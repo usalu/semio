@@ -34,7 +34,7 @@ use serde_json::{json, Value};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex};
 use vcs::{create_document_vcs_envelope, DocumentBackboneRef, LocalStorageBackbonePort};
-use mathematical_graph_port_directed_dag::{
+use infinite_board_port_directed_dag::{
     dag_fixture_to_wire_literal, DagCamera, DagFixture, DagFixtureEdge, DagNodeKind, DagNodeSpec, IoPortSpec,
 };
 

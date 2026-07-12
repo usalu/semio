@@ -1,0 +1,3 @@
+[workspace]
+members = ["framework/core/rs", "framework/hash/rs", "framework/sync/rs", "vcs/rs"]
+resolver = "2"

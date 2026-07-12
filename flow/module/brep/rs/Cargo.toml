@@ -17,6 +17,7 @@ flow_module_wasm = { path = "../../wasm/rs" }
 kernel_3d_brepkit = { path = "../../../../kernel/3d/brep/rs" }
 kernel_3d_engine = { path = "../../../../kernel/3d/brep/engine/rs" }
 neural_engine = { path = "../../../../neural/engine/rs" }
+semio-framework-core = { path = "../../../../framework/core/rs" }
 base64 = "0.22"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

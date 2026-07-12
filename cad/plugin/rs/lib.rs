@@ -362,6 +362,35 @@ pub mod geometry_import {
             primitives,
         }
     }
+    /// 🧊 Builds a `CadObject` around a solid `GeometryHandle` already resident in `kernel` (e.g. from
+    /// a native OBJ/STL/STEP import), tessellating once just to derive a display `extent` — the
+    /// handle itself is kept verbatim rather than being round-tripped through a mesh reimport.
+    pub fn cad_object_from_solid_handle(
+        kernel: &mut dyn BrepKernel,
+        id: impl Into<String>,
+        label: impl Into<String>,
+        typology: impl Into<String>,
+        handle: GeometryHandle,
+    ) -> CadObject {
+        let extent = block_on(kernel.tessellate(&handle, 0.1))
+            .ok()
+            .and_then(|mesh| mesh_extent(&mesh_from_indexed(&mesh.position, &mesh.normal, &mesh.index)));
+        let handle_id = handle.0.clone();
+        CadObject {
+            id: id.into(),
+            label: label.into(),
+            typology: typology.into(),
+            visible: true,
+            locked: false,
+            origin: [0.0, 0.0, 0.0],
+            orientation: Some([0.0, 0.0, 0.0, 1.0]),
+            scale: None,
+            mesh_url: None,
+            extent,
+            solid_handle: Some(handle_id.clone()),
+            primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: handle_id, kind: "solid".into() }],
+        }
+    }
     //#endregion 🔖MeshImport
 
     pub fn object_label_from_id(object_id: &str) -> String {
@@ -2090,7 +2119,7 @@ use cad_document::{
     CadStore, CAD_DOCUMENT_SCHEMA, CAD_PLAY_DOCUMENT_SCHEMA,
 };
 use geometry_import::{
-    cad_object_from_mesh, objects_from_fixture_model, parse_geometry, tessellate_geometry_handle,
+    cad_object_from_mesh, cad_object_from_solid_handle, objects_from_fixture_model, parse_geometry, tessellate_geometry_handle,
 };
 use semio_framework_plugin::{PanelGroup,
     apply_world3d_sun_action, build_world_3d_scene, merge_world_selection_ids, mesh_from_kind,
@@ -2103,7 +2132,7 @@ use semio_framework_plugin::{PanelGroup,
     WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
     WindowLayoutWindowNode, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, MeshImporter,
 };
 use semio_framework_plugin::layout::{WindowEngagementPossible, WindowEngagementStatus};
 use serde::{Deserialize, Serialize};
@@ -2394,6 +2423,8 @@ struct CadPlayRuntime {
     pending_export_filename: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pending_export_mime: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pending_export_encoding: Option<String>,
     #[serde(default)]
     sun: WorldSunConfig,
 }
@@ -2427,6 +2458,7 @@ impl Default for CadPlayRuntime {
             pending_export: None,
             pending_export_filename: None,
             pending_export_mime: None,
+            pending_export_encoding: None,
             sun: WorldSunConfig::default(),
         }
     }
@@ -2769,45 +2801,151 @@ fn apply_transformation_to_envelope(envelope: &mut CadPlayEnvelope, qid: &str) -
     ops_ok
 }
 
-fn export_step_for_pane(envelope: &CadPlayEnvelope, pane: CadPaneId) -> Option<(String, String)> {
-    let objects = cad_pane_objects(&envelope.document, pane);
+/// @emoji 📤 A pending native-geometry export ready for `pending_export`/`export_download_ops`.
+struct CadSolidExport {
+    filename: String,
+    data: Value,
+    mime_type: String,
+    encoding: Option<String>,
+}
+
+fn collect_pane_solids(kernel: &mut dyn BrepKernel, envelope: &CadPlayEnvelope, pane: CadPaneId) -> Vec<GeometryHandle> {
+    cad_pane_objects(&envelope.document, pane)
+        .iter()
+        .filter_map(|object| {
+            let mut next = object.clone();
+            solid_for_object(kernel, &mut next)
+        })
+        .collect()
+}
+
+fn collect_modelspace_solids(kernel: &mut dyn BrepKernel, envelope: &CadPlayEnvelope) -> Vec<GeometryHandle> {
+    CadPaneId::all()
+        .into_iter()
+        .flat_map(|pane| collect_pane_solids(kernel, envelope, pane))
+        .collect()
+}
+
+/// @emoji 📤 Encodes `solids` through the kernel's native OBJ/STL/STEP codec for `format`; STL is
+/// base64-wrapped since it is a binary format, OBJ/STEP stay UTF-8 text.
+fn export_solids_as(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle], format: semio_framework_plugin::OsMediaFormat, stem: &str) -> Option<CadSolidExport> {
+    use semio_framework_plugin::OsMediaFormat;
+    let filename = format!("{stem}.{}", format.as_str());
+    let mime_type = format.mime_type().to_string();
+    match format {
+        OsMediaFormat::Obj => {
+            let text = kernel_3d_engine::block_on(kernel.export_obj(solids, 0.1)).ok()?;
+            Some(CadSolidExport { filename, data: Value::String(text), mime_type, encoding: None })
+        }
+        OsMediaFormat::Stl => {
+            let bytes = kernel_3d_engine::block_on(kernel.export_stl(solids, 0.1)).ok()?;
+            let encoded = base64::engine::general_purpose::STANDARD.encode(bytes);
+            Some(CadSolidExport { filename, data: Value::String(encoded), mime_type, encoding: Some("base64".into()) })
+        }
+        OsMediaFormat::Step => {
+            let text = kernel_3d_engine::block_on(kernel.export_step(solids)).ok()?;
+            Some(CadSolidExport { filename, data: Value::String(text), mime_type, encoding: None })
+        }
+        _ => None,
+    }
+}
+
+fn export_solid_for_pane(envelope: &CadPlayEnvelope, pane: CadPaneId, format: semio_framework_plugin::OsMediaFormat) -> Option<CadSolidExport> {
     let Ok(mut kernel) = cad_brep_kernel().lock() else {
         return None;
     };
-    let mut solids = Vec::new();
-    for object in objects {
-        let mut next = object.clone();
-        if let Some(handle) = solid_for_object(&mut kernel, &mut next) {
-            solids.push(handle);
-        }
-    }
+    let solids = collect_pane_solids(&mut kernel, envelope, pane);
     if solids.is_empty() {
         return None;
     }
-    let step = kernel_3d_engine::block_on(kernel.export_step(&solids)).ok()?;
-    let stem = pane.model_definition_id().replace('.', "-");
-    Some((format!("cad-{}.stp", stem), step))
+    let stem = format!("cad-{}", pane.model_definition_id().replace('.', "-"));
+    export_solids_as(&mut kernel, &solids, format, &stem)
 }
 
-fn export_step_modelspace(envelope: &CadPlayEnvelope) -> Option<(String, String)> {
-    let Ok(kernel_mutex) = cad_brep_kernel().lock() else {
+fn export_solid_modelspace(envelope: &CadPlayEnvelope, format: semio_framework_plugin::OsMediaFormat) -> Option<CadSolidExport> {
+    let Ok(mut kernel) = cad_brep_kernel().lock() else {
         return None;
     };
-    let mut kernel = kernel_mutex;
-    let mut solids = Vec::new();
-    for pane in CadPaneId::all() {
-        for object in cad_pane_objects(&envelope.document, pane) {
-            let mut next = object.clone();
-            if let Some(handle) = solid_for_object(&mut kernel, &mut next) {
-                solids.push(handle);
-            }
-        }
-    }
+    let solids = collect_modelspace_solids(&mut kernel, envelope);
     if solids.is_empty() {
         return None;
     }
-    let step = kernel_3d_engine::block_on(kernel.export_step(&solids)).ok()?;
-    Some(("cad.modelspace.stp".into(), step))
+    export_solids_as(&mut kernel, &solids, format, "cad.modelspace")
+}
+
+/// @emoji 📥 Stages a native-geometry export onto the runtime's pending-download slot.
+fn apply_solid_export(envelope: &mut CadPlayEnvelope, export: CadSolidExport) {
+    envelope.runtime.pending_export = Some(export.data);
+    envelope.runtime.pending_export_filename = Some(export.filename);
+    envelope.runtime.pending_export_mime = Some(export.mime_type);
+    envelope.runtime.pending_export_encoding = export.encoding;
+}
+
+/// @emoji 📦 Decodes a `requestFileOpen` payload (a `data:` URL when `readAs: "dataUrl"` was
+/// requested, otherwise a raw string) into bytes.
+fn cad_file_bytes_from_payload(payload: &Value) -> Option<Vec<u8>> {
+    let raw = payload.as_str()?;
+    if raw.starts_with("data:") {
+        let (_, encoded) = raw.split_once(',')?;
+        base64::engine::general_purpose::STANDARD.decode(encoded).ok()
+    } else {
+        Some(raw.as_bytes().to_vec())
+    }
+}
+
+/// @emoji 📦 Decodes a `requestFileOpen` payload into UTF-8 text; see `cad_file_bytes_from_payload`.
+fn cad_file_text_from_payload(payload: &Value) -> Option<String> {
+    String::from_utf8(cad_file_bytes_from_payload(payload)?).ok()
+}
+
+/// @emoji 🧊 Imports a STEP payload into the shared kernel and wraps the first solid it contains
+/// (STEP files may hold more than one shape) as a new `CadObject`.
+fn import_step_object(text: &str) -> Option<CadObject> {
+    let mut kernel = cad_brep_kernel().lock().ok()?;
+    let handle = kernel_3d_engine::block_on(kernel.import_step(text)).ok()?.into_iter().next()?;
+    Some(cad_object_from_solid_handle(&mut kernel, next_cad_id("object-step"), "Imported STEP", "spatial.shape.imported", handle))
+}
+
+/// @emoji 🧊 Imports an OBJ payload into the shared kernel as a new `CadObject`.
+fn import_obj_object(text: &str) -> Option<CadObject> {
+    let mut kernel = cad_brep_kernel().lock().ok()?;
+    let handle = kernel_3d_engine::block_on(kernel.import_obj(text, 0.01)).ok()?;
+    Some(cad_object_from_solid_handle(&mut kernel, next_cad_id("object-obj"), "Imported OBJ", "spatial.shape.imported", handle))
+}
+
+/// @emoji 🧊 Imports an STL payload into the shared kernel as a new `CadObject`.
+fn import_stl_object(bytes: &[u8]) -> Option<CadObject> {
+    let mut kernel = cad_brep_kernel().lock().ok()?;
+    let handle = kernel_3d_engine::block_on(kernel.import_stl(bytes, 0.01)).ok()?;
+    Some(cad_object_from_solid_handle(&mut kernel, next_cad_id("object-stl"), "Imported STL", "spatial.shape.imported", handle))
+}
+
+/// @emoji 🧊 Imports a GLB payload by decoding it to a tessellated mesh (via the shared
+/// `MeshImporter` codec) and re-importing that mesh into the kernel as a solid, matching the
+/// DWG-derived import path (`cad_object_from_mesh`) since GLB carries no exact B-Rep to preserve.
+fn import_glb_object(bytes: &[u8]) -> Option<CadObject> {
+    let mesh = semio_framework_plugin::GlbImporter.import(bytes).ok()?;
+    let mut kernel = cad_brep_kernel().lock().ok()?;
+    Some(cad_object_from_mesh(&mut kernel, next_cad_id("object-glb"), "Imported GLB", "spatial.shape.imported", &mesh))
+}
+
+/// @emoji 🗂️ Routes a `requestFileOpen` payload to the matching native-geometry import by the
+/// picked file's extension; returns `None` for anything else so the caller can fall back to the
+/// spatial-JSON document path.
+fn import_cad_object_by_extension(name: &str, payload: &Value) -> Option<CadObject> {
+    if name.ends_with(".stp") || name.ends_with(".step") {
+        return import_step_object(&cad_file_text_from_payload(payload)?);
+    }
+    if name.ends_with(".obj") {
+        return import_obj_object(&cad_file_text_from_payload(payload)?);
+    }
+    if name.ends_with(".stl") {
+        return import_stl_object(&cad_file_bytes_from_payload(payload)?);
+    }
+    if name.ends_with(".glb") {
+        return import_glb_object(&cad_file_bytes_from_payload(payload)?);
+    }
+    None
 }
 
 fn export_spatial_json(envelope: &CadPlayEnvelope, mode: &str) -> Value {
@@ -2948,11 +3086,13 @@ fn export_download_ops(envelope: &CadPlayEnvelope) -> Vec<String> {
         Value::String(text) => text,
         other => serde_json::to_string(&other).unwrap_or_default(),
     };
+    let encoding = envelope.runtime.pending_export_encoding.clone();
     vec![json!({
         "op": "downloadMediaExport",
         "filename": filename,
         "mimeType": mime_type,
         "data": payload,
+        "encoding": encoding,
     })
     .to_string()]
 }
@@ -4246,6 +4386,18 @@ fn build_cad_play_toolbar(envelope: &CadPlayEnvelope, labels: &CadLabels) -> Vec
             cad_action("saveCurrent", None),
         ),
         tool_button(
+            "cad.play.save.current.obj",
+            "save",
+            "Current (OBJ)",
+            cad_action("saveCurrentObj", None),
+        ),
+        tool_button(
+            "cad.play.save.current.stl",
+            "save",
+            "Current (STL)",
+            cad_action("saveCurrentStl", None),
+        ),
+        tool_button(
             "cad.play.save.load",
             "folder-open",
             "Load",
@@ -5002,30 +5154,33 @@ impl PluginApp for CadApp {
                 return ops;
             }
             "saveInPlay" => {
-                if let Some((filename, step)) = export_step_modelspace(&envelope) {
-                    envelope.runtime.pending_export = Some(Value::String(step));
-                    envelope.runtime.pending_export_filename = Some(filename);
-                    envelope.runtime.pending_export_mime = Some("application/step".into());
+                if let Some(export) = export_solid_modelspace(&envelope, semio_framework_plugin::OsMediaFormat::Step) {
+                    apply_solid_export(&mut envelope, export);
                 } else {
                     envelope.runtime.pending_export = Some(export_spatial_json(&envelope, "modelspace"));
                     envelope.runtime.pending_export_filename = Some("cad.modelspace.spatial.json".into());
                     envelope.runtime.pending_export_mime = Some("application/json".into());
+                    envelope.runtime.pending_export_encoding = None;
                 }
                 let mut ops = vec![set_document_op(&envelope)];
                 ops.extend(export_download_ops(&envelope));
                 return ops;
             }
-            "saveCurrent" => {
+            "saveCurrent" | "saveCurrentObj" | "saveCurrentStl" => {
+                let format = match action {
+                    "saveCurrentObj" => semio_framework_plugin::OsMediaFormat::Obj,
+                    "saveCurrentStl" => semio_framework_plugin::OsMediaFormat::Stl,
+                    _ => semio_framework_plugin::OsMediaFormat::Step,
+                };
                 let pane = cad_pane_from_model_definition_id(&envelope.document.active_model_definition_id)
                     .unwrap_or(CadPaneId::Shape);
-                if let Some((filename, step)) = export_step_for_pane(&envelope, pane) {
-                    envelope.runtime.pending_export = Some(Value::String(step));
-                    envelope.runtime.pending_export_filename = Some(filename);
-                    envelope.runtime.pending_export_mime = Some("application/step".into());
+                if let Some(export) = export_solid_for_pane(&envelope, pane, format) {
+                    apply_solid_export(&mut envelope, export);
                 } else {
                     envelope.runtime.pending_export = Some(export_spatial_json(&envelope, "current"));
                     envelope.runtime.pending_export_filename = Some("cad.current.spatial.json".into());
                     envelope.runtime.pending_export_mime = Some("application/json".into());
+                    envelope.runtime.pending_export_encoding = None;
                 }
                 let mut ops = vec![set_document_op(&envelope)];
                 ops.extend(export_download_ops(&envelope));
@@ -5035,40 +5190,51 @@ impl PluginApp for CadApp {
                 envelope.runtime.pending_export = None;
                 envelope.runtime.pending_export_filename = None;
                 envelope.runtime.pending_export_mime = None;
+                envelope.runtime.pending_export_encoding = None;
                 return vec![json!({
                     "op": "requestFileOpen",
-                    "accept": ".json,.spatial.json,.stp,.step",
-                    "importAction": "importSpatialJson",
+                    "accept": ".json,.spatial.json,.stp,.step,.obj,.stl,.glb",
+                    "importAction": "importCadFile",
+                    "readAs": "dataUrl",
                 })
                 .to_string()];
             }
-            "importSpatialJson" => {
+            "importCadFile" => {
+                let name = args
+                    .and_then(|value| value.get("name"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("")
+                    .to_ascii_lowercase();
                 let payload = args
                     .and_then(|value| value.get("payload").or_else(|| value.get("modelSpace")))
                     .cloned()
                     .or_else(|| args.cloned());
-                if let Some(payload) = payload {
-                    let payload = match payload {
-                        Value::String(text) => serde_json::from_str::<Value>(&text).unwrap_or(Value::String(text)),
-                        other => other,
-                    };
-                    let unwrapped = unwrap_spatial_load_payload(&payload).unwrap_or(payload);
-                    if let Some(scene) = scene_from_spatial_payload(&unwrapped) {
-                        envelope.document = scene;
-                        envelope.history = seed_cad_history(&envelope.document);
-                        envelope.applied_edit_ids.clear();
-                        envelope.redo_edit_ids.clear();
-                        envelope.runtime.selected_object_ids.clear();
-                        envelope.runtime.engagement_session = None;
-                        return vec![set_document_op(&envelope)];
-                    }
-                    if let Ok(scene) = serde_json::from_value::<CadScene>(unwrapped) {
-                        envelope.document = scene;
-                        envelope.history = seed_cad_history(&envelope.document);
-                        envelope.applied_edit_ids.clear();
-                        envelope.redo_edit_ids.clear();
-                        return vec![set_document_op(&envelope)];
-                    }
+                let Some(payload) = payload else { return Vec::new() };
+                if let Some(object) = import_cad_object_by_extension(&name, &payload) {
+                    envelope.document.objects.push(object);
+                    envelope.history = seed_cad_history(&envelope.document);
+                    return vec![set_document_op(&envelope)];
+                }
+                let payload = match payload {
+                    Value::String(text) => serde_json::from_str::<Value>(&text).unwrap_or(Value::String(text)),
+                    other => other,
+                };
+                let unwrapped = unwrap_spatial_load_payload(&payload).unwrap_or(payload);
+                if let Some(scene) = scene_from_spatial_payload(&unwrapped) {
+                    envelope.document = scene;
+                    envelope.history = seed_cad_history(&envelope.document);
+                    envelope.applied_edit_ids.clear();
+                    envelope.redo_edit_ids.clear();
+                    envelope.runtime.selected_object_ids.clear();
+                    envelope.runtime.engagement_session = None;
+                    return vec![set_document_op(&envelope)];
+                }
+                if let Ok(scene) = serde_json::from_value::<CadScene>(unwrapped) {
+                    envelope.document = scene;
+                    envelope.history = seed_cad_history(&envelope.document);
+                    envelope.applied_edit_ids.clear();
+                    envelope.redo_edit_ids.clear();
+                    return vec![set_document_op(&envelope)];
                 }
             }
             "setReferenceSelection" => {
@@ -5431,7 +5597,7 @@ fn create_cad_app() -> App {
             .operation("rotateSelection", "Rotate Selection")
             .operation("scaleSelection", "Scale Selection")
             .operation("applyTransformation", "Apply Transformation")
-            .operation("importSpatialJson", "Import Spatial JSON")
+            .operation("importCadFile", "Import CAD File")
             .operation("patchCadPlayReference", "Patch Reference")
             .operation("engagementSubmit", "Engagement Submit")
             .view_action("setActiveTool", "Set Active Tool")
@@ -5460,6 +5626,8 @@ fn create_cad_app() -> App {
             .shell_action("saveSelected", "Save Selected")
             .shell_action("saveInPlay", "Save In Play")
             .shell_action("saveCurrent", "Save Current")
+            .shell_action("saveCurrentObj", "Save Current (OBJ)")
+            .shell_action("saveCurrentStl", "Save Current (STL)")
             .shell_action("loadRawRequest", "Load Raw Request")
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
@@ -5520,9 +5688,26 @@ fn cad_document_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Result<s
     serde_json::to_value(&envelope).map_err(|err| err.to_string())
 }
 
+/// @emoji 🧵 Bridges a `MeshImporter`-decoded mesh (currently only GLB) back into a `CadPlayEnvelope`
+/// document, reusing the same OBJ-text-roundtrip kernel import as the DWG/STL/`importCadFile` paths.
+fn cad_document_from_mesh(mesh: &semio_framework_plugin::MeshData) -> Result<serde_json::Value, String> {
+    let mut envelope = default_envelope();
+    let mut kernel = cad_brep_kernel().lock().map_err(|_| "cad brep kernel lock poisoned".to_string())?;
+    let object = cad_object_from_mesh(&mut kernel, next_cad_id("object-glb"), "Imported GLB", "spatial.shape.imported", mesh);
+    envelope.document.objects = vec![object];
+    envelope.history = seed_cad_history(&envelope.document);
+    serde_json::to_value(&envelope).map_err(|err| err.to_string())
+}
+
 fn register_cad_exports() {
-    semio_framework_os::register_mesh_exporter("3d.cad", "cad", cad_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
+    semio_framework_os::register_solid_exporter("3d.cad", Box::new(kernel_3d_brepkit::ObjSolidExporter));
+    semio_framework_os::register_solid_exporter("3d.cad", Box::new(kernel_3d_brepkit::StlSolidExporter));
+    semio_framework_os::register_solid_exporter("3d.cad", Box::new(kernel_3d_brepkit::StepSolidExporter));
+    semio_framework_os::register_solid_importer("3d.cad", Box::new(kernel_3d_brepkit::ObjSolidImporter));
+    semio_framework_os::register_solid_importer("3d.cad", Box::new(kernel_3d_brepkit::StlSolidImporter));
+    semio_framework_os::register_solid_importer("3d.cad", Box::new(kernel_3d_brepkit::StepSolidImporter));
     semio_framework_os::register_mesh_exporter("3d.cad", "cad", cad_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
+    semio_framework_os::register_mesh_importer("3d.cad", cad_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
     semio_framework_os::register_mesh_dwg_export_handler("3d.cad", "cad", cad_mesh_from_document);
     semio_framework_os::register_dwg_import_handler("3d.cad", cad_document_from_dwg);
 }
@@ -6175,11 +6360,12 @@ mod tests {
     }
 
     #[test]
-    fn import_spatial_json_action_accepts_file_text_string_payload() {
-        // The React shell's requestFileOpen host op reads the picked file as text and dispatches
-        // importSpatialJson with `args: { payload: <file text> }` — a JSON *string*, not a parsed
-        // value (framework/renderer/react/os-shell.tsx handleRequestFileOpen). The action must
-        // string-parse it before unwrapping/deserializing.
+    fn import_cad_file_action_accepts_spatial_json_text_string_payload() {
+        // The React shell's requestFileOpen host op reads the picked file and dispatches
+        // importCadFile with `args: { payload: <file text or data URL>, name: <file name> }`
+        // (framework/renderer/react/os-shell.tsx handleRequestFileOpen). Without a recognized
+        // native-geometry extension in `name`, the action must string-parse the payload as JSON
+        // before unwrapping/deserializing it as a spatial-model document.
         let mut app = CadApp;
         let envelope = default_envelope();
         let file_text = json!({
@@ -6198,15 +6384,40 @@ mod tests {
         })
         .to_string();
         let ops = app.handle_action_patch_ops(
-            "importSpatialJson",
-            Some(&json!({ "payload": file_text })),
+            "importCadFile",
+            Some(&json!({ "payload": file_text, "name": "cad.spatial.json" })),
             &serde_json::to_string(&envelope).unwrap(),
             &ViewState::default(),
         );
-        assert!(!ops.is_empty(), "importSpatialJson must emit a setDocument op for a string payload");
+        assert!(!ops.is_empty(), "importCadFile must emit a setDocument op for a spatial JSON string payload");
         let next = apply_ops(&envelope, &ops);
         assert_eq!(next.document.objects.len(), 1);
         assert_eq!(next.document.objects[0].id, "object-loaded");
+    }
+
+    #[test]
+    fn import_cad_file_action_imports_obj_stl_and_step_by_extension() {
+        // Consistent with the JSON path above, importCadFile must also dispatch OBJ/STL/STEP
+        // payloads (as data URLs, matching the production `readAs: "dataUrl"` request) through
+        // the kernel's native-geometry importers by filename extension, appending a new object
+        // rather than replacing the whole document.
+        let mut app = CadApp;
+        let envelope = default_envelope();
+        let obj_text = "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n";
+        let obj_data_url = format!(
+            "data:model/obj;base64,{}",
+            base64::engine::general_purpose::STANDARD.encode(obj_text)
+        );
+        let ops = app.handle_action_patch_ops(
+            "importCadFile",
+            Some(&json!({ "payload": obj_data_url, "name": "triangle.obj" })),
+            &serde_json::to_string(&envelope).unwrap(),
+            &ViewState::default(),
+        );
+        assert!(!ops.is_empty(), "importCadFile must emit a setDocument op for an OBJ payload");
+        let next = apply_ops(&envelope, &ops);
+        assert_eq!(next.document.objects.len(), envelope.document.objects.len() + 1);
+        assert!(next.document.objects.last().unwrap().solid_handle.is_some());
     }
 
     fn apply_ops(envelope: &CadPlayEnvelope, ops: &[String]) -> CadPlayEnvelope {

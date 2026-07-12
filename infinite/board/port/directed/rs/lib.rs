@@ -6,8 +6,8 @@ pub mod scene_json {
 
     use serde::{Deserialize, Serialize};
 
-    pub use mathematical_graph::{CameraJson, NodeDescJson};
-    pub use mathematical_graph_port::HandleDescJson;
+    pub use infinite_board::{CameraJson, NodeDescJson};
+    pub use infinite_board_port::HandleDescJson;
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
@@ -686,12 +686,12 @@ pub mod types {
 }
 
 pub use infinite_cavas as cavas;
-pub use mathematical_graph::{
+pub use infinite_board::{
     area_preselect_ids, merge_ids_into_selection, merge_pick_into_selection, normalize_selection_mode, pick_merge_mode_for_modifiers, selection_contains_edge_curve, selection_contains_handle_point, selection_contains_node_bounds,
     selection_drag_enclosing, selection_drag_enclosing_rectangle, selection_drag_shape, selection_screen_overlay_points, SELECTION_CLICK_MAX_DISTANCE_PX, SELECTION_DRAG_DIRECTION_THRESHOLD_PX, SELECTION_LASSO_MIN_POINT_DISTANCE_PX,
     SELECTION_MARQUEE_DRAG_THRESHOLD_PX,
 };
-pub use mathematical_graph_port::*;
+pub use infinite_board_port::*;
 pub use scene_json::{board_json_visible_option, board_json_visible_or_true, fixture_edge_handle_ids_from_object, normalize_board_descriptor_hidden_to_visible, EdgeDescJson, FixtureJson, SceneDescriptorJson, WireDescJson};
 pub use types::*;
 
@@ -722,7 +722,7 @@ pub mod force_graph {
     use std::collections::HashMap;
 
     use crate::board_json_visible_or_true;
-    pub use mathematical_graph_normal_undirected::ForceGraphLayoutOptions;
+    pub use infinite_board_normal_undirected::ForceGraphLayoutOptions;
 
     fn build_handle_to_node(nodes: &[Value]) -> HashMap<String, String> {
         let mut handle_to_node: HashMap<String, String> = HashMap::new();
@@ -758,7 +758,7 @@ pub mod force_graph {
     pub fn apply_force_graph_layout_to_fixture_v1_value(fixture: &mut Value, opts: &ForceGraphLayoutOptions) -> Result<(), String> {
         let nodes = fixture.as_object().and_then(|root| root.get("nodes")).and_then(|v| v.as_array()).cloned().unwrap_or_default();
         let handle_to_node = build_handle_to_node(&nodes);
-        mathematical_graph_normal_undirected::apply_force_graph_layout_to_fixture_v1_value_resolved(fixture, opts, |endpoint, id_to_index| {
+        infinite_board_normal_undirected::apply_force_graph_layout_to_fixture_v1_value_resolved(fixture, opts, |endpoint, id_to_index| {
             let node_id = handle_to_node.get(endpoint).cloned().unwrap_or_else(|| endpoint.to_string());
             id_to_index.contains_key(&node_id).then_some(node_id)
         })

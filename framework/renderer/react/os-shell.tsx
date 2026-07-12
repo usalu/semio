@@ -3083,6 +3083,35 @@ export async function createMapSession(): Promise<MapWasmSession> {
   return new mod.MapSession();
 }
 
+//#region TerrainSession
+export type TerrainWasmSession = {
+  set_project_origin(lon: number, lat: number): void;
+  set_exaggeration(exaggeration: number): void;
+  visible_terrain_tiles_json(cameraJson: string): string;
+  upload_elevation_tile(z: number, x: number, y: number, bytes: Uint8Array): boolean;
+  evict_terrain_tile(z: number, x: number, y: number): void;
+  terrain_tile_mesh_json(z: number, x: number, y: number): string;
+};
+
+type TerrainSessionModule = {
+  readonly default: (input?: unknown) => Promise<unknown>;
+  readonly TerrainSession: new () => TerrainWasmSession;
+};
+
+let terrainSessionPromise: Promise<TerrainSessionModule> | null = null;
+
+export async function createTerrainSession(): Promise<TerrainWasmSession> {
+  if (!terrainSessionPromise) {
+    terrainSessionPromise = import("@semio-tech/gis-3d-rs/pkg/gis_3d.js").then(async (mod) => {
+      await mod.default();
+      return mod as TerrainSessionModule;
+    });
+  }
+  const mod = await terrainSessionPromise;
+  return new mod.TerrainSession();
+}
+//#endregion TerrainSession
+
 export type Puzzle2dBoardWasmSession = {
   attach_canvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown>;
   setSize(width: number, height: number, dpr: number): void;

@@ -10,8 +10,8 @@ path = "lib.rs"
 
 [dependencies]
 ui_styling = { path = "../../../../../../ui/styling/rs" }
-mathematical_graph_port_directed = { path = "../../../../../../mathematical/graph/port/directed/rs" }
-mathematical_graph_normal_undirected = { path = "../../../../../../mathematical/graph/normal/undirected/rs" }
+infinite_board_port_directed = { path = "../../rs" }
+infinite_board_normal_undirected = { path = "../../../../normal/undirected/rs" }
 mathematical_graph_manifest = { path = "../../../../../../mathematical/graph/manifest/rs" }
 mathematical_graph_drawing = { path = "../../../../../../mathematical/graph/drawing/rs" }
 infinite_cavas = { path = "../../../../../../infinite/cavas/rs" }

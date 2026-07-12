@@ -2469,14 +2469,25 @@ fn mesh_from_mesh_document(doc: &serde_json::Value) -> Result<semio_framework_pl
         .unwrap_or_else(|| Ok(mesh_from_kind("box")))
 }
 
+/// 🔌 One call per `MeshExporter`/`MeshImporter` format so the OS media-graph VFS (menu + file-picker
+/// affordances) auto-populates from `required_os_media_export_formats`/`required_os_media_import_formats`;
+/// DWG stays on its own dedicated registrars since it isn't a `MeshExporter` codec.
 fn register_lowpoly_exports() {
     semio_framework_os::register_mesh_exporter("3d.lowpoly", "lowpoly", lowpoly_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
     semio_framework_os::register_mesh_exporter("3d.lowpoly", "lowpoly", lowpoly_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
+    semio_framework_os::register_mesh_exporter("3d.lowpoly", "lowpoly", lowpoly_mesh_from_document, Box::new(semio_framework_plugin::StlExporter));
     semio_framework_os::register_mesh_dwg_export_handler("3d.lowpoly", "lowpoly", lowpoly_mesh_from_document);
+    semio_framework_os::register_mesh_importer("3d.lowpoly", lowpoly_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
+    semio_framework_os::register_mesh_importer("3d.lowpoly", lowpoly_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
+    semio_framework_os::register_mesh_importer("3d.lowpoly", lowpoly_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
     semio_framework_os::register_mesh_dwg_import_handler("3d.lowpoly", lowpoly_document_from_mesh);
     semio_framework_os::register_mesh_exporter("3d.mesh", "mesh", mesh_from_mesh_document, Box::new(semio_framework_plugin::ObjExporter));
     semio_framework_os::register_mesh_exporter("3d.mesh", "mesh", mesh_from_mesh_document, Box::new(semio_framework_plugin::GlbExporter));
+    semio_framework_os::register_mesh_exporter("3d.mesh", "mesh", mesh_from_mesh_document, Box::new(semio_framework_plugin::StlExporter));
     semio_framework_os::register_mesh_dwg_export_handler("3d.mesh", "mesh", mesh_from_mesh_document);
+    semio_framework_os::register_mesh_importer("3d.mesh", mesh_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
+    semio_framework_os::register_mesh_importer("3d.mesh", mesh_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
+    semio_framework_os::register_mesh_importer("3d.mesh", mesh_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
     semio_framework_os::register_mesh_dwg_import_handler("3d.mesh", mesh_document_from_mesh);
 }
 
@@ -2985,6 +2996,44 @@ mod tests {
         let reexported = lowpoly_mesh_from_document(&doc).unwrap();
         assert!(!reexported.positions.is_empty());
         assert!(!reexported.indices.is_empty());
+    }
+
+    #[test]
+    fn lowpoly_document_from_mesh_round_trips_through_obj_glb_stl_codecs() {
+        use semio_framework_plugin::{GlbExporter, GlbImporter, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter};
+        let mesh = mesh_from_kind("box");
+        let codecs: Vec<(Box<dyn MeshExporter>, Box<dyn MeshImporter>)> = vec![
+            (Box::new(ObjExporter), Box::new(ObjImporter)),
+            (Box::new(GlbExporter), Box::new(GlbImporter)),
+            (Box::new(StlExporter), Box::new(StlImporter)),
+        ];
+        for (exporter, importer) in codecs {
+            let bytes = exporter.export(&mesh).unwrap();
+            let decoded = importer.import(&bytes).unwrap();
+            let doc = lowpoly_document_from_mesh(&decoded).unwrap();
+            let reexported = lowpoly_mesh_from_document(&doc).unwrap();
+            assert!(!reexported.positions.is_empty());
+            assert!(!reexported.indices.is_empty());
+        }
+    }
+
+    #[test]
+    fn mesh_document_round_trips_through_obj_glb_stl_codecs() {
+        use semio_framework_plugin::{GlbExporter, GlbImporter, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter};
+        let mesh = mesh_from_kind("box");
+        let codecs: Vec<(Box<dyn MeshExporter>, Box<dyn MeshImporter>)> = vec![
+            (Box::new(ObjExporter), Box::new(ObjImporter)),
+            (Box::new(GlbExporter), Box::new(GlbImporter)),
+            (Box::new(StlExporter), Box::new(StlImporter)),
+        ];
+        for (exporter, importer) in codecs {
+            let bytes = exporter.export(&mesh).unwrap();
+            let decoded = importer.import(&bytes).unwrap();
+            let doc = mesh_document_from_mesh(&decoded).unwrap();
+            let reimported = mesh_from_mesh_document(&doc).unwrap();
+            assert!(reimported.vertex_count() > 0);
+            assert!(reimported.triangle_count() > 0);
+        }
     }
 
     #[test]

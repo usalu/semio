@@ -8,7 +8,7 @@ pub use graph::{
     apply_edge_handle_snap_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value, apply_normal_undirected_redraw_layout_to_fixture_v1_json,
     apply_redraw_layout_to_fixture_v1_json as apply_ported_redraw_layout_to_fixture_v1_json, apply_undirected_force_graph_layout_to_fixture_v1_json, apply_undirected_force_graph_layout_to_fixture_v1_value, GraphExtension,
 };
-pub use mathematical_graph_port_directed_normal::{self as graph, *};
+pub use infinite_board_port_directed_normal::{self as graph, *};
 pub use reasoning_mindmap as mindmap;
 
 #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]

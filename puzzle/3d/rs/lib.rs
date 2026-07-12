@@ -1,11 +1,149 @@
 //! 🧩 Puzzle 3d brush/fill precompute: parry3d solid collision, candidate enumeration, greedy fill.
 #![allow(clippy::missing_errors_doc, reason = "Internal puzzle 3d WASM bundle.")]
 
-use nalgebra::{Isometry3, Point3, Quaternion, UnitQuaternion, Vector3};
-use parry3d::query::intersection_test;
-use parry3d::shape::{SharedShape, TriMesh, TriMeshFlags};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+//#region 🔒GeometryAdapter
+//! 🔒 Thin wrappers over `nalgebra`/`parry3d` — the one interface boundary this crate depends on.
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Vec3d(nalgebra::Vector3<f32>);
+
+impl Vec3d {
+    fn new(x: f32, y: f32, z: f32) -> Self {
+        Self(nalgebra::Vector3::new(x, y, z))
+    }
+    fn x(&self) -> f32 {
+        self.0.x
+    }
+    fn y(&self) -> f32 {
+        self.0.y
+    }
+    fn z(&self) -> f32 {
+        self.0.z
+    }
+    fn amax(&self) -> f32 {
+        self.0.amax()
+    }
+}
+
+impl std::ops::Add for Vec3d {
+    type Output = Vec3d;
+    fn add(self, rhs: Self) -> Self {
+        Vec3d(self.0 + rhs.0)
+    }
+}
+
+impl std::ops::Mul<f32> for Vec3d {
+    type Output = Vec3d;
+    fn mul(self, rhs: f32) -> Self {
+        Vec3d(self.0 * rhs)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Point3d(nalgebra::Point3<f32>);
+
+impl Point3d {
+    fn new(x: f32, y: f32, z: f32) -> Self {
+        Self(nalgebra::Point3::new(x, y, z))
+    }
+    fn x(&self) -> f32 {
+        self.0.x
+    }
+    fn y(&self) -> f32 {
+        self.0.y
+    }
+    fn z(&self) -> f32 {
+        self.0.z
+    }
+    fn inf(&self, other: &Self) -> Self {
+        Self(self.0.inf(&other.0))
+    }
+    fn sup(&self, other: &Self) -> Self {
+        Self(self.0.sup(&other.0))
+    }
+    fn coords(&self) -> Vec3d {
+        Vec3d(self.0.coords)
+    }
+    fn from_coords(v: Vec3d) -> Self {
+        Self(nalgebra::Point3::from(v.0))
+    }
+}
+
+impl std::ops::Sub for Point3d {
+    type Output = Vec3d;
+    fn sub(self, rhs: Self) -> Vec3d {
+        Vec3d(self.0 - rhs.0)
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+struct Rotation3d(nalgebra::UnitQuaternion<f32>);
+
+impl Rotation3d {
+    fn identity() -> Self {
+        Self(nalgebra::UnitQuaternion::identity())
+    }
+    /// 🔓 Builds from CAD's `[i, j, k, w]` quaternion convention.
+    fn from_ijkw(i: f32, j: f32, k: f32, w: f32) -> Self {
+        Self(nalgebra::UnitQuaternion::from_quaternion(nalgebra::Quaternion::new(w, i, j, k)))
+    }
+    fn to_ijkw(&self) -> (f32, f32, f32, f32) {
+        let q = self.0.quaternion();
+        (q.i, q.j, q.k, q.w)
+    }
+    fn rotation_between(from: Vec3d, to: Vec3d) -> Option<Self> {
+        nalgebra::UnitQuaternion::rotation_between(&from.0, &to.0).map(Self)
+    }
+    fn apply(&self, v: Vec3d) -> Vec3d {
+        Vec3d(self.0 * v.0)
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+struct Pose3d(nalgebra::Isometry3<f32>);
+
+impl Pose3d {
+    fn identity() -> Self {
+        Self(nalgebra::Isometry3::identity())
+    }
+    fn from_parts(translation: Vec3d, rotation: Rotation3d) -> Self {
+        Self(nalgebra::Isometry3::from_parts(translation.0.into(), rotation.0))
+    }
+    fn inverse(&self) -> Self {
+        Self(self.0.inverse())
+    }
+    fn transform_point(&self, point: &Point3d) -> Point3d {
+        Point3d(self.0 * point.0)
+    }
+    fn compose(&self, other: &Self) -> Self {
+        Self(self.0 * other.0)
+    }
+}
+
+struct CollisionShape(parry3d::shape::SharedShape);
+
+impl CollisionShape {
+    fn from_triangle_mesh(vertices: &[Point3d], indices: Vec<[u32; 3]>) -> Self {
+        let verts: Vec<nalgebra::Point3<f32>> = vertices.iter().map(|p| p.0).collect();
+        let mesh = parry3d::shape::TriMesh::with_flags(
+            verts,
+            indices,
+            parry3d::shape::TriMeshFlags::ORIENTED | parry3d::shape::TriMeshFlags::MERGE_DUPLICATE_VERTICES,
+        );
+        Self(parry3d::shape::SharedShape::new(mesh))
+    }
+    fn contains_point(&self, pose: &Pose3d, point: &Point3d) -> bool {
+        self.0.contains_point(&pose.0, &point.0)
+    }
+}
+
+fn shapes_intersect(pose_a: &Pose3d, a: &CollisionShape, pose_b: &Pose3d, b: &CollisionShape) -> bool {
+    parry3d::query::intersection_test(&pose_a.0, &*a.0, &pose_b.0, &*b.0).unwrap_or(false)
+}
+//#endregion 🔒GeometryAdapter
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use wasm_bindgen::prelude::*;
@@ -261,21 +399,21 @@ struct AttractionVortexContext {
 }
 
 struct CollisionMeshPart {
-    shape: SharedShape,
-    local_pose: Isometry3<f32>,
+    shape: CollisionShape,
+    local_pose: Pose3d,
 }
 
 struct CollisionBody {
     parts: Vec<CollisionMeshPart>,
-    local_bounds_min: Point3<f32>,
-    local_bounds_max: Point3<f32>,
+    local_bounds_min: Point3d,
+    local_bounds_max: Point3d,
 }
 
 #[derive(Clone)]
 struct PlacedCollisionEntry {
     object_id: String,
     mesh_url: String,
-    world: Isometry3<f32>,
+    world: Pose3d,
 }
 
 #[derive(Clone)]
@@ -346,14 +484,14 @@ fn vec3_scale(v: Vec3, scale: &Option<serde_json::Value>) -> Vec3 {
     }
 }
 
-fn unit_quat_from_cad(q: Quat) -> UnitQuaternion<f32> {
-    UnitQuaternion::from_quaternion(Quaternion::new(q[3] as f32, q[0] as f32, q[1] as f32, q[2] as f32))
+fn unit_quat_from_cad(q: Quat) -> Rotation3d {
+    Rotation3d::from_ijkw(q[0] as f32, q[1] as f32, q[2] as f32, q[3] as f32)
 }
 
 fn quat_rotate_vec(q: Quat, v: Vec3) -> Vec3 {
     let uq = unit_quat_from_cad(q);
-    let rotated = uq * Vector3::new(v[0] as f32, v[1] as f32, v[2] as f32);
-    [rotated.x as f64, rotated.y as f64, rotated.z as f64]
+    let rotated = uq.apply(Vec3d::new(v[0] as f32, v[1] as f32, v[2] as f32));
+    [rotated.x() as f64, rotated.y() as f64, rotated.z() as f64]
 }
 
 fn quaternion_from_180_degree_axis(axis: Vec3) -> Quat {
@@ -373,10 +511,10 @@ fn anti_parallel_brush_orientation(target_dir: Vec3) -> Quat {
     quaternion_from_180_degree_axis(axis)
 }
 
-fn pose_isometry(origin: Vec3, orientation: Quat, _scale: &Option<serde_json::Value>) -> Isometry3<f32> {
+fn pose_isometry(origin: Vec3, orientation: Quat, _scale: &Option<serde_json::Value>) -> Pose3d {
     let q = unit_quat_from_cad(orientation);
-    let t = Vector3::new(origin[0] as f32, origin[1] as f32, origin[2] as f32);
-    Isometry3::from_parts(t.into(), q)
+    let t = Vec3d::new(origin[0] as f32, origin[1] as f32, origin[2] as f32);
+    Pose3d::from_parts(t, q)
 }
 
 fn compute_brush_placement_pose(
@@ -404,11 +542,11 @@ fn compute_brush_placement_pose(
     let orientation = if vec3_dot(local_dir, desired_world_dir) < -1.0 + BRUSH_PLACEMENT_PARALLEL_TOLERANCE {
         anti_parallel_brush_orientation(target_dir)
     } else {
-        let from = Vector3::new(local_dir[0] as f32, local_dir[1] as f32, local_dir[2] as f32);
-        let to = Vector3::new(desired_world_dir[0] as f32, desired_world_dir[1] as f32, desired_world_dir[2] as f32);
-        let q = UnitQuaternion::rotation_between(&from, &to).unwrap_or(UnitQuaternion::identity());
-        let quat = q.quaternion();
-        [quat.i as f64, quat.j as f64, quat.k as f64, quat.w as f64]
+        let from = Vec3d::new(local_dir[0] as f32, local_dir[1] as f32, local_dir[2] as f32);
+        let to = Vec3d::new(desired_world_dir[0] as f32, desired_world_dir[1] as f32, desired_world_dir[2] as f32);
+        let q = Rotation3d::rotation_between(from, to).unwrap_or(Rotation3d::identity());
+        let (i, j, k, w) = q.to_ijkw();
+        [i as f64, j as f64, k as f64, w as f64]
     };
     let origin = vec3_sub(target_world_position, quat_rotate_vec(orientation, scaled_local));
     (origin, orientation)
@@ -418,11 +556,11 @@ fn collision_body_from_buffers(positions: &[f32], indices: &[u32]) -> Option<Col
     if positions.len() < 9 || indices.len() < 3 {
         return None;
     }
-    let mut verts: Vec<Point3<f32>> = Vec::with_capacity(positions.len() / 3);
-    let mut min = Point3::new(f32::INFINITY, f32::INFINITY, f32::INFINITY);
-    let mut max = Point3::new(f32::NEG_INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY);
+    let mut verts: Vec<Point3d> = Vec::with_capacity(positions.len() / 3);
+    let mut min = Point3d::new(f32::INFINITY, f32::INFINITY, f32::INFINITY);
+    let mut max = Point3d::new(f32::NEG_INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY);
     for chunk in positions.chunks_exact(3) {
-        let rp = Point3::new(chunk[0], chunk[1], chunk[2]);
+        let rp = Point3d::new(chunk[0], chunk[1], chunk[2]);
         verts.push(rp);
         min = min.inf(&rp);
         max = max.sup(&rp);
@@ -435,26 +573,25 @@ fn collision_body_from_buffers(positions: &[f32], indices: &[u32]) -> Option<Col
     for chunk in indices.chunks_exact(3) {
         tris.push([chunk[0], chunk[1], chunk[2]]);
     }
-    let tri_mesh = TriMesh::with_flags(verts, tris, TriMeshFlags::ORIENTED | TriMeshFlags::MERGE_DUPLICATE_VERTICES);
-    let shape = SharedShape::new(tri_mesh);
-    Some(CollisionBody { parts: vec![CollisionMeshPart { shape, local_pose: Isometry3::identity() }], local_bounds_min: min, local_bounds_max: max })
+    let shape = CollisionShape::from_triangle_mesh(&verts, tris);
+    Some(CollisionBody { parts: vec![CollisionMeshPart { shape, local_pose: Pose3d::identity() }], local_bounds_min: min, local_bounds_max: max })
 }
 
-fn world_bounds(body: &CollisionBody, world: &Isometry3<f32>) -> (Point3<f32>, Point3<f32>) {
+fn world_bounds(body: &CollisionBody, world: &Pose3d) -> (Point3d, Point3d) {
     let corners = [
-        Point3::new(body.local_bounds_min.x, body.local_bounds_min.y, body.local_bounds_min.z),
-        Point3::new(body.local_bounds_max.x, body.local_bounds_min.y, body.local_bounds_min.z),
-        Point3::new(body.local_bounds_min.x, body.local_bounds_max.y, body.local_bounds_min.z),
-        Point3::new(body.local_bounds_max.x, body.local_bounds_max.y, body.local_bounds_min.z),
-        Point3::new(body.local_bounds_min.x, body.local_bounds_min.y, body.local_bounds_max.z),
-        Point3::new(body.local_bounds_max.x, body.local_bounds_min.y, body.local_bounds_max.z),
-        Point3::new(body.local_bounds_min.x, body.local_bounds_max.y, body.local_bounds_max.z),
-        Point3::new(body.local_bounds_max.x, body.local_bounds_max.y, body.local_bounds_max.z),
+        Point3d::new(body.local_bounds_min.x(), body.local_bounds_min.y(), body.local_bounds_min.z()),
+        Point3d::new(body.local_bounds_max.x(), body.local_bounds_min.y(), body.local_bounds_min.z()),
+        Point3d::new(body.local_bounds_min.x(), body.local_bounds_max.y(), body.local_bounds_min.z()),
+        Point3d::new(body.local_bounds_max.x(), body.local_bounds_max.y(), body.local_bounds_min.z()),
+        Point3d::new(body.local_bounds_min.x(), body.local_bounds_min.y(), body.local_bounds_max.z()),
+        Point3d::new(body.local_bounds_max.x(), body.local_bounds_min.y(), body.local_bounds_max.z()),
+        Point3d::new(body.local_bounds_min.x(), body.local_bounds_max.y(), body.local_bounds_max.z()),
+        Point3d::new(body.local_bounds_max.x(), body.local_bounds_max.y(), body.local_bounds_max.z()),
     ];
-    let mut min = Point3::new(f32::INFINITY, f32::INFINITY, f32::INFINITY);
-    let mut max = Point3::new(f32::NEG_INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY);
+    let mut min = Point3d::new(f32::INFINITY, f32::INFINITY, f32::INFINITY);
+    let mut max = Point3d::new(f32::NEG_INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY);
     for corner in corners {
-        let w = world * corner;
+        let w = world.transform_point(&corner);
         min = min.inf(&w);
         max = max.sup(&w);
     }
@@ -475,11 +612,20 @@ fn volume_scale_vec(scale: &Option<serde_json::Value>) -> [f32; 3] {
     }
 }
 
-fn world_volumes_contain_aabb(volumes: &[WorldVolumeProps], min: Point3<f32>, max: Point3<f32>) -> bool {
+fn world_volumes_contain_aabb(volumes: &[WorldVolumeProps], min: Point3d, max: Point3d) -> bool {
     if volumes.is_empty() {
         return true;
     }
-    let corners = [min, Point3::new(max.x, min.y, min.z), Point3::new(min.x, max.y, min.z), Point3::new(max.x, max.y, min.z), Point3::new(min.x, min.y, max.z), Point3::new(max.x, min.y, max.z), Point3::new(min.x, max.y, max.z), max];
+    let corners = [
+        min,
+        Point3d::new(max.x(), min.y(), min.z()),
+        Point3d::new(min.x(), max.y(), min.z()),
+        Point3d::new(max.x(), max.y(), min.z()),
+        Point3d::new(min.x(), min.y(), max.z()),
+        Point3d::new(max.x(), min.y(), max.z()),
+        Point3d::new(min.x(), max.y(), max.z()),
+        max,
+    ];
     for volume in volumes {
         let scale = volume_scale_vec(&volume.scale);
         let world = pose_isometry(volume.origin, volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &None);
@@ -489,9 +635,9 @@ fn world_volumes_contain_aabb(volumes: &[WorldVolumeProps], min: Point3<f32>, ma
         let hz = 0.5 + 1e-3;
         let mut inside = true;
         for corner in corners {
-            let relative = inv * corner;
-            let local = Point3::new(relative.x / scale[0], relative.y / scale[1], relative.z / scale[2]);
-            if local.x.abs() > hx || local.y.abs() > hy || local.z.abs() > hz {
+            let relative = inv.transform_point(&corner);
+            let local = Point3d::new(relative.x() / scale[0], relative.y() / scale[1], relative.z() / scale[2]);
+            if local.x().abs() > hx || local.y().abs() > hy || local.z().abs() > hz {
                 inside = false;
                 break;
             }
@@ -503,10 +649,10 @@ fn world_volumes_contain_aabb(volumes: &[WorldVolumeProps], min: Point3<f32>, ma
     false
 }
 
-fn point_inside_body(body: &CollisionBody, world: &Isometry3<f32>, point: Point3<f32>) -> bool {
-    let local = world.inverse() * point;
+fn point_inside_body(body: &CollisionBody, world: &Pose3d, point: Point3d) -> bool {
+    let local = world.inverse().transform_point(&point);
     for part in &body.parts {
-        let part_local = part.local_pose.inverse() * local;
+        let part_local = part.local_pose.inverse().transform_point(&local);
         if part.shape.contains_point(&part.local_pose, &part_local) {
             return true;
         }
@@ -514,38 +660,38 @@ fn point_inside_body(body: &CollisionBody, world: &Isometry3<f32>, point: Point3
     false
 }
 
-fn bodies_intersect(a: &CollisionBody, world_a: &Isometry3<f32>, b: &CollisionBody, world_b: &Isometry3<f32>) -> bool {
+fn bodies_intersect(a: &CollisionBody, world_a: &Pose3d, b: &CollisionBody, world_b: &Pose3d) -> bool {
     let (amin, amax) = world_bounds(a, world_a);
     let (bmin, bmax) = world_bounds(b, world_b);
-    if amax.x < bmin.x || bmax.x < amin.x || amax.y < bmin.y || bmax.y < amin.y || amax.z < bmin.z || bmax.z < amin.z {
+    if amax.x() < bmin.x() || bmax.x() < amin.x() || amax.y() < bmin.y() || bmax.y() < amin.y() || amax.z() < bmin.z() || bmax.z() < amin.z() {
         return false;
     }
     for part_a in &a.parts {
-        let pose_a = world_a * part_a.local_pose;
+        let pose_a = world_a.compose(&part_a.local_pose);
         for part_b in &b.parts {
-            let pose_b = world_b * part_b.local_pose;
-            if intersection_test(&pose_a, &*part_a.shape, &pose_b, &*part_b.shape).unwrap_or(false) {
+            let pose_b = world_b.compose(&part_b.local_pose);
+            if shapes_intersect(&pose_a, &part_a.shape, &pose_b, &part_b.shape) {
                 return true;
             }
         }
     }
-    let center = Point3::from((amin.coords + amax.coords + bmin.coords + bmax.coords) * 0.25);
+    let center = Point3d::from_coords((amin.coords() + amax.coords() + bmin.coords() + bmax.coords()) * 0.25);
     point_inside_body(a, world_a, center) && point_inside_body(b, world_b, center)
 }
 
-fn solid_overlap_volume(a: &CollisionBody, world_a: &Isometry3<f32>, b: &CollisionBody, world_b: &Isometry3<f32>, sample_count: usize, overlap_budget: f64) -> f64 {
+fn solid_overlap_volume(a: &CollisionBody, world_a: &Pose3d, b: &CollisionBody, world_b: &Pose3d, sample_count: usize, overlap_budget: f64) -> f64 {
     let (amin, amax) = world_bounds(a, world_a);
     let (bmin, bmax) = world_bounds(b, world_b);
-    let imin = Point3::new(amin.x.max(bmin.x), amin.y.max(bmin.y), amin.z.max(bmin.z));
-    let imax = Point3::new(amax.x.min(bmax.x), amax.y.min(bmax.y), amax.z.min(bmax.z));
-    if imax.x < imin.x || imax.y < imin.y || imax.z < imin.z {
+    let imin = Point3d::new(amin.x().max(bmin.x()), amin.y().max(bmin.y()), amin.z().max(bmin.z()));
+    let imax = Point3d::new(amax.x().min(bmax.x()), amax.y().min(bmax.y()), amax.z().min(bmax.z()));
+    if imax.x() < imin.x() || imax.y() < imin.y() || imax.z() < imin.z() {
         return 0.0;
     }
     if !bodies_intersect(a, world_a, b, world_b) {
         return 0.0;
     }
     let size = imax - imin;
-    let box_vol = size.x as f64 * size.y as f64 * size.z as f64;
+    let box_vol = size.x() as f64 * size.y() as f64 * size.z() as f64;
     if box_vol <= SURFACE_CONTACT_MAX_AABB_VOLUME {
         return 0.0;
     }
@@ -558,7 +704,11 @@ fn solid_overlap_volume(a: &CollisionBody, world_a: &Isometry3<f32>, b: &Collisi
         let ry = (state as f64) / (u32::MAX as f64);
         state = state.wrapping_mul(1664525).wrapping_add(1013904223);
         let rz = (state as f64) / (u32::MAX as f64);
-        let p = Point3::new(imin.x + (imax.x - imin.x) * rx as f32, imin.y + (imax.y - imin.y) * ry as f32, imin.z + (imax.z - imin.z) * rz as f32);
+        let p = Point3d::new(
+            imin.x() + (imax.x() - imin.x()) * rx as f32,
+            imin.y() + (imax.y() - imin.y()) * ry as f32,
+            imin.z() + (imax.z() - imin.z()) * rz as f32,
+        );
         if point_inside_body(a, world_a, p) && point_inside_body(b, world_b, p) {
             inside_both += 1;
             if (inside_both as f64 / sample_count as f64) * box_vol > overlap_budget {
@@ -1532,11 +1682,11 @@ mod tests {
     #[test]
     fn world_volumes_contain_aabb_respects_oriented_box() {
         let volumes = vec![WorldVolumeProps { id: "v1".to_string(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(serde_json::json!([4.0, 4.0, 4.0])) }];
-        let min = Point3::new(-1.0, -1.0, -1.0);
-        let max = Point3::new(1.0, 1.0, 1.0);
+        let min = Point3d::new(-1.0, -1.0, -1.0);
+        let max = Point3d::new(1.0, 1.0, 1.0);
         assert!(world_volumes_contain_aabb(&volumes, min, max));
-        let outside_min = Point3::new(-3.0, -3.0, -3.0);
-        let outside_max = Point3::new(3.0, 3.0, 3.0);
+        let outside_min = Point3d::new(-3.0, -3.0, -3.0);
+        let outside_max = Point3d::new(3.0, 3.0, 3.0);
         assert!(!world_volumes_contain_aabb(&volumes, outside_min, outside_max));
     }
 

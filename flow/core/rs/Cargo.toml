@@ -27,7 +27,7 @@ semio-framework-core = { path = "../../../framework/core/rs" }
 neural_engine = { path = "../../../neural/engine/rs", features = ["parallel"] }
 neural_dag = { path = "../../../neural/dag/rs" }
 mathematical_graph_manifest = { path = "../../../mathematical/graph/manifest/rs" }
-mathematical_graph_port_directed_dag = { path = "../../../mathematical/graph/port/directed/dag/rs" }
+infinite_board_port_directed_dag = { path = "../../../infinite/board/port/directed/dag/rs" }
 infinite_cavas = { path = "../../../infinite/cavas/rs" }
 ui_styling = { path = "../../../ui/styling/rs" }
 protocol = { path = "../../../protocol/rs" }

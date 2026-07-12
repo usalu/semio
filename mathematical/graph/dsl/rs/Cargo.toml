@@ -10,7 +10,6 @@ path = "lib.rs"
 
 [dependencies]
 mathematical_graph_manifest = { path = "../../manifest/rs" }
-mathematical_graph_port_directed = { path = "../../port/directed/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 

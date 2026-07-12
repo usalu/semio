@@ -8,7 +8,7 @@ use mathematical_graph_manifest::{flow_dag::flow_dag_manifest, ManifestValidator
 
 use graph::{handle_position, world_box_from_points, BoardEvent, WorldBox};
 pub use infinite_cavas as cavas;
-pub use mathematical_graph_port_directed::{
+pub use infinite_board_port_directed::{
     self as graph, compute_edge_bezier_points, compute_edge_sharp_sz_path, handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path, handle_exterior_cap_triangle_peak, handle_exterior_cap_triangle_stroke_path, handle_outward_at_node_rim, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, HandleRole, InteractionMode, Node,
     NodeId, RenderSnapshot, Selection, CanvasPalette,
 };

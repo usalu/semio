@@ -1,6 +1,6 @@
 import { createElement, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { Canvas2dHost, worldToScreenLogical } from "./components/canvas-2d-host.tsx";
 import {
   Puzzle2dBoardHost,
@@ -1824,20 +1824,27 @@ describe("s media graph flow routing", () => {
 });
 
 describe("ui search/find (fuse re-export from @semio-tech/ui-react)", () => {
+  // Command dialogs render via a Radix Portal into `document.body`, not into the render() container, so assertions query `document.body`.
+  // This package's vitest config has no shared setupFile, so tests here clean up their own portal-rendered DOM.
+  afterEach(async () => {
+    const { cleanup } = await import("@testing-library/react");
+    cleanup();
+  });
+
   it("UISearch renders all items and fuzzy-filters them via the shared Fuse re-export", async () => {
     const { render, fireEvent } = await import("@testing-library/react");
     const items: UISearchItem[] = [
       { id: "a", label: "Alpha", category: "Test", onSelect: noopAction },
       { id: "b", label: "Bravo", category: "Test", onSelect: noopAction },
     ];
-    const { container } = render(createElement(UIFindProvider, null, createElement(UISearch, { items, open: true, onOpenChange: noopAction })));
-    expect(container.textContent).toContain("Alpha");
-    expect(container.textContent).toContain("Bravo");
-    const input = container.querySelector('[data-slot="command-input"]') as HTMLInputElement;
+    render(createElement(UIFindProvider, null, createElement(UISearch, { items, open: true, onOpenChange: noopAction })));
+    expect(document.body.textContent).toContain("Alpha");
+    expect(document.body.textContent).toContain("Bravo");
+    const input = document.querySelector('[data-slot="command-input"]') as HTMLInputElement;
     expect(input).not.toBeNull();
     fireEvent.change(input, { target: { value: "alp" } });
-    expect(container.textContent).toContain("Alpha");
-    expect(container.textContent).not.toContain("Bravo");
+    expect(document.body.textContent).toContain("Alpha");
+    expect(document.body.textContent).not.toContain("Bravo");
   });
 
   it("UIFind renders and fuzzy-filters items registered on its context via the shared Fuse re-export", async () => {
@@ -1847,19 +1854,19 @@ describe("ui search/find (fuse re-export from @semio-tech/ui-react)", () => {
       contextValue = useUIFind();
       return createElement(UIFind, { open: true, onOpenChange: noopAction });
     };
-    const { container } = render(createElement(UIFindProvider, null, createElement(Harness)));
+    render(createElement(UIFindProvider, null, createElement(Harness)));
     act(() => {
       contextValue!.setFindItems([
         { id: "1", label: "Chair", category: "Test" },
         { id: "2", label: "Table", category: "Test" },
       ]);
     });
-    expect(container.textContent).toContain("Chair");
-    expect(container.textContent).toContain("Table");
-    const input = container.querySelector('[data-slot="command-input"]') as HTMLInputElement;
+    expect(document.body.textContent).toContain("Chair");
+    expect(document.body.textContent).toContain("Table");
+    const input = document.querySelector('[data-slot="command-input"]') as HTMLInputElement;
     expect(input).not.toBeNull();
     fireEvent.change(input, { target: { value: "cha" } });
-    expect(container.textContent).toContain("Chair");
-    expect(container.textContent).not.toContain("Table");
+    expect(document.body.textContent).toContain("Chair");
+    expect(document.body.textContent).not.toContain("Table");
   });
 });

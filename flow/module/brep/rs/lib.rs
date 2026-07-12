@@ -40,14 +40,14 @@ fn evict_mesh_cache_for_handle(handle: &str) {
 // #region 🔖Helpers
 fn with_kernel<T>(f: impl FnOnce(&mut dyn BrepKernel) -> Result<T, EvalError>) -> Result<T, EvalError> {
     let mut guard = kernel().write().map_err(|_| EvalError::InvalidInput("brep kernel lock poisoned".into()))?;
-    f(&mut guard)
+    f(&mut **guard)
 }
 
 /// 🔓 Read-only kernel access — lets concurrent queries (tessellate, volume, closest-point, …)
 /// proceed in parallel with each other while still serializing against mutating operations.
 fn with_kernel_read<T>(f: impl FnOnce(&dyn BrepKernel) -> Result<T, EvalError>) -> Result<T, EvalError> {
     let guard = kernel().read().map_err(|_| EvalError::InvalidInput("brep kernel lock poisoned".into()))?;
-    f(&guard)
+    f(&**guard)
 }
 
 fn kind_label(kind: GeometryKind) -> &'static str {
@@ -2153,6 +2153,68 @@ pub fn dispose_geometry(handle: &str) {
     }
 }
 // #endregion 🔖Tessellation
+
+// #region 🔖MediaExport
+/// 📤 Exports geometry handles owned by the in-process brep kernel to a solid/mesh interchange format. STEP/OBJ/STL go through the kernel's native codecs; GLB bridges through tessellation (`tessellate` → merged `MeshData` → `GlbExporter`) since the kernel has no native GLB writer wired here. Binary formats are base64-encoded. Returns `{"data","binary","format"}` or `{"error"}` JSON.
+pub fn export_solid_json(handles: &[String], format: &str, deflection: f64) -> String {
+    let shapes: Vec<GeometryHandle> = handles.iter().cloned().map(GeometryHandle).collect();
+    let outcome: Result<(String, bool), String> = kernel().read().map_err(|_| "brep kernel lock poisoned".to_string()).and_then(|guard| {
+        let guard = &**guard;
+        match format {
+            "step" => block_on(guard.export_step(&shapes)).map(|text| (text, false)).map_err(|error| error.to_string()),
+            "obj" => block_on(guard.export_obj(&shapes, deflection)).map(|text| (text, false)).map_err(|error| error.to_string()),
+            "stl" => block_on(guard.export_stl(&shapes, deflection)).map(|data| (encode_base64(&data), true)).map_err(|error| error.to_string()),
+            "glb" => export_glb_via_tessellation(guard, &shapes, deflection).map(|data| (encode_base64(&data), true)),
+            other => Err(format!("unsupported solid export format: {other}")),
+        }
+    });
+    match outcome {
+        Ok((data, binary)) => serde_json::json!({ "data": data, "binary": binary, "format": format }).to_string(),
+        Err(error) => serde_json::json!({ "error": error }).to_string(),
+    }
+}
+
+/// 🧊 Bridges GLB export through mesh tessellation: tessellates every shape, merges the resulting triangle soup into one `MeshData`, and encodes it with the shared `GlbExporter` mesh codec (the same codec every other app uses for GLB).
+fn export_glb_via_tessellation(kernel: &dyn BrepKernel, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, String> {
+    use semio_framework_core::MeshExporter;
+    let mut merged = semio_framework_core::MeshData::default();
+    for shape in shapes {
+        let transfer = block_on(kernel.tessellate(shape, deflection)).map_err(|error| error.to_string())?;
+        let mesh = kernel_3d_brepkit::mesh_data_from_mesh_transfer(&transfer);
+        let offset = (merged.positions.len() / 3) as u32;
+        merged.positions.extend(mesh.positions);
+        merged.normals.extend(mesh.normals);
+        merged.indices.extend(mesh.indices.into_iter().map(|index| index + offset));
+    }
+    semio_framework_core::GlbExporter.export(&merged)
+}
+
+/// 📥 Imports STEP/OBJ/STL solid data (or GLB mesh data, bridged through the kernel's OBJ ingestion since it has no raw-mesh entry point) into the in-process kernel. STEP/OBJ expect UTF-8 text in `data`; STL/GLB expect base64-encoded bytes. Returns `{"handles":[...]}` or `{"error"}` JSON.
+pub fn import_solid_json(format: &str, data: &str, tolerance: f64) -> String {
+    let outcome: Result<Vec<String>, String> = kernel().write().map_err(|_| "brep kernel lock poisoned".to_string()).and_then(|mut guard| {
+        let guard = &mut **guard;
+        match format {
+            "step" => block_on(guard.import_step(data)).map(|handles| handles.into_iter().map(|handle| handle.0).collect()).map_err(|error| error.to_string()),
+            "obj" => block_on(guard.import_obj(data, tolerance)).map(|handle| vec![handle.0]).map_err(|error| error.to_string()),
+            "stl" => decode_base64(data).map_err(|error| error.to_string()).and_then(|bytes| block_on(guard.import_stl(&bytes, tolerance)).map(|handle| vec![handle.0]).map_err(|error| error.to_string())),
+            "glb" => decode_base64(data).map_err(|error| error.to_string()).and_then(|bytes| import_glb_via_tessellation(guard, &bytes, tolerance)),
+            other => Err(format!("unsupported solid import format: {other}")),
+        }
+    });
+    match outcome {
+        Ok(handles) => serde_json::json!({ "handles": handles }).to_string(),
+        Err(error) => serde_json::json!({ "error": error }).to_string(),
+    }
+}
+
+/// 🧊 Bridges GLB import through the mesh codec: decodes GLB bytes to `MeshData` via `GlbImporter`, re-encodes it as OBJ text, and ingests that through the kernel's own OBJ importer.
+fn import_glb_via_tessellation(kernel: &mut dyn BrepKernel, bytes: &[u8], tolerance: f64) -> Result<Vec<String>, String> {
+    use semio_framework_core::MeshImporter;
+    let mesh = semio_framework_core::GlbImporter.import(bytes)?;
+    let obj_text = semio_framework_core::mesh_to_obj(&mesh, "glb-import");
+    block_on(kernel.import_obj(&obj_text, tolerance)).map(|handle| vec![handle.0]).map_err(|error| error.to_string())
+}
+// #endregion 🔖MediaExport
 
 // #region 🔖WasmExt
 #[cfg(all(target_arch = "wasm32", feature = "standalone-wasm"))]

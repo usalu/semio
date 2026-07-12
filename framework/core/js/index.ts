@@ -2,6 +2,25 @@
 /** @emoji 🧭 `@semio-tech/framework-core` — shared canvas pick helpers, layout factories, and inspector utilities for UI renderers. */
 // #endregion 🧲Header
 
+// #region 🧬GeneratedMirror
+/** 🧬 Types generated from `framework/core/rs/lib.rs` via ts-rs (`bun nx run @semio-tech/framework-core:generate`); re-exported below alongside their hand-written neighbors so this stays the one import surface. */
+import type {
+  ActionDescriptor as GeneratedActionDescriptor,
+  ActionKind as GeneratedActionKind,
+  ActionDefinition as GeneratedActionDefinition,
+  WindowMeasure as GeneratedWindowMeasure,
+  WindowEngagementOption as GeneratedWindowEngagementOption,
+  WindowEngagementInput as GeneratedWindowEngagementInput,
+  WindowEngagementStatus as GeneratedWindowEngagementStatus,
+  WindowEngagementPossible as GeneratedWindowEngagementPossible,
+  WindowEngagementRingOption as GeneratedWindowEngagementRingOption,
+  WindowEngagementToggleGroupOption as GeneratedWindowEngagementToggleGroupOption,
+  WindowEngagementSelectItem as GeneratedWindowEngagementSelectItem,
+  WindowEngagementControl as GeneratedWindowEngagementControl,
+  WindowEngagement as GeneratedWindowEngagement,
+} from "./generated/manifest.ts";
+// #endregion 🧬GeneratedMirror
+
 export const CANVAS_HOVER_SOURCE_CANVAS = "canvas";
 export const CANVAS_HOVER_SOURCE_PICK_MENU = "pick-menu";
 export const CANVAS_HOVER_SOURCE_CATALOG = "catalog";
@@ -41,11 +60,8 @@ export type CanvasHoverFocus = {
   readonly target: CanvasPickTarget | null;
 };
 
-export type ActionDescriptor = {
-  readonly controllerId: string;
-  readonly action: string;
-  readonly args?: unknown;
-};
+/** 🧬 Generated from Rust `ActionDescriptor` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
+export type ActionDescriptor = GeneratedActionDescriptor;
 
 export type WindowLayoutWindowNode = {
   readonly kind: "window";
@@ -417,6 +433,8 @@ export type World3dScene = {
   readonly environmentJson?: string;
   readonly frameJson?: string;
   readonly fitJson?: string;
+  /** 🌐⛰️ GIS 3D terrain style/source descriptor, consumed by `WorldTerrainLayer`. */
+  readonly terrainJson?: string;
 };
 
 /** 🕸️ A node-graph surface scene payload — mirrors the wasm `componentScene` node's `nodeGraph` field. */
@@ -906,18 +924,9 @@ function uiDeclarativeChildToTreeItem(node: UiNode, fallbackId: string): UiTreeI
 }
 
 //#region PluginRuntime
-export type ActionKind = "operation" | "view" | "history" | "shell";
-
-export type ActionDefinition = {
-  readonly id: string;
-  readonly label: string;
-  readonly kind: ActionKind;
-  readonly iconId?: string;
-  readonly argsSchema?: unknown;
-  readonly keys?: string;
-  readonly inPalette: boolean;
-  readonly category?: string;
-};
+/** 🧬 Generated from Rust `ActionKind`/`ActionDefinition` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
+export type ActionKind = GeneratedActionKind;
+export type ActionDefinition = GeneratedActionDefinition;
 
 /** @emoji 🕹️ Mirrors `semio_framework_core::history_action_definitions` — the six framework-owned
  * History actions every app receives, used by the shell to render the same set without a wasm round trip. */
@@ -1004,157 +1013,17 @@ export type PluginManifest = {
 };
 
 //#region AppManifestProtocol
-export type WindowMeasure =
-  | {
-      readonly kind: "select";
-      readonly id: string;
-      readonly label?: string;
-      readonly value: string;
-      readonly items: readonly { readonly id: string; readonly value: string; readonly label: string }[];
-      readonly onChange: ActionDescriptor;
-    }
-  | {
-      readonly kind: "slider";
-      readonly id: string;
-      readonly label?: string;
-      readonly value: number;
-      readonly min: number;
-      readonly max: number;
-      readonly step?: number;
-      readonly onChange: ActionDescriptor;
-    }
-  | {
-      readonly kind: "toggle";
-      readonly id: string;
-      readonly iconId: string;
-      readonly label?: string;
-      readonly pressed: boolean;
-      readonly text?: string;
-      readonly onChange: ActionDescriptor;
-    }
-  | {
-      readonly kind: "group";
-      readonly id: string;
-      readonly label: string;
-      readonly defaultOpen?: boolean;
-      readonly children: readonly WindowMeasure[];
-    };
-
-export type WindowEngagementOption = {
-  readonly id: string;
-  readonly label?: string;
-  readonly iconId?: string;
-  readonly pressed?: boolean;
-  readonly disabled?: boolean;
-  readonly action?: ActionDescriptor;
-};
-
-export type WindowEngagementInput = {
-  readonly id?: string;
-  readonly value?: string;
-  readonly placeholder?: string;
-  readonly disabled?: boolean;
-  readonly onChange?: ActionDescriptor;
-  readonly onSubmit?: ActionDescriptor;
-  readonly onRepeatLast?: ActionDescriptor;
-  readonly onAbort?: ActionDescriptor;
-};
-
-export type WindowEngagementStatus = {
-  readonly id: string;
-  readonly text: string;
-};
-
-export type WindowEngagementPossible = {
-  readonly id: string;
-  readonly label: string;
-  readonly detail?: string;
-  readonly action?: ActionDescriptor;
-};
-
-export type WindowEngagementRingOption = {
-  readonly id: string;
-  readonly label: string;
-  readonly disabled?: boolean;
-};
-
-export type WindowEngagementToggleGroupOption = {
-  readonly id: string;
-  readonly label: string;
-  readonly disabled?: boolean;
-};
-
-export type WindowEngagementSelectItem = {
-  readonly id: string;
-  readonly value: string;
-  readonly label: string;
-};
-
-export type WindowEngagementControl =
-  | {
-      readonly kind: "slider";
-      readonly id?: string;
-      readonly label?: string;
-      readonly value: number;
-      readonly min: number;
-      readonly max: number;
-      readonly step?: number;
-      readonly unit?: string;
-      readonly disabled?: boolean;
-      readonly onChange?: ActionDescriptor;
-      readonly onCommit?: ActionDescriptor;
-    }
-  | {
-      readonly kind: "stepper";
-      readonly id?: string;
-      readonly label?: string;
-      readonly value: number;
-      readonly min?: number;
-      readonly max?: number;
-      readonly step?: number;
-      readonly unit?: string;
-      readonly disabled?: boolean;
-      readonly onChange?: ActionDescriptor;
-      readonly onCommit?: ActionDescriptor;
-    }
-  | {
-      readonly kind: "ring";
-      readonly id?: string;
-      readonly label?: string;
-      readonly value?: string;
-      readonly options: readonly WindowEngagementRingOption[];
-      readonly disabled?: boolean;
-      readonly onSelect?: ActionDescriptor;
-    }
-  | {
-      readonly kind: "toggleGroup";
-      readonly id?: string;
-      readonly label?: string;
-      readonly value?: string;
-      readonly options: readonly WindowEngagementToggleGroupOption[];
-      readonly disabled?: boolean;
-      readonly onSelect?: ActionDescriptor;
-    }
-  | {
-      readonly kind: "select";
-      readonly id?: string;
-      readonly label?: string;
-      readonly value?: string;
-      readonly placeholder?: string;
-      readonly items: readonly WindowEngagementSelectItem[];
-      readonly disabled?: boolean;
-      readonly onChange?: ActionDescriptor;
-    };
-
-export type WindowEngagement = {
-  readonly sessionActive?: boolean;
-  readonly options?: readonly WindowEngagementOption[];
-  readonly input?: WindowEngagementInput;
-  readonly control?: WindowEngagementControl;
-  readonly controls?: readonly WindowEngagementControl[];
-  readonly status?: readonly WindowEngagementStatus[];
-  readonly possibleEngagements?: readonly WindowEngagementPossible[];
-};
+/** 🧬 Generated from Rust `WindowMeasure`/`WindowEngagement*` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
+export type WindowMeasure = GeneratedWindowMeasure;
+export type WindowEngagementOption = GeneratedWindowEngagementOption;
+export type WindowEngagementInput = GeneratedWindowEngagementInput;
+export type WindowEngagementStatus = GeneratedWindowEngagementStatus;
+export type WindowEngagementPossible = GeneratedWindowEngagementPossible;
+export type WindowEngagementRingOption = GeneratedWindowEngagementRingOption;
+export type WindowEngagementToggleGroupOption = GeneratedWindowEngagementToggleGroupOption;
+export type WindowEngagementSelectItem = GeneratedWindowEngagementSelectItem;
+export type WindowEngagementControl = GeneratedWindowEngagementControl;
+export type WindowEngagement = GeneratedWindowEngagement;
 
 /** 🌳 Mirrors Rust `PanelTabDefinition` — a leaf carries `bodyKey`, a branch carries `children`; `group` is only meaningful on root entries. */
 export type AppPanelTabDefinition = {

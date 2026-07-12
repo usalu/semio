@@ -2333,5 +2333,75 @@ mod tests {
         assert_eq!(errors.schema(), Some("list"));
         assert!(errors.get("0").is_some());
     }
+
+    #[test]
+    fn compute_dirty_set_is_empty_for_unchanged_snapshots() {
+        let tree = Tree {
+            neurons: vec![Neuron::with_kind("a", "echo", number_dictionary(1.0)), Neuron::with_kind("b", "double", Dictionary::new())],
+            synapses: vec![Synapse { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "number".into() }],
+        };
+        let seeds = HashMap::new();
+        let snapshot = TreeSnapshot::capture(&tree, &seeds);
+        assert!(compute_dirty_set(Some(&snapshot), &snapshot).is_empty());
+    }
+
+    #[test]
+    fn compute_dirty_set_propagates_only_to_descendants_of_changed_leaf() {
+        // Two independent branches: a -> b, c -> d. Changing `a`'s params should dirty `a` and
+        // `b` (its descendant), but never touch `c`/`d` (a disjoint branch).
+        let make_tree = |a_value: f64| Tree {
+            neurons: vec![
+                Neuron::with_kind("a", "echo", number_dictionary(a_value)),
+                Neuron::with_kind("b", "double", Dictionary::new()),
+                Neuron::with_kind("c", "echo", number_dictionary(9.0)),
+                Neuron::with_kind("d", "double", Dictionary::new()),
+            ],
+            synapses: vec![
+                Synapse { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "number".into() },
+                Synapse { id: "s2".into(), from: "c".into(), to: "d".into(), from_port: "x".into(), to_port: "number".into() },
+            ],
+        };
+        let seeds = HashMap::new();
+        let previous = TreeSnapshot::capture(&make_tree(1.0), &seeds);
+        let current = TreeSnapshot::capture(&make_tree(2.0), &seeds);
+        let dirty = compute_dirty_set(Some(&previous), &current);
+        assert_eq!(dirty, HashSet::from(["a".to_string(), "b".to_string()]));
+    }
+
+    #[test]
+    fn compute_dirty_set_marks_surviving_dependents_of_removed_neuron() {
+        // a -> b -> c. Removing `b` and rewiring `a` directly into `c` must dirty `c`, since it
+        // otherwise wouldn't be discovered as changed by iterating the *current* tree alone.
+        let before = Tree {
+            neurons: vec![Neuron::with_kind("a", "echo", number_dictionary(1.0)), Neuron::with_kind("b", "double", Dictionary::new()), Neuron::with_kind("c", "double", Dictionary::new())],
+            synapses: vec![
+                Synapse { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "number".into() },
+                Synapse { id: "s2".into(), from: "b".into(), to: "c".into(), from_port: "x".into(), to_port: "number".into() },
+            ],
+        };
+        let after = Tree {
+            neurons: vec![Neuron::with_kind("a", "echo", number_dictionary(1.0)), Neuron::with_kind("c", "double", Dictionary::new())],
+            synapses: vec![Synapse { id: "s3".into(), from: "a".into(), to: "c".into(), from_port: "x".into(), to_port: "number".into() }],
+        };
+        let seeds = HashMap::new();
+        let previous = TreeSnapshot::capture(&before, &seeds);
+        let current = TreeSnapshot::capture(&after, &seeds);
+        let dirty = compute_dirty_set(Some(&previous), &current);
+        assert!(dirty.contains("c"), "surviving dependent of a removed neuron must be dirtied");
+        assert!(!dirty.contains("a"), "unrelated unchanged neuron must stay clean");
+    }
+
+    #[test]
+    fn compute_dirty_set_treats_seed_change_as_dirty() {
+        let tree = Tree { neurons: vec![Neuron::with_kind("a", "echo", Dictionary::new())], synapses: vec![] };
+        let mut before_seeds = HashMap::new();
+        before_seeds.insert("a".to_string(), number_dictionary(1.0));
+        let mut after_seeds = HashMap::new();
+        after_seeds.insert("a".to_string(), number_dictionary(2.0));
+        let previous = TreeSnapshot::capture(&tree, &before_seeds);
+        let current = TreeSnapshot::capture(&tree, &after_seeds);
+        let dirty = compute_dirty_set(Some(&previous), &current);
+        assert_eq!(dirty, HashSet::from(["a".to_string()]));
+    }
 }
 // #endregion 🔖Tests

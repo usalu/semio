@@ -5,8 +5,10 @@ pub mod component {
     //! 🧩 WASI P2 component exports for the plugin world contract.
 
     use crate::plugin_runtime::{
-        ensure_plugin_initialized, plugin_app_labels, plugin_create_app, plugin_handle_action, plugin_manifest,
-        plugin_render_with_document, plugin_tools, plugin_window_engagements, plugin_window_measures,
+        ensure_plugin_initialized, plugin_app_labels, plugin_attach_backbone, plugin_create_app,
+        plugin_detach_backbone, plugin_document, plugin_handle_action, plugin_ingest_operations,
+        plugin_load_document, plugin_manifest, plugin_render_with_document, plugin_tools,
+        plugin_window_engagements, plugin_window_measures,
     };
     use wit_bindgen::generate;
 
@@ -111,6 +113,31 @@ pub mod component {
         fn migrate_document(_input: MigrateDocumentInput) -> Result<MigrateDocumentOutput, PluginError> {
             Err(PluginError::Message("migrate-document not implemented".into()))
         }
+
+        fn apply_operations(instance_id: u32, operations_json: String) -> Result<(), PluginError> {
+            ensure_plugin_initialized();
+            plugin_ingest_operations(instance_id, &operations_json).map_err(PluginError::Message)
+        }
+
+        fn read_app_document(instance_id: u32) -> Result<String, PluginError> {
+            ensure_plugin_initialized();
+            plugin_document(instance_id).map_err(PluginError::Message)
+        }
+
+        fn load_app_document(instance_id: u32, document_json: String) -> Result<(), PluginError> {
+            ensure_plugin_initialized();
+            plugin_load_document(instance_id, &document_json).map_err(PluginError::Message)
+        }
+
+        fn attach_backbone(instance_id: u32, uri: String) -> Result<(), PluginError> {
+            ensure_plugin_initialized();
+            plugin_attach_backbone(instance_id, &uri).map_err(PluginError::Message)
+        }
+
+        fn detach_backbone(instance_id: u32) -> Result<(), PluginError> {
+            ensure_plugin_initialized();
+            plugin_detach_backbone(instance_id).map_err(PluginError::Message)
+        }
     }
 
     export!(ComponentGuest);
@@ -123,6 +150,10 @@ pub mod component {
 
     pub fn host_backbone_poll(uri: &str) -> Result<Vec<String>, String> {
         semio::framework::host::backbone_poll(uri)
+    }
+
+    pub fn host_backbone_status(uri: &str) -> Result<String, String> {
+        semio::framework::host::backbone_status(uri)
     }
 
     pub fn host_now_ms() -> i64 {
@@ -964,6 +995,11 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             store: DocumentVcsStore::new(envelope),
             cache: None,
         }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn test_projection(&self) -> A::Projection {
+        self.store.projection().expect("materialize projection")
     }
 
     fn build_history_view(&self) -> HistoryView {
@@ -2208,20 +2244,13 @@ pub mod plugin_runtime {
 // #region plugin_runtime
 //! 📤 WASM component export glue for plugin bundles.
 
-use crate::app::{AppInstance, Plugin, PluginBundle};
+use crate::app::{ActionMeta, AppInstance, Plugin, PluginBundle};
 use semio_framework_core::{
-    kernel::{
-        ActorId, ActionInvocationId, ActionResult, HybridLogicalTimestamp, InverseOperation,
-        KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationId, SchemaId, UndoGroup,
-        UndoPolicy,
-    },
-    framework_panel_tab_label, AppLabelsOverlay, PluginManifest, UiNode, ViewState,
+    kernel::ActionResult, framework_panel_tab_label, AppLabelsOverlay, PluginManifest, UiNode, ViewState,
 };
 use serde::Deserialize;
 use std::cell::{Cell, RefCell};
 use std::sync::atomic::{AtomicU32, Ordering};
-
-const JSON_PATCH_SCHEMA_ID: &str = "semio.kernel.json-patch";
 
 thread_local! {
     static PLUGIN: RefCell<Option<PluginBundle>> = const { RefCell::new(None) };
@@ -2252,122 +2281,6 @@ fn with_instances_mut<R, F: FnOnce(&mut Vec<AppInstance>) -> Result<R, String>>(
     INSTANCES.with(|instances| f(&mut instances.borrow_mut()))
 }
 
-fn with_instances<R, F: FnOnce(&Vec<AppInstance>) -> Result<R, String>>(f: F) -> Result<R, String> {
-    let _guard = InstanceGuard::enter()?;
-    INSTANCES.with(|instances| f(&instances.borrow()))
-}
-
-pub fn action_result_from_patch_ops(
-    patch_ops: Vec<String>,
-    action: &str,
-    instance_id: u32,
-    generation: u64,
-    actor: &str,
-) -> ActionResult {
-    let invocation_id = ActionInvocationId(format!("{action}:{instance_id}:{generation}"));
-    let actor_id = ActorId(actor.to_string());
-    let document = DocumentHandle(instance_id as u128);
-    let base_version = DocumentVersion(generation);
-    let operations: Vec<KernelOperation> = patch_ops
-        .iter()
-        .enumerate()
-        .map(|(index, op_json)| {
-            let payload: serde_json::Value =
-                serde_json::from_str(op_json).unwrap_or(serde_json::Value::Null);
-            let operation_id = OperationId(format!("{}:{index}", invocation_id.0));
-            KernelOperation {
-                id: operation_id.clone(),
-                document,
-                base_version,
-                action_id: invocation_id.clone(),
-                diff: DocumentDiff {
-                    schema_id: SchemaId(JSON_PATCH_SCHEMA_ID.into()),
-                    payload,
-                },
-                inverse: InverseOperation {
-                    target_operation: operation_id,
-                    inverse_diff: DocumentDiff {
-                        schema_id: SchemaId("semio.kernel.json-patch.inverse".into()),
-                        payload: serde_json::Value::Null,
-                    },
-                    base_version,
-                    dependencies: vec![],
-                    undo_policy: UndoPolicy::ExactBaseOnly,
-                },
-                dependencies: vec![],
-                author: actor_id.clone(),
-                timestamp: HybridLogicalTimestamp::new(0, 0),
-            }
-        })
-        .collect();
-    let operation_ids: Vec<OperationId> = operations.iter().map(|op| op.id.clone()).collect();
-    let inverse_operations: Vec<InverseOperation> =
-        operations.iter().map(|op| op.inverse.clone()).collect();
-    ActionResult {
-        output: serde_json::Value::Null,
-        operations,
-        inverse_group: UndoGroup {
-            action_id: invocation_id,
-            operations: operation_ids,
-            inverse_operations,
-        },
-        diagnostics: vec![],
-        requested_effects: vec![],
-        events: vec![],
-    }
-}
-
-fn sync_instance_document(document_json: &str, result: &ActionResult) -> Result<String, String> {
-    let mut document = document_json.to_string();
-    for operation in &result.operations {
-        if operation.diff.schema_id.0 != JSON_PATCH_SCHEMA_ID {
-            continue;
-        }
-        let op_json = serde_json::to_string(&operation.diff.payload).map_err(|error| error.to_string())?;
-        document = apply_document_op(&document, &op_json)?;
-    }
-    Ok(document)
-}
-
-fn apply_document_op(document_json: &str, op_json: &str) -> Result<String, String> {
-    let mut document: serde_json::Value =
-        serde_json::from_str(document_json).map_err(|error| error.to_string())?;
-    let op: serde_json::Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
-    match op.get("op").and_then(|value| value.as_str()) {
-        Some("setDocument") => {
-            if let Some(next) = op.get("document") {
-                document = next.clone();
-            }
-        }
-        Some("patch") => {
-            if let Some(patch) = op.get("patch") {
-                merge_json(&mut document, patch);
-            }
-        }
-        _ => {}
-    }
-    serde_json::to_string(&document).map_err(|error| error.to_string())
-}
-
-fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
-    match (target, patch) {
-        (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
-            for (key, value) in patch_map {
-                if value.is_null() {
-                    target_map.remove(key);
-                } else {
-                    let entry = target_map
-                        .entry(key.clone())
-                        .or_insert(serde_json::Value::Null);
-                    merge_json(entry, value);
-                }
-            }
-        }
-        (target_slot, patch_value) => {
-            *target_slot = patch_value.clone();
-        }
-    }
-}
 
 static NEXT_INSTANCE_ID: AtomicU32 = AtomicU32::new(1);
 
@@ -2421,13 +2334,8 @@ pub fn plugin_create_app(app_id: &str) -> Result<u32, String> {
             .create_app(app_id)
             .ok_or_else(|| format!("unknown app: {app_id}"))?;
         let id = NEXT_INSTANCE_ID.fetch_add(1, Ordering::SeqCst);
-        let document_json = app.initial_document_json();
         with_instances_mut(|list| {
-            list.push(AppInstance {
-                id,
-                app,
-                document_json,
-            });
+            list.push(AppInstance { id, app });
             Ok(())
         })?;
         Ok(id)
@@ -2445,6 +2353,12 @@ pub fn plugin_destroy_app(instance_id: u32) -> Result<(), String> {
     })
 }
 
+fn find_instance(list: &mut [AppInstance], instance_id: u32) -> Result<&mut AppInstance, String> {
+    list.iter_mut()
+        .find(|instance| instance.id == instance_id)
+        .ok_or_else(|| format!("unknown instance: {instance_id}"))
+}
+
 pub fn plugin_handle_action(
     instance_id: u32,
     action_json: &str,
@@ -2459,36 +2373,61 @@ pub fn plugin_handle_action(
         .cloned()
         .map(|value| serde_json::from_value(value).unwrap_or_default())
         .unwrap_or_default();
-    let action_name = action
-        .get("action")
-        .and_then(|value| value.as_str())
-        .unwrap_or("");
+    let action_name = action.get("action").and_then(|value| value.as_str()).unwrap_or("");
     let args = action.get("args").cloned();
     let actor = context
         .get("actor")
         .and_then(|value| value.as_str())
-        .unwrap_or("local");
-  with_instances_mut(|list| {
-        let instance = list
-            .iter_mut()
-            .find(|instance| instance.id == instance_id)
-            .ok_or_else(|| format!("unknown instance: {instance_id}"))?;
-        let generation = 0_u64;
-        let patch_ops = instance.app.handle_action_patch_ops(
-            action_name,
-            args.as_ref(),
-            &instance.document_json,
-            &view_state,
-        );
-        let result = action_result_from_patch_ops(
-            patch_ops,
-            action_name,
-            instance_id,
-            generation,
-            actor,
-        );
-        instance.document_json = sync_instance_document(&instance.document_json, &result)?;
-        Ok(result)
+        .unwrap_or("local")
+        .to_string();
+    let meta = ActionMeta { actor, instance_id };
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        instance.app.handle_action(action_name, args.as_ref(), &view_state, &meta)
+    })
+}
+
+/// @emoji 📥 Ingests a JSON array of remote `OpEnvelope`s into the instance's document store
+/// (idempotent — duplicate op ids are dropped by the causal DAG / edit-id dedupe).
+pub fn plugin_ingest_operations(instance_id: u32, operations_json: &str) -> Result<(), String> {
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        instance.app.ingest_operations(operations_json)
+    })
+}
+
+/// @emoji 📖 Serializes the instance's full persistent document (the `DocumentVcsEnvelope`).
+pub fn plugin_document(instance_id: u32) -> Result<String, String> {
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        instance.app.document_json()
+    })
+}
+
+/// @emoji 📂 Replaces the instance's document from a serialized `DocumentVcsEnvelope`.
+pub fn plugin_load_document(instance_id: u32, document_json: &str) -> Result<(), String> {
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        instance.app.load_document(document_json)
+    })
+}
+
+/// @emoji 🔗 Attaches a backbone channel by URI. The URI is resolved to a `vcs::PortBackbone`
+/// (a pure queue relayed across the wasm sandbox to the host); the host owns the real IO endpoint.
+pub fn plugin_attach_backbone(instance_id: u32, uri: &str) -> Result<(), String> {
+    let backbone: Box<dyn vcs::Backbone> = Box::new(vcs::PortBackbone::new(uri));
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        instance.app.attach_backbone(backbone)
+    })
+}
+
+/// @emoji ✂️ Detaches the instance's backbone channel; the document graph stays in memory.
+pub fn plugin_detach_backbone(instance_id: u32) -> Result<(), String> {
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        instance.app.detach_backbone();
+        Ok(())
     })
 }
 
@@ -2499,7 +2438,7 @@ pub fn plugin_render(instance_id: u32, body_key: &str, view_state_json: &str) ->
 pub fn plugin_render_with_document(
     instance_id: u32,
     body_key: &str,
-    document_json: Option<&str>,
+    projection_override_json: Option<&str>,
     view_state_json: &str,
 ) -> Result<UiNode, String> {
     #[derive(Deserialize)]
@@ -2511,64 +2450,36 @@ pub fn plugin_render_with_document(
         #[serde(default)]
         document_json: Option<String>,
     }
-    let (resolved_body_key, view_state, override_document) = if body_key.is_empty() {
+    let (resolved_body_key, view_state, override_projection) = if body_key.is_empty() {
         let input: WindowRenderInput =
             serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
-        (
-            if input.body_key.is_empty() {
-                body_key.to_string()
-            } else {
-                input.body_key
-            },
-            input.view_state,
-            input.document_json,
-        )
+        (input.body_key, input.view_state, input.document_json)
     } else if let Ok(input) = serde_json::from_str::<WindowRenderInput>(view_state_json) {
+        let key = if input.body_key.is_empty() { body_key.to_string() } else { input.body_key };
         (
-            if input.body_key.is_empty() {
-                body_key.to_string()
-            } else {
-                input.body_key
-            },
+            key,
             input.view_state,
-            input
-                .document_json
-                .or_else(|| document_json.map(str::to_string)),
+            input.document_json.or_else(|| projection_override_json.map(str::to_string)),
         )
     } else {
         let view_state: ViewState =
             serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
-        (
-            body_key.to_string(),
-            view_state,
-            document_json.map(str::to_string),
-        )
+        (body_key.to_string(), view_state, projection_override_json.map(str::to_string))
     };
-    with_instances(|list| {
-        let instance = list
-            .iter()
-            .find(|instance| instance.id == instance_id)
-            .ok_or_else(|| format!("unknown instance: {instance_id}"))?;
-        let document = override_document
-            .as_deref()
-            .unwrap_or(instance.document_json.as_str());
-        Ok(instance
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        instance
             .app
-            .render(&resolved_body_key, document, &view_state))
+            .render(&resolved_body_key, override_projection.as_deref(), &view_state)
     })
 }
 
 pub fn plugin_tools(instance_id: u32, view_state_json: &str) -> Result<Vec<semio_framework_core::ToolNode>, String> {
     let view_state: ViewState =
         serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
-    with_instances(|list| {
-        let instance = list
-            .iter()
-            .find(|instance| instance.id == instance_id)
-            .ok_or_else(|| format!("unknown instance: {instance_id}"))?;
-        Ok(instance
-            .app
-            .tools(&instance.document_json, &view_state))
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        Ok(instance.app.tools(&view_state))
     })
 }
 
@@ -2578,14 +2489,9 @@ pub fn plugin_window_engagements(
 ) -> Result<std::collections::HashMap<String, semio_framework_core::layout::WindowEngagement>, String> {
     let view_state: ViewState =
         serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
-    with_instances(|list| {
-        let instance = list
-            .iter()
-            .find(|instance| instance.id == instance_id)
-            .ok_or_else(|| format!("unknown instance: {instance_id}"))?;
-        Ok(instance
-            .app
-            .window_engagements(&instance.document_json, &view_state))
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        Ok(instance.app.window_engagements(&view_state))
     })
 }
 
@@ -2595,14 +2501,9 @@ pub fn plugin_window_measures(
 ) -> Result<std::collections::HashMap<String, Vec<semio_framework_core::WindowMeasure>>, String> {
     let view_state: ViewState =
         serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
-    with_instances(|list| {
-        let instance = list
-            .iter()
-            .find(|instance| instance.id == instance_id)
-            .ok_or_else(|| format!("unknown instance: {instance_id}"))?;
-        Ok(instance
-            .app
-            .window_measures(&instance.document_json, &view_state))
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        Ok(instance.app.window_measures(&view_state))
     })
 }
 
@@ -2610,14 +2511,12 @@ pub fn plugin_app_labels(instance_id: u32, view_state_json: &str) -> Result<AppL
     let view_state: ViewState =
         serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
     let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-    with_instances(|list| {
-        let instance = list
-            .iter()
-            .find(|instance| instance.id == instance_id)
-            .ok_or_else(|| format!("unknown instance: {instance_id}"))?;
+    let manifest = plugin_manifest();
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        let app_id = instance.app.app_id().to_string();
         let mut overlay = instance.app.app_labels(&view_state);
-        let app_id = instance.app.app_id();
-        let panel_tab_ids: Vec<String> = plugin_manifest()
+        let panel_tab_ids: Vec<String> = manifest
             .apps
             .iter()
             .find(|app| app.id == app_id)
@@ -2650,10 +2549,12 @@ macro_rules! plugin_exports {
 /// 🧵 Collapses a plugin crate's hand-written `bundle()` fn + `plugin_exports!` call into one
 /// declarative block: `semio_framework_plugin::semio_plugin! { id: "note", label: "Note", version:
 /// "0.1.0", setup: register_note_exports, apps: [ create_note_app => NoteApp ] }`. Each `apps` entry
-/// pairs an `App`-returning factory function with the `PluginApp` type instantiated for it — that
-/// type must implement `Default` (multi-app crates list one entry per app, e.g. puzzle's
-/// `d2::create_puzzle2d_app => d2::Puzzle2dPlayApp, d3::create_puzzle3d_app => d3::Puzzle3dPlayApp`).
-/// Expands to the equivalent `bundle()` fn plus a `plugin_exports!(bundle)` call, and a
+/// pairs an `App`-returning factory function with the [`DocumentApp`](crate::DocumentApp) type
+/// instantiated for it — that type must implement `Default` (multi-app crates list one entry per
+/// app, e.g. puzzle's `d2::create_puzzle2d_app => d2::Puzzle2dApp, d3::create_puzzle3d_app =>
+/// d3::Puzzle3dApp`). Each app is wrapped in a [`VcsDocumentApp`](crate::VcsDocumentApp) so it
+/// satisfies the object-safe runtime [`PluginApp`](crate::PluginApp) contract with a persistent op
+/// store. Expands to the equivalent `bundle()` fn plus a `plugin_exports!(bundle)` call, and a
 /// `#[cfg(test)]` regression check asserting every declared app id actually lands in the built
 /// `PluginBundle`'s manifest.
 #[macro_export]
@@ -2668,7 +2569,7 @@ macro_rules! semio_plugin {
         fn __semio_plugin_bundle() -> $crate::PluginBundle {
             ($setup)();
             $crate::PluginBundle::new($id, $label, $version)
-                $( .register_app(($app_fn)(), || ::std::boxed::Box::new(<$app_ty as ::std::default::Default>::default())) )+
+                $( .register_document_app(($app_fn)(), || <$app_ty as ::std::default::Default>::default()) )+
         }
 
         $crate::plugin_exports!(__semio_plugin_bundle);
@@ -2693,35 +2594,141 @@ macro_rules! semio_plugin {
 
 #[cfg(test)]
 mod semio_plugin_macro_tests {
-    use crate::app::{App, PluginApp};
-    use crate::SurfaceKind;
-    use serde_json::Value;
+    //! 🧪 The plugin contract's own unit test: a `TestApp` implementing the typed `DocumentApp`
+    //! surface, wrapped in `VcsDocumentApp`, exercising typed operations with true inverses, view
+    //! actions that emit no ops, history interception, and remote-op ingest idempotency.
 
+    use crate::app::{
+        ActionEmit, ActionMeta, App, DocumentApp, DocumentView, PluginApp, VcsDocumentApp,
+    };
+    use crate::{ui_text, SurfaceKind, UiNode, ViewState};
+    use semio_framework_core::kernel::HostEffect;
+    use serde::{Deserialize, Serialize};
+    use serde_json::{json, Value};
+    use vcs::{Backbone, BackboneMessage, MemoryBackbone, Operation, OperationDiff};
+
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    struct TestProjection {
+        count: i32,
+        label: String,
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    struct TestDiff {
+        count: Option<i32>,
+        label: Option<String>,
+    }
+
+    impl OperationDiff<TestProjection> for TestDiff {
+        fn apply(&self, projection: &TestProjection) -> TestProjection {
+            TestProjection {
+                count: self.count.unwrap_or(projection.count),
+                label: self.label.clone().unwrap_or_else(|| projection.label.clone()),
+            }
+        }
+
+        fn absorb(&mut self, other: Self) {
+            if other.count.is_some() {
+                self.count = other.count;
+            }
+            if other.label.is_some() {
+                self.label = other.label;
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[serde(tag = "op", rename_all = "camelCase")]
+    enum TestOp {
+        SetCount { value: i32 },
+        SetLabel { value: String },
+    }
+
+    impl Operation<TestProjection> for TestOp {
+        type Diff = TestDiff;
+
+        fn diff(&self, _projection: &TestProjection) -> TestDiff {
+            match self {
+                TestOp::SetCount { value } => TestDiff { count: Some(*value), label: None },
+                TestOp::SetLabel { value } => TestDiff { count: None, label: Some(value.clone()) },
+            }
+        }
+
+        fn backwards(&self, projection: &TestProjection) -> Vec<Self> {
+            match self {
+                TestOp::SetCount { .. } => vec![TestOp::SetCount { value: projection.count }],
+                TestOp::SetLabel { .. } => vec![TestOp::SetLabel { value: projection.label.clone() }],
+            }
+        }
+    }
+
+    /// 🧪 App under test: `selected` is ephemeral view state living in the app struct (never in the
+    /// document), demonstrating that view actions mutate the struct and emit no operations.
     #[derive(Default)]
-    struct SyntheticPlayApp;
+    struct TestApp {
+        selected: Option<String>,
+    }
 
-    impl PluginApp for SyntheticPlayApp {
+    impl DocumentApp for TestApp {
+        type Projection = TestProjection;
+        type Op = TestOp;
+
         fn app_id(&self) -> &str {
             "synthetic-play"
         }
 
-        fn initial_document_json(&self) -> String {
-            "{}".to_string()
+        fn document_schema(&self) -> &str {
+            "semio.test/v1"
         }
 
-        fn handle_action_patch_ops(
+        fn initial_projection(&self) -> TestProjection {
+            TestProjection::default()
+        }
+
+        fn handle_action(
             &mut self,
-            _action: &str,
-            _args: Option<&Value>,
-            _document_json: &str,
-            _view_state: &crate::ViewState,
-        ) -> Vec<String> {
-            Vec::new()
+            action: &str,
+            args: Option<&Value>,
+            doc: &DocumentView<'_, TestProjection>,
+            _view_state: &ViewState,
+        ) -> ActionEmit<TestOp> {
+            match action {
+                "increment" => ActionEmit {
+                    ops: vec![TestOp::SetCount { value: doc.projection.count + 1 }],
+                    description: Some("increment".into()),
+                    ..Default::default()
+                },
+                "setLabel" => {
+                    let value = args
+                        .and_then(|value| value.get("value"))
+                        .and_then(Value::as_str)
+                        .unwrap_or_default()
+                        .to_string();
+                    ActionEmit {
+                        ops: vec![TestOp::SetLabel { value }],
+                        coalesce_key: Some("label".into()),
+                        ..Default::default()
+                    }
+                }
+                "select" => {
+                    self.selected = args
+                        .and_then(|value| value.get("id"))
+                        .and_then(Value::as_str)
+                        .map(str::to_string);
+                    ActionEmit::default()
+                }
+                "navigate" => ActionEmit::effect(HostEffect::Navigate { uri: "semio://home".into() }),
+                _ => ActionEmit::default(),
+            }
         }
 
-        fn render(&self, _body_key: &str, _document_json: &str, _view_state: &crate::ViewState) -> crate::UiNode {
-            crate::ui_text("synthetic")
+        fn render(&self, _body_key: &str, doc: &DocumentView<'_, TestProjection>, _view_state: &ViewState) -> UiNode {
+            ui_text(format!("count={}", doc.projection.count))
         }
+    }
+
+    fn meta() -> ActionMeta {
+        ActionMeta { actor: "local".into(), instance_id: 1 }
     }
 
     fn synthetic_play_app() -> App {
@@ -2737,7 +2744,7 @@ mod semio_plugin_macro_tests {
     crate::semio_plugin! {
         id: "synthetic", label: "Synthetic", version: "0.0.1",
         setup: synthetic_setup,
-        apps: [ synthetic_play_app => SyntheticPlayApp ],
+        apps: [ synthetic_play_app => TestApp ],
     }
 
     #[test]
@@ -2755,6 +2762,115 @@ mod semio_plugin_macro_tests {
         let app = bundle.create_app("synthetic-play").expect("registered app");
         assert_eq!(app.app_id(), "synthetic-play");
         assert!(bundle.create_app("unknown-app").is_none());
+    }
+
+    #[test]
+    fn operation_action_emits_kernel_op_with_true_inverse() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        let result = app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment");
+        assert_eq!(result.operations.len(), 1);
+        assert_eq!(result.operations[0].diff.payload, json!({ "op": "setCount", "value": 1 }));
+        assert_eq!(
+            result.operations[0].inverse.inverse_diff.payload,
+            json!({ "backwards": [{ "op": "setCount", "value": 0 }] })
+        );
+        assert_eq!(result.inverse_group.operations.len(), 1);
+        assert_eq!(app.test_projection().count, 1);
+    }
+
+    #[test]
+    fn view_action_emits_no_operations() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        let result = app
+            .handle_action("select", Some(&json!({ "id": "node-1" })), &ViewState::default(), &meta())
+            .expect("select");
+        assert!(result.operations.is_empty());
+        assert!(result.requested_effects.is_empty());
+        // A view action never advances the document.
+        assert_eq!(app.test_projection(), TestProjection::default());
+    }
+
+    #[test]
+    fn shell_action_emits_host_effect_without_operations() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        let result = app.handle_action("navigate", None, &ViewState::default(), &meta()).expect("navigate");
+        assert!(result.operations.is_empty());
+        assert_eq!(result.requested_effects, vec![HostEffect::Navigate { uri: "semio://home".into() }]);
+    }
+
+    #[test]
+    fn coalesced_operations_amend_a_single_edit() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        for value in ["a", "ab", "abc"] {
+            app.handle_action("setLabel", Some(&json!({ "value": value })), &ViewState::default(), &meta())
+                .expect("setLabel");
+        }
+        assert_eq!(app.test_projection().label, "abc");
+        // One undo reverts the whole coalesced gesture back to the empty label.
+        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        assert_eq!(app.test_projection().label, "");
+    }
+
+    #[test]
+    fn history_actions_round_trip_through_the_store() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("inc1");
+        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("inc2");
+        assert_eq!(app.test_projection().count, 2);
+
+        let undo = app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        assert!(undo.operations.is_empty());
+        assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
+        assert_eq!(app.test_projection().count, 1);
+
+        app.handle_action("redo", None, &ViewState::default(), &meta()).expect("redo");
+        assert_eq!(app.test_projection().count, 2);
+
+        let checkpoint = app.handle_action("commitCheckpoint", None, &ViewState::default(), &meta()).expect("checkpoint");
+        assert!(checkpoint.operations.is_empty());
+        assert!(checkpoint.events.iter().any(|event| event.kind == "history-changed"));
+    }
+
+    #[test]
+    fn undo_on_empty_history_is_a_benign_no_op() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        let result = app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        assert!(result.operations.is_empty());
+        assert!(result.events.is_empty());
+    }
+
+    #[test]
+    fn document_round_trips_through_serialization() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("inc");
+        app.handle_action("setLabel", Some(&json!({ "value": "hi" })), &ViewState::default(), &meta()).expect("label");
+        let json = app.document_json().expect("document json");
+
+        let mut restored = VcsDocumentApp::new(TestApp::default());
+        restored.load_document(&json).expect("load document");
+        assert_eq!(restored.test_projection(), TestProjection { count: 1, label: "hi".into() });
+    }
+
+    #[test]
+    fn ingest_operations_is_idempotent() {
+        let mut sender = VcsDocumentApp::new(TestApp::default());
+        let (near, mut far) = MemoryBackbone::pair("mem://doc", "mem://doc");
+        sender.attach_backbone(Box::new(near)).expect("attach");
+        sender.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment");
+
+        let mut envelopes = Vec::new();
+        for message in far.receive().expect("receive") {
+            if let BackboneMessage::Ops { envelopes: ops } = message {
+                envelopes.extend(ops);
+            }
+        }
+        assert!(!envelopes.is_empty(), "expected the applied op to flow onto the channel");
+        let operations_json = serde_json::to_string(&envelopes).expect("serialize envelopes");
+
+        let mut receiver = VcsDocumentApp::new(TestApp::default());
+        receiver.ingest_operations(&operations_json).expect("ingest once");
+        receiver.ingest_operations(&operations_json).expect("ingest twice");
+        assert_eq!(receiver.test_projection().count, 1, "feeding the same op twice must not double-apply");
     }
 }
 // #endregion plugin_runtime
@@ -3015,6 +3131,7 @@ pub fn world3d_scene_extended(
         environment_json,
         frame_json: None,
         fit_json: None,
+        terrain_json: None,
     }
 }
 
@@ -3124,6 +3241,16 @@ pub fn host_backbone_poll(uri: &str) -> Result<Vec<String>, String> {
     #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
     {
         return crate::component::host_backbone_poll(uri);
+    }
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    Err(format!("host backbone unavailable: {uri}"))
+}
+
+/** @emoji 🩺 Queries the host for the sync status of a backbone uri; errs when no host is linked. */
+pub fn host_backbone_status(uri: &str) -> Result<String, String> {
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+    {
+        return crate::component::host_backbone_status(uri);
     }
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     Err(format!("host backbone unavailable: {uri}"))
@@ -3266,7 +3393,8 @@ pub use protocol_mode::{
 };
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 pub use host_port::{
-    host_backbone_poll, host_backbone_send, host_now_ms, register_host_backbone_channel, HostBackboneChannel,
+    host_backbone_poll, host_backbone_send, host_backbone_status, host_now_ms,
+    register_host_backbone_channel, HostBackboneChannel,
 };
 pub use plugin_runtime::{
     install_plugin_bundle, plugin_attach_backbone, plugin_detach_backbone, plugin_document,

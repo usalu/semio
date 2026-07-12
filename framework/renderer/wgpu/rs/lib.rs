@@ -5016,6 +5016,7 @@ mod render_plan_validator_tests {
                 environment_json: None,
                 frame_json: None,
                 fit_json: None,
+                terrain_json: None,
             },
         );
         let error = validate_ui_node(&node, &limits).expect_err("oversized mesh count should be rejected");

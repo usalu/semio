@@ -1,19 +1,25 @@
 mod header {
     // 🧲Header
-    // HubStorage over SQLite (async, via sqlx-sqlite/sqlx-core direct — no `sqlx` facade, matching
-    // the workspace's Postgres precedent). Zero-touch default: one file, no external service.
+    // HubStorage over SQLite (rusqlite) — the zero-touch default for local dev and single-user
+    // self-hosting; no external database service required.
+    //
+    // Uses synchronous `rusqlite` behind `Arc<Mutex<Connection>>`, not an async SQLite driver:
+    // a Cargo workspace may link only one native `sqlite3` (`links = "sqlite3"`), and `rusqlite`
+    // is already the sqlite binding used elsewhere in this workspace (compose's unrelated
+    // `compose/client/lib/rs`) — adding `sqlx-sqlite`'s `libsqlite3-sys` alongside it is a hard
+    // `cargo` resolution conflict, not a style choice. Trait methods stay `async fn` (satisfying
+    // the shared `HubStorage` interface) but their bodies are synchronous rusqlite calls, exactly
+    // as the pre-HP-1 `bin.rs` reasoned: queries are short, the mutex guard is never held across
+    // an `.await`, so nothing here blocks the executor for longer than a real query takes.
 }
 
 use async_trait::async_trait;
 use os_hub_storage::error::{StorageError, StorageResult};
 use os_hub_storage::model::*;
 use os_hub_storage::HubStorage;
+use rusqlite::{Connection, OptionalExtension};
 use semio_framework_core::OpEnvelope;
-use sqlx_core::pool::PoolOptions;
-use sqlx_core::query::query;
-use sqlx_core::query_as::query_as;
-use sqlx_core::row::Row;
-use sqlx_sqlite::{Sqlite, SqlitePool};
+use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
 //#region 🔖Schema
@@ -119,40 +125,54 @@ fn default_snapshot() -> serde_json::Value {
     })
 }
 
-/// @emoji 🗄️ SQLite-backed `HubStorage`. One pooled connection is enough — SQLite serializes writes
-/// internally and this backend targets single-node/dev deployments.
+/// @emoji 🗄️ SQLite-backed `HubStorage`. One `rusqlite::Connection` behind a `Mutex` — see `header`
+/// for why this isn't an async SQLite driver.
 pub struct SqliteStorage {
-    pool: SqlitePool,
+    conn: Arc<Mutex<Connection>>,
 }
 
 impl SqliteStorage {
     /// @emoji 🔌 Opens (creating if absent) the SQLite database at `path` and bootstraps the schema.
     /// `path` may be `:memory:` for tests.
     pub async fn connect(path: &str) -> StorageResult<Self> {
-        let url = if path == ":memory:" { "sqlite::memory:".to_string() } else { format!("sqlite://{path}?mode=rwc") };
-        let pool: SqlitePool = PoolOptions::<Sqlite>::new().max_connections(1).connect(&url).await.map_err(backend)?;
-        for statement in SCHEMA.split(';').map(str::trim).filter(|s| !s.is_empty()) {
-            query(statement).execute(&pool).await.map_err(backend)?;
-        }
-        Ok(Self { pool })
+        let conn = Connection::open(path).map_err(backend)?;
+        conn.execute_batch(SCHEMA).map_err(backend)?;
+        Ok(Self { conn: Arc::new(Mutex::new(conn)) })
     }
 
-    /// @emoji 🌱 Seeds a default studio, its owner-less default document, and a `Documents/default` node.
+    fn lock(&self) -> std::sync::MutexGuard<'_, Connection> {
+        self.conn.lock().expect("hub storage lock")
+    }
+
+    /// @emoji 🌱 Seeds a placeholder `seed` system user, a default studio it owns, an owner-less
+    /// default document, and a `Documents/default` node. The system user satisfies
+    /// `hub_studio.owner_user_id`'s foreign key until a real bootstrap admin claims ownership
+    /// through `/admin` (HP-6).
     pub async fn seed(&self) -> StorageResult<()> {
-        let studio_exists: i64 = query_as::<_, (i64,)>("SELECT COUNT(*) FROM hub_studio WHERE id = 'default'")
-            .fetch_one(&self.pool)
-            .await
-            .map_err(backend)?
-            .0;
+        let user_exists: i64 =
+            self.lock().query_row("SELECT COUNT(*) FROM hub_user WHERE id = 'seed'", [], |row| row.get(0)).map_err(backend)?;
+        if user_exists == 0 {
+            self.lock()
+                .execute(
+                    "INSERT INTO hub_user (id, email, display_name, created_at) VALUES ('seed', 'seed@localhost', 'System', ?1)",
+                    rusqlite::params![now_ms()],
+                )
+                .map_err(backend)?;
+        }
+        let studio_exists: i64 = self
+            .lock()
+            .query_row("SELECT COUNT(*) FROM hub_studio WHERE id = 'default'", [], |row| row.get(0))
+            .map_err(backend)?;
         if studio_exists == 0 {
-            query("INSERT INTO hub_studio (id, name, owner_user_id, created_at) VALUES ('default', 'Studio', 'seed', ?1)")
-                .bind(now_ms())
-                .execute(&self.pool)
-                .await
+            self.lock()
+                .execute(
+                    "INSERT INTO hub_studio (id, name, owner_user_id, created_at) VALUES ('default', 'Studio', 'seed', ?1)",
+                    rusqlite::params![now_ms()],
+                )
                 .map_err(backend)?;
         }
         self.ensure_document("default", "default").await?;
-        let node_count: i64 = query_as::<_, (i64,)>("SELECT COUNT(*) FROM node").fetch_one(&self.pool).await.map_err(backend)?.0;
+        let node_count: i64 = self.lock().query_row("SELECT COUNT(*) FROM node", [], |row| row.get(0)).map_err(backend)?;
         if node_count == 0 {
             let folder = self.create_node("default", None, "Documents", "folder").await?;
             self.create_node("default", Some(&folder.id), "default", "document").await?;
@@ -165,110 +185,99 @@ impl SqliteStorage {
 impl HubStorage for SqliteStorage {
     //#region Documents
     async fn ensure_document(&self, studio_id: &str, id: &str) -> StorageResult<DocumentRecord> {
-        let existing = query_as::<_, (String, String, String, i64)>("SELECT id, studio_id, schema, version FROM document WHERE id = ?1")
-            .bind(id)
-            .fetch_optional(&self.pool)
-            .await
+        let conn = self.lock();
+        let existing = conn
+            .query_row("SELECT studio_id, schema, snapshot, version FROM document WHERE id = ?1", [id], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, i64>(3)?))
+            })
+            .optional()
             .map_err(backend)?;
-        if existing.is_some() {
-            let row = query_as::<_, (String, String, String, String, i64)>("SELECT id, studio_id, schema, snapshot, version FROM document WHERE id = ?1")
-                .bind(id)
-                .fetch_one(&self.pool)
-                .await
-                .map_err(backend)?;
-            let snapshot = serde_json::from_str(&row.3).unwrap_or_else(|_| default_snapshot());
-            return Ok(DocumentRecord { id: row.0, studio_id: row.1, schema: row.2, snapshot, version: row.4 });
+        if let Some((studio_id, schema, snapshot, version)) = existing {
+            let snapshot = serde_json::from_str(&snapshot).unwrap_or_else(|_| default_snapshot());
+            return Ok(DocumentRecord { id: id.to_string(), studio_id, schema, snapshot, version });
         }
         let snapshot = default_snapshot();
         let schema = snapshot.get("schema").and_then(|v| v.as_str()).unwrap_or("s.studio/v1").to_string();
-        query("INSERT INTO document (id, studio_id, schema, snapshot, version) VALUES (?1, ?2, ?3, ?4, 0)")
-            .bind(id)
-            .bind(studio_id)
-            .bind(&schema)
-            .bind(snapshot.to_string())
-            .execute(&self.pool)
-            .await
-            .map_err(backend)?;
+        conn.execute(
+            "INSERT INTO document (id, studio_id, schema, snapshot, version) VALUES (?1, ?2, ?3, ?4, 0)",
+            rusqlite::params![id, studio_id, schema, snapshot.to_string()],
+        )
+        .map_err(backend)?;
         Ok(DocumentRecord { id: id.to_string(), studio_id: studio_id.to_string(), schema, snapshot, version: 0 })
     }
 
     async fn save_document(&self, id: &str, schema: &str, snapshot: &serde_json::Value, version: i64) -> StorageResult<()> {
-        query(
-            "INSERT INTO document (id, studio_id, schema, snapshot, version) VALUES (?1, 'default', ?2, ?3, ?4)
-             ON CONFLICT(id) DO UPDATE SET schema = ?2, snapshot = ?3, version = ?4",
-        )
-        .bind(id)
-        .bind(schema)
-        .bind(snapshot.to_string())
-        .bind(version)
-        .execute(&self.pool)
-        .await
-        .map_err(backend)?;
+        self.lock()
+            .execute(
+                "INSERT INTO document (id, studio_id, schema, snapshot, version) VALUES (?1, 'default', ?2, ?3, ?4)
+                 ON CONFLICT(id) DO UPDATE SET schema = ?2, snapshot = ?3, version = ?4",
+                rusqlite::params![id, schema, snapshot.to_string(), version],
+            )
+            .map_err(backend)?;
         Ok(())
     }
 
     async fn insert_op(&self, document_id: &str, version: i64, envelope: &OpEnvelope) -> StorageResult<bool> {
         let payload = serde_json::to_string(envelope).unwrap_or_default();
-        let result = query(
-            "INSERT OR IGNORE INTO document_op (id, document_id, version, actor, envelope, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-        )
-        .bind(&envelope.id.0)
-        .bind(document_id)
-        .bind(version)
-        .bind(&envelope.actor.0)
-        .bind(payload)
-        .bind(now_ms())
-        .execute(&self.pool)
-        .await
-        .map_err(backend)?;
-        Ok(result.rows_affected() > 0)
+        let changed = self
+            .lock()
+            .execute(
+                "INSERT OR IGNORE INTO document_op (id, document_id, version, actor, envelope, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                rusqlite::params![envelope.id.0, document_id, version, envelope.actor.0, payload, now_ms()],
+            )
+            .map_err(backend)?;
+        Ok(changed > 0)
     }
 
     async fn load_ops(&self, document_id: &str) -> StorageResult<Vec<(i64, OpEnvelope)>> {
-        let rows = query_as::<_, (i64, String)>("SELECT version, envelope FROM document_op WHERE document_id = ?1 ORDER BY version ASC")
-            .bind(document_id)
-            .fetch_all(&self.pool)
-            .await
+        let conn = self.lock();
+        let mut stmt = conn
+            .prepare("SELECT version, envelope FROM document_op WHERE document_id = ?1 ORDER BY version ASC")
             .map_err(backend)?;
-        Ok(rows.into_iter().filter_map(|(version, envelope)| serde_json::from_str(&envelope).ok().map(|e| (version, e))).collect())
+        let rows = stmt
+            .query_map([document_id], |row| Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?)))
+            .map_err(backend)?;
+        Ok(rows
+            .filter_map(|row| row.ok())
+            .filter_map(|(version, envelope)| serde_json::from_str(&envelope).ok().map(|e| (version, e)))
+            .collect())
     }
     //#endregion
 
     //#region Vfs
     async fn list_nodes(&self, studio_id: &str, parent: Option<&str>) -> StorageResult<Vec<NodeRecord>> {
-        let rows = match parent {
-            Some(parent) => query_as::<_, (String, Option<String>, String, String)>(
-                "SELECT id, parent_id, name, kind FROM node WHERE studio_id = ?1 AND parent_id = ?2 ORDER BY name",
-            )
-            .bind(studio_id)
-            .bind(parent)
-            .fetch_all(&self.pool)
-            .await
-            .map_err(backend)?,
-            None => query_as::<_, (String, Option<String>, String, String)>(
-                "SELECT id, parent_id, name, kind FROM node WHERE studio_id = ?1 AND parent_id IS NULL ORDER BY name",
-            )
-            .bind(studio_id)
-            .fetch_all(&self.pool)
-            .await
-            .map_err(backend)?,
+        let conn = self.lock();
+        let row_mapper = |row: &rusqlite::Row| -> rusqlite::Result<NodeRecord> {
+            Ok(NodeRecord { id: row.get(0)?, studio_id: studio_id.to_string(), parent_id: row.get(1)?, name: row.get(2)?, kind: row.get(3)? })
         };
-        Ok(rows
-            .into_iter()
-            .map(|(id, parent_id, name, kind)| NodeRecord { id, studio_id: studio_id.to_string(), parent_id, name, kind })
-            .collect())
+        let rows = match parent {
+            Some(parent) => {
+                let mut stmt = conn
+                    .prepare("SELECT id, parent_id, name, kind FROM node WHERE studio_id = ?1 AND parent_id = ?2 ORDER BY name")
+                    .map_err(backend)?;
+                let mapped = stmt.query_map(rusqlite::params![studio_id, parent], row_mapper).map_err(backend)?;
+                let collected: Vec<_> = mapped.filter_map(|row| row.ok()).collect();
+                collected
+            }
+            None => {
+                let mut stmt = conn
+                    .prepare("SELECT id, parent_id, name, kind FROM node WHERE studio_id = ?1 AND parent_id IS NULL ORDER BY name")
+                    .map_err(backend)?;
+                let mapped = stmt.query_map([studio_id], row_mapper).map_err(backend)?;
+                let collected: Vec<_> = mapped.filter_map(|row| row.ok()).collect();
+                collected
+            }
+        };
+        Ok(rows)
     }
 
     async fn create_node(&self, studio_id: &str, parent_id: Option<&str>, name: &str, kind: &str) -> StorageResult<NodeRecord> {
         let id = Uuid::now_v7().to_string();
-        query("INSERT INTO node (id, studio_id, parent_id, name, kind) VALUES (?1, ?2, ?3, ?4, ?5)")
-            .bind(&id)
-            .bind(studio_id)
-            .bind(parent_id)
-            .bind(name)
-            .bind(kind)
-            .execute(&self.pool)
-            .await
+        self.lock()
+            .execute(
+                "INSERT INTO node (id, studio_id, parent_id, name, kind) VALUES (?1, ?2, ?3, ?4, ?5)",
+                rusqlite::params![id, studio_id, parent_id, name, kind],
+            )
             .map_err(backend)?;
         Ok(NodeRecord { id, studio_id: studio_id.to_string(), parent_id: parent_id.map(str::to_string), name: name.to_string(), kind: kind.to_string() })
     }
@@ -277,36 +286,33 @@ impl HubStorage for SqliteStorage {
     //#region ShareTokens
     async fn create_share_token(&self, document_id: &str) -> StorageResult<String> {
         let token = Uuid::now_v7().to_string();
-        query("INSERT INTO share_token (token, document_id, created_at) VALUES (?1, ?2, ?3)")
-            .bind(&token)
-            .bind(document_id)
-            .bind(now_ms())
-            .execute(&self.pool)
-            .await
+        self.lock()
+            .execute(
+                "INSERT INTO share_token (token, document_id, created_at) VALUES (?1, ?2, ?3)",
+                rusqlite::params![token, document_id, now_ms()],
+            )
             .map_err(backend)?;
         Ok(token)
     }
 
     async fn authorized_by_token(&self, document_id: &str, token: Option<&str>) -> StorageResult<bool> {
-        let has_tokens: i64 = query_as::<_, (i64,)>("SELECT COUNT(*) FROM share_token WHERE document_id = ?1")
-            .bind(document_id)
-            .fetch_one(&self.pool)
-            .await
-            .map_err(backend)?
-            .0;
+        let conn = self.lock();
+        let has_tokens: i64 = conn
+            .query_row("SELECT COUNT(*) FROM share_token WHERE document_id = ?1", [document_id], |row| row.get(0))
+            .map_err(backend)?;
         if has_tokens == 0 {
             return Ok(true);
         }
         match token {
             None => Ok(false),
             Some(token) => {
-                let valid: i64 = query_as::<_, (i64,)>("SELECT COUNT(*) FROM share_token WHERE document_id = ?1 AND token = ?2")
-                    .bind(document_id)
-                    .bind(token)
-                    .fetch_one(&self.pool)
-                    .await
-                    .map_err(backend)?
-                    .0;
+                let valid: i64 = conn
+                    .query_row(
+                        "SELECT COUNT(*) FROM share_token WHERE document_id = ?1 AND token = ?2",
+                        rusqlite::params![document_id, token],
+                        |row| row.get(0),
+                    )
+                    .map_err(backend)?;
                 Ok(valid > 0)
             }
         }
@@ -324,16 +330,11 @@ impl HubStorage for SqliteStorage {
     ) -> StorageResult<UserRecord> {
         let id = Uuid::now_v7().to_string();
         let created_at = now_ms();
-        query("INSERT INTO hub_user (id, email, display_name, password_hash, sso_subject, sso_provider, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)")
-            .bind(&id)
-            .bind(email)
-            .bind(display_name)
-            .bind(password_hash)
-            .bind(sso_subject)
-            .bind(sso_provider)
-            .bind(created_at)
-            .execute(&self.pool)
-            .await
+        self.lock()
+            .execute(
+                "INSERT INTO hub_user (id, email, display_name, password_hash, sso_subject, sso_provider, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                rusqlite::params![id, email, display_name, password_hash, sso_subject, sso_provider, created_at],
+            )
             .map_err(backend)?;
         Ok(UserRecord {
             id,
@@ -347,65 +348,34 @@ impl HubStorage for SqliteStorage {
     }
 
     async fn get_user_by_email(&self, email: &str) -> StorageResult<Option<UserRecord>> {
-        let row = query_as::<_, (String, String, String, Option<String>, Option<String>, Option<String>, i64)>(
-            "SELECT id, email, display_name, password_hash, sso_subject, sso_provider, created_at FROM hub_user WHERE email = ?1",
-        )
-        .bind(email)
-        .fetch_optional(&self.pool)
-        .await
-        .map_err(backend)?;
-        Ok(row.map(|(id, email, display_name, password_hash, sso_subject, sso_provider, created_at)| UserRecord {
-            id,
-            email,
-            display_name,
-            password_hash,
-            sso_subject,
-            sso_provider,
-            created_at,
-        }))
+        self.lock()
+            .query_row(
+                "SELECT id, email, display_name, password_hash, sso_subject, sso_provider, created_at FROM hub_user WHERE email = ?1",
+                [email],
+                user_row,
+            )
+            .optional()
+            .map_err(backend)
     }
 
     async fn get_user_by_sso_subject(&self, provider: &str, subject: &str) -> StorageResult<Option<UserRecord>> {
-        let row = query_as::<_, (String, String, String, Option<String>, Option<String>, Option<String>, i64)>(
-            "SELECT id, email, display_name, password_hash, sso_subject, sso_provider, created_at FROM hub_user WHERE sso_provider = ?1 AND sso_subject = ?2",
-        )
-        .bind(provider)
-        .bind(subject)
-        .fetch_optional(&self.pool)
-        .await
-        .map_err(backend)?;
-        Ok(row.map(|(id, email, display_name, password_hash, sso_subject, sso_provider, created_at)| UserRecord {
-            id,
-            email,
-            display_name,
-            password_hash,
-            sso_subject,
-            sso_provider,
-            created_at,
-        }))
+        self.lock()
+            .query_row(
+                "SELECT id, email, display_name, password_hash, sso_subject, sso_provider, created_at FROM hub_user WHERE sso_provider = ?1 AND sso_subject = ?2",
+                rusqlite::params![provider, subject],
+                user_row,
+            )
+            .optional()
+            .map_err(backend)
     }
 
     async fn list_users(&self, limit: i64, offset: i64) -> StorageResult<Vec<UserRecord>> {
-        let rows = query_as::<_, (String, String, String, Option<String>, Option<String>, Option<String>, i64)>(
-            "SELECT id, email, display_name, password_hash, sso_subject, sso_provider, created_at FROM hub_user ORDER BY created_at LIMIT ?1 OFFSET ?2",
-        )
-        .bind(limit)
-        .bind(offset)
-        .fetch_all(&self.pool)
-        .await
-        .map_err(backend)?;
-        Ok(rows
-            .into_iter()
-            .map(|(id, email, display_name, password_hash, sso_subject, sso_provider, created_at)| UserRecord {
-                id,
-                email,
-                display_name,
-                password_hash,
-                sso_subject,
-                sso_provider,
-                created_at,
-            })
-            .collect())
+        let conn = self.lock();
+        let mut stmt = conn
+            .prepare("SELECT id, email, display_name, password_hash, sso_subject, sso_provider, created_at FROM hub_user ORDER BY created_at LIMIT ?1 OFFSET ?2")
+            .map_err(backend)?;
+        let rows = stmt.query_map(rusqlite::params![limit, offset], user_row).map_err(backend)?;
+        Ok(rows.filter_map(|row| row.ok()).collect())
     }
     //#endregion
 
@@ -413,29 +383,37 @@ impl HubStorage for SqliteStorage {
     async fn create_studio(&self, name: &str, owner_user_id: &str) -> StorageResult<StudioRecord> {
         let id = Uuid::now_v7().to_string();
         let created_at = now_ms();
-        query("INSERT INTO hub_studio (id, name, owner_user_id, created_at) VALUES (?1, ?2, ?3, ?4)")
-            .bind(&id)
-            .bind(name)
-            .bind(owner_user_id)
-            .bind(created_at)
-            .execute(&self.pool)
-            .await
+        self.lock()
+            .execute(
+                "INSERT INTO hub_studio (id, name, owner_user_id, created_at) VALUES (?1, ?2, ?3, ?4)",
+                rusqlite::params![id, name, owner_user_id, created_at],
+            )
             .map_err(backend)?;
         self.upsert_membership(&id, owner_user_id, StudioRole::Owner).await?;
         Ok(StudioRecord { id, name: name.to_string(), owner_user_id: owner_user_id.to_string(), created_at })
     }
 
     async fn list_studios_for_user(&self, user_id: &str) -> StorageResult<Vec<(StudioRecord, StudioRole)>> {
-        let rows = query_as::<_, (String, String, String, i64, String)>(
-            "SELECT s.id, s.name, s.owner_user_id, s.created_at, m.role FROM hub_studio s
-             JOIN hub_studio_membership m ON m.studio_id = s.id WHERE m.user_id = ?1 ORDER BY s.created_at",
-        )
-        .bind(user_id)
-        .fetch_all(&self.pool)
-        .await
-        .map_err(backend)?;
+        let conn = self.lock();
+        let mut stmt = conn
+            .prepare(
+                "SELECT s.id, s.name, s.owner_user_id, s.created_at, m.role FROM hub_studio s
+                 JOIN hub_studio_membership m ON m.studio_id = s.id WHERE m.user_id = ?1 ORDER BY s.created_at",
+            )
+            .map_err(backend)?;
+        let rows = stmt
+            .query_map([user_id], |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, i64>(3)?,
+                    row.get::<_, String>(4)?,
+                ))
+            })
+            .map_err(backend)?;
         Ok(rows
-            .into_iter()
+            .filter_map(|row| row.ok())
             .filter_map(|(id, name, owner_user_id, created_at, role)| {
                 StudioRole::parse(&role).map(|role| (StudioRecord { id, name, owner_user_id, created_at }, role))
             })
@@ -443,23 +421,41 @@ impl HubStorage for SqliteStorage {
     }
 
     async fn list_studios(&self, limit: i64, offset: i64) -> StorageResult<Vec<StudioRecord>> {
-        let rows = query_as::<_, (String, String, String, i64)>("SELECT id, name, owner_user_id, created_at FROM hub_studio ORDER BY created_at LIMIT ?1 OFFSET ?2")
-            .bind(limit)
-            .bind(offset)
-            .fetch_all(&self.pool)
-            .await
+        let conn = self.lock();
+        let mut stmt = conn
+            .prepare("SELECT id, name, owner_user_id, created_at FROM hub_studio ORDER BY created_at LIMIT ?1 OFFSET ?2")
             .map_err(backend)?;
-        Ok(rows.into_iter().map(|(id, name, owner_user_id, created_at)| StudioRecord { id, name, owner_user_id, created_at }).collect())
+        let rows = stmt
+            .query_map(rusqlite::params![limit, offset], |row| {
+                Ok(StudioRecord {
+                    id: row.get(0)?,
+                    name: row.get(1)?,
+                    owner_user_id: row.get(2)?,
+                    created_at: row.get(3)?,
+                })
+            })
+            .map_err(backend)?;
+        Ok(rows.filter_map(|row| row.ok()).collect())
     }
 
     async fn list_documents_for_studio(&self, studio_id: &str) -> StorageResult<Vec<DocumentRecord>> {
-        let rows = query_as::<_, (String, String, String, String, i64)>("SELECT id, studio_id, schema, snapshot, version FROM document WHERE studio_id = ?1")
-            .bind(studio_id)
-            .fetch_all(&self.pool)
-            .await
+        let conn = self.lock();
+        let mut stmt = conn
+            .prepare("SELECT id, studio_id, schema, snapshot, version FROM document WHERE studio_id = ?1")
+            .map_err(backend)?;
+        let rows = stmt
+            .query_map([studio_id], |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, String>(3)?,
+                    row.get::<_, i64>(4)?,
+                ))
+            })
             .map_err(backend)?;
         Ok(rows
-            .into_iter()
+            .filter_map(|row| row.ok())
             .map(|(id, studio_id, schema, snapshot, version)| DocumentRecord {
                 id,
                 studio_id,
@@ -471,38 +467,37 @@ impl HubStorage for SqliteStorage {
     }
 
     async fn upsert_membership(&self, studio_id: &str, user_id: &str, role: StudioRole) -> StorageResult<()> {
-        query(
-            "INSERT INTO hub_studio_membership (studio_id, user_id, role, created_at) VALUES (?1, ?2, ?3, ?4)
-             ON CONFLICT(studio_id, user_id) DO UPDATE SET role = ?3",
-        )
-        .bind(studio_id)
-        .bind(user_id)
-        .bind(role.as_str())
-        .bind(now_ms())
-        .execute(&self.pool)
-        .await
-        .map_err(backend)?;
+        self.lock()
+            .execute(
+                "INSERT INTO hub_studio_membership (studio_id, user_id, role, created_at) VALUES (?1, ?2, ?3, ?4)
+                 ON CONFLICT(studio_id, user_id) DO UPDATE SET role = ?3",
+                rusqlite::params![studio_id, user_id, role.as_str(), now_ms()],
+            )
+            .map_err(backend)?;
         Ok(())
     }
 
     async fn remove_membership(&self, studio_id: &str, user_id: &str) -> StorageResult<()> {
-        query("DELETE FROM hub_studio_membership WHERE studio_id = ?1 AND user_id = ?2")
-            .bind(studio_id)
-            .bind(user_id)
-            .execute(&self.pool)
-            .await
+        self.lock()
+            .execute(
+                "DELETE FROM hub_studio_membership WHERE studio_id = ?1 AND user_id = ?2",
+                rusqlite::params![studio_id, user_id],
+            )
             .map_err(backend)?;
         Ok(())
     }
 
     async fn get_role(&self, studio_id: &str, user_id: &str) -> StorageResult<Option<StudioRole>> {
-        let row = query_as::<_, (String,)>("SELECT role FROM hub_studio_membership WHERE studio_id = ?1 AND user_id = ?2")
-            .bind(studio_id)
-            .bind(user_id)
-            .fetch_optional(&self.pool)
-            .await
+        let role: Option<String> = self
+            .lock()
+            .query_row(
+                "SELECT role FROM hub_studio_membership WHERE studio_id = ?1 AND user_id = ?2",
+                rusqlite::params![studio_id, user_id],
+                |row| row.get(0),
+            )
+            .optional()
             .map_err(backend)?;
-        Ok(row.and_then(|(role,)| StudioRole::parse(&role)))
+        Ok(role.and_then(|r| StudioRole::parse(&r)))
     }
     //#endregion
 
@@ -511,31 +506,36 @@ impl HubStorage for SqliteStorage {
         let id = Uuid::now_v7().to_string();
         let created_at = now_ms();
         let expires_at = created_at + ttl_secs * 1000;
-        query("INSERT INTO hub_auth_session (id, user_id, created_at, expires_at, sso_provider) VALUES (?1, ?2, ?3, ?4, ?5)")
-            .bind(&id)
-            .bind(user_id)
-            .bind(created_at)
-            .bind(expires_at)
-            .bind(sso_provider)
-            .execute(&self.pool)
-            .await
+        self.lock()
+            .execute(
+                "INSERT INTO hub_auth_session (id, user_id, created_at, expires_at, sso_provider) VALUES (?1, ?2, ?3, ?4, ?5)",
+                rusqlite::params![id, user_id, created_at, expires_at, sso_provider],
+            )
             .map_err(backend)?;
         Ok(AuthSessionRecord { id, user_id: user_id.to_string(), created_at, expires_at, sso_provider: sso_provider.map(str::to_string) })
     }
 
     async fn get_auth_session(&self, id: &str) -> StorageResult<Option<AuthSessionRecord>> {
-        let row = query_as::<_, (String, String, i64, i64, Option<String>)>(
-            "SELECT id, user_id, created_at, expires_at, sso_provider FROM hub_auth_session WHERE id = ?1",
-        )
-        .bind(id)
-        .fetch_optional(&self.pool)
-        .await
-        .map_err(backend)?;
-        Ok(row.map(|(id, user_id, created_at, expires_at, sso_provider)| AuthSessionRecord { id, user_id, created_at, expires_at, sso_provider }))
+        self.lock()
+            .query_row(
+                "SELECT id, user_id, created_at, expires_at, sso_provider FROM hub_auth_session WHERE id = ?1",
+                [id],
+                |row| {
+                    Ok(AuthSessionRecord {
+                        id: row.get(0)?,
+                        user_id: row.get(1)?,
+                        created_at: row.get(2)?,
+                        expires_at: row.get(3)?,
+                        sso_provider: row.get(4)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(backend)
     }
 
     async fn revoke_auth_session(&self, id: &str) -> StorageResult<()> {
-        query("DELETE FROM hub_auth_session WHERE id = ?1").bind(id).execute(&self.pool).await.map_err(backend)?;
+        self.lock().execute("DELETE FROM hub_auth_session WHERE id = ?1", [id]).map_err(backend)?;
         Ok(())
     }
     //#endregion
@@ -551,15 +551,11 @@ impl HubStorage for SqliteStorage {
         let id = Uuid::now_v7().to_string();
         let connected_at = now_ms();
         let role_str = studio_role.map(|r| r.as_str());
-        query("INSERT INTO hub_sync_session (id, document_id, user_id, studio_role, client_label, connected_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)")
-            .bind(&id)
-            .bind(document_id)
-            .bind(user_id)
-            .bind(role_str)
-            .bind(client_label)
-            .bind(connected_at)
-            .execute(&self.pool)
-            .await
+        self.lock()
+            .execute(
+                "INSERT INTO hub_sync_session (id, document_id, user_id, studio_role, client_label, connected_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                rusqlite::params![id, document_id, user_id, role_str, client_label, connected_at],
+            )
             .map_err(backend)?;
         Ok(SyncSessionRecord {
             id,
@@ -573,37 +569,52 @@ impl HubStorage for SqliteStorage {
     }
 
     async fn record_sync_session_close(&self, sync_session_id: &str) -> StorageResult<()> {
-        query("UPDATE hub_sync_session SET disconnected_at = ?2 WHERE id = ?1")
-            .bind(sync_session_id)
-            .bind(now_ms())
-            .execute(&self.pool)
-            .await
+        self.lock()
+            .execute(
+                "UPDATE hub_sync_session SET disconnected_at = ?2 WHERE id = ?1",
+                rusqlite::params![sync_session_id, now_ms()],
+            )
             .map_err(backend)?;
         Ok(())
     }
 
     async fn list_sync_sessions_for_document(&self, document_id: &str) -> StorageResult<Vec<SyncSessionRecord>> {
-        let rows = query_as::<_, (String, Option<String>, Option<String>, String, i64, Option<i64>)>(
-            "SELECT id, user_id, studio_role, client_label, connected_at, disconnected_at FROM hub_sync_session WHERE document_id = ?1 ORDER BY connected_at DESC",
-        )
-        .bind(document_id)
-        .fetch_all(&self.pool)
-        .await
-        .map_err(backend)?;
-        Ok(rows
-            .into_iter()
-            .map(|(id, user_id, studio_role, client_label, connected_at, disconnected_at)| SyncSessionRecord {
-                id,
-                document_id: document_id.to_string(),
-                user_id,
-                studio_role: studio_role.and_then(|r| StudioRole::parse(&r)),
-                client_label,
-                connected_at,
-                disconnected_at,
+        let conn = self.lock();
+        let mut stmt = conn
+            .prepare(
+                "SELECT id, user_id, studio_role, client_label, connected_at, disconnected_at FROM hub_sync_session
+                 WHERE document_id = ?1 ORDER BY connected_at DESC",
+            )
+            .map_err(backend)?;
+        let rows = stmt
+            .query_map([document_id], |row| {
+                let studio_role: Option<String> = row.get(2)?;
+                Ok(SyncSessionRecord {
+                    id: row.get(0)?,
+                    document_id: document_id.to_string(),
+                    user_id: row.get(1)?,
+                    studio_role: studio_role.and_then(|r| StudioRole::parse(&r)),
+                    client_label: row.get(3)?,
+                    connected_at: row.get(4)?,
+                    disconnected_at: row.get(5)?,
+                })
             })
-            .collect())
+            .map_err(backend)?;
+        Ok(rows.filter_map(|row| row.ok()).collect())
     }
     //#endregion
+}
+
+fn user_row(row: &rusqlite::Row) -> rusqlite::Result<UserRecord> {
+    Ok(UserRecord {
+        id: row.get(0)?,
+        email: row.get(1)?,
+        display_name: row.get(2)?,
+        password_hash: row.get(3)?,
+        sso_subject: row.get(4)?,
+        sso_provider: row.get(5)?,
+        created_at: row.get(6)?,
+    })
 }
 
 //#region 🔖Tests

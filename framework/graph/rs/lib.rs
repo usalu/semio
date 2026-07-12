@@ -1,7 +1,7 @@
 //! 🕸️ Generic node-graph engine for framework renderers.
 
 pub use infinite_cavas as cavas;
-pub use mathematical_graph_port_directed_dag as dag;
+pub use infinite_board_port_directed_dag as dag;
 
 use dag::{
     dag_screen_to_world, dag_take_pending_open_instance_id, fit_node_size, DagCamera, DagFixture,

@@ -1,7 +1,7 @@
 //! 🧠 Mindmap graph extension: topics and relationships on a property graph.
 
 pub use infinite_cavas as cavas;
-pub use mathematical_graph_normal_directed as graph;
+pub use infinite_board_normal_directed as graph;
 
 // #region 🔖MindmapExtension
 /// 🧠 Mindmap semantics over a property graph canvas.

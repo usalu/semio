@@ -1,0 +1,30 @@
+{
+  "name": "remote-ops-backlog",
+  "schema": "demo/v1",
+  "documentId": "fixture-backlog",
+  "inbound": [
+    {
+      "kind": "externalEdits",
+      "edits": [
+        {
+          "id": "backlog-1",
+          "actor": "peer",
+          "forwards": [{ "op": "SetN", "n": 2 }],
+          "backwards": [{ "op": "SetN", "n": 0 }],
+          "sequenceNumber": 1,
+          "startedAt": "0"
+        },
+        {
+          "id": "backlog-2",
+          "actor": "peer",
+          "forwards": [{ "op": "SetN", "n": 3 }],
+          "backwards": [{ "op": "SetN", "n": 2 }],
+          "sequenceNumber": 2,
+          "startedAt": "0"
+        }
+      ]
+    }
+  ],
+  "expectedEvents": ["remoteOps"],
+  "expectedEditIds": ["backlog-1", "backlog-2"]
+}

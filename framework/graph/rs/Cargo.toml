@@ -12,7 +12,7 @@ crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
 [dependencies]
-mathematical_graph_port_directed_dag = { path = "../../../mathematical/graph/port/directed/dag/rs" }
+infinite_board_port_directed_dag = { path = "../../../infinite/board/port/directed/dag/rs" }
 ui_styling = { path = "../../../ui/styling/rs" }
 infinite_cavas = { path = "../../../infinite/cavas/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

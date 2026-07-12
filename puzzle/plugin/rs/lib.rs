@@ -5747,6 +5747,10 @@ pub mod d3 {
     pub fn register_puzzle3d_exports() {
         semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
         semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
+        semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::StlExporter));
+        semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
+        semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
+        semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
         semio_framework_os::register_mesh_dwg_export_handler("3d.puzzle", "puzzle", puzzle3d_mesh_from_document);
         semio_framework_os::register_mesh_dwg_import_handler("3d.puzzle", puzzle3d_document_from_mesh);
     }
@@ -5848,6 +5852,33 @@ pub mod d3 {
             let envelope = Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() };
             let mesh = puzzle3d_mesh_from_document(&serde_json::to_value(&envelope).unwrap()).unwrap();
             assert!(!mesh.positions.is_empty(), "an all-hidden fixture still exports the box fallback so downstream tooling gets a valid mesh");
+        }
+
+        /// 📦 `register_puzzle3d_exports` must round-trip Obj/Glb/Stl authoring export+import through the OS media graph (not the unrelated `registerBrushMesh` runtime asset path).
+        #[test]
+        fn register_puzzle3d_exports_round_trips_obj_glb_stl_through_the_os_media_graph() {
+            register_puzzle3d_exports();
+            let instance = semio_framework_os::OsAppInstance {
+                id: "test-instance".into(),
+                program_id: "puzzle3d".into(),
+                app_id: PUZZLE3D_PLAY_APP_ID.into(),
+                label: "Test".into(),
+                yields: "3d.puzzle".into(),
+                source_document: semio_framework_os::OsSourceDocument { format: "json".into(), vcs_json: None, inline: None, payload_ref: None },
+            };
+            let document = serde_json::to_value(&default_envelope()).unwrap();
+            for format in [semio_framework_os::OsMediaFormat::Obj, semio_framework_os::OsMediaFormat::Glb, semio_framework_os::OsMediaFormat::Stl] {
+                let exported = semio_framework_os::export_os_app_instance_media(&instance, &document, format.clone()).unwrap();
+                assert!(!exported.data.is_empty(), "{format:?} export produced no data");
+                let bytes = if exported.encoding.as_deref() == Some("base64") {
+                    base64::engine::general_purpose::STANDARD.decode(&exported.data).unwrap()
+                } else {
+                    exported.data.into_bytes()
+                };
+                let imported = semio_framework_os::import_os_app_instance_media(&instance, &bytes, format).unwrap();
+                let envelope: Puzzle3dEnvelope = serde_json::from_value(imported).unwrap();
+                assert_eq!(envelope.fixture.schema, PUZZLE3D_FIXTURE_SCHEMA);
+            }
         }
 
         #[test]
@@ -7323,7 +7354,7 @@ pub mod d5 {
     //! 👯 Puzzle 5D plugin — paired 2D board + 3D world puzzle play app bundled as a hot-swappable WASM component.
 
     use puzzle_5d::{BrushPlacePayload, Puzzle5dPrecomputeSession};
-    use semio_framework_os::register_mesh_exporter;
+    use semio_framework_os::{register_mesh_exporter, register_mesh_importer};
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_puzzle2d_board_scene, build_world_3d_scene, create_default_layout,
         layout::{MeasureSelectItem, WindowEngagementStatus, WindowEngagementToggleGroupOption},
@@ -9775,6 +9806,10 @@ pub mod d5 {
     pub fn register_puzzle5d_exports() {
         register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::ObjExporter));
         register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::GlbExporter));
+        register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::StlExporter));
+        register_mesh_importer("5d.puzzle", puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
+        register_mesh_importer("5d.puzzle", puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
+        register_mesh_importer("5d.puzzle", puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
         semio_framework_os::register_mesh_dwg_export_handler("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
         semio_framework_os::register_mesh_dwg_import_handler("5d.puzzle", puzzle5d_document_from_mesh);
     }
@@ -9837,6 +9872,33 @@ pub mod d5 {
             let envelope: Puzzle5dEnvelope = serde_json::from_value(document).unwrap();
             assert_eq!(envelope.document.schema, PUZZLE5D_SCHEMA);
             assert!(envelope.document.parts.is_empty());
+        }
+
+        /// 📦 `register_puzzle5d_exports` must round-trip Obj/Glb/Stl authoring export+import through the OS media graph.
+        #[test]
+        fn register_puzzle5d_exports_round_trips_obj_glb_stl_through_the_os_media_graph() {
+            register_puzzle5d_exports();
+            let instance = semio_framework_os::OsAppInstance {
+                id: "test-instance".into(),
+                program_id: "puzzle5d".into(),
+                app_id: PUZZLE5D_PLAY_APP_ID.into(),
+                label: "Test".into(),
+                yields: "5d.puzzle".into(),
+                source_document: semio_framework_os::OsSourceDocument { format: "json".into(), vcs_json: None, inline: None, payload_ref: None },
+            };
+            let document = serde_json::to_value(&Puzzle5dEnvelope { document: empty_document(), runtime: Puzzle5dRuntime::default() }).unwrap();
+            for format in [semio_framework_os::OsMediaFormat::Obj, semio_framework_os::OsMediaFormat::Glb, semio_framework_os::OsMediaFormat::Stl] {
+                let exported = semio_framework_os::export_os_app_instance_media(&instance, &document, format.clone()).unwrap();
+                assert!(!exported.data.is_empty(), "{format:?} export produced no data");
+                let bytes = if exported.encoding.as_deref() == Some("base64") {
+                    base64::engine::general_purpose::STANDARD.decode(&exported.data).unwrap()
+                } else {
+                    exported.data.into_bytes()
+                };
+                let imported = semio_framework_os::import_os_app_instance_media(&instance, &bytes, format).unwrap();
+                let envelope: Puzzle5dEnvelope = serde_json::from_value(imported).unwrap();
+                assert_eq!(envelope.document.schema, PUZZLE5D_SCHEMA);
+            }
         }
 
         #[test]

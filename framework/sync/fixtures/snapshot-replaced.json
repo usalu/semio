@@ -1,0 +1,45 @@
+{
+  "name": "snapshot-replaced",
+  "schema": "demo/v1",
+  "documentId": "fixture-snapshot",
+  "inbound": [
+    {
+      "kind": "externalEdits",
+      "edits": [
+        {
+          "id": "sr-1",
+          "actor": "peer",
+          "forwards": [{ "op": "SetN", "n": 3 }],
+          "backwards": [{ "op": "SetN", "n": 0 }],
+          "sequenceNumber": 1,
+          "startedAt": "0"
+        }
+      ]
+    },
+    {
+      "kind": "replaceEnvelope",
+      "envelope": {
+        "schema": "demo/v1",
+        "id": "fixture-snapshot",
+        "vcs": {
+          "initialProjection": { "n": 0 },
+          "edits": [
+            {
+              "id": "sr-2",
+              "actor": "peer",
+              "forwards": [{ "op": "SetN", "n": 8 }],
+              "backwards": [{ "op": "SetN", "n": 0 }],
+              "sequenceNumber": 1,
+              "startedAt": "0"
+            }
+          ],
+          "changes": [],
+          "checkpoints": [],
+          "alternatives": []
+        }
+      }
+    }
+  ],
+  "expectedEvents": ["remoteOps", "snapshotReplaced"],
+  "expectedEditIds": ["sr-2"]
+}

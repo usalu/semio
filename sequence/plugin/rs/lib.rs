@@ -1,6 +1,6 @@
 //! 🔗 Sequence plugin — declarative sequence play app bundled as a hot-swappable WASM component.
 
-use mathematical_graph_port_directed_dag::{DagFixture, DagLayoutOptions, DagLayoutOrientation};
+use infinite_board_port_directed_dag::{DagFixture, DagLayoutOptions, DagLayoutOrientation};
 use sequence_core::{default_fixture, SequenceFixture, SequenceHost, SequenceStep};
 use semio_framework_plugin::{SurfaceKind, PanelGroup, 
     build_node_graph_scene, build_text_editor_scene, create_default_layout, tool_button, tool_collection,

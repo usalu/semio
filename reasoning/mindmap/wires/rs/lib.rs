@@ -1,7 +1,7 @@
 //! 🔗 WIRES mindmap: Owns, Is, References, Has on a flexible identity-kind set.
 
 pub use infinite_cavas as cavas;
-pub use mathematical_graph_normal_undirected as graph;
+pub use infinite_board_normal_undirected as graph;
 pub use reasoning_mindmap as mindmap;
 
 // #region 🔖RelationshipKind

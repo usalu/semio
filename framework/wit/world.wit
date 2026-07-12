@@ -101,6 +101,11 @@ interface plugin {
     context: action-context-json,
   ) -> result<app-labels-json, plugin-error>;
   migrate-document: func(input: migrate-document-input) -> result<migrate-document-output, plugin-error>;
+  apply-operations: func(instance-id: u32, operations-json: string) -> result<_, plugin-error>;
+  read-app-document: func(instance-id: u32) -> result<string, plugin-error>;
+  load-app-document: func(instance-id: u32, document-json: string) -> result<_, plugin-error>;
+  attach-backbone: func(instance-id: u32, uri: string) -> result<_, plugin-error>;
+  detach-backbone: func(instance-id: u32) -> result<_, plugin-error>;
 }
 
 interface host {
@@ -114,6 +119,7 @@ interface host {
   network-fetch: func(origin: string, path: string) -> result<list<u8>, string>;
   backbone-send: func(uri: string, message-json: string) -> result<_, string>;
   backbone-poll: func(uri: string) -> result<list<string>, string>;
+  backbone-status: func(uri: string) -> result<string, string>;
 }
 
 world plugin-world {

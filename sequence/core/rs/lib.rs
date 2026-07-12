@@ -2,7 +2,7 @@
 
 pub use imperative_engine::{compile_to_text, EffectLogEntry, Executor, imperative_catalogue_json, imperative_module_registry, Path, RunResult, Step};
 pub use imperative_module_core::{catalogue_json, module_registry};
-pub use mathematical_graph_port_directed_dag as dag;
+pub use infinite_board_port_directed_dag as dag;
 
 use dag::{
     dag_fixture_to_wire_literal, would_create_cycle, DagCamera, DagFixtureEdge, DagFixture, DagHost, DagLayoutOptions, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape,

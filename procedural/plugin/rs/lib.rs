@@ -2887,7 +2887,11 @@ pub mod app_3d {
     pub fn register_procedural3d_exports() {
         semio_framework_os::register_mesh_exporter("3d.procedural", "procedural", procedural3d_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
         semio_framework_os::register_mesh_exporter("3d.procedural", "procedural", procedural3d_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
+        semio_framework_os::register_mesh_exporter("3d.procedural", "procedural", procedural3d_mesh_from_document, Box::new(semio_framework_plugin::StlExporter));
         semio_framework_os::register_mesh_dwg_export_handler("3d.procedural", "procedural", procedural3d_mesh_from_document);
+        semio_framework_os::register_mesh_importer("3d.procedural", procedural3d_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
+        semio_framework_os::register_mesh_importer("3d.procedural", procedural3d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
+        semio_framework_os::register_mesh_importer("3d.procedural", procedural3d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
         semio_framework_os::register_mesh_dwg_import_handler("3d.procedural", procedural3d_document_from_mesh);
     }
 
@@ -3250,6 +3254,33 @@ pub mod app_3d {
             let document = procedural3d_document_from_mesh(&mesh).expect("dwg mesh import document");
             let envelope: Procedural3dEnvelope = serde_json::from_value(document).expect("parseable envelope");
             assert_eq!(envelope.fixture.schema, "flow.fixture");
+        }
+
+        #[test]
+        fn procedural3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs() {
+            use semio_framework_plugin::{
+                GlbExporter, GlbImporter, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter,
+            };
+            let app = Procedural3dPlayApp;
+            let document = app.initial_document_json();
+            let document_json: Value = serde_json::from_str(&document).expect("initial document json");
+            let mesh = procedural3d_mesh_from_document(&document_json).expect("mesh from document");
+            assert!(!mesh.positions.is_empty());
+
+            let obj_bytes = ObjExporter.export(&mesh).expect("obj export");
+            let obj_mesh = ObjImporter.import(&obj_bytes).expect("obj import");
+            let obj_document = procedural3d_document_from_mesh(&obj_mesh).expect("obj document from mesh");
+            let _: Procedural3dEnvelope = serde_json::from_value(obj_document).expect("parseable obj envelope");
+
+            let glb_bytes = GlbExporter.export(&mesh).expect("glb export");
+            let glb_mesh = GlbImporter.import(&glb_bytes).expect("glb import");
+            let glb_document = procedural3d_document_from_mesh(&glb_mesh).expect("glb document from mesh");
+            let _: Procedural3dEnvelope = serde_json::from_value(glb_document).expect("parseable glb envelope");
+
+            let stl_bytes = StlExporter.export(&mesh).expect("stl export");
+            let stl_mesh = StlImporter.import(&stl_bytes).expect("stl import");
+            let stl_document = procedural3d_document_from_mesh(&stl_mesh).expect("stl document from mesh");
+            let _: Procedural3dEnvelope = serde_json::from_value(stl_document).expect("parseable stl envelope");
         }
 
         fn apply_ops(envelope: &Procedural3dEnvelope, ops: &[String]) -> Procedural3dEnvelope {

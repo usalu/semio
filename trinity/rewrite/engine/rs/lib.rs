@@ -1,12 +1,12 @@
 //! ♻️ Parametric graph rewriting for trinity graphs with optional WASM canvas host.
 
 pub use infinite_cavas as cavas;
-use mathematical_graph_port_directed::{
+use infinite_board_port_directed::{
     force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions},
-    geometry::{compute_edge_bezier_points, distance_between},
+    compute_edge_bezier_points, distance_between,
     BoardEngine, HandleRole, CanvasPalette,
 };
-use mathematical_graph_port_directed_normal::BoardHost;
+use infinite_board_port_directed_normal::BoardHost;
 use serde::{Deserialize, Serialize};
 use std::cell::Cell;
 use std::collections::HashMap;
@@ -1415,7 +1415,7 @@ mod tests {
         assert!(!host.engine.edges.is_empty());
         assert!(!host.engine.enforce_acyclic);
         assert_eq!(host.board.nodes.len(), 9);
-        assert!(host.board.nodes.values().all(|node| matches!(node.shape, mathematical_graph_port_directed::NodeShape::Circle)));
+        assert!(host.board.nodes.values().all(|node| matches!(node.shape, infinite_board_port_directed::NodeShape::Circle)));
     }
 
     #[test]

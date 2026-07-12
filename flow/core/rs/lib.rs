@@ -1,7 +1,7 @@
 //! 🌊 Flow core: widgets, neural evaluation, and DAG canvas host.
 
 pub use infinite_cavas as cavas;
-pub use mathematical_graph_port_directed_dag as dag;
+pub use infinite_board_port_directed_dag as dag;
 pub use neural_engine as neural;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -1732,7 +1732,8 @@ pub struct FlowHost {
     host_catalogue_json: String,
     kind_infos: HashMap<String, OperatorInfo>,
     neural_cache: std::sync::Arc<NeuralCache>,
-    last_tree_signature: Option<u64>,
+    previous_snapshot: Option<TreeSnapshot>,
+    previous_channels: Option<EvalChannels>,
     next_widget_serial: u64,
     next_synapse_serial: u64,
     viewport_w: u32,
@@ -1769,7 +1770,8 @@ impl FlowHost {
             host_catalogue_json: String::new(),
             kind_infos: HashMap::new(),
             neural_cache,
-            last_tree_signature: None,
+            previous_snapshot: None,
+            previous_channels: None,
             next_widget_serial: 1,
             next_synapse_serial: 100,
             viewport_w: 1,
@@ -1800,7 +1802,8 @@ impl FlowHost {
         self.outputs.clear();
         self.export_payloads.clear();
         self.last_eval_json.clear();
-        self.last_tree_signature = None;
+        self.previous_snapshot = None;
+        self.previous_channels = None;
         self.pan_anchor = None;
         self.ghost_node = None;
         if reset_history {
@@ -2382,20 +2385,21 @@ impl FlowHost {
     fn evaluate_internal(&mut self) {
         let tree = self.build_tree();
         let seeds = self.build_seeds();
-        let signature = tree_signature(&tree, &seeds);
-        if self.last_tree_signature == Some(signature) && !self.outputs.is_empty() {
+        let snapshot = TreeSnapshot::capture(&tree, &seeds);
+        let dirty = compute_dirty_set(self.previous_snapshot.as_ref(), &snapshot);
+        if dirty.is_empty() && self.previous_channels.is_some() && !self.outputs.is_empty() {
             return;
         }
-        self.last_tree_signature = Some(signature);
         let registry = flow_registry();
         let evaluator = Evaluator::new(registry);
         self.neural_cache.begin_epoch();
+        let previous = self.previous_channels.as_ref();
         let result = if let Some(bridge) = self.eval_bridge.as_ref() {
             let mut dispatch = |kind: &str, input: &Dictionary| bridge.evaluate(kind, input);
-            evaluator.evaluate_channels_sequential_cached(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache)
+            evaluator.evaluate_channels_sequential_cached(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache, &dirty, previous)
         } else {
             let dispatch = |kind: &str, input: &Dictionary| registry.dispatch(kind, input);
-            evaluator.evaluate_channels_cached(&tree, &seeds, &self.kind_infos, &dispatch, &self.neural_cache)
+            evaluator.evaluate_channels_cached(&tree, &seeds, &self.kind_infos, &dispatch, &self.neural_cache, &dirty, previous)
         };
         self.neural_cache.sweep();
         match result {
@@ -2408,6 +2412,11 @@ impl FlowHost {
                 flow_module_brep::retain_geometry_handles(&live_handles);
                 let live_drawing_handles = collect_live_drawing_handles_from_channels(&channels);
                 flow_module_draw::retain_drawing_handles(&live_drawing_handles);
+                // 🔒 Only advance the snapshot/channels pair together, and only on success — a
+                // failed evaluation keeps diffing against the last known-good state next time,
+                // which is always a safe (never under-dirty) baseline.
+                self.previous_snapshot = Some(snapshot);
+                self.previous_channels = Some(channels);
             }
             Err(err) => {
                 if self.last_eval_json.is_empty() || is_global_eval_error_json(&self.last_eval_json) {
@@ -4644,6 +4653,34 @@ mod tests {
     }
 
     #[test]
+    fn dirty_propagation_only_dispatches_affected_branch() {
+        use std::sync::Mutex as StdMutex;
+        use std::sync::Arc;
+        // Branch A (default fixture): slider -> add -> preview. Branch B (added here): a second,
+        // disconnected slider -> passThrough, sharing no synapse with branch A.
+        let calls: Arc<StdMutex<Vec<String>>> = Arc::new(StdMutex::new(Vec::new()));
+        let calls_for_bridge = calls.clone();
+        let mut host = FlowHost::default();
+        host.set_eval_bridge_fn(Box::new(move |kind, input| {
+            calls_for_bridge.lock().unwrap().push(kind.to_string());
+            test_math_bridge(kind, input)
+        }));
+        host.set_neuron_kind_infos_json(&test_kind_infos_json());
+        let slider_b_id = host.add_widget(r#"{"kind":"inputSlider","value":1.0}"#, 400.0, 0.0).unwrap();
+        let pass_id = host.add_widget(r#"{"kind":"neuron","id":"pass","neuronKind":"math.passThrough","params":{},"input_ports":[],"preview":false}"#, 600.0, 0.0).unwrap();
+        host.connect_ports(&slider_b_id, "number", &pass_id, "number").unwrap();
+        host.evaluate_internal();
+        calls.lock().unwrap().clear();
+
+        host.set_slider_value("slider", 5.0);
+        host.evaluate_internal();
+
+        let dispatched = calls.lock().unwrap().clone();
+        assert!(dispatched.iter().any(|kind| kind == "math.add"), "branch A (add) should re-dispatch after its slider changed");
+        assert!(!dispatched.iter().any(|kind| kind == "math.passThrough"), "branch B (pass) must stay clean when only branch A changed");
+    }
+
+    #[test]
     fn neural_cache_persists_across_evaluations() {
         use std::sync::atomic::{AtomicUsize, Ordering};
         use std::sync::Arc;
@@ -5096,7 +5133,7 @@ mod tests {
             }])
             .unwrap(),
         );
-        host.last_tree_signature = None;
+        host.previous_snapshot = None;
         host.outputs.clear();
         host.evaluate_internal();
         let preview = host

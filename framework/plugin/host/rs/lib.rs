@@ -47,14 +47,15 @@ impl HostState {
         })
     }
 
-    /// @emoji 🔌 Resolves (and caches) the real, native-side backbone for a plugin-attached uri —
-    /// the plugin only ever sees an opaque channel; this host process owns the actual sync endpoint.
+    /// @emoji 🔌 Looks up the real, native-side backbone for a plugin-attached uri — the plugin only
+    /// ever sees an opaque channel; this host process owns the actual sync endpoint. Native URI→IO
+    /// resolution left this crate with WS-A (`vcs::resolve_backbone` is wasm-only now); the endpoint
+    /// must be registered up front via {@link WasmPluginRuntime::register_host_backbone}. WS-E wires a
+    /// `sync::DocumentHost`-backed backbone in here; until then this is an explicit-registration map.
     fn backbone_for(&mut self, uri: &str) -> Result<&mut Box<dyn vcs::Backbone>, String> {
-        if !self.backbones.contains_key(uri) {
-            let backbone = vcs::resolve_backbone(uri).map_err(|error| error.to_string())?;
-            self.backbones.insert(uri.to_string(), backbone);
-        }
-        Ok(self.backbones.get_mut(uri).expect("just inserted"))
+        self.backbones.get_mut(uri).ok_or_else(|| {
+            format!("no host backbone registered for {uri}; call register_host_backbone (WS-E wires DocumentHost here)")
+        })
     }
 }
 
@@ -112,6 +113,10 @@ impl semio::framework::host::Host for HostState {
             .into_iter()
             .map(|message| serde_json::to_string(&message).map_err(|error| error.to_string()))
             .collect()
+    }
+
+    fn backbone_status(&mut self, uri: String) -> Result<String, String> {
+        Ok(if self.backbones.contains_key(&uri) { "attached".into() } else { "detached".into() })
     }
 }
 //#endregion 🔖HostState
@@ -242,6 +247,94 @@ impl WasmPluginRuntime {
     }
 
     pub fn destroy_app(&self, _instance_id: u32) {}
+
+    /// @emoji 🔗 Registers the native-side backbone endpoint the sandboxed plugin's `backbone-send`/
+    /// `backbone-poll`/`backbone-status` host calls operate against, keyed by uri. WS-E calls this
+    /// with a `sync::DocumentHost`-backed backbone once the actor layer is wired; until then it is an
+    /// explicit in-process registration (there is no native URI→IO resolution in this crate anymore).
+    pub fn register_host_backbone(&self, uri: &str, backbone: Box<dyn vcs::Backbone>) -> Result<(), String> {
+        let mut store = self.store.lock().map_err(|_| "plugin store lock poisoned")?;
+        store.data_mut().backbones.insert(uri.to_string(), backbone);
+        Ok(())
+    }
+
+    /// @emoji ✂️ Removes a previously registered native backbone endpoint.
+    pub fn deregister_host_backbone(&self, uri: &str) -> Result<(), String> {
+        let mut store = self.store.lock().map_err(|_| "plugin store lock poisoned")?;
+        store.data_mut().backbones.remove(uri);
+        Ok(())
+    }
+
+    /// @emoji 📥 Ingests a JSON array of remote `OpEnvelope`s into the plugin instance's store.
+    pub fn apply_operations(&self, instance_id: u32, operations_json: &str) -> Result<(), String> {
+        let mut store = self.store.lock().map_err(|_| "plugin store lock poisoned")?;
+        let bindings = self.bindings.lock().map_err(|_| "plugin bindings lock poisoned")?;
+        Self::prepare_call(&mut store);
+        bindings
+            .semio_framework_plugin()
+            .call_apply_operations(&mut *store, instance_id, operations_json)
+            .map_err(|error| error.to_string())?
+            .map_err(|error| match error {
+                semio::framework::types::PluginError::Message(message) => message,
+            })
+    }
+
+    /// @emoji 📖 Reads the plugin instance's full persistent document JSON.
+    pub fn read_app_document(&self, instance_id: u32) -> Result<String, String> {
+        let mut store = self.store.lock().map_err(|_| "plugin store lock poisoned")?;
+        let bindings = self.bindings.lock().map_err(|_| "plugin bindings lock poisoned")?;
+        Self::prepare_call(&mut store);
+        bindings
+            .semio_framework_plugin()
+            .call_read_app_document(&mut *store, instance_id)
+            .map_err(|error| error.to_string())?
+            .map_err(|error| match error {
+                semio::framework::types::PluginError::Message(message) => message,
+            })
+    }
+
+    /// @emoji 📂 Replaces the plugin instance's document from a serialized envelope.
+    pub fn load_app_document(&self, instance_id: u32, document_json: &str) -> Result<(), String> {
+        let mut store = self.store.lock().map_err(|_| "plugin store lock poisoned")?;
+        let bindings = self.bindings.lock().map_err(|_| "plugin bindings lock poisoned")?;
+        Self::prepare_call(&mut store);
+        bindings
+            .semio_framework_plugin()
+            .call_load_app_document(&mut *store, instance_id, document_json)
+            .map_err(|error| error.to_string())?
+            .map_err(|error| match error {
+                semio::framework::types::PluginError::Message(message) => message,
+            })
+    }
+
+    /// @emoji 🔗 Asks the plugin to attach a backbone by uri (resolved to a `PortBackbone` inside the
+    /// sandbox, relayed to the endpoint registered here via {@link register_host_backbone}).
+    pub fn attach_backbone(&self, instance_id: u32, uri: &str) -> Result<(), String> {
+        let mut store = self.store.lock().map_err(|_| "plugin store lock poisoned")?;
+        let bindings = self.bindings.lock().map_err(|_| "plugin bindings lock poisoned")?;
+        Self::prepare_call(&mut store);
+        bindings
+            .semio_framework_plugin()
+            .call_attach_backbone(&mut *store, instance_id, uri)
+            .map_err(|error| error.to_string())?
+            .map_err(|error| match error {
+                semio::framework::types::PluginError::Message(message) => message,
+            })
+    }
+
+    /// @emoji ✂️ Asks the plugin to detach its backbone channel.
+    pub fn detach_backbone(&self, instance_id: u32) -> Result<(), String> {
+        let mut store = self.store.lock().map_err(|_| "plugin store lock poisoned")?;
+        let bindings = self.bindings.lock().map_err(|_| "plugin bindings lock poisoned")?;
+        Self::prepare_call(&mut store);
+        bindings
+            .semio_framework_plugin()
+            .call_detach_backbone(&mut *store, instance_id)
+            .map_err(|error| error.to_string())?
+            .map_err(|error| match error {
+                semio::framework::types::PluginError::Message(message) => message,
+            })
+    }
 
     pub fn handle_action(
         &self,

@@ -36,6 +36,7 @@ import {
 } from "@semio-tech/ui-react";
 import { resolveSemanticColorHex } from "@semio-tech/ui-styling";
 import type { ComponentSceneHostProps } from "@semio-tech/framework-core";
+import { WorldTerrainLayer } from "./world-terrain-layer.tsx";
 
 //#region WorldSceneParsing
 type WorldMeshData = {
@@ -2390,6 +2391,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
                 <BrushMeshRegistrar url={url} onRegister={handleRegisterBrushMesh} />
               </Suspense>
             ))}
+            <WorldTerrainLayer terrainJson={scene?.terrainJson} cameraPosition={cameraState.position} cameraTarget={cameraState.target} />
             <group ref={instancesGroupRef}>
               <WorldInstancesLayer
                 instances={instances}

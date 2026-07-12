@@ -518,6 +518,7 @@ fn user_from_row(row: (String, String, String, Option<String>, Option<String>, O
 mod tests {
     use super::*;
     use testcontainers_modules::postgres::Postgres;
+    use testcontainers_modules::testcontainers;
     use testcontainers_modules::testcontainers::runners::AsyncRunner;
 
     async fn test_storage() -> (PostgresStorage, testcontainers::ContainerAsync<Postgres>) {

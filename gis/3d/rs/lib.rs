@@ -5,6 +5,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 
 //#region Projection
 /// 🧭 Standard Web Mercator slippy-map tile math (Terrarium tiles are tiled this way), kept
@@ -380,6 +381,66 @@ impl TerrainSessionCore {
 }
 //#endregion TerrainSession
 
+//#region DocumentVcs
+/// 🗄️ VCS-backed, undoable document for GIS 3D — deliberately minimal for the first pass: the
+/// only editable/undoable property is vertical exaggeration (a genuinely useful terrain control),
+/// mirroring `gis_2d`'s `GisMapDocument`/`GisMapOp` (whose one editable property is `layers`).
+pub const GIS_3D_TERRAIN_SCHEMA: &str = "gis.terrain";
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Gis3dTerrainDocument {
+    pub exaggeration: f64,
+}
+
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Gis3dTerrainDiff {
+    pub exaggeration: Option<f64>,
+}
+
+impl OperationDiff<Gis3dTerrainDocument> for Gis3dTerrainDiff {
+    fn apply(&self, projection: &Gis3dTerrainDocument) -> Gis3dTerrainDocument {
+        Gis3dTerrainDocument { exaggeration: self.exaggeration.unwrap_or(projection.exaggeration) }
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.exaggeration.is_some() {
+            self.exaggeration = other.exaggeration;
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum Gis3dTerrainOp {
+    SetExaggeration { exaggeration: f64 },
+}
+
+impl Operation<Gis3dTerrainDocument> for Gis3dTerrainOp {
+    type Diff = Gis3dTerrainDiff;
+
+    fn diff(&self, _projection: &Gis3dTerrainDocument) -> Gis3dTerrainDiff {
+        match self {
+            Gis3dTerrainOp::SetExaggeration { exaggeration } => Gis3dTerrainDiff { exaggeration: Some(*exaggeration) },
+        }
+    }
+
+    fn backwards(&self, projection: &Gis3dTerrainDocument) -> Vec<Self> {
+        match self {
+            Gis3dTerrainOp::SetExaggeration { .. } => vec![Gis3dTerrainOp::SetExaggeration { exaggeration: projection.exaggeration }],
+        }
+    }
+}
+
+pub type Gis3dTerrainEnvelope = DocumentVcsEnvelope<Gis3dTerrainDocument, Gis3dTerrainOp>;
+pub type Gis3dTerrainStore = DocumentVcsStore<Gis3dTerrainDocument, Gis3dTerrainOp>;
+
+pub fn empty_gis3d_terrain_projection() -> Gis3dTerrainDocument {
+    Gis3dTerrainDocument { exaggeration: 1.0 }
+}
+//#endregion DocumentVcs
+
 //#region WasmBindings
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
@@ -533,6 +594,17 @@ mod tests {
         assert_eq!(value["projectOriginLon"], 9.7382);
         assert_eq!(value["exaggeration"], 1.5);
         assert_eq!(value["tileUrlTemplate"], GIS_3D_TERRAIN_TILE_URL_TEMPLATE);
+    }
+
+    #[test]
+    fn exaggeration_op_diffs_and_reverses() {
+        let projection = Gis3dTerrainDocument { exaggeration: 1.0 };
+        let op = Gis3dTerrainOp::SetExaggeration { exaggeration: 2.5 };
+        let diff = op.diff(&projection);
+        let next = diff.apply(&projection);
+        assert_eq!(next.exaggeration, 2.5);
+        let backwards = op.backwards(&projection);
+        assert_eq!(backwards, vec![Gis3dTerrainOp::SetExaggeration { exaggeration: 1.0 }]);
     }
 }
 //#endregion Tests

@@ -19,7 +19,7 @@ path = "lib.rs"
 
 [dependencies]
 sequence_core = { path = "../../core/rs" }
-mathematical_graph_port_directed_dag = { path = "../../../mathematical/graph/port/directed/dag/rs" }
+infinite_board_port_directed_dag = { path = "../../../infinite/board/port/directed/dag/rs" }
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

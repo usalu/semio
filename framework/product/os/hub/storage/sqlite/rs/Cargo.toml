@@ -17,8 +17,7 @@ path = "lib.rs"
 async-trait = "0.1"
 serde_json = "1.0"
 uuid = { version = "1.20", features = ["v7"] }
-sqlx_core = { package = "sqlx-core", version = "0.8" }
-sqlx_sqlite = { package = "sqlx-sqlite", version = "0.8" }
+rusqlite = { version = "0.38.0", features = ["bundled"] }
 semio-framework-core = { path = "../../../../../../core/rs" }
 os-hub-storage = { path = "../../rs" }
 
