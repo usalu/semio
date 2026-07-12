@@ -1,6 +1,6 @@
 //! 🔀 DAG plugin — declarative DAG play app bundled as a hot-swappable WASM component.
 
-use mathematical_graph_port_directed_dag::{
+use infinite_board_port_directed_dag::{
     dag_fixture_to_wire_literal, dag_node_kind_tag, fit_node_size, note_widget_size, preview_widget_size,
     stepper_widget_height, stepper_widget_width, would_create_cycle, DagCamera, DagFixture, DagFixtureEdge, DagHost,
     DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, DagStepperField, IoPortSpec,

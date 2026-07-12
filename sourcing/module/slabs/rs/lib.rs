@@ -31,7 +31,9 @@ mod tests {
     fn bundle_contributes_slabs_module_for_sourcing_curate() {
         let manifest = bundle().manifest;
         assert_eq!(manifest.contributions.len(), 1);
-        let Contribution::SourcingModule { app_id, module_id, typology_json, kinds_json, .. } = &manifest.contributions[0];
+        let Contribution::SourcingModule { app_id, module_id, typology_json, kinds_json, .. } = &manifest.contributions[0] else {
+            panic!("expected a SourcingModule contribution");
+        };
         assert_eq!(app_id, HOST_APP_ID);
         assert_eq!(module_id, "slabs");
         assert!(serde_json::from_str::<sourcing_curate::TypologyNode>(typology_json).is_ok());

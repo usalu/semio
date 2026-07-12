@@ -5521,7 +5521,9 @@ fn cad_document_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Result<s
 }
 
 fn register_cad_exports() {
-    semio_framework_os::register_mesh_export_handlers("3d.cad", "cad", cad_mesh_from_document);
+    semio_framework_os::register_mesh_exporter("3d.cad", "cad", cad_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
+    semio_framework_os::register_mesh_exporter("3d.cad", "cad", cad_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
+    semio_framework_os::register_mesh_dwg_export_handler("3d.cad", "cad", cad_mesh_from_document);
     semio_framework_os::register_dwg_import_handler("3d.cad", cad_document_from_dwg);
 }
 

@@ -5745,7 +5745,9 @@ pub mod d3 {
     }
 
     pub fn register_puzzle3d_exports() {
-        semio_framework_os::register_mesh_export_handlers("3d.puzzle", "puzzle", puzzle3d_mesh_from_document);
+        semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
+        semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
+        semio_framework_os::register_mesh_dwg_export_handler("3d.puzzle", "puzzle", puzzle3d_mesh_from_document);
         semio_framework_os::register_mesh_dwg_import_handler("3d.puzzle", puzzle3d_document_from_mesh);
     }
     //#endregion 🔖Manifest
@@ -7321,7 +7323,7 @@ pub mod d5 {
     //! 👯 Puzzle 5D plugin — paired 2D board + 3D world puzzle play app bundled as a hot-swappable WASM component.
 
     use puzzle_5d::{BrushPlacePayload, Puzzle5dPrecomputeSession};
-    use semio_framework_os::register_mesh_export_handlers;
+    use semio_framework_os::register_mesh_exporter;
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_puzzle2d_board_scene, build_world_3d_scene, create_default_layout,
         layout::{MeasureSelectItem, WindowEngagementStatus, WindowEngagementToggleGroupOption},
@@ -9771,7 +9773,9 @@ pub mod d5 {
     }
 
     pub fn register_puzzle5d_exports() {
-        register_mesh_export_handlers("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
+        register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::ObjExporter));
+        register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::GlbExporter));
+        semio_framework_os::register_mesh_dwg_export_handler("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
         semio_framework_os::register_mesh_dwg_import_handler("5d.puzzle", puzzle5d_document_from_mesh);
     }
     //#endregion 🔖Manifest

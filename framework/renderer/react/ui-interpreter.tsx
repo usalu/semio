@@ -54,6 +54,7 @@ const COMPONENT_SCENE_HOSTS: Record<ComponentKind, LazyExoticComponent<Component
   "icon-render": lazyHost(() => import("./components/icon-render-host.tsx"), "IconRenderHost"),
   "note-canvas": lazyHost(() => import("./components/note-canvas-host.tsx"), "NoteCanvasHost"),
   "vcs-history": lazyHost(() => import("./components/vcs-history-host.tsx"), "VcsHistoryHost"),
+  "protocol-list": lazyHost(() => import("./components/protocol-list-host.tsx"), "ProtocolListHost"),
 };
 //#endregion ComponentSceneHostRegistry
 

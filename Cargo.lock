@@ -5860,7 +5860,8 @@ dependencies = [
  "axum 0.8.9",
  "dashmap",
  "futures",
- "rusqlite",
+ "os-hub-storage",
+ "os-hub-storage-sqlite",
  "semio-framework-core",
  "serde",
  "serde_json",
@@ -5883,6 +5884,19 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+]
+
+[[package]]
+name = "os-hub-storage-sqlite"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "os-hub-storage",
+ "rusqlite",
+ "semio-framework-core",
+ "serde_json",
+ "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -7534,6 +7548,7 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "kernel_3d_brepkit",
+ "kernel_3d_engine",
  "png 0.17.16",
  "pretty_assertions",
  "resvg",

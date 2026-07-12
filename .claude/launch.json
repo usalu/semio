@@ -233,6 +233,26 @@
         "SEMIO_RENDERER": "react"
       },
       "port": 6075
+    },
+    {
+      "name": "remodel-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:remodel"],
+      "env": {
+        "REMODEL_PLAY_PORT": "6082",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6082
+    },
+    {
+      "name": "remodel-wgpu-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:remodel"],
+      "env": {
+        "REMODEL_PLAY_PORT": "6182",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "port": 6182
     }
   ]
 }

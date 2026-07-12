@@ -4,7 +4,7 @@
 use protocol::{empty_protocol_projection, ProtocolEnvelope, ProtocolOp, ProtocolSpec, ProtocolStore, PROTOCOL_BUILTIN_KINDS, PROTOCOL_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     add_block_op, add_step_op, create_default_layout, move_block_op, move_step_op, remove_block_op, remove_step_op,
-    render_protocol_builder, ui_text, update_protocol_title_op, App, ActionDescriptor, PluginApp, PluginBundle,
+    render_protocol_builder, ui_text, update_protocol_title_op, App, PluginApp, PluginBundle,
     ProtocolBuilderConfig, ProtocolPaletteEntry, SurfaceKind, UiNode, ViewState, PROTOCOL_BUILDER_LABELS_EN,
 };
 use serde::{Deserialize, Serialize};
@@ -256,6 +256,8 @@ fn create_protocol_play_app() -> App {
     App::from_builder(
         App::builder(PROTOCOL_PLAY_APP_ID, "Protocol")
             .document(["semio", "protocol"])
+            .mode("builder", "Builder")
+            .default_mode_id("builder")
             .window_kind(PROTOCOL_PLAY_WINDOW_BUILDER, "Builder", PROTOCOL_PLAY_BODY_BUILDER, SurfaceKind::ProtocolList)
             .default_layout(create_default_layout(&[PROTOCOL_PLAY_WINDOW_BUILDER.into()], "row", None, None)),
     )

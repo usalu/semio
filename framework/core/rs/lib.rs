@@ -6228,6 +6228,55 @@ pub enum HostEffect {
     CloseWindow { window: WindowHandle },
     Notify { message: String },
     RequestSync,
+    /// @emoji 🧭 Navigates the shell to a URI (studio/instance/document route).
+    Navigate { uri: String },
+    /// @emoji 🗂️ Replaces the active studio/window panel state with a serialized panel JSON.
+    SetPanel { panel_json: String },
+    /// @emoji ⬇️ Downloads an in-memory media export as a file (base64 or utf-8 `data`).
+    DownloadMediaExport {
+        filename: String,
+        mime_type: String,
+        data: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        encoding: Option<String>,
+    },
+    /// @emoji 🖼️ Renders one or more icon-scene requests to images and downloads each.
+    IconRenderExport { items: Vec<IconRenderExportItem> },
+    /// @emoji 📤 Asks the shell to open a file picker and re-dispatch `import_action` with the
+    /// picked file's contents as `{ payload, name }` args.
+    RequestFileOpen {
+        accept: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        read_as: Option<String>,
+        import_action: String,
+    },
+    /// @emoji ✨ Spawns a plugin instance (idempotent on `os_instance_id`) without focusing it.
+    SpawnPluginInstance {
+        program_id: String,
+        app_id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        os_instance_id: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        label: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        document_json: Option<String>,
+    },
+    /// @emoji 🪟 Spawns (if needed) and focuses/navigates to a plugin instance.
+    OpenPluginInstance {
+        program_id: String,
+        app_id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        os_instance_id: Option<String>,
+    },
+}
+
+/// @emoji 🖼️ One icon-render export request: the destination filename plus the opaque icon-scene
+/// render request forwarded to the shell's `iconRenderPort`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IconRenderExportItem {
+    pub filename: String,
+    pub request: Value,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -6992,7 +7041,7 @@ pub use ui::*;
 pub use ui::kernel::{
     ActorId, AppEvent, AppInstanceId, AssetHandle, Capability, CapabilityGrant, CapabilityRequirement,
     CapabilityToken, ActionContext, ActionDef, ActionId, ActionInvocation, ActionInvocationId,
-    ActionRequest, ActionResult, Diagnostic, HostEffect, HubClientFrame, HubServerFrame, HybridLogicalTimestamp, InverseOperation,
+    ActionRequest, ActionResult, Diagnostic, HostEffect, HubClientFrame, HubServerFrame, HybridLogicalTimestamp, IconRenderExportItem, InverseOperation,
     InsertResult, KernelOperation, MergeStrategyKind, DocumentDiff, DocumentHandle, DocumentId, DocumentKind,
     DocumentVersion, OpDag, OpDagError, OpEnvelope, OperationId, PayloadHash, PhysicalSize, PluginInstanceId, PresencePeer,
     ResourceId, ResourceKind, Appearance, Rights, SchemaId, SchemaVersion, Scope, UndoGroup, UndoPolicy,

@@ -1,16 +1,15 @@
 //! 📋 Forms plugin — declarative forms play app bundled as a hot-swappable WASM component.
 
 use forms::{
-    can_advance, default_value_for_question, empty_forms_projection, flatten_form_questions,
-    initial_try_values, is_extension_question_kind, visible_questions, FormOp, FormQuestion,
-    FormQuestionOption, FormSpec, FormStep, FormVectorField, FormsEnvelope, FormsStore,
-    FORM_BUILTIN_KINDS, FORMS_DOCUMENT_SCHEMA,
+    can_advance, default_value_for_question, empty_forms_projection, initial_try_values, is_extension_question_kind,
+    visible_questions, FormOp, FormQuestion, FormQuestionOption, FormSpec, FormStep, FormVectorField, FormsEnvelope,
+    FormsStore, FORM_BUILTIN_KINDS, FORMS_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{SurfaceKind,
     create_default_layout,
     ui_external_slot, ui_image, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
     ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Contribution,
-    PanelGroup, ActionDescriptor, PluginApp, PluginBundle, UiButtonNode,
+    PanelGroup, ActionDescriptor, PluginApp, UiButtonNode,
     UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode,
     UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState,
@@ -21,7 +20,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::LazyLock;
 use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentVcsCommand};
 
 //#region 🔖Constants
@@ -795,15 +793,7 @@ struct FormsLabels {
     add_vector_field: &'static str,
     vector_field_label_suffix: &'static str,
     vector_field_value_suffix: &'static str,
-    form_title: &'static str,
     add_step: &'static str,
-    remove_step: &'static str,
-    title: &'static str,
-    add_question: &'static str,
-    remove_question: &'static str,
-    move_up: &'static str,
-    move_down: &'static str,
-    drop_question_kind_here: &'static str,
     add_text_question: &'static str,
     question: &'static str,
     selected: &'static str,
@@ -858,15 +848,7 @@ const FORMS_LABELS_NATIVE_EN: FormsLabels = FormsLabels {
     add_vector_field: "Add Vector Field",
     vector_field_label_suffix: "label",
     vector_field_value_suffix: "value",
-    form_title: "Form Title",
     add_step: "Add Step",
-    remove_step: "Remove Step",
-    title: "Title",
-    add_question: "Add Question",
-    remove_question: "Remove Question",
-    move_up: "Move Up",
-    move_down: "Move Down",
-    drop_question_kind_here: "Drop a question kind here",
     add_text_question: "Add Text Question",
     question: "Question",
     selected: "selected",
@@ -921,15 +903,7 @@ const FORMS_LABELS_NATIVE_DE: FormsLabels = FormsLabels {
     add_vector_field: "Vektorfeld hinzufügen",
     vector_field_label_suffix: "Bezeichnung",
     vector_field_value_suffix: "Wert",
-    form_title: "Formulartitel",
     add_step: "Schritt hinzufügen",
-    remove_step: "Schritt entfernen",
-    title: "Titel",
-    add_question: "Frage hinzufügen",
-    remove_question: "Frage entfernen",
-    move_up: "Nach oben",
-    move_down: "Nach unten",
-    drop_question_kind_here: "Fragetyp hier ablegen",
     add_text_question: "Textfrage hinzufügen",
     question: "Frage",
     selected: "ausgewählt",
@@ -2147,7 +2121,7 @@ impl PluginApp for FormsPlayApp {
                 let index = resolve_question_insert_index(&projection, to_step_id, target_id, position).unwrap_or(0);
                 let _ = store.dispatch(DocumentVcsCommand::Apply {
                     operations: vec![FormOp::MoveBlock {
-                        question_id: question_id.into(),
+                        block_id: question_id.into(),
                         from_step_id: source.step_id,
                         to_step_id: to_step_id.into(),
                         index,
@@ -2177,7 +2151,7 @@ impl PluginApp for FormsPlayApp {
                 let _ = store.dispatch(DocumentVcsCommand::Apply {
                     operations: vec![FormOp::AddBlock {
                         step_id,
-                        question,
+                        block: question,
                         index,
                     }],
                     description: None,
@@ -2351,7 +2325,7 @@ fn create_forms_app() -> App {
             .icon_id("forms")
             .mode("blueprint", "Blueprint")
             .default_mode_id("blueprint")
-            .window_kind(FORMS_PLAY_WINDOW_BLUEPRINT, "Blueprint", FORMS_PLAY_BODY_BLUEPRINT, SurfaceKind::NodeGraph)
+            .window_kind(FORMS_PLAY_WINDOW_BLUEPRINT, "Blueprint", FORMS_PLAY_BODY_BLUEPRINT, SurfaceKind::ProtocolList)
             .window_kind(FORMS_PLAY_WINDOW_TRY, "Try", FORMS_PLAY_BODY_TRY, SurfaceKind::Canvas2d)
             .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, FORMS_PLAY_BODY_DOCUMENT)
             .panel_tab("framework.panel.catalogue", "Catalogue", PanelGroup::Workbench, FORMS_PLAY_BODY_CATALOGUE)
@@ -2454,11 +2428,10 @@ mod tests {
         let first_question_id = spec.steps[0].blocks[0].id.clone();
         let node = app.render(FORMS_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("forms-blueprint.title"));
-        assert!(json.contains(&format!("forms-blueprint.card.{first_question_id}")));
-        assert!(json.contains("setSelection"));
-        assert!(json.contains("forms-blueprint.add-step"));
-        assert!(json.contains(&format!("forms-blueprint.{first_question_id}.label")));
+        assert!(json.contains(r#""componentKind":"protocol-list""#));
+        assert!(json.contains(r#""surfaceId":"forms.play.blueprint""#));
+        assert!(json.contains("\"protocolList\""));
+        assert!(json.contains(&first_question_id));
     }
 
     #[test]
@@ -2471,7 +2444,7 @@ mod tests {
         play.selected_ids = vec![first_question_id.clone()];
         let node = app.render(FORMS_PLAY_BODY_BLUEPRINT, &serde_json::to_string(&play).unwrap(), &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains(r#""selected":true"#));
+        assert!(json.contains(&format!(r#""selectedId":"{first_question_id}""#)));
     }
 
     #[test]
@@ -2850,12 +2823,10 @@ mod tests {
         let document = app.initial_document_json();
         let node = app.render(FORMS_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("Form Title"));
-        assert!(json.contains("Add Step"));
-        assert!(json.contains("Required"));
-        assert!(json.contains("Remove Question"));
-        assert!(json.contains("Move Up"));
-        assert!(!json.contains("Formulartitel"));
+        assert!(json.contains("Boolean"));
+        assert!(json.contains("Long Text"));
+        assert!(json.contains("Slider"));
+        assert!(!json.contains("Boolescher Wert"));
     }
 
     #[test]
@@ -2865,12 +2836,10 @@ mod tests {
         let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
         let node = app.render(FORMS_PLAY_BODY_BLUEPRINT, &document, &view_state);
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("Formulartitel"));
-        assert!(json.contains("Schritt hinzufügen"));
-        assert!(json.contains("Erforderlich"));
-        assert!(json.contains("Frage entfernen"));
-        assert!(json.contains("Nach oben"));
-        assert!(!json.contains("Form Title"));
+        assert!(json.contains("Boolescher Wert"));
+        assert!(json.contains("Langtext"));
+        assert!(json.contains("Schieberegler"));
+        assert!(!json.contains("Boolean"));
 
         let catalogue_node = app.render(FORMS_PLAY_BODY_CATALOGUE, &document, &view_state);
         let catalogue_json = serde_json::to_string(&catalogue_node).unwrap();

@@ -4511,7 +4511,7 @@ mod tests {
     #[test]
     fn mesh_dwg_registrar_round_trips_a_box() {
         use base64::Engine;
-        crate::media_export_raster::register_mesh_export_handlers("3d.__dwg_test", "box", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
+        crate::media_export_raster::register_mesh_dwg_export_handler("3d.__dwg_test", "box", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
         let result = export_handlers()
             .lock()
             .expect("lock")
@@ -4521,6 +4521,55 @@ mod tests {
         let bytes = base64::engine::general_purpose::STANDARD.decode(result.data).expect("decode base64");
         let drawing = semio_framework_core::dwg_from_bytes(&bytes).expect("dwg from bytes");
         assert!(!drawing.entities.is_empty());
+    }
+
+    #[test]
+    fn mesh_exporter_registrar_round_trips_a_box_through_glb() {
+        use base64::Engine;
+        crate::media_export_raster::register_mesh_exporter(
+            "3d.__mesh_exporter_test",
+            "box",
+            |_| Ok(semio_framework_plugin::mesh_from_kind("box")),
+            Box::new(semio_framework_plugin::GlbExporter),
+        );
+        let result = export_handlers()
+            .lock()
+            .expect("lock")
+            .get(&os_media_export_key("3d.__mesh_exporter_test", &OsMediaFormat::Glb))
+            .expect("glb handler registered")(&serde_json::json!({}))
+        .expect("export glb");
+        let bytes = base64::engine::general_purpose::STANDARD.decode(result.data).expect("decode base64");
+        let mesh = semio_framework_core::mesh_from_glb(&bytes).expect("glb decodes back to a mesh");
+        assert!(mesh.vertex_count() > 0);
+    }
+
+    #[test]
+    fn mesh_importer_registrar_round_trips_a_box_through_obj() {
+        crate::media_export_raster::register_mesh_importer(
+            "3d.__mesh_importer_test",
+            |mesh| Ok(serde_json::json!({ "vertexCount": mesh.vertex_count() })),
+            Box::new(semio_framework_plugin::ObjImporter),
+        );
+        let obj_bytes = semio_framework_core::mesh_to_obj(&semio_framework_plugin::mesh_from_kind("box"), "box").into_bytes();
+        let handlers = import_handlers().lock().expect("lock");
+        let handler = handlers
+            .get(&os_media_export_key("3d.__mesh_importer_test", &OsMediaFormat::Obj))
+            .expect("obj handler registered");
+        let document = handler(&obj_bytes).expect("import obj");
+        assert!(document["vertexCount"].as_u64().expect("vertex count") > 0);
+    }
+
+    #[test]
+    fn solid_exporter_and_importer_registrars_round_trip_a_box_through_step() {
+        let mut kernel = kernel_3d_brepkit::BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).expect("box");
+        crate::media_export_raster::register_solid_exporter("3d.__solid_test", Box::new(kernel_3d_brepkit::StepSolidExporter));
+        crate::media_export_raster::register_solid_importer("3d.__solid_test", Box::new(kernel_3d_brepkit::StepSolidImporter));
+        assert!(crate::media_export_raster::solid_exporter_for("3d.__solid_test", &OsMediaFormat::Step));
+        let bytes = crate::media_export_raster::export_registered_solid("3d.__solid_test", &OsMediaFormat::Step, &kernel, &[solid], 0.1).expect("export step");
+        assert!(!bytes.is_empty());
+        let imported = crate::media_export_raster::import_registered_solid("3d.__solid_test", &OsMediaFormat::Step, &mut kernel, &bytes, 0.1).expect("import step");
+        assert!(!imported.is_empty());
     }
 
     #[test]
@@ -5254,7 +5303,9 @@ pub use instance::{
 };
 pub use media_export_raster::{
     dwg_drawing_to_svg, rasterize_svg_to_png_base64, register_2d_export_handlers, register_dwg_import_handler,
-    register_mesh_dwg_import_handler, register_mesh_export_handlers, svg_to_dwg_bytes,
+    register_mesh_dwg_export_handler, register_mesh_dwg_import_handler, register_mesh_exporter, register_mesh_importer,
+    register_solid_exporter, register_solid_importer, solid_exporter_for, export_registered_solid, import_registered_solid,
+    svg_to_dwg_bytes,
 };
 pub use media_export_simple::{map_points_svg, pages_rects_svg, title_card_svg, wrap_svg};
 pub use media_graph::{
@@ -5265,8 +5316,8 @@ pub use media_graph::{
     build_os_media_flow_operator_infos, OsMediaFlowOperatorInfo, OsMediaGraphCamera, OsMediaNodeGraphPayload,
     os_media_graph_vfs_instance_id, os_media_graph_vfs_schema, os_media_graph_vfs_source_id,
     os_media_neuron_kind_for_node, register_os_media_export_handler, register_os_media_import_handler,
-    required_os_media_export_formats, required_os_media_import_formats,
-    sync_media_graph_parameter_ports, validate_media_graph, MediaGraphPosition, MediaGraphValidation,
+    required_os_media_export_formats, required_os_media_import_formats, os_resource_media_capability,
+    sync_media_graph_parameter_ports, validate_media_graph, MediaGraphPosition, MediaGraphValidation, OsMediaCapability,
     OsMediaFormat, OsMediaExportResult, OsMediaGraph, OsMediaGraphEdge, OsMediaGraphNode,
     OsMediaGraphVfsNodeRecord, OsMediaGraphVfsSchema, OsMediaPort, ProgramRegistry,
     OS_MEDIA_FLOW_MODULE_ID, OS_MEDIA_GRAPH_SCHEMA, OS_MEDIA_GRAPH_VFS_ROOT_ID, OS_STUDIO_SCHEMA,

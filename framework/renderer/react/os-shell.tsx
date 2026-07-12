@@ -249,9 +249,9 @@ export type PluginManifest = {
   readonly programs: readonly { readonly programId: string; readonly appId: string; readonly label: string; readonly document: readonly string[]; readonly yields: string }[];
   readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string; readonly appId: string }[];
   readonly contributions?: readonly {
-    readonly kind: "formsQuestionKind";
+    readonly kind: "protocolBlockKind";
     readonly appId: string;
-    readonly questionKind: string;
+    readonly blockKind: string;
     readonly label: string;
     readonly iconId: string;
     readonly defaultValueJson?: string;

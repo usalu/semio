@@ -577,6 +577,21 @@ export type VcsHistoryScene = {
   readonly columnsJson: string;
 };
 
+/** 🧩 A palette entry for a block kind insertable into a {@link ProtocolListScene}, contributed either by the host app's own built-ins or by a `protocolBlockKind` module contribution. */
+export type ProtocolPaletteEntry = {
+  readonly blockKind: string;
+  readonly label: string;
+  readonly iconId: string;
+};
+
+/** 🧩 A strict, ordered list of steps/blocks for the Blockly-like list editor. `stepsJson` is a `ProtocolStep[]` array, `paletteJson` is a `ProtocolPaletteEntry[]` array of the block kinds available to insert. */
+export type ProtocolListScene = {
+  readonly stepsJson: string;
+  readonly paletteJson: string;
+  readonly selectedId?: string;
+  readonly draggingId?: string;
+};
+
 /** 🔌 A plugin-contributed external body rendered inline — mirrors the wasm `externalSlot` node. */
 export type UiExternalSlotNode = {
   readonly type: "externalSlot";
@@ -587,7 +602,7 @@ export type UiExternalSlotNode = {
 };
 
 /** 🧭 The dispatch key on {@link UiComponentSceneNode} — matches the lazy-loaded host component per `framework/renderer/react/components/*-host.tsx`. */
-export type ComponentKind = "canvas-2d" | "world-3d" | "node-graph" | "text-editor" | "table" | "raster" | "gis2d-map" | "puzzle2d-board" | "icon-render" | "note-canvas" | "vcs-history";
+export type ComponentKind = "canvas-2d" | "world-3d" | "node-graph" | "text-editor" | "table" | "raster" | "gis2d-map" | "puzzle2d-board" | "icon-render" | "note-canvas" | "vcs-history" | "protocol-list";
 
 /** 🖥️ A native (non-declarative) rendering surface — mirrors the wasm `componentScene` node; the active `componentKind` selects which optional scene field is populated. */
 export type UiComponentSceneNode = {
@@ -609,6 +624,7 @@ export type UiComponentSceneNode = {
   readonly iconRender?: IconRenderScene;
   readonly noteCanvas?: NoteCanvasScene;
   readonly vcsHistory?: VcsHistoryScene;
+  readonly protocolList?: ProtocolListScene;
 };
 
 /** 🧷 Shared prop shape for every `framework/renderer/react/components/*-host.tsx` component. */
@@ -948,9 +964,9 @@ function normalizeAppLabelsOverlay(raw: Partial<PluginAppLabelsOverlay> | null |
 
 export type PluginContribution =
   | {
-      readonly kind: "formsQuestionKind";
+      readonly kind: "protocolBlockKind";
       readonly appId: string;
-      readonly questionKind: string;
+      readonly blockKind: string;
       readonly label: string;
       readonly iconId: string;
       readonly defaultValueJson?: string;

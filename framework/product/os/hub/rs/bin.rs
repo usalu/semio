@@ -1,8 +1,9 @@
 mod header {
     // 🧲Header
-    // OS hub v2 — SQLite-backed VFS + per-document op-log actors with duplex WebSocket sync.
+    // OS hub v2 — pluggable-storage VFS + per-document op-log actors with duplex WebSocket sync.
     // CQRS split: op appends are causally ordered (OpDag) and never version-gated; only whole-envelope
-    // snapshot replacement keeps optimistic concurrency (CAS → Conflict).
+    // snapshot replacement keeps optimistic concurrency (CAS → Conflict). Persistence is behind
+    // {@link HubStorage} (os-hub-storage) — sqlite today, postgres/neo4j are sibling backends.
 }
 
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
@@ -13,69 +14,20 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use dashmap::DashMap;
 use futures::{SinkExt, StreamExt};
-use rusqlite::{Connection, OptionalExtension};
+use os_hub_storage::model::{DocumentRecord, NodeRecord};
+use os_hub_storage::HubStorage;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use std::net::SocketAddr;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::{broadcast, mpsc, oneshot};
 use semio_framework_core::{HubClientFrame, HubServerFrame, OpDag, OpEnvelope, PresencePeer};
-use uuid::Uuid;
 
-//#region 🔖Storage
-const SCHEMA: &str = "\
-CREATE TABLE IF NOT EXISTS node (
-    id TEXT PRIMARY KEY,
-    parent_id TEXT REFERENCES node(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    kind TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS document (
-    id TEXT PRIMARY KEY,
-    schema TEXT NOT NULL,
-    snapshot TEXT NOT NULL,
-    version INTEGER NOT NULL DEFAULT 0
-);
-CREATE TABLE IF NOT EXISTS document_op (
-    id TEXT PRIMARY KEY,
-    document_id TEXT NOT NULL,
-    version INTEGER NOT NULL,
-    actor TEXT,
-    envelope TEXT NOT NULL,
-    created_at INTEGER NOT NULL
-);
-CREATE TABLE IF NOT EXISTS session (
-    id TEXT PRIMARY KEY,
-    document_id TEXT NOT NULL,
-    client_name TEXT NOT NULL,
-    created_at INTEGER NOT NULL
-);
-CREATE TABLE IF NOT EXISTS share_token (
-    token TEXT PRIMARY KEY,
-    document_id TEXT NOT NULL,
-    created_at INTEGER NOT NULL
-);
-";
-
-#[derive(Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct NodeRow {
-    id: String,
-    parent_id: Option<String>,
-    name: String,
-    kind: String,
-}
-
-/// @emoji 🗄️ SQLite-backed hub persistence.
-/// One `rusqlite::Connection` behind a `Mutex` (chosen over a dedicated command thread: rusqlite
-/// calls are synchronous and short, the hub's concurrency is modest, and the guard is never held
-/// across an `.await`, so no future is made non-`Send`).
-#[derive(Clone)]
-struct HubStorage {
-    conn: Arc<Mutex<Connection>>,
-}
+/// @emoji 🏛️ Every route in HP-1 operates against this studio; HP-5 threads real `studio_id`
+/// resolution (from `AuthSession`/share-token) through the REST/WS layer.
+const DEFAULT_STUDIO_ID: &str = "default";
 
 fn now_ms() -> i64 {
     SystemTime::now()
@@ -84,221 +36,7 @@ fn now_ms() -> i64 {
         .unwrap_or(0)
 }
 
-fn node_from_row(row: &rusqlite::Row) -> rusqlite::Result<NodeRow> {
-    Ok(NodeRow {
-        id: row.get(0)?,
-        parent_id: row.get(1)?,
-        name: row.get(2)?,
-        kind: row.get(3)?,
-    })
-}
-
-impl HubStorage {
-    fn open(path: &str) -> Self {
-        let conn = Connection::open(path).expect("open sqlite");
-        conn.execute_batch(SCHEMA).expect("bootstrap schema");
-        Self {
-            conn: Arc::new(Mutex::new(conn)),
-        }
-    }
-
-    fn lock(&self) -> std::sync::MutexGuard<'_, Connection> {
-        self.conn.lock().expect("hub storage lock")
-    }
-
-    /// @emoji 🌱 Seeds a default document plus a `Documents/default` VFS entry on a fresh database.
-    fn seed(&self) {
-        self.ensure_document("default");
-        let node_count: i64 = self
-            .lock()
-            .query_row("SELECT COUNT(*) FROM node", [], |row| row.get(0))
-            .unwrap_or(0);
-        if node_count == 0 {
-            let folder = self.create_node(None, "Documents", "folder");
-            self.create_node(Some(&folder.id), "default", "document");
-        }
-    }
-
-    /// @emoji 📄 Loads a document, seeding a fresh empty snapshot on first open (open-on-demand).
-    fn ensure_document(&self, id: &str) -> DocumentRecord {
-        let conn = self.lock();
-        let existing = conn
-            .query_row(
-                "SELECT schema, snapshot, version FROM document WHERE id = ?1",
-                [id],
-                |row| {
-                    Ok((
-                        row.get::<_, String>(0)?,
-                        row.get::<_, String>(1)?,
-                        row.get::<_, i64>(2)?,
-                    ))
-                },
-            )
-            .optional()
-            .expect("query document");
-        if let Some((schema, snapshot, version)) = existing {
-            let snapshot = serde_json::from_str(&snapshot).unwrap_or_else(|_| default_snapshot());
-            return DocumentRecord {
-                schema,
-                snapshot,
-                version,
-            };
-        }
-        let snapshot = default_snapshot();
-        let schema = snapshot
-            .get("schema")
-            .and_then(|value| value.as_str())
-            .unwrap_or("s.studio/v1")
-            .to_string();
-        conn.execute(
-            "INSERT INTO document (id, schema, snapshot, version) VALUES (?1, ?2, ?3, 0)",
-            rusqlite::params![id, schema, snapshot.to_string()],
-        )
-        .expect("insert document");
-        DocumentRecord {
-            schema,
-            snapshot,
-            version: 0,
-        }
-    }
-
-    fn save_document(&self, id: &str, schema: &str, snapshot: &Value, version: i64) {
-        self.lock()
-            .execute(
-                "INSERT INTO document (id, schema, snapshot, version) VALUES (?1, ?2, ?3, ?4)
-                 ON CONFLICT(id) DO UPDATE SET schema = ?2, snapshot = ?3, version = ?4",
-                rusqlite::params![id, schema, snapshot.to_string(), version],
-            )
-            .expect("save document");
-    }
-
-    /// @emoji ➕ Appends one op, deduping by op id via `INSERT OR IGNORE`. Returns whether a row was written.
-    fn insert_op(&self, document_id: &str, version: i64, envelope: &OpEnvelope) -> bool {
-        let payload = serde_json::to_string(envelope).unwrap_or_default();
-        let changed = self
-            .lock()
-            .execute(
-                "INSERT OR IGNORE INTO document_op (id, document_id, version, actor, envelope, created_at)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-                rusqlite::params![
-                    envelope.id.0,
-                    document_id,
-                    version,
-                    envelope.actor.0,
-                    payload,
-                    now_ms()
-                ],
-            )
-            .expect("insert op");
-        changed > 0
-    }
-
-    fn load_ops(&self, document_id: &str) -> Vec<(i64, OpEnvelope)> {
-        let conn = self.lock();
-        let mut stmt = conn
-            .prepare("SELECT version, envelope FROM document_op WHERE document_id = ?1 ORDER BY version ASC")
-            .expect("prepare load_ops");
-        let rows = stmt
-            .query_map([document_id], |row| {
-                Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?))
-            })
-            .expect("query load_ops");
-        rows.filter_map(|row| row.ok())
-            .filter_map(|(version, envelope)| {
-                serde_json::from_str(&envelope).ok().map(|envelope| (version, envelope))
-            })
-            .collect()
-    }
-
-    fn list_nodes(&self, parent: Option<&str>) -> Vec<NodeRow> {
-        let conn = self.lock();
-        match parent {
-            Some(parent) => {
-                let mut stmt = conn
-                    .prepare("SELECT id, parent_id, name, kind FROM node WHERE parent_id = ?1 ORDER BY name")
-                    .expect("prepare list_nodes");
-                let rows = stmt.query_map([parent], node_from_row).expect("query list_nodes");
-                rows.filter_map(|row| row.ok()).collect()
-            }
-            None => {
-                let mut stmt = conn
-                    .prepare("SELECT id, parent_id, name, kind FROM node WHERE parent_id IS NULL ORDER BY name")
-                    .expect("prepare list_nodes");
-                let rows = stmt.query_map([], node_from_row).expect("query list_nodes");
-                rows.filter_map(|row| row.ok()).collect()
-            }
-        }
-    }
-
-    fn create_node(&self, parent_id: Option<&str>, name: &str, kind: &str) -> NodeRow {
-        let id = Uuid::now_v7().to_string();
-        self.lock()
-            .execute(
-                "INSERT INTO node (id, parent_id, name, kind) VALUES (?1, ?2, ?3, ?4)",
-                rusqlite::params![id, parent_id, name, kind],
-            )
-            .expect("insert node");
-        NodeRow {
-            id,
-            parent_id: parent_id.map(|value| value.to_string()),
-            name: name.to_string(),
-            kind: kind.to_string(),
-        }
-    }
-
-    fn create_share_token(&self, document_id: &str) -> String {
-        let token = Uuid::now_v7().to_string();
-        self.lock()
-            .execute(
-                "INSERT INTO share_token (token, document_id, created_at) VALUES (?1, ?2, ?3)",
-                rusqlite::params![token, document_id, now_ms()],
-            )
-            .expect("insert share token");
-        token
-    }
-
-    fn document_has_tokens(&self, document_id: &str) -> bool {
-        self.lock()
-            .query_row(
-                "SELECT COUNT(*) FROM share_token WHERE document_id = ?1",
-                [document_id],
-                |row| row.get::<_, i64>(0),
-            )
-            .unwrap_or(0)
-            > 0
-    }
-
-    fn token_valid(&self, document_id: &str, token: &str) -> bool {
-        self.lock()
-            .query_row(
-                "SELECT COUNT(*) FROM share_token WHERE document_id = ?1 AND token = ?2",
-                rusqlite::params![document_id, token],
-                |row| row.get::<_, i64>(0),
-            )
-            .unwrap_or(0)
-            > 0
-    }
-
-    /// @emoji 🔐 Tokenless documents are open (dev default); once any token is issued a valid bearer is required.
-    fn authorized(&self, document_id: &str, token: Option<&str>) -> bool {
-        if !self.document_has_tokens(document_id) {
-            return true;
-        }
-        match token {
-            Some(token) => self.token_valid(document_id, token),
-            None => false,
-        }
-    }
-}
-//#endregion 🔖Storage
-
 //#region 🔖DocumentActor
-struct DocumentRecord {
-    schema: String,
-    snapshot: Value,
-    version: i64,
-}
-
 struct AppendedOp {
     version: i64,
     op_id: String,
@@ -420,10 +158,10 @@ impl DocumentHandle {
 
 /// @emoji 🎭 One actor per open document: owns the `OpDag`, the log version counter, the in-memory op
 /// cache, the presence roster, and the per-document broadcast fan-out. All persistence goes through
-/// {@link HubStorage}.
+/// the injected {@link HubStorage}.
 struct DocumentActor {
     document_id: String,
-    storage: HubStorage,
+    storage: Arc<dyn HubStorage>,
     schema: String,
     snapshot: Value,
     version: i64,
@@ -435,9 +173,12 @@ struct DocumentActor {
 }
 
 impl DocumentActor {
-    fn load(document_id: String, storage: HubStorage) -> Self {
-        let record = storage.ensure_document(&document_id);
-        let ops = storage.load_ops(&document_id);
+    async fn load(document_id: String, storage: Arc<dyn HubStorage>) -> Self {
+        let record: DocumentRecord = storage
+            .ensure_document(DEFAULT_STUDIO_ID, &document_id)
+            .await
+            .expect("ensure document");
+        let ops = storage.load_ops(&document_id).await.expect("load ops");
         let mut dag = OpDag::new();
         let mut seen = HashSet::new();
         for (_, envelope) in &ops {
@@ -497,7 +238,11 @@ impl DocumentActor {
                             });
                             continue;
                         }
-                        let inserted = self.storage.insert_op(&self.document_id, self.version + 1, &envelope);
+                        let inserted = self
+                            .storage
+                            .insert_op(&self.document_id, self.version + 1, &envelope)
+                            .await
+                            .expect("insert op");
                         if !inserted {
                             self.seen.insert(op_id.clone());
                             appended.push(AppendedOp {
@@ -520,7 +265,9 @@ impl DocumentActor {
                     }
                     if !fresh.is_empty() {
                         self.storage
-                            .save_document(&self.document_id, &self.schema, &self.snapshot, self.version);
+                            .save_document(&self.document_id, &self.schema, &self.snapshot, self.version)
+                            .await
+                            .expect("save document");
                         let _ = self.broadcast.send(HubServerFrame::Ops {
                             version: self.version,
                             envelopes: fresh,
@@ -541,7 +288,9 @@ impl DocumentActor {
                     self.version += 1;
                     self.apply_envelope(&envelope);
                     self.storage
-                        .save_document(&self.document_id, &self.schema, &self.snapshot, self.version);
+                        .save_document(&self.document_id, &self.schema, &self.snapshot, self.version)
+                        .await
+                        .expect("save document");
                     let _ = self.broadcast.send(HubServerFrame::SnapshotReplaced {
                         version: self.version,
                         envelope: self.snapshot.clone(),
@@ -621,10 +370,15 @@ impl DocumentActor {
     }
 }
 
-fn spawn_document_actor(document_id: String, storage: HubStorage) -> DocumentHandle {
+/// @emoji 🌱 Spawns the actor's async load inside its own task so `HubState::actor` stays a
+/// synchronous `DashMap` lookup — the mailbox channel exists immediately, `DocumentActor::load`'s
+/// storage IO happens before the actor's `run` loop starts draining it.
+fn spawn_document_actor(document_id: String, storage: Arc<dyn HubStorage>) -> DocumentHandle {
     let (tx, rx) = mpsc::channel(256);
-    let actor = DocumentActor::load(document_id, storage);
-    tokio::spawn(actor.run(rx));
+    tokio::spawn(async move {
+        let actor = DocumentActor::load(document_id, storage).await;
+        actor.run(rx).await;
+    });
     DocumentHandle { tx }
 }
 //#endregion 🔖DocumentActor
@@ -632,7 +386,7 @@ fn spawn_document_actor(document_id: String, storage: HubStorage) -> DocumentHan
 //#region 🔖State
 #[derive(Clone)]
 struct HubState {
-    storage: HubStorage,
+    storage: Arc<dyn HubStorage>,
     actors: Arc<DashMap<String, DocumentHandle>>,
     admin_token: Option<String>,
 }
@@ -656,26 +410,6 @@ fn bearer(headers: &HeaderMap) -> Option<String> {
         .and_then(|value| value.to_str().ok())
         .and_then(|value| value.strip_prefix("Bearer "))
         .map(|value| value.to_string())
-}
-
-fn default_snapshot() -> Value {
-    serde_json::json!({
-        "schema": "s.studio/v1",
-        "id": "default",
-        "name": "Studio",
-        "vcs": {
-            "initialProjection": {
-                "programs": [],
-                "activeProgramId": null,
-                "activeAlternativeId": null,
-                "appInstances": [],
-                "mediaGraph": { "schema": "s.media-graph", "nodes": [], "edges": [] }
-            },
-            "operations": [],
-            "checkpoints": [],
-            "alternatives": []
-        }
-    })
 }
 //#endregion 🔖State
 
@@ -742,12 +476,22 @@ struct ShareResponse {
     token: String,
 }
 
-async fn list_nodes(Query(query): Query<NodesQuery>, State(state): State<HubState>) -> Json<Vec<NodeRow>> {
-    Json(state.storage.list_nodes(query.parent.as_deref()))
+async fn list_nodes(Query(query): Query<NodesQuery>, State(state): State<HubState>) -> Result<Json<Vec<NodeRecord>>, StatusCode> {
+    state
+        .storage
+        .list_nodes(DEFAULT_STUDIO_ID, query.parent.as_deref())
+        .await
+        .map(Json)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
-async fn create_node(State(state): State<HubState>, Json(body): Json<CreateNodeRequest>) -> Json<NodeRow> {
-    Json(state.storage.create_node(body.parent_id.as_deref(), &body.name, &body.kind))
+async fn create_node(State(state): State<HubState>, Json(body): Json<CreateNodeRequest>) -> Result<Json<NodeRecord>, StatusCode> {
+    state
+        .storage
+        .create_node(DEFAULT_STUDIO_ID, body.parent_id.as_deref(), &body.name, &body.kind)
+        .await
+        .map(Json)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
 async fn get_document(
@@ -755,7 +499,7 @@ async fn get_document(
     headers: HeaderMap,
     State(state): State<HubState>,
 ) -> Result<Json<DocumentResponse>, StatusCode> {
-    if !state.storage.authorized(&document_id, bearer(&headers).as_deref()) {
+    if !authorized(&state, &document_id, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     let (snapshot, version) = state
@@ -771,7 +515,7 @@ async fn get_envelope(
     headers: HeaderMap,
     State(state): State<HubState>,
 ) -> Result<Json<EnvelopeResponse>, StatusCode> {
-    if !state.storage.authorized(&document_id, bearer(&headers).as_deref()) {
+    if !authorized(&state, &document_id, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     let (envelope, version) = state
@@ -788,7 +532,7 @@ async fn put_envelope(
     State(state): State<HubState>,
     Json(body): Json<PutEnvelopeRequest>,
 ) -> Result<Json<PutEnvelopeResponse>, StatusCode> {
-    if !state.storage.authorized(&document_id, bearer(&headers).as_deref()) {
+    if !authorized(&state, &document_id, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     match state.actor(&document_id).put_envelope(body.version, body.envelope).await {
@@ -803,7 +547,7 @@ async fn append_op(
     State(state): State<HubState>,
     Json(body): Json<AppendOpRequest>,
 ) -> Result<Json<AppendOpResponse>, StatusCode> {
-    if !state.storage.authorized(&document_id, bearer(&headers).as_deref()) {
+    if !authorized(&state, &document_id, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     let origin = body.envelope.actor.0.clone();
@@ -818,7 +562,7 @@ async fn get_ops_since(
     headers: HeaderMap,
     State(state): State<HubState>,
 ) -> Result<Json<Vec<OpSinceRow>>, StatusCode> {
-    if !state.storage.authorized(&document_id, bearer(&headers).as_deref()) {
+    if !authorized(&state, &document_id, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     let rows = state
@@ -844,9 +588,17 @@ async fn create_share(
         }
         None => return Err(StatusCode::FORBIDDEN),
     }
-    Ok(Json(ShareResponse {
-        token: state.storage.create_share_token(&document_id),
-    }))
+    let token = state
+        .storage
+        .create_share_token(&document_id)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok(Json(ShareResponse { token }))
+}
+
+/// @emoji 🔐 Tokenless documents are open (dev default); once any token is issued a valid bearer is required.
+async fn authorized(state: &HubState, document_id: &str, token: Option<&str>) -> bool {
+    state.storage.authorized_by_token(document_id, token).await.unwrap_or(false)
 }
 //#endregion 🔖Rest
 
@@ -881,7 +633,7 @@ async fn handle_ws(socket: WebSocket, document_id: String, state: HubState) {
             return;
         }
     };
-    if !state.storage.authorized(&document_id, token.as_deref()) {
+    if !authorized(&state, &document_id, token.as_deref()).await {
         let _ = sender
             .send(encode(&HubServerFrame::Error {
                 message: "unauthorized".into(),
@@ -987,6 +739,26 @@ fn router(state: HubState) -> Router {
         .with_state(state)
 }
 
+/// @emoji 🧬 Resolves and connects the storage backend selected by `OS_HUB_STORAGE_BACKEND`
+/// (`sqlite` today; `postgres`/`neo4j` are sibling crates wired in by HP-2/HP-3).
+async fn connect_storage() -> Arc<dyn HubStorage> {
+    let backend = std::env::var("OS_HUB_STORAGE_BACKEND").unwrap_or_else(|_| "sqlite".into());
+    match backend.as_str() {
+        "sqlite" | "" => {
+            let db_path = std::env::var("OS_HUB_DB").unwrap_or_else(|_| "./.semio/hub.db".into());
+            if db_path != ":memory:" {
+                if let Some(parent) = std::path::Path::new(&db_path).parent() {
+                    let _ = std::fs::create_dir_all(parent);
+                }
+            }
+            let storage = os_hub_storage_sqlite::SqliteStorage::connect(&db_path).await.expect("connect sqlite storage");
+            storage.seed().await.expect("seed sqlite storage");
+            Arc::new(storage)
+        }
+        other => panic!("unknown OS_HUB_STORAGE_BACKEND: {other}"),
+    }
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -994,14 +766,7 @@ async fn main() {
         .ok()
         .and_then(|value| value.parse().ok())
         .unwrap_or(6070);
-    let db_path = std::env::var("OS_HUB_DB").unwrap_or_else(|_| "./.semio/hub.db".into());
-    if db_path != ":memory:" {
-        if let Some(parent) = std::path::Path::new(&db_path).parent() {
-            let _ = std::fs::create_dir_all(parent);
-        }
-    }
-    let storage = HubStorage::open(&db_path);
-    storage.seed();
+    let storage = connect_storage().await;
     let admin_token = std::env::var("OS_HUB_ADMIN_TOKEN").ok().filter(|value| !value.is_empty());
     let state = HubState {
         storage,
@@ -1020,12 +785,14 @@ async fn main() {
 mod tests {
     use super::*;
 
+    use os_hub_storage_sqlite::SqliteStorage;
     use semio_framework_core::{
         ActorId, DocumentDiff, DocumentId, DocumentVersion, InverseOperation, OperationId, PayloadHash,
         SchemaId, SchemaVersion, UndoPolicy,
     };
     use tokio_tungstenite::connect_async;
     use tokio_tungstenite::tungstenite::Message as WsMessage;
+    use uuid::Uuid;
 
     fn temp_db_path() -> String {
         std::env::temp_dir()
@@ -1034,21 +801,21 @@ mod tests {
             .into_owned()
     }
 
-    fn memory_state() -> HubState {
-        let storage = HubStorage::open(":memory:");
-        storage.seed();
+    async fn memory_state() -> HubState {
+        let storage = SqliteStorage::connect(":memory:").await.expect("connect");
+        storage.seed().await.expect("seed");
         HubState {
-            storage,
+            storage: Arc::new(storage),
             actors: Arc::new(DashMap::new()),
             admin_token: None,
         }
     }
 
-    fn file_state(path: &str) -> HubState {
-        let storage = HubStorage::open(path);
-        storage.seed();
+    async fn file_state(path: &str) -> HubState {
+        let storage = SqliteStorage::connect(path).await.expect("connect");
+        storage.seed().await.expect("seed");
         HubState {
-            storage,
+            storage: Arc::new(storage),
             actors: Arc::new(DashMap::new()),
             admin_token: None,
         }
@@ -1111,7 +878,7 @@ mod tests {
     // 🔬 WS duplex fan-out: A's op reaches B over its own socket.
     #[tokio::test]
     async fn ws_duplex_fan_out() {
-        let addr = spawn_server(memory_state()).await;
+        let addr = spawn_server(memory_state().await).await;
         let url = format!("ws://{addr}/documents/default/ws");
 
         let (mut a, _) = connect_async(&url).await.unwrap();
@@ -1161,14 +928,14 @@ mod tests {
     async fn persistence_round_trip_from_file() {
         let path = temp_db_path();
         {
-            let state = file_state(&path);
+            let state = file_state(&path).await;
             let handle = state.actor("default");
             for id in ["op-1", "op-2", "op-3"] {
                 handle.append_ops(vec![sample_envelope(id)], "actor-1".into()).await;
             }
         }
         // Rebuild fresh state + actors against the same db file.
-        let reopened = file_state(&path);
+        let reopened = file_state(&path).await;
         let ops = reopened.actor("default").ops_since(0).await;
         assert_eq!(ops.len(), 3);
         assert_eq!(ops.iter().map(|(_, e)| e.id.0.clone()).collect::<Vec<_>>(), vec!["op-1", "op-2", "op-3"]);
@@ -1178,20 +945,20 @@ mod tests {
     // 🔬 Op-id dedupe: the same envelope appended twice yields one row and one new append.
     #[tokio::test]
     async fn op_id_dedupe() {
-        let state = memory_state();
+        let state = memory_state().await;
         let handle = state.actor("default");
         let first = handle.append_ops(vec![sample_envelope("dup")], "actor-1".into()).await;
         let second = handle.append_ops(vec![sample_envelope("dup")], "actor-1".into()).await;
         assert!(first[0].is_new);
         assert!(!second[0].is_new);
-        assert_eq!(state.storage.load_ops("default").len(), 1);
+        assert_eq!(state.storage.load_ops("default").await.unwrap().len(), 1);
         assert_eq!(handle.ops_since(0).await.len(), 1);
     }
 
     // 🔬 Snapshot CAS: a stale-version envelope replace is rejected without mutating state.
     #[tokio::test]
     async fn snapshot_cas_conflict() {
-        let state = memory_state();
+        let state = memory_state().await;
         let handle = state.actor("default");
         let (_, version) = handle.get_document().await.unwrap();
         assert_eq!(version, 0);
@@ -1206,7 +973,7 @@ mod tests {
     // 🔬 Op append never 409s on version mismatch (the bug fix): two "concurrent" appends both succeed.
     #[tokio::test]
     async fn op_append_never_version_conflicts() {
-        let state = memory_state();
+        let state = memory_state().await;
         let handle = state.actor("default");
         // Bump the structural version so a legacy client's base assumption (0) would mismatch.
         let envelope = serde_json::json!({ "schema": "s.studio/v1", "id": "default", "vcs": { "operations": [] } });
@@ -1222,7 +989,7 @@ mod tests {
     // 🔬 REST op append assigns and returns an incrementing version.
     #[tokio::test]
     async fn rest_append_increments_version() {
-        let state = memory_state();
+        let state = memory_state().await;
         let response = append_op(
             Path("default".into()),
             HeaderMap::new(),
@@ -1237,7 +1004,7 @@ mod tests {
     // 🔬 GET /ops?since= filters by assigned version.
     #[tokio::test]
     async fn rest_ops_since_filters() {
-        let state = memory_state();
+        let state = memory_state().await;
         let handle = state.actor("default");
         handle.append_ops(vec![sample_envelope("op-1")], "actor-1".into()).await;
         handle.append_ops(vec![sample_envelope("op-2")], "actor-1".into()).await;
@@ -1265,12 +1032,13 @@ mod tests {
     // 🔬 VFS nodes are durable and creatable.
     #[tokio::test]
     async fn nodes_create_and_list() {
-        let state = memory_state();
+        let state = memory_state().await;
         let created = create_node(
             State(state.clone()),
             Json(CreateNodeRequest { parent_id: None, name: "Projects".into(), kind: "folder".into() }),
         )
-        .await;
+        .await
+        .expect("create");
         let child = create_node(
             State(state.clone()),
             Json(CreateNodeRequest {
@@ -1279,12 +1047,14 @@ mod tests {
                 kind: "document".into(),
             }),
         )
-        .await;
+        .await
+        .expect("create child");
         let children = list_nodes(
             Query(NodesQuery { parent: Some(created.0.id.clone()) }),
             State(state.clone()),
         )
-        .await;
+        .await
+        .expect("list");
         assert_eq!(children.0.len(), 1);
         assert_eq!(children.0[0].id, child.0.id);
     }
@@ -1292,23 +1062,23 @@ mod tests {
     // 🔬 Auth-lite: issuing a share token closes an otherwise-open document.
     #[tokio::test]
     async fn share_token_gates_access() {
-        let storage = HubStorage::open(":memory:");
-        storage.seed();
+        let storage = SqliteStorage::connect(":memory:").await.expect("connect");
+        storage.seed().await.expect("seed");
         let admin = HubState {
-            storage: storage.clone(),
+            storage: Arc::new(storage),
             actors: Arc::new(DashMap::new()),
             admin_token: Some("admin-secret".into()),
         };
         // Open before any token is issued.
-        assert!(storage.authorized("guarded", None));
+        assert!(admin.storage.authorized_by_token("guarded", None).await.unwrap());
         let mut headers = HeaderMap::new();
         headers.insert(axum::http::header::AUTHORIZATION, "Bearer admin-secret".parse().unwrap());
         let share = create_share(Path("guarded".into()), headers, State(admin.clone()))
             .await
             .expect("share");
         // Now closed to tokenless access, open with the minted token.
-        assert!(!storage.authorized("guarded", None));
-        assert!(storage.authorized("guarded", Some(&share.0.token)));
+        assert!(!admin.storage.authorized_by_token("guarded", None).await.unwrap());
+        assert!(admin.storage.authorized_by_token("guarded", Some(&share.0.token)).await.unwrap());
         // Wrong admin bearer is rejected.
         let mut bad = HeaderMap::new();
         bad.insert(axum::http::header::AUTHORIZATION, "Bearer nope".parse().unwrap());

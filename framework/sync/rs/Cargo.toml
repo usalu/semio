@@ -15,3 +15,23 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"
 vcs = { path = "../../../vcs/rs" }
+# 🧵 Channels/events used by the actor protocol on every target (sync primitives compile on wasm32).
+tokio = { version = "1", features = ["sync", "macros"], default-features = false }
+futures-util = { version = "0.3", default-features = false }
+
+# 🖥️ Native document-host actor: current-thread tokio runtime, hub WebSocket client, file watching.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tokio = { version = "1", features = ["rt", "net", "time", "macros", "sync"] }
+tokio-tungstenite = "0.26"
+notify = "8"
+
+# 🌐 Browser wgpu build: the actor runs on `spawn_local` with a `web_sys::WebSocket` hub transport.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = ["WebSocket", "MessageEvent", "BinaryType", "Event", "CloseEvent", "ErrorEvent"] }
+
+[dev-dependencies]
+tempfile = "3.20.0"
+tokio = { version = "1", features = ["full", "test-util"] }

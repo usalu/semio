@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./rs/pkg/mathematical_graph_port_directed_dag.js"
+    ".": "./rs/pkg/infinite_board_port_directed_dag.js"
   }
 }

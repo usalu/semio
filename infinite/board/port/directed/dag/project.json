@@ -5,7 +5,7 @@
     "wasm": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "mathematical/graph/port/directed/dag",
+        "cwd": "infinite/board/port/directed/dag",
         "command": "bun ./script.ts wasm"
       }
     }

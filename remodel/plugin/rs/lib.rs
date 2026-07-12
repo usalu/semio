@@ -215,7 +215,9 @@ fn remodel_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
 }
 
 fn register_remodel_exports() {
-    semio_framework_os::register_mesh_export_handlers("3d.remodel", "remodel", remodel_mesh_from_document);
+    semio_framework_os::register_mesh_exporter("3d.remodel", "remodel", remodel_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
+    semio_framework_os::register_mesh_exporter("3d.remodel", "remodel", remodel_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
+    semio_framework_os::register_mesh_dwg_export_handler("3d.remodel", "remodel", remodel_mesh_from_document);
 }
 
 semio_framework_plugin::semio_plugin! {

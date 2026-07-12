@@ -112,6 +112,7 @@
     "dev:sequence": "bun ./script.ts dev sequence",
     "dev:layout": "bun ./script.ts dev layout",
     "dev:lowpoly": "bun ./script.ts dev lowpoly",
+    "dev:remodel": "bun ./script.ts dev remodel",
     "dev:procedural:3d": "bun ./script.ts dev procedural 3d",
     "dev:procedural:3d:hexagonal-column": "bun ./script.ts dev procedural 3d fixture hexagonal-column",
     "dev:procedural:2d": "bun ./script.ts dev procedural 2d",

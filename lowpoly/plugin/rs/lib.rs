@@ -2470,9 +2470,13 @@ fn mesh_from_mesh_document(doc: &serde_json::Value) -> Result<semio_framework_pl
 }
 
 fn register_lowpoly_exports() {
-    semio_framework_os::register_mesh_export_handlers("3d.lowpoly", "lowpoly", lowpoly_mesh_from_document);
+    semio_framework_os::register_mesh_exporter("3d.lowpoly", "lowpoly", lowpoly_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
+    semio_framework_os::register_mesh_exporter("3d.lowpoly", "lowpoly", lowpoly_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
+    semio_framework_os::register_mesh_dwg_export_handler("3d.lowpoly", "lowpoly", lowpoly_mesh_from_document);
     semio_framework_os::register_mesh_dwg_import_handler("3d.lowpoly", lowpoly_document_from_mesh);
-    semio_framework_os::register_mesh_export_handlers("3d.mesh", "mesh", mesh_from_mesh_document);
+    semio_framework_os::register_mesh_exporter("3d.mesh", "mesh", mesh_from_mesh_document, Box::new(semio_framework_plugin::ObjExporter));
+    semio_framework_os::register_mesh_exporter("3d.mesh", "mesh", mesh_from_mesh_document, Box::new(semio_framework_plugin::GlbExporter));
+    semio_framework_os::register_mesh_dwg_export_handler("3d.mesh", "mesh", mesh_from_mesh_document);
     semio_framework_os::register_mesh_dwg_import_handler("3d.mesh", mesh_document_from_mesh);
 }
 

@@ -3313,7 +3313,7 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_suggestion_offset(80.0);
         h.set_brush_node_size(40.0);
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../fixture/nakagin-capsule-tower.2d.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../example/nakagin-capsule-tower.2d.json")).unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map(|v| v.to_string()).unwrap_or_else(|| "[]".to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
         let catalogs_str = fixture
@@ -3404,7 +3404,7 @@ mod host_tests {
         h.set_active_tool("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../fixture/nakagin-capsule-tower.2d.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../example/nakagin-capsule-tower.2d.json")).unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map(|v| v.to_string()).unwrap_or_else(|| "[]".to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
         let catalogs_str = fixture

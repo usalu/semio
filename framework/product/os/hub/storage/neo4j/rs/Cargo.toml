@@ -1,12 +1,12 @@
 # #region 🔖Header
 # 2026 Ueli Saluz
 # AGPL-3.0
-# HubStorage implementation over SQLite (async, via sqlx) — the zero-touch default for local dev
-# and single-user self-hosting; no external database service required.
+# HubStorage implementation over Neo4j (neo4rs) — users/studios/memberships as real nodes and
+# relationships; documents/ops stay a flat node-with-properties log (see lib.rs header for why).
 # #endregion 🔖Header
 
 [package]
-name = "os-hub-storage-sqlite"
+name = "os-hub-storage-neo4j"
 version = "0.1.0"
 edition = "2021"
 
@@ -17,7 +17,7 @@ path = "lib.rs"
 async-trait = "0.1"
 serde_json = "1.0"
 uuid = { version = "1.20", features = ["v7"] }
-rusqlite = { version = "0.38.0", features = ["bundled"] }
+neo4rs = "0.8"
 semio-framework-core = { path = "../../../../../../core/rs" }
 os-hub-storage = { path = "../../rs" }
 
