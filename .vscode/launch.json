@@ -755,6 +755,57 @@
       }
     },
     {
+      "name": "🛠️dev🌐gis⛰️3d⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:gis:3d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "GIS_3D_PLAY_PORT": "6083",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 160.3
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6083)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🌐gis⛰️3d🧊wgpu🌐wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:gis:3d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "GIS_3D_PLAY_PORT": "6183",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 160.4
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6183)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🌐gis⛰️3d🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native gis3d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 160.5
+      }
+    },
+    {
       "name": "🛠️dev📽️presentationplay⚛️react",
       "type": "node-terminal",
       "request": "launch",

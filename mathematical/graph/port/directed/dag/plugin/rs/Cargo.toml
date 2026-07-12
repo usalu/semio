@@ -1,7 +1,0 @@
-[package]
-name = "mathematical_graph_port_directed_dag_plugin"
-version = "0.1.0"
-edition = "2021"
-
-[lib]
-path = "lib.rs"

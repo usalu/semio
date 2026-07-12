@@ -32,7 +32,7 @@ pub struct Pose {
 /// 📦 Primitive solid spec resolvable via `BrepkitKernel::*_prim_sync`, or a non-parametric imported
 /// reference (mesh or real B-Rep solid) resolved by the app's own kernel session instead of a primitive.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum SolidSpec {
     Box { width: f64, depth: f64, height: f64 },
     Cylinder { radius: f64, height: f64 },

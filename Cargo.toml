@@ -38,6 +38,20 @@ members = [
     "kernel/3d/brep/engine/rs",
     "process/3d/rs",
     "process/plugin/rs",
+    "sequence/core/rs",
+    "sequence/plugin/rs",
+    "trinity/rewrite/engine/rs",
+    "trinity/jack/core/rs",
+    "trinity/ram/rs",
+    "trinity/plugin/rs",
+    "framework/graph/rs",
+    "reasoning/mindmap/wires/rs",
+    "reasoning/mindmap/plugin/rs",
+    "s/plugin/rs",
+    "s/rs",
+    "framework/sync/rs",
+    "framework/plugin/host/rs",
+    "framework/renderer/wgpu/rs",
 ]
 
 resolver = "2"

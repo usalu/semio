@@ -1,5 +1,3239 @@
 //! 🖱️ Declarative UI components (default) and retained-mode wgpu engine (feature "engine").
 
+// #region component
+//! 🧩 Declarative UI component model (declarative `UiNode` tree, scene records, `SurfaceKind`, `WindowLayout`/`WindowEngagement`/`WindowMeasure`, `ToolNode`) — moved verbatim from framework/core/rs/lib.rs; JSON wire format is byte-identical to the pre-move version (see the inline `*_wire_format_tests` mods). Ungated (default features) so wasm32-wasip2 plugin builds stay dependency-clean; must never reference `semio_framework_core`.
+pub mod component {
+pub mod layout {
+// #region layout
+//! 📐 Window layouts, panel tab constants, and engagement rails.
+
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+//#region 🔖Action
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ActionDescriptor {
+    pub controller_id: String,
+    pub action: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
+    pub args: Option<serde_json::Value>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StyleSpec {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub variant: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub density: Option<String>,
+}
+//#endregion 🔖Action
+
+//#region 🔖PanelTabConstants
+pub const FRAMEWORK_PANEL_TAB_DOCUMENT_ID: &str = "framework.panel.document";
+pub const FRAMEWORK_PANEL_TAB_CATALOGUE_ID: &str = "framework.panel.catalogue";
+pub const FRAMEWORK_PANEL_TAB_INSPECTION_ID: &str = "framework.panel.inspection";
+pub const FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL: &str = "Document";
+pub const FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL: &str = "Catalogue";
+pub const FRAMEWORK_PANEL_TAB_INSPECTION_LABEL: &str = "Inspection";
+pub const FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID: &str = "framework.panel.document";
+pub const FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID: &str = "framework.panel.catalogue";
+pub const FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID: &str = "framework.panel.inspection";
+pub const FRAMEWORK_PANEL_TAB_PARAMETERS_ID: &str = "framework.panel.parameters";
+pub const FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL: &str = "Parameters";
+pub const FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID: &str = "framework.panel.parameters";
+
+/// 🗣️ Resolves a well-known framework panel-tab id to its native English/German label; unknown ids resolve to None so app-specific panel tabs are left untouched.
+pub fn framework_panel_tab_label(id: &str, is_de: bool) -> Option<&'static str> {
+    match (id, is_de) {
+        (FRAMEWORK_PANEL_TAB_DOCUMENT_ID, false) => Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL),
+        (FRAMEWORK_PANEL_TAB_DOCUMENT_ID, true) => Some("Dokument"),
+        (FRAMEWORK_PANEL_TAB_CATALOGUE_ID, false) => Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL),
+        (FRAMEWORK_PANEL_TAB_CATALOGUE_ID, true) => Some("Katalog"),
+        (FRAMEWORK_PANEL_TAB_INSPECTION_ID, false) => Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL),
+        (FRAMEWORK_PANEL_TAB_INSPECTION_ID, true) => Some("Inspektion"),
+        (FRAMEWORK_PANEL_TAB_PARAMETERS_ID, false) => Some(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL),
+        (FRAMEWORK_PANEL_TAB_PARAMETERS_ID, true) => Some("Parameter"),
+        _ => None,
+    }
+}
+//#endregion 🔖PanelTabConstants
+
+//#region 🔖WindowLayout
+fn kind_window() -> String {
+    "window".into()
+}
+
+fn kind_stack() -> String {
+    "stack".into()
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct WindowLayoutWindowNode {
+    #[serde(default = "kind_window")]
+    pub kind: String,
+    pub window_kind_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub title: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub instance_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub template_id: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct WindowLayoutStackNode {
+    #[serde(default = "kind_stack")]
+    pub kind: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub size: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none", alias = "activeId")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub active_window_kind_id: Option<String>,
+    pub children: Vec<WindowLayoutWindowNode>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct WindowLayoutAxisNode {
+    pub kind: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub size: Option<f64>,
+    pub children: Vec<WindowLayoutChild>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(untagged)]
+pub enum WindowLayoutChild {
+    Axis(WindowLayoutAxisNode),
+    Stack(WindowLayoutStackNode),
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(untagged)]
+pub enum WindowLayoutRoot {
+    Axis(WindowLayoutAxisNode),
+    Stack(WindowLayoutStackNode),
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct WindowLayout {
+    pub root: WindowLayoutRoot,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct NamedLayout {
+    pub id: String,
+    pub label: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub icon_id: Option<String>,
+    pub layout: WindowLayout,
+    pub origin: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub group_path: Option<Vec<String>>,
+}
+
+pub fn create_window_layout(
+    window_kind_id: impl Into<String>,
+    title: Option<String>,
+    instance_id: Option<String>,
+    template_id: Option<String>,
+) -> WindowLayoutWindowNode {
+    WindowLayoutWindowNode {
+        kind: kind_window(),
+        window_kind_id: window_kind_id.into(),
+        title,
+        instance_id,
+        template_id,
+    }
+}
+
+pub fn create_stack_layout(window_kind_ids: &[String], titles: Option<&[String]>) -> WindowLayout {
+    WindowLayout {
+        root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
+            kind: kind_stack(),
+            size: None,
+            active_window_kind_id: None,
+            children: window_kind_ids
+                .iter()
+                .enumerate()
+                .map(|(index, id)| {
+                    create_window_layout(
+                        id.clone(),
+                        titles.and_then(|rows| rows.get(index).cloned()),
+                        None,
+                        None,
+                    )
+                })
+                .collect(),
+        }),
+    }
+}
+
+pub fn create_default_layout(
+    window_ids: &[String],
+    direction: &str,
+    sizes: Option<&[f64]>,
+    titles: Option<&[String]>,
+) -> WindowLayout {
+    WindowLayout {
+        root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
+            kind: direction.into(),
+            size: None,
+            children: window_ids
+                .iter()
+                .enumerate()
+                .map(|(index, id)| {
+                    WindowLayoutChild::Stack(WindowLayoutStackNode {
+                        kind: kind_stack(),
+                        size: sizes.and_then(|rows| rows.get(index).copied()),
+                        active_window_kind_id: None,
+                        children: vec![create_window_layout(
+                            id.clone(),
+                            titles
+                                .and_then(|rows| rows.get(index).cloned())
+                                .or_else(|| Some(id.clone())),
+                            None,
+                            None,
+                        )],
+                    })
+                })
+                .collect(),
+        }),
+    }
+}
+
+pub fn create_tab_stack_layout(window_ids: &[String], titles: Option<&[String]>) -> WindowLayout {
+    create_stack_layout(window_ids, titles)
+}
+
+/// 🪟 Builds a balanced fallback layout for an app that declares no `default_layout`: a single
+/// stack when there is one window, otherwise an even row of single-window stacks.
+pub fn even_window_layout(window_ids: &[String]) -> WindowLayout {
+    if window_ids.is_empty() {
+        return WindowLayout {
+            root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
+                kind: kind_stack(),
+                size: None,
+                active_window_kind_id: None,
+                children: vec![],
+            }),
+        };
+    }
+    if window_ids.len() == 1 {
+        return WindowLayout {
+            root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
+                kind: kind_stack(),
+                size: None,
+                active_window_kind_id: Some(window_ids[0].clone()),
+                children: vec![create_window_layout(window_ids[0].clone(), None, None, None)],
+            }),
+        };
+    }
+    let count = window_ids.len() as f64;
+    WindowLayout {
+        root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
+            kind: "row".into(),
+            size: None,
+            children: window_ids
+                .iter()
+                .map(|id| {
+                    WindowLayoutChild::Stack(WindowLayoutStackNode {
+                        kind: kind_stack(),
+                        size: Some(1.0 / count),
+                        active_window_kind_id: Some(id.clone()),
+                        children: vec![create_window_layout(id.clone(), None, None, None)],
+                    })
+                })
+                .collect(),
+        }),
+    }
+}
+
+pub fn create_named_layout(
+    id: impl Into<String>,
+    label: impl Into<String>,
+    layout: WindowLayout,
+    origin: impl Into<String>,
+    icon_id: Option<String>,
+    group_path: Option<Vec<String>>,
+) -> NamedLayout {
+    NamedLayout {
+        id: id.into(),
+        label: label.into(),
+        icon_id,
+        layout,
+        origin: origin.into(),
+        group_path,
+    }
+}
+
+pub fn merge_named_layouts(base: &[NamedLayout], extension: &[NamedLayout]) -> Vec<NamedLayout> {
+    let mut merged: HashMap<String, NamedLayout> = HashMap::new();
+    for entry in base {
+        merged.insert(entry.id.clone(), entry.clone());
+    }
+    for entry in extension {
+        merged.insert(entry.id.clone(), entry.clone());
+    }
+    merged.into_values().collect()
+}
+
+/// 🧭 Collects every `window_kind_id` referenced by a layout tree.
+pub fn collect_window_kind_ids_from_layout(layout: &WindowLayout) -> Vec<String> {
+    let mut ids = Vec::new();
+    collect_window_kind_ids_from_root(&layout.root, &mut ids);
+    ids
+}
+
+fn collect_window_kind_ids_from_root(root: &WindowLayoutRoot, out: &mut Vec<String>) {
+    match root {
+        WindowLayoutRoot::Axis(axis) => collect_window_kind_ids_from_children(&axis.children, out),
+        WindowLayoutRoot::Stack(stack) => collect_window_kind_ids_from_stack(stack, out),
+    }
+}
+
+fn collect_window_kind_ids_from_children(children: &[WindowLayoutChild], out: &mut Vec<String>) {
+    for child in children {
+        match child {
+            WindowLayoutChild::Axis(axis) => collect_window_kind_ids_from_children(&axis.children, out),
+            WindowLayoutChild::Stack(stack) => collect_window_kind_ids_from_stack(stack, out),
+        }
+    }
+}
+
+fn collect_window_kind_ids_from_stack(stack: &WindowLayoutStackNode, out: &mut Vec<String>) {
+    for window in &stack.children {
+        out.push(window.window_kind_id.clone());
+    }
+}
+//#endregion 🔖WindowLayout
+
+//#region 🔖WindowMeasure
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MeasureSelectItem {
+    pub id: String,
+    pub value: String,
+    pub label: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum WindowMeasure {
+    Select {
+        id: String,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        label: Option<String>,
+        value: String,
+        items: Vec<MeasureSelectItem>,
+        #[cfg_attr(feature = "typegen", ts(rename = "onChange"))]
+        on_change: ActionDescriptor,
+    },
+    Slider {
+        id: String,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        label: Option<String>,
+        value: f64,
+        min: f64,
+        max: f64,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        step: Option<f64>,
+        #[cfg_attr(feature = "typegen", ts(rename = "onChange"))]
+        on_change: ActionDescriptor,
+    },
+    Toggle {
+        id: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "iconId"))]
+        icon_id: String,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        label: Option<String>,
+        pressed: bool,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        text: Option<String>,
+        #[cfg_attr(feature = "typegen", ts(rename = "onChange"))]
+        on_change: ActionDescriptor,
+    },
+    Group {
+        id: String,
+        label: String,
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "defaultOpen"))]
+        default_open: Option<bool>,
+        children: Vec<WindowMeasure>,
+    },
+}
+//#endregion 🔖WindowMeasure
+
+//#region 🔖WindowEngagement
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct WindowEngagementOption {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub label: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub icon_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub pressed: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub disabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub action: Option<ActionDescriptor>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct WindowEngagementInput {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub value: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub placeholder: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub disabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub on_change: Option<ActionDescriptor>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub on_submit: Option<ActionDescriptor>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub on_repeat_last: Option<ActionDescriptor>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub on_abort: Option<ActionDescriptor>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct WindowEngagementStatus {
+    pub id: String,
+    pub text: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct WindowEngagementPossible {
+    pub id: String,
+    pub label: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub detail: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub action: Option<ActionDescriptor>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct WindowEngagementRingOption {
+    pub id: String,
+    pub label: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub disabled: Option<bool>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct WindowEngagementToggleGroupOption {
+    pub id: String,
+    pub label: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub disabled: Option<bool>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct WindowEngagementSelectItem {
+    pub id: String,
+    pub value: String,
+    pub label: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum WindowEngagementControl {
+    Slider {
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        id: Option<String>,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        label: Option<String>,
+        value: f64,
+        min: f64,
+        max: f64,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        step: Option<f64>,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        unit: Option<String>,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        disabled: Option<bool>,
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
+        on_change: Option<ActionDescriptor>,
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "onCommit"))]
+        on_commit: Option<ActionDescriptor>,
+    },
+    Stepper {
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        id: Option<String>,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        label: Option<String>,
+        value: f64,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        min: Option<f64>,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        max: Option<f64>,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        step: Option<f64>,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        unit: Option<String>,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        disabled: Option<bool>,
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
+        on_change: Option<ActionDescriptor>,
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "onCommit"))]
+        on_commit: Option<ActionDescriptor>,
+    },
+    Ring {
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        id: Option<String>,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        label: Option<String>,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        value: Option<String>,
+        options: Vec<WindowEngagementRingOption>,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        disabled: Option<bool>,
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "onSelect"))]
+        on_select: Option<ActionDescriptor>,
+    },
+    ToggleGroup {
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        id: Option<String>,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        label: Option<String>,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        value: Option<String>,
+        options: Vec<WindowEngagementToggleGroupOption>,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        disabled: Option<bool>,
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "onSelect"))]
+        on_select: Option<ActionDescriptor>,
+    },
+    Select {
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        id: Option<String>,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        label: Option<String>,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        value: Option<String>,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        placeholder: Option<String>,
+        items: Vec<WindowEngagementSelectItem>,
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        disabled: Option<bool>,
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
+        on_change: Option<ActionDescriptor>,
+    },
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct WindowEngagement {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub session_active: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub options: Option<Vec<WindowEngagementOption>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub input: Option<WindowEngagementInput>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub control: Option<WindowEngagementControl>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub controls: Option<Vec<WindowEngagementControl>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub status: Option<Vec<WindowEngagementStatus>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub possible_engagements: Option<Vec<WindowEngagementPossible>>,
+}
+
+/// 🤝 Closed replacement for `Option<WindowEngagement>` — makes "this window kind never engages" a
+/// named variant instead of `None`, so absence is an explicit, typed state rather than an implicit gap.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase", tag = "kind", content = "value")]
+pub enum WindowEngagementSlot {
+    None,
+    Some(WindowEngagement),
+}
+
+impl Default for WindowEngagementSlot {
+    fn default() -> Self {
+        Self::None
+    }
+}
+
+impl WindowEngagementSlot {
+    pub fn as_option(&self) -> Option<&WindowEngagement> {
+        match self {
+            WindowEngagementSlot::None => None,
+            WindowEngagementSlot::Some(engagement) => Some(engagement),
+        }
+    }
+}
+
+pub fn default_viewport_engagement() -> WindowEngagement {
+    WindowEngagement {
+        session_active: Some(true),
+        options: None,
+        input: None,
+        control: None,
+        controls: None,
+        status: Some(vec![WindowEngagementStatus {
+            id: "framework.viewport.status".into(),
+            text: "Viewport".into(),
+        }]),
+        possible_engagements: None,
+    }
+}
+
+/// 🎛️ Everything a window kind can expose beyond its rendered body — always present as a shape,
+/// empty collections/`WindowEngagementSlot::None` for windows that don't use a given facet.
+/// Replaces the previously separately-optional `measures`/`engagement` pair on `WindowKindDefinition`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct WindowOptions {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub measures: Vec<WindowMeasure>,
+    #[serde(default)]
+    pub engagement: WindowEngagementSlot,
+}
+//#endregion 🔖WindowEngagement
+
+//#region 🔖WireFormatGoldenTests
+/** 🧊 Golden wire-format tests: freeze exact JSON for layout/action/engagement types
+before these move into ui_wgpu, so the move can be proven byte-identical. */
+#[cfg(test)]
+mod layout_wire_format_tests {
+    use super::*;
+
+    const GOLDEN_ACTION_DESCRIPTOR_JSON: &str = "[{\"controllerId\":\"ctrl\",\"action\":\"doThing\",\"args\":42},{\"controllerId\":\"ctrl\",\"action\":\"doOther\"},{\"variant\":\"primary\",\"size\":\"md\"}]";
+
+    #[test]
+    fn action_descriptor_and_style_spec_serialize_to_golden_json() {
+        let values = (
+            ActionDescriptor {
+                controller_id: "ctrl".into(),
+                action: "doThing".into(),
+                args: Some(serde_json::json!(42)),
+            },
+            ActionDescriptor { controller_id: "ctrl".into(), action: "doOther".into(), args: None },
+            StyleSpec {
+                variant: Some("primary".into()),
+                size: Some("md".into()),
+                density: None,
+            },
+        );
+        let json = serde_json::to_string(&values).unwrap();
+        assert_eq!(json, GOLDEN_ACTION_DESCRIPTOR_JSON);
+    }
+
+    const GOLDEN_WINDOW_LAYOUT_JSON: &str = "{\"root\":{\"kind\":\"horizontal\",\"children\":[{\"kind\":\"stack\",\"size\":0.5,\"activeWindowKindId\":\"main\",\"children\":[{\"kind\":\"window\",\"windowKindId\":\"main\",\"title\":\"Main\"}]},{\"kind\":\"vertical\",\"size\":0.5,\"children\":[]}]}}";
+
+    #[test]
+    fn window_layout_serializes_to_golden_json() {
+        let layout = WindowLayout {
+            root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
+                kind: "horizontal".into(),
+                size: None,
+                children: vec![
+                    WindowLayoutChild::Stack(WindowLayoutStackNode {
+                        kind: "stack".into(),
+                        size: Some(0.5),
+                        active_window_kind_id: Some("main".into()),
+                        children: vec![WindowLayoutWindowNode {
+                            kind: "window".into(),
+                            window_kind_id: "main".into(),
+                            title: Some("Main".into()),
+                            instance_id: None,
+                            template_id: None,
+                        }],
+                    }),
+                    WindowLayoutChild::Axis(WindowLayoutAxisNode {
+                        kind: "vertical".into(),
+                        size: Some(0.5),
+                        children: vec![],
+                    }),
+                ],
+            }),
+        };
+        let json = serde_json::to_string(&layout).unwrap();
+        assert_eq!(json, GOLDEN_WINDOW_LAYOUT_JSON);
+        let roundtripped: WindowLayout = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, layout);
+    }
+
+    const GOLDEN_WINDOW_MEASURE_JSON: &str = "[{\"kind\":\"select\",\"id\":\"m1\",\"label\":\"Mode\",\"value\":\"a\",\"items\":[{\"id\":\"a\",\"value\":\"a\",\"label\":\"A\"}],\"on_change\":{\"controllerId\":\"ctrl\",\"action\":\"measureSelect\"}},{\"kind\":\"slider\",\"id\":\"m2\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":0.5,\"on_change\":{\"controllerId\":\"ctrl\",\"action\":\"measureSlider\"}},{\"kind\":\"toggle\",\"id\":\"m3\",\"icon_id\":\"icon.grid\",\"label\":null,\"pressed\":true,\"text\":null,\"on_change\":{\"controllerId\":\"ctrl\",\"action\":\"measureToggle\"}},{\"kind\":\"group\",\"id\":\"m4\",\"label\":\"Group\",\"default_open\":true,\"children\":[]}]";
+
+    #[test]
+    fn window_measure_serializes_to_golden_json() {
+        let measures = vec![
+            WindowMeasure::Select {
+                id: "m1".into(),
+                label: Some("Mode".into()),
+                value: "a".into(),
+                items: vec![MeasureSelectItem { id: "a".into(), value: "a".into(), label: "A".into() }],
+                on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "measureSelect".into(), args: None },
+            },
+            WindowMeasure::Slider {
+                id: "m2".into(),
+                label: None,
+                value: 1.0,
+                min: 0.0,
+                max: 2.0,
+                step: Some(0.5),
+                on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "measureSlider".into(), args: None },
+            },
+            WindowMeasure::Toggle {
+                id: "m3".into(),
+                icon_id: "icon.grid".into(),
+                label: None,
+                pressed: true,
+                text: None,
+                on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "measureToggle".into(), args: None },
+            },
+            WindowMeasure::Group {
+                id: "m4".into(),
+                label: "Group".into(),
+                default_open: Some(true),
+                children: vec![],
+            },
+        ];
+        let json = serde_json::to_string(&measures).unwrap();
+        assert_eq!(json, GOLDEN_WINDOW_MEASURE_JSON);
+        let roundtripped: Vec<WindowMeasure> = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, measures);
+    }
+
+    const GOLDEN_WINDOW_ENGAGEMENT_JSON: &str = "{\"sessionActive\":true,\"options\":[{\"id\":\"opt1\",\"label\":\"Option\",\"pressed\":false}],\"input\":{\"id\":\"in1\",\"value\":\"v\"},\"control\":{\"kind\":\"slider\",\"id\":\"sl1\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":null,\"unit\":null,\"disabled\":null,\"on_change\":null,\"on_commit\":null},\"status\":[{\"id\":\"st1\",\"text\":\"Ready\"}],\"possibleEngagements\":[{\"id\":\"pe1\",\"label\":\"Possible\"}]}";
+
+    #[test]
+    fn window_engagement_serializes_to_golden_json() {
+        let engagement = WindowEngagement {
+            session_active: Some(true),
+            options: Some(vec![WindowEngagementOption {
+                id: "opt1".into(),
+                label: Some("Option".into()),
+                icon_id: None,
+                pressed: Some(false),
+                disabled: None,
+                action: None,
+            }]),
+            input: Some(WindowEngagementInput {
+                id: Some("in1".into()),
+                value: Some("v".into()),
+                placeholder: None,
+                disabled: None,
+                on_change: None,
+                on_submit: None,
+                on_repeat_last: None,
+                on_abort: None,
+            }),
+            control: Some(WindowEngagementControl::Slider {
+                id: Some("sl1".into()),
+                label: None,
+                value: 1.0,
+                min: 0.0,
+                max: 2.0,
+                step: None,
+                unit: None,
+                disabled: None,
+                on_change: None,
+                on_commit: None,
+            }),
+            controls: None,
+            status: Some(vec![WindowEngagementStatus { id: "st1".into(), text: "Ready".into() }]),
+            possible_engagements: Some(vec![WindowEngagementPossible {
+                id: "pe1".into(),
+                label: "Possible".into(),
+                detail: None,
+                action: None,
+            }]),
+        };
+        let json = serde_json::to_string(&engagement).unwrap();
+        assert_eq!(json, GOLDEN_WINDOW_ENGAGEMENT_JSON);
+        let roundtripped: WindowEngagement = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, engagement);
+    }
+}
+//#endregion 🔖WireFormatGoldenTests
+// #endregion layout
+}
+
+pub mod tools {
+// #region tools
+//! 🧰 Declarative per-mode toolbar tool trees.
+
+use super::layout::ActionDescriptor;
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ToolCategory {
+    Selection,
+    Tools,
+    Actions,
+    History,
+    Sync,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum ToolNode {
+    Separator {
+        id: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        order: Option<u32>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        disabled: Option<bool>,
+    },
+    Button {
+        id: String,
+        icon_id: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        label: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        text: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        title: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        order: Option<u32>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        disabled: Option<bool>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        category: Option<ToolCategory>,
+        on_press: ActionDescriptor,
+    },
+    Toggle {
+        id: String,
+        icon_id: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        label: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        text: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        title: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        order: Option<u32>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pressed: Option<bool>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        disabled: Option<bool>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        category: Option<ToolCategory>,
+        on_change: ActionDescriptor,
+    },
+    Collection {
+        id: String,
+        icon_id: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        label: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        text: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        title: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        order: Option<u32>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        disabled: Option<bool>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        category: Option<ToolCategory>,
+        children: Vec<ToolNode>,
+    },
+}
+
+impl ToolNode {
+    pub fn category(&self) -> ToolCategory {
+        match self {
+            ToolNode::Separator { .. } => ToolCategory::Tools,
+            ToolNode::Button { category, .. } => category.unwrap_or(ToolCategory::Actions),
+            ToolNode::Toggle { category, .. } => category.unwrap_or(ToolCategory::Tools),
+            ToolNode::Collection { category, .. } => category.unwrap_or(ToolCategory::Tools),
+        }
+    }
+
+    pub fn with_category(mut self, category: ToolCategory) -> Self {
+        match &mut self {
+            ToolNode::Button { category: slot, .. }
+            | ToolNode::Toggle { category: slot, .. }
+            | ToolNode::Collection { category: slot, .. } => *slot = Some(category),
+            ToolNode::Separator { .. } => {}
+        }
+        self
+    }
+}
+
+pub fn tool_separator(id: impl Into<String>) -> ToolNode {
+    ToolNode::Separator {
+        id: id.into(),
+        order: None,
+        disabled: None,
+    }
+}
+
+pub fn tool_button(
+    id: impl Into<String>,
+    icon_id: impl Into<String>,
+    label: impl Into<String>,
+    on_press: ActionDescriptor,
+) -> ToolNode {
+    let label = label.into();
+    ToolNode::Button {
+        id: id.into(),
+        icon_id: icon_id.into(),
+        label: Some(label.clone()),
+        text: None,
+        title: Some(label),
+        order: None,
+        disabled: None,
+        category: None,
+        on_press,
+    }
+}
+
+pub fn tool_toggle(
+    id: impl Into<String>,
+    icon_id: impl Into<String>,
+    label: impl Into<String>,
+    pressed: bool,
+    on_change: ActionDescriptor,
+) -> ToolNode {
+    let label = label.into();
+    ToolNode::Toggle {
+        id: id.into(),
+        icon_id: icon_id.into(),
+        label: Some(label.clone()),
+        text: None,
+        title: Some(label),
+        order: None,
+        pressed: Some(pressed),
+        disabled: None,
+        category: None,
+        on_change,
+    }
+}
+
+pub fn tool_collection(
+    id: impl Into<String>,
+    icon_id: impl Into<String>,
+    label: impl Into<String>,
+    children: Vec<ToolNode>,
+) -> ToolNode {
+    let label = label.into();
+    ToolNode::Collection {
+        id: id.into(),
+        icon_id: icon_id.into(),
+        label: Some(label.clone()),
+        text: None,
+        title: Some(label),
+        order: None,
+        disabled: None,
+        category: None,
+        children,
+    }
+}
+
+//#region 🔖WireFormatGoldenTests
+/** 🧊 Golden wire-format tests: freeze exact JSON for ToolNode before it moves into ui_wgpu. */
+#[cfg(test)]
+mod tool_node_wire_format_tests {
+    use super::*;
+    use super::super::layout::ActionDescriptor;
+
+    const GOLDEN_TOOL_NODE_JSON: &str = "[{\"kind\":\"separator\",\"id\":\"sep1\",\"order\":1},{\"kind\":\"button\",\"id\":\"btn1\",\"iconId\":\"icon.tool\",\"label\":\"Tool\",\"title\":\"Tool\",\"category\":\"history\",\"onPress\":{\"controllerId\":\"ctrl\",\"action\":\"runTool\"}},{\"kind\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"icon.toggle\",\"label\":\"Toggle\",\"title\":\"Toggle\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggleTool\"}},{\"kind\":\"collection\",\"id\":\"col1\",\"iconId\":\"icon.group\",\"label\":\"Group\",\"title\":\"Group\",\"children\":[{\"kind\":\"separator\",\"id\":\"sep2\"}]}]";
+
+    #[test]
+    fn tool_node_serializes_to_golden_json() {
+        let nodes = vec![
+            ToolNode::Separator { id: "sep1".into(), order: Some(1), disabled: None },
+            tool_button(
+                "btn1",
+                "icon.tool",
+                "Tool",
+                ActionDescriptor { controller_id: "ctrl".into(), action: "runTool".into(), args: None },
+            )
+            .with_category(ToolCategory::History),
+            tool_toggle(
+                "tog1",
+                "icon.toggle",
+                "Toggle",
+                true,
+                ActionDescriptor { controller_id: "ctrl".into(), action: "toggleTool".into(), args: None },
+            ),
+            tool_collection("col1", "icon.group", "Group", vec![tool_separator("sep2")]),
+        ];
+        let json = serde_json::to_string(&nodes).unwrap();
+        assert_eq!(json, GOLDEN_TOOL_NODE_JSON);
+        let roundtripped: Vec<ToolNode> = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, nodes);
+    }
+}
+//#endregion 🔖WireFormatGoldenTests
+// #endregion tools
+}
+
+pub mod ui {
+// #region ui
+//! 🧩 Declarative UI graph types shared by kernel, plugins, and renderers.
+
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+//#region 🔖Action
+pub use super::layout::{ActionDescriptor, StyleSpec};
+//#endregion 🔖Action
+
+//#region 🔖Primitives
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiStackNode {
+    pub direction: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gap: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub padding: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selected: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub activate: Option<ActionDescriptor>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub drop_action: Option<ActionDescriptor>,
+    pub children: Vec<UiNode>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiTextNode {
+    pub value: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub emphasize: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub data_attributes: Option<HashMap<String, String>>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiButtonNode {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    pub icon_id: String,
+    pub label: String,
+    pub action: ActionDescriptor,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub style: Option<StyleSpec>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub disabled: Option<bool>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiSeparatorNode {}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiImageNode {
+    pub id: String,
+    pub src: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub alt: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiInputNode {
+    pub id: String,
+    pub input_kind: String,
+    pub value: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub placeholder: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub commit: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub min: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub step: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accept: Option<String>,
+    pub on_change: ActionDescriptor,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiSelectItem {
+    pub value: String,
+    pub label: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiSelectNode {
+    pub id: String,
+    pub value: String,
+    pub items: Vec<UiSelectItem>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub placeholder: Option<String>,
+    pub on_change: ActionDescriptor,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiToggleNode {
+    pub id: String,
+    pub icon_id: String,
+    pub pressed: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+    pub on_change: ActionDescriptor,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiVec3Node {
+    pub id: String,
+    pub value: Option<[f64; 3]>,
+    pub on_change: ActionDescriptor,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiKeyValueEntry {
+    pub label: String,
+    pub value: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiKeyValueNode {
+    pub entries: Vec<UiKeyValueEntry>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiSliderNode {
+    pub id: String,
+    pub value: f64,
+    pub min: f64,
+    pub max: f64,
+    pub step: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    pub on_change: ActionDescriptor,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiNumberStepperNode {
+    pub id: String,
+    pub value: f64,
+    pub step: f64,
+    pub uniform: bool,
+    pub on_absolute: ActionDescriptor,
+    pub on_delta: ActionDescriptor,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiRingNode {
+    pub id: String,
+    pub orb_id: String,
+    pub t: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub disabled: Option<bool>,
+    pub on_change: ActionDescriptor,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiIconSelectNode {
+    pub id: String,
+    pub value: String,
+    pub uniform: bool,
+    pub classifier_kind: String,
+    pub on_change: ActionDescriptor,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "camelCase")]
+pub enum UiControlNode {
+    Input(UiInputNode),
+    Select(UiSelectNode),
+    Toggle(UiToggleNode),
+    Vec3(UiVec3Node),
+    Button(UiButtonNode),
+    KeyValue(UiKeyValueNode),
+    Slider(UiSliderNode),
+    NumberStepper(UiNumberStepperNode),
+    Ring(UiRingNode),
+    IconSelect(UiIconSelectNode),
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiFieldNode {
+    pub id: String,
+    pub label: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub required: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+    pub child: Box<UiNode>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiSectionNode {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none", alias = "title")]
+    pub label: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_open: Option<bool>,
+    pub children: Vec<UiNode>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiTreeItemAction {
+    pub icon_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    pub action: ActionDescriptor,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reveal_on_hover: Option<bool>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiTreeItemNode {
+    pub id: String,
+    pub label: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none", alias = "icon")]
+    pub icon_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selected: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none", alias = "expanded")]
+    pub default_open: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub action: Option<ActionDescriptor>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hover_action: Option<ActionDescriptor>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unhover_action: Option<ActionDescriptor>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub actions: Option<Vec<UiTreeItemAction>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub draggable: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub drag_data: Option<HashMap<String, String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub items: Option<Vec<UiTreeItemNode>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub control: Option<UiControlNode>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub is_hidden: Option<bool>,
+}
+
+impl UiTreeItemNode {
+    /** @emoji 🌳 Builds a tree item with optional extensions unset. */
+    pub fn base(id: impl Into<String>, label: impl Into<String>) -> Self {
+        Self {
+            id: id.into(),
+            label: label.into(),
+            description: None,
+            icon_id: None,
+            selected: None,
+            default_open: None,
+            action: None,
+            hover_action: None,
+            unhover_action: None,
+            actions: None,
+            draggable: None,
+            drag_data: None,
+            items: None,
+            control: None,
+            is_hidden: None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiTreeSectionNode {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_open: Option<bool>,
+    pub items: Vec<UiTreeItemNode>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiTreeNode {
+    pub sections: Vec<UiTreeSectionNode>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selected_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub highlighted_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selection_change: Option<ActionDescriptor>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub drop_action: Option<ActionDescriptor>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiInspectorFieldGroup {
+    pub id: String,
+    pub label: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_open: Option<bool>,
+    pub fields: Vec<UiNode>,
+}
+
+pub const UI_INSPECTOR_MIXED_PLACEHOLDER: &str = "Mixed";
+//#endregion 🔖Primitives
+
+//#region 🔖InspectorHelpers
+pub fn ui_inspector_all_equal<T: PartialEq>(values: &[T]) -> bool {
+    if values.len() <= 1 {
+        return true;
+    }
+    values.windows(2).all(|pair| pair[0] == pair[1])
+}
+
+pub struct UiInspectorMixedText {
+    pub value: String,
+    pub placeholder: Option<String>,
+}
+
+pub fn ui_inspector_mixed_text(values: &[String]) -> UiInspectorMixedText {
+    let uniform = ui_inspector_all_equal(values);
+    UiInspectorMixedText {
+        value: if uniform {
+            values.first().cloned().unwrap_or_default()
+        } else {
+            String::new()
+        },
+        placeholder: if uniform {
+            None
+        } else {
+            Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into())
+        },
+    }
+}
+
+pub struct UiInspectorMixedNumber {
+    pub value: f64,
+    pub uniform: bool,
+}
+
+pub fn ui_inspector_mixed_number(values: &[f64]) -> UiInspectorMixedNumber {
+    let uniform = ui_inspector_all_equal(values);
+    UiInspectorMixedNumber {
+        value: if uniform {
+            *values.first().unwrap_or(&0.0)
+        } else {
+            f64::NAN
+        },
+        uniform,
+    }
+}
+
+pub fn ui_inspector_mixed_select(values: &[String]) -> UiInspectorMixedText {
+    ui_inspector_mixed_text(values)
+}
+
+pub struct UiInspectorMixedToggle {
+    pub pressed: bool,
+    pub uniform: bool,
+}
+
+pub fn ui_inspector_mixed_toggle(values: &[bool]) -> UiInspectorMixedToggle {
+    let uniform = ui_inspector_all_equal(values);
+    UiInspectorMixedToggle {
+        pressed: uniform && values.first().copied().unwrap_or(false),
+        uniform,
+    }
+}
+
+pub fn ui_inspector_mixed_slider(values: &[f64]) -> UiInspectorMixedNumber {
+    ui_inspector_mixed_number(values)
+}
+
+pub struct UiInspectorMixedVec3 {
+    pub value: Option<[f64; 3]>,
+    pub uniform: bool,
+}
+
+pub fn ui_inspector_mixed_vec3(values: &[[f64; 3]]) -> UiInspectorMixedVec3 {
+    let serialized: Vec<String> = values
+        .iter()
+        .map(|row| serde_json::to_string(row).unwrap_or_default())
+        .collect();
+    let uniform = ui_inspector_all_equal(&serialized);
+    UiInspectorMixedVec3 {
+        value: if uniform { values.first().copied() } else { None },
+        uniform,
+    }
+}
+
+pub fn ui_inspector_readonly_field(
+    id: impl Into<String>,
+    label: impl Into<String>,
+    value: impl Into<String>,
+) -> UiNode {
+    let id = id.into();
+    UiNode::Field(UiFieldNode {
+        id: id.clone(),
+        label: label.into(),
+        child: Box::new(UiNode::Input(UiInputNode {
+            id,
+            input_kind: "text".into(),
+            value: value.into(),
+            placeholder: None,
+            commit: None,
+            on_change: ActionDescriptor {
+                controller_id: String::new(),
+                action: String::new(),
+                args: None,
+            },
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
+        })),
+        description: None,
+        required: None,
+        error: None,
+    })
+}
+
+pub fn ui_inspector_groups_to_tree(groups: &[UiInspectorFieldGroup]) -> UiNode {
+    let sections: Vec<UiSectionNode> = groups
+        .iter()
+        .filter(|group| !group.fields.is_empty())
+        .map(|group| UiSectionNode {
+            id: group.id.clone(),
+            label: Some(group.label.clone()),
+            default_open: Some(group.default_open.unwrap_or(true)),
+            children: group.fields.clone(),
+        })
+        .collect();
+    ui_declarative_sections_to_tree(&sections)
+}
+
+pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
+    let tree_sections: Vec<UiTreeSectionNode> = sections
+        .iter()
+        .map(|section| UiTreeSectionNode {
+            id: section.id.clone(),
+            label: section.label.clone(),
+            default_open: Some(section.default_open.unwrap_or(true)),
+            items: section
+                .children
+                .iter()
+                .enumerate()
+                .map(|(index, child)| {
+                    ui_declarative_child_to_tree_item(child, format!("{}.{}", section.id, index))
+                })
+                .collect(),
+        })
+        .collect();
+    UiNode::Tree(if tree_sections.is_empty() {
+        UiTreeNode {
+            sections: vec![UiTreeSectionNode {
+                id: "empty".into(),
+                label: None,
+                default_open: None,
+                items: vec![UiTreeItemNode {
+                    id: "empty".into(),
+                    label: "—".into(),
+                    description: None,
+                    icon_id: None,
+                    selected: None,
+                    default_open: None,
+                    action: None,
+                    hover_action: None,
+                    unhover_action: None,
+                    actions: None,
+                    draggable: None,
+                    drag_data: None,
+                    items: None,
+                    control: None,
+                    is_hidden: None,
+                }],
+            }],
+            selected_ids: None,
+            highlighted_ids: None,
+            selection_change: None,
+            drop_action: None,
+        }
+    } else {
+        UiTreeNode {
+            sections: tree_sections,
+            selected_ids: None,
+            highlighted_ids: None,
+            selection_change: None,
+            drop_action: None,
+        }
+    })
+}
+
+fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTreeItemNode {
+    match node {
+        UiNode::Text(text) => UiTreeItemNode {
+            id: format!("{}.text", fallback_id),
+            label: text.value.clone(),
+            description: None,
+            icon_id: None,
+            selected: None,
+            default_open: None,
+            action: None,
+            hover_action: None,
+            unhover_action: None,
+            actions: None,
+            draggable: None,
+            drag_data: None,
+            items: None,
+            control: None,
+            is_hidden: None,
+        },
+        UiNode::Field(field) => {
+            let description = if let UiNode::Input(input) = field.child.as_ref() {
+                input
+                    .placeholder
+                    .clone()
+                    .or_else(|| if input.value.is_empty() { None } else { Some(input.value.clone()) })
+            } else {
+                None
+            };
+            UiTreeItemNode {
+                id: field.id.clone(),
+                label: field.label.clone(),
+                description,
+                icon_id: None,
+                selected: None,
+                default_open: None,
+                action: None,
+                hover_action: None,
+                unhover_action: None,
+                actions: None,
+                draggable: None,
+                drag_data: None,
+                items: None,
+                control: ui_node_to_control(&field.child),
+                is_hidden: None,
+            }
+        }
+        UiNode::Button(button) => UiTreeItemNode {
+            id: button.id.clone().unwrap_or(fallback_id),
+            label: button.label.clone(),
+            description: None,
+            icon_id: None,
+            selected: None,
+            default_open: None,
+            action: None,
+            hover_action: None,
+            unhover_action: None,
+            actions: None,
+            draggable: None,
+            drag_data: None,
+            items: None,
+            control: Some(UiControlNode::Button(button.clone())),
+            is_hidden: None,
+        },
+        UiNode::Input(input) => tree_control_item(input.id.clone(), UiControlNode::Input(input.clone())),
+        UiNode::Select(select) => tree_control_item(select.id.clone(), UiControlNode::Select(select.clone())),
+        UiNode::Toggle(toggle) => tree_control_item(toggle.id.clone(), UiControlNode::Toggle(toggle.clone())),
+        UiNode::Vec3(vec3) => tree_control_item(vec3.id.clone(), UiControlNode::Vec3(vec3.clone())),
+        UiNode::KeyValue(key_value) => tree_control_item(fallback_id, UiControlNode::KeyValue(key_value.clone())),
+        UiNode::Slider(slider) => tree_control_item(slider.id.clone(), UiControlNode::Slider(slider.clone())),
+        UiNode::NumberStepper(stepper) => {
+            tree_control_item(stepper.id.clone(), UiControlNode::NumberStepper(stepper.clone()))
+        }
+        UiNode::Ring(ring) => tree_control_item(ring.id.clone(), UiControlNode::Ring(ring.clone())),
+        UiNode::IconSelect(icon_select) => {
+            tree_control_item(icon_select.id.clone(), UiControlNode::IconSelect(icon_select.clone()))
+        }
+        UiNode::Separator(_) => UiTreeItemNode {
+            id: format!("{}.sep", fallback_id),
+            label: "—".into(),
+            description: None,
+            icon_id: None,
+            selected: None,
+            default_open: None,
+            action: None,
+            hover_action: None,
+            unhover_action: None,
+            actions: None,
+            draggable: None,
+            drag_data: None,
+            items: None,
+            control: None,
+            is_hidden: None,
+        },
+        other => UiTreeItemNode {
+            id: fallback_id,
+            label: format!("{other:?}"),
+            description: None,
+            icon_id: None,
+            selected: None,
+            default_open: None,
+            action: None,
+            hover_action: None,
+            unhover_action: None,
+            actions: None,
+            draggable: None,
+            drag_data: None,
+            items: None,
+            control: None,
+            is_hidden: None,
+        },
+    }
+}
+
+fn tree_control_item(id: String, control: UiControlNode) -> UiTreeItemNode {
+    UiTreeItemNode {
+        id,
+        label: String::new(),
+        description: None,
+        icon_id: None,
+        selected: None,
+        default_open: None,
+        action: None,
+        hover_action: None,
+        unhover_action: None,
+        actions: None,
+        draggable: None,
+        drag_data: None,
+        items: None,
+        control: Some(control),
+        is_hidden: None,
+    }
+}
+//#endregion 🔖InspectorHelpers
+
+//#region 🔖ComponentScenes
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub enum SurfaceKind {
+    #[serde(rename = "canvas-2d")]
+    Canvas2d,
+    #[serde(rename = "world-3d")]
+    World3d,
+    #[serde(rename = "node-graph")]
+    NodeGraph,
+    #[serde(rename = "text-editor")]
+    TextEditor,
+    #[serde(rename = "table")]
+    Table,
+    #[serde(rename = "raster")]
+    Raster,
+    #[serde(rename = "virtualFileSystem")]
+    VirtualFileSystem,
+    #[serde(rename = "gis2d-map")]
+    GisMap,
+    #[serde(rename = "puzzle2d-board")]
+    Puzzle2dBoard,
+    #[serde(rename = "icon-render")]
+    IconRender,
+    #[serde(rename = "note-canvas")]
+    NoteCanvas,
+    #[serde(rename = "vcs-history")]
+    VcsHistory,
+    #[serde(rename = "protocol-list")]
+    ProtocolList,
+}
+
+impl SurfaceKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Canvas2d => "canvas-2d",
+            Self::World3d => "world-3d",
+            Self::NodeGraph => "node-graph",
+            Self::TextEditor => "text-editor",
+            Self::Table => "table",
+            Self::Raster => "raster",
+            Self::VirtualFileSystem => "virtualFileSystem",
+            Self::GisMap => "gis2d-map",
+            Self::Puzzle2dBoard => "puzzle2d-board",
+            Self::IconRender => "icon-render",
+            Self::NoteCanvas => "note-canvas",
+            Self::VcsHistory => "vcs-history",
+            Self::ProtocolList => "protocol-list",
+        }
+    }
+
+    pub fn is_viewport(self) -> bool {
+        matches!(
+            self,
+            Self::World3d | Self::NodeGraph | Self::Canvas2d | Self::Puzzle2dBoard | Self::NoteCanvas
+        )
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Canvas2dScene {
+    pub camera_x: f64,
+    pub camera_y: f64,
+    pub zoom: f64,
+    pub layers_json: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct World3dScene {
+    pub camera_json: String,
+    #[serde(default = "world3d_default_meshes_json")]
+    pub meshes_json: String,
+    pub instances_json: String,
+    #[serde(default = "world3d_default_selection_json")]
+    pub selection_json: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vortices_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub attractions_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_volumes_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub references_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub brush_preview_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interaction_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub engagement_preview_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lod_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub chunking_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub context_menu_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub environment_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub frame_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fit_json: Option<String>,
+    /// 🌐⛰️ GIS 3D terrain style/source descriptor (`{tileUrlTemplate, projectOriginLon, projectOriginLat, exaggeration, colorRamp, minZoom, maxZoom}`), consumed by `WorldTerrainLayer`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub terrain_json: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorldMeshLodEntry {
+    pub lod: f64,
+    pub url: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorldLodRecord {
+    #[serde(default = "default_true")]
+    pub automatic: bool,
+    #[serde(default = "default_manual_lod")]
+    pub manual: f64,
+    #[serde(default = "default_distance_reference")]
+    pub distance_reference: f64,
+    #[serde(default)]
+    pub depth_variable: bool,
+    #[serde(default = "default_grid_factor")]
+    pub grid_factor: f64,
+    #[serde(default)]
+    pub grid_snap_enabled: bool,
+    #[serde(default = "default_true")]
+    pub show_grid: bool,
+    #[serde(default)]
+    pub grid_datum: Option<[f64; 3]>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorldChunkingRecord {
+    pub chunk_size: f64,
+    pub max_distance: f64,
+}
+
+fn default_manual_lod() -> f64 {
+    100.0
+}
+
+fn default_distance_reference() -> f64 {
+    100.0
+}
+
+fn default_grid_factor() -> f64 {
+    10.0
+}
+
+fn default_true() -> bool {
+    true
+}
+
+pub fn world3d_default_lod_json() -> String {
+    serde_json::json!({
+        "automatic": true,
+        "manual": 100.0,
+        "distanceReference": 100.0,
+        "depthVariable": false,
+        "gridFactor": 10.0,
+        "gridSnapEnabled": false,
+        "showGrid": true,
+        "gridDatum": [0.0, 0.0, 0.0],
+    })
+    .to_string()
+}
+
+pub fn world3d_chunking_json(chunk_size: f64, max_distance: f64) -> String {
+    serde_json::json!({
+        "chunkSize": chunk_size,
+        "maxDistance": max_distance,
+    })
+    .to_string()
+}
+
+pub fn world3d_default_selection_json() -> String {
+    r#"{"method":"rectangle","mode":"replace","ids":[],"hoveredId":null}"#.into()
+}
+
+pub fn world3d_default_meshes_json() -> String {
+    "[]".into()
+}
+
+pub fn world3d_camera_json(position: [f64; 3], target: [f64; 3], fov: f64) -> String {
+    serde_json::json!({
+        "position": position,
+        "target": target,
+        "up": [0.0, 0.0, 1.0],
+        "fov": fov,
+    })
+    .to_string()
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NodeGraphScene {
+    pub nodes_json: String,
+    pub edges_json: String,
+    pub viewport_json: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub editable: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub operators_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context_menu_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub find_items_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selection_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hover_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub preview_off_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lod_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub catalogue_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub controls_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub clusters_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub computing_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub capabilities_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fixture_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub presence_peers_json: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TextEditorScene {
+    pub buffer: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub language: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selection_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tokens_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub diagnostics_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub completions_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub overlays_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub occurrences_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub placeholders_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub extra_carets_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selectable_spans_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub settings_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub camera_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hover_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub newline_gates_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rename_json: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TableScene {
+    pub columns_json: String,
+    pub rows_json: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selection_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub row_drag_mime: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub drop_action: Option<ActionDescriptor>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sort_json: Option<String>,
+}
+
+impl TableScene {
+    /** @emoji 📋 Builds a table scene with optional extensions (selection/drag/sort) unset. */
+    pub fn base(columns_json: impl Into<String>, rows_json: impl Into<String>) -> Self {
+        Self {
+            columns_json: columns_json.into(),
+            rows_json: rows_json.into(),
+            selection_json: None,
+            row_drag_mime: None,
+            drop_action: None,
+            sort_json: None,
+        }
+    }
+}
+
+//#region 🔖TableCells
+/// 🧾 A typed table cell value: plain text/number, or an interactive stepper/button group.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum TableCell {
+    Text {
+        value: String,
+    },
+    Number {
+        value: f64,
+    },
+    Stepper {
+        value: f64,
+        min: f64,
+        max: f64,
+        step: f64,
+        action: ActionDescriptor,
+    },
+    Buttons {
+        buttons: Vec<UiTreeItemAction>,
+    },
+}
+
+/// 🧾 Builds one `rows_json` record: an id, an optional drag payload, and typed/plain cells keyed by column id.
+pub fn table_row_json(
+    id: impl Into<String>,
+    drag_payload: Option<&serde_json::Value>,
+    cells: &[(&str, TableCell)],
+) -> serde_json::Value {
+    let mut row = serde_json::Map::new();
+    row.insert("id".into(), serde_json::Value::String(id.into()));
+    if let Some(payload) = drag_payload {
+        row.insert("_drag".into(), payload.clone());
+    }
+    for (column_id, cell) in cells {
+        let value = serde_json::to_value(cell).unwrap_or(serde_json::Value::Null);
+        row.insert((*column_id).to_string(), value);
+    }
+    serde_json::Value::Object(row)
+}
+//#endregion 🔖TableCells
+
+/** @emoji 🖼️ Raster scene: WASM `RasterSession` sync channels for the composite/navigator windows, see raster/rs/lib.rs. */
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RasterScene {
+    pub document_sync_json: String,
+    pub assets_json: String,
+    pub camera_json: String,
+    pub selection_json: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hovered_id: Option<String>,
+    pub active_tool: String,
+    pub brush_size: f64,
+    pub brush_opacity: f64,
+    pub view_mode: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub composite_viewport_json: Option<String>,
+}
+
+/** @emoji 🖼️ Icon-render scene: client-side render request for a shot preview, see https://threejs.org/docs/#examples/en/renderers/SVGRenderer. */
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IconRenderScene {
+    pub request_json: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub footer: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub frame_json: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VirtualFileSystemScene {
+    pub schema_json: String,
+    pub rows_json: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selected_row_ids_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hovered_row_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub empty_message: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub drag_drop_enabled: Option<bool>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GisMapScene {
+    pub map_fixture_json: String,
+    pub camera_json: String,
+    #[serde(default = "gis_map_default_render_mode")]
+    pub render_mode: String,
+    #[serde(default = "gis_map_default_vector_style")]
+    pub vector_style: String,
+    #[serde(default = "gis_map_default_lod_mode")]
+    pub lod_mode: String,
+    #[serde(default = "gis_map_default_tile_url_template")]
+    pub tile_url_template: String,
+    #[serde(default = "gis_map_default_vector_tile_url_template")]
+    pub vector_tile_url_template: String,
+    #[serde(default = "gis_map_default_layer_visibility_json")]
+    pub layer_visibility_json: String,
+    #[serde(default = "gis_map_default_layer_stroke_scale_json")]
+    pub layer_stroke_scale_json: String,
+    #[serde(default = "gis_map_default_selection_json")]
+    pub selection_json: String,
+    #[serde(default = "gis_map_default_hover_json")]
+    pub hover_json: String,
+    #[serde(default = "gis_map_default_selection_method")]
+    pub selection_method: String,
+    #[serde(default = "gis_map_default_selection_mode")]
+    pub selection_mode: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context_menu_json: Option<String>,
+}
+
+pub fn gis_map_default_render_mode() -> String {
+    "combined".into()
+}
+
+pub fn gis_map_default_vector_style() -> String {
+    "colored".into()
+}
+
+pub fn gis_map_default_lod_mode() -> String {
+    "automatic".into()
+}
+
+pub fn gis_map_default_tile_url_template() -> String {
+    "/osm/{z}/{x}/{y}.png".into()
+}
+
+pub fn gis_map_default_vector_tile_url_template() -> String {
+    "/vt/{z}/{x}/{y}.pbf".into()
+}
+
+pub fn gis_map_default_layer_visibility_json() -> String {
+    r#"{"raster":true,"water":true,"land":true,"roads":true,"buildings":true,"borders":true,"labels":true,"positions":true,"positionLabels":true,"routes":true,"regions":true}"#.into()
+}
+
+pub fn gis_map_default_layer_stroke_scale_json() -> String {
+    r#"{"raster":1,"water":1,"land":1,"roads":1,"buildings":1,"borders":1,"labels":1,"positions":1,"positionLabels":1,"routes":1,"regions":1}"#.into()
+}
+
+pub fn gis_map_default_selection_json() -> String {
+    r#"{"positions":[],"routes":[]}"#.into()
+}
+
+pub fn gis_map_default_hover_json() -> String {
+    "null".into()
+}
+
+pub fn gis_map_default_selection_method() -> String {
+    "rectangle".into()
+}
+
+pub fn gis_map_default_selection_mode() -> String {
+    "default".into()
+}
+
+impl GisMapScene {
+    /** @emoji 🗺️ Builds a GIS map scene with optional extensions unset. */
+    pub fn base(map_fixture_json: String, camera_json: String) -> Self {
+        Self {
+            map_fixture_json,
+            camera_json,
+            render_mode: gis_map_default_render_mode(),
+            vector_style: gis_map_default_vector_style(),
+            lod_mode: gis_map_default_lod_mode(),
+            tile_url_template: gis_map_default_tile_url_template(),
+            vector_tile_url_template: gis_map_default_vector_tile_url_template(),
+            layer_visibility_json: gis_map_default_layer_visibility_json(),
+            layer_stroke_scale_json: gis_map_default_layer_stroke_scale_json(),
+            selection_json: gis_map_default_selection_json(),
+            hover_json: gis_map_default_hover_json(),
+            selection_method: gis_map_default_selection_method(),
+            selection_mode: gis_map_default_selection_mode(),
+            context_menu_json: None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle2dBoardScene {
+    pub fixture_json: String,
+    pub camera_json: String,
+    #[serde(default = "puzzle2d_board_default_kind_catalogs_json")]
+    pub kind_catalogs_json: String,
+    #[serde(default = "puzzle2d_board_default_selection_json")]
+    pub selection_json: String,
+    #[serde(default)]
+    pub interactive: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hovered_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active_tool: Option<String>,
+    #[serde(default = "puzzle2d_board_default_selection_method")]
+    pub selection_method: String,
+    #[serde(default)]
+    pub grid_snap_enabled: bool,
+    #[serde(default = "puzzle2d_board_default_grid_factor")]
+    pub grid_factor: f64,
+    #[serde(default)]
+    pub suggestion_offset: f64,
+    #[serde(default = "puzzle2d_board_default_brush_kind_weights_json")]
+    pub brush_kind_weights_json: String,
+    #[serde(default = "puzzle2d_board_default_kind_compatibility_json")]
+    pub kind_compatibility_json: String,
+    #[serde(default = "puzzle2d_board_default_lod_mode")]
+    pub lod_mode: String,
+}
+
+pub fn puzzle2d_board_default_kind_catalogs_json() -> String {
+    "{}".into()
+}
+
+pub fn puzzle2d_board_default_selection_json() -> String {
+    "[]".into()
+}
+
+pub fn puzzle2d_board_default_selection_method() -> String {
+    "rectangle".into()
+}
+
+pub fn puzzle2d_board_default_grid_factor() -> f64 {
+    1.0
+}
+
+pub fn puzzle2d_board_default_brush_kind_weights_json() -> String {
+    "{}".into()
+}
+
+pub fn puzzle2d_board_default_kind_compatibility_json() -> String {
+    "[]".into()
+}
+
+pub fn puzzle2d_board_default_lod_mode() -> String {
+    "automatic".into()
+}
+
+impl Puzzle2dBoardScene {
+    /** @emoji 🧩 Builds a puzzle 2D board scene with optional extensions unset. */
+    pub fn base(fixture_json: String, camera_json: String, interactive: bool) -> Self {
+        Self {
+            fixture_json,
+            camera_json,
+            kind_catalogs_json: puzzle2d_board_default_kind_catalogs_json(),
+            selection_json: puzzle2d_board_default_selection_json(),
+            interactive,
+            hovered_id: None,
+            active_tool: None,
+            selection_method: puzzle2d_board_default_selection_method(),
+            grid_snap_enabled: false,
+            grid_factor: puzzle2d_board_default_grid_factor(),
+            suggestion_offset: 0.0,
+            brush_kind_weights_json: puzzle2d_board_default_brush_kind_weights_json(),
+            kind_compatibility_json: puzzle2d_board_default_kind_compatibility_json(),
+            lod_mode: puzzle2d_board_default_lod_mode(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NoteCanvasScene {
+    pub document_json: String,
+    #[serde(default = "note_canvas_default_selection_json")]
+    pub selection_json: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hovered_id: Option<String>,
+    pub active_tool: String,
+    pub view_mode: String,
+    #[serde(default)]
+    pub interactive: bool,
+}
+
+pub fn note_canvas_default_selection_json() -> String {
+    "[]".into()
+}
+
+impl NoteCanvasScene {
+    /** @emoji 📝 Builds a note canvas scene with the default empty selection. */
+    pub fn base(document_json: String, active_tool: String, view_mode: String, interactive: bool) -> Self {
+        Self {
+            document_json,
+            selection_json: note_canvas_default_selection_json(),
+            hovered_id: None,
+            active_tool,
+            view_mode,
+            interactive,
+        }
+    }
+}
+
+/** @emoji 🗄️ A checkpoint ancestor-graph history view. `columns_json` is a `HistoryColumn[]` array
+ * (see `vcs::HistoryColumn`), newest checkpoint first. */
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VcsHistoryScene {
+    pub columns_json: String,
+}
+
+/** @emoji 🧩 A palette entry for a block kind insertable into a [`ProtocolListScene`], contributed
+ * either by the host app's own built-ins or by a `Contribution::ProtocolBlockKind` module. */
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProtocolPaletteEntry {
+    pub block_kind: String,
+    pub label: String,
+    pub icon_id: String,
+}
+
+/** @emoji 🧩 A strict, ordered list of steps/blocks for the Blockly-like list editor. `steps_json`
+ * is a `ProtocolStep[]` array (see `protocol::ProtocolStep`), `palette_json` is a
+ * `ProtocolPaletteEntry[]` array of the block kinds available to insert. */
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProtocolListScene {
+    pub steps_json: String,
+    pub palette_json: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selected_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dragging_id: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiExternalSlotNode {
+    pub plugin_id: String,
+    pub app_id: String,
+    pub body_key: String,
+    pub params_json: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiComponentSceneNode {
+    pub surface_id: String,
+    pub controller_id: String,
+    pub component_kind: SurfaceKind,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pane_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub binding_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub canvas_2d: Option<Canvas2dScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub world_3d: Option<World3dScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub node_graph: Option<NodeGraphScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text_editor: Option<TextEditorScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub table: Option<TableScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raster: Option<RasterScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub virtual_file_system: Option<VirtualFileSystemScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gis_map: Option<GisMapScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub puzzle2d_board: Option<Puzzle2dBoardScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub icon_render: Option<IconRenderScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub note_canvas: Option<NoteCanvasScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vcs_history: Option<VcsHistoryScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub protocol_list: Option<ProtocolListScene>,
+}
+//#endregion 🔖ComponentScenes
+
+//#region 🔖UiNode
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "camelCase")]
+pub enum UiNode {
+    Stack(UiStackNode),
+    Text(UiTextNode),
+    Button(UiButtonNode),
+    Separator(UiSeparatorNode),
+    Input(UiInputNode),
+    Select(UiSelectNode),
+    Toggle(UiToggleNode),
+    Vec3(UiVec3Node),
+    KeyValue(UiKeyValueNode),
+    Slider(UiSliderNode),
+    NumberStepper(UiNumberStepperNode),
+    Ring(UiRingNode),
+    IconSelect(UiIconSelectNode),
+    Field(UiFieldNode),
+    Section(UiSectionNode),
+    Tree(UiTreeNode),
+    Image(UiImageNode),
+    ComponentScene(UiComponentSceneNode),
+    ExternalSlot(UiExternalSlotNode),
+}
+
+impl NodeGraphScene {
+    /** @emoji 🕸️ Builds a node-graph scene with optional extensions unset. */
+    pub fn base(nodes_json: String, edges_json: String, viewport_json: String) -> Self {
+        Self {
+            nodes_json,
+            edges_json,
+            viewport_json,
+            editable: None,
+            operators_json: None,
+            context_menu_json: None,
+            find_items_json: None,
+            selection_json: None,
+            hover_json: None,
+            preview_off_json: None,
+            lod_json: None,
+            catalogue_json: None,
+            controls_json: None,
+            clusters_json: None,
+            computing_json: None,
+            capabilities_json: None,
+            fixture_json: None,
+            presence_peers_json: None,
+        }
+    }
+}
+
+impl TextEditorScene {
+    /** @emoji ✍️ Builds a text-editor scene with optional extensions unset. */
+    pub fn base(buffer: String, language: Option<String>, selection_json: Option<String>) -> Self {
+        Self {
+            buffer,
+            language,
+            selection_json,
+            tokens_json: None,
+            diagnostics_json: None,
+            completions_json: None,
+            overlays_json: None,
+            occurrences_json: None,
+            placeholders_json: None,
+            extra_carets_json: None,
+            selectable_spans_json: None,
+            settings_json: None,
+            camera_json: None,
+            hover_json: None,
+            newline_gates_json: None,
+            rename_json: None,
+        }
+    }
+}
+
+//#region 🔖SceneActions
+/** @emoji 🎮 Renderer-to-plugin action names for node-graph surfaces. */
+pub mod node_graph_actions {
+    pub const SELECT: &str = "nodeGraphSelect";
+    pub const HOVER: &str = "nodeGraphHover";
+    pub const EDIT: &str = "nodeGraphEdit";
+    pub const VIEWPORT: &str = "nodeGraphViewport";
+    pub const SPOTLIGHT_COMMIT: &str = "spotlightCommit";
+}
+
+/** @emoji ✍️ Renderer-to-plugin action names for text-editor surfaces. */
+pub mod text_editor_actions {
+    pub const EDIT: &str = "textEdit";
+    pub const SELECT: &str = "textSelect";
+    pub const HOVER: &str = "textHover";
+    pub const REQUEST_COMPLETIONS: &str = "requestCompletions";
+    pub const COMMIT_RENAME: &str = "commitRename";
+    pub const FORMAT_DOCUMENT: &str = "formatDocument";
+}
+
+/** @emoji 🗺️ Renderer-to-plugin action names for GIS map surfaces. */
+pub mod puzzle2d_board_actions {
+    pub const APPLY_BOARD_EVENTS: &str = "applyBoardEvents";
+}
+
+/** @emoji 📝 Renderer-to-plugin action names for note canvas surfaces. */
+pub mod note_canvas_actions {
+    pub const APPLY_NOTE_EVENTS: &str = "applyNoteEvents";
+}
+
+pub mod gis_map_actions {
+    pub const SET_CAMERA: &str = "setCamera";
+    pub const SET_FEATURE_SELECTION: &str = "setFeatureSelection";
+    pub const SET_HOVER: &str = "setHover";
+    pub const SET_SELECTION_METHOD: &str = "setSelectionMethod";
+    pub const SET_SELECTION_MODE: &str = "setSelectionMode";
+    pub const CLEAR_SELECTION: &str = "clearSelection";
+    pub const SELECT_ALL: &str = "selectAll";
+    pub const DESELECT: &str = "deselect";
+    pub const FOCUS_FEATURE: &str = "focusFeature";
+    pub const OPEN_SOURCE: &str = "openSource";
+    pub const SET_LAYER_STROKE_SCALE: &str = "setLayerStrokeScale";
+    pub const FIT_WORLD: &str = "fitWorld";
+}
+//#endregion 🔖SceneActions
+
+pub fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
+    UiNode::Stack(UiStackNode {
+        direction: "vertical".into(),
+        gap: Some("standard".into()),
+        padding: None,
+        id: None,
+        selected: None,
+        activate: None,
+        children,
+        drop_action: None,
+    })
+}
+
+/** @emoji 🖼️ Builds an image node rendering a source URL or path. */
+pub fn ui_image(id: impl Into<String>, src: impl Into<String>, alt: Option<String>) -> UiNode {
+    UiNode::Image(UiImageNode {
+        id: id.into(),
+        src: src.into(),
+        alt,
+    })
+}
+
+/** @emoji 🎛 Extracts the control payload of a {@link UiNode} when it is a control variant. */
+pub fn ui_node_to_control(node: &UiNode) -> Option<UiControlNode> {
+    match node {
+        UiNode::Input(input) => Some(UiControlNode::Input(input.clone())),
+        UiNode::Select(select) => Some(UiControlNode::Select(select.clone())),
+        UiNode::Toggle(toggle) => Some(UiControlNode::Toggle(toggle.clone())),
+        UiNode::Vec3(vec3) => Some(UiControlNode::Vec3(vec3.clone())),
+        UiNode::Button(button) => Some(UiControlNode::Button(button.clone())),
+        UiNode::KeyValue(key_value) => Some(UiControlNode::KeyValue(key_value.clone())),
+        UiNode::Slider(slider) => Some(UiControlNode::Slider(slider.clone())),
+        UiNode::NumberStepper(stepper) => Some(UiControlNode::NumberStepper(stepper.clone())),
+        UiNode::Ring(ring) => Some(UiControlNode::Ring(ring.clone())),
+        UiNode::IconSelect(icon) => Some(UiControlNode::IconSelect(icon.clone())),
+        _ => None,
+    }
+}
+
+/** @emoji 🎛 Wraps a {@link UiControlNode} back into its matching {@link UiNode} control variant (inverse of {@link ui_node_to_control}). */
+pub fn ui_control_to_node(control: UiControlNode) -> UiNode {
+    match control {
+        UiControlNode::Input(input) => UiNode::Input(input),
+        UiControlNode::Select(select) => UiNode::Select(select),
+        UiControlNode::Toggle(toggle) => UiNode::Toggle(toggle),
+        UiControlNode::Vec3(vec3) => UiNode::Vec3(vec3),
+        UiControlNode::Button(button) => UiNode::Button(button),
+        UiControlNode::KeyValue(key_value) => UiNode::KeyValue(key_value),
+        UiControlNode::Slider(slider) => UiNode::Slider(slider),
+        UiControlNode::NumberStepper(stepper) => UiNode::NumberStepper(stepper),
+        UiControlNode::Ring(ring) => UiNode::Ring(ring),
+        UiControlNode::IconSelect(icon) => UiNode::IconSelect(icon),
+    }
+}
+
+impl Default for UiNode {
+    fn default() -> Self {
+        ui_stack_vertical(vec![])
+    }
+}
+
+pub fn ui_text(value: impl Into<String>) -> UiNode {
+    UiNode::Text(UiTextNode {
+        value: value.into(),
+        emphasize: None,
+        data_attributes: None,
+    })
+}
+
+/** @emoji 🔌 Renders a contributing plugin body inline at this tree position. */
+pub fn ui_external_slot(
+    plugin_id: impl Into<String>,
+    app_id: impl Into<String>,
+    body_key: impl Into<String>,
+    params_json: impl Into<String>,
+) -> UiNode {
+    UiNode::ExternalSlot(UiExternalSlotNode {
+        plugin_id: plugin_id.into(),
+        app_id: app_id.into(),
+        body_key: body_key.into(),
+        params_json: params_json.into(),
+    })
+}
+
+fn component_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    component_kind: SurfaceKind,
+    pane_id: Option<String>,
+    binding_id: Option<String>,
+    canvas_2d: Option<Canvas2dScene>,
+    world_3d: Option<World3dScene>,
+    node_graph: Option<NodeGraphScene>,
+    text_editor: Option<TextEditorScene>,
+    table: Option<TableScene>,
+    raster: Option<RasterScene>,
+    virtual_file_system: Option<VirtualFileSystemScene>,
+    gis_map: Option<GisMapScene>,
+    puzzle2d_board: Option<Puzzle2dBoardScene>,
+) -> UiNode {
+    UiNode::ComponentScene(UiComponentSceneNode {
+        surface_id: surface_id.into(),
+        controller_id: controller_id.into(),
+        component_kind,
+        pane_id,
+        binding_id,
+        canvas_2d,
+        world_3d,
+        node_graph,
+        text_editor,
+        table,
+        raster,
+        virtual_file_system,
+        gis_map,
+        puzzle2d_board,
+        icon_render: None,
+        note_canvas: None,
+        vcs_history: None,
+        protocol_list: None,
+    })
+}
+
+pub fn build_canvas_2d_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: Canvas2dScene,
+) -> UiNode {
+    component_scene(
+        surface_id,
+        controller_id,
+        SurfaceKind::Canvas2d,
+        None,
+        None,
+        Some(scene),
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+}
+
+pub fn build_world_3d_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: World3dScene,
+) -> UiNode {
+    component_scene(
+        surface_id,
+        controller_id,
+        SurfaceKind::World3d,
+        None,
+        None,
+        None,
+        Some(scene),
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+}
+
+pub fn build_node_graph_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: NodeGraphScene,
+) -> UiNode {
+    component_scene(
+        surface_id,
+        controller_id,
+        SurfaceKind::NodeGraph,
+        None,
+        None,
+        None,
+        None,
+        Some(scene),
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+}
+
+pub fn build_text_editor_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: TextEditorScene,
+) -> UiNode {
+    component_scene(
+        surface_id,
+        controller_id,
+        SurfaceKind::TextEditor,
+        None,
+        None,
+        None,
+        None,
+        None,
+        Some(scene),
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+}
+
+//#region 🔖TextIdentifierOccurrences
+/// 🔎 Expands an offset in `text` to the bounds of the identifier (`[A-Za-z0-9_]+`) it falls in, if any.
+pub fn text_identifier_bounds_at(text: &str, offset: usize) -> Option<(usize, usize)> {
+    let bytes = text.as_bytes();
+    let is_ident = |byte: u8| (byte as char).is_ascii_alphanumeric() || byte == b'_';
+    let mut index = offset.min(bytes.len());
+    while index > 0 && is_ident(bytes[index - 1]) {
+        index -= 1;
+    }
+    let start = index;
+    while index < bytes.len() && is_ident(bytes[index]) {
+        index += 1;
+    }
+    if start == index {
+        None
+    } else {
+        Some((start, index))
+    }
+}
+
+/// 🔎 JSON `{selection, hover}` occurrence ranges for the identifier under `cursor`, for editor cross-highlighting.
+pub fn text_identifier_occurrences_json(text: &str, cursor: usize) -> Option<String> {
+    let (start, end) = text_identifier_bounds_at(text, cursor)?;
+    let needle = &text[start..end];
+    if needle.is_empty() {
+        return None;
+    }
+    let mut ranges = Vec::new();
+    let mut scan = 0usize;
+    while let Some(found) = text[scan..].find(needle) {
+        let at = scan + found;
+        let next_end = at + needle.len();
+        if text_identifier_bounds_at(text, at) == Some((at, next_end)) {
+            ranges.push(serde_json::json!({ "start": at, "end": next_end }));
+        }
+        scan = at + needle.len();
+    }
+    let ranges_json = serde_json::to_string(&ranges).unwrap_or_else(|_| "[]".into());
+    Some(serde_json::json!({ "selection": ranges_json, "hover": ranges_json }).to_string())
+}
+//#endregion 🔖TextIdentifierOccurrences
+
+pub fn build_table_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: TableScene,
+) -> UiNode {
+    component_scene(
+        surface_id,
+        controller_id,
+        SurfaceKind::Table,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        Some(scene),
+        None,
+        None,
+        None,
+        None,
+    )
+}
+
+pub fn build_raster_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: RasterScene,
+) -> UiNode {
+    component_scene(
+        surface_id,
+        controller_id,
+        SurfaceKind::Raster,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        Some(scene),
+        None,
+        None,
+        None,
+    )
+}
+
+pub fn build_virtual_file_system_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: VirtualFileSystemScene,
+    pane_id: Option<String>,
+    binding_id: Option<String>,
+) -> UiNode {
+    component_scene(
+        surface_id,
+        controller_id,
+        SurfaceKind::VirtualFileSystem,
+        pane_id,
+        binding_id,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        Some(scene),
+        None,
+        None,
+    )
+}
+
+pub fn build_gis_map_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: GisMapScene,
+) -> UiNode {
+    component_scene(
+        surface_id,
+        controller_id,
+        SurfaceKind::GisMap,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        Some(scene),
+        None,
+    )
+}
+
+pub fn build_puzzle2d_board_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: Puzzle2dBoardScene,
+) -> UiNode {
+    component_scene(
+        surface_id,
+        controller_id,
+        SurfaceKind::Puzzle2dBoard,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        Some(scene),
+    )
+}
+
+pub fn build_icon_render_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: IconRenderScene,
+) -> UiNode {
+    let UiNode::ComponentScene(node) = component_scene(
+        surface_id,
+        controller_id,
+        SurfaceKind::IconRender,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    ) else {
+        unreachable!()
+    };
+    UiNode::ComponentScene(UiComponentSceneNode {
+        icon_render: Some(scene),
+        ..node
+    })
+}
+
+pub fn build_note_canvas_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: NoteCanvasScene,
+) -> UiNode {
+    let UiNode::ComponentScene(node) = component_scene(
+        surface_id,
+        controller_id,
+        SurfaceKind::NoteCanvas,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    ) else {
+        unreachable!()
+    };
+    UiNode::ComponentScene(UiComponentSceneNode {
+        note_canvas: Some(scene),
+        ..node
+    })
+}
+
+pub fn build_vcs_history_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: VcsHistoryScene,
+) -> UiNode {
+    let UiNode::ComponentScene(node) = component_scene(
+        surface_id,
+        controller_id,
+        SurfaceKind::VcsHistory,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    ) else {
+        unreachable!()
+    };
+    UiNode::ComponentScene(UiComponentSceneNode {
+        vcs_history: Some(scene),
+        ..node
+    })
+}
+//#endregion 🔖UiNode
+
+//#region 🔖WireFormatGoldenTests
+/** 🧊 Golden wire-format tests: freeze exact JSON for every UiNode/scene/SurfaceKind
+before these types move into ui_wgpu, so the move can be proven byte-identical. */
+#[cfg(test)]
+mod ui_node_wire_format_tests {
+    use super::*;
+
+    fn act(action: &str) -> ActionDescriptor {
+        ActionDescriptor {
+            controller_id: "ctrl".into(),
+            action: action.into(),
+            args: None,
+        }
+    }
+
+    fn sample_tree() -> UiNode {
+        UiNode::Stack(UiStackNode {
+            direction: "vertical".into(),
+            gap: Some("md".into()),
+            padding: None,
+            id: Some("root".into()),
+            selected: None,
+            activate: None,
+            drop_action: None,
+            children: vec![
+                UiNode::Text(UiTextNode {
+                    value: "Hello".into(),
+                    emphasize: Some(true),
+                    data_attributes: None,
+                }),
+                UiNode::Button(UiButtonNode {
+                    id: Some("btn1".into()),
+                    icon_id: "icon.save".into(),
+                    label: "Save".into(),
+                    action: act("save"),
+                    style: None,
+                    disabled: Some(false),
+                }),
+                UiNode::Separator(UiSeparatorNode {}),
+                UiNode::Input(UiInputNode {
+                    id: "inp1".into(),
+                    input_kind: "text".into(),
+                    value: "abc".into(),
+                    placeholder: Some("type...".into()),
+                    commit: None,
+                    min: None,
+                    max: None,
+                    step: None,
+                    accept: None,
+                    on_change: act("setValue"),
+                }),
+                UiNode::Select(UiSelectNode {
+                    id: "sel1".into(),
+                    value: "a".into(),
+                    items: vec![
+                        UiSelectItem { value: "a".into(), label: "A".into() },
+                        UiSelectItem { value: "b".into(), label: "B".into() },
+                    ],
+                    placeholder: None,
+                    on_change: act("selectChange"),
+                }),
+                UiNode::Toggle(UiToggleNode {
+                    id: "tog1".into(),
+                    icon_id: "icon.bold".into(),
+                    pressed: true,
+                    text: None,
+                    on_change: act("toggle"),
+                }),
+                UiNode::Vec3(UiVec3Node {
+                    id: "vec1".into(),
+                    value: Some([1.0, 2.0, 3.0]),
+                    on_change: act("vecChange"),
+                }),
+                UiNode::KeyValue(UiKeyValueNode {
+                    entries: vec![UiKeyValueEntry { label: "K".into(), value: "V".into() }],
+                }),
+                UiNode::Slider(UiSliderNode {
+                    id: "sl1".into(),
+                    value: 0.5,
+                    min: 0.0,
+                    max: 1.0,
+                    step: 0.1,
+                    unit: Some("%".into()),
+                    on_change: act("sliderChange"),
+                }),
+                UiNode::NumberStepper(UiNumberStepperNode {
+                    id: "num1".into(),
+                    value: 2.0,
+                    step: 1.0,
+                    uniform: true,
+                    on_absolute: act("setAbs"),
+                    on_delta: act("setDelta"),
+                }),
+                UiNode::Ring(UiRingNode {
+                    id: "ring1".into(),
+                    orb_id: "orb1".into(),
+                    t: 0.25,
+                    disabled: None,
+                    on_change: act("ringChange"),
+                }),
+                UiNode::IconSelect(UiIconSelectNode {
+                    id: "icn1".into(),
+                    value: "star".into(),
+                    uniform: true,
+                    classifier_kind: "icon".into(),
+                    on_change: act("iconChange"),
+                }),
+                UiNode::Field(UiFieldNode {
+                    id: "field1".into(),
+                    label: "Field".into(),
+                    description: Some("desc".into()),
+                    required: Some(true),
+                    error: None,
+                    child: Box::new(UiNode::Text(UiTextNode {
+                        value: "child".into(),
+                        emphasize: None,
+                        data_attributes: None,
+                    })),
+                }),
+                UiNode::Section(UiSectionNode {
+                    id: "sec1".into(),
+                    label: Some("Section".into()),
+                    default_open: Some(true),
+                    children: vec![],
+                }),
+                UiNode::Tree(UiTreeNode {
+                    sections: vec![UiTreeSectionNode {
+                        id: "treesec1".into(),
+                        label: Some("Items".into()),
+                        default_open: Some(true),
+                        items: vec![UiTreeItemNode::base("item1", "Item 1")],
+                    }],
+                    selected_ids: Some(vec!["item1".into()]),
+                    highlighted_ids: None,
+                    selection_change: None,
+                    drop_action: None,
+                }),
+                UiNode::Image(UiImageNode {
+                    id: "img1".into(),
+                    src: "icon.png".into(),
+                    alt: Some("alt text".into()),
+                }),
+                UiNode::ComponentScene(UiComponentSceneNode {
+                    surface_id: "surf1".into(),
+                    controller_id: "ctrl".into(),
+                    component_kind: SurfaceKind::World3d,
+                    pane_id: None,
+                    binding_id: None,
+                    canvas_2d: None,
+                    world_3d: Some(World3dScene {
+                        camera_json: "{}".into(),
+                        meshes_json: "[]".into(),
+                        instances_json: "[]".into(),
+                        selection_json: "{}".into(),
+                        vortices_json: None,
+                        attractions_json: None,
+                        target_volumes_json: None,
+                        references_json: None,
+                        brush_preview_json: None,
+                        interaction_json: None,
+                        engagement_preview_json: None,
+                        lod_json: None,
+                        chunking_json: None,
+                        context_menu_json: None,
+                        environment_json: None,
+                        frame_json: None,
+                        fit_json: None,
+                        terrain_json: None,
+                    }),
+                    node_graph: None,
+                    text_editor: None,
+                    table: None,
+                    raster: None,
+                    virtual_file_system: None,
+                    gis_map: None,
+                    puzzle2d_board: None,
+                    icon_render: None,
+                    note_canvas: None,
+                    vcs_history: None,
+                    protocol_list: None,
+                }),
+                UiNode::ExternalSlot(UiExternalSlotNode {
+                    plugin_id: "plugin1".into(),
+                    app_id: "app1".into(),
+                    body_key: "body1".into(),
+                    params_json: "{}".into(),
+                }),
+            ],
+        })
+    }
+
+    const GOLDEN_UI_NODE_TREE_JSON: &str = "{\"type\":\"stack\",\"direction\":\"vertical\",\"gap\":\"md\",\"id\":\"root\",\"children\":[{\"type\":\"text\",\"value\":\"Hello\",\"emphasize\":true},{\"type\":\"button\",\"id\":\"btn1\",\"iconId\":\"icon.save\",\"label\":\"Save\",\"action\":{\"controllerId\":\"ctrl\",\"action\":\"save\"},\"disabled\":false},{\"type\":\"separator\"},{\"type\":\"input\",\"id\":\"inp1\",\"inputKind\":\"text\",\"value\":\"abc\",\"placeholder\":\"type...\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"setValue\"}},{\"type\":\"select\",\"id\":\"sel1\",\"value\":\"a\",\"items\":[{\"value\":\"a\",\"label\":\"A\"},{\"value\":\"b\",\"label\":\"B\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"selectChange\"}},{\"type\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"icon.bold\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggle\"}},{\"type\":\"vec3\",\"id\":\"vec1\",\"value\":[1.0,2.0,3.0],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"vecChange\"}},{\"type\":\"keyValue\",\"entries\":[{\"label\":\"K\",\"value\":\"V\"}]},{\"type\":\"slider\",\"id\":\"sl1\",\"value\":0.5,\"min\":0.0,\"max\":1.0,\"step\":0.1,\"unit\":\"%\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"sliderChange\"}},{\"type\":\"numberStepper\",\"id\":\"num1\",\"value\":2.0,\"step\":1.0,\"uniform\":true,\"onAbsolute\":{\"controllerId\":\"ctrl\",\"action\":\"setAbs\"},\"onDelta\":{\"controllerId\":\"ctrl\",\"action\":\"setDelta\"}},{\"type\":\"ring\",\"id\":\"ring1\",\"orbId\":\"orb1\",\"t\":0.25,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"ringChange\"}},{\"type\":\"iconSelect\",\"id\":\"icn1\",\"value\":\"star\",\"uniform\":true,\"classifierKind\":\"icon\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"iconChange\"}},{\"type\":\"field\",\"id\":\"field1\",\"label\":\"Field\",\"description\":\"desc\",\"required\":true,\"child\":{\"type\":\"text\",\"value\":\"child\"}},{\"type\":\"section\",\"id\":\"sec1\",\"label\":\"Section\",\"defaultOpen\":true,\"children\":[]},{\"type\":\"tree\",\"sections\":[{\"id\":\"treesec1\",\"label\":\"Items\",\"defaultOpen\":true,\"items\":[{\"id\":\"item1\",\"label\":\"Item 1\"}]}],\"selectedIds\":[\"item1\"]},{\"type\":\"image\",\"id\":\"img1\",\"src\":\"icon.png\",\"alt\":\"alt text\"},{\"type\":\"componentScene\",\"surfaceId\":\"surf1\",\"controllerId\":\"ctrl\",\"componentKind\":\"world-3d\",\"world3d\":{\"cameraJson\":\"{}\",\"meshesJson\":\"[]\",\"instancesJson\":\"[]\",\"selectionJson\":\"{}\"}},{\"type\":\"externalSlot\",\"pluginId\":\"plugin1\",\"appId\":\"app1\",\"bodyKey\":\"body1\",\"paramsJson\":\"{}\"}]}";
+
+    #[test]
+    fn ui_node_tree_serializes_to_golden_json() {
+        let node = sample_tree();
+        let json = serde_json::to_string(&node).unwrap();
+        assert_eq!(
+            json, GOLDEN_UI_NODE_TREE_JSON,
+            "UiNode wire format drifted \u{2014} lock this in before moving the type into ui_wgpu"
+        );
+        let roundtripped: UiNode = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, node);
+    }
+
+    const GOLDEN_SURFACE_KIND_JSON: &str = "[\"canvas-2d\",\"world-3d\",\"node-graph\",\"text-editor\",\"table\",\"raster\",\"virtualFileSystem\",\"gis2d-map\",\"puzzle2d-board\",\"icon-render\",\"note-canvas\",\"vcs-history\"]";
+
+    #[test]
+    fn surface_kind_serializes_to_golden_json() {
+        let kinds = vec![
+            SurfaceKind::Canvas2d,
+            SurfaceKind::World3d,
+            SurfaceKind::NodeGraph,
+            SurfaceKind::TextEditor,
+            SurfaceKind::Table,
+            SurfaceKind::Raster,
+            SurfaceKind::VirtualFileSystem,
+            SurfaceKind::GisMap,
+            SurfaceKind::Puzzle2dBoard,
+            SurfaceKind::IconRender,
+            SurfaceKind::NoteCanvas,
+            SurfaceKind::VcsHistory,
+        ];
+        let json = serde_json::to_string(&kinds).unwrap();
+        assert_eq!(json, GOLDEN_SURFACE_KIND_JSON);
+        let roundtripped: Vec<SurfaceKind> = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, kinds);
+    }
+
+    const GOLDEN_SCENES_JSON: &str = "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeTool\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{\\\"raster\\\":true,\\\"water\\\":true,\\\"land\\\":true,\\\"roads\\\":true,\\\"buildings\\\":true,\\\"borders\\\":true,\\\"labels\\\":true,\\\"positions\\\":true,\\\"positionLabels\\\":true,\\\"routes\\\":true,\\\"regions\\\":true}\",\"layerStrokeScaleJson\":\"{\\\"raster\\\":1,\\\"water\\\":1,\\\"land\\\":1,\\\"roads\\\":1,\\\"buildings\\\":1,\\\"borders\\\":1,\\\"labels\\\":1,\\\"positions\\\":1,\\\"positionLabels\\\":1,\\\"routes\\\":1,\\\"regions\\\":1}\",\"selectionJson\":\"{\\\"positions\\\":[],\\\"routes\\\":[]}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"kindCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"selectionMethod\":\"rectangle\",\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"suggestionOffset\":0.0,\"brushKindWeightsJson\":\"{}\",\"kindCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeTool\":\"select\",\"viewMode\":\"edit\",\"interactive\":true},{\"columnsJson\":\"[]\"},{\"nodesJson\":\"[]\",\"edgesJson\":\"[]\",\"viewportJson\":\"{}\"},{\"buffer\":\"buf\",\"language\":\"rust\"},{\"stepsJson\":\"[]\",\"paletteJson\":\"[]\"}]";
+
+    #[test]
+    fn scene_records_serialize_to_golden_json() {
+        let scenes = (
+            Canvas2dScene { camera_x: 1.0, camera_y: 2.0, zoom: 1.5, layers_json: "[]".into() },
+            TableScene::base("[]", "[]"),
+            RasterScene {
+                document_sync_json: "{}".into(),
+                assets_json: "[]".into(),
+                camera_json: "{}".into(),
+                selection_json: "[]".into(),
+                hovered_id: Some("h1".into()),
+                active_tool: "brush".into(),
+                brush_size: 4.0,
+                brush_opacity: 1.0,
+                view_mode: "composite".into(),
+                composite_viewport_json: None,
+            },
+            IconRenderScene { request_json: "{}".into(), footer: None, frame_json: None },
+            VirtualFileSystemScene {
+                schema_json: "{}".into(),
+                rows_json: "[]".into(),
+                selected_row_ids_json: None,
+                hovered_row_id: None,
+                empty_message: Some("Empty".into()),
+                drag_drop_enabled: Some(true),
+            },
+            GisMapScene::base("{}".into(), "{}".into()),
+            Puzzle2dBoardScene::base("{}".into(), "{}".into(), true),
+            NoteCanvasScene::base("{}".into(), "select".into(), "edit".into(), true),
+            VcsHistoryScene { columns_json: "[]".into() },
+            NodeGraphScene::base("[]".into(), "[]".into(), "{}".into()),
+            TextEditorScene::base("buf".into(), Some("rust".into()), None),
+            ProtocolListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None },
+        );
+        let json = serde_json::to_string(&scenes).unwrap();
+        assert_eq!(json, GOLDEN_SCENES_JSON);
+        let roundtripped: (
+            Canvas2dScene,
+            TableScene,
+            RasterScene,
+            IconRenderScene,
+            VirtualFileSystemScene,
+            GisMapScene,
+            Puzzle2dBoardScene,
+            NoteCanvasScene,
+            VcsHistoryScene,
+            NodeGraphScene,
+            TextEditorScene,
+            ProtocolListScene,
+        ) = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, scenes);
+    }
+}
+//#endregion 🔖WireFormatGoldenTests
+// #endregion ui
+}
+}
+// #endregion component
+
 #[cfg(feature = "engine")]
 pub mod chrome {
 // #region chrome
@@ -7600,6 +10834,22 @@ fn key_action_from_event(event: &KeyEvent) -> Option<KeyAction> {
 // 🧩 Always available: declarative component types + engine-agnostic primitives (default features).
 pub use geometry::Rect;
 pub use theme::{GlassTier, Rgba, Theme};
+pub use component::layout::{
+    collect_window_kind_ids_from_layout, create_default_layout, create_named_layout, create_stack_layout,
+    create_tab_stack_layout, create_window_layout, even_window_layout, merge_named_layouts, ActionDescriptor,
+    NamedLayout, StyleSpec, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
+    WindowEngagementOption, WindowEngagementSlot, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild,
+    WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, WindowOptions,
+    default_viewport_engagement, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID,
+    FRAMEWORK_PANEL_TAB_PARAMETERS_ID, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
+    framework_panel_tab_label,
+};
+pub use component::tools::{tool_button, tool_collection, tool_separator, tool_toggle, ToolCategory, ToolNode};
+pub use component::ui::*;
 
 // 🖥️ Retained-mode engine surface (feature = "engine" only).
 #[cfg(feature = "engine")]

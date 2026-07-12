@@ -10,6 +10,9 @@ path = "lib.rs"
 
 [features]
 default = []
+# 🧬 Generates the TypeScript mirror for boundary/protocol types on the moved `component` region
+# (see framework/core's former `typegen` feature); never enabled by default.
+typegen = ["dep:ts-rs"]
 # 🖥️ Full retained-mode engine: arena/tree/layout/text/input/gpu rendering. Off by
 # default so wasm32-wasip2 plugin components depend on the component types only.
 engine = [
@@ -30,6 +33,7 @@ engine = [
 ui_styling = { path = "../../styling/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+ts-rs = { version = "10", optional = true }
 kernel_3d_scene = { path = "../../../kernel/3d/scene/rs", optional = true }
 fontdue = { version = "0.9.3", optional = true }
 bytemuck = { version = "1.24.0", features = ["derive"], optional = true }

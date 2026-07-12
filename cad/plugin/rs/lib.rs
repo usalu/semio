@@ -2287,7 +2287,8 @@ const CAD_TRANSFORMATION_SPECS: &[CadTransformationSpec] = &[
 
 //#region 🔖BrepMeshes
 use kernel_3d_brepkit::BrepkitKernel;
-use kernel_3d_engine::{block_on, BrepKernel, MeshTransfer};
+use kernel_3d_engine::{block_on, BrepKernel, GeometryHandle, MeshTransfer};
+use base64::Engine;
 use semio_framework_core::{SurfaceKind, mesh_from_indexed};
 use std::sync::{Mutex, OnceLock};
 

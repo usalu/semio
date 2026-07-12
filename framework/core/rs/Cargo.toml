@@ -13,6 +13,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"
 ts-rs = { version = "10", optional = true }
+ui_wgpu = { path = "../../../ui/wgpu/rs" }
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"
@@ -20,4 +21,4 @@ pretty_assertions = "1.4.1"
 [features]
 # 🧬 Generates the TypeScript mirror for boundary/protocol types (see `js/generated/manifest.ts`);
 # never enabled by default so `ts-rs` never affects the plain `cargo build`/`cargo test` path.
-typegen = ["dep:ts-rs"]
+typegen = ["dep:ts-rs", "ui_wgpu/typegen"]

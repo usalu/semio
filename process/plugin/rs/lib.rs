@@ -13,7 +13,7 @@ pub mod app_3d {
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_world_3d_scene, create_default_layout, mesh_from_indexed_with_face_groups, mesh_from_kind, tool_button,
         tool_toggle, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, world3d_camera_json, world3d_mesh_id_from_url, world3d_scene,
-        world3d_sun_measures, world3d_selection_json, ActionDescriptor, App, MeshData, PanelGroup, PluginApp, SurfaceKind, ToolCategory, ToolNode,
+        world3d_sun_measures, world3d_selection_json, ActionDescriptor, App, MeshData, MeshExporter, MeshImporter, PanelGroup, PluginApp, SurfaceKind, ToolCategory, ToolNode,
         UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
         ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure, WorldSunConfig,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,

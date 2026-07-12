@@ -104,6 +104,7 @@
     "dev:puzzle:5d": "bun ./script.ts dev 5d",
     "dev:puzzle:5d:concrete-forest": "bun ./script.ts dev 5d fixture concrete",
     "dev:gis:2d": "bun ./script.ts dev gis 2d",
+    "dev:gis:3d": "bun ./script.ts dev gis 3d",
     "dev:reasoning:wires": "bun ./script.ts dev wires",
     "dev:presentation": "bun ./script.ts dev presentation",
     "dev:cad": "bun ./script.ts dev cad",

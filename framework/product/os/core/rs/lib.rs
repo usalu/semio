@@ -1450,7 +1450,7 @@ impl OsStore {
     }
 
     pub fn attach_backbone(&mut self, uri: &str) -> Result<(), VcsError> {
-        self.inner.attach_backbone(uri)
+        self.inner.attach_backbone_uri(uri)
     }
 
     pub fn detach_backbone(&mut self) {
@@ -2231,7 +2231,7 @@ pub mod backbone {
 
 use crate::host::OsBackbonePort;
 use std::sync::Arc;
-use vcs::{MemoryBackbonePort, VcsError};
+use vcs::{BackboneStorage, MemoryBackbonePort, VcsError};
 
 enum StudioPortKind {
     #[cfg(not(target_arch = "wasm32"))]
@@ -2278,13 +2278,13 @@ impl OsBackbonePort for StudioBackbonePort {
                 #[cfg(not(target_arch = "wasm32"))]
                 StudioPortKind::File(file_uri, storage) if uri == file_uri => {
                     return storage
-                        .read("__debug_stub__")?
+                        .read()?
                         .ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")));
                 }
                 #[cfg(not(target_arch = "wasm32"))]
                 StudioPortKind::Folder(folder_uri, storage) if uri == folder_uri => {
                     return storage
-                        .read("__debug_stub__")?
+                        .read()?
                         .ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")));
                 }
                 _ => {}
@@ -2298,11 +2298,11 @@ impl OsBackbonePort for StudioBackbonePort {
             match kind {
                 #[cfg(not(target_arch = "wasm32"))]
                 StudioPortKind::File(file_uri, storage) if uri == file_uri => {
-                    return storage.write("__debug_stub__", "__debug_stub__", payload);
+                    return storage.write(payload);
                 }
                 #[cfg(not(target_arch = "wasm32"))]
                 StudioPortKind::Folder(folder_uri, storage) if uri == folder_uri => {
-                    return storage.write("__debug_stub__", "__debug_stub__", payload);
+                    return storage.write(payload);
                 }
                 _ => {}
             }
