@@ -25676,6 +25676,14 @@ if (treeVitest) {
       expect(measuresMarkup).not.toContain("border-emphasized");
     });
 
+    it("draws exactly one border around the Stepper group, never a second one on its buttons", () => {
+      const stepperMarkup = renderToStaticMarkup(<Stepper id="ui.stepper.regression" value={5} min={0} max={10} />);
+      expect(stepperMarkup).not.toContain("border-border");
+      expect(stepperMarkup.match(/data-slot="stepper-(group|minus|plus)"/g)?.length).toBe(3);
+      const groupMatch = stepperMarkup.match(/<div data-slot="stepper-group"[^>]*class="([^"]*)"/);
+      expect(groupMatch?.[1]).toContain("border");
+    });
+
     it("renders adjacent toolbar toggle group items for segmented focus borders", () => {
       const markup = renderToStaticMarkup(
         <ToolbarZone>

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn, SelectionMarquee, marqueeCoverageFromGesture, screenRectFromPoints, type SelectionMarqueePoint } from "@semio-tech/ui-react";
 import { resolveSemanticColorHex } from "@semio-tech/ui-styling";
-import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ComponentSceneHostProps } from "@semio-tech/framework-core";
 
 //#region Types
 export type Vec2 = readonly [number, number];
@@ -894,7 +894,7 @@ const NOTE_MARQUEE_THRESHOLD_PX = 4;
 //#endregion DragState
 
 //#region NoteCanvasHost
-export function NoteCanvasHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
+export function NoteCanvasHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.noteCanvas;
   const rootRef = useRef<HTMLDivElement | null>(null);
   const gestureActiveRef = useRef(false);

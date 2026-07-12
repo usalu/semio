@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, type DragEvent } from "react";
 import { GraphWasmCanvas, type CanvasInputModifiers, type GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
 import { CATALOGUE_DRAG_MIME } from "@semio-tech/ui-react";
-import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ComponentSceneHostProps } from "@semio-tech/framework-core";
 
 //#region CanvasCameraMath
 export const CANVAS_CAMERA_ZOOM_MIN = 0.05;
@@ -558,7 +558,7 @@ const CAMERA_SYNC_DEBOUNCE_MS = 120;
 const DRAG_OVER_THROTTLE_MS = 50;
 const DRAG_OVER_THROTTLE_DISTANCE = 4;
 
-export function Canvas2dHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
+export function Canvas2dHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.canvas2d;
   const initialCamera = useMemo(() => ({ x: scene?.cameraX ?? 0, y: scene?.cameraY ?? 0, zoom: scene?.zoom ?? 1 }), [scene?.cameraX, scene?.cameraY, scene?.zoom]);
   const cameraRef = useRef<CanvasCamera>(initialCamera);

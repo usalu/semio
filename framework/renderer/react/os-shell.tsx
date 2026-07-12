@@ -1,4 +1,4 @@
-import { Component, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactElement, type ReactNode } from "react";
+import { Component, createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore, type ReactElement, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import Fuse, { type FuseResult } from "fuse.js";
 import type { GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
@@ -48,6 +48,8 @@ import {
   WindowMeasureTreeLeaf,
   WindowMeasuresTree,
   bootstrapElementsSurfaceChromeDocument,
+  borderElementClass,
+  borderNormalBottomClass,
   cn,
   createEvenWindowLayout,
   iconRenderPort,
@@ -865,7 +867,7 @@ class ShellRenderErrorBoundary extends Component<{ readonly children: ReactNode 
   render() {
     if (this.state.hasError) {
       return (
-        <p className="p-4 text-sm text-destructive" role="alert">
+        <p className="p-double text-sm text-destructive" role="alert">
           {shellLabel("ui.common.renderError")}: {this.state.message}
         </p>
       );
@@ -1047,19 +1049,16 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       };
       const windowCount = nextSession.app.windowKinds.length;
       const panelTabLeaves = flattenPanelTabLeaves(nextSession.app.panelTabs);
-      const rendered: unknown[] = [];
-      for (const kind of nextSession.app.windowKinds) {
-        rendered.push(await plugin.render(nextSession.instanceId, kind.bodyKey, viewState));
-      }
-      for (const tab of panelTabLeaves) {
-        rendered.push(await plugin.render(nextSession.instanceId, tab.bodyKey!, viewState));
-      }
-      for (const kind of nextSession.app.windowKinds) {
-        rendered.push(await plugin.tools(nextSession.instanceId, { ...viewState, activeWindowKindId: kind.id }));
-      }
-      rendered.push(await plugin.windowEngagements(nextSession.instanceId, viewState));
-      rendered.push(await plugin.windowMeasures(nextSession.instanceId, viewState));
-      const appLabelsOverlay = await plugin.appLabels(nextSession.instanceId, viewState);
+      const [rendered, appLabelsOverlay] = await Promise.all([
+        Promise.all([
+          ...nextSession.app.windowKinds.map((kind) => plugin.render(nextSession.instanceId, kind.bodyKey, viewState)),
+          ...panelTabLeaves.map((tab) => plugin.render(nextSession.instanceId, tab.bodyKey!, viewState)),
+          ...nextSession.app.windowKinds.map((kind) => plugin.tools(nextSession.instanceId, { ...viewState, activeWindowKindId: kind.id })),
+          plugin.windowEngagements(nextSession.instanceId, viewState),
+          plugin.windowMeasures(nextSession.instanceId, viewState),
+        ]),
+        plugin.appLabels(nextSession.instanceId, viewState),
+      ]);
       if (generation !== refreshGenerationRef.current) return;
       const windowNodes = await Promise.all(rendered.slice(0, windowCount).map((node) => resolveExternalSlots(node as UiNode, slotContext)));
       const panelNodes = await Promise.all(rendered.slice(windowCount, windowCount + panelTabLeaves.length).map((node) => resolveExternalSlots(node as UiNode, slotContext)));
@@ -2322,23 +2321,23 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   );
 
   const canvas = useMemo(() => {
-    if (!session) return <p className="p-4 text-sm text-muted-foreground">{shellLabel("ui.common.loadingPlugins")}</p>;
+    if (!session) return <p className="p-double text-sm text-muted-foreground">{shellLabel("ui.common.loadingPlugins")}</p>;
     if (error)
       return (
-        <p className="p-4 text-sm text-destructive" role="alert">
+        <p className="p-double text-sm text-destructive" role="alert">
           {error}
         </p>
       );
     const modes = session.app.modes.length > 0 ? session.app.modes : [{ id: session.app.id, label: appDocumentLabel(session.app.document) }];
     const studioHomeBar =
       studioMode && session.app.id === S_PLAY_APP_ID && !panel?.activeSpawnedId ? (
-        <button type="button" className="border-b border-border/60 px-3 py-2 text-left text-sm text-muted-foreground hover:bg-muted/40 hover:text-foreground" onClick={() => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "goHome" })}>
+        <button type="button" className={cn(borderNormalBottomClass, "px-single py-single text-left text-sm text-muted-foreground hover:bg-muted/40 hover:text-foreground")} onClick={() => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "goHome" })}>
           ← {shellLabel("ui.common.home")}
         </button>
       ) : null;
     const focusedSpawned = panel?.activeSpawnedId ? panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId) : undefined;
     const focusedBar = focusedSpawned ? (
-      <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2 text-sm text-muted-foreground">
+      <div className={cn(borderNormalBottomClass, "flex items-center gap-single px-single py-single text-sm text-muted-foreground")}>
         <button type="button" className="hover:text-foreground" onClick={() => (openStudioIdRef.current ? navigateHistory(`/studios/${openStudioIdRef.current}`) : onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "closeFocusedInstance" }))}>
           ← {shellLabel("ui.common.backToMediaGraph")}
         </button>
@@ -3823,7 +3822,7 @@ function themeColorInputRow(id: string, label: string, hex: string, onChange: (h
   return {
     id,
     label,
-    control: <input id={id} type="color" className="h-small w-16 shrink-0 rounded border border-border bg-background" value={hex} onChange={(event) => onChange(event.target.value)} />,
+    control: <input id={id} type="color" className={cn(borderElementClass, "h-small w-16 shrink-0 rounded border bg-background")} value={hex} onChange={(event) => onChange(event.target.value)} />,
   };
 }
 
@@ -3883,10 +3882,10 @@ function buildThemeAppearanceGroupItems(host: SettingsHostApi, appearance: Theme
         id: `framework.settings.theme.appearances.${appearance}.${group}.${paintKey}`,
         label: paintKey,
         control: (
-          <div className="flex w-full items-center gap-1">
+          <div className="flex w-full items-center gap-single">
             <input
               type="color"
-              className="h-small w-10 shrink-0 rounded border border-border bg-background"
+              className={cn(borderElementClass, "h-small w-10 shrink-0 rounded border bg-background")}
               value={hex}
               onChange={(event) => host.setThemeAppearancePaint(appearance, group, paintKey, event.target.value, alpha)}
             />

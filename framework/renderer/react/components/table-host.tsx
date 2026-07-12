@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import { Button, Icon, Input, Table, type TableColumn } from "@semio-tech/ui-react";
 import { ICONS, type IconName } from "@semio-tech/ui-asset";
-import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ActionDescriptor, ComponentSceneHostProps } from "@semio-tech/framework-core";
 
 //#region TableHost
+//#region Types
 type TableColumnRecord = { readonly id: string; readonly label: string; readonly sortable?: boolean };
 type TableCellButton = { readonly iconId: string; readonly label?: string; readonly action: ActionDescriptor; readonly revealOnHover?: boolean };
 type TableCellRecord =
@@ -12,7 +13,9 @@ type TableCellRecord =
   | { readonly kind: "stepper"; readonly value: number; readonly min: number; readonly max: number; readonly step: number; readonly action: ActionDescriptor }
   | { readonly kind: "buttons"; readonly buttons: readonly TableCellButton[] };
 type TableRowRecord = Record<string, unknown> & { readonly id?: string; readonly _drag?: Record<string, unknown> };
+//#endregion Types
 
+//#region Helpers
 function isTableCellRecord(value: unknown): value is TableCellRecord {
   return typeof value === "object" && value !== null && "kind" in value;
 }
@@ -70,8 +73,10 @@ function renderTableCell(cell: TableCellRecord, onAction: (action: ActionDescrip
       );
   }
 }
+//#endregion Helpers
 
-export function TableHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
+//#region Component
+export function TableHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.table;
   const columns = useMemo(() => {
     if (!scene) return [] as TableColumnRecord[];
@@ -194,4 +199,5 @@ export function TableHost({ node, onAction }: { readonly node: UiComponentSceneN
     </div>
   );
 }
+//#endregion Component
 //#endregion TableHost

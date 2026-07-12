@@ -6,8 +6,8 @@ pub mod dock {
 
 use semio_framework_core::{
     layout::{
-        WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
-        WindowLayoutWindowNode,
+        even_window_layout, WindowLayout, WindowLayoutChild, WindowLayoutRoot,
+        WindowLayoutStackNode, WindowLayoutWindowNode,
     },
     AppDefinition, ActionDescriptor,
 };
@@ -818,34 +818,10 @@ fn collect_stack_tab_bars(
     }
 }
 
+/// 🪟 Wgpu-local adapter: builds the balanced fallback layout via
+/// `semio_framework_core::layout::even_window_layout` and converts it to a runtime `DockNode`.
 fn even_layout(window_ids: &[String]) -> DockNode {
-    if window_ids.is_empty() {
-        return DockNode::Stack {
-            windows: vec![],
-            active: String::new(),
-        };
-    }
-    if window_ids.len() == 1 {
-        return DockNode::Stack {
-            windows: vec![window_ids[0].clone()],
-            active: window_ids[0].clone(),
-        };
-    }
-    let count = window_ids.len() as f32;
-    DockNode::Row(
-        window_ids
-            .iter()
-            .map(|id| {
-                (
-                    DockNode::Stack {
-                        windows: vec![id.clone()],
-                        active: id.clone(),
-                    },
-                    1.0 / count,
-                )
-            })
-            .collect(),
-    )
+    dock_from_window_layout(&even_window_layout(window_ids).root)
 }
 
 fn normalize_sizes(children: Vec<(DockNode, f32)>, axis_size: Option<f32>) -> Vec<(DockNode, f32)> {
@@ -4359,6 +4335,8 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
     if let Some(table) = &scene.table {
         check_json_payload(&format!("{scene_label} table.columns"), &table.columns_json, limits)?;
         check_json_payload(&format!("{scene_label} table.rows"), &table.rows_json, limits)?;
+        check_optional_json_payload(&format!("{scene_label} table.selection"), &table.selection_json, limits)?;
+        check_optional_json_payload(&format!("{scene_label} table.sort"), &table.sort_json, limits)?;
     }
     if let Some(raster) = &scene.raster {
         check_json_payload(&format!("{scene_label} raster.documentSync"), &raster.document_sync_json, limits)?;
@@ -6725,6 +6703,100 @@ struct TableColumn {
     label: String,
 }
 
+/// 🧾 Mirrors `semio_framework_core::TableCell` — a typed table cell value parsed out of a row's raw JSON.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+enum TableCellPayload {
+    Text { value: String },
+    Number { value: f64 },
+    Stepper { value: f64, min: f64, max: f64, step: f64, action: ActionDescriptor },
+    Buttons { buttons: Vec<TableCellButtonPayload> },
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct TableCellButtonPayload {
+    icon_id: String,
+    #[serde(default)]
+    label: Option<String>,
+    action: ActionDescriptor,
+}
+
+/// 🔗 Merges `patch` into `base`'s existing args (rather than replacing them), so a stepper/button cell keeps its row-identifying args (e.g. `objectId`) alongside the delta/click patch.
+fn merge_action_args(base: &ActionDescriptor, patch: Value) -> ActionDescriptor {
+    let mut args = match &base.args {
+        Some(Value::Object(map)) => map.clone(),
+        _ => serde_json::Map::new(),
+    };
+    if let Value::Object(patch_map) = patch {
+        args.extend(patch_map);
+    }
+    ActionDescriptor {
+        controller_id: base.controller_id.clone(),
+        action: base.action.clone(),
+        args: Some(Value::Object(args)),
+    }
+}
+
+/// 🧾 Renders a table cell's interactive controls (stepper/buttons) directly, or returns the plain text to draw for text/number/legacy-string cells.
+fn render_table_cell(cell: &Value, rect: Rect, ctx: &mut FrameworkWidgetContext<'_>) -> Option<String> {
+    let Ok(payload) = serde_json::from_value::<TableCellPayload>(cell.clone()) else {
+        return Some(match cell {
+            Value::String(s) => s.clone(),
+            other => other.to_string(),
+        });
+    };
+    match payload {
+        TableCellPayload::Text { value } => Some(value),
+        TableCellPayload::Number { value } => Some(value.to_string()),
+        TableCellPayload::Stepper { value, min, max, step, action } => {
+            let seg = (rect.w / 3.0).min(rect.h);
+            let minus = Rect::new(rect.x, rect.y, seg, rect.h);
+            let center = Rect::new(rect.x + seg, rect.y, seg, rect.h);
+            let plus = Rect::new(rect.x + seg * 2.0, rect.y, seg, rect.h);
+            render_widget(
+                &WidgetNode::Button {
+                    id: None,
+                    icon_id: None,
+                    label: "−".into(),
+                    event: (value > min).then(|| merge_action_args(&action, json!({ "delta": -step }))),
+                },
+                minus,
+                ctx,
+            );
+            render_widget(&WidgetNode::Text { value: format!("{value:.0}"), emphasize: false }, center, ctx);
+            render_widget(
+                &WidgetNode::Button {
+                    id: None,
+                    icon_id: None,
+                    label: "+".into(),
+                    event: (value < max).then(|| merge_action_args(&action, json!({ "delta": step }))),
+                },
+                plus,
+                ctx,
+            );
+            None
+        }
+        TableCellPayload::Buttons { buttons } => {
+            let seg = if buttons.is_empty() { rect.w } else { rect.w / buttons.len() as f32 };
+            for (index, button) in buttons.iter().enumerate() {
+                let button_rect = Rect::new(rect.x + index as f32 * seg, rect.y, seg, rect.h);
+                render_widget(
+                    &WidgetNode::Button {
+                        id: None,
+                        icon_id: Some(button.icon_id.clone()),
+                        label: button.label.clone().unwrap_or_default(),
+                        event: Some(button.action.clone()),
+                    },
+                    button_rect,
+                    ctx,
+                );
+            }
+            None
+        }
+    }
+}
+
 fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(table) = &scene.table else {
@@ -6732,6 +6804,13 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
     };
     let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).unwrap_or_default();
     let rows: Vec<Value> = serde_json::from_str(&table.rows_json).unwrap_or_default();
+    let selected_ids: Vec<String> = table
+        .selection_json
+        .as_deref()
+        .and_then(|json| serde_json::from_str::<Value>(json).ok())
+        .and_then(|value| value.get("selectedIds").cloned())
+        .and_then(|value| serde_json::from_value(value).ok())
+        .unwrap_or_default();
     let inner = bounds;
     let header_h = theme.control_height * 1.33;
     let row_h = theme.control_height;
@@ -6791,7 +6870,11 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
         let control_id = format!("{}.row.{}", scene.surface_id, row_id);
         let row_rect = Rect::new(body.x, y, body.w, row_h);
         let hovered = hovered_row.as_deref() == Some(control_id.as_str());
-        if hovered {
+        let selected = selected_ids.iter().any(|id| id == &row_id);
+        if selected {
+            ctx.draw
+                .push_solid([row_rect.x, row_rect.y, row_rect.w, row_rect.h], theme.selected);
+        } else if hovered {
             ctx.draw
                 .push_solid([row_rect.x, row_rect.y, row_rect.w, row_rect.h], theme.row_hover);
         }
@@ -6805,22 +6888,26 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
         );
         for (col_index, column) in columns.iter().enumerate() {
             let x = body.x + col_index as f32 * col_w;
-            let value = row
-                .get(&column.id)
-                .map(|v| match v {
-                    Value::String(s) => s.clone(),
-                    other => other.to_string(),
-                })
-                .unwrap_or_else(|| "—".into());
-            draw_text(
-                ctx,
-                &value,
-                x + pad,
-                y + row_h * 0.65,
-                theme.font_size_small,
-                if hovered { theme.active_foreground } else { theme.text },
-            );
+            let cell_rect = Rect::new(x + pad, y, col_w - pad * 2.0, row_h);
+            let text = match row.get(&column.id) {
+                Some(value) => render_table_cell(value, cell_rect, ctx),
+                None => Some("—".into()),
+            };
+            if let Some(text) = text {
+                draw_text(
+                    ctx,
+                    &text,
+                    x + pad,
+                    y + row_h * 0.65,
+                    theme.font_size_small,
+                    if selected || hovered { theme.active_foreground } else { theme.text },
+                );
+            }
         }
+        let drag_data = table.row_drag_mime.as_ref().and_then(|mime| {
+            row.get("_drag")
+                .map(|payload| HashMap::from([(mime.clone(), payload.to_string())]))
+        });
         ctx.input.register_hit(HitTarget {
             rect: row_rect,
             event: Some(scene_action(
@@ -6831,7 +6918,7 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
             control_id: Some(control_id),
             kind: HitKind::Generic,
             drag_axis: None,
-            drag_data: None,
+            drag_data,
         });
     }
     ctx.draw.pop_scissor();

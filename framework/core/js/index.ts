@@ -1207,30 +1207,6 @@ export function buildContributionsJson(loaded: ReadonlyArray<{ readonly pluginId
   return JSON.stringify(entries);
 }
 
-export const PLAYGROUND_PLUGIN_REGISTRY_IDS: Readonly<Record<string, string>> = {
-  procedural3d: "procedural",
-  procedural2d: "procedural",
-  process3d: "process",
-  puzzle2d: "puzzle",
-  puzzle3d: "puzzle",
-  puzzle5d: "puzzle",
-  "trinity-rewrite": "trinity",
-  gis2d: "gis",
-  "reasoning-wires": "reasoning-mindmap",
-};
-
-export const PLAYGROUND_DEFAULT_APP_IDS: Readonly<Record<string, string>> = {
-  procedural3d: "procedural3d-play",
-  procedural2d: "procedural2d-play",
-  process3d: "process3d-play",
-  puzzle2d: "puzzle2d-play",
-  puzzle3d: "puzzle3d-play",
-  puzzle5d: "puzzle5d-play",
-  "trinity-rewrite": "trinity-rewrite-play",
-  gis2d: "gis2d-play",
-  "reasoning-wires": "reasoning-wires-play",
-};
-
 export function resolveLayoutForMode(
   app: { readonly defaultLayout?: WindowLayout; readonly namedLayouts?: readonly NamedLayout[]; readonly modes: readonly { readonly id: string; readonly layoutId?: string }[] },
   modeId: string,
@@ -1243,24 +1219,18 @@ export function resolveLayoutForMode(
   return app.defaultLayout;
 }
 
-export function resolvePluginRegistryId(playgroundPluginId: string): string {
-  return PLAYGROUND_PLUGIN_REGISTRY_IDS[playgroundPluginId] ?? playgroundPluginId;
-}
-
-export function resolvePlaygroundDefaultAppId(playgroundPluginId: string): string | undefined {
-  return PLAYGROUND_DEFAULT_APP_IDS[playgroundPluginId];
-}
-
-export function contributorPluginIdsFor(registryId: string): readonly string[] {
-  if (registryId === "forms" || registryId === "procedural") return ["forms-module-procedural"];
-  return [];
-}
-
+/**
+ * 🧩 Expands a plugin registry for a primary plugin: `primaryPluginId` is matched directly
+ * against entry `pluginId` (no registry-id indirection), then every other entry whose
+ * `contributes` intersects the primary entry's `consumes` is appended. Studio mode, or the
+ * absence of a primary id, passes the full registry through unchanged.
+ */
 export function expandPluginRegistry(plugins: readonly PluginRegistryEntry[], primaryPluginId?: string, studioMode = false): readonly PluginRegistryEntry[] {
   if (studioMode || !primaryPluginId) return plugins;
-  const registryId = resolvePluginRegistryId(primaryPluginId);
-  const extraIds = new Set(contributorPluginIdsFor(registryId));
-  return [...plugins.filter((entry) => entry.pluginId === registryId), ...plugins.filter((entry) => entry.pluginId !== registryId && extraIds.has(entry.pluginId))];
+  const primaryEntries = plugins.filter((entry) => entry.pluginId === primaryPluginId);
+  const consumes = new Set(primaryEntries.flatMap((entry) => entry.consumes ?? []));
+  const contributorEntries = plugins.filter((entry) => entry.pluginId !== primaryPluginId && (entry.contributes ?? []).some((tag) => consumes.has(tag)));
+  return [...primaryEntries, ...contributorEntries];
 }
 
 export type ExternalSlotResolverContext = {
@@ -1310,6 +1280,8 @@ export async function resolveExternalSlots(node: PluginUiNode, context: External
 export type PluginRegistryEntry = {
   readonly pluginId: string;
   readonly moduleUrl: string;
+  readonly contributes?: readonly string[];
+  readonly consumes?: readonly string[];
 };
 
 type KernelOperationPayload = {

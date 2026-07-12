@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { IconShotFrame, iconRenderPort, type IconRenderRequest } from "@semio-tech/ui-react";
-import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ComponentSceneHostProps } from "@semio-tech/framework-core";
 
 //#region IconRenderHost
 /** @emoji 🖼️ Renders an icon-render scene: offscreen GLB shot preview inside a shot frame, see https://threejs.org/docs/#examples/en/renderers/SVGRenderer. */
-export function IconRenderHost({ node }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
+export function IconRenderHost({ node }: ComponentSceneHostProps) {
   const scene = node.iconRender;
   const requestJson = scene?.requestJson;
   const request = useMemo<IconRenderRequest | null>(() => {

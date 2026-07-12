@@ -35,7 +35,7 @@ import {
   useCanvasAppearanceSync,
 } from "@semio-tech/ui-react";
 import { resolveSemanticColorHex } from "@semio-tech/ui-styling";
-import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ComponentSceneHostProps } from "@semio-tech/framework-core";
 
 //#region WorldSceneParsing
 type WorldMeshData = {
@@ -1688,7 +1688,7 @@ function axisDragParam(clientX: number, clientY: number, hostRect: DOMRect, came
 }
 
 //#region World3dHost
-export function World3dHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
+export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.world3d;
   const colors = useSemanticColors();
   const parsedCamera = useMemo(() => parseCameraState(scene?.cameraJson ?? "{}"), [scene?.cameraJson]);

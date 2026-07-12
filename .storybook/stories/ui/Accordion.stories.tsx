@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 🥼︎ compose/js/.storybook/story/elements/aggregation/Accordion.stories.tsx
+// 🥼︎ .storybook/stories/ui/Accordion.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

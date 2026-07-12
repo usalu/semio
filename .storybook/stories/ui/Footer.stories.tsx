@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 🥼︎ compose/js/.storybook/story/elements/Footer.stories.tsx
+// 🥼︎ .storybook/stories/ui/Footer.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

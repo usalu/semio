@@ -1955,6 +1955,16 @@ pub mod d2 {
         }
 
         #[test]
+        fn cached_fixture_json_reuses_string_for_same_document_across_panes() {
+            let envelope = parse_envelope(&Puzzle2dPlayApp::default().initial_document_json());
+            let document_json = serde_json::to_string(&envelope).unwrap();
+            let overview = puzzle2d_board_scene(&document_json, &envelope, PUZZLE2D_PANE_OVERVIEW);
+            let detail = puzzle2d_board_scene(&document_json, &envelope, PUZZLE2D_PANE_DETAIL);
+            assert_eq!(overview.fixture_json, detail.fixture_json);
+            assert_eq!(overview.fixture_json, envelope.fixture.to_string());
+        }
+
+        #[test]
         fn puzzle2d_document_json_from_dwg_returns_empty_board_framed_to_extents() {
             let mut drawing = semio_framework_os::DwgDrawing::default();
             drawing.extmin = [0.0, 0.0, 0.0];
@@ -2350,11 +2360,13 @@ pub mod d3 {
         "setSelectionFlag",
         "patchInspector",
         "addBrushObject",
+        "acceptSuggestion",
         "setFillCount",
         "createAttraction",
         "deleteAttraction",
         "addTargetVolume",
         "deleteTargetVolume",
+        "setTargetVolumeFlag",
     ];
     const PUZZLE3D_UNDO_STACK_MAX: usize = 50;
 
@@ -2568,6 +2580,9 @@ pub mod d3 {
         hovered_object_id: Option<String>,
         #[serde(default)]
         hovered_vortex_full_id: Option<String>,
+        /// 🎯 Anchor position (client x/y) of the open per-vortex brush-candidate suggestion popup, or `None` when closed.
+        #[serde(default)]
+        suggestion_menu: Option<[f64; 2]>,
         #[serde(default = "default_overlap_budget")]
         overlap_budget: f64,
         #[serde(default)]
@@ -2630,6 +2645,7 @@ pub mod d3 {
                 selection_method: default_selection_method(),
                 hovered_object_id: None,
                 hovered_vortex_full_id: None,
+                suggestion_menu: None,
                 overlap_budget: default_overlap_budget(),
                 fill_count: 0,
                 brush_candidate_index: 0,
@@ -3060,7 +3076,35 @@ pub mod d3 {
         serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
     }
 
-    fn world_interaction_json(runtime: &Puzzle3dRuntime) -> String {
+    fn world_interaction_json(envelope: &Puzzle3dEnvelope, session: &Puzzle3dPrecomputeSession) -> String {
+        let runtime = &envelope.runtime;
+        let suggestion_menu = runtime.suggestion_menu.map(|[x, y]| {
+            let (pending, candidates) = puzzle3d_brush_target_vortex(envelope)
+                .map(|target| {
+                    let raw = session.brush_candidates(&target);
+                    let free = parse_brush_candidates_free(&raw);
+                    let pending: Value = serde_json::from_str(&raw).unwrap_or(Value::Null);
+                    let pending = pending.get("unknownPending").and_then(Value::as_bool).unwrap_or(false);
+                    let candidates: Vec<Value> = free
+                        .iter()
+                        .enumerate()
+                        .map(|(index, candidate)| {
+                            let object_label = candidate.get("objectKind").and_then(Value::as_str).or_else(|| candidate.get("objectKindId").and_then(Value::as_str)).unwrap_or("kind");
+                            let source_vortex_index = candidate.get("sourceVortexIndex").and_then(Value::as_u64).unwrap_or(0);
+                            json!({ "index": index, "objectLabel": object_label, "vortexLabel": format!("vortex {source_vortex_index}") })
+                        })
+                        .collect();
+                    (pending, candidates)
+                })
+                .unwrap_or((false, Vec::new()));
+            json!({ "open": true, "x": x, "y": y, "pending": pending, "candidates": candidates })
+        });
+        let fill_build: Value = serde_json::from_str(&session.fill_progress()).unwrap_or(Value::Null);
+        let fill_build = json!({
+            "count": fill_build.get("count").cloned().unwrap_or(json!(0)),
+            "maxCount": fill_build.get("maxCount").cloned().unwrap_or(json!(PUZZLE3D_FILL_COUNT_MAX)),
+            "done": fill_build.get("done").cloned().unwrap_or(json!(true)),
+        });
         json!({
             "activeTool": runtime.active_tool,
             "brushCandidateIndex": runtime.brush_candidate_index,
@@ -3068,6 +3112,8 @@ pub mod d3 {
             "fillEditTargetVolumes": runtime.fill_edit_target_volumes,
             "voxelDims": runtime.voxel_dims,
             "gridFactor": runtime.grid_factor,
+            "suggestionMenu": suggestion_menu,
+            "fillBuild": fill_build,
         })
         .to_string()
     }
@@ -4549,46 +4595,94 @@ pub mod d3 {
     }
 
     fn puzzle3d_context_menu_json(envelope: &Puzzle3dEnvelope) -> Option<String> {
-        if envelope.runtime.selection.object_ids.is_empty() {
-            return None;
+        let selection = &envelope.runtime.selection;
+        if !selection.object_ids.is_empty() {
+            let all_hidden = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.hidden);
+            let all_locked = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.locked);
+            let items = vec![
+                json!({
+                    "id": "duplicate",
+                    "label": "Duplicate",
+                    "action": "duplicateSelection",
+                }),
+                json!({
+                    "id": "select-same-kind",
+                    "label": "Select all of same kind",
+                    "action": "selectSameKindSelection",
+                }),
+                json!({
+                    "id": "hide-show",
+                    "label": if all_hidden { "Show" } else { "Hide" },
+                    "action": "setSelectionFlag",
+                    "args": { "flag": "hidden", "value": !all_hidden },
+                }),
+                json!({
+                    "id": "lock-unlock",
+                    "label": if all_locked { "Unlock" } else { "Lock" },
+                    "action": "setSelectionFlag",
+                    "args": { "flag": "locked", "value": !all_locked },
+                }),
+                json!({
+                    "id": "zoom",
+                    "label": "Zoom to selection",
+                    "action": "zoomToSelection",
+                }),
+                json!({
+                    "id": "delete",
+                    "label": "Delete",
+                    "action": "deleteSelection",
+                }),
+            ];
+            return serde_json::to_string(&items).ok();
         }
-        let all_hidden = envelope.fixture.objects.iter().filter(|object| envelope.runtime.selection.object_ids.contains(&object.id)).all(|object| object.hidden);
-        let all_locked = envelope.fixture.objects.iter().filter(|object| envelope.runtime.selection.object_ids.contains(&object.id)).all(|object| object.locked);
-        let items = vec![
-            json!({
-                "id": "duplicate",
-                "label": "Duplicate",
-                "action": "duplicateSelection",
-            }),
-            json!({
-                "id": "select-same-kind",
-                "label": "Select all of same kind",
-                "action": "selectSameKindSelection",
-            }),
-            json!({
-                "id": "hide-show",
-                "label": if all_hidden { "Show" } else { "Hide" },
-                "action": "setSelectionFlag",
-                "args": { "flag": "hidden", "value": !all_hidden },
-            }),
-            json!({
-                "id": "lock-unlock",
-                "label": if all_locked { "Unlock" } else { "Lock" },
-                "action": "setSelectionFlag",
-                "args": { "flag": "locked", "value": !all_locked },
-            }),
-            json!({
-                "id": "zoom",
-                "label": "Zoom to selection",
-                "action": "zoomToSelection",
-            }),
-            json!({
+        if !selection.vortex_ids.is_empty() {
+            let mut items = Vec::new();
+            if let [only] = selection.vortex_ids.as_slice() {
+                items.push(json!({
+                    "id": "suggest",
+                    "label": "Suggest objects",
+                    "action": "openVortexSuggestions",
+                    "args": { "fullId": only },
+                }));
+            }
+            return serde_json::to_string(&items).ok();
+        }
+        if let Some(id) = selection.attraction_ids.first() {
+            let items = vec![json!({
                 "id": "delete",
                 "label": "Delete",
-                "action": "deleteSelection",
-            }),
-        ];
-        serde_json::to_string(&items).ok()
+                "action": "deleteAttraction",
+                "args": { "id": id },
+            })];
+            return serde_json::to_string(&items).ok();
+        }
+        if let Some(id) = selection.target_volume_ids.first() {
+            let target_volume = envelope.fixture.target_volumes.iter().find(|volume| &volume.id == id);
+            let hidden = target_volume.map(|volume| volume.hidden).unwrap_or(false);
+            let locked = target_volume.map(|volume| volume.locked).unwrap_or(false);
+            let items = vec![
+                json!({
+                    "id": "hide-show",
+                    "label": if hidden { "Show" } else { "Hide" },
+                    "action": "setTargetVolumeFlag",
+                    "args": { "id": id, "flag": "hidden", "value": !hidden },
+                }),
+                json!({
+                    "id": "lock-unlock",
+                    "label": if locked { "Unlock" } else { "Lock" },
+                    "action": "setTargetVolumeFlag",
+                    "args": { "id": id, "flag": "locked", "value": !locked },
+                }),
+                json!({
+                    "id": "delete",
+                    "label": "Delete",
+                    "action": "deleteTargetVolume",
+                    "args": { "id": id },
+                }),
+            ];
+            return serde_json::to_string(&items).ok();
+        }
+        None
     }
     //#endregion 🔖Engagement
 
@@ -5327,6 +5421,19 @@ pub mod d3 {
                         return vec![set_document_op(&envelope)];
                     }
                 }
+                "setTargetVolumeFlag" => {
+                    let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).unwrap_or("");
+                    let flag = args.and_then(|value| value.get("flag")).and_then(|value| value.as_str()).unwrap_or("");
+                    let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_bool()).unwrap_or(false);
+                    if let Some(volume) = envelope.fixture.target_volumes.iter_mut().find(|volume| volume.id == id) {
+                        match flag {
+                            "hidden" => volume.hidden = value,
+                            "locked" => volume.locked = value,
+                            _ => {}
+                        }
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
                 "engagementPossibleSelect" => {
                     let possible_id = args.and_then(|value| value.get("possibleId")).and_then(|value| value.as_str()).unwrap_or("");
                     envelope.runtime.active_tool = match possible_id {
@@ -5388,14 +5495,70 @@ pub mod d3 {
                 }
                 "cycleBrushCandidate" => {
                     drive_precompute(&mut self.precompute, &envelope);
+                    let delta = args.and_then(|value| value.get("delta")).and_then(|value| value.as_i64()).unwrap_or(1);
                     if let Some(vortex_id) = puzzle3d_brush_target_vortex(&envelope) {
                         let raw = self.precompute.brush_candidates(&vortex_id);
                         let free_count = parse_brush_candidates_free_count(&raw);
                         if free_count > 0 {
-                            envelope.runtime.brush_candidate_index = (envelope.runtime.brush_candidate_index + 1) % free_count;
+                            let current = envelope.runtime.brush_candidate_index as i64;
+                            let next = (current + delta).rem_euclid(free_count as i64);
+                            envelope.runtime.brush_candidate_index = next as usize;
                         }
                     } else {
-                        envelope.runtime.brush_candidate_index = envelope.runtime.brush_candidate_index.saturating_add(1);
+                        envelope.runtime.brush_candidate_index = envelope.runtime.brush_candidate_index.saturating_add_signed(delta as isize);
+                    }
+                    return vec![set_document_op(&envelope)];
+                }
+                "openVortexSuggestions" => {
+                    if let Some(full_id) = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()) {
+                        envelope.runtime.selection.vortex_ids = vec![full_id.to_string()];
+                        envelope.runtime.selection.object_ids.clear();
+                        envelope.runtime.active_tool = "brush".into();
+                        envelope.runtime.brush_candidate_index = 0;
+                        let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                        let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                        envelope.runtime.suggestion_menu = Some([x, y]);
+                        drive_precompute(&mut self.precompute, &envelope);
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+                "closeVortexSuggestions" => {
+                    envelope.runtime.suggestion_menu = None;
+                    return vec![set_document_op(&envelope)];
+                }
+                "hoverSuggestion" => {
+                    if let Some(index) = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()) {
+                        envelope.runtime.brush_candidate_index = index as usize;
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+                "acceptSuggestion" => {
+                    drive_precompute(&mut self.precompute, &envelope);
+                    let index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).unwrap_or(envelope.runtime.brush_candidate_index as u64) as usize;
+                    if let Some(vortex_id) = puzzle3d_brush_target_vortex(&envelope) {
+                        if let Some(preview_json) = self.precompute.brush_preview_json(&vortex_id, index) {
+                            if let Ok(fixture_json) = self.precompute.apply_brush_placement_rust(&preview_json) {
+                                if let Some(next) = fixture_from_engine_json(&envelope, &fixture_json) {
+                                    envelope = next;
+                                    puzzle3d_rederive_all_attractions(&mut envelope.fixture);
+                                    resolve_puzzle3d_attractions(&mut envelope.fixture);
+                                    envelope.runtime.suggestion_menu = None;
+                                    return vec![set_document_op(&envelope)];
+                                }
+                            }
+                        }
+                    }
+                }
+                "suggestionsTick" => {
+                    drive_precompute(&mut self.precompute, &envelope);
+                    return vec![set_document_op(&envelope)];
+                }
+                "fillBuildTick" => {
+                    drive_precompute(&mut self.precompute, &envelope);
+                    let progress: Value = serde_json::from_str(&self.precompute.fill_progress()).unwrap_or(Value::Null);
+                    let done = progress.get("done").and_then(Value::as_bool).unwrap_or(true);
+                    if done && envelope.runtime.active_tool == "fill" && envelope.runtime.fill_count == 0 {
+                        envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, 1);
                     }
                     return vec![set_document_op(&envelope)];
                 }
@@ -5437,7 +5600,7 @@ pub mod d3 {
                             Some(world_target_volumes_json(&envelope.fixture)),
                             Some(world_references_json(&envelope.fixture)),
                             brush_preview,
-                            Some(world_interaction_json(&envelope.runtime)),
+                            Some(world_interaction_json(&envelope, &self.precompute)),
                             None,
                             Some(world3d_lod_json(&envelope.runtime)),
                             Some(world3d_chunking_json(envelope.runtime.chunk_size, 8000.0)),
@@ -6388,7 +6551,8 @@ pub mod d3 {
             let mut envelope = default_envelope();
             envelope.runtime.fill_edit_target_volumes = true;
             envelope.runtime.voxel_dims = [2, 3, 4];
-            let interaction: Value = serde_json::from_str(&world_interaction_json(&envelope.runtime)).unwrap();
+            let session = Puzzle3dPrecomputeSession::new();
+            let interaction: Value = serde_json::from_str(&world_interaction_json(&envelope, &session)).unwrap();
             assert_eq!(interaction.get("fillEditTargetVolumes").and_then(|v| v.as_bool()), Some(true));
             assert_eq!(interaction.get("voxelDims").and_then(|v| v.as_array()).cloned(), Some(vec![json!(2), json!(3), json!(4)]));
         }

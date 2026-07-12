@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 🥼︎ compose/js/.storybook/story/elements/Popover.stories.tsx
+// 🥼︎ .storybook/stories/ui/Popover.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

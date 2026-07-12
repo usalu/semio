@@ -307,6 +307,63 @@ describe("declarative forms parity", () => {
     expect(markup).toContain("60 %");
   });
 
+  it("renders numberStepper as a single-border Stepper control, not hand-rolled double-bordered buttons", () => {
+    const markup = renderToStaticMarkup(
+      interpretUiNode(
+        {
+          type: "numberStepper",
+          id: "forms-try.height.stepper",
+          value: 3,
+          step: 1,
+          uniform: true,
+          onAbsolute: { controllerId: "forms-play", action: "setTryValueAbsolute" },
+          onDelta: { controllerId: "forms-play", action: "setTryValueDelta" },
+        },
+        { onAction: noopAction },
+      ),
+    );
+    expect(markup).toContain('data-slot="stepper-group"');
+    expect(markup).toContain('data-slot="stepper-minus"');
+    expect(markup).toContain('data-slot="stepper-plus"');
+    expect(markup).not.toContain("border-border");
+  });
+
+  it("shows the mixed-values placeholder on a non-uniform numberStepper", () => {
+    const markup = renderToStaticMarkup(
+      interpretUiNode(
+        {
+          type: "numberStepper",
+          id: "forms-try.height.stepper",
+          value: 0,
+          step: 1,
+          uniform: false,
+          onAbsolute: { controllerId: "forms-play", action: "setTryValueAbsolute" },
+          onDelta: { controllerId: "forms-play", action: "setTryValueDelta" },
+        },
+        { onAction: noopAction },
+      ),
+    );
+    expect(markup).toContain('data-mixed="true"');
+  });
+
+  it("tokenizes stack node gap/padding instead of hardcoded rem inline styles, and keeps separators off raw border-border", () => {
+    const markup = renderToStaticMarkup(
+      interpretUiNode(
+        {
+          type: "stack",
+          direction: "vertical",
+          id: "forms-blueprint.section.q1",
+          gap: "tight",
+          children: [{ type: "text", value: "text · q1" }, { type: "separator" }],
+        },
+        { onAction: noopAction },
+      ),
+    );
+    expect(markup).toContain("gap-single");
+    expect(markup).not.toContain("style=");
+    expect(markup).not.toContain("border-border");
+  });
+
   it("passes number bounds and file accept to inputs", () => {
     const numberMarkup = renderToStaticMarkup(
       interpretUiNode(

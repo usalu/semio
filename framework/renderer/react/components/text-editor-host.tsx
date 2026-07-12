@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ContextMenuController, Textarea, type ContextMenuItem } from "@semio-tech/ui-react";
 import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
-import type { ActionDescriptor, TextEditorScene, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ActionDescriptor, ComponentSceneHostProps, TextEditorScene } from "@semio-tech/framework-core";
 import { textEditorActions } from "../os-shell.tsx";
 import { createEditorSession, type EditorWasmSession } from "../os-shell.tsx";
 
@@ -684,7 +684,7 @@ const useClient = () => {
   return client;
 };
 
-export function TextEditorHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
+export function TextEditorHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.textEditor;
   const isClient = useClient();
   const tokens = useMemo((): readonly GrammarToken[] => {

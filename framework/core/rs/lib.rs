@@ -285,6 +285,49 @@ pub fn create_tab_stack_layout(window_ids: &[String], titles: Option<&[String]>)
     create_stack_layout(window_ids, titles)
 }
 
+/// 🪟 Builds a balanced fallback layout for an app that declares no `default_layout`: a single
+/// stack when there is one window, otherwise an even row of single-window stacks.
+pub fn even_window_layout(window_ids: &[String]) -> WindowLayout {
+    if window_ids.is_empty() {
+        return WindowLayout {
+            root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
+                kind: kind_stack(),
+                size: None,
+                active_window_kind_id: None,
+                children: vec![],
+            }),
+        };
+    }
+    if window_ids.len() == 1 {
+        return WindowLayout {
+            root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
+                kind: kind_stack(),
+                size: None,
+                active_window_kind_id: Some(window_ids[0].clone()),
+                children: vec![create_window_layout(window_ids[0].clone(), None, None, None)],
+            }),
+        };
+    }
+    let count = window_ids.len() as f64;
+    WindowLayout {
+        root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
+            kind: "row".into(),
+            size: None,
+            children: window_ids
+                .iter()
+                .map(|id| {
+                    WindowLayoutChild::Stack(WindowLayoutStackNode {
+                        kind: kind_stack(),
+                        size: Some(1.0 / count),
+                        active_window_kind_id: Some(id.clone()),
+                        children: vec![create_window_layout(id.clone(), None, None, None)],
+                    })
+                })
+                .collect(),
+        }),
+    }
+}
+
 pub fn create_named_layout(
     id: impl Into<String>,
     label: impl Into<String>,
@@ -3879,6 +3922,8 @@ pub enum SurfaceKind {
     NoteCanvas,
     #[serde(rename = "vcs-history")]
     VcsHistory,
+    #[serde(rename = "protocol-list")]
+    ProtocolList,
 }
 
 impl SurfaceKind {
@@ -3896,6 +3941,7 @@ impl SurfaceKind {
             Self::IconRender => "icon-render",
             Self::NoteCanvas => "note-canvas",
             Self::VcsHistory => "vcs-history",
+            Self::ProtocolList => "protocol-list",
         }
     }
 
@@ -4451,6 +4497,30 @@ pub struct VcsHistoryScene {
     pub columns_json: String,
 }
 
+/** @emoji 🧩 A palette entry for a block kind insertable into a [`ProtocolListScene`], contributed
+ * either by the host app's own built-ins or by a `Contribution::ProtocolBlockKind` module. */
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProtocolPaletteEntry {
+    pub block_kind: String,
+    pub label: String,
+    pub icon_id: String,
+}
+
+/** @emoji 🧩 A strict, ordered list of steps/blocks for the Blockly-like list editor. `steps_json`
+ * is a `ProtocolStep[]` array (see `protocol::ProtocolStep`), `palette_json` is a
+ * `ProtocolPaletteEntry[]` array of the block kinds available to insert. */
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProtocolListScene {
+    pub steps_json: String,
+    pub palette_json: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selected_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dragging_id: Option<String>,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UiExternalSlotNode {
@@ -4494,6 +4564,8 @@ pub struct UiComponentSceneNode {
     pub note_canvas: Option<NoteCanvasScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vcs_history: Option<VcsHistoryScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub protocol_list: Option<ProtocolListScene>,
 }
 //#endregion 🔖ComponentScenes
 

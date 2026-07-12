@@ -4790,6 +4790,7 @@ version = "0.1.0"
 dependencies = [
  "infinite_cavas",
  "mathematical_core",
+ "mathematical_geometry",
  "mathematical_graph_manifest",
  "serde",
  "serde_json",
@@ -5780,6 +5781,7 @@ dependencies = [
  "thiserror 2.0.18",
  "time",
  "tokio",
+ "tokio-tungstenite 0.26.2",
  "tower-http 0.6.10",
  "tracing",
  "tracing-subscriber",
@@ -7872,6 +7874,59 @@ checksum = "3a766e1110788c36f4fa1c2b71b387a7815aa65f88ce0229841826633d93723e"
 dependencies = [
  "libc",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "sourcing-module-beams"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "serde_json",
+ "sourcing_curate",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "sourcing-module-slabs"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "serde_json",
+ "sourcing_curate",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "sourcing-module-windows"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "serde_json",
+ "sourcing_curate",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "sourcing-plugin"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "serde_json",
+ "sourcing_curate",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "sourcing_curate"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]

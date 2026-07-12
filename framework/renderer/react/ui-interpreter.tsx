@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ReactElement, type ReactNode } from "react";
+import { lazy, Suspense, type ComponentType, type LazyExoticComponent, type ReactElement, type ReactNode } from "react";
 import {
   Button,
   ChromeAwareWindowScrollSurface,
@@ -19,6 +19,8 @@ import {
   Toggle,
   Tree,
   VirtualFileSystem,
+  borderElementClass,
+  borderNormalTopClass,
   catalogueTreeDragController,
   classifyIconSelectorMode,
   cn,
@@ -29,56 +31,49 @@ import {
   type TreePanelConfig,
 } from "@semio-tech/ui-react";
 import { ICONS, type IconName } from "@semio-tech/ui-asset";
-import type { ActionDescriptor, UiControlNode, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode } from "@semio-tech/framework-core";
+import type { ActionDescriptor, ComponentKind, ComponentSceneHostProps, UiControlNode, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode } from "@semio-tech/framework-core";
 
-const Canvas2dHost = lazy(() => import("./components/canvas-2d-host.tsx").then((module) => ({ default: module.Canvas2dHost })));
-const NodeGraphHost = lazy(() => import("./components/node-graph-host.tsx").then((module) => ({ default: module.NodeGraphHost })));
-const RasterHost = lazy(() => import("./components/raster-host.tsx").then((module) => ({ default: module.RasterHost })));
-const TableHost = lazy(() => import("./components/table-host.tsx").then((module) => ({ default: module.TableHost })));
-const TextEditorHost = lazy(() => import("./components/text-editor-host.tsx").then((module) => ({ default: module.TextEditorHost })));
-const World3dHost = lazy(() => import("./components/world-3d-host.tsx").then((module) => ({ default: module.World3dHost })));
-const GisMapHost = lazy(() => import("./components/gis-map-host.tsx").then((module) => ({ default: module.GisMapHost })));
-const Puzzle2dBoardHost = lazy(() => import("./components/puzzle-2d-board-host.tsx").then((module) => ({ default: module.Puzzle2dBoardHost })));
-const IconRenderHost = lazy(() => import("./components/icon-render-host.tsx").then((module) => ({ default: module.IconRenderHost })));
-const NoteCanvasHost = lazy(() => import("./components/note-canvas-host.tsx").then((module) => ({ default: module.NoteCanvasHost })));
-const VcsHistoryHost = lazy(() => import("./components/vcs-history-host.tsx").then((module) => ({ default: module.VcsHistoryHost })));
+//#region ComponentSceneHostRegistry
+/** 🧩 Wraps a dynamic host-module import into a lazily-loaded component bound to a named export. */
+function lazyHost<P>(loader: () => Promise<Record<string, unknown>>, exportName: string): LazyExoticComponent<ComponentType<P>> {
+  return lazy(async () => {
+    const module = await loader();
+    return { default: module[exportName] as ComponentType<P> };
+  });
+}
+
+const COMPONENT_SCENE_HOSTS: Record<ComponentKind, LazyExoticComponent<ComponentType<ComponentSceneHostProps>>> = {
+  "canvas-2d": lazyHost(() => import("./components/canvas-2d-host.tsx"), "Canvas2dHost"),
+  "world-3d": lazyHost(() => import("./components/world-3d-host.tsx"), "World3dHost"),
+  "node-graph": lazyHost(() => import("./components/node-graph-host.tsx"), "NodeGraphHost"),
+  "text-editor": lazyHost(() => import("./components/text-editor-host.tsx"), "TextEditorHost"),
+  table: lazyHost(() => import("./components/table-host.tsx"), "TableHost"),
+  raster: lazyHost(() => import("./components/raster-host.tsx"), "RasterHost"),
+  "gis2d-map": lazyHost(() => import("./components/gis-map-host.tsx"), "GisMapHost"),
+  "puzzle2d-board": lazyHost(() => import("./components/puzzle-2d-board-host.tsx"), "Puzzle2dBoardHost"),
+  "icon-render": lazyHost(() => import("./components/icon-render-host.tsx"), "IconRenderHost"),
+  "note-canvas": lazyHost(() => import("./components/note-canvas-host.tsx"), "NoteCanvasHost"),
+  "vcs-history": lazyHost(() => import("./components/vcs-history-host.tsx"), "VcsHistoryHost"),
+};
+//#endregion ComponentSceneHostRegistry
 
 function ComponentSceneFallback() {
   return <p className="text-muted-foreground p-2 text-xs">Loading surface…</p>;
 }
 
 function renderComponentSceneHost(node: Extract<UiNode, { type: "componentScene" }>, onAction: (action: ActionDescriptor) => void): ReactNode {
-  const host = (() => {
-    switch (node.componentKind) {
-      case "canvas-2d":
-        return <Canvas2dHost node={node} onAction={onAction} />;
-      case "world-3d":
-        return <World3dHost node={node} onAction={onAction} />;
-      case "node-graph":
-        return <NodeGraphHost node={node} onAction={onAction} />;
-      case "text-editor":
-        return <TextEditorHost node={node} onAction={onAction} />;
-      case "table":
-        return <TableHost node={node} onAction={onAction} />;
-      case "raster":
-        return <RasterHost node={node} onAction={onAction} />;
-      case "gis2d-map":
-        return <GisMapHost node={node} onAction={onAction} />;
-      case "puzzle2d-board":
-        return <Puzzle2dBoardHost node={node} onAction={onAction} />;
-      case "icon-render":
-        return <IconRenderHost node={node} onAction={onAction} />;
-      case "note-canvas":
-        return <NoteCanvasHost node={node} onAction={onAction} />;
-      case "vcs-history":
-        return <VcsHistoryHost node={node} onAction={onAction} />;
-      case "virtualFileSystem":
-        return <VirtualFileSystemHost node={node} onAction={onAction} />;
-      default:
-        return <p className="text-muted-foreground text-xs">Unknown component: {node.componentKind}</p>;
-    }
-  })();
-  return <Suspense fallback={<ComponentSceneFallback />}>{host}</Suspense>;
+  if (node.componentKind === "virtualFileSystem") {
+    return <VirtualFileSystemHost node={node} onAction={onAction} />;
+  }
+  const Host = COMPONENT_SCENE_HOSTS[node.componentKind as ComponentKind];
+  if (!Host) {
+    return <p className="text-muted-foreground text-xs">Unknown component: {node.componentKind}</p>;
+  }
+  return (
+    <Suspense fallback={<ComponentSceneFallback />}>
+      <Host node={node} onAction={onAction} />
+    </Suspense>
+  );
 }
 
 //#region UiInterpreterContext
@@ -503,15 +498,6 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
                 }
               : undefined
           }
-          style={{
-            display: "flex",
-            flexDirection: node.direction === "horizontal" ? "row" : "column",
-            gap: node.gap === "none" ? 0 : node.gap === "tight" ? "0.25rem" : node.gap === "relaxed" ? "1rem" : "0.5rem",
-            padding: node.padding === "none" ? 0 : "0.5rem",
-            minHeight: 0,
-            minWidth: 0,
-            flex: 1,
-          }}
         >
           {node.children.map((child, index) => (
             <div key={uiNodeKey(child, index)} className="flex-auto">
@@ -526,7 +512,7 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
     case "button":
       return <Button id={node.id} text={node.label} icon={resolveDeclarativeControlIcon(node.iconId)} disabled={node.disabled} onClick={() => context.onAction(node.action)} />;
     case "separator":
-      return <hr className="border-border" />;
+      return <hr className={cn("border-0", borderNormalTopClass)} />;
     case "image":
       return <img id={node.id} src={node.src} alt={node.alt ?? ""} className="max-h-64 max-w-full rounded-md object-contain" data-ui-image={node.id} />;
     case "input":

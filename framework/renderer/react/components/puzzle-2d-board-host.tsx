@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type DragEvent, type MouseEvent } from "react";
 import { CATALOGUE_DRAG_MIME, ContextMenuController, getActiveCatalogueDragPayload, pickMostSpecificCanvasTarget, useCanvasAppearanceSync, type CanvasPickTarget } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import type { ActionDescriptor, Puzzle2dBoardScene, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ComponentSceneHostProps, Puzzle2dBoardScene } from "@semio-tech/framework-core";
 import type { Puzzle2dBoardWasmSession } from "../os-shell.tsx";
 import { createPuzzle2dBoardSession } from "../os-shell.tsx";
 
@@ -209,7 +209,7 @@ function applyFixtureToSession(session: Puzzle2dBoardWasmSession, scene: Puzzle2
 //#endregion Sync
 
 //#region Puzzle2dBoardHost
-export function Puzzle2dBoardHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
+export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.puzzle2dBoard;
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);

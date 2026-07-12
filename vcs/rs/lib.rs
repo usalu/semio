@@ -1479,8 +1479,12 @@ pub enum BackboneMessage {
     Ack { op_ids: Vec<String> },
 }
 
-/// @emoji 🧵 Duplex message channel to another process; the WIP graph never leaves memory —
-/// a backbone only ever exists to synchronize it with a peer across a process boundary.
+/// @emoji 🧵 Non-blocking, IO-free in-memory queue contract between a `DocumentVcsStore` and its
+/// sync actor. `send`/`receive` MUST return immediately: implementations only enqueue/dequeue
+/// `BackboneMessage`s — never HTTP, never filesystem, never a blocking wait. All IO (persistence,
+/// hub sync, file watching, presence) lives behind this queue in `framework/sync`'s actor layer,
+/// which owns the other end; the store's `pump()`/`flush_outbound()` run synchronously on the
+/// caller's thread and must never be blocked by transport work.
 pub trait Backbone: Send + Sync {
     fn descriptor(&self) -> DocumentBackboneRef;
     fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError>;
@@ -1695,61 +1699,90 @@ impl Backbone for MemoryBackbone {
     }
 }
 
-/// @emoji 🗃️ Raw single-document persistence primitive consumed by a host-side `Backbone` endpoint.
-pub trait BackboneStorage: Send + Sync {
-    fn read(&self) -> Result<Option<String>, VcsError>;
-    fn write(&self, envelope_json: &str) -> Result<(), VcsError>;
+/// @emoji 🔗 The store-side end of a pair of crossed in-memory queues. Implements the non-blocking
+/// {@link Backbone} contract; the matching {@link ChannelBackboneRemote} is held by an external sync
+/// actor (built in `framework/sync`, a later workstream) that pushes inbound messages and drains the
+/// store's outbound ones. This crate only provides the queue plumbing — never the actor itself.
+pub struct ChannelBackbone {
+    uri: String,
+    inbound: Arc<Mutex<VecDeque<BackboneMessage>>>,
+    outbound: Arc<Mutex<VecDeque<BackboneMessage>>>,
 }
 
-fn storage_receive(bootstrapped: &mut bool, storage: &dyn BackboneStorage) -> Result<Vec<BackboneMessage>, VcsError> {
-    if *bootstrapped {
-        return Ok(Vec::new());
-    }
-    *bootstrapped = true;
-    match storage.read()? {
-        Some(envelope_json) => Ok(vec![BackboneMessage::Snapshot { envelope_json }]),
-        None => Ok(Vec::new()),
+/// @emoji 🎛️ The actor-side end paired with a {@link ChannelBackbone}: `push` delivers a message to
+/// the store's inbound queue, `drain` collects everything the store has sent outbound. Not a
+/// `Backbone` — this is the handle an IO-owning actor endpoint holds across the store boundary.
+pub struct ChannelBackboneRemote {
+    uri: String,
+    inbound: Arc<Mutex<VecDeque<BackboneMessage>>>,
+    outbound: Arc<Mutex<VecDeque<BackboneMessage>>>,
+}
+
+impl ChannelBackbone {
+    /// @emoji 🔗 Creates a crossed pair sharing a URI: the store attaches the `ChannelBackbone`; the
+    /// actor keeps the `ChannelBackboneRemote`.
+    pub fn pair(uri: &str) -> (ChannelBackbone, ChannelBackboneRemote) {
+        let inbound = Arc::new(Mutex::new(VecDeque::new()));
+        let outbound = Arc::new(Mutex::new(VecDeque::new()));
+        (
+            ChannelBackbone {
+                uri: uri.to_string(),
+                inbound: inbound.clone(),
+                outbound: outbound.clone(),
+            },
+            ChannelBackboneRemote {
+                uri: uri.to_string(),
+                inbound,
+                outbound,
+            },
+        )
     }
 }
 
-fn storage_send(storage: &dyn BackboneStorage, message: BackboneMessage) -> Result<(), VcsError> {
-    match message {
-        BackboneMessage::Snapshot { envelope_json } => storage.write(&envelope_json),
-        BackboneMessage::Ops { envelopes } => {
-            let existing = storage
-                .read()?
-                .ok_or_else(|| VcsError::Backbone("cannot append ops before a snapshot exists".into()))?;
-            let mut stored: serde_json::Value =
-                serde_json::from_str(&existing).map_err(|e| VcsError::Deserialize(e.to_string()))?;
-            append_ops_into_stored_envelope(&mut stored, envelopes)?;
-            let json = serde_json::to_string(&stored).map_err(|e| VcsError::Serialize(e.to_string()))?;
-            storage.write(&json)
-        }
+impl Backbone for ChannelBackbone {
+    fn descriptor(&self) -> DocumentBackboneRef {
+        document_backbone_ref(&self.uri)
+    }
+
+    fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
+        self.outbound
+            .lock()
+            .map_err(|_| VcsError::Backbone("lock poisoned".into()))?
+            .push_back(message);
+        Ok(())
+    }
+
+    fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
+        let mut inbound = self.inbound.lock().map_err(|_| VcsError::Backbone("lock poisoned".into()))?;
+        Ok(inbound.drain(..).collect())
     }
 }
 
-fn append_ops_into_stored_envelope(stored: &mut serde_json::Value, envelopes: Vec<OpEnvelope>) -> Result<(), VcsError> {
-    let edits = stored
-        .get_mut("vcs")
-        .and_then(|vcs| vcs.get_mut("edits"))
-        .and_then(|edits| edits.as_array_mut())
-        .ok_or_else(|| VcsError::Backbone("stored envelope missing vcs.edits".into()))?;
-    let mut seen: HashSet<String> = edits
-        .iter()
-        .filter_map(|edit| edit.get("id").and_then(|id| id.as_str()).map(str::to_string))
-        .collect();
-    for envelope in envelopes {
-        let edit_json = envelope.diff.payload;
-        if let Some(id) = edit_json.get("id").and_then(|id| id.as_str()) {
-            if !seen.insert(id.to_string()) {
-                continue;
-            }
-        }
-        edits.push(edit_json);
+impl ChannelBackboneRemote {
+    pub fn descriptor(&self) -> DocumentBackboneRef {
+        document_backbone_ref(&self.uri)
     }
-    Ok(())
+
+    /// @emoji 📥 Delivers a message to the store's inbound queue (actor→store).
+    pub fn push(&self, message: BackboneMessage) -> Result<(), VcsError> {
+        self.inbound
+            .lock()
+            .map_err(|_| VcsError::Backbone("lock poisoned".into()))?
+            .push_back(message);
+        Ok(())
+    }
+
+    /// @emoji 📤 Collects everything the store has sent outbound (store→actor), draining the queue.
+    pub fn drain(&self) -> Result<Vec<BackboneMessage>, VcsError> {
+        let mut outbound = self.outbound.lock().map_err(|_| VcsError::Backbone("lock poisoned".into()))?;
+        Ok(outbound.drain(..).collect())
+    }
 }
 
+/// @emoji 🗃️ Pure single-blob file persistence (`file://x.json`) — read/write a whole envelope JSON.
+/// No `Backbone` impl: the `framework/sync` actor layer drives this from its own thread; this crate
+/// only owns the file format. `file://` is an export/import format; `folder://` is the canonical
+/// local store.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct FileJsonStorage {
     path: std::path::PathBuf,
@@ -1760,11 +1793,9 @@ impl FileJsonStorage {
     pub fn new(path: std::path::PathBuf) -> Self {
         Self { path }
     }
-}
 
-#[cfg(not(target_arch = "wasm32"))]
-impl BackboneStorage for FileJsonStorage {
-    fn read(&self) -> Result<Option<String>, VcsError> {
+    /// @emoji 📖 Reads the stored envelope JSON, or `None` if the file does not exist yet.
+    pub fn read(&self) -> Result<Option<String>, VcsError> {
         match std::fs::read_to_string(&self.path) {
             Ok(json) => Ok(Some(json)),
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(None),
@@ -1772,7 +1803,8 @@ impl BackboneStorage for FileJsonStorage {
         }
     }
 
-    fn write(&self, envelope_json: &str) -> Result<(), VcsError> {
+    /// @emoji ✍️ Writes the whole envelope JSON, creating parent directories as needed.
+    pub fn write(&self, envelope_json: &str) -> Result<(), VcsError> {
         if let Some(parent) = self.path.parent() {
             std::fs::create_dir_all(parent).map_err(|e| VcsError::Backbone(e.to_string()))?;
         }
@@ -1780,42 +1812,10 @@ impl BackboneStorage for FileJsonStorage {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-pub struct FileJsonBackbone {
-    uri: String,
-    storage: FileJsonStorage,
-    bootstrapped: bool,
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl FileJsonBackbone {
-    pub fn new(uri: &str) -> Result<Self, VcsError> {
-        let path = uri
-            .strip_prefix("file://")
-            .ok_or_else(|| VcsError::Backbone(format!("expected file:// uri, got {uri}")))?;
-        Ok(Self {
-            uri: uri.to_string(),
-            storage: FileJsonStorage::new(std::path::PathBuf::from(path)),
-            bootstrapped: false,
-        })
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl Backbone for FileJsonBackbone {
-    fn descriptor(&self) -> DocumentBackboneRef {
-        document_backbone_ref(&self.uri)
-    }
-
-    fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
-        storage_send(&self.storage, message)
-    }
-
-    fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
-        storage_receive(&mut self.bootstrapped, &self.storage)
-    }
-}
-
+/// @emoji 🗄️ Pure multi-document sqlite persistence (`folder://`), the canonical local store. Rows
+/// are keyed by document id: `document(id, schema, json, updated_at)` — a single folder holds every
+/// open document's envelope. No `Backbone` impl: the `framework/sync` actor layer drives this from
+/// its own thread; this crate only owns the sqlite schema.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct FolderSqliteStorage {
     folder: std::path::PathBuf,
@@ -1828,252 +1828,72 @@ impl FolderSqliteStorage {
     }
 
     fn db_path(&self) -> std::path::PathBuf {
-        self.folder.join(".semio").join("document.db")
+        self.folder.join(".semio").join("documents.db")
     }
 
     fn connection(&self) -> Result<rusqlite::Connection, VcsError> {
         let semio_dir = self.folder.join(".semio");
         std::fs::create_dir_all(&semio_dir).map_err(|e| VcsError::Backbone(e.to_string()))?;
-        rusqlite::Connection::open(self.db_path()).map_err(|e| VcsError::Backbone(e.to_string()))
+        let conn = rusqlite::Connection::open(self.db_path()).map_err(|e| VcsError::Backbone(e.to_string()))?;
+        Self::ensure_schema(&conn)?;
+        Ok(conn)
     }
 
     fn ensure_schema(conn: &rusqlite::Connection) -> Result<(), VcsError> {
         conn.execute_batch(
-            "CREATE TABLE IF NOT EXISTS document (id INTEGER PRIMARY KEY CHECK (id = 1), json TEXT NOT NULL);",
+            "CREATE TABLE IF NOT EXISTS document (\
+                 id TEXT PRIMARY KEY,\
+                 schema TEXT,\
+                 json TEXT NOT NULL,\
+                 updated_at INTEGER NOT NULL\
+             );",
         )
         .map_err(|e| VcsError::Backbone(e.to_string()))
     }
-}
 
-#[cfg(not(target_arch = "wasm32"))]
-impl BackboneStorage for FolderSqliteStorage {
-    fn read(&self) -> Result<Option<String>, VcsError> {
+    /// @emoji 📖 Reads the stored envelope JSON for `document_id`, or `None` if absent.
+    pub fn read(&self, document_id: &str) -> Result<Option<String>, VcsError> {
         use rusqlite::OptionalExtension;
         let conn = self.connection()?;
-        Self::ensure_schema(&conn)?;
-        conn.query_row("SELECT json FROM document WHERE id = 1", [], |row| row.get(0))
+        conn.query_row("SELECT json FROM document WHERE id = ?1", [document_id], |row| row.get(0))
             .optional()
             .map_err(|e| VcsError::Backbone(e.to_string()))
     }
 
-    fn write(&self, envelope_json: &str) -> Result<(), VcsError> {
+    /// @emoji ✍️ Upserts `document_id`'s envelope JSON (with its schema id and an `updated_at` stamp).
+    pub fn write(&self, document_id: &str, schema: &str, envelope_json: &str) -> Result<(), VcsError> {
         let conn = self.connection()?;
-        Self::ensure_schema(&conn)?;
         conn.execute(
-            "INSERT INTO document (id, json) VALUES (1, ?1) ON CONFLICT(id) DO UPDATE SET json = excluded.json",
-            [envelope_json],
+            "INSERT INTO document (id, schema, json, updated_at) VALUES (?1, ?2, ?3, ?4) \
+             ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, json = excluded.json, updated_at = excluded.updated_at",
+            rusqlite::params![document_id, schema, envelope_json, now_ms() as i64],
         )
         .map_err(|e| VcsError::Backbone(e.to_string()))?;
         Ok(())
     }
-}
 
-#[cfg(not(target_arch = "wasm32"))]
-pub struct FolderSqliteBackbone {
-    uri: String,
-    storage: FolderSqliteStorage,
-    bootstrapped: bool,
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl FolderSqliteBackbone {
-    pub fn new(uri: &str) -> Result<Self, VcsError> {
-        let folder = uri
-            .strip_prefix("folder://")
-            .ok_or_else(|| VcsError::Backbone(format!("expected folder:// uri, got {uri}")))?;
-        Ok(Self {
-            uri: uri.to_string(),
-            storage: FolderSqliteStorage::new(std::path::PathBuf::from(folder)),
-            bootstrapped: false,
-        })
+    /// @emoji 📇 Lists every stored document id (newest write first), for a folder-wide index.
+    pub fn document_ids(&self) -> Result<Vec<String>, VcsError> {
+        let conn = self.connection()?;
+        let mut statement = conn
+            .prepare("SELECT id FROM document ORDER BY updated_at DESC")
+            .map_err(|e| VcsError::Backbone(e.to_string()))?;
+        let ids = statement
+            .query_map([], |row| row.get::<_, String>(0))
+            .map_err(|e| VcsError::Backbone(e.to_string()))?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|e| VcsError::Backbone(e.to_string()))?;
+        Ok(ids)
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-impl Backbone for FolderSqliteBackbone {
-    fn descriptor(&self) -> DocumentBackboneRef {
-        document_backbone_ref(&self.uri)
-    }
-
-    fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
-        storage_send(&self.storage, message)
-    }
-
-    fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
-        storage_receive(&mut self.bootstrapped, &self.storage)
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-#[derive(Deserialize)]
-struct RemoteOpRow {
-    version: i64,
-    envelope: OpEnvelope,
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-#[derive(Deserialize)]
-struct RemoteVersionResponse {
-    version: i64,
-}
-
-pub struct RemoteBackbone {
-    uri: String,
-    last_version: Mutex<i64>,
-    last_conflict: Mutex<Option<StudioConflict>>,
-}
-
-impl RemoteBackbone {
-    pub fn new(uri: &str) -> Result<Self, VcsError> {
-        if !uri.starts_with("remote://") {
-            return Err(VcsError::Backbone(format!("expected remote:// uri, got {uri}")));
-        }
-        Ok(Self {
-            uri: uri.to_string(),
-            last_version: Mutex::new(0),
-            last_conflict: Mutex::new(None),
-        })
-    }
-
-    pub fn last_conflict(&self) -> Option<StudioConflict> {
-        self.last_conflict.lock().ok().and_then(|g| g.clone())
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    fn endpoint(&self) -> Result<(String, String), VcsError> {
-        let rest = self
-            .uri
-            .strip_prefix("remote://")
-            .ok_or_else(|| VcsError::Backbone(format!("invalid remote uri: {}", self.uri)))?;
-        let (host_port, document_id) = rest
-            .rsplit_once('/')
-            .ok_or_else(|| VcsError::Backbone(format!("remote uri missing document id: {}", self.uri)))?;
-        if document_id.is_empty() {
-            return Err(VcsError::Backbone(format!(
-                "remote uri missing document id: {}",
-                self.uri
-            )));
-        }
-        Ok((format!("http://{host_port}"), document_id.to_string()))
-    }
-
-    fn record_conflict(&self, message: impl Into<String>) {
-        let conflict = StudioConflict {
-            kind: "studio-conflict".into(),
-            uri: self.uri.clone(),
-            message: message.into(),
-        };
-        if let Ok(mut guard) = self.last_conflict.lock() {
-            *guard = Some(conflict);
-        }
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    fn current_version(&self) -> i64 {
-        self.last_version.lock().map(|guard| *guard).unwrap_or(0)
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    fn set_version(&self, version: i64) {
-        if let Ok(mut guard) = self.last_version.lock() {
-            *guard = version;
-        }
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    fn apply_version_response(&self, response: ureq::Response) -> Result<(), VcsError> {
-        if response.status() != 200 {
-            let message = format!("remote sync failed with status {}", response.status());
-            self.record_conflict(message.clone());
-            return Err(VcsError::Backbone(message));
-        }
-        let parsed: RemoteVersionResponse = response
-            .into_json()
-            .map_err(|err| VcsError::Backbone(err.to_string()))?;
-        self.set_version(parsed.version);
-        Ok(())
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl Backbone for RemoteBackbone {
-    fn descriptor(&self) -> DocumentBackboneRef {
-        document_backbone_ref(&self.uri)
-    }
-
-    fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
-        let (base, document_id) = self.endpoint()?;
-        match message {
-            BackboneMessage::Snapshot { envelope_json } => {
-                let envelope: serde_json::Value =
-                    serde_json::from_str(&envelope_json).map_err(|e| VcsError::Deserialize(e.to_string()))?;
-                let url = format!("{base}/documents/{document_id}/envelope");
-                let body = serde_json::json!({"version": self.current_version(), "envelope": envelope});
-                let response = ureq::put(&url)
-                    .set("Content-Type", "application/json")
-                    .send_string(&body.to_string())
-                    .map_err(|err| {
-                        self.record_conflict(err.to_string());
-                        VcsError::Backbone(err.to_string())
-                    })?;
-                self.apply_version_response(response)
-            }
-            BackboneMessage::Ops { envelopes } => {
-                for envelope in envelopes {
-                    let url = format!("{base}/documents/{document_id}/ops");
-                    let body = serde_json::json!({"version": self.current_version(), "envelope": envelope});
-                    let response = ureq::post(&url)
-                        .set("Content-Type", "application/json")
-                        .send_string(&body.to_string())
-                        .map_err(|err| {
-                            self.record_conflict(err.to_string());
-                            VcsError::Backbone(err.to_string())
-                        })?;
-                    self.apply_version_response(response)?;
-                }
-                Ok(())
-            }
-        }
-    }
-
-    fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
-        let (base, document_id) = self.endpoint()?;
-        let since = self.current_version();
-        let url = format!("{base}/documents/{document_id}/ops?since={since}");
-        let response = ureq::get(&url).call().map_err(|err| {
-            self.record_conflict(err.to_string());
-            VcsError::Backbone(err.to_string())
-        })?;
-        let rows: Vec<RemoteOpRow> = response
-            .into_json()
-            .map_err(|err| VcsError::Backbone(err.to_string()))?;
-        if rows.is_empty() {
-            return Ok(Vec::new());
-        }
-        if let Some(latest) = rows.iter().map(|row| row.version).max() {
-            self.set_version(latest);
-        }
-        Ok(vec![BackboneMessage::Ops {
-            envelopes: rows.into_iter().map(|row| row.envelope).collect(),
-        }])
-    }
-}
-
-/// @emoji 🔌 Resolves a backbone URI to a concrete channel implementation. Inside a wasm sandbox,
-/// every scheme forwards to the host process over the injected `BackboneChannelPort`.
+/// @emoji 🔌 Resolves a backbone URI to a concrete channel implementation. Only available inside the
+/// wasm sandbox, where every scheme forwards to the host process over the injected
+/// {@link BackboneChannelPort} (a pure in-memory queue). Native IO-performing backbones moved out of
+/// this crate entirely — the `framework/sync` actor layer owns them.
 #[cfg(target_arch = "wasm32")]
 pub fn resolve_backbone(uri: &str) -> Result<Box<dyn Backbone>, VcsError> {
     Ok(Box::new(PortBackbone::new(uri)))
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-pub fn resolve_backbone(uri: &str) -> Result<Box<dyn Backbone>, VcsError> {
-    match uri.split("://").next().unwrap_or("") {
-        "file" => Ok(Box::new(FileJsonBackbone::new(uri)?)),
-        "folder" => Ok(Box::new(FolderSqliteBackbone::new(uri)?)),
-        "remote" => Ok(Box::new(RemoteBackbone::new(uri)?)),
-        scheme => Err(VcsError::Backbone(format!("unsupported backbone uri scheme: {scheme}"))),
-    }
 }
 //#endregion 🔖Backbone
 
@@ -2178,6 +1998,26 @@ mod tests {
         fn backwards(&self, projection: &DemoProjection) -> Vec<Self> {
             vec![DemoOp::SetN { n: projection.n }]
         }
+    }
+
+    /// @emoji 🛰️ Builds a foreign {@link OpEnvelope} (as if authored by `actor` on another peer) by
+    /// applying `op` in a throwaway peer store and stamping the envelope's actor id.
+    fn foreign_op_envelope(actor: &str, op: DemoOp) -> OpEnvelope {
+        let mut peer = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOp>(
+            "demo/v1",
+            "demo",
+            DemoProjection { n: 0 },
+            None,
+        ));
+        peer.dispatch(DocumentVcsCommand::Apply {
+            operations: vec![op],
+            description: None,
+        })
+        .expect("peer apply");
+        let edit = peer.envelope().vcs.edits.last().expect("peer edit").clone();
+        let mut envelope = op_envelope_from_edit(peer.envelope(), &edit, Vec::new()).expect("op envelope");
+        envelope.actor = ActorId(actor.to_string());
+        envelope
     }
 
     #[test]
@@ -2593,53 +2433,59 @@ mod tests {
     }
 
     #[test]
-    fn file_json_backbone_round_trip() {
+    fn file_json_storage_round_trips_a_blob() {
         let dir = tempfile::tempdir().expect("tempdir");
-        let path = dir.path().join("demo.json");
-        let uri = format!("file://{}", path.display());
-        let mut backbone = FileJsonBackbone::new(&uri).expect("backbone");
+        let storage = FileJsonStorage::new(dir.path().join("demo.json"));
+        assert_eq!(storage.read().expect("read empty"), None, "absent file reads as None");
         let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 1 }, None);
-        let json = serde_json::to_string(&envelope).expect("json");
-        backbone
-            .send(BackboneMessage::Snapshot { envelope_json: json })
-            .expect("send");
-        let mut reader = FileJsonBackbone::new(&uri).expect("backbone");
-        let messages = reader.receive().expect("receive");
-        let BackboneMessage::Snapshot { envelope_json } = messages.into_iter().next().expect("snapshot") else {
-            panic!("expected a snapshot message");
-        };
+        storage
+            .write(&serde_json::to_string(&envelope).expect("json"))
+            .expect("write");
         let loaded: DocumentVcsEnvelope<DemoProjection, DemoOp> =
-            serde_json::from_str(&envelope_json).expect("parse");
+            serde_json::from_str(&storage.read().expect("read").expect("some")).expect("parse");
         assert_eq!(loaded.id, "demo");
     }
 
     #[test]
-    fn folder_sqlite_backbone_round_trip() {
+    fn folder_sqlite_storage_round_trips_by_document_id() {
         let dir = tempfile::tempdir().expect("tempdir");
-        let uri = format!("folder://{}", dir.path().display());
-        let mut backbone = FolderSqliteBackbone::new(&uri).expect("backbone");
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 3 }, None);
-        let json = serde_json::to_string(&envelope).expect("json");
-        backbone
-            .send(BackboneMessage::Snapshot { envelope_json: json })
-            .expect("send");
-        let mut reader = FolderSqliteBackbone::new(&uri).expect("backbone");
-        let messages = reader.receive().expect("receive");
-        let BackboneMessage::Snapshot { envelope_json } = messages.into_iter().next().expect("snapshot") else {
-            panic!("expected a snapshot message");
-        };
-        let loaded: DocumentVcsEnvelope<DemoProjection, DemoOp> =
-            serde_json::from_str(&envelope_json).expect("parse");
-        assert_eq!(loaded.vcs.initial_projection.n, 3);
+        let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
+        assert_eq!(storage.read("doc-a").expect("read empty"), None, "absent document reads as None");
+        let env_a: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "doc-a", DemoProjection { n: 3 }, None);
+        let env_b: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "doc-b", DemoProjection { n: 7 }, None);
+        storage
+            .write("doc-a", "demo/v1", &serde_json::to_string(&env_a).expect("json a"))
+            .expect("write a");
+        storage
+            .write("doc-b", "demo/v1", &serde_json::to_string(&env_b).expect("json b"))
+            .expect("write b");
+        let loaded_a: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            serde_json::from_str(&storage.read("doc-a").expect("read a").expect("some a")).expect("parse a");
+        let loaded_b: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            serde_json::from_str(&storage.read("doc-b").expect("read b").expect("some b")).expect("parse b");
+        assert_eq!(loaded_a.vcs.initial_projection.n, 3, "documents are keyed independently");
+        assert_eq!(loaded_b.vcs.initial_projection.n, 7);
+
+        let env_a2: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "doc-a", DemoProjection { n: 5 }, None);
+        storage
+            .write("doc-a", "demo/v1", &serde_json::to_string(&env_a2).expect("json a2"))
+            .expect("upsert a");
+        let reloaded_a: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            serde_json::from_str(&storage.read("doc-a").expect("reread a").expect("some a2")).expect("parse a2");
+        assert_eq!(reloaded_a.vcs.initial_projection.n, 5, "writing the same id upserts in place");
+
+        let mut ids = storage.document_ids().expect("document ids");
+        ids.sort();
+        assert_eq!(ids, vec!["doc-a".to_string(), "doc-b".to_string()], "folder indexes every document");
     }
 
     #[test]
-    fn attach_reconciles_a_persisted_snapshot() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        let path = dir.path().join("demo.json");
-        let uri = format!("file://{}", path.display());
+    fn attach_reconciles_a_pushed_snapshot() {
+        let (channel, remote) = ChannelBackbone::pair("chan");
         let seeded: DocumentVcsEnvelope<DemoProjection, DemoOp> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut seed_store = DocumentVcsStore::new(seeded);
@@ -2649,15 +2495,192 @@ mod tests {
                 description: None,
             })
             .expect("apply");
-        seed_store
-            .attach_backbone_uri(&uri)
-            .expect("seed store persists its snapshot on attach");
+        remote
+            .push(BackboneMessage::Snapshot {
+                envelope_json: seed_store.envelope_json().expect("seed json"),
+            })
+            .expect("push snapshot");
 
         let fresh: DocumentVcsEnvelope<DemoProjection, DemoOp> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store = DocumentVcsStore::new(fresh);
-        store.attach_backbone_uri(&uri).expect("attach reconciles persisted state");
-        assert_eq!(store.projection().expect("projection").n, 5, "adopted the persisted edit");
+        store.attach_backbone(Box::new(channel)).expect("attach reconciles the pushed snapshot");
+        assert_eq!(store.projection().expect("projection").n, 5, "adopted the pushed snapshot's edit");
+    }
+
+    #[test]
+    fn channel_backbone_round_trips_between_store_and_actor() {
+        let (channel, remote) = ChannelBackbone::pair("chan");
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store.attach_backbone(Box::new(channel)).expect("attach");
+        let attach_flush = remote.drain().expect("drain attach");
+        assert!(
+            attach_flush.iter().any(|message| matches!(message, BackboneMessage::Snapshot { .. })),
+            "attach flushes a snapshot to the actor end: {attach_flush:?}"
+        );
+
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 4 }],
+                description: None,
+            })
+            .expect("apply");
+        let outbound = remote.drain().expect("drain apply");
+        assert!(
+            outbound.iter().any(|message| matches!(message, BackboneMessage::Ops { .. })),
+            "a local apply is sent outbound as ops: {outbound:?}"
+        );
+
+        remote
+            .push(BackboneMessage::Ops {
+                envelopes: vec![foreign_op_envelope("peer", DemoOp::SetN { n: 8 })],
+            })
+            .expect("push inbound ops");
+        store.tick().expect("tick");
+        assert_eq!(store.projection().expect("projection").n, 8, "store ingests the actor's inbound ops");
+    }
+
+    #[test]
+    fn pump_acks_ingested_ops() {
+        let (channel, remote) = ChannelBackbone::pair("chan");
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store.attach_backbone(Box::new(channel)).expect("attach");
+        let _ = remote.drain().expect("drain attach snapshot");
+
+        let inbound = foreign_op_envelope("peer", DemoOp::SetN { n: 7 });
+        let op_id = inbound.id.0.clone();
+        remote
+            .push(BackboneMessage::Ops { envelopes: vec![inbound] })
+            .expect("push inbound ops");
+        store.tick().expect("tick");
+        assert_eq!(store.projection().expect("projection").n, 7, "ingested the inbound op");
+
+        let outbound = remote.drain().expect("drain ack");
+        assert!(
+            outbound
+                .iter()
+                .any(|message| matches!(message, BackboneMessage::Ack { op_ids } if op_ids == &vec![op_id.clone()])),
+            "successful ops ingest emits an Ack for the ingested op ids: {outbound:?}"
+        );
+    }
+
+    #[test]
+    fn exact_base_only_undo_refuses_a_foreign_tail() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 1 }],
+                description: None,
+            })
+            .expect("local apply");
+        store
+            .ingest_remote(foreign_op_envelope("peer", DemoOp::SetN { n: 2 }))
+            .expect("ingest foreign");
+        assert_eq!(store.projection().expect("projection").n, 2, "foreign edit sits at the tail");
+
+        let error = store
+            .dispatch(DocumentVcsCommand::UndoWithPolicy {
+                policy: UndoPolicy::ExactBaseOnly,
+                semantic_command: None,
+            })
+            .expect_err("undo must refuse a foreign tail");
+        assert!(matches!(error, VcsError::ForeignEdit(_)), "got {error:?}");
+        assert_eq!(store.projection().expect("projection").n, 2, "the timeline is untouched after refusal");
+    }
+
+    #[test]
+    fn transform_against_concurrent_undo_skips_over_a_foreign_tail() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 1 }],
+                description: None,
+            })
+            .expect("local apply");
+        let local_edit_id = store.applied_edit_ids()[0].clone();
+        let foreign = foreign_op_envelope("peer", DemoOp::SetN { n: 2 });
+        let foreign_id = foreign.id.0.clone();
+        store.ingest_remote(foreign).expect("ingest foreign");
+        assert_eq!(store.applied_edit_ids().len(), 2, "local + foreign are both applied");
+
+        store
+            .dispatch(DocumentVcsCommand::UndoWithPolicy {
+                policy: UndoPolicy::TransformAgainstConcurrent,
+                semantic_command: None,
+            })
+            .expect("transform undo removes the local edit from mid-timeline");
+        assert_eq!(
+            store.applied_edit_ids(),
+            &[foreign_id.clone()],
+            "only the local edit is removed; the concurrent foreign edit stays applied"
+        );
+        assert_eq!(store.redo_edit_ids(), &[local_edit_id.clone()], "the local edit is on the redo stack");
+        assert_eq!(store.projection().expect("projection").n, 2, "projection re-materializes from the foreign edit alone");
+
+        store.dispatch(DocumentVcsCommand::Redo).expect("redo brings the local edit back");
+        assert_eq!(store.applied_edit_ids().len(), 2);
+        assert_eq!(store.projection().expect("projection").n, 1, "redo re-applies the local edit at the tail");
+    }
+
+    #[test]
+    fn collection_diff_from_op_projects_each_variant() {
+        let items: Vec<DemoItem> = vec![
+            DemoItem { id: "a".into(), value: 1 },
+            DemoItem { id: "b".into(), value: 2 },
+        ];
+        let added = collection_diff_from_op(
+            &items,
+            &CollectionOp::Add {
+                index: 0,
+                item: DemoItem { id: "c".into(), value: 3 },
+            },
+        );
+        assert_eq!(added.added.len(), 1);
+        assert!(added.removed.is_empty() && added.modified.is_empty());
+
+        let removed = collection_diff_from_op::<String, DemoItem, DemoItemPatch>(&items, &CollectionOp::Remove { id: "a".into() });
+        assert_eq!(removed.removed, vec!["a".to_string()]);
+
+        let patched = collection_diff_from_op(
+            &items,
+            &CollectionOp::Patch {
+                id: "b".into(),
+                patch: DemoItemPatch { value: Some(9) },
+            },
+        );
+        assert_eq!(patched.modified.len(), 1);
+        assert_eq!(patched.modified[0].id, "b");
+
+        let moved = collection_diff_from_op::<String, DemoItem, DemoItemPatch>(&items, &CollectionOp::Move { id: "a".into(), to_index: 1 });
+        assert_eq!(moved.removed, vec!["a".to_string()], "move is encoded as remove + re-add by identity");
+        assert_eq!(moved.added.len(), 1);
+        assert_eq!(moved.added[0].id, "a");
+    }
+
+    #[test]
+    fn edit_operations_exposes_the_latest_edit() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        assert!(store.edit_operations().is_none(), "no edits yet");
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 5 }],
+                description: None,
+            })
+            .expect("apply");
+        let (forwards, backwards, meta) = store.edit_operations().expect("edit operations");
+        assert_eq!(forwards, &[DemoOp::SetN { n: 5 }]);
+        assert_eq!(backwards, &[DemoOp::SetN { n: 0 }], "backwards restores the pre-state");
+        assert_eq!(meta.len(), 1);
     }
 
     #[test]

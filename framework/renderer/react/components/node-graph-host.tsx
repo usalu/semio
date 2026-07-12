@@ -19,7 +19,7 @@ import {
 } from "@semio-tech/ui-react";
 import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import type { ActionDescriptor, NodeGraphScene, PresencePeer, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ActionDescriptor, ComponentSceneHostProps, NodeGraphScene, PresencePeer, UiComponentSceneNode } from "@semio-tech/framework-core";
 import { createFlowSession, createGraphSession, isFlowGraphScene, nodeGraphActions, useUIFindSafe, type FlowWasmSession } from "../os-shell.tsx";
 
 //#region Types
@@ -696,6 +696,7 @@ function DiagramGraphFallback({
 //#endregion DiagramFallback
 
 //#region NodeGraphHost
+//#region Helpers
 const useClient = () => {
   const [client, setClient] = useState(false);
   useEffect(() => setClient(true), []);
@@ -715,8 +716,10 @@ function PresencePeersOverlay({ peers }: { readonly peers: readonly PresencePeer
     </div>
   );
 }
+//#endregion Helpers
 
-export function NodeGraphHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
+//#region Component
+export function NodeGraphHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.nodeGraph;
   const editable = scene?.editable ?? true;
   const parsedNodes = useMemo(() => parseJsonArray<MediaGraphNodeRecord>(scene?.nodesJson), [scene?.nodesJson]);
@@ -772,6 +775,7 @@ export function NodeGraphHost({ node, onAction }: { readonly node: UiComponentSc
     </div>
   );
 }
+//#endregion Component
 //#endregion NodeGraphHost
 
 //#region 🔖graph-canvas-overlays

@@ -12,6 +12,8 @@ export type PluginRegistryEntry = {
   readonly cratePath: string;
   readonly packageName: string;
   readonly wasmOut: string;
+  readonly contributes: readonly string[];
+  readonly consumes: readonly string[];
 };
 
 function findPluginCargoFiles(root: string): string[] {
@@ -30,8 +32,8 @@ function findPluginCargoFiles(root: string): string[] {
         walk(path);
       } else if (name === "Cargo.toml" && !path.includes("/framework/plugin/rs/")) {
         const isPluginCrate = path.endsWith("/plugin/rs/Cargo.toml");
-        const isFormsModuleCrate = path.includes("/forms/module/") && path.endsWith("/rs/Cargo.toml");
-        if (isPluginCrate || isFormsModuleCrate) {
+        const isModuleCrate = /\/module\/[^/]+\/rs\/Cargo\.toml$/.test(path);
+        if (isPluginCrate || isModuleCrate) {
           out.push(path);
         }
       }

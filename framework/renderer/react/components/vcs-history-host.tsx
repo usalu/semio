@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import { HistoryTable, type HistoryColumn } from "@semio-tech/ui-react";
-import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ComponentSceneHostProps } from "@semio-tech/framework-core";
 
 //#region VcsHistoryHost
-export function VcsHistoryHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
+export function VcsHistoryHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.vcsHistory;
   const columns = useMemo(() => {
     if (!scene) return [] as HistoryColumn[];

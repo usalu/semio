@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 🥼︎ compose/js/.storybook/story/elements/aggregation/Collapsible.stories.tsx
+// 🥼︎ .storybook/stories/ui/Collapsible.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

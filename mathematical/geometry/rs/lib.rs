@@ -133,6 +133,7 @@ impl std::ops::Deref for Vec2 {
 }
 
 impl Vec2 {
+    pub const ZERO: Self = Self(kurbo::Vec2::ZERO);
     pub fn new(x: f64, y: f64) -> Self {
         Self(kurbo::Vec2::new(x, y))
     }
@@ -160,6 +161,32 @@ impl From<(f64, f64)> for Vec2 {
     }
 }
 
+impl std::ops::Add for Vec2 {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self {
+        Self(self.0 + rhs.0)
+    }
+}
+
+impl std::ops::AddAssign for Vec2 {
+    fn add_assign(&mut self, rhs: Self) {
+        self.0 += rhs.0;
+    }
+}
+
+impl std::ops::Sub for Vec2 {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self {
+        Self(self.0 - rhs.0)
+    }
+}
+
+impl std::ops::SubAssign for Vec2 {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.0 -= rhs.0;
+    }
+}
+
 impl std::ops::Div<f64> for Vec2 {
     type Output = Self;
     fn div(self, rhs: f64) -> Self {
@@ -171,6 +198,19 @@ impl std::ops::Mul<f64> for Vec2 {
     type Output = Self;
     fn mul(self, rhs: f64) -> Self {
         Self(self.0 * rhs)
+    }
+}
+
+impl std::ops::Mul<Vec2> for f64 {
+    type Output = Vec2;
+    fn mul(self, rhs: Vec2) -> Vec2 {
+        rhs * self
+    }
+}
+
+impl std::ops::MulAssign<f64> for Vec2 {
+    fn mul_assign(&mut self, rhs: f64) {
+        self.0 *= rhs;
     }
 }
 

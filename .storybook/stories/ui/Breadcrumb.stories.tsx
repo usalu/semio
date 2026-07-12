@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 🥼︎ compose/js/.storybook/story/elements/navigation/Breadcrumb.stories.tsx
+// 🥼︎ .storybook/stories/ui/Breadcrumb.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

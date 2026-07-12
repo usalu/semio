@@ -14,7 +14,7 @@ import {
   type SelectionMergeMode,
   type SelectionMarqueeMethod,
 } from "@semio-tech/ui-react";
-import type { ActionDescriptor, GisMapScene, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ComponentSceneHostProps, GisMapScene } from "@semio-tech/framework-core";
 import type { MapWasmSession } from "../os-shell.tsx";
 import { createMapSession } from "../os-shell.tsx";
 
@@ -558,7 +558,7 @@ function buildGisMapContextMenuItems(scene: GisMapScene, feature: MapHoveredFeat
 //#endregion ContextMenu
 
 //#region GisMapHost
-export function GisMapHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
+export function GisMapHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.gisMap;
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);

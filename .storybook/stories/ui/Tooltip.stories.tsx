@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 🥼︎ compose/js/.storybook/story/elements/display/Tooltip.stories.tsx
+// 🥼︎ .storybook/stories/ui/Tooltip.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

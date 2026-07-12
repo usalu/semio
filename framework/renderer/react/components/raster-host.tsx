@@ -13,7 +13,7 @@ import {
   type SelectionMergeMode,
 } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import type { ActionDescriptor, RasterScene, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ActionDescriptor, ComponentSceneHostProps, RasterScene, UiComponentSceneNode } from "@semio-tech/framework-core";
 import { createRasterSession, type RasterWasmSession } from "../os-shell.tsx";
 import { wheelCameraAtScreen, type CanvasCamera } from "./canvas-2d-host.tsx";
 
@@ -560,7 +560,7 @@ function RasterWasmCanvas({ sessionFactory, onSessionReady }: { readonly session
 //#endregion RasterWasmCanvas
 
 //#region RasterHost
-export function RasterHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
+export function RasterHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.raster;
   if (!scene) return <div className="semio-raster-empty">No raster scene</div>;
   return <RasterCanvasSurface node={node} scene={scene} onAction={onAction} />;

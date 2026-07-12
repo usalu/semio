@@ -4,11 +4,11 @@ pub mod geometry {
     // #region geometry
     //! 📐 Graph geometry: handle positions, edge beziers, hit-test distances.
 
-    use crate::cavas::{append_shape_to_path, Affine, Arc, BezPath, Circle, CubicBez, PathEl, Point, Rect, Stroke, Vec2};
+    use crate::cavas::{append_shape_to_path, Affine, Arc, BezPath, Circle, CubicBez, Point, Rect, Stroke, Vec2};
     use crate::cavas::Color;
     use crate::cavas::Scene;
     use crate::NodeShape;
-    use mathematical_geometry::{clamp_f64, distance_between, distance_point_to_cubic_bezier, distance_point_to_polyline, normalize_or_zero, ray_from_origin_to_axis_aligned_rectangle_edge};
+    pub use mathematical_geometry::{clamp_f64, distance_between, distance_point_to_cubic_bezier, distance_point_to_polyline, normalize_or_zero, ray_from_origin_to_axis_aligned_rectangle_edge};
 
     /// 🕳️ Even-odd clip path: local outer bounds minus the parent node body (keeps handle paint outside transparent nodes).
     pub fn handle_outside_node_clip_path(handle_center: Point, handle_radius: f64, node_center: Point, node_shape: NodeShape, node_radius: f64, node_width: f64, node_height: f64) -> BezPath {
@@ -252,18 +252,18 @@ pub mod geometry {
             let trough = center - out * radius;
             if out.x.abs() >= out.y.abs() {
                 if out.x > 0.0 {
-                    assert!((bb.x1 - peak.x).abs() < 0.25, "east cap must peak at +x");
-                    assert!(bb.x0 > trough.x + 0.25, "east cap must not peak inward");
+                    assert!((bb.x1() - peak.x).abs() < 0.25, "east cap must peak at +x");
+                    assert!(bb.x0() > trough.x + 0.25, "east cap must not peak inward");
                 } else {
-                    assert!((bb.x0 - peak.x).abs() < 0.25, "west cap must peak at -x");
-                    assert!(bb.x1 < trough.x - 0.25, "west cap must not peak inward");
+                    assert!((bb.x0() - peak.x).abs() < 0.25, "west cap must peak at -x");
+                    assert!(bb.x1() < trough.x - 0.25, "west cap must not peak inward");
                 }
             } else if out.y > 0.0 {
-                assert!((bb.y1 - peak.y).abs() < 0.25, "south cap must peak at +y");
-                assert!(bb.y0 > trough.y + 0.25, "south cap must not peak inward");
+                assert!((bb.y1() - peak.y).abs() < 0.25, "south cap must peak at +y");
+                assert!(bb.y0() > trough.y + 0.25, "south cap must not peak inward");
             } else {
-                assert!((bb.y0 - peak.y).abs() < 0.25, "north cap must peak at -y");
-                assert!(bb.y1 < trough.y + 0.25, "north cap must not peak inward");
+                assert!((bb.y0() - peak.y).abs() < 0.25, "north cap must peak at -y");
+                assert!(bb.y1() < trough.y + 0.25, "north cap must not peak inward");
             }
         }
 
@@ -339,7 +339,7 @@ pub mod geometry {
             let peak = handle_exterior_cap_triangle_peak(center, outward, radius);
             assert!((peak.x - (center.x + radius)).abs() < 1e-9);
             let fill = handle_exterior_cap_triangle_fill_path(center, outward, radius);
-            assert!(fill.bounding_box().x1 > center.x);
+            assert!(fill.bounding_box().x1() > center.x);
         }
 
         #[test]
@@ -2277,8 +2277,8 @@ mod tests {
         use cavas::Point;
 
         fn midpoint_bulge(curve: CubicBez) -> f64 {
-            let p0 = curve.p0()();
-            let p3 = curve.p3()();
+            let p0 = curve.p0();
+            let p3 = curve.p3();
             let mid = curve.eval(0.5);
             let chord = p3 - p0;
             let len = chord.hypot();

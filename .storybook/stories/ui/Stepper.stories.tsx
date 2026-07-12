@@ -1,6 +1,6 @@
 // #region 🧲Header
 
-// 🥼︎ compose/js/.storybook/story/elements/input/Stepper.stories.tsx
+// 🥼︎ .storybook/stories/ui/Stepper.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

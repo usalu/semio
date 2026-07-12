@@ -1,0 +1,21 @@
+[package]
+name = "protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Generic strict-list, module-based visual code/data-generation editor domain model — typed VCS on `vcs`"
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+path = "lib.rs"
+
+[dependencies]
+vcs = { path = "../../vcs/rs" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.106"
