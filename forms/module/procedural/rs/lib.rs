@@ -6,7 +6,7 @@ use forms::{visible_questions, FormQuestion};
 use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{
     build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, App,
-    CommandDescriptor, Contribution, PluginApp, PluginBundle, SurfaceKind, UiControlNode,
+    ActionDescriptor, Contribution, PluginApp, PluginBundle, SurfaceKind, UiControlNode,
     UiFieldNode, UiInputNode, UiNode, UiSliderNode, UiToggleNode, ViewState, world3d_default_camera,
     world3d_scene, world3d_selection_json,
 };
@@ -76,10 +76,10 @@ fn json_string_value(value: &Value) -> String {
     }
 }
 
-fn module_cmd(payload: &ModuleRenderPayload, command: &str, args: Value) -> CommandDescriptor {
-    CommandDescriptor {
+fn module_action(payload: &ModuleRenderPayload, action: &str, args: Value) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: payload.controller_id.clone(),
-        command: command.into(),
+        action: action.into(),
         args: Some(args),
     }
 }
@@ -283,7 +283,7 @@ fn render_question_control(
         "tryParam"
     };
     let patch_cmd = |param_key: &str| {
-        module_cmd(
+        module_action(
             payload,
             if payload.surface == "blueprint" {
                 "patchQuestions"
@@ -436,9 +436,9 @@ impl PluginApp for ModuleApp {
         .unwrap_or_else(|_| "{}".into())
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        _command: &str,
+        _action: &str,
         _args: Option<&Value>,
         _document_json: &str,
         _view_state: &ViewState,

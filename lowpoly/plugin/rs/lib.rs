@@ -11,7 +11,7 @@ use semio_framework_plugin::{SurfaceKind,
     build_canvas_2d_scene, build_world_3d_scene, create_default_layout, create_named_layout,
     merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree,
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, PanelGroup,
-    world3d_selection_json, App, Canvas2dScene, CommandDescriptor, MeshData, PluginApp, PluginBundle,
+    world3d_selection_json, App, Canvas2dScene, ActionDescriptor, MeshData, PluginApp, PluginBundle,
     tool_button, tool_collection, tool_toggle, ToolCategory, ToolNode, UiControlNode, UiFieldNode,
     UiInspectorFieldGroup, UiNode, UiToggleNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -197,10 +197,10 @@ fn set_document_op(envelope: &LowpolyPlayEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
 }
 
-fn lowpoly_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn lowpoly_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: LOWPOLY_PLAY_CONTROLLER_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -606,17 +606,17 @@ fn uv_canvas_layers_json(doc: &LowpolyDocument, envelope: &LowpolyPlayEnvelope, 
 //#endregion 🔖Scene
 
 //#region 🔖Panels
-fn tree_item_with_command(
+fn tree_item_with_action(
     id: impl Into<String>,
     label: impl Into<String>,
     icon_id: Option<&str>,
-    command: CommandDescriptor,
+    action: ActionDescriptor,
 ) -> semio_framework_plugin::UiTreeItemNode {
     tree_item(
         id,
         label,
         icon_id,
-        Some(command),
+        Some(action),
         None,
         None,
         None,
@@ -630,9 +630,9 @@ fn tree_item(
     id: impl Into<String>,
     label: impl Into<String>,
     icon_id: Option<&str>,
-    command: Option<CommandDescriptor>,
-    hover_command: Option<CommandDescriptor>,
-    unhover_command: Option<CommandDescriptor>,
+    action: Option<ActionDescriptor>,
+    hover_action: Option<ActionDescriptor>,
+    unhover_action: Option<ActionDescriptor>,
     actions: Option<Vec<semio_framework_plugin::UiTreeItemAction>>,
     items: Option<Vec<semio_framework_plugin::UiTreeItemNode>>,
     default_open: Option<bool>,
@@ -645,9 +645,9 @@ fn tree_item(
         icon_id: icon_id.map(str::to_string),
         selected: None,
         default_open,
-        command,
-        hover_command,
-        unhover_command,
+        action,
+        hover_action,
+        unhover_action,
         actions,
         draggable: None,
         drag_data: None,
@@ -686,7 +686,7 @@ fn build_document_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) ->
                             actions = Some(vec![semio_framework_plugin::UiTreeItemAction {
                                 icon_id: "flip-vertical".into(),
                                 label: Some("Flip normal".into()),
-                                command: lowpoly_cmd(
+                                action: lowpoly_action(
                                     "flipFaces",
                                     Some(json!({ "faceIds": [id] })),
                                 ),
@@ -697,7 +697,7 @@ fn build_document_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) ->
                             row_id,
                             format!("{label} {id}"),
                             Some(icon),
-                            Some(lowpoly_cmd(
+                            Some(lowpoly_action(
                                 "toggleSelectionTarget",
                                 Some(json!({
                                     "objectId": object.id,
@@ -706,8 +706,8 @@ fn build_document_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) ->
                                     "merge": "invertive",
                                 })),
                             )),
-                            Some(lowpoly_cmd("setHover", Some(hover_args.clone()))),
-                            Some(lowpoly_cmd("setHover", None)),
+                            Some(lowpoly_action("setHover", Some(hover_args.clone()))),
+                            Some(lowpoly_action("setHover", None)),
                             actions,
                             None,
                             None,
@@ -732,7 +732,7 @@ fn build_document_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) ->
                 format!("lowpoly-document.{object_id}"),
                 object.name.clone(),
                 Some("box"),
-                Some(lowpoly_cmd(
+                Some(lowpoly_action(
                     "toggleSelectionTarget",
                     Some(json!({
                         "objectId": object.id,
@@ -768,7 +768,7 @@ fn build_document_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) ->
             Some(highlighted_ids)
         },
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -780,7 +780,7 @@ fn build_catalogue_tree() -> UiNode {
                 format!("lowpoly-play-catalogue.{kind}"),
                 *label,
                 Some(icon),
-                Some(lowpoly_cmd("addPrimitive", Some(json!({ "kind": kind })))),
+                Some(lowpoly_action("addPrimitive", Some(json!({ "kind": kind })))),
                 None,
                 None,
                 None,
@@ -800,7 +800,7 @@ fn build_catalogue_tree() -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -816,7 +816,7 @@ fn build_layers_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
                 format!("lowpoly-layer:{index}"),
                 layer.name.clone(),
                 Some("layers"),
-                Some(lowpoly_cmd("setActivePaintLayer", Some(json!({ "layerIndex": index })))),
+                Some(lowpoly_action("setActivePaintLayer", Some(json!({ "layerIndex": index })))),
                 None,
                 None,
                 None,
@@ -836,7 +836,7 @@ fn build_layers_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
         selected_ids: Some(vec![format!("lowpoly-layer:{active_layer}")]),
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -853,7 +853,7 @@ fn inspector_tool_param_field(id: &str, label: &str, key: &str, value: &Value) -
                 .unwrap_or_else(|| "0".into()),
             placeholder: None,
             commit: None,
-            on_change: lowpoly_cmd("setToolParam", Some(json!({ "key": key }))),
+            on_change: lowpoly_action("setToolParam", Some(json!({ "key": key }))),
             min: None,
             max: None,
             step: None,
@@ -888,7 +888,7 @@ fn build_inspector_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
                         value: object.name.clone(),
                         placeholder: None,
                         commit: None,
-                        on_change: lowpoly_cmd(
+                        on_change: lowpoly_action(
                             "patchObject",
                             Some(json!({ "objectId": object.id, "field": "name" })),
                         ),
@@ -909,7 +909,7 @@ fn build_inspector_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
                         icon_id: "sun".into(),
                         pressed: object.smooth_shading,
                         text: None,
-                        on_change: lowpoly_cmd(
+                        on_change: lowpoly_action(
                             "patchObject",
                             Some(json!({ "objectId": object.id, "field": "smoothShading" })),
                         ),
@@ -1000,7 +1000,7 @@ fn lowpoly_window_engagement(envelope: &LowpolyPlayEnvelope) -> WindowEngagement
                 icon_id: Some("move".into()),
                 pressed: Some(transform == "move"),
                 disabled: None,
-                command: Some(lowpoly_cmd("setTransformTool", Some(json!({ "tool": "move" })))),
+                action: Some(lowpoly_action("setTransformTool", Some(json!({ "tool": "move" })))),
             },
             WindowEngagementOption {
                 id: "lowpoly.opt.rotate".into(),
@@ -1008,7 +1008,7 @@ fn lowpoly_window_engagement(envelope: &LowpolyPlayEnvelope) -> WindowEngagement
                 icon_id: Some("rotate-cw".into()),
                 pressed: Some(transform == "rotate"),
                 disabled: None,
-                command: Some(lowpoly_cmd("setTransformTool", Some(json!({ "tool": "rotate" })))),
+                action: Some(lowpoly_action("setTransformTool", Some(json!({ "tool": "rotate" })))),
             },
             WindowEngagementOption {
                 id: "lowpoly.opt.scale".into(),
@@ -1016,7 +1016,7 @@ fn lowpoly_window_engagement(envelope: &LowpolyPlayEnvelope) -> WindowEngagement
                 icon_id: Some("maximize-2".into()),
                 pressed: Some(transform == "scale"),
                 disabled: None,
-                command: Some(lowpoly_cmd("setTransformTool", Some(json!({ "tool": "scale" })))),
+                action: Some(lowpoly_action("setTransformTool", Some(json!({ "tool": "scale" })))),
             },
             WindowEngagementOption {
                 id: "lowpoly.opt.snap".into(),
@@ -1024,7 +1024,7 @@ fn lowpoly_window_engagement(envelope: &LowpolyPlayEnvelope) -> WindowEngagement
                 icon_id: Some("magnet".into()),
                 pressed: None,
                 disabled: None,
-                command: Some(lowpoly_cmd("snap", None)),
+                action: Some(lowpoly_action("snap", None)),
             },
             WindowEngagementOption {
                 id: "lowpoly.opt.smooth".into(),
@@ -1032,7 +1032,7 @@ fn lowpoly_window_engagement(envelope: &LowpolyPlayEnvelope) -> WindowEngagement
                 icon_id: Some("sun".into()),
                 pressed: None,
                 disabled: None,
-                command: Some(lowpoly_cmd("toggleSmooth", None)),
+                action: Some(lowpoly_action("toggleSmooth", None)),
             },
             WindowEngagementOption {
                 id: "lowpoly.opt.show-edges".into(),
@@ -1040,7 +1040,7 @@ fn lowpoly_window_engagement(envelope: &LowpolyPlayEnvelope) -> WindowEngagement
                 icon_id: Some("git-commit-horizontal".into()),
                 pressed: Some(envelope.runtime.show_edges),
                 disabled: None,
-                command: Some(lowpoly_cmd("toggleShowEdges", None)),
+                action: Some(lowpoly_action("toggleShowEdges", None)),
             },
         ]),
         input: Some(WindowEngagementInput {
@@ -1048,8 +1048,8 @@ fn lowpoly_window_engagement(envelope: &LowpolyPlayEnvelope) -> WindowEngagement
             value: Some(envelope.runtime.engagement_input.clone()),
             placeholder: Some("extrude, inset, mirror, decimate".into()),
             disabled: None,
-            on_change: Some(lowpoly_cmd("engagementInput", None)),
-            on_submit: Some(lowpoly_cmd("engagementSubmit", None)),
+            on_change: Some(lowpoly_action("engagementInput", None)),
+            on_submit: Some(lowpoly_action("engagementSubmit", None)),
             on_repeat_last: None,
             on_abort: None,
         }),
@@ -1068,13 +1068,13 @@ fn lowpoly_window_engagement(envelope: &LowpolyPlayEnvelope) -> WindowEngagement
                 id: "lowpoly.eng.extrude".into(),
                 label: "Extrude".into(),
                 detail: None,
-                command: Some(lowpoly_cmd("extrude", None)),
+                action: Some(lowpoly_action("extrude", None)),
             },
             WindowEngagementPossible {
                 id: "lowpoly.eng.triangulate".into(),
                 label: "Triangulate".into(),
                 detail: None,
-                command: Some(lowpoly_cmd("triangulate", None)),
+                action: Some(lowpoly_action("triangulate", None)),
             },
         ]),
     }
@@ -1101,7 +1101,7 @@ fn lowpoly_tool_param_slider(
         min,
         max,
         step: Some(step),
-        on_change: lowpoly_cmd("setToolParam", Some(json!({ "key": key }))),
+        on_change: lowpoly_action("setToolParam", Some(json!({ "key": key }))),
     }
 }
 
@@ -1114,7 +1114,7 @@ fn lowpoly_window_measures(envelope: &LowpolyPlayEnvelope) -> Vec<WindowMeasure>
             label: Some("Show Edges".into()),
             pressed: envelope.runtime.show_edges,
             text: None,
-            on_change: lowpoly_cmd("toggleShowEdges", None),
+            on_change: lowpoly_action("toggleShowEdges", None),
         },
         WindowMeasure::Select {
             id: "lowpoly-measure-selection-method".into(),
@@ -1124,7 +1124,7 @@ fn lowpoly_window_measures(envelope: &LowpolyPlayEnvelope) -> Vec<WindowMeasure>
                 MeasureSelectItem { id: "rectangle".into(), value: "rectangle".into(), label: "Rectangle".into() },
                 MeasureSelectItem { id: "lasso".into(), value: "lasso".into(), label: "Lasso".into() },
             ],
-            on_change: lowpoly_cmd("setSelectionMethod", None),
+            on_change: lowpoly_action("setSelectionMethod", None),
         },
         WindowMeasure::Group {
             id: "lowpoly-measure-tool-params".into(),
@@ -1161,28 +1161,28 @@ fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
                     "box",
                     "Mesh",
                     targets.mesh,
-                    lowpoly_cmd("toggleSelectionKind", Some(json!({ "kind": "mesh" }))),
+                    lowpoly_action("toggleSelectionKind", Some(json!({ "kind": "mesh" }))),
                 ),
                 tool_toggle(
                     "lowpoly-tools-selection-face",
                     "square",
                     "Face",
                     targets.face,
-                    lowpoly_cmd("toggleSelectionKind", Some(json!({ "kind": "face" }))),
+                    lowpoly_action("toggleSelectionKind", Some(json!({ "kind": "face" }))),
                 ),
                 tool_toggle(
                     "lowpoly-tools-selection-edge",
                     "minus",
                     "Edge",
                     targets.edge,
-                    lowpoly_cmd("toggleSelectionKind", Some(json!({ "kind": "edge" }))),
+                    lowpoly_action("toggleSelectionKind", Some(json!({ "kind": "edge" }))),
                 ),
                 tool_toggle(
                     "lowpoly-tools-selection-vertex",
                     "circle",
                     "Vertex",
                     targets.vertex,
-                    lowpoly_cmd("toggleSelectionKind", Some(json!({ "kind": "vertex" }))),
+                    lowpoly_action("toggleSelectionKind", Some(json!({ "kind": "vertex" }))),
                 ),
             ],
         )
@@ -1197,21 +1197,21 @@ fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
                     "move",
                     "Move",
                     transform == "move",
-                    lowpoly_cmd("setTransformTool", Some(json!({ "tool": "move" }))),
+                    lowpoly_action("setTransformTool", Some(json!({ "tool": "move" }))),
                 ),
                 tool_toggle(
                     "lowpoly-tools-transform-rotate",
                     "rotate-cw",
                     "Rotate",
                     transform == "rotate",
-                    lowpoly_cmd("setTransformTool", Some(json!({ "tool": "rotate" }))),
+                    lowpoly_action("setTransformTool", Some(json!({ "tool": "rotate" }))),
                 ),
                 tool_toggle(
                     "lowpoly-tools-transform-scale",
                     "maximize-2",
                     "Scale",
                     transform == "scale",
-                    lowpoly_cmd("setTransformTool", Some(json!({ "tool": "scale" }))),
+                    lowpoly_action("setTransformTool", Some(json!({ "tool": "scale" }))),
                 ),
             ],
         )
@@ -1221,42 +1221,42 @@ fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
             "pen-tool",
             "Edit",
             vec![
-                tool_button("lowpoly-tools-extrude", "box", "Extrude", lowpoly_cmd("extrude", None)),
-                tool_button("lowpoly-tools-inset", "square", "Inset", lowpoly_cmd("inset", None)),
+                tool_button("lowpoly-tools-extrude", "box", "Extrude", lowpoly_action("extrude", None)),
+                tool_button("lowpoly-tools-inset", "square", "Inset", lowpoly_action("inset", None)),
                 tool_button(
                     "lowpoly-tools-flip",
                     "flip-vertical",
                     "Flip Normals",
-                    lowpoly_cmd("flipFaces", None),
+                    lowpoly_action("flipFaces", None),
                 ),
-                tool_button("lowpoly-tools-bevel", "git-branch", "Bevel", lowpoly_cmd("bevel", None)),
-                tool_button("lowpoly-tools-loop-cut", "git-commit", "Loop Cut", lowpoly_cmd("loopCut", None)),
-                tool_button("lowpoly-tools-merge", "git-merge", "Merge", lowpoly_cmd("merge", None)),
-                tool_button("lowpoly-tools-dissolve", "eraser", "Dissolve", lowpoly_cmd("dissolve", None)),
-                tool_button("lowpoly-tools-subdivide", "grid-3x3", "Subdivide", lowpoly_cmd("subdivide", None)),
+                tool_button("lowpoly-tools-bevel", "git-branch", "Bevel", lowpoly_action("bevel", None)),
+                tool_button("lowpoly-tools-loop-cut", "git-commit", "Loop Cut", lowpoly_action("loopCut", None)),
+                tool_button("lowpoly-tools-merge", "git-merge", "Merge", lowpoly_action("merge", None)),
+                tool_button("lowpoly-tools-dissolve", "eraser", "Dissolve", lowpoly_action("dissolve", None)),
+                tool_button("lowpoly-tools-subdivide", "grid-3x3", "Subdivide", lowpoly_action("subdivide", None)),
                 tool_button(
                     "lowpoly-tools-triangulate",
                     "triangle",
                     "Triangulate",
-                    lowpoly_cmd("triangulate", None),
+                    lowpoly_action("triangulate", None),
                 ),
                 tool_button(
                     "lowpoly-tools-mirror",
                     "flip-horizontal",
                     "Mirror",
-                    lowpoly_cmd("mirror", None),
+                    lowpoly_action("mirror", None),
                 ),
-                tool_button("lowpoly-tools-decimate", "minimize-2", "Decimate", lowpoly_cmd("decimate", None)),
+                tool_button("lowpoly-tools-decimate", "minimize-2", "Decimate", lowpoly_action("decimate", None)),
             ],
         )
-        .with_category(ToolCategory::Commands),
+        .with_category(ToolCategory::Actions),
         tool_collection(
             "lowpoly-tools-history",
             "undo",
             "History",
             vec![
-                tool_button("lowpoly-tools-undo", "undo", "Undo", lowpoly_cmd("editUndo", None)),
-                tool_button("lowpoly-tools-redo", "redo", "Redo", lowpoly_cmd("editRedo", None)),
+                tool_button("lowpoly-tools-undo", "undo", "Undo", lowpoly_action("editUndo", None)),
+                tool_button("lowpoly-tools-redo", "redo", "Redo", lowpoly_action("editRedo", None)),
             ],
         )
         .with_category(ToolCategory::History),
@@ -1276,28 +1276,28 @@ fn paint_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
                     "paintbrush",
                     "Brush",
                     paint_tool == "brush",
-                    lowpoly_cmd("setPaintTool", Some(json!({ "tool": "brush" }))),
+                    lowpoly_action("setPaintTool", Some(json!({ "tool": "brush" }))),
                 ),
                 tool_toggle(
                     "lowpoly-paint-eraser",
                     "eraser",
                     "Eraser",
                     paint_tool == "eraser",
-                    lowpoly_cmd("setPaintTool", Some(json!({ "tool": "eraser" }))),
+                    lowpoly_action("setPaintTool", Some(json!({ "tool": "eraser" }))),
                 ),
                 tool_toggle(
                     "lowpoly-paint-fill",
                     "paint-bucket",
                     "Fill",
                     paint_tool == "fill",
-                    lowpoly_cmd("setPaintTool", Some(json!({ "tool": "fill" }))),
+                    lowpoly_action("setPaintTool", Some(json!({ "tool": "fill" }))),
                 ),
                 tool_toggle(
                     "lowpoly-paint-eyedropper",
                     "pipette",
                     "Eyedropper",
                     paint_tool == "eyedropper",
-                    lowpoly_cmd("setPaintTool", Some(json!({ "tool": "eyedropper" }))),
+                    lowpoly_action("setPaintTool", Some(json!({ "tool": "eyedropper" }))),
                 ),
             ],
         )
@@ -1307,29 +1307,29 @@ fn paint_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
             "grid-3x3",
             "UV",
             vec![
-                tool_button("lowpoly-paint-unwrap", "grid-3x3", "Unwrap", lowpoly_cmd("unwrapActive", None)),
+                tool_button("lowpoly-paint-unwrap", "grid-3x3", "Unwrap", lowpoly_action("unwrapActive", None)),
                 tool_button(
                     "lowpoly-paint-mark-seam",
                     "scissors",
                     "Mark Seam",
-                    lowpoly_cmd("markUvSeam", Some(json!({ "seam": true }))),
+                    lowpoly_action("markUvSeam", Some(json!({ "seam": true }))),
                 ),
                 tool_button(
                     "lowpoly-paint-clear-seam",
                     "unlink",
                     "Clear Seam",
-                    lowpoly_cmd("clearSeam", None),
+                    lowpoly_action("clearSeam", None),
                 ),
             ],
         )
-        .with_category(ToolCategory::Commands),
+        .with_category(ToolCategory::Actions),
         tool_collection(
             "lowpoly-paint-history",
             "undo",
             "History",
             vec![
-                tool_button("lowpoly-paint-undo", "undo", "Undo", lowpoly_cmd("paintUndo", None)),
-                tool_button("lowpoly-paint-redo", "redo", "Redo", lowpoly_cmd("paintRedo", None)),
+                tool_button("lowpoly-paint-undo", "undo", "Undo", lowpoly_action("paintUndo", None)),
+                tool_button("lowpoly-paint-redo", "redo", "Redo", lowpoly_action("paintRedo", None)),
             ],
         )
         .with_category(ToolCategory::History),
@@ -1640,15 +1640,15 @@ impl PluginApp for LowpolyPlayApp {
         ])
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut envelope = parse_envelope(document_json);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(document) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value::<LowpolyPlayEnvelope>(document.clone()) {
@@ -1905,8 +1905,8 @@ impl PluginApp for LowpolyPlayApp {
                     .map(str::trim)
                     .filter(|value| !value.is_empty())
                     .map(str::to_lowercase);
-                if let Some(command) = value {
-                    return self.handle_command_patch_ops(&command, None, document_json, _view_state);
+                if let Some(action) = value {
+                    return self.handle_action_patch_ops(&action, None, document_json, _view_state);
                 }
                 return Vec::new();
             }
@@ -2110,7 +2110,7 @@ impl PluginApp for LowpolyPlayApp {
                 });
             }
             "clearSeam" => {
-                return self.handle_command_patch_ops("markUvSeam", Some(&json!({ "seam": false })), document_json, _view_state);
+                return self.handle_action_patch_ops("markUvSeam", Some(&json!({ "seam": false })), document_json, _view_state);
             }
             "editUndo" => {
                 if let Some(snapshot) = self.edit_undo.pop() {
@@ -2386,7 +2386,7 @@ mod tests {
     fn add_primitive_creates_object() {
         let mut app = LowpolyPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("addPrimitive", Some(&json!({ "kind": "box" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addPrimitive", Some(&json!({ "kind": "box" })), &document, &ViewState::default());
         let envelope: LowpolyPlayEnvelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.fixture.objects.len(), 2);
         assert!(envelope.fixture.objects.iter().any(|object| object.name == "box"));
@@ -2413,7 +2413,7 @@ mod tests {
             .unwrap()
             .face_count();
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("extrude", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("extrude", None, &document, &ViewState::default());
         let next: LowpolyPlayEnvelope = apply_ops(&envelope, &ops);
         let after_faces = LowpolyDocument::new(next.fixture).unwrap().active_mesh().unwrap().face_count();
         assert!(after_faces > before_faces);
@@ -2423,7 +2423,7 @@ mod tests {
     fn set_active_object_switches_selection() {
         let mut app = LowpolyPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("addPrimitive", Some(&json!({ "kind": "plane" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addPrimitive", Some(&json!({ "kind": "plane" })), &document, &ViewState::default());
         let mut envelope: LowpolyPlayEnvelope = apply_ops(&parse_envelope(&document), &ops);
         let second_id = envelope.fixture.active_object_id.clone();
         let forest_id = envelope
@@ -2434,7 +2434,7 @@ mod tests {
             .map(|object| object.id.clone())
             .expect("concrete forest left object");
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setActiveObject",
             Some(&json!({ "objectId": forest_id })),
             &document,
@@ -2482,14 +2482,14 @@ mod tests {
     fn world_pick_null_clears_selection() {
         let mut app = LowpolyPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "worldPick",
             Some(&json!({ "granularity": "vertex", "id": 2, "merge": "replace" })),
             &document,
             &ViewState::default(),
         );
         let envelope = apply_ops(&parse_envelope(&document), &ops);
-        let clear_ops = app.handle_command_patch_ops(
+        let clear_ops = app.handle_action_patch_ops(
             "worldPick",
             Some(&json!({ "granularity": "vertex", "id": null, "merge": "replace" })),
             &serde_json::to_string(&envelope).unwrap(),
@@ -2503,7 +2503,7 @@ mod tests {
     fn world_pick_updates_selection() {
         let mut app = LowpolyPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "worldPick",
             Some(&json!({ "granularity": "face", "id": 0, "merge": "replace" })),
             &document,
@@ -2518,7 +2518,7 @@ mod tests {
     fn paint_stroke_updates_pixels() {
         let mut app = LowpolyPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "paintAt",
             Some(&json!({ "u": 0.5, "v": 0.5 })),
             &document,
@@ -2557,7 +2557,7 @@ mod tests {
         envelope.fixture.selection.keys.clear();
         let object_id = envelope.fixture.active_object_id.clone();
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "toggleSelectionTarget",
             Some(&json!({ "objectId": object_id, "mode": "face", "id": 0, "merge": "invertive" })),
             &document,
@@ -2594,7 +2594,7 @@ mod tests {
         let envelope = parse_envelope(&app.initial_document_json());
         let object_id = envelope.fixture.active_object_id.clone();
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setHover",
             Some(&json!({ "objectId": object_id, "mode": "vertex", "id": 3 })),
             &document,
@@ -2608,7 +2608,7 @@ mod tests {
         let highlighted = highlighted_document_ids(&hovered.runtime, &hovered.fixture);
         assert_eq!(highlighted.len(), 1);
         assert!(highlighted[0].contains(".vertex.3"));
-        let clear_ops = app.handle_command_patch_ops("setHover", None, &serde_json::to_string(&hovered).unwrap(), &ViewState::default());
+        let clear_ops = app.handle_action_patch_ops("setHover", None, &serde_json::to_string(&hovered).unwrap(), &ViewState::default());
         let cleared = apply_ops(&hovered, &clear_ops);
         assert!(cleared.runtime.hovered_target.is_none());
     }
@@ -2700,7 +2700,7 @@ mod tests {
             .unwrap()
             .face_count();
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("extrude", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("extrude", None, &document, &ViewState::default());
         let extruded: LowpolyPlayEnvelope = apply_ops(&envelope, &ops);
         let after_faces = LowpolyDocument::new(extruded.fixture.clone())
             .unwrap()
@@ -2708,7 +2708,7 @@ mod tests {
             .unwrap()
             .face_count();
         assert!(after_faces > before_faces);
-        let undo_ops = app.handle_command_patch_ops(
+        let undo_ops = app.handle_action_patch_ops(
             "editUndo",
             None,
             &serde_json::to_string(&extruded).unwrap(),
@@ -2752,7 +2752,7 @@ mod tests {
         let mut app = LowpolyPlayApp::default();
         let envelope = parse_envelope(&app.initial_document_json());
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("toggleShowEdges", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("toggleShowEdges", None, &document, &ViewState::default());
         let next = apply_ops(&envelope, &ops);
         assert!(next.runtime.show_edges);
         let selection_json = world_selection_json_for(&next, None, None);
@@ -2765,7 +2765,7 @@ mod tests {
         let mut app = LowpolyPlayApp::default();
         let envelope = parse_envelope(&app.initial_document_json());
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "toggleSelectionKind",
             Some(&json!({ "kind": "vertex" })),
             &document,

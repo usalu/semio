@@ -4,7 +4,7 @@ use puzzle_2d::Puzzle2dExtension;
 use reasoning_mindmap_wires::{DefaultWiresExtension, RelationshipKind};
 use semio_framework_plugin::{SurfaceKind, 
     build_canvas_2d_scene, create_default_layout, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
-    Canvas2dScene, CommandDescriptor, PanelGroup, PluginApp, PluginBundle, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+    Canvas2dScene, ActionDescriptor, PanelGroup, PluginApp, PluginBundle, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
@@ -86,10 +86,10 @@ fn set_document_op(envelope: &ReasoningWiresPlayEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
 }
 
-fn wires_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn wires_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: WIRES_PLAY_CONTROLLER_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -341,7 +341,7 @@ fn render_canvas(board: &Value, wires: &Value) -> UiNode {
 //#endregion 🔖Canvas
 
 //#region 🔖DocumentPanel
-fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, description: Option<String>, command: CommandDescriptor) -> UiTreeItemNode {
+fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
         label: label.into(),
@@ -349,9 +349,9 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
         icon_id: None,
         selected: None,
         default_open: None,
-        command: Some(command),
-        hover_command: None,
-        unhover_command: None,
+        action: Some(action),
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -373,11 +373,11 @@ fn render_document_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
             let description = identity_kind
                 .and_then(|kind| wires_identity_kind_name(wires, kind))
                 .filter(|kind_name| kind_name != label);
-            Some(tree_item_with_command(
+            Some(tree_item_with_action(
                 format!("{WIRES_DOCUMENT_IDENTITY_PREFIX}{node_id}"),
                 label,
                 description,
-                wires_cmd("setSelection", Some(json!({ "ids": [node_id] }))),
+                wires_action("setSelection", Some(json!({ "ids": [node_id] }))),
             ))
         })
         .collect();
@@ -385,11 +385,11 @@ fn render_document_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
         .iter()
         .filter_map(|edge| {
             let edge_id = edge.get("id")?.as_str()?;
-            Some(tree_item_with_command(
+            Some(tree_item_with_action(
                 format!("{WIRES_DOCUMENT_RELATIONSHIP_PREFIX}{edge_id}"),
                 wires_relationship_document_label(wires, edge_id).unwrap_or_else(|| edge_id.into()),
                 None,
-                wires_cmd("setSelection", Some(json!({ "ids": [edge_id] }))),
+                wires_action("setSelection", Some(json!({ "ids": [edge_id] }))),
             ))
         })
         .collect();
@@ -407,9 +407,9 @@ fn render_document_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
                         icon_id: None,
                         selected: None,
                         default_open: None,
-                        command: None,
-                        hover_command: None,
-                        unhover_command: None,
+                        action: None,
+                        hover_action: None,
+                        unhover_action: None,
                         actions: None,
                         draggable: None,
                         drag_data: None,
@@ -433,9 +433,9 @@ fn render_document_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
                         icon_id: None,
                         selected: None,
                         default_open: None,
-                        command: None,
-        hover_command: None,
-        unhover_command: None,
+                        action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
                         draggable: None,
                         drag_data: None,
@@ -450,8 +450,8 @@ fn render_document_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
         ],
         selected_ids: Some(document_tree_selected_ids(board, &envelope.selected_ids)),
         highlighted_ids: None,
-        selection_change: Some(wires_cmd("setSelection", None)),
-        drop_command: None,
+        selection_change: Some(wires_action("setSelection", None)),
+        drop_action: None,
     })
 }
 //#endregion 🔖DocumentPanel
@@ -473,12 +473,12 @@ fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value]) -> UiT
         .enumerate()
         .map(|(index, entry)| {
             let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind");
-            let command = match section_id {
-                "wires-play-kinds.identity-kinds" => wires_cmd("addNode", Some(json!({ "kind": kind_id }))),
+            let action = match section_id {
+                "wires-play-kinds.identity-kinds" => wires_action("addNode", Some(json!({ "kind": kind_id }))),
                 "wires-play-kinds.relationship-kinds" => {
-                    wires_cmd("addRelationship", Some(json!({ "kind": kind_id })))
+                    wires_action("addRelationship", Some(json!({ "kind": kind_id })))
                 }
-                _ => wires_cmd("addNode", Some(json!({ "kind": kind_id }))),
+                _ => wires_action("addNode", Some(json!({ "kind": kind_id }))),
             };
             UiTreeItemNode {
                 id: format!("{section_id}.{index}.{kind_id}"),
@@ -487,9 +487,9 @@ fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value]) -> UiT
                 icon_id: None,
                 selected: None,
                 default_open: None,
-                command: Some(command),
-                hover_command: None,
-                unhover_command: None,
+                action: Some(action),
+                hover_action: None,
+                unhover_action: None,
                 actions: None,
                 draggable: None,
                 drag_data: None,
@@ -511,9 +511,9 @@ fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value]) -> UiT
                 icon_id: None,
                 selected: None,
                 default_open: None,
-                command: None,
-        hover_command: None,
-        unhover_command: None,
+                action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
                 draggable: None,
                 drag_data: None,
@@ -538,7 +538,7 @@ fn render_catalogue_panel(wires: &Value) -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 //#endregion 🔖CataloguePanel
@@ -631,15 +631,15 @@ impl PluginApp for WiresPlayApp {
         serde_json::to_string(&default_envelope()).expect("wires envelope json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut envelope = parse_envelope(document_json);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value(next.clone()) {
@@ -858,26 +858,26 @@ mod tests {
     fn pointer_drag_translates_node_by_screen_delta() {
         let mut app = WiresPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("addNode", Some(&json!({ "kind": "identity" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addNode", Some(&json!({ "kind": "identity" })), &document, &ViewState::default());
         let with_node = apply_ops(&document, &ops);
         let document = serde_json::to_string(&with_node).unwrap();
-        let ops = app.handle_command_patch_ops("canvasPointerDown", Some(&json!({ "id": "node-1", "x": 100.0, "y": 100.0 })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("canvasPointerDown", Some(&json!({ "id": "node-1", "x": 100.0, "y": 100.0 })), &document, &ViewState::default());
         let dragging = apply_ops(&document, &ops);
         assert_eq!(dragging.drag.as_ref().map(|drag| drag.node_id.as_str()), Some("node-1"));
         let document = serde_json::to_string(&dragging).unwrap();
-        let ops = app.handle_command_patch_ops("canvasPointerMove", Some(&json!({ "x": 140.0, "y": 130.0 })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("canvasPointerMove", Some(&json!({ "x": 140.0, "y": 130.0 })), &document, &ViewState::default());
         let moved = apply_ops(&document, &ops);
         let node = fixture_nodes(&moved.board_fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some("node-1")).expect("node-1");
         assert_eq!(node.get("x").and_then(|value| value.as_f64()), Some(40.0));
         assert_eq!(node.get("y").and_then(|value| value.as_f64()), Some(30.0));
         let document = serde_json::to_string(&moved).unwrap();
-        let ops = app.handle_command_patch_ops("canvasPointerUp", Some(&json!({ "x": 140.0, "y": 130.0 })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("canvasPointerUp", Some(&json!({ "x": 140.0, "y": 130.0 })), &document, &ViewState::default());
         let released = apply_ops(&document, &ops);
         assert!(released.drag.is_none());
     }
 
     #[test]
-    fn force_layout_command_repositions_metabolism_nodes() {
+    fn force_layout_action_repositions_metabolism_nodes() {
         let mut app = WiresPlayApp;
         let envelope = envelope_from_wires_fixture(serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).expect("metabolism fixture"));
         let before: Vec<(f64, f64)> = fixture_nodes(&envelope.board_fixture)
@@ -885,7 +885,7 @@ mod tests {
             .map(|node| (node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0), node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0)))
             .collect();
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("forceLayout", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("forceLayout", None, &document, &ViewState::default());
         let laid_out = apply_ops(&document, &ops);
         let after: Vec<(f64, f64)> = fixture_nodes(&laid_out.board_fixture)
             .iter()

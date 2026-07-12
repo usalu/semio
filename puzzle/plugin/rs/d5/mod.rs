@@ -6,7 +6,7 @@ use semio_framework_plugin::{
     build_puzzle2d_board_scene, build_world_3d_scene, create_default_layout,
     layout::{MeasureSelectItem, WindowEngagementStatus, WindowEngagementToggleGroupOption},
     merge_world_selection_ids, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_chunking_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, App,
-    CommandDescriptor, PanelGroup, PluginApp, Puzzle2dBoardScene, SurfaceKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl,
+    ActionDescriptor, PanelGroup, PluginApp, Puzzle2dBoardScene, SurfaceKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl,
     WindowEngagementInput, WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
@@ -346,8 +346,8 @@ fn set_document_op(envelope: &Puzzle5dEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
 }
 
-fn puzzle5d_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor { controller_id: PUZZLE5D_PLAY_CONTROLLER_ID.into(), command: command.into(), args }
+fn puzzle5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: PUZZLE5D_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
 }
 
 fn puzzle5d_grip_full_id(part_id: &str, grip_id: &str) -> String {
@@ -1024,10 +1024,10 @@ fn puzzle5d_context_menu_json(envelope: &Puzzle5dEnvelope) -> Option<String> {
         return None;
     }
     let items = vec![
-        json!({ "id": "duplicate", "label": "Duplicate", "command": "duplicateSelection" }),
-        json!({ "id": "select-same-kind", "label": "Select all of same kind", "command": "selectSameKindSelection" }),
-        json!({ "id": "zoom", "label": "Zoom to selection", "command": "zoomToSelection" }),
-        json!({ "id": "delete", "label": "Delete", "command": "deleteSelection" }),
+        json!({ "id": "duplicate", "label": "Duplicate", "action": "duplicateSelection" }),
+        json!({ "id": "select-same-kind", "label": "Select all of same kind", "action": "selectSameKindSelection" }),
+        json!({ "id": "zoom", "label": "Zoom to selection", "action": "zoomToSelection" }),
+        json!({ "id": "delete", "label": "Delete", "action": "deleteSelection" }),
     ];
     serde_json::to_string(&items).ok()
 }
@@ -1083,7 +1083,7 @@ fn puzzle5d_brush_placement_control(envelope: &Puzzle5dEnvelope, precompute: &Pu
         value: Some(format!("puzzle5d.brush.candidate.{selected_index}")),
         options,
         disabled: None,
-        on_select: Some(puzzle5d_cmd("engagementControlSelect", None)),
+        on_select: Some(puzzle5d_action("engagementControlSelect", None)),
     })
 }
 
@@ -1097,7 +1097,7 @@ fn puzzle5d_fill_count_control(envelope: &Puzzle5dEnvelope) -> WindowEngagementC
         step: Some(1.0),
         unit: None,
         disabled: None,
-        on_change: Some(puzzle5d_cmd("setFillCount", None)),
+        on_change: Some(puzzle5d_action("setFillCount", None)),
         on_commit: None,
     }
 }
@@ -1123,10 +1123,10 @@ fn puzzle5d_engagement(envelope: &Puzzle5dEnvelope, precompute: &Puzzle5dPrecomp
             value: Some(input_value),
             placeholder: Some(placeholder.into()),
             disabled: None,
-            on_change: Some(puzzle5d_cmd("engagementInput", Some(json!({ "window": window })))),
-            on_submit: Some(puzzle5d_cmd("engagementSubmit", Some(json!({ "window": window })))),
+            on_change: Some(puzzle5d_action("engagementInput", Some(json!({ "window": window })))),
+            on_submit: Some(puzzle5d_action("engagementSubmit", Some(json!({ "window": window })))),
             on_repeat_last: None,
-            on_abort: Some(puzzle5d_cmd("engagementAbort", Some(json!({ "window": window })))),
+            on_abort: Some(puzzle5d_action("engagementAbort", Some(json!({ "window": window })))),
         }),
         control,
         controls: None,
@@ -1138,7 +1138,7 @@ fn puzzle5d_engagement(envelope: &Puzzle5dEnvelope, precompute: &Puzzle5dPrecomp
                 icon_id: Some("cursor".into()),
                 pressed: Some(envelope.runtime.active_tool == "select"),
                 disabled: None,
-                command: Some(puzzle5d_cmd("engagementPossibleSelect", Some(json!({ "window": window, "possibleId": PUZZLE5D_ENGAGEMENT_TOOL_SELECT })))),
+                action: Some(puzzle5d_action("engagementPossibleSelect", Some(json!({ "window": window, "possibleId": PUZZLE5D_ENGAGEMENT_TOOL_SELECT })))),
             },
             WindowEngagementOption {
                 id: PUZZLE5D_ENGAGEMENT_TOOL_BRUSH.into(),
@@ -1146,7 +1146,7 @@ fn puzzle5d_engagement(envelope: &Puzzle5dEnvelope, precompute: &Puzzle5dPrecomp
                 icon_id: Some("brush".into()),
                 pressed: Some(envelope.runtime.active_tool == "brush"),
                 disabled: None,
-                command: Some(puzzle5d_cmd("engagementPossibleSelect", Some(json!({ "window": window, "possibleId": PUZZLE5D_ENGAGEMENT_TOOL_BRUSH })))),
+                action: Some(puzzle5d_action("engagementPossibleSelect", Some(json!({ "window": window, "possibleId": PUZZLE5D_ENGAGEMENT_TOOL_BRUSH })))),
             },
             WindowEngagementOption {
                 id: PUZZLE5D_ENGAGEMENT_TOOL_FILL.into(),
@@ -1154,7 +1154,7 @@ fn puzzle5d_engagement(envelope: &Puzzle5dEnvelope, precompute: &Puzzle5dPrecomp
                 icon_id: Some("fill".into()),
                 pressed: Some(envelope.runtime.fill_count > 0 || envelope.runtime.active_tool == "fill"),
                 disabled: None,
-                command: Some(puzzle5d_cmd("engagementPossibleSelect", Some(json!({ "window": window, "possibleId": PUZZLE5D_ENGAGEMENT_TOOL_FILL })))),
+                action: Some(puzzle5d_action("engagementPossibleSelect", Some(json!({ "window": window, "possibleId": PUZZLE5D_ENGAGEMENT_TOOL_FILL })))),
             },
         ]),
         possible_engagements: None,
@@ -1193,10 +1193,10 @@ fn puzzle5d_kind_ids(document: &Puzzle5dDocument, slice: &str) -> Vec<String> {
 fn puzzle5d_lod_measure(runtime: &Puzzle5dRuntime) -> WindowMeasure {
     let mut items = vec![MeasureSelectItem { id: PUZZLE5D_LOD_MODE_AUTOMATIC.into(), value: PUZZLE5D_LOD_MODE_AUTOMATIC.into(), label: "Automatic".into() }];
     items.extend(puzzle5d_lod_tier_ids().into_iter().map(|tier| MeasureSelectItem { id: tier.clone(), value: tier.clone(), label: tier }));
-    WindowMeasure::Select { id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-lod"), label: Some("LOD".into()), value: runtime.lod_mode.clone(), items, on_change: puzzle5d_cmd("setLodMode", None) }
+    WindowMeasure::Select { id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-lod"), label: Some("LOD".into()), value: runtime.lod_mode.clone(), items, on_change: puzzle5d_action("setLodMode", None) }
 }
 
-fn puzzle5d_kind_weight_measures(prefix: &str, command: &str, ids: &[String], weights: &HashMap<String, f64>) -> Vec<WindowMeasure> {
+fn puzzle5d_kind_weight_measures(prefix: &str, action: &str, ids: &[String], weights: &HashMap<String, f64>) -> Vec<WindowMeasure> {
     ids.iter()
         .map(|kind_id| {
             let weight = weights.get(kind_id).copied().unwrap_or(0.0);
@@ -1207,7 +1207,7 @@ fn puzzle5d_kind_weight_measures(prefix: &str, command: &str, ids: &[String], we
                 min: 0.0,
                 max: 1.0,
                 step: Some(0.01),
-                on_change: puzzle5d_cmd(command, Some(json!({ "kindId": kind_id }))),
+                on_change: puzzle5d_action(action, Some(json!({ "kindId": kind_id }))),
             }
         })
         .collect()
@@ -1228,7 +1228,7 @@ fn puzzle5d_suggestion_measures_group(envelope: &Puzzle5dEnvelope) -> WindowMeas
                 min: PUZZLE5D_SUGGESTION_OFFSET_MIN,
                 max: PUZZLE5D_SUGGESTION_OFFSET_MAX,
                 step: Some(PUZZLE5D_SUGGESTION_OFFSET_STEP),
-                on_change: puzzle5d_cmd("setSuggestionOffset", None),
+                on_change: puzzle5d_action("setSuggestionOffset", None),
             },
             WindowMeasure::Group {
                 id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion-parts"),
@@ -1258,7 +1258,7 @@ fn puzzle5d_brush_measures_group(envelope: &Puzzle5dEnvelope) -> WindowMeasure {
             min: 0.0,
             max: 0.2,
             step: Some(0.005),
-            on_change: puzzle5d_cmd("setBrushPlacementOverlapBudget", None),
+            on_change: puzzle5d_action("setBrushPlacementOverlapBudget", None),
         }],
     }
 }
@@ -1273,10 +1273,10 @@ fn puzzle5d_window_measures(window: &str, envelope: &Puzzle5dEnvelope) -> Vec<Wi
 //#endregion 🔖Measures
 
 //#region 🔖Panels
-fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, command: CommandDescriptor) -> UiTreeItemNode {
+fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
     let mut item = UiTreeItemNode::base(id, label);
     item.icon_id = icon_id.map(str::to_string);
-    item.command = Some(command);
+    item.action = Some(action);
     item
 }
 
@@ -1320,10 +1320,10 @@ fn build_document_tree(envelope: &Puzzle5dEnvelope) -> UiNode {
                 .iter()
                 .map(|grip| {
                     let full_id = puzzle5d_grip_full_id(&part.id, &grip.id);
-                    tree_item_with_command(format!("puzzle5d-play-document.grip.{full_id}"), format!("{} ({})", grip.id, grip.grip_kind), Some("circle-dot"), puzzle5d_cmd("setSelection", Some(json!({ "gripIds": [full_id] }))))
+                    tree_item_with_action(format!("puzzle5d-play-document.grip.{full_id}"), format!("{} ({})", grip.id, grip.grip_kind), Some("circle-dot"), puzzle5d_action("setSelection", Some(json!({ "gripIds": [full_id] }))))
                 })
                 .collect();
-            let mut item = tree_item_with_command(format!("puzzle5d-play-document.part.{}", part.id), part_label(part), Some("box"), puzzle5d_cmd("setSelection", Some(json!({ "partIds": [part.id] }))));
+            let mut item = tree_item_with_action(format!("puzzle5d-play-document.part.{}", part.id), part_label(part), Some("box"), puzzle5d_action("setSelection", Some(json!({ "partIds": [part.id] }))));
             item.description = Some(part.part_kind.clone());
             if !grip_items.is_empty() {
                 item.items = Some(grip_items);
@@ -1335,7 +1335,7 @@ fn build_document_tree(envelope: &Puzzle5dEnvelope) -> UiNode {
         .document
         .fasteners
         .iter()
-        .map(|fastener| tree_item_with_command(format!("puzzle5d-play-document.fastener.{}", fastener.id), fastener_label(&envelope.document, fastener), Some("link"), puzzle5d_cmd("setSelection", Some(json!({ "fastenerIds": [fastener.id] })))))
+        .map(|fastener| tree_item_with_action(format!("puzzle5d-play-document.fastener.{}", fastener.id), fastener_label(&envelope.document, fastener), Some("link"), puzzle5d_action("setSelection", Some(json!({ "fastenerIds": [fastener.id] })))))
         .collect();
     UiNode::Tree(UiTreeNode {
         sections: vec![
@@ -1354,8 +1354,8 @@ fn build_document_tree(envelope: &Puzzle5dEnvelope) -> UiNode {
         ],
         selected_ids: Some(document_tree_selected_ids(envelope)),
         highlighted_ids: None,
-        selection_change: Some(puzzle5d_cmd("setSelection", None)),
-        drop_command: None,
+        selection_change: Some(puzzle5d_action("setSelection", None)),
+        drop_action: None,
     })
 }
 
@@ -1385,15 +1385,15 @@ fn puzzle5d_catalog_item_drag_data(kind_id: &str, entry: &Value) -> HashMap<Stri
     HashMap::from([(PUZZLE5D_CATALOGUE_DRAG_MIME.to_string(), payload.to_string())])
 }
 
-fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value], add_command: Option<&str>) -> UiTreeSectionNode {
+fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value], add_action: Option<&str>) -> UiTreeSectionNode {
     let items: Vec<UiTreeItemNode> = entries
         .iter()
         .enumerate()
         .map(|(index, entry)| {
             let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind");
-            match add_command {
-                Some(command) => {
-                    let mut item = tree_item_with_command(format!("{section_id}.{index}.{kind_id}"), catalog_kind_label(entry), Some("box"), puzzle5d_cmd(command, Some(json!({ "partKind": kind_id }))));
+            match add_action {
+                Some(action) => {
+                    let mut item = tree_item_with_action(format!("{section_id}.{index}.{kind_id}"), catalog_kind_label(entry), Some("box"), puzzle5d_action(action, Some(json!({ "partKind": kind_id }))));
                     item.description = Some(kind_id.into());
                     item.draggable = Some(true);
                     item.drag_data = Some(puzzle5d_catalog_item_drag_data(kind_id, entry));
@@ -1431,11 +1431,11 @@ fn build_kinds_tree(envelope: &Puzzle5dEnvelope) -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
-fn inspector_text_field(id: &str, label: &str, value: String, command: CommandDescriptor) -> UiNode {
+fn inspector_text_field(id: &str, label: &str, value: String, action: ActionDescriptor) -> UiNode {
     UiNode::Field(UiFieldNode {
         id: id.into(),
         label: label.into(),
@@ -1452,7 +1452,7 @@ fn inspector_text_field(id: &str, label: &str, value: String, command: CommandDe
             max: None,
             step: None,
             accept: None,
-            on_change: command,
+            on_change: action,
         })),
     })
 }
@@ -1465,12 +1465,12 @@ fn build_part_inspector(part: &Puzzle5dPart) -> UiNode {
         default_open: None,
         fields: vec![
             ui_inspector_readonly_field("puzzle5d-play-inspector.part.id", "Id", &part.id),
-            inspector_text_field("puzzle5d-play-inspector.part.kind", "Kind", part.part_kind.clone(), puzzle5d_cmd("patchPart", Some(json!({ "partId": part.id, "field": "partKind" })))),
-            inspector_text_field("puzzle5d-play-inspector.part.label", "Label", part.part_3d.label.clone().unwrap_or_default(), puzzle5d_cmd("patchPart", Some(json!({ "partId": part.id, "field": "label" })))),
-            inspector_text_field("puzzle5d-play-inspector.part.text", "Flat text", part.part_2d.text.clone(), puzzle5d_cmd("patchPart", Some(json!({ "partId": part.id, "field": "text" })))),
-            inspector_text_field("puzzle5d-play-inspector.part.x", "Flat x", format!("{}", part.part_2d.x), puzzle5d_cmd("patchPart", Some(json!({ "partId": part.id, "field": "x" })))),
-            inspector_text_field("puzzle5d-play-inspector.part.y", "Flat y", format!("{}", part.part_2d.y), puzzle5d_cmd("patchPart", Some(json!({ "partId": part.id, "field": "y" })))),
-            inspector_text_field("puzzle5d-play-inspector.part.origin", "Volume origin", format!("{:.3}, {:.3}, {:.3}", origin[0], origin[1], origin[2]), puzzle5d_cmd("patchPart", Some(json!({ "partId": part.id, "field": "origin" })))),
+            inspector_text_field("puzzle5d-play-inspector.part.kind", "Kind", part.part_kind.clone(), puzzle5d_action("patchPart", Some(json!({ "partId": part.id, "field": "partKind" })))),
+            inspector_text_field("puzzle5d-play-inspector.part.label", "Label", part.part_3d.label.clone().unwrap_or_default(), puzzle5d_action("patchPart", Some(json!({ "partId": part.id, "field": "label" })))),
+            inspector_text_field("puzzle5d-play-inspector.part.text", "Flat text", part.part_2d.text.clone(), puzzle5d_action("patchPart", Some(json!({ "partId": part.id, "field": "text" })))),
+            inspector_text_field("puzzle5d-play-inspector.part.x", "Flat x", format!("{}", part.part_2d.x), puzzle5d_action("patchPart", Some(json!({ "partId": part.id, "field": "x" })))),
+            inspector_text_field("puzzle5d-play-inspector.part.y", "Flat y", format!("{}", part.part_2d.y), puzzle5d_action("patchPart", Some(json!({ "partId": part.id, "field": "y" })))),
+            inspector_text_field("puzzle5d-play-inspector.part.origin", "Volume origin", format!("{:.3}, {:.3}, {:.3}", origin[0], origin[1], origin[2]), puzzle5d_action("patchPart", Some(json!({ "partId": part.id, "field": "origin" })))),
         ],
     }])
 }
@@ -1485,11 +1485,11 @@ fn build_grip_inspector(part: &Puzzle5dPart, grip: &Puzzle5dGrip) -> UiNode {
         default_open: None,
         fields: vec![
             ui_inspector_readonly_field("puzzle5d-play-inspector.grip.id", "Id", &full_id),
-            inspector_text_field("puzzle5d-play-inspector.grip.kind", "Kind", grip.grip_kind.clone(), puzzle5d_cmd("patchGrip", Some(json!({ "gripFullId": full_id, "field": "gripKind" })))),
-            inspector_text_field("puzzle5d-play-inspector.grip.angle", "Flat angle", format!("{}", grip.grip_2d.angle), puzzle5d_cmd("patchGrip", Some(json!({ "gripFullId": full_id, "field": "angle" })))),
-            inspector_text_field("puzzle5d-play-inspector.grip.radius", "Radius", format!("{}", grip.grip_3d.radius), puzzle5d_cmd("patchGrip", Some(json!({ "gripFullId": full_id, "field": "radius" })))),
-            inspector_text_field("puzzle5d-play-inspector.grip.position", "Position", format!("{:.3}, {:.3}, {:.3}", position[0], position[1], position[2]), puzzle5d_cmd("patchGrip", Some(json!({ "gripFullId": full_id, "field": "position" })))),
-            inspector_text_field("puzzle5d-play-inspector.grip.direction", "Direction", format!("{:.3}, {:.3}, {:.3}", direction[0], direction[1], direction[2]), puzzle5d_cmd("patchGrip", Some(json!({ "gripFullId": full_id, "field": "direction" })))),
+            inspector_text_field("puzzle5d-play-inspector.grip.kind", "Kind", grip.grip_kind.clone(), puzzle5d_action("patchGrip", Some(json!({ "gripFullId": full_id, "field": "gripKind" })))),
+            inspector_text_field("puzzle5d-play-inspector.grip.angle", "Flat angle", format!("{}", grip.grip_2d.angle), puzzle5d_action("patchGrip", Some(json!({ "gripFullId": full_id, "field": "angle" })))),
+            inspector_text_field("puzzle5d-play-inspector.grip.radius", "Radius", format!("{}", grip.grip_3d.radius), puzzle5d_action("patchGrip", Some(json!({ "gripFullId": full_id, "field": "radius" })))),
+            inspector_text_field("puzzle5d-play-inspector.grip.position", "Position", format!("{:.3}, {:.3}, {:.3}", position[0], position[1], position[2]), puzzle5d_action("patchGrip", Some(json!({ "gripFullId": full_id, "field": "position" })))),
+            inspector_text_field("puzzle5d-play-inspector.grip.direction", "Direction", format!("{:.3}, {:.3}, {:.3}", direction[0], direction[1], direction[2]), puzzle5d_action("patchGrip", Some(json!({ "gripFullId": full_id, "field": "direction" })))),
         ],
     }])
 }
@@ -1676,9 +1676,9 @@ impl PluginApp for Puzzle5dPlayApp {
         serde_json::to_string(&default_envelope()).expect("puzzle5d envelope json")
     }
 
-    fn handle_command_patch_ops(&mut self, command: &str, args: Option<&Value>, document_json: &str, _view_state: &ViewState) -> Vec<String> {
+    fn handle_action_patch_ops(&mut self, action: &str, args: Option<&Value>, document_json: &str, _view_state: &ViewState) -> Vec<String> {
         let mut envelope = parse_envelope(document_json);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(document) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value(document.clone()) {
@@ -1947,7 +1947,7 @@ impl PluginApp for Puzzle5dPlayApp {
             "setObjectKindWeight" | "setVortexKindWeight" => {
                 let kind_id = args.and_then(|v| v.get("kindId")).and_then(|v| v.as_str()).unwrap_or("");
                 let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_f64()).unwrap_or(1.0);
-                if command == "setObjectKindWeight" {
+                if action == "setObjectKindWeight" {
                     envelope.runtime.object_kind_weights.insert(kind_id.into(), value);
                 } else {
                     envelope.runtime.vortex_kind_weights.insert(kind_id.into(), value);
@@ -2429,7 +2429,7 @@ mod tests {
             { "name": "nodeMove", "payload": { "id": "seed-left-001", "x": 111.0, "y": 222.0 } }
         ])
         .to_string();
-        let ops = app.handle_command_patch_ops("applyBoardEvents", Some(&json!({ "eventsJson": events })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("applyBoardEvents", Some(&json!({ "eventsJson": events })), &document, &ViewState::default());
         let envelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.runtime.selection.part_ids, vec!["seed-left-001".to_string()]);
         assert_eq!(envelope.document.camera2d.x, 10.0);
@@ -2452,7 +2452,7 @@ mod tests {
         });
         let document = serde_json::to_string(&envelope).unwrap();
         let events = json!([{ "name": "edgeCreate", "payload": { "id": "edge-1", "edgeKind": "link", "source": "seed-left-001:v0", "target": "part-b:v0" } }]).to_string();
-        let ops = app.handle_command_patch_ops("applyBoardEvents", Some(&json!({ "eventsJson": events })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("applyBoardEvents", Some(&json!({ "eventsJson": events })), &document, &ViewState::default());
         let next = apply_ops(&envelope, &ops);
         assert_eq!(next.document.fasteners.len(), 1);
         assert_eq!(next.document.fasteners[0].source, "seed-left-001:v0");
@@ -2476,7 +2476,7 @@ mod tests {
     fn world_pick_selects_by_index() {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &document, &ViewState::default());
         let envelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.runtime.selection.part_ids, vec!["seed-left-001".to_string()]);
     }
@@ -2485,10 +2485,10 @@ mod tests {
     fn set_hover_and_world_hover_update_hovered_part() {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("setHover", Some(&json!({ "objectId": "seed-left-001" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setHover", Some(&json!({ "objectId": "seed-left-001" })), &document, &ViewState::default());
         let envelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.runtime.hovered_part_id.as_deref(), Some("seed-left-001"));
-        let cleared_ops = app.handle_command_patch_ops("setHover", Some(&json!({ "objectId": Value::Null })), &document, &ViewState::default());
+        let cleared_ops = app.handle_action_patch_ops("setHover", Some(&json!({ "objectId": Value::Null })), &document, &ViewState::default());
         let cleared = apply_ops(&parse_envelope(&document), &cleared_ops);
         assert_eq!(cleared.runtime.hovered_part_id, None);
     }
@@ -2497,7 +2497,7 @@ mod tests {
     fn set_transform_tool_updates_runtime() {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("setTransformTool", Some(&json!({ "tool": "rotate" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setTransformTool", Some(&json!({ "tool": "rotate" })), &document, &ViewState::default());
         let envelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.runtime.transform_tool, "rotate");
     }
@@ -2518,7 +2518,7 @@ mod tests {
         let mut envelope = default_envelope();
         envelope.runtime.selection.part_ids = vec!["seed-left-001".into()];
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("duplicateSelection", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("duplicateSelection", None, &document, &ViewState::default());
         let next = apply_ops(&envelope, &ops);
         assert_eq!(next.document.parts.len(), 2);
         let clone = next.document.parts.iter().find(|part| part.id != "seed-left-001").unwrap();
@@ -2532,7 +2532,7 @@ mod tests {
         let mut envelope = default_envelope();
         envelope.runtime.selection.part_ids = vec!["seed-left-001".into()];
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("zoomToSelection", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("zoomToSelection", None, &document, &ViewState::default());
         let next = apply_ops(&envelope, &ops);
         assert_eq!(next.document.camera3d.target, envelope.document.parts[0].part_3d.origin);
         assert_eq!(next.document.camera2d.x, envelope.document.parts[0].part_2d.x);
@@ -2562,7 +2562,7 @@ mod tests {
     fn engagement_possible_select_switches_tool() {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("engagementPossibleSelect", Some(&json!({ "window": PUZZLE5D_PLAY_WINDOW_3D, "possibleId": PUZZLE5D_ENGAGEMENT_TOOL_BRUSH })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("engagementPossibleSelect", Some(&json!({ "window": PUZZLE5D_PLAY_WINDOW_3D, "possibleId": PUZZLE5D_ENGAGEMENT_TOOL_BRUSH })), &document, &ViewState::default());
         let envelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.runtime.active_tool, "brush");
     }
@@ -2597,7 +2597,7 @@ mod tests {
         let grip_full_id = puzzle5d_grip_full_id(&part_id, &envelope.document.parts[0].grips[0].id);
         let fastener_id = envelope.document.fasteners[0].id.clone();
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("setSelection", Some(&json!({ "ids": [part_id, grip_full_id, fastener_id] })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setSelection", Some(&json!({ "ids": [part_id, grip_full_id, fastener_id] })), &document, &ViewState::default());
         let next = apply_ops(&envelope, &ops);
         assert_eq!(next.runtime.selection.part_ids.len(), 1);
         assert_eq!(next.runtime.selection.grip_ids.len(), 1);
@@ -2608,10 +2608,10 @@ mod tests {
     fn patch_part_updates_flat_and_volume_fields() {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("patchPart", Some(&json!({ "partId": "seed-left-001", "field": "origin", "value": "1, 2, 3" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("patchPart", Some(&json!({ "partId": "seed-left-001", "field": "origin", "value": "1, 2, 3" })), &document, &ViewState::default());
         let envelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.document.parts[0].part_3d.origin, [1.0, 2.0, 3.0]);
-        let ops = app.handle_command_patch_ops("patchPart", Some(&json!({ "partId": "seed-left-001", "field": "x", "value": "42.5" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("patchPart", Some(&json!({ "partId": "seed-left-001", "field": "x", "value": "42.5" })), &document, &ViewState::default());
         let envelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.document.parts[0].part_2d.x, 42.5);
     }
@@ -2620,7 +2620,7 @@ mod tests {
     fn patch_grip_updates_fields() {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("patchGrip", Some(&json!({ "gripFullId": "seed-left-001:v0", "field": "angle", "value": "1.5707" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("patchGrip", Some(&json!({ "gripFullId": "seed-left-001:v0", "field": "angle", "value": "1.5707" })), &document, &ViewState::default());
         let envelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.document.parts[0].grips[0].grip_2d.angle, 1.5707);
     }
@@ -2658,7 +2658,7 @@ mod tests {
         let fasteners_touching: usize = envelope.document.fasteners.iter().filter(|fastener| fastener.source.starts_with(&part_id) || fastener.target.starts_with(&part_id)).count();
         assert!(fasteners_touching > 0);
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("deleteSelection", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("deleteSelection", None, &document, &ViewState::default());
         let next = apply_ops(&envelope, &ops);
         assert!(next.document.parts.iter().all(|part| part.id != part_id));
         assert!(next.document.fasteners.iter().all(|fastener| !fastener.source.starts_with(&part_id) && !fastener.target.starts_with(&part_id)));
@@ -2679,7 +2679,7 @@ mod tests {
         document.parts = vec![part("part-a", [0.0, 0.0, 0.0]), part("part-b", [10.0, 10.0, 10.0])];
         let envelope = Puzzle5dEnvelope { document, runtime: Puzzle5dRuntime::default() };
         let document_json = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("worldRelocate", Some(&json!({ "objectId": "part-b", "position": [0.0, 0.0, 0.0] })), &document_json, &ViewState::default());
+        let ops = app.handle_action_patch_ops("worldRelocate", Some(&json!({ "objectId": "part-b", "position": [0.0, 0.0, 0.0] })), &document_json, &ViewState::default());
         let next = apply_ops(&envelope, &ops);
         assert_eq!(next.document.parts.iter().find(|part| part.id == "part-b").unwrap().part_3d.origin, [0.0, 0.0, 0.0]);
         assert_eq!(next.document.fasteners.len(), 1);
@@ -2691,7 +2691,7 @@ mod tests {
     fn set_brush_placement_overlap_budget_clamps_value() {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("setBrushPlacementOverlapBudget", Some(&json!({ "value": 5.0 })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setBrushPlacementOverlapBudget", Some(&json!({ "value": 5.0 })), &document, &ViewState::default());
         let envelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.runtime.overlap_budget, 1.0);
     }
@@ -2700,10 +2700,10 @@ mod tests {
     fn set_object_and_vortex_kind_weight_updates_runtime_maps() {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
-        let object_ops = app.handle_command_patch_ops("setObjectKindWeight", Some(&json!({ "kindId": "Hexagonal Cut Concrete Forest Left", "value": 2.0 })), &document, &ViewState::default());
+        let object_ops = app.handle_action_patch_ops("setObjectKindWeight", Some(&json!({ "kindId": "Hexagonal Cut Concrete Forest Left", "value": 2.0 })), &document, &ViewState::default());
         let with_object_weight = apply_ops(&parse_envelope(&document), &object_ops);
         assert_eq!(with_object_weight.runtime.object_kind_weights.get("Hexagonal Cut Concrete Forest Left"), Some(&2.0));
-        let vortex_ops = app.handle_command_patch_ops("setVortexKindWeight", Some(&json!({ "kindId": "b-l", "value": 0.5 })), &document, &ViewState::default());
+        let vortex_ops = app.handle_action_patch_ops("setVortexKindWeight", Some(&json!({ "kindId": "b-l", "value": 0.5 })), &document, &ViewState::default());
         let with_vortex_weight = apply_ops(&parse_envelope(&document), &vortex_ops);
         assert_eq!(with_vortex_weight.runtime.vortex_kind_weights.get("b-l"), Some(&0.5));
     }
@@ -2713,10 +2713,10 @@ mod tests {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
         let full_id = "seed-left-001:v0";
-        let hover_ops = app.handle_command_patch_ops("worldVortexHover", Some(&json!({ "fullId": full_id })), &document, &ViewState::default());
+        let hover_ops = app.handle_action_patch_ops("worldVortexHover", Some(&json!({ "fullId": full_id })), &document, &ViewState::default());
         let hovered = apply_ops(&parse_envelope(&document), &hover_ops);
         assert_eq!(hovered.runtime.selection.grip_ids, vec![full_id.to_string()]);
-        let select_ops = app.handle_command_patch_ops("worldVortexSelect", Some(&json!({ "fullId": full_id })), &document, &ViewState::default());
+        let select_ops = app.handle_action_patch_ops("worldVortexSelect", Some(&json!({ "fullId": full_id })), &document, &ViewState::default());
         let selected = apply_ops(&parse_envelope(&document), &select_ops);
         assert_eq!(selected.runtime.selection.grip_ids, vec![full_id.to_string()]);
         assert!(selected.runtime.selection.part_ids.is_empty());
@@ -2726,10 +2726,10 @@ mod tests {
     fn set_camera_routes_by_surface() {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
-        let ops_2d = app.handle_command_patch_ops("setCamera", Some(&json!({ "surfaceId": PUZZLE5D_PLAY_SURFACE_2D, "camera": { "x": 5.0, "y": 6.0, "zoom": 2.0 } })), &document, &ViewState::default());
+        let ops_2d = app.handle_action_patch_ops("setCamera", Some(&json!({ "surfaceId": PUZZLE5D_PLAY_SURFACE_2D, "camera": { "x": 5.0, "y": 6.0, "zoom": 2.0 } })), &document, &ViewState::default());
         let envelope_2d = apply_ops(&parse_envelope(&document), &ops_2d);
         assert_eq!(envelope_2d.document.camera2d.x, 5.0);
-        let ops_3d = app.handle_command_patch_ops("setCamera", Some(&json!({ "surfaceId": PUZZLE5D_PLAY_SURFACE_3D, "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 1.0 } })), &document, &ViewState::default());
+        let ops_3d = app.handle_action_patch_ops("setCamera", Some(&json!({ "surfaceId": PUZZLE5D_PLAY_SURFACE_3D, "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 1.0 } })), &document, &ViewState::default());
         let envelope_3d = apply_ops(&parse_envelope(&document), &ops_3d);
         assert_eq!(envelope_3d.document.camera3d.position, [1.0, 2.0, 3.0]);
     }
@@ -2739,7 +2739,7 @@ mod tests {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
         let replacement = serde_json::to_string(&empty_document()).unwrap();
-        let ops = app.handle_command_patch_ops("setFixtureJson", Some(&json!({ "json": replacement })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setFixtureJson", Some(&json!({ "json": replacement })), &document, &ViewState::default());
         let envelope = apply_ops(&parse_envelope(&document), &ops);
         assert!(envelope.document.parts.is_empty());
     }
@@ -2748,7 +2748,7 @@ mod tests {
     fn add_part_kind_appends_paired_part() {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("addPartKind", Some(&json!({ "partKind": "Hexagonal Cut Concrete Forest Right" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addPartKind", Some(&json!({ "partKind": "Hexagonal Cut Concrete Forest Right" })), &document, &ViewState::default());
         let envelope = apply_ops(&parse_envelope(&document), &ops);
         let added = envelope.document.parts.iter().find(|part| part.part_kind == "Hexagonal Cut Concrete Forest Right").expect("added part");
         assert!(!added.grips.is_empty());

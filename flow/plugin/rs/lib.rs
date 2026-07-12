@@ -8,9 +8,9 @@ use flow_core::{
 };
 use semio_framework_plugin::{SurfaceKind, PanelGroup, 
     build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout,
-    handle_generation_command, render_generation_form_body, render_generation_preview_text, render_generations_tree,
+    handle_generation_action, render_generation_form_body, render_generation_preview_text, render_generations_tree,
     selected_generation, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
-    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, App, CommandDescriptor, GenerationPlayState,
+    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, App, ActionDescriptor, GenerationPlayState,
     NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -42,7 +42,7 @@ const FLOW_PLAY_BODY_GENERATE_PREVIEW: &str = "flow.play.generate-preview";
 const FLOW_PLAY_SURFACE_GENERATE_PREVIEW: &str = "flow.play.generate-preview";
 const FLOW_WIDGET_DRAG_MIME: &str = "application/x-flow-widget";
 
-/// 🧩 Built-in flow extensions: (id, name, commandId, commandTitle, effect).
+/// 🧩 Built-in flow extensions: (id, name, actionId, actionTitle, effect).
 const FLOW_EXTENSIONS: &[(&str, &str, &str, &str, &str)] = &[
     ("auto-layout", "Auto Layout", "flow.extension.reorganize", "Reorganize Canvas", "reorganize"),
     ("auto-evaluate", "Auto Evaluate", "flow.extension.evaluate", "Evaluate Fixture", "evaluate"),
@@ -148,10 +148,10 @@ fn set_document_op(envelope: &FlowPlayEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
 }
 
-fn flow_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn flow_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: FLOW_PLAY_APP_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -297,9 +297,9 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         icon_id: None,
         selected: None,
         default_open: None,
-        command: None,
-        hover_command: None,
-        unhover_command: None,
+        action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -323,20 +323,20 @@ fn flow_widget_drag_data(descriptor: &Value) -> HashMap<String, String> {
     drag_data
 }
 
-fn tree_item_with_command_draggable(
+fn tree_item_with_action_draggable(
     id: impl Into<String>,
     label: impl Into<String>,
     description: Option<String>,
-    command: CommandDescriptor,
+    action: ActionDescriptor,
     descriptor: &Value,
 ) -> UiTreeItemNode {
-    let mut item = tree_item_with_command(id, label, description, command);
+    let mut item = tree_item_with_action(id, label, description, action);
     item.draggable = Some(true);
     item.drag_data = Some(flow_widget_drag_data(descriptor));
     item
 }
 
-fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, description: Option<String>, command: CommandDescriptor) -> UiTreeItemNode {
+fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
         label: label.into(),
@@ -344,9 +344,9 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
         icon_id: None,
         selected: None,
         default_open: None,
-        command: Some(command),
-        hover_command: None,
-        unhover_command: None,
+        action: Some(action),
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -363,11 +363,11 @@ fn build_document_tree(fixture: &FlowFixture, selected: &[String]) -> UiNode {
         .widgets
         .iter()
         .map(|widget| {
-            tree_item_with_command(
+            tree_item_with_action(
                 format!("flow-play-document.widget.{}", widget_id(widget)),
                 widget_tree_label(widget),
                 Some(widget_kind_label(widget).into()),
-                flow_cmd("setSelection", Some(json!({ "ids": [widget_id(widget)] }))),
+                flow_action("setSelection", Some(json!({ "ids": [widget_id(widget)] }))),
             )
         })
         .collect();
@@ -382,9 +382,9 @@ fn build_document_tree(fixture: &FlowFixture, selected: &[String]) -> UiNode {
                 icon_id: None,
                 selected: None,
                 default_open: None,
-                command: None,
-        hover_command: None,
-        unhover_command: None,
+                action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
                 draggable: None,
                 drag_data: None,
@@ -420,7 +420,7 @@ fn build_document_tree(fixture: &FlowFixture, selected: &[String]) -> UiNode {
         selected_ids: Some(selected.iter().map(|id| format!("flow-play-document.widget.{id}")).collect()),
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -461,12 +461,12 @@ fn build_catalogue_tree(envelope: &FlowPlayEnvelope) -> UiNode {
                             } else {
                                 flow_widget_descriptor(kind, None)
                             };
-                            let command = flow_cmd("addWidget", Some(descriptor.clone()));
-                            Some(tree_item_with_command_draggable(
+                            let action = flow_action("addWidget", Some(descriptor.clone()));
+                            Some(tree_item_with_action_draggable(
                                 format!("flow-play-catalogue.{id}.{kind}.{label}"),
                                 label,
                                 Some(kind.to_string()),
-                                command,
+                                action,
                                 &descriptor,
                             ))
                         })
@@ -488,33 +488,33 @@ fn build_catalogue_tree(envelope: &FlowPlayEnvelope) -> UiNode {
         selected_ids: Some(vec![]),
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
-/// 🧩 Installed/enabled extension palette plus commands surfaced by active extensions.
+/// 🧩 Installed/enabled extension palette plus actions surfaced by active extensions.
 fn flow_extensions_tree_sections(runtime: &FlowPlayRuntime) -> Vec<UiTreeSectionNode> {
     let installed: Vec<UiTreeItemNode> = FLOW_EXTENSIONS
         .iter()
         .map(|(id, name, _, _, _)| {
             let enabled = runtime.extension_enabled.get(*id).copied().unwrap_or(false);
-            tree_item_with_command(
+            tree_item_with_action(
                 format!("flow-play-extensions.{id}"),
                 *name,
                 Some(if enabled { "enabled".into() } else { "disabled".into() }),
-                flow_cmd("toggleExtension", Some(json!({ "id": id, "enabled": !enabled }))),
+                flow_action("toggleExtension", Some(json!({ "id": id, "enabled": !enabled }))),
             )
         })
         .collect();
-    let commands: Vec<UiTreeItemNode> = FLOW_EXTENSIONS
+    let actions: Vec<UiTreeItemNode> = FLOW_EXTENSIONS
         .iter()
         .filter(|(id, ..)| runtime.extension_enabled.get(*id).copied().unwrap_or(false))
-        .map(|(_, _, command_id, title, _)| {
-            tree_item_with_command(
-                format!("flow-play-extensions.command.{command_id}"),
+        .map(|(_, _, action_id, title, _)| {
+            tree_item_with_action(
+                format!("flow-play-extensions.action.{action_id}"),
                 *title,
-                Some((*command_id).into()),
-                flow_cmd("runExtensionCommand", Some(json!({ "commandId": command_id }))),
+                Some((*action_id).into()),
+                flow_action("runExtensionAction", Some(json!({ "actionId": action_id }))),
             )
         })
         .collect();
@@ -524,12 +524,12 @@ fn flow_extensions_tree_sections(runtime: &FlowPlayRuntime) -> Vec<UiTreeSection
         default_open: Some(false),
         items: installed,
     }];
-    if !commands.is_empty() {
+    if !actions.is_empty() {
         sections.push(UiTreeSectionNode {
-            id: "flow-play-extensions.commands".into(),
-            label: Some("Extension Commands".into()),
+            id: "flow-play-extensions.actions".into(),
+            label: Some("Extension Actions".into()),
             default_open: Some(false),
-            items: commands,
+            items: actions,
         });
     }
     sections
@@ -548,11 +548,11 @@ fn catalogue_tree_sections_fallback() -> Vec<UiTreeSectionNode> {
                 .iter()
                 .map(|(kind, label)| {
                     let descriptor = flow_widget_descriptor(kind, None);
-                    tree_item_with_command_draggable(
+                    tree_item_with_action_draggable(
                         format!("flow-play-catalogue.source.{kind}"),
                         *label,
                         Some((*kind).into()),
-                        flow_cmd("addWidget", Some(descriptor.clone())),
+                        flow_action("addWidget", Some(descriptor.clone())),
                         &descriptor,
                     )
                 })
@@ -566,11 +566,11 @@ fn catalogue_tree_sections_fallback() -> Vec<UiTreeSectionNode> {
                 .iter()
                 .map(|(kind, label)| {
                     let descriptor = flow_widget_descriptor("neuron", Some(kind));
-                    tree_item_with_command_draggable(
+                    tree_item_with_action_draggable(
                         format!("flow-play-catalogue.component.{kind}"),
                         *label,
                         Some((*kind).into()),
-                        flow_cmd("addWidget", Some(descriptor.clone())),
+                        flow_action("addWidget", Some(descriptor.clone())),
                         &descriptor,
                     )
                 })
@@ -584,11 +584,11 @@ fn catalogue_tree_sections_fallback() -> Vec<UiTreeSectionNode> {
                 .iter()
                 .map(|(kind, label)| {
                     let descriptor = flow_widget_descriptor(kind, None);
-                    tree_item_with_command_draggable(
+                    tree_item_with_action_draggable(
                         format!("flow-play-catalogue.sink.{kind}"),
                         *label,
                         Some((*kind).into()),
-                        flow_cmd("addWidget", Some(descriptor.clone())),
+                        flow_action("addWidget", Some(descriptor.clone())),
                         &descriptor,
                     )
                 })
@@ -623,7 +623,7 @@ fn canvas_settings_field_group(runtime: &FlowPlayRuntime) -> UiInspectorFieldGro
                     value: runtime.lod_mode.clone(),
                     items: lod_items,
                     placeholder: None,
-                    on_change: flow_cmd("setLodMode", None),
+                    on_change: flow_action("setLodMode", None),
                 })),
                 description: None,
                 required: None,
@@ -638,7 +638,7 @@ fn canvas_settings_field_group(runtime: &FlowPlayRuntime) -> UiInspectorFieldGro
                     value: runtime.proximity_distance.to_string(),
                     placeholder: None,
                     commit: None,
-                    on_change: flow_cmd("setProximityDistance", None),
+                    on_change: flow_action("setProximityDistance", None),
                     min: None,
                     max: None,
                     step: None,
@@ -685,7 +685,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
                     value: if mixed.uniform { mixed.value.to_string() } else { String::new() },
                     placeholder: if mixed.uniform { None } else { Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into()) },
                     commit: None,
-                    on_change: flow_cmd("patchFlowWidgets", Some(json!({ "widgetIds": widget_ids, "field": "value" }))),
+                    on_change: flow_action("patchFlowWidgets", Some(json!({ "widgetIds": widget_ids, "field": "value" }))),
                     min: None,
                     max: None,
                     step: None,
@@ -712,7 +712,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
                     value: mixed.value,
                     placeholder: mixed.placeholder,
                     commit: Some("blur".into()),
-                    on_change: flow_cmd("patchFlowWidgets", Some(json!({ "widgetIds": widget_ids, "field": "text" }))),
+                    on_change: flow_action("patchFlowWidgets", Some(json!({ "widgetIds": widget_ids, "field": "text" }))),
                     min: None,
                     max: None,
                     step: None,
@@ -742,7 +742,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
                     value: widget_ids[0].clone(),
                     placeholder: None,
                     commit: Some("blur".into()),
-                    on_change: flow_cmd("renameFlowWidget", Some(json!({ "oldId": widget_ids[0] }))),
+                    on_change: flow_action("renameFlowWidget", Some(json!({ "oldId": widget_ids[0] }))),
                     min: None,
                     max: None,
                     step: None,
@@ -783,7 +783,7 @@ fn render_main_graph(envelope: &FlowPlayEnvelope) -> UiNode {
             editable: Some(true),
             operators_json: flow_extras.operators_json,
             context_menu_json: Some(
-                r#"[{"id":"delete-selection","label":"Delete selection","command":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
+                r#"[{"id":"delete-selection","label":"Delete selection","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
             ),
             find_items_json: None,
             capabilities_json: flow_extras.capabilities_json,
@@ -884,16 +884,16 @@ impl PluginApp for FlowPlayApp {
         serde_json::to_string(&default_envelope()).expect("flow envelope json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut envelope = parse_envelope(document_json);
         let host = self.host_for(&envelope);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value(next.clone()) {
@@ -1124,7 +1124,7 @@ impl PluginApp for FlowPlayApp {
                     .and_then(|value| value.as_array())
                     .cloned()
                     .unwrap_or_default();
-                if ops.is_empty() && command == "spotlightCommit" {
+                if ops.is_empty() && action == "spotlightCommit" {
                     if let Ok(eval_json) = host.evaluate() {
                         envelope.runtime.last_eval_json = eval_json;
                         envelope.fixture = host.fixture.clone();
@@ -1176,10 +1176,10 @@ impl PluginApp for FlowPlayApp {
             }
             "addGeneration" | "removeGeneration" | "selectGeneration" | "renameGeneration" | "updateGenerationValues" => {
                 let spec = flow_fixture_to_form_spec(&envelope.fixture);
-                if handle_generation_command(command, args, &mut envelope.generation, &spec, FLOW_PLAY_APP_ID) {
-                    if command == "addGeneration" && envelope.generation.generations.len() == 1 {
+                if handle_generation_action(action, args, &mut envelope.generation, &spec, FLOW_PLAY_APP_ID) {
+                    if action == "addGeneration" && envelope.generation.generations.len() == 1 {
                         refresh_generation_preview(&mut envelope);
-                    } else if command == "selectGeneration" || command == "updateGenerationValues" {
+                    } else if action == "selectGeneration" || action == "updateGenerationValues" {
                         refresh_generation_preview(&mut envelope);
                     }
                     return vec![set_document_op(&envelope)];
@@ -1213,10 +1213,10 @@ impl PluginApp for FlowPlayApp {
                     return vec![set_document_op(&envelope)];
                 }
             }
-            "runExtensionCommand" => {
-                let command_id = args.and_then(|value| value.get("commandId")).and_then(|value| value.as_str());
-                if let Some(command_id) = command_id {
-                    if let Some((id, _, _, _, effect)) = FLOW_EXTENSIONS.iter().find(|(_, _, cmd_id, ..)| *cmd_id == command_id) {
+            "runExtensionAction" => {
+                let action_id = args.and_then(|value| value.get("actionId")).and_then(|value| value.as_str());
+                if let Some(action_id) = action_id {
+                    if let Some((id, _, _, _, effect)) = FLOW_EXTENSIONS.iter().find(|(_, _, entry_action_id, ..)| *entry_action_id == action_id) {
                         if envelope.runtime.extension_enabled.get(*id).copied().unwrap_or(false) {
                             match *effect {
                                 "reorganize" => {
@@ -1404,7 +1404,7 @@ mod tests {
     fn evaluate_updates_preview_state() {
         let mut app = FlowPlayApp { host: None };
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("evaluate", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("evaluate", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated: FlowPlayEnvelope = serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
         assert!(!updated.runtime.last_eval_json.is_empty());
@@ -1416,7 +1416,7 @@ mod tests {
         let document = app.initial_document_json();
         let before: FlowPlayEnvelope = serde_json::from_str(&document).unwrap();
         let count_before = before.fixture.widgets.len();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "addWidget",
             Some(&json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 })),
             &document,
@@ -1424,7 +1424,7 @@ mod tests {
         );
         assert_eq!(ops.len(), 1);
         let after_add = serde_json::to_string(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"]).unwrap();
-        let undo_ops = app.handle_command_patch_ops("undo", None, &after_add, &ViewState::default());
+        let undo_ops = app.handle_action_patch_ops("undo", None, &after_add, &ViewState::default());
         let restored: FlowPlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&undo_ops[0]).unwrap()["document"].clone()).unwrap();
         assert_eq!(restored.fixture.widgets.len(), count_before);
@@ -1446,7 +1446,7 @@ mod tests {
     fn add_generation_evaluates_preview() {
         let mut app = FlowPlayApp { host: None };
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("addGeneration", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addGeneration", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated: FlowPlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
@@ -1454,9 +1454,9 @@ mod tests {
         assert!(updated.generation.preview_text.as_deref().unwrap_or("").len() > 2);
     }
 
-    fn document_after(app: &mut FlowPlayApp, document: &str, command: &str, args: Option<Value>) -> FlowPlayEnvelope {
-        let ops = app.handle_command_patch_ops(command, args.as_ref(), document, &ViewState::default());
-        assert_eq!(ops.len(), 1, "command {command} produced no op");
+    fn document_after(app: &mut FlowPlayApp, document: &str, action: &str, args: Option<Value>) -> FlowPlayEnvelope {
+        let ops = app.handle_action_patch_ops(action, args.as_ref(), document, &ViewState::default());
+        assert_eq!(ops.len(), 1, "action {action} produced no op");
         serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap()
     }
 
@@ -1464,7 +1464,7 @@ mod tests {
     fn set_lod_mode_rejects_unknown_and_accepts_known() {
         let mut app = FlowPlayApp { host: None };
         let document = app.initial_document_json();
-        assert!(app.handle_command_patch_ops("setLodMode", Some(&json!({ "mode": "bogus" })), &document, &ViewState::default()).is_empty());
+        assert!(app.handle_action_patch_ops("setLodMode", Some(&json!({ "mode": "bogus" })), &document, &ViewState::default()).is_empty());
         let next = document_after(&mut app, &document, "setLodMode", Some(json!({ "mode": "micro" })));
         assert_eq!(next.runtime.lod_mode, "micro");
         let node_graph = app.render(FLOW_PLAY_BODY_MAIN, &serde_json::to_string(&next).unwrap(), &ViewState::default());
@@ -1505,16 +1505,16 @@ mod tests {
     }
 
     #[test]
-    fn toggle_extension_and_run_command_reorganizes_fixture() {
+    fn toggle_extension_and_run_action_reorganizes_fixture() {
         let mut app = FlowPlayApp { host: None };
         let document = app.initial_document_json();
         assert!(app
-            .handle_command_patch_ops("runExtensionCommand", Some(&json!({ "commandId": "flow.extension.reorganize" })), &document, &ViewState::default())
+            .handle_action_patch_ops("runExtensionAction", Some(&json!({ "actionId": "flow.extension.reorganize" })), &document, &ViewState::default())
             .is_empty());
         let toggled = document_after(&mut app, &document, "toggleExtension", Some(json!({ "id": "auto-layout", "enabled": true })));
         assert_eq!(toggled.runtime.extension_enabled.get("auto-layout"), Some(&true));
         let toggled_json = serde_json::to_string(&toggled).unwrap();
-        let ran = document_after(&mut app, &toggled_json, "runExtensionCommand", Some(json!({ "commandId": "flow.extension.reorganize" })));
+        let ran = document_after(&mut app, &toggled_json, "runExtensionAction", Some(json!({ "actionId": "flow.extension.reorganize" })));
         assert_eq!(ran.fixture.widgets.len(), toggled.fixture.widgets.len());
     }
 }

@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 import { Table, type TableColumn } from "@semio-tech/ui-react";
-import type { CommandDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
+import type { ActionDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
 
 //#region TableHost
 type TableColumnRecord = { readonly id: string; readonly label: string };
 type TableRowRecord = Record<string, unknown>;
 
-export function TableHost({ node, onCommand }: { readonly node: UiComponentSceneNode; readonly onCommand: (command: CommandDescriptor) => void }) {
+export function TableHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
   const scene = node.table;
   const columns = useMemo(() => {
     if (!scene) return [] as TableColumnRecord[];
@@ -45,9 +45,9 @@ export function TableHost({ node, onCommand }: { readonly node: UiComponentScene
         emptyMessage="No rows"
         getRowId={(row, index) => String(row.id ?? row.programId ?? index)}
         onRowClick={(row) =>
-          onCommand({
+          onAction({
             controllerId: node.controllerId,
-            command: "selectRow",
+            action: "selectRow",
             args: { surfaceId: node.surfaceId, row },
           })
         }

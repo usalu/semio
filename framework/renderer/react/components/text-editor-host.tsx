@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ContextMenuController, Textarea, type ContextMenuItem } from "@semio-tech/ui-react";
 import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
-import type { CommandDescriptor, TextEditorScene, UiComponentSceneNode } from "../os-shell.tsx";
-import { textEditorCommands } from "../os-shell.tsx";
+import type { ActionDescriptor, TextEditorScene, UiComponentSceneNode } from "../os-shell.tsx";
+import { textEditorActions } from "../os-shell.tsx";
 import { createEditorSession, type EditorWasmSession } from "../os-shell.tsx";
 
 //#region Types
@@ -139,17 +139,17 @@ export function buildTextEditorContextMenuItems(
 //#endregion EditingHelpers
 
 //#region WasmEditorSurface
-function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { readonly scene: TextEditorScene; readonly controllerId: string; readonly surfaceId: string; readonly onCommand: (command: CommandDescriptor) => void }) {
+function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { readonly scene: TextEditorScene; readonly controllerId: string; readonly surfaceId: string; readonly onAction: (action: ActionDescriptor) => void }) {
   const sessionRef = useRef<FrameworkEditorSession | null>(null);
   const renameActiveRef = useRef(false);
   const lastHoverRangeRef = useRef<SpanRange | null>(null);
   const sceneJson = useMemo(() => JSON.stringify(scene), [scene]);
 
   const dispatch = useCallback(
-    (command: string, args?: Record<string, unknown>) => {
-      onCommand({ controllerId, command, args: { surfaceId, ...args } });
+    (action: string, args?: Record<string, unknown>) => {
+      onAction({ controllerId, action, args: { surfaceId, ...args } });
     },
-    [controllerId, onCommand, surfaceId],
+    [controllerId, onAction, surfaceId],
   );
 
   const syncSession = useCallback(() => {
@@ -169,7 +169,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
   const emitSelection = useCallback(() => {
     const session = sessionRef.current;
     if (!session) return;
-    dispatch(textEditorCommands.select, { start: session.anchor(), end: session.caret() });
+    dispatch(textEditorActions.select, { start: session.anchor(), end: session.caret() });
   }, [dispatch]);
 
   const [wasmSession, setWasmSession] = useState<FrameworkEditorSession | null>(null);
@@ -272,7 +272,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
       const prefixStart = identifierPrefixStart(text, caret);
       session.setSelectionRange(prefixStart, caret);
       session.replaceSelection(item.insertText ?? item.label);
-      dispatch(textEditorCommands.edit, { text: session.text() });
+      dispatch(textEditorActions.edit, { text: session.text() });
       session.renderFrame();
       emitSelection();
       setCompletionsOpen(false);
@@ -304,7 +304,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
 
   const commitRename = useCallback(() => {
     if (!renameDraft) return;
-    dispatch(textEditorCommands.commitRename, { occurrences: renameDraft.occurrences, text: renameDraft.text });
+    dispatch(textEditorActions.commitRename, { occurrences: renameDraft.occurrences, text: renameDraft.text });
     renameActiveRef.current = false;
     setRenameDraft(null);
     setRenamePosition(null);
@@ -368,7 +368,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
               lastHoverRangeRef.current = hover;
               if (hover) {
                 session.setHoverRange(hover.start, hover.end);
-                dispatch(textEditorCommands.hover, { start: hover.start, end: hover.end });
+                dispatch(textEditorActions.hover, { start: hover.start, end: hover.end });
               }
             }
           } catch {
@@ -434,7 +434,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
               cut: () => {
                 void navigator.clipboard.writeText(session.selectionText());
                 session.replaceSelection("");
-                dispatch(textEditorCommands.edit, { text: session.text() });
+                dispatch(textEditorActions.edit, { text: session.text() });
                 session.renderFrame();
                 emitSelection();
               },
@@ -444,12 +444,12 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
               paste: () => {
                 void navigator.clipboard.readText().then((text) => {
                   session.replaceSelection(text);
-                  dispatch(textEditorCommands.edit, { text: session.text() });
+                  dispatch(textEditorActions.edit, { text: session.text() });
                   session.renderFrame();
                   emitSelection();
                 });
               },
-              format: () => dispatch(textEditorCommands.formatDocument, {}),
+              format: () => dispatch(textEditorActions.formatDocument, {}),
               lint: () => dispatch("lintDocument", {}),
               pickTarget: (target) => {
                 if (target.domain === "token") {
@@ -527,7 +527,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
       <textarea
         className="absolute inset-0 resize-none bg-transparent font-mono text-xs text-transparent caret-foreground opacity-0"
         value={scene.buffer}
-        onChange={(event) => dispatch(textEditorCommands.edit, { text: event.target.value })}
+        onChange={(event) => dispatch(textEditorActions.edit, { text: event.target.value })}
         onKeyDown={(event) => {
           const session = sessionRef.current;
           if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
@@ -554,7 +554,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
           }
           if (event.key.toLowerCase() === "f" && event.shiftKey && (event.metaKey || event.ctrlKey)) {
             event.preventDefault();
-            dispatch(textEditorCommands.formatDocument, {});
+            dispatch(textEditorActions.formatDocument, {});
             return;
           }
           if (!session) return;
@@ -628,7 +628,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
           if (event.key === "Tab") {
             event.preventDefault();
             session.insertText(session.tabInsertText());
-            dispatch(textEditorCommands.edit, { text: session.text() });
+            dispatch(textEditorActions.edit, { text: session.text() });
             session.renderFrame();
             emitSelection();
             return;
@@ -638,7 +638,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
             const allowed = newlineGates == null || newlineGates.has(session.caret());
             if (allowed) {
               session.insertText("\n");
-              dispatch(textEditorCommands.edit, { text: session.text() });
+              dispatch(textEditorActions.edit, { text: session.text() });
               session.renderFrame();
               emitSelection();
             }
@@ -648,7 +648,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
           if (event.key.length === 1 && !event.metaKey && !event.ctrlKey && !event.altKey) {
             event.preventDefault();
             session.insertText(event.key);
-            dispatch(textEditorCommands.edit, { text: session.text() });
+            dispatch(textEditorActions.edit, { text: session.text() });
             session.renderFrame();
             emitSelection();
             return;
@@ -656,7 +656,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
           if (event.key === "Backspace") {
             event.preventDefault();
             session.backspace();
-            dispatch(textEditorCommands.edit, { text: session.text() });
+            dispatch(textEditorActions.edit, { text: session.text() });
             session.renderFrame();
             emitSelection();
             return;
@@ -664,7 +664,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onCommand }: { read
           if (event.key === "Delete") {
             event.preventDefault();
             session.deleteForward();
-            dispatch(textEditorCommands.edit, { text: session.text() });
+            dispatch(textEditorActions.edit, { text: session.text() });
             session.renderFrame();
             emitSelection();
           }
@@ -684,7 +684,7 @@ const useClient = () => {
   return client;
 };
 
-export function TextEditorHost({ node, onCommand }: { readonly node: UiComponentSceneNode; readonly onCommand: (command: CommandDescriptor) => void }) {
+export function TextEditorHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
   const scene = node.textEditor;
   const isClient = useClient();
   const tokens = useMemo((): readonly GrammarToken[] => {
@@ -709,7 +709,7 @@ export function TextEditorHost({ node, onCommand }: { readonly node: UiComponent
   return (
     <div className="semio-text-editor-host flex h-full min-h-[16rem] w-full flex-col bg-canvas" data-surface-id={node.surfaceId}>
       {isClient ? (
-        <WasmEditorSurface scene={scene} controllerId={node.controllerId} surfaceId={node.surfaceId} onCommand={onCommand} />
+        <WasmEditorSurface scene={scene} controllerId={node.controllerId} surfaceId={node.surfaceId} onAction={onAction} />
       ) : (
         <div className="relative min-h-0 flex-1">
           <HighlightedBuffer buffer={scene.buffer} tokens={tokens} />
@@ -721,9 +721,9 @@ export function TextEditorHost({ node, onCommand }: { readonly node: UiComponent
             value={scene.buffer}
             placeholder={scene.language ? `${scene.language} document` : "Document"}
             onLazyChange={(value) =>
-              onCommand({
+              onAction({
                 controllerId: node.controllerId,
-                command: textEditorCommands.edit,
+                action: textEditorActions.edit,
                 args: { surfaceId: node.surfaceId, text: value },
               })
             }

@@ -17,7 +17,7 @@ use crate::registry::{
     os_app_primary_output_kind, os_app_registration, PluginRegistry,
 };
 use semio_framework_core::{
-    AppDefinition, CommandContext, CommandDescriptor, CommandInvocation, CommandResult,
+    AppDefinition, ActionContext, ActionDescriptor, ActionInvocation, ActionResult,
     Contribution, HybridLogicalTimestamp, InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion,
     OperationId, PluginManifest, SchemaId, UiButtonNode, UiNode, UndoGroup, UndoPolicy, ViewState,
     ui_stack_vertical, ui_text,
@@ -258,10 +258,10 @@ impl PluginHost {
         self.instances.get_mut(&instance_id)
     }
 
-    pub fn commit_command_result(
+    pub fn commit_action_result(
         &mut self,
         instance_id: u32,
-        result: &CommandResult,
+        result: &ActionResult,
     ) -> Result<(), String> {
         let Some(instance) = self.instances.get_mut(&instance_id) else {
             return Err("instance not found".into());
@@ -277,12 +277,12 @@ impl PluginHost {
         }
         Ok(())
     }
-    pub fn invoke_command(
+    pub fn invoke_action(
         &mut self,
-        invocation: CommandInvocation,
-    ) -> Result<CommandResult, String> {
-        if invocation.command.0.trim().is_empty() {
-            return Err("command id must not be empty".into());
+        invocation: ActionInvocation,
+    ) -> Result<ActionResult, String> {
+        if invocation.action.0.trim().is_empty() {
+            return Err("action id must not be empty".into());
         }
         let instance_id: u32 = invocation
             .app
@@ -302,7 +302,7 @@ impl PluginHost {
         };
         let document_projection =
             serde_json::from_str(&document_json).unwrap_or(Value::Null);
-        let _context = CommandContext {
+        let _context = ActionContext {
             invocation: invocation.clone(),
             document_projection,
             view_state,
@@ -321,11 +321,11 @@ impl PluginHost {
         let operation_ids: Vec<OperationId> = operations.iter().map(|op| op.id.clone()).collect();
         let inverse_operations: Vec<InverseOperation> =
             operations.iter().map(|op| op.inverse.clone()).collect();
-        let result = CommandResult {
+        let result = ActionResult {
             output: invocation.input.clone(),
             operations,
             inverse_group: UndoGroup {
-                command_id: invocation.id.clone(),
+                action_id: invocation.id.clone(),
                 operations: operation_ids,
                 inverse_operations,
             },
@@ -333,11 +333,11 @@ impl PluginHost {
             requested_effects: vec![],
             events: vec![],
         };
-        self.commit_command_result(instance_id, &result)?;
+        self.commit_action_result(instance_id, &result)?;
         Ok(result)
     }
 
-    //#region 🔖CommandKernel
+    //#region 🔖ActionKernel
 
     pub fn recovery_ui(&self, plugin_id: &str) -> UiNode {
         let state = self
@@ -354,9 +354,9 @@ impl PluginHost {
                 id: Some("recovery-restart-app".into()),
                 icon_id: "restart".into(),
                 label: "Restart app".into(),
-                command: CommandDescriptor {
+                action: ActionDescriptor {
                     controller_id: plugin_id.into(),
-                    command: "recovery.restartApp".into(),
+                    action: "recovery.restartApp".into(),
                     args: None,
                 },
                 style: None,
@@ -366,9 +366,9 @@ impl PluginHost {
                 id: Some("recovery-disable-plugin".into()),
                 icon_id: "disable".into(),
                 label: "Disable plugin".into(),
-                command: CommandDescriptor {
+                action: ActionDescriptor {
                     controller_id: plugin_id.into(),
-                    command: "recovery.disablePlugin".into(),
+                    action: "recovery.disablePlugin".into(),
                     args: None,
                 },
                 style: None,
@@ -378,9 +378,9 @@ impl PluginHost {
                 id: Some("recovery-show-diagnostics".into()),
                 icon_id: "diagnostics".into(),
                 label: "Show diagnostics".into(),
-                command: CommandDescriptor {
+                action: ActionDescriptor {
                     controller_id: plugin_id.into(),
-                    command: "recovery.showDiagnostics".into(),
+                    action: "recovery.showDiagnostics".into(),
                     args: None,
                 },
                 style: None,
@@ -388,7 +388,7 @@ impl PluginHost {
             }),
         ])
     }
-    //#endregion 🔖CommandKernel
+    //#endregion 🔖ActionKernel
 
     pub fn set_view_state(&mut self, instance_id: u32, view_state: ViewState) {
         if let Some(instance) = self.instances.get_mut(&instance_id) {
@@ -586,7 +586,7 @@ fn extract_patch_ops(input: &Value) -> Vec<String> {
 }
 
 fn kernel_operation_from_patch_op(
-    invocation: &CommandInvocation,
+    invocation: &ActionInvocation,
     op_json: &str,
     index: usize,
     base_version: DocumentVersion,
@@ -602,7 +602,7 @@ fn kernel_operation_from_patch_op(
         id: operation_id.clone(),
         document,
         base_version,
-        command_id: invocation.id.clone(),
+        action_id: invocation.id.clone(),
         diff: DocumentDiff {
             schema_id: SchemaId(JSON_PATCH_SCHEMA_ID.into()),
             payload,
@@ -1724,7 +1724,7 @@ mod tests {
     use crate::registry::{merge_os_program_definition, os_baseline_resource, OsPlatformAppInput, OsPlatformInput};
     use crate::media_graph::{empty_media_graph, validate_media_graph};
     use semio_framework_core::{
-        ActorId, AppInstanceId, CommandId, CommandInvocationId, ModeDefinition, PluginManifest,
+        ActorId, AppInstanceId, ActionId, ActionInvocationId, ModeDefinition, PluginManifest,
         WindowKindDefinition,
         SurfaceKind,
     };
@@ -1767,7 +1767,7 @@ mod tests {
                 }],
                 panel_tabs: vec![],
                 keybindings: vec![],
-                commands: vec![],
+                actions: vec![],
                 named_layouts: Vec::new(),
                 default_layout: None,
                 terminologies: Vec::new(),
@@ -1817,7 +1817,7 @@ mod tests {
             }],
             panel_tabs: vec![],
             keybindings: vec![],
-            commands: vec![],
+            actions: vec![],
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
@@ -1851,7 +1851,7 @@ mod tests {
             }],
             panel_tabs: vec![],
             keybindings: vec![],
-            commands: vec![],
+            actions: vec![],
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
@@ -1929,7 +1929,7 @@ mod tests {
             }],
             panel_tabs: vec![],
             keybindings: vec![],
-            commands: vec![],
+            actions: vec![],
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
@@ -2024,7 +2024,7 @@ mod tests {
     }
 
     #[test]
-    fn invoke_command_applies_patch_ops_and_returns_kernel_operations() {
+    fn invoke_action_applies_patch_ops_and_returns_kernel_operations() {
         let mut host = PluginHost::new();
         let manifest = PluginManifest {
             plugin_id: "draw".into(),
@@ -2059,7 +2059,7 @@ mod tests {
                 }],
                 panel_tabs: vec![],
                 keybindings: vec![],
-                commands: vec![],
+                actions: vec![],
                 named_layouts: Vec::new(),
                 default_layout: None,
                 terminologies: Vec::new(),
@@ -2081,10 +2081,10 @@ mod tests {
         })
         .to_string();
         let result = host
-            .invoke_command(CommandInvocation {
-                id: CommandInvocationId("invoke-1".into()),
+            .invoke_action(ActionInvocation {
+                id: ActionInvocationId("invoke-1".into()),
                 app: AppInstanceId(instance_id.to_string()),
-                command: CommandId("setTitle".into()),
+                action: ActionId("setTitle".into()),
                 input: serde_json::json!({ "ops": [patch_op] }),
                 actor: ActorId("tester".into()),
                 causal_context: vec![],
@@ -5040,7 +5040,7 @@ pub fn resolve_os_app_definition(
         window_kinds: Vec::new(),
         panel_tabs: Vec::new(),
         keybindings: Vec::new(),
-        commands: Vec::new(),
+        actions: Vec::new(),
         named_layouts: Vec::new(),
         default_layout: None,
         terminologies: Vec::new(),

@@ -41,9 +41,9 @@ export type CanvasHoverFocus = {
   readonly target: CanvasPickTarget | null;
 };
 
-export type CommandDescriptor = {
+export type ActionDescriptor = {
   readonly controllerId: string;
-  readonly command: string;
+  readonly action: string;
   readonly args?: unknown;
 };
 
@@ -86,7 +86,7 @@ export enum Expertise {
   EXPERT = "expert",
 }
 
-export type ToolCategory = "selection" | "tools" | "commands" | "history" | "sync";
+export type ToolCategory = "selection" | "tools" | "actions" | "history" | "sync";
 
 export type ToolLeaf =
   | { readonly id: string; readonly kind: "separator"; readonly order?: number; readonly disabled?: boolean }
@@ -101,7 +101,7 @@ export type ToolLeaf =
       readonly disabled?: boolean;
       readonly category?: ToolCategory;
       readonly controllerId?: string;
-      readonly command?: string;
+      readonly action?: string;
       readonly args?: unknown;
     }
   | {
@@ -116,7 +116,7 @@ export type ToolLeaf =
       readonly disabled?: boolean;
       readonly category?: ToolCategory;
       readonly controllerId?: string;
-      readonly command?: string;
+      readonly action?: string;
       readonly args?: unknown;
     };
 
@@ -150,7 +150,7 @@ export type UiTreeItemNode = {
   readonly icon?: string;
   readonly selected?: boolean;
   readonly defaultOpen?: boolean;
-  readonly command?: CommandDescriptor;
+  readonly action?: ActionDescriptor;
   readonly draggable?: boolean;
   readonly dragData?: Readonly<Record<string, string>>;
   readonly items?: readonly UiTreeItemNode[];
@@ -170,7 +170,7 @@ export type UiTreeNode = {
   readonly sections: readonly UiTreeSectionNode[];
   readonly selectedIds?: readonly string[];
   readonly highlightedIds?: readonly string[];
-  readonly selectionChange?: CommandDescriptor;
+  readonly selectionChange?: ActionDescriptor;
 };
 
 export type UiControlNode = UiInputNode | UiSelectNode | UiToggleNode | UiVec3Node | UiButtonNode | UiKeyValueNode | UiSliderNode | UiNumberStepperNode | UiRingNode | UiIconSelectNode;
@@ -182,7 +182,7 @@ export type UiInputNode = {
   readonly value: string;
   readonly placeholder?: string;
   readonly commit?: "change" | "blur";
-  readonly onChange: CommandDescriptor;
+  readonly onChange: ActionDescriptor;
 };
 
 export type UiSelectNode = {
@@ -191,7 +191,7 @@ export type UiSelectNode = {
   readonly value: string;
   readonly items: readonly { readonly value: string; readonly label: string }[];
   readonly placeholder?: string;
-  readonly onChange: CommandDescriptor;
+  readonly onChange: ActionDescriptor;
 };
 
 export type UiToggleNode = {
@@ -200,14 +200,14 @@ export type UiToggleNode = {
   readonly iconId: string;
   readonly pressed: boolean;
   readonly text?: string;
-  readonly onChange: CommandDescriptor;
+  readonly onChange: ActionDescriptor;
 };
 
 export type UiVec3Node = {
   readonly type: "vec3";
   readonly id: string;
   readonly value: readonly [number, number, number] | null;
-  readonly onChange: CommandDescriptor;
+  readonly onChange: ActionDescriptor;
 };
 
 export type UiKeyValueNode = {
@@ -222,7 +222,7 @@ export type UiSliderNode = {
   readonly min: number;
   readonly max: number;
   readonly step: number;
-  readonly onChange: CommandDescriptor;
+  readonly onChange: ActionDescriptor;
 };
 
 export type UiNumberStepperNode = {
@@ -231,8 +231,8 @@ export type UiNumberStepperNode = {
   readonly value: number;
   readonly step: number;
   readonly uniform: boolean;
-  readonly onAbsolute: CommandDescriptor;
-  readonly onDelta: CommandDescriptor;
+  readonly onAbsolute: ActionDescriptor;
+  readonly onDelta: ActionDescriptor;
 };
 
 export type UiRingNode = {
@@ -241,7 +241,7 @@ export type UiRingNode = {
   readonly orbId: string;
   readonly t: number;
   readonly disabled?: boolean;
-  readonly onChange: CommandDescriptor;
+  readonly onChange: ActionDescriptor;
 };
 
 export type UiIconSelectNode = {
@@ -250,7 +250,7 @@ export type UiIconSelectNode = {
   readonly value: string;
   readonly uniform: boolean;
   readonly classifierKind: "puzzle2d";
-  readonly onChange: CommandDescriptor;
+  readonly onChange: ActionDescriptor;
 };
 
 export type UiFieldNode = {
@@ -265,7 +265,7 @@ export type UiButtonNode = {
   readonly id?: string;
   readonly iconId: string;
   readonly label: string;
-  readonly command: CommandDescriptor;
+  readonly action: ActionDescriptor;
 };
 
 export type UiTextNode = {
@@ -574,12 +574,12 @@ function uiDeclarativeChildToTreeItem(node: UiNode, fallbackId: string): UiTreeI
 }
 
 //#region PluginRuntime
-export type CommandKind = "operation" | "view" | "history" | "shell";
+export type ActionKind = "operation" | "view" | "history" | "shell";
 
-export type CommandDefinition = {
+export type ActionDefinition = {
   readonly id: string;
   readonly label: string;
-  readonly kind: CommandKind;
+  readonly kind: ActionKind;
   readonly iconId?: string;
   readonly argsSchema?: unknown;
   readonly keys?: string;
@@ -587,9 +587,9 @@ export type CommandDefinition = {
   readonly category?: string;
 };
 
-/** @emoji 🕹️ Mirrors `semio_framework_core::history_command_definitions` — the six framework-owned
- * History commands every app receives, used by the shell to render the same set without a wasm round trip. */
-export const HISTORY_COMMAND_IDS = [
+/** @emoji 🕹️ Mirrors `semio_framework_core::history_action_definitions` — the six framework-owned
+ * History actions every app receives, used by the shell to render the same set without a wasm round trip. */
+export const HISTORY_ACTION_IDS = [
   "undo",
   "redo",
   "commitCheckpoint",
@@ -644,7 +644,7 @@ export type PluginWasmHandle = {
   readonly manifest: PluginManifest;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
-  readonly handleCommand: (instanceId: number, commandJson: string, viewState: PluginViewState) => Promise<string[]>;
+  readonly handleAction: (instanceId: number, actionJson: string, viewState: PluginViewState) => Promise<string[]>;
   readonly render: (instanceId: number, bodyKey: string, viewState: PluginViewState) => Promise<PluginUiNode>;
   readonly renderWithDocument?: (instanceId: number, bodyKey: string, viewState: PluginViewState, documentJson: string) => Promise<PluginUiNode>;
   readonly tools: (instanceId: number, viewState: PluginViewState) => Promise<readonly Record<string, unknown>[]>;
@@ -772,12 +772,12 @@ type KernelOperationPayload = {
   };
 };
 
-type CommandResultPayload = {
+type ActionResultPayload = {
   readonly operations?: readonly KernelOperationPayload[];
 };
 
-/** @emoji 🔧 Normalizes plugin command responses into legacy JSON patch op strings. */
-export function patchOpsFromCommandResponse(raw: string): string[] {
+/** @emoji 🔧 Normalizes plugin action responses into legacy JSON patch op strings. */
+export function patchOpsFromActionResponse(raw: string): string[] {
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
@@ -788,7 +788,7 @@ export function patchOpsFromCommandResponse(raw: string): string[] {
     return parsed.map((entry) => (typeof entry === "string" ? entry : JSON.stringify(entry)));
   }
   if (parsed && typeof parsed === "object") {
-    const result = parsed as CommandResultPayload;
+    const result = parsed as ActionResultPayload;
     if (Array.isArray(result.operations)) {
       return result.operations
         .map((operation) => operation?.diff?.payload)
@@ -829,7 +829,7 @@ export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): Plugin
     manifest: handle.manifest,
     createApp: (appId) => runSerialized(() => handle.createApp(appId)),
     destroyApp: (instanceId) => runSerialized(() => handle.destroyApp(instanceId)),
-    handleCommand: (instanceId, commandJson, viewState) => runSerialized(() => handle.handleCommand(instanceId, commandJson, viewState)),
+    handleAction: (instanceId, actionJson, viewState) => runSerialized(() => handle.handleAction(instanceId, actionJson, viewState)),
     render: (instanceId, bodyKey, viewState) => runSerialized(() => handle.render(instanceId, bodyKey, viewState)),
     renderWithDocument: handle.renderWithDocument ? (instanceId, bodyKey, viewState, documentJson) => runSerialized(() => handle.renderWithDocument!(instanceId, bodyKey, viewState, documentJson)) : undefined,
     tools: (instanceId, viewState) => runSerialized(() => handle.tools(instanceId, viewState)),
@@ -862,7 +862,7 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
       manifest: () => Promise<string>;
       createApp: (appId: string) => Promise<number>;
       destroyApp?: (instanceId: number) => Promise<void>;
-      handleCommand: (instanceId: number, commandJson: string, contextJson: string) => Promise<string>;
+      handleAction: (instanceId: number, actionJson: string, contextJson: string) => Promise<string>;
       render: (instanceId: number, bodyKey: string, viewStateJson: string) => Promise<string>;
       renderWithDocument?: (instanceId: number, bodyKey: string, viewStateJson: string, documentJson: string) => Promise<string>;
       tools?: (instanceId: number, viewStateJson: string) => Promise<string>;
@@ -872,7 +872,7 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
     semio_plugin_manifest?: () => string;
     semio_plugin_create_app?: (appId: string) => number;
     semio_plugin_destroy_app?: (instanceId: number) => void;
-    semio_plugin_handle_command?: (instanceId: number, commandJson: string, viewStateJson: string) => string;
+    semio_plugin_handle_action?: (instanceId: number, actionJson: string, viewStateJson: string) => string;
     semio_plugin_render?: (instanceId: number, bodyKey: string, viewStateJson: string) => string;
     semio_plugin_tools?: (instanceId: number, viewStateJson: string) => string;
     semio_plugin_window_engagements?: (instanceId: number, viewStateJson: string) => string;
@@ -889,9 +889,9 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
       destroyApp: async (instanceId) => {
         await api.destroyApp?.(instanceId);
       },
-      handleCommand: async (instanceId, commandJson, viewState) => {
-        const raw = await api.handleCommand(instanceId, commandJson, JSON.stringify(viewState));
-        return patchOpsFromCommandResponse(raw);
+      handleAction: async (instanceId, actionJson, viewState) => {
+        const raw = await api.handleAction(instanceId, actionJson, JSON.stringify(viewState));
+        return patchOpsFromActionResponse(raw);
       },
       render: async (instanceId, bodyKey, viewState) => JSON.parse(await api.render(instanceId, bodyKey, JSON.stringify(viewState))) as PluginUiNode,
       renderWithDocument: api.renderWithDocument ? async (instanceId, bodyKey, viewState, documentJson) => JSON.parse(await api.renderWithDocument!(instanceId, bodyKey, JSON.stringify(viewState), documentJson)) as PluginUiNode : undefined,
@@ -925,11 +925,11 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
     async destroyApp(instanceId: number) {
       module.semio_plugin_destroy_app?.(instanceId);
     },
-    async handleCommand(instanceId: number, commandJson: string, viewState: PluginViewState) {
-      const handle = module.semio_plugin_handle_command;
+    async handleAction(instanceId: number, actionJson: string, viewState: PluginViewState) {
+      const handle = module.semio_plugin_handle_action;
       if (!handle) return [];
-      const raw = handle(instanceId, commandJson, JSON.stringify(viewState));
-      return patchOpsFromCommandResponse(raw);
+      const raw = handle(instanceId, actionJson, JSON.stringify(viewState));
+      return patchOpsFromActionResponse(raw);
     },
     async render(instanceId: number, bodyKey: string, viewState: PluginViewState) {
       const render = module.semio_plugin_render;
@@ -964,7 +964,7 @@ export function pluginHandleForBridge(handle: PluginWasmHandle) {
     manifest: () => JSON.stringify(handle.manifest),
     createApp: (appId: string) => handle.createApp(appId),
     destroyApp: (instanceId: number) => handle.destroyApp(instanceId),
-    handleCommand: (instanceId: number, commandJson: string, viewStateJson: string) => handle.handleCommand(instanceId, commandJson, JSON.parse(viewStateJson) as PluginViewState).then((ops) => JSON.stringify(ops)),
+    handleAction: (instanceId: number, actionJson: string, viewStateJson: string) => handle.handleAction(instanceId, actionJson, JSON.parse(viewStateJson) as PluginViewState).then((ops) => JSON.stringify(ops)),
     render: (instanceId: number, bodyKey: string, viewStateJson: string) => handle.render(instanceId, bodyKey, JSON.parse(viewStateJson) as PluginViewState).then((node) => JSON.stringify(node)),
     renderWithDocument: handle.renderWithDocument
       ? (instanceId: number, bodyKey: string, viewStateJson: string, documentJson: string) => handle.renderWithDocument!(instanceId, bodyKey, JSON.parse(viewStateJson) as PluginViewState, documentJson).then((node) => JSON.stringify(node))

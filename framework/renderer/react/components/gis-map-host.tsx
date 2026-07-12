@@ -14,7 +14,7 @@ import {
   type SelectionMergeMode,
   type SelectionMarqueeMethod,
 } from "@semio-tech/ui-react";
-import type { CommandDescriptor, GisMapScene, MapWasmSession, UiComponentSceneNode } from "../os-shell.tsx";
+import type { ActionDescriptor, GisMapScene, MapWasmSession, UiComponentSceneNode } from "../os-shell.tsx";
 import { createMapSession } from "../os-shell.tsx";
 
 //#region Types
@@ -503,7 +503,7 @@ class MapRenderer {
 //#endregion MapRenderer
 
 //#region ContextMenu
-function buildGisMapContextMenuItems(scene: GisMapScene, feature: MapHoveredFeature | null, dispatch: (command: string, args?: Record<string, unknown>) => void): ContextMenuItem[] {
+function buildGisMapContextMenuItems(scene: GisMapScene, feature: MapHoveredFeature | null, dispatch: (action: string, args?: Record<string, unknown>) => void): ContextMenuItem[] {
   const selection = parseFeatureSelection(scene.selectionJson);
   if (feature) {
     const selected = feature.kind === "position" ? selection.positions.includes(feature.id) : selection.routes.includes(feature.id);
@@ -557,7 +557,7 @@ function buildGisMapContextMenuItems(scene: GisMapScene, feature: MapHoveredFeat
 //#endregion ContextMenu
 
 //#region GisMapHost
-export function GisMapHost({ node, onCommand }: { readonly node: UiComponentSceneNode; readonly onCommand: (command: CommandDescriptor) => void }) {
+export function GisMapHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
   const scene = node.gisMap;
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -579,10 +579,10 @@ export function GisMapHost({ node, onCommand }: { readonly node: UiComponentScen
   const selectionMethod = (scene?.selectionMethod ?? "rectangle") as SelectionMarqueeMethod;
 
   const dispatch = useCallback(
-    (command: string, args?: Record<string, unknown>) => {
-      onCommand({ controllerId: node.controllerId, command, args: { surfaceId: node.surfaceId, ...args } });
+    (action: string, args?: Record<string, unknown>) => {
+      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
     },
-    [node.controllerId, node.surfaceId, onCommand],
+    [node.controllerId, node.surfaceId, onAction],
   );
 
   const dispatchCamera = useCallback(

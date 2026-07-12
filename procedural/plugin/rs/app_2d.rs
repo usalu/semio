@@ -3,10 +3,10 @@
 use flow_core::{dag::DagFixture, flow_backed_node_graph_extras, flow_neuron_kind_infos_json, forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec}, FlowFixture, FlowHost, Widget};
 use flow_module_draw::render_scene_json;
 use semio_framework_plugin::{SurfaceKind, PanelGroup, 
-    build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout, handle_generation_command,
+    build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout, handle_generation_action,
     render_generation_form_body, render_generation_preview_text, render_generations_tree, selected_generation,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical,
-    ui_text, App, Canvas2dScene, CommandDescriptor, GenerationPlayState, NodeGraphScene, PluginApp, PluginBundle,
+    ui_text, App, Canvas2dScene, ActionDescriptor, GenerationPlayState, NodeGraphScene, PluginApp, PluginBundle,
     UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -89,10 +89,10 @@ fn set_document_op(envelope: &Procedural2dPlayEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
 }
 
-fn procedural2d_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn procedural2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: PROCEDURAL2D_PLAY_APP_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -388,7 +388,7 @@ fn refresh_generation_preview(play: &mut Procedural2dPlayEnvelope) {
 //#endregion 🔖DocumentHelpers
 
 //#region 🔖Panels
-fn tree_item(id: impl Into<String>, label: impl Into<String>, command: Option<CommandDescriptor>) -> UiTreeItemNode {
+fn tree_item(id: impl Into<String>, label: impl Into<String>, action: Option<ActionDescriptor>) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
         label: label.into(),
@@ -396,10 +396,10 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>, command: Option<Co
         icon_id: None,
         selected: None,
         default_open: None,
-        hover_command: None,
-        unhover_command: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
-        command,
+        action,
         draggable: None,
         drag_data: None,
         items: None,
@@ -418,7 +418,7 @@ fn build_document_tree(play: &Procedural2dPlayEnvelope) -> UiNode {
             tree_item(
                 format!("procedural2d-play-document.widget.{id}"),
                 id.clone(),
-                Some(procedural2d_cmd("setSelection", Some(json!({ "ids": [id] })))),
+                Some(procedural2d_action("setSelection", Some(json!({ "ids": [id] })))),
             )
         })
         .collect();
@@ -441,8 +441,8 @@ fn build_document_tree(play: &Procedural2dPlayEnvelope) -> UiNode {
                 .collect(),
         ),
         highlighted_ids: None,
-        selection_change: Some(procedural2d_cmd("setSelection", None)),
-        drop_command: None,
+        selection_change: Some(procedural2d_action("setSelection", None)),
+        drop_action: None,
     })
 }
 
@@ -462,7 +462,7 @@ fn build_catalogue_tree() -> UiNode {
                         tree_item(
                             format!("procedural2d-play-catalogue.source.{kind}"),
                             *label,
-                            Some(procedural2d_cmd("addWidget", Some(json!({ "kind": kind })))),
+                            Some(procedural2d_action("addWidget", Some(json!({ "kind": kind })))),
                         )
                     })
                     .collect(),
@@ -477,7 +477,7 @@ fn build_catalogue_tree() -> UiNode {
                         tree_item(
                             format!("procedural2d-play-catalogue.component.{kind}"),
                             *label,
-                            Some(procedural2d_cmd(
+                            Some(procedural2d_action(
                                 "addWidget",
                                 Some(json!({ "kind": "neuron", "neuronKind": kind })),
                             )),
@@ -495,7 +495,7 @@ fn build_catalogue_tree() -> UiNode {
                         tree_item(
                             format!("procedural2d-play-catalogue.sink.{kind}"),
                             *label,
-                            Some(procedural2d_cmd("addWidget", Some(json!({ "kind": kind })))),
+                            Some(procedural2d_action("addWidget", Some(json!({ "kind": kind })))),
                         )
                     })
                     .collect(),
@@ -510,7 +510,7 @@ fn build_catalogue_tree() -> UiNode {
                         tree_item(
                             format!("procedural2d-play-catalogue.mode.{mode}"),
                             format!("Show {mode}"),
-                            Some(procedural2d_cmd("setShowMode", Some(json!({ "value": mode })))),
+                            Some(procedural2d_action("setShowMode", Some(json!({ "value": mode })))),
                         )
                     })
                     .collect(),
@@ -519,7 +519,7 @@ fn build_catalogue_tree() -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -566,7 +566,7 @@ fn render_main_graph(play: &Procedural2dPlayEnvelope) -> UiNode {
             fixture_json: flow_extras.fixture_json,
             selection_json,
             context_menu_json: Some(
-                r#"[{"id":"delete-selection","label":"Delete selection","command":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
+                r#"[{"id":"delete-selection","label":"Delete selection","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
             ),
             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
         },
@@ -665,15 +665,15 @@ impl PluginApp for Procedural2dPlayApp {
         serde_json::to_string(&default_envelope()).expect("procedural2d envelope json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut play = parse_envelope(document_json);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(document) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value::<Procedural2dPlayEnvelope>(document.clone()) {
@@ -854,8 +854,8 @@ impl PluginApp for Procedural2dPlayApp {
             "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "canvasWheel" => {}
             "addGeneration" | "removeGeneration" | "selectGeneration" | "renameGeneration" | "updateGenerationValues" => {
                 let spec = flow_fixture_to_form_spec(&play.fixture);
-                if handle_generation_command(command, args, &mut play.generation, &spec, PROCEDURAL2D_PLAY_APP_ID) {
-                    if matches!(command, "addGeneration" | "selectGeneration" | "updateGenerationValues") {
+                if handle_generation_action(action, args, &mut play.generation, &spec, PROCEDURAL2D_PLAY_APP_ID) {
+                    if matches!(action, "addGeneration" | "selectGeneration" | "updateGenerationValues") {
                         refresh_generation_preview(&mut play);
                     }
                     return vec![set_document_op(&play)];
@@ -1023,10 +1023,10 @@ mod tests {
     }
 
     #[test]
-    fn generate_command_sets_eval_outputs() {
+    fn generate_action_sets_eval_outputs() {
         let mut app = Procedural2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("generate", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("generate", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: Procedural2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
@@ -1037,7 +1037,7 @@ mod tests {
     fn set_show_mode_updates_runtime() {
         let mut app = Procedural2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("setShowMode", Some(&json!({ "value": "wire" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setShowMode", Some(&json!({ "value": "wire" })), &document, &ViewState::default());
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: Procedural2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
         assert_eq!(next.runtime.show_mode, "wire");
@@ -1055,7 +1055,7 @@ mod tests {
     fn add_generation_evaluates_preview() {
         let mut app = Procedural2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("addGeneration", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addGeneration", None, &document, &ViewState::default());
         let updated: Procedural2dPlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
         assert_eq!(updated.generation.generations.len(), 1);

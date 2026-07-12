@@ -5,15 +5,15 @@ interface types {
     json: string,
   }
 
-  record command-invocation-json {
+  record action-invocation-json {
     json: string,
   }
 
-  record command-context-json {
+  record action-context-json {
     json: string,
   }
 
-  record command-response-json {
+  record action-response-json {
     json: string,
   }
 
@@ -55,9 +55,9 @@ interface types {
 interface plugin {
   use types.{
     plugin-manifest-json,
-    command-invocation-json,
-    command-context-json,
-    command-response-json,
+    action-invocation-json,
+    action-context-json,
+    action-response-json,
     window-input-json,
     window-output-json,
     plugin-tools-json,
@@ -70,26 +70,26 @@ interface plugin {
 
   manifest: func() -> plugin-manifest-json;
   instantiate-app: func(app-id: string, instance-id: string) -> result<u32, plugin-error>;
-  handle-command: func(
+  handle-action: func(
     instance-id: u32,
-    command: command-invocation-json,
-    context: command-context-json,
-  ) -> result<command-response-json, plugin-error>;
+    action: action-invocation-json,
+    context: action-context-json,
+  ) -> result<action-response-json, plugin-error>;
   update-window: func(
     instance-id: u32,
     input: window-input-json,
   ) -> result<window-output-json, plugin-error>;
   list-tools: func(
     instance-id: u32,
-    context: command-context-json,
+    context: action-context-json,
   ) -> result<plugin-tools-json, plugin-error>;
   window-engagements: func(
     instance-id: u32,
-    context: command-context-json,
+    context: action-context-json,
   ) -> result<plugin-window-engagements-json, plugin-error>;
   window-measures: func(
     instance-id: u32,
-    context: command-context-json,
+    context: action-context-json,
   ) -> result<plugin-window-measures-json, plugin-error>;
   migrate-document: func(input: migrate-document-input) -> result<migrate-document-output, plugin-error>;
 }
@@ -100,7 +100,7 @@ interface host {
   read-document: func(handle: u64) -> result<string, string>;
   write-document: func(handle: u64, payload-json: string) -> result<_, string>;
   open-window: func(kind: string, params-json: string) -> result<u64, string>;
-  invoke-command: func(target: string, invocation-json: string) -> result<string, string>;
+  invoke-action: func(target: string, invocation-json: string) -> result<string, string>;
   read-asset: func(handle: u64) -> result<list<u8>, string>;
   network-fetch: func(origin: string, path: string) -> result<list<u8>, string>;
   backbone-read: func(uri: string) -> result<string, string>;

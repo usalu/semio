@@ -4,7 +4,7 @@ use imperative_core::{default_document, Dictionary, ImperativeDocument, Imperati
 use imperative_engine::Step;
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_table_scene, build_text_editor_scene, create_stack_layout, ui_declarative_sections_to_tree,
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, CommandDescriptor, PluginApp, PluginBundle,
+    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, ActionDescriptor, PluginApp, PluginBundle,
     TableScene, TextEditorScene, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -116,7 +116,7 @@ fn next_step_id(document: &ImperativeDocument) -> String {
     format!("step-{}", max_suffix(&document.path.steps) + 1)
 }
 
-/// 📍 Reads `owner`/`slot` off command args into a [`imperative_core::PathRef`] so nested
+/// 📍 Reads `owner`/`slot` off action args into a [`imperative_core::PathRef`] so nested
 /// control-step bodies (e.g. `control.if` then/else) resolve correctly; falls back to the root
 /// path unless both are present and `owner` names a real top-level step, avoiding an unresolvable
 /// or unknown reference that would otherwise panic the host.
@@ -152,9 +152,9 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         icon_id: None,
         selected: None,
         default_open: None,
-        command: None,
-        hover_command: None,
-        unhover_command: None,
+        action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -164,7 +164,7 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
     }
 }
 
-fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, description: Option<String>, command: CommandDescriptor) -> UiTreeItemNode {
+fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
         label: label.into(),
@@ -172,9 +172,9 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
         icon_id: None,
         selected: None,
         default_open: None,
-        command: Some(command),
-        hover_command: None,
-        unhover_command: None,
+        action: Some(action),
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -184,10 +184,10 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
     }
 }
 
-fn imperative_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn imperative_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: IMPERATIVE_PLAY_APP_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -201,11 +201,11 @@ fn build_document_tree(document: &ImperativeDocument, selected: &[String]) -> Ui
         .iter()
         .enumerate()
         .map(|(index, step)| {
-            tree_item_with_command(
+            tree_item_with_action(
                 format!("imperative-play-document.step.{}", step.id),
                 format!("{}. {}", index + 1, step.kind),
                 Some(step.id.clone()),
-                imperative_cmd("setSelection", Some(json!({ "ids": [step.id.clone()] }))),
+                imperative_action("setSelection", Some(json!({ "ids": [step.id.clone()] }))),
             )
         })
         .collect();
@@ -223,7 +223,7 @@ fn build_document_tree(document: &ImperativeDocument, selected: &[String]) -> Ui
         selected_ids: Some(selected.iter().map(|id| format!("imperative-play-document.step.{id}")).collect()),
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -243,11 +243,11 @@ fn build_catalogue_tree() -> UiNode {
             items: actions
                 .iter()
                 .map(|(kind, label)| {
-                    tree_item_with_command(
+                    tree_item_with_action(
                         format!("imperative-play-catalogue.action.{kind}"),
                         *label,
                         Some((*kind).into()),
-                        imperative_cmd("addStep", Some(json!({ "kind": kind }))),
+                        imperative_action("addStep", Some(json!({ "kind": kind }))),
                     )
                 })
                 .collect(),
@@ -255,7 +255,7 @@ fn build_catalogue_tree() -> UiNode {
         selected_ids: Some(vec![]),
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -350,15 +350,15 @@ impl PluginApp for ImperativePlayApp {
         serde_json::to_string(&default_envelope()).expect("imperative envelope json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut play = parse_envelope(document_json);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value(next.clone()) {
@@ -513,9 +513,9 @@ fn create_imperative_app() -> App {
             .operation("moveStepAt", "Move Step At")
             .operation("setStepParams", "Set Step Params")
             .operation("setStepParamsAt", "Set Step Params At")
-            .view_command("setSelection", "Set Selection")
-            .view_command("run", "Run")
-            .shell_command("setDocument", "Set Document")
+            .view_action("setSelection", "Set Selection")
+            .view_action("run", "Run")
+            .shell_action("setDocument", "Set Document")
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
@@ -537,8 +537,8 @@ mod tests {
     #[test]
     fn app_definition_builds_without_panicking() {
         let app = create_imperative_app();
-        assert!(app.definition.commands.iter().any(|command| command.id == "addStep"));
-        assert!(app.definition.commands.iter().any(|command| command.id == "undo"));
+        assert!(app.definition.actions.iter().any(|action| action.id == "addStep"));
+        assert!(app.definition.actions.iter().any(|action| action.id == "undo"));
     }
 
     #[test]
@@ -566,10 +566,10 @@ mod tests {
     }
 
     #[test]
-    fn add_step_command_appends_step() {
+    fn add_step_action_appends_step() {
         let mut app = ImperativePlayApp;
         let document_json = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("addStep", Some(&json!({ "kind": "log.print" })), &document_json, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addStep", Some(&json!({ "kind": "log.print" })), &document_json, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated_op: Value = serde_json::from_str(&ops[0]).unwrap();
         let updated: ImperativePlayEnvelope = serde_json::from_value(updated_op["document"].clone()).unwrap();
@@ -589,11 +589,11 @@ mod tests {
     fn add_step_at_owner_slot_nests_into_control_body() {
         let mut app = ImperativePlayApp;
         let document_json = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("addStepAt", Some(&json!({ "kind": "control.if" })), &document_json, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addStepAt", Some(&json!({ "kind": "control.if" })), &document_json, &ViewState::default());
         let with_owner = apply_ops(&document_json, &ops);
         let owner_id = with_owner.runtime.selected_step_ids[0].clone();
         let document_json = serde_json::to_string(&with_owner).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "addStepAt",
             Some(&json!({ "kind": "log.print", "owner": owner_id, "slot": "then" })),
             &document_json,
@@ -614,7 +614,7 @@ mod tests {
     fn add_step_at_falls_back_to_root_for_unknown_owner() {
         let mut app = ImperativePlayApp;
         let document_json = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "addStepAt",
             Some(&json!({ "kind": "log.print", "owner": "missing-step", "slot": "then" })),
             &document_json,
@@ -626,10 +626,10 @@ mod tests {
     }
 
     #[test]
-    fn run_command_expands_scope_into_readable_rows_without_truncation() {
+    fn run_action_expands_scope_into_readable_rows_without_truncation() {
         let mut app = ImperativePlayApp;
         let document_json = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("run", None, &document_json, &ViewState::default());
+        let ops = app.handle_action_patch_ops("run", None, &document_json, &ViewState::default());
         let ran = apply_ops(&document_json, &ops);
         assert!(!ran.runtime.run_output_json.is_empty());
         let node = app.render(IMPERATIVE_PLAY_BODY_MAIN, &serde_json::to_string(&ran).unwrap(), &ViewState::default());
@@ -642,27 +642,27 @@ mod tests {
         let mut app = ImperativePlayApp;
         let document_json = app.initial_document_json();
         let original = document(&parse_envelope(&document_json));
-        let ops = app.handle_command_patch_ops("addStep", Some(&json!({ "kind": "log.print" })), &document_json, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addStep", Some(&json!({ "kind": "log.print" })), &document_json, &ViewState::default());
         let after_add = apply_ops(&document_json, &ops);
         let document_json = serde_json::to_string(&after_add).unwrap();
-        let ops = app.handle_command_patch_ops("undo", None, &document_json, &ViewState::default());
+        let ops = app.handle_action_patch_ops("undo", None, &document_json, &ViewState::default());
         let after_undo = apply_ops(&document_json, &ops);
         assert_eq!(document(&after_undo), original, "undo is a true inverse of addStep");
-        let ops = app.handle_command_patch_ops("redo", None, &serde_json::to_string(&after_undo).unwrap(), &ViewState::default());
+        let ops = app.handle_action_patch_ops("redo", None, &serde_json::to_string(&after_undo).unwrap(), &ViewState::default());
         let after_redo = apply_ops(&serde_json::to_string(&after_undo).unwrap(), &ops);
         assert_eq!(document(&after_redo), document(&after_add), "redo restores the post-apply state");
     }
 
     #[test]
-    fn remove_step_command_is_exact_inverse_of_add() {
+    fn remove_step_action_is_exact_inverse_of_add() {
         let mut app = ImperativePlayApp;
         let document_json = app.initial_document_json();
         let original = document(&parse_envelope(&document_json));
-        let ops = app.handle_command_patch_ops("addStep", Some(&json!({ "kind": "math.add" })), &document_json, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addStep", Some(&json!({ "kind": "math.add" })), &document_json, &ViewState::default());
         let after_add = apply_ops(&document_json, &ops);
         let added_id = after_add.runtime.selected_step_ids[0].clone();
         let document_json = serde_json::to_string(&after_add).unwrap();
-        let ops = app.handle_command_patch_ops("removeStep", Some(&json!({ "id": added_id })), &document_json, &ViewState::default());
+        let ops = app.handle_action_patch_ops("removeStep", Some(&json!({ "id": added_id })), &document_json, &ViewState::default());
         let after_remove = apply_ops(&document_json, &ops);
         assert_eq!(document(&after_remove), original);
     }

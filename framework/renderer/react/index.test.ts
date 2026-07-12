@@ -4,14 +4,14 @@ import { describe, expect, it } from "vitest";
 import { Canvas2dHost, worldToScreenLogical } from "./components/canvas-2d-host.tsx";
 import {
   Puzzle2dBoardHost,
-  puzzle2dBoardCameraCommandArgs,
+  puzzle2dBoardCameraActionArgs,
   buildPuzzle2dSelectionMenuItems,
   coalescePuzzle2dBoardEvents,
   parsePuzzle2dCatalogueDragPayload,
   puzzle2dFixtureDropPreviewJson,
   puzzle2dScreenToWorld,
 } from "./components/puzzle-2d-board-host.tsx";
-import { NodeGraphHost, computeDagMarqueeOverlay, nodeGraphViewportCommandArgs, parseDagSliderOverlays } from "./components/node-graph-host.tsx";
+import { NodeGraphHost, computeDagMarqueeOverlay, nodeGraphViewportActionArgs, parseDagSliderOverlays } from "./components/node-graph-host.tsx";
 import { SelectionMarquee } from "@semio-tech/ui-react";
 import { RasterHost } from "./components/raster-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
@@ -32,12 +32,11 @@ import {
   type NoteDocument,
   type NoteInkBlock,
 } from "./components/note-canvas-host.tsx";
-import { appDocumentLabel, appWindowDocumentLabel, buildToolbarRibbonSegments, isFlowGraphScene, orderModeWindowTabs, selectSpawnedToolNodes, sortToolNodes, spawnedWindowChromeForKind, ToolTree } from "./os-shell.tsx";
+import { appDocumentLabel, appWindowDocumentLabel, buildToolbarRibbonSegments, isFlowGraphScene, selectSpawnedToolNodes, sortToolNodes, spawnedWindowChromeForKind, ToolTree } from "./os-shell.tsx";
 import { interpretUiNode } from "./ui-interpreter.tsx";
 import type { UiNode } from "./os-shell.tsx";
-import type { WindowLayoutNode } from "@semio-tech/ui-react";
 
-const noopCommand = () => {};
+const noopAction = () => {};
 
 describe("framework sync tools", () => {
   it("builds four sync backbone toggles", async () => {
@@ -61,18 +60,18 @@ describe("framework plugin runtime", () => {
     expect(handle.manifest.pluginId).toBe("mock");
   });
 
-  it("extracts patch ops from CommandResult plugin responses", async () => {
-    const { patchOpsFromCommandResponse } = await import("@semio-tech/framework-core");
-    const legacy = patchOpsFromCommandResponse(JSON.stringify([JSON.stringify({ op: "setDocument", document: { id: "legacy" } })]));
+  it("extracts patch ops from ActionResult plugin responses", async () => {
+    const { patchOpsFromActionResponse } = await import("@semio-tech/framework-core");
+    const legacy = patchOpsFromActionResponse(JSON.stringify([JSON.stringify({ op: "setDocument", document: { id: "legacy" } })]));
     expect(legacy).toEqual([JSON.stringify({ op: "setDocument", document: { id: "legacy" } })]);
-    const commandResult = patchOpsFromCommandResponse(
+    const actionResult = patchOpsFromActionResponse(
       JSON.stringify({
         output: null,
         operations: [{ diff: { payload: { op: "setDocument", document: { id: "forest" } } } }],
-        inverseGroup: { commandId: "setActiveExample:1:0", operations: [] },
+        inverseGroup: { actionId: "setActiveExample:1:0", operations: [] },
       }),
     );
-    expect(commandResult).toEqual([JSON.stringify({ op: "setDocument", document: { id: "forest" } })]);
+    expect(actionResult).toEqual([JSON.stringify({ op: "setDocument", document: { id: "forest" } })]);
   });
 
   it("serializes concurrent plugin wasm handle calls", async () => {
@@ -84,7 +83,7 @@ describe("framework plugin runtime", () => {
       manifest: { pluginId: "mock", label: "Mock", version: "0", apps: [], programs: [], examples: [] },
       createApp: async () => 1,
       destroyApp: async () => {},
-      handleCommand: async () => {
+      handleAction: async () => {
         inFlight += 1;
         maxInFlight = Math.max(maxInFlight, inFlight);
         await new Promise((resolve) => setTimeout(resolve, 5));
@@ -97,7 +96,7 @@ describe("framework plugin runtime", () => {
       windowMeasures: async () => ({}),
       dispose: () => {},
     });
-    await Promise.all([handle.handleCommand(1, "{}", {}), handle.handleCommand(1, "{}", {}), handle.handleCommand(1, "{}", {})]);
+    await Promise.all([handle.handleAction(1, "{}", {}), handle.handleAction(1, "{}", {}), handle.handleAction(1, "{}", {})]);
     expect(maxInFlight).toBe(1);
   });
 });
@@ -144,7 +143,7 @@ describe("framework external slots", () => {
       manifest: { pluginId: "forms-module-procedural", label: "Module", version: "0", apps: [], programs: [], examples: [] },
       createApp: async () => 7,
       destroyApp: async () => {},
-      handleCommand: async () => [],
+      handleAction: async () => [],
       render: async () => ({ type: "text", value: "fallback" }),
       renderWithDocument: async (_instanceId: number, bodyKey: string) => ({
         type: "text",
@@ -182,7 +181,7 @@ describe("framework external slots", () => {
           bodyKey: "preview",
           paramsJson: "{}",
         },
-        { onCommand: noopCommand },
+        { onAction: noopAction },
       ),
     );
     expect(markup).toContain("Extension unavailable: missing-module");
@@ -205,10 +204,10 @@ describe("declarative forms parity", () => {
             id: "forms-try.name.input",
             inputKind: "text",
             value: "",
-            onChange: { controllerId: "forms-play", command: "setTryValue" },
+            onChange: { controllerId: "forms-play", action: "setTryValue" },
           },
         },
-        { onCommand: noopCommand },
+        { onAction: noopAction },
       ),
     );
     expect(markup).toContain("Your full name");
@@ -228,9 +227,9 @@ describe("declarative forms parity", () => {
           max: 100,
           step: 5,
           unit: "%",
-          onChange: { controllerId: "forms-play", command: "setTryValue" },
+          onChange: { controllerId: "forms-play", action: "setTryValue" },
         },
-        { onCommand: noopCommand },
+        { onAction: noopAction },
       ),
     );
     expect(markup).toContain("60 %");
@@ -247,9 +246,9 @@ describe("declarative forms parity", () => {
           min: 13,
           max: 120,
           step: 1,
-          onChange: { controllerId: "forms-play", command: "setTryValue" },
+          onChange: { controllerId: "forms-play", action: "setTryValue" },
         },
-        { onCommand: noopCommand },
+        { onAction: noopAction },
       ),
     );
     expect(numberMarkup).toContain('min="13"');
@@ -262,9 +261,9 @@ describe("declarative forms parity", () => {
           inputKind: "file",
           value: "",
           accept: ".pdf,.doc",
-          onChange: { controllerId: "forms-play", command: "setTryValue" },
+          onChange: { controllerId: "forms-play", action: "setTryValue" },
         },
-        { onCommand: noopCommand },
+        { onAction: noopAction },
       ),
     );
     expect(fileMarkup).toContain('accept=".pdf,.doc"');
@@ -279,9 +278,9 @@ describe("declarative forms parity", () => {
           iconId: "chevron-right",
           label: "Next",
           disabled: true,
-          command: { controllerId: "forms-play", command: "nextStep" },
+          action: { controllerId: "forms-play", action: "nextStep" },
         },
-        { onCommand: noopCommand },
+        { onAction: noopAction },
       ),
     );
     expect(markup).toContain("disabled");
@@ -295,10 +294,10 @@ describe("declarative forms parity", () => {
           direction: "vertical",
           id: "forms-blueprint.card.q1",
           selected: true,
-          activate: { controllerId: "forms-play", command: "setSelection" },
+          activate: { controllerId: "forms-play", action: "setSelection" },
           children: [{ type: "text", value: "text · q1" }],
         },
-        { onCommand: noopCommand },
+        { onAction: noopAction },
       ),
     );
     expect(markup).toContain('data-ui-stack="forms-blueprint.card.q1"');
@@ -315,24 +314,24 @@ describe("declarative forms parity", () => {
           src: "https://example.com/avatar.png",
           alt: "Avatar",
         },
-        { onCommand: noopCommand },
+        { onAction: noopAction },
       ),
     );
     expect(markup).toContain('src="https://example.com/avatar.png"');
     expect(markup).toContain('alt="Avatar"');
   });
 
-  it("dispatches the tree drop command with payload, target and position", async () => {
+  it("dispatches the tree drop action with payload, target and position", async () => {
     const { declarativeTreeDragController } = await import("./ui-interpreter.tsx");
     const dispatched: unknown[] = [];
     const controller = declarativeTreeDragController(
       {
         type: "tree",
         sections: [{ id: "steps", items: [{ id: "forms-play-document.step.s1", label: "Inputs" }] }],
-        dropCommand: { controllerId: "forms-play", command: "dropQuestionKind" },
+        dropAction: { controllerId: "forms-play", action: "dropQuestionKind" },
       },
-      (command) => {
-        dispatched.push(command);
+      (action) => {
+        dispatched.push(action);
       },
     );
     controller?.handleDrop?.({
@@ -349,7 +348,7 @@ describe("declarative forms parity", () => {
     expect(dispatched).toEqual([
       {
         controllerId: "forms-play",
-        command: "dropQuestionKind",
+        action: "dropQuestionKind",
         args: { kind: "slider", targetId: "forms-play-document.step.s1", dropPosition: "after" },
       },
     ]);
@@ -381,7 +380,7 @@ describe("framework renderer hosts", () => {
             viewportJson: '{"x":0,"y":0,"zoom":1}',
           },
         },
-        onCommand: noopCommand,
+        onAction: noopAction,
       }),
     );
     expect(markup).toContain("semio-node-graph-host");
@@ -413,14 +412,14 @@ describe("framework renderer hosts", () => {
             findItemsJson: JSON.stringify([{ id: "app-a", label: "Draw", category: "Media graph" }]),
           },
         },
-        onCommand: noopCommand,
+        onAction: noopAction,
       }),
     );
     expect(markup).toContain("semio-node-graph-host");
   });
 
-  it("uses the live session camera for node graph wheel viewport commands", () => {
-    expect(nodeGraphViewportCommandArgs('{"x":12,"y":24,"zoom":1.75}')).toEqual({
+  it("uses the live session camera for node graph wheel viewport actions", () => {
+    expect(nodeGraphViewportActionArgs('{"x":12,"y":24,"zoom":1.75}')).toEqual({
       viewportJson: '{"x":12,"y":24,"zoom":1.75}',
     });
   });
@@ -464,7 +463,7 @@ describe("framework renderer hosts", () => {
             layersJson: JSON.stringify([{ id: "layer-1", name: "Layer 1", x: 0, y: 0, width: 120, height: 80 }]),
           },
         },
-        onCommand: noopCommand,
+        onAction: noopAction,
       }),
     );
     expect(markup).toContain("semio-canvas-2d-host");
@@ -519,7 +518,7 @@ describe("framework renderer hosts", () => {
             ]),
           },
         },
-        onCommand: noopCommand,
+        onAction: noopAction,
       }),
     );
     expect(markup).toContain("semio-canvas-2d-host");
@@ -548,14 +547,14 @@ describe("framework renderer hosts", () => {
             lodMode: "automatic",
           },
         },
-        onCommand: noopCommand,
+        onAction: noopAction,
       }),
     );
     expect(markup).toContain("semio-puzzle2d-board-host");
   });
 
-  it("uses the live puzzle 2d board camera for wheel persistence commands", () => {
-    expect(puzzle2dBoardCameraCommandArgs('{"x":345,"y":-123,"zoom":4.25}')).toEqual({
+  it("uses the live puzzle 2d board camera for wheel persistence actions", () => {
+    expect(puzzle2dBoardCameraActionArgs('{"x":345,"y":-123,"zoom":4.25}')).toEqual({
       camera: { x: 345, y: -123, zoom: 4.25 },
     });
   });
@@ -602,7 +601,7 @@ describe("framework renderer hosts", () => {
 
   it("builds a select-all menu when nothing is selected", () => {
     const items = buildPuzzle2dSelectionMenuItems(JSON.stringify({ nodes: [], edges: [] }), "[]");
-    expect(items).toEqual([{ id: "selectAll", label: "Select all", command: "selectAll" }]);
+    expect(items).toEqual([{ id: "selectAll", label: "Select all", action: "selectAll" }]);
   });
 
   it("builds the full selection menu with Hide/Lock/Duplicate/SelectSameKind/ZoomToSelection/Delete for a visible unlocked node", () => {
@@ -680,7 +679,7 @@ describe("framework renderer hosts", () => {
           controllerId: "puzzle-play",
           componentKind: "world-3d",
         },
-        onCommand: noopCommand,
+        onAction: noopAction,
       }),
     );
     expect(markup).toContain("semio-world-3d-empty");
@@ -728,7 +727,7 @@ describe("framework renderer hosts", () => {
             tokensJson: JSON.stringify([{ class: "ident", start: 0, end: 5 }]),
           },
         },
-        onCommand: noopCommand,
+        onAction: noopAction,
       }),
     );
     expect(markup).toContain("semio-text-editor-host");
@@ -751,7 +750,7 @@ describe("framework renderer hosts", () => {
             renameJson: '{"name":"a","occurrences":[{"start":7,"end":8}]}',
           },
         },
-        onCommand: noopCommand,
+        onAction: noopAction,
       }),
     );
     expect(markup).toContain("semio-text-editor-host");
@@ -837,7 +836,7 @@ describe("framework renderer hosts", () => {
             rowsJson: JSON.stringify([{ label: "Draw" }]),
           },
         },
-        onCommand: noopCommand,
+        onAction: noopAction,
       }),
     );
     expect(markup).toContain("semio-table-host");
@@ -863,7 +862,7 @@ describe("framework renderer hosts", () => {
             viewMode: "composite",
           },
         },
-        onCommand: noopCommand,
+        onAction: noopAction,
       }),
     );
     expect(markup).toContain("semio-raster-canvas-surface");
@@ -891,7 +890,7 @@ describe("framework renderer hosts", () => {
             compositeViewportJson: '{"width":640,"height":480}',
           },
         },
-        onCommand: noopCommand,
+        onAction: noopAction,
       }),
     );
     expect(markup).toContain("semio-raster-canvas-surface");
@@ -907,7 +906,7 @@ describe("framework renderer hosts", () => {
           controllerId: "raster-play",
           componentKind: "raster",
         },
-        onCommand: noopCommand,
+        onAction: noopAction,
       }),
     );
     expect(markup).toContain("semio-raster-empty");
@@ -940,7 +939,7 @@ describe("framework renderer hosts", () => {
             ]),
           },
         },
-        { onCommand: noopCommand },
+        { onAction: noopAction },
       ) as ReactElement,
     );
     expect(markup).toContain("Draw");
@@ -1055,7 +1054,7 @@ describe("note canvas host", () => {
             interactive: true,
           },
         },
-        onCommand: noopCommand,
+        onAction: noopAction,
       }) as ReactElement,
     );
     expect(markup).toContain("Welcome to Note");
@@ -1074,7 +1073,7 @@ describe("note canvas host", () => {
     const compositeMarkup = renderToStaticMarkup(
       createElement(NoteCanvasHost, {
         node: { ...baseNode, noteCanvas: { documentJson: JSON.stringify(semioNoteDocument), selectionJson: "[]", activeTool: "selectDirect", viewMode: "composite", interactive: true } },
-        onCommand: noopCommand,
+        onAction: noopAction,
       }) as ReactElement,
     );
     expect(compositeMarkup).toContain("note-viewport-grid");
@@ -1082,7 +1081,7 @@ describe("note canvas host", () => {
     const navigatorMarkup = renderToStaticMarkup(
       createElement(NoteCanvasHost, {
         node: { ...baseNode, noteCanvas: { documentJson: JSON.stringify(semioNoteDocument), selectionJson: "[]", activeTool: "selectDirect", viewMode: "navigator", interactive: false } },
-        onCommand: noopCommand,
+        onAction: noopAction,
       }) as ReactElement,
     );
     expect(navigatorMarkup).not.toContain("note-viewport-grid");
@@ -1145,7 +1144,7 @@ describe("spawned window chrome", () => {
       {
         id: "edit",
         label: "Edit",
-        tools: [{ id: "static-tool", kind: "button" as const, iconId: "save", controllerId: "cad-play", command: "save" }],
+        tools: [{ id: "static-tool", kind: "button" as const, iconId: "save", controllerId: "cad-play", action: "save" }],
       },
     ],
     windowKinds: [
@@ -1156,12 +1155,12 @@ describe("spawned window chrome", () => {
         engagement: {
           input: {
             id: "engagement-input",
-            placeholder: "Command",
-            onChange: { controllerId: "cad-play", command: "engagementInput" },
+            placeholder: "Action",
+            onChange: { controllerId: "cad-play", action: "engagementInput" },
           },
-          possibleEngagements: [{ id: "box", label: "Box", command: { controllerId: "cad-play", command: "startBox" } }],
+          possibleEngagements: [{ id: "box", label: "Box", action: { controllerId: "cad-play", action: "startBox" } }],
         },
-        measures: [{ id: "render-mode", kind: "select" as const, label: "Render Mode", value: "shaded", items: [], onChange: { controllerId: "cad-play", command: "setRenderMode" } }],
+        measures: [{ id: "render-mode", kind: "select" as const, label: "Render Mode", value: "shaded", items: [], onChange: { controllerId: "cad-play", action: "setRenderMode" } }],
       },
     ],
     panelTabs: [],
@@ -1169,7 +1168,7 @@ describe("spawned window chrome", () => {
   };
 
   it("prefers dynamic spawned tools over static mode tools", () => {
-    const dynamic = [{ id: "dynamic-tool", kind: "button" as const, iconId: "box", controllerId: "cad-play", command: "box" }];
+    const dynamic = [{ id: "dynamic-tool", kind: "button" as const, iconId: "box", controllerId: "cad-play", action: "box" }];
     expect(selectSpawnedToolNodes(dynamic, app, "edit")).toEqual(dynamic);
     expect(selectSpawnedToolNodes([], app, "edit")).toEqual(app.modes[0]!.tools);
   });
@@ -1181,14 +1180,14 @@ describe("spawned window chrome", () => {
         input: {
           id: "engagement-input",
           value: "Box",
-          placeholder: "Command",
-          onChange: { controllerId: "cad-play", command: "engagementInput" },
+          placeholder: "Action",
+          onChange: { controllerId: "cad-play", action: "engagementInput" },
         },
-        possibleEngagements: [{ id: "box", label: "Box", detail: "b", command: { controllerId: "cad-play", command: "startBox" } }],
+        possibleEngagements: [{ id: "box", label: "Box", detail: "b", action: { controllerId: "cad-play", action: "startBox" } }],
       },
     };
     const measures = { [kind.id]: kind.measures ?? [] };
-    const chrome = spawnedWindowChromeForKind(kind, engagements, measures, noopCommand);
+    const chrome = spawnedWindowChromeForKind(kind, engagements, measures, noopAction);
     expect(chrome.engagement?.input?.value).toBe("Box");
     expect(chrome.engagement?.possibleEngagements?.[0]?.label).toBe("Box");
     const measuresMarkup = renderToStaticMarkup(chrome.measures as ReactElement);
@@ -1199,8 +1198,8 @@ describe("spawned window chrome", () => {
 describe("toolbar ribbon", () => {
   it("sorts tool nodes by order", () => {
     const sorted = sortToolNodes([
-      { id: "b", kind: "button", iconId: "box", order: 2, controllerId: "x", command: "b" },
-      { id: "a", kind: "button", iconId: "box", order: 1, controllerId: "x", command: "a" },
+      { id: "b", kind: "button", iconId: "box", order: 2, controllerId: "x", action: "b" },
+      { id: "a", kind: "button", iconId: "box", order: 1, controllerId: "x", action: "a" },
     ]);
     expect(sorted.map((node) => node.id)).toEqual(["a", "b"]);
   });
@@ -1217,7 +1216,7 @@ describe("toolbar ribbon", () => {
               id: "view-tools",
               kind: "collection",
               iconId: "zoom-in",
-              children: [{ id: "zoom-in", kind: "button", iconId: "zoom-in", controllerId: "x", command: "zoomIn" }],
+              children: [{ id: "zoom-in", kind: "button", iconId: "zoom-in", controllerId: "x", action: "zoomIn" }],
             },
           ],
         },
@@ -1230,7 +1229,7 @@ describe("toolbar ribbon", () => {
               id: "construct-tools",
               kind: "collection",
               iconId: "box",
-              children: [{ id: "box", kind: "button", iconId: "box", controllerId: "x", command: "box" }],
+              children: [{ id: "box", kind: "button", iconId: "box", controllerId: "x", action: "box" }],
             },
           ],
         },
@@ -1248,13 +1247,13 @@ describe("toolbar ribbon", () => {
           id: "view",
           kind: "collection",
           iconId: "eye",
-          children: [{ id: "zoom-in", kind: "button", iconId: "zoom-in", controllerId: "x", command: "zoomIn" }],
+          children: [{ id: "zoom-in", kind: "button", iconId: "zoom-in", controllerId: "x", action: "zoomIn" }],
         },
         {
           id: "save",
           kind: "collection",
           iconId: "save",
-          children: [{ id: "export", kind: "button", iconId: "download", controllerId: "x", command: "export" }],
+          children: [{ id: "export", kind: "button", iconId: "download", controllerId: "x", action: "export" }],
         },
       ],
       [],
@@ -1277,8 +1276,8 @@ describe("toolbar ribbon", () => {
                 kind: "collection",
                 iconId: "eye",
                 children: [
-                  { id: "show-edges", kind: "toggle", iconId: "box", pressed: true, controllerId: "x", command: "edges" },
-                  { id: "show-faces", kind: "toggle", iconId: "square", pressed: false, controllerId: "x", command: "faces" },
+                  { id: "show-edges", kind: "toggle", iconId: "box", pressed: true, controllerId: "x", action: "edges" },
+                  { id: "show-faces", kind: "toggle", iconId: "square", pressed: false, controllerId: "x", action: "faces" },
                 ],
               },
             ],
@@ -1292,12 +1291,12 @@ describe("toolbar ribbon", () => {
                 id: "construct-tools",
                 kind: "collection",
                 iconId: "box",
-                children: [{ id: "box", kind: "button", iconId: "box", controllerId: "x", command: "box" }],
+                children: [{ id: "box", kind: "button", iconId: "box", controllerId: "x", action: "box" }],
               },
             ],
           },
         ],
-        onCommand: noopCommand,
+        onAction: noopAction,
       }),
     );
     expect(markup).toContain('id="ui.toolbar"');
@@ -1308,8 +1307,8 @@ describe("toolbar ribbon", () => {
     const markup = renderToStaticMarkup(
       createElement(ToolTree, {
         id: "ui.toolbar.model",
-        tools: [{ id: "box", kind: "button", iconId: "box", controllerId: "x", command: "box" }],
-        onCommand: noopCommand,
+        tools: [{ id: "box", kind: "button", iconId: "box", controllerId: "x", action: "box" }],
+        onAction: noopAction,
       }),
     );
     expect(markup).toContain('id="ui.toolbar.model"');
@@ -1341,37 +1340,10 @@ describe("s media graph flow routing", () => {
             ]),
           },
         },
-        onCommand: noopCommand,
+        onAction: noopAction,
       }),
     );
     expect(markup).toContain("Ada");
     expect(markup).toContain("2 selected");
-  });
-});
-
-describe("mobile window tabs", () => {
-  it("orders tabs by their position in the layout tree, not the windows array order", () => {
-    const layout: WindowLayoutNode = {
-      kind: "row",
-      children: [
-        { kind: "stack", children: [{ kind: "window", id: "b" }], activeId: "b" },
-        { kind: "stack", children: [{ kind: "window", id: "a" }], activeId: "a" },
-      ],
-    };
-    const windows = [
-      { id: "a", title: "A" },
-      { id: "b", title: "B" },
-    ];
-    expect(orderModeWindowTabs(layout, windows).map((tab) => tab.id)).toEqual(["b", "a"]);
-  });
-
-  it("appends windows absent from the layout tree, in their original order", () => {
-    const layout: WindowLayoutNode = { kind: "stack", children: [{ kind: "window", id: "a" }], activeId: "a" };
-    const windows = [
-      { id: "a", title: "A" },
-      { id: "b", title: "B" },
-      { id: "c", title: "C" },
-    ];
-    expect(orderModeWindowTabs(layout, windows).map((tab) => tab.id)).toEqual(["a", "b", "c"]);
   });
 });

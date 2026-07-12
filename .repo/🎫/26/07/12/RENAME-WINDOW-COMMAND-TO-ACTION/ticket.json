@@ -1,0 +1,13 @@
+{
+  "title": "Rename Window Command To Action",
+  "emoji": "🔤",
+  "status": "open",
+  "description": "In ui, os, and playground: rename the concept of \"command\" (as used for window kinds — actions and tools bound to a window) to \"action\". Every window kind can have actions; actions and tools are bound to windows. \"Command\" is being reserved for a different concept, so all naming referring to window commands must become \"action\" naming — types, functions, variables, props, file names, docs, comments — with no legacy aliases or backwards-compatible re-exports left behind.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1937"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪3bbd30c9a1384b9784556387d57990db"
+  ]
+}

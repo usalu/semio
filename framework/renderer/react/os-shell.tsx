@@ -16,13 +16,11 @@ import {
   CommandItem,
   CommandList,
   Footer,
-  FooterNav,
   Icon,
   Input,
   Layout,
   LevelProvider,
   Mode,
-  modeCollectWindowIds,
   Navbar,
   NavbarExampleSelect,
   PanelToggleGroup,
@@ -60,7 +58,7 @@ import {
   useElementsSurfaceChrome,
   useMediaQuery,
   useSidePanelChromeHotkeys,
-  useCommandHotkey,
+  useActionHotkey,
   readStoredUiChromeCompact,
   readStoredUiChromeExpertise,
   readStoredUiChromeLayout,
@@ -100,7 +98,6 @@ import {
   type EngagementControl,
   type EngagementSpec,
   type FooterItem,
-  type FooterNavItem,
   type ModeWindowDescriptor,
   type NavbarItem,
   type PanelToggleItem,
@@ -130,7 +127,7 @@ import {
   resolveLayoutForMode,
   resolvePlaygroundDefaultAppId,
   resolvePluginRegistryId,
-  type CommandDefinition,
+  type ActionDefinition,
   type NamedLayout,
   type PluginRegistryEntry,
   type PluginWasmHandle as CorePluginWasmHandle,
@@ -468,7 +465,7 @@ function findDefaultActiveWindowKindId(layout: WindowLayout | undefined, windowK
   return windowKinds[0]?.id ?? null;
 }
 
-function windowEngagementControlToSpec(control: WindowEngagementControl | undefined, onCommand: (command: CommandDescriptor) => void): EngagementControl | undefined {
+function windowEngagementControlToSpec(control: WindowEngagementControl | undefined, onAction: (action: ActionDescriptor) => void): EngagementControl | undefined {
   if (!control) return undefined;
   if (control.kind === "ring" || control.kind === "toggleGroup") {
     return {
@@ -478,7 +475,7 @@ function windowEngagementControlToSpec(control: WindowEngagementControl | undefi
       value: control.value,
       disabled: control.disabled,
       options: control.options.map((row) => ({ id: row.id, label: row.label, disabled: row.disabled })),
-      onSelect: control.onSelect ? (id: string) => onCommand({ ...control.onSelect!, args: { ...(control.onSelect!.args as object | undefined), id } }) : undefined,
+      onSelect: control.onSelect ? (id: string) => onAction({ ...control.onSelect!, args: { ...(control.onSelect!.args as object | undefined), id } }) : undefined,
     };
   }
   if (control.kind === "select") {
@@ -490,12 +487,12 @@ function windowEngagementControlToSpec(control: WindowEngagementControl | undefi
       placeholder: control.placeholder,
       disabled: control.disabled,
       items: control.items.map((row) => ({ id: row.id, value: row.value, label: row.label })),
-      onChange: control.onChange ? (value: string) => onCommand({ ...control.onChange!, args: { ...(control.onChange!.args as object | undefined), value } }) : undefined,
+      onChange: control.onChange ? (value: string) => onAction({ ...control.onChange!, args: { ...(control.onChange!.args as object | undefined), value } }) : undefined,
     };
   }
-  const dispatchNumeric = (cmd: CommandDescriptor | undefined, value: number) => {
-    if (!cmd) return;
-    onCommand({ ...cmd, args: { ...(cmd.args as object | undefined), value } });
+  const dispatchNumeric = (action: ActionDescriptor | undefined, value: number) => {
+    if (!action) return;
+    onAction({ ...action, args: { ...(action.args as object | undefined), value } });
   };
   return {
     kind: control.kind,
@@ -544,7 +541,7 @@ function resolveWindowEngagement(kind: AppDefinition["windowKinds"][number], byK
   return byKind[kind.id] ?? kind.engagement ?? (isViewportSurface(surfaceKind) ? defaultViewportEngagement() : undefined);
 }
 
-function windowEngagementToSpec(engagement: WindowEngagement | undefined, onCommand: (command: CommandDescriptor) => void): EngagementSpec | undefined {
+function windowEngagementToSpec(engagement: WindowEngagement | undefined, onAction: (action: ActionDescriptor) => void): EngagementSpec | undefined {
   if (!engagement) return undefined;
   const options = engagement.options?.map((option) => ({
     id: option.id,
@@ -552,7 +549,7 @@ function windowEngagementToSpec(engagement: WindowEngagement | undefined, onComm
     icon: option.iconId ? <Icon icon={option.iconId in ICONS ? (option.iconId as IconName) : "circle-dot"} size="small" /> : undefined,
     pressed: option.pressed,
     disabled: option.disabled,
-    onPress: option.command ? () => onCommand(option.command!) : undefined,
+    onPress: option.action ? () => onAction(option.action!) : undefined,
   }));
   const input = engagement.input
     ? {
@@ -560,10 +557,10 @@ function windowEngagementToSpec(engagement: WindowEngagement | undefined, onComm
         value: engagement.input.value,
         placeholder: engagement.input.placeholder,
         disabled: engagement.input.disabled,
-        onChange: engagement.input.onChange ? (value: string) => onCommand({ ...engagement.input!.onChange!, args: { ...(engagement.input!.onChange!.args as object | undefined), value } }) : undefined,
-        onSubmit: engagement.input.onSubmit ? (value: string) => onCommand({ ...engagement.input!.onSubmit!, args: { ...(engagement.input!.onSubmit!.args as object | undefined), value } }) : undefined,
-        onRepeatLast: engagement.input.onRepeatLast ? () => onCommand(engagement.input!.onRepeatLast!) : undefined,
-        onAbort: engagement.input.onAbort ? () => onCommand(engagement.input!.onAbort!) : undefined,
+        onChange: engagement.input.onChange ? (value: string) => onAction({ ...engagement.input!.onChange!, args: { ...(engagement.input!.onChange!.args as object | undefined), value } }) : undefined,
+        onSubmit: engagement.input.onSubmit ? (value: string) => onAction({ ...engagement.input!.onSubmit!, args: { ...(engagement.input!.onSubmit!.args as object | undefined), value } }) : undefined,
+        onRepeatLast: engagement.input.onRepeatLast ? () => onAction(engagement.input!.onRepeatLast!) : undefined,
+        onAbort: engagement.input.onAbort ? () => onAction(engagement.input!.onAbort!) : undefined,
       }
     : undefined;
   const status = engagement.status?.map((row) => ({ id: row.id, content: row.text }));
@@ -571,10 +568,10 @@ function windowEngagementToSpec(engagement: WindowEngagement | undefined, onComm
     id: row.id,
     label: row.label,
     detail: row.detail,
-    onSelect: row.command ? () => onCommand(row.command!) : undefined,
+    onSelect: row.action ? () => onAction(row.action!) : undefined,
   }));
-  const control = windowEngagementControlToSpec(engagement.control, onCommand);
-  const controls = engagement.controls?.map((row) => windowEngagementControlToSpec(row, onCommand)).filter((row): row is EngagementControl => row !== undefined);
+  const control = windowEngagementControlToSpec(engagement.control, onAction);
+  const controls = engagement.controls?.map((row) => windowEngagementControlToSpec(row, onAction)).filter((row): row is EngagementControl => row !== undefined);
   const hasContent = (options?.length ?? 0) > 0 || Boolean(input) || Boolean(control) || (controls?.length ?? 0) > 0 || (status?.length ?? 0) > 0 || (possibleEngagements?.length ?? 0) > 0;
   if (!hasContent) return undefined;
   return { sessionActive: engagement.sessionActive, options, input, control, controls, status, possibleEngagements };
@@ -609,11 +606,11 @@ export function spawnedWindowChromeForKind(
   kind: AppDefinition["windowKinds"][number],
   engagementsByKind: Readonly<Record<string, WindowEngagement>>,
   measuresByKind: Readonly<Record<string, readonly WindowMeasure[]>>,
-  onCommand: (command: CommandDescriptor) => void,
+  onAction: (action: ActionDescriptor) => void,
 ): { readonly engagement?: EngagementSpec; readonly measures: ReactNode } {
   return {
-    engagement: windowEngagementToSpec(resolveWindowEngagement(kind, engagementsByKind), onCommand),
-    measures: windowMeasuresOverlay(measuresByKind[kind.id] ?? kind.measures, onCommand),
+    engagement: windowEngagementToSpec(resolveWindowEngagement(kind, engagementsByKind), onAction),
+    measures: windowMeasuresOverlay(measuresByKind[kind.id] ?? kind.measures, onAction),
   };
 }
 
@@ -621,8 +618,8 @@ function isTreeNode(node: UiNode): node is UiTreeNode {
   return node.type === "tree";
 }
 
-function uiNodeToTreePanelConfig(node: UiNode, onCommand: (command: CommandDescriptor) => void): TreePanelConfig {
-  if (isTreeNode(node)) return uiTreeNodeToTreePanelConfig(node, onCommand);
+function uiNodeToTreePanelConfig(node: UiNode, onAction: (action: ActionDescriptor) => void): TreePanelConfig {
+  if (isTreeNode(node)) return uiTreeNodeToTreePanelConfig(node, onAction);
   return {
     sections: [
       {
@@ -632,7 +629,7 @@ function uiNodeToTreePanelConfig(node: UiNode, onCommand: (command: CommandDescr
           {
             id: "panel.body.content",
             label: "",
-            control: <ChromeAwareWindowScrollSurface className="min-h-0 flex-1">{interpretUiNode(node, { onCommand })}</ChromeAwareWindowScrollSurface>,
+            control: <ChromeAwareWindowScrollSurface className="min-h-0 flex-1">{interpretUiNode(node, { onAction })}</ChromeAwareWindowScrollSurface>,
           },
         ],
       },
@@ -663,18 +660,18 @@ function shellTerminologyLabel(id: string): string {
   return isChromeKnown ? shellLabel(`ui.settings.terminology.${id as UiChromeTerminologyId}`) : id;
 }
 
-function renderWindowMeasure(measure: WindowMeasure, onCommand: (command: CommandDescriptor) => void): ReactNode {
+function renderWindowMeasure(measure: WindowMeasure, onAction: (action: ActionDescriptor) => void): ReactNode {
   if (measure.kind === "group") {
     return (
       <WindowMeasureTreeGroup key={measure.id} id={measure.id} label={measure.label} defaultOpen={measure.defaultOpen}>
-        {measure.children.map((child) => renderWindowMeasure(child, onCommand))}
+        {measure.children.map((child) => renderWindowMeasure(child, onAction))}
       </WindowMeasureTreeGroup>
     );
   }
   if (measure.kind === "select") {
     return (
       <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
-        <Select value={measure.value} onValueChange={(value) => onCommand({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value } })}>
+        <Select value={measure.value} onValueChange={(value) => onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value } })}>
           <SelectTrigger id={measure.id} className="h-small w-full min-w-0" size="sm">
             <SelectValue />
           </SelectTrigger>
@@ -698,7 +695,7 @@ function renderWindowMeasure(measure: WindowMeasure, onCommand: (command: Comman
           min={measure.min}
           max={measure.max}
           step={measure.step}
-          onValueChange={(values) => onCommand({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value: values[0] ?? measure.value } })}
+          onValueChange={(values) => onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value: values[0] ?? measure.value } })}
         />
       </WindowMeasureTreeLeaf>
     );
@@ -711,7 +708,7 @@ function renderWindowMeasure(measure: WindowMeasure, onCommand: (command: Comman
           pressed={measure.pressed}
           text={measure.text}
           icon={<Icon icon={measure.iconId in ICONS ? (measure.iconId as IconName) : "circle-dot"} size="small" />}
-          onPressedChange={(pressed) => onCommand({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), pressed } })}
+          onPressedChange={(pressed) => onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), pressed } })}
         />
       </WindowMeasureTreeLeaf>
     );
@@ -719,23 +716,14 @@ function renderWindowMeasure(measure: WindowMeasure, onCommand: (command: Comman
   return null;
 }
 
-function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, onCommand: (command: CommandDescriptor) => void): ReactNode | undefined {
+function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, onAction: (action: ActionDescriptor) => void): ReactNode | undefined {
   if (!measures || measures.length === 0) return undefined;
-  return <WindowMeasuresTree>{measures.map((measure) => renderWindowMeasure(measure, onCommand))}</WindowMeasuresTree>;
+  return <WindowMeasuresTree>{measures.map((measure) => renderWindowMeasure(measure, onAction))}</WindowMeasuresTree>;
 }
 
-function windowToolbarNode(tools: readonly ToolNode[] | undefined, windowId: string, onCommand: (command: CommandDescriptor) => void): ReactNode {
+function windowToolbarNode(tools: readonly ToolNode[] | undefined, windowId: string, onAction: (action: ActionDescriptor) => void): ReactNode {
   if (!tools?.length) return undefined;
-  return <ToolTree id={`ui.toolbar.${windowId}`} tools={tools} onCommand={onCommand} />;
-}
-
-/** @emoji 📱 Orders mobile footer window tabs by their position in the layout tree, appending layout-absent windows. */
-export function orderModeWindowTabs(layout: WindowLayoutNode, windows: readonly { readonly id: string; readonly title: string }[]): readonly { readonly id: string; readonly title: string }[] {
-  const byId = new Map(windows.map((window) => [window.id, window]));
-  const orderedIds = modeCollectWindowIds(layout).filter((id) => byId.has(id));
-  const seen = new Set(orderedIds);
-  const trailingIds = windows.filter((window) => !seen.has(window.id)).map((window) => window.id);
-  return [...orderedIds, ...trailingIds].map((id) => byId.get(id)!);
+  return <ToolTree id={`ui.toolbar.${windowId}`} tools={tools} onAction={onAction} />;
 }
 //#endregion ShellHelpers
 
@@ -808,7 +796,6 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const [mobileActiveTabId, setMobileActiveTabId] = useState<string | undefined>(undefined);
   const [leftPanelTabId, setLeftPanelTabId] = useState<string | undefined>(undefined);
   const [rightPanelTabId, setRightPanelTabId] = useState<string | undefined>(undefined);
-  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [extraWindowInstances, setExtraWindowInstances] = useState<readonly { readonly id: string; readonly windowKindId: string; readonly title: string }[]>([]);
   const extraWindowCounterRef = useRef(0);
   const openStudioIdRef = useRef<string | null>(null);
@@ -929,9 +916,9 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     };
   }, [registry, studioMode]);
 
-  const findPluginForCommand = useCallback(
-    (command: CommandDescriptor) => {
-      const byController = loadedPlugins.find((entry) => entry.manifest.apps.some((app) => app.controllerId === command.controllerId));
+  const findPluginForAction = useCallback(
+    (action: ActionDescriptor) => {
+      const byController = loadedPlugins.find((entry) => entry.manifest.apps.some((app) => app.controllerId === action.controllerId));
       if (byController) return byController;
       return loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId);
     },
@@ -1120,7 +1107,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       if (!studioSession) return;
       if (openStudioIdRef.current === studioId) return;
       openStudioIdRef.current = studioId;
-      await sPlugin.handleCommand(studioSession.instanceId, JSON.stringify({ controllerId: S_PLAY_CONTROLLER_ID, command: "openStudio", args: { studioId } }), studioSession.viewState);
+      await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: S_PLAY_CONTROLLER_ID, action: "openStudio", args: { studioId } }), studioSession.viewState);
       await refreshUi(studioSession);
     },
     [loadedPlugins, refreshUi, studioMode, switchToSApp],
@@ -1136,7 +1123,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, documentJson: string, viewState: ViewState) => {
     try {
       const document = JSON.parse(documentJson) as Record<string, unknown>;
-      await plugin.handleCommand(pluginInstanceId, JSON.stringify({ controllerId: app.controllerId, command: "setDocument", args: { document } }), viewState);
+      await plugin.handleAction(pluginInstanceId, JSON.stringify({ controllerId: app.controllerId, action: "setDocument", args: { document } }), viewState);
     } catch (syncError) {
       console.error("[DEBUG] spawned plugin document sync failed", syncError);
     }
@@ -1201,7 +1188,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           data?: string;
           encoding?: string;
           accept?: string;
-          importCommand?: string;
+          importAction?: string;
           readAs?: string;
           items?: readonly { filename: string; request: unknown }[];
         };
@@ -1225,16 +1212,16 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
             }
           }
         }
-        if (op.op === "requestFileOpen" && op.importCommand) {
+        if (op.op === "requestFileOpen" && op.importAction) {
           const opened = await requestFileOpen(op.accept ?? ".json,.spatial.json", op.readAs);
           if (opened) {
             const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
             if (pluginEntry) {
-              const importOps = await pluginEntry.handle.handleCommand(
+              const importOps = await pluginEntry.handle.handleAction(
                 baseSession.instanceId,
                 JSON.stringify({
                   controllerId: baseSession.app.controllerId,
-                  command: op.importCommand,
+                  action: op.importAction,
                   args: { payload: opened.contents, name: opened.name },
                 }),
                 baseSession.viewState,
@@ -1310,9 +1297,9 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       }
       lastEnvelopeJsonRef.current = envelopeJson;
       const document = documentFromEnvelopeJson(envelopeJson);
-      const ops = await plugin.handleCommand(
+      const ops = await plugin.handleAction(
         targetSession.instanceId,
-        JSON.stringify({ controllerId: targetSession.app.controllerId, command: "setDocument", args: { document } }),
+        JSON.stringify({ controllerId: targetSession.app.controllerId, action: "setDocument", args: { document } }),
         targetSession.viewState,
       );
       setSyncBackboneUri(uri);
@@ -1357,83 +1344,83 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     [loadedPlugins, session, updateStudioPanel],
   );
 
-  const onCommand = useCallback(
-    (command: CommandDescriptor) => {
+  const onAction = useCallback(
+    (action: ActionDescriptor) => {
       if (!session) return;
 
-      if (command.controllerId === FRAMEWORK_SYNC_CONTROLLER_ID) {
-        if (command.command === "selectTemporary") {
+      if (action.controllerId === FRAMEWORK_SYNC_CONTROLLER_ID) {
+        if (action.action === "selectTemporary") {
           void attachSyncBackbone(buildTemporaryBackboneUri(syncDocumentId(session, panel, studioMode)));
           return;
         }
-        if (command.command === "selectFile") {
+        if (action.action === "selectFile") {
           setSyncCardKind("file");
           setSyncDraftPath(syncBackboneUri?.startsWith("file://") ? syncBackboneUri.slice("file://".length) : "");
           return;
         }
-        if (command.command === "selectFolder") {
+        if (action.action === "selectFolder") {
           setSyncCardKind("folder");
           setSyncDraftPath(syncBackboneUri?.startsWith("folder://") ? syncBackboneUri.slice("folder://".length) : "");
           return;
         }
-        if (command.command === "selectRemote") {
+        if (action.action === "selectRemote") {
           setSyncCardKind("remote");
           const remote = syncBackboneUri?.startsWith("remote://") ? syncBackboneUri.slice("remote://".length) : "";
           setSyncDraftPath(remote);
           return;
         }
-        if (command.command === "attach") {
-          const path = typeof command.args === "object" && command.args != null && "path" in command.args ? String((command.args as { path?: string }).path ?? "") : syncDraftPath;
+        if (action.action === "attach") {
+          const path = typeof action.args === "object" && action.args != null && "path" in action.args ? String((action.args as { path?: string }).path ?? "") : syncDraftPath;
           if (!path.trim()) return;
           const uri =
-            command.args && typeof command.args === "object" && "kind" in command.args
-              ? String((command.args as { kind?: string }).kind) === "remote"
+            action.args && typeof action.args === "object" && "kind" in action.args
+              ? String((action.args as { kind?: string }).kind) === "remote"
                 ? buildRemoteBackboneUri(path.split("/")[0] ?? "127.0.0.1:8787", path.split("/").slice(1).join("/") || syncDocumentId(session, panel, studioMode))
-                : String((command.args as { kind?: string }).kind) === "folder"
+                : String((action.args as { kind?: string }).kind) === "folder"
                   ? buildFolderBackboneUri(path)
                   : buildFileBackboneUri(path)
               : buildFileBackboneUri(path);
           void attachSyncBackbone(uri);
           return;
         }
-        if (command.command === "detach") {
+        if (action.action === "detach") {
           void detachSyncBackbone();
           return;
         }
         return;
       }
 
-      if (studioMode && command.controllerId === S_HOME_CONTROLLER_ID && command.command === "importStudio") {
+      if (studioMode && action.controllerId === S_HOME_CONTROLLER_ID && action.action === "importStudio") {
         importStudioInputRef.current?.click();
         return;
       }
 
-      if (studioMode && command.command === "spawnApp" && command.controllerId !== S_PLAY_CONTROLLER_ID) {
-        const programId = typeof command.args === "object" && command.args != null && "programId" in command.args ? String((command.args as { programId?: string }).programId ?? "") : "";
-        const pluginId = typeof command.args === "object" && command.args != null && "pluginId" in command.args ? String((command.args as { pluginId?: string }).pluginId ?? "") : "";
+      if (studioMode && action.action === "spawnApp" && action.controllerId !== S_PLAY_CONTROLLER_ID) {
+        const programId = typeof action.args === "object" && action.args != null && "programId" in action.args ? String((action.args as { programId?: string }).programId ?? "") : "";
+        const pluginId = typeof action.args === "object" && action.args != null && "pluginId" in action.args ? String((action.args as { pluginId?: string }).pluginId ?? "") : "";
         const currentPanel = parsePanelState(session.viewState);
         const program = currentPanel?.programs.find((entry) => entry.programId === programId && entry.pluginId === pluginId);
         if (program) void spawnProgram(program);
         return;
       }
 
-      if (studioMode && command.controllerId === S_PLAY_CONTROLLER_ID && command.command === "setActivePanelTab") {
-        const tabId = typeof command.args === "object" && command.args != null && "tabId" in command.args ? String((command.args as { tabId?: string }).tabId ?? "s-play-catalogue") : "s-play-catalogue";
+      if (studioMode && action.controllerId === S_PLAY_CONTROLLER_ID && action.action === "setActivePanelTab") {
+        const tabId = typeof action.args === "object" && action.args != null && "tabId" in action.args ? String((action.args as { tabId?: string }).tabId ?? "s-play-catalogue") : "s-play-catalogue";
         const currentPanel = parsePanelState(session.viewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
         updateStudioPanel(buildStudioPanelState(currentPanel.programs, currentPanel.spawnedApps, tabId, currentPanel.activeSpawnedId));
         return;
       }
 
-      const pluginEntry = findPluginForCommand(command);
+      const pluginEntry = findPluginForAction(action);
       const plugin = pluginEntry?.handle;
       if (!plugin) return;
 
       const targetSession =
-        studioMode && command.controllerId !== session.app.controllerId
+        studioMode && action.controllerId !== session.app.controllerId
           ? (() => {
               const spawned = panel?.spawnedApps.find((entry) => {
                 const app = loadedPlugins.find((p) => p.handle.pluginId === entry.pluginId)?.manifest.apps.find((a) => a.id === entry.appId);
-                return app?.controllerId === command.controllerId;
+                return app?.controllerId === action.controllerId;
               });
               if (!spawned) return session;
               const app = loadedPlugins.find((p) => p.handle.pluginId === spawned.pluginId)?.manifest.apps.find((a) => a.id === spawned.appId);
@@ -1443,20 +1430,20 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           : session;
 
       void plugin
-        .handleCommand(targetSession.instanceId, JSON.stringify(command), targetSession.viewState)
+        .handleAction(targetSession.instanceId, JSON.stringify(action), targetSession.viewState)
         .then(async (ops) => {
-          if (studioMode && session.pluginId === "s" && panel?.activeSpawnedId && command.controllerId !== session.app.controllerId) {
+          if (studioMode && session.pluginId === "s" && panel?.activeSpawnedId && action.controllerId !== session.app.controllerId) {
             const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
             const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === "s")?.handle;
             if (spawned && sPlugin) {
               for (const opJson of ops) {
                 const op = JSON.parse(opJson) as { op?: string; document?: unknown };
                 if (op.op === "setDocument" && op.document != null) {
-                  const patchOps = await sPlugin.handleCommand(
+                  const patchOps = await sPlugin.handleAction(
                     session.instanceId,
                     JSON.stringify({
                       controllerId: S_PLAY_CONTROLLER_ID,
-                      command: "patchAppSource",
+                      action: "patchAppSource",
                       args: { instanceId: spawned.id, inline: JSON.stringify(op.document) },
                     }),
                     session.viewState,
@@ -1468,23 +1455,23 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           }
           await processPluginOps(ops, targetSession);
         })
-        .catch((commandError) => {
-          console.error("[DEBUG] command failed", commandError);
+        .catch((actionError) => {
+          console.error("[DEBUG] action failed", actionError);
         });
     },
-    [attachSyncBackbone, detachSyncBackbone, findPluginForCommand, loadedPlugins, panel, processPluginOps, session, spawnProgram, studioMode, syncBackboneUri, syncDraftPath, updateStudioPanel],
+    [attachSyncBackbone, detachSyncBackbone, findPluginForAction, loadedPlugins, panel, processPluginOps, session, spawnProgram, studioMode, syncBackboneUri, syncDraftPath, updateStudioPanel],
   );
 
-  const onCommandRef = useRef(onCommand);
+  const onActionRef = useRef(onAction);
   useEffect(() => {
-    onCommandRef.current = onCommand;
-  }, [onCommand]);
+    onActionRef.current = onAction;
+  }, [onAction]);
 
   const studioSessionActive = studioMode && session?.app.id === S_PLAY_APP_ID;
   useEffect(() => {
     if (!studioSessionActive || typeof window === "undefined") return;
     const identity = presenceClientIdentity();
-    const beat = () => onCommandRef.current({ controllerId: S_PLAY_CONTROLLER_ID, command: "presenceHeartbeat", args: identity });
+    const beat = () => onActionRef.current({ controllerId: S_PLAY_CONTROLLER_ID, action: "presenceHeartbeat", args: identity });
     const initial = window.setTimeout(beat, 1000);
     const timer = window.setInterval(beat, PRESENCE_HEARTBEAT_INTERVAL_MS);
     return () => {
@@ -1538,29 +1525,29 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     writeStoredUiCustomThemes(uiCustomThemes);
   }, [uiCustomThemes]);
 
-  useCommandHotkey(
+  useActionHotkey(
     "mod+[",
     useCallback(() => {
       if (canGoBack) goBack();
     }, [canGoBack, goBack]),
   );
-  useCommandHotkey(
+  useActionHotkey(
     "mod+]",
     useCallback(() => {
       if (canGoForward) goForward();
     }, [canGoForward, goForward]),
   );
-  useCommandHotkey(
+  useActionHotkey(
     "mod+up",
     useCallback(() => {
       if (canGoUp) goUp();
     }, [canGoUp, goUp]),
   );
-  useCommandHotkey(
+  useActionHotkey(
     "mod+p",
     useCallback(() => setSearchOpen((open) => !open), []),
   );
-  useCommandHotkey(
+  useActionHotkey(
     "mod+f",
     useCallback(() => setFindOpen((open) => !open), []),
   );
@@ -1829,14 +1816,14 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         for (const chord of parseKeys(binding.keys)) {
           if (!matches(event, chord)) continue;
           event.preventDefault();
-          onCommand(binding.command);
+          onAction(binding.action);
           return;
         }
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onCommand, session]);
+  }, [onAction, session]);
 
   const activePanelTabId = panel?.activePanelTab ?? session?.app.panelTabs.find((tab) => panelSideForGroup(tab.group) === "right")?.id ?? session?.app.panelTabs[0]?.id;
 
@@ -1849,7 +1836,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         icon: panelTabIcon(tab.id, tab.group),
         name: tab.label,
         order,
-        tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tab.id] ?? { type: "text", value: "Loading…" }, onCommand)),
+        tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tab.id] ?? { type: "text", value: "Loading…" }, onAction)),
       }));
     if (studioMode && session.app.id === S_PLAY_APP_ID && pluginLeftTabs.length > 0) return pluginLeftTabs;
     const hasPluginDocumentTab = pluginLeftTabs.some((tab) => tab.id === FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
@@ -1864,7 +1851,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       }),
     };
     return [documentTab, ...pluginLeftTabs];
-  }, [onCommand, panel?.spawnedApps.length, panelUiByKey, session, studioMode]);
+  }, [onAction, panel?.spawnedApps.length, panelUiByKey, session, studioMode]);
 
   const detailsRightTabs = useMemo((): SidePanelTabConfig[] => {
     if (!session) return [];
@@ -1875,9 +1862,9 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         icon: panelTabIcon(tab.id, tab.group),
         name: tab.label,
         order,
-        tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tab.id] ?? { type: "text", value: "Loading…" }, onCommand)),
+        tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tab.id] ?? { type: "text", value: "Loading…" }, onAction)),
       }));
-  }, [onCommand, panelUiByKey, session]);
+  }, [onAction, panelUiByKey, session]);
 
   const settingsRightTabs = useMemo((): SidePanelTabConfig[] => frameworkSettingsTabs, [frameworkSettingsTabs]);
 
@@ -1910,17 +1897,17 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const mobilePanel = useMemo(() => {
     if (mobilePanelTabs.length === 0) return undefined;
     return {
-      visible: mobilePanelOpen,
+      visible: leftPanelVisible || rightPanelVisible,
       tabs: mobilePanelTabs,
       activeTabId: mobileActiveTabId ?? mobilePanelTabs[0]?.id,
       onActiveTabChange: (tabId: string) => {
         setMobileActiveTabId(tabId);
         if (studioMode && session?.app.id === S_PLAY_APP_ID) {
-          onCommand({ controllerId: session.app.controllerId, command: "setActivePanelTab", args: { tabId } });
+          onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
         }
       },
     };
-  }, [mobileActiveTabId, mobilePanelOpen, mobilePanelTabs, onCommand, session, studioMode]);
+  }, [leftPanelVisible, mobileActiveTabId, mobilePanelTabs, onAction, rightPanelVisible, session, studioMode]);
 
   const workbenchIcon = useMemo(() => {
     const TabIcon = workbenchLeftTabs[0]?.icon;
@@ -2006,8 +1993,8 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     if (exampleOptions.length === 0 || activeExampleId || !session) return;
     if (noExampleResetInstanceIdRef.current === session.instanceId) return;
     noExampleResetInstanceIdRef.current = session.instanceId;
-    onCommand({ controllerId: session.app.controllerId, command: "setActiveExample", args: { exampleId: "" } });
-  }, [activeExampleId, exampleOptions, onCommand, session]);
+    onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: "" } });
+  }, [activeExampleId, exampleOptions, onAction, session]);
 
   const activeModeId = session?.viewState.activeModeId ?? session?.app.modes[0]?.id ?? session?.app.id ?? "";
 
@@ -2037,7 +2024,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
             options={exampleOptions}
             onValueChange={(exampleId) => {
               setActiveExampleId(exampleId);
-              onCommand({ controllerId: session.app.controllerId, command: "setActiveExample", args: { exampleId } });
+              onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId } });
             }}
           />
         ),
@@ -2071,63 +2058,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       });
     }
     return items;
-  }, [activeExampleId, activeModeId, applyModeChange, exampleOptions, onCommand, panelToggles, session]);
-
-  const mobileNavbarItems = useMemo((): NavbarItem[] => {
-    if (!session) return [];
-    const items: NavbarItem[] = [
-      {
-        key: "logoAndTitle",
-        className: "min-w-0 flex-1 flex items-center gap-single",
-        content: (
-          <div className="flex min-w-0 items-center gap-single">
-            <SemioLogo className="size-workbench shrink-0" />
-            <span data-slot="app-name" className={cn("min-w-0 truncate px-single", shellChromeTitleClassName)}>
-              {appDocumentLabel(session.app.document)}
-            </span>
-          </div>
-        ),
-      },
-    ];
-    if (exampleOptions.length > 0 && (!studioMode || session.app.id !== S_HOME_APP_ID)) {
-      items.push({
-        key: "fixture",
-        content: (
-          <NavbarExampleSelect
-            id="playground.navbar.fixture.mobile"
-            value={activeExampleId}
-            options={exampleOptions}
-            onValueChange={(exampleId) => {
-              setActiveExampleId(exampleId);
-              onCommand({ controllerId: session.app.controllerId, command: "setActiveExample", args: { exampleId } });
-            }}
-          />
-        ),
-      });
-    } else {
-      items.push(navbarFillItem());
-    }
-    if (session.app.modes.length > 1) {
-      items.push({
-        key: "modes",
-        content: (
-          <Select value={activeModeId} onValueChange={(modeId) => applyModeChange(modeId)}>
-            <SelectTrigger className="h-medium w-auto min-w-[6rem]" id="playground.navbar.modes.mobile" size="sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {session.app.modes.map((mode) => (
-                <SelectItem key={mode.id} value={mode.id}>
-                  {mode.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ),
-      });
-    }
-    return items;
-  }, [activeExampleId, activeModeId, applyModeChange, exampleOptions, onCommand, session, studioMode]);
+  }, [activeExampleId, activeModeId, applyModeChange, exampleOptions, onAction, panelToggles, session]);
 
   const searchItems = useMemo(() => {
     if (!session) return [];
@@ -2138,7 +2069,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         label: tab.label,
         category: "Panels",
         icon: <Icon icon="panel-left" size="small" />,
-        onSelect: () => onCommand({ controllerId: session.app.controllerId, command: "setActivePanelTab", args: { tabId: tab.id } }),
+        onSelect: () => onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId: tab.id } }),
       });
     }
     for (const kind of session.app.windowKinds) {
@@ -2150,27 +2081,27 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         onSelect: () => setActiveWindowId(kind.id),
       });
     }
-    const keysByCommandId = new Map(session.app.keybindings.map((binding) => [binding.command.command, binding.keys]));
-    const declaredCommandIds = new Set<string>();
-    for (const command of session.app.commands ?? []) {
-      if (!command.inPalette) continue;
-      declaredCommandIds.add(command.id);
+    const keysByActionId = new Map(session.app.keybindings.map((binding) => [binding.action.action, binding.keys]));
+    const declaredActionIds = new Set<string>();
+    for (const action of session.app.actions ?? []) {
+      if (!action.inPalette) continue;
+      declaredActionIds.add(action.id);
       items.push({
-        id: `command.${command.id}`,
-        label: command.label,
-        description: command.keys ?? keysByCommandId.get(command.id),
-        category: command.category ?? (command.kind === "history" ? "History" : "Commands"),
-        onSelect: () => onCommand({ controllerId: session.app.controllerId, command: command.id }),
+        id: `action.${action.id}`,
+        label: action.label,
+        description: action.keys ?? keysByActionId.get(action.id),
+        category: action.category ?? (action.kind === "history" ? "History" : "Actions"),
+        onSelect: () => onAction({ controllerId: session.app.controllerId, action: action.id }),
       });
     }
     for (const binding of session.app.keybindings) {
-      if (declaredCommandIds.has(binding.command.command)) continue;
+      if (declaredActionIds.has(binding.action.action)) continue;
       items.push({
         id: `keybinding.${binding.keys}`,
-        label: binding.command.command,
+        label: binding.action.action,
         description: binding.keys,
-        category: "Commands",
-        onSelect: () => onCommand(binding.command),
+        category: "Actions",
+        onSelect: () => onAction(binding.action),
       });
     }
     if (studioMode && panel) {
@@ -2179,7 +2110,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           id: `spawn.${program.programId}`,
           label: `Spawn ${appDocumentLabel(program.document)}`,
           category: "Catalogue",
-          onSelect: () => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "spawnApp", args: { programId: program.programId } }),
+          onSelect: () => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "spawnApp", args: { programId: program.programId } }),
         });
       }
       items.push(
@@ -2188,25 +2119,25 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           label: "Undo",
           category: "Studio",
           icon: <Icon icon="undo-2" size="small" />,
-          onSelect: () => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "undo" }),
+          onSelect: () => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "undo" }),
         },
         {
           id: "studio.redo",
           label: "Redo",
           category: "Studio",
           icon: <Icon icon="redo-2" size="small" />,
-          onSelect: () => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "redo" }),
+          onSelect: () => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "redo" }),
         },
         {
           id: "studio.home",
           label: "Go Home",
           category: "Navigation",
-          onSelect: () => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "goHome" }),
+          onSelect: () => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "goHome" }),
         },
       );
     }
     return items;
-  }, [onCommand, panel, session, studioMode]);
+  }, [onAction, panel, session, studioMode]);
 
   const footerItems = useMemo((): FooterItem[] => {
     if (!session) return [];
@@ -2228,14 +2159,14 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         cardKind={syncCardKind}
         draftPath={syncDraftPath}
         syncTools={syncTools}
-        onCommand={onCommand}
+        onAction={onAction}
         onDraftPathChange={setSyncDraftPath}
         onClose={() => setSyncCardKind(null)}
         onAttach={attachSyncBackbone}
         onDetach={detachSyncBackbone}
       />
     );
-  }, [attachSyncBackbone, detachSyncBackbone, onCommand, syncBackboneUri, syncCardKind, syncDraftPath]);
+  }, [attachSyncBackbone, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath]);
 
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
@@ -2244,7 +2175,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       if (spawned) {
         const spawnedApp = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
         const windowKind = spawnedApp?.windowKinds[0];
-        const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawnedWindowEngagements, spawnedWindowMeasures, onCommand) : undefined;
+        const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawnedWindowEngagements, spawnedWindowMeasures, onAction) : undefined;
         return [
           {
             id: spawned.id,
@@ -2253,8 +2184,8 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
             showControls: true,
             measures: chrome?.measures,
             engagement: chrome?.engagement,
-            toolbar: windowToolbarNode(spawnedToolNodes, spawned.id, onCommand),
-            children: <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">{interpretUiNode(spawnedWindowUi, { onCommand })}</ChromeAwareWindowScrollSurface>,
+            toolbar: windowToolbarNode(spawnedToolNodes, spawned.id, onAction),
+            children: <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">{interpretUiNode(spawnedWindowUi, { onAction })}</ChromeAwareWindowScrollSurface>,
           },
         ];
       }
@@ -2265,12 +2196,12 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       title: appWindowDocumentLabel(session.app, kind.label),
       fill: true,
       showControls: true,
-      measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.measures, onCommand),
-      engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onCommand),
-      toolbar: windowToolbarNode(toolNodesByKind[kind.id], kind.id, onCommand),
+      measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.measures, onAction),
+      engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onAction),
+      toolbar: windowToolbarNode(toolNodesByKind[kind.id], kind.id, onAction),
       children: (
         <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id}>
-          {interpretUiNode(windowUiByKind[kind.id] ?? { type: "text", value: `Missing window: ${kind.id}` }, { onCommand })}
+          {interpretUiNode(windowUiByKind[kind.id] ?? { type: "text", value: `Missing window: ${kind.id}` }, { onAction })}
         </ChromeAwareWindowScrollSurface>
       ),
     }));
@@ -2283,46 +2214,24 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           title: instance.title,
           fill: true,
           showControls: true,
-          measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.measures, onCommand),
-          engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onCommand),
-          toolbar: windowToolbarNode(toolNodesByKind[kind.id], instance.id, onCommand),
+          measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.measures, onAction),
+          engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onAction),
+          toolbar: windowToolbarNode(toolNodesByKind[kind.id], instance.id, onAction),
           children: (
             <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id}>
-              {interpretUiNode(windowUiByKind[kind.id] ?? { type: "text", value: `Missing window: ${kind.id}` }, { onCommand })}
+              {interpretUiNode(windowUiByKind[kind.id] ?? { type: "text", value: `Missing window: ${kind.id}` }, { onAction })}
             </ChromeAwareWindowScrollSurface>
           ),
         },
       ];
     });
     return [...baseWindows, ...extraWindows];
-  }, [extraWindowInstances, loadedPlugins, onCommand, panel, session, spawnedToolNodes, spawnedWindowEngagements, spawnedWindowMeasures, spawnedWindowUi, studioMode, toolNodesByKind, windowEngagementsByKind, windowMeasuresByKind, windowUiByKind]);
+  }, [extraWindowInstances, loadedPlugins, onAction, panel, session, spawnedToolNodes, spawnedWindowEngagements, spawnedWindowMeasures, spawnedWindowUi, studioMode, toolNodesByKind, windowEngagementsByKind, windowMeasuresByKind, windowUiByKind]);
 
   const effectiveModeLayout = useMemo(
     () => shellLayout ?? (session ? convertFrameworkLayoutToModeLayout(session.app.defaultLayout, modeWindows.map((window) => window.id)) : { kind: "stack" as const, children: [] }),
     [modeWindows, session, shellLayout],
   );
-
-  const mobileWindowTabs = useMemo(() => orderModeWindowTabs(effectiveModeLayout, modeWindows), [effectiveModeLayout, modeWindows]);
-
-  const mobileFooterNav = useMemo((): FooterNavItem[] => {
-    const items: FooterNavItem[] = mobileWindowTabs.map((window) => ({
-      id: window.id,
-      icon: "square",
-      label: window.title,
-      active: activeWindowId === window.id,
-      onSelect: () => setActiveWindowId(window.id),
-    }));
-    if (mobilePanel) {
-      items.push({
-        id: "mobile.panels",
-        icon: "panel-left",
-        label: shellLabel("ui.panelToggle.workbench"),
-        active: mobilePanelOpen,
-        onSelect: () => setMobilePanelOpen((open) => !open),
-      });
-    }
-    return items;
-  }, [activeWindowId, mobilePanel, mobilePanelOpen, mobileWindowTabs]);
 
   const canvas = useMemo(() => {
     if (!session) return <p className="p-4 text-sm text-muted-foreground">Loading plugins…</p>;
@@ -2335,14 +2244,14 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     const modes = session.app.modes.length > 0 ? session.app.modes : [{ id: session.app.id, label: appDocumentLabel(session.app.document) }];
     const studioHomeBar =
       studioMode && session.app.id === S_PLAY_APP_ID && !panel?.activeSpawnedId ? (
-        <button type="button" className="border-b border-border/60 px-3 py-2 text-left text-sm text-muted-foreground hover:bg-muted/40 hover:text-foreground" onClick={() => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "goHome" })}>
+        <button type="button" className="border-b border-border/60 px-3 py-2 text-left text-sm text-muted-foreground hover:bg-muted/40 hover:text-foreground" onClick={() => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "goHome" })}>
           ← Home
         </button>
       ) : null;
     const focusedSpawned = panel?.activeSpawnedId ? panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId) : undefined;
     const focusedBar = focusedSpawned ? (
       <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2 text-sm text-muted-foreground">
-        <button type="button" className="hover:text-foreground" onClick={() => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "closeFocusedInstance" })}>
+        <button type="button" className="hover:text-foreground" onClick={() => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "closeFocusedInstance" })}>
           ← Back to Media Graph
         </button>
         <span>·</span>
@@ -2362,7 +2271,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
             const file = event.target.files?.[0];
             if (!file) return;
             void file.text().then((json) => {
-              onCommand({ controllerId: S_HOME_CONTROLLER_ID, command: "importStudio", args: { json } });
+              onAction({ controllerId: S_HOME_CONTROLLER_ID, action: "importStudio", args: { json } });
               event.target.value = "";
             });
           }}
@@ -2398,7 +2307,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         </div>
       </div>
     );
-  }, [activeWindowId, effectiveModeLayout, error, handleTemplateDrop, mobile, modeWindows, onCommand, panel, session, studioMode, updateStudioPanel]);
+  }, [activeWindowId, effectiveModeLayout, error, handleTemplateDrop, mobile, modeWindows, onAction, panel, session, studioMode, updateStudioPanel]);
 
   return (
     <UIFindProvider>
@@ -2407,8 +2316,8 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           <Layout
             mobile={mobile}
             mobilePanel={mobilePanel}
-            navbar={<Navbar items={mobile ? mobileNavbarItems : navbarItems} showFullscreenToggle={!mobile} />}
-            footer={mobile ? <FooterNav items={mobileFooterNav} /> : <Footer items={footerItems} toolbar={footerToolbar} />}
+            navbar={<Navbar items={navbarItems} showFullscreenToggle />}
+            footer={<Footer items={footerItems} toolbar={footerToolbar} />}
             leftSidePanel={
               leftPanelTabs.length > 0
                 ? {
@@ -2421,7 +2330,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
                     onActiveTabChange: (tabId) => {
                       setLeftPanelTabId(tabId);
                       if (studioMode && session?.app.id === S_PLAY_APP_ID) {
-                        onCommand({ controllerId: session.app.controllerId, command: "setActivePanelTab", args: { tabId } });
+                        onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
                       }
                     },
                   }
@@ -2439,7 +2348,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
                     onActiveTabChange: (tabId) => {
                       setRightPanelTabId(tabId);
                       if (studioMode && session?.app.id === S_PLAY_APP_ID) {
-                        onCommand({ controllerId: session.app.controllerId, command: "setActivePanelTab", args: { tabId } });
+                        onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
                       }
                     },
                   }
@@ -2457,9 +2366,9 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
 //#endregion FrameworkOsShell
 
 //#region 🔖types
-export type CommandDescriptor = {
+export type ActionDescriptor = {
   readonly controllerId: string;
-  readonly command: string;
+  readonly action: string;
   readonly args?: unknown;
 };
 
@@ -2476,8 +2385,8 @@ export type UiStackNode = {
   readonly padding?: string;
   readonly id?: string;
   readonly selected?: boolean;
-  readonly activate?: CommandDescriptor;
-  readonly dropCommand?: CommandDescriptor;
+  readonly activate?: ActionDescriptor;
+  readonly dropAction?: ActionDescriptor;
   readonly children: readonly UiNode[];
 };
 
@@ -2493,7 +2402,7 @@ export type UiButtonNode = {
   readonly id?: string;
   readonly iconId: string;
   readonly label: string;
-  readonly command: CommandDescriptor;
+  readonly action: ActionDescriptor;
   readonly style?: StyleSpec;
   readonly disabled?: boolean;
 };
@@ -2518,7 +2427,7 @@ export type UiInputNode = {
   readonly max?: number;
   readonly step?: number;
   readonly accept?: string;
-  readonly onChange: CommandDescriptor;
+  readonly onChange: ActionDescriptor;
 };
 
 export type UiSelectItem = {
@@ -2532,7 +2441,7 @@ export type UiSelectNode = {
   readonly value: string;
   readonly items: readonly UiSelectItem[];
   readonly placeholder?: string;
-  readonly onChange: CommandDescriptor;
+  readonly onChange: ActionDescriptor;
 };
 
 export type UiToggleNode = {
@@ -2541,14 +2450,14 @@ export type UiToggleNode = {
   readonly iconId: string;
   readonly pressed: boolean;
   readonly text?: string;
-  readonly onChange: CommandDescriptor;
+  readonly onChange: ActionDescriptor;
 };
 
 export type UiVec3Node = {
   readonly type: "vec3";
   readonly id: string;
   readonly value: readonly [number, number, number] | null;
-  readonly onChange: CommandDescriptor;
+  readonly onChange: ActionDescriptor;
 };
 
 export type UiKeyValueEntry = {
@@ -2569,7 +2478,7 @@ export type UiSliderNode = {
   readonly max: number;
   readonly step: number;
   readonly unit?: string;
-  readonly onChange: CommandDescriptor;
+  readonly onChange: ActionDescriptor;
 };
 
 export type UiNumberStepperNode = {
@@ -2578,8 +2487,8 @@ export type UiNumberStepperNode = {
   readonly value: number;
   readonly step: number;
   readonly uniform: boolean;
-  readonly onAbsolute: CommandDescriptor;
-  readonly onDelta: CommandDescriptor;
+  readonly onAbsolute: ActionDescriptor;
+  readonly onDelta: ActionDescriptor;
 };
 
 export type UiRingNode = {
@@ -2588,7 +2497,7 @@ export type UiRingNode = {
   readonly orbId: string;
   readonly t: number;
   readonly disabled?: boolean;
-  readonly onChange: CommandDescriptor;
+  readonly onChange: ActionDescriptor;
 };
 
 export type UiIconSelectNode = {
@@ -2597,7 +2506,7 @@ export type UiIconSelectNode = {
   readonly value: string;
   readonly uniform: boolean;
   readonly classifierKind: string;
-  readonly onChange: CommandDescriptor;
+  readonly onChange: ActionDescriptor;
 };
 
 export type UiControlNode = UiInputNode | UiSelectNode | UiToggleNode | UiVec3Node | UiButtonNode | UiKeyValueNode | UiSliderNode | UiNumberStepperNode | UiRingNode | UiIconSelectNode;
@@ -2623,7 +2532,7 @@ export type UiSectionNode = {
 export type UiTreeItemAction = {
   readonly iconId: string;
   readonly label?: string;
-  readonly command: CommandDescriptor;
+  readonly action: ActionDescriptor;
   readonly revealOnHover?: boolean;
 };
 
@@ -2634,9 +2543,9 @@ export type UiTreeItemNode = {
   readonly iconId?: string;
   readonly selected?: boolean;
   readonly defaultOpen?: boolean;
-  readonly command?: CommandDescriptor;
-  readonly hoverCommand?: CommandDescriptor;
-  readonly unhoverCommand?: CommandDescriptor;
+  readonly action?: ActionDescriptor;
+  readonly hoverAction?: ActionDescriptor;
+  readonly unhoverAction?: ActionDescriptor;
   readonly actions?: readonly UiTreeItemAction[];
   readonly draggable?: boolean;
   readonly dragData?: Readonly<Record<string, string>>;
@@ -2657,8 +2566,8 @@ export type UiTreeNode = {
   readonly sections: readonly UiTreeSectionNode[];
   readonly selectedIds?: readonly string[];
   readonly highlightedIds?: readonly string[];
-  readonly selectionChange?: CommandDescriptor;
-  readonly dropCommand?: CommandDescriptor;
+  readonly selectionChange?: ActionDescriptor;
+  readonly dropAction?: ActionDescriptor;
 };
 
 export type UiInspectorFieldGroup = {
@@ -2741,7 +2650,7 @@ export type TextEditorScene = {
   readonly renameJson?: string;
 };
 
-export const nodeGraphCommands = {
+export const nodeGraphActions = {
   select: "nodeGraphSelect",
   hover: "nodeGraphHover",
   edit: "nodeGraphEdit",
@@ -2749,7 +2658,7 @@ export const nodeGraphCommands = {
   spotlightCommit: "spotlightCommit",
 } as const;
 
-export const textEditorCommands = {
+export const textEditorActions = {
   edit: "textEdit",
   select: "textSelect",
   hover: "textHover",
@@ -2922,7 +2831,7 @@ export type WindowEngagementOption = {
   readonly iconId?: string;
   readonly pressed?: boolean;
   readonly disabled?: boolean;
-  readonly command?: CommandDescriptor;
+  readonly action?: ActionDescriptor;
 };
 
 export type WindowEngagementInput = {
@@ -2930,10 +2839,10 @@ export type WindowEngagementInput = {
   readonly value?: string;
   readonly placeholder?: string;
   readonly disabled?: boolean;
-  readonly onChange?: CommandDescriptor;
-  readonly onSubmit?: CommandDescriptor;
-  readonly onRepeatLast?: CommandDescriptor;
-  readonly onAbort?: CommandDescriptor;
+  readonly onChange?: ActionDescriptor;
+  readonly onSubmit?: ActionDescriptor;
+  readonly onRepeatLast?: ActionDescriptor;
+  readonly onAbort?: ActionDescriptor;
 };
 
 export type WindowEngagementStatus = {
@@ -2945,7 +2854,7 @@ export type WindowEngagementPossible = {
   readonly id: string;
   readonly label: string;
   readonly detail?: string;
-  readonly command?: CommandDescriptor;
+  readonly action?: ActionDescriptor;
 };
 
 export type WindowEngagementRingOption = {
@@ -2977,8 +2886,8 @@ export type WindowEngagementControl =
       readonly step?: number;
       readonly unit?: string;
       readonly disabled?: boolean;
-      readonly onChange?: CommandDescriptor;
-      readonly onCommit?: CommandDescriptor;
+      readonly onChange?: ActionDescriptor;
+      readonly onCommit?: ActionDescriptor;
     }
   | {
       readonly kind: "stepper";
@@ -2990,8 +2899,8 @@ export type WindowEngagementControl =
       readonly step?: number;
       readonly unit?: string;
       readonly disabled?: boolean;
-      readonly onChange?: CommandDescriptor;
-      readonly onCommit?: CommandDescriptor;
+      readonly onChange?: ActionDescriptor;
+      readonly onCommit?: ActionDescriptor;
     }
   | {
       readonly kind: "ring";
@@ -3000,7 +2909,7 @@ export type WindowEngagementControl =
       readonly value?: string;
       readonly options: readonly WindowEngagementRingOption[];
       readonly disabled?: boolean;
-      readonly onSelect?: CommandDescriptor;
+      readonly onSelect?: ActionDescriptor;
     }
   | {
       readonly kind: "toggleGroup";
@@ -3009,7 +2918,7 @@ export type WindowEngagementControl =
       readonly value?: string;
       readonly options: readonly WindowEngagementToggleGroupOption[];
       readonly disabled?: boolean;
-      readonly onSelect?: CommandDescriptor;
+      readonly onSelect?: ActionDescriptor;
     }
   | {
       readonly kind: "select";
@@ -3019,7 +2928,7 @@ export type WindowEngagementControl =
       readonly placeholder?: string;
       readonly items: readonly WindowEngagementSelectItem[];
       readonly disabled?: boolean;
-      readonly onChange?: CommandDescriptor;
+      readonly onChange?: ActionDescriptor;
     };
 
 export type WindowEngagement = {
@@ -3039,7 +2948,7 @@ export type WindowMeasure =
       readonly label?: string;
       readonly value: string;
       readonly items: readonly { readonly id: string; readonly value: string; readonly label: string }[];
-      readonly onChange: CommandDescriptor;
+      readonly onChange: ActionDescriptor;
     }
   | {
       readonly kind: "slider";
@@ -3049,7 +2958,7 @@ export type WindowMeasure =
       readonly min: number;
       readonly max: number;
       readonly step?: number;
-      readonly onChange: CommandDescriptor;
+      readonly onChange: ActionDescriptor;
     }
   | {
       readonly kind: "toggle";
@@ -3058,7 +2967,7 @@ export type WindowMeasure =
       readonly label?: string;
       readonly pressed: boolean;
       readonly text?: string;
-      readonly onChange: CommandDescriptor;
+      readonly onChange: ActionDescriptor;
     }
   | {
       readonly kind: "group";
@@ -3095,8 +3004,8 @@ export type AppDefinition = {
     readonly engagement?: WindowEngagement;
   }[];
   readonly panelTabs: readonly { readonly id: string; readonly label: string; readonly group: string; readonly bodyKey: string }[];
-  readonly keybindings: readonly { readonly keys: string; readonly command: CommandDescriptor }[];
-  readonly commands?: readonly CommandDefinition[];
+  readonly keybindings: readonly { readonly keys: string; readonly action: ActionDescriptor }[];
+  readonly actions?: readonly ActionDefinition[];
   readonly namedLayouts?: readonly NamedLayout[];
   readonly defaultLayout?: WindowLayout;
   readonly terminologies?: readonly string[];
@@ -3145,9 +3054,9 @@ export type ToolLeaf =
       readonly title?: string;
       readonly order?: number;
       readonly disabled?: boolean;
-      readonly category?: "selection" | "tools" | "commands" | "history" | "sync";
+      readonly category?: "selection" | "tools" | "actions" | "history" | "sync";
       readonly controllerId?: string;
-      readonly command?: string;
+      readonly action?: string;
       readonly args?: unknown;
     }
   | {
@@ -3160,9 +3069,9 @@ export type ToolLeaf =
       readonly order?: number;
       readonly pressed?: boolean;
       readonly disabled?: boolean;
-      readonly category?: "selection" | "tools" | "commands" | "history" | "sync";
+      readonly category?: "selection" | "tools" | "actions" | "history" | "sync";
       readonly controllerId?: string;
-      readonly command?: string;
+      readonly action?: string;
       readonly args?: unknown;
     };
 
@@ -3188,7 +3097,7 @@ export type ToolNode =
       readonly title?: string;
       readonly order?: number;
       readonly disabled?: boolean;
-      readonly onPress: CommandDescriptor;
+      readonly onPress: ActionDescriptor;
     }
   | {
       readonly id: string;
@@ -3200,7 +3109,7 @@ export type ToolNode =
       readonly order?: number;
       readonly pressed?: boolean;
       readonly disabled?: boolean;
-      readonly onChange: CommandDescriptor;
+      readonly onChange: ActionDescriptor;
     };
 
 export const UI_INSPECTOR_MIXED_PLACEHOLDER = "Mixed";
@@ -3226,7 +3135,7 @@ export type PluginWasmHandle = {
   readonly manifest: PluginManifest;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
-  readonly handleCommand: (instanceId: number, commandJson: string, viewState: ViewState) => Promise<string[]>;
+  readonly handleAction: (instanceId: number, actionJson: string, viewState: ViewState) => Promise<string[]>;
   readonly render: (instanceId: number, bodyKey: string, viewState: ViewState) => Promise<UiNode>;
   readonly renderWithDocument?: (instanceId: number, bodyKey: string, viewState: ViewState, documentJson: string) => Promise<UiNode>;
   readonly tools: (instanceId: number, viewState: ViewState) => Promise<readonly ToolNode[]>;
@@ -3251,7 +3160,7 @@ function adaptPluginHandle(handle: CorePluginWasmHandle): PluginWasmHandle {
     manifest: handle.manifest as unknown as PluginManifest,
     createApp: (appId) => handle.createApp(appId),
     destroyApp: (instanceId) => handle.destroyApp(instanceId),
-    handleCommand: (instanceId, commandJson, viewState) => handle.handleCommand(instanceId, commandJson, viewState),
+    handleAction: (instanceId, actionJson, viewState) => handle.handleAction(instanceId, actionJson, viewState),
     render: async (instanceId, bodyKey, viewState) => (await handle.render(instanceId, bodyKey, viewState)) as unknown as UiNode,
     renderWithDocument: handle.renderWithDocument ? async (instanceId, bodyKey, viewState, documentJson) => (await handle.renderWithDocument!(instanceId, bodyKey, viewState, documentJson)) as unknown as UiNode : undefined,
     tools: async (instanceId, viewState) => (await handle.tools(instanceId, viewState)) as unknown as ToolNode[],
@@ -3808,14 +3717,14 @@ type SyncAttachCardProps = {
   readonly cardKind: SyncCardKind | null;
   readonly draftPath: string;
   readonly syncTools: readonly FrameworkSyncToolLeaf[];
-  readonly onCommand: (command: CommandDescriptor) => void;
+  readonly onAction: (action: ActionDescriptor) => void;
   readonly onDraftPathChange: (value: string) => void;
   readonly onClose: () => void;
   readonly onAttach: (uri: string) => void;
   readonly onDetach: () => void;
 };
 
-function SyncAttachCard({ activeUri, cardKind, draftPath, syncTools, onCommand, onDraftPathChange, onClose, onAttach, onDetach }: SyncAttachCardProps): ReactElement {
+function SyncAttachCard({ activeUri, cardKind, draftPath, syncTools, onAction, onDraftPathChange, onClose, onAttach, onDetach }: SyncAttachCardProps): ReactElement {
   const open = cardKind != null;
   const placeholder =
     cardKind === "remote" ? "127.0.0.1:8787/demo" : cardKind === "folder" ? "/absolute/project/folder" : "/absolute/document.json";
@@ -3841,7 +3750,7 @@ function SyncAttachCard({ activeUri, cardKind, draftPath, syncTools, onCommand, 
     >
       <PopoverAnchor asChild>
         <div>
-          <ToolTree tools={syncTools as readonly ToolNode[]} onCommand={onCommand} />
+          <ToolTree tools={syncTools as readonly ToolNode[]} onAction={onAction} />
         </div>
       </PopoverAnchor>
       {open ? (
@@ -3872,16 +3781,16 @@ function SyncAttachCard({ activeUri, cardKind, draftPath, syncTools, onCommand, 
 
 type ToolTreeProps = {
   readonly tools: readonly ToolNode[];
-  readonly onCommand: (command: CommandDescriptor) => void;
+  readonly onAction: (action: ActionDescriptor) => void;
   readonly id?: string;
 };
 
-function resolveLeafCommand(node: ToolLeaf | Extract<ToolNode, { readonly kind: "button" | "toggle" }>): CommandDescriptor | null {
+function resolveLeafAction(node: ToolLeaf | Extract<ToolNode, { readonly kind: "button" | "toggle" }>): ActionDescriptor | null {
   if ("onPress" in node && node.onPress) return node.onPress;
   if ("onChange" in node && node.onChange) return node.onChange;
   if (node.kind === "button" || node.kind === "toggle") {
-    if (!node.command || !node.controllerId) return null;
-    return { controllerId: node.controllerId, command: node.command, args: node.args as Record<string, unknown> | undefined };
+    if (!node.action || !node.controllerId) return null;
+    return { controllerId: node.controllerId, action: node.action, args: node.args as Record<string, unknown> | undefined };
   }
   return null;
 }
@@ -3986,7 +3895,7 @@ function reconcileToolPath(nodes: readonly ToolNode[], path: readonly string[]):
   return reconciled;
 }
 
-function ToolToolbarItems({ items, onCommand }: { readonly items: readonly ToolLeaf[]; readonly onCommand: (command: CommandDescriptor) => void }): ReactElement {
+function ToolToolbarItems({ items, onAction }: { readonly items: readonly ToolLeaf[]; readonly onAction: (action: ActionDescriptor) => void }): ReactElement {
   const sorted = useMemo(() => sortToolNodes(items) as ToolLeaf[], [items]);
   const nodes = useMemo(() => {
     const rendered: ReactElement[] = [];
@@ -4001,8 +3910,8 @@ function ToolToolbarItems({ items, onCommand }: { readonly items: readonly ToolL
         <ToolbarItem key={`buttons-${run.map((entry) => entry.id).join("-")}`}>
           <ButtonGroup>
             {run.map((entry) => {
-              const command = resolveLeafCommand(entry);
-              if (!command) return null;
+              const action = resolveLeafAction(entry);
+              if (!action) return null;
               return (
                 <ButtonGroupItem
                   key={entry.id}
@@ -4010,7 +3919,7 @@ function ToolToolbarItems({ items, onCommand }: { readonly items: readonly ToolL
                   aria-label={entry.title ?? entry.label ?? entry.id}
                   title={entry.title ?? entry.label}
                   disabled={entry.disabled}
-                  onClick={() => onCommand(command)}
+                  onClick={() => onAction(action)}
                   icon={<Icon icon={toolIcon(entry.iconId)} size="small" />}
                   text={entry.text ?? entry.label}
                 />
@@ -4032,10 +3941,10 @@ function ToolToolbarItems({ items, onCommand }: { readonly items: readonly ToolL
             value={run.filter((entry) => entry.pressed).map((entry) => entry.id)}
             onValueChange={(values) => {
               for (const entry of run) {
-                const command = resolveLeafCommand(entry);
-                if (!command) continue;
+                const action = resolveLeafAction(entry);
+                if (!action) continue;
                 const pressed = values.includes(entry.id);
-                if ((entry.pressed ?? false) !== pressed) onCommand(command);
+                if ((entry.pressed ?? false) !== pressed) onAction(action);
               }
             }}
             items={run.map((entry) => ({
@@ -4070,12 +3979,12 @@ function ToolToolbarItems({ items, onCommand }: { readonly items: readonly ToolL
     }
     flushRuns();
     return rendered;
-  }, [onCommand, sorted]);
+  }, [onAction, sorted]);
 
   return <ToolbarGroup>{nodes}</ToolbarGroup>;
 }
 
-export function ToolTree({ tools, onCommand, id = "ui.toolbar" }: ToolTreeProps): ReactElement | null {
+export function ToolTree({ tools, onAction, id = "ui.toolbar" }: ToolTreeProps): ReactElement | null {
   const [activePath, setActivePath] = useState<readonly string[]>([]);
 
   useEffect(() => {
@@ -4108,7 +4017,7 @@ export function ToolTree({ tools, onCommand, id = "ui.toolbar" }: ToolTreeProps)
                 />
               </ToolbarItem>
             ) : (
-              <ToolToolbarItems items={segment.items} onCommand={onCommand} />
+              <ToolToolbarItems items={segment.items} onAction={onAction} />
             )}
           </ToolbarZone>
         ))}

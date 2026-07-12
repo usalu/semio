@@ -1,8 +1,9 @@
 {
   "title": "Fix Theme Color Tree Row Spacing In React Renderer",
   "emoji": "🎨",
-  "status": "open",
+  "status": "closed",
   "description": "The theme colors tree panel in the React renderer (framework/renderer/react/os-shell.tsx, themeColorInputRow) renders color swatch rows with inconsistent spacing/alignment compared to the workbench-token row height used by the tree component. The input[type=color] used className h-small w-full without a flex-centering wrapper, unlike the sibling buildThemeAppearanceGroupItems which wraps its color input in a flex items-center div. This caused misaligned/broken-looking rows for entries like black, d-d-d-g, d-g-g-g in the settings theme colors tree.",
+  "summary": "Fixed the React renderer's tree property rows (TreeItem layoutKind=\"property\" in ui/js/react/index.tsx) which always split a labeled control (color swatch, text/number input, select, checkbox) into a separate indented header row plus a nested \"expanded content\" row with guide lines — even when the item had no real children. This produced oversized, misaligned rows in every settings/theme tree panel (visible in the Settings \u003e Theme \u003e Colors panel: black, d-d-d-g, d-g-g-g, etc.). Changed TreeItem to render the control inline in the same single-line row as the label when the item isn't actually expandable, and changed TreeDataItemView to stop wrapping simple leaf controls in a redundant empty-labeled Label grid. Updated the corresponding TreeDataItem-building call sites in framework/renderer/react/os-shell.tsx (theme color/text/number inputs and general settings selects) from full-width block styling (w-full) to fixed inline widths appropriate for the new single-line layout. Updated two outdated unit tests in ui/js/react/index.tsx that asserted on the old split-row markup. Verified visually in the dev preview (Settings \u003e General and Settings \u003e Theme \u003e Colors now render clean single-line rows) and via `bun ./script.ts test` in ui/js/react (same 9 pre-existing unrelated baseline failures before and after; the 3 targeted tests pass).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1934"
   },

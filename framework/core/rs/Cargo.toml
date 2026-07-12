@@ -3,7 +3,7 @@ name = "semio-framework-core"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Render-independent framework kernel: Platform, CommandBus, declarative UiTree, layouts"
+description = "Render-independent framework kernel: Platform, ActionBus, declarative UiTree, layouts"
 
 [lib]
 path = "lib.rs"

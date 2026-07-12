@@ -4,7 +4,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_node_graph_scene, build_text_editor_scene, text_identifier_bounds_at,
     tool_button, tool_collection,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
-    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, App, CommandDescriptor, NodeGraphScene, PluginApp,
+    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, App, ActionDescriptor, NodeGraphScene, PluginApp,
     TextEditorScene, ToolNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
     WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -132,10 +132,10 @@ fn set_document_op(envelope: &TrinityRewriteEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
 }
 
-fn rewrite_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn rewrite_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: TRINITY_REWRITE_PLAY_CONTROLLER_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -783,9 +783,9 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         icon_id: None,
         selected: None,
         default_open: None,
-        command: None,
-        hover_command: None,
-        unhover_command: None,
+        action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -795,7 +795,7 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
     }
 }
 
-fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, description: Option<String>, command: CommandDescriptor) -> UiTreeItemNode {
+fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
         label: label.into(),
@@ -803,9 +803,9 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
         icon_id: None,
         selected: None,
         default_open: None,
-        command: Some(command),
-        hover_command: None,
-        unhover_command: None,
+        action: Some(action),
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -830,9 +830,9 @@ fn build_document_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
             icon_id: None,
             selected: None,
             default_open: None,
-            command: Some(rewrite_cmd("setSelection", Some(json!({ "ids": [node.id] })))),
-        hover_command: None,
-        unhover_command: None,
+            action: Some(rewrite_action("setSelection", Some(json!({ "ids": [node.id] })))),
+        hover_action: None,
+        unhover_action: None,
         actions: None,
             draggable: None,
             drag_data: None,
@@ -857,13 +857,13 @@ fn build_document_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
                 .collect(),
         ),
         highlighted_ids: None,
-        selection_change: Some(rewrite_cmd("setSelection", Some(json!({ "ids": [] })))),
-        drop_command: None,
+        selection_change: Some(rewrite_action("setSelection", Some(json!({ "ids": [] })))),
+        drop_action: None,
     })
 }
 
 fn catalogue_add_item(id: &str, label: &str, clause_kind: &str) -> UiTreeItemNode {
-    tree_item_with_command(id, label, None, rewrite_cmd("addRuleClause", Some(json!({ "kind": clause_kind }))))
+    tree_item_with_action(id, label, None, rewrite_action("addRuleClause", Some(json!({ "kind": clause_kind }))))
 }
 
 fn build_catalogue_tree() -> UiNode {
@@ -901,7 +901,7 @@ fn build_catalogue_tree() -> UiNode {
         selected_ids: Some(vec![]),
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -988,7 +988,7 @@ fn build_inspector_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
                         value: name_mixed.value,
                         placeholder: name_mixed.placeholder,
                         commit: None,
-                        on_change: rewrite_cmd("patchTrinityNodes", Some(json!({ "nodeIds": node_ids, "field": "name" }))),
+                        on_change: rewrite_action("patchTrinityNodes", Some(json!({ "nodeIds": node_ids, "field": "name" }))),
                         min: None,
                         max: None,
                         step: None,
@@ -1044,7 +1044,7 @@ fn build_parameters_panel(envelope: &TrinityRewriteEnvelope) -> UiNode {
                 value: display,
                 placeholder: Some(param.kind_label()),
                 commit: Some("blur".into()),
-                on_change: rewrite_cmd("setParameter", Some(json!({ "name": param.name }))),
+                on_change: rewrite_action("setParameter", Some(json!({ "name": param.name }))),
                 min: None,
                 max: None,
                 step: None,
@@ -1083,7 +1083,7 @@ impl ParameterKindLabel for ParameterSpec {
 
 //#region 🔖Render
 const DELETE_SELECTION_CONTEXT_MENU: &str =
-    r#"[{"id":"delete-selection","label":"Delete selection","command":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#;
+    r#"[{"id":"delete-selection","label":"Delete selection","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#;
 
 fn rewrite_lod_json_for_window(runtime: &RewritePlayRuntime, window_id: &str) -> Option<String> {
     let mode = runtime.lod_mode_by_window.get(window_id).map(String::as_str).unwrap_or(TRINITY_LOD_MODE_AUTOMATIC);
@@ -1107,7 +1107,7 @@ fn trinity_rewrite_lod_measure(window_id: &str, current_mode: &str) -> WindowMea
         label: Some("LOD".into()),
         value: current_mode.into(),
         items,
-        on_change: rewrite_cmd("setLodMode", Some(json!({ "windowId": window_id }))),
+        on_change: rewrite_action("setLodMode", Some(json!({ "windowId": window_id }))),
     }
 }
 
@@ -1207,15 +1207,15 @@ impl PluginApp for TrinityRewritePlayApp {
         serde_json::to_string(&default_envelope()).expect("trinity rewrite envelope json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut envelope = parse_envelope(document_json);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value(next.clone()) {
@@ -1481,16 +1481,16 @@ impl PluginApp for TrinityRewritePlayApp {
                 "clock",
                 "History",
                 vec![
-                    tool_button("trinity-rewrite-undo", "undo-2", "Undo", rewrite_cmd("undo", None)),
-                    tool_button("trinity-rewrite-redo", "redo-2", "Redo", rewrite_cmd("redo", None)),
-                    tool_button("trinity-rewrite-checkpoint", "git-commit", "Checkpoint", rewrite_cmd("commitCheckpoint", None)),
+                    tool_button("trinity-rewrite-undo", "undo-2", "Undo", rewrite_action("undo", None)),
+                    tool_button("trinity-rewrite-redo", "redo-2", "Redo", rewrite_action("redo", None)),
+                    tool_button("trinity-rewrite-checkpoint", "git-commit", "Checkpoint", rewrite_action("commitCheckpoint", None)),
                 ],
             ),
             tool_collection(
                 "trinity-rewrite-rule",
                 "code",
                 "Rule",
-                vec![tool_button("trinity-rewrite-reorganize", "rotate-cw", "Reorganize", rewrite_cmd("reorganize", None))],
+                vec![tool_button("trinity-rewrite-reorganize", "rotate-cw", "Reorganize", rewrite_action("reorganize", None))],
             ),
         ]
     }
@@ -1642,8 +1642,8 @@ mod tests {
         assert!(rhs_json.contains("\"editable\":true"));
     }
 
-    fn apply_and_get_envelope(app: &mut TrinityRewritePlayApp, command: &str, args: Option<&Value>, document: &str) -> TrinityRewriteEnvelope {
-        let ops = app.handle_command_patch_ops(command, args, document, &ViewState::default());
+    fn apply_and_get_envelope(app: &mut TrinityRewritePlayApp, action: &str, args: Option<&Value>, document: &str) -> TrinityRewriteEnvelope {
+        let ops = app.handle_action_patch_ops(action, args, document, &ViewState::default());
         let next = ops.first().cloned().and_then(|op| serde_json::from_str::<Value>(&op).ok()).and_then(|value| value.get("document").cloned()).expect("document op");
         serde_json::from_value(next).expect("envelope")
     }
@@ -1683,7 +1683,7 @@ mod tests {
         let mut selected = after_add.clone();
         selected.runtime.selected_node_ids = vec!["rhs-set-1".into()];
         let selected_json = serde_json::to_string(&selected).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "nodeGraphEdit",
             Some(&json!({ "surfaceId": TRINITY_REWRITE_PLAY_SURFACE_RHS, "ops": [{ "op": "deleteSelection" }] })),
             &selected_json,

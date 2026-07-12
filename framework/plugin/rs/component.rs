@@ -1,7 +1,7 @@
 //! 🧩 WASI P2 component exports for the plugin world contract.
 
 use crate::plugin_runtime::{
-    ensure_plugin_initialized, plugin_create_app, plugin_handle_command, plugin_manifest,
+    ensure_plugin_initialized, plugin_create_app, plugin_handle_action, plugin_manifest,
     plugin_render_with_document, plugin_tools, plugin_window_engagements, plugin_window_measures,
 };
 use wit_bindgen::generate;
@@ -13,7 +13,7 @@ generate!({
 
 use exports::semio::framework::plugin::Guest;
 use semio::framework::types::{
-    CommandContextJson, CommandInvocationJson, CommandResponseJson, MigrateDocumentInput,
+    ActionContextJson, ActionInvocationJson, ActionResponseJson, MigrateDocumentInput,
     MigrateDocumentOutput, PluginError, PluginManifestJson, PluginToolsJson, PluginWindowEngagementsJson,
     PluginWindowMeasuresJson, WindowInputJson, WindowOutputJson,
 };
@@ -33,15 +33,15 @@ impl Guest for ComponentGuest {
         plugin_create_app(&app_id).map_err(PluginError::Message)
     }
 
-    fn handle_command(
+    fn handle_action(
         instance_id: u32,
-        command: CommandInvocationJson,
-        context: CommandContextJson,
-    ) -> Result<CommandResponseJson, PluginError> {
+        action: ActionInvocationJson,
+        context: ActionContextJson,
+    ) -> Result<ActionResponseJson, PluginError> {
         ensure_plugin_initialized();
-        let result = plugin_handle_command(instance_id, &command.json, &context.json)
+        let result = plugin_handle_action(instance_id, &action.json, &context.json)
             .map_err(PluginError::Message)?;
-        Ok(CommandResponseJson {
+        Ok(ActionResponseJson {
             json: serde_json::to_string(&result).unwrap_or_else(|_| "{}".into()),
         })
     }
@@ -60,7 +60,7 @@ impl Guest for ComponentGuest {
 
     fn list_tools(
         instance_id: u32,
-        context: CommandContextJson,
+        context: ActionContextJson,
     ) -> Result<PluginToolsJson, PluginError> {
         ensure_plugin_initialized();
         let tools = plugin_tools(instance_id, &context.json).map_err(PluginError::Message)?;
@@ -71,7 +71,7 @@ impl Guest for ComponentGuest {
 
     fn window_engagements(
         instance_id: u32,
-        context: CommandContextJson,
+        context: ActionContextJson,
     ) -> Result<PluginWindowEngagementsJson, PluginError> {
         ensure_plugin_initialized();
         let engagements =
@@ -83,7 +83,7 @@ impl Guest for ComponentGuest {
 
     fn window_measures(
         instance_id: u32,
-        context: CommandContextJson,
+        context: ActionContextJson,
     ) -> Result<PluginWindowMeasuresJson, PluginError> {
         ensure_plugin_initialized();
         let measures =

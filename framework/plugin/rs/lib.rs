@@ -11,12 +11,12 @@ pub mod app {
 //! 🧩 Declarative app builder and plugin trait.
 
 use semio_framework_core::{
-    collect_window_kind_ids_from_layout, history_command_definitions, kernel::{
-        ActorId, CapabilityRequirement, CommandInvocationId, CommandResult, HybridLogicalTimestamp,
+    collect_window_kind_ids_from_layout, history_action_definitions, kernel::{
+        ActorId, CapabilityRequirement, ActionInvocationId, ActionResult, HybridLogicalTimestamp,
         InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
-    AppDefinition, CommandDefinition, CommandDescriptor, CommandKind, Contribution, ExampleDefinition, Keybinding,
+    AppDefinition, ActionDefinition, ActionDescriptor, ActionKind, Contribution, ExampleDefinition, Keybinding,
     ModeDefinition, NamedLayout, PanelGroup, PanelTabDefinition, PluginManifest, ProgramDefinition, ToolNode,
     UiNode, ViewState, WindowEngagement, WindowKindDefinition, WindowLayout, WindowMeasure,
     SurfaceKind,
@@ -51,7 +51,7 @@ pub struct PanelTabSpec {
 pub struct KeybindingSpec {
     pub keys: String,
     pub controller_id: String,
-    pub command: String,
+    pub action: String,
 }
 
 pub struct AppBuilder {
@@ -65,7 +65,7 @@ pub struct AppBuilder {
     window_kinds: Vec<WindowKindSpec>,
     panel_tabs: Vec<PanelTabSpec>,
     keybindings: Vec<KeybindingSpec>,
-    commands: Vec<CommandDefinition>,
+    actions: Vec<ActionDefinition>,
     named_layouts: Vec<NamedLayout>,
     default_layout: Option<WindowLayout>,
     terminologies: Vec<String>,
@@ -85,7 +85,7 @@ impl AppBuilder {
             window_kinds: Vec::new(),
             panel_tabs: Vec::new(),
             keybindings: Vec::new(),
-            commands: Vec::new(),
+            actions: Vec::new(),
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
@@ -208,33 +208,33 @@ impl AppBuilder {
         self
     }
 
-    pub fn keybinding(mut self, keys: impl Into<String>, command: impl Into<String>) -> Self {
+    pub fn keybinding(mut self, keys: impl Into<String>, action: impl Into<String>) -> Self {
         self.keybindings.push(KeybindingSpec {
             keys: keys.into(),
             controller_id: self.controller_id.clone(),
-            command: command.into(),
+            action: action.into(),
         });
         self
     }
 
-    /// @emoji ✏️ Declares a document-mutating command — dispatched as VCS operations with a true inverse.
+    /// @emoji ✏️ Declares a document-mutating action — dispatched as VCS operations with a true inverse.
     pub fn operation(self, id: impl Into<String>, label: impl Into<String>) -> Self {
-        self.command_with(CommandDefinition::new(id, label, CommandKind::Operation))
+        self.action_with(ActionDefinition::new(id, label, ActionKind::Operation))
     }
 
-    /// @emoji 👁️ Declares an ephemeral view command (camera, selection, hover, active tool) — not recorded in history.
-    pub fn view_command(self, id: impl Into<String>, label: impl Into<String>) -> Self {
-        self.command_with(CommandDefinition::new(id, label, CommandKind::View))
+    /// @emoji 👁️ Declares an ephemeral view action (camera, selection, hover, active tool) — not recorded in history.
+    pub fn view_action(self, id: impl Into<String>, label: impl Into<String>) -> Self {
+        self.action_with(ActionDefinition::new(id, label, ActionKind::View))
     }
 
-    /// @emoji 🐚 Declares a shell-only effect command (navigate, export, spawn) — no document mutation.
-    pub fn shell_command(self, id: impl Into<String>, label: impl Into<String>) -> Self {
-        self.command_with(CommandDefinition::new(id, label, CommandKind::Shell))
+    /// @emoji 🐚 Declares a shell-only effect action (navigate, export, spawn) — no document mutation.
+    pub fn shell_action(self, id: impl Into<String>, label: impl Into<String>) -> Self {
+        self.action_with(ActionDefinition::new(id, label, ActionKind::Shell))
     }
 
-    /// @emoji 📇 Declares a fully specified command (icon, args schema, keybinding, palette visibility, category).
-    pub fn command_with(mut self, command: CommandDefinition) -> Self {
-        self.commands.push(command);
+    /// @emoji 📇 Declares a fully specified action (icon, args schema, keybinding, palette visibility, category).
+    pub fn action_with(mut self, action: ActionDefinition) -> Self {
+        self.actions.push(action);
         self
     }
 
@@ -292,20 +292,20 @@ impl AppBuilder {
         let default_mode_id = self
             .default_mode_id
             .or_else(|| self.modes.first().map(|mode| mode.id.clone()));
-        let mut declared_command_ids = HashSet::new();
-        for command in &self.commands {
+        let mut declared_action_ids = HashSet::new();
+        for action in &self.actions {
             assert!(
-                declared_command_ids.insert(command.id.clone()),
-                "app {} duplicate command id {}",
+                declared_action_ids.insert(action.id.clone()),
+                "app {} duplicate action id {}",
                 self.id,
-                command.id
+                action.id
             );
         }
-        let app_declared_commands = !self.commands.is_empty();
-        let mut commands = self.commands;
-        for history_command in history_command_definitions() {
-            if declared_command_ids.insert(history_command.id.clone()) {
-                commands.push(history_command);
+        let app_declared_actions = !self.actions.is_empty();
+        let mut actions = self.actions;
+        for history_action in history_action_definitions() {
+            if declared_action_ids.insert(history_action.id.clone()) {
+                actions.push(history_action);
             }
         }
         let mut bound_keys: HashSet<String> = self.keybindings.iter().map(|binding| binding.keys.clone()).collect();
@@ -314,38 +314,38 @@ impl AppBuilder {
             .into_iter()
             .map(|binding| Keybinding {
                 keys: binding.keys,
-                command: CommandDescriptor {
+                action: ActionDescriptor {
                     controller_id: binding.controller_id,
-                    command: binding.command,
+                    action: binding.action,
                     args: None,
                 },
             })
             .collect();
-        for history_command in commands.iter().filter(|command| command.kind == CommandKind::History) {
-            if let Some(keys) = &history_command.keys {
+        for history_action in actions.iter().filter(|action| action.kind == ActionKind::History) {
+            if let Some(keys) = &history_action.keys {
                 if bound_keys.insert(keys.clone()) {
                     keybindings.push(Keybinding {
                         keys: keys.clone(),
-                        command: CommandDescriptor {
+                        action: ActionDescriptor {
                             controller_id: self.controller_id.clone(),
-                            command: history_command.id.clone(),
+                            action: history_action.id.clone(),
                             args: None,
                         },
                     });
                 }
             }
         }
-        // Apps that have adopted the declarative command registry must keep their keybindings
-        // in sync with it; apps not yet migrated (no `.operation()`/`.view_command()`/`.shell_command()`
-        // calls) are exempt until their migration wave lands their command declarations.
-        if app_declared_commands {
+        // Apps that have adopted the declarative action registry must keep their keybindings
+        // in sync with it; apps not yet migrated (no `.operation()`/`.view_action()`/`.shell_action()`
+        // calls) are exempt until their migration wave lands their action declarations.
+        if app_declared_actions {
             for binding in &keybindings {
                 assert!(
-                    declared_command_ids.contains(&binding.command.command),
-                    "app {} keybinding {} references undeclared command {}",
+                    declared_action_ids.contains(&binding.action.action),
+                    "app {} keybinding {} references undeclared action {}",
                     self.id,
                     binding.keys,
-                    binding.command.command
+                    binding.action.action
                 );
             }
         }
@@ -395,7 +395,7 @@ impl AppBuilder {
                 })
                 .collect(),
             keybindings,
-            commands,
+            actions,
             named_layouts: self.named_layouts,
             default_layout: self.default_layout,
             terminologies: self.terminologies,
@@ -444,9 +444,9 @@ mod app_builder_tests {
     }
 
     #[test]
-    fn build_definition_auto_injects_history_commands_and_keybindings() {
+    fn build_definition_auto_injects_history_actions_and_keybindings() {
         let definition = minimal_app("history-app").build_definition();
-        let history_ids: HashSet<&str> = definition.commands.iter().map(|c| c.id.as_str()).collect();
+        let history_ids: HashSet<&str> = definition.actions.iter().map(|c| c.id.as_str()).collect();
         assert!(history_ids.contains("undo"));
         assert!(history_ids.contains("redo"));
         assert!(history_ids.contains("commitCheckpoint"));
@@ -458,8 +458,8 @@ mod app_builder_tests {
             .iter()
             .find(|binding| binding.keys == "mod+z")
             .expect("undo keybinding auto-injected");
-        assert_eq!(undo_binding.command.command, "undo");
-        assert_eq!(undo_binding.command.controller_id, "history-app");
+        assert_eq!(undo_binding.action.action, "undo");
+        assert_eq!(undo_binding.action.controller_id, "history-app");
     }
 
     #[test]
@@ -471,20 +471,20 @@ mod app_builder_tests {
     }
 
     #[test]
-    fn operation_view_and_shell_commands_are_declared_with_their_kind() {
-        let definition = minimal_app("typed-commands-app")
+    fn operation_view_and_shell_actions_are_declared_with_their_kind() {
+        let definition = minimal_app("typed-actions-app")
             .operation("addLayer", "Add Layer")
-            .view_command("setCamera", "Set Camera")
-            .shell_command("exportPng", "Export PNG")
+            .view_action("setCamera", "Set Camera")
+            .shell_action("exportPng", "Export PNG")
             .build_definition();
-        let by_id = |id: &str| definition.commands.iter().find(|c| c.id == id).expect("declared");
-        assert_eq!(by_id("addLayer").kind, CommandKind::Operation);
-        assert_eq!(by_id("setCamera").kind, CommandKind::View);
-        assert_eq!(by_id("exportPng").kind, CommandKind::Shell);
+        let by_id = |id: &str| definition.actions.iter().find(|c| c.id == id).expect("declared");
+        assert_eq!(by_id("addLayer").kind, ActionKind::Operation);
+        assert_eq!(by_id("setCamera").kind, ActionKind::View);
+        assert_eq!(by_id("exportPng").kind, ActionKind::Shell);
     }
 
     #[test]
-    fn build_definition_rejects_duplicate_command_ids() {
+    fn build_definition_rejects_duplicate_action_ids() {
         let result = std::panic::catch_unwind(|| {
             minimal_app("dupe-command-app")
                 .operation("addLayer", "Add Layer")
@@ -495,7 +495,7 @@ mod app_builder_tests {
     }
 
     #[test]
-    fn build_definition_rejects_keybinding_for_undeclared_command_once_opted_in() {
+    fn build_definition_rejects_keybinding_for_undeclared_action_once_opted_in() {
         let result = std::panic::catch_unwind(|| {
             minimal_app("undeclared-keybinding-app")
                 .operation("addLayer", "Add Layer")
@@ -550,9 +550,9 @@ impl App {
 pub trait PluginApp: Send {
     fn app_id(&self) -> &str;
     fn initial_document_json(&self) -> String;
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         view_state: &ViewState,
@@ -677,7 +677,7 @@ pub mod generate_mode {
 
 use forms::{default_value_for_question, flatten_form_questions, is_question_visible, FormQuestion, FormSpec};
 use semio_framework_core::{
-    build_text_editor_scene, ui_stack_vertical, ui_text, CommandDescriptor, TextEditorScene, UiControlNode,
+    build_text_editor_scene, ui_stack_vertical, ui_text, ActionDescriptor, TextEditorScene, UiControlNode,
     UiFieldNode, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemAction,
     UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
 };
@@ -774,14 +774,14 @@ pub fn update_generation_values(
     }
 }
 
-pub fn handle_generation_command(
-    command: &str,
+pub fn handle_generation_action(
+    action: &str,
     args: Option<&Value>,
     state: &mut GenerationPlayState,
     spec: &FormSpec,
     controller_id: &str,
 ) -> bool {
-    match command {
+    match action {
         "addGeneration" => {
             add_generation(state, spec);
             true
@@ -826,10 +826,10 @@ pub fn handle_generation_command(
 //#endregion 🔖Crud
 
 //#region 🔖Render
-fn generation_cmd(controller_id: &str, command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn generation_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: controller_id.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -846,7 +846,7 @@ pub fn render_generations_tree(
             let mut actions = vec![UiTreeItemAction {
                 icon_id: "trash-2".into(),
                 label: Some("Remove".into()),
-                command: generation_cmd(
+                action: generation_action(
                     controller_id,
                     "removeGeneration",
                     Some(json!({ "id": generation.id })),
@@ -858,7 +858,7 @@ pub fn render_generations_tree(
                 UiTreeItemAction {
                     icon_id: "pencil".into(),
                     label: Some("Rename".into()),
-                    command: generation_cmd(
+                    action: generation_action(
                         controller_id,
                         "renameGeneration",
                         Some(json!({ "id": generation.id, "name": format!("{} copy", generation.name) })),
@@ -873,13 +873,13 @@ pub fn render_generations_tree(
                 icon_id: Some("layers".into()),
                 selected: Some(selected_id == Some(generation.id.as_str())),
                 default_open: None,
-                command: Some(generation_cmd(
+                action: Some(generation_action(
                     controller_id,
                     "selectGeneration",
                     Some(json!({ "id": generation.id })),
                 )),
-                hover_command: None,
-                unhover_command: None,
+                hover_action: None,
+                unhover_action: None,
                 actions: Some(actions),
                 draggable: None,
                 drag_data: None,
@@ -901,9 +901,9 @@ pub fn render_generations_tree(
                 icon_id: None,
                 selected: None,
                 default_open: None,
-                command: None,
-                hover_command: None,
-                unhover_command: None,
+                action: None,
+                hover_action: None,
+                unhover_action: None,
                 actions: None,
                 draggable: None,
                 drag_data: None,
@@ -926,9 +926,9 @@ pub fn render_generations_tree(
             icon_id: Some("plus".into()),
             selected: None,
             default_open: None,
-            command: Some(generation_cmd(controller_id, "addGeneration", None)),
-            hover_command: None,
-            unhover_command: None,
+            action: Some(generation_action(controller_id, "addGeneration", None)),
+            hover_action: None,
+            unhover_action: None,
             actions: None,
             draggable: None,
             drag_data: None,
@@ -941,8 +941,8 @@ pub fn render_generations_tree(
         sections,
         selected_ids: selected_id.map(|id| vec![format!("{surface_prefix}.generation.{id}")]),
         highlighted_ids: None,
-        selection_change: Some(generation_cmd(controller_id, "selectGeneration", None)),
-        drop_command: None,
+        selection_change: Some(generation_action(controller_id, "selectGeneration", None)),
+        drop_action: None,
     })
 }
 
@@ -950,7 +950,7 @@ fn render_question_field(
     question: &FormQuestion,
     values: &Map<String, Value>,
     controller_id: &str,
-    patch_command: &str,
+    patch_action: &str,
     generation_id: &str,
 ) -> Option<UiNode> {
     if !is_question_visible(question, values) {
@@ -962,9 +962,9 @@ fn render_question_field(
         .unwrap_or_else(|| default_value_for_question(question));
     let field_id = format!("generate.form.{}", question.id);
     let on_change = || {
-        generation_cmd(
+        generation_action(
             controller_id,
-            patch_command,
+            patch_action,
             Some(json!({
                 "generationId": generation_id,
                 "questionId": question.id,
@@ -1069,9 +1069,9 @@ fn render_question_field(
                             value: number.as_f64().map(|entry| entry.to_string()).unwrap_or_default(),
                             placeholder: None,
                             commit: None,
-                            on_change: generation_cmd(
+                            on_change: generation_action(
                                 controller_id,
-                                patch_command,
+                                patch_action,
                                 Some(json!({
                                     "generationId": generation_id,
                                     "questionId": question.id,
@@ -1120,7 +1120,7 @@ pub fn render_generation_form_body(
     form_spec: &FormSpec,
     values: &Map<String, Value>,
     controller_id: &str,
-    patch_command: &str,
+    patch_action: &str,
     generation_id: &str,
 ) -> UiNode {
     let mut children = Vec::new();
@@ -1129,7 +1129,7 @@ pub fn render_generation_form_body(
             children.push(ui_text(step.title.clone()));
         }
         for question in &step.questions {
-            if let Some(field) = render_question_field(question, values, controller_id, patch_command, generation_id) {
+            if let Some(field) = render_question_field(question, values, controller_id, patch_action, generation_id) {
                 children.push(field);
             }
         }
@@ -1225,7 +1225,7 @@ pub mod plugin_runtime {
 use crate::app::{AppInstance, Plugin, PluginBundle};
 use semio_framework_core::{
     kernel::{
-        ActorId, CommandInvocationId, CommandResult, HybridLogicalTimestamp, InverseOperation,
+        ActorId, ActionInvocationId, ActionResult, HybridLogicalTimestamp, InverseOperation,
         KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationId, SchemaId, UndoGroup,
         UndoPolicy,
     },
@@ -1271,14 +1271,14 @@ fn with_instances<R, F: FnOnce(&Vec<AppInstance>) -> Result<R, String>>(f: F) ->
     INSTANCES.with(|instances| f(&instances.borrow()))
 }
 
-pub fn command_result_from_patch_ops(
+pub fn action_result_from_patch_ops(
     patch_ops: Vec<String>,
-    command: &str,
+    action: &str,
     instance_id: u32,
     generation: u64,
     actor: &str,
-) -> CommandResult {
-    let invocation_id = CommandInvocationId(format!("{command}:{instance_id}:{generation}"));
+) -> ActionResult {
+    let invocation_id = ActionInvocationId(format!("{action}:{instance_id}:{generation}"));
     let actor_id = ActorId(actor.to_string());
     let document = DocumentHandle(instance_id as u128);
     let base_version = DocumentVersion(generation);
@@ -1293,7 +1293,7 @@ pub fn command_result_from_patch_ops(
                 id: operation_id.clone(),
                 document,
                 base_version,
-                command_id: invocation_id.clone(),
+                action_id: invocation_id.clone(),
                 diff: DocumentDiff {
                     schema_id: SchemaId(JSON_PATCH_SCHEMA_ID.into()),
                     payload,
@@ -1317,11 +1317,11 @@ pub fn command_result_from_patch_ops(
     let operation_ids: Vec<OperationId> = operations.iter().map(|op| op.id.clone()).collect();
     let inverse_operations: Vec<InverseOperation> =
         operations.iter().map(|op| op.inverse.clone()).collect();
-    CommandResult {
+    ActionResult {
         output: serde_json::Value::Null,
         operations,
         inverse_group: UndoGroup {
-            command_id: invocation_id,
+            action_id: invocation_id,
             operations: operation_ids,
             inverse_operations,
         },
@@ -1331,7 +1331,7 @@ pub fn command_result_from_patch_ops(
     }
 }
 
-fn sync_instance_document(document_json: &str, result: &CommandResult) -> Result<String, String> {
+fn sync_instance_document(document_json: &str, result: &ActionResult) -> Result<String, String> {
     let mut document = document_json.to_string();
     for operation in &result.operations {
         if operation.diff.schema_id.0 != JSON_PATCH_SCHEMA_ID {
@@ -1459,13 +1459,13 @@ pub fn plugin_destroy_app(instance_id: u32) -> Result<(), String> {
     })
 }
 
-pub fn plugin_handle_command(
+pub fn plugin_handle_action(
     instance_id: u32,
-    command_json: &str,
+    action_json: &str,
     context_json: &str,
-) -> Result<CommandResult, String> {
-    let command: serde_json::Value =
-        serde_json::from_str(command_json).map_err(|error| error.to_string())?;
+) -> Result<ActionResult, String> {
+    let action: serde_json::Value =
+        serde_json::from_str(action_json).map_err(|error| error.to_string())?;
     let context: serde_json::Value =
         serde_json::from_str(context_json).map_err(|error| error.to_string())?;
     let view_state: ViewState = context
@@ -1473,11 +1473,11 @@ pub fn plugin_handle_command(
         .cloned()
         .map(|value| serde_json::from_value(value).unwrap_or_default())
         .unwrap_or_default();
-    let command_name = command
-        .get("command")
+    let action_name = action
+        .get("action")
         .and_then(|value| value.as_str())
         .unwrap_or("");
-    let args = command.get("args").cloned();
+    let args = action.get("args").cloned();
     let actor = context
         .get("actor")
         .and_then(|value| value.as_str())
@@ -1488,15 +1488,15 @@ pub fn plugin_handle_command(
             .find(|instance| instance.id == instance_id)
             .ok_or_else(|| format!("unknown instance: {instance_id}"))?;
         let generation = 0_u64;
-        let patch_ops = instance.app.handle_command_patch_ops(
-            command_name,
+        let patch_ops = instance.app.handle_action_patch_ops(
+            action_name,
             args.as_ref(),
             &instance.document_json,
             &view_state,
         );
-        let result = command_result_from_patch_ops(
+        let result = action_result_from_patch_ops(
             patch_ops,
-            command_name,
+            action_name,
             instance_id,
             generation,
             actor,
@@ -1793,19 +1793,19 @@ impl PluginApp for StandardPluginApp {
         self.spec.initial_document_json.to_string()
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
-        if command == "setDocument" {
+        if action == "setDocument" {
             if let Some(document) = args.and_then(|value| value.get("document")) {
                 return vec![serde_json::json!({ "op": "setDocument", "document": document }).to_string()];
             }
         }
-        if command == "patch" {
+        if action == "patch" {
             if let Some(patch) = args.and_then(|value| value.get("patch")) {
                 return vec![serde_json::json!({ "op": "patch", "patch": patch }).to_string()];
             }
@@ -2402,13 +2402,13 @@ pub use app::{
     WindowKindSpec,
 };
 pub use generate_mode::{
-    add_generation, handle_generation_command, initial_generation_values, remove_generation,
+    add_generation, handle_generation_action, initial_generation_values, remove_generation,
     rename_generation, render_generation_form_body, render_generation_preview_text,
     render_generations_tree, select_generation, selected_generation, selected_generation_mut,
     update_generation_values, FormGeneration, GenerationPlayState,
 };
 pub use host_port::{host_backbone_read, host_backbone_write, host_now_ms, register_host_backbone_port, HostBackbonePort};
-pub use plugin_runtime::{command_result_from_patch_ops, install_plugin_bundle};
+pub use plugin_runtime::{action_result_from_patch_ops, install_plugin_bundle};
 pub use scaffold::{
     assert_standard_app_renders, register_standard_app, standard_app,
     standard_factory, StandardApp, StandardPluginApp,

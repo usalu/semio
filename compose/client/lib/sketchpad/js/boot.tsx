@@ -127,7 +127,7 @@ function SketchpadFeedbackFormHost({ platform }: { readonly node: UiPanelHostSur
 
   const dispatchDraft = (next: SketchpadFeedbackDraft) => {
     setDraft(next);
-    platform?.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "setFeedbackDraft", next);
+    platform?.actionBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "setFeedbackDraft", next);
   };
 
   return (
@@ -135,7 +135,7 @@ function SketchpadFeedbackFormHost({ platform }: { readonly node: UiPanelHostSur
       className="flex h-full min-h-0 flex-col gap-standard p-4"
       onSubmit={(event) => {
         event.preventDefault();
-        platform?.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "submitFeedback");
+        platform?.actionBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "submitFeedback");
         setSubmitted(true);
       }}
     >

@@ -4,7 +4,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_icon_render_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_stack_vertical,
     ui_text, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
-    world3d_selection_json, App, CommandDescriptor, IconRenderScene, PluginApp, PluginBundle,
+    world3d_selection_json, App, ActionDescriptor, IconRenderScene, PluginApp, PluginBundle,
     ToolNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowMeasure,
     World3dScene,
@@ -397,10 +397,10 @@ fn set_document_op(envelope: &ShootingPlayEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
 }
 
-fn shooting_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn shooting_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: SHOOTING_PLAY_CONTROLLER_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -671,9 +671,9 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         icon_id: None,
         selected: None,
         default_open: None,
-        command: None,
-        hover_command: None,
-        unhover_command: None,
+        action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -683,11 +683,11 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
     }
 }
 
-fn tree_item_with_command(
+fn tree_item_with_action(
     id: impl Into<String>,
     label: impl Into<String>,
     icon_id: Option<&str>,
-    command: CommandDescriptor,
+    action: ActionDescriptor,
 ) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
@@ -696,9 +696,9 @@ fn tree_item_with_command(
         icon_id: icon_id.map(str::to_string),
         selected: None,
         default_open: None,
-        command: Some(command),
-        hover_command: None,
-        unhover_command: None,
+        action: Some(action),
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -714,11 +714,11 @@ fn build_document_tree(envelope: &ShootingPlayEnvelope) -> UiNode {
         .shots
         .iter()
         .map(|shot| {
-            tree_item_with_command(
+            tree_item_with_action(
                 format!("shooting-shot:{}", shot.id),
                 shot.label.clone(),
                 Some("camera"),
-                shooting_cmd("setSelection", Some(json!({ "shotIds": [shot.id], "assetIds": [] }))),
+                shooting_action("setSelection", Some(json!({ "shotIds": [shot.id], "assetIds": [] }))),
             )
         })
         .collect();
@@ -726,11 +726,11 @@ fn build_document_tree(envelope: &ShootingPlayEnvelope) -> UiNode {
         .assets
         .iter()
         .map(|asset| {
-            tree_item_with_command(
+            tree_item_with_action(
                 format!("shooting-asset:{}", asset.id),
                 asset.name.clone(),
                 Some("box"),
-                shooting_cmd("setSelection", Some(json!({ "shotIds": [], "assetIds": [asset.id] }))),
+                shooting_action("setSelection", Some(json!({ "shotIds": [], "assetIds": [asset.id] }))),
             )
         })
         .collect();
@@ -752,7 +752,7 @@ fn build_document_tree(envelope: &ShootingPlayEnvelope) -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -774,27 +774,27 @@ fn build_catalogue_tree() -> UiNode {
                 id: "shooting-play-catalogue.assets".into(),
                 label: Some("Add Asset".into()),
                 default_open: Some(true),
-                items: vec![tree_item_with_command(
+                items: vec![tree_item_with_action(
                     "shooting-play-catalogue.asset.glb",
                     "GLB Asset",
                     Some("box"),
-                    shooting_cmd("addAsset", Some(json!({ "format": "glb" }))),
+                    shooting_action("addAsset", Some(json!({ "format": "glb" }))),
                 )],
             },
         ],
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
 fn catalog_shot_item(id: &str, label: &str, format: &str, shape: &str) -> UiTreeItemNode {
-    tree_item_with_command(
+    tree_item_with_action(
         format!("shooting-play-catalogue.{id}"),
         label,
         Some("camera"),
-        shooting_cmd("addShot", Some(json!({ "format": format, "shape": shape }))),
+        shooting_action("addShot", Some(json!({ "format": format, "shape": shape }))),
     )
 }
 
@@ -839,7 +839,7 @@ fn shot_inspector_group(shot: &ShootingShot) -> UiInspectorFieldGroup {
                     value: shot.label.clone(),
                     placeholder: None,
                     commit: None,
-                    on_change: shooting_cmd(
+                    on_change: shooting_action(
                         "patchShot",
                         Some(json!({ "shotId": shot.id, "field": "label" })),
                     ),
@@ -863,7 +863,7 @@ fn shot_inspector_group(shot: &ShootingShot) -> UiInspectorFieldGroup {
                     value: width_mixed.value.to_string(),
                     placeholder: None,
                     commit: None,
-                    on_change: shooting_cmd(
+                    on_change: shooting_action(
                         "patchShot",
                         Some(json!({ "shotId": shot.id, "field": "width" })),
                     ),
@@ -885,7 +885,7 @@ fn shot_inspector_group(shot: &ShootingShot) -> UiInspectorFieldGroup {
                     value: height_mixed.value.to_string(),
                     placeholder: None,
                     commit: None,
-                    on_change: shooting_cmd(
+                    on_change: shooting_action(
                         "patchShot",
                         Some(json!({ "shotId": shot.id, "field": "height" })),
                     ),
@@ -917,7 +917,7 @@ fn asset_inspector_group(asset: &ShootingAsset) -> UiInspectorFieldGroup {
                     value: asset.name.clone(),
                     placeholder: None,
                     commit: None,
-                    on_change: shooting_cmd(
+                    on_change: shooting_action(
                         "patchAsset",
                         Some(json!({ "assetId": asset.id, "field": "name" })),
                     ),
@@ -939,7 +939,7 @@ fn asset_inspector_group(asset: &ShootingAsset) -> UiInspectorFieldGroup {
                     value: asset.url.clone(),
                     placeholder: None,
                     commit: None,
-                    on_change: shooting_cmd(
+                    on_change: shooting_action(
                         "patchAsset",
                         Some(json!({ "assetId": asset.id, "field": "url" })),
                     ),
@@ -1051,7 +1051,7 @@ fn shooting_model_measures(envelope: &ShootingPlayEnvelope) -> Vec<WindowMeasure
             label: Some("Center Model".into()),
             pressed: envelope.runtime.center_model,
             text: None,
-            on_change: shooting_cmd("setCenterModel", None),
+            on_change: shooting_action("setCenterModel", None),
         },
         WindowMeasure::Slider {
             id: "shooting.measure.sun-azimuth".into(),
@@ -1060,7 +1060,7 @@ fn shooting_model_measures(envelope: &ShootingPlayEnvelope) -> Vec<WindowMeasure
             min: 0.0,
             max: 360.0,
             step: Some(1.0),
-            on_change: shooting_cmd("setSunAzimuth", None),
+            on_change: shooting_action("setSunAzimuth", None),
         },
         WindowMeasure::Slider {
             id: "shooting.measure.sun-elevation".into(),
@@ -1069,7 +1069,7 @@ fn shooting_model_measures(envelope: &ShootingPlayEnvelope) -> Vec<WindowMeasure
             min: -10.0,
             max: 90.0,
             step: Some(1.0),
-            on_change: shooting_cmd("setSunElevation", None),
+            on_change: shooting_action("setSunElevation", None),
         },
         WindowMeasure::Slider {
             id: "shooting.measure.sun-intensity".into(),
@@ -1078,7 +1078,7 @@ fn shooting_model_measures(envelope: &ShootingPlayEnvelope) -> Vec<WindowMeasure
             min: 0.0,
             max: 5.0,
             step: Some(0.1),
-            on_change: shooting_cmd("setSunIntensity", None),
+            on_change: shooting_action("setSunIntensity", None),
         },
         WindowMeasure::Slider {
             id: "shooting.measure.ambient".into(),
@@ -1087,7 +1087,7 @@ fn shooting_model_measures(envelope: &ShootingPlayEnvelope) -> Vec<WindowMeasure
             min: 0.0,
             max: 3.0,
             step: Some(0.05),
-            on_change: shooting_cmd("setAmbientIntensity", None),
+            on_change: shooting_action("setAmbientIntensity", None),
         },
         WindowMeasure::Toggle {
             id: "shooting.measure.shadow".into(),
@@ -1095,7 +1095,7 @@ fn shooting_model_measures(envelope: &ShootingPlayEnvelope) -> Vec<WindowMeasure
             label: Some("Shadow".into()),
             pressed: scene.shadow.enabled,
             text: None,
-            on_change: shooting_cmd("setShadowEnabled", None),
+            on_change: shooting_action("setShadowEnabled", None),
         },
         WindowMeasure::Slider {
             id: "shooting.measure.roughness".into(),
@@ -1104,7 +1104,7 @@ fn shooting_model_measures(envelope: &ShootingPlayEnvelope) -> Vec<WindowMeasure
             min: 0.0,
             max: 1.0,
             step: Some(0.05),
-            on_change: shooting_cmd("setMaterialRoughness", None),
+            on_change: shooting_action("setMaterialRoughness", None),
         },
     ]
 }
@@ -1126,7 +1126,7 @@ fn shooting_icon_measures(envelope: &ShootingPlayEnvelope) -> Vec<WindowMeasure>
                     label: entry.label.clone(),
                 })
                 .collect(),
-            on_change: shooting_cmd("setActiveShot", None),
+            on_change: shooting_action("setActiveShot", None),
         },
         WindowMeasure::Select {
             id: "shooting.measure.format".into(),
@@ -1136,7 +1136,7 @@ fn shooting_icon_measures(envelope: &ShootingPlayEnvelope) -> Vec<WindowMeasure>
                 MeasureSelectItem { id: "shooting.measure.format.svg".into(), value: "svg".into(), label: "SVG".into() },
                 MeasureSelectItem { id: "shooting.measure.format.png".into(), value: "png".into(), label: "PNG".into() },
             ],
-            on_change: shooting_cmd("setActiveShotFormat", None),
+            on_change: shooting_action("setActiveShotFormat", None),
         },
         WindowMeasure::Select {
             id: "shooting.measure.shape".into(),
@@ -1146,7 +1146,7 @@ fn shooting_icon_measures(envelope: &ShootingPlayEnvelope) -> Vec<WindowMeasure>
                 MeasureSelectItem { id: "shooting.measure.shape.rectangle".into(), value: "rectangle".into(), label: "Rectangle".into() },
                 MeasureSelectItem { id: "shooting.measure.shape.ellipse".into(), value: "ellipse".into(), label: "Ellipse".into() },
             ],
-            on_change: shooting_cmd("setActiveShotShape", None),
+            on_change: shooting_action("setActiveShotShape", None),
         },
     ]
 }
@@ -1162,7 +1162,7 @@ fn shooting_model_engagement(envelope: &ShootingPlayEnvelope) -> WindowEngagemen
                 icon_id: Some("move".into()),
                 pressed: Some(transform == "move"),
                 disabled: None,
-                command: Some(shooting_cmd("setTransformTool", Some(json!({ "tool": "move" })))),
+                action: Some(shooting_action("setTransformTool", Some(json!({ "tool": "move" })))),
             },
             WindowEngagementOption {
                 id: "shooting.opt.rotate".into(),
@@ -1170,7 +1170,7 @@ fn shooting_model_engagement(envelope: &ShootingPlayEnvelope) -> WindowEngagemen
                 icon_id: Some("rotate-cw".into()),
                 pressed: Some(transform == "rotate"),
                 disabled: None,
-                command: Some(shooting_cmd("setTransformTool", Some(json!({ "tool": "rotate" })))),
+                action: Some(shooting_action("setTransformTool", Some(json!({ "tool": "rotate" })))),
             },
             WindowEngagementOption {
                 id: "shooting.opt.scale".into(),
@@ -1178,7 +1178,7 @@ fn shooting_model_engagement(envelope: &ShootingPlayEnvelope) -> WindowEngagemen
                 icon_id: Some("maximize-2".into()),
                 pressed: Some(transform == "scale"),
                 disabled: None,
-                command: Some(shooting_cmd("setTransformTool", Some(json!({ "tool": "scale" })))),
+                action: Some(shooting_action("setTransformTool", Some(json!({ "tool": "scale" })))),
             },
         ]),
         input: Some(WindowEngagementInput {
@@ -1186,8 +1186,8 @@ fn shooting_model_engagement(envelope: &ShootingPlayEnvelope) -> WindowEngagemen
             value: Some(envelope.runtime.camera_draft_label.clone()),
             placeholder: Some("Camera label".into()),
             disabled: None,
-            on_change: Some(shooting_cmd("setCameraDraftLabel", None)),
-            on_submit: Some(shooting_cmd("saveCamera", None)),
+            on_change: Some(shooting_action("setCameraDraftLabel", None)),
+            on_submit: Some(shooting_action("saveCamera", None)),
             on_repeat_last: None,
             on_abort: None,
         }),
@@ -1206,7 +1206,7 @@ fn shooting_model_engagement(envelope: &ShootingPlayEnvelope) -> WindowEngagemen
                     id: format!("shooting.camera.{}", saved.id),
                     label: saved.label.clone(),
                     detail: Some("Load camera".into()),
-                    command: Some(shooting_cmd("loadSavedCamera", Some(json!({ "id": saved.id })))),
+                    action: Some(shooting_action("loadSavedCamera", Some(json!({ "id": saved.id })))),
                 })
                 .collect(),
         ),
@@ -1223,7 +1223,7 @@ fn shooting_icon_engagement(envelope: &ShootingPlayEnvelope) -> WindowEngagement
             value: shot.map(|entry| entry.label.clone()),
             placeholder: Some("Shot label".into()),
             disabled: Some(shot.is_none()),
-            on_change: Some(shooting_cmd("setActiveShotLabel", None)),
+            on_change: Some(shooting_action("setActiveShotLabel", None)),
             on_submit: None,
             on_repeat_last: None,
             on_abort: None,
@@ -1262,7 +1262,7 @@ fn shooting_tools(envelope: &ShootingPlayEnvelope) -> Vec<ToolNode> {
                     order: Some(1),
                     disabled: None,
                     category: None,
-                    on_press: shooting_cmd("loadRequest", None),
+                    on_press: shooting_action("loadRequest", None),
                 },
                 ToolNode::Button {
                     id: "shooting.tools.open.glb".into(),
@@ -1273,7 +1273,7 @@ fn shooting_tools(envelope: &ShootingPlayEnvelope) -> Vec<ToolNode> {
                     order: Some(2),
                     disabled: None,
                     category: None,
-                    on_press: shooting_cmd("importAssetRequest", None),
+                    on_press: shooting_action("importAssetRequest", None),
                 },
             ],
         },
@@ -1296,7 +1296,7 @@ fn shooting_tools(envelope: &ShootingPlayEnvelope) -> Vec<ToolNode> {
                     order: Some(1),
                     disabled: None,
                     category: None,
-                    on_press: shooting_cmd("saveDownload", None),
+                    on_press: shooting_action("saveDownload", None),
                 },
                 ToolNode::Button {
                     id: "shooting.tools.save.shot".into(),
@@ -1307,7 +1307,7 @@ fn shooting_tools(envelope: &ShootingPlayEnvelope) -> Vec<ToolNode> {
                     order: Some(2),
                     disabled: Some(!has_shot),
                     category: None,
-                    on_press: shooting_cmd("exportActiveShot", None),
+                    on_press: shooting_action("exportActiveShot", None),
                 },
                 ToolNode::Button {
                     id: "shooting.tools.save.shots".into(),
@@ -1318,7 +1318,7 @@ fn shooting_tools(envelope: &ShootingPlayEnvelope) -> Vec<ToolNode> {
                     order: Some(3),
                     disabled: Some(!has_shot),
                     category: None,
-                    on_press: shooting_cmd("exportAllShots", None),
+                    on_press: shooting_action("exportAllShots", None),
                 },
                 ToolNode::Button {
                     id: "shooting.tools.save.reset".into(),
@@ -1329,7 +1329,7 @@ fn shooting_tools(envelope: &ShootingPlayEnvelope) -> Vec<ToolNode> {
                     order: Some(4),
                     disabled: None,
                     category: None,
-                    on_press: shooting_cmd("resetFixture", None),
+                    on_press: shooting_action("resetFixture", None),
                 },
             ],
         },
@@ -1342,7 +1342,7 @@ fn shooting_tools(envelope: &ShootingPlayEnvelope) -> Vec<ToolNode> {
             order: Some(3),
             disabled: None,
             category: None,
-            on_press: shooting_cmd("saveCamera", None),
+            on_press: shooting_action("saveCamera", None),
         },
     ]
 }
@@ -1360,15 +1360,15 @@ impl PluginApp for ShootingPlayApp {
         serde_json::to_string(&default_envelope()).expect("shooting envelope json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut envelope = parse_envelope(document_json);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(document) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value(document.clone()) {
@@ -1520,7 +1520,7 @@ impl PluginApp for ShootingPlayApp {
             }
             "setSunAzimuth" | "setSunElevation" | "setSunIntensity" | "setAmbientIntensity" | "setMaterialRoughness" => {
                 if let Some(value) = args.and_then(|args| args.get("value")).and_then(|value| value.as_f64()) {
-                    match command {
+                    match action {
                         "setSunAzimuth" => envelope.fixture.scene.sun.azimuth = value,
                         "setSunElevation" => envelope.fixture.scene.sun.elevation = value,
                         "setSunIntensity" => envelope.fixture.scene.sun.intensity = value,
@@ -1571,7 +1571,7 @@ impl PluginApp for ShootingPlayApp {
                 return vec![json!({
                     "op": "requestFileOpen",
                     "accept": ".json,application/json",
-                    "importCommand": "setFixtureJson",
+                    "importAction": "setFixtureJson",
                 })
                 .to_string()];
             }
@@ -1580,7 +1580,7 @@ impl PluginApp for ShootingPlayApp {
                     "op": "requestFileOpen",
                     "accept": ".glb,model/gltf-binary",
                     "readAs": "dataUrl",
-                    "importCommand": "importAsset",
+                    "importAction": "importAsset",
                 })
                 .to_string()];
             }
@@ -1615,7 +1615,7 @@ impl PluginApp for ShootingPlayApp {
             }
             "exportActiveShot" | "exportAllShots" => {
                 if let Some(asset) = active_asset(&envelope.fixture) {
-                    let shots: Vec<&ShootingShot> = if command == "exportActiveShot" {
+                    let shots: Vec<&ShootingShot> = if action == "exportActiveShot" {
                         active_shot(&envelope.fixture).into_iter().collect()
                     } else {
                         envelope.fixture.shots.iter().collect()
@@ -1683,7 +1683,7 @@ impl PluginApp for ShootingPlayApp {
                 }
             }
             "patchShot" | "patchShots" => {
-                let shot_ids: Vec<String> = if command == "patchShot" {
+                let shot_ids: Vec<String> = if action == "patchShot" {
                     args.and_then(|value| value.get("shotId"))
                         .and_then(|value| value.as_str())
                         .map(|id| vec![id.to_string()])
@@ -1708,7 +1708,7 @@ impl PluginApp for ShootingPlayApp {
                 }
             }
             "patchAsset" | "patchAssets" => {
-                let asset_ids: Vec<String> = if command == "patchAsset" {
+                let asset_ids: Vec<String> = if action == "patchAsset" {
                     args.and_then(|value| value.get("assetId"))
                         .and_then(|value| value.as_str())
                         .map(|id| vec![id.to_string()])
@@ -2040,10 +2040,10 @@ mod tests {
     fn save_and_load_camera_round_trip() {
         let mut app = ShootingPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("setCameraDraftLabel", Some(&json!({ "value": "Hero" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setCameraDraftLabel", Some(&json!({ "value": "Hero" })), &document, &ViewState::default());
         let envelope = apply_ops(&parse_envelope(&document), &ops);
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("saveCamera", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("saveCamera", None, &document, &ViewState::default());
         let envelope = apply_ops(&envelope, &ops);
         assert_eq!(envelope.fixture.saved_cameras.len(), 1);
         assert_eq!(envelope.fixture.saved_cameras[0].label, "Hero");
@@ -2052,7 +2052,7 @@ mod tests {
         let mut moved = envelope.clone();
         moved.fixture.camera.position = [1.0, 2.0, 3.0];
         let document = serde_json::to_string(&moved).unwrap();
-        let ops = app.handle_command_patch_ops("loadSavedCamera", Some(&json!({ "id": saved_id })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("loadSavedCamera", Some(&json!({ "id": saved_id })), &document, &ViewState::default());
         let restored = apply_ops(&moved, &ops);
         assert_eq!(restored.fixture.camera.position, envelope.fixture.saved_cameras[0].camera.position);
         let engagements = app.window_engagements(&serde_json::to_string(&restored).unwrap(), &ViewState::default());
@@ -2072,7 +2072,7 @@ mod tests {
         envelope.fixture.shots[0].camera_id = Some("camera-a".into());
         let document = serde_json::to_string(&envelope).unwrap();
         let camera = json!({ "position": [9.0, 9.0, 9.0], "target": [0.0, 0.0, 0.0], "zoom": 2.0, "fov": 50.0 });
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setShotCamera",
             Some(&json!({ "shotId": envelope.fixture.shots[0].id, "camera": camera })),
             &document,
@@ -2087,10 +2087,10 @@ mod tests {
     fn scene_setters_mutate_lighting_and_measures_reflect_them() {
         let mut app = ShootingPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("setSunAzimuth", Some(&json!({ "value": 90.0 })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setSunAzimuth", Some(&json!({ "value": 90.0 })), &document, &ViewState::default());
         let envelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.fixture.scene.sun.azimuth, 90.0);
-        let ops = app.handle_command_patch_ops("setShadowEnabled", Some(&json!({ "pressed": false })), &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
+        let ops = app.handle_action_patch_ops("setShadowEnabled", Some(&json!({ "pressed": false })), &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
         let envelope = apply_ops(&envelope, &ops);
         assert!(!envelope.fixture.scene.shadow.enabled);
         let measures = app.window_measures(&serde_json::to_string(&envelope).unwrap(), &ViewState::default());
@@ -2103,15 +2103,15 @@ mod tests {
     fn center_model_and_asset_activation_bump_fit_revision() {
         let mut app = ShootingPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("setCenterModel", Some(&json!({ "pressed": false })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setCenterModel", Some(&json!({ "pressed": false })), &document, &ViewState::default());
         let envelope = apply_ops(&parse_envelope(&document), &ops);
         assert!(!envelope.runtime.center_model);
-        let ops = app.handle_command_patch_ops("setCenterModel", Some(&json!({ "pressed": true })), &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
+        let ops = app.handle_action_patch_ops("setCenterModel", Some(&json!({ "pressed": true })), &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
         let envelope = apply_ops(&envelope, &ops);
         assert!(envelope.runtime.center_model);
         assert_eq!(envelope.runtime.fit_revision, 1);
         let asset_id = envelope.fixture.assets[0].id.clone();
-        let ops = app.handle_command_patch_ops("setActiveAsset", Some(&json!({ "value": asset_id })), &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
+        let ops = app.handle_action_patch_ops("setActiveAsset", Some(&json!({ "value": asset_id })), &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
         let envelope = apply_ops(&envelope, &ops);
         assert_eq!(envelope.runtime.fit_revision, 2);
     }
@@ -2120,7 +2120,7 @@ mod tests {
     fn world_pick_and_hover_drive_selection_protocol() {
         let mut app = ShootingPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("worldPick", Some(&json!({ "granularity": "mesh", "id": 0, "merge": "replace" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("worldPick", Some(&json!({ "granularity": "mesh", "id": 0, "merge": "replace" })), &document, &ViewState::default());
         let envelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.runtime.selected_asset_ids, vec!["base".to_string()]);
         assert_eq!(envelope.fixture.active_asset_id, "base");
@@ -2129,10 +2129,10 @@ mod tests {
         assert_eq!(selection["activeObjectId"], json!("base"));
         assert!(selection.get("gumballTarget").is_some());
         assert_eq!(selection["transformTool"], json!("move"));
-        let ops = app.handle_command_patch_ops("setHover", Some(&json!({ "objectId": "base" })), &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
+        let ops = app.handle_action_patch_ops("setHover", Some(&json!({ "objectId": "base" })), &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
         let envelope = apply_ops(&envelope, &ops);
         assert_eq!(envelope.runtime.hovered_asset_id.as_deref(), Some("base"));
-        let ops = app.handle_command_patch_ops("worldPick", Some(&json!({ "granularity": "mesh", "id": Value::Null, "merge": "replace" })), &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
+        let ops = app.handle_action_patch_ops("worldPick", Some(&json!({ "granularity": "mesh", "id": Value::Null, "merge": "replace" })), &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
         let envelope = apply_ops(&envelope, &ops);
         assert!(envelope.runtime.selected_asset_ids.is_empty());
     }
@@ -2141,30 +2141,30 @@ mod tests {
     fn export_import_and_download_ops() {
         let mut app = ShootingPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("exportActiveShot", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("exportActiveShot", None, &document, &ViewState::default());
         let op: Value = serde_json::from_str(&ops[0]).unwrap();
         assert_eq!(op["op"], json!("iconRenderExport"));
         assert_eq!(op["items"].as_array().unwrap().len(), 1);
         assert_eq!(op["items"][0]["filename"], json!("overview-svg.svg"));
         assert_eq!(op["items"][0]["request"]["assetUrl"], json!("/mesh/base.glb"));
-        let ops = app.handle_command_patch_ops("exportAllShots", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("exportAllShots", None, &document, &ViewState::default());
         let op: Value = serde_json::from_str(&ops[0]).unwrap();
         assert_eq!(op["items"].as_array().unwrap().len(), 2);
-        let ops = app.handle_command_patch_ops("saveDownload", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("saveDownload", None, &document, &ViewState::default());
         let op: Value = serde_json::from_str(&ops[0]).unwrap();
         assert_eq!(op["op"], json!("downloadMediaExport"));
         assert_eq!(op["filename"], json!("shooting.fixture.json"));
         let round_trip: ShootingFixture = serde_json::from_str(op["data"].as_str().unwrap()).unwrap();
         assert_eq!(round_trip.schema, SHOOTING_FIXTURE_SCHEMA);
-        let ops = app.handle_command_patch_ops("loadRequest", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("loadRequest", None, &document, &ViewState::default());
         let op: Value = serde_json::from_str(&ops[0]).unwrap();
         assert_eq!(op["op"], json!("requestFileOpen"));
-        assert_eq!(op["importCommand"], json!("setFixtureJson"));
-        let ops = app.handle_command_patch_ops("importAssetRequest", None, &document, &ViewState::default());
+        assert_eq!(op["importAction"], json!("setFixtureJson"));
+        let ops = app.handle_action_patch_ops("importAssetRequest", None, &document, &ViewState::default());
         let op: Value = serde_json::from_str(&ops[0]).unwrap();
         assert_eq!(op["readAs"], json!("dataUrl"));
-        assert_eq!(op["importCommand"], json!("importAsset"));
-        let ops = app.handle_command_patch_ops(
+        assert_eq!(op["importAction"], json!("importAsset"));
+        let ops = app.handle_action_patch_ops(
             "importAsset",
             Some(&json!({ "payload": "data:model/gltf-binary;base64,AAAA", "name": "chair.glb" })),
             &document,
@@ -2198,7 +2198,7 @@ mod tests {
     fn set_active_shot_label_patches_active_shot() {
         let mut app = ShootingPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("setActiveShotLabel", Some(&json!({ "value": "Hero Shot" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setActiveShotLabel", Some(&json!({ "value": "Hero Shot" })), &document, &ViewState::default());
         let envelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(active_shot(&envelope.fixture).unwrap().label, "Hero Shot");
     }
@@ -2209,7 +2209,7 @@ mod tests {
         let mut envelope = default_envelope();
         envelope.fixture.shots.clear();
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("resetFixture", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("resetFixture", None, &document, &ViewState::default());
         let restored = apply_ops(&envelope, &ops);
         assert_eq!(restored.fixture.shots.len(), 2);
     }
@@ -2278,10 +2278,10 @@ mod tests {
     }
 
     #[test]
-    fn add_shot_command_appends_shot() {
+    fn add_shot_action_appends_shot() {
         let mut app = ShootingPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("addShot", Some(&json!({ "format": "svg", "shape": "ellipse" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addShot", Some(&json!({ "format": "svg", "shape": "ellipse" })), &document, &ViewState::default());
         let envelope: ShootingPlayEnvelope = apply_ops(&parse_envelope(&document), &ops);
         assert!(envelope.fixture.shots.iter().any(|shot| shot.format == "svg" && shot.shape == "ellipse"));
     }
@@ -2292,7 +2292,7 @@ mod tests {
         let document = app.initial_document_json();
         let envelope = parse_envelope(&document);
         let second_id = envelope.fixture.shots.get(1).map(|shot| shot.id.clone()).expect("second shot");
-        let ops = app.handle_command_patch_ops("setActiveShot", Some(&json!({ "value": second_id })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setActiveShot", Some(&json!({ "value": second_id })), &document, &ViewState::default());
         let next: ShootingPlayEnvelope = apply_ops(&envelope, &ops);
         assert_eq!(next.fixture.active_shot_id, second_id);
     }

@@ -2,7 +2,7 @@
 
 use semio_framework_plugin::{SurfaceKind, 
     build_table_scene, build_text_editor_scene, create_default_layout, ui_inspector_readonly_field,
-    ui_stack_vertical, ui_text, App, CommandDescriptor, PanelGroup, PluginApp, PluginBundle, TableScene, TextEditorScene,
+    ui_stack_vertical, ui_text, App, ActionDescriptor, PanelGroup, PluginApp, PluginBundle, TableScene, TextEditorScene,
     UiControlNode, UiFieldNode, UiInputNode, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 };
@@ -204,10 +204,10 @@ fn set_document_op(envelope: &VcsPlayEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
 }
 
-fn vcs_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn vcs_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: VCS_PLAY_APP_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -399,9 +399,9 @@ fn build_document_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNod
             icon_id: Some("git-commit".into()),
             selected: None,
             default_open: None,
-            command: Some(vcs_cmd("checkoutCheckpoint", Some(json!({ "checkpointId": checkpoint.id })))),
-            hover_command: None,
-            unhover_command: None,
+            action: Some(vcs_action("checkoutCheckpoint", Some(json!({ "checkpointId": checkpoint.id })))),
+            hover_action: None,
+            unhover_action: None,
             actions: None,
             draggable: None,
             drag_data: None,
@@ -421,12 +421,12 @@ fn build_document_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNod
             icon_id: Some("git-branch".into()),
             selected: None,
             default_open: None,
-            command: Some(vcs_cmd(
+            action: Some(vcs_action(
                 "switchAlternative",
                 Some(json!({ "alternativeId": alt.id })),
             )),
-            hover_command: None,
-            unhover_command: None,
+            hover_action: None,
+            unhover_action: None,
             actions: None,
             draggable: None,
             drag_data: None,
@@ -449,9 +449,9 @@ fn build_document_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNod
                         icon_id: None,
                         selected: None,
                         default_open: None,
-                        command: None,
-        hover_command: None,
-        unhover_command: None,
+                        action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
                         draggable: None,
                         drag_data: None,
@@ -477,8 +477,8 @@ fn build_document_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNod
                 .collect(),
         ),
         highlighted_ids: None,
-        selection_change: Some(vcs_cmd("setSelection", None)),
-        drop_command: None,
+        selection_change: Some(vcs_action("setSelection", None)),
+        drop_action: None,
     })
 }
 
@@ -493,7 +493,7 @@ fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
                 value: projection.title.clone(),
                 placeholder: None,
                 commit: Some("blur".into()),
-                on_change: vcs_cmd("patchProjection", Some(json!({ "field": "title" }))),
+                on_change: vcs_action("patchProjection", Some(json!({ "field": "title" }))),
                 min: None,
                 max: None,
                 step: None,
@@ -512,7 +512,7 @@ fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
                 value: projection.counter.to_string(),
                 placeholder: None,
                 commit: Some("blur".into()),
-                on_change: vcs_cmd("patchProjection", Some(json!({ "field": "counter" }))),
+                on_change: vcs_action("patchProjection", Some(json!({ "field": "counter" }))),
                 min: None,
                 max: None,
                 step: None,
@@ -531,7 +531,7 @@ fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
                 value: projection.status.clone(),
                 placeholder: None,
                 commit: Some("blur".into()),
-                on_change: vcs_cmd("patchProjection", Some(json!({ "field": "status" }))),
+                on_change: vcs_action("patchProjection", Some(json!({ "field": "status" }))),
                 min: None,
                 max: None,
                 step: None,
@@ -550,7 +550,7 @@ fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
                 value: projection.notes.clone(),
                 placeholder: None,
                 commit: Some("blur".into()),
-                on_change: vcs_cmd("patchProjection", Some(json!({ "field": "notes" }))),
+                on_change: vcs_action("patchProjection", Some(json!({ "field": "notes" }))),
                 min: None,
                 max: None,
                 step: None,
@@ -609,16 +609,16 @@ impl PluginApp for VcsPlayApp {
         serde_json::to_string(&default_envelope()).expect("vcs envelope json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut play = parse_envelope(document_json);
         let mut store = store_from_envelope(&play);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(document) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value::<VcsPlayEnvelope>(document.clone()) {
@@ -761,13 +761,13 @@ fn create_vcs_app() -> App {
             .operation("patchProjection", "Patch Projection")
             .operation("textEdit", "Edit Text")
             .operation("edit", "Edit")
-            .view_command("setSelection", "Set Selection")
-            .view_command("noop", "No-op")
-            .view_command("canvasPointerDown", "Canvas Pointer Down")
-            .view_command("canvasPointerMove", "Canvas Pointer Move")
-            .view_command("canvasPointerUp", "Canvas Pointer Up")
-            .view_command("canvasWheel", "Canvas Wheel")
-            .shell_command("setDocument", "Set Document")
+            .view_action("setSelection", "Set Selection")
+            .view_action("noop", "No-op")
+            .view_action("canvasPointerDown", "Canvas Pointer Down")
+            .view_action("canvasPointerMove", "Canvas Pointer Move")
+            .view_action("canvasPointerUp", "Canvas Pointer Up")
+            .view_action("canvasWheel", "Canvas Wheel")
+            .shell_action("setDocument", "Set Document")
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .default_layout(create_default_layout(
@@ -818,11 +818,11 @@ mod tests {
     }
 
     #[test]
-    fn increment_counter_command_updates_projection() {
+    fn increment_counter_action_updates_projection() {
         let mut app = VcsPlayApp;
         let document = app.initial_document_json();
         let before = materialized_projection(&parse_envelope(&document)).counter;
-        let ops = app.handle_command_patch_ops("incrementCounter", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("incrementCounter", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: VcsPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
@@ -839,7 +839,7 @@ mod tests {
     }
 
     #[test]
-    fn text_edit_command_persists_projection_changes() {
+    fn text_edit_action_persists_projection_changes() {
         let mut app = VcsPlayApp;
         let document = app.initial_document_json();
         let before = materialized_projection(&parse_envelope(&document));
@@ -848,7 +848,7 @@ mod tests {
         edited.counter = before.counter + 41;
         edited.tags.push("edited-in-place".into());
         let text = serde_json::to_string_pretty(&edited).unwrap();
-        let ops = app.handle_command_patch_ops("textEdit", Some(&json!({ "text": text })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("textEdit", Some(&json!({ "text": text })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: VcsPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
@@ -859,14 +859,14 @@ mod tests {
     }
 
     #[test]
-    fn edit_command_is_alias_for_text_edit() {
+    fn edit_action_is_alias_for_text_edit() {
         let mut app = VcsPlayApp;
         let document = app.initial_document_json();
         let before = materialized_projection(&parse_envelope(&document));
         let mut edited = before.clone();
         edited.status = "reviewed".into();
         let text = serde_json::to_string(&edited).unwrap();
-        let ops = app.handle_command_patch_ops("edit", Some(&json!({ "text": text })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("edit", Some(&json!({ "text": text })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: VcsPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();

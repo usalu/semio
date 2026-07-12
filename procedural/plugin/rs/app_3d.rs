@@ -9,11 +9,11 @@ use flow_core::{
 use flow_module_brep::tessellate_geometry_json;
 use semio_framework_plugin::{PanelGroup,
     build_node_graph_scene, build_world_3d_scene, create_default_layout, create_named_layout,
-    handle_generation_command, merge_world_selection_ids,
+    handle_generation_action, merge_world_selection_ids,
     mesh_from_kind, render_generation_form_body, render_generation_preview_text, render_generations_tree,
     selected_generation, tool_button, tool_collection, tool_toggle, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, App, world3d_scene, world3d_selection_json,
-    CommandDescriptor, GenerationPlayState, NodeGraphScene, PluginApp, PluginBundle, ToolCategory, ToolNode, UiControlNode,
+    ActionDescriptor, GenerationPlayState, NodeGraphScene, PluginApp, PluginBundle, ToolCategory, ToolNode, UiControlNode,
     UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -280,10 +280,10 @@ fn finalize_document_op(envelope: &mut Procedural3dEnvelope) -> String {
     set_document_op(envelope)
 }
 
-fn procedural_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn procedural_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: PROCEDURAL_3D_PLAY_CONTROLLER_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -709,11 +709,11 @@ fn export_mesh_from_envelope(envelope: &Procedural3dEnvelope) -> semio_framework
 //#endregion 🔖Document
 
 //#region 🔖Panels
-fn tree_item_with_command(
+fn tree_item_with_action(
     id: impl Into<String>,
     label: impl Into<String>,
     icon_id: Option<&str>,
-    command: CommandDescriptor,
+    action: ActionDescriptor,
 ) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
@@ -722,9 +722,9 @@ fn tree_item_with_command(
         icon_id: icon_id.map(str::to_string),
         selected: None,
         default_open: None,
-        command: Some(command),
-        hover_command: None,
-        unhover_command: None,
+        action: Some(action),
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -740,11 +740,11 @@ fn build_document_tree(fixture: &FlowFixture, selected_node_ids: &[String]) -> U
         .iter()
         .map(|widget| {
             let id = widget_id(widget).to_string();
-            tree_item_with_command(
+            tree_item_with_action(
                 format!("procedural-widget:{id}"),
                 id.clone(),
                 Some("cpu"),
-                procedural_cmd("setSelection", Some(json!({ "ids": [id] }))),
+                procedural_action("setSelection", Some(json!({ "ids": [id] }))),
             )
         })
         .collect();
@@ -758,7 +758,7 @@ fn build_document_tree(fixture: &FlowFixture, selected_node_ids: &[String]) -> U
         selected_ids: Some(selected_node_ids.iter().map(|id| format!("procedural-widget:{id}")).collect()),
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -766,11 +766,11 @@ fn build_catalogue_tree() -> UiNode {
     let items: Vec<UiTreeItemNode> = WIDGET_CATALOG
         .iter()
         .map(|(kind, label, icon)| {
-            tree_item_with_command(
+            tree_item_with_action(
                 format!("procedural-play-catalogue.{kind}"),
                 *label,
                 Some(icon),
-                procedural_cmd("addWidget", Some(json!({ "kind": kind }))),
+                procedural_action("addWidget", Some(json!({ "kind": kind }))),
             )
         })
         .collect();
@@ -784,7 +784,7 @@ fn build_catalogue_tree() -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -814,7 +814,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String]) -> 
                 value: mixed.value.to_string(),
                 placeholder: None,
                 commit: None,
-                on_change: procedural_cmd(
+                on_change: procedural_action(
                     "patchFlowWidgets",
                     Some(json!({ "widgetIds": [selected_id], "field": "value" })),
                 ),
@@ -906,16 +906,16 @@ impl PluginApp for Procedural3dPlayApp {
         serde_json::to_string(&default_envelope()).expect("procedural3d envelope json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut envelope = parse_envelope(document_json);
         let mut host = host_from_envelope(&envelope);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(document) = args.and_then(|value| value.get("document")) {
                     if let Ok(mut parsed) = serde_json::from_value::<Procedural3dEnvelope>(document.clone()) {
@@ -1266,9 +1266,9 @@ impl PluginApp for Procedural3dPlayApp {
             "worldPointerDown" | "graphPointerDown" => return Vec::new(),
             "addGeneration" | "removeGeneration" | "selectGeneration" | "renameGeneration" | "updateGenerationValues" => {
                 let spec = flow_fixture_to_form_spec(&envelope.fixture);
-                if handle_generation_command(command, args, &mut envelope.generation, &spec, PROCEDURAL_3D_PLAY_APP_ID)
+                if handle_generation_action(action, args, &mut envelope.generation, &spec, PROCEDURAL_3D_PLAY_APP_ID)
                 {
-                    if matches!(command, "addGeneration" | "selectGeneration" | "updateGenerationValues") {
+                    if matches!(action, "addGeneration" | "selectGeneration" | "updateGenerationValues") {
                         refresh_generation_preview(&mut envelope);
                     }
                     return vec![finalize_document_op(&mut envelope)];
@@ -1304,7 +1304,7 @@ impl PluginApp for Procedural3dPlayApp {
                         fixture_json: flow_extras.fixture_json,
                         selection_json,
                         context_menu_json: Some(
-                            r#"[{"id":"delete-selection","label":"Delete selection","command":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
+                            r#"[{"id":"delete-selection","label":"Delete selection","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
                         ),
                         ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
                     },
@@ -1360,10 +1360,10 @@ fn selection_ids(args: Option<&Value>) -> Vec<String> {
 }
 //#endregion 🔖Procedural3dPlayApp
 
-fn procedural3d_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn procedural3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: PROCEDURAL_3D_PLAY_CONTROLLER_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -1380,14 +1380,14 @@ fn procedural3d_edit_tools() -> Vec<ToolNode> {
                     "box",
                     "Solid",
                     true,
-                    procedural3d_cmd("setLodMode", Some(json!({ "value": "solid" }))),
+                    procedural3d_action("setLodMode", Some(json!({ "value": "solid" }))),
                 ),
                 tool_toggle(
                     "procedural3d-tools-lod-wireframe",
                     "git-commit-horizontal",
                     "Wireframe",
                     false,
-                    procedural3d_cmd("setLodMode", Some(json!({ "value": "wireframe" }))),
+                    procedural3d_action("setLodMode", Some(json!({ "value": "wireframe" }))),
                 ),
             ],
         )
@@ -1400,9 +1400,9 @@ fn procedural3d_generate_tools() -> Vec<ToolNode> {
         "procedural3d-tools-add-generation",
         "plus",
         "Add Generation",
-        procedural3d_cmd("addGeneration", None),
+        procedural3d_action("addGeneration", None),
     )
-    .with_category(ToolCategory::Commands)]
+    .with_category(ToolCategory::Actions)]
 }
 
 //#region 🔖Manifest
@@ -1546,7 +1546,7 @@ mod tests {
     fn set_lod_mode_reads_value_arg() {
         let mut app = Procedural3dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("setLodMode", Some(&json!({ "value": "wireframe" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setLodMode", Some(&json!({ "value": "wireframe" })), &document, &ViewState::default());
         let envelope: Procedural3dEnvelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.runtime.lod_mode, "wireframe");
     }
@@ -1555,7 +1555,7 @@ mod tests {
     fn set_active_example_loads_sphere_fixture() {
         let mut app = Procedural3dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setActiveExample",
             Some(&json!({ "exampleId": PROCEDURAL_EXAMPLE_SPHERE_TORUS })),
             &document,
@@ -1584,10 +1584,10 @@ mod tests {
     }
 
     #[test]
-    fn viewport_command_preserves_preview_cache() {
+    fn viewport_action_preserves_preview_cache() {
         let mut app = Procedural3dPlayApp;
         let document = app.initial_document_json();
-        let load_ops = app.handle_command_patch_ops(
+        let load_ops = app.handle_action_patch_ops(
             "setActiveExample",
             Some(&json!({ "exampleId": PROCEDURAL_EXAMPLE_SPHERE_TORUS })),
             &document,
@@ -1596,7 +1596,7 @@ mod tests {
         let mut envelope: Procedural3dEnvelope = apply_ops(&parse_envelope(&document), &load_ops);
         let cached = envelope.runtime.preview_cache.clone().expect("preview cache");
         let document = serde_json::to_string(&envelope).unwrap();
-        let viewport_ops = app.handle_command_patch_ops(
+        let viewport_ops = app.handle_action_patch_ops(
             "nodeGraphViewport",
             Some(&json!({ "viewportJson": r#"{"x":12,"y":24,"zoom":2}"# })),
             &document,
@@ -1615,7 +1615,7 @@ mod tests {
         let document = app.initial_document_json();
         let before: Procedural3dEnvelope = parse_envelope(&document);
         let cached = before.runtime.preview_cache.clone().expect("preview cache");
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "patchFlowWidgets",
             Some(&json!({ "widgetIds": ["height"], "field": "value", "value": 9.5 })),
             &document,
@@ -1714,11 +1714,11 @@ mod tests {
     }
 
     #[test]
-    fn add_widget_command_appends_widget() {
+    fn add_widget_action_appends_widget() {
         let mut app = Procedural3dPlayApp;
         let document = app.initial_document_json();
         let before = parse_envelope(&document).fixture.widgets.len();
-        let ops = app.handle_command_patch_ops("addWidget", Some(&json!({ "kind": "inputNote" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addWidget", Some(&json!({ "kind": "inputNote" })), &document, &ViewState::default());
         let envelope: Procedural3dEnvelope = apply_ops(&parse_envelope(&document), &ops);
         assert!(envelope.fixture.widgets.len() > before);
     }
@@ -1735,7 +1735,7 @@ mod tests {
     fn add_generation_evaluates_preview() {
         let mut app = Procedural3dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("addGeneration", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addGeneration", None, &document, &ViewState::default());
         let envelope: Procedural3dEnvelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.generation.generations.len(), 1);
         assert!(envelope.generation.preview_text.as_deref().unwrap_or("").len() > 2);
@@ -1747,7 +1747,7 @@ mod tests {
         let document = app.initial_document_json();
         let before = parse_envelope(&document);
         assert!(before.fixture.synapses.iter().any(|synapse| synapse.from == "extrude" && synapse.to == "column-preview"));
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "translateSelection",
             Some(&json!({ "ids": ["extrude"], "dx": 1.0, "dy": 2.0, "dz": 3.0 })),
             &document,
@@ -1768,7 +1768,7 @@ mod tests {
 
         // Re-grabbing the same transform accumulates the delta instead of creating a second node.
         let document2 = serde_json::to_string(&envelope).unwrap();
-        let ops2 = app.handle_command_patch_ops(
+        let ops2 = app.handle_action_patch_ops(
             "translateSelection",
             Some(&json!({ "ids": [transform_id], "dx": 1.0, "dy": 0.0, "dz": 0.0 })),
             &document2,
@@ -1785,7 +1785,7 @@ mod tests {
         let mut app = Procedural3dPlayApp;
         let document = app.initial_document_json();
         let envelope = parse_envelope(&document);
-        let rotate_ops = app.handle_command_patch_ops(
+        let rotate_ops = app.handle_action_patch_ops(
             "rotateSelection",
             Some(&json!({ "ids": ["extrude"], "angle": std::f64::consts::FRAC_PI_2 })),
             &document,
@@ -1796,7 +1796,7 @@ mod tests {
         assert!(rotated.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuronKind, .. } if id == rotate_id && neuronKind == "brep.xform.rotate")));
         assert_eq!(gumball_widget_number_param(&host_from_envelope(&rotated), rotate_id, "angle", 0.0), std::f64::consts::FRAC_PI_2);
 
-        let scale_ops = app.handle_command_patch_ops(
+        let scale_ops = app.handle_action_patch_ops(
             "scaleSelection",
             Some(&json!({ "ids": ["extrude"], "sx": 2.0, "sy": 2.0, "sz": 2.0 })),
             &document,
@@ -1813,38 +1813,38 @@ mod tests {
         let mut app = Procedural3dPlayApp;
         let document = app.initial_document_json();
         let before = parse_envelope(&document);
-        let add_ops = app.handle_command_patch_ops("addWidget", Some(&json!({ "kind": "inputNote" })), &document, &ViewState::default());
+        let add_ops = app.handle_action_patch_ops("addWidget", Some(&json!({ "kind": "inputNote" })), &document, &ViewState::default());
         let after_add = apply_ops(&before, &add_ops);
         assert!(after_add.fixture.widgets.len() > before.fixture.widgets.len());
         assert_eq!(after_add.runtime.undo_fixtures.len(), 1);
 
         let document_after_add = serde_json::to_string(&after_add).unwrap();
-        let undo_ops = app.handle_command_patch_ops("undo", None, &document_after_add, &ViewState::default());
+        let undo_ops = app.handle_action_patch_ops("undo", None, &document_after_add, &ViewState::default());
         let after_undo = apply_ops(&after_add, &undo_ops);
         assert_eq!(after_undo.fixture.widgets.len(), before.fixture.widgets.len());
         assert_eq!(after_undo.runtime.undo_fixtures.len(), 0);
         assert_eq!(after_undo.runtime.redo_fixtures.len(), 1);
 
         let document_after_undo = serde_json::to_string(&after_undo).unwrap();
-        let redo_ops = app.handle_command_patch_ops("redo", None, &document_after_undo, &ViewState::default());
+        let redo_ops = app.handle_action_patch_ops("redo", None, &document_after_undo, &ViewState::default());
         let after_redo = apply_ops(&after_undo, &redo_ops);
         assert_eq!(after_redo.fixture.widgets.len(), after_add.fixture.widgets.len());
         assert_eq!(after_redo.runtime.redo_fixtures.len(), 0);
     }
 
     #[test]
-    fn remove_widget_command_deletes_by_id_and_supports_undo() {
+    fn remove_widget_action_deletes_by_id_and_supports_undo() {
         let mut app = Procedural3dPlayApp;
         let document = app.initial_document_json();
         let before = parse_envelope(&document);
         assert!(before.fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"));
-        let ops = app.handle_command_patch_ops("removeWidget", Some(&json!({ "widgetId": "sides" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("removeWidget", Some(&json!({ "widgetId": "sides" })), &document, &ViewState::default());
         let after = apply_ops(&before, &ops);
         assert!(!after.fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"));
         assert_eq!(after.runtime.undo_fixtures.len(), 1);
 
         let document_after = serde_json::to_string(&after).unwrap();
-        let undo_ops = app.handle_command_patch_ops("undo", None, &document_after, &ViewState::default());
+        let undo_ops = app.handle_action_patch_ops("undo", None, &document_after, &ViewState::default());
         let restored = apply_ops(&after, &undo_ops);
         assert!(restored.fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"));
     }

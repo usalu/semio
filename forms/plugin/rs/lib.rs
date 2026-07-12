@@ -10,7 +10,7 @@ use semio_framework_plugin::{SurfaceKind,
     create_default_layout,
     ui_external_slot, ui_image, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
     ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Contribution,
-    PanelGroup, CommandDescriptor, PluginApp, PluginBundle, UiButtonNode,
+    PanelGroup, ActionDescriptor, PluginApp, PluginBundle, UiButtonNode,
     UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode,
     UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState,
@@ -213,10 +213,10 @@ fn set_document_op(envelope: &FormsPlayEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
 }
 
-fn forms_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn forms_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: FORMS_PLAY_CONTROLLER_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -725,7 +725,7 @@ fn patch_building_component_param(
     reset_try_runtime(play);
 }
 
-fn apply_store_command(play: &mut FormsPlayEnvelope, store: &mut FormsStore) -> Vec<String> {
+fn apply_store_action(play: &mut FormsPlayEnvelope, store: &mut FormsStore) -> Vec<String> {
     *play = sync_store_to_envelope(store, play);
     vec![set_document_op(play)]
 }
@@ -769,7 +769,7 @@ fn catalogue_kinds(contributions: &[PluginContributionEntry]) -> Vec<(String, St
 //#endregion 🔖Helpers
 
 //#region 🔖Builder
-fn builder_text_editor(id: String, label: &str, value: String, on_change: CommandDescriptor) -> UiNode {
+fn builder_text_editor(id: String, label: &str, value: String, on_change: ActionDescriptor) -> UiNode {
     UiNode::Field(UiFieldNode {
         id: id.clone(),
         label: label.into(),
@@ -791,12 +791,12 @@ fn builder_text_editor(id: String, label: &str, value: String, on_change: Comman
     })
 }
 
-fn builder_button(id: String, icon_id: &str, label: &str, command: CommandDescriptor, disabled: bool) -> UiNode {
+fn builder_button(id: String, icon_id: &str, label: &str, action: ActionDescriptor, disabled: bool) -> UiNode {
     UiNode::Button(UiButtonNode {
         id: Some(id),
         icon_id: icon_id.into(),
         label: label.into(),
-        command,
+        action,
         style: None,
         disabled: Some(disabled).filter(|disabled| *disabled),
     })
@@ -823,7 +823,7 @@ fn builder_question_card(
             format!("{prefix}.label"),
             "Label",
             question.label.clone(),
-            forms_cmd("patchQuestions", Some(json!({ "questionIds": question_ids, "field": "label" }))),
+            forms_action("patchQuestions", Some(json!({ "questionIds": question_ids, "field": "label" }))),
         ),
         UiNode::Field(UiFieldNode {
             id: format!("{prefix}.required"),
@@ -836,7 +836,7 @@ fn builder_question_card(
                 icon_id: "check".into(),
                 pressed: required,
                 text: Some(if required { "Yes".into() } else { "No".into() }),
-                on_change: forms_cmd("patchQuestions", Some(json!({ "questionIds": question_ids, "field": "required" }))),
+                on_change: forms_action("patchQuestions", Some(json!({ "questionIds": question_ids, "field": "required" }))),
             })),
         }),
     ];
@@ -846,14 +846,14 @@ fn builder_question_card(
             format!("{prefix}.remove"),
             "trash-2",
             "Remove Question",
-            forms_cmd("removeQuestion", Some(json!({ "questionId": question.id }))),
+            forms_action("removeQuestion", Some(json!({ "questionId": question.id }))),
             false,
         ),
         builder_button(
             format!("{prefix}.move-up"),
             "arrow-up",
             "Move Up",
-            forms_cmd(
+            forms_action(
                 "moveQuestion",
                 Some(json!({ "questionId": question.id, "toStepId": step.id, "index": index.saturating_sub(1) })),
             ),
@@ -863,7 +863,7 @@ fn builder_question_card(
             format!("{prefix}.move-down"),
             "arrow-down",
             "Move Down",
-            forms_cmd(
+            forms_action(
                 "moveQuestion",
                 Some(json!({ "questionId": question.id, "toStepId": step.id, "index": index + 1 })),
             ),
@@ -876,8 +876,8 @@ fn builder_question_card(
         padding: None,
         id: Some(format!("forms-blueprint.card.{}", question.id)),
         selected: Some(selected_ids.contains(&question.id)).filter(|selected| *selected),
-        activate: Some(forms_cmd("setSelection", Some(json!({ "ids": [question.id] })))),
-        drop_command: Some(forms_cmd(
+        activate: Some(forms_action("setSelection", Some(json!({ "ids": [question.id] })))),
+        drop_action: Some(forms_action(
             "dropQuestionKind",
             Some(json!({ "targetId": question.id, "dropPosition": "after" })),
         )),
@@ -898,13 +898,13 @@ fn builder_step_section(
             format!("{prefix}.title"),
             "Title",
             step.title.clone(),
-            forms_cmd("patchStep", Some(json!({ "stepId": step.id, "field": "title" }))),
+            forms_action("patchStep", Some(json!({ "stepId": step.id, "field": "title" }))),
         ),
         builder_text_editor(
             format!("{prefix}.description"),
             "Description",
             step.description.clone().unwrap_or_default(),
-            forms_cmd("patchStep", Some(json!({ "stepId": step.id, "field": "description" }))),
+            forms_action("patchStep", Some(json!({ "stepId": step.id, "field": "description" }))),
         ),
     ];
     for (index, question) in step.questions.iter().enumerate() {
@@ -917,7 +917,7 @@ fn builder_step_section(
         id: Some(format!("{prefix}.dropzone")),
         selected: None,
         activate: None,
-        drop_command: Some(forms_cmd(
+        drop_action: Some(forms_action(
             "dropQuestionKind",
             Some(json!({ "targetId": forms_play_step_tree_id(&step.id), "dropPosition": "inside" })),
         )),
@@ -928,28 +928,28 @@ fn builder_step_section(
             format!("{prefix}.add-question"),
             "plus",
             "Add Question",
-            forms_cmd("addQuestion", Some(json!({ "stepId": step.id, "kind": "text" }))),
+            forms_action("addQuestion", Some(json!({ "stepId": step.id, "kind": "text" }))),
             false,
         ),
         builder_button(
             format!("{prefix}.remove"),
             "trash-2",
             "Remove Step",
-            forms_cmd("removeStep", Some(json!({ "stepId": step.id }))),
+            forms_action("removeStep", Some(json!({ "stepId": step.id }))),
             false,
         ),
         builder_button(
             format!("{prefix}.move-up"),
             "arrow-up",
             "Move Up",
-            forms_cmd("moveStep", Some(json!({ "stepId": step.id, "index": step_index.saturating_sub(1) }))),
+            forms_action("moveStep", Some(json!({ "stepId": step.id, "index": step_index.saturating_sub(1) }))),
             step_index == 0,
         ),
         builder_button(
             format!("{prefix}.move-down"),
             "arrow-down",
             "Move Down",
-            forms_cmd("moveStep", Some(json!({ "stepId": step.id, "index": step_index + 1 }))),
+            forms_action("moveStep", Some(json!({ "stepId": step.id, "index": step_index + 1 }))),
             step_index + 1 >= spec.steps.len(),
         ),
     ]));
@@ -966,7 +966,7 @@ fn render_blueprint_builder(spec: &FormSpec, play: &FormsPlayEnvelope, contribut
         "forms-blueprint.title".into(),
         "Form Title",
         spec.title.clone().unwrap_or_default(),
-        forms_cmd("updateForm", Some(json!({ "field": "title" }))),
+        forms_action("updateForm", Some(json!({ "field": "title" }))),
     )];
     for (step_index, step) in spec.steps.iter().enumerate() {
         children.push(builder_step_section(spec, step, step_index, &play.selected_ids, contributions));
@@ -975,7 +975,7 @@ fn render_blueprint_builder(spec: &FormSpec, play: &FormsPlayEnvelope, contribut
         "forms-blueprint.add-step".into(),
         "plus",
         "Add Step",
-        forms_cmd("addStep", None),
+        forms_action("addStep", None),
         false,
     ));
     ui_stack_vertical(children)
@@ -983,8 +983,8 @@ fn render_blueprint_builder(spec: &FormSpec, play: &FormsPlayEnvelope, contribut
 //#endregion 🔖Builder
 
 //#region 🔖TryWizard
-fn try_value_cmd(key: &str) -> CommandDescriptor {
-    forms_cmd("setTryValue", Some(json!({ "key": key })))
+fn try_value_action(key: &str) -> ActionDescriptor {
+    forms_action("setTryValue", Some(json!({ "key": key })))
 }
 
 fn image_question_src(question: &FormQuestion) -> String {
@@ -1023,7 +1023,7 @@ fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
         selected: None,
         activate: None,
         children,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -1056,7 +1056,7 @@ fn render_try_question(
                 value: json_string_value(&value),
                 placeholder: question.placeholder.clone(),
                 commit: None,
-                on_change: try_value_cmd(&key),
+                on_change: try_value_action(&key),
                 min: None,
                 max: None,
                 step: None,
@@ -1072,7 +1072,7 @@ fn render_try_question(
                 value: json_string_value(&value),
                 placeholder: None,
                 commit: None,
-                on_change: try_value_cmd(&key),
+                on_change: try_value_action(&key),
                 min: question.min,
                 max: question.max,
                 step: question.step,
@@ -1089,7 +1089,7 @@ fn render_try_question(
                 max: question.max.unwrap_or(100.0),
                 step: question.step.unwrap_or(1.0),
                 unit: question.unit.clone(),
-                on_change: try_value_cmd(&key),
+                on_change: try_value_action(&key),
             }),
         ),
         "boolean" => try_field(
@@ -1100,7 +1100,7 @@ fn render_try_question(
                 icon_id: "check".into(),
                 pressed: value.as_bool().unwrap_or(false),
                 text: Some(if value.as_bool().unwrap_or(false) { "Yes".into() } else { "No".into() }),
-                on_change: try_value_cmd(&key),
+                on_change: try_value_action(&key),
             }),
         ),
         "single" => {
@@ -1125,7 +1125,7 @@ fn render_try_question(
                     value: json_string_value(&value),
                     placeholder: None,
                     items,
-                    on_change: try_value_cmd(&key),
+                    on_change: try_value_action(&key),
                 }),
             )
         }
@@ -1146,7 +1146,7 @@ fn render_try_question(
                                 icon_id: "hash".into(),
                                 pressed: selected.contains(&option.value),
                                 text: Some(option.label.clone()),
-                                on_change: forms_cmd(
+                                on_change: forms_action(
                                     "setTryValue",
                                     Some(json!({ "key": key, "optionValue": option.value })),
                                 ),
@@ -1166,7 +1166,7 @@ fn render_try_question(
                 value: json_string_value(&value),
                 placeholder: None,
                 commit: None,
-                on_change: try_value_cmd(&key),
+                on_change: try_value_action(&key),
                 min: None,
                 max: None,
                 step: None,
@@ -1192,11 +1192,11 @@ fn render_try_question(
                             value: json_f64_value(&field_value),
                             step: question.step.unwrap_or(0.1),
                             uniform: true,
-                            on_absolute: forms_cmd(
+                            on_absolute: forms_action(
                                 "setTryValue",
                                 Some(json!({ "key": key, "vectorIndex": index })),
                             ),
-                            on_delta: forms_cmd(
+                            on_delta: forms_action(
                                 "setTryValue",
                                 Some(json!({ "key": key, "vectorIndex": index })),
                             ),
@@ -1217,7 +1217,7 @@ fn render_try_question(
                 value: json_string_value(&value),
                 placeholder: None,
                 commit: None,
-                on_change: try_value_cmd(&key),
+                on_change: try_value_action(&key),
                 min: None,
                 max: None,
                 step: None,
@@ -1266,7 +1266,7 @@ fn render_try_wizard(spec: &FormSpec, play: &FormsPlayEnvelope, contributions: &
             id: Some("forms-try.back".into()),
             icon_id: "chevron-left".into(),
             label: "Back".into(),
-            command: forms_cmd("previousStep", None),
+            action: forms_action("previousStep", None),
             style: None,
             disabled: Some(step_index == 0).filter(|disabled| *disabled),
         }),
@@ -1275,7 +1275,7 @@ fn render_try_wizard(spec: &FormSpec, play: &FormsPlayEnvelope, contributions: &
                 id: Some("forms-try.next".into()),
                 icon_id: "chevron-right".into(),
                 label: "Next".into(),
-                command: forms_cmd("nextStep", None),
+                action: forms_action("nextStep", None),
                 style: None,
                 disabled: Some(!advance).filter(|disabled| *disabled),
             })
@@ -1284,7 +1284,7 @@ fn render_try_wizard(spec: &FormSpec, play: &FormsPlayEnvelope, contributions: &
                 id: Some("forms-try.submit".into()),
                 icon_id: "check".into(),
                 label: "Submit".into(),
-                command: forms_cmd("submit", None),
+                action: forms_action("submit", None),
                 style: None,
                 disabled: Some(!advance).filter(|disabled| *disabled),
             })
@@ -1307,9 +1307,9 @@ fn build_document_tree(spec: &FormSpec, selected_ids: &[String]) -> UiNode {
             icon_id: Some("list-tree".into()),
             selected: None,
             default_open: Some(true),
-            command: Some(forms_cmd("setSelection", Some(json!({ "ids": [] })))),
-            hover_command: None,
-            unhover_command: None,
+            action: Some(forms_action("setSelection", Some(json!({ "ids": [] })))),
+            hover_action: None,
+            unhover_action: None,
             actions: None,
             draggable: Some(true),
             drag_data: None,
@@ -1323,9 +1323,9 @@ fn build_document_tree(spec: &FormSpec, selected_ids: &[String]) -> UiNode {
                         icon_id: Some("help-circle".into()),
                         selected: None,
                         default_open: None,
-                        command: Some(forms_cmd("setSelection", Some(json!({ "ids": [question.id.clone()] })))),
-                        hover_command: None,
-                        unhover_command: None,
+                        action: Some(forms_action("setSelection", Some(json!({ "ids": [question.id.clone()] })))),
+                        hover_action: None,
+                        unhover_action: None,
                         actions: None,
                         draggable: Some(true),
                         drag_data: None,
@@ -1352,9 +1352,9 @@ fn build_document_tree(spec: &FormSpec, selected_ids: &[String]) -> UiNode {
                     icon_id: None,
                     selected: None,
                     default_open: None,
-                    command: None,
-        hover_command: None,
-        unhover_command: None,
+                    action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
                     draggable: None,
                     drag_data: None,
@@ -1368,8 +1368,8 @@ fn build_document_tree(spec: &FormSpec, selected_ids: &[String]) -> UiNode {
         }],
         selected_ids: Some(selected_ids.to_vec()),
         highlighted_ids: None,
-        selection_change: Some(forms_cmd("setSelection", None)),
-        drop_command: Some(forms_cmd("dropQuestionKind", None)),
+        selection_change: Some(forms_action("setSelection", None)),
+        drop_action: Some(forms_action("dropQuestionKind", None)),
     })
 }
 
@@ -1386,9 +1386,9 @@ fn build_catalogue_tree(contributions: &[PluginContributionEntry]) -> UiNode {
                 icon_id: Some(icon.clone()),
                 selected: None,
                 default_open: None,
-                command: Some(forms_cmd("addQuestion", Some(json!({ "kind": kind })))),
-                hover_command: None,
-                unhover_command: None,
+                action: Some(forms_action("addQuestion", Some(json!({ "kind": kind })))),
+                hover_action: None,
+                unhover_action: None,
                 actions: None,
                 draggable: Some(true),
                 drag_data: Some(drag_data),
@@ -1418,9 +1418,9 @@ fn build_catalogue_tree(contributions: &[PluginContributionEntry]) -> UiNode {
                         icon_id: Some("plus".into()),
                         selected: None,
                         default_open: None,
-                        command: Some(forms_cmd("addStep", None)),
-                        hover_command: None,
-                        unhover_command: None,
+                        action: Some(forms_action("addStep", None)),
+                        hover_action: None,
+                        unhover_action: None,
                         actions: None,
                         draggable: None,
                         drag_data: None,
@@ -1435,9 +1435,9 @@ fn build_catalogue_tree(contributions: &[PluginContributionEntry]) -> UiNode {
                         icon_id: Some("type".into()),
                         selected: None,
                         default_open: None,
-                        command: Some(forms_cmd("addQuestion", Some(json!({ "kind": "text" })))),
-                        hover_command: None,
-                        unhover_command: None,
+                        action: Some(forms_action("addQuestion", Some(json!({ "kind": "text" })))),
+                        hover_action: None,
+                        unhover_action: None,
                         actions: None,
                         draggable: None,
                         drag_data: None,
@@ -1451,12 +1451,12 @@ fn build_catalogue_tree(contributions: &[PluginContributionEntry]) -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
-fn inspector_patch(question_ids: &[String], field: &str) -> CommandDescriptor {
-    forms_cmd("patchQuestions", Some(json!({ "questionIds": question_ids, "field": field })))
+fn inspector_patch(question_ids: &[String], field: &str) -> ActionDescriptor {
+    forms_action("patchQuestions", Some(json!({ "questionIds": question_ids, "field": field })))
 }
 
 fn inspector_text_field(question_ids: &[String], field_id: &str, label: &str, values: &[String], field: &str) -> UiNode {
@@ -1586,7 +1586,7 @@ fn question_kind_editor_fields(
                             value: option.label.clone(),
                             placeholder: None,
                             commit: None,
-                            on_change: forms_cmd(
+                            on_change: forms_action(
                                 "patchQuestionOptions",
                                 Some(json!({ "questionIds": question_ids, "optionValue": option.value, "field": "label" })),
                             ),
@@ -1600,7 +1600,7 @@ fn question_kind_editor_fields(
                         id: Some(fid(&format!("option.{}.remove", option.value))),
                         icon_id: "trash-2".into(),
                         label: "Remove Option".into(),
-                        command: forms_cmd(
+                        action: forms_action(
                             "removeQuestionOption",
                             Some(json!({ "questionId": question.id, "optionValue": option.value })),
                         ),
@@ -1613,7 +1613,7 @@ fn question_kind_editor_fields(
                 id: Some(fid("option.add")),
                 icon_id: "plus".into(),
                 label: "Add Option".into(),
-                command: forms_cmd("addQuestionOption", Some(json!({ "questionId": question.id, "label": "New option" }))),
+                action: forms_action("addQuestionOption", Some(json!({ "questionId": question.id, "label": "New option" }))),
                 style: None,
                 disabled: None,
             }));
@@ -1650,7 +1650,7 @@ fn question_kind_editor_fields(
                             value: field.label.clone().unwrap_or_else(|| field.key.clone()),
                             placeholder: None,
                             commit: None,
-                            on_change: forms_cmd(
+                            on_change: forms_action(
                                 "patchVectorField",
                                 Some(json!({ "questionId": question.id, "fieldKey": field.key, "field": "label" })),
                             ),
@@ -1671,11 +1671,11 @@ fn question_kind_editor_fields(
                             value: field.value.unwrap_or(0.0),
                             step: question.step.unwrap_or(0.1),
                             uniform: true,
-                            on_absolute: forms_cmd(
+                            on_absolute: forms_action(
                                 "patchVectorField",
                                 Some(json!({ "questionId": question.id, "fieldKey": field.key, "field": "value" })),
                             ),
-                            on_delta: forms_cmd(
+                            on_delta: forms_action(
                                 "patchVectorField",
                                 Some(json!({ "questionId": question.id, "fieldKey": field.key, "field": "value" })),
                             ),
@@ -1685,7 +1685,7 @@ fn question_kind_editor_fields(
                         id: Some(fid(&format!("vector.{}.remove", field.key))),
                         icon_id: "trash-2".into(),
                         label: format!("Remove {}", field.key),
-                        command: forms_cmd(
+                        action: forms_action(
                             "removeVectorField",
                             Some(json!({ "questionId": question.id, "fieldKey": field.key })),
                         ),
@@ -1698,7 +1698,7 @@ fn question_kind_editor_fields(
                 id: Some(fid("vector.add")),
                 icon_id: "plus".into(),
                 label: "Add Vector Field".into(),
-                command: forms_cmd(
+                action: forms_action(
                     "addVectorField",
                     Some(json!({ "questionId": question.id, "fieldKey": "field" })),
                 ),
@@ -1844,16 +1844,16 @@ impl PluginApp for FormsPlayApp {
         serde_json::to_string(&building_component_envelope()).expect("forms envelope json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut play = parse_envelope(document_json);
         let mut store = store_from_envelope(&play);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(document) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value::<FormsPlayEnvelope>(document.clone()) {
@@ -1883,7 +1883,7 @@ impl PluginApp for FormsPlayApp {
                     description: None,
                 });
                 play.try_values.clear();
-                return apply_store_command(&mut play, &mut store);
+                return apply_store_action(&mut play, &mut store);
             }
             "patchStep" => {
                 let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -1909,7 +1909,7 @@ impl PluginApp for FormsPlayApp {
                     description: None,
                 });
                 play.try_values.clear();
-                return apply_store_command(&mut play, &mut store);
+                return apply_store_action(&mut play, &mut store);
             }
             "removeStep" => {
                 let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -1929,7 +1929,7 @@ impl PluginApp for FormsPlayApp {
                 });
                 play.selected_ids.retain(|id| !removed_ids.contains(id));
                 play.try_values.clear();
-                return apply_store_command(&mut play, &mut store);
+                return apply_store_action(&mut play, &mut store);
             }
             "moveStep" => {
                 let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -1945,7 +1945,7 @@ impl PluginApp for FormsPlayApp {
                     description: None,
                 });
                 play.try_values.clear();
-                return apply_store_command(&mut play, &mut store);
+                return apply_store_action(&mut play, &mut store);
             }
             "updateForm" => {
                 let title = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
@@ -1955,7 +1955,7 @@ impl PluginApp for FormsPlayApp {
                     }],
                     description: None,
                 });
-                return apply_store_command(&mut play, &mut store);
+                return apply_store_action(&mut play, &mut store);
             }
             "addQuestion" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("text");
@@ -1980,7 +1980,7 @@ impl PluginApp for FormsPlayApp {
                 });
                 play.try_values.clear();
                 play.selected_ids = vec![select_id];
-                return apply_store_command(&mut play, &mut store);
+                return apply_store_action(&mut play, &mut store);
             }
             "removeQuestion" => {
                 let question_id = args.and_then(|value| value.get("questionId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -2000,7 +2000,7 @@ impl PluginApp for FormsPlayApp {
                 });
                 play.selected_ids.retain(|id| id != question_id);
                 play.try_values.clear();
-                return apply_store_command(&mut play, &mut store);
+                return apply_store_action(&mut play, &mut store);
             }
             "patchQuestions" => {
                 let question_ids: Vec<String> = args
@@ -2030,7 +2030,7 @@ impl PluginApp for FormsPlayApp {
                         patch_question_field(&mut play, &mut store, &question_id, field, &raw_value);
                     }
                 }
-                return apply_store_command(&mut play, &mut store);
+                return apply_store_action(&mut play, &mut store);
             }
             "patchQuestionOptions" => {
                 let question_ids: Vec<String> = args
@@ -2047,7 +2047,7 @@ impl PluginApp for FormsPlayApp {
                 for question_id in question_ids {
                     patch_question_option(&mut play, &mut store, &question_id, option_value, field, &raw_value);
                 }
-                return apply_store_command(&mut play, &mut store);
+                return apply_store_action(&mut play, &mut store);
             }
             "addQuestionOption" => {
                 let question_id = args.and_then(|value| value.get("questionId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -2057,7 +2057,7 @@ impl PluginApp for FormsPlayApp {
                     .unwrap_or("New option");
                 if !question_id.is_empty() {
                     add_question_option(&mut play, &mut store, question_id, label);
-                    return apply_store_command(&mut play, &mut store);
+                    return apply_store_action(&mut play, &mut store);
                 }
             }
             "removeQuestionOption" => {
@@ -2068,7 +2068,7 @@ impl PluginApp for FormsPlayApp {
                     .unwrap_or("");
                 if !question_id.is_empty() && !option_value.is_empty() {
                     remove_question_option(&mut play, &mut store, question_id, option_value);
-                    return apply_store_command(&mut play, &mut store);
+                    return apply_store_action(&mut play, &mut store);
                 }
             }
             "patchVectorField" => {
@@ -2082,7 +2082,7 @@ impl PluginApp for FormsPlayApp {
                     .unwrap_or(Value::Null);
                 if !question_id.is_empty() && !field_key.is_empty() {
                     patch_vector_field(&mut play, &mut store, question_id, field_key, field, &raw_value);
-                    return apply_store_command(&mut play, &mut store);
+                    return apply_store_action(&mut play, &mut store);
                 }
             }
             "addVectorField" => {
@@ -2093,7 +2093,7 @@ impl PluginApp for FormsPlayApp {
                     .unwrap_or("field");
                 if !question_id.is_empty() {
                     add_vector_field(&mut play, &mut store, question_id, field_key);
-                    return apply_store_command(&mut play, &mut store);
+                    return apply_store_action(&mut play, &mut store);
                 }
             }
             "removeVectorField" => {
@@ -2101,7 +2101,7 @@ impl PluginApp for FormsPlayApp {
                 let field_key = args.and_then(|value| value.get("fieldKey")).and_then(|value| value.as_str()).unwrap_or("");
                 if !question_id.is_empty() && !field_key.is_empty() {
                     remove_vector_field(&mut play, &mut store, question_id, field_key);
-                    return apply_store_command(&mut play, &mut store);
+                    return apply_store_action(&mut play, &mut store);
                 }
             }
             "moveQuestion" => {
@@ -2133,7 +2133,7 @@ impl PluginApp for FormsPlayApp {
                     description: None,
                 });
                 play.try_values.clear();
-                return apply_store_command(&mut play, &mut store);
+                return apply_store_action(&mut play, &mut store);
             }
             "dropQuestionKind" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str());
@@ -2162,17 +2162,17 @@ impl PluginApp for FormsPlayApp {
                 });
                 play.try_values.clear();
                 play.selected_ids = vec![select_id];
-                return apply_store_command(&mut play, &mut store);
+                return apply_store_action(&mut play, &mut store);
             }
             "undo" => {
                 let _ = store.dispatch(DocumentVcsCommand::Undo);
                 play.try_values.clear();
-                return apply_store_command(&mut play, &mut store);
+                return apply_store_action(&mut play, &mut store);
             }
             "redo" => {
                 let _ = store.dispatch(DocumentVcsCommand::Redo);
                 play.try_values.clear();
-                return apply_store_command(&mut play, &mut store);
+                return apply_store_action(&mut play, &mut store);
             }
             "exportFixture" => {
                 let spec = store.projection().unwrap_or_else(|_| materialized_projection(&play));
@@ -2187,7 +2187,7 @@ impl PluginApp for FormsPlayApp {
                         store = FormsStore::new(envelope);
                         reset_try_runtime(&mut play);
                         play.selected_ids.clear();
-                        return apply_store_command(&mut play, &mut store);
+                        return apply_store_action(&mut play, &mut store);
                     }
                 }
             }
@@ -2206,7 +2206,7 @@ impl PluginApp for FormsPlayApp {
                 store = FormsStore::new(envelope);
                 reset_try_runtime(&mut play);
                 play.selected_ids.clear();
-                return apply_store_command(&mut play, &mut store);
+                return apply_store_action(&mut play, &mut store);
             }
             "setTryValue" => {
                 let key = args.and_then(|value| value.get("key")).and_then(|value| value.as_str());
@@ -2332,19 +2332,19 @@ fn create_forms_app() -> App {
             .operation("removeVectorField", "Remove Vector Field")
             .operation("moveQuestion", "Move Question")
             .operation("dropQuestionKind", "Drop Question Kind")
-            .view_command("setSelection", "Set Selection")
-            .view_command("setActiveExample", "Set Active Example")
-            .view_command("setTryValue", "Set Try Value")
-            .view_command("setTryValues", "Set Try Values")
-            .view_command("resetTry", "Reset Try")
-            .view_command("previousStep", "Previous Step")
-            .view_command("nextStep", "Next Step")
-            .view_command("submit", "Submit")
-            .view_command("editEngagementInput", "Edit Engagement Input")
-            .view_command("tryEngagementInput", "Try Engagement Input")
-            .shell_command("setDocument", "Set Document")
-            .shell_command("exportFixture", "Export Fixture")
-            .shell_command("setSpecJson", "Set Spec JSON")
+            .view_action("setSelection", "Set Selection")
+            .view_action("setActiveExample", "Set Active Example")
+            .view_action("setTryValue", "Set Try Value")
+            .view_action("setTryValues", "Set Try Values")
+            .view_action("resetTry", "Reset Try")
+            .view_action("previousStep", "Previous Step")
+            .view_action("nextStep", "Next Step")
+            .view_action("submit", "Submit")
+            .view_action("editEngagementInput", "Edit Engagement Input")
+            .view_action("tryEngagementInput", "Try Engagement Input")
+            .shell_action("setDocument", "Set Document")
+            .shell_action("exportFixture", "Export Fixture")
+            .shell_action("setSpecJson", "Set Spec JSON")
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .default_layout(create_default_layout(
@@ -2437,14 +2437,14 @@ mod tests {
     #[test]
     fn try_wizard_gates_navigation_and_reports_inline_errors() {
         let mut app = FormsPlayApp;
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setActiveExample",
             Some(&json!({ "exampleId": "default" })),
             &app.initial_document_json(),
             &ViewState::default(),
         );
         let play = apply_ops(&app.initial_document_json(), &ops);
-        let clear_ops = app.handle_command_patch_ops(
+        let clear_ops = app.handle_action_patch_ops(
             "setTryValues",
             Some(&json!({ "values": { "name": "", "email": "" } })),
             &serde_json::to_string(&play).unwrap(),
@@ -2461,7 +2461,7 @@ mod tests {
     #[test]
     fn try_wizard_emits_slider_unit_and_number_bounds() {
         let mut app = FormsPlayApp;
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setActiveExample",
             Some(&json!({ "exampleId": "onboarding" })),
             &app.initial_document_json(),
@@ -2472,14 +2472,14 @@ mod tests {
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains(r#""min":13.0"#) || json.contains(r#""min":13"#));
         assert!(json.contains(r#""max":120.0"#) || json.contains(r#""max":120"#));
-        let next_ops = app.handle_command_patch_ops(
+        let next_ops = app.handle_action_patch_ops(
             "setTryValues",
             Some(&json!({ "values": { "full-name": "Ada" } })),
             &serde_json::to_string(&play).unwrap(),
             &ViewState::default(),
         );
         let filled = apply_ops(&serde_json::to_string(&play).unwrap(), &next_ops);
-        let step_ops = app.handle_command_patch_ops("nextStep", None, &serde_json::to_string(&filled).unwrap(), &ViewState::default());
+        let step_ops = app.handle_action_patch_ops("nextStep", None, &serde_json::to_string(&filled).unwrap(), &ViewState::default());
         let second = apply_ops(&serde_json::to_string(&filled).unwrap(), &step_ops);
         let second_node = app.render(FORMS_PLAY_BODY_TRY, &serde_json::to_string(&second).unwrap(), &ViewState::default());
         let second_json = serde_json::to_string(&second_node).unwrap();
@@ -2505,7 +2505,7 @@ mod tests {
         let mut app = FormsPlayApp;
         let document = app.initial_document_json();
         let step_id = materialized_projection(&parse_envelope(&document)).steps[0].id.clone();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "patchStep",
             Some(&json!({ "stepId": step_id, "field": "title", "value": "Renamed" })),
             &document,
@@ -2516,15 +2516,15 @@ mod tests {
     }
 
     #[test]
-    fn remove_and_move_step_commands() {
+    fn remove_and_move_step_actions() {
         let mut app = FormsPlayApp;
         let document = app.initial_document_json();
-        let add_ops = app.handle_command_patch_ops("addStep", None, &document, &ViewState::default());
+        let add_ops = app.handle_action_patch_ops("addStep", None, &document, &ViewState::default());
         let with_step = apply_ops(&document, &add_ops);
         let with_step_json = serde_json::to_string(&with_step).unwrap();
         let spec = materialized_projection(&with_step);
         let last_step_id = spec.steps.last().unwrap().id.clone();
-        let move_ops = app.handle_command_patch_ops(
+        let move_ops = app.handle_action_patch_ops(
             "moveStep",
             Some(&json!({ "stepId": last_step_id, "index": 0 })),
             &with_step_json,
@@ -2532,7 +2532,7 @@ mod tests {
         );
         let moved = apply_ops(&with_step_json, &move_ops);
         assert_eq!(materialized_projection(&moved).steps[0].id, last_step_id);
-        let remove_ops = app.handle_command_patch_ops(
+        let remove_ops = app.handle_action_patch_ops(
             "removeStep",
             Some(&json!({ "stepId": last_step_id })),
             &serde_json::to_string(&moved).unwrap(),
@@ -2543,10 +2543,10 @@ mod tests {
     }
 
     #[test]
-    fn update_form_command_sets_title() {
+    fn update_form_action_sets_title() {
         let mut app = FormsPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "updateForm",
             Some(&json!({ "field": "title", "value": "My Form" })),
             &document,
@@ -2557,12 +2557,12 @@ mod tests {
     }
 
     #[test]
-    fn document_tree_declares_drop_command() {
+    fn document_tree_declares_drop_action() {
         let app = FormsPlayApp;
         let document = app.initial_document_json();
         let node = app.render(FORMS_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains(r#""dropCommand""#));
+        assert!(json.contains(r#""dropAction""#));
         assert!(json.contains("dropQuestionKind"));
     }
 
@@ -2571,7 +2571,7 @@ mod tests {
         let mut app = FormsPlayApp;
         let document = app.initial_document_json();
         let step_id = materialized_projection(&parse_envelope(&document)).steps[0].id.clone();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "dropQuestionKind",
             Some(&json!({ "kind": "slider", "targetId": forms_play_step_tree_id(&step_id), "dropPosition": "inside" })),
             &document,
@@ -2621,7 +2621,7 @@ mod tests {
         let mut view_state = ViewState::default();
         view_state.contributions_json = Some(serde_json::to_string(&contributions).unwrap());
         let mut play_app = FormsPlayApp;
-        let ops = play_app.handle_command_patch_ops(
+        let ops = play_app.handle_action_patch_ops(
             "setActiveExample",
             Some(&json!({ "exampleId": "building-component" })),
             &app.initial_document_json(),
@@ -2639,7 +2639,7 @@ mod tests {
     fn extension_question_falls_back_without_contribution() {
         let app = FormsPlayApp;
         let mut play_app = FormsPlayApp;
-        let ops = play_app.handle_command_patch_ops(
+        let ops = play_app.handle_action_patch_ops(
             "setActiveExample",
             Some(&json!({ "exampleId": "building-component" })),
             &app.initial_document_json(),
@@ -2674,21 +2674,21 @@ mod tests {
     }
 
     #[test]
-    fn add_step_command_appends_step() {
+    fn add_step_action_appends_step() {
         let mut app = FormsPlayApp;
         let document = app.initial_document_json();
         let before = materialized_projection(&parse_envelope(&document)).steps.len();
-        let ops = app.handle_command_patch_ops("addStep", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addStep", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let next = apply_ops(&document, &ops);
         assert_eq!(materialized_projection(&next).steps.len(), before + 1);
     }
 
     #[test]
-    fn add_question_command_appends_question() {
+    fn add_question_action_appends_question() {
         let mut app = FormsPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "addQuestion",
             Some(&json!({ "kind": "text" })),
             &document,
@@ -2704,7 +2704,7 @@ mod tests {
     fn set_try_values_updates_runtime() {
         let mut app = FormsPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setTryValues",
             Some(&json!({ "values": { "q-text": "Ada" } })),
             &document,
@@ -2732,7 +2732,7 @@ mod tests {
     fn wizard_step_navigation() {
         let mut app = FormsPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setActiveExample",
             Some(&json!({ "exampleId": "onboarding" })),
             &document,
@@ -2740,10 +2740,10 @@ mod tests {
         );
         let play = apply_ops(&document, &ops);
         assert_eq!(play.current_step_index, 0);
-        let next_ops = app.handle_command_patch_ops("nextStep", None, &serde_json::to_string(&play).unwrap(), &ViewState::default());
+        let next_ops = app.handle_action_patch_ops("nextStep", None, &serde_json::to_string(&play).unwrap(), &ViewState::default());
         let next = apply_ops(&document, &next_ops);
         assert_eq!(next.current_step_index, 1);
-        let back_ops = app.handle_command_patch_ops("previousStep", None, &serde_json::to_string(&next).unwrap(), &ViewState::default());
+        let back_ops = app.handle_action_patch_ops("previousStep", None, &serde_json::to_string(&next).unwrap(), &ViewState::default());
         let back = apply_ops(&document, &back_ops);
         assert_eq!(back.current_step_index, 0);
     }
@@ -2751,7 +2751,7 @@ mod tests {
     #[test]
     fn conditional_visibility_hides_team_size() {
         let mut app = FormsPlayApp;
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setActiveExample",
             Some(&json!({ "exampleId": "onboarding" })),
             &app.initial_document_json(),
@@ -2767,7 +2767,7 @@ mod tests {
     #[test]
     fn inspector_patch_updates_required() {
         let mut app = FormsPlayApp;
-        let document = app.handle_command_patch_ops(
+        let document = app.handle_action_patch_ops(
             "setActiveExample",
             Some(&json!({ "exampleId": "default" })),
             &app.initial_document_json(),
@@ -2776,7 +2776,7 @@ mod tests {
         let play = apply_ops(&app.initial_document_json(), &document);
         let spec = materialized_projection(&play);
         let name_id = spec.steps[0].questions[0].id.clone();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "patchQuestions",
             Some(&json!({ "questionIds": [name_id.clone()], "field": "required", "pressed": false })),
             &serde_json::to_string(&play).unwrap(),
@@ -2791,7 +2791,7 @@ mod tests {
     #[test]
     fn renders_try_wizard() {
         let mut app = FormsPlayApp;
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setActiveExample",
             Some(&json!({ "exampleId": "default" })),
             &app.initial_document_json(),

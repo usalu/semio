@@ -3,7 +3,7 @@
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_note_canvas_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_stack_vertical, ui_text, App,
-    NoteCanvasScene, CommandDescriptor, DwgDrawing, DwgGeometry, PluginApp, PluginBundle, UiFieldNode, UiInputNode,
+    NoteCanvasScene, ActionDescriptor, DwgDrawing, DwgGeometry, PluginApp, PluginBundle, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiSectionNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -841,10 +841,10 @@ fn selection_from_envelope(play: &NotePlayEnvelope, view_state: &ViewState) -> V
 //#endregion 🔖Document
 
 //#region 🔖Panels
-fn play_cmd(controller_id: &str, command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn play_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: controller_id.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -890,13 +890,13 @@ fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
         icon_id: Some(block_icon(block_kind(block)).into()),
         selected: None,
         default_open: Some(matches!(block, NoteBlockNode::Group { .. })),
-        command: Some(play_cmd(
+        action: Some(play_action(
             NOTE_PLAY_CONTROLLER_ID,
             "setSelection",
             Some(json!({ "ids": [block_id(block)] })),
         )),
-        hover_command: None,
-        unhover_command: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: Some(true),
         drag_data: None,
@@ -922,13 +922,13 @@ fn render_document_panel(document: &NoteDocument, play: &NotePlayEnvelope, view_
         icon_id: Some(icon.into()),
         selected: None,
         default_open: None,
-        command: Some(play_cmd(
+        action: Some(play_action(
             NOTE_PLAY_CONTROLLER_ID,
             "addBlock",
             Some(json!({ "kind": kind })),
         )),
-        hover_command: None,
-        unhover_command: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -945,9 +945,9 @@ fn render_document_panel(document: &NoteDocument, play: &NotePlayEnvelope, view_
             icon_id: Some("sticky-note".into()),
             selected: None,
             default_open: None,
-            command: None,
-            hover_command: None,
-            unhover_command: None,
+            action: None,
+            hover_action: None,
+            unhover_action: None,
             actions: None,
             draggable: None,
             drag_data: None,
@@ -971,12 +971,12 @@ fn render_document_panel(document: &NoteDocument, play: &NotePlayEnvelope, view_
         }],
         selected_ids: Some(selected_ids),
         highlighted_ids: None,
-        selection_change: Some(play_cmd(
+        selection_change: Some(play_action(
             NOTE_PLAY_CONTROLLER_ID,
             "setSelection",
             None,
         )),
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -996,8 +996,8 @@ fn render_catalogue_panel() -> UiNode {
     }])
 }
 
-fn inspector_patch(block_ids: &[String], field: &str) -> CommandDescriptor {
-    play_cmd(
+fn inspector_patch(block_ids: &[String], field: &str) -> ActionDescriptor {
+    play_action(
         NOTE_PLAY_CONTROLLER_ID,
         "patchBlocks",
         Some(json!({ "blockIds": block_ids, "field": field })),
@@ -1213,8 +1213,8 @@ fn documents_differ_ignoring_camera(a: &NoteDocument, b: &NoteDocument) -> bool 
 //#endregion 🔖CanvasEvents
 
 //#region 🔖Shell
-fn note_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    play_cmd(NOTE_PLAY_CONTROLLER_ID, command, args)
+fn note_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    play_action(NOTE_PLAY_CONTROLLER_ID, action, args)
 }
 
 fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
@@ -1230,7 +1230,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
                 min: 0.1,
                 max: 8.0,
                 step: Some(0.05),
-                on_change: note_cmd("setCameraZoom", None),
+                on_change: note_action("setCameraZoom", None),
             }],
         },
         WindowMeasure::Group {
@@ -1244,7 +1244,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
                     label: Some("Show grid".into()),
                     pressed: document.grid_visible.unwrap_or(true),
                     text: None,
-                    on_change: note_cmd("setGridVisible", None),
+                    on_change: note_action("setGridVisible", None),
                 },
                 WindowMeasure::Slider {
                     id: "note-measures.grid-spacing".into(),
@@ -1253,7 +1253,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
                     min: 8.0,
                     max: 256.0,
                     step: Some(4.0),
-                    on_change: note_cmd("setGridSpacing", None),
+                    on_change: note_action("setGridSpacing", None),
                 },
                 WindowMeasure::Slider {
                     id: "note-measures.grid-subdivisions".into(),
@@ -1262,7 +1262,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
                     min: 1.0,
                     max: 16.0,
                     step: Some(1.0),
-                    on_change: note_cmd("setGridSubdivisions", None),
+                    on_change: note_action("setGridSubdivisions", None),
                 },
                 WindowMeasure::Slider {
                     id: "note-measures.grid-opacity".into(),
@@ -1271,7 +1271,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
                     min: 0.05,
                     max: 1.0,
                     step: Some(0.05),
-                    on_change: note_cmd("setGridOpacity", None),
+                    on_change: note_action("setGridOpacity", None),
                 },
             ],
         },
@@ -1286,7 +1286,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
                     label: Some("Snap to grid".into()),
                     pressed: document.snap_enabled.unwrap_or(false),
                     text: None,
-                    on_change: note_cmd("setSnapEnabled", None),
+                    on_change: note_action("setSnapEnabled", None),
                 },
                 WindowMeasure::Slider {
                     id: "note-measures.snap-spacing".into(),
@@ -1295,7 +1295,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
                     min: 1.0,
                     max: 128.0,
                     step: Some(1.0),
-                    on_change: note_cmd("setSnapGridSpacing", None),
+                    on_change: note_action("setSnapGridSpacing", None),
                 },
             ],
         },
@@ -1311,7 +1311,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
                     min: 1.0,
                     max: 24.0,
                     step: Some(1.0),
-                    on_change: note_cmd("setPencilWidth", None),
+                    on_change: note_action("setPencilWidth", None),
                 },
                 WindowMeasure::Slider {
                     id: "note-measures.eraser-radius".into(),
@@ -1320,7 +1320,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
                     min: 4.0,
                     max: 48.0,
                     step: Some(1.0),
-                    on_change: note_cmd("setEraserRadius", None),
+                    on_change: note_action("setEraserRadius", None),
                 },
             ],
         },
@@ -1336,7 +1336,7 @@ fn note_navigator_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
             min: 0.05,
             max: 2.0,
             step: Some(0.05),
-            on_change: note_cmd("setCameraZoom", None),
+            on_change: note_action("setCameraZoom", None),
         },
         WindowMeasure::Toggle {
             id: "note-navigator-measures.grid-visible".into(),
@@ -1344,7 +1344,7 @@ fn note_navigator_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
             label: Some("Show grid".into()),
             pressed: document.grid_visible.unwrap_or(true),
             text: None,
-            on_change: note_cmd("setGridVisible", None),
+            on_change: note_action("setGridVisible", None),
         },
     ]
 }
@@ -1371,8 +1371,8 @@ fn note_canvas_engagement(play: &NotePlayEnvelope) -> WindowEngagement {
             value: Some(play.engagement_input.clone()),
             placeholder: Some("Block name".into()),
             disabled: Some(play.selected_ids.len() != 1),
-            on_change: Some(note_cmd("engagementInput", None)),
-            on_submit: Some(note_cmd("engagementSubmit", None)),
+            on_change: Some(note_action("engagementInput", None)),
+            on_submit: Some(note_action("engagementSubmit", None)),
             on_repeat_last: None,
             on_abort: None,
         }),
@@ -1396,7 +1396,7 @@ fn note_navigator_engagement(play: &NotePlayEnvelope) -> WindowEngagement {
             placeholder: Some("Select all".into()),
             disabled: None,
             on_change: None,
-            on_submit: Some(note_cmd("selectAll", None)),
+            on_submit: Some(note_action("selectAll", None)),
             on_repeat_last: None,
             on_abort: None,
         }),
@@ -1409,10 +1409,10 @@ fn note_navigator_engagement(play: &NotePlayEnvelope) -> WindowEngagement {
 
 fn note_toolbar(document: &NoteDocument) -> Vec<ToolNode> {
     let tool = document.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
-    let set_tool = |id: &str| note_cmd("setActiveTool", Some(json!({ "tool": id })));
+    let set_tool = |id: &str| note_action("setActiveTool", Some(json!({ "tool": id })));
     vec![
-        tool_button("note.play.tools.open", "folder-open", "Import", note_cmd("loadRequest", None)),
-        tool_button("note.play.tools.save", "save", "Export", note_cmd("saveDownload", None)),
+        tool_button("note.play.tools.open", "folder-open", "Import", note_action("loadRequest", None)),
+        tool_button("note.play.tools.save", "save", "Export", note_action("saveDownload", None)),
         tool_separator("note.play.tools.separator.io"),
         tool_toggle("note.play.tools.selectDirect", "cursor", "Direct", tool == "selectDirect", set_tool("selectDirect")),
         tool_toggle("note.play.tools.selectMarquee", "selection", "Marquee", tool == "selectMarquee", set_tool("selectMarquee")),
@@ -1452,15 +1452,15 @@ impl PluginApp for NoteApp {
         .expect("note document json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut play = parse_envelope(document_json);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value::<NotePlayEnvelope>(next.clone()) {
@@ -1745,7 +1745,7 @@ impl PluginApp for NoteApp {
             | "nudgeSelectionUpFast" | "nudgeSelectionDownFast" | "nudgeSelectionLeftFast" | "nudgeSelectionRightFast" => {
                 const NUDGE_STEP: f64 = 1.0;
                 const NUDGE_STEP_FAST: f64 = 10.0;
-                let (default_dx, default_dy) = match command {
+                let (default_dx, default_dy) = match action {
                     "nudgeSelectionUp" => (0.0, -NUDGE_STEP),
                     "nudgeSelectionDown" => (0.0, NUDGE_STEP),
                     "nudgeSelectionLeft" => (-NUDGE_STEP, 0.0),
@@ -1887,7 +1887,7 @@ impl PluginApp for NoteApp {
                 return vec![json!({
                     "op": "requestFileOpen",
                     "accept": ".json,.note.json,application/json",
-                    "importCommand": "setFixtureJson",
+                    "importAction": "setFixtureJson",
                 })
                 .to_string()];
             }
@@ -2326,10 +2326,10 @@ mod tests {
     }
 
     #[test]
-    fn add_block_command() {
+    fn add_block_action() {
         let mut app = NoteApp;
         let document = serde_json::to_string(&empty_note_document()).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "addBlock",
             Some(&json!({ "kind": "text" })),
             &document,
@@ -2340,7 +2340,7 @@ mod tests {
     }
 
     #[test]
-    fn nudge_direction_commands_move_selection_without_args() {
+    fn nudge_direction_actions_move_selection_without_args() {
         let mut app = NoteApp;
         let mut play = parse_envelope(&serde_json::to_string(&empty_note_document()).unwrap());
         let block = create_block_by_kind("text", 0.0, 0.0);
@@ -2349,24 +2349,24 @@ mod tests {
         play.selected_ids = vec![block_id.clone()];
         let document = serde_json::to_string(&play).unwrap();
 
-        for (command, expected_dx, expected_dy) in [
+        for (action, expected_dx, expected_dy) in [
             ("nudgeSelectionUp", 0.0, -1.0),
             ("nudgeSelectionDown", 0.0, 1.0),
             ("nudgeSelectionLeft", -1.0, 0.0),
             ("nudgeSelectionRight", 1.0, 0.0),
         ] {
-            let ops = app.handle_command_patch_ops(command, None, &document, &ViewState::default());
-            assert_eq!(ops.len(), 1, "{command} should emit a setDocument op");
+            let ops = app.handle_action_patch_ops(action, None, &document, &ViewState::default());
+            assert_eq!(ops.len(), 1, "{action} should emit a setDocument op");
             let updated: NotePlayEnvelope =
                 serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
             let moved = find_block(&updated.document.blocks, &block_id).unwrap();
             let (x, y, ..) = block_bounds(moved);
-            assert_eq!((x, y), (expected_dx, expected_dy), "{command} moved block to unexpected position");
+            assert_eq!((x, y), (expected_dx, expected_dy), "{action} moved block to unexpected position");
         }
     }
 
     #[test]
-    fn nudge_fast_commands_use_ten_pixel_step() {
+    fn nudge_fast_actions_use_ten_pixel_step() {
         let mut app = NoteApp;
         let mut play = parse_envelope(&serde_json::to_string(&empty_note_document()).unwrap());
         let block = create_block_by_kind("text", 0.0, 0.0);
@@ -2375,7 +2375,7 @@ mod tests {
         play.selected_ids = vec![block_id_value.clone()];
         let document = serde_json::to_string(&play).unwrap();
 
-        let ops = app.handle_command_patch_ops("nudgeSelectionRightFast", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("nudgeSelectionRightFast", None, &document, &ViewState::default());
         let updated: NotePlayEnvelope = serde_json::from_str(&document_json_from_op(&ops[0])).unwrap();
         let moved = find_block(&updated.document.blocks, &block_id_value).unwrap();
         let (x, y, ..) = block_bounds(moved);
@@ -2393,7 +2393,7 @@ mod tests {
             { "op": "addBlock", "block": block.clone(), "parentId": null, "index": null }
         ])
         .to_string();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "applyNoteEvents",
             Some(&json!({ "eventsJson": begin_events, "phase": "begin", "selectIds": [new_id.clone()] })),
             &document,
@@ -2411,7 +2411,7 @@ mod tests {
                 { "op": "updateBlock", "blockId": new_id, "block": moved }
             ])
             .to_string();
-            let ops = app.handle_command_patch_ops(
+            let ops = app.handle_action_patch_ops(
                 "applyNoteEvents",
                 Some(&json!({ "eventsJson": live_events, "phase": "live" })),
                 &current,
@@ -2423,7 +2423,7 @@ mod tests {
             current = document_json_from_op(&ops[0]);
         }
 
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "applyNoteEvents",
             Some(&json!({ "eventsJson": "[]", "phase": "commit" })),
             &current,
@@ -2434,7 +2434,7 @@ mod tests {
         assert_eq!(committed.undo_stack.len(), 1, "gesture should push exactly one undo step");
         assert_eq!(committed.document.blocks.len(), 1);
 
-        let undo_ops = app.handle_command_patch_ops("undo", None, &committed_document, &ViewState::default());
+        let undo_ops = app.handle_action_patch_ops("undo", None, &committed_document, &ViewState::default());
         assert_eq!(undo_ops.len(), 1);
         let undone: NotePlayEnvelope = serde_json::from_str(&document_json_from_op(&undo_ops[0])).unwrap();
         assert!(undone.document.blocks.is_empty(), "undo should restore pre-gesture document");
@@ -2444,14 +2444,14 @@ mod tests {
     fn gesture_commit_with_no_changes_does_not_push_undo() {
         let mut app = NoteApp;
         let document = serde_json::to_string(&empty_note_document()).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "applyNoteEvents",
             Some(&json!({ "eventsJson": "[]", "phase": "begin" })),
             &document,
             &ViewState::default(),
         );
         let after_begin = document_json_from_op(&ops[0]);
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "applyNoteEvents",
             Some(&json!({ "eventsJson": "[]", "phase": "commit" })),
             &after_begin,
@@ -2462,10 +2462,10 @@ mod tests {
     }
 
     #[test]
-    fn camera_and_tool_commands_do_not_push_undo() {
+    fn camera_and_tool_actions_do_not_push_undo() {
         let mut app = NoteApp;
         let document = serde_json::to_string(&empty_note_document()).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setCameraZoom",
             Some(&json!({ "value": 2.0 })),
             &document,
@@ -2476,7 +2476,7 @@ mod tests {
         assert_eq!(envelope.document.camera.zoom, 2.0);
 
         let after_zoom = document_json_from_op(&ops[0]);
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setActiveTool",
             Some(&json!({ "tool": "pencil" })),
             &after_zoom,
@@ -2491,7 +2491,7 @@ mod tests {
     fn set_grid_subdivisions_and_opacity_clamp() {
         let mut app = NoteApp;
         let document = serde_json::to_string(&empty_note_document()).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setGridSubdivisions",
             Some(&json!({ "value": 40.0 })),
             &document,
@@ -2501,7 +2501,7 @@ mod tests {
         assert_eq!(envelope.document.grid_subdivisions, Some(16.0));
 
         let after = document_json_from_op(&ops[0]);
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setGridOpacity",
             Some(&json!({ "value": 5.0 })),
             &after,
@@ -2528,7 +2528,7 @@ mod tests {
             ("tableRemoveRow", 1, 4),
             ("tableRemoveColumn", 1, 3),
         ] {
-            let ops = app.handle_command_patch_ops(
+            let ops = app.handle_action_patch_ops(
                 "patchBlocks",
                 Some(&json!({ "blockIds": [table_id], "field": field })),
                 &document,
@@ -2556,7 +2556,7 @@ mod tests {
         play.selected_ids = vec![source_id.clone()];
         let document = serde_json::to_string(&play).unwrap();
 
-        let ops = app.handle_command_patch_ops("duplicateSelection", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("duplicateSelection", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let envelope: NotePlayEnvelope = serde_json::from_str(&document_json_from_op(&ops[0])).unwrap();
         assert_eq!(envelope.document.blocks.len(), 2);
@@ -2572,22 +2572,22 @@ mod tests {
     fn save_download_and_load_request_ops() {
         let mut app = NoteApp;
         let document = SEMIO_EXAMPLE_JSON.to_string();
-        let ops = app.handle_command_patch_ops("saveDownload", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("saveDownload", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         assert!(ops[0].contains("\"op\":\"downloadMediaExport\""));
         assert!(ops[0].contains("semio.note.json"));
 
-        let ops = app.handle_command_patch_ops("loadRequest", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("loadRequest", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         assert!(ops[0].contains("\"op\":\"requestFileOpen\""));
-        assert!(ops[0].contains("\"importCommand\":\"setFixtureJson\""));
+        assert!(ops[0].contains("\"importAction\":\"setFixtureJson\""));
     }
 
     #[test]
     fn set_fixture_json_replaces_document() {
         let mut app = NoteApp;
         let document = serde_json::to_string(&empty_note_document()).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setFixtureJson",
             Some(&json!({ "payload": SEMIO_EXAMPLE_JSON })),
             &document,
@@ -2602,7 +2602,7 @@ mod tests {
     fn set_active_example_loads_semio_blocks() {
         let mut app = NoteApp;
         let document = serde_json::to_string(&empty_note_document()).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setActiveExample",
             Some(&json!({ "exampleId": "semio" })),
             &document,
@@ -2613,7 +2613,7 @@ mod tests {
         assert_eq!(envelope.document.blocks.len(), 3);
 
         let after_semio = document_json_from_op(&ops[0]);
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setActiveExample",
             Some(&json!({ "exampleId": "empty" })),
             &after_semio,

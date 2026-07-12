@@ -10,7 +10,7 @@ import { fetchComposeFileSystemChildren, type ComposeFileSystemChildRef, type Co
 import { gunzipSync } from "fflate";
 import type { Store as JsKitStore } from "@semio-tech/compose-js";
 import {
-  CommandBus,
+  ActionBus,
   Component,
   Controller,
   ObservableCell,
@@ -71,7 +71,7 @@ import {
   FRAMEWORK_PANEL_TAB_INSPECTION_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
   PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY,
-  type CommandDescriptor,
+  type ActionDescriptor,
   type NavigationDestination,
   type NavigationLevel,
   type SearchItemSpec,
@@ -11674,11 +11674,11 @@ function sketchpadPanelTextStack(lines: readonly { readonly text: string; readon
   };
 }
 
-function sketchpadPanelCommandButton(label: string, command: string, args?: unknown): { readonly type: "button"; readonly label: string; readonly command: { readonly controllerId: string; readonly command: string; readonly args?: unknown } } {
+function sketchpadPanelActionButton(label: string, action: string, args?: unknown): { readonly type: "button"; readonly label: string; readonly action: { readonly controllerId: string; readonly action: string; readonly args?: unknown } } {
   return {
     type: "button",
     label,
-    command: { controllerId: "compose.sketchpad.shell", command, ...(args !== undefined ? { args } : {}) },
+    action: { controllerId: "compose.sketchpad.shell", action, ...(args !== undefined ? { args } : {}) },
   };
 }
 //#endregion 🔖KitHelpers
@@ -13956,8 +13956,8 @@ export class SketchpadTypeRepresentationScene extends SketchpadRoutedComponent<P
   }
 }
 
-function sketchpadShellCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
-  return { controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, command, args: args as never };
+function sketchpadShellAct(action: string, args?: Record<string, unknown>): ActionDescriptor {
+  return { controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, action, args: args as never };
 }
 
 function sketchpadAllEqual<T>(values: readonly T[]): boolean {
@@ -13999,7 +13999,7 @@ function buildSketchpadDocumentPanelBody(ctx: WindowBodyViewContext): UiTreeNode
       return {
         id: `sketchpad.document.kit.${id}`,
         label: kit?.name ?? id,
-        command: sketchpadShellCmd("navigate", { path: `/kits/${id}` }),
+        action: sketchpadShellAct("navigate", { path: `/kits/${id}` }),
       };
     });
     if (homeSelected.length > 0) {
@@ -14013,7 +14013,7 @@ function buildSketchpadDocumentPanelBody(ctx: WindowBodyViewContext): UiTreeNode
             type: "button",
             id: `sketchpad.document.home-kit.${id}`,
             label: kit?.name ?? id,
-            command: sketchpadShellCmd("navigate", { path: `/kits/${id}` }),
+            action: sketchpadShellAct("navigate", { path: `/kits/${id}` }),
           };
         }),
       });
@@ -14023,8 +14023,8 @@ function buildSketchpadDocumentPanelBody(ctx: WindowBodyViewContext): UiTreeNode
       id: "sketchpad.document.open-kits",
       label: "Open kits",
       children: kitItems.length
-        ? kitItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command }))
-        : [{ type: "text", value: `${open.length} kit(s) open` }, sketchpadPanelCommandButton("Import kit archive…", "importKitFromFile"), sketchpadPanelCommandButton("Create empty kit", "createTemporaryKit", { name: "Untitled Kit" })],
+        ? kitItems.map((item) => ({ type: "button", id: item.id, label: item.label, action: item.action }))
+        : [{ type: "text", value: `${open.length} kit(s) open` }, sketchpadPanelActionButton("Import kit archive…", "importKitFromFile"), sketchpadPanelActionButton("Create empty kit", "createTemporaryKit", { name: "Untitled Kit" })],
     });
     return { ...uiDeclarativeSectionsToTree(sections), selectedIds: sketchpadDocumentSelectedIds(selection) };
   }
@@ -14035,25 +14035,25 @@ function buildSketchpadDocumentPanelBody(ctx: WindowBodyViewContext): UiTreeNode
   const designItems: UiTreeItemNode[] = sketchpadKitItemsOf<Design>(kit.designs).map((design) => ({
     id: `sketchpad.document.design.${design.id}`,
     label: design.name ?? design.id ?? "",
-    command: sketchpadShellCmd("navigate", { path: `/kits/${kitId}/design/${design.id}` }),
+    action: sketchpadShellAct("navigate", { path: `/kits/${kitId}/design/${design.id}` }),
   }));
   const typeItems: UiTreeItemNode[] = sketchpadKitTypeRows(kit).map((type) => ({
     id: `sketchpad.document.type.${type.id}`,
     label: type.name ?? type.id ?? "",
-    command: sketchpadShellCmd("navigate", { path: `/kits/${kitId}/type/${type.id}` }),
+    action: sketchpadShellAct("navigate", { path: `/kits/${kitId}/type/${type.id}` }),
   }));
   sections.push({
     type: "section",
     id: "sketchpad.document.kit",
     label: kit.name ?? kitId,
-    children: [{ type: "text", value: `${designItems.length} design(s) · ${typeItems.length} type(s)` }, sketchpadPanelCommandButton("Create design", "createDesignInActiveKit", { name: "New design" })],
+    children: [{ type: "text", value: `${designItems.length} design(s) · ${typeItems.length} type(s)` }, sketchpadPanelActionButton("Create design", "createDesignInActiveKit", { name: "New design" })],
   });
   if (designId) {
     const design = findDesignInKit(kit, designId);
     const pieceItems: UiTreeItemNode[] = (design?.pieces ?? []).map((piece) => ({
       id: `sketchpad.document.piece.${piece.id}`,
       label: sketchpadPieceLabel(piece, kit),
-      command: sketchpadShellCmd("setRouteSelection", {
+      action: sketchpadShellAct("setRouteSelection", {
         pieceIds: [piece.id!],
         connectionIds: [],
         kitWiresNodeIds: [],
@@ -14066,7 +14066,7 @@ function buildSketchpadDocumentPanelBody(ctx: WindowBodyViewContext): UiTreeNode
       .map((connection) => ({
         id: `sketchpad.document.connection.${connection.id}`,
         label: connection.id!,
-        command: sketchpadShellCmd("setRouteSelection", {
+        action: sketchpadShellAct("setRouteSelection", {
           pieceIds: [],
           connectionIds: [connection.id!],
           kitWiresNodeIds: [],
@@ -14079,8 +14079,8 @@ function buildSketchpadDocumentPanelBody(ctx: WindowBodyViewContext): UiTreeNode
       label: design?.name ?? designId,
       children: [
         { type: "text", value: `${pieceItems.length} piece(s) · ${connectionItems.length} connection(s)` },
-        ...pieceItems.map((item) => ({ type: "button" as const, id: item.id, label: item.label, command: item.command })),
-        ...connectionItems.map((item) => ({ type: "button" as const, id: item.id, label: item.label, command: item.command })),
+        ...pieceItems.map((item) => ({ type: "button" as const, id: item.id, label: item.label, action: item.action })),
+        ...connectionItems.map((item) => ({ type: "button" as const, id: item.id, label: item.label, action: item.action })),
       ],
     });
   } else if (typeId) {
@@ -14105,13 +14105,13 @@ function buildSketchpadDocumentPanelBody(ctx: WindowBodyViewContext): UiTreeNode
         type: "section",
         id: "sketchpad.document.designs",
         label: "Designs",
-        children: designItems.length ? designItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command })) : [{ type: "text", value: "(none)" }],
+        children: designItems.length ? designItems.map((item) => ({ type: "button", id: item.id, label: item.label, action: item.action })) : [{ type: "text", value: "(none)" }],
       },
       {
         type: "section",
         id: "sketchpad.document.types",
         label: "Types",
-        children: typeItems.length ? typeItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command })) : [{ type: "text", value: "(none)" }],
+        children: typeItems.length ? typeItems.map((item) => ({ type: "button", id: item.id, label: item.label, action: item.action })) : [{ type: "text", value: "(none)" }],
       },
     );
   }
@@ -14148,7 +14148,7 @@ function buildSketchpadCataloguePanelBody(ctx: WindowBodyViewContext): UiTreeNod
             type: "button",
             id: `sketchpad.catalogue.type.${type.id}`,
             label: type.name ?? type.id ?? "",
-            command: sketchpadShellCmd("navigate", { path: `/kits/${kitId}/type/${type.id}` }),
+            action: sketchpadShellAct("navigate", { path: `/kits/${kitId}/type/${type.id}` }),
           }))
         : [{ type: "text", value: "(none)" }],
     },
@@ -14223,7 +14223,7 @@ function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNo
           inputKind: "text",
           value: nameUniform ? (names[0] ?? "") : "",
           placeholder: nameUniform ? undefined : "Mixed",
-          onChange: sketchpadShellCmd("patchRoutePieces", { kitId, designId, pieceIds: selection.pieceIds, field: "name" }),
+          onChange: sketchpadShellAct("patchRoutePieces", { kitId, designId, pieceIds: selection.pieceIds, field: "name" }),
         },
       },
       {
@@ -14236,7 +14236,7 @@ function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNo
           inputKind: "text",
           value: descriptionUniform ? (descriptions[0] ?? "") : "",
           placeholder: descriptionUniform ? undefined : "Mixed",
-          onChange: sketchpadShellCmd("patchRoutePieces", { kitId, designId, pieceIds: selection.pieceIds, field: "description" }),
+          onChange: sketchpadShellAct("patchRoutePieces", { kitId, designId, pieceIds: selection.pieceIds, field: "description" }),
         },
       },
     );
@@ -14273,7 +14273,7 @@ function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNo
           inputKind: "number",
           value: gapUniform ? String(gaps[0] ?? 0) : "",
           placeholder: gapUniform ? undefined : "Mixed",
-          onChange: sketchpadShellCmd("patchRouteConnections", { kitId, designId, connectionIds: selection.connectionIds, field: "gap" }),
+          onChange: sketchpadShellAct("patchRouteConnections", { kitId, designId, connectionIds: selection.connectionIds, field: "gap" }),
         },
       });
     }
@@ -14383,7 +14383,7 @@ class SketchpadPlatformComponents {
 }
 //#endregion 🔖SketchpadPlatformComponents
 
-/** @emoji 🧭 Routes sketchpad navigation and panel chrome through {@link CommandBus}. */
+/** @emoji 🧭 Routes sketchpad navigation and panel chrome through {@link ActionBus}. */
 export class SketchpadShellController extends VirtualFileSystemController {
   private readonly vfsRouteRootByScope = new Map<string, string>();
   private readonly shellStore: ObservableCell<SketchpadShellSnapshot>;
@@ -14395,8 +14395,8 @@ export class SketchpadShellController extends VirtualFileSystemController {
   readonly kitWiresHoverStore = new ObservableCell<string | null>(null);
   readonly kitWiresPreselectStore = new ObservableCell<SketchpadKitWiresPreselectSnapshot>(SKETCHPAD_KIT_WIRES_PRESELECT_EMPTY);
 
-  constructor(commandBus: CommandBus, hostNotify: () => void) {
-    super(SKETCHPAD_SHELL_CONTROLLER_ID, commandBus, hostNotify);
+  constructor(actionBus: ActionBus, hostNotify: () => void) {
+    super(SKETCHPAD_SHELL_CONTROLLER_ID, actionBus, hostNotify);
     this.shellStore = new ObservableCell<SketchpadShellSnapshot>({
       navigationPath: "/",
       panelVisibility: { leftSidePanel: false, rightSidePanel: false },
@@ -14867,10 +14867,10 @@ export class SketchpadShellController extends VirtualFileSystemController {
     return model;
   }
 
-  protected override runVirtualFileSystemCommand(command: string, args?: unknown): boolean {
+  protected override runVirtualFileSystemAction(action: string, args?: unknown): boolean {
     const scope = this.resolveScope(args);
     if (scope?.appId === SKETCHPAD_KIT_APP_ID) {
-      if (command === "setVirtualFileSystemRowSelection") {
+      if (action === "setVirtualFileSystemRowSelection") {
         const selectionPayload = args as { rowIds?: readonly string[]; anchorRowId?: string };
         const rowIds = selectionPayload.rowIds ? [...selectionPayload.rowIds] : [];
         const key = virtualFileSystemScopeKey(scope);
@@ -14889,18 +14889,18 @@ export class SketchpadShellController extends VirtualFileSystemController {
         }
         return true;
       }
-      if (command === "virtualFileSystemRowHover") {
+      if (action === "virtualFileSystemRowHover") {
         const rowId = (args as { rowId?: string | null }).rowId ?? null;
         this.setKitWiresHoveredNodeId(rowId);
         return true;
       }
     }
-    return super.runVirtualFileSystemCommand(command, args);
+    return super.runVirtualFileSystemAction(action, args);
   }
 
-  override run(command: string, args?: unknown): void {
-    if (this.runVirtualFileSystemCommand(command, args)) {
-      if (command !== "virtualFileSystemRowHover") {
+  override run(action: string, args?: unknown): void {
+    if (this.runVirtualFileSystemAction(action, args)) {
+      if (action !== "virtualFileSystemRowHover") {
         const scope = this.resolveScope(args);
         if (scope?.appId === SKETCHPAD_KIT_APP_ID) {
           const kitId = parseSketchpadRouteScopeFromPath(this.shellStore.get().navigationPath).kitId;
@@ -14910,7 +14910,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
       return;
     }
     const shell = this.shellStore.get();
-    switch (command) {
+    switch (action) {
       case "setNavigation": {
         const path = (args as { path: string }).path;
         const pathOnly = path.split("?")[0] ?? "/";
@@ -15147,24 +15147,24 @@ let sketchpadPluginHostSingleton: PluginHost | null = null;
 let sketchpadPlatformReady: Promise<Platform> | null = null;
 let sketchpadBodiesRegistered = false;
 
-function sketchpadShellCommand(id: string, label: string, command: string, args?: unknown, category = "Sketchpad"): SearchItemSpec {
-  return { id, label, category, controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, command, args };
+function sketchpadShellActionItem(id: string, label: string, action: string, args?: unknown, category = "Sketchpad"): SearchItemSpec {
+  return { id, label, category, controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, action, args };
 }
 
-function sketchpadKitAppCommands(): readonly SearchItemSpec[] {
+function sketchpadKitAppActions(): readonly SearchItemSpec[] {
   return [
-    sketchpadShellCommand("compose.sketchpad.kit.createKit", "Create empty kit", "createTemporaryKit", { name: "Untitled Kit" }),
-    sketchpadShellCommand("compose.sketchpad.kit.importFile", "Import kit from file", "importKitFromFile"),
-    sketchpadShellCommand("compose.sketchpad.kit.openFolder", "Open folder kit", "openKit", { kind: "folder" }),
-    sketchpadShellCommand("compose.sketchpad.kit.openFile", "Open file kit", "openKit", { kind: "file" }),
-    sketchpadShellCommand("compose.sketchpad.kit.openRemote", "Open remote kit", "openKit", { kind: "remote" }),
-    sketchpadShellCommand("compose.sketchpad.kit.close", "Close active kit", "closeActiveKit"),
-    sketchpadShellCommand("compose.sketchpad.kit.rename", "Rename kit", "renameActiveKit", { name: "Renamed kit" }),
-    sketchpadShellCommand("compose.sketchpad.kit.createDesign", "Create design", "createDesignInActiveKit", { name: "New design" }),
-    sketchpadShellCommand("compose.sketchpad.kit.export", "Export active kit JSON", "exportActiveKit"),
-    sketchpadShellCommand("compose.sketchpad.kit.copyJson", "Copy active kit JSON", "copyActiveKitJson"),
-    sketchpadShellCommand("compose.sketchpad.kit.openDocs", "Open documentation", "navigate", { path: "/doc/getting-started/index" }),
-    sketchpadShellCommand("compose.sketchpad.kit.openFeedback", "Open feedback", "navigate", { path: "/feedback" }),
+    sketchpadShellActionItem("compose.sketchpad.kit.createKit", "Create empty kit", "createTemporaryKit", { name: "Untitled Kit" }),
+    sketchpadShellActionItem("compose.sketchpad.kit.importFile", "Import kit from file", "importKitFromFile"),
+    sketchpadShellActionItem("compose.sketchpad.kit.openFolder", "Open folder kit", "openKit", { kind: "folder" }),
+    sketchpadShellActionItem("compose.sketchpad.kit.openFile", "Open file kit", "openKit", { kind: "file" }),
+    sketchpadShellActionItem("compose.sketchpad.kit.openRemote", "Open remote kit", "openKit", { kind: "remote" }),
+    sketchpadShellActionItem("compose.sketchpad.kit.close", "Close active kit", "closeActiveKit"),
+    sketchpadShellActionItem("compose.sketchpad.kit.rename", "Rename kit", "renameActiveKit", { name: "Renamed kit" }),
+    sketchpadShellActionItem("compose.sketchpad.kit.createDesign", "Create design", "createDesignInActiveKit", { name: "New design" }),
+    sketchpadShellActionItem("compose.sketchpad.kit.export", "Export active kit JSON", "exportActiveKit"),
+    sketchpadShellActionItem("compose.sketchpad.kit.copyJson", "Copy active kit JSON", "copyActiveKitJson"),
+    sketchpadShellActionItem("compose.sketchpad.kit.openDocs", "Open documentation", "navigate", { path: "/doc/getting-started/index" }),
+    sketchpadShellActionItem("compose.sketchpad.kit.openFeedback", "Open feedback", "navigate", { path: "/feedback" }),
   ];
 }
 
@@ -15200,7 +15200,7 @@ function buildSketchpadExtensionManifest(): PluginManifest {
             { id: "wires", label: "Wires", bodyKey: SKETCHPAD_BODY_KIT_WIRES },
           ],
           defaultLayout: createDefaultLayout(["vfs", "wires"], "row", [50, 50], ["File System", "Wires"]),
-          commands: sketchpadKitAppCommands(),
+          actions: sketchpadKitAppActions(),
           panelTabs: sketchpadKitPanelTabs(),
         },
         {
@@ -15291,7 +15291,7 @@ function applySketchpadUri(platform: Platform, uri: string): void {
   const pathOnly = uri.split("?")[0] ?? "/";
   platform.uri = uri;
   platform.activeAppId = sketchpadAppIdFromPath(pathOnly);
-  platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "setNavigation", { path: uri });
+  platform.actionBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "setNavigation", { path: uri });
   sketchpadSyncTypeAppChrome(platform);
   platform.notify();
 }
@@ -15446,7 +15446,7 @@ export async function buildSketchpadPlatform(): Promise<Platform> {
   sketchpadConfigureBrowserKitFactories();
   registerSketchpadWindowBodies();
   const platform = new Platform(SKETCHPAD_PLATFORM_SPEC);
-  const controller = new SketchpadShellController(platform.commandBus, () => platform.notify());
+  const controller = new SketchpadShellController(platform.actionBus, () => platform.notify());
   sketchpadShellControllerSingleton = controller;
   const host = new PluginHost(platform);
   host.register(buildSketchpadExtensionManifest(), {
@@ -15619,7 +15619,7 @@ if (import.meta.vitest) {
       const designId = "00000000-0000-4000-8000-000000000011";
       const designSiblingId = "00000000-0000-4000-8000-000000000012";
       const platform = new Platform({ id: "nav-test", name: "Nav" });
-      const bus = new CommandBus();
+      const bus = new ActionBus();
       const ctrl = new SketchpadShellController(bus, () => platform.notify());
       const app = new AppRuntime(SKETCHPAD_KIT_APP_ID, "Home", undefined, ctrl, createTabStackLayout(["main"], ["Main"]), [new WindowKindRuntime("main", "Main", "test.sketchpad.nav.main")]);
       platform.addApp(app);
@@ -15651,7 +15651,7 @@ if (import.meta.vitest) {
 
   describe("SketchpadShellController stores", () => {
     it("provideStore registers shell and kit stores", () => {
-      const bus = new CommandBus();
+      const bus = new ActionBus();
       const ctrl = new SketchpadShellController(bus, () => {});
       const kitStore = new InMemoryComposeKitStore({ id: "k1", name: "A" } as Kit);
       ctrl.registerKitStore("k1", kitStore, { kind: "temporary" });
@@ -15800,7 +15800,7 @@ if (import.meta.vitest) {
 
   describe("SketchpadShellController navigation", () => {
     it("closeKit removes store and open id", () => {
-      const bus = new CommandBus();
+      const bus = new ActionBus();
       const ctrl = new SketchpadShellController(bus, () => {});
       ctrl.registerKitStore("k1", new InMemoryComposeKitStore({ id: "k1", name: "A" } as Kit));
       ctrl.closeKit("k1");
@@ -15810,7 +15810,7 @@ if (import.meta.vitest) {
     });
 
     it("createTemporaryKit registers navigable kit", async () => {
-      const bus = new CommandBus();
+      const bus = new ActionBus();
       const ctrl = new SketchpadShellController(bus, () => {});
       const id = await ctrl.createTemporaryKit("Test");
       expect(ctrl.listOpenKitIds()).toContain(id);
@@ -15821,7 +15821,7 @@ if (import.meta.vitest) {
     });
 
     it("navigateTo syncs platform uri before onNavigate", () => {
-      const bus = new CommandBus();
+      const bus = new ActionBus();
       const platform = new Platform({ id: "t", name: "T", defaultActiveAppId: SKETCHPAD_KIT_APP_ID });
       platform.applyUri = (uri) => applySketchpadUri(platform, uri);
       let uriWhenHistoryUpdates: string | undefined;
@@ -15924,7 +15924,7 @@ if (import.meta.vitest) {
       try {
         const jsStore = (await session.stores())[0]!;
         const store = await createComposeKitStoreFromJsStore(jsStore);
-        const bus = new CommandBus();
+        const bus = new ActionBus();
         const ctrl = new SketchpadShellController(bus, () => {});
         const kitId = store.getSnapshot().kit.id;
         ctrl.registerKitStore(kitId, store);
@@ -16220,7 +16220,7 @@ if (import.meta.vitest) {
   describe("sketchpadSyncTypeAppChrome", () => {
     it("creates one window kind per representation", () => {
       const platform = new Platform({ id: "t", name: "T", defaultActiveAppId: SKETCHPAD_TYPE_APP_ID });
-      const ctrl = new SketchpadShellController(new CommandBus(), () => platform.notify());
+      const ctrl = new SketchpadShellController(new ActionBus(), () => platform.notify());
       sketchpadShellControllerSingleton = ctrl;
       const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
       const typeId = "11111111-2222-3333-4444-555555555555";
@@ -16386,7 +16386,7 @@ if (import.meta.vitest) {
 
   describe("SketchpadShellController route selection URL", () => {
     it("syncs navigation path when selection changes on a design route", () => {
-      const bus = new CommandBus();
+      const bus = new ActionBus();
       const ctrl = new SketchpadShellController(bus, () => {});
       const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
       const designId = "11111111-2222-3333-4444-555555555555";
@@ -16419,7 +16419,7 @@ if (import.meta.vitest) {
       ctrl.navigateTo("/");
       platform.uri = "/";
       ctrl.updateHome({ ...sketchpadEmptyHomeUiState(), selectedKitIds: [kitId] });
-      const tree = buildSketchpadInspectionPanelBody({ platform, windowKindId: "home-main", bus: platform.commandBus });
+      const tree = buildSketchpadInspectionPanelBody({ platform, windowKindId: "home-main", bus: platform.actionBus });
       const text = JSON.stringify(tree);
       expect(text).toContain("Selected Kit");
       ctrl.dispose();
@@ -16435,7 +16435,7 @@ if (import.meta.vitest) {
       platform.uri = `/kits/${kitId}`;
       ctrl.buildVirtualFileSystemModel(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID));
       ctrl.setRouteSelection({ pieceIds: [], connectionIds: [], kitWiresNodeIds: [typeId], kitWiresHoveredNodeId: null });
-      const tree = buildSketchpadInspectionPanelBody({ platform, windowKindId: "vfs", bus: platform.commandBus });
+      const tree = buildSketchpadInspectionPanelBody({ platform, windowKindId: "vfs", bus: platform.actionBus });
       const text = JSON.stringify(tree);
       expect(text).toContain("Column");
       ctrl.dispose();
@@ -16468,10 +16468,10 @@ if (import.meta.vitest) {
       ctrl.navigateTo(`/kits/${kitId}/design/${designId}`);
       platform.uri = `/kits/${kitId}/design/${designId}`;
       ctrl.setRouteSelection({ pieceIds: [], connectionIds: [connectionA, connectionB], kitWiresNodeIds: [], kitWiresHoveredNodeId: null });
-      const tree = buildSketchpadInspectionPanelBody({ platform, windowKindId: "design", bus: platform.commandBus });
+      const tree = buildSketchpadInspectionPanelBody({ platform, windowKindId: "design", bus: platform.actionBus });
       const gapField = tree.sections.flatMap((section) => section.items).find((item) => item.id === "sketchpad.inspection.connection.gap");
       expect(gapField?.control?.type).toBe("input");
-      expect(gapField?.control?.onChange?.command).toBe("patchRouteConnections");
+      expect(gapField?.control?.onChange?.action).toBe("patchRouteConnections");
       ctrl.run("patchRouteConnections", { kitId, designId, connectionIds: [connectionA, connectionB], field: "gap", value: 5 });
       const design = findDesignInKit(ctrl.getKitStore(kitId)!.getSnapshot().kit, designId);
       const gaps = ((design as { connections?: readonly { gap?: number }[] }).connections ?? []).map((row) => row.gap);
@@ -16568,7 +16568,7 @@ if (import.meta.vitest) {
       const kitId = "aaaaaaaa-bbbb-cccc-dddd-444444444444";
       const folderId = "cccccccc-dddd-eeee-ffff-111111111111";
       const typeId = "dddddddd-eeee-ffff-1111-222222222222";
-      const bus = new CommandBus();
+      const bus = new ActionBus();
       const ctrl = new SketchpadShellController(bus, () => {});
       ctrl.registerKitStore(
         kitId,
@@ -16592,7 +16592,7 @@ if (import.meta.vitest) {
     it("keeps manually expanded kit vfs folders through kit wires prepare", async () => {
       const kitId = "aaaaaaaa-bbbb-cccc-dddd-333333333333";
       const folderId = "bbbbbbbb-cccc-dddd-eeee-ffffffffffff";
-      const bus = new CommandBus();
+      const bus = new ActionBus();
       const ctrl = new SketchpadShellController(bus, () => {});
       ctrl.registerKitStore(
         kitId,
@@ -16802,7 +16802,7 @@ if (import.meta.vitest) {
 
   describe("sketchpadApplyPuzzle2dSelection", () => {
     it("stores design piece selection on shell", () => {
-      const bus = new CommandBus();
+      const bus = new ActionBus();
       const ctrl = new SketchpadShellController(bus, () => {});
       const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
       const designId = "11111111-2222-3333-4444-555555555555";
@@ -16813,7 +16813,7 @@ if (import.meta.vitest) {
     });
 
     it("stores design piece selection from scene volume object ids", () => {
-      const bus = new CommandBus();
+      const bus = new ActionBus();
       const ctrl = new SketchpadShellController(bus, () => {});
       const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
       const designId = "11111111-2222-3333-4444-555555555555";
@@ -16824,7 +16824,7 @@ if (import.meta.vitest) {
     });
 
     it("maps volume attraction ids to connection selection", () => {
-      const bus = new CommandBus();
+      const bus = new ActionBus();
       const ctrl = new SketchpadShellController(bus, () => {});
       const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
       const designId = "11111111-2222-3333-4444-555555555555";
@@ -16849,7 +16849,7 @@ if (import.meta.vitest) {
     });
 
     it("stores kit wires selection on single click without navigating", () => {
-      const bus = new CommandBus();
+      const bus = new ActionBus();
       const ctrl = new SketchpadShellController(bus, () => {});
       const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
       const typeId = "11111111-2222-3333-4444-555555555555";
@@ -16873,7 +16873,7 @@ if (import.meta.vitest) {
       ctrl.syncVirtualFileSystemRoute(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), kitId);
       const vfs = platform.getComponent(virtualFileSystemSurfaceId(SKETCHPAD_KIT_APP_ID));
       expect(vfs?.getSnapshot().selectedRowIds ?? []).toEqual([]);
-      platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "puzzle5dSelection", {
+      platform.actionBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "puzzle5dSelection", {
         instanceId: sketchpadKitWiresInstanceId(kitId),
         puzzle2dIds: [typeId],
       });
@@ -16890,11 +16890,11 @@ if (import.meta.vitest) {
       ctrl.navigateTo(`/kits/${kitId}`);
       platform.uri = `/kits/${kitId}`;
       ctrl.syncVirtualFileSystemRoute(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), kitId);
-      platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "puzzle5dSelection", {
+      platform.actionBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "puzzle5dSelection", {
         instanceId: sketchpadKitWiresInstanceId(kitId),
         puzzle2dIds: [typeId],
       });
-      platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "setVirtualFileSystemRowSelection", {
+      platform.actionBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "setVirtualFileSystemRowSelection", {
         appId: SKETCHPAD_KIT_APP_ID,
         surfaceId: virtualFileSystemSurfaceId(SKETCHPAD_KIT_APP_ID),
         rowIds: [],
@@ -16936,12 +16936,12 @@ if (import.meta.vitest) {
       ctrl.syncVirtualFileSystemRoute(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), kitId);
       const vfs = platform.getComponent(virtualFileSystemSurfaceId(SKETCHPAD_KIT_APP_ID));
       expect(vfs?.getSnapshot().selectedRowIds ?? []).toEqual([]);
-      platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "puzzle5dPreselect", {
+      platform.actionBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "puzzle5dPreselect", {
         instanceId: sketchpadKitWiresInstanceId(kitId),
         preselect: { ids: [typeA, typeB], removedIds: [] },
       });
       expect(vfs?.getSnapshot().selectedRowIds).toEqual([typeA, typeB]);
-      platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "puzzle5dPreselect", {
+      platform.actionBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "puzzle5dPreselect", {
         instanceId: sketchpadKitWiresInstanceId(kitId),
         preselect: { ids: [], removedIds: [] },
       });
@@ -16958,7 +16958,7 @@ if (import.meta.vitest) {
       ctrl.navigateTo(`/kits/${kitId}`);
       platform.uri = `/kits/${kitId}`;
       ctrl.syncVirtualFileSystemRoute(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), kitId);
-      platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "virtualFileSystemRowHover", {
+      platform.actionBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "virtualFileSystemRowHover", {
         appId: SKETCHPAD_KIT_APP_ID,
         surfaceId: virtualFileSystemSurfaceId(SKETCHPAD_KIT_APP_ID),
         rowId: typeId,
@@ -16967,7 +16967,7 @@ if (import.meta.vitest) {
       const wires = platform.getComponent(SKETCHPAD_SURFACE_KIT_WIRES);
       expect(vfs?.getSnapshot().hoveredRowId).toBe(typeId);
       expect(wires?.getSnapshot().puzzle2dHoveredId).toBe(typeId);
-      platform.commandBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "puzzle5dHover", {
+      platform.actionBus.dispatch(SKETCHPAD_SHELL_CONTROLLER_ID, "puzzle5dHover", {
         instanceId: sketchpadKitWiresInstanceId(kitId),
         nodeId: null,
       });
@@ -16977,7 +16977,7 @@ if (import.meta.vitest) {
     });
 
     it("navigates kit wires on double-click activate", () => {
-      const bus = new CommandBus();
+      const bus = new ActionBus();
       const ctrl = new SketchpadShellController(bus, () => {});
       const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
       const typeId = "11111111-2222-3333-4444-555555555555";
@@ -17109,7 +17109,7 @@ if (import.meta.vitest) {
 
   describe("SketchpadShellController topology", () => {
     it("upserts topology store for kit wires surface", async () => {
-      const bus = new CommandBus();
+      const bus = new ActionBus();
       const ctrl = new SketchpadShellController(bus, () => {});
       const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
       const typeId = "11111111-2222-3333-4444-555555555555";
@@ -17135,7 +17135,7 @@ if (import.meta.vitest) {
     });
 
     it("concurrent kit wires syncs share one vfs prepare and emit containment edges", async () => {
-      const bus = new CommandBus();
+      const bus = new ActionBus();
       const ctrl = new SketchpadShellController(bus, () => {});
       const kitId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
       const typeId = "11111111-2222-3333-4444-555555555555";
@@ -17160,7 +17160,7 @@ if (import.meta.vitest) {
     });
 
     it("matches wires identities to vfs rows when a typology is expanded", async () => {
-      const bus = new CommandBus();
+      const bus = new ActionBus();
       const ctrl = new SketchpadShellController(bus, () => {});
       const kitId = "aaaaaaaa-bbbb-cccc-dddd-555555555555";
       const typologyId = "bbbbbbbb-cccc-dddd-eeee-111111111111";

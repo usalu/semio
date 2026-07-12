@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn, SelectionMarquee, marqueeCoverageFromGesture, screenRectFromPoints, type SelectionMarqueePoint } from "@semio-tech/ui-react";
 import { resolveSemanticColorHex } from "@semio-tech/ui-styling";
-import type { CommandDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
+import type { ActionDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
 
 //#region Types
 export type Vec2 = readonly [number, number];
@@ -894,7 +894,7 @@ const NOTE_MARQUEE_THRESHOLD_PX = 4;
 //#endregion DragState
 
 //#region NoteCanvasHost
-export function NoteCanvasHost({ node, onCommand }: { readonly node: UiComponentSceneNode; readonly onCommand: (command: CommandDescriptor) => void }) {
+export function NoteCanvasHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
   const scene = node.noteCanvas;
   const rootRef = useRef<HTMLDivElement | null>(null);
   const gestureActiveRef = useRef(false);
@@ -919,11 +919,11 @@ export function NoteCanvasHost({ node, onCommand }: { readonly node: UiComponent
   }, [scene?.documentJson]);
 
   const dispatch = useCallback(
-    (command: string, args?: Record<string, unknown>) => {
+    (action: string, args?: Record<string, unknown>) => {
       if (!node.controllerId) return;
-      onCommand({ controllerId: node.controllerId, command, args: { surfaceId: node.surfaceId, ...args } });
+      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
     },
-    [node.controllerId, node.surfaceId, onCommand],
+    [node.controllerId, node.surfaceId, onAction],
   );
 
   const flushPendingLive = useCallback(() => {

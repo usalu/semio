@@ -8,7 +8,7 @@ use mathematical_graph_port_directed_dag::{
 use semio_framework_plugin::{SurfaceKind, PanelGroup, 
     build_node_graph_scene, build_text_editor_scene, create_default_layout, ui_declarative_sections_to_tree,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field,
-    ui_text, App, CommandDescriptor, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, UiControlNode,
+    ui_text, App, ActionDescriptor, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, UiControlNode,
     UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -101,10 +101,10 @@ fn set_document_op(envelope: &DagPlayEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
 }
 
-fn dag_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn dag_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: DAG_PLAY_APP_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -350,9 +350,9 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         icon_id: None,
         selected: None,
         default_open: None,
-        command: None,
-        hover_command: None,
-        unhover_command: None,
+        action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -370,9 +370,9 @@ fn tree_item_with_description(id: impl Into<String>, label: impl Into<String>, d
         icon_id: None,
         selected: None,
         default_open: None,
-        command: None,
-        hover_command: None,
-        unhover_command: None,
+        action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -382,7 +382,7 @@ fn tree_item_with_description(id: impl Into<String>, label: impl Into<String>, d
     }
 }
 
-fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, description: Option<String>, command: CommandDescriptor) -> UiTreeItemNode {
+fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
         label: label.into(),
@@ -390,9 +390,9 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
         icon_id: None,
         selected: None,
         default_open: None,
-        command: Some(command),
-        hover_command: None,
-        unhover_command: None,
+        action: Some(action),
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -409,11 +409,11 @@ fn build_document_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
         .nodes
         .iter()
         .map(|node| {
-            tree_item_with_command(
+            tree_item_with_action(
                 format!("dag-play-document.node.{}", node.id),
                 if node.name.is_empty() { node.id.clone() } else { node.name.clone() },
                 Some(dag_node_kind_tag(&node.kind).into()),
-                dag_cmd("setSelection", Some(json!({ "ids": [node.id.clone()] }))),
+                dag_action("setSelection", Some(json!({ "ids": [node.id.clone()] }))),
             )
         })
         .collect();
@@ -454,7 +454,7 @@ fn build_document_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
         selected_ids: Some(selected.iter().map(|id| format!("dag-play-document.node.{id}")).collect()),
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -476,11 +476,11 @@ fn build_catalogue_tree() -> UiNode {
             items: kinds
                 .iter()
                 .map(|(kind, label)| {
-                    tree_item_with_command(
+                    tree_item_with_action(
                         format!("dag-play-catalogue.kind.{kind}"),
                         *label,
                         Some((*kind).into()),
-                        dag_cmd("addNode", Some(json!({ "kind": kind }))),
+                        dag_action("addNode", Some(json!({ "kind": kind }))),
                     )
                 })
                 .collect(),
@@ -488,7 +488,7 @@ fn build_catalogue_tree() -> UiNode {
         selected_ids: Some(vec![]),
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -503,7 +503,7 @@ fn inspector_number_field(node_ids: &[String], field_id: &str, label: &str, valu
             value: if mixed.uniform { mixed.value.to_string() } else { String::new() },
             placeholder: if mixed.uniform { None } else { Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into()) },
             commit: None,
-            on_change: dag_cmd("patchDagNodes", Some(json!({ "nodeIds": node_ids, "field": field }))),
+            on_change: dag_action("patchDagNodes", Some(json!({ "nodeIds": node_ids, "field": field }))),
             min: None,
             max: None,
             step: None,
@@ -526,7 +526,7 @@ fn inspector_text_field(node_ids: &[String], field_id: &str, label: &str, values
             value: mixed.value,
             placeholder: mixed.placeholder,
             commit: Some("blur".into()),
-            on_change: dag_cmd("patchDagNodes", Some(json!({ "nodeIds": node_ids, "field": field }))),
+            on_change: dag_action("patchDagNodes", Some(json!({ "nodeIds": node_ids, "field": field }))),
             min: None,
             max: None,
             step: None,
@@ -597,7 +597,7 @@ fn build_inspector_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
                     value: node_ids[0].clone(),
                     placeholder: None,
                     commit: Some("blur".into()),
-                    on_change: dag_cmd("renameDagNode", Some(json!({ "oldId": node_ids[0] }))),
+                    on_change: dag_action("renameDagNode", Some(json!({ "oldId": node_ids[0] }))),
                     min: None,
                     max: None,
                     step: None,
@@ -638,7 +638,7 @@ fn render_main_graph(envelope: &DagPlayEnvelope) -> UiNode {
             editable: Some(true),
             selection_json,
             context_menu_json: Some(
-                r#"[{"id":"delete-selection","label":"Delete selection","command":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
+                r#"[{"id":"delete-selection","label":"Delete selection","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
             ),
             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
         },
@@ -666,15 +666,15 @@ impl PluginApp for DagPlayApp {
         serde_json::to_string(&default_envelope()).expect("dag envelope json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut envelope = parse_envelope(document_json);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value(next.clone()) {
@@ -1046,10 +1046,10 @@ mod tests {
     }
 
     #[test]
-    fn add_node_command_updates_fixture() {
+    fn add_node_action_updates_fixture() {
         let mut app = DagPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("addNode", Some(&json!({ "kind": "slider" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addNode", Some(&json!({ "kind": "slider" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated_op: Value = serde_json::from_str(&ops[0]).unwrap();
         let updated: DagPlayEnvelope = serde_json::from_value(updated_op["document"].clone()).unwrap();
@@ -1073,7 +1073,7 @@ mod tests {
         let document = app.initial_document_json();
         let envelope: DagPlayEnvelope = serde_json::from_str(&document).unwrap();
         let old_id = envelope.fixture.nodes.first().map(|node| node.id.clone()).expect("node");
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "renameDagNode",
             Some(&json!({ "oldId": old_id, "value": "renamed-node" })),
             &document,
@@ -1091,7 +1091,7 @@ mod tests {
         let document = app.initial_document_json();
         let envelope: DagPlayEnvelope = serde_json::from_str(&document).unwrap();
         let node_id = envelope.fixture.nodes.first().map(|node| node.id.clone()).expect("node");
-        let ops = app.handle_command_patch_ops("removeNode", Some(&json!({ "nodeId": node_id })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("removeNode", Some(&json!({ "nodeId": node_id })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated: DagPlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();

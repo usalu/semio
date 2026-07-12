@@ -3,7 +3,7 @@
 use semio_framework_plugin::{SurfaceKind,
     build_raster_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical,
-    ui_text, App, CommandDescriptor, PanelGroup, PluginApp, PluginBundle, RasterScene, UiInspectorFieldGroup,
+    ui_text, App, ActionDescriptor, PanelGroup, PluginApp, PluginBundle, RasterScene, UiInspectorFieldGroup,
     UiNode, UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -533,10 +533,10 @@ fn patch_layer_field(document: &mut RasterDocument, layer_id: &str, field: &str,
 //#endregion 🔖Document
 
 //#region 🔖Panels
-fn play_cmd(controller_id: &str, command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn play_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: controller_id.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -590,13 +590,13 @@ fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
         }.into()),
         selected: None,
         default_open: Some(matches!(layer, RasterLayerNode::Group { .. })),
-        command: Some(play_cmd(
+        action: Some(play_action(
             RASTER_PLAY_CONTROLLER_ID,
             "setSelection",
             Some(json!({ "ids": [layer_node_id(layer)] })),
         )),
-        hover_command: None,
-        unhover_command: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: Some(true),
         drag_data: None,
@@ -615,13 +615,13 @@ fn render_layers_panel(document: &RasterDocument, play: &RasterPlayEnvelope, vie
             icon_id: Some("image".into()),
             selected: None,
             default_open: None,
-            command: Some(play_cmd(
+            action: Some(play_action(
                 RASTER_PLAY_CONTROLLER_ID,
                 "addLayer",
                 Some(json!({ "kind": "pixel" })),
             )),
-            hover_command: None,
-            unhover_command: None,
+            hover_action: None,
+            unhover_action: None,
             actions: None,
             draggable: None,
             drag_data: None,
@@ -636,13 +636,13 @@ fn render_layers_panel(document: &RasterDocument, play: &RasterPlayEnvelope, vie
             icon_id: Some("folder-plus".into()),
             selected: None,
             default_open: None,
-            command: Some(play_cmd(
+            action: Some(play_action(
                 RASTER_PLAY_CONTROLLER_ID,
                 "addLayer",
                 Some(json!({ "kind": "group" })),
             )),
-            hover_command: None,
-            unhover_command: None,
+            hover_action: None,
+            unhover_action: None,
             actions: None,
             draggable: None,
             drag_data: None,
@@ -671,12 +671,12 @@ fn render_layers_panel(document: &RasterDocument, play: &RasterPlayEnvelope, vie
         }],
         selected_ids: Some(selected_ids),
         highlighted_ids: Some(highlighted_ids),
-        selection_change: Some(play_cmd(
+        selection_change: Some(play_action(
             RASTER_PLAY_CONTROLLER_ID,
             "setSelection",
             None,
         )),
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -694,13 +694,13 @@ fn render_masks_panel(document: &RasterDocument, play: &RasterPlayEnvelope, view
                     icon_id: Some("scan".into()),
                     selected: None,
                     default_open: None,
-                    command: Some(play_cmd(
+                    action: Some(play_action(
                         RASTER_PLAY_CONTROLLER_ID,
                         "setSelection",
                         Some(json!({ "ids": [id] })),
                     )),
-                    hover_command: None,
-                    unhover_command: None,
+                    hover_action: None,
+                    unhover_action: None,
                     actions: None,
                     draggable: None,
                     drag_data: None,
@@ -727,9 +727,9 @@ fn render_masks_panel(document: &RasterDocument, play: &RasterPlayEnvelope, view
             icon_id: Some("scan".into()),
             selected: None,
             default_open: None,
-            command: None,
-            hover_command: None,
-            unhover_command: None,
+            action: None,
+            hover_action: None,
+            unhover_action: None,
             actions: None,
             draggable: None,
             drag_data: None,
@@ -753,7 +753,7 @@ fn render_masks_panel(document: &RasterDocument, play: &RasterPlayEnvelope, view
         ),
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -882,15 +882,15 @@ impl PluginApp for RasterApp {
         .expect("raster document json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut play = parse_envelope(document_json);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value::<RasterPlayEnvelope>(next.clone()) {
@@ -1367,7 +1367,7 @@ mod tests {
         let document = SEMIO_EXAMPLE_JSON.to_string();
         let envelope: RasterPlayEnvelope = serde_json::from_str(&document).unwrap();
         let layer_id = layer_node_id(&envelope.document.layers[0]).to_string();
-        let ops = app.handle_command_patch_ops("setHover", Some(&json!({ "id": layer_id })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setHover", Some(&json!({ "id": layer_id })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let next_document = serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string();
         let node = app.render(RASTER_PLAY_BODY_LAYERS, &next_document, &ViewState::default());
@@ -1379,7 +1379,7 @@ mod tests {
     fn set_composite_viewport_feeds_navigator_scene() {
         let mut app = RasterApp;
         let document = serde_json::to_string(&empty_raster_document()).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setCompositeViewport",
             Some(&json!({ "width": 640.0, "height": 480.0 })),
             &document,
@@ -1395,10 +1395,10 @@ mod tests {
     }
 
     #[test]
-    fn add_layer_command() {
+    fn add_layer_action() {
         let mut app = RasterApp;
         let document = serde_json::to_string(&empty_raster_document()).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "addLayer",
             Some(&json!({ "kind": "group" })),
             &document,

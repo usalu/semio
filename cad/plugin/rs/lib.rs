@@ -19,7 +19,7 @@ use semio_framework_plugin::{PanelGroup,
     tool_button, tool_collection, tool_separator, tool_toggle, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_mixed_vec3, ui_inspector_all_equal, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_chunking_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, App,
-    CommandDescriptor, MeshData, PluginApp, PluginBundle, ToolCategory, ToolNode, UiControlNode, UiFieldNode,
+    ActionDescriptor, MeshData, PluginApp, PluginBundle, ToolCategory, ToolNode, UiControlNode, UiFieldNode,
     UiInspectorFieldGroup, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiTreeItemAction, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementOption,
     WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
@@ -525,10 +525,10 @@ fn set_document_op(envelope: &CadPlayEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
 }
 
-fn cad_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn cad_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: CAD_PLAY_CONTROLLER_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -1236,6 +1236,19 @@ fn cad_labels(view_state: &ViewState) -> &'static CadLabels {
         (_, false) => &CAD_LABELS_NATIVE_EN,
     }
 }
+
+/// 🗣️ Resolves a typology catalog entry's display label from its stable id; unknown ids fall back to the catalog's native English text.
+fn typology_label(typology: &'static str, labels: &CadLabels) -> &'static str {
+    match typology {
+        "spatial.shape.primitive.box" => labels.typology_box,
+        "building.building.slab" | "structure.structure.onewayreinforcedconcreteslab" => labels.typology_slab,
+        "building.building.column" | "structure.structure.reinforcedconcretecolumn" => labels.typology_column,
+        "building.building.beam" => labels.typology_beam,
+        "building.building.wall" => labels.typology_wall,
+        "energy.energy.externalwall" => labels.typology_external_wall,
+        _ => TYPOLOGY_CATALOG.iter().find(|entry| entry.typology == typology).map(|entry| entry.label).unwrap_or(typology),
+    }
+}
 //#endregion 🔖Terminology
 
 //#region 🔖Panels
@@ -1244,11 +1257,11 @@ fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> 
         .primitives
         .iter()
         .map(|primitive| {
-            let mut item = tree_item_with_command(
+            let mut item = tree_item_with_action(
                 format!("cad-primitive:{id_suffix}:{}:{}", object.id, primitive.primitive_id),
                 format!("{}: {}", primitive.slot, primitive.primitive_id),
                 Some("hexagon"),
-                cad_cmd(
+                cad_action(
                     "setPrimitiveSelection",
                     Some(json!({
                         "objectId": object.id,
@@ -1257,26 +1270,26 @@ fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> 
                     })),
                 ),
             );
-            item.hover_command = Some(cad_cmd("worldHover", Some(json!({ "id": object.id }))));
-            item.unhover_command = Some(cad_cmd("worldHover", None));
+            item.hover_action = Some(cad_action("worldHover", Some(json!({ "id": object.id }))));
+            item.unhover_action = Some(cad_action("worldHover", None));
             item
         })
         .collect();
-    let mut item = tree_item_with_command(
+    let mut item = tree_item_with_action(
         format!("cad-object:{id_suffix}:{}", object.id),
         object.label.clone(),
         Some("box"),
-        cad_cmd("setSelection", Some(json!({ "objectIds": [object.id] }))),
+        cad_action("setSelection", Some(json!({ "objectIds": [object.id] }))),
     );
-    item.hover_command = Some(cad_cmd("worldHover", Some(json!({ "id": object.id }))));
-    item.unhover_command = Some(cad_cmd("worldHover", None));
+    item.hover_action = Some(cad_action("worldHover", Some(json!({ "id": object.id }))));
+    item.unhover_action = Some(cad_action("worldHover", None));
     item.is_hidden = Some(!object.visible);
     item.draggable = Some(!object.locked);
     item.actions = Some(vec![
         UiTreeItemAction {
             icon_id: if object.visible { "eye-off" } else { "eye" }.into(),
-            label: Some(if object.visible { "Hide" } else { "Show" }.into()),
-            command: cad_cmd(
+            label: Some(if object.visible { labels.hide } else { labels.show }.into()),
+            action: cad_action(
                 "patchObject",
                 Some(json!({ "objectId": object.id, "field": "hidden", "value": object.visible })),
             ),
@@ -1284,8 +1297,8 @@ fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> 
         },
         UiTreeItemAction {
             icon_id: if object.locked { "unlock" } else { "lock" }.into(),
-            label: Some(if object.locked { "Unlock" } else { "Lock" }.into()),
-            command: cad_cmd(
+            label: Some(if object.locked { labels.unlock } else { labels.lock }.into()),
+            action: cad_action(
                 "patchObject",
                 Some(json!({ "objectId": object.id, "field": "locked", "value": !object.locked })),
             ),
@@ -1293,14 +1306,14 @@ fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> 
         },
         UiTreeItemAction {
             icon_id: "copy".into(),
-            label: Some("Duplicate".into()),
-            command: cad_cmd("duplicateObject", Some(json!({ "objectId": object.id }))),
+            label: Some(labels.duplicate.into()),
+            action: cad_action("duplicateObject", Some(json!({ "objectId": object.id }))),
             reveal_on_hover: Some(true),
         },
         UiTreeItemAction {
             icon_id: "trash-2".into(),
-            label: Some("Delete".into()),
-            command: cad_cmd("deleteObject", Some(json!({ "objectId": object.id }))),
+            label: Some(labels.delete.into()),
+            action: cad_action("deleteObject", Some(json!({ "objectId": object.id }))),
             reveal_on_hover: Some(true),
         },
     ]);
@@ -1311,28 +1324,28 @@ fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> 
     item
 }
 
-fn reference_tree_item(model_definition_id: &str, reference: &CadReference) -> UiTreeItemNode {
-    let mut item = tree_item_with_command(
+fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labels: &CadLabels) -> UiTreeItemNode {
+    let mut item = tree_item_with_action(
         format!("cad-reference:{model_definition_id}:{}", reference.id),
         reference.id.clone(),
         Some("image"),
-        cad_cmd(
+        cad_action(
             "setReferenceSelection",
             Some(json!({ "modelDefinitionId": model_definition_id, "referenceId": reference.id })),
         ),
     );
     item.description = Some(reference.source_url.clone());
-    item.hover_command = Some(cad_cmd(
+    item.hover_action = Some(cad_action(
         "referenceHover",
         Some(json!({ "modelDefinitionId": model_definition_id, "referenceId": reference.id })),
     ));
-    item.unhover_command = Some(cad_cmd("referenceHover", None));
+    item.unhover_action = Some(cad_action("referenceHover", None));
     item.is_hidden = Some(reference.hidden);
     item.actions = Some(vec![
         UiTreeItemAction {
             icon_id: if reference.hidden { "eye" } else { "eye-off" }.into(),
-            label: Some(if reference.hidden { "Show" } else { "Hide" }.into()),
-            command: cad_cmd(
+            label: Some(if reference.hidden { labels.show } else { labels.hide }.into()),
+            action: cad_action(
                 "patchCadPlayReference",
                 Some(json!({
                     "modelDefinitionId": model_definition_id,
@@ -1345,8 +1358,8 @@ fn reference_tree_item(model_definition_id: &str, reference: &CadReference) -> U
         },
         UiTreeItemAction {
             icon_id: if reference.locked { "unlock" } else { "lock" }.into(),
-            label: Some(if reference.locked { "Unlock" } else { "Lock" }.into()),
-            command: cad_cmd(
+            label: Some(if reference.locked { labels.unlock } else { labels.lock }.into()),
+            action: cad_action(
                 "patchCadPlayReference",
                 Some(json!({
                     "modelDefinitionId": model_definition_id,
@@ -1361,11 +1374,11 @@ fn reference_tree_item(model_definition_id: &str, reference: &CadReference) -> U
     item
 }
 
-fn tree_item_with_command(
+fn tree_item_with_action(
     id: impl Into<String>,
     label: impl Into<String>,
     icon_id: Option<&str>,
-    command: CommandDescriptor,
+    action: ActionDescriptor,
 ) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
@@ -1374,9 +1387,9 @@ fn tree_item_with_command(
         icon_id: icon_id.map(str::to_string),
         selected: None,
         default_open: None,
-        command: Some(command),
-        hover_command: None,
-        unhover_command: None,
+        action: Some(action),
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -1386,31 +1399,31 @@ fn tree_item_with_command(
     }
 }
 
-fn pane_document_section(label: &str, id_suffix: &str, objects: &[CadObject]) -> UiTreeSectionNode {
+fn pane_document_section(label: &str, id_suffix: &str, objects: &[CadObject], labels: &CadLabels) -> UiTreeSectionNode {
     UiTreeSectionNode {
         id: format!("cad-play-document.{id_suffix}"),
         label: Some(label.into()),
         default_open: Some(true),
-        items: objects.iter().map(|object| object_tree_item(id_suffix, object)).collect(),
+        items: objects.iter().map(|object| object_tree_item(id_suffix, object, labels)).collect(),
     }
 }
 
-fn references_section(model_definition_id: &str, references: &[CadReference]) -> UiTreeSectionNode {
+fn references_section(model_definition_id: &str, references: &[CadReference], labels: &CadLabels) -> UiTreeSectionNode {
     UiTreeSectionNode {
         id: format!("cad-play-document.references.{model_definition_id}"),
-        label: Some("References".into()),
+        label: Some(labels.references.into()),
         default_open: Some(false),
         items: if references.is_empty() {
-            vec![tree_item_with_command(
+            vec![tree_item_with_action(
                 format!("cad-play-document.references.{model_definition_id}.empty"),
                 "(none)",
                 None,
-                cad_cmd("noop", None),
+                cad_action("noop", None),
             )]
         } else {
             references
                 .iter()
-                .map(|reference| reference_tree_item(model_definition_id, reference))
+                .map(|reference| reference_tree_item(model_definition_id, reference, labels))
                 .collect()
         },
     }
@@ -1469,22 +1482,22 @@ fn document_tree_highlighted_ids(document: &CadScene, runtime: &CadPlayRuntime) 
     })
 }
 
-fn build_document_tree(envelope: &CadPlayEnvelope) -> UiNode {
+fn build_document_tree(envelope: &CadPlayEnvelope, labels: &CadLabels) -> UiNode {
     let node_items: Vec<UiTreeItemNode> = envelope
         .document
         .nodes
         .iter()
         .map(|node| {
-            tree_item_with_command(
+            tree_item_with_action(
                 format!("cad-node:{}", node.id),
                 node.label.clone(),
                 Some("git-branch"),
-                cad_cmd("setNodeSelection", Some(json!({ "nodeIds": [node.id] }))),
+                cad_action("setNodeSelection", Some(json!({ "nodeIds": [node.id] }))),
             )
         })
         .collect();
     let mut sections = vec![
-        pane_document_section("Shape", "shape", &envelope.document.objects),
+        pane_document_section(labels.pane_shape, "shape", &envelope.document.objects, labels),
         references_section(
             CAD_MODEL_DEFINITION_SHAPE,
             envelope
@@ -1493,8 +1506,9 @@ fn build_document_tree(envelope: &CadPlayEnvelope) -> UiNode {
                 .get(CAD_MODEL_DEFINITION_SHAPE)
                 .map(|rows| rows.as_slice())
                 .unwrap_or(&[]),
+            labels,
         ),
-        pane_document_section("Building", "building", &envelope.document.building_objects),
+        pane_document_section(labels.pane_building, "building", &envelope.document.building_objects, labels),
         references_section(
             CAD_MODEL_DEFINITION_BUILDING,
             envelope
@@ -1503,8 +1517,9 @@ fn build_document_tree(envelope: &CadPlayEnvelope) -> UiNode {
                 .get(CAD_MODEL_DEFINITION_BUILDING)
                 .map(|rows| rows.as_slice())
                 .unwrap_or(&[]),
+            labels,
         ),
-        pane_document_section("Energy", "energy", &envelope.document.energy_objects),
+        pane_document_section(labels.pane_energy, "energy", &envelope.document.energy_objects, labels),
         references_section(
             CAD_MODEL_DEFINITION_ENERGY,
             envelope
@@ -1513,11 +1528,13 @@ fn build_document_tree(envelope: &CadPlayEnvelope) -> UiNode {
                 .get(CAD_MODEL_DEFINITION_ENERGY)
                 .map(|rows| rows.as_slice())
                 .unwrap_or(&[]),
+            labels,
         ),
         pane_document_section(
-            "Structure Classic",
+            labels.pane_structure_classic,
             "structure-classic",
             &envelope.document.structure_classic_objects,
+            labels,
         ),
         references_section(
             CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
@@ -1527,10 +1544,11 @@ fn build_document_tree(envelope: &CadPlayEnvelope) -> UiNode {
                 .get(CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC)
                 .map(|rows| rows.as_slice())
                 .unwrap_or(&[]),
+            labels,
         ),
         UiTreeSectionNode {
             id: "cad-play-document.nodes".into(),
-            label: Some("Nodes".into()),
+            label: Some(labels.nodes.into()),
             default_open: Some(true),
             items: node_items,
         },
@@ -1541,33 +1559,33 @@ fn build_document_tree(envelope: &CadPlayEnvelope) -> UiNode {
         selected_ids: document_tree_selected_ids(&envelope.document, &envelope.runtime),
         highlighted_ids: document_tree_highlighted_ids(&envelope.document, &envelope.runtime),
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
-fn build_catalogue_tree() -> UiNode {
+fn build_catalogue_tree(labels: &CadLabels) -> UiNode {
     let items: Vec<UiTreeItemNode> = TYPOLOGY_CATALOG
         .iter()
         .map(|entry| {
-            tree_item_with_command(
+            tree_item_with_action(
                 format!("cad-play-catalogue.{}", entry.typology),
-                entry.label,
+                typology_label(entry.typology, labels),
                 Some(entry.icon),
-                cad_cmd("addObject", Some(json!({ "typology": entry.typology }))),
+                cad_action("addObject", Some(json!({ "typology": entry.typology }))),
             )
         })
         .collect();
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "cad-play-catalogue.typologies".into(),
-            label: Some("Typologies".into()),
+            label: Some(labels.typologies.into()),
             default_open: Some(true),
             items,
         }],
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -1625,12 +1643,13 @@ fn build_properties_panel(envelope: &CadPlayEnvelope, labels: &CadLabels) -> UiN
             return ui_inspector_groups_to_tree(&[reference_inspector_group(
                 model_definition_id,
                 reference,
+                labels,
             )]);
         }
     }
     if let Some(node_id) = envelope.runtime.selected_node_ids.first() {
         if let Some(node) = envelope.document.nodes.iter().find(|entry| &entry.id == node_id) {
-            return ui_inspector_groups_to_tree(&[node_inspector_group(node)]);
+            return ui_inspector_groups_to_tree(&[node_inspector_group(node, labels)]);
         }
     }
     ui_stack_vertical(vec![
@@ -1668,7 +1687,7 @@ fn inspector_number_field(
             },
             placeholder: if mixed.uniform { None } else { Some("—".into()) },
             commit: None,
-            on_change: cad_cmd(
+            on_change: cad_action(
                 "patchSelection",
                 Some(json!({ "objectIds": object_ids, "field": field })),
             ),
@@ -1705,7 +1724,7 @@ fn inspector_vec3_field(
             },
             placeholder: if mixed.uniform { None } else { Some("—".into()) },
             commit: None,
-            on_change: cad_cmd(
+            on_change: cad_action(
                 "patchSelection",
                 Some(json!({ "objectIds": object_ids, "field": field })),
             ),
@@ -1757,7 +1776,7 @@ fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> Ui
                     value: label_mixed.value.clone(),
                     placeholder: label_mixed.placeholder.clone(),
                     commit: None,
-                    on_change: cad_cmd(
+                    on_change: cad_action(
                         "patchSelection",
                         Some(json!({ "objectIds": object_ids, "field": "label" })),
                     ),
@@ -1780,11 +1799,11 @@ fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> Ui
                         .iter()
                         .map(|entry| UiSelectItem {
                             value: entry.typology.into(),
-                            label: entry.label.into(),
+                            label: typology_label(entry.typology, term_labels).into(),
                         })
                         .collect(),
                     placeholder: typology_mixed.placeholder.clone(),
-                    on_change: cad_cmd(
+                    on_change: cad_action(
                         "patchSelection",
                         Some(json!({ "objectIds": object_ids, "field": "typology" })),
                     ),
@@ -1801,7 +1820,7 @@ fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> Ui
                     icon_id: "eye-off".into(),
                     pressed: hidden_mixed.pressed,
                     text: None,
-                    on_change: cad_cmd(
+                    on_change: cad_action(
                         "patchSelection",
                         Some(json!({ "objectIds": object_ids, "field": "hidden" })),
                     ),
@@ -1818,7 +1837,7 @@ fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> Ui
                     icon_id: "lock".into(),
                     pressed: locked_mixed.pressed,
                     text: None,
-                    on_change: cad_cmd(
+                    on_change: cad_action(
                         "patchSelection",
                         Some(json!({ "objectIds": object_ids, "field": "locked" })),
                     ),
@@ -1860,7 +1879,7 @@ fn primitive_inspector_group(object: &CadObject, labels: &CadLabels, primitive_i
         .unwrap_or("primitive");
     UiInspectorFieldGroup {
         id: "cad-play-inspector.primitive".into(),
-        label: "Primitive".into(),
+        label: labels.primitive.into(),
         default_open: None,
         fields: vec![
             ui_inspector_readonly_field("cad-play-inspector.primitive.object", labels.object, &object.label),
@@ -1891,7 +1910,7 @@ fn inspector_quat_field(id: &str, label: &str, values: &[[f64; 4]], object_ids: 
             },
             placeholder: if uniform { None } else { Some("—".into()) },
             commit: None,
-            on_change: cad_cmd(
+            on_change: cad_action(
                 "patchSelection",
                 Some(json!({ "objectIds": object_ids, "field": "orientation" })),
             ),
@@ -1906,10 +1925,10 @@ fn inspector_quat_field(id: &str, label: &str, values: &[[f64; 4]], object_ids: 
     })
 }
 
-fn reference_inspector_group(model_definition_id: &str, reference: &CadReference) -> UiInspectorFieldGroup {
+fn reference_inspector_group(model_definition_id: &str, reference: &CadReference, labels: &CadLabels) -> UiInspectorFieldGroup {
     UiInspectorFieldGroup {
         id: "cad-play-inspector.reference".into(),
-        label: "Reference".into(),
+        label: labels.reference.into(),
         default_open: None,
         fields: vec![
             ui_inspector_readonly_field("cad-play-inspector.reference.id", "Id", &reference.id),
@@ -1927,7 +1946,7 @@ fn reference_inspector_group(model_definition_id: &str, reference: &CadReference
                     value: reference.width_world.to_string(),
                     placeholder: None,
                     commit: None,
-                    on_change: cad_cmd(
+                    on_change: cad_action(
                         "patchCadPlayReference",
                         Some(json!({
                             "modelDefinitionId": model_definition_id,
@@ -1955,10 +1974,10 @@ fn reference_inspector_group(model_definition_id: &str, reference: &CadReference
     }
 }
 
-fn node_inspector_group(node: &CadNode) -> UiInspectorFieldGroup {
+fn node_inspector_group(node: &CadNode, labels: &CadLabels) -> UiInspectorFieldGroup {
     UiInspectorFieldGroup {
         id: "cad-play-inspector.node".into(),
-        label: "Node".into(),
+        label: labels.node.into(),
         default_open: None,
         fields: vec![
             UiNode::Field(UiFieldNode {
@@ -1970,7 +1989,7 @@ fn node_inspector_group(node: &CadNode) -> UiInspectorFieldGroup {
                     value: node.label.clone(),
                     placeholder: None,
                     commit: None,
-                    on_change: cad_cmd(
+                    on_change: cad_action(
                         "renameNode",
                         Some(json!({ "nodeId": node.id })),
                     ),
@@ -2001,7 +2020,7 @@ fn cad_window_engagement(envelope: &CadPlayEnvelope, pane: CadPaneId) -> WindowE
                     id: transition.event_kind.clone(),
                     label: transition.label,
                     detail: Some(transition.key),
-                    command: Some(cad_cmd(
+                    action: Some(cad_action(
                         "engagementPossibleSelect",
                         Some(json!({
                             "pane": cad_pane_suffix(pane),
@@ -2017,7 +2036,7 @@ fn cad_window_engagement(envelope: &CadPlayEnvelope, pane: CadPaneId) -> WindowE
                     id: entry.id.clone(),
                     label: entry.label.clone(),
                     detail: Some(entry.key.clone()),
-                    command: Some(cad_cmd(
+                    action: Some(cad_action(
                         "engagementPossibleSelect",
                         Some(json!({ "pane": cad_pane_suffix(pane), "possibleId": entry.id.clone() })),
                     )),
@@ -2039,7 +2058,7 @@ fn cad_window_engagement(envelope: &CadPlayEnvelope, pane: CadPaneId) -> WindowE
                 icon_id: Some("move".into()),
                 pressed: Some(transform == "move"),
                 disabled: None,
-                command: Some(cad_cmd("setTransformTool", Some(json!({ "tool": "move" })))),
+                action: Some(cad_action("setTransformTool", Some(json!({ "tool": "move" })))),
             },
             WindowEngagementOption {
                 id: "cad.opt.rotate".into(),
@@ -2047,7 +2066,7 @@ fn cad_window_engagement(envelope: &CadPlayEnvelope, pane: CadPaneId) -> WindowE
                 icon_id: Some("rotate-cw".into()),
                 pressed: Some(transform == "rotate"),
                 disabled: None,
-                command: Some(cad_cmd("setTransformTool", Some(json!({ "tool": "rotate" })))),
+                action: Some(cad_action("setTransformTool", Some(json!({ "tool": "rotate" })))),
             },
             WindowEngagementOption {
                 id: "cad.opt.scale".into(),
@@ -2055,27 +2074,27 @@ fn cad_window_engagement(envelope: &CadPlayEnvelope, pane: CadPaneId) -> WindowE
                 icon_id: Some("maximize-2".into()),
                 pressed: Some(transform == "scale"),
                 disabled: None,
-                command: Some(cad_cmd("setTransformTool", Some(json!({ "tool": "scale" })))),
+                action: Some(cad_action("setTransformTool", Some(json!({ "tool": "scale" })))),
             },
         ]),
         input: Some(WindowEngagementInput {
             id: Some("engagement-input".into()),
             value: Some(envelope.runtime.engagement_input.clone()),
-            placeholder: Some("Command".into()),
+            placeholder: Some("Action".into()),
             disabled: None,
-            on_change: Some(cad_cmd(
+            on_change: Some(cad_action(
                 "engagementInput",
                 Some(json!({ "pane": cad_pane_suffix(pane) })),
             )),
-            on_submit: Some(cad_cmd(
+            on_submit: Some(cad_action(
                 "engagementSubmit",
                 Some(json!({ "pane": cad_pane_suffix(pane) })),
             )),
-            on_repeat_last: Some(cad_cmd(
+            on_repeat_last: Some(cad_action(
                 "engagementRepeatLast",
                 Some(json!({ "pane": cad_pane_suffix(pane) })),
             )),
-            on_abort: Some(cad_cmd(
+            on_abort: Some(cad_action(
                 "engagementAbort",
                 Some(json!({ "pane": cad_pane_suffix(pane) })),
             )),
@@ -2105,7 +2124,7 @@ fn cad_window_engagement(envelope: &CadPlayEnvelope, pane: CadPaneId) -> WindowE
     }
 }
 
-fn build_cad_play_toolbar(envelope: &CadPlayEnvelope) -> Vec<ToolNode> {
+fn build_cad_play_toolbar(envelope: &CadPlayEnvelope, labels: &CadLabels) -> Vec<ToolNode> {
     let active = envelope.document.active_model_definition_id.as_str();
     let view_tools: Vec<ToolNode> = CadPaneId::all()
         .into_iter()
@@ -2116,7 +2135,7 @@ fn build_cad_play_toolbar(envelope: &CadPlayEnvelope) -> Vec<ToolNode> {
                 "box",
                 pane.model_definition_id(),
                 active == pane.model_definition_id(),
-                cad_cmd(
+                cad_action(
                     "focusModelDefinition",
                     Some(json!({ "modelDefinitionId": pane.model_definition_id() })),
                 ),
@@ -2129,26 +2148,26 @@ fn build_cad_play_toolbar(envelope: &CadPlayEnvelope) -> Vec<ToolNode> {
             "cad.play.save.selected",
             "save",
             "Selected",
-            cad_cmd("saveSelected", None),
+            cad_action("saveSelected", None),
         )
         .with_disabled(envelope.runtime.selected_object_ids.is_empty()),
         tool_button(
             "cad.play.save.modelspace",
             "hard-drive",
             "Model space",
-            cad_cmd("saveInPlay", None),
+            cad_action("saveInPlay", None),
         ),
         tool_button(
             "cad.play.save.current",
             "save",
             "Current",
-            cad_cmd("saveCurrent", None),
+            cad_action("saveCurrent", None),
         ),
         tool_button(
             "cad.play.save.load",
             "folder-open",
             "Load",
-            cad_cmd("loadRawRequest", None),
+            cad_action("loadRawRequest", None),
         ),
     ];
     let transfers_to = transfers_to_for_model_definition(active);
@@ -2164,7 +2183,7 @@ fn build_cad_play_toolbar(envelope: &CadPlayEnvelope) -> Vec<ToolNode> {
                 ),
                 "arrow-right",
                 format!("→ {}", spec.label),
-                cad_cmd(
+                cad_action(
                     "applyTransformation",
                     Some(json!({
                         "qid": qualified_transformation_id(spec.source_model_definition_id, spec.id),
@@ -2185,7 +2204,7 @@ fn build_cad_play_toolbar(envelope: &CadPlayEnvelope) -> Vec<ToolNode> {
             ),
             "arrow-left",
             format!("← {}", spec.label),
-            cad_cmd(
+            cad_action(
                 "applyTransformation",
                 Some(json!({
                     "qid": qualified_transformation_id(spec.source_model_definition_id, spec.id),
@@ -2195,18 +2214,18 @@ fn build_cad_play_toolbar(envelope: &CadPlayEnvelope) -> Vec<ToolNode> {
         .with_order((transfers_to.len() + index + 1) as u32)
     }));
     let mut tools = vec![
-        tool_collection("view", "layout-grid", "View", view_tools).with_category(ToolCategory::Tools),
-        tool_collection("save", "save", "Save", save_tools).with_category(ToolCategory::Commands),
+        tool_collection("view", "layout-grid", labels.group_view, view_tools).with_category(ToolCategory::Tools),
+        tool_collection("save", "save", labels.group_save, save_tools).with_category(ToolCategory::Actions),
     ];
     if !transfer_tools.is_empty() {
         tools.push(
             tool_collection(
                 "transfer",
                 "arrow-right-left",
-                "Transfer",
+                labels.group_transfer,
                 transfer_tools,
             )
-            .with_category(ToolCategory::Commands),
+            .with_category(ToolCategory::Actions),
         );
     }
     let construct_tools: Vec<ToolNode> = list_interactions_for_model_definition(active)
@@ -2217,7 +2236,7 @@ fn build_cad_play_toolbar(envelope: &CadPlayEnvelope) -> Vec<ToolNode> {
                 format!("cad.play.construct.{}", entry.id),
                 "plus",
                 entry.label.clone(),
-                cad_cmd(
+                cad_action(
                     "engagementPossibleSelect",
                     Some(json!({
                         "pane": cad_pane_suffix(
@@ -2232,7 +2251,7 @@ fn build_cad_play_toolbar(envelope: &CadPlayEnvelope) -> Vec<ToolNode> {
         .collect();
     if !construct_tools.is_empty() {
         tools.push(
-            tool_collection("construct", "hammer", "Construct", construct_tools)
+            tool_collection("construct", "hammer", labels.group_construct, construct_tools)
                 .with_category(ToolCategory::Tools),
         );
     }
@@ -2530,15 +2549,15 @@ impl PluginApp for CadApp {
         serde_json::to_string(&default_envelope()).expect("cad envelope json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut envelope = parse_envelope(document_json);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(document) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value(document.clone()) {
@@ -2687,7 +2706,7 @@ impl PluginApp for CadApp {
                 }
             }
             "patchObject" | "patchSelection" => {
-                let object_ids: Vec<String> = if command == "patchSelection" {
+                let object_ids: Vec<String> = if action == "patchSelection" {
                     args.and_then(|value| value.get("objectIds"))
                         .and_then(|value| serde_json::from_value(value.clone()).ok())
                         .unwrap_or_else(|| envelope.runtime.selected_object_ids.clone())
@@ -2936,7 +2955,7 @@ impl PluginApp for CadApp {
                 return vec![json!({
                     "op": "requestFileOpen",
                     "accept": ".json,.spatial.json,.stp,.step",
-                    "importCommand": "importSpatialJson",
+                    "importAction": "importSpatialJson",
                 })
                 .to_string()];
             }
@@ -3182,12 +3201,13 @@ impl PluginApp for CadApp {
         Vec::new()
     }
 
-    fn tools(&self, document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
-        build_cad_play_toolbar(&parse_envelope(document_json))
+    fn tools(&self, document_json: &str, view_state: &ViewState) -> Vec<ToolNode> {
+        build_cad_play_toolbar(&parse_envelope(document_json), cad_labels(view_state))
     }
 
     fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
+        let labels = cad_labels(view_state);
         match body_key {
             CAD_PLAY_BODY_SHAPE => build_world_scene_for_pane(&envelope, CadPaneId::Shape, CAD_PLAY_SURFACE_SHAPE),
             CAD_PLAY_BODY_BUILDING => {
@@ -3199,9 +3219,9 @@ impl PluginApp for CadApp {
                 CadPaneId::StructureClassic,
                 CAD_PLAY_SURFACE_STRUCTURE_CLASSIC,
             ),
-            CAD_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
-            CAD_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
-            CAD_PLAY_BODY_PROPERTIES => build_properties_panel(&envelope, cad_labels(view_state)),
+            CAD_PLAY_BODY_DOCUMENT => build_document_tree(&envelope, labels),
+            CAD_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
+            CAD_PLAY_BODY_PROPERTIES => build_properties_panel(&envelope, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -3301,33 +3321,33 @@ fn create_cad_app() -> App {
             .operation("importSpatialJson", "Import Spatial JSON")
             .operation("patchCadPlayReference", "Patch Reference")
             .operation("engagementSubmit", "Engagement Submit")
-            .view_command("setActiveTool", "Set Active Tool")
-            .view_command("setSelection", "Set Selection")
-            .view_command("setNodeSelection", "Set Node Selection")
-            .view_command("setCamera", "Set Camera")
-            .view_command("setTransformTool", "Set Transform Tool")
-            .view_command("worldSelect", "World Select")
-            .view_command("worldHover", "World Hover")
-            .view_command("setHover", "Set Hover")
-            .view_command("worldPick", "World Pick")
-            .view_command("setSelectionMethod", "Set Selection Method")
-            .view_command("focusModelDefinition", "Focus Model Definition")
-            .view_command("setReferenceSelection", "Set Reference Selection")
-            .view_command("referenceHover", "Reference Hover")
-            .view_command("engagementInput", "Engagement Input")
-            .view_command("engagementPossibleSelect", "Engagement Possible Select")
-            .view_command("engagementRepeatLast", "Engagement Repeat Last")
-            .view_command("engagementAbort", "Engagement Abort")
-            .view_command("worldPointerDown", "World Pointer Down")
-            .view_command("worldPointerMove", "World Pointer Move")
-            .view_command("engagementPointerDown", "Engagement Pointer Down")
-            .view_command("setPrimitiveSelection", "Set Primitive Selection")
-            .shell_command("setDocument", "Set Document")
-            .shell_command("setActiveExample", "Set Active Example")
-            .shell_command("saveSelected", "Save Selected")
-            .shell_command("saveInPlay", "Save In Play")
-            .shell_command("saveCurrent", "Save Current")
-            .shell_command("loadRawRequest", "Load Raw Request")
+            .view_action("setActiveTool", "Set Active Tool")
+            .view_action("setSelection", "Set Selection")
+            .view_action("setNodeSelection", "Set Node Selection")
+            .view_action("setCamera", "Set Camera")
+            .view_action("setTransformTool", "Set Transform Tool")
+            .view_action("worldSelect", "World Select")
+            .view_action("worldHover", "World Hover")
+            .view_action("setHover", "Set Hover")
+            .view_action("worldPick", "World Pick")
+            .view_action("setSelectionMethod", "Set Selection Method")
+            .view_action("focusModelDefinition", "Focus Model Definition")
+            .view_action("setReferenceSelection", "Set Reference Selection")
+            .view_action("referenceHover", "Reference Hover")
+            .view_action("engagementInput", "Engagement Input")
+            .view_action("engagementPossibleSelect", "Engagement Possible Select")
+            .view_action("engagementRepeatLast", "Engagement Repeat Last")
+            .view_action("engagementAbort", "Engagement Abort")
+            .view_action("worldPointerDown", "World Pointer Down")
+            .view_action("worldPointerMove", "World Pointer Move")
+            .view_action("engagementPointerDown", "Engagement Pointer Down")
+            .view_action("setPrimitiveSelection", "Set Primitive Selection")
+            .shell_action("setDocument", "Set Document")
+            .shell_action("setActiveExample", "Set Active Example")
+            .shell_action("saveSelected", "Save Selected")
+            .shell_action("saveInPlay", "Save In Play")
+            .shell_action("saveCurrent", "Save Current")
+            .shell_action("loadRawRequest", "Load Raw Request")
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .panel_tab(
@@ -3487,10 +3507,10 @@ mod tests {
     }
 
     #[test]
-    fn add_object_command_appends_object() {
+    fn add_object_action_appends_object() {
         let mut app = CadApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "addObject",
             Some(&json!({ "typology": "building.building.column" })),
             &document,
@@ -3516,7 +3536,7 @@ mod tests {
         let mut app = CadApp;
         let document = app.initial_document_json();
         let before_count = parse_envelope(&document).document.objects.len();
-        let add_ops = app.handle_command_patch_ops(
+        let add_ops = app.handle_action_patch_ops(
             "addObject",
             Some(&json!({ "typology": "spatial.shape.primitive.box" })),
             &document,
@@ -3525,7 +3545,7 @@ mod tests {
         let after_add = apply_ops(&parse_envelope(&document), &add_ops);
         assert_eq!(after_add.document.objects.len(), before_count + 1);
         let after_add_json = serde_json::to_string(&after_add).unwrap();
-        let undo_ops = app.handle_command_patch_ops("undo", None, &after_add_json, &ViewState::default());
+        let undo_ops = app.handle_action_patch_ops("undo", None, &after_add_json, &ViewState::default());
         let after_undo = apply_ops(&after_add, &undo_ops);
         assert_eq!(after_undo.document.objects.len(), before_count);
     }
@@ -3561,14 +3581,14 @@ mod tests {
         let node = app.render(CAD_PLAY_BODY_DOCUMENT, &app.initial_document_json(), &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("cad-primitive:"));
-        assert!(json.contains("hoverCommand"));
+        assert!(json.contains("hoverAction"));
     }
 
     #[test]
     fn gumball_fields_present_when_selection_active() {
         let mut app = CadApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setSelection",
             Some(&json!({ "objectIds": ["object-box-1"] })),
             &document,
@@ -3595,7 +3615,7 @@ mod tests {
     fn set_transform_tool_updates_runtime_and_engagement() {
         let mut app = CadApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setTransformTool",
             Some(&json!({ "tool": "rotate" })),
             &document,
@@ -3634,18 +3654,18 @@ mod tests {
         let document = app.initial_document_json();
         let before_count = parse_envelope(&document).document.nodes.len();
 
-        let add_ops = app.handle_command_patch_ops("addNode", Some(&json!({ "kind": "solid" })), &document, &ViewState::default());
+        let add_ops = app.handle_action_patch_ops("addNode", Some(&json!({ "kind": "solid" })), &document, &ViewState::default());
         let after_add = apply_ops(&parse_envelope(&document), &add_ops);
         assert_eq!(after_add.document.nodes.len(), before_count + 1);
         let after_add_json = serde_json::to_string(&after_add).unwrap();
 
-        let undo_ops = app.handle_command_patch_ops("undo", None, &after_add_json, &ViewState::default());
+        let undo_ops = app.handle_action_patch_ops("undo", None, &after_add_json, &ViewState::default());
         assert!(!undo_ops.is_empty(), "undo should produce an op");
         let after_undo = apply_ops(&after_add, &undo_ops);
         assert_eq!(after_undo.document.nodes.len(), before_count);
         let after_undo_json = serde_json::to_string(&after_undo).unwrap();
 
-        let redo_ops = app.handle_command_patch_ops("redo", None, &after_undo_json, &ViewState::default());
+        let redo_ops = app.handle_action_patch_ops("redo", None, &after_undo_json, &ViewState::default());
         assert!(!redo_ops.is_empty(), "redo should produce an op");
         let after_redo = apply_ops(&after_undo, &redo_ops);
         assert_eq!(after_redo.document.nodes.len(), before_count + 1);
@@ -3672,7 +3692,7 @@ mod tests {
         let object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
         envelope.document.objects = vec![object];
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "applyTransformation",
             Some(&json!({ "qid": "spatial.shape.from_geometry" })),
             &document,
@@ -3699,7 +3719,7 @@ mod tests {
         envelope.document.objects[0].typology = "spatial.shape.primitive.box".into();
         envelope.document.objects[0].label = "live-shape-only".into();
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "applyTransformation",
             Some(&json!({ "qid": "spatial.shape.from_geometry" })),
             &document,
@@ -3777,6 +3797,50 @@ mod tests {
     }
 
     #[test]
+    fn cad_labels_translate_document_tree_panes_in_german() {
+        let app = CadApp;
+        let document = app.initial_document_json();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let node = app.render(CAD_PLAY_BODY_DOCUMENT, &document, &view_state);
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("\"Form\""));
+        assert!(json.contains("Gebäude"));
+        assert!(json.contains("Energie"));
+        assert!(json.contains("Struktur Klassisch"));
+        assert!(json.contains("Referenzen"));
+        assert!(json.contains("\"Knoten\""));
+        assert!(!json.contains("\"Shape\""));
+    }
+
+    #[test]
+    fn cad_labels_translate_catalogue_typologies_in_german() {
+        let app = CadApp;
+        let document = app.initial_document_json();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let node = app.render(CAD_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Typologien"));
+        assert!(json.contains("Platte"));
+        assert!(json.contains("Stütze"));
+        assert!(json.contains("Balken"));
+        assert!(json.contains("Wand"));
+        assert!(json.contains("Außenwand"));
+        assert!(!json.contains("\"Slab\""));
+    }
+
+    #[test]
+    fn cad_labels_resolve_reuse_terminology_for_primitive() {
+        let app = CadApp;
+        let mut envelope = parse_envelope(&app.initial_document_json());
+        envelope.runtime.selected_object_ids = vec!["object-box-1".into()];
+        envelope.runtime.selected_primitive_id = Some("box-solid".into());
+        let view_state = ViewState { terminology: Some("reuse".into()), locale: Some("de".into()), ..ViewState::default() };
+        let panel = build_properties_panel(&envelope, cad_labels(&view_state));
+        let json = serde_json::to_string(&panel).unwrap();
+        assert!(json.contains("Bauteil"));
+    }
+
+    #[test]
     fn world_pick_selects_visible_object_by_index() {
         // The Shape pane's fixture object is a single hexagonal-cut solid (one object), so this
         // exercises worldPick-by-index against the Building pane, which has multiple objects.
@@ -3791,7 +3855,7 @@ mod tests {
         assert!(building_visible.len() > 1);
         let expected_id = building_visible[1].id.clone();
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "worldPick",
             Some(&json!({
                 "surfaceId": "cad.play.scene3d/building",
@@ -3829,7 +3893,7 @@ mod tests {
         let mut envelope = parse_envelope(&app.initial_document_json());
         envelope.runtime.selected_object_ids = vec!["object-box-1".into()];
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("saveSelected", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("saveSelected", None, &document, &ViewState::default());
         assert!(ops.iter().any(|op| op.contains("downloadMediaExport")));
         assert!(ops.iter().any(|op| op.contains("activeModelDefinitionId")));
     }
@@ -3839,7 +3903,7 @@ mod tests {
         let mut app = CadApp;
         let mut envelope = parse_envelope(&app.initial_document_json());
         envelope.runtime.engagement_input = "b".into();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "engagementSubmit",
             Some(&json!({ "pane": "shape" })),
             &serde_json::to_string(&envelope).unwrap(),
@@ -3854,7 +3918,7 @@ mod tests {
         let mut app = CadApp;
         let mut envelope = parse_envelope(&app.initial_document_json());
         envelope.runtime.engagement_input = "b".into();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "engagementSubmit",
             Some(&json!({ "pane": "shape" })),
             &serde_json::to_string(&envelope).unwrap(),
@@ -3865,7 +3929,7 @@ mod tests {
         let object_count_before = envelope.document.objects.len();
 
         // box's default boxMode is "point"; a plain pointer.move in first_corner updates cursor.
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "worldPointerMove",
             Some(&json!({ "pane": "shape", "position": [3.0, 4.0, 0.0] })),
             &serde_json::to_string(&envelope).unwrap(),
@@ -3885,7 +3949,7 @@ mod tests {
         let mut app = CadApp;
         let mut envelope = parse_envelope(&app.initial_document_json());
         envelope.runtime.engagement_input = "b".into();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "engagementSubmit",
             Some(&json!({ "pane": "shape" })),
             &serde_json::to_string(&envelope).unwrap(),
@@ -3897,7 +3961,7 @@ mod tests {
         // box.json's default boxMode is "point" (length/width prompt); select diagonal mode (key
         // "d") to reach the classic two-corner-click flow.
         envelope.runtime.engagement_input = "d".into();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "engagementSubmit",
             Some(&json!({ "pane": "shape" })),
             &serde_json::to_string(&envelope).unwrap(),
@@ -3906,7 +3970,7 @@ mod tests {
         envelope = apply_ops(&envelope, &ops);
 
         for position in [json!([0.0, 0.0, 0.0]), json!([2.0, 3.0, 0.0])] {
-            let ops = app.handle_command_patch_ops(
+            let ops = app.handle_action_patch_ops(
                 "worldPointerDown",
                 Some(&json!({ "pane": "shape", "position": position })),
                 &serde_json::to_string(&envelope).unwrap(),
@@ -3916,7 +3980,7 @@ mod tests {
         }
 
         envelope.runtime.engagement_input = "SetHeight2.5".into();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "engagementSubmit",
             Some(&json!({ "pane": "shape" })),
             &serde_json::to_string(&envelope).unwrap(),
@@ -3927,7 +3991,7 @@ mod tests {
         // box.json's `set.height` only records the height (state stays first_corner_height);
         // an explicit `confirm` (Enter) is needed to reach `ready`, box's commit.fromStates.
         envelope.runtime.engagement_input = "Confirm".into();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "engagementSubmit",
             Some(&json!({ "pane": "shape" })),
             &serde_json::to_string(&envelope).unwrap(),
@@ -3937,7 +4001,7 @@ mod tests {
         assert!(envelope.runtime.engagement_session.is_none(), "box should have committed");
         assert_eq!(envelope.runtime.last_finalized_interaction_id.as_deref(), Some("primitive.box"));
 
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "engagementRepeatLast",
             Some(&json!({ "pane": "shape" })),
             &serde_json::to_string(&envelope).unwrap(),
@@ -3977,7 +4041,7 @@ mod tests {
     }
 
     #[test]
-    fn import_spatial_json_command_accepts_file_text_string_payload() {
+    fn import_spatial_json_action_accepts_file_text_string_payload() {
         // The React shell's requestFileOpen host op reads the picked file as text and dispatches
         // importSpatialJson with `args: { payload: <file text> }` — a JSON *string*, not a parsed
         // value (framework/renderer/react/os-shell.tsx handleRequestFileOpen). The command must
@@ -3999,7 +4063,7 @@ mod tests {
             }]
         })
         .to_string();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "importSpatialJson",
             Some(&json!({ "payload": file_text })),
             &serde_json::to_string(&envelope).unwrap(),

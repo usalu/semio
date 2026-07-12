@@ -2,7 +2,7 @@
 
 use semio_framework_core::{
     kernel::{CapabilityRequirement, ResourceKind, Rights, Scope},
-    CommandResult, PluginManifest, ToolNode, UiNode, ViewState, WindowEngagement, WindowMeasure,
+    ActionResult, PluginManifest, ToolNode, UiNode, ViewState, WindowEngagement, WindowMeasure,
 };
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -71,8 +71,8 @@ impl semio::framework::host::Host for HostState {
         Err("open-window not implemented".into())
     }
 
-    fn invoke_command(&mut self, _target: String, _invocation_json: String) -> Result<String, String> {
-        Err("invoke-command not implemented".into())
+    fn invoke_action(&mut self, _target: String, _invocation_json: String) -> Result<String, String> {
+        Err("invoke-action not implemented".into())
     }
 
     fn read_asset(&mut self, _handle: u64) -> Result<Vec<u8>, String> {
@@ -227,12 +227,12 @@ impl WasmPluginRuntime {
 
     pub fn destroy_app(&self, _instance_id: u32) {}
 
-    pub fn handle_command(
+    pub fn handle_action(
         &self,
         instance_id: u32,
-        command_json: &str,
+        action_json: &str,
         view_state: &ViewState,
-    ) -> Result<CommandResult, String> {
+    ) -> Result<ActionResult, String> {
         let context_json = serde_json::json!({
             "viewState": view_state,
             "actor": "local",
@@ -243,13 +243,13 @@ impl WasmPluginRuntime {
         Self::prepare_call(&mut store);
         let response = bindings
             .semio_framework_plugin()
-            .call_handle_command(
+            .call_handle_action(
                 &mut *store,
                 instance_id,
-                &semio::framework::types::CommandInvocationJson {
-                    json: command_json.to_string(),
+                &semio::framework::types::ActionInvocationJson {
+                    json: action_json.to_string(),
                 },
-                &semio::framework::types::CommandContextJson {
+                &semio::framework::types::ActionContextJson {
                     json: context_json,
                 },
             )

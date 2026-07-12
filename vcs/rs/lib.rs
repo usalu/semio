@@ -691,7 +691,7 @@ where
                         self.applied_edit_ids.pop().ok_or(VcsError::NothingToUndo)?;
                         self.redo_edit_ids.push(last);
                     }
-                    UndoPolicy::SemanticUndo | UndoPolicy::CompensatingCommand => {
+                    UndoPolicy::SemanticUndo | UndoPolicy::CompensatingAction => {
                         if semantic_command.is_none() {
                             return Err(VcsError::Backbone(
                                 "semantic undo requires compensating command".into(),

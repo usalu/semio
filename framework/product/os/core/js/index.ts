@@ -156,7 +156,7 @@ export type FrameworkSyncToolLeaf = {
   readonly pressed?: boolean;
   readonly category: "sync";
   readonly controllerId: typeof FRAMEWORK_SYNC_CONTROLLER_ID;
-  readonly command: string;
+  readonly action: string;
   readonly args?: unknown;
 };
 
@@ -164,10 +164,10 @@ export function buildFrameworkSyncTools(activeUri: string | null): readonly Fram
   const activeKind = activeUri ? backboneKindFromUri(activeUri) : null;
   const pressed = (kind: BackboneKind) => activeKind === kind;
   return [
-    { id: "framework.sync.temporary", kind: "toggle", iconId: "hard-drive", label: "Temporary", category: "sync", pressed: pressed("temporary"), order: 0, controllerId: FRAMEWORK_SYNC_CONTROLLER_ID, command: "selectTemporary" },
-    { id: "framework.sync.file", kind: "toggle", iconId: "file-json", label: "File", category: "sync", pressed: pressed("file"), order: 1, controllerId: FRAMEWORK_SYNC_CONTROLLER_ID, command: "selectFile" },
-    { id: "framework.sync.folder", kind: "toggle", iconId: "folder", label: "Folder", category: "sync", pressed: pressed("folder"), order: 2, controllerId: FRAMEWORK_SYNC_CONTROLLER_ID, command: "selectFolder" },
-    { id: "framework.sync.remote", kind: "toggle", iconId: "cloud", label: "Remote", category: "sync", pressed: pressed("remote"), order: 3, controllerId: FRAMEWORK_SYNC_CONTROLLER_ID, command: "selectRemote" },
+    { id: "framework.sync.temporary", kind: "toggle", iconId: "hard-drive", label: "Temporary", category: "sync", pressed: pressed("temporary"), order: 0, controllerId: FRAMEWORK_SYNC_CONTROLLER_ID, action: "selectTemporary" },
+    { id: "framework.sync.file", kind: "toggle", iconId: "file-json", label: "File", category: "sync", pressed: pressed("file"), order: 1, controllerId: FRAMEWORK_SYNC_CONTROLLER_ID, action: "selectFile" },
+    { id: "framework.sync.folder", kind: "toggle", iconId: "folder", label: "Folder", category: "sync", pressed: pressed("folder"), order: 2, controllerId: FRAMEWORK_SYNC_CONTROLLER_ID, action: "selectFolder" },
+    { id: "framework.sync.remote", kind: "toggle", iconId: "cloud", label: "Remote", category: "sync", pressed: pressed("remote"), order: 3, controllerId: FRAMEWORK_SYNC_CONTROLLER_ID, action: "selectRemote" },
   ];
 }
 //#endregion 🔖Backbone

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, type DragEvent } from "react";
 import { GraphWasmCanvas, type CanvasInputModifiers, type GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
 import { CATALOGUE_DRAG_MIME } from "@semio-tech/ui-react";
-import type { CommandDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
+import type { ActionDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
 
 //#region CanvasCameraMath
 export const CANVAS_CAMERA_ZOOM_MIN = 0.05;
@@ -343,7 +343,7 @@ class JsonLayersCanvasSession implements GraphWasmSession {
     private readonly layersJson: string,
     private camera: CanvasCamera,
     private readonly onCameraChange: (camera: CanvasCamera) => void,
-    private readonly onPointer?: (command: string, args?: Record<string, unknown>) => void,
+    private readonly onPointer?: (action: string, args?: Record<string, unknown>) => void,
   ) {}
 
   async attachCanvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown> {
@@ -558,7 +558,7 @@ const CAMERA_SYNC_DEBOUNCE_MS = 120;
 const DRAG_OVER_THROTTLE_MS = 50;
 const DRAG_OVER_THROTTLE_DISTANCE = 4;
 
-export function Canvas2dHost({ node, onCommand }: { readonly node: UiComponentSceneNode; readonly onCommand: (command: CommandDescriptor) => void }) {
+export function Canvas2dHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
   const scene = node.canvas2d;
   const initialCamera = useMemo(() => ({ x: scene?.cameraX ?? 0, y: scene?.cameraY ?? 0, zoom: scene?.zoom ?? 1 }), [scene?.cameraX, scene?.cameraY, scene?.zoom]);
   const cameraRef = useRef<CanvasCamera>(initialCamera);
@@ -568,14 +568,14 @@ export function Canvas2dHost({ node, onCommand }: { readonly node: UiComponentSc
   const cameraSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragOverStateRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const dispatch = useCallback(
-    (command: string, args?: Record<string, unknown>) => {
-      onCommand({
+    (action: string, args?: Record<string, unknown>) => {
+      onAction({
         controllerId: node.controllerId,
-        command,
+        action,
         args: { surfaceId: node.surfaceId, ...args },
       });
     },
-    [node.controllerId, node.surfaceId, onCommand],
+    [node.controllerId, node.surfaceId, onAction],
   );
   const sessionFactory = useMemo(() => {
     return () => {
@@ -588,14 +588,14 @@ export function Canvas2dHost({ node, onCommand }: { readonly node: UiComponentSc
           if (cameraSyncTimeoutRef.current) clearTimeout(cameraSyncTimeoutRef.current);
           cameraSyncTimeoutRef.current = setTimeout(() => dispatch("setCamera", { camera: next }), CAMERA_SYNC_DEBOUNCE_MS);
         },
-        (command, args) => {
-          if (command === "canvasPointerDown" && args?.button === 0) {
+        (action, args) => {
+          if (action === "canvasPointerDown" && args?.button === 0) {
             dispatch("paintStrokeBegin");
           }
-          if (command === "canvasPointerUp") {
+          if (action === "canvasPointerUp") {
             dispatch("paintStrokeEnd");
           }
-          dispatch(command, args);
+          dispatch(action, args);
         },
       );
       sessionRef.current = session;

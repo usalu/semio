@@ -29,7 +29,7 @@ import {
   type TreePanelConfig,
 } from "@semio-tech/ui-react";
 import { ICONS, type IconName } from "@semio-tech/ui-asset";
-import type { CommandDescriptor, UiControlNode, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode } from "./os-shell.tsx";
+import type { ActionDescriptor, UiControlNode, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode } from "./os-shell.tsx";
 
 const Canvas2dHost = lazy(() => import("./components/canvas-2d-host.tsx").then((module) => ({ default: module.Canvas2dHost })));
 const NodeGraphHost = lazy(() => import("./components/node-graph-host.tsx").then((module) => ({ default: module.NodeGraphHost })));
@@ -46,31 +46,31 @@ function ComponentSceneFallback() {
   return <p className="text-muted-foreground p-2 text-xs">Loading surface…</p>;
 }
 
-function renderComponentSceneHost(node: Extract<UiNode, { type: "componentScene" }>, onCommand: (command: CommandDescriptor) => void): ReactNode {
+function renderComponentSceneHost(node: Extract<UiNode, { type: "componentScene" }>, onAction: (action: ActionDescriptor) => void): ReactNode {
   const host = (() => {
     switch (node.componentKind) {
       case "canvas-2d":
-        return <Canvas2dHost node={node} onCommand={onCommand} />;
+        return <Canvas2dHost node={node} onAction={onAction} />;
       case "world-3d":
-        return <World3dHost node={node} onCommand={onCommand} />;
+        return <World3dHost node={node} onAction={onAction} />;
       case "node-graph":
-        return <NodeGraphHost node={node} onCommand={onCommand} />;
+        return <NodeGraphHost node={node} onAction={onAction} />;
       case "text-editor":
-        return <TextEditorHost node={node} onCommand={onCommand} />;
+        return <TextEditorHost node={node} onAction={onAction} />;
       case "table":
-        return <TableHost node={node} onCommand={onCommand} />;
+        return <TableHost node={node} onAction={onAction} />;
       case "raster":
-        return <RasterHost node={node} onCommand={onCommand} />;
+        return <RasterHost node={node} onAction={onAction} />;
       case "gis2d-map":
-        return <GisMapHost node={node} onCommand={onCommand} />;
+        return <GisMapHost node={node} onAction={onAction} />;
       case "puzzle2d-board":
-        return <Puzzle2dBoardHost node={node} onCommand={onCommand} />;
+        return <Puzzle2dBoardHost node={node} onAction={onAction} />;
       case "icon-render":
-        return <IconRenderHost node={node} onCommand={onCommand} />;
+        return <IconRenderHost node={node} onAction={onAction} />;
       case "note-canvas":
-        return <NoteCanvasHost node={node} onCommand={onCommand} />;
+        return <NoteCanvasHost node={node} onAction={onAction} />;
       case "virtualFileSystem":
-        return <VirtualFileSystemHost node={node} onCommand={onCommand} />;
+        return <VirtualFileSystemHost node={node} onAction={onAction} />;
       default:
         return <p className="text-muted-foreground text-xs">Unknown component: {node.componentKind}</p>;
     }
@@ -80,13 +80,13 @@ function renderComponentSceneHost(node: Extract<UiNode, { type: "componentScene"
 
 //#region UiInterpreterContext
 export type UiInterpreterContext = {
-  readonly onCommand: (command: CommandDescriptor) => void;
+  readonly onAction: (action: ActionDescriptor) => void;
 };
 //#endregion UiInterpreterContext
 
-//#region CommandDispatch
-function dispatchUiCommand(onCommand: UiInterpreterContext["onCommand"], descriptor: CommandDescriptor, patch: Record<string, unknown>): void {
-  onCommand({
+//#region ActionDispatch
+function dispatchUiAction(onAction: UiInterpreterContext["onAction"], descriptor: ActionDescriptor, patch: Record<string, unknown>): void {
+  onAction({
     ...descriptor,
     args: { ...(typeof descriptor.args === "object" && descriptor.args != null ? descriptor.args : {}), ...patch },
   });
@@ -96,17 +96,17 @@ function resolveDeclarativeControlIcon(iconId: string, size: number | "tiny" | "
   const iconName = iconId in ICONS ? (iconId as IconName) : "circle-dot";
   return <Icon icon={iconName} size={size} />;
 }
-//#endregion CommandDispatch
+//#endregion ActionDispatch
 
 //#region RenderUiControl
 /** @emoji 🎛 Renders a declarative control node with ui-react primitives. */
-export function renderUiControl(control: UiControlNode, onCommand: UiInterpreterContext["onCommand"]): ReactElement {
+export function renderUiControl(control: UiControlNode, onAction: UiInterpreterContext["onAction"]): ReactElement {
   switch (control.type) {
     case "input": {
       const commitOnBlur = control.commit === "blur";
       const commitValue = (raw: string) => {
         const value = control.inputKind === "number" ? Number(raw) : raw;
-        dispatchUiCommand(onCommand, control.onChange, { value });
+        dispatchUiAction(onAction, control.onChange, { value });
       };
       if (control.inputKind === "longText") {
         return (
@@ -159,7 +159,7 @@ export function renderUiControl(control: UiControlNode, onCommand: UiInterpreter
     }
     case "select":
       return (
-        <Select value={control.value || undefined} onValueChange={(value) => dispatchUiCommand(onCommand, control.onChange, { value })}>
+        <Select value={control.value || undefined} onValueChange={(value) => dispatchUiAction(onAction, control.onChange, { value })}>
           <SelectTrigger id={control.id} className="h-medium w-full min-w-0" size="sm">
             <SelectValue placeholder={control.placeholder ?? "Select"} />
           </SelectTrigger>
@@ -173,7 +173,7 @@ export function renderUiControl(control: UiControlNode, onCommand: UiInterpreter
         </Select>
       );
     case "toggle":
-      return <Toggle id={control.id} pressed={control.pressed} text={control.text} icon={resolveDeclarativeControlIcon(control.iconId)} onPressedChange={(pressed) => dispatchUiCommand(onCommand, control.onChange, { pressed })} />;
+      return <Toggle id={control.id} pressed={control.pressed} text={control.text} icon={resolveDeclarativeControlIcon(control.iconId)} onPressedChange={(pressed) => dispatchUiAction(onAction, control.onChange, { pressed })} />;
     case "vec3": {
       const tuple = control.value;
       const mixed = tuple == null || !Array.isArray(tuple) || tuple.length < 3;
@@ -195,7 +195,7 @@ export function renderUiControl(control: UiControlNode, onCommand: UiInterpreter
                 if (!Number.isFinite(parsed)) return;
                 const next: [number, number, number] = [tuple[0] ?? 0, tuple[1] ?? 0, tuple[2] ?? 0];
                 next[index] = parsed;
-                dispatchUiCommand(onCommand, control.onChange, { value: next });
+                dispatchUiAction(onAction, control.onChange, { value: next });
               }}
             />
           ))}
@@ -222,7 +222,7 @@ export function renderUiControl(control: UiControlNode, onCommand: UiInterpreter
           min={control.min}
           step={control.step}
           value={[control.value]}
-          onValueChange={(values) => dispatchUiCommand(onCommand, control.onChange, { value: values[0] ?? control.value })}
+          onValueChange={(values) => dispatchUiAction(onAction, control.onChange, { value: values[0] ?? control.value })}
         />
       );
       if (!control.unit) return slider;
@@ -238,7 +238,7 @@ export function renderUiControl(control: UiControlNode, onCommand: UiInterpreter
     case "numberStepper":
       return (
         <div className="flex min-w-0 w-full items-center gap-1">
-          <Button className="h-medium shrink-0 px-2" onClick={() => dispatchUiCommand(onCommand, control.onDelta, { delta: -control.step })} type="button" variant="outline">
+          <Button className="h-medium shrink-0 px-2" onClick={() => dispatchUiAction(onAction, control.onDelta, { delta: -control.step })} type="button" variant="outline">
             −
           </Button>
           <Input
@@ -247,77 +247,77 @@ export function renderUiControl(control: UiControlNode, onCommand: UiInterpreter
             onChange={(event) => {
               const parsed = Number(event.target.value);
               if (Number.isFinite(parsed)) {
-                dispatchUiCommand(onCommand, control.onAbsolute, { value: parsed });
+                dispatchUiAction(onAction, control.onAbsolute, { value: parsed });
               }
             }}
             placeholder={control.uniform ? undefined : "Mixed"}
             type="number"
             value={control.uniform && Number.isFinite(control.value) ? String(control.value) : ""}
           />
-          <Button className="h-medium shrink-0 px-2" onClick={() => dispatchUiCommand(onCommand, control.onDelta, { delta: control.step })} type="button" variant="outline">
+          <Button className="h-medium shrink-0 px-2" onClick={() => dispatchUiAction(onAction, control.onDelta, { delta: control.step })} type="button" variant="outline">
             +
           </Button>
         </div>
       );
     case "ring":
-      return <Ring id={control.id} onOrbChange={(_orbId, _oldT, newT) => dispatchUiCommand(onCommand, control.onChange, { t: newT })} orbs={[{ disabled: control.disabled, id: control.orbId, selected: true, t: control.t }]} />;
+      return <Ring id={control.id} onOrbChange={(_orbId, _oldT, newT) => dispatchUiAction(onAction, control.onChange, { t: newT })} orbs={[{ disabled: control.disabled, id: control.orbId, selected: true, t: control.t }]} />;
     case "iconSelect":
       return (
         <IconSelector
           classifyIconSelectorMode={control.classifierKind === "puzzle2d" ? classifyIconSelectorMode : undefined}
           id={control.id}
-          onChange={(next) => dispatchUiCommand(onCommand, control.onChange, { value: next })}
+          onChange={(next) => dispatchUiAction(onAction, control.onChange, { value: next })}
           uniform={control.uniform}
           value={control.value}
         />
       );
     case "button":
-      return <Button id={control.id} text={control.label} icon={resolveDeclarativeControlIcon(control.iconId)} disabled={control.disabled} onClick={() => onCommand(control.command)} />;
+      return <Button id={control.id} text={control.label} icon={resolveDeclarativeControlIcon(control.iconId)} disabled={control.disabled} onClick={() => onAction(control.action)} />;
   }
 }
 //#endregion RenderUiControl
 
 //#region UiTreePanel
-function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], onCommand: UiInterpreterContext["onCommand"]): TreeDataItem[] {
+function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], onAction: UiInterpreterContext["onAction"]): TreeDataItem[] {
   return items.map((item) => ({
     id: item.id,
     label: item.label,
     description: item.description,
     icon: item.iconId ? renderControlIcon(item.iconId, 12) : undefined,
-    control: item.control ? renderUiControl(item.control, onCommand) : undefined,
+    control: item.control ? renderUiControl(item.control, onAction) : undefined,
     defaultOpen: item.defaultOpen,
     isSelected: item.selected,
     isHidden: item.isHidden,
     draggable: item.draggable,
     dragData: item.dragData,
     className: item.draggable || item.dragData ? "cursor-grab active:cursor-grabbing" : undefined,
-    items: item.items?.length ? uiTreeItemsToTreeData(item.items, onCommand) : undefined,
-    onClick: item.command ? () => dispatchUiCommand(onCommand, item.command!, {}) : undefined,
-    onPointerEnter: item.hoverCommand ? () => dispatchUiCommand(onCommand, item.hoverCommand!, {}) : undefined,
-    onPointerLeave: item.unhoverCommand ? () => dispatchUiCommand(onCommand, item.unhoverCommand!, {}) : undefined,
+    items: item.items?.length ? uiTreeItemsToTreeData(item.items, onAction) : undefined,
+    onClick: item.action ? () => dispatchUiAction(onAction, item.action!, {}) : undefined,
+    onPointerEnter: item.hoverAction ? () => dispatchUiAction(onAction, item.hoverAction!, {}) : undefined,
+    onPointerLeave: item.unhoverAction ? () => dispatchUiAction(onAction, item.unhoverAction!, {}) : undefined,
     actions: item.actions?.map((action) => ({
       kind: "button" as const,
       icon: renderControlIcon(action.iconId, 12),
       title: action.label,
       revealOnHover: action.revealOnHover,
-      onClick: () => dispatchUiCommand(onCommand, action.command, {}),
+      onClick: () => dispatchUiAction(onAction, action.action, {}),
     })),
   }));
 }
 
 /** @emoji 🌲 Maps a declarative {@link UiTreeNode} to a {@link TreePanelConfig}. */
-export function uiTreeNodeToTreePanelConfig(treeNode: UiTreeNode, onCommand: UiInterpreterContext["onCommand"]): TreePanelConfig {
+export function uiTreeNodeToTreePanelConfig(treeNode: UiTreeNode, onAction: UiInterpreterContext["onAction"]): TreePanelConfig {
   const sections: TreeDataSection[] = treeNode.sections.map((section: UiTreeSectionNode) => ({
     id: section.id,
     label: section.label ?? "",
     defaultOpen: section.defaultOpen,
-    items: uiTreeItemsToTreeData(section.items, onCommand),
+    items: uiTreeItemsToTreeData(section.items, onAction),
   }));
   return {
     sections,
     selectedIds: treeNode.selectedIds as string[] | undefined,
     highlightedIds: treeNode.highlightedIds,
-    onSelectionChange: treeNode.selectionChange ? (selectedIds) => dispatchUiCommand(onCommand, treeNode.selectionChange!, { ids: selectedIds }) : undefined,
+    onSelectionChange: treeNode.selectionChange ? (selectedIds) => dispatchUiAction(onAction, treeNode.selectionChange!, { ids: selectedIds }) : undefined,
   };
 }
 
@@ -338,12 +338,12 @@ function treeDragPayloadMime(treeNode: UiTreeNode): string | undefined {
   return undefined;
 }
 
-/** @emoji 🖱️ Builds the drag/drop controller for a declarative tree — palette source when items carry drag payloads, drop dispatch when the tree declares a drop command. */
-export function declarativeTreeDragController(treeNode: UiTreeNode, onCommand: UiInterpreterContext["onCommand"]): TreeDragAndDropController | undefined {
+/** @emoji 🖱️ Builds the drag/drop controller for a declarative tree — palette source when items carry drag payloads, drop dispatch when the tree declares a drop action. */
+export function declarativeTreeDragController(treeNode: UiTreeNode, onAction: UiInterpreterContext["onAction"]): TreeDragAndDropController | undefined {
   const mime = treeDragPayloadMime(treeNode);
   const source = mime ? catalogueTreeDragController(mime) : undefined;
-  const dropCommand = treeNode.dropCommand;
-  if (!dropCommand) return source;
+  const dropAction = treeNode.dropAction;
+  if (!dropAction) return source;
   return {
     ...(source ?? {}),
     handleDrop: ({ data, target, dropPosition }) => {
@@ -355,14 +355,14 @@ export function declarativeTreeDragController(treeNode: UiTreeNode, onCommand: U
       } catch {
         return;
       }
-      dispatchUiCommand(onCommand, dropCommand, { ...payload, targetId: target.id, dropPosition: dropPosition ?? "inside" });
+      dispatchUiAction(onAction, dropAction, { ...payload, targetId: target.id, dropPosition: dropPosition ?? "inside" });
     },
   };
 }
 
-function DeclarativeTreePanel({ treeNode, onCommand }: { readonly treeNode: UiTreeNode; readonly onCommand: UiInterpreterContext["onCommand"] }) {
-  const config = uiTreeNodeToTreePanelConfig(treeNode, onCommand);
-  const dragController = declarativeTreeDragController(treeNode, onCommand);
+function DeclarativeTreePanel({ treeNode, onAction }: { readonly treeNode: UiTreeNode; readonly onAction: UiInterpreterContext["onAction"] }) {
+  const config = uiTreeNodeToTreePanelConfig(treeNode, onAction);
+  const dragController = declarativeTreeDragController(treeNode, onAction);
   return (
     <Tree
       className="min-h-0 min-w-0 flex-1 overflow-auto"
@@ -379,7 +379,7 @@ function DeclarativeTreePanel({ treeNode, onCommand }: { readonly treeNode: UiTr
 //#endregion UiTreePanel
 
 //#region VirtualFileSystemHost
-function VirtualFileSystemHost({ node, onCommand }: { readonly node: Extract<UiNode, { type: "componentScene" }>; readonly onCommand: (command: CommandDescriptor) => void }) {
+function VirtualFileSystemHost({ node, onAction }: { readonly node: Extract<UiNode, { type: "componentScene" }>; readonly onAction: (action: ActionDescriptor) => void }) {
   const scene = node.virtualFileSystem;
   if (!scene) return <div className="semio-vfs-empty">No virtual file system scene</div>;
   const schema = JSON.parse(scene.schemaJson) as Parameters<typeof VirtualFileSystem>[0]["schema"];
@@ -394,9 +394,9 @@ function VirtualFileSystemHost({ node, onCommand }: { readonly node: Extract<UiN
       emptyMessage={scene.emptyMessage}
       dragDrop={scene.dragDropEnabled ? { enabled: true } : undefined}
       onSelectionChange={(ids) =>
-        onCommand({
+        onAction({
           controllerId: node.controllerId,
-          command: "selectRows",
+          action: "selectRows",
           args: { surfaceId: node.surfaceId, ids },
         })
       }
@@ -404,9 +404,9 @@ function VirtualFileSystemHost({ node, onCommand }: { readonly node: Extract<UiN
         const uri = row.navigateUri;
         if (!uri) return;
         if (uri.startsWith("os://instance/")) {
-          onCommand({
+          onAction({
             controllerId: node.controllerId,
-            command: "openInstance",
+            action: "openInstance",
             args: { surfaceId: node.surfaceId, instanceId: uri.slice("os://instance/".length) },
           });
           return;
@@ -414,9 +414,9 @@ function VirtualFileSystemHost({ node, onCommand }: { readonly node: Extract<UiN
         if (uri.startsWith("os://export/")) {
           const [, , , instanceId, , format] = uri.split("/");
           if (instanceId && format) {
-            onCommand({
+            onAction({
               controllerId: node.controllerId,
-              command: "exportMedia",
+              action: "exportMedia",
               args: { surfaceId: node.surfaceId, instanceId, format },
             });
           }
@@ -425,9 +425,9 @@ function VirtualFileSystemHost({ node, onCommand }: { readonly node: Extract<UiN
         if (uri.startsWith("os://import/")) {
           const [, , , instanceId, resourceKind, format] = uri.split("/");
           if (instanceId && format) {
-            onCommand({
+            onAction({
               controllerId: node.controllerId,
-              command: "importMedia",
+              action: "importMedia",
               args: { surfaceId: node.surfaceId, instanceId, resourceKind, format },
             });
           }
@@ -436,18 +436,18 @@ function VirtualFileSystemHost({ node, onCommand }: { readonly node: Extract<UiN
         if (uri.startsWith("/studios/")) {
           const studioId = uri.split("/")[2];
           if (studioId) {
-            onCommand({
+            onAction({
               controllerId: node.controllerId,
-              command: "navigateVirtualFileSystemNode",
+              action: "navigateVirtualFileSystemNode",
               args: { surfaceId: node.surfaceId, studioId },
             });
           }
           return;
         }
         if (uri.startsWith("studio:")) {
-          onCommand({
+          onAction({
             controllerId: node.controllerId,
-            command: "navigateVirtualFileSystemNode",
+            action: "navigateVirtualFileSystemNode",
             args: { surfaceId: node.surfaceId, studioId: uri.slice("studio:".length) },
           });
         }
@@ -468,7 +468,7 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
   switch (node.type) {
     case "stack": {
       const activate = node.activate;
-      const dropCommand = node.dropCommand;
+      const dropAction = node.dropAction;
       return (
         <div
           className={cn(
@@ -482,12 +482,12 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
             activate
               ? (event) => {
                   event.stopPropagation();
-                  dispatchUiCommand(context.onCommand, activate, {});
+                  dispatchUiAction(context.onAction, activate, {});
                 }
               : undefined
           }
           onDragOver={
-            dropCommand
+            dropAction
               ? (event) => {
                   event.preventDefault();
                   event.dataTransfer.dropEffect = "copy";
@@ -495,14 +495,14 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
               : undefined
           }
           onDrop={
-            dropCommand
+            dropAction
               ? (event) => {
                   event.preventDefault();
                   event.stopPropagation();
                   const encoded = [...event.dataTransfer.types].filter((kind) => kind.startsWith("application/x-semio-")).map((kind) => event.dataTransfer.getData(kind))[0];
                   if (!encoded?.trim()) return;
                   try {
-                    dispatchUiCommand(context.onCommand, dropCommand, JSON.parse(encoded) as Record<string, unknown>);
+                    dispatchUiAction(context.onAction, dropAction, JSON.parse(encoded) as Record<string, unknown>);
                   } catch {
                     return;
                   }
@@ -530,29 +530,29 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
     case "text":
       return <p className={node.emphasize ? "font-semibold" : "text-sm"}>{node.value}</p>;
     case "button":
-      return <Button id={node.id} text={node.label} icon={resolveDeclarativeControlIcon(node.iconId)} disabled={node.disabled} onClick={() => context.onCommand(node.command)} />;
+      return <Button id={node.id} text={node.label} icon={resolveDeclarativeControlIcon(node.iconId)} disabled={node.disabled} onClick={() => context.onAction(node.action)} />;
     case "separator":
       return <hr className="border-border" />;
     case "image":
       return <img id={node.id} src={node.src} alt={node.alt ?? ""} className="max-h-64 max-w-full rounded-md object-contain" data-ui-image={node.id} />;
     case "input":
-      return renderUiControl(node, context.onCommand);
+      return renderUiControl(node, context.onAction);
     case "select":
-      return renderUiControl(node, context.onCommand);
+      return renderUiControl(node, context.onAction);
     case "toggle":
-      return renderUiControl(node, context.onCommand);
+      return renderUiControl(node, context.onAction);
     case "vec3":
-      return renderUiControl(node, context.onCommand);
+      return renderUiControl(node, context.onAction);
     case "keyValue":
-      return renderUiControl(node, context.onCommand);
+      return renderUiControl(node, context.onAction);
     case "slider":
-      return renderUiControl(node, context.onCommand);
+      return renderUiControl(node, context.onAction);
     case "numberStepper":
-      return renderUiControl(node, context.onCommand);
+      return renderUiControl(node, context.onAction);
     case "ring":
-      return renderUiControl(node, context.onCommand);
+      return renderUiControl(node, context.onAction);
     case "iconSelect":
-      return renderUiControl(node, context.onCommand);
+      return renderUiControl(node, context.onAction);
     case "field":
       return (
         <Field id={node.id} label={node.label} description={node.description} required={node.required} error={node.error}>
@@ -568,9 +568,9 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
         </Section>
       );
     case "tree":
-      return <DeclarativeTreePanel treeNode={node} onCommand={context.onCommand} />;
+      return <DeclarativeTreePanel treeNode={node} onAction={context.onAction} />;
     case "componentScene":
-      return renderComponentSceneHost(node, context.onCommand);
+      return renderComponentSceneHost(node, context.onAction);
     case "externalSlot":
       return <p className="text-muted-foreground text-xs">Extension unavailable: {node.pluginId}</p>;
   }

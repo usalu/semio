@@ -20,7 +20,7 @@ use semio_framework_plugin::{PanelGroup,
     layout::MeasureSelectItem,
     layout::WindowEngagementStatus, tool_button, tool_collection, ui_declarative_sections_to_tree,
     ui_inspector_all_equal, ui_text,
-    App, CommandDescriptor, ModeDefinition, NodeGraphScene, PluginApp, PluginBundle, SurfaceKind, TextEditorScene,
+    App, ActionDescriptor, ModeDefinition, NodeGraphScene, PluginApp, PluginBundle, SurfaceKind, TextEditorScene,
     ToolCategory,
     UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiSectionNode,
     UiSelectItem, UiSelectNode, UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
@@ -381,18 +381,18 @@ fn set_panel_op(panel: &StudioPanelState) -> String {
     json!({ "op": "setPanel", "panel": panel }).to_string()
 }
 
-fn s_play_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn s_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: S_PLAY_CONTROLLER_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
 
-fn s_home_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn s_home_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: S_HOME_CONTROLLER_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -406,7 +406,7 @@ fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
         id: None,
         selected: None,
         activate: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -495,15 +495,15 @@ fn selected_instance_ids(runtime: &StudioRuntimeState, projection: &OsProjection
 
 fn media_graph_context_menu_json() -> String {
     json!([
-        { "id": "open-instance", "label": "Open instance", "command": "openInstance" },
-        { "id": "duplicate-instance", "label": "Duplicate", "command": "duplicateAppInstance" },
-        { "id": "copy-instance", "label": "Copy", "command": "copyAppInstance" },
-        { "id": "paste-instance", "label": "Paste", "command": "pasteAppInstance" },
-        { "id": "rename-instance", "label": "Rename label…", "command": "renameAppInstance" },
-        { "id": "remove-instance", "label": "Remove", "command": "removeAppInstance" },
-        { "id": "select-all", "label": "Select all", "command": "setMediaNodeSelection", "args": { "selectAll": true } },
-        { "id": "clear-selection", "label": "Clear selection", "command": "setMediaNodeSelection", "args": { "nodeIds": [] } },
-        { "id": "reorganize", "label": "Reorganize", "command": "reorganizeMediaGraph" }
+        { "id": "open-instance", "label": "Open instance", "action": "openInstance" },
+        { "id": "duplicate-instance", "label": "Duplicate", "action": "duplicateAppInstance" },
+        { "id": "copy-instance", "label": "Copy", "action": "copyAppInstance" },
+        { "id": "paste-instance", "label": "Paste", "action": "pasteAppInstance" },
+        { "id": "rename-instance", "label": "Rename label…", "action": "renameAppInstance" },
+        { "id": "remove-instance", "label": "Remove", "action": "removeAppInstance" },
+        { "id": "select-all", "label": "Select all", "action": "setMediaNodeSelection", "args": { "selectAll": true } },
+        { "id": "clear-selection", "label": "Clear selection", "action": "setMediaNodeSelection", "args": { "nodeIds": [] } },
+        { "id": "reorganize", "label": "Reorganize", "action": "reorganizeMediaGraph" }
     ])
     .to_string()
 }
@@ -716,9 +716,9 @@ fn app_catalogue_item(path: &[String], label: &str, node: AppCatalogueNode) -> U
         icon_id: app.as_ref().map(|entry| entry.app_id.clone()),
         selected: None,
         default_open: (!children.is_empty()).then_some(true),
-        command: None,
-        hover_command: None,
-        unhover_command: None,
+        action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: app.as_ref().map(|_| true),
         drag_data: (!drag_data.is_empty()).then_some(drag_data),
@@ -777,7 +777,7 @@ fn build_catalogue_tree(panel: &StudioPanelState) -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -788,11 +788,11 @@ fn parameter_value_control(parameter: &OsParameter) -> UiNode {
             value: *value,
             step: step.unwrap_or(1.0),
             uniform: true,
-            on_absolute: s_play_cmd(
+            on_absolute: s_play_action(
                 "patchParameter",
                 Some(json!({ "parameterId": id, "field": "value" })),
             ),
-            on_delta: s_play_cmd(
+            on_delta: s_play_action(
                 "patchParameter",
                 Some(json!({ "parameterId": id, "field": "value" })),
             ),
@@ -808,7 +808,7 @@ fn parameter_value_control(parameter: &OsParameter) -> UiNode {
                 })
                 .collect(),
             placeholder: None,
-            on_change: s_play_cmd(
+            on_change: s_play_action(
                 "patchParameter",
                 Some(json!({ "parameterId": id, "field": "value" })),
             ),
@@ -818,7 +818,7 @@ fn parameter_value_control(parameter: &OsParameter) -> UiNode {
             icon_id: "toggle-left".into(),
             pressed: *value,
             text: Some(if *value { "On".into() } else { "Off".into() }),
-            on_change: s_play_cmd(
+            on_change: s_play_action(
                 "patchParameter",
                 Some(json!({ "parameterId": id, "field": "value" })),
             ),
@@ -829,7 +829,7 @@ fn parameter_value_control(parameter: &OsParameter) -> UiNode {
             value: value.clone(),
             placeholder: None,
             commit: None,
-            on_change: s_play_cmd(
+            on_change: s_play_action(
                 "patchParameter",
                 Some(json!({ "parameterId": id, "field": "value" })),
             ),
@@ -858,11 +858,11 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
                     value: min.unwrap_or(0.0),
                     step: 1.0,
                     uniform: true,
-                    on_absolute: s_play_cmd(
+                    on_absolute: s_play_action(
                         "patchParameter",
                         Some(json!({ "parameterId": id, "field": "min" })),
                     ),
-                    on_delta: s_play_cmd(
+                    on_delta: s_play_action(
                         "patchParameter",
                         Some(json!({ "parameterId": id, "field": "min" })),
                     ),
@@ -879,11 +879,11 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
                     value: max.unwrap_or(0.0),
                     step: 1.0,
                     uniform: true,
-                    on_absolute: s_play_cmd(
+                    on_absolute: s_play_action(
                         "patchParameter",
                         Some(json!({ "parameterId": id, "field": "max" })),
                     ),
-                    on_delta: s_play_cmd(
+                    on_delta: s_play_action(
                         "patchParameter",
                         Some(json!({ "parameterId": id, "field": "max" })),
                     ),
@@ -900,11 +900,11 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
                     value: step.unwrap_or(0.0),
                     step: 0.1,
                     uniform: true,
-                    on_absolute: s_play_cmd(
+                    on_absolute: s_play_action(
                         "patchParameter",
                         Some(json!({ "parameterId": id, "field": "step" })),
                     ),
-                    on_delta: s_play_cmd(
+                    on_delta: s_play_action(
                         "patchParameter",
                         Some(json!({ "parameterId": id, "field": "step" })),
                     ),
@@ -925,7 +925,7 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
                             id: Some(format!("s-play-parameters.{id}.option.{option}.remove")),
                             icon_id: "trash-2".into(),
                             label: "Remove".into(),
-                            command: s_play_cmd(
+                            action: s_play_action(
                                 "patchParameter",
                                 Some(json!({ "parameterId": id, "field": "removeOption", "value": option })),
                             ),
@@ -947,7 +947,7 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
                     value: String::new(),
                     placeholder: Some("New option".into()),
                     commit: None,
-                    on_change: s_play_cmd(
+                    on_change: s_play_action(
                         "patchParameter",
                         Some(json!({ "parameterId": id, "field": "addOption" })),
                     ),
@@ -977,7 +977,7 @@ fn build_parameters_tree(document: &OsDocument) -> UiNode {
                 id: Some("s-play-parameters.add".into()),
                 icon_id: "plus".into(),
                 label: "Add Parameter".into(),
-                command: s_play_cmd("addParameter", Some(json!({ "type": "numeric" }))),
+                action: s_play_action("addParameter", Some(json!({ "type": "numeric" }))),
                 style: None,
                 disabled: None,
             }),
@@ -1001,7 +1001,7 @@ fn build_parameters_tree(document: &OsDocument) -> UiNode {
                     },
                     placeholder: None,
                     commit: None,
-                    on_change: s_play_cmd(
+                    on_change: s_play_action(
                         "patchParameter",
                         Some(json!({ "parameterId": parameter_id, "field": "name" })),
                     ),
@@ -1028,7 +1028,7 @@ fn build_parameters_tree(document: &OsDocument) -> UiNode {
             id: Some(format!("s-play-parameters.{parameter_id}.remove")),
             icon_id: "trash-2".into(),
             label: "Remove".into(),
-            command: s_play_cmd(
+            action: s_play_action(
                 "removeParameter",
                 Some(json!({ "parameterId": parameter_id })),
             ),
@@ -1084,7 +1084,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                     value: media_node_ids[0].clone(),
                     placeholder: None,
                     commit: None,
-                    on_change: s_play_cmd("noop", None),
+                    on_change: s_play_action("noop", None),
                     min: None,
                     max: None,
                     step: None,
@@ -1108,7 +1108,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                 },
                 placeholder: if x_uniform { None } else { Some("Mixed".into()) },
                 commit: None,
-                on_change: s_play_cmd(
+                on_change: s_play_action(
                     "patchMediaNodes",
                     Some(json!({ "nodeIds": media_node_ids, "field": "position", "axis": "x" })),
                 ),
@@ -1134,7 +1134,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                 },
                 placeholder: if y_uniform { None } else { Some("Mixed".into()) },
                 commit: None,
-                on_change: s_play_cmd(
+                on_change: s_play_action(
                     "patchMediaNodes",
                     Some(json!({ "nodeIds": media_node_ids, "field": "position", "axis": "y" })),
                 ),
@@ -1199,7 +1199,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                     },
                     placeholder: if label_uniform { None } else { Some("Mixed".into()) },
                     commit: None,
-                    on_change: s_play_cmd(
+                    on_change: s_play_action(
                         "patchAppInstances",
                         Some(json!({ "instanceIds": instance_ids, "field": "label" })),
                     ),
@@ -1266,7 +1266,7 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
                                     .unwrap_or_else(|| "__direct__".into()),
                                 items,
                                 placeholder: None,
-                                on_change: s_play_cmd(
+                                on_change: s_play_action(
                                     "bindParameterField",
                                     Some(json!({
                                         "instanceId": instance.id,
@@ -1545,9 +1545,9 @@ impl PluginApp for SHomeApp {
         .expect("home document json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
@@ -1557,7 +1557,7 @@ impl PluginApp for SHomeApp {
             catalog_generation: 0,
         });
         let port = catalog_port();
-        match command {
+        match action {
             "createStudio" => {
                 let name = args
                     .and_then(|value| value.get("name"))
@@ -1586,7 +1586,7 @@ impl PluginApp for SHomeApp {
                             }
                             return vec![json!({
                                 "op": "requestFolderPick",
-                                "importCommand": "createStudio",
+                                "importAction": "createStudio",
                                 "args": { "kind": "folder", "name": name }
                             })
                             .to_string()];
@@ -1671,7 +1671,7 @@ impl PluginApp for SHomeApp {
                 }
                 return vec![json!({
                     "op": "requestFileOpen",
-                    "importCommand": "importStudio",
+                    "importAction": "importStudio",
                     "accept": ".json"
                 })
                 .to_string()];
@@ -1720,15 +1720,15 @@ impl PluginApp for SHomeApp {
 struct SStudioApp;
 
 impl SStudioApp {
-    fn handle_studio_command(
+    fn handle_studio_action(
         envelope: &mut SStudioEnvelope,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
     ) -> Vec<String> {
         let mut ops = Vec::new();
         let mut store = store_from_envelope(envelope);
         let mut runtime = envelope.runtime.clone();
-        match command {
+        match action {
             "setActivePanelTab" => {
                 if let Some(tab) = args.and_then(|value| value.get("tabId")).and_then(|value| value.as_str()) {
                     let mut panel = StudioPanelState {
@@ -1947,7 +1947,7 @@ impl SStudioApp {
             }
             "duplicateAppInstance" | "pasteAppInstance" => {
                 let projection = store.projection().unwrap_or_else(|_| default_os_projection());
-                let source_ids = if command == "pasteAppInstance" {
+                let source_ids = if action == "pasteAppInstance" {
                     runtime.clipboard_instance_ids.clone()
                 } else {
                     selected_instance_ids(&runtime, &projection)
@@ -2110,7 +2110,7 @@ impl SStudioApp {
                         "op": "requestFileOpen",
                         "accept": format!(".{format}"),
                         "readAs": "dataUrl",
-                        "importCommand": "importMediaPayload",
+                        "importAction": "importMediaPayload",
                     })
                     .to_string());
                 }
@@ -2557,7 +2557,7 @@ impl SStudioApp {
             _ => {}
         }
         if matches!(
-            command,
+            action,
             "presenceHeartbeat" | "nodeGraphSelect" | "setMediaNodeSelection" | "selectInstance" | "setAppInstanceSelection" | "deleteSelection"
         ) {
             publish_presence(&runtime);
@@ -2578,28 +2578,28 @@ impl PluginApp for SStudioApp {
         initial_studio_document_json()
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         view_state: &ViewState,
     ) -> Vec<String> {
-        if command == "setActivePanelTab" {
+        if action == "setActivePanelTab" {
             if let Some(tab) = args.and_then(|value| value.get("tabId")).and_then(|value| value.as_str()) {
                 let mut panel = parse_panel_state(view_state);
                 panel.active_panel_tab = tab.into();
                 return vec![set_panel_op(&panel)];
             }
         }
-        if command == "closeFocusedInstance" {
+        if action == "closeFocusedInstance" {
             let mut panel = parse_panel_state(view_state);
             panel.active_spawned_id = None;
             let mut envelope = parse_studio_envelope(document_json);
             envelope.runtime.focused_instance_id = None;
             return vec![set_panel_op(&panel), set_studio_document_op(&envelope)];
         }
-        if command == "navigateVirtualFileSystemNode" {
+        if action == "navigateVirtualFileSystemNode" {
             if let Some(studio_id) = args
                 .and_then(|value| value.get("studioId"))
                 .and_then(|value| value.as_str())
@@ -2612,7 +2612,7 @@ impl PluginApp for SStudioApp {
             }
         }
         let mut envelope = parse_studio_envelope(document_json);
-        Self::handle_studio_command(&mut envelope, command, args)
+        Self::handle_studio_action(&mut envelope, action, args)
     }
 
     fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
@@ -2666,8 +2666,8 @@ fn media_graph_engagement(runtime: &StudioRuntimeState, node_count: usize, app_c
             id: Some("s-media-catalogue-hint".into()),
             value: Some(runtime.media_graph_engagement_input.clone()),
             placeholder: Some("Drag apps from Catalogue workbench tab".into()),
-            on_change: Some(s_play_cmd("mediaGraphEngagementInput", None)),
-            on_submit: Some(s_play_cmd("mediaGraphEngagementSubmit", None)),
+            on_change: Some(s_play_action("mediaGraphEngagementInput", None)),
+            on_submit: Some(s_play_action("mediaGraphEngagementSubmit", None)),
             disabled: None,
             on_repeat_last: None,
             on_abort: None,
@@ -2695,7 +2695,7 @@ fn media_graph_measures(runtime: &StudioRuntimeState, instances: &[OsAppInstance
                 label: instance.label.clone(),
             })
             .collect(),
-        on_change: s_play_cmd("selectInstance", None),
+        on_change: s_play_action("selectInstance", None),
     }]
 }
 
@@ -2705,13 +2705,13 @@ fn home_create_tools() -> Vec<semio_framework_plugin::ToolNode> {
             "s-home.create.temporary",
             "zap",
             "Temporary",
-            s_home_cmd("createStudio", Some(json!({ "kind": "temporary" }))),
+            s_home_action("createStudio", Some(json!({ "kind": "temporary" }))),
         ),
         tool_button(
             "s-home.create.file",
             "file-json",
             "File",
-            s_home_cmd("createStudio", Some(json!({ "kind": "file" }))),
+            s_home_action("createStudio", Some(json!({ "kind": "file" }))),
         ),
     ];
     #[cfg(not(target_arch = "wasm32"))]
@@ -2719,17 +2719,17 @@ fn home_create_tools() -> Vec<semio_framework_plugin::ToolNode> {
         "s-home.create.folder",
         "folder",
         "Folder",
-        s_home_cmd("createStudio", Some(json!({ "kind": "folder" }))),
+        s_home_action("createStudio", Some(json!({ "kind": "folder" }))),
     ));
     vec![
-        tool_collection("s-home.create", "plus", "Create", children).with_category(ToolCategory::Commands),
+        tool_collection("s-home.create", "plus", "Create", children).with_category(ToolCategory::Actions),
         tool_button(
             "s-home.import",
             "upload",
             "Import Studio",
-            s_home_cmd("importStudio", None),
+            s_home_action("importStudio", None),
         )
-        .with_category(ToolCategory::Commands),
+        .with_category(ToolCategory::Actions),
     ]
 }
 
@@ -2745,14 +2745,14 @@ fn create_home_app() -> App {
                 &[S_HOME_WINDOW.into()],
                 Some(&["Studios".into()]),
             ))
-            .shell_command("createStudio", "Create Studio")
-            .shell_command("bindStudioFile", "Bind Studio File")
-            .shell_command("importStudio", "Import Studio")
-            .shell_command("openStudio", "Open Studio")
-            .shell_command("navigateVirtualFileSystemNode", "Navigate File System Node")
-            .shell_command("deleteVirtualFileSystemNode", "Delete File System Node")
-            .shell_command("goHome", "Go Home")
-            .view_command("setActivePanelTab", "Set Active Panel Tab")
+            .shell_action("createStudio", "Create Studio")
+            .shell_action("bindStudioFile", "Bind Studio File")
+            .shell_action("importStudio", "Import Studio")
+            .shell_action("openStudio", "Open Studio")
+            .shell_action("navigateVirtualFileSystemNode", "Navigate File System Node")
+            .shell_action("deleteVirtualFileSystemNode", "Delete File System Node")
+            .shell_action("goHome", "Go Home")
+            .view_action("setActivePanelTab", "Set Active Panel Tab")
             .keybinding("mod+n", "createStudio")
             .keybinding("mod+o", "importStudio"),
     );
@@ -2810,13 +2810,13 @@ fn create_studio_app() -> App {
                 "history",
                 "History",
                 vec![
-                    tool_button("s-play.undo", "undo-2", "Undo", s_play_cmd("undo", None)),
-                    tool_button("s-play.redo", "redo-2", "Redo", s_play_cmd("redo", None)),
+                    tool_button("s-play.undo", "undo-2", "Undo", s_play_action("undo", None)),
+                    tool_button("s-play.redo", "redo-2", "Redo", s_play_action("redo", None)),
                     tool_button(
                         "s-play.checkpoint",
                         "git-commit-horizontal",
                         "Checkpoint",
-                        s_play_cmd("commitCheckpoint", None),
+                        s_play_action("commitCheckpoint", None),
                     ),
                 ],
             )
@@ -2844,22 +2844,22 @@ fn create_studio_app() -> App {
         .operation("reorganizeMediaGraph", "Reorganize Media Graph")
         .operation("mediaGraphEngagementSubmit", "Media Graph Engagement Submit")
         .operation("compiledDagEngagementSubmit", "Compiled DAG Engagement Submit")
-        .view_command("setActivePanelTab", "Set Active Panel Tab")
-        .view_command("selectInstance", "Select Instance")
-        .view_command("nodeGraphSelect", "Select Graph Node")
-        .view_command("setMediaNodeSelection", "Set Media Node Selection")
-        .view_command("nodeGraphHover", "Hover Graph Node")
-        .view_command("textHover", "Text Hover")
-        .view_command("setAppInstanceSelection", "Set App Instance Selection")
-        .view_command("mediaGraphEngagementInput", "Media Graph Engagement Input")
-        .view_command("compiledDagEngagementInput", "Compiled DAG Engagement Input")
-        .shell_command("setActiveExample", "Set Active Example")
-        .shell_command("exportMedia", "Export Media")
-        .shell_command("openStudio", "Open Studio")
-        .shell_command("openInstance", "Open Instance")
-        .shell_command("closeFocusedInstance", "Close Focused Instance")
-        .shell_command("goHome", "Go Home")
-        .shell_command("navigateVirtualFileSystemNode", "Navigate File System Node")
+        .view_action("setActivePanelTab", "Set Active Panel Tab")
+        .view_action("selectInstance", "Select Instance")
+        .view_action("nodeGraphSelect", "Select Graph Node")
+        .view_action("setMediaNodeSelection", "Set Media Node Selection")
+        .view_action("nodeGraphHover", "Hover Graph Node")
+        .view_action("textHover", "Text Hover")
+        .view_action("setAppInstanceSelection", "Set App Instance Selection")
+        .view_action("mediaGraphEngagementInput", "Media Graph Engagement Input")
+        .view_action("compiledDagEngagementInput", "Compiled DAG Engagement Input")
+        .shell_action("setActiveExample", "Set Active Example")
+        .shell_action("exportMedia", "Export Media")
+        .shell_action("openStudio", "Open Studio")
+        .shell_action("openInstance", "Open Instance")
+        .shell_action("closeFocusedInstance", "Close Focused Instance")
+        .shell_action("goHome", "Go Home")
+        .shell_action("navigateVirtualFileSystemNode", "Navigate File System Node")
         .keybinding("mod+z", "undo")
         .keybinding("mod+shift+z", "redo")
         .keybinding("mod+s", "commitCheckpoint");
@@ -2999,7 +2999,7 @@ mod tests {
             .expect("node")
             .id
             .clone();
-        SStudioApp::handle_studio_command(
+        SStudioApp::handle_studio_action(
             &mut envelope,
             "moveMediaNode",
             Some(&json!({ "nodeId": node_id, "x": 120.0, "y": 160.0 })),
@@ -3018,7 +3018,7 @@ mod tests {
     fn spawns_draw_app_instance() {
         seed_draw_program();
         let mut envelope = initial_studio_envelope();
-        let ops = SStudioApp::handle_studio_command(
+        let ops = SStudioApp::handle_studio_action(
             &mut envelope,
             "spawnApp",
             Some(&json!({ "programId": "draw", "appId": "draw" })),
@@ -3048,21 +3048,21 @@ mod tests {
         semio_framework_os::register_dwg_import_handler("2d.drawing", |_drawing| Ok(json!({ "schema": "draw.document", "imported": true })));
 
         let mut envelope = initial_studio_envelope();
-        SStudioApp::handle_studio_command(&mut envelope, "spawnApp", Some(&json!({ "programId": "draw", "appId": "draw" })));
+        SStudioApp::handle_studio_action(&mut envelope, "spawnApp", Some(&json!({ "programId": "draw", "appId": "draw" })));
         let projection = projection_from_document(&envelope.document);
         let instance = projection.app_instances.iter().find(|instance| instance.program_id == "draw").expect("draw instance");
         let instance_id = instance.id.clone();
 
-        let export_ops = SStudioApp::handle_studio_command(&mut envelope, "exportMedia", Some(&json!({ "instanceId": instance_id, "format": "dwg" })));
+        let export_ops = SStudioApp::handle_studio_action(&mut envelope, "exportMedia", Some(&json!({ "instanceId": instance_id, "format": "dwg" })));
         let export_op: Value = export_ops.iter().find_map(|op| serde_json::from_str::<Value>(op).ok().filter(|value| value["op"] == "downloadMediaExport")).expect("download op");
         let data = export_op["data"].as_str().expect("base64 dwg data").to_string();
         assert!(!data.is_empty());
         assert_eq!(export_op["encoding"], "base64");
 
-        let import_ops = SStudioApp::handle_studio_command(&mut envelope, "importMedia", Some(&json!({ "instanceId": instance_id, "format": "dwg" })));
+        let import_ops = SStudioApp::handle_studio_action(&mut envelope, "importMedia", Some(&json!({ "instanceId": instance_id, "format": "dwg" })));
         assert!(import_ops.iter().any(|op| op.contains("requestFileOpen")));
 
-        SStudioApp::handle_studio_command(&mut envelope, "importMediaPayload", Some(&json!({ "payload": format!("data:image/vnd.dwg;base64,{data}") })));
+        SStudioApp::handle_studio_action(&mut envelope, "importMediaPayload", Some(&json!({ "payload": format!("data:image/vnd.dwg;base64,{data}") })));
         let projection_after = projection_from_document(&envelope.document);
         let instance_after = projection_after.app_instances.iter().find(|instance| instance.id == instance_id).expect("draw instance still present");
         assert_eq!(instance_after.source_document.inline.as_deref(), Some(r#"{"imported":true,"schema":"draw.document"}"#));
@@ -3072,7 +3072,7 @@ mod tests {
     fn commit_checkpoint_round_trips_projection() {
         let mut envelope = initial_studio_envelope();
         let before = projection_from_document(&envelope.document);
-        SStudioApp::handle_studio_command(
+        SStudioApp::handle_studio_action(
             &mut envelope,
             "commitCheckpoint",
             Some(&json!({ "message": "snapshot" })),
@@ -3103,7 +3103,7 @@ mod tests {
     #[test]
     fn patch_parameter_updates_value() {
         let mut envelope = initial_studio_envelope();
-        let ops = SStudioApp::handle_studio_command(
+        let ops = SStudioApp::handle_studio_action(
             &mut envelope,
             "patchParameter",
             Some(&json!({ "parameterId": "param-brush-size", "field": "value", "value": 48.0 })),
@@ -3160,11 +3160,11 @@ mod tests {
     }
 
     #[test]
-    fn creates_studio_via_home_command() {
+    fn creates_studio_via_home_action() {
         let port = catalog_port();
         let before = list_os_studio_catalog_entries(port.clone()).expect("list").len();
         let mut home = SHomeApp;
-        home.handle_command_patch_ops(
+        home.handle_action_patch_ops(
             "createStudio",
             Some(&json!({ "name": "Test Studio" })),
             &home.initial_document_json(),
@@ -3191,7 +3191,7 @@ mod tests {
     #[test]
     fn temporary_studio_uses_ephemeral_port() {
         let mut home = SHomeApp;
-        let ops = home.handle_command_patch_ops(
+        let ops = home.handle_action_patch_ops(
             "createStudio",
             Some(&json!({ "name": "Temp Studio", "kind": "temporary" })),
             &home.initial_document_json(),
@@ -3213,7 +3213,7 @@ mod tests {
             .take(2)
             .map(|instance| instance.id.clone())
             .collect();
-        SStudioApp::handle_studio_command(
+        SStudioApp::handle_studio_action(
             &mut envelope,
             "patchAppInstances",
             Some(&json!({ "instanceIds": ids, "field": "label", "value": "Batch Label" })),
@@ -3237,13 +3237,13 @@ mod tests {
             .id
             .clone();
         assert!(envelope.runtime.focused_instance_id.is_none());
-        SStudioApp::handle_studio_command(
+        SStudioApp::handle_studio_action(
             &mut envelope,
             "openInstance",
             Some(&json!({ "instanceId": instance_id })),
         );
         assert_eq!(envelope.runtime.focused_instance_id.as_deref(), Some(instance_id.as_str()));
-        SStudioApp::handle_studio_command(&mut envelope, "closeFocusedInstance", None);
+        SStudioApp::handle_studio_action(&mut envelope, "closeFocusedInstance", None);
         assert!(envelope.runtime.focused_instance_id.is_none());
     }
 
@@ -3258,7 +3258,7 @@ mod tests {
             .expect("draw instance")
             .id
             .clone();
-        let ops = SStudioApp::handle_studio_command(
+        let ops = SStudioApp::handle_studio_action(
             &mut envelope,
             "openInstance",
             Some(&json!({ "instanceId": instance_id })),
@@ -3302,7 +3302,7 @@ mod tests {
         let UiControlNode::Input(input) = control else {
             panic!("expected input control");
         };
-        assert_eq!(input.on_change.command, "patchAppInstances");
+        assert_eq!(input.on_change.action, "patchAppInstances");
     }
 
     fn seed_multi_port_programs() {
@@ -3398,12 +3398,12 @@ mod tests {
     fn spawns_puzzle5d_and_shooting_with_multi_port_registrations() {
         seed_multi_port_programs();
         let mut envelope = initial_studio_envelope();
-        SStudioApp::handle_studio_command(
+        SStudioApp::handle_studio_action(
             &mut envelope,
             "spawnApp",
             Some(&json!({ "programId": "puzzle.5d", "appId": "puzzle5d", "position": { "x": 200, "y": 100 } })),
         );
-        SStudioApp::handle_studio_command(
+        SStudioApp::handle_studio_action(
             &mut envelope,
             "spawnApp",
             Some(&json!({ "programId": "shooting", "appId": "shooting", "position": { "x": 300, "y": 100 } })),
@@ -3434,7 +3434,7 @@ mod tests {
         let instance = projection.app_instances.first().expect("instance");
         let parameter = projection.parameters.first().expect("parameter");
         let parameter_id = parameter_entity_id(parameter);
-        SStudioApp::handle_studio_command(
+        SStudioApp::handle_studio_action(
             &mut envelope,
             "bindParameterField",
             Some(&json!({
@@ -3448,7 +3448,7 @@ mod tests {
             .iter()
             .any(|row| row.instance_id == instance.id && row.field_path == "label");
         assert!(bound);
-        SStudioApp::handle_studio_command(
+        SStudioApp::handle_studio_action(
             &mut envelope,
             "unbindParameterField",
             Some(&json!({
@@ -3547,7 +3547,7 @@ mod tests {
         let camera = OsMediaGraphCamera { x: 40.0, y: -20.0, zoom: 2.0 };
         let mut fixture = os_media_graph_to_flow_fixture(&projection.media_graph, &projection.app_instances, &camera);
         fixture["layout"][&node.id] = json!({ "x": 500.0 + node.width / 2.0, "y": 300.0 + node.height / 2.0 });
-        SStudioApp::handle_studio_command(
+        SStudioApp::handle_studio_action(
             &mut envelope,
             "nodeGraphEdit",
             Some(&json!({ "ops": [{ "op": "setFixture", "fixtureJson": fixture.to_string() }] })),
@@ -3566,7 +3566,7 @@ mod tests {
     #[test]
     fn node_graph_viewport_persists_camera() {
         let mut envelope = initial_studio_envelope();
-        SStudioApp::handle_studio_command(
+        SStudioApp::handle_studio_action(
             &mut envelope,
             "nodeGraphViewport",
             Some(&json!({ "viewportJson": r#"{"x":7.0,"y":9.0,"zoom":0.5}"# })),
@@ -3581,12 +3581,12 @@ mod tests {
     fn presence_heartbeat_publishes_peer_for_other_clients() {
         let mut envelope = initial_studio_envelope();
         let first_node_id = projection_from_document(&envelope.document).media_graph.nodes[0].id.clone();
-        SStudioApp::handle_studio_command(
+        SStudioApp::handle_studio_action(
             &mut envelope,
             "nodeGraphSelect",
             Some(&json!({ "nodeIds": [first_node_id] })),
         );
-        SStudioApp::handle_studio_command(
+        SStudioApp::handle_studio_action(
             &mut envelope,
             "presenceHeartbeat",
             Some(&json!({ "clientId": "client-test-a", "name": "Ada" })),

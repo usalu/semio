@@ -35,7 +35,7 @@ import {
   useCanvasAppearanceSync,
 } from "@semio-tech/ui-react";
 import { resolveSemanticColorHex } from "@semio-tech/ui-styling";
-import type { CommandDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
+import type { ActionDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
 
 //#region WorldSceneParsing
 type WorldMeshData = {
@@ -95,7 +95,7 @@ type WorldHoverComponent = {
 type WorldContextMenuItem = {
   readonly id: string;
   readonly label: string;
-  readonly command: string;
+  readonly action: string;
   readonly args?: Record<string, unknown>;
 };
 
@@ -1577,7 +1577,7 @@ function raycastGroundPoint(clientX: number, clientY: number, hostRect: DOMRect,
 }
 
 //#region World3dHost
-export function World3dHost({ node, onCommand }: { readonly node: UiComponentSceneNode; readonly onCommand: (command: CommandDescriptor) => void }) {
+export function World3dHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
   const scene = node.world3d;
   const colors = useSemanticColors();
   const parsedCamera = useMemo(() => parseCameraState(scene?.cameraJson ?? "{}"), [scene?.cameraJson]);
@@ -1632,14 +1632,14 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
   }, [marqueeDragActive, marqueeEnd, marqueePath, marqueeStart, method]);
 
   const dispatch = useCallback(
-    (command: string, args?: Record<string, unknown>) => {
-      onCommand({
+    (action: string, args?: Record<string, unknown>) => {
+      onAction({
         controllerId: node.controllerId,
-        command,
+        action,
         args: { surfaceId: node.surfaceId, ...args },
       });
     },
-    [node.controllerId, node.surfaceId, onCommand],
+    [node.controllerId, node.surfaceId, onAction],
   );
 
   const referenceSelectedIds = useMemo(() => {
@@ -1724,11 +1724,11 @@ export function World3dHost({ node, onCommand }: { readonly node: UiComponentSce
 
   const handleContextMenuSelect = useCallback(
     (item: WorldContextMenuItem) => {
-      if (item.command === "zoomToSelection") {
+      if (item.action === "zoomToSelection") {
         handleZoomToSelection();
         return;
       }
-      dispatch(item.command, item.args);
+      dispatch(item.action, item.args);
     },
     [dispatch, handleZoomToSelection],
   );

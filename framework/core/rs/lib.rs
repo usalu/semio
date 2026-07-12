@@ -1,35 +1,35 @@
-//! 🥅 Render-independent framework kernel: declarative {@link UiNode}, {@link Platform}, {@link CommandBus}.
+//! 🥅 Render-independent framework kernel: declarative {@link UiNode}, {@link Platform}, {@link ActionBus}.
 
-pub mod command_bus {
-// #region command_bus
-//! 🎯 Command routing between renderer and app controllers.
+pub mod action_bus {
+// #region action_bus
+//! 🎯 Action routing between renderer and app controllers.
 
 use serde_json::Value;
 use std::collections::HashMap;
 
-pub trait CommandHandler: Send {
+pub trait ActionHandler: Send {
     fn id(&self) -> &str;
-    fn handle(&mut self, command: &str, args: Option<&Value>) -> Vec<String>;
+    fn handle(&mut self, action: &str, args: Option<&Value>) -> Vec<String>;
 }
 
-pub struct CommandBus {
-    controllers: HashMap<String, Box<dyn CommandHandler>>,
+pub struct ActionBus {
+    controllers: HashMap<String, Box<dyn ActionHandler>>,
 }
 
-impl Default for CommandBus {
+impl Default for ActionBus {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl CommandBus {
+impl ActionBus {
     pub fn new() -> Self {
         Self {
             controllers: HashMap::new(),
         }
     }
 
-    pub fn register(&mut self, handler: Box<dyn CommandHandler>) {
+    pub fn register(&mut self, handler: Box<dyn ActionHandler>) {
         let id = handler.id().to_string();
         self.controllers.insert(id, handler);
     }
@@ -38,10 +38,10 @@ impl CommandBus {
         self.controllers.remove(controller_id);
     }
 
-    pub fn dispatch(&mut self, controller_id: &str, command: &str, args: Option<&Value>) -> Vec<String> {
+    pub fn dispatch(&mut self, controller_id: &str, action: &str, args: Option<&Value>) -> Vec<String> {
         self.controllers
             .get_mut(controller_id)
-            .map(|handler| handler.handle(command, args))
+            .map(|handler| handler.handle(action, args))
             .unwrap_or_default()
     }
 }
@@ -54,25 +54,25 @@ mod tests {
         id: String,
     }
 
-    impl CommandHandler for EchoHandler {
+    impl ActionHandler for EchoHandler {
         fn id(&self) -> &str {
             &self.id
         }
 
-        fn handle(&mut self, command: &str, _args: Option<&Value>) -> Vec<String> {
-            vec![format!("{command}:ok")]
+        fn handle(&mut self, action: &str, _args: Option<&Value>) -> Vec<String> {
+            vec![format!("{action}:ok")]
         }
     }
 
     #[test]
     fn dispatches_to_registered_handler() {
-        let mut bus = CommandBus::new();
+        let mut bus = ActionBus::new();
         bus.register(Box::new(EchoHandler { id: "app".into() }));
         let ops = bus.dispatch("app", "ping", None);
         assert_eq!(ops, vec!["ping:ok"]);
     }
 }
-// #endregion command_bus
+// #endregion action_bus
 }
 
 pub mod layout {
@@ -82,12 +82,12 @@ pub mod layout {
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-//#region 🔖Command
+//#region 🔖Action
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CommandDescriptor {
+pub struct ActionDescriptor {
     pub controller_id: String,
-    pub command: String,
+    pub action: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub args: Option<serde_json::Value>,
 }
@@ -102,7 +102,7 @@ pub struct StyleSpec {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub density: Option<String>,
 }
-//#endregion 🔖Command
+//#endregion 🔖Action
 
 //#region 🔖PanelTabConstants
 pub const FRAMEWORK_PANEL_TAB_DOCUMENT_ID: &str = "framework.panel.document";
@@ -346,7 +346,7 @@ pub enum WindowMeasure {
         label: Option<String>,
         value: String,
         items: Vec<MeasureSelectItem>,
-        on_change: CommandDescriptor,
+        on_change: ActionDescriptor,
     },
     Slider {
         id: String,
@@ -355,7 +355,7 @@ pub enum WindowMeasure {
         min: f64,
         max: f64,
         step: Option<f64>,
-        on_change: CommandDescriptor,
+        on_change: ActionDescriptor,
     },
     Toggle {
         id: String,
@@ -363,7 +363,7 @@ pub enum WindowMeasure {
         label: Option<String>,
         pressed: bool,
         text: Option<String>,
-        on_change: CommandDescriptor,
+        on_change: ActionDescriptor,
     },
     Group {
         id: String,
@@ -388,7 +388,7 @@ pub struct WindowEngagementOption {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub disabled: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub command: Option<CommandDescriptor>,
+    pub action: Option<ActionDescriptor>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -403,13 +403,13 @@ pub struct WindowEngagementInput {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub disabled: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub on_change: Option<CommandDescriptor>,
+    pub on_change: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub on_submit: Option<CommandDescriptor>,
+    pub on_submit: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub on_repeat_last: Option<CommandDescriptor>,
+    pub on_repeat_last: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub on_abort: Option<CommandDescriptor>,
+    pub on_abort: Option<ActionDescriptor>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -427,7 +427,7 @@ pub struct WindowEngagementPossible {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub detail: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub command: Option<CommandDescriptor>,
+    pub action: Option<ActionDescriptor>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -468,8 +468,8 @@ pub enum WindowEngagementControl {
         step: Option<f64>,
         unit: Option<String>,
         disabled: Option<bool>,
-        on_change: Option<CommandDescriptor>,
-        on_commit: Option<CommandDescriptor>,
+        on_change: Option<ActionDescriptor>,
+        on_commit: Option<ActionDescriptor>,
     },
     Stepper {
         id: Option<String>,
@@ -480,8 +480,8 @@ pub enum WindowEngagementControl {
         step: Option<f64>,
         unit: Option<String>,
         disabled: Option<bool>,
-        on_change: Option<CommandDescriptor>,
-        on_commit: Option<CommandDescriptor>,
+        on_change: Option<ActionDescriptor>,
+        on_commit: Option<ActionDescriptor>,
     },
     Ring {
         id: Option<String>,
@@ -489,7 +489,7 @@ pub enum WindowEngagementControl {
         value: Option<String>,
         options: Vec<WindowEngagementRingOption>,
         disabled: Option<bool>,
-        on_select: Option<CommandDescriptor>,
+        on_select: Option<ActionDescriptor>,
     },
     ToggleGroup {
         id: Option<String>,
@@ -497,7 +497,7 @@ pub enum WindowEngagementControl {
         value: Option<String>,
         options: Vec<WindowEngagementToggleGroupOption>,
         disabled: Option<bool>,
-        on_select: Option<CommandDescriptor>,
+        on_select: Option<ActionDescriptor>,
     },
     Select {
         id: Option<String>,
@@ -506,7 +506,7 @@ pub enum WindowEngagementControl {
         placeholder: Option<String>,
         items: Vec<WindowEngagementSelectItem>,
         disabled: Option<bool>,
-        on_change: Option<CommandDescriptor>,
+        on_change: Option<ActionDescriptor>,
     },
 }
 
@@ -546,23 +546,23 @@ pub fn default_viewport_engagement() -> WindowEngagement {
 //#endregion 🔖WindowEngagement
 
 //#region 🔖WireFormatGoldenTests
-/** 🧊 Golden wire-format tests: freeze exact JSON for layout/command/engagement types
+/** 🧊 Golden wire-format tests: freeze exact JSON for layout/action/engagement types
 before these move into ui_wgpu, so the move can be proven byte-identical. */
 #[cfg(test)]
 mod layout_wire_format_tests {
     use super::*;
 
-    const GOLDEN_COMMAND_DESCRIPTOR_JSON: &str = "[{\"controllerId\":\"ctrl\",\"command\":\"doThing\",\"args\":42},{\"controllerId\":\"ctrl\",\"command\":\"doOther\"},{\"variant\":\"primary\",\"size\":\"md\"}]";
+    const GOLDEN_ACTION_DESCRIPTOR_JSON: &str = "[{\"controllerId\":\"ctrl\",\"action\":\"doThing\",\"args\":42},{\"controllerId\":\"ctrl\",\"action\":\"doOther\"},{\"variant\":\"primary\",\"size\":\"md\"}]";
 
     #[test]
-    fn command_descriptor_and_style_spec_serialize_to_golden_json() {
+    fn action_descriptor_and_style_spec_serialize_to_golden_json() {
         let values = (
-            CommandDescriptor {
+            ActionDescriptor {
                 controller_id: "ctrl".into(),
-                command: "doThing".into(),
+                action: "doThing".into(),
                 args: Some(serde_json::json!(42)),
             },
-            CommandDescriptor { controller_id: "ctrl".into(), command: "doOther".into(), args: None },
+            ActionDescriptor { controller_id: "ctrl".into(), action: "doOther".into(), args: None },
             StyleSpec {
                 variant: Some("primary".into()),
                 size: Some("md".into()),
@@ -570,7 +570,7 @@ mod layout_wire_format_tests {
             },
         );
         let json = serde_json::to_string(&values).unwrap();
-        assert_eq!(json, GOLDEN_COMMAND_DESCRIPTOR_JSON);
+        assert_eq!(json, GOLDEN_ACTION_DESCRIPTOR_JSON);
     }
 
     const GOLDEN_WINDOW_LAYOUT_JSON: &str = "{\"root\":{\"kind\":\"horizontal\",\"children\":[{\"kind\":\"stack\",\"size\":0.5,\"activeWindowKindId\":\"main\",\"children\":[{\"kind\":\"window\",\"windowKindId\":\"main\",\"title\":\"Main\"}]},{\"kind\":\"vertical\",\"size\":0.5,\"children\":[]}]}}";
@@ -608,7 +608,7 @@ mod layout_wire_format_tests {
         assert_eq!(roundtripped, layout);
     }
 
-    const GOLDEN_WINDOW_MEASURE_JSON: &str = "[{\"kind\":\"select\",\"id\":\"m1\",\"label\":\"Mode\",\"value\":\"a\",\"items\":[{\"id\":\"a\",\"value\":\"a\",\"label\":\"A\"}],\"on_change\":{\"controllerId\":\"ctrl\",\"command\":\"measureSelect\"}},{\"kind\":\"slider\",\"id\":\"m2\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":0.5,\"on_change\":{\"controllerId\":\"ctrl\",\"command\":\"measureSlider\"}},{\"kind\":\"toggle\",\"id\":\"m3\",\"icon_id\":\"icon.grid\",\"label\":null,\"pressed\":true,\"text\":null,\"on_change\":{\"controllerId\":\"ctrl\",\"command\":\"measureToggle\"}},{\"kind\":\"group\",\"id\":\"m4\",\"label\":\"Group\",\"default_open\":true,\"children\":[]}]";
+    const GOLDEN_WINDOW_MEASURE_JSON: &str = "[{\"kind\":\"select\",\"id\":\"m1\",\"label\":\"Mode\",\"value\":\"a\",\"items\":[{\"id\":\"a\",\"value\":\"a\",\"label\":\"A\"}],\"on_change\":{\"controllerId\":\"ctrl\",\"action\":\"measureSelect\"}},{\"kind\":\"slider\",\"id\":\"m2\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":0.5,\"on_change\":{\"controllerId\":\"ctrl\",\"action\":\"measureSlider\"}},{\"kind\":\"toggle\",\"id\":\"m3\",\"icon_id\":\"icon.grid\",\"label\":null,\"pressed\":true,\"text\":null,\"on_change\":{\"controllerId\":\"ctrl\",\"action\":\"measureToggle\"}},{\"kind\":\"group\",\"id\":\"m4\",\"label\":\"Group\",\"default_open\":true,\"children\":[]}]";
 
     #[test]
     fn window_measure_serializes_to_golden_json() {
@@ -618,7 +618,7 @@ mod layout_wire_format_tests {
                 label: Some("Mode".into()),
                 value: "a".into(),
                 items: vec![MeasureSelectItem { id: "a".into(), value: "a".into(), label: "A".into() }],
-                on_change: CommandDescriptor { controller_id: "ctrl".into(), command: "measureSelect".into(), args: None },
+                on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "measureSelect".into(), args: None },
             },
             WindowMeasure::Slider {
                 id: "m2".into(),
@@ -627,7 +627,7 @@ mod layout_wire_format_tests {
                 min: 0.0,
                 max: 2.0,
                 step: Some(0.5),
-                on_change: CommandDescriptor { controller_id: "ctrl".into(), command: "measureSlider".into(), args: None },
+                on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "measureSlider".into(), args: None },
             },
             WindowMeasure::Toggle {
                 id: "m3".into(),
@@ -635,7 +635,7 @@ mod layout_wire_format_tests {
                 label: None,
                 pressed: true,
                 text: None,
-                on_change: CommandDescriptor { controller_id: "ctrl".into(), command: "measureToggle".into(), args: None },
+                on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "measureToggle".into(), args: None },
             },
             WindowMeasure::Group {
                 id: "m4".into(),
@@ -662,7 +662,7 @@ mod layout_wire_format_tests {
                 icon_id: None,
                 pressed: Some(false),
                 disabled: None,
-                command: None,
+                action: None,
             }]),
             input: Some(WindowEngagementInput {
                 id: Some("in1".into()),
@@ -692,7 +692,7 @@ mod layout_wire_format_tests {
                 id: "pe1".into(),
                 label: "Possible".into(),
                 detail: None,
-                command: None,
+                action: None,
             }]),
         };
         let json = serde_json::to_string(&engagement).unwrap();
@@ -2792,9 +2792,9 @@ mod tests {
 
 pub mod platform {
 // #region platform
-//! 🖥️ Root shell: apps, URI chrome, panel toggles, and shared command bus.
+//! 🖥️ Root shell: apps, URI chrome, panel toggles, and shared action bus.
 
-use crate::command_bus::CommandBus;
+use crate::action_bus::ActionBus;
 use crate::ui::AppDefinition;
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -2813,7 +2813,7 @@ pub struct PlatformSpec {
 }
 
 pub struct Platform {
-    pub command_bus: CommandBus,
+    pub action_bus: ActionBus,
     pub apps: Vec<AppDefinition>,
     pub active_app_id: String,
     pub generation: u64,
@@ -2831,7 +2831,7 @@ impl Platform {
         let spec = spec.unwrap_or_default();
         let panel_visibility = spec.initial_panel_visibility.clone().unwrap_or_default();
         Self {
-            command_bus: CommandBus::new(),
+            action_bus: ActionBus::new(),
             apps: Vec::new(),
             active_app_id: spec.default_active_app_id.clone().unwrap_or_default(),
             generation: 0,
@@ -2922,7 +2922,7 @@ mod tests {
             }],
             panel_tabs: vec![],
             keybindings: vec![],
-            commands: vec![],
+            actions: vec![],
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
@@ -2937,7 +2937,7 @@ pub mod tools {
 // #region tools
 //! 🧰 Declarative per-mode toolbar tool trees.
 
-use crate::layout::CommandDescriptor;
+use crate::layout::ActionDescriptor;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -2945,7 +2945,7 @@ use serde::{Deserialize, Serialize};
 pub enum ToolCategory {
     Selection,
     Tools,
-    Commands,
+    Actions,
     History,
     Sync,
 }
@@ -2975,7 +2975,7 @@ pub enum ToolNode {
         disabled: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
         category: Option<ToolCategory>,
-        on_press: CommandDescriptor,
+        on_press: ActionDescriptor,
     },
     Toggle {
         id: String,
@@ -2994,7 +2994,7 @@ pub enum ToolNode {
         disabled: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
         category: Option<ToolCategory>,
-        on_change: CommandDescriptor,
+        on_change: ActionDescriptor,
     },
     Collection {
         id: String,
@@ -3019,7 +3019,7 @@ impl ToolNode {
     pub fn category(&self) -> ToolCategory {
         match self {
             ToolNode::Separator { .. } => ToolCategory::Tools,
-            ToolNode::Button { category, .. } => category.unwrap_or(ToolCategory::Commands),
+            ToolNode::Button { category, .. } => category.unwrap_or(ToolCategory::Actions),
             ToolNode::Toggle { category, .. } => category.unwrap_or(ToolCategory::Tools),
             ToolNode::Collection { category, .. } => category.unwrap_or(ToolCategory::Tools),
         }
@@ -3048,7 +3048,7 @@ pub fn tool_button(
     id: impl Into<String>,
     icon_id: impl Into<String>,
     label: impl Into<String>,
-    on_press: CommandDescriptor,
+    on_press: ActionDescriptor,
 ) -> ToolNode {
     let label = label.into();
     ToolNode::Button {
@@ -3069,7 +3069,7 @@ pub fn tool_toggle(
     icon_id: impl Into<String>,
     label: impl Into<String>,
     pressed: bool,
-    on_change: CommandDescriptor,
+    on_change: ActionDescriptor,
 ) -> ToolNode {
     let label = label.into();
     ToolNode::Toggle {
@@ -3111,9 +3111,9 @@ pub fn tool_collection(
 #[cfg(test)]
 mod tool_node_wire_format_tests {
     use super::*;
-    use crate::layout::CommandDescriptor;
+    use crate::layout::ActionDescriptor;
 
-    const GOLDEN_TOOL_NODE_JSON: &str = "[{\"kind\":\"separator\",\"id\":\"sep1\",\"order\":1},{\"kind\":\"button\",\"id\":\"btn1\",\"iconId\":\"icon.tool\",\"label\":\"Tool\",\"title\":\"Tool\",\"category\":\"history\",\"onPress\":{\"controllerId\":\"ctrl\",\"command\":\"runTool\"}},{\"kind\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"icon.toggle\",\"label\":\"Toggle\",\"title\":\"Toggle\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"command\":\"toggleTool\"}},{\"kind\":\"collection\",\"id\":\"col1\",\"iconId\":\"icon.group\",\"label\":\"Group\",\"title\":\"Group\",\"children\":[{\"kind\":\"separator\",\"id\":\"sep2\"}]}]";
+    const GOLDEN_TOOL_NODE_JSON: &str = "[{\"kind\":\"separator\",\"id\":\"sep1\",\"order\":1},{\"kind\":\"button\",\"id\":\"btn1\",\"iconId\":\"icon.tool\",\"label\":\"Tool\",\"title\":\"Tool\",\"category\":\"history\",\"onPress\":{\"controllerId\":\"ctrl\",\"action\":\"runTool\"}},{\"kind\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"icon.toggle\",\"label\":\"Toggle\",\"title\":\"Toggle\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggleTool\"}},{\"kind\":\"collection\",\"id\":\"col1\",\"iconId\":\"icon.group\",\"label\":\"Group\",\"title\":\"Group\",\"children\":[{\"kind\":\"separator\",\"id\":\"sep2\"}]}]";
 
     #[test]
     fn tool_node_serializes_to_golden_json() {
@@ -3123,7 +3123,7 @@ mod tool_node_wire_format_tests {
                 "btn1",
                 "icon.tool",
                 "Tool",
-                CommandDescriptor { controller_id: "ctrl".into(), command: "runTool".into(), args: None },
+                ActionDescriptor { controller_id: "ctrl".into(), action: "runTool".into(), args: None },
             )
             .with_category(ToolCategory::History),
             tool_toggle(
@@ -3131,7 +3131,7 @@ mod tool_node_wire_format_tests {
                 "icon.toggle",
                 "Toggle",
                 true,
-                CommandDescriptor { controller_id: "ctrl".into(), command: "toggleTool".into(), args: None },
+                ActionDescriptor { controller_id: "ctrl".into(), action: "toggleTool".into(), args: None },
             ),
             tool_collection("col1", "icon.group", "Group", vec![tool_separator("sep2")]),
         ];
@@ -3156,9 +3156,9 @@ use crate::layout::WindowMeasure;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-//#region 🔖Command
-pub use crate::layout::{CommandDescriptor, StyleSpec};
-//#endregion 🔖Command
+//#region 🔖Action
+pub use crate::layout::{ActionDescriptor, StyleSpec};
+//#endregion 🔖Action
 
 //#region 🔖Primitives
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3174,9 +3174,9 @@ pub struct UiStackNode {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub selected: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub activate: Option<CommandDescriptor>,
+    pub activate: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub drop_command: Option<CommandDescriptor>,
+    pub drop_action: Option<ActionDescriptor>,
     pub children: Vec<UiNode>,
 }
 
@@ -3197,7 +3197,7 @@ pub struct UiButtonNode {
     pub id: Option<String>,
     pub icon_id: String,
     pub label: String,
-    pub command: CommandDescriptor,
+    pub action: ActionDescriptor,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub style: Option<StyleSpec>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -3235,7 +3235,7 @@ pub struct UiInputNode {
     pub step: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub accept: Option<String>,
-    pub on_change: CommandDescriptor,
+    pub on_change: ActionDescriptor,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3253,7 +3253,7 @@ pub struct UiSelectNode {
     pub items: Vec<UiSelectItem>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub placeholder: Option<String>,
-    pub on_change: CommandDescriptor,
+    pub on_change: ActionDescriptor,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3264,7 +3264,7 @@ pub struct UiToggleNode {
     pub pressed: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
-    pub on_change: CommandDescriptor,
+    pub on_change: ActionDescriptor,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3272,7 +3272,7 @@ pub struct UiToggleNode {
 pub struct UiVec3Node {
     pub id: String,
     pub value: Option<[f64; 3]>,
-    pub on_change: CommandDescriptor,
+    pub on_change: ActionDescriptor,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3298,7 +3298,7 @@ pub struct UiSliderNode {
     pub step: f64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub unit: Option<String>,
-    pub on_change: CommandDescriptor,
+    pub on_change: ActionDescriptor,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3308,8 +3308,8 @@ pub struct UiNumberStepperNode {
     pub value: f64,
     pub step: f64,
     pub uniform: bool,
-    pub on_absolute: CommandDescriptor,
-    pub on_delta: CommandDescriptor,
+    pub on_absolute: ActionDescriptor,
+    pub on_delta: ActionDescriptor,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3320,7 +3320,7 @@ pub struct UiRingNode {
     pub t: f64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub disabled: Option<bool>,
-    pub on_change: CommandDescriptor,
+    pub on_change: ActionDescriptor,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3330,7 +3330,7 @@ pub struct UiIconSelectNode {
     pub value: String,
     pub uniform: bool,
     pub classifier_kind: String,
-    pub on_change: CommandDescriptor,
+    pub on_change: ActionDescriptor,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3379,7 +3379,7 @@ pub struct UiTreeItemAction {
     pub icon_id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
-    pub command: CommandDescriptor,
+    pub action: ActionDescriptor,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reveal_on_hover: Option<bool>,
 }
@@ -3398,11 +3398,11 @@ pub struct UiTreeItemNode {
     #[serde(skip_serializing_if = "Option::is_none", alias = "expanded")]
     pub default_open: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub command: Option<CommandDescriptor>,
+    pub action: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub hover_command: Option<CommandDescriptor>,
+    pub hover_action: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub unhover_command: Option<CommandDescriptor>,
+    pub unhover_action: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub actions: Option<Vec<UiTreeItemAction>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -3427,9 +3427,9 @@ impl UiTreeItemNode {
             icon_id: None,
             selected: None,
             default_open: None,
-            command: None,
-            hover_command: None,
-            unhover_command: None,
+            action: None,
+            hover_action: None,
+            unhover_action: None,
             actions: None,
             draggable: None,
             drag_data: None,
@@ -3460,9 +3460,9 @@ pub struct UiTreeNode {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub highlighted_ids: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub selection_change: Option<CommandDescriptor>,
+    pub selection_change: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub drop_command: Option<CommandDescriptor>,
+    pub drop_action: Option<ActionDescriptor>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3577,9 +3577,9 @@ pub fn ui_inspector_readonly_field(
             value: value.into(),
             placeholder: None,
             commit: None,
-            on_change: CommandDescriptor {
+            on_change: ActionDescriptor {
                 controller_id: String::new(),
-                command: String::new(),
+                action: String::new(),
                 args: None,
             },
             min: None,
@@ -3637,9 +3637,9 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
                     icon_id: None,
                     selected: None,
                     default_open: None,
-                    command: None,
-                    hover_command: None,
-                    unhover_command: None,
+                    action: None,
+                    hover_action: None,
+                    unhover_action: None,
                     actions: None,
                     draggable: None,
                     drag_data: None,
@@ -3651,7 +3651,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
-            drop_command: None,
+            drop_action: None,
         }
     } else {
         UiTreeNode {
@@ -3659,7 +3659,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
-            drop_command: None,
+            drop_action: None,
         }
     })
 }
@@ -3673,9 +3673,9 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             icon_id: None,
             selected: None,
             default_open: None,
-            command: None,
-            hover_command: None,
-            unhover_command: None,
+            action: None,
+            hover_action: None,
+            unhover_action: None,
             actions: None,
             draggable: None,
             drag_data: None,
@@ -3699,9 +3699,9 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
                 icon_id: None,
                 selected: None,
                 default_open: None,
-                command: None,
-                hover_command: None,
-                unhover_command: None,
+                action: None,
+                hover_action: None,
+                unhover_action: None,
                 actions: None,
                 draggable: None,
                 drag_data: None,
@@ -3717,9 +3717,9 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             icon_id: None,
             selected: None,
             default_open: None,
-            command: None,
-            hover_command: None,
-            unhover_command: None,
+            action: None,
+            hover_action: None,
+            unhover_action: None,
             actions: None,
             draggable: None,
             drag_data: None,
@@ -3747,9 +3747,9 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             icon_id: None,
             selected: None,
             default_open: None,
-            command: None,
-            hover_command: None,
-            unhover_command: None,
+            action: None,
+            hover_action: None,
+            unhover_action: None,
             actions: None,
             draggable: None,
             drag_data: None,
@@ -3764,9 +3764,9 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             icon_id: None,
             selected: None,
             default_open: None,
-            command: None,
-            hover_command: None,
-            unhover_command: None,
+            action: None,
+            hover_action: None,
+            unhover_action: None,
             actions: None,
             draggable: None,
             drag_data: None,
@@ -3785,9 +3785,9 @@ fn tree_control_item(id: String, control: UiControlNode) -> UiTreeItemNode {
         icon_id: None,
         selected: None,
         default_open: None,
-        command: None,
-        hover_command: None,
-        unhover_command: None,
+        action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -4441,9 +4441,9 @@ impl TextEditorScene {
     }
 }
 
-//#region 🔖SceneCommands
-/** @emoji 🎮 Renderer-to-plugin command names for node-graph surfaces. */
-pub mod node_graph_commands {
+//#region 🔖SceneActions
+/** @emoji 🎮 Renderer-to-plugin action names for node-graph surfaces. */
+pub mod node_graph_actions {
     pub const SELECT: &str = "nodeGraphSelect";
     pub const HOVER: &str = "nodeGraphHover";
     pub const EDIT: &str = "nodeGraphEdit";
@@ -4451,8 +4451,8 @@ pub mod node_graph_commands {
     pub const SPOTLIGHT_COMMIT: &str = "spotlightCommit";
 }
 
-/** @emoji ✍️ Renderer-to-plugin command names for text-editor surfaces. */
-pub mod text_editor_commands {
+/** @emoji ✍️ Renderer-to-plugin action names for text-editor surfaces. */
+pub mod text_editor_actions {
     pub const EDIT: &str = "textEdit";
     pub const SELECT: &str = "textSelect";
     pub const HOVER: &str = "textHover";
@@ -4461,17 +4461,17 @@ pub mod text_editor_commands {
     pub const FORMAT_DOCUMENT: &str = "formatDocument";
 }
 
-/** @emoji 🗺️ Renderer-to-plugin command names for GIS map surfaces. */
-pub mod puzzle2d_board_commands {
+/** @emoji 🗺️ Renderer-to-plugin action names for GIS map surfaces. */
+pub mod puzzle2d_board_actions {
     pub const APPLY_BOARD_EVENTS: &str = "applyBoardEvents";
 }
 
-/** @emoji 📝 Renderer-to-plugin command names for note canvas surfaces. */
-pub mod note_canvas_commands {
+/** @emoji 📝 Renderer-to-plugin action names for note canvas surfaces. */
+pub mod note_canvas_actions {
     pub const APPLY_NOTE_EVENTS: &str = "applyNoteEvents";
 }
 
-pub mod gis_map_commands {
+pub mod gis_map_actions {
     pub const SET_CAMERA: &str = "setCamera";
     pub const SET_FEATURE_SELECTION: &str = "setFeatureSelection";
     pub const SET_HOVER: &str = "setHover";
@@ -4485,7 +4485,7 @@ pub mod gis_map_commands {
     pub const SET_LAYER_STROKE_SCALE: &str = "setLayerStrokeScale";
     pub const FIT_WORLD: &str = "fitWorld";
 }
-//#endregion 🔖SceneCommands
+//#endregion 🔖SceneActions
 
 pub fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
     UiNode::Stack(UiStackNode {
@@ -4496,7 +4496,7 @@ pub fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
         selected: None,
         activate: None,
         children,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -4922,13 +4922,13 @@ pub fn build_note_canvas_scene(
 #[serde(rename_all = "camelCase")]
 pub struct Keybinding {
     pub keys: String,
-    pub command: CommandDescriptor,
+    pub action: ActionDescriptor,
 }
 
-/// @emoji 🗂️ Classifies a declared command by how it interacts with VCS history.
+/// @emoji 🗂️ Classifies a declared action by how it interacts with VCS history.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub enum CommandKind {
+pub enum ActionKind {
     /// Mutates the document — dispatched as VCS operations with a true inverse, recorded in history.
     Operation,
     /// Ephemeral view state (camera, selection, hover, active tool) — not recorded in history.
@@ -4939,13 +4939,13 @@ pub enum CommandKind {
     Shell,
 }
 
-/// @emoji 📇 Declares one command an app can receive via `CommandDescriptor.command`.
+/// @emoji 📇 Declares one action an app can receive via `ActionDescriptor.action`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CommandDefinition {
+pub struct ActionDefinition {
     pub id: String,
     pub label: String,
-    pub kind: CommandKind,
+    pub kind: ActionKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -4958,8 +4958,8 @@ pub struct CommandDefinition {
     pub category: Option<String>,
 }
 
-impl CommandDefinition {
-    pub fn new(id: impl Into<String>, label: impl Into<String>, kind: CommandKind) -> Self {
+impl ActionDefinition {
+    pub fn new(id: impl Into<String>, label: impl Into<String>, kind: ActionKind) -> Self {
         Self {
             id: id.into(),
             label: label.into(),
@@ -4973,21 +4973,21 @@ impl CommandDefinition {
     }
 }
 
-/// @emoji 🕹️ The six framework-owned History commands, auto-injected into every `AppDefinition`.
-pub fn history_command_definitions() -> Vec<CommandDefinition> {
+/// @emoji 🕹️ The six framework-owned History actions, auto-injected into every `AppDefinition`.
+pub fn history_action_definitions() -> Vec<ActionDefinition> {
     vec![
-        CommandDefinition {
+        ActionDefinition {
             keys: Some("mod+z".into()),
-            ..CommandDefinition::new("undo", "Undo", CommandKind::History)
+            ..ActionDefinition::new("undo", "Undo", ActionKind::History)
         },
-        CommandDefinition {
+        ActionDefinition {
             keys: Some("mod+shift+z".into()),
-            ..CommandDefinition::new("redo", "Redo", CommandKind::History)
+            ..ActionDefinition::new("redo", "Redo", ActionKind::History)
         },
-        CommandDefinition::new("commitCheckpoint", "Commit Checkpoint", CommandKind::History),
-        CommandDefinition::new("createAlternative", "Create Alternative", CommandKind::History),
-        CommandDefinition::new("switchAlternative", "Switch Alternative", CommandKind::History),
-        CommandDefinition::new("checkoutCheckpoint", "Checkout Checkpoint", CommandKind::History),
+        ActionDefinition::new("commitCheckpoint", "Commit Checkpoint", ActionKind::History),
+        ActionDefinition::new("createAlternative", "Create Alternative", ActionKind::History),
+        ActionDefinition::new("switchAlternative", "Switch Alternative", ActionKind::History),
+        ActionDefinition::new("checkoutCheckpoint", "Checkout Checkpoint", ActionKind::History),
     ]
 }
 
@@ -5079,7 +5079,7 @@ pub struct AppDefinition {
     pub panel_tabs: Vec<PanelTabDefinition>,
     pub keybindings: Vec<Keybinding>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub commands: Vec<CommandDefinition>,
+    pub actions: Vec<ActionDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub named_layouts: Vec<NamedLayout>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -5191,7 +5191,7 @@ pub struct ViewState {
 
 //#region 🔖Kernel
 pub mod kernel {
-//! 🧠 Local-first command kernel contracts: commands, operations, capabilities, window I/O.
+//! 🧠 Local-first action kernel contracts: actions, operations, capabilities, window I/O.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -5227,11 +5227,11 @@ pub struct OperationId(pub String);
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct CommandInvocationId(pub String);
+pub struct ActionInvocationId(pub String);
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct CommandId(pub String);
+pub struct ActionId(pub String);
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -5360,11 +5360,11 @@ pub struct CapabilityGrant {
 }
 //#endregion 🔖Capability
 
-//#region 🔖Command
+//#region 🔖Action
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CommandDef {
-    pub id: CommandId,
+pub struct ActionDef {
+    pub id: ActionId,
     pub input_schema: SchemaId,
     pub output_schema: SchemaId,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -5375,10 +5375,10 @@ pub struct CommandDef {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CommandInvocation {
-    pub id: CommandInvocationId,
+pub struct ActionInvocation {
+    pub id: ActionInvocationId,
     pub app: AppInstanceId,
-    pub command: CommandId,
+    pub action: ActionId,
     pub input: Value,
     pub actor: ActorId,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -5421,7 +5421,7 @@ pub enum UndoPolicy {
     ExactBaseOnly,
     TransformAgainstConcurrent,
     SemanticUndo,
-    CompensatingCommand,
+    CompensatingAction,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -5441,7 +5441,7 @@ pub struct KernelOperation {
     pub id: OperationId,
     pub document: DocumentHandle,
     pub base_version: DocumentVersion,
-    pub command_id: CommandInvocationId,
+    pub action_id: ActionInvocationId,
     pub diff: DocumentDiff,
     pub inverse: InverseOperation,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -5453,14 +5453,14 @@ pub struct KernelOperation {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UndoGroup {
-    pub command_id: CommandInvocationId,
+    pub action_id: ActionInvocationId,
     pub operations: Vec<OperationId>,
     pub inverse_operations: Vec<InverseOperation>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CommandResult {
+pub struct ActionResult {
     pub output: Value,
     pub operations: Vec<KernelOperation>,
     pub inverse_group: UndoGroup,
@@ -5474,14 +5474,14 @@ pub struct CommandResult {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CommandContext {
-    pub invocation: CommandInvocation,
+pub struct ActionContext {
+    pub invocation: ActionInvocation,
     pub document_projection: Value,
     pub view_state: super::ViewState,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub granted_capabilities: Vec<CapabilityGrant>,
 }
-//#endregion 🔖Command
+//#endregion 🔖Action
 
 //#region 🔖Sync
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -5526,8 +5526,8 @@ pub struct WindowEvent {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CommandRequest {
-    pub invocation: CommandInvocation,
+pub struct ActionRequest {
+    pub invocation: ActionInvocation,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -5560,7 +5560,7 @@ pub struct WindowInput {
 pub struct WindowOutput {
     pub ui: super::UiNode,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub commands: Vec<CommandRequest>,
+    pub actions: Vec<ActionRequest>,
 }
 //#endregion 🔖Window
 
@@ -5621,10 +5621,10 @@ before these types move into ui_wgpu, so the move can be proven byte-identical. 
 mod ui_node_wire_format_tests {
     use super::*;
 
-    fn cmd(command: &str) -> CommandDescriptor {
-        CommandDescriptor {
+    fn act(action: &str) -> ActionDescriptor {
+        ActionDescriptor {
             controller_id: "ctrl".into(),
-            command: command.into(),
+            action: action.into(),
             args: None,
         }
     }
@@ -5637,7 +5637,7 @@ mod ui_node_wire_format_tests {
             id: Some("root".into()),
             selected: None,
             activate: None,
-            drop_command: None,
+            drop_action: None,
             children: vec![
                 UiNode::Text(UiTextNode {
                     value: "Hello".into(),
@@ -5648,7 +5648,7 @@ mod ui_node_wire_format_tests {
                     id: Some("btn1".into()),
                     icon_id: "icon.save".into(),
                     label: "Save".into(),
-                    command: cmd("save"),
+                    action: act("save"),
                     style: None,
                     disabled: Some(false),
                 }),
@@ -5663,7 +5663,7 @@ mod ui_node_wire_format_tests {
                     max: None,
                     step: None,
                     accept: None,
-                    on_change: cmd("setValue"),
+                    on_change: act("setValue"),
                 }),
                 UiNode::Select(UiSelectNode {
                     id: "sel1".into(),
@@ -5673,19 +5673,19 @@ mod ui_node_wire_format_tests {
                         UiSelectItem { value: "b".into(), label: "B".into() },
                     ],
                     placeholder: None,
-                    on_change: cmd("selectChange"),
+                    on_change: act("selectChange"),
                 }),
                 UiNode::Toggle(UiToggleNode {
                     id: "tog1".into(),
                     icon_id: "icon.bold".into(),
                     pressed: true,
                     text: None,
-                    on_change: cmd("toggle"),
+                    on_change: act("toggle"),
                 }),
                 UiNode::Vec3(UiVec3Node {
                     id: "vec1".into(),
                     value: Some([1.0, 2.0, 3.0]),
-                    on_change: cmd("vecChange"),
+                    on_change: act("vecChange"),
                 }),
                 UiNode::KeyValue(UiKeyValueNode {
                     entries: vec![UiKeyValueEntry { label: "K".into(), value: "V".into() }],
@@ -5697,29 +5697,29 @@ mod ui_node_wire_format_tests {
                     max: 1.0,
                     step: 0.1,
                     unit: Some("%".into()),
-                    on_change: cmd("sliderChange"),
+                    on_change: act("sliderChange"),
                 }),
                 UiNode::NumberStepper(UiNumberStepperNode {
                     id: "num1".into(),
                     value: 2.0,
                     step: 1.0,
                     uniform: true,
-                    on_absolute: cmd("setAbs"),
-                    on_delta: cmd("setDelta"),
+                    on_absolute: act("setAbs"),
+                    on_delta: act("setDelta"),
                 }),
                 UiNode::Ring(UiRingNode {
                     id: "ring1".into(),
                     orb_id: "orb1".into(),
                     t: 0.25,
                     disabled: None,
-                    on_change: cmd("ringChange"),
+                    on_change: act("ringChange"),
                 }),
                 UiNode::IconSelect(UiIconSelectNode {
                     id: "icn1".into(),
                     value: "star".into(),
                     uniform: true,
                     classifier_kind: "icon".into(),
-                    on_change: cmd("iconChange"),
+                    on_change: act("iconChange"),
                 }),
                 UiNode::Field(UiFieldNode {
                     id: "field1".into(),
@@ -5749,7 +5749,7 @@ mod ui_node_wire_format_tests {
                     selected_ids: Some(vec!["item1".into()]),
                     highlighted_ids: None,
                     selection_change: None,
-                    drop_command: None,
+                    drop_action: None,
                 }),
                 UiNode::Image(UiImageNode {
                     id: "img1".into(),
@@ -5802,7 +5802,7 @@ mod ui_node_wire_format_tests {
         })
     }
 
-    const GOLDEN_UI_NODE_TREE_JSON: &str = "{\"type\":\"stack\",\"direction\":\"vertical\",\"gap\":\"md\",\"id\":\"root\",\"children\":[{\"type\":\"text\",\"value\":\"Hello\",\"emphasize\":true},{\"type\":\"button\",\"id\":\"btn1\",\"iconId\":\"icon.save\",\"label\":\"Save\",\"command\":{\"controllerId\":\"ctrl\",\"command\":\"save\"},\"disabled\":false},{\"type\":\"separator\"},{\"type\":\"input\",\"id\":\"inp1\",\"inputKind\":\"text\",\"value\":\"abc\",\"placeholder\":\"type...\",\"onChange\":{\"controllerId\":\"ctrl\",\"command\":\"setValue\"}},{\"type\":\"select\",\"id\":\"sel1\",\"value\":\"a\",\"items\":[{\"value\":\"a\",\"label\":\"A\"},{\"value\":\"b\",\"label\":\"B\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"command\":\"selectChange\"}},{\"type\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"icon.bold\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"command\":\"toggle\"}},{\"type\":\"vec3\",\"id\":\"vec1\",\"value\":[1.0,2.0,3.0],\"onChange\":{\"controllerId\":\"ctrl\",\"command\":\"vecChange\"}},{\"type\":\"keyValue\",\"entries\":[{\"label\":\"K\",\"value\":\"V\"}]},{\"type\":\"slider\",\"id\":\"sl1\",\"value\":0.5,\"min\":0.0,\"max\":1.0,\"step\":0.1,\"unit\":\"%\",\"onChange\":{\"controllerId\":\"ctrl\",\"command\":\"sliderChange\"}},{\"type\":\"numberStepper\",\"id\":\"num1\",\"value\":2.0,\"step\":1.0,\"uniform\":true,\"onAbsolute\":{\"controllerId\":\"ctrl\",\"command\":\"setAbs\"},\"onDelta\":{\"controllerId\":\"ctrl\",\"command\":\"setDelta\"}},{\"type\":\"ring\",\"id\":\"ring1\",\"orbId\":\"orb1\",\"t\":0.25,\"onChange\":{\"controllerId\":\"ctrl\",\"command\":\"ringChange\"}},{\"type\":\"iconSelect\",\"id\":\"icn1\",\"value\":\"star\",\"uniform\":true,\"classifierKind\":\"icon\",\"onChange\":{\"controllerId\":\"ctrl\",\"command\":\"iconChange\"}},{\"type\":\"field\",\"id\":\"field1\",\"label\":\"Field\",\"description\":\"desc\",\"required\":true,\"child\":{\"type\":\"text\",\"value\":\"child\"}},{\"type\":\"section\",\"id\":\"sec1\",\"label\":\"Section\",\"defaultOpen\":true,\"children\":[]},{\"type\":\"tree\",\"sections\":[{\"id\":\"treesec1\",\"label\":\"Items\",\"defaultOpen\":true,\"items\":[{\"id\":\"item1\",\"label\":\"Item 1\"}]}],\"selectedIds\":[\"item1\"]},{\"type\":\"image\",\"id\":\"img1\",\"src\":\"icon.png\",\"alt\":\"alt text\"},{\"type\":\"componentScene\",\"surfaceId\":\"surf1\",\"controllerId\":\"ctrl\",\"componentKind\":\"world-3d\",\"world3d\":{\"cameraJson\":\"{}\",\"meshesJson\":\"[]\",\"instancesJson\":\"[]\",\"selectionJson\":\"{}\"}},{\"type\":\"externalSlot\",\"pluginId\":\"plugin1\",\"appId\":\"app1\",\"bodyKey\":\"body1\",\"paramsJson\":\"{}\"}]}";
+    const GOLDEN_UI_NODE_TREE_JSON: &str = "{\"type\":\"stack\",\"direction\":\"vertical\",\"gap\":\"md\",\"id\":\"root\",\"children\":[{\"type\":\"text\",\"value\":\"Hello\",\"emphasize\":true},{\"type\":\"button\",\"id\":\"btn1\",\"iconId\":\"icon.save\",\"label\":\"Save\",\"action\":{\"controllerId\":\"ctrl\",\"action\":\"save\"},\"disabled\":false},{\"type\":\"separator\"},{\"type\":\"input\",\"id\":\"inp1\",\"inputKind\":\"text\",\"value\":\"abc\",\"placeholder\":\"type...\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"setValue\"}},{\"type\":\"select\",\"id\":\"sel1\",\"value\":\"a\",\"items\":[{\"value\":\"a\",\"label\":\"A\"},{\"value\":\"b\",\"label\":\"B\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"selectChange\"}},{\"type\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"icon.bold\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggle\"}},{\"type\":\"vec3\",\"id\":\"vec1\",\"value\":[1.0,2.0,3.0],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"vecChange\"}},{\"type\":\"keyValue\",\"entries\":[{\"label\":\"K\",\"value\":\"V\"}]},{\"type\":\"slider\",\"id\":\"sl1\",\"value\":0.5,\"min\":0.0,\"max\":1.0,\"step\":0.1,\"unit\":\"%\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"sliderChange\"}},{\"type\":\"numberStepper\",\"id\":\"num1\",\"value\":2.0,\"step\":1.0,\"uniform\":true,\"onAbsolute\":{\"controllerId\":\"ctrl\",\"action\":\"setAbs\"},\"onDelta\":{\"controllerId\":\"ctrl\",\"action\":\"setDelta\"}},{\"type\":\"ring\",\"id\":\"ring1\",\"orbId\":\"orb1\",\"t\":0.25,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"ringChange\"}},{\"type\":\"iconSelect\",\"id\":\"icn1\",\"value\":\"star\",\"uniform\":true,\"classifierKind\":\"icon\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"iconChange\"}},{\"type\":\"field\",\"id\":\"field1\",\"label\":\"Field\",\"description\":\"desc\",\"required\":true,\"child\":{\"type\":\"text\",\"value\":\"child\"}},{\"type\":\"section\",\"id\":\"sec1\",\"label\":\"Section\",\"defaultOpen\":true,\"children\":[]},{\"type\":\"tree\",\"sections\":[{\"id\":\"treesec1\",\"label\":\"Items\",\"defaultOpen\":true,\"items\":[{\"id\":\"item1\",\"label\":\"Item 1\"}]}],\"selectedIds\":[\"item1\"]},{\"type\":\"image\",\"id\":\"img1\",\"src\":\"icon.png\",\"alt\":\"alt text\"},{\"type\":\"componentScene\",\"surfaceId\":\"surf1\",\"controllerId\":\"ctrl\",\"componentKind\":\"world-3d\",\"world3d\":{\"cameraJson\":\"{}\",\"meshesJson\":\"[]\",\"instancesJson\":\"[]\",\"selectionJson\":\"{}\"}},{\"type\":\"externalSlot\",\"pluginId\":\"plugin1\",\"appId\":\"app1\",\"bodyKey\":\"body1\",\"paramsJson\":\"{}\"}]}";
 
     #[test]
     fn ui_node_tree_serializes_to_golden_json() {
@@ -5880,10 +5880,10 @@ mod ui_node_wire_format_tests {
 }
 
 
-pub use command_bus::{CommandBus, CommandHandler};
+pub use action_bus::{ActionBus, ActionHandler};
 pub use layout::{
     collect_window_kind_ids_from_layout, create_default_layout, create_named_layout, create_stack_layout,
-    create_tab_stack_layout, create_window_layout, merge_named_layouts, CommandDescriptor, NamedLayout,
+    create_tab_stack_layout, create_window_layout, merge_named_layouts, ActionDescriptor, NamedLayout,
     StyleSpec, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption,
     WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
     WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, default_viewport_engagement,
@@ -5905,8 +5905,8 @@ pub use tools::{tool_button, tool_collection, tool_separator, tool_toggle, ToolC
 pub use ui::*;
 pub use ui::kernel::{
     ActorId, AppEvent, AppInstanceId, AssetHandle, Capability, CapabilityGrant, CapabilityRequirement,
-    CapabilityToken, CommandContext, CommandDef, CommandId, CommandInvocation, CommandInvocationId,
-    CommandRequest, CommandResult, Diagnostic, HostEffect, HybridLogicalTimestamp, InverseOperation,
+    CapabilityToken, ActionContext, ActionDef, ActionId, ActionInvocation, ActionInvocationId,
+    ActionRequest, ActionResult, Diagnostic, HostEffect, HybridLogicalTimestamp, InverseOperation,
     KernelOperation, MergeStrategyKind, DocumentDiff, DocumentHandle, DocumentId, DocumentKind, DocumentVersion,
     OpEnvelope, OperationId, PayloadHash, PhysicalSize, PluginInstanceId, ResourceId, ResourceKind,
     Appearance, Rights, SchemaId, SchemaVersion, Scope, UndoGroup, UndoPolicy, WindowEvent, WindowHandle,

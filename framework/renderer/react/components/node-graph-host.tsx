@@ -18,8 +18,8 @@ import {
 } from "@semio-tech/ui-react";
 import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import type { CommandDescriptor, NodeGraphScene, PresencePeer, UiComponentSceneNode } from "../os-shell.tsx";
-import { createFlowSession, createGraphSession, isFlowGraphScene, nodeGraphCommands, useUIFindSafe, type FlowWasmSession } from "../os-shell.tsx";
+import type { ActionDescriptor, NodeGraphScene, PresencePeer, UiComponentSceneNode } from "../os-shell.tsx";
+import { createFlowSession, createGraphSession, isFlowGraphScene, nodeGraphActions, useUIFindSafe, type FlowWasmSession } from "../os-shell.tsx";
 
 //#region Types
 type MediaGraphPort = {
@@ -64,7 +64,7 @@ type GraphFindItem = { readonly id: string; readonly label: string; readonly cat
 type GraphContextMenuItem = {
   readonly id: string;
   readonly label: string;
-  readonly command: string;
+  readonly action: string;
   readonly args?: Record<string, unknown>;
 };
 
@@ -96,7 +96,7 @@ type FrameworkGraphSession = GraphWasmSession & {
 //#endregion Types
 
 //#region Viewport
-export function nodeGraphViewportCommandArgs(cameraJson: string): { readonly viewportJson: string } {
+export function nodeGraphViewportActionArgs(cameraJson: string): { readonly viewportJson: string } {
   return { viewportJson: cameraJson };
 }
 //#endregion Viewport
@@ -161,7 +161,7 @@ function isEditableGraphKeyTarget(target: EventTarget | null): boolean {
   return target.closest("[contenteditable='true'], [role='textbox']") != null;
 }
 
-function handleGraphKeyboard(event: KeyboardEvent<HTMLDivElement>, editable: boolean, parsedNodes: readonly MediaGraphNodeRecord[], dispatch: (command: string, args?: Record<string, unknown>) => void) {
+function handleGraphKeyboard(event: KeyboardEvent<HTMLDivElement>, editable: boolean, parsedNodes: readonly MediaGraphNodeRecord[], dispatch: (action: string, args?: Record<string, unknown>) => void) {
   if (!editable || isEditableGraphKeyTarget(event.target)) return;
   const mod = event.metaKey || event.ctrlKey;
   if (mod && event.key.toLowerCase() === "a") {
@@ -228,14 +228,14 @@ function WasmGraphSurface({
   controllerId,
   editable,
   contextMenuItems,
-  onCommand,
+  onAction,
 }: {
   readonly scene: NodeGraphScene;
   readonly surfaceId: string;
   readonly controllerId: string;
   readonly editable: boolean;
   readonly contextMenuItems: readonly GraphContextMenuItem[];
-  readonly onCommand: (command: CommandDescriptor) => void;
+  readonly onAction: (action: ActionDescriptor) => void;
 }) {
   const sessionRef = useRef<FrameworkGraphSession | null>(null);
   const labelCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -250,10 +250,10 @@ function WasmGraphSurface({
   const sceneJson = useMemo(() => sceneToSyncJson(scene), [scene]);
 
   const dispatch = useCallback(
-    (command: string, args?: Record<string, unknown>) => {
-      onCommand({ controllerId, command, args: { surfaceId, ...args } });
+    (action: string, args?: Record<string, unknown>) => {
+      onAction({ controllerId, action, args: { surfaceId, ...args } });
     },
-    [controllerId, onCommand, surfaceId],
+    [controllerId, onAction, surfaceId],
   );
 
   const paintOverlays = useCallback(() => {
@@ -347,10 +347,10 @@ function WasmGraphSurface({
     if (!session) return;
     try {
       const nodeIds = JSON.parse(session.selectedNodeIdsJson()) as string[];
-      dispatch(nodeGraphCommands.select, { nodeIds });
+      dispatch(nodeGraphActions.select, { nodeIds });
       const hovered = session.hoveredNodeId();
-      dispatch(nodeGraphCommands.hover, { hoverJson: hovered ? JSON.stringify({ nodeId: hovered }) : null });
-      dispatch(nodeGraphCommands.viewport, nodeGraphViewportCommandArgs(session.cameraJson()));
+      dispatch(nodeGraphActions.hover, { hoverJson: hovered ? JSON.stringify({ nodeId: hovered }) : null });
+      dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(session.cameraJson()));
       const openId = session.takePendingOpenInstanceId?.();
       if (openId) dispatch("openInstance", { instanceId: openId });
     } catch {
@@ -364,7 +364,7 @@ function WasmGraphSurface({
     if (!session?.fixtureJson) return;
     try {
       const fixtureJson = session.fixtureJson();
-      dispatch(nodeGraphCommands.edit, { ops: [{ op: "setFixture", fixtureJson }] });
+      dispatch(nodeGraphActions.edit, { ops: [{ op: "setFixture", fixtureJson }] });
     } catch {
       /* session not ready */
     }
@@ -486,15 +486,15 @@ function WasmGraphSurface({
           }}
         />
       ) : null}
-      <GraphParamOverlays stateJson={paramStateJson} logicalW={overlaySize.w} logicalH={overlaySize.h} editable={editable} onParamChange={(nodeId, portId, value) => dispatch(nodeGraphCommands.edit, { op: "setParam", nodeId, portId, value })} />
+      <GraphParamOverlays stateJson={paramStateJson} logicalW={overlaySize.w} logicalH={overlaySize.h} editable={editable} onParamChange={(nodeId, portId, value) => dispatch(nodeGraphActions.edit, { op: "setParam", nodeId, portId, value })} />
       <GraphStepperOverlays
         stateJson={stepperStateJson}
         logicalW={overlaySize.w}
         logicalH={overlaySize.h}
         editable={editable}
-        onStepperChange={(widgetId, fieldKey, value) => dispatch(nodeGraphCommands.edit, { op: "setStepper", widgetId, fieldKey, value })}
+        onStepperChange={(widgetId, fieldKey, value) => dispatch(nodeGraphActions.edit, { op: "setStepper", widgetId, fieldKey, value })}
       />
-      <GraphSliderOverlays stateJson={sliderStateJson} logicalW={overlaySize.w} logicalH={overlaySize.h} editable={editable} onSliderChange={(widgetId, value) => dispatch(nodeGraphCommands.edit, { op: "setSlider", widgetId, value })} />
+      <GraphSliderOverlays stateJson={sliderStateJson} logicalW={overlaySize.w} logicalH={overlaySize.h} editable={editable} onSliderChange={(widgetId, value) => dispatch(nodeGraphActions.edit, { op: "setSlider", widgetId, value })} />
       <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} />
       <ContextMenuController
         open={contextMenu != null}
@@ -502,7 +502,7 @@ function WasmGraphSurface({
         items={contextMenuItems.map((item) => ({
           id: item.id,
           label: item.label,
-          onSelect: () => dispatch(item.command, item.args),
+          onSelect: () => dispatch(item.action, item.args),
         }))}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
@@ -522,7 +522,7 @@ function DiagramGraphFallback({
   parsedEdges,
   findItems,
   contextMenuItems,
-  onCommand,
+  onAction,
 }: {
   readonly scene: NodeGraphScene;
   readonly node: UiComponentSceneNode;
@@ -531,7 +531,7 @@ function DiagramGraphFallback({
   readonly parsedEdges: readonly MediaGraphEdgeRecord[];
   readonly findItems: readonly GraphFindItem[];
   readonly contextMenuItems: readonly GraphContextMenuItem[];
-  readonly onCommand: (command: CommandDescriptor) => void;
+  readonly onAction: (action: ActionDescriptor) => void;
 }) {
   const viewport = useMemo(() => parseViewport(scene.viewportJson ?? "{}"), [scene.viewportJson]);
   const initialNodes = useMemo(() => mediaGraphNodesToDiagramNodes(parsedNodes), [parsedNodes]);
@@ -544,10 +544,10 @@ function DiagramGraphFallback({
   }, [initialNodes, initialEdges]);
 
   const dispatch = useCallback(
-    (command: string, args?: Record<string, unknown>) => {
-      onCommand({ controllerId: node.controllerId, command, args: { surfaceId: node.surfaceId, ...args } });
+    (action: string, args?: Record<string, unknown>) => {
+      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
     },
-    [node.controllerId, node.surfaceId, onCommand],
+    [node.controllerId, node.surfaceId, onAction],
   );
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -604,7 +604,7 @@ function DiagramGraphFallback({
         onNodeDragStop={
           editable
             ? (_event, draggedNode) => {
-                dispatch(nodeGraphCommands.edit, {
+                dispatch(nodeGraphActions.edit, {
                   ops: [{ op: "move", nodeId: draggedNode.id, x: draggedNode.position.x, y: draggedNode.position.y }],
                 });
               }
@@ -614,7 +614,7 @@ function DiagramGraphFallback({
           editable
             ? (connection) => {
                 if (!connection.source || !connection.target || !connection.sourceHandle || !connection.targetHandle) return;
-                dispatch(nodeGraphCommands.edit, {
+                dispatch(nodeGraphActions.edit, {
                   ops: [
                     {
                       op: "connect",
@@ -631,7 +631,7 @@ function DiagramGraphFallback({
         onNodeClick={(_event, clickedNode) => {
           const record = parsedNodes.find((entry) => entry.id === clickedNode.id);
           if (record?.instanceId) dispatch("selectInstance", { instanceId: record.instanceId });
-          dispatch(nodeGraphCommands.select, { nodeIds: [clickedNode.id] });
+          dispatch(nodeGraphActions.select, { nodeIds: [clickedNode.id] });
         }}
         onNodeDoubleClick={(_event, clickedNode) => {
           const record = parsedNodes.find((entry) => entry.id === clickedNode.id);
@@ -639,7 +639,7 @@ function DiagramGraphFallback({
         }}
         onSelectionChange={(selection) => {
           const nodeIds = selection.nodes.map((entry) => entry.id);
-          dispatch(nodeGraphCommands.select, { nodeIds });
+          dispatch(nodeGraphActions.select, { nodeIds });
         }}
       />
       <ContextMenuController
@@ -648,7 +648,7 @@ function DiagramGraphFallback({
         items={contextMenuItems.map((item) => ({
           id: item.id,
           label: item.label,
-          onSelect: () => dispatch(item.command, item.args),
+          onSelect: () => dispatch(item.action, item.args),
         }))}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
@@ -680,7 +680,7 @@ function PresencePeersOverlay({ peers }: { readonly peers: readonly PresencePeer
   );
 }
 
-export function NodeGraphHost({ node, onCommand }: { readonly node: UiComponentSceneNode; readonly onCommand: (command: CommandDescriptor) => void }) {
+export function NodeGraphHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
   const scene = node.nodeGraph;
   const editable = scene?.editable ?? true;
   const parsedNodes = useMemo(() => parseJsonArray<MediaGraphNodeRecord>(scene?.nodesJson), [scene?.nodesJson]);
@@ -691,10 +691,10 @@ export function NodeGraphHost({ node, onCommand }: { readonly node: UiComponentS
   const isClient = useClient();
 
   const dispatch = useCallback(
-    (command: string, args?: Record<string, unknown>) => {
-      onCommand({ controllerId: node.controllerId, command, args: { surfaceId: node.surfaceId, ...args } });
+    (action: string, args?: Record<string, unknown>) => {
+      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
     },
-    [node.controllerId, node.surfaceId, onCommand],
+    [node.controllerId, node.surfaceId, onAction],
   );
 
   const findContext = useUIFindSafe();
@@ -702,7 +702,7 @@ export function NodeGraphHost({ node, onCommand }: { readonly node: UiComponentS
   onFindItemRef.current = (itemId: string) => {
     const mediaNode = parsedNodes.find((entry) => entry.instanceId === itemId);
     if (!mediaNode) return;
-    dispatch(nodeGraphCommands.select, { nodeIds: [mediaNode.id] });
+    dispatch(nodeGraphActions.select, { nodeIds: [mediaNode.id] });
     dispatch("selectInstance", { instanceId: mediaNode.instanceId! });
   };
 
@@ -725,12 +725,12 @@ export function NodeGraphHost({ node, onCommand }: { readonly node: UiComponentS
     <div className="semio-node-graph-host relative h-full min-h-[24rem] w-full" data-surface-id={node.surfaceId} tabIndex={editable ? 0 : undefined} onKeyDown={(event) => handleGraphKeyboard(event, editable, parsedNodes, dispatch)}>
       {isClient ? (
         useFlowEngine ? (
-          <FlowGraphCanvasHost scene={scene} surfaceId={node.surfaceId} controllerId={node.controllerId} editable={editable} contextMenuItems={contextMenuItems} onCommand={onCommand} />
+          <FlowGraphCanvasHost scene={scene} surfaceId={node.surfaceId} controllerId={node.controllerId} editable={editable} contextMenuItems={contextMenuItems} onAction={onAction} />
         ) : (
-          <WasmGraphSurface scene={scene} surfaceId={node.surfaceId} controllerId={node.controllerId} editable={editable} contextMenuItems={contextMenuItems} onCommand={onCommand} />
+          <WasmGraphSurface scene={scene} surfaceId={node.surfaceId} controllerId={node.controllerId} editable={editable} contextMenuItems={contextMenuItems} onAction={onAction} />
         )
       ) : (
-        <DiagramGraphFallback scene={scene} node={node} editable={editable} parsedNodes={parsedNodes} parsedEdges={parsedEdges} findItems={findItems} contextMenuItems={contextMenuItems} onCommand={onCommand} />
+        <DiagramGraphFallback scene={scene} node={node} editable={editable} parsedNodes={parsedNodes} parsedEdges={parsedEdges} findItems={findItems} contextMenuItems={contextMenuItems} onAction={onAction} />
       )}
       <PresencePeersOverlay peers={presencePeers} />
     </div>
@@ -1323,14 +1323,14 @@ export function FlowGraphCanvasHost({
   controllerId,
   editable,
   contextMenuItems,
-  onCommand,
+  onAction,
 }: {
   readonly scene: NodeGraphScene;
   readonly surfaceId: string;
   readonly controllerId: string;
   readonly editable: boolean;
   readonly contextMenuItems: readonly GraphContextMenuItem[];
-  readonly onCommand: (command: CommandDescriptor) => void;
+  readonly onAction: (action: ActionDescriptor) => void;
 }) {
   const sessionRef = useRef<FlowWasmSession | null>(null);
   const gpuCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -1357,10 +1357,10 @@ export function FlowGraphCanvasHost({
   }, [surfaceId, controllerId]);
 
   const dispatch = useCallback(
-    (command: string, args?: Record<string, unknown>) => {
-      onCommand({ controllerId, command, args: { surfaceId, ...args } });
+    (action: string, args?: Record<string, unknown>) => {
+      onAction({ controllerId, action, args: { surfaceId, ...args } });
     },
-    [controllerId, onCommand, surfaceId],
+    [controllerId, onAction, surfaceId],
   );
 
   const commitFixture = useCallback(() => {
@@ -1369,7 +1369,7 @@ export function FlowGraphCanvasHost({
     try {
       const fixtureJson = session.fixtureJson();
       console.log("[DEBUG] commitFixture: dispatching setFixture, isGestureActive=", isGestureActiveRef.current, "len=", fixtureJson.length);
-      dispatch(nodeGraphCommands.edit, { ops: [{ op: "setFixture", fixtureJson }] });
+      dispatch(nodeGraphActions.edit, { ops: [{ op: "setFixture", fixtureJson }] });
       session.evaluateSync();
     } catch {
       /* session not ready */
@@ -1466,10 +1466,10 @@ export function FlowGraphCanvasHost({
     if (!session) return;
     try {
       const nodeIds = JSON.parse(session.selectedWidgetIds()) as string[];
-      dispatch(nodeGraphCommands.select, { nodeIds });
+      dispatch(nodeGraphActions.select, { nodeIds });
       const hovered = session.hoveredWidgetId();
       const channelJson = session.hoveredChannelJson();
-      dispatch(nodeGraphCommands.hover, { hoverJson: hovered ? channelJson : null });
+      dispatch(nodeGraphActions.hover, { hoverJson: hovered ? channelJson : null });
     } catch {
       /* session not ready */
     }
@@ -1816,19 +1816,19 @@ export function FlowGraphCanvasHost({
           session.wheelScreen(event.clientX - rect.left, event.clientY - rect.top, 0, delta, true);
           session.renderFrame();
           const cameraJson = session.cameraJson?.();
-          if (cameraJson) dispatch(nodeGraphCommands.viewport, nodeGraphViewportCommandArgs(cameraJson));
+          if (cameraJson) dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(cameraJson));
           paintOverlays();
         }}
       />
       <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} />
-      <SpotlightOverlay previewText={previewText} onCommit={() => dispatch(nodeGraphCommands.spotlightCommit, {})} onDismiss={() => setPreviewText("")} />
+      <SpotlightOverlay previewText={previewText} onCommit={() => dispatch(nodeGraphActions.spotlightCommit, {})} onDismiss={() => setPreviewText("")} />
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
         items={contextMenuItems.map((item) => ({
           id: item.id,
           label: item.label,
-          onSelect: () => dispatch(item.command, item.args),
+          onSelect: () => dispatch(item.action, item.args),
         }))}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);

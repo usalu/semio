@@ -107,7 +107,7 @@ use grammar::{tokenize_language, GrammarToken};
 use trinity_jack::{complete, example_graph, format as jack_format, lint, semantic_tokens, Diagnostic};
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_text_editor_scene, tool_button, tool_collection, ui_declarative_sections_to_tree, ui_text, App,
-    CommandDescriptor, PluginApp, PluginBundle, TextEditorScene, ToolNode, UiNode, UiSectionNode,
+    ActionDescriptor, PluginApp, PluginBundle, TextEditorScene, ToolNode, UiNode, UiSectionNode,
     UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -815,13 +815,13 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
         icon_id: jack_ast_tree_icon(&node.kind).map(str::to_string),
         selected: None,
         default_open: Some(matches!(node.kind.as_str(), "query" | "match" | "pattern" | "return")),
-        command: Some(play_cmd(
+        action: Some(play_action(
             WRITER_PLAY_CONTROLLER_ID,
             "selectAstNode",
             Some(json!({ "id": node.id, "start": node.start, "end": node.end })),
         )),
-        hover_command: Some(play_cmd(WRITER_PLAY_CONTROLLER_ID, "setAstHover", Some(json!({ "id": node.id })))),
-        unhover_command: Some(play_cmd(WRITER_PLAY_CONTROLLER_ID, "setAstHover", Some(json!({ "id": Value::Null })))),
+        hover_action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "setAstHover", Some(json!({ "id": node.id })))),
+        unhover_action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "setAstHover", Some(json!({ "id": Value::Null })))),
         actions: None,
         draggable: None,
         drag_data: None,
@@ -1243,10 +1243,10 @@ fn format_writer_text(text: &str, language_id: &str) -> String {
 //#endregion 🔖JackEditor
 
 //#region 🔖Panels
-fn play_cmd(controller_id: &str, command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn play_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: controller_id.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -1259,9 +1259,9 @@ fn empty_tree_item(id: &str, label: &str) -> UiTreeItemNode {
         icon_id: None,
         selected: None,
         default_open: None,
-        command: None,
-        hover_command: None,
-        unhover_command: None,
+        action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -1300,8 +1300,8 @@ fn render_document_panel(document: &WriterDocument, runtime: &WriterPlayRuntime)
         }],
         selected_ids: Some(runtime.selected_ast_ids.clone()),
         highlighted_ids: highlighted_ast_id.map(|id| vec![id]),
-        selection_change: Some(play_cmd(WRITER_PLAY_CONTROLLER_ID, "setAstSelection", None)),
-        drop_command: None,
+        selection_change: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "setAstSelection", None)),
+        drop_action: None,
     })
 }
 
@@ -1503,15 +1503,15 @@ impl PluginApp for WriterApp {
         .expect("writer document json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut play = parse_envelope(document_json);
-        match command {
+        match action {
             "textEdit" | "setDocument" => {
                 if let Some(text) = args.and_then(|value| value.get("text")).and_then(|value| value.as_str()) {
                     push_undo_writer(&mut play);
@@ -1774,8 +1774,8 @@ impl PluginApp for WriterApp {
             "wand-2",
             "Actions",
             vec![
-                tool_button("writer-format", "align-left", "Format", play_cmd(WRITER_PLAY_CONTROLLER_ID, "formatDocument", None)),
-                tool_button("writer-lint", "alert-circle", "Lint", play_cmd(WRITER_PLAY_CONTROLLER_ID, "lintDocument", None)),
+                tool_button("writer-format", "align-left", "Format", play_action(WRITER_PLAY_CONTROLLER_ID, "formatDocument", None)),
+                tool_button("writer-lint", "alert-circle", "Lint", play_action(WRITER_PLAY_CONTROLLER_ID, "lintDocument", None)),
             ],
         )]
     }
@@ -1791,15 +1791,15 @@ impl PluginApp for WriterApp {
                 icon_id: Some("list-ordered".into()),
                 pressed: Some(settings.show_line_numbers),
                 disabled: None,
-                command: Some(play_cmd(WRITER_PLAY_CONTROLLER_ID, "toggleLineNumbers", None)),
+                command: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "toggleLineNumbers", None)),
             }]),
             input: Some(WindowEngagementInput {
                 id: Some("writer-engagement-input".into()),
                 value: Some(play.runtime.engagement_input.clone()),
                 placeholder: Some("Format, lint, line numbers".into()),
                 disabled: None,
-                on_change: Some(play_cmd(WRITER_PLAY_CONTROLLER_ID, "engagementInput", None)),
-                on_submit: Some(play_cmd(WRITER_PLAY_CONTROLLER_ID, "engagementSubmit", None)),
+                on_change: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "engagementInput", None)),
+                on_submit: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "engagementSubmit", None)),
                 on_repeat_last: None,
                 on_abort: None,
             }),
@@ -1807,9 +1807,9 @@ impl PluginApp for WriterApp {
             controls: None,
             status: Some(vec![WindowEngagementStatus { id: "writer-editor-mode".into(), text: "Text editor".into() }]),
             possible_engagements: Some(vec![
-                WindowEngagementPossible { id: "writer-format".into(), label: "Format".into(), detail: None, command: Some(play_cmd(WRITER_PLAY_CONTROLLER_ID, "formatDocument", None)) },
-                WindowEngagementPossible { id: "writer-lint".into(), label: "Lint".into(), detail: None, command: Some(play_cmd(WRITER_PLAY_CONTROLLER_ID, "lintDocument", None)) },
-                WindowEngagementPossible { id: "writer-line-numbers".into(), label: "Line numbers".into(), detail: None, command: Some(play_cmd(WRITER_PLAY_CONTROLLER_ID, "toggleLineNumbers", None)) },
+                WindowEngagementPossible { id: "writer-format".into(), label: "Format".into(), detail: None, command: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "formatDocument", None)) },
+                WindowEngagementPossible { id: "writer-lint".into(), label: "Lint".into(), detail: None, command: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "lintDocument", None)) },
+                WindowEngagementPossible { id: "writer-line-numbers".into(), label: "Line numbers".into(), detail: None, command: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "toggleLineNumbers", None)) },
             ]),
         };
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), engagement)])
@@ -1826,7 +1826,7 @@ impl PluginApp for WriterApp {
                 min: 10.0,
                 max: 24.0,
                 step: Some(1.0),
-                on_change: play_cmd(WRITER_PLAY_CONTROLLER_ID, "setEditorSetting", Some(json!({ "field": "fontPx" }))),
+                on_change: play_action(WRITER_PLAY_CONTROLLER_ID, "setEditorSetting", Some(json!({ "field": "fontPx" }))),
             },
             WindowMeasure::Slider {
                 id: "writer-line-height-measure".into(),
@@ -1835,7 +1835,7 @@ impl PluginApp for WriterApp {
                 min: 16.0,
                 max: 40.0,
                 step: Some(1.0),
-                on_change: play_cmd(WRITER_PLAY_CONTROLLER_ID, "setEditorSetting", Some(json!({ "field": "lineHeight" }))),
+                on_change: play_action(WRITER_PLAY_CONTROLLER_ID, "setEditorSetting", Some(json!({ "field": "lineHeight" }))),
             },
             WindowMeasure::Slider {
                 id: "writer-tab-size-measure".into(),
@@ -1844,7 +1844,7 @@ impl PluginApp for WriterApp {
                 min: 1.0,
                 max: 8.0,
                 step: Some(1.0),
-                on_change: play_cmd(WRITER_PLAY_CONTROLLER_ID, "setEditorSetting", Some(json!({ "field": "tabSize" }))),
+                on_change: play_action(WRITER_PLAY_CONTROLLER_ID, "setEditorSetting", Some(json!({ "field": "tabSize" }))),
             },
             WindowMeasure::Toggle {
                 id: "writer-line-numbers-measure".into(),
@@ -1852,7 +1852,7 @@ impl PluginApp for WriterApp {
                 label: Some("Line numbers".into()),
                 pressed: settings.show_line_numbers,
                 text: None,
-                on_change: play_cmd(WRITER_PLAY_CONTROLLER_ID, "toggleLineNumbers", None),
+                on_change: play_action(WRITER_PLAY_CONTROLLER_ID, "toggleLineNumbers", None),
             },
         ];
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), measures)])
@@ -1958,7 +1958,7 @@ mod tests {
             redo_stack: Vec::new(),
         })
         .unwrap();
-        let ops = app.handle_command_patch_ops("formatDocument", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("formatDocument", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let envelope: WriterPlayEnvelope = serde_json::from_str(
             &serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string(),
@@ -1978,7 +1978,7 @@ mod tests {
     fn set_text_command_updates_document() {
         let mut app = WriterApp;
         let document = serde_json::to_string(&empty_writer_document()).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setText",
             Some(&json!({ "text": "MATCH (a) RETURN a" })),
             &document,
@@ -2089,7 +2089,7 @@ mod tests {
         let occurrences = jack_variable_occurrences(CANONICAL_QUERY, "a");
         assert_eq!(occurrences.len(), 3);
         let occurrences_json: Vec<Value> = occurrences.iter().map(|(s, e)| json!({ "start": s, "end": e })).collect();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "commitRename",
             Some(&json!({ "occurrences": occurrences_json, "text": "piece" })),
             &document,
@@ -2105,7 +2105,7 @@ mod tests {
     fn engagement_submit_parses_font_size() {
         let mut app = WriterApp;
         let document = serde_json::to_string(&empty_writer_document()).unwrap();
-        let ops = app.handle_command_patch_ops("engagementSubmit", Some(&json!({ "value": "font 16" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "font 16" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
         assert_eq!(envelope.runtime.editor_settings.font_px, 16);
@@ -2159,7 +2159,7 @@ mod tests {
         let mut app = WriterApp;
         let document = JACK_EXAMPLE_JSON.to_string();
         let root = parse_jack_ast(&parse_envelope(&document).document.text);
-        let ops = app.handle_command_patch_ops("setAstHover", Some(&json!({ "id": root.id })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setAstHover", Some(&json!({ "id": root.id })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let next_document = serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string();
         let tree_node = app.render(WRITER_PLAY_BODY_DOCUMENT, &next_document, &ViewState::default());
@@ -2185,7 +2185,7 @@ mod tests {
     fn set_active_example_loads_jack_fixture() {
         let mut app = WriterApp;
         let document = serde_json::to_string(&empty_writer_document()).unwrap();
-        let ops = app.handle_command_patch_ops("setActiveExample", Some(&json!({ "exampleId": "jack" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setActiveExample", Some(&json!({ "exampleId": "jack" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
         assert_eq!(envelope.document.id, "jack");
@@ -2196,7 +2196,7 @@ mod tests {
     fn set_active_example_loads_dag_jack_fixture() {
         let mut app = WriterApp;
         let document = serde_json::to_string(&empty_writer_document()).unwrap();
-        let ops = app.handle_command_patch_ops("setActiveExample", Some(&json!({ "exampleId": "dag.jack" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setActiveExample", Some(&json!({ "exampleId": "dag.jack" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
         assert_eq!(envelope.document.id, "dag-jack");
@@ -2206,7 +2206,7 @@ mod tests {
     fn set_active_example_falls_back_to_empty_document() {
         let mut app = WriterApp;
         let document = JACK_EXAMPLE_JSON.to_string();
-        let ops = app.handle_command_patch_ops("setActiveExample", Some(&json!({ "exampleId": "empty" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setActiveExample", Some(&json!({ "exampleId": "empty" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
         assert_eq!(envelope.document.id, "empty");

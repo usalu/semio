@@ -13,7 +13,7 @@ import {
   type SelectionMergeMode,
 } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import type { CommandDescriptor, RasterScene, UiComponentSceneNode } from "../os-shell.tsx";
+import type { ActionDescriptor, RasterScene, UiComponentSceneNode } from "../os-shell.tsx";
 import { createRasterSession, type RasterWasmSession } from "../os-shell.tsx";
 import { wheelCameraAtScreen, type CanvasCamera } from "./canvas-2d-host.tsx";
 
@@ -124,7 +124,7 @@ type RasterMarqueeOverlay =
 //#endregion RasterMarqueeOverlay
 
 //#region RasterCanvasSurface
-function RasterCanvasSurface({ node, scene, onCommand }: { readonly node: UiComponentSceneNode; readonly scene: RasterScene; readonly onCommand: (command: CommandDescriptor) => void }) {
+function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiComponentSceneNode; readonly scene: RasterScene; readonly onAction: (action: ActionDescriptor) => void }) {
   const isNavigator = scene.viewMode === "navigator";
   const containerRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<RasterWasmSession | null>(null);
@@ -145,10 +145,10 @@ function RasterCanvasSurface({ node, scene, onCommand }: { readonly node: UiComp
   const [overlayRect, setOverlayRect] = useState<RasterScreenRect | null>(null);
 
   const dispatch = useCallback(
-    (command: string, args?: Record<string, unknown>) => {
-      onCommand({ controllerId: node.controllerId, command, args: { surfaceId: node.surfaceId, ...args } });
+    (action: string, args?: Record<string, unknown>) => {
+      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
     },
-    [node.controllerId, node.surfaceId, onCommand],
+    [node.controllerId, node.surfaceId, onAction],
   );
 
   //#region Session lifecycle
@@ -560,9 +560,9 @@ function RasterWasmCanvas({ sessionFactory, onSessionReady }: { readonly session
 //#endregion RasterWasmCanvas
 
 //#region RasterHost
-export function RasterHost({ node, onCommand }: { readonly node: UiComponentSceneNode; readonly onCommand: (command: CommandDescriptor) => void }) {
+export function RasterHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
   const scene = node.raster;
   if (!scene) return <div className="semio-raster-empty">No raster scene</div>;
-  return <RasterCanvasSurface node={node} scene={scene} onCommand={onCommand} />;
+  return <RasterCanvasSurface node={node} scene={scene} onAction={onAction} />;
 }
 //#endregion RasterHost

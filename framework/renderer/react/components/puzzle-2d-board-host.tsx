@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type DragEvent, type MouseEvent } from "react";
 import { CATALOGUE_DRAG_MIME, ContextMenuController, getActiveCatalogueDragPayload, pickMostSpecificCanvasTarget, useCanvasAppearanceSync, type CanvasPickTarget } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import type { CommandDescriptor, Puzzle2dBoardScene, Puzzle2dBoardWasmSession, UiComponentSceneNode } from "../os-shell.tsx";
+import type { ActionDescriptor, Puzzle2dBoardScene, Puzzle2dBoardWasmSession, UiComponentSceneNode } from "../os-shell.tsx";
 import { createPuzzle2dBoardSession } from "../os-shell.tsx";
 
 //#region Types
@@ -10,7 +10,7 @@ type BoardEventRow = { readonly name: string; readonly payload?: unknown };
 type Puzzle2dSelectionMenuItem = {
   readonly id: string;
   readonly label: string;
-  readonly command: string;
+  readonly action: string;
   readonly args?: Record<string, unknown>;
   readonly destructive?: boolean;
   readonly disabled?: boolean;
@@ -37,7 +37,7 @@ function parseBoardCamera(json: string): BoardCamera | null {
   }
 }
 
-export function puzzle2dBoardCameraCommandArgs(cameraJson: string): { readonly camera: BoardCamera } | null {
+export function puzzle2dBoardCameraActionArgs(cameraJson: string): { readonly camera: BoardCamera } | null {
   const camera = parseBoardCamera(cameraJson);
   return camera ? { camera } : null;
 }
@@ -124,7 +124,7 @@ export function buildPuzzle2dSelectionMenuItems(fixtureJson: string, selectionJs
   }
   const selected = parseSelectionIds(selectionJson);
   if (selected.length === 0) {
-    return [{ id: "selectAll", label: "Select all", command: "selectAll" }];
+    return [{ id: "selectAll", label: "Select all", action: "selectAll" }];
   }
 
   const selectedSet = new Set(selected);
@@ -155,12 +155,12 @@ export function buildPuzzle2dSelectionMenuItems(fixtureJson: string, selectionJs
   const anyUnlocked = selectedEntities.some((entity) => !puzzle2dEntityFlag(entity, "locked"));
 
   return [
-    { id: "toggleHidden", label: anyVisible ? "Hide" : "Show", command: "setSelectionFlag", args: { flag: "hidden", value: anyVisible } },
-    { id: "toggleLocked", label: anyUnlocked ? "Lock" : "Unlock", command: "setSelectionFlag", args: { flag: "locked", value: anyUnlocked } },
-    { id: "duplicate", label: "Duplicate", command: "duplicateSelection", disabled: !hasSelectedNode },
-    { id: "selectSameKind", label: "Select all of same kind", command: "selectSameKind" },
-    { id: "focusSelection", label: "Zoom to selection", command: "focusSelection" },
-    { id: "deleteSelection", label: "Delete", command: "deleteSelection", destructive: true },
+    { id: "toggleHidden", label: anyVisible ? "Hide" : "Show", action: "setSelectionFlag", args: { flag: "hidden", value: anyVisible } },
+    { id: "toggleLocked", label: anyUnlocked ? "Lock" : "Unlock", action: "setSelectionFlag", args: { flag: "locked", value: anyUnlocked } },
+    { id: "duplicate", label: "Duplicate", action: "duplicateSelection", disabled: !hasSelectedNode },
+    { id: "selectSameKind", label: "Select all of same kind", action: "selectSameKind" },
+    { id: "focusSelection", label: "Zoom to selection", action: "focusSelection" },
+    { id: "deleteSelection", label: "Delete", action: "deleteSelection", destructive: true },
   ];
 }
 //#endregion SelectionMenu
@@ -208,7 +208,7 @@ function applyFixtureToSession(session: Puzzle2dBoardWasmSession, scene: Puzzle2
 //#endregion Sync
 
 //#region Puzzle2dBoardHost
-export function Puzzle2dBoardHost({ node, onCommand }: { readonly node: UiComponentSceneNode; readonly onCommand: (command: CommandDescriptor) => void }) {
+export function Puzzle2dBoardHost({ node, onAction }: { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void }) {
   const scene = node.puzzle2dBoard;
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -223,10 +223,10 @@ export function Puzzle2dBoardHost({ node, onCommand }: { readonly node: UiCompon
   const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly Puzzle2dSelectionMenuItem[] } | null>(null);
 
   const dispatch = useCallback(
-    (command: string, args?: Record<string, unknown>) => {
-      onCommand({ controllerId: node.controllerId, command, args: { surfaceId: node.surfaceId, ...args } });
+    (action: string, args?: Record<string, unknown>) => {
+      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
     },
-    [node.controllerId, node.surfaceId, onCommand],
+    [node.controllerId, node.surfaceId, onAction],
   );
 
   const readContainerSize = useCallback((): { w: number; h: number } => {
@@ -567,7 +567,7 @@ export function Puzzle2dBoardHost({ node, onCommand }: { readonly node: UiCompon
       } catch {
         /* gpu not ready */
       }
-      const cameraArgs = puzzle2dBoardCameraCommandArgs(session.cameraJson());
+      const cameraArgs = puzzle2dBoardCameraActionArgs(session.cameraJson());
       if (cameraArgs) dispatch("setCamera", cameraArgs);
       flushBoardEvents();
     };
@@ -747,7 +747,7 @@ export function Puzzle2dBoardHost({ node, onCommand }: { readonly node: UiCompon
           label: item.label,
           disabled: item.disabled,
           destructive: item.destructive,
-          onSelect: () => dispatch(item.command, item.args),
+          onSelect: () => dispatch(item.action, item.args),
         }))}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);

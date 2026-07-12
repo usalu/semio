@@ -5,7 +5,7 @@ use sequence_core::{default_fixture, SequenceFixture, SequenceHost, SequenceStep
 use semio_framework_plugin::{SurfaceKind, PanelGroup, 
     build_node_graph_scene, build_text_editor_scene, create_default_layout, tool_button, tool_collection,
     tool_toggle, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text,
-    App, CommandDescriptor, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, ToolCategory, ToolNode, UiControlNode,
+    App, ActionDescriptor, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, ToolCategory, ToolNode, UiControlNode,
     UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -114,10 +114,10 @@ fn push_undo(envelope: &mut SequencePlayEnvelope) {
     envelope.redo_stack.clear();
 }
 
-fn sequence_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn sequence_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: SEQUENCE_PLAY_APP_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -195,9 +195,9 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         icon_id: None,
         selected: None,
         default_open: None,
-        command: None,
-        hover_command: None,
-        unhover_command: None,
+        action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -207,7 +207,7 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
     }
 }
 
-fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, description: Option<String>, command: CommandDescriptor) -> UiTreeItemNode {
+fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
         label: label.into(),
@@ -215,9 +215,9 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
         icon_id: None,
         selected: None,
         default_open: None,
-        command: Some(command),
-        hover_command: None,
-        unhover_command: None,
+        action: Some(action),
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -239,11 +239,11 @@ fn control_slots(kind: &str) -> &'static [&'static str] {
 }
 
 fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture) -> UiTreeItemNode {
-    let mut item = tree_item_with_command(
+    let mut item = tree_item_with_action(
         format!("sequence-play-document.step.{}", step.id),
         format!("{} ({})", step.id, step.kind),
         Some(step.kind.clone()),
-        sequence_cmd("setSelection", Some(json!({ "ids": [step.id.clone()] }))),
+        sequence_action("setSelection", Some(json!({ "ids": [step.id.clone()] }))),
     );
     if is_control_kind(&step.kind) {
         item.control = Some(UiControlNode::Toggle(UiToggleNode {
@@ -251,7 +251,7 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture) -> UiTre
             icon_id: if step.collapsed { "chevron-right" } else { "chevron-down" }.into(),
             pressed: !step.collapsed,
             text: None,
-            on_change: sequence_cmd("setStepCollapsed", Some(json!({ "id": step.id }))),
+            on_change: sequence_action("setStepCollapsed", Some(json!({ "id": step.id }))),
         }));
         let slot_items: Vec<UiTreeItemNode> = control_slots(&step.kind)
             .iter()
@@ -271,9 +271,9 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture) -> UiTre
                     icon_id: Some("folder".into()),
                     selected: None,
                     default_open: Some(true),
-                    command: None,
-                    hover_command: None,
-                    unhover_command: None,
+                    action: None,
+                    hover_action: None,
+                    unhover_action: None,
                     actions: None,
                     draggable: None,
                     drag_data: None,
@@ -311,9 +311,9 @@ fn build_document_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNode
                 icon_id: None,
                 selected: None,
                 default_open: None,
-                command: None,
-        hover_command: None,
-        unhover_command: None,
+                action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
                 draggable: None,
                 drag_data: None,
@@ -349,7 +349,7 @@ fn build_document_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNode
         selected_ids: Some(selected.iter().map(|id| format!("sequence-play-document.step.{id}")).collect()),
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -364,21 +364,21 @@ fn build_catalogue_tree(fixture: &SequenceFixture) -> UiNode {
     let mut items: Vec<UiTreeItemNode> = actions
         .iter()
         .map(|(kind, label)| {
-            tree_item_with_command(
+            tree_item_with_action(
                 format!("sequence-play-catalogue.action.{kind}"),
                 *label,
                 Some((*kind).into()),
-                sequence_cmd("addStep", Some(json!({ "kind": kind }))),
+                sequence_action("addStep", Some(json!({ "kind": kind }))),
             )
         })
         .collect();
     for owner in fixture.steps.iter().filter(|step| is_control_kind(&step.kind)) {
         for slot_name in control_slots(&owner.kind) {
-            items.push(tree_item_with_command(
+            items.push(tree_item_with_action(
                 format!("sequence-play-catalogue.slot.{}.{}", owner.id, slot_name),
                 format!("Add to {} → {slot_name}", owner.id),
                 Some(format!("{slot_name} @ {}", owner.id)),
-                sequence_cmd(
+                sequence_action(
                     "addStepToSlot",
                     Some(json!({
                         "kind": "log.print",
@@ -399,7 +399,7 @@ fn build_catalogue_tree(fixture: &SequenceFixture) -> UiNode {
         selected_ids: Some(vec![]),
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -466,7 +466,7 @@ fn render_main_graph(envelope: &SequencePlayEnvelope) -> UiNode {
             editable: Some(true),
             selection_json,
             context_menu_json: Some(
-                r#"[{"id":"delete-selection","label":"Delete selection","command":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
+                r#"[{"id":"delete-selection","label":"Delete selection","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
             ),
             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
         },
@@ -513,18 +513,18 @@ fn edit_tools(envelope: &SequencePlayEnvelope) -> Vec<ToolNode> {
             "play",
             "Run",
             vec![
-                tool_button("sequence-tools-run", "play", "Run", sequence_cmd("run", None)),
-                tool_button("sequence-tools-stop", "square", "Stop", sequence_cmd("stop", None)),
+                tool_button("sequence-tools-run", "play", "Run", sequence_action("run", None)),
+                tool_button("sequence-tools-stop", "square", "Stop", sequence_action("stop", None)),
             ],
         )
-        .with_category(ToolCategory::Commands),
+        .with_category(ToolCategory::Actions),
         tool_button(
             "sequence-tools-reorganize",
             "refresh-cw",
             "Reorganize",
-            sequence_cmd("reorganize", None),
+            sequence_action("reorganize", None),
         )
-        .with_category(ToolCategory::Commands),
+        .with_category(ToolCategory::Actions),
         tool_collection(
             "sequence-tools-orientation",
             "layout-grid",
@@ -535,14 +535,14 @@ fn edit_tools(envelope: &SequencePlayEnvelope) -> Vec<ToolNode> {
                     "arrow-right",
                     "Left to right",
                     orientation == DagLayoutOrientation::LeftRight,
-                    sequence_cmd("setOrientation", Some(orientation_arg(DagLayoutOrientation::LeftRight))),
+                    sequence_action("setOrientation", Some(orientation_arg(DagLayoutOrientation::LeftRight))),
                 ),
                 tool_toggle(
                     "sequence-tools-orientation-tb",
                     "arrow-down",
                     "Top to bottom",
                     orientation == DagLayoutOrientation::TopBottom,
-                    sequence_cmd("setOrientation", Some(orientation_arg(DagLayoutOrientation::TopBottom))),
+                    sequence_action("setOrientation", Some(orientation_arg(DagLayoutOrientation::TopBottom))),
                 ),
             ],
         )
@@ -563,16 +563,16 @@ impl PluginApp for SequencePlayApp {
         serde_json::to_string(&default_envelope()).expect("sequence envelope json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut envelope = parse_envelope(document_json);
         let mut host = host_from_envelope(&envelope);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value(next.clone()) {
@@ -702,7 +702,7 @@ impl PluginApp for SequencePlayApp {
                     .or_else(|| args.and_then(|value| value.get("owner")))
                     .and_then(|value| value.as_str());
                 push_undo(&mut envelope);
-                let id = if command == "addStepToSlot" {
+                let id = if action == "addStepToSlot" {
                     let owner = args.and_then(|value| value.get("owner")).and_then(|value| value.as_str());
                     let slot = args.and_then(|value| value.get("slotName")).and_then(|value| value.as_str());
                     match (owner, slot) {
@@ -947,10 +947,10 @@ mod tests {
     }
 
     #[test]
-    fn add_step_command_appends_step() {
+    fn add_step_action_appends_step() {
         let mut app = SequencePlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("addStep", Some(&json!({ "kind": "log.print" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addStep", Some(&json!({ "kind": "log.print" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated_op: Value = serde_json::from_str(&ops[0]).unwrap();
         let updated: SequencePlayEnvelope = serde_json::from_value(updated_op["document"].clone()).unwrap();
@@ -961,7 +961,7 @@ mod tests {
     fn run_stores_result_in_runtime() {
         let mut app = SequencePlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("run", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("run", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated: SequencePlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
@@ -969,12 +969,12 @@ mod tests {
     }
 
     #[test]
-    fn remove_step_command_deletes_step() {
+    fn remove_step_action_deletes_step() {
         let mut app = SequencePlayApp;
         let envelope = default_envelope();
         let step_id = envelope.fixture.steps[0].id.clone();
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("removeStep", Some(&json!({ "id": step_id })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("removeStep", Some(&json!({ "id": step_id })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated: SequencePlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
@@ -995,10 +995,10 @@ mod tests {
     }
 
     #[test]
-    fn set_orientation_command_flips_toggle_state() {
+    fn set_orientation_action_flips_toggle_state() {
         let mut app = SequencePlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("setOrientation", Some(&json!({ "orientation": "topBottom" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setOrientation", Some(&json!({ "orientation": "topBottom" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated: SequencePlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
@@ -1023,7 +1023,7 @@ mod tests {
     }
 
     #[test]
-    fn reorganize_command_spreads_step_positions_apart() {
+    fn reorganize_action_spreads_step_positions_apart() {
         let mut app = SequencePlayApp;
         let mut envelope = default_envelope();
         for step in envelope.fixture.steps.iter_mut() {
@@ -1031,7 +1031,7 @@ mod tests {
             step.y = 0.0;
         }
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("reorganize", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("reorganize", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated: SequencePlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
@@ -1040,12 +1040,12 @@ mod tests {
     }
 
     #[test]
-    fn stop_command_clears_last_run_result() {
+    fn stop_action_clears_last_run_result() {
         let mut app = SequencePlayApp;
         let document = app.initial_document_json();
-        let ran = app.handle_command_patch_ops("run", None, &document, &ViewState::default());
+        let ran = app.handle_action_patch_ops("run", None, &document, &ViewState::default());
         let ran_document = serde_json::from_str::<Value>(&ran[0]).unwrap()["document"].to_string();
-        let ops = app.handle_command_patch_ops("stop", None, &ran_document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("stop", None, &ran_document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated: SequencePlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();

@@ -9,7 +9,7 @@ use layout_rs::{
 use semio_framework_plugin::{SurfaceKind,
     build_canvas_2d_scene, create_default_layout, tool_button, tool_collection, ui_declarative_sections_to_tree,
     ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
-    Canvas2dScene, CommandDescriptor, PanelGroup, PluginApp, PluginBundle, ToolNode, UiFieldNode,
+    Canvas2dScene, ActionDescriptor, PanelGroup, PluginApp, PluginBundle, ToolNode, UiFieldNode,
     UiInputNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -140,10 +140,10 @@ fn download_media_export_op(filename: &str, mime_type: &str, data: &str) -> Stri
     json!({ "op": "downloadMediaExport", "filename": filename, "mimeType": mime_type, "data": data }).to_string()
 }
 
-fn layout_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn layout_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: LAYOUT_PLAY_APP_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -579,7 +579,7 @@ fn tree_item(
     label: impl Into<String>,
     description: Option<String>,
     icon_id: Option<String>,
-    command: Option<CommandDescriptor>,
+    action: Option<ActionDescriptor>,
 ) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
@@ -588,10 +588,10 @@ fn tree_item(
         icon_id,
         selected: None,
         default_open: None,
-        hover_command: None,
-        unhover_command: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
-        command,
+        action,
         draggable: None,
         drag_data: None,
         items: None,
@@ -605,12 +605,12 @@ fn tree_item_hoverable(
     label: impl Into<String>,
     description: Option<String>,
     icon_id: Option<String>,
-    command: Option<CommandDescriptor>,
+    action: Option<ActionDescriptor>,
     hover_id: &str,
 ) -> UiTreeItemNode {
-    let mut item = tree_item(id, label, description, icon_id, command);
-    item.hover_command = Some(layout_cmd("setHover", Some(json!({ "id": hover_id }))));
-    item.unhover_command = Some(layout_cmd("setHover", Some(json!({ "id": Value::Null }))));
+    let mut item = tree_item(id, label, description, icon_id, action);
+    item.hover_action = Some(layout_action("setHover", Some(json!({ "id": hover_id }))));
+    item.unhover_action = Some(layout_action("setHover", Some(json!({ "id": Value::Null }))));
     item
 }
 
@@ -632,7 +632,7 @@ fn build_document_tree(play: &LayoutPlayEnvelope) -> UiNode {
                 page.name.clone(),
                 page.parent_page_id.as_ref().map(|parent_id| format!("parent: {parent_id}")),
                 Some("file".into()),
-                Some(layout_cmd("setActivePage", Some(json!({ "pageId": page.id })))),
+                Some(layout_action("setActivePage", Some(json!({ "pageId": page.id })))),
                 &page.id,
             )
         })
@@ -648,7 +648,7 @@ fn build_document_tree(play: &LayoutPlayEnvelope) -> UiNode {
                     frame.id(),
                     Some(format!("{} · {}", page.name, frame.kind_str())),
                     Some(frame_icon(frame.kind_str()).into()),
-                    Some(layout_cmd("setSelection", Some(json!({ "ids": [frame.id()] })))),
+                    Some(layout_action("setSelection", Some(json!({ "ids": [frame.id()] })))),
                     frame.id(),
                 )
             })
@@ -714,7 +714,7 @@ fn build_document_tree(play: &LayoutPlayEnvelope) -> UiNode {
                 link.path.clone(),
                 Some(link.state.clone().unwrap_or_else(|| "ok".into())),
                 Some("link".into()),
-                (!referencing_ids.is_empty()).then(|| layout_cmd("setSelection", Some(json!({ "ids": referencing_ids })))),
+                (!referencing_ids.is_empty()).then(|| layout_action("setSelection", Some(json!({ "ids": referencing_ids })))),
             )
         })
         .collect();
@@ -785,17 +785,17 @@ fn build_document_tree(play: &LayoutPlayEnvelope) -> UiNode {
                 .collect(),
         ),
         highlighted_ids: if highlighted_ids.is_empty() { None } else { Some(highlighted_ids) },
-        selection_change: Some(layout_cmd("setSelection", None)),
-        drop_command: None,
+        selection_change: Some(layout_action("setSelection", None)),
+        drop_action: None,
     })
 }
 
 fn catalogue_tree_item(kind: &str, label: &str, icon: &str) -> UiTreeItemNode {
-    let command = if kind == "page" { layout_cmd("addPage", None) } else { layout_cmd("addFrame", Some(json!({ "kind": kind }))) };
+    let action = if kind == "page" { layout_action("addPage", None) } else { layout_action("addFrame", Some(json!({ "kind": kind }))) };
     let mut drag_data = HashMap::new();
     drag_data.insert(LAYOUT_CATALOGUE_DRAG_MIME.to_string(), json!({ "kind": kind }).to_string());
     drag_data.insert(format!("{LAYOUT_CATALOGUE_KIND_MIME_PREFIX}{kind}"), String::new());
-    let mut item = tree_item(format!("layout-catalogue.{kind}"), label, Some(kind.into()), Some(icon.into()), Some(command));
+    let mut item = tree_item(format!("layout-catalogue.{kind}"), label, Some(kind.into()), Some(icon.into()), Some(action));
     item.draggable = Some(true);
     item.drag_data = Some(drag_data);
     item
@@ -814,7 +814,7 @@ fn build_catalogue_tree() -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -841,7 +841,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                     value: page.name.clone(),
                     placeholder: None,
                     commit: Some("blur".into()),
-                    on_change: layout_cmd("patchPage", Some(json!({ "pageId": page.id, "field": "name" }))),
+                    on_change: layout_action("patchPage", Some(json!({ "pageId": page.id, "field": "name" }))),
                     min: None,
                     max: None,
                     step: None,
@@ -870,7 +870,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                     value: format!("{value}"),
                     placeholder: None,
                     commit: Some("blur".into()),
-                    on_change: layout_cmd("patchPage", Some(json!({ "pageId": page.id, "field": field }))),
+                    on_change: layout_action("patchPage", Some(json!({ "pageId": page.id, "field": field }))),
                     min: None,
                     max: None,
                     step: None,
@@ -890,7 +890,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                 value: format!("{}", page.columns.count),
                 placeholder: None,
                 commit: Some("blur".into()),
-                on_change: layout_cmd("patchPage", Some(json!({ "pageId": page.id, "field": "columnsCount" }))),
+                on_change: layout_action("patchPage", Some(json!({ "pageId": page.id, "field": "columnsCount" }))),
                 min: None,
                 max: None,
                 step: None,
@@ -933,7 +933,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                         value: format!("{}", value as i64),
                         placeholder: None,
                         commit: Some("blur".into()),
-                        on_change: layout_cmd(
+                        on_change: layout_action(
                             "patchFrame",
                             Some(json!({ "frameId": frame_id, "pageId": page_id, "field": field })),
                         ),
@@ -959,7 +959,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                                 value: rgba_to_text(value),
                                 placeholder: Some("r, g, b, a".into()),
                                 commit: Some("blur".into()),
-                                on_change: layout_cmd(
+                                on_change: layout_action(
                                     "patchFrame",
                                     Some(json!({ "frameId": frame_id, "pageId": page_id, "field": field })),
                                 ),
@@ -984,7 +984,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                             value: story_full_content(doc, story_id),
                             placeholder: None,
                             commit: Some("blur".into()),
-                            on_change: layout_cmd(
+                            on_change: layout_action(
                                 "patchFrame",
                                 Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "storyContent" })),
                             ),
@@ -1009,7 +1009,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                                 UiSelectItem { value: "contour".into(), label: "Contour".into() },
                             ],
                             placeholder: None,
-                            on_change: layout_cmd(
+                            on_change: layout_action(
                                 "patchFrame",
                                 Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "wrapMode" })),
                             ),
@@ -1027,7 +1027,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                             value: format!("{columns}"),
                             placeholder: None,
                             commit: Some("blur".into()),
-                            on_change: layout_cmd(
+                            on_change: layout_action(
                                 "patchFrame",
                                 Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "columns" })),
                             ),
@@ -1051,7 +1051,7 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                             value: link_path(doc, link_id),
                             placeholder: None,
                             commit: Some("blur".into()),
-                            on_change: layout_cmd(
+                            on_change: layout_action(
                                 "patchFrame",
                                 Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "linkPath" })),
                             ),
@@ -1104,7 +1104,7 @@ fn build_preflight_tree(play: &LayoutPlayEnvelope) -> UiNode {
                     } else {
                         "alert-triangle"
                     }.into()),
-                    Some(layout_cmd("focusPreflightIssue", Some(json!({ "issue": issue })))),
+                    Some(layout_action("focusPreflightIssue", Some(json!({ "issue": issue })))),
                 )
             })
             .collect()
@@ -1119,7 +1119,7 @@ fn build_preflight_tree(play: &LayoutPlayEnvelope) -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -1132,8 +1132,8 @@ fn layout_window_engagement(play: &LayoutPlayEnvelope, label: &str) -> WindowEng
             value: Some(play.runtime.engagement_input.clone()),
             placeholder: Some("undo, redo, export png".into()),
             disabled: None,
-            on_change: Some(layout_cmd("engagementInput", None)),
-            on_submit: Some(layout_cmd("engagementSubmit", None)),
+            on_change: Some(layout_action("engagementInput", None)),
+            on_submit: Some(layout_action("engagementSubmit", None)),
             on_repeat_last: None,
             on_abort: None,
         }),
@@ -1144,8 +1144,8 @@ fn layout_window_engagement(play: &LayoutPlayEnvelope, label: &str) -> WindowEng
             text: format!("Page {}", play.runtime.active_page_id),
         }]),
         possible_engagements: Some(vec![
-            WindowEngagementPossible { id: "layout.eng.undo".into(), label: "Undo".into(), detail: None, command: Some(layout_cmd("undo", None)) },
-            WindowEngagementPossible { id: "layout.eng.redo".into(), label: "Redo".into(), detail: None, command: Some(layout_cmd("redo", None)) },
+            WindowEngagementPossible { id: "layout.eng.undo".into(), label: "Undo".into(), detail: None, action: Some(layout_action("undo", None)) },
+            WindowEngagementPossible { id: "layout.eng.redo".into(), label: "Redo".into(), detail: None, action: Some(layout_action("redo", None)) },
         ]),
     }
 }
@@ -1157,8 +1157,8 @@ fn layout_toolbar_tools() -> Vec<ToolNode> {
             "file-text",
             "Document",
             vec![
-                tool_button("layout-tools-undo", "rotate-ccw", "Undo", layout_cmd("undo", None)),
-                tool_button("layout-tools-redo", "rotate-cw", "Redo", layout_cmd("redo", None)),
+                tool_button("layout-tools-undo", "rotate-ccw", "Undo", layout_action("undo", None)),
+                tool_button("layout-tools-redo", "rotate-cw", "Redo", layout_action("redo", None)),
             ],
         ),
         tool_collection(
@@ -1166,10 +1166,10 @@ fn layout_toolbar_tools() -> Vec<ToolNode> {
             "download",
             "Export",
             vec![
-                tool_button("layout-tools-export-png", "image", "PNG", layout_cmd("exportPng", None)),
-                tool_button("layout-tools-export-svg", "file-code", "SVG", layout_cmd("exportSvg", None)),
-                tool_button("layout-tools-export-pdf", "file-text", "PDF", layout_cmd("exportPdf", None)),
-                tool_button("layout-tools-export-package", "archive", "Package", layout_cmd("exportPackage", None)),
+                tool_button("layout-tools-export-png", "image", "PNG", layout_action("exportPng", None)),
+                tool_button("layout-tools-export-svg", "file-code", "SVG", layout_action("exportSvg", None)),
+                tool_button("layout-tools-export-pdf", "file-text", "PDF", layout_action("exportPdf", None)),
+                tool_button("layout-tools-export-package", "archive", "Package", layout_action("exportPackage", None)),
             ],
         ),
     ]
@@ -1218,15 +1218,15 @@ impl PluginApp for LayoutPlayApp {
         serde_json::to_string(&default_envelope()).expect("layout envelope json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut play = parse_envelope(document_json);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(document) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value::<LayoutPlayEnvelope>(document.clone()) {
@@ -1705,9 +1705,9 @@ impl PluginApp for LayoutPlayApp {
                 let (sx, sy, width, height) = pointer_args(args);
                 let (wx, wy) = screen_to_world_for_surface(&play, blueprint, sx, sy, width, height);
                 if kind == "page" {
-                    return self.handle_command_patch_ops("addPage", None, &cleared_json, _view_state);
+                    return self.handle_action_patch_ops("addPage", None, &cleared_json, _view_state);
                 }
-                return self.handle_command_patch_ops("addFrame", Some(&json!({ "kind": kind, "x": wx, "y": wy })), &cleared_json, _view_state);
+                return self.handle_action_patch_ops("addFrame", Some(&json!({ "kind": kind, "x": wx, "y": wy })), &cleared_json, _view_state);
             }
             "engagementInput" => {
                 if let Some(value) = args.and_then(|value| value.get("value")).and_then(Value::as_str) {
@@ -1717,7 +1717,7 @@ impl PluginApp for LayoutPlayApp {
             }
             "engagementSubmit" => {
                 let typed = args.and_then(|value| value.get("value")).and_then(Value::as_str).map(str::trim).map(str::to_lowercase).unwrap_or_default();
-                let command = match typed.as_str() {
+                let action = match typed.as_str() {
                     "undo" => Some("undo"),
                     "redo" => Some("redo"),
                     "export png" | "png" => Some("exportPng"),
@@ -1726,8 +1726,8 @@ impl PluginApp for LayoutPlayApp {
                     "export package" | "package" => Some("exportPackage"),
                     _ => None,
                 };
-                if let Some(command) = command {
-                    return self.handle_command_patch_ops(command, None, document_json, _view_state);
+                if let Some(action) = action {
+                    return self.handle_action_patch_ops(action, None, document_json, _view_state);
                 }
                 return Vec::new();
             }
@@ -1953,7 +1953,7 @@ mod tests {
     fn set_selection_updates_runtime() {
         let mut app = LayoutPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setSelection",
             Some(&json!({ "ids": ["frame-text-1"] })),
             &document,
@@ -1973,12 +1973,12 @@ mod tests {
     }
 
     #[test]
-    fn add_frame_command_appends_rect() {
+    fn add_frame_action_appends_rect() {
         let mut app = LayoutPlayApp;
         let document = app.initial_document_json();
         let before: LayoutPlayEnvelope = serde_json::from_str(&document).expect("parse envelope");
         let before_count = before.document.pages[0].frames.len();
-        let ops = app.handle_command_patch_ops("addFrame", Some(&json!({ "kind": "rect" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addFrame", Some(&json!({ "kind": "rect" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
@@ -1996,7 +1996,7 @@ mod tests {
             ("marginLeft", 40.0),
             ("columnsGutter", 18.0),
         ] {
-            let ops = app.handle_command_patch_ops(
+            let ops = app.handle_action_patch_ops(
                 "patchPage",
                 Some(&json!({ "pageId": "page-1", "field": field, "value": value })),
                 &document,
@@ -2004,7 +2004,7 @@ mod tests {
             );
             assert_eq!(ops.len(), 1, "field {field} should apply");
         }
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "patchPage",
             Some(&json!({ "pageId": "page-1", "field": "columnsCount", "value": 3 })),
             &document,
@@ -2020,13 +2020,13 @@ mod tests {
     fn patch_frame_supports_rect_fill_and_stroke() {
         let mut app = LayoutPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("addFrame", Some(&json!({ "kind": "rect" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addFrame", Some(&json!({ "kind": "rect" })), &document, &ViewState::default());
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let after_add: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
         let document = serde_json::to_string(&after_add).unwrap();
         let frame_id = after_add.runtime.selected_ids[0].clone();
 
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "patchFrame",
             Some(&json!({ "frameId": frame_id, "pageId": "page-1", "field": "fill", "value": "0.5, 0.4, 0.3, 1" })),
             &document,
@@ -2044,7 +2044,7 @@ mod tests {
     fn patch_frame_supports_text_story_content_and_wrap_mode() {
         let mut app = LayoutPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "patchFrame",
             Some(&json!({ "frameId": "frame-text-1", "pageId": "page-1", "field": "storyContent", "value": "Edited story body." })),
             &document,
@@ -2057,7 +2057,7 @@ mod tests {
         assert_eq!(story.content, "Edited story body.");
 
         let document = serde_json::to_string(&next).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "patchFrame",
             Some(&json!({ "frameId": "frame-text-1", "pageId": "page-1", "field": "wrapMode", "value": "contour" })),
             &document,
@@ -2074,7 +2074,7 @@ mod tests {
     fn patch_frame_supports_image_link_path() {
         let mut app = LayoutPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "patchFrame",
             Some(&json!({ "frameId": "frame-image-1", "pageId": "page-1", "field": "linkPath", "value": "assets/updated.png" })),
             &document,
@@ -2088,17 +2088,17 @@ mod tests {
     }
 
     #[test]
-    fn export_commands_wire_to_real_layout_rs_exporters() {
+    fn export_actions_wire_to_real_layout_rs_exporters() {
         let mut app = LayoutPlayApp;
         let document = app.initial_document_json();
-        for (command, mime_type) in [
+        for (action, mime_type) in [
             ("exportPng", "image/png"),
             ("exportSvg", "image/svg+xml"),
             ("exportPdf", "application/pdf"),
             ("exportPackage", "application/zip"),
         ] {
-            let ops = app.handle_command_patch_ops(command, Some(&json!({ "pageId": "page-1" })), &document, &ViewState::default());
-            assert_eq!(ops.len(), 1, "{command} should emit a download op");
+            let ops = app.handle_action_patch_ops(action, Some(&json!({ "pageId": "page-1" })), &document, &ViewState::default());
+            assert_eq!(ops.len(), 1, "{action} should emit a download op");
             let payload: Value = serde_json::from_str(&ops[0]).unwrap();
             assert_eq!(payload["op"], "downloadMediaExport");
             assert_eq!(payload["mimeType"], mime_type);
@@ -2156,7 +2156,7 @@ mod tests {
     fn selected_and_hovered_frames_get_chrome_strokes() {
         let mut app = LayoutPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("setSelection", Some(&json!({ "ids": ["frame-text-1"] })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setSelection", Some(&json!({ "ids": ["frame-text-1"] })), &document, &ViewState::default());
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let selected: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
         let document = serde_json::to_string(&selected).unwrap();
@@ -2164,7 +2164,7 @@ mod tests {
         let json_str = serde_json::to_string(&node).unwrap();
         assert!(json_str.contains("2.5"));
 
-        let ops = app.handle_command_patch_ops("setHover", Some(&json!({ "id": "frame-image-1" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setHover", Some(&json!({ "id": "frame-image-1" })), &document, &ViewState::default());
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let hovered: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
         let document = serde_json::to_string(&hovered).unwrap();
@@ -2177,7 +2177,7 @@ mod tests {
     fn set_camera_updates_surface_camera() {
         let mut app = LayoutPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setCamera",
             Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "camera": { "x": 10.0, "y": 20.0, "zoom": 1.5 } })),
             &document,
@@ -2197,7 +2197,7 @@ mod tests {
         let mut app = LayoutPlayApp;
         let document = app.initial_document_json();
         let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 136.0, 435.0);
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "canvasPointerDown",
             Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0, "button": 0 })),
             &document,
@@ -2215,13 +2215,13 @@ mod tests {
         let document = app.initial_document_json();
         let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 156.0, 220.0);
         let args = json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0 });
-        let ops = app.handle_command_patch_ops("canvasPointerMove", Some(&args), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("canvasPointerMove", Some(&args), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
         assert_eq!(next.runtime.hovered_id.as_deref(), Some("frame-text-1"));
         let document = serde_json::to_string(&next).unwrap();
-        let ops = app.handle_command_patch_ops("canvasPointerMove", Some(&args), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("canvasPointerMove", Some(&args), &document, &ViewState::default());
         assert!(ops.is_empty());
     }
 
@@ -2231,7 +2231,7 @@ mod tests {
         let document = app.initial_document_json();
         let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 100.0, 200.0);
         let drag_data = json!({ "kind": "rect" }).to_string();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "canvasDrop",
             Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0, "dragData": drag_data })),
             &document,
@@ -2254,7 +2254,7 @@ mod tests {
         let before: LayoutPlayEnvelope = serde_json::from_str(&document).unwrap();
         let before_count = before.document.pages.len();
         let drag_data = json!({ "kind": "page" }).to_string();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "canvasDrop",
             Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": 0.0, "y": 0.0, "width": 800.0, "height": 600.0, "dragData": drag_data })),
             &document,
@@ -2270,7 +2270,7 @@ mod tests {
     fn drag_over_emits_ghost_and_leave_clears() {
         let mut app = LayoutPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "canvasDragOver",
             Some(&json!({
                 "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT,
@@ -2289,7 +2289,7 @@ mod tests {
         let json_str = serde_json::to_string(&scene).unwrap();
         assert!(json_str.contains("layout.drop-preview"));
 
-        let ops = app.handle_command_patch_ops("canvasDragLeave", Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("canvasDragLeave", Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let cleared: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
@@ -2430,7 +2430,7 @@ mod tests {
     fn engagement_submit_triggers_export() {
         let mut app = LayoutPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("engagementSubmit", Some(&json!({ "value": "export png" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "export png" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         assert_eq!(payload["op"], "downloadMediaExport");

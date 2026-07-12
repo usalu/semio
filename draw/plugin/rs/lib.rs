@@ -12,7 +12,7 @@ use semio_framework_plugin::{SurfaceKind,
     build_canvas_2d_scene, create_default_layout, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_select, ui_inspector_mixed_slider, ui_inspector_mixed_text, ui_inspector_mixed_toggle,
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, tool_collection, tool_toggle, App, Canvas2dScene,
-    CommandDescriptor, PanelGroup, ToolNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSelectItem,
+    ActionDescriptor, PanelGroup, ToolNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSelectItem,
     UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
     WindowEngagementInput,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
@@ -69,10 +69,10 @@ struct DrawInteractionState {
     drag: Option<DrawDragState>,
 }
 
-fn draw_play_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn draw_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: DRAW_PLAY_CONTROLLER_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -483,16 +483,16 @@ impl semio_framework_plugin::PluginApp for DrawApp {
         .expect("draw document json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         view_state: &ViewState,
     ) -> Vec<String> {
         let mut play = parse_envelope(document_json);
         let interaction = interaction_state(&play, view_state);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value::<DrawPlayEnvelope>(next.clone()) {
@@ -650,7 +650,7 @@ impl semio_framework_plugin::PluginApp for DrawApp {
                     .and_then(|value| value.get("dropPosition"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("inside");
-                if command == "dropLayerKind" {
+                if action == "dropLayerKind" {
                     if let Some(kind) = kind {
                         let layer = create_layer_by_kind(kind);
                         let select_id = layer_id(&layer).to_string();
@@ -948,7 +948,7 @@ impl semio_framework_plugin::PluginApp for DrawApp {
                 icon,
                 label,
                 active == id,
-                draw_play_cmd("setActiveTool", Some(json!({ "tool": id }))),
+                draw_play_action("setActiveTool", Some(json!({ "tool": id }))),
             )
         };
         vec![
@@ -1155,9 +1155,9 @@ fn layer_tree_item(doc: &DrawDocument, layer: &draw::DrawLayerNode) -> UiTreeIte
         icon_id: Some(layer_icon(layer).into()),
         selected: None,
         default_open: Some(matches!(layer, draw::DrawLayerNode::Group(_))),
-        command: Some(draw_play_cmd("setSelection", Some(json!({ "ids": [base.id] })))),
-        hover_command: None,
-        unhover_command: None,
+        action: Some(draw_play_action("setSelection", Some(json!({ "ids": [base.id] })))),
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: Some(true),
         drag_data: Some(drag_data),
@@ -1177,9 +1177,9 @@ fn boolean_child_item(doc: &DrawDocument, boolean_id: &str, child_id: &str) -> U
             icon_id: Some(layer_icon(child).into()),
             selected: None,
             default_open: None,
-            command: Some(draw_play_cmd("setSelection", Some(json!({ "ids": [child_id] })))),
-        hover_command: None,
-        unhover_command: None,
+            action: Some(draw_play_action("setSelection", Some(json!({ "ids": [child_id] })))),
+        hover_action: None,
+        unhover_action: None,
         actions: None,
             draggable: Some(false),
             drag_data: None,
@@ -1195,9 +1195,9 @@ fn boolean_child_item(doc: &DrawDocument, boolean_id: &str, child_id: &str) -> U
         icon_id: Some("alert-circle".into()),
         selected: None,
         default_open: None,
-        command: None,
-        hover_command: None,
-        unhover_command: None,
+        action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: Some(false),
         drag_data: None,
@@ -1223,9 +1223,9 @@ fn render_layers_panel(document: &DrawDocument, interaction: &DrawInteractionSta
             icon_id: Some("pen-tool".into()),
             selected: None,
             default_open: None,
-            command: None,
-        hover_command: None,
-        unhover_command: None,
+            action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
             draggable: None,
             drag_data: None,
@@ -1256,12 +1256,12 @@ fn render_layers_panel(document: &DrawDocument, interaction: &DrawInteractionSta
         }],
         selected_ids: Some(selected_tree_ids),
         highlighted_ids: if highlighted_ids.is_empty() { None } else { Some(highlighted_ids) },
-        selection_change: Some(draw_play_cmd("setSelection", None)),
-        drop_command: None,
+        selection_change: Some(draw_play_action("setSelection", None)),
+        drop_action: None,
     })
 }
 
-fn tree_button(id: &str, label: &str, icon: &str, command: &str, args: Value) -> UiTreeItemNode {
+fn tree_button(id: &str, label: &str, icon: &str, action: &str, args: Value) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
         label: label.into(),
@@ -1269,9 +1269,9 @@ fn tree_button(id: &str, label: &str, icon: &str, command: &str, args: Value) ->
         icon_id: Some(icon.into()),
         selected: None,
         default_open: None,
-        command: Some(draw_play_cmd(command, Some(args))),
-        hover_command: None,
-        unhover_command: None,
+        action: Some(draw_play_action(action, Some(args))),
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -1308,9 +1308,9 @@ fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawInteractio
                 icon_id: Some(icon.into()),
                 selected: None,
                 default_open: None,
-                command: None,
-                hover_command: None,
-                unhover_command: None,
+                action: None,
+                hover_action: None,
+                unhover_action: None,
                 actions: None,
                 draggable: Some(true),
                 drag_data: Some(drag_data),
@@ -1328,12 +1328,12 @@ fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawInteractio
             icon_id: Some("combine".into()),
             selected: None,
             default_open: None,
-            command: Some(draw_play_cmd(
+            action: Some(draw_play_action(
                 "combineBoolean",
                 Some(json!({ "op": op, "ids": interaction.selected_ids })),
             )),
-            hover_command: None,
-            unhover_command: None,
+            hover_action: None,
+            unhover_action: None,
             actions: None,
             draggable: None,
             drag_data: None,
@@ -1352,14 +1352,14 @@ fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawInteractio
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 //#endregion 🔖CataloguePanel
 
 //#region 🔖InspectorPanel
-fn inspector_patch(layer_ids: &[String], field: &str) -> CommandDescriptor {
-    draw_play_cmd("patchLayers", Some(json!({ "layerIds": layer_ids, "field": field })))
+fn inspector_patch(layer_ids: &[String], field: &str) -> ActionDescriptor {
+    draw_play_action("patchLayers", Some(json!({ "layerIds": layer_ids, "field": field })))
 }
 
 fn inspector_number_field(layer_ids: &[String], field_id: &str, label: &str, values: &[f64], field: &str) -> UiNode {
@@ -1854,8 +1854,8 @@ fn create_draw_app() -> App {
             id: Some("draw-canvas-engagement".into()),
             value: Some(String::new()),
             placeholder: Some("Layer name".into()),
-            on_change: Some(draw_play_cmd("engagementInput", None)),
-            on_submit: Some(draw_play_cmd("engagementSubmit", None)),
+            on_change: Some(draw_play_action("engagementInput", None)),
+            on_submit: Some(draw_play_action("engagementSubmit", None)),
             disabled: None,
             on_repeat_last: None,
             on_abort: None,
@@ -1969,10 +1969,10 @@ mod tests {
     }
 
     #[test]
-    fn add_layer_command_appends_path() {
+    fn add_layer_action_appends_path() {
         let mut app = DrawApp;
         let document = serde_json::to_string(&empty_draw_projection()).unwrap();
-        let ops = app.handle_command_patch_ops("addLayer", Some(&json!({ "kind": "path" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addLayer", Some(&json!({ "kind": "path" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 2);
         let next: DrawDocument = serde_json::from_str(&document).unwrap();
         let applied = apply_ops(&next, &ops);
@@ -1985,7 +1985,7 @@ mod tests {
         let mut document = default_draw_document("patch", None);
         let layer_id = draw::layer_id(&document.layers[0]).to_string();
         let document_json = serde_json::to_string(&document).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "patchLayers",
             Some(&json!({ "layerIds": [layer_id.clone()], "field": "opacity", "value": 0.5 })),
             &document_json,
@@ -2015,7 +2015,7 @@ mod tests {
     fn set_active_tool_updates_document() {
         let mut app = DrawApp;
         let document = serde_json::to_string(&empty_draw_projection()).unwrap();
-        let ops = app.handle_command_patch_ops("setActiveTool", Some(&json!({ "tool": "pen" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setActiveTool", Some(&json!({ "tool": "pen" })), &document, &ViewState::default());
         let next: DrawDocument = apply_ops(&empty_draw_projection(), &ops);
         assert_eq!(next.active_tool.as_deref(), Some("pen"));
     }
@@ -2037,7 +2037,7 @@ mod tests {
         document.layers.push(second);
         let first_id = draw::layer_id(&document.layers[0]).to_string();
         let document_json = serde_json::to_string(&document).unwrap();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "combineBoolean",
             Some(&json!({ "op": "union", "ids": [first_id, second_id] })),
             &document_json,
@@ -2055,8 +2055,8 @@ mod tests {
         assert!((world_y - 55.0).abs() < 1e-9);
     }
 
-    fn dispatch(app: &mut DrawApp, document_json: &str, command: &str, args: Option<Value>, view_state: &ViewState) -> String {
-        let ops = app.handle_command_patch_ops(command, args.as_ref(), document_json, view_state);
+    fn dispatch(app: &mut DrawApp, document_json: &str, action: &str, args: Option<Value>, view_state: &ViewState) -> String {
+        let ops = app.handle_action_patch_ops(action, args.as_ref(), document_json, view_state);
         for op_json in ops.iter().rev() {
             if let Ok(op) = serde_json::from_str::<Value>(op_json) {
                 if op.get("op").and_then(|value| value.as_str()) == Some("setDocument") {
@@ -2166,7 +2166,7 @@ mod tests {
     fn set_camera_does_not_push_undo() {
         let mut app = DrawApp;
         let document = serde_json::to_string(&empty_draw_projection()).unwrap();
-        let ops = app.handle_command_patch_ops("setCamera", Some(&json!({ "camera": { "x": 5.0, "y": 5.0, "zoom": 2.0 } })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setCamera", Some(&json!({ "camera": { "x": 5.0, "y": 5.0, "zoom": 2.0 } })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let op: Value = serde_json::from_str(&ops[0]).unwrap();
         let envelope: DrawPlayEnvelope = serde_json::from_value(op.get("document").unwrap().clone()).unwrap();

@@ -4,7 +4,7 @@ use puzzle_2d::{handle_position_on_circle, handle_position_on_rectangle, puzzle_
 use semio_framework_plugin::{
     build_canvas_2d_scene, build_puzzle2d_board_scene, create_default_layout,
     layout::{MeasureSelectItem, WindowEngagementStatus, WindowEngagementToggleGroupOption},
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, CommandDescriptor, PanelGroup, PluginApp, PluginBundle, Puzzle2dBoardScene, SurfaceKind, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
+    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, ActionDescriptor, PanelGroup, PluginApp, PluginBundle, Puzzle2dBoardScene, SurfaceKind, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
     WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
@@ -168,8 +168,8 @@ fn set_document_op(envelope: &Puzzle2dPlayEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
 }
 
-fn puzzle2d_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor { controller_id: PUZZLE2D_PLAY_CONTROLLER_ID.into(), command: command.into(), args }
+fn puzzle2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: PUZZLE2D_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
 }
 
 fn selection_ids(args: Option<&Value>) -> Vec<String> {
@@ -638,7 +638,7 @@ fn puzzle2d_brush_placement_control(envelope: &Puzzle2dPlayEnvelope) -> Option<W
         value: Some(format!("puzzle2d.brush.candidate.{selected_index}")),
         options,
         disabled: None,
-        on_select: Some(puzzle2d_cmd("engagementControlSelect", None)),
+        on_select: Some(puzzle2d_action("engagementControlSelect", None)),
     })
 }
 
@@ -653,7 +653,7 @@ fn puzzle2d_fill_count_control(envelope: &Puzzle2dPlayEnvelope) -> WindowEngagem
         step: Some(1.0),
         unit: None,
         disabled: None,
-        on_change: Some(puzzle2d_cmd("setFillCount", None)),
+        on_change: Some(puzzle2d_action("setFillCount", None)),
         on_commit: None,
     }
 }
@@ -682,10 +682,10 @@ fn puzzle2d_engagement(envelope: &Puzzle2dPlayEnvelope, host: &BoardHost, pane: 
             value: Some(input_value),
             placeholder: Some(placeholder.into()),
             disabled: None,
-            on_change: Some(puzzle2d_cmd("engagementInput", Some(json!({ "pane": pane })))),
-            on_submit: Some(puzzle2d_cmd("engagementSubmit", Some(json!({ "pane": pane })))),
+            on_change: Some(puzzle2d_action("engagementInput", Some(json!({ "pane": pane })))),
+            on_submit: Some(puzzle2d_action("engagementSubmit", Some(json!({ "pane": pane })))),
             on_repeat_last: None,
-            on_abort: Some(puzzle2d_cmd("engagementAbort", Some(json!({ "pane": pane })))),
+            on_abort: Some(puzzle2d_action("engagementAbort", Some(json!({ "pane": pane })))),
         }),
         control,
         controls: None,
@@ -697,7 +697,7 @@ fn puzzle2d_engagement(envelope: &Puzzle2dPlayEnvelope, host: &BoardHost, pane: 
                 icon_id: Some("cursor".into()),
                 pressed: Some(envelope.runtime.active_tool == "select"),
                 disabled: None,
-                command: Some(puzzle2d_cmd("engagementPossibleSelect", Some(json!({ "pane": pane, "possibleId": PUZZLE2D_ENGAGEMENT_TOOL_SELECT })))),
+                action: Some(puzzle2d_action("engagementPossibleSelect", Some(json!({ "pane": pane, "possibleId": PUZZLE2D_ENGAGEMENT_TOOL_SELECT })))),
             },
             WindowEngagementOption {
                 id: PUZZLE2D_ENGAGEMENT_TOOL_BRUSH.into(),
@@ -705,7 +705,7 @@ fn puzzle2d_engagement(envelope: &Puzzle2dPlayEnvelope, host: &BoardHost, pane: 
                 icon_id: Some("brush".into()),
                 pressed: Some(envelope.runtime.active_tool == "brush"),
                 disabled: None,
-                command: Some(puzzle2d_cmd("engagementPossibleSelect", Some(json!({ "pane": pane, "possibleId": PUZZLE2D_ENGAGEMENT_TOOL_BRUSH })))),
+                action: Some(puzzle2d_action("engagementPossibleSelect", Some(json!({ "pane": pane, "possibleId": PUZZLE2D_ENGAGEMENT_TOOL_BRUSH })))),
             },
             WindowEngagementOption {
                 id: PUZZLE2D_ENGAGEMENT_TOOL_FILL.into(),
@@ -713,7 +713,7 @@ fn puzzle2d_engagement(envelope: &Puzzle2dPlayEnvelope, host: &BoardHost, pane: 
                 icon_id: Some("fill".into()),
                 pressed: Some(envelope.runtime.fill_count > 0 || envelope.runtime.active_tool == "fill"),
                 disabled: None,
-                command: Some(puzzle2d_cmd("engagementPossibleSelect", Some(json!({ "pane": pane, "possibleId": PUZZLE2D_ENGAGEMENT_TOOL_FILL })))),
+                action: Some(puzzle2d_action("engagementPossibleSelect", Some(json!({ "pane": pane, "possibleId": PUZZLE2D_ENGAGEMENT_TOOL_FILL })))),
             },
         ]),
         possible_engagements: None,
@@ -816,7 +816,7 @@ fn puzzle2d_pane_camera(fixture: &Value, pane: &str) -> (f64, f64, f64) {
     }
 }
 
-/// 🖱️ Recovers the pane id from the `canvas-2d-host` surface id echoed back into pointer-command args.
+/// 🖱️ Recovers the pane id from the `canvas-2d-host` surface id echoed back into pointer-action args.
 fn pane_from_surface_id(surface_id: &str) -> &'static str {
     if surface_id.ends_with(PUZZLE2D_PANE_DETAIL) {
         PUZZLE2D_PANE_DETAIL
@@ -896,7 +896,7 @@ fn patch_inspector_nodes(fixture: &mut Value, ids: &[String], field: &str, value
 //#endregion 🔖Canvas
 
 //#region 🔖DocumentPanel
-fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, description: Option<String>, command: CommandDescriptor) -> UiTreeItemNode {
+fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
         label: label.into(),
@@ -904,9 +904,9 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
         icon_id: None,
         selected: None,
         default_open: None,
-        command: Some(command),
-        hover_command: None,
-        unhover_command: None,
+        action: Some(action),
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -949,14 +949,14 @@ fn render_document_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
         .iter()
         .filter_map(|node| {
             let id = node.get("id")?.as_str()?;
-            Some(tree_item_with_command(format!("puzzle2d-play-document.node.{id}"), node_label(node), node.get("nodeKind").and_then(|value| value.as_str()).map(str::to_string), puzzle2d_cmd("setSelection", Some(json!({ "ids": [id] })))))
+            Some(tree_item_with_action(format!("puzzle2d-play-document.node.{id}"), node_label(node), node.get("nodeKind").and_then(|value| value.as_str()).map(str::to_string), puzzle2d_action("setSelection", Some(json!({ "ids": [id] })))))
         })
         .collect();
     let edge_items: Vec<UiTreeItemNode> = fixture_edges(fixture)
         .iter()
         .filter_map(|edge| {
             let id = edge.get("id")?.as_str()?;
-            Some(tree_item_with_command(format!("puzzle2d-play-document.edge.{id}"), edge_label(edge, fixture), edge.get("edgeKind").and_then(|value| value.as_str()).map(str::to_string), puzzle2d_cmd("setSelection", Some(json!({ "ids": [id] })))))
+            Some(tree_item_with_action(format!("puzzle2d-play-document.edge.{id}"), edge_label(edge, fixture), edge.get("edgeKind").and_then(|value| value.as_str()).map(str::to_string), puzzle2d_action("setSelection", Some(json!({ "ids": [id] })))))
         })
         .collect();
     UiNode::Tree(UiTreeNode {
@@ -973,9 +973,9 @@ fn render_document_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
                         icon_id: None,
                         selected: None,
                         default_open: None,
-                        command: None,
-                        hover_command: None,
-                        unhover_command: None,
+                        action: None,
+                        hover_action: None,
+                        unhover_action: None,
                         actions: None,
                         draggable: None,
                         drag_data: None,
@@ -999,9 +999,9 @@ fn render_document_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
                         icon_id: None,
                         selected: None,
                         default_open: None,
-                        command: None,
-                        hover_command: None,
-                        unhover_command: None,
+                        action: None,
+                        hover_action: None,
+                        unhover_action: None,
                         actions: None,
                         draggable: None,
                         drag_data: None,
@@ -1016,8 +1016,8 @@ fn render_document_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
         ],
         selected_ids: Some(document_tree_selected_ids(fixture, &envelope.runtime.selected_ids)),
         highlighted_ids: None,
-        selection_change: Some(puzzle2d_cmd("setSelection", None)),
-        drop_command: None,
+        selection_change: Some(puzzle2d_action("setSelection", None)),
+        drop_action: None,
     })
 }
 //#endregion 🔖DocumentPanel
@@ -1099,9 +1099,9 @@ fn kind_catalog_section(section_id: &str, slice: &str, label: &str, entries: &[V
                 icon_id: None,
                 selected: None,
                 default_open: None,
-                command: Some(puzzle2d_cmd("addNode", Some(json!({ "kind": kind_id })))),
-                hover_command: None,
-                unhover_command: None,
+                action: Some(puzzle2d_action("addNode", Some(json!({ "kind": kind_id })))),
+                hover_action: None,
+                unhover_action: None,
                 actions: None,
                 draggable: draggable.then_some(true),
                 drag_data: draggable.then(|| puzzle2d_catalog_item_drag_data(slice, kind_id, entry)),
@@ -1123,9 +1123,9 @@ fn kind_catalog_section(section_id: &str, slice: &str, label: &str, entries: &[V
                 icon_id: None,
                 selected: None,
                 default_open: None,
-                command: None,
-                hover_command: None,
-                unhover_command: None,
+                action: None,
+                hover_action: None,
+                unhover_action: None,
                 actions: None,
                 draggable: None,
                 drag_data: None,
@@ -1155,7 +1155,7 @@ fn render_catalogue_panel(fixture: &Value) -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 //#endregion 🔖CataloguePanel
@@ -1196,7 +1196,7 @@ fn puzzle2d_kind_ids(fixture: &Value, field: &str) -> Vec<String> {
 fn puzzle2d_lod_measure(pane: &str, current_mode: &str) -> WindowMeasure {
     let mut items = vec![MeasureSelectItem { id: PUZZLE2D_LOD_MODE_AUTOMATIC.into(), value: PUZZLE2D_LOD_MODE_AUTOMATIC.into(), label: "Automatic".into() }];
     items.extend(puzzle2d_lod_tier_ids().into_iter().map(|tier| MeasureSelectItem { id: tier.clone(), value: tier.clone(), label: tier }));
-    WindowMeasure::Select { id: format!("{pane}-lod"), label: Some("LOD".into()), value: current_mode.into(), items, on_change: puzzle2d_cmd("setLodModeForPane", Some(json!({ "pane": pane }))) }
+    WindowMeasure::Select { id: format!("{pane}-lod"), label: Some("LOD".into()), value: current_mode.into(), items, on_change: puzzle2d_action("setLodModeForPane", Some(json!({ "pane": pane }))) }
 }
 
 fn puzzle2d_kind_weight_measures(prefix: &str, ids: &[String], weights: &BTreeMap<String, f64>, catalog_slice: &str) -> Vec<WindowMeasure> {
@@ -1210,7 +1210,7 @@ fn puzzle2d_kind_weight_measures(prefix: &str, ids: &[String], weights: &BTreeMa
                 min: 0.0,
                 max: 1.0,
                 step: Some(0.01),
-                on_change: puzzle2d_cmd("setBrushKindWeights", Some(json!({ "kindId": kind_id, "catalogSlice": catalog_slice }))),
+                on_change: puzzle2d_action("setBrushKindWeights", Some(json!({ "kindId": kind_id, "catalogSlice": catalog_slice }))),
             }
         })
         .collect()
@@ -1232,7 +1232,7 @@ fn puzzle2d_suggestion_measures_group(envelope: &Puzzle2dPlayEnvelope) -> Window
                 min: PUZZLE2D_SUGGESTION_OFFSET_MIN,
                 max: PUZZLE2D_SUGGESTION_OFFSET_MAX,
                 step: Some(PUZZLE2D_SUGGESTION_OFFSET_STEP),
-                on_change: puzzle2d_cmd("setSuggestionOffset", None),
+                on_change: puzzle2d_action("setSuggestionOffset", None),
             },
             WindowMeasure::Group {
                 id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-distribution-nodes"),
@@ -1276,10 +1276,10 @@ impl PluginApp for Puzzle2dPlayApp {
         serde_json::to_string(&default_envelope()).expect("puzzle2d envelope json")
     }
 
-    fn handle_command_patch_ops(&mut self, command: &str, args: Option<&Value>, document_json: &str, _view_state: &ViewState) -> Vec<String> {
+    fn handle_action_patch_ops(&mut self, action: &str, args: Option<&Value>, document_json: &str, _view_state: &ViewState) -> Vec<String> {
         let mut envelope = parse_envelope(document_json);
         sync_host_from_envelope(&mut self.host, &envelope);
-        let ops = match command {
+        let ops = match action {
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value(next.clone()) {
@@ -1845,7 +1845,7 @@ mod tests {
     fn set_lod_mode_for_pane_persists_per_pane_state() {
         let mut app = Puzzle2dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("setLodModeForPane", Some(&json!({ "pane": PUZZLE2D_PANE_DETAIL, "value": "compact" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setLodModeForPane", Some(&json!({ "pane": PUZZLE2D_PANE_DETAIL, "value": "compact" })), &document, &ViewState::default());
         let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
         assert_eq!(envelope.runtime.lod_mode_by_pane.get(PUZZLE2D_PANE_DETAIL).map(String::as_str), Some("compact"));
         assert_eq!(envelope.runtime.lod_mode_by_pane.get(PUZZLE2D_PANE_OVERVIEW).map(String::as_str), Some(PUZZLE2D_LOD_MODE_AUTOMATIC));
@@ -1855,11 +1855,11 @@ mod tests {
     fn engagement_input_and_submit_round_trip_sets_active_tool() {
         let mut app = Puzzle2dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("engagementInput", Some(&json!({ "pane": PUZZLE2D_PANE_OVERVIEW, "value": "brush" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("engagementInput", Some(&json!({ "pane": PUZZLE2D_PANE_OVERVIEW, "value": "brush" })), &document, &ViewState::default());
         let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
         assert_eq!(envelope.runtime.engagement_input_by_pane.get(PUZZLE2D_PANE_OVERVIEW).map(String::as_str), Some("brush"));
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("engagementSubmit", Some(&json!({ "pane": PUZZLE2D_PANE_OVERVIEW, "value": "brush" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "pane": PUZZLE2D_PANE_OVERVIEW, "value": "brush" })), &document, &ViewState::default());
         let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
         assert_eq!(envelope.runtime.active_tool, "brush");
         assert_eq!(envelope.runtime.engagement_input_by_pane.get(PUZZLE2D_PANE_OVERVIEW).map(String::as_str), Some(""));
@@ -1886,15 +1886,15 @@ mod tests {
     }
 
     #[test]
-    fn suggestion_offset_and_brush_kind_weight_commands_persist() {
+    fn suggestion_offset_and_brush_kind_weight_actions_persist() {
         let mut app = Puzzle2dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("setSuggestionOffset", Some(&json!({ "value": 40.0 })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setSuggestionOffset", Some(&json!({ "value": 40.0 })), &document, &ViewState::default());
         let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
         assert_eq!(envelope.runtime.suggestion_offset, 40.0);
 
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("setBrushKindWeights", Some(&json!({ "kindId": "heavy", "catalogSlice": "nodes", "value": 0.75 })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setBrushKindWeights", Some(&json!({ "kindId": "heavy", "catalogSlice": "nodes", "value": 0.75 })), &document, &ViewState::default());
         let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
         assert_eq!(envelope.runtime.node_kind_weights.get("heavy").copied(), Some(0.75));
     }
@@ -1911,10 +1911,10 @@ mod tests {
     }
 
     #[test]
-    fn add_node_command_appends_node() {
+    fn add_node_action_appends_node() {
         let mut app = Puzzle2dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("addNode", Some(&json!({ "kind": "node" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("addNode", Some(&json!({ "kind": "node" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
         assert_eq!(envelope.fixture.get("nodes").and_then(|value| value.as_array()).map(|values| values.len()), Some(1));
@@ -1930,7 +1930,7 @@ mod tests {
             "payload": { "ids": ["seed-left-001"] }
         }])
         .to_string();
-        let ops = app.handle_command_patch_ops("applyBoardEvents", Some(&json!({ "eventsJson": events_json })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("applyBoardEvents", Some(&json!({ "eventsJson": events_json })), &document, &ViewState::default());
         let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
         assert!(envelope.runtime.selected_ids.iter().any(|id| id == "seed-left-001"), "expected seed-left-001 selected, got {:?}", envelope.runtime.selected_ids);
     }
@@ -1946,7 +1946,7 @@ mod tests {
             "payload": camera
         }])
         .to_string();
-        let ops = app.handle_command_patch_ops("applyBoardEvents", Some(&json!({ "eventsJson": events_json })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("applyBoardEvents", Some(&json!({ "eventsJson": events_json })), &document, &ViewState::default());
         let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
         let node = app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
         let scene_camera = board_scene_camera(&node);
@@ -2007,10 +2007,10 @@ mod tests {
     fn puzzle2d_board_scene_carries_runtime_fields() {
         let mut app = Puzzle2dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("setActiveTool", Some(&json!({ "tool": "brush" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setActiveTool", Some(&json!({ "tool": "brush" })), &document, &ViewState::default());
         let envelope = apply_document_op(&document, &ops[0]);
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("setGridSnapEnabled", Some(&json!({ "enabled": true })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setGridSnapEnabled", Some(&json!({ "enabled": true })), &document, &ViewState::default());
         let envelope = apply_document_op(&document, &ops[0]);
         let document = serde_json::to_string(&envelope).unwrap();
 
@@ -2026,13 +2026,13 @@ mod tests {
         let mut app = Puzzle2dPlayApp::default();
         let envelope = envelope_with_selection(&["n1"]);
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("setSelectionFlag", Some(&json!({ "flag": "hidden", "value": true })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setSelectionFlag", Some(&json!({ "flag": "hidden", "value": true })), &document, &ViewState::default());
         let envelope = apply_document_op(&document, &ops[0]);
         let node = fixture_nodes(&envelope.fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some("n1")).unwrap();
         assert_eq!(node.get("hidden").and_then(|value| value.as_bool()), Some(true));
 
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("setSelectionFlag", Some(&json!({ "flag": "locked", "value": true })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setSelectionFlag", Some(&json!({ "flag": "locked", "value": true })), &document, &ViewState::default());
         let envelope = apply_document_op(&document, &ops[0]);
         let node = fixture_nodes(&envelope.fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some("n1")).unwrap();
         assert_eq!(node.get("locked").and_then(|value| value.as_bool()), Some(true));
@@ -2043,7 +2043,7 @@ mod tests {
         let mut app = Puzzle2dPlayApp::default();
         let envelope = envelope_with_selection(&["n1"]);
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("duplicateSelection", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("duplicateSelection", None, &document, &ViewState::default());
         assert!(!ops.is_empty());
         let envelope = apply_document_op(&document, &ops[0]);
         assert_eq!(envelope.runtime.selected_ids.len(), 1);
@@ -2060,7 +2060,7 @@ mod tests {
         let mut app = Puzzle2dPlayApp::default();
         let envelope = envelope_with_selection(&["n1"]);
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command_patch_ops("selectSameKind", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("selectSameKind", None, &document, &ViewState::default());
         let envelope = apply_document_op(&document, &ops[0]);
         let mut ids = envelope.runtime.selected_ids.clone();
         ids.sort();

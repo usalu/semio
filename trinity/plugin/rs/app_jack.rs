@@ -4,7 +4,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_node_graph_scene, build_table_scene, build_text_editor_scene,
     text_identifier_occurrences_json, tool_button, tool_collection,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text,
-    ui_inspector_readonly_field, ui_text, App, CommandDescriptor, NodeGraphScene, PluginApp,
+    ui_inspector_readonly_field, ui_text, App, ActionDescriptor, NodeGraphScene, PluginApp,
     TableScene, TextEditorScene, ToolNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild,
     WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -112,10 +112,10 @@ fn set_document_op(envelope: &TrinityJackEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
 }
 
-fn jack_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn jack_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: TRINITY_JACK_PLAY_CONTROLLER_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -329,7 +329,7 @@ fn trinity_lod_measure(window_id: &str, current_mode: &str) -> WindowMeasure {
         label: Some("LOD".into()),
         value: current_mode.into(),
         items,
-        on_change: jack_cmd("setLodMode", Some(json!({ "windowId": window_id }))),
+        on_change: jack_action("setLodMode", Some(json!({ "windowId": window_id }))),
     }
 }
 
@@ -483,9 +483,9 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         icon_id: None,
         selected: None,
         default_open: None,
-        command: None,
-        hover_command: None,
-        unhover_command: None,
+        action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -495,11 +495,11 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
     }
 }
 
-fn tree_item_with_command(
+fn tree_item_with_action(
     id: impl Into<String>,
     label: impl Into<String>,
     description: Option<String>,
-    command: CommandDescriptor,
+    action: ActionDescriptor,
 ) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
@@ -508,9 +508,9 @@ fn tree_item_with_command(
         icon_id: None,
         selected: None,
         default_open: None,
-        command: Some(command),
-        hover_command: None,
-        unhover_command: None,
+        action: Some(action),
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -536,11 +536,11 @@ fn build_document_tree(envelope: &TrinityJackEnvelope) -> UiNode {
         .nodes
         .iter()
         .map(|node| {
-            tree_item_with_command(
+            tree_item_with_action(
                 format!("trinity-document.node.{}", node.id),
                 if node.name.is_empty() { node.id.clone() } else { node.name.clone() },
                 Some(node.kind.clone()),
-                jack_cmd("setSelection", Some(json!({ "ids": [node.id] }))),
+                jack_action("setSelection", Some(json!({ "ids": [node.id] }))),
             )
         })
         .collect();
@@ -576,8 +576,8 @@ fn build_document_tree(envelope: &TrinityJackEnvelope) -> UiNode {
                 .collect(),
         ),
         highlighted_ids: None,
-        selection_change: Some(jack_cmd("setSelection", Some(json!({ "ids": [] })))),
-        drop_command: None,
+        selection_change: Some(jack_action("setSelection", Some(json!({ "ids": [] })))),
+        drop_action: None,
     })
 }
 
@@ -602,11 +602,11 @@ fn build_catalogue_tree(envelope: &TrinityJackEnvelope) -> UiNode {
                 items: fixtures
                     .iter()
                     .map(|(id, label)| {
-                        tree_item_with_command(
+                        tree_item_with_action(
                             format!("trinity-jack-catalogue.fixture.{id}"),
                             *label,
                             Some(preset_query(id).into()),
-                            jack_cmd("setActiveExample", Some(json!({ "exampleId": id }))),
+                            jack_action("setActiveExample", Some(json!({ "exampleId": id }))),
                         )
                     })
                     .collect(),
@@ -618,11 +618,11 @@ fn build_catalogue_tree(envelope: &TrinityJackEnvelope) -> UiNode {
                 items: examples
                     .iter()
                     .map(|(id, label, query)| {
-                        tree_item_with_command(
+                        tree_item_with_action(
                             format!("trinity-jack-catalogue.example.{id}"),
                             *label,
                             Some((*query).into()),
-                            jack_cmd("loadExampleQuery", Some(json!({ "query": query }))),
+                            jack_action("loadExampleQuery", Some(json!({ "query": query }))),
                         )
                     })
                     .collect(),
@@ -648,7 +648,7 @@ fn build_catalogue_tree(envelope: &TrinityJackEnvelope) -> UiNode {
         },
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -744,7 +744,7 @@ fn build_inspector_tree(envelope: &TrinityJackEnvelope) -> UiNode {
                         value: name_mixed.value,
                         placeholder: name_mixed.placeholder,
                         commit: None,
-                        on_change: jack_cmd(
+                        on_change: jack_action(
                             "patchTrinityNodes",
                             Some(json!({ "nodeIds": node_ids, "field": "name" })),
                         ),
@@ -796,7 +796,7 @@ fn render_graph(envelope: &TrinityJackEnvelope) -> UiNode {
         NodeGraphScene {
             selection_json,
             context_menu_json: Some(
-                r#"[{"id":"delete-selection","label":"Delete selection","command":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
+                r#"[{"id":"delete-selection","label":"Delete selection","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
             ),
             lod_json: trinity_lod_json_for_window(&envelope.runtime, TRINITY_JACK_PLAY_WINDOW_GRAPH),
             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
@@ -864,15 +864,15 @@ impl PluginApp for TrinityJackPlayApp {
         serde_json::to_string(&envelope).expect("trinity jack envelope json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut envelope = parse_envelope(document_json);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value(next.clone()) {
@@ -1125,9 +1125,9 @@ impl PluginApp for TrinityJackPlayApp {
                 "clock",
                 "History",
                 vec![
-                    tool_button("trinity-jack-undo", "undo-2", "Undo", jack_cmd("undo", None)),
-                    tool_button("trinity-jack-redo", "redo-2", "Redo", jack_cmd("redo", None)),
-                    tool_button("trinity-jack-checkpoint", "git-commit", "Checkpoint", jack_cmd("commitCheckpoint", None)),
+                    tool_button("trinity-jack-undo", "undo-2", "Undo", jack_action("undo", None)),
+                    tool_button("trinity-jack-redo", "redo-2", "Redo", jack_action("redo", None)),
+                    tool_button("trinity-jack-checkpoint", "git-commit", "Checkpoint", jack_action("commitCheckpoint", None)),
                 ],
             ),
             tool_collection(
@@ -1135,8 +1135,8 @@ impl PluginApp for TrinityJackPlayApp {
                 "code",
                 "Query",
                 vec![
-                    tool_button("trinity-jack-run", "play", "Run", jack_cmd("runJackQuery", None)),
-                    tool_button("trinity-jack-reorganize", "rotate-cw", "Reorganize", jack_cmd("reorganize", None)),
+                    tool_button("trinity-jack-run", "play", "Run", jack_action("runJackQuery", None)),
+                    tool_button("trinity-jack-reorganize", "rotate-cw", "Reorganize", jack_action("reorganize", None)),
                 ],
             ),
         ]
@@ -1237,25 +1237,25 @@ pub fn create_trinity_jack_app() -> App {
             .operation("patchTrinityNodes", "Patch Nodes")
             .operation("reorganize", "Reorganize")
             .operation("runJackQuery", "Run Jack Query")
-            .view_command("setSelection", "Set Selection")
-            .view_command("selectNode", "Select Node")
-            .view_command("nodeGraphSelect", "Select Graph Node")
-            .view_command("nodeGraphHover", "Hover Graph Node")
-            .view_command("nodeGraphViewport", "Set Graph Viewport")
-            .view_command("textEdit", "Edit Jack Query")
-            .view_command("textSelect", "Select Jack Query Text")
-            .view_command("textHover", "Hover Jack Query Text")
-            .view_command("requestCompletions", "Request Completions")
-            .view_command("formatDocument", "Format Jack Query")
-            .view_command("submit", "Submit Jack Query")
-            .view_command("setLodMode", "Set LOD Mode")
-            .view_command("loadExampleQuery", "Load Example Query")
-            .view_command("editorEngagementInput", "Editor Engagement Input")
-            .view_command("graphEngagementInput", "Graph Engagement Input")
-            .view_command("resultsEngagementInput", "Results Engagement Input")
-            .view_command("graphPointerDown", "Graph Pointer Down")
-            .shell_command("setDocument", "Set Document")
-            .shell_command("setActiveExample", "Set Active Example")
+            .view_action("setSelection", "Set Selection")
+            .view_action("selectNode", "Select Node")
+            .view_action("nodeGraphSelect", "Select Graph Node")
+            .view_action("nodeGraphHover", "Hover Graph Node")
+            .view_action("nodeGraphViewport", "Set Graph Viewport")
+            .view_action("textEdit", "Edit Jack Query")
+            .view_action("textSelect", "Select Jack Query Text")
+            .view_action("textHover", "Hover Jack Query Text")
+            .view_action("requestCompletions", "Request Completions")
+            .view_action("formatDocument", "Format Jack Query")
+            .view_action("submit", "Submit Jack Query")
+            .view_action("setLodMode", "Set LOD Mode")
+            .view_action("loadExampleQuery", "Load Example Query")
+            .view_action("editorEngagementInput", "Editor Engagement Input")
+            .view_action("graphEngagementInput", "Graph Engagement Input")
+            .view_action("resultsEngagementInput", "Results Engagement Input")
+            .view_action("graphPointerDown", "Graph Pointer Down")
+            .shell_action("setDocument", "Set Document")
+            .shell_action("setActiveExample", "Set Active Example")
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .keybinding("mod+alt+s", "commitCheckpoint"),
@@ -1293,7 +1293,7 @@ mod tests {
         let mut app = TrinityJackPlayApp;
         let document = app.initial_document_json();
         let mut next = document;
-        for op in app.handle_command_patch_ops("runJackQuery", None, &next, &ViewState::default()) {
+        for op in app.handle_action_patch_ops("runJackQuery", None, &next, &ViewState::default()) {
             if let Ok(value) = serde_json::from_str::<Value>(&op) {
                 if let Some(doc) = value.get("document") {
                     next = doc.to_string();
@@ -1311,7 +1311,7 @@ mod tests {
         let document = app.initial_document_json();
         let fixture = parse_fixture_json(NAKAGIN_FIXTURE_JSON).expect("fixture");
         let node_id = fixture.nodes.first().expect("node").id.clone();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "nodeGraphSelect",
             Some(&json!({ "nodeIds": [node_id.clone()] })),
             &document,
@@ -1348,7 +1348,7 @@ mod tests {
     fn text_edit_updates_query() {
         let mut app = TrinityJackPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "textEdit",
             Some(&json!({ "text": "MATCH (a:Piece) RETURN a.name" })),
             &document,
@@ -1373,7 +1373,7 @@ mod tests {
     fn set_lod_mode_persists_per_window() {
         let mut app = TrinityJackPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setLodMode",
             Some(&json!({ "windowId": TRINITY_JACK_PLAY_WINDOW_GRAPH, "value": "minimap" })),
             &document,
@@ -1388,7 +1388,7 @@ mod tests {
     fn return_graph_example_renders_node_graph_in_results() {
         let mut app = TrinityJackPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "loadExampleQuery",
             Some(&json!({ "query": "MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' RETURN a, r, b" })),
             &document,
@@ -1418,7 +1418,7 @@ mod tests {
         let document = app.initial_document_json();
         let fixture = parse_fixture_json(NAKAGIN_FIXTURE_JSON).expect("fixture");
         let node_id = fixture.nodes.first().expect("node").id.clone();
-        let ops = app.handle_command_patch_ops("nodeGraphSelect", Some(&json!({ "nodeIds": [node_id] })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("nodeGraphSelect", Some(&json!({ "nodeIds": [node_id] })), &document, &ViewState::default());
         let next = ops.first().cloned().and_then(|op| serde_json::from_str::<Value>(&op).ok()).and_then(|value| value.get("document").cloned()).expect("document op").to_string();
         let node = app.render(TRINITY_JACK_PLAY_BODY_INSPECTION, &next, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
@@ -1441,7 +1441,7 @@ mod tests {
         let mut app = TrinityJackPlayApp;
         let document = app.initial_document_json();
         let query = "MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'undo-test-label'";
-        let run_ops = app.handle_command_patch_ops("runJackQuery", Some(&json!({ "query": query })), &document, &ViewState::default());
+        let run_ops = app.handle_action_patch_ops("runJackQuery", Some(&json!({ "query": query })), &document, &ViewState::default());
         let ran_json = run_ops
             .first()
             .and_then(|op| serde_json::from_str::<Value>(op).ok())
@@ -1450,7 +1450,7 @@ mod tests {
             .to_string();
         let ran_envelope = parse_envelope(&ran_json);
         assert!(ran_envelope.fixture_json.contains("undo-test-label"), "SET should have applied the label");
-        let undo_ops = app.handle_command_patch_ops("undo", None, &ran_json, &ViewState::default());
+        let undo_ops = app.handle_action_patch_ops("undo", None, &ran_json, &ViewState::default());
         assert!(!undo_ops.is_empty(), "undo should succeed in a fresh dispatch after a prior edit");
         let undone_envelope = parse_envelope(
             &undo_ops

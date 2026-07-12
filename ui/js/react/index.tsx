@@ -2313,11 +2313,11 @@ export function resolveControlLabelId(id: string): string {
   if (id === "engagement-possibles-toggle" || id === "ui.engagement.suggestions") {
     return _controlLabelIdResolver("ui.engagement.suggestions");
   }
-  if (id === "engagement-options" || id === "ui.engagement.commands") {
-    return _controlLabelIdResolver("ui.engagement.commands");
+  if (id === "engagement-options" || id === "ui.engagement.actions") {
+    return _controlLabelIdResolver("ui.engagement.actions");
   }
-  if (id === "engagement-input" || id === "ui.engagement.command") {
-    return _controlLabelIdResolver("ui.engagement.command");
+  if (id === "engagement-input" || id === "ui.engagement.action") {
+    return _controlLabelIdResolver("ui.engagement.action");
   }
   if (id.startsWith("playground.panel.")) {
     return _controlLabelIdResolver(`ui.panelToggle.${id.slice("playground.panel.".length)}`);
@@ -2571,9 +2571,9 @@ export type UiTranslationSchema = {
       readonly demo: UiLabelValue;
     };
     readonly engagement: {
-      readonly command: UiLabelValue;
-      readonly commandActive: UiLabelValue;
-      readonly commands: UiLabelValue;
+      readonly action: UiLabelValue;
+      readonly actionActive: UiLabelValue;
+      readonly actions: UiLabelValue;
       readonly suggestions: UiLabelValue;
       readonly noMatches: UiLabelValue;
     };
@@ -2962,34 +2962,34 @@ export const uiChromeTranslationBundles = {
           },
         },
         engagement: {
-          command: {
+          action: {
             label: {
-              normal: "Befehl",
-              beginner: "Befehl eingeben oder aus der Liste waehlen",
+              normal: "Aktion",
+              beginner: "Aktion eingeben oder aus der Liste waehlen",
             },
           },
-          commandActive: {
+          actionActive: {
             label: {
-              normal: "Befehl oder Wert",
-              beginner: "Befehl oder Zahl fuer den aktuellen Schritt",
+              normal: "Aktion oder Wert",
+              beginner: "Aktion oder Zahl fuer den aktuellen Schritt",
             },
           },
-          commands: {
+          actions: {
             label: {
-              normal: "Befehle",
-              beginner: "Schnellbefehle fuer den aktuellen Schritt",
+              normal: "Aktionen",
+              beginner: "Schnellaktionen fuer den aktuellen Schritt",
             },
           },
           suggestions: {
             label: {
               normal: "Vorschlaege",
-              beginner: "Liste der passenden Befehle oeffnen",
+              beginner: "Liste der passenden Aktionen oeffnen",
             },
           },
           noMatches: {
             label: {
               normal: "Keine Treffer",
-              beginner: "Keine passenden Befehle",
+              beginner: "Keine passenden Aktionen",
             },
           },
         },
@@ -3357,34 +3357,34 @@ export const uiChromeTranslationBundles = {
           },
         },
         engagement: {
-          command: {
+          action: {
             label: {
-              normal: "Command",
-              beginner: "Type a command or pick one from the list",
+              normal: "Action",
+              beginner: "Type an action or pick one from the list",
             },
           },
-          commandActive: {
+          actionActive: {
             label: {
-              normal: "Command or value",
-              beginner: "Command or number for the current step",
+              normal: "Action or value",
+              beginner: "Action or number for the current step",
             },
           },
-          commands: {
+          actions: {
             label: {
-              normal: "Commands",
-              beginner: "Quick commands for the current step",
+              normal: "Actions",
+              beginner: "Quick actions for the current step",
             },
           },
           suggestions: {
             label: {
               normal: "Suggestions",
-              beginner: "Open the list of matching commands",
+              beginner: "Open the list of matching actions",
             },
           },
           noMatches: {
             label: {
               normal: "No matches",
-              beginner: "No matching commands",
+              beginner: "No matching actions",
             },
           },
         },
@@ -3715,7 +3715,7 @@ export function useTranslatedHotkey(id: UiTranslationKey | (string & {})): strin
 /**
  * Hook binding a keyboard shortcut with optional translation and overrides.
  **/
-export function useCommandHotkey(
+export function useActionHotkey(
   hotkeyOrId: string,
   callback: () => void,
   options?: Parameters<typeof useHotkeys>[2],
@@ -4209,7 +4209,7 @@ export const floatingPanelAsideClass = cn("relative flex shrink-0 flex-col gap-s
 /** @emoji 🪟 Frosted compact toolbar chrome (projection switch, align controls). */
 export const floatingToolbarSurfaceClass = cn(glassToolbarClass, "overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass);
 
-/** @emoji 🪟 Frosted inline field/command shell inside editor asides. */
+/** @emoji 🪟 Frosted inline field/action shell inside editor asides. */
 export const floatingFieldSurfaceClass = cn(glassMenuClass, "relative overflow-visible rounded-md border", borderNormalClass);
 
 /** @emoji 🪟 Golden-window host root for technology canvases inside {@link ProductShell}. */
@@ -4447,10 +4447,10 @@ export const windowMeasuresStackFoldedClass = "w-fit max-w-full";
 /** @emoji 📐 Outer overlay for floating window engagement along the top-left edge. */
 export const windowEngagementOverlayClass = "pointer-events-none absolute top-0 left-0 z-panel flex max-h-full flex-col items-start p-single";
 
-/** @emoji 📐 Collapsed command chrome hugging the top-left corner. */
+/** @emoji 📐 Collapsed action chrome hugging the top-left corner. */
 export const windowEngagementOverlayFoldedClass = windowMeasuresOverlayFoldedClass;
 
-/** @emoji 📐 Command input body beside the engagement chrome toggle: matches the chrome's height for a bare input, grows only when Engagement renders extra rows. */
+/** @emoji 📐 Action input body beside the engagement chrome toggle: matches the chrome's height for a bare input, grows only when Engagement renders extra rows. */
 export const windowEngagementBodyClass = "flex min-h-medium min-w-0 flex-auto flex-col justify-center gap-half overflow-hidden px-single";
 
 /** @emoji 📐 Outer overlay for the floating window toolbar along the bottom-left edge. */
@@ -4589,7 +4589,7 @@ export const ChromeAwareWindowScrollSurface = reactHostPort.forwardRef<HTMLDivEl
 });
 ChromeAwareWindowScrollSurface.displayName = "ChromeAwareWindowScrollSurface";
 
-/** @emoji 📐 Labelled icon action in window rail chrome bars (options + command). */
+/** @emoji 📐 Labelled icon action in window rail chrome bars (options + action). */
 export const windowRailChromeLabelActionClass = cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent text-element px-single gap-single", interactiveHoverClass);
 
 /** @emoji 📐 Compact title bar on top of the window options stack. */
@@ -4887,48 +4887,6 @@ const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible =
 };
 
 export { Footer };
-
-/** @emoji 📱 One window/panel tab in the mobile bottom navigation. */
-export interface FooterNavItem {
-  id: string;
-  icon: ControlIcon;
-  label?: string;
-  active?: boolean;
-  onSelect: () => void;
-}
-
-/**
- * Props interface for the FooterNav component.
- **/
-export interface FooterNavProps {
-  items: FooterNavItem[];
-  className?: string;
-}
-
-/** @emoji 📱 Phone-optimized bottom navigation replacing {@link Footer} on mobile; equal-width icon-over-label tabs. */
-const FooterNav: React.FC<FooterNavProps> = ({ items, className = "" }) => {
-  const level = useLevel();
-  const bgClass = getLevelBgClass(level);
-  return (
-    <nav id="ui.footer" data-slot="footer-nav" className={cn(borderNormalTopClass, "relative flex h-large w-full items-stretch min-w-0", bgClass, className)}>
-      {items.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          data-slot="footer-nav-item"
-          data-active={item.active ? "true" : undefined}
-          className={cn("flex min-w-0 flex-1 flex-col items-center justify-center gap-half px-single text-xs", item.active && interactiveActiveFillClass)}
-          onClick={item.onSelect}
-        >
-          {renderControlIcon(item.icon, "small")}
-          {item.label ? <span className="w-full truncate text-center">{item.label}</span> : null}
-        </button>
-      ))}
-    </nav>
-  );
-};
-
-export { FooterNav };
 
 // #endregion 🎮Footer
 
@@ -13321,19 +13279,19 @@ interface WindowEngagementChromeProps {
   onToggle: () => void;
 }
 
-/** @emoji ⌨️ Title bar for the window command rail: single fold/unfold toggle, same height and surface as {@link WindowMeasuresChrome}. */
+/** @emoji ⌨️ Title bar for the window action rail: single fold/unfold toggle, same height and surface as {@link WindowMeasuresChrome}. */
 const WindowEngagementChrome: React.FC<WindowEngagementChromeProps> = ({ windowId, expanded, onToggle }) => {
   if (!expanded) {
     return (
       <div data-slot="window-engagement-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
-        <ActionGroupItem id={`${windowId}-window-engagement-toggle`} icon="chevron-right" text="Command" className={windowRailChromeLabelActionClass} onClick={onToggle} />
+        <ActionGroupItem id={`${windowId}-window-engagement-toggle`} icon="chevron-right" text="Action" className={windowRailChromeLabelActionClass} onClick={onToggle} />
       </div>
     );
   }
 
   return (
     <div data-slot="window-engagement-chrome" data-expanded="true" className={windowRailChromeAsideClass}>
-      <ActionGroupItem id={`${windowId}-window-engagement-toggle`} icon="chevron-left" text="Command" className={windowRailChromeLabelActionClass} onClick={onToggle} />
+      <ActionGroupItem id={`${windowId}-window-engagement-toggle`} icon="chevron-left" text="Action" className={windowRailChromeLabelActionClass} onClick={onToggle} />
     </div>
   );
 };
@@ -14409,9 +14367,9 @@ export interface EngagementInput {
   placeholder?: string;
   onChange?: (value: string) => void;
   onSubmit?: (value: string) => void;
-  /** @emoji 🔁 Restarts the last finalized engagement when Space is pressed with an empty command. */
+  /** @emoji 🔁 Restarts the last finalized engagement when Space is pressed with an empty action. */
   onRepeatLast?: () => void;
-  /** @emoji ⎋ Cancels the active engagement session (Escape), e.g. abort interaction or clear command. */
+  /** @emoji ⎋ Cancels the active engagement session (Escape), e.g. abort interaction or clear action. */
   onAbort?: () => void;
   disabled?: boolean;
 }
@@ -14514,23 +14472,23 @@ export interface EngagementSelectControl {
   onChange?: (value: string) => void;
 }
 
-/** @emoji 🎛 Optional engagement UI control for the active command step. */
+/** @emoji 🎛 Optional engagement UI control for the active action step. */
 export type EngagementControl = EngagementSliderControl | EngagementStepperControl | EngagementRingControl | EngagementToggleGroupControl | EngagementSelectControl;
 
-/** @emoji 🏷 i18n keys for window command chrome (`ui.engagement.*` in {@link uiChromeTranslationBundles}). */
+/** @emoji 🏷 i18n keys for window action chrome (`ui.engagement.*` in {@link uiChromeTranslationBundles}). */
 export const UI_ENGAGEMENT = {
-  command: "ui.engagement.command",
-  commandActive: "ui.engagement.commandActive",
-  commands: "ui.engagement.commands",
+  action: "ui.engagement.action",
+  actionActive: "ui.engagement.actionActive",
+  actions: "ui.engagement.actions",
   suggestions: "ui.engagement.suggestions",
   noMatches: "ui.engagement.noMatches",
 } as const;
 
-/** @emoji 🏷 Default English copy for window command chrome (matches `ui.engagement.*` en bundle). */
+/** @emoji 🏷 Default English copy for window action chrome (matches `ui.engagement.*` en bundle). */
 export const ENGAGEMENT_USER = {
-  commandPlaceholder: "Command",
-  commandPlaceholderActive: "Command or value",
-  commandsAria: "Commands",
+  actionPlaceholder: "Action",
+  actionPlaceholderActive: "Action or value",
+  actionsAria: "Actions",
   suggestionsAria: "Suggestions",
   noMatches: "No matches",
 } as const;
@@ -14542,8 +14500,8 @@ export function humanizeEngagementStepId(stepId: string): string {
   return trimmed.replace(/[._-]+/g, " ").replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
-/** @emoji ⌨️ Normalizes engagement command text: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`), preserving decimal points inside numbers (`3.5` stays `3.5`, not `35`). */
-export function normalizeEngagementCommandText(text: string): string {
+/** @emoji ⌨️ Normalizes engagement action text: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`), preserving decimal points inside numbers (`3.5` stays `3.5`, not `35`). */
+export function normalizeEngagementActionText(text: string): string {
   const decimalMarker = "\u0001";
   const withProtectedDecimals = text.replace(/(\d)\.(\d)/g, `$1${decimalMarker}$2`);
   const words = withProtectedDecimals
@@ -14557,15 +14515,15 @@ export function normalizeEngagementCommandText(text: string): string {
   return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join("");
 }
 
-/** @emoji ⚖️ True when two engagement command tokens match after {@link normalizeEngagementCommandText} (case-insensitive). */
-export function engagementCommandTokenEquals(a: string, b: string): boolean {
-  return normalizeEngagementCommandText(a).toLowerCase() === normalizeEngagementCommandText(b).toLowerCase();
+/** @emoji ⚖️ True when two engagement action tokens match after {@link normalizeEngagementActionText} (case-insensitive). */
+export function engagementActionTokenEquals(a: string, b: string): boolean {
+  return normalizeEngagementActionText(a).toLowerCase() === normalizeEngagementActionText(b).toLowerCase();
 }
 
 function engagementPossibleRankScore(query: string, item: EngagementPossible): number {
-  const ql = normalizeEngagementCommandText(query).toLowerCase();
+  const ql = normalizeEngagementActionText(query).toLowerCase();
   if (!ql) return -1;
-  const label = normalizeEngagementCommandText(item.label).toLowerCase();
+  const label = normalizeEngagementActionText(item.label).toLowerCase();
   const detail = (item.detail ?? "").toLowerCase();
   const id = item.id.toLowerCase();
   if (label.startsWith(ql)) return 3000 - label.length;
@@ -14584,14 +14542,14 @@ function engagementSuggestionPointerTarget(event: Pick<PointerEvent, "target">):
   return null;
 }
 
-/** @emoji 🎯 True when a pointer event targets an engagement suggestion command row. */
-export function isEngagementSuggestionCommandTarget(event: Pick<PointerEvent, "target">): boolean {
+/** @emoji 🎯 True when a pointer event targets an engagement suggestion action row. */
+export function isEngagementSuggestionActionTarget(event: Pick<PointerEvent, "target">): boolean {
   return Boolean(engagementSuggestionPointerTarget(event)?.closest('[cmdk-item], [data-slot="command-item"]'));
 }
 
-/** @emoji 🔎 Filters {@link EngagementPossible} rows by label, detail, and id for the engagement command line. */
+/** @emoji 🔎 Filters {@link EngagementPossible} rows by label, detail, and id for the engagement action line. */
 export function filterEngagementPossibles(query: string, items: readonly EngagementPossible[]): EngagementPossible[] {
-  const trimmed = normalizeEngagementCommandText(query).toLowerCase();
+  const trimmed = normalizeEngagementActionText(query).toLowerCase();
   if (!trimmed) return [...items];
   return items
     .map((item) => ({ item, score: engagementPossibleRankScore(query, item) }))
@@ -14611,7 +14569,7 @@ export function engagementInlineCompletion(query: string, item: EngagementPossib
   if (!query.trim() || !item) return null;
   const q = query;
   const ql = q.toLowerCase();
-  const label = normalizeEngagementCommandText(item.label);
+  const label = normalizeEngagementActionText(item.label);
   let best: EngagementInlineCompletion | null = null;
   const consider = (matched: boolean) => {
     if (!matched || !label.toLowerCase().startsWith(ql)) return;
@@ -14652,8 +14610,8 @@ export function engagementActiveCompletionSuffix(query: string, matches: readonl
 
 /** @emoji 🔎 Renders a possible name with the query prefix emphasized using label casing (e.g. **B**ox). */
 export function engagementHighlightedLabel(label: string, query: string, detail?: string): React.ReactNode {
-  const displayLabel = normalizeEngagementCommandText(label);
-  const trimmed = normalizeEngagementCommandText(query);
+  const displayLabel = normalizeEngagementActionText(label);
+  const trimmed = normalizeEngagementActionText(query);
   if (!trimmed) return displayLabel;
   const ql = trimmed.toLowerCase();
   const ll = displayLabel.toLowerCase();
@@ -14734,15 +14692,15 @@ export function installElementsSurfaceBrowserDefaultSuppression(bindings: Return
   bindings.listen(document, "focusin", onFocusIn as EventListener, true);
 }
 
-/** @emoji ⌨️ True when the event target is already the active window engagement command field. */
-export function isEngagementCommandTypingTarget(t: EventTarget | null): boolean {
+/** @emoji ⌨️ True when the event target is already the active window engagement action field. */
+export function isEngagementActionTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
   return Boolean(t.closest('[data-slot="window"][data-active="true"] [data-slot="engagement"][data-active="true"] [data-slot="input"], [data-slot="window"][data-active="true"] [data-slot="engagement"][data-active="true"] textarea'));
 }
 
-/** @emoji ⌨️ True when printable keys should route to the active window engagement command (skip other text fields). */
+/** @emoji ⌨️ True when printable keys should route to the active window engagement action (skip other text fields). */
 export function shouldRouteKeysToWindowEngagement(t: EventTarget | null): boolean {
-  if (isEngagementCommandTypingTarget(t)) return false;
+  if (isEngagementActionTypingTarget(t)) return false;
   const engagementField = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
   const active = document.activeElement;
   if (engagementField && (active === engagementField || engagementField.contains(active))) return false;
@@ -14751,13 +14709,13 @@ export function shouldRouteKeysToWindowEngagement(t: EventTarget | null): boolea
   return true;
 }
 
-/** @emoji ⌨️ Returns the window engagement command input, optionally requiring {@link EngagementProps.active}. */
+/** @emoji ⌨️ Returns the window engagement action input, optionally requiring {@link EngagementProps.active}. */
 export function queryWindowEngagementInput(activeOnly = false): HTMLInputElement | null {
   const engagementActive = activeOnly ? '[data-active="true"]' : "";
   return document.querySelector<HTMLInputElement>(`[data-slot="window"][data-active="true"] [data-slot="engagement"]${engagementActive} [data-slot="input"]`);
 }
 
-/** @emoji ⌨️ Focuses the command input in the active window engagement overlay, if present. */
+/** @emoji ⌨️ Focuses the action input in the active window engagement overlay, if present. */
 export function focusActiveEngagementInput(): boolean {
   const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
   if (!field || field.disabled) return false;
@@ -14771,7 +14729,7 @@ export function shouldActivateEngagementPossibleOnConfirm(draft: string, showPos
   return showPossiblesList || Boolean(draft.trim());
 }
 
-/** @emoji ␣ Applies Space on an engagement command line (step submit vs repeat-last when idle). */
+/** @emoji ␣ Applies Space on an engagement action line (step submit vs repeat-last when idle). */
 export function applyEngagementSpaceAction(input: EngagementInput, draft: string, sessionActive: boolean): boolean {
   if (input.disabled) return false;
   if (!draft.trim()) {
@@ -14796,11 +14754,11 @@ export function routeWindowEngagementSpace(engagement: EngagementSpec | undefine
   if (event.key !== " " || event.ctrlKey || event.metaKey || event.altKey) return false;
   if (!shouldRouteKeysToWindowEngagement(event.target)) return false;
   const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
-  const draft = normalizeEngagementCommandText(input.value ?? field?.value ?? "");
+  const draft = normalizeEngagementActionText(input.value ?? field?.value ?? "");
   return applyEngagementSpaceAction(input, draft, Boolean(engagement?.sessionActive));
 }
 
-/** @emoji ⌨️ Routes a printable key to the active window engagement command when focus is elsewhere in the window. */
+/** @emoji ⌨️ Routes a printable key to the active window engagement action when focus is elsewhere in the window. */
 export function routeWindowEngagementKeydown(engagement: EngagementSpec | undefined, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">): boolean {
   const input = engagement?.input;
   if (!input || input.disabled || event.defaultPrevented || event.isComposing) return false;
@@ -14809,7 +14767,7 @@ export function routeWindowEngagementKeydown(engagement: EngagementSpec | undefi
   const printable = event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
   if (!printable) return false;
   const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
-  const next = normalizeEngagementCommandText(`${input.value ?? field?.value ?? ""}${event.key}`);
+  const next = normalizeEngagementActionText(`${input.value ?? field?.value ?? ""}${event.key}`);
   input.onChange?.(next);
   return true;
 }
@@ -14818,13 +14776,13 @@ export function routeWindowEngagementKeydown(engagement: EngagementSpec | undefi
 export function routeWindowEngagementEscape(
   engagement: EngagementSpec | undefined,
   event: Pick<KeyboardEvent, "key" | "defaultPrevented" | "isComposing" | "target">,
-  zone: { readonly chromeVisible: boolean; readonly commandActive: boolean },
+  zone: { readonly chromeVisible: boolean; readonly actionActive: boolean },
 ): boolean {
   if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) return false;
   const onAbort = engagement?.input?.onAbort;
   if (!onAbort) return false;
-  if (!engagement?.sessionActive && !zone.chromeVisible && !zone.commandActive) return false;
-  if (isUiTypingTarget(event.target) && !isEngagementCommandTypingTarget(event.target)) return false;
+  if (!engagement?.sessionActive && !zone.chromeVisible && !zone.actionActive) return false;
+  if (isUiTypingTarget(event.target) && !isEngagementActionTypingTarget(event.target)) return false;
   const focused = document.activeElement;
   if (focused instanceof HTMLElement && isUiTypingTarget(focused) && !focused.closest('[data-slot="engagement"]')) return false;
   onAbort();
@@ -14833,7 +14791,7 @@ export function routeWindowEngagementEscape(
 
 /** @emoji 💬 Floating window engagement payload with options, input, and status lines. */
 export interface EngagementSpec {
-  /** @emoji 🎯 Ongoing engagement: chrome stays visible; {@link options} are step transitions; command input accepts step values. */
+  /** @emoji 🎯 Ongoing engagement: chrome stays visible; {@link options} are step transitions; action input accepts step values. */
   sessionActive?: boolean;
   options?: EngagementOption[];
   input?: EngagementInput;
@@ -14883,7 +14841,7 @@ export function createEvenWindowLayout(windowIds: readonly string[]): WindowLayo
 
 export interface EngagementProps extends EngagementSpec {
   className?: string;
-  /** @emoji 🎯 When true, focuses the command input whenever this engagement belongs to the globally active window. */
+  /** @emoji 🎯 When true, focuses the action input whenever this engagement belongs to the globally active window. */
   active?: boolean;
 }
 
@@ -15001,17 +14959,17 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
   );
 }
 
-/** @emoji 💬 Top-aligned engagement: command input with optional right chevron for possibles; status and option buttons below. */
+/** @emoji 💬 Top-aligned engagement: action input with optional right chevron for possibles; status and option buttons below. */
 const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options, input, control, controls, status, possibleEngagements, className = "", active = false }) => {
-  const commandPlaceholderLabel = useLabel(UI_ENGAGEMENT.command);
-  const commandActivePlaceholderLabel = useLabel(UI_ENGAGEMENT.commandActive);
-  const stepOptionsAriaLabel = useLabel(UI_ENGAGEMENT.commands);
+  const actionPlaceholderLabel = useLabel(UI_ENGAGEMENT.action);
+  const actionActivePlaceholderLabel = useLabel(UI_ENGAGEMENT.actionActive);
+  const stepOptionsAriaLabel = useLabel(UI_ENGAGEMENT.actions);
   const [uncontrolledDraft, setUncontrolledDraft] = reactHostPort.useState("");
   const isControlledInput = !!input?.onChange;
-  const draft = normalizeEngagementCommandText(isControlledInput ? (input?.value ?? "") : uncontrolledDraft);
+  const draft = normalizeEngagementActionText(isControlledInput ? (input?.value ?? "") : uncontrolledDraft);
   const primaryStepStatus = sessionActive ? status?.find((row) => row.id === "engagement-step") : undefined;
   const secondaryStatus = sessionActive ? status?.filter((row) => row.id !== "engagement-step") : status;
-  const commandPlaceholder = input?.placeholder ?? (sessionActive ? commandActivePlaceholderLabel || ENGAGEMENT_USER.commandPlaceholderActive : commandPlaceholderLabel || ENGAGEMENT_USER.commandPlaceholder);
+  const actionPlaceholder = input?.placeholder ?? (sessionActive ? actionActivePlaceholderLabel || ENGAGEMENT_USER.actionPlaceholderActive : actionPlaceholderLabel || ENGAGEMENT_USER.actionPlaceholder);
   const [possiblesExpanded, setPossiblesExpanded] = reactHostPort.useState(false);
   const [activePossibleIndex, setActivePossibleIndex] = reactHostPort.useState(0);
   const engagementRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -15035,7 +14993,7 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
 
   const applyDraft = reactHostPort.useCallback(
     (value: string) => {
-      const normalized = normalizeEngagementCommandText(value);
+      const normalized = normalizeEngagementActionText(value);
       if (isControlledInput) input?.onChange?.(normalized);
       else setUncontrolledDraft(normalized);
     },
@@ -15100,10 +15058,10 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
             }}
           >
             <PopoverAnchor asChild>
-              <div data-slot="engagement-command-row" className="flex w-full min-w-0 items-stretch gap-half">
-                <div data-slot="engagement-command-input" className="relative grid min-w-0 flex-1 [&_[data-slot=input-root]]:col-start-1 [&_[data-slot=input-root]]:row-start-1 [&_[data-slot=input-root]]:min-w-0">
+              <div data-slot="engagement-action-row" className="flex w-full min-w-0 items-stretch gap-half">
+                <div data-slot="engagement-action-input" className="relative grid min-w-0 flex-1 [&_[data-slot=input-root]]:col-start-1 [&_[data-slot=input-root]]:row-start-1 [&_[data-slot=input-root]]:min-w-0">
                   <Input
-                    id={!input!.id || input!.id === "engagement-input" || isInternalChromeControlId(input!.id) ? UI_ENGAGEMENT.command : input!.id}
+                    id={!input!.id || input!.id === "engagement-input" || isInternalChromeControlId(input!.id) ? UI_ENGAGEMENT.action : input!.id}
                     className="relative z-[1] min-w-0 flex-1 bg-transparent"
                     value={draft}
                     tabIndex={active ? 0 : -1}
@@ -15149,9 +15107,9 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
                         input!.onSubmit?.(draft);
                       }
                     }}
-                    placeholder={commandPlaceholder}
+                    placeholder={actionPlaceholder}
                     disabled={input!.disabled}
-                    aria-label={commandPlaceholder}
+                    aria-label={actionPlaceholder}
                   />
                   {inlineCompletion ? (
                     <div aria-hidden data-slot="engagement-inline-completion" className="text-foreground pointer-events-none col-start-1 row-start-1 flex h-medium min-w-0 items-center overflow-hidden p-single text-sm md:text-sm">
@@ -15230,19 +15188,19 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
             data-step-options={sessionActive ? "true" : undefined}
             className="flex flex-wrap items-center justify-center gap-half"
             role="group"
-            aria-label={sessionActive ? stepOptionsAriaLabel || ENGAGEMENT_USER.commandsAria : ENGAGEMENT_USER.commandsAria}
+            aria-label={sessionActive ? stepOptionsAriaLabel || ENGAGEMENT_USER.actionsAria : ENGAGEMENT_USER.actionsAria}
           >
-            <ButtonGroup id={UI_ENGAGEMENT.commands}>
+            <ButtonGroup id={UI_ENGAGEMENT.actions}>
               {options!.map((option) => {
-                const commandLabel = normalizeEngagementCommandText(option.label);
+                const actionLabel = normalizeEngagementActionText(option.label);
                 const optionControlId = isInternalChromeControlId(option.id) ? undefined : option.id;
                 return (
                   <ButtonGroupItem
                     key={option.id}
                     id={optionControlId}
-                    aria-label={commandLabel}
+                    aria-label={actionLabel}
                     icon={option.icon}
-                    text={commandLabel}
+                    text={actionLabel}
                     className={cn(option.pressed && interactiveActiveFillClass)}
                     onClick={option.onPress}
                     disabled={option.disabled}
@@ -15417,7 +15375,7 @@ const Window: React.FC<WindowProps> = ({
   reactHostPort.useEffect(() => {
     if (!active || !engagement?.input?.onAbort) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (routeWindowEngagementEscape(engagement, event, { chromeVisible: engagementExpanded, commandActive: engagementExpanded })) {
+      if (routeWindowEngagementEscape(engagement, event, { chromeVisible: engagementExpanded, actionActive: engagementExpanded })) {
         event.preventDefault();
         event.stopPropagation();
       }
@@ -20522,7 +20480,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       if (
         routeWindowEngagementEscape(engagement, event, {
           chromeVisible: true,
-          commandActive: true,
+          actionActive: true,
         })
       ) {
         event.preventDefault();
@@ -20879,21 +20837,23 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     return modeDockDragInsertTabs(layoutState, dragState, (windowId) => windowsById.get(windowId)?.title ?? windowId);
   }, [dragState, layoutState, templateDrag, windowsById]);
 
+  const noopDrag = reactHostPort.useCallback(() => {}, []);
+
   const dockContext = reactHostPort.useMemo<ModeDockContextValue>(
     () => ({
       dragState: previewDragState,
       tabInsertPreview,
       draggedInsertTabs,
       registerStackDropTargets,
-      startTabDrag,
-      startStackDrag,
+      startTabDrag: mobile ? noopDrag : startTabDrag,
+      startStackDrag: mobile ? noopDrag : startStackDrag,
       clearPendingDrag,
       closeWindow,
       activateWindow,
       maximizedStackPath,
       toggleMaximize,
     }),
-    [previewDragState, tabInsertPreview, draggedInsertTabs, registerStackDropTargets, startTabDrag, startStackDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, toggleMaximize],
+    [mobile, noopDrag, previewDragState, tabInsertPreview, draggedInsertTabs, registerStackDropTargets, startTabDrag, startStackDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, toggleMaximize],
   );
 
   const renderContext = reactHostPort.useMemo<ModeRenderContext>(
@@ -20919,23 +20879,24 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const hasWindows = orderedWindowIds.length > 0;
   const emptyShellNotice = resolveTranslationLabel(uiI18n.t("ui.display.emptyShell"));
 
-  const mobileWindowId = mobile ? ((activeWindowId && windowsById.has(activeWindowId) ? activeWindowId : orderedWindowIds[0]) ?? null) : null;
-  const mobileWindowDescriptor = mobileWindowId ? windowsById.get(mobileWindowId) : undefined;
+  /** @emoji 📱 Mobile has no split-pane window manager: every window collapses into one tab stack, rendered through the same {@link ModeDockStack} chrome (tab bar, toolbar, measures, engagement) as desktop. */
+  const mobileFlatStack: WindowLayoutStackNode | null = mobile
+    ? {
+        kind: "stack",
+        children: orderedWindowIds.map((id) => ({ kind: "window", id })),
+        activeId: (activeWindowId && orderedWindowIds.includes(activeWindowId) ? activeWindowId : orderedWindowIds[0]) ?? undefined,
+      }
+    : null;
 
   const body =
     children ??
     (mobile
-      ? mobileWindowDescriptor
-        ? (() => {
-            const { children: windowChildren, engagement, ...windowProps } = mobileWindowDescriptor;
-            return (
-              <div data-slot="mode-mobile-window" className={cn("relative z-0 flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single", windowBodyFrameActiveClass)}>
-                <Window {...windowProps} fill={mobileWindowDescriptor.fill ?? true} engagement={engagement} active onActivate={() => {}}>
-                  {windowChildren}
-                </Window>
-              </div>
-            );
-          })()
+      ? mobileFlatStack && mobileFlatStack.children.length > 0
+        ? (
+            <ModeDockContext.Provider value={dockContext}>
+              <ModeDockStack stackPath="" node={mobileFlatStack} windowsById={windowsById} activeWindowId={activeWindowId} />
+            </ModeDockContext.Provider>
+          )
         : null
       : maximizedStack ? (
           <ModeDockContext.Provider value={dockContext}>
@@ -21033,7 +20994,6 @@ export {
   modeDockDragInsertTabs,
   mergeStackTabsIntoStack,
   resolveModeTabInsertPreview,
-  modeCollectWindowIds,
 };
 
 // #endregion 🧭Mode
@@ -22412,17 +22372,17 @@ if (import.meta.vitest) {
     });
 
     it("Engagement focuses its input when active", async () => {
-      const { rerender } = render(<Engagement active={false} input={{ id: "engagement-input", placeholder: "Command" }} />);
-      const field = () => screen.getByPlaceholderText("Command") as HTMLInputElement;
+      const { rerender } = render(<Engagement active={false} input={{ id: "engagement-input", placeholder: "Action" }} />);
+      const field = () => screen.getByPlaceholderText("Action") as HTMLInputElement;
       expect(document.activeElement).not.toBe(field());
-      rerender(<Engagement active input={{ id: "engagement-input", placeholder: "Command" }} />);
+      rerender(<Engagement active input={{ id: "engagement-input", placeholder: "Action" }} />);
       await waitFor(() => expect(document.activeElement).toBe(field()));
       expect(field().tabIndex).toBe(0);
     });
 
     it("Engagement input is removed from tab order when inactive", () => {
-      render(<Engagement active={false} input={{ placeholder: "Command" }} />);
-      expect((screen.getByPlaceholderText("Command") as HTMLInputElement).tabIndex).toBe(-1);
+      render(<Engagement active={false} input={{ placeholder: "Action" }} />);
+      expect((screen.getByPlaceholderText("Action") as HTMLInputElement).tabIndex).toBe(-1);
     });
 
     it("filterEngagementPossibles matches label, detail, and id", () => {
@@ -22442,13 +22402,13 @@ if (import.meta.vitest) {
       expect(filterEngagementPossibles("Extr", items).map((row) => row.id)).toEqual(["surface.extrudeCrv", "feature.extrudeWire"]);
     });
 
-    it("isEngagementSuggestionCommandTarget accepts text nodes inside command rows", () => {
+    it("isEngagementSuggestionActionTarget accepts text nodes inside action rows", () => {
       const row = document.createElement("div");
       row.setAttribute("data-slot", "command-item");
       const label = document.createTextNode("ExtrudeCrv");
       row.appendChild(label);
       document.body.appendChild(row);
-      expect(isEngagementSuggestionCommandTarget({ target: label })).toBe(true);
+      expect(isEngagementSuggestionActionTarget({ target: label })).toBe(true);
       row.remove();
     });
 
@@ -22475,7 +22435,7 @@ if (import.meta.vitest) {
       render(
         <Engagement
           active
-          input={{ placeholder: ENGAGEMENT_USER.commandPlaceholder }}
+          input={{ placeholder: ENGAGEMENT_USER.actionPlaceholder }}
           possibleEngagements={[
             { id: "primitive.box", label: "Box", detail: "b", onSelect: () => selected.push("primitive.box") },
             { id: "primitive.sphere", label: "Sphere", detail: "s", onSelect: () => selected.push("primitive.sphere") },
@@ -22483,7 +22443,7 @@ if (import.meta.vitest) {
           ]}
         />,
       );
-      const field = screen.getByPlaceholderText(ENGAGEMENT_USER.commandPlaceholder);
+      const field = screen.getByPlaceholderText(ENGAGEMENT_USER.actionPlaceholder);
       expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
       fireEvent.change(field, { target: { value: "f" } });
       await waitFor(() => expect(document.querySelector('[data-slot="engagement-inline-suffix"]')?.textContent).toBe("ill"));
@@ -22502,14 +22462,14 @@ if (import.meta.vitest) {
       render(
         <Engagement
           active
-          input={{ placeholder: ENGAGEMENT_USER.commandPlaceholder }}
+          input={{ placeholder: ENGAGEMENT_USER.actionPlaceholder }}
           possibleEngagements={[
             { id: "primitive.box", label: "Box", detail: "b", onSelect: () => selected.push("primitive.box") },
             { id: "primitive.sphere", label: "Sphere", detail: "s", onSelect: () => selected.push("primitive.sphere") },
           ]}
         />,
       );
-      const field = screen.getByPlaceholderText(ENGAGEMENT_USER.commandPlaceholder);
+      const field = screen.getByPlaceholderText(ENGAGEMENT_USER.actionPlaceholder);
       expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
       fireEvent.change(field, { target: { value: "b" } });
       await waitFor(() => {
@@ -22548,7 +22508,7 @@ if (import.meta.vitest) {
       render(
         <Engagement
           active
-          input={{ placeholder: ENGAGEMENT_USER.commandPlaceholder, value: "Extr", onChange: () => {} }}
+          input={{ placeholder: ENGAGEMENT_USER.actionPlaceholder, value: "Extr", onChange: () => {} }}
           possibleEngagements={[
             { id: "feature.extrudeWire", label: "ExtrudeWire", detail: "e", onSelect: () => selected.push("feature.extrudeWire") },
             { id: "surface.extrudeCrv", label: "ExtrudeCrv", detail: "e", onSelect: () => selected.push("surface.extrudeCrv") },
@@ -22572,7 +22532,7 @@ if (import.meta.vitest) {
         <Engagement
           active
           sessionActive
-          input={{ placeholder: ENGAGEMENT_USER.commandPlaceholder }}
+          input={{ placeholder: ENGAGEMENT_USER.actionPlaceholder }}
           control={{
             kind: "toggleGroup",
             id: "engagement-tool-group",
@@ -22617,7 +22577,7 @@ if (import.meta.vitest) {
       expect(submitted).toEqual([]);
     });
 
-    it("routeWindowEngagementSpace calls onRepeatLast for empty command", () => {
+    it("routeWindowEngagementSpace calls onRepeatLast for empty action", () => {
       const repeated: string[] = [];
       const engagement = { input: { value: "", onRepeatLast: () => repeated.push("last") } };
       const body = document.createElement("div");
@@ -22635,7 +22595,7 @@ if (import.meta.vitest) {
       expect(repeated).toEqual(["last"]);
     });
 
-    it("routeWindowEngagementSpace calls onSubmit for non-empty command", () => {
+    it("routeWindowEngagementSpace calls onSubmit for non-empty action", () => {
       const submitted: string[] = [];
       const engagement = {
         input: {
@@ -22669,7 +22629,7 @@ if (import.meta.vitest) {
             active
             input={{
               value,
-              placeholder: "Command",
+              placeholder: "Action",
               onChange: setValue,
               onSubmit: (draft) => submitted.push(draft),
               onRepeatLast: () => repeated.push("last"),
@@ -22678,7 +22638,7 @@ if (import.meta.vitest) {
         );
       };
       render(<Harness />);
-      const field = await screen.findByPlaceholderText("Command");
+      const field = await screen.findByPlaceholderText("Action");
       fireEvent.change(field, { target: { value: "box" } });
       fireEvent.keyDown(field, { key: " " });
       expect(submitted).toEqual(["Box"]);
@@ -22692,13 +22652,13 @@ if (import.meta.vitest) {
         <Engagement
           active
           input={{
-            placeholder: "Command",
+            placeholder: "Action",
             onSubmit: () => submitted.push("submit"),
             onRepeatLast: () => repeated.push("last"),
           }}
         />,
       );
-      const field = await screen.findByPlaceholderText("Command");
+      const field = await screen.findByPlaceholderText("Action");
       fireEvent.keyDown(field, { key: " " });
       expect(repeated).toEqual(["last"]);
       expect(submitted).toEqual([]);
@@ -22716,7 +22676,7 @@ if (import.meta.vitest) {
                   id: "engagement-window",
                   title: "Viewport",
                   active: true,
-                  engagement: { input: { id: "engagement-input", value, placeholder: "Command", onChange: setValue } },
+                  engagement: { input: { id: "engagement-input", value, placeholder: "Action", onChange: setValue } },
                   children: <div data-testid="window-body">Body</div>,
                 },
               ]}
@@ -22726,10 +22686,10 @@ if (import.meta.vitest) {
         );
       };
       const { container } = render(<Harness />);
-      expect(screen.queryByPlaceholderText("Command")).toBeNull();
+      expect(screen.queryByPlaceholderText("Action")).toBeNull();
       fireEvent.keyDown(container.querySelector('[data-slot="mode"]')!, { key: "b", bubbles: true });
       await waitFor(() => {
-        const typedField = screen.getByPlaceholderText("Command") as HTMLInputElement;
+        const typedField = screen.getByPlaceholderText("Action") as HTMLInputElement;
         expect(typedField.value).toBe("B");
         expect(typedField.tabIndex).toBe(0);
         expect(document.querySelector('[data-slot="engagement"]')?.getAttribute("data-active")).toBe("true");
@@ -22799,7 +22759,7 @@ if (import.meta.vitest) {
 
     it("Window keeps bodies edgeless and chrome-aware scroll hosts start below the dead line", () => {
       const { container } = render(
-        <Window id="chrome-aware-window" active engagement={{ input: { placeholder: "Command" } }} measures={<div>LOD</div>}>
+        <Window id="chrome-aware-window" active engagement={{ input: { placeholder: "Action" } }} measures={<div>LOD</div>}>
           <div data-window-content-layout="chrome-aware" className="flex min-h-0 flex-1 flex-col">
             <Scrollable className="h-40">
               <div style={{ height: 240 }}>Line one</div>
@@ -22816,7 +22776,7 @@ if (import.meta.vitest) {
 
     it("Window edgeless bodies do not apply a dead-line scroll offset", () => {
       const { container } = render(
-        <Window id="edgeless-window" active engagement={{ input: { placeholder: "Command" } }}>
+        <Window id="edgeless-window" active engagement={{ input: { placeholder: "Action" } }}>
           <div data-window-content-layout="edgeless" className="h-40">
             <Scrollable className="h-full">
               <div style={{ height: 240 }}>Canvas</div>
@@ -22830,7 +22790,7 @@ if (import.meta.vitest) {
 
     it("Window dead-line hosts skip offset when content fits", () => {
       const { container } = render(
-        <Window id="fits-window" active engagement={{ input: { placeholder: "Command" } }}>
+        <Window id="fits-window" active engagement={{ input: { placeholder: "Action" } }}>
           <Scrollable className="h-40">
             <div style={{ height: 40 }}>Short</div>
           </Scrollable>
@@ -22846,7 +22806,7 @@ if (import.meta.vitest) {
       const Harness = ({ active }: { active: boolean }) => (
         <>
           <Input id="other-input" placeholder="Other" />
-          <Engagement active={active} input={{ placeholder: "Command" }} />
+          <Engagement active={active} input={{ placeholder: "Action" }} />
         </>
       );
       const { rerender } = render(<Harness active={false} />);
@@ -22858,8 +22818,8 @@ if (import.meta.vitest) {
 
     it("Engagement Escape calls onAbort when possibles list is closed", () => {
       const aborted: string[] = [];
-      render(<Engagement active input={{ placeholder: "Command", onAbort: () => aborted.push("abort") }} possibleEngagements={[{ id: "a", label: "A", onSelect: () => {} }]} />);
-      const field = screen.getByPlaceholderText("Command");
+      render(<Engagement active input={{ placeholder: "Action", onAbort: () => aborted.push("abort") }} possibleEngagements={[{ id: "a", label: "A", onSelect: () => {} }]} />);
+      const field = screen.getByPlaceholderText("Action");
       fireEvent.keyDown(field, { key: "Escape" });
       expect(aborted).toEqual(["abort"]);
     });
@@ -22868,9 +22828,9 @@ if (import.meta.vitest) {
       const scrollIntoView = Element.prototype.scrollIntoView;
       Element.prototype.scrollIntoView = () => undefined;
       const aborted: string[] = [];
-      render(<Engagement active input={{ placeholder: "Command", onAbort: () => aborted.push("abort") }} possibleEngagements={[{ id: "a", label: "A", onSelect: () => {} }]} />);
+      render(<Engagement active input={{ placeholder: "Action", onAbort: () => aborted.push("abort") }} possibleEngagements={[{ id: "a", label: "A", onSelect: () => {} }]} />);
       fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
-      const field = screen.getByPlaceholderText("Command");
+      const field = screen.getByPlaceholderText("Action");
       fireEvent.keyDown(field, { key: "Escape" });
       expect(aborted).toEqual([]);
       expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
@@ -22885,7 +22845,7 @@ if (import.meta.vitest) {
         sessionActive: true,
         input: { value: "", placeholder: "Brush", onAbort: () => aborted.push("abort") },
       };
-      const handled = routeWindowEngagementEscape(engagement, { key: "Escape", defaultPrevented: false, isComposing: false, target: document.body }, { chromeVisible: false, commandActive: false });
+      const handled = routeWindowEngagementEscape(engagement, { key: "Escape", defaultPrevented: false, isComposing: false, target: document.body }, { chromeVisible: false, actionActive: false });
       expect(handled).toBe(true);
       expect(aborted).toEqual(["abort"]);
     });
@@ -22902,7 +22862,7 @@ if (import.meta.vitest) {
                 title: "Viewport",
                 active: true,
                 engagement: {
-                  input: { value: "Box", placeholder: "Command", onChange: () => {}, onAbort: () => aborted.push("abort") },
+                  input: { value: "Box", placeholder: "Action", onChange: () => {}, onAbort: () => aborted.push("abort") },
                 },
                 children: <div data-testid="window-body">Body</div>,
               },
@@ -22912,14 +22872,14 @@ if (import.meta.vitest) {
         </div>
       );
       const { container } = render(<Harness />);
-      await waitFor(() => expect(screen.getByPlaceholderText("Command")).toBeTruthy());
+      await waitFor(() => expect(screen.getByPlaceholderText("Action")).toBeTruthy());
       fireEvent.keyDown(container.querySelector('[data-slot="mode"]')!, { key: "Escape", bubbles: true });
       expect(aborted).toEqual(["abort"]);
     });
 
     it("Window shows engagement as a folded strip by default, same surface as window options", () => {
       const { container } = render(
-        <Window id="engagement-window" active engagement={{ input: { placeholder: "Command" }, status: [{ id: "s", content: "Idle" }] }}>
+        <Window id="engagement-window" active engagement={{ input: { placeholder: "Action" }, status: [{ id: "s", content: "Idle" }] }}>
           <div>Body</div>
         </Window>,
       );
@@ -22927,10 +22887,10 @@ if (import.meta.vitest) {
       expect(zone).toBeTruthy();
       expect(zone.className).toContain("ui-glass-window-options");
       expect(zone.className).toContain("flex-row");
-      expect(screen.queryByPlaceholderText("Command")).toBeNull();
+      expect(screen.queryByPlaceholderText("Action")).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
       fireEvent.click(container.querySelector('[id="engagement-window-window-engagement-toggle"]')!);
-      expect(screen.getByPlaceholderText("Command")).toBeTruthy();
+      expect(screen.getByPlaceholderText("Action")).toBeTruthy();
       expect(screen.getByText("Idle")).toBeTruthy();
       const chrome = container.querySelector('[data-slot="window-engagement-chrome"]');
       const body = container.querySelector('[data-slot="window-engagement-body"]');
@@ -22943,7 +22903,7 @@ if (import.meta.vitest) {
       const Harness = () => {
         const [value, setValue] = reactHostPort.useState("");
         return (
-          <Window id="engagement-window" active engagement={{ input: { id: "engagement-input", value, placeholder: "Command", onChange: setValue } }}>
+          <Window id="engagement-window" active engagement={{ input: { id: "engagement-input", value, placeholder: "Action", onChange: setValue } }}>
             <div data-testid="window-body">Body</div>
           </Window>
         );
@@ -22951,10 +22911,10 @@ if (import.meta.vitest) {
       const { container } = render(<Harness />);
       const toggleBtn = container.querySelector('[id="engagement-window-window-engagement-toggle"]') as HTMLElement;
       expect(toggleBtn).toBeTruthy();
-      expect(screen.queryByPlaceholderText("Command")).toBeNull();
+      expect(screen.queryByPlaceholderText("Action")).toBeNull();
       fireEvent.click(toggleBtn);
       const activeField = await waitFor(() => {
-        const next = screen.getByPlaceholderText("Command") as HTMLInputElement;
+        const next = screen.getByPlaceholderText("Action") as HTMLInputElement;
         expect(document.activeElement).toBe(next);
         return next;
       });
@@ -22966,34 +22926,34 @@ if (import.meta.vitest) {
       });
     });
 
-    it("Engagement onChange PascalCases spaced command without window routing", () => {
+    it("Engagement onChange PascalCases spaced action without window routing", () => {
       const changed: string[] = [];
-      render(<Engagement input={{ value: "", onChange: (next) => changed.push(next), placeholder: "Command" }} />);
-      fireEvent.change(screen.getByPlaceholderText("Command"), { target: { value: "set height" } });
+      render(<Engagement input={{ value: "", onChange: (next) => changed.push(next), placeholder: "Action" }} />);
+      fireEvent.change(screen.getByPlaceholderText("Action"), { target: { value: "set height" } });
       expect(changed).toEqual(["SetHeight"]);
     });
 
-    it("normalizeEngagementCommandText strips separators and PascalCases tokens", () => {
-      expect(normalizeEngagementCommandText("set height 5")).toBe("SetHeight5");
-      expect(normalizeEngagementCommandText("b ")).toBe("B");
-      expect(normalizeEngagementCommandText("box")).toBe("Box");
-      expect(normalizeEngagementCommandText("SetHeight")).toBe("SetHeight");
+    it("normalizeEngagementActionText strips separators and PascalCases tokens", () => {
+      expect(normalizeEngagementActionText("set height 5")).toBe("SetHeight5");
+      expect(normalizeEngagementActionText("b ")).toBe("B");
+      expect(normalizeEngagementActionText("box")).toBe("Box");
+      expect(normalizeEngagementActionText("SetHeight")).toBe("SetHeight");
     });
 
-    it("normalizeEngagementCommandText preserves decimal points inside numbers", () => {
-      expect(normalizeEngagementCommandText("set height 3.5")).toBe("SetHeight3.5");
-      expect(normalizeEngagementCommandText("3.5")).toBe("3.5");
-      expect(normalizeEngagementCommandText("0.25")).toBe("0.25");
-      expect(normalizeEngagementCommandText("dist 12.75")).toBe("Dist12.75");
+    it("normalizeEngagementActionText preserves decimal points inside numbers", () => {
+      expect(normalizeEngagementActionText("set height 3.5")).toBe("SetHeight3.5");
+      expect(normalizeEngagementActionText("3.5")).toBe("3.5");
+      expect(normalizeEngagementActionText("0.25")).toBe("0.25");
+      expect(normalizeEngagementActionText("dist 12.75")).toBe("Dist12.75");
     });
 
-    it("engagementCommandTokenEquals matches tokens regardless of casing", () => {
-      expect(engagementCommandTokenEquals("brush", "Brush")).toBe(true);
-      expect(engagementCommandTokenEquals("SELECT", "select")).toBe(true);
-      expect(engagementCommandTokenEquals("box", "sphere")).toBe(false);
+    it("engagementActionTokenEquals matches tokens regardless of casing", () => {
+      expect(engagementActionTokenEquals("brush", "Brush")).toBe(true);
+      expect(engagementActionTokenEquals("SELECT", "select")).toBe(true);
+      expect(engagementActionTokenEquals("box", "sphere")).toBe(false);
     });
 
-    it("Engagement input PascalCases command text and space confirms like enter", async () => {
+    it("Engagement input PascalCases action text and space confirms like enter", async () => {
       const submitted: string[] = [];
       const Harness = () => {
         const [value, setValue] = reactHostPort.useState("SetHeight");
@@ -23003,7 +22963,7 @@ if (import.meta.vitest) {
             input={{
               id: "engagement-input",
               value,
-              placeholder: "Command",
+              placeholder: "Action",
               onChange: setValue,
               onSubmit: (next) => submitted.push(next),
             }}
@@ -23011,7 +22971,7 @@ if (import.meta.vitest) {
         );
       };
       render(<Harness />);
-      const field = screen.getByPlaceholderText("Command") as HTMLInputElement;
+      const field = screen.getByPlaceholderText("Action") as HTMLInputElement;
       expect(field.value).toBe("SetHeight");
       fireEvent.keyDown(field, { key: " " });
       await waitFor(() => expect(submitted).toEqual(["SetHeight"]));
@@ -23042,9 +23002,9 @@ if (import.meta.vitest) {
       expect(screen.getByText("Idle")).toBeTruthy();
     });
 
-    it("Window engagement command row spans the sized engagement zone", () => {
+    it("Window engagement action row spans the sized engagement zone", () => {
       const { container } = render(
-        <Window id="engagement-window" active engagement={{ input: { placeholder: "Command" } }}>
+        <Window id="engagement-window" active engagement={{ input: { placeholder: "Action" } }}>
           <div>Body</div>
         </Window>,
       );
@@ -23054,8 +23014,8 @@ if (import.meta.vitest) {
       fireEvent.click(toggleBtn);
       expect(zone.className).toContain("w-full");
       expect(overlay.style.width).toBe("min(28rem, 100%)");
-      const row = container.querySelector('[data-slot="engagement-command-row"]');
-      const inputRoot = container.querySelector('[data-slot="engagement-command-input"] [data-slot="input-root"]');
+      const row = container.querySelector('[data-slot="engagement-action-row"]');
+      const inputRoot = container.querySelector('[data-slot="engagement-action-input"] [data-slot="input-root"]');
       expect(row?.className).toContain("w-full");
       expect(inputRoot?.className).toContain("w-full");
     });
@@ -23103,7 +23063,7 @@ if (import.meta.vitest) {
 
     it("Window engagement max width shrinks when measures rail is present", () => {
       const { container } = render(
-        <Window id="layout-window" active engagement={{ input: { placeholder: "Command" } }} measures={<div data-testid="measure-slot">LOD</div>}>
+        <Window id="layout-window" active engagement={{ input: { placeholder: "Action" } }} measures={<div data-testid="measure-slot">LOD</div>}>
           <div data-testid="window-body">Body</div>
         </Window>,
       );
@@ -23134,29 +23094,29 @@ if (import.meta.vitest) {
 
     it("Window hides engagement overlay when measures are fullscreen", () => {
       const { container } = render(
-        <Window id="measures-engagement-window" active engagement={{ input: { placeholder: "Command" } }} measures={<div data-testid="measure-slot">LOD</div>}>
+        <Window id="measures-engagement-window" active engagement={{ input: { placeholder: "Action" } }} measures={<div data-testid="measure-slot">LOD</div>}>
           <div>Body</div>
         </Window>,
       );
       fireEvent.click(container.querySelector('[id="measures-engagement-window-window-engagement-toggle"]')!);
       fireEvent.click(container.querySelector("#measures-engagement-window-window-measures-unfold")!);
-      expect(screen.getByPlaceholderText("Command")).toBeTruthy();
+      expect(screen.getByPlaceholderText("Action")).toBeTruthy();
       fireEvent.click(container.querySelector(`#measures-engagement-window-window-measures-span`)!);
       expect(container.querySelector('[data-slot="window-measures-overlay"]')?.getAttribute("data-expanded")).toBe("true");
       expect(container.querySelector('[data-slot="window-engagement-overlay"]')).toBeNull();
-      expect(screen.queryByPlaceholderText("Command")).toBeNull();
+      expect(screen.queryByPlaceholderText("Action")).toBeNull();
       fireEvent.click(container.querySelector(`#measures-engagement-window-window-measures-span`)!);
       expect(container.querySelector('[data-slot="window-engagement-overlay"]')).toBeTruthy();
     });
 
     it("Window hides engagement overlay entirely while inactive", () => {
       const { container } = render(
-        <Window id="engagement-window" engagement={{ input: { placeholder: "Command" }, status: [{ id: "s", content: "Idle" }] }}>
+        <Window id="engagement-window" engagement={{ input: { placeholder: "Action" }, status: [{ id: "s", content: "Idle" }] }}>
           <div>Body</div>
         </Window>,
       );
       expect(container.querySelector('[data-slot="window-engagement-overlay"]')).toBeNull();
-      expect(screen.queryByPlaceholderText("Command")).toBeNull();
+      expect(screen.queryByPlaceholderText("Action")).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
     });
 
@@ -24749,25 +24709,25 @@ if (treeVitest) {
       { id: "a", title: "A", children: <div>A body</div> },
       { id: "b", title: "B", children: <div>B body</div> },
     ];
-    const layout: WindowLayoutNode = {
-      kind: "stack",
+    const splitLayout: WindowLayoutNode = {
+      kind: "row",
       children: [
-        { kind: "window", id: "a" },
-        { kind: "window", id: "b" },
+        { kind: "stack", children: [{ kind: "window", id: "a" }], activeId: "a" },
+        { kind: "stack", children: [{ kind: "window", id: "b" }], activeId: "b" },
       ],
-      activeId: "a",
     };
 
-    it("renders only the active window with no tab bar or dock chrome", () => {
-      const markup = renderToStaticMarkup(<Mode mobile windows={windows} activeWindowId="b" layout={layout} />);
-      expect(markup).not.toContain('data-slot="mode-dock-tabbar"');
-      expect(markup.match(/data-slot="mode-mobile-window"/g)?.length).toBe(1);
+    it("collapses split panes into one tab stack with the regular window chrome", () => {
+      const markup = renderToStaticMarkup(<Mode mobile windows={windows} activeWindowId="b" layout={splitLayout} />);
+      expect(markup).toContain('data-slot="mode-dock-tabbar"');
+      expect(markup).toContain('data-slot="mode-dock-tab"');
+      expect(markup).toContain("A");
       expect(markup).toContain("B body");
       expect(markup).not.toContain("A body");
     });
 
     it("falls back to the first ordered window when activeWindowId is stale", () => {
-      const markup = renderToStaticMarkup(<Mode mobile windows={windows} activeWindowId="missing" layout={layout} />);
+      const markup = renderToStaticMarkup(<Mode mobile windows={windows} activeWindowId="missing" layout={splitLayout} />);
       expect(markup).toContain("A body");
       expect(markup).not.toContain("B body");
     });
@@ -24949,7 +24909,7 @@ if (treeVitest) {
       const markup = renderToStaticMarkup(
         <LevelProvider level="window">
           <ButtonGroup>
-            <ButtonGroupItem id="ui.engagement.commands" text="Next" icon="arrow-right" />
+            <ButtonGroupItem id="ui.engagement.actions" text="Next" icon="arrow-right" />
           </ButtonGroup>
         </LevelProvider>,
       );
@@ -25044,8 +25004,8 @@ if (treeVitest) {
     it("maps legacy engagement control ids to ui.engagement i18n keys", () => {
       expect(isInternalChromeControlId("engagement-possibles-toggle")).toBe(true);
       expect(resolveControlLabelId("engagement-possibles-toggle")).toBe("ui.engagement.suggestions");
-      expect(resolveControlLabelId("engagement-options")).toBe("ui.engagement.commands");
-      expect(resolveControlLabelId("engagement-input")).toBe("ui.engagement.command");
+      expect(resolveControlLabelId("engagement-options")).toBe("ui.engagement.actions");
+      expect(resolveControlLabelId("engagement-input")).toBe("ui.engagement.action");
     });
 
     it("uses normal shell edges on panel frame, navbar bottom, and footer top with CSS hover emphasis", () => {
@@ -25127,7 +25087,7 @@ if (treeVitest) {
     it("renders engagement suggestions toggle without internal-id humanized labels", () => {
       const markup = renderToStaticMarkup(
         <UiChromeCompactProvider compact={false}>
-          <Engagement input={{ placeholder: "Command" }} possibleEngagements={[{ id: "primitive.box", label: "Box", detail: "b", onSelect: () => {} }]} />
+          <Engagement input={{ placeholder: "Action" }} possibleEngagements={[{ id: "primitive.box", label: "Box", detail: "b", onSelect: () => {} }]} />
         </UiChromeCompactProvider>,
       );
       expect(markup).toContain('id="ui.engagement.suggestions"');

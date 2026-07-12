@@ -7,7 +7,7 @@ use gis_2d::{
 };
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_gis_map_scene, create_default_layout, layout::MeasureSelectItem, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle,
-    ui_inspector_readonly_field, ui_text, App, CommandDescriptor, DwgDrawing, DwgGeometry, GisMapScene, PluginApp, PluginBundle,
+    ui_inspector_readonly_field, ui_text, App, ActionDescriptor, DwgDrawing, DwgGeometry, GisMapScene, PluginApp, PluginBundle,
     UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiSliderNode,
     UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -256,10 +256,10 @@ fn set_document_op(envelope: &Gis2dPlayEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
 }
 
-fn gis2d_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn gis2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: GIS2D_PLAY_APP_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -307,7 +307,7 @@ fn layer_weight_slider_fields(play: &Gis2dPlayEnvelope) -> Vec<UiNode> {
                     min: 0.25,
                     max: 3.0,
                     step: 0.05,
-                    on_change: gis2d_cmd(
+                    on_change: gis2d_action(
                         "setLayerStrokeScale",
                         Some(json!({ "layerId": layer_id })),
                     ),
@@ -371,7 +371,7 @@ fn gis2d_window_measures(play: &Gis2dPlayEnvelope) -> Vec<WindowMeasure> {
             label: Some((*label).into()),
             pressed: layer_visible(&play.runtime, id),
             text: None,
-            on_change: gis2d_cmd("toggleLayerVisibility", Some(json!({ "layerId": id }))),
+            on_change: gis2d_action("toggleLayerVisibility", Some(json!({ "layerId": id }))),
         })
         .collect();
     let layer_weight_sliders: Vec<WindowMeasure> = layer_weight_entries(play)
@@ -383,7 +383,7 @@ fn gis2d_window_measures(play: &Gis2dPlayEnvelope) -> Vec<WindowMeasure> {
             min: 0.25,
             max: 3.0,
             step: Some(0.05),
-            on_change: gis2d_cmd("setLayerStrokeScale", Some(json!({ "layerId": layer_id }))),
+            on_change: gis2d_action("setLayerStrokeScale", Some(json!({ "layerId": layer_id }))),
         })
         .collect();
     vec![
@@ -396,7 +396,7 @@ fn gis2d_window_measures(play: &Gis2dPlayEnvelope) -> Vec<WindowMeasure> {
                 MeasureSelectItem { id: "vector".into(), value: "vector".into(), label: "Vector".into() },
                 MeasureSelectItem { id: "combined".into(), value: "combined".into(), label: "Combined".into() },
             ],
-            on_change: gis2d_cmd("setRenderMode", None),
+            on_change: gis2d_action("setRenderMode", None),
         },
         WindowMeasure::Select {
             id: "gis2d-play-window.vector-style".into(),
@@ -407,7 +407,7 @@ fn gis2d_window_measures(play: &Gis2dPlayEnvelope) -> Vec<WindowMeasure> {
                 MeasureSelectItem { id: "figureGround".into(), value: "figureGround".into(), label: "Figure Ground".into() },
                 MeasureSelectItem { id: "invertedFigure".into(), value: "invertedFigure".into(), label: "Inverted Figure".into() },
             ],
-            on_change: gis2d_cmd("setVectorStyle", None),
+            on_change: gis2d_action("setVectorStyle", None),
         },
         WindowMeasure::Select {
             id: "gis2d-play-window.lod-mode".into(),
@@ -417,7 +417,7 @@ fn gis2d_window_measures(play: &Gis2dPlayEnvelope) -> Vec<WindowMeasure> {
                 .into_iter()
                 .map(|(value, label)| MeasureSelectItem { id: value.clone(), value, label })
                 .collect(),
-            on_change: gis2d_cmd("setLodMode", None),
+            on_change: gis2d_action("setLodMode", None),
         },
         WindowMeasure::Select {
             id: "gis2d-play-window.selection-method".into(),
@@ -427,7 +427,7 @@ fn gis2d_window_measures(play: &Gis2dPlayEnvelope) -> Vec<WindowMeasure> {
                 MeasureSelectItem { id: "rectangle".into(), value: "rectangle".into(), label: "Rectangle".into() },
                 MeasureSelectItem { id: "lasso".into(), value: "lasso".into(), label: "Lasso".into() },
             ],
-            on_change: gis2d_cmd("setSelectionMethod", None),
+            on_change: gis2d_action("setSelectionMethod", None),
         },
         WindowMeasure::Group {
             id: "gis2d-play-window.layers".into(),
@@ -451,7 +451,7 @@ fn tree_item(
     label: impl Into<String>,
     description: Option<String>,
     icon_id: Option<String>,
-    command: Option<CommandDescriptor>,
+    action: Option<ActionDescriptor>,
 ) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
@@ -460,10 +460,10 @@ fn tree_item(
         icon_id,
         selected: None,
         default_open: None,
-        hover_command: None,
-        unhover_command: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
-        command,
+        action,
         draggable: None,
         drag_data: None,
         items: None,
@@ -483,7 +483,7 @@ fn build_document_tree(play: &Gis2dPlayEnvelope) -> UiNode {
                     *label,
                     Some((*id).into()),
                     Some((*icon).into()),
-                    Some(gis2d_cmd("setSelection", Some(json!({ "ids": [id] })))),
+                    Some(gis2d_action("setSelection", Some(json!({ "ids": [id] })))),
                 )
             })
             .collect()
@@ -499,7 +499,7 @@ fn build_document_tree(play: &Gis2dPlayEnvelope) -> UiNode {
                     label,
                     Some(id.into()),
                     Some("layers".into()),
-                    Some(gis2d_cmd("setSelection", Some(json!({ "ids": [id] })))),
+                    Some(gis2d_action("setSelection", Some(json!({ "ids": [id] })))),
                 ))
             })
             .collect()
@@ -519,8 +519,8 @@ fn build_document_tree(play: &Gis2dPlayEnvelope) -> UiNode {
                 .collect(),
         ),
         highlighted_ids: None,
-        selection_change: Some(gis2d_cmd("setSelection", None)),
-        drop_command: None,
+        selection_change: Some(gis2d_action("setSelection", None)),
+        drop_action: None,
     })
 }
 
@@ -533,7 +533,7 @@ fn build_catalogue_tree(play: &Gis2dPlayEnvelope) -> UiNode {
                 *label,
                 None,
                 Some((*icon).into()),
-                Some(gis2d_cmd("toggleLayerVisibility", Some(json!({ "layerId": id })))),
+                Some(gis2d_action("toggleLayerVisibility", Some(json!({ "layerId": id })))),
             )
         })
         .collect();
@@ -548,7 +548,7 @@ fn build_catalogue_tree(play: &Gis2dPlayEnvelope) -> UiNode {
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
-        drop_command: None,
+        drop_action: None,
     })
 }
 
@@ -573,7 +573,7 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
                         UiSelectItem { value: "combined".into(), label: "Combined".into() },
                     ],
                     placeholder: None,
-                    on_change: gis2d_cmd("setRenderMode", None),
+                    on_change: gis2d_action("setRenderMode", None),
                 })),
                 description: None,
                 required: None,
@@ -591,7 +591,7 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
                         UiSelectItem { value: "invertedFigure".into(), label: "Inverted Figure".into() },
                     ],
                     placeholder: None,
-                    on_change: gis2d_cmd("setVectorStyle", None),
+                    on_change: gis2d_action("setVectorStyle", None),
                 })),
                 description: None,
                 required: None,
@@ -605,7 +605,7 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
                     value: play.runtime.lod_mode.clone(),
                     items: lod_items,
                     placeholder: None,
-                    on_change: gis2d_cmd("setLodMode", None),
+                    on_change: gis2d_action("setLodMode", None),
                 })),
                 description: None,
                 required: None,
@@ -622,7 +622,7 @@ fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
                         UiSelectItem { value: "lasso".into(), label: "Lasso".into() },
                     ],
                     placeholder: None,
-                    on_change: gis2d_cmd("setSelectionMethod", None),
+                    on_change: gis2d_action("setSelectionMethod", None),
                 })),
                 description: None,
                 required: None,
@@ -688,7 +688,7 @@ fn build_inspector_tree(play: &Gis2dPlayEnvelope) -> UiNode {
                         icon_id: "eye".into(),
                         pressed: mixed.uniform && mixed.pressed,
                         text: None,
-                        on_change: gis2d_cmd("toggleLayerVisibility", Some(json!({ "layerId": layer_id }))),
+                        on_change: gis2d_action("toggleLayerVisibility", Some(json!({ "layerId": layer_id }))),
                     })),
                     description: None,
                     required: None,
@@ -741,16 +741,16 @@ impl PluginApp for Gis2dPlayApp {
         serde_json::to_string(&default_envelope()).expect("gis2d envelope json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut play = parse_envelope(document_json);
         let mut store = store_from_envelope(&play);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(document) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value::<Gis2dPlayEnvelope>(document.clone()) {
@@ -967,7 +967,7 @@ impl PluginApp for Gis2dPlayApp {
                 }
             }
             "patchRoutes" | "patchRoute" => {
-                let route_ids: Vec<String> = if command == "patchRoute" {
+                let route_ids: Vec<String> = if action == "patchRoute" {
                     args.and_then(|value| value.get("routeId"))
                         .and_then(|value| value.as_str())
                         .map(|id| vec![id.to_string()])
@@ -1063,25 +1063,25 @@ pub fn create_gis2d_app() -> App {
             .operation("patchPositions", "Patch Positions")
             .operation("patchRoutes", "Patch Routes")
             .operation("patchRoute", "Patch Route")
-            .view_command("setSelection", "Set Selection")
-            .view_command("toggleLayerVisibility", "Toggle Layer Visibility")
-            .view_command("setActiveExample", "Set Active Example")
-            .view_command("fitWorld", "Fit World")
-            .view_command("setCamera", "Set Camera")
-            .view_command("setRenderMode", "Set Render Mode")
-            .view_command("setVectorStyle", "Set Vector Style")
-            .view_command("setLodMode", "Set LOD Mode")
-            .view_command("setFeatureSelection", "Set Feature Selection")
-            .view_command("setHover", "Set Hover")
-            .view_command("setSelectionMethod", "Set Selection Method")
-            .view_command("setSelectionMode", "Set Selection Mode")
-            .view_command("clearSelection", "Clear Selection")
-            .view_command("selectAll", "Select All")
-            .view_command("deselect", "Deselect")
-            .view_command("focusFeature", "Focus Feature")
-            .view_command("setLayerStrokeScale", "Set Layer Stroke Scale")
-            .shell_command("setDocument", "Set Document")
-            .shell_command("openSource", "Open Source")
+            .view_action("setSelection", "Set Selection")
+            .view_action("toggleLayerVisibility", "Toggle Layer Visibility")
+            .view_action("setActiveExample", "Set Active Example")
+            .view_action("fitWorld", "Fit World")
+            .view_action("setCamera", "Set Camera")
+            .view_action("setRenderMode", "Set Render Mode")
+            .view_action("setVectorStyle", "Set Vector Style")
+            .view_action("setLodMode", "Set LOD Mode")
+            .view_action("setFeatureSelection", "Set Feature Selection")
+            .view_action("setHover", "Set Hover")
+            .view_action("setSelectionMethod", "Set Selection Method")
+            .view_action("setSelectionMode", "Set Selection Mode")
+            .view_action("clearSelection", "Clear Selection")
+            .view_action("selectAll", "Select All")
+            .view_action("deselect", "Deselect")
+            .view_action("focusFeature", "Focus Feature")
+            .view_action("setLayerStrokeScale", "Set Layer Stroke Scale")
+            .shell_action("setDocument", "Set Document")
+            .shell_action("openSource", "Open Source")
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
@@ -1194,7 +1194,7 @@ mod tests {
     fn set_selection_updates_runtime() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setSelection",
             Some(&json!({ "ids": ["roads"] })),
             &document,
@@ -1207,11 +1207,11 @@ mod tests {
     }
 
     #[test]
-    fn set_layers_command_persists_projection() {
+    fn set_layers_action_persists_projection() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
         let layers = vec![json!({ "id": "custom", "name": "Custom", "x": 0.0, "y": 0.0, "width": 80.0, "height": 40.0 })];
-        let ops = app.handle_command_patch_ops("setLayers", Some(&json!({ "layers": layers })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setLayers", Some(&json!({ "layers": layers })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
@@ -1222,7 +1222,7 @@ mod tests {
     fn toggle_layer_visibility_hides_layer() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "toggleLayerVisibility",
             Some(&json!({ "layerId": "raster" })),
             &document,
@@ -1237,19 +1237,19 @@ mod tests {
     fn set_render_mode_vector_style_lod_mode_persist() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops("setRenderMode", Some(&json!({ "mode": "vector" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setRenderMode", Some(&json!({ "mode": "vector" })), &document, &ViewState::default());
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
         assert_eq!(next.runtime.render_mode, "vector");
         let document = serde_json::to_string(&next).unwrap();
 
-        let ops = app.handle_command_patch_ops("setVectorStyle", Some(&json!({ "style": "figureGround" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setVectorStyle", Some(&json!({ "style": "figureGround" })), &document, &ViewState::default());
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
         assert_eq!(next.runtime.vector_style, "figureGround");
         let document = serde_json::to_string(&next).unwrap();
 
-        let ops = app.handle_command_patch_ops("setLodMode", Some(&json!({ "mode": "city" })), &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("setLodMode", Some(&json!({ "mode": "city" })), &document, &ViewState::default());
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
         assert_eq!(next.runtime.lod_mode, "city");
@@ -1263,7 +1263,7 @@ mod tests {
     fn set_feature_selection_updates_runtime_and_host() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setFeatureSelection",
             Some(&json!({ "positions": ["p_institut_de_botanique_ulg_liege"], "routes": [] })),
             &document,
@@ -1280,7 +1280,7 @@ mod tests {
     fn set_hover_updates_runtime() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setHover",
             Some(&json!({ "hover": { "kind": "position", "id": "p_test" } })),
             &document,
@@ -1298,7 +1298,7 @@ mod tests {
     fn clear_selection_resets_features() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setFeatureSelection",
             Some(&json!({ "positions": ["p_institut_de_botanique_ulg_liege"], "routes": [] })),
             &document,
@@ -1306,7 +1306,7 @@ mod tests {
         );
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let document = payload["document"].to_string();
-        let ops = app.handle_command_patch_ops("clearSelection", None, &document, &ViewState::default());
+        let ops = app.handle_action_patch_ops("clearSelection", None, &document, &ViewState::default());
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
         assert_eq!(next.runtime.feature_selection_json, default_feature_selection_json());
@@ -1316,14 +1316,14 @@ mod tests {
     fn set_feature_selection_additive_merges() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setFeatureSelection",
             Some(&json!({ "positions": ["a"], "routes": [], "mode": "default" })),
             &document,
             &ViewState::default(),
         );
         let document = serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setFeatureSelection",
             Some(&json!({ "positions": ["b"], "routes": [], "mode": "additive" })),
             &document,
@@ -1342,14 +1342,14 @@ mod tests {
     fn set_feature_selection_subtractive_removes() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setFeatureSelection",
             Some(&json!({ "positions": ["a", "b"], "routes": [], "mode": "default" })),
             &document,
             &ViewState::default(),
         );
         let document = serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setFeatureSelection",
             Some(&json!({ "positions": ["a"], "routes": [], "mode": "subtractive" })),
             &document,
@@ -1365,14 +1365,14 @@ mod tests {
     fn set_feature_selection_invertive_toggles() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setFeatureSelection",
             Some(&json!({ "positions": ["a"], "routes": [], "mode": "default" })),
             &document,
             &ViewState::default(),
         );
         let document = serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setFeatureSelection",
             Some(&json!({ "positions": ["b"], "routes": [], "mode": "invertive" })),
             &document,
@@ -1388,7 +1388,7 @@ mod tests {
     fn set_layer_stroke_scale_persists_weight() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "setLayerStrokeScale",
             Some(&json!({ "layerId": "roads", "value": 1.5 })),
             &document,
@@ -1424,7 +1424,7 @@ mod tests {
     fn patch_route_updates_matching_route_field() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command_patch_ops(
+        let ops = app.handle_action_patch_ops(
             "patchRoute",
             Some(&json!({
                 "routeId": "bg_holz_fassade_botanique:bw_institut_botanique_ulg:0",

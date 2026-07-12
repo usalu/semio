@@ -8,7 +8,7 @@ use presentation_deck::{
 use semio_framework_plugin::{SurfaceKind, PanelGroup, 
     build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, App,
-    Canvas2dScene, CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInputNode,
+    Canvas2dScene, ActionDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -69,10 +69,10 @@ fn set_document_op(envelope: &PresentationPlayEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
 }
 
-fn presentation_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
-    CommandDescriptor {
+fn presentation_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
         controller_id: PRESENTATION_PLAY_CONTROLLER_ID.into(),
-        command: command.into(),
+        action: action.into(),
         args,
     }
 }
@@ -161,9 +161,9 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         icon_id: None,
         selected: None,
         default_open: None,
-        command: None,
-        hover_command: None,
-        unhover_command: None,
+        action: None,
+        hover_action: None,
+        unhover_action: None,
         actions: None,
         draggable: None,
         drag_data: None,
@@ -188,9 +188,9 @@ fn build_document_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
             icon_id: None,
             selected: Some(envelope.runtime.selected_ids.contains(&tile.id)),
             default_open: None,
-            command: Some(presentation_cmd("setSelectedIds", Some(json!({ "ids": [tile.id] })))),
-        hover_command: None,
-        unhover_command: None,
+            action: Some(presentation_action("setSelectedIds", Some(json!({ "ids": [tile.id] })))),
+        hover_action: None,
+        unhover_action: None,
         actions: None,
             draggable: None,
             drag_data: None,
@@ -212,8 +212,8 @@ fn build_document_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
         }],
         selected_ids: Some(envelope.runtime.selected_ids.clone()),
         highlighted_ids: None,
-        selection_change: Some(presentation_cmd("setSelectedIds", Some(json!({ "ids": [] })))),
-        drop_command: None,
+        selection_change: Some(presentation_action("setSelectedIds", Some(json!({ "ids": [] })))),
+        drop_action: None,
     })
 }
 
@@ -236,7 +236,7 @@ fn inspector_crop_field(tile_ids: &[String], field: &str, label: &str, values: &
                 Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into())
             },
             commit: Some("blur".into()),
-            on_change: presentation_cmd(
+            on_change: presentation_action(
                 "patchTileCrops",
                 Some(json!({ "ids": tile_ids, "field": field })),
             ),
@@ -285,7 +285,7 @@ fn build_details_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
             value: name_mixed.value,
             placeholder: name_mixed.placeholder,
             commit: Some("blur".into()),
-            on_change: presentation_cmd("renameTiles", Some(json!({ "ids": tile_ids }))),
+            on_change: presentation_action("renameTiles", Some(json!({ "ids": tile_ids }))),
             min: None,
             max: None,
             step: None,
@@ -309,7 +309,7 @@ fn build_details_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
             id: Some(format!("presentation.play.tile.{}.delete", tile_ids[0])),
             icon_id: "trash-2".into(),
             label: "Delete tile".into(),
-            command: presentation_cmd("deleteTile", Some(json!({ "id": tile_ids[0] }))),
+            action: presentation_action("deleteTile", Some(json!({ "id": tile_ids[0] }))),
             style: None,
             disabled: None,
         }));
@@ -318,7 +318,7 @@ fn build_details_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
         id: Some("presentation.play.details.delete-selection".into()),
         icon_id: "trash-2".into(),
         label: "Delete selection".into(),
-        command: presentation_cmd("deleteSelection", None),
+        action: presentation_action("deleteSelection", None),
         style: None,
         disabled: None,
     }));
@@ -349,12 +349,12 @@ fn build_details_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
     ui_inspector_groups_to_tree(&groups)
 }
 
-fn catalogue_button(id: &str, label: &str, command: &str, args: Option<Value>) -> UiNode {
+fn catalogue_button(id: &str, label: &str, action: &str, args: Option<Value>) -> UiNode {
     UiNode::Button(semio_framework_plugin::UiButtonNode {
         id: Some(id.into()),
         icon_id: "plus".into(),
         label: label.into(),
-        command: presentation_cmd(command, args),
+        action: presentation_action(action, args),
         style: None,
         disabled: None,
     })
@@ -404,7 +404,7 @@ fn build_catalogue_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
                         value: envelope.deck.source.src.clone(),
                         placeholder: None,
                         commit: None,
-                        on_change: presentation_cmd("noop", None),
+                        on_change: presentation_action("noop", None),
                         min: None,
                         max: None,
                         step: None,
@@ -448,15 +448,15 @@ impl PluginApp for PresentationPlayApp {
         serde_json::to_string(&default_envelope()).expect("presentation envelope json")
     }
 
-    fn handle_command_patch_ops(
+    fn handle_action_patch_ops(
         &mut self,
-        command: &str,
+        action: &str,
         args: Option<&Value>,
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut envelope = parse_envelope(document_json);
-        match command {
+        match action {
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value(next.clone()) {
@@ -835,10 +835,10 @@ mod tests {
     }
 
     #[test]
-    fn seed_grid_command_adds_tiles() {
+    fn seed_grid_action_adds_tiles() {
         let mut app = PresentationPlayApp;
         let mut document = app.initial_document_json();
-        for op in app.handle_command_patch_ops("seedGrid", Some(&json!({ "rows": 2, "columns": 2 })), &document, &ViewState::default()) {
+        for op in app.handle_action_patch_ops("seedGrid", Some(&json!({ "rows": 2, "columns": 2 })), &document, &ViewState::default()) {
             if let Ok(value) = serde_json::from_str::<Value>(&op) {
                 if value.get("op").and_then(|v| v.as_str()) == Some("setDocument") {
                     document = serde_json::to_string(&value.get("document").unwrap()).unwrap();
@@ -859,7 +859,7 @@ mod tests {
     fn source_frame_renders_as_actual_image_layer_behind_tiles() {
         let mut app = PresentationPlayApp;
         let mut document = app.initial_document_json();
-        for op in app.handle_command_patch_ops("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &document, &ViewState::default()) {
+        for op in app.handle_action_patch_ops("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &document, &ViewState::default()) {
             if let Ok(value) = serde_json::from_str::<Value>(&op) {
                 if value.get("op").and_then(|v| v.as_str()) == Some("setDocument") {
                     document = serde_json::to_string(&value.get("document").unwrap()).unwrap();
@@ -884,7 +884,7 @@ mod tests {
     fn document_lists_seeded_tiles() {
         let mut app = PresentationPlayApp;
         let mut document = app.initial_document_json();
-        for op in app.handle_command_patch_ops("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &document, &ViewState::default()) {
+        for op in app.handle_action_patch_ops("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &document, &ViewState::default()) {
             if let Ok(value) = serde_json::from_str::<Value>(&op) {
                 if let Some(doc) = value.get("document") {
                     document = doc.to_string();
