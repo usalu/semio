@@ -829,6 +829,8 @@ struct FormsLabels {
     kind_file: &'static str,
     kind_vector: &'static str,
     kind_note: &'static str,
+    window_blueprint: &'static str,
+    window_try: &'static str,
 }
 
 const FORMS_LABELS_NATIVE_EN: FormsLabels = FormsLabels {
@@ -890,6 +892,8 @@ const FORMS_LABELS_NATIVE_EN: FormsLabels = FormsLabels {
     kind_file: "File",
     kind_vector: "Vector",
     kind_note: "Note",
+    window_blueprint: "Blueprint",
+    window_try: "Try",
 };
 
 const FORMS_LABELS_NATIVE_DE: FormsLabels = FormsLabels {
@@ -951,6 +955,8 @@ const FORMS_LABELS_NATIVE_DE: FormsLabels = FormsLabels {
     kind_file: "Datei",
     kind_vector: "Vektor",
     kind_note: "Notiz",
+    window_blueprint: "Entwurf",
+    window_try: "Testen",
 };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; forms has no domain-terminology variant to switch on.
@@ -2506,6 +2512,19 @@ impl PluginApp for FormsPlayApp {
             FORMS_PLAY_BODY_CATALOGUE => build_catalogue_tree(&contributions, labels),
             FORMS_PLAY_BODY_INSPECTION => build_inspector_tree(&spec, &play, &contributions, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
+        }
+    }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = forms_labels(view_state);
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: None,
+            window_kind_labels: std::collections::HashMap::from([
+                (FORMS_PLAY_WINDOW_BLUEPRINT.to_string(), labels.window_blueprint.to_string()),
+                (FORMS_PLAY_WINDOW_TRY.to_string(), labels.window_try.to_string()),
+            ]),
+            panel_tab_labels: std::collections::HashMap::new(),
+            mode_labels: std::collections::HashMap::new(),
         }
     }
 }

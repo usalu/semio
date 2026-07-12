@@ -693,6 +693,8 @@ struct ShootingLabels {
     format_png: &'static str,
     shape_rectangle: &'static str,
     shape_ellipse: &'static str,
+    window_scene: &'static str,
+    window_icon: &'static str,
 }
 
 const SHOOTING_LABELS_NATIVE_EN: ShootingLabels = ShootingLabels {
@@ -724,6 +726,8 @@ const SHOOTING_LABELS_NATIVE_EN: ShootingLabels = ShootingLabels {
     format_png: "PNG",
     shape_rectangle: "Rectangle",
     shape_ellipse: "Ellipse",
+    window_scene: "Scene",
+    window_icon: "Icon",
 };
 
 const SHOOTING_LABELS_NATIVE_DE: ShootingLabels = ShootingLabels {
@@ -755,6 +759,8 @@ const SHOOTING_LABELS_NATIVE_DE: ShootingLabels = ShootingLabels {
     format_png: "PNG",
     shape_rectangle: "Rechteck",
     shape_ellipse: "Ellipse",
+    window_scene: "Szene",
+    window_icon: "Symbol",
 };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; no terminology variant exists for this app.
@@ -2000,6 +2006,19 @@ impl PluginApp for ShootingPlayApp {
             (SHOOTING_PLAY_WINDOW_SCENE.into(), shooting_model_measures(&envelope)),
             (SHOOTING_PLAY_WINDOW_ICON.into(), shooting_icon_measures(&envelope, labels)),
         ])
+    }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = shooting_labels(view_state);
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: None,
+            window_kind_labels: std::collections::HashMap::from([
+                (SHOOTING_PLAY_WINDOW_SCENE.to_string(), labels.window_scene.to_string()),
+                (SHOOTING_PLAY_WINDOW_ICON.to_string(), labels.window_icon.to_string()),
+            ]),
+            panel_tab_labels: std::collections::HashMap::new(),
+            mode_labels: std::collections::HashMap::new(),
+        }
     }
 }
 //#endregion 🔖ShootingPlayApp

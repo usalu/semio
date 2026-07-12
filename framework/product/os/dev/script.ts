@@ -216,6 +216,11 @@ self.addEventListener("message", async (event) => {
             : "{}",
         });
         break;
+      case "appLabels":
+        reply(requestId, "appLabels", {
+          value: await api.appLabels ? await api.appLabels(msg.instanceId, msg.viewStateJson) : "{}",
+        });
+        break;
       default:
         throw new Error(\`unknown worker message type: \${type}\`);
     }
@@ -317,6 +322,15 @@ async function createPluginApiInner() {
       const response = await plugin.windowMeasures(instanceId, { json: context });
       return response.json;
     },
+    async appLabels(instanceId, viewStateJson) {
+      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
+      const context =
+        viewStateJson && viewStateJson.trim().startsWith("{")
+          ? viewStateJson
+          : JSON.stringify({ viewState: JSON.parse(viewStateJson), actor: "local" });
+      const response = await plugin.appLabels(instanceId, { json: context });
+      return response.json;
+    },
   };
   return {
     manifest: () => runSerialized(() => core.manifest()),
@@ -333,6 +347,7 @@ async function createPluginApiInner() {
       runSerialized(() => core.windowEngagements(instanceId, viewStateJson)),
     windowMeasures: (instanceId, viewStateJson) =>
       runSerialized(() => core.windowMeasures(instanceId, viewStateJson)),
+    appLabels: (instanceId, viewStateJson) => runSerialized(() => core.appLabels(instanceId, viewStateJson)),
   };
 }
 
@@ -803,12 +818,185 @@ class TestScript extends BundleScript {
   }
 }
 
+//#region 🔖StudioE2eVerify
+/** 🎭 Playwright end-to-end workflow verification for the `s` studio shell (folded in from the former `.repo/🎫/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/s-studio-e2e-verify.mjs`). */
+const STUDIO_E2E_HEADLESS_GPU_ERROR_FRAGMENTS = ["NoCompatibleDevice"];
+
+function studioE2eAssert(condition: boolean, message: string): void {
+  if (!condition) throw new Error(message);
+}
+
+function isIgnorableStudioE2ePageError(message: string): boolean {
+  return STUDIO_E2E_HEADLESS_GPU_ERROR_FRAGMENTS.some((fragment) => message.includes(fragment));
+}
+
+async function waitForStudioE2eCondition(page: import("playwright").Page, predicate: (state: { text: string; children: number }) => boolean, label: string, deadline: number): Promise<{ text: string; children: number }> {
+  while (Date.now() < deadline) {
+    const text = await page
+      .locator("body")
+      .innerText()
+      .catch(() => "");
+    const children = await page.locator("#root *").count();
+    if (predicate({ text, children })) return { text, children };
+    await page.waitForTimeout(500);
+  }
+  throw new Error(`timeout waiting for ${label}`);
+}
+
+async function openStudioE2e(page: import("playwright").Page, deadline: number): Promise<{ text: string; children: number }> {
+  await page.keyboard.press("Meta+n");
+  while (Date.now() < deadline) {
+    const text = await page
+      .locator("body")
+      .innerText()
+      .catch(() => "");
+    const path = await page.evaluate(() => location.pathname);
+    const children = await page.locator("#root *").count();
+    if (/Catalogue/i.test(text) && /Parameters/i.test(text) && path.startsWith("/studios/")) {
+      return { text, children };
+    }
+    await page.waitForTimeout(500);
+  }
+  throw new Error("timeout waiting for studio workspace");
+}
+
+async function activateStudioE2eMediaGraphWindow(page: import("playwright").Page): Promise<void> {
+  await page.locator(".semio-node-graph-host").first().click({ force: true });
+  await page.waitForTimeout(200);
+}
+
+async function expandStudioE2eMediaGraphEngagement(page: import("playwright").Page): Promise<void> {
+  await activateStudioE2eMediaGraphWindow(page);
+  await page.evaluate(() => document.getElementById("s-media-graph-window-engagement-toggle")?.click());
+  await page.waitForSelector("#s-media-catalogue-hint", { timeout: 10_000 });
+}
+
+async function spawnStudioE2eDrawFromEngagement(page: import("playwright").Page): Promise<string> {
+  await expandStudioE2eMediaGraphEngagement(page);
+  const engagementInput = page.locator("#s-media-catalogue-hint");
+  await engagementInput.fill("draw draw");
+  await engagementInput.press("Enter");
+  await page.waitForTimeout(1500);
+  return "engagement";
+}
+
+async function openStudioE2eCommandPalette(page: import("playwright").Page): Promise<void> {
+  await page.locator(".semio-node-graph-host").first().click({ force: true });
+  await page.waitForTimeout(100);
+  await page.keyboard.press("Meta+p");
+  await page.waitForSelector("[role='dialog'] [data-slot='command-input']", { timeout: 10_000 });
+}
+
+async function spawnStudioE2eDrawFromPalette(page: import("playwright").Page): Promise<string | null> {
+  await openStudioE2eCommandPalette(page);
+  const paletteInput = page.locator("[role='dialog'] [data-slot='command-input']").first();
+  await paletteInput.fill("draw");
+  await page.waitForTimeout(400);
+  const drawSpawn = page
+    .locator("[cmdk-item]")
+    .filter({ hasText: /Spawn Draw/i })
+    .first();
+  if (await drawSpawn.count()) {
+    await drawSpawn.click();
+    return "palette";
+  }
+  await page.keyboard.press("Escape");
+  return null;
+}
+
+async function runStudioE2eVerify(baseUrl: string, timeoutMs: number): Promise<void> {
+  const { chromium } = await import("playwright");
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  const pageErrors: string[] = [];
+  page.on("pageerror", (err) => pageErrors.push(String(err)));
+
+  console.log(`[DEBUG] navigating to ${baseUrl}`);
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded", timeout: 120_000 });
+  await page.waitForFunction(() => document.body.innerText.includes("Home") && /Demo Studio|New Studio/i.test(document.body.innerText) && document.querySelectorAll("#root *").length > 150, { timeout: 120_000 });
+
+  const deadline = Date.now() + timeoutMs;
+  const booted = await waitForStudioE2eCondition(page, ({ text }) => /Home/i.test(text) && /Studios|Search/i.test(text) && /Demo Studio|New Studio/i.test(text), "home shell with studios", deadline);
+  console.log(`[DEBUG] home loaded (${booted.children} nodes)`);
+  studioE2eAssert(/Demo Studio|Studios/i.test(booted.text), "home studios vfs should list seeded studio");
+
+  await openStudioE2e(page, deadline);
+  const pathAfterCreate = await page.evaluate(() => location.pathname);
+  console.log(`[DEBUG] studio loaded at ${pathAfterCreate}`);
+  studioE2eAssert(pathAfterCreate.startsWith("/studios/"), "studio uri should be under /studios/");
+
+  await page.waitForFunction(() => document.querySelector(".semio-node-graph-host") != null, { timeout: 30_000 });
+
+  const bodyText = await page.locator("body").innerText();
+  studioE2eAssert(!/Missing window:/i.test(bodyText), "all studio windows should render");
+  studioE2eAssert((await page.locator(".semio-node-graph-host").count()) > 0, "node graph host should render");
+  studioE2eAssert((await page.locator(".semio-text-editor-host").count()) > 0, "compiled dag editor should render");
+  console.log("[DEBUG] three studio windows rendered");
+
+  let spawnMode: string | null = null;
+  try {
+    spawnMode = await spawnStudioE2eDrawFromEngagement(page);
+    console.log(`[DEBUG] spawn via ${spawnMode}`);
+  } catch {
+    spawnMode = await spawnStudioE2eDrawFromPalette(page);
+    studioE2eAssert(spawnMode === "palette", "draw spawn should work via engagement rail or command palette");
+    console.log(`[DEBUG] spawn via ${spawnMode}`);
+  }
+
+  await page.keyboard.press("Meta+z");
+  await page.waitForTimeout(1500);
+  console.log("[DEBUG] undo issued");
+
+  await openStudioE2eCommandPalette(page);
+  const paletteInput = page.locator("[role='dialog'] [data-slot='command-input']").first();
+  await paletteInput.fill("undo");
+  await page.waitForTimeout(300);
+  studioE2eAssert((await page.locator("[cmdk-item]").filter({ hasText: "Undo" }).count()) > 0, "undo should be in command palette");
+  await paletteInput.fill("checkpoint");
+  await page.waitForTimeout(300);
+  studioE2eAssert((await page.locator("[cmdk-item]").filter({ hasText: /commitCheckpoint/ }).count()) > 0, "checkpoint command should be in command palette");
+  console.log("[DEBUG] studio commands in palette");
+  await page.keyboard.press("Escape");
+
+  await page.keyboard.press("Meta+f");
+  await page.waitForTimeout(500);
+  studioE2eAssert((await page.locator("[role='dialog'] [data-slot='command-input']").count()) > 0, "find palette should open");
+  console.log("[DEBUG] find palette available");
+  await page.keyboard.press("Escape");
+
+  await page.getByRole("button", { name: "← Home" }).click({ force: true });
+  await waitForStudioE2eCondition(page, ({ text }) => text.includes("Demo Studio") || text.includes("New Studio"), "home via studio bar", deadline);
+  console.log("[DEBUG] studio home bar navigation works");
+
+  const demoStudioRow = page.locator('[data-row-id="studio:default"]');
+  if (await demoStudioRow.count()) {
+    await demoStudioRow.dblclick({ force: true });
+    await page.waitForFunction(() => location.pathname.startsWith("/studios/"), { timeout: 15_000 });
+    studioE2eAssert(/Catalogue/i.test(await page.locator("body").innerText()), "opened studio from home vfs");
+    console.log("[DEBUG] home vfs open studio works");
+  }
+
+  const criticalErrors = pageErrors.filter((message) => !isIgnorableStudioE2ePageError(message));
+  if (criticalErrors.length !== pageErrors.length) {
+    console.log(`[DEBUG] ignored headless gpu errors: ${pageErrors.filter(isIgnorableStudioE2ePageError).join(" | ")}`);
+  }
+  studioE2eAssert(criticalErrors.length === 0, `page errors: ${criticalErrors.join(" | ")}`);
+
+  await browser.close();
+  console.log("PASS: S studio end-to-end workflows verified");
+}
+//#endregion 🔖StudioE2eVerify
+
 class VerifyScript extends BundleScript {
-  async run(_segments: string[]): Promise<void> {
+  async run(segments: string[]): Promise<void> {
     const port = process.env.S_OS_PORT ?? "6070";
     const studioUrl = process.env.S_STUDIO_URL ?? `http://127.0.0.1:${port}/`;
-    const e2eScript = join(repoRoot, ".repo/🎫/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/s-studio-e2e-verify.mjs");
-    if (!existsSync(e2eScript)) throw new Error(`missing e2e script: ${e2eScript}`);
+    const timeoutMs = Number(process.env.S_STUDIO_E2E_TIMEOUT_MS ?? 300_000);
+    if (segments[0] === "e2e") {
+      await runStudioE2eVerify(studioUrl, timeoutMs);
+      console.log(`[DEBUG] s studio e2e verify passed (${studioUrl})`);
+      return;
+    }
     for (const target of generatePluginRegistry(repoRoot)) {
       const packageName = await readPackageName(target.cratePath);
       const pluginTests = spawnSync("cargo", ["test", "-p", packageName], { cwd: repoRoot, stdio: "inherit" });
@@ -819,12 +1007,7 @@ class VerifyScript extends BundleScript {
       stdio: "inherit",
     });
     if (rendererTests.status !== 0) throw new Error("framework-renderer-react tests failed");
-    const e2e = spawnSync("node", [e2eScript], {
-      cwd: repoRoot,
-      stdio: "inherit",
-      env: { ...process.env, S_STUDIO_URL: studioUrl },
-    });
-    if (e2e.status !== 0) throw new Error("s studio e2e verification failed");
+    await runStudioE2eVerify(studioUrl, timeoutMs);
     await new PluginCapabilityLintScript(this.root).run([]);
     console.log(`[DEBUG] s studio verify passed (${studioUrl})`);
   }

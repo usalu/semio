@@ -2101,6 +2101,28 @@
       }
     },
     {
+      "name": "🧪verify🌍workspace",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts verify",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391
+      }
+    },
+    {
+      "name": "🧪verify🚪gate",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts verify gate",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.1
+      }
+    },
+    {
       "name": "📦build📐cad🎛️concrete🌲forest",
       "type": "node-terminal",
       "request": "launch",
@@ -2384,6 +2406,17 @@
       "presentation": {
         "group": "4_build",
         "order": 205
+      }
+    },
+    {
+      "name": "📦build🧩plugin📜registry",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/plugin-registry:generate",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206
       }
     },
     {

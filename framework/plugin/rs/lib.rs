@@ -1,7 +1,134 @@
 //! 🔌 Declarative app plugin SDK — build fully declarative Rust apps bundled into hot-swappable WASM components.
 
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-pub mod component;
+pub mod component {
+    //! 🧩 WASI P2 component exports for the plugin world contract.
+
+    use crate::plugin_runtime::{
+        ensure_plugin_initialized, plugin_app_labels, plugin_create_app, plugin_handle_action, plugin_manifest,
+        plugin_render_with_document, plugin_tools, plugin_window_engagements, plugin_window_measures,
+    };
+    use wit_bindgen::generate;
+
+    generate!({
+        world: "plugin-world",
+        path: "../../wit",
+    });
+
+    use exports::semio::framework::plugin::Guest;
+    use semio::framework::types::{
+        ActionContextJson, ActionInvocationJson, ActionResponseJson, AppLabelsJson, MigrateDocumentInput,
+        MigrateDocumentOutput, PluginError, PluginManifestJson, PluginToolsJson, PluginWindowEngagementsJson,
+        PluginWindowMeasuresJson, WindowInputJson, WindowOutputJson,
+    };
+
+    pub struct ComponentGuest;
+
+    impl Guest for ComponentGuest {
+        fn manifest() -> PluginManifestJson {
+            ensure_plugin_initialized();
+            PluginManifestJson {
+                json: serde_json::to_string(&plugin_manifest()).unwrap_or_else(|_| "{}".into()),
+            }
+        }
+
+        fn instantiate_app(app_id: String, _instance_id: String) -> Result<u32, PluginError> {
+            ensure_plugin_initialized();
+            plugin_create_app(&app_id).map_err(PluginError::Message)
+        }
+
+        fn handle_action(
+            instance_id: u32,
+            action: ActionInvocationJson,
+            context: ActionContextJson,
+        ) -> Result<ActionResponseJson, PluginError> {
+            ensure_plugin_initialized();
+            let result = plugin_handle_action(instance_id, &action.json, &context.json)
+                .map_err(PluginError::Message)?;
+            Ok(ActionResponseJson {
+                json: serde_json::to_string(&result).unwrap_or_else(|_| "{}".into()),
+            })
+        }
+
+        fn update_window(
+            instance_id: u32,
+            input: WindowInputJson,
+        ) -> Result<WindowOutputJson, PluginError> {
+            ensure_plugin_initialized();
+            let node = plugin_render_with_document(instance_id, "", None, &input.json)
+                .map_err(PluginError::Message)?;
+            Ok(WindowOutputJson {
+                json: serde_json::to_string(&node).unwrap_or_else(|_| "{}".into()),
+            })
+        }
+
+        fn list_tools(
+            instance_id: u32,
+            context: ActionContextJson,
+        ) -> Result<PluginToolsJson, PluginError> {
+            ensure_plugin_initialized();
+            let tools = plugin_tools(instance_id, &context.json).map_err(PluginError::Message)?;
+            Ok(PluginToolsJson {
+                json: serde_json::to_string(&tools).unwrap_or_else(|_| "[]".into()),
+            })
+        }
+
+        fn window_engagements(
+            instance_id: u32,
+            context: ActionContextJson,
+        ) -> Result<PluginWindowEngagementsJson, PluginError> {
+            ensure_plugin_initialized();
+            let engagements =
+                plugin_window_engagements(instance_id, &context.json).map_err(PluginError::Message)?;
+            Ok(PluginWindowEngagementsJson {
+                json: serde_json::to_string(&engagements).unwrap_or_else(|_| "{}".into()),
+            })
+        }
+
+        fn window_measures(
+            instance_id: u32,
+            context: ActionContextJson,
+        ) -> Result<PluginWindowMeasuresJson, PluginError> {
+            ensure_plugin_initialized();
+            let measures =
+                plugin_window_measures(instance_id, &context.json).map_err(PluginError::Message)?;
+            Ok(PluginWindowMeasuresJson {
+                json: serde_json::to_string(&measures).unwrap_or_else(|_| "{}".into()),
+            })
+        }
+
+        fn app_labels(
+            instance_id: u32,
+            context: ActionContextJson,
+        ) -> Result<AppLabelsJson, PluginError> {
+            ensure_plugin_initialized();
+            let overlay = plugin_app_labels(instance_id, &context.json).map_err(PluginError::Message)?;
+            Ok(AppLabelsJson {
+                json: serde_json::to_string(&overlay).unwrap_or_else(|_| "{}".into()),
+            })
+        }
+
+        fn migrate_document(_input: MigrateDocumentInput) -> Result<MigrateDocumentOutput, PluginError> {
+            Err(PluginError::Message("migrate-document not implemented".into()))
+        }
+    }
+
+    export!(ComponentGuest);
+
+    pub fn component_export_anchor() {}
+
+    pub fn host_backbone_send(uri: &str, message_json: &str) -> Result<(), String> {
+        semio::framework::host::backbone_send(uri, message_json)
+    }
+
+    pub fn host_backbone_poll(uri: &str) -> Result<Vec<String>, String> {
+        semio::framework::host::backbone_poll(uri)
+    }
+
+    pub fn host_now_ms() -> i64 {
+        semio::framework::host::now_ms()
+    }
+}
 
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 pub use component::component_export_anchor;
@@ -16,7 +143,7 @@ use semio_framework_core::{
         InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
-    AppDefinition, ActionDefinition, ActionDescriptor, ActionKind, Contribution, ExampleDefinition, Keybinding,
+    AppDefinition, AppLabelsOverlay, ActionDefinition, ActionDescriptor, ActionKind, Contribution, ExampleDefinition, Keybinding,
     ModeDefinition, NamedLayout, PanelGroup, PanelTabDefinition, PluginManifest, ProgramDefinition, ToolNode,
     UiNode, ViewState, WindowEngagement, WindowKindDefinition, WindowLayout, WindowMeasure,
     SurfaceKind,
@@ -604,6 +731,13 @@ pub trait PluginApp: Send {
         _view_state: &ViewState,
     ) -> std::collections::HashMap<String, Vec<semio_framework_core::WindowMeasure>> {
         std::collections::HashMap::new()
+    }
+    /// 🗣️ Locale/terminology-aware overlay for this app's window-kind/mode labels, resolved fresh per `ViewState`
+    /// (unlike the static `AppDefinition` labels baked in at manifest-build time). Framework panel-tab labels
+    /// (Document/Catalogue/Inspection/Parameters) are merged in automatically by `plugin_runtime::plugin_app_labels`
+    /// and do not need to be supplied here.
+    fn app_labels(&self, _view_state: &ViewState) -> AppLabelsOverlay {
+        AppLabelsOverlay::default()
     }
 }
 
@@ -1259,7 +1393,7 @@ use semio_framework_core::{
         KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationId, SchemaId, UndoGroup,
         UndoPolicy,
     },
-    PluginManifest, UiNode, ViewState,
+    framework_panel_tab_label, AppLabelsOverlay, PluginManifest, UiNode, ViewState,
 };
 use serde::Deserialize;
 use std::cell::{Cell, RefCell};
@@ -1647,6 +1781,32 @@ pub fn plugin_window_measures(
         Ok(instance
             .app
             .window_measures(&instance.document_json, &view_state))
+    })
+}
+
+pub fn plugin_app_labels(instance_id: u32, view_state_json: &str) -> Result<AppLabelsOverlay, String> {
+    let view_state: ViewState =
+        serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    with_instances(|list| {
+        let instance = list
+            .iter()
+            .find(|instance| instance.id == instance_id)
+            .ok_or_else(|| format!("unknown instance: {instance_id}"))?;
+        let mut overlay = instance.app.app_labels(&view_state);
+        let app_id = instance.app.app_id();
+        let panel_tab_ids: Vec<String> = plugin_manifest()
+            .apps
+            .iter()
+            .find(|app| app.id == app_id)
+            .map(|app| app.panel_tabs.iter().map(|tab| tab.id.clone()).collect())
+            .unwrap_or_default();
+        for id in panel_tab_ids {
+            if let Some(label) = framework_panel_tab_label(&id, is_de) {
+                overlay.panel_tab_labels.entry(id).or_insert_with(|| label.into());
+            }
+        }
+        Ok(overlay)
     })
 }
 
@@ -2515,6 +2675,7 @@ pub use app::{
     App, AppBuilder, AppInstance, KeybindingSpec, ModeSpec, PanelTabSpec, Plugin, PluginApp, PluginBundle,
     WindowKindSpec,
 };
+pub use semio_framework_core::AppLabelsOverlay;
 pub use generate_mode::{
     add_generation, handle_generation_action, initial_generation_values, remove_generation,
     rename_generation, render_generation_form_body, render_generation_preview_text,

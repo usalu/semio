@@ -382,6 +382,11 @@ struct FlowPlayLabels {
     canvas: &'static str,
     widget: &'static str,
     delete_selection: &'static str,
+    window_main: &'static str,
+    window_compiled: &'static str,
+    window_generations: &'static str,
+    window_generate_form: &'static str,
+    window_generate_preview: &'static str,
 }
 
 const FLOW_LABELS_NATIVE_EN: FlowPlayLabels = FlowPlayLabels {
@@ -407,6 +412,11 @@ const FLOW_LABELS_NATIVE_EN: FlowPlayLabels = FlowPlayLabels {
     canvas: "Canvas",
     widget: "Widget",
     delete_selection: "Delete selection",
+    window_main: "Flow",
+    window_compiled: "DSL",
+    window_generations: "Generations",
+    window_generate_form: "Form",
+    window_generate_preview: "Preview",
 };
 
 const FLOW_LABELS_NATIVE_DE: FlowPlayLabels = FlowPlayLabels {
@@ -432,6 +442,11 @@ const FLOW_LABELS_NATIVE_DE: FlowPlayLabels = FlowPlayLabels {
     canvas: "Leinwand",
     widget: "Widget",
     delete_selection: "Auswahl löschen",
+    window_main: "Flow",
+    window_compiled: "DSL",
+    window_generations: "Generationen",
+    window_generate_form: "Formular",
+    window_generate_preview: "Vorschau",
 };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
@@ -1366,6 +1381,22 @@ impl PluginApp for FlowPlayApp {
             FLOW_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope, labels),
             FLOW_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_node_ids, &envelope.runtime, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
+        }
+    }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = flow_labels(view_state);
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: None,
+            window_kind_labels: std::collections::HashMap::from([
+                (FLOW_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()),
+                (FLOW_PLAY_WINDOW_COMPILED.to_string(), labels.window_compiled.to_string()),
+                (FLOW_PLAY_WINDOW_GENERATIONS.to_string(), labels.window_generations.to_string()),
+                (FLOW_PLAY_WINDOW_GENERATE_FORM.to_string(), labels.window_generate_form.to_string()),
+                (FLOW_PLAY_WINDOW_GENERATE_PREVIEW.to_string(), labels.window_generate_preview.to_string()),
+            ]),
+            panel_tab_labels: std::collections::HashMap::new(),
+            mode_labels: std::collections::HashMap::new(),
         }
     }
 }

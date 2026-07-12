@@ -5683,6 +5683,7 @@ struct SceneSurfaceState {
     pending_raster: Option<PendingRasterUpload>,
     pending_raster_uploads: Vec<PendingRasterUpload>,
     canvas_image_digests: HashMap<String, u64>,
+    canvas_image_src_digests: HashMap<String, u64>,
     paint_stroke_active: bool,
     vfs_expanded_ids: HashSet<String>,
     vfs_selection_anchor: Option<String>,
@@ -5967,6 +5968,11 @@ pub fn handle_scene_wheel(
             ctrl,
         ),
         SurfaceKind::NoteCanvas => note_wheel(scene, inner, x, y, delta),
+        SurfaceKind::VcsHistory => {
+            let current = scroll_offset(&scene.surface_id, "history");
+            set_scroll_offset(&scene.surface_id, "history", current + delta * 0.5);
+            Vec::new()
+        }
         _ => Vec::new(),
     }
 }
@@ -6470,6 +6476,7 @@ pub fn render_component_scene(
         }
         SurfaceKind::IconRender => render_icon_render(scene, bounds, ctx, gpu, icon_render_states),
         SurfaceKind::Puzzle2dBoard => render_puzzle_board(scene, bounds, ctx, gpu, puzzle2d_board_states),
+        SurfaceKind::VcsHistory => render_vcs_history(scene, bounds, ctx),
         _ => render_placeholder(scene.component_kind.as_str(), bounds, ctx),
     }
     apply_scene_wheel(scene, bounds, ctx);
@@ -6834,6 +6841,285 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
 }
 //#endregion Table
 
+//#region VcsHistory
+/** @emoji 🗄️ Mirrors `vcs::HistoryColumn` / React `HistoryColumn` (`ui/js/react/index.tsx:19116`). */
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct HistoryColumnAuthorJson {
+    #[serde(default)]
+    id: String,
+    #[serde(default)]
+    name: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct HistoryColumnJson {
+    checkpoint_id: String,
+    #[serde(default)]
+    labels: Vec<String>,
+    #[serde(default)]
+    authors: Vec<HistoryColumnAuthorJson>,
+    #[serde(default)]
+    parent_checkpoint_id: Option<String>,
+    #[serde(default)]
+    description: Option<String>,
+    #[serde(default)]
+    lane: usize,
+}
+
+const HISTORY_LANE_PITCH: f32 = 16.0;
+const HISTORY_LANE_PAD: f32 = 8.0;
+const HISTORY_AUTHOR_SLOT: f32 = 40.0;
+
+/** Ports `historyLaneCount` (`ui/js/react/index.tsx:19141`). */
+fn history_lane_count(columns: &[HistoryColumnJson]) -> usize {
+    columns.iter().map(|column| column.lane + 1).max().unwrap_or(1).max(1)
+}
+
+/** Ports `historyGraphWidth` (`ui/js/react/index.tsx:19145`). */
+fn history_graph_width(lane_count: usize) -> f32 {
+    (HISTORY_LANE_PAD * 2.0 + lane_count as f32 * HISTORY_LANE_PITCH).max(56.0)
+}
+
+/** Ports `historyLaneX` (`ui/js/react/index.tsx:19153`). */
+fn history_lane_x(lane: usize, lane_count: usize, graph_width: f32) -> f32 {
+    if lane_count <= 1 {
+        return graph_width * 0.5;
+    }
+    HISTORY_LANE_PAD + lane as f32 * HISTORY_LANE_PITCH + HISTORY_LANE_PITCH * 0.5
+}
+
+/** Ports `historyRowLaneGuides` (`ui/js/react/index.tsx:19162`): per-row, per-lane guide-line
+ * visibility, including the elbow-row propagation when a checkpoint's parent sits on another lane. */
+fn history_row_lane_guides(columns: &[HistoryColumnJson], lane_count: usize) -> Vec<Vec<bool>> {
+    let mut guides = vec![vec![false; lane_count]; columns.len()];
+    let row_by_id: HashMap<&str, usize> = columns
+        .iter()
+        .enumerate()
+        .map(|(index, column)| (column.checkpoint_id.as_str(), index))
+        .collect();
+    for (row_index, column) in columns.iter().enumerate() {
+        if column.lane < lane_count {
+            guides[row_index][column.lane] = true;
+        }
+        let Some(parent_row) = column.parent_checkpoint_id.as_deref().and_then(|id| row_by_id.get(id).copied()) else {
+            continue;
+        };
+        let parent_lane = columns[parent_row].lane;
+        if column.lane == parent_lane {
+            for row in (row_index + 1)..parent_row {
+                guides[row][column.lane] = true;
+            }
+            continue;
+        }
+        let elbow_row = if row_index + 1 < parent_row { row_index + 1 } else { parent_row };
+        for row in (row_index + 1)..=elbow_row {
+            if column.lane < lane_count {
+                guides[row][column.lane] = true;
+            }
+        }
+        for row in elbow_row..parent_row {
+            if parent_lane < lane_count {
+                guides[row][parent_lane] = true;
+            }
+        }
+    }
+    guides
+}
+
+fn render_vcs_history(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    let theme = ctx.theme;
+    let Some(history) = &scene.vcs_history else {
+        return render_placeholder("vcs-history", bounds, ctx);
+    };
+    let columns: Vec<HistoryColumnJson> = serde_json::from_str(&history.columns_json).unwrap_or_default();
+    let inner = bounds;
+    let row_h = theme.control_height * 1.33;
+    let pad = theme.padding_standard;
+    if columns.is_empty() {
+        draw_text(ctx, "—", inner.x + pad, inner.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
+        return;
+    }
+    let lane_count = history_lane_count(&columns);
+    let graph_width = history_graph_width(lane_count);
+    let graph_col_w = graph_width + HISTORY_AUTHOR_SLOT;
+    let labels_col_w = (inner.w * 0.28).max(96.0);
+    let guides = history_row_lane_guides(&columns, lane_count);
+    let row_by_id: HashMap<&str, usize> = columns
+        .iter()
+        .enumerate()
+        .map(|(index, column)| (column.checkpoint_id.as_str(), index))
+        .collect();
+
+    let scroll = scroll_offset(&scene.surface_id, "history");
+    ctx.input.register_hit(HitTarget {
+        rect: inner,
+        event: None,
+        control_id: Some(scroll_key(&scene.surface_id, "history")),
+        kind: HitKind::ScrollRegion,
+        drag_axis: None,
+        drag_data: None,
+    });
+    ctx.draw.push_scissor(inner);
+    let hovered_row = ctx.input.hovered_id.clone();
+    let graph_x0 = inner.x + labels_col_w;
+    let desc_x = inner.x + labels_col_w + graph_col_w;
+
+    for (row_index, column) in columns.iter().enumerate() {
+        let y = inner.y + row_index as f32 * row_h - scroll;
+        if y + row_h < inner.y || y > inner.y + inner.h {
+            continue;
+        }
+        let control_id = format!("{}.history.{}", scene.surface_id, column.checkpoint_id);
+        let hovered = hovered_row.as_deref() == Some(control_id.as_str());
+        let row_rect = Rect::new(inner.x, y, inner.w, row_h);
+        if hovered {
+            ctx.draw.push_solid([row_rect.x, row_rect.y, row_rect.w, row_rect.h], theme.row_hover);
+        }
+        ctx.draw.push_line(
+            row_rect.x,
+            row_rect.y + row_rect.h - theme.stroke_hairline,
+            row_rect.x + row_rect.w,
+            row_rect.y + row_rect.h - theme.stroke_hairline,
+            theme.separator,
+            1.0,
+        );
+
+        let mut label_x = inner.x + pad;
+        if column.labels.is_empty() {
+            draw_text(ctx, "checkpoint", label_x, y + row_h * 0.65, theme.font_size_small, theme.text_muted);
+        } else {
+            for label in &column.labels {
+                let chip_w = (label.len() as f32 * 6.0 + pad * 2.0).min((inner.x + labels_col_w - label_x).max(0.0));
+                if chip_w <= 0.0 {
+                    break;
+                }
+                ctx.draw.push_rounded([label_x, y + row_h * 0.5 - 9.0, chip_w, 18.0], theme.accent, 4.0);
+                draw_text(ctx, label, label_x + 4.0, y + row_h * 0.5 + 4.0, theme.font_size_small, theme.active_foreground);
+                label_x += chip_w + 4.0;
+            }
+        }
+
+        for lane in 0..lane_count {
+            if guides[row_index][lane] {
+                let lx = graph_x0 + history_lane_x(lane, lane_count, graph_width);
+                ctx.draw.push_line(lx, y, lx, y + row_h, theme.separator, 1.0);
+            }
+        }
+        if let Some(parent_id) = column.parent_checkpoint_id.as_deref() {
+            if let Some(&parent_row) = row_by_id.get(parent_id) {
+                let x0 = graph_x0 + history_lane_x(column.lane, lane_count, graph_width);
+                let parent_lane = columns[parent_row].lane;
+                let x1 = graph_x0 + history_lane_x(parent_lane, lane_count, graph_width);
+                let y0 = y + row_h * 0.5;
+                let y1 = inner.y + parent_row as f32 * row_h - scroll + row_h * 0.5;
+                if (x0 - x1).abs() < 0.5 {
+                    ctx.draw.push_line(x0, y0, x1, y1, theme.separator, 1.5);
+                } else {
+                    let elbow_y = y + row_h;
+                    ctx.draw.push_line(x0, y0, x0, elbow_y, theme.separator, 1.5);
+                    ctx.draw.push_line(x0, elbow_y, x1, elbow_y, theme.separator, 1.5);
+                    ctx.draw.push_line(x1, elbow_y, x1, y1, theme.separator, 1.5);
+                }
+            }
+        }
+        let dot_x = graph_x0 + history_lane_x(column.lane, lane_count, graph_width);
+        let dot_y = y + row_h * 0.5;
+        ctx.draw.push_rounded([dot_x - 3.0, dot_y - 3.0, 6.0, 6.0], theme.text, 3.0);
+
+        let avatar_size = 20.0;
+        let avatar_x = graph_x0 + graph_width + 4.0;
+        let avatar_y = y + row_h * 0.5 - avatar_size * 0.5;
+        let initial = column
+            .authors
+            .first()
+            .and_then(|author| author.name.chars().next())
+            .map(|c| c.to_uppercase().to_string())
+            .unwrap_or_else(|| "?".into());
+        ctx.draw.push_rounded([avatar_x, avatar_y, avatar_size, avatar_size], theme.button, avatar_size * 0.5);
+        draw_text(ctx, &initial, avatar_x + avatar_size * 0.32, avatar_y + avatar_size * 0.7, theme.font_size_small, theme.text);
+
+        if let Some(description) = &column.description {
+            draw_text(ctx, description, desc_x + pad, y + row_h * 0.65, theme.font_size_small, theme.text_muted);
+        }
+
+        ctx.input.register_hit(HitTarget {
+            rect: row_rect,
+            event: Some(scene_action(scene, "checkoutCheckpoint", json!({ "checkpointId": column.checkpoint_id }))),
+            control_id: Some(control_id),
+            kind: HitKind::Generic,
+            drag_axis: None,
+            drag_data: None,
+        });
+    }
+    ctx.draw.pop_scissor();
+}
+//#endregion VcsHistory
+
+//#region VcsHistoryTests
+#[cfg(test)]
+mod vcs_history_tests {
+    use super::*;
+
+    fn column(id: &str, lane: usize, parent: Option<&str>) -> HistoryColumnJson {
+        HistoryColumnJson {
+            checkpoint_id: id.to_string(),
+            labels: Vec::new(),
+            authors: Vec::new(),
+            parent_checkpoint_id: parent.map(str::to_string),
+            description: None,
+            lane,
+        }
+    }
+
+    #[test]
+    fn lane_count_is_max_lane_plus_one() {
+        let columns = vec![column("a", 0, None), column("b", 2, Some("a"))];
+        assert_eq!(history_lane_count(&columns), 3);
+    }
+
+    #[test]
+    fn lane_count_defaults_to_one_for_empty_columns() {
+        assert_eq!(history_lane_count(&[]), 1);
+    }
+
+    #[test]
+    fn lane_x_centers_graph_when_single_lane() {
+        let width = history_graph_width(1);
+        assert_eq!(history_lane_x(0, 1, width), width * 0.5);
+    }
+
+    #[test]
+    fn linear_history_guides_stay_on_single_lane() {
+        let columns = vec![column("c", 0, Some("b")), column("b", 0, Some("a")), column("a", 0, None)];
+        let guides = history_row_lane_guides(&columns, 1);
+        assert!(guides.iter().all(|row| row[0]), "a linear single-lane history must keep every row's lane-0 guide active");
+    }
+
+    #[test]
+    fn fork_guides_propagate_through_elbow_row() {
+        let columns = vec![column("c", 1, Some("a")), column("b", 0, None), column("a", 0, None)];
+        let guides = history_row_lane_guides(&columns, 2);
+        assert!(guides[0][1], "the forking checkpoint's own row must show its lane");
+        assert!(guides[1][1] || guides[1][0], "the elbow row must carry a guide on at least one of the two connected lanes");
+    }
+
+    #[test]
+    fn columns_json_tolerates_missing_optional_fields() {
+        let json = r#"[{"checkpointId":"only-required"}]"#;
+        let columns: Vec<HistoryColumnJson> = serde_json::from_str(json).unwrap();
+        assert_eq!(columns.len(), 1);
+        assert_eq!(columns[0].checkpoint_id, "only-required");
+        assert_eq!(columns[0].lane, 0);
+        assert!(columns[0].labels.is_empty());
+        assert!(columns[0].authors.is_empty());
+        assert!(columns[0].parent_checkpoint_id.is_none());
+        assert!(columns[0].description.is_none());
+    }
+}
+//#endregion VcsHistoryTests
+
 //#region Canvas2d
 #[derive(Deserialize)]
 struct CanvasLayer {
@@ -6883,15 +7169,26 @@ fn decode_canvas_image(data_url: &str) -> Option<(Vec<u8>, u32, u32)> {
     Some((rgba.into_raw(), width, height))
 }
 
+/** Hashes the raw (still-encoded) `data_url` before touching base64/PNG decode, so an unchanged
+ * image layer costs one cheap byte-hash per frame instead of a full decode — decode only runs when
+ * the source string actually changes. Continuous rAF renderers (e.g. raster) would otherwise redo
+ * base64+PNG decode every frame for every image layer regardless of whether anything changed. */
 pub(crate) fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_url: &str) -> Option<String> {
+    let key = format!("canvas-image:{surface_id}:{layer_id}");
+    let src_key = format!("canvas-image-src:{surface_id}:{layer_id}");
+    let src_digest = digest_pixels(data_url.as_bytes());
+    let unchanged = scene_state(surface_id).canvas_image_src_digests.get(&src_key).copied() == Some(src_digest);
+    if unchanged {
+        return Some(key);
+    }
     let (pixels, width, height) = decode_canvas_image(data_url)?;
     let expected = (width as usize).saturating_mul(height as usize).saturating_mul(4);
     if pixels.len() < expected {
         return None;
     }
     let digest = digest_pixels(&pixels[..expected]);
-    let key = format!("canvas-image:{surface_id}:{layer_id}");
     mutate_scene_state(surface_id, |state| {
+        state.canvas_image_src_digests.insert(src_key.clone(), src_digest);
         let prior = state.canvas_image_digests.get(&key).copied();
         if prior != Some(digest) {
             state.canvas_image_digests.insert(key.clone(), digest);
@@ -6906,6 +7203,10 @@ pub(crate) fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_u
     Some(key)
 }
 
+/** Clamps checkerboard cell iteration to the world-space rect actually visible through `inner`
+ * (intersected with the full `±extent/2` grid) instead of always walking the whole grid — a
+ * continuously-rendering surface (raster) was pushing up to `(extent/cell)^2` solid quads every
+ * single frame regardless of zoom/pan, which starves headless WebGPU frame pacing. */
 fn draw_checkerboard(
     draw: &mut ui_wgpu::DrawList,
     viewport: &Viewport,
@@ -6917,12 +7218,23 @@ fn draw_checkerboard(
     let half = extent * 0.5;
     let light = Rgba::new(0.85, 0.85, 0.85, 1.0);
     let dark = Rgba::new(0.72, 0.72, 0.72, 1.0);
-    let mut row = 0;
-    let mut wy = -half;
-    while wy < half {
-        let mut col = 0;
-        let mut wx = -half;
-        while wx < half {
+    let (mut min_x, mut max_x, mut min_y, mut max_y) = (-half, half, -half, half);
+    if viewport.zoom > 0.0 {
+        let (wx0, wy0) = viewport.screen_to_world(inner.x, inner.y, inner);
+        let (wx1, wy1) = viewport.screen_to_world(inner.x + inner.w, inner.y + inner.h, inner);
+        min_x = min_x.max(wx0.min(wx1) - cell);
+        max_x = max_x.min(wx0.max(wx1) + cell);
+        min_y = min_y.max(wy0.min(wy1) - cell);
+        max_y = max_y.min(wy0.max(wy1) + cell);
+    }
+    let start_row = ((min_y - (-half)) / cell).floor().max(0.0) as i64;
+    let start_col = ((min_x - (-half)) / cell).floor().max(0.0) as i64;
+    let mut row = start_row;
+    let mut wy = -half + start_row as f32 * cell;
+    while wy < max_y {
+        let mut col = start_col;
+        let mut wx = -half + start_col as f32 * cell;
+        while wx < max_x {
             let color = if (row + col) % 2 == 0 { light } else { dark };
             let (sx, sy) = viewport.world_to_screen(wx, wy, inner);
             let (sx1, sy1) = viewport.world_to_screen(wx + cell, wy + cell, inner);
@@ -6986,9 +7298,6 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
         zoom: canvas.zoom as f32,
     };
     let local = scene_state(&scene.surface_id);
-    if local.viewport.zoom > 0.0 && scene.component_kind == SurfaceKind::Canvas2d {
-        viewport = local.viewport;
-    }
     if local.viewport.zoom > 0.0 && scene.component_kind == SurfaceKind::Canvas2d {
         viewport = local.viewport;
     }
@@ -8171,6 +8480,76 @@ fn render_note_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
     });
 }
 //#endregion NoteCanvasRender
+
+//#region RasterFrameCostTests
+#[cfg(test)]
+mod raster_frame_cost_tests {
+    use super::*;
+
+    fn count_solids(draw: &ui_wgpu::DrawList) -> usize {
+        draw.layers.iter().map(|layer| layer.ui_instances.len()).sum()
+    }
+
+    fn tiny_png_data_url(r: u8, g: u8, b: u8) -> String {
+        let img = image::RgbaImage::from_pixel(1, 1, image::Rgba([r, g, b, 255]));
+        let mut bytes: Vec<u8> = Vec::new();
+        image::DynamicImage::ImageRgba8(img)
+            .write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png)
+            .expect("encode tiny test png");
+        format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(&bytes))
+    }
+
+    #[test]
+    fn queue_canvas_image_upload_skips_decode_when_source_unchanged() {
+        let surface_id = "raster-frame-cost-test-unchanged";
+        let data_url = tiny_png_data_url(10, 20, 30);
+        let first = queue_canvas_image_upload(surface_id, "layer-a", &data_url);
+        assert!(first.is_some());
+        mutate_scene_state(surface_id, |state| {
+            state.pending_raster_uploads.clear();
+        });
+        let second = queue_canvas_image_upload(surface_id, "layer-a", &data_url);
+        assert_eq!(first, second, "key must stay stable across frames");
+        let pending = scene_state(surface_id).pending_raster_uploads.len();
+        assert_eq!(pending, 0, "unchanged data_url must not re-decode/re-queue an upload");
+    }
+
+    #[test]
+    fn queue_canvas_image_upload_redecodes_when_source_changes() {
+        let surface_id = "raster-frame-cost-test-changed";
+        let png_a = tiny_png_data_url(10, 20, 30);
+        let png_b = tiny_png_data_url(200, 100, 50);
+        queue_canvas_image_upload(surface_id, "layer-a", &png_a);
+        mutate_scene_state(surface_id, |state| state.pending_raster_uploads.clear());
+        queue_canvas_image_upload(surface_id, "layer-a", &png_b);
+        let pending = scene_state(surface_id).pending_raster_uploads.len();
+        assert_eq!(pending, 1, "changed data_url must re-decode and queue exactly one upload");
+    }
+
+    #[test]
+    fn draw_checkerboard_clamps_to_visible_viewport() {
+        let mut draw = ui_wgpu::DrawList::default();
+        let viewport = Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
+        let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let theme = Theme::default();
+        draw_checkerboard(&mut draw, &viewport, inner, &theme, 4096.0);
+        let quads = count_solids(&draw);
+        assert!(quads > 0, "checkerboard should still draw the visible cells");
+        assert!(quads < 4000, "checkerboard must clamp to the viewport instead of the full ±extent/2 grid, got {quads}");
+    }
+
+    #[test]
+    fn draw_checkerboard_falls_back_to_full_extent_when_zoom_is_zero() {
+        let mut draw = ui_wgpu::DrawList::default();
+        let viewport = Viewport { x: 0.0, y: 0.0, zoom: 0.0 };
+        let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let theme = Theme::default();
+        draw_checkerboard(&mut draw, &viewport, inner, &theme, 64.0);
+        let quads = count_solids(&draw);
+        assert_eq!(quads, 16, "degenerate zoom must fall back to the full extent grid (4x4 cells for a 64-unit extent)");
+    }
+}
+//#endregion RasterFrameCostTests
 
 //#region NoteCanvasTests
 #[cfg(test)]
@@ -9928,7 +10307,6 @@ pub struct ContextMenuState {
 pub enum OverlayState {
     #[default]
     None,
-    AppearanceSelect,
     Search,
     Find,
     Dropdown(String),
@@ -12344,11 +12722,6 @@ impl ShellState {
                     }
                 }
                 self.context_menu = None;
-                return Ok(true);
-            }
-            id if id.starts_with("shell.appearance.") => {
-                self.appearance_id = id.trim_start_matches("shell.appearance.").to_string();
-                self.overlay_state = OverlayState::None;
                 return Ok(true);
             }
             id if id.starts_with("section.chevron.") => {
@@ -14830,16 +15203,6 @@ impl ShellState {
             }
             OverlayState::Dropdown(id) if id == "example" => {
                 let examples = self.active_plugin_examples();
-                let items: Vec<(String, String, usize)> = examples
-                    .iter()
-                    .enumerate()
-                    .map(|(index, ex)| (String::new(), ex.label.clone(), index))
-                    .collect();
-                let id_items: Vec<(String, String, usize)> = examples
-                    .iter()
-                    .enumerate()
-                    .map(|(index, ex)| (String::new(), ex.label.clone(), index))
-                    .collect();
                 let mapped: Vec<(String, String, usize)> = examples
                     .iter()
                     .enumerate()
@@ -14856,10 +15219,8 @@ impl ShellState {
                     &mapped,
                     &examples,
                 );
-                let _ = (items, id_items);
             }
             OverlayState::Dropdown(_) => {}
-            OverlayState::AppearanceSelect => {}
             OverlayState::None => {}
         }
         if let Some(kind) = self.sync_card_kind.as_deref() {
@@ -15877,53 +16238,6 @@ impl ShellState {
                 event: item.action.clone(),
                 control_id: Some(item.id.clone()),
                 kind: HitKind::ContextMenu,
-                drag_axis: None,
-            drag_data: None,
-            });
-        }
-    }
-
-    fn render_appearance_dropdown(
-        &self,
-        overlay: &mut DrawList,
-        atlas: &mut FontAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        x: f32,
-        y: f32,
-    ) {
-        let options = [("system", "System"), ("light", "Light"), ("dark", "Dark")];
-        let row_h = theme.control_height;
-        let w = 112.0;
-        let h = options.len() as f32 * row_h + theme.padding_standard * 2.0;
-        overlay.push_glass([x, y, w, h], theme.border_radius, GlassTier::Menu, theme);
-        for (index, (value, label)) in options.iter().enumerate() {
-            let row = Rect::new(
-                x + theme.gap_standard,
-                y + theme.gap_standard + index as f32 * row_h,
-                w - theme.gap_standard * 2.0,
-                row_h,
-            );
-            let selected = *value == self.appearance_id;
-            let hovered = row.contains(input.pointer_x, input.pointer_y);
-            let bg = if selected {
-                theme.selected
-            } else if hovered {
-                theme.button_hover
-            } else {
-                theme.button
-            };
-            overlay.push_rounded([row.x, row.y, row.w, row.h], bg, theme.border_radius);
-            chrome_text(overlay, atlas, input, theme, label,
-                row.x + theme.padding_standard,
-                row.y + (row.h + theme.font_size_small) * 0.5 - 1.0,
-                theme.font_size_small,
-                if selected || hovered { theme.active_foreground } else { theme.text });
-            input.register_hit(HitTarget {
-                rect: row,
-                event: None,
-                control_id: Some(format!("shell.appearance.{value}")),
-                kind: HitKind::DropdownItem,
                 drag_axis: None,
             drag_data: None,
             });

@@ -173,6 +173,21 @@
         "forwardAllArgs": true
       }
     },
+    "verify": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./script.ts verify",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-gate": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./script.ts verify gate"
+      }
+    },
     "test-storybook": {
       "executor": "nx:run-commands",
       "dependsOn": [],

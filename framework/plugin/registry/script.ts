@@ -139,7 +139,29 @@ class GenerateScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript);
+/** @emoji 🔎 Renders the catalog in memory and byte-compares it against `generated/*` — never writes (a lint/verify step must never let the auto-commit daemon land regenerated files). */
+class CheckScript extends BundleScript {
+  run(_segments: string[]): void {
+    const repoRoot = getWorkspaceRoot();
+    const entries = generatePluginRegistry(repoRoot);
+    const outDir = join(this.root, "generated");
+    const expected: Record<string, string> = {
+      "plugins.json": `${JSON.stringify(entries, null, 2)}\n`,
+      "plugins.ts": emitTypeScript(entries),
+    };
+    const stale = Object.entries(expected)
+      .filter(([name, content]) => !existsSync(join(outDir, name)) || readFileSync(join(outDir, name), "utf8") !== content)
+      .map(([name]) => name);
+    if (stale.length > 0) {
+      console.error(`plugin registry catalog is stale: ${stale.map((name) => `generated/${name}`).join(", ")}`);
+      console.error("run `bun nx run @semio-tech/plugin-registry:generate` to refresh.");
+      process.exit(1);
+    }
+    console.log(`plugin registry catalog is fresh (${entries.length} plugin crates).`);
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("check", CheckScript);
 
 if (import.meta.main) {
   await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" });

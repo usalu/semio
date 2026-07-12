@@ -10,6 +10,13 @@
         "command": "bun ./script.ts test",
         "cwd": "framework/renderer/react"
       }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts lint",
+        "cwd": "framework/renderer/react"
+      }
     }
   },
   "tags": ["scope:framework", "type:renderer"]

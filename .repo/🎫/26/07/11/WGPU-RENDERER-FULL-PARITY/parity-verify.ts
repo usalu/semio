@@ -302,6 +302,46 @@ async function capturePluginWithRetry(browser: Browser, plugin: PluginId): Promi
   console.log(`[DEBUG] ${plugin}: first attempt failed (${first.skipped}) — retrying once`);
   return capturePlugin(browser, plugin);
 }
+
+/** Races a promise against a hard deadline. `chromium.launch()`/`browser.close()` have no built-in
+ * timeout — if the underlying process hangs (observed in this environment), the awaiting caller
+ * blocks forever with zero CPU activity and no error, silently stalling the whole harness. */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
+const chromiumLaunchArgs = {
+  args: ["--enable-unsafe-webgpu", "--use-angle=swiftshader", "--enable-features=Vulkan"],
+} as const;
+
+async function launchBrowser(): Promise<Browser> {
+  try {
+    return await withTimeout(chromium.launch({ headless: !headed, ...chromiumLaunchArgs }), 60_000, "chromium.launch");
+  } catch (error) {
+    console.log(`[DEBUG] chromium.launch stalled (${error instanceof Error ? error.message : String(error)}) — retrying once`);
+    return await withTimeout(chromium.launch({ headless: !headed, ...chromiumLaunchArgs }), 60_000, "chromium.launch retry");
+  }
+}
+
+async function closeBrowserSafely(browser: Browser): Promise<void> {
+  try {
+    await withTimeout(browser.close(), 30_000, "browser.close");
+  } catch (error) {
+    console.log(`[DEBUG] browser.close stalled (${error instanceof Error ? error.message : String(error)}) — abandoning old browser process`);
+  }
+}
 //#endregion
 
 //#region Report
@@ -372,21 +412,15 @@ async function main(): Promise<void> {
       }
     }
 
-    let browser: Browser = await chromium.launch({
-      headless: !headed,
-      args: ["--enable-unsafe-webgpu", "--use-angle=swiftshader", "--enable-features=Vulkan"],
-    });
+    let browser: Browser = await launchBrowser();
 
     try {
       await preflight(browser);
 
       for (const [index, plugin] of targets.entries()) {
         if (index > 0 && index % 5 === 0) {
-          await browser.close();
-          browser = await chromium.launch({
-            headless: !headed,
-            args: ["--enable-unsafe-webgpu", "--use-angle=swiftshader", "--enable-features=Vulkan"],
-          });
+          await closeBrowserSafely(browser);
+          browser = await launchBrowser();
         }
         process.stdout.write(`PARITY ${plugin}... `);
         const refResult = await loadReferenceStatsAsync(plugin);
@@ -411,7 +445,7 @@ async function main(): Promise<void> {
         reports.push(report);
       }
     } finally {
-      await browser.close();
+      await closeBrowserSafely(browser);
     }
 
     const jsonPath = join(ticketDir, "parity-report.json");

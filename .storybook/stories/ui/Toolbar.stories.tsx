@@ -209,7 +209,8 @@ type DemoToolNode =
   | { readonly id: string; readonly label: string; readonly icon: DemoToolLeaf["icon"]; readonly kind: "leaves"; readonly leaves: readonly DemoToolLeaf[] }
   | { readonly id: string; readonly label: string; readonly icon: DemoToolLeaf["icon"]; readonly kind: "group"; readonly children: readonly DemoToolNode[] };
 
-const RECURSIVE_CATEGORY_DEMO_TREE: readonly DemoToolNode[] = [
+/** @emoji 🪟 Window-scoped categories only (selection / tools) — what belongs in a window's own bottom-left panel. Mode-wide categories like actions/history don't: they're shared across every window in the mode, so they live once in the footer instead (see {@link ModeWideFooterCategories}). */
+const WINDOW_CATEGORY_DEMO_TREE: readonly DemoToolNode[] = [
   {
     id: "selection",
     label: "Selection",
@@ -249,9 +250,22 @@ const RECURSIVE_CATEGORY_DEMO_TREE: readonly DemoToolNode[] = [
       },
     ],
   },
+];
+
+const FOOTER_CATEGORY_DEMO_TREE: readonly DemoToolNode[] = [
   {
     id: "actions",
     label: "Actions",
+    icon: RotateCcw,
+    kind: "leaves",
+    leaves: [
+      { id: "format", icon: RotateCcw },
+      { id: "lint", icon: Maximize2 },
+    ],
+  },
+  {
+    id: "history",
+    label: "History",
     icon: RotateCcw,
     kind: "leaves",
     leaves: [
@@ -311,23 +325,34 @@ function buildRecursiveCategoryRows(tree: readonly DemoToolNode[], activePath: r
   return rows;
 }
 
-const RecursiveCategoryGroupsDemo = () => {
+const CategoryGroupsDemo = ({ tree, direction }: { readonly tree: readonly DemoToolNode[]; readonly direction: "up" | "inline" }) => {
   const [activePath, setActivePath] = useState<readonly string[]>([]);
   const onActivate = (depth: number, value: string) => {
     setActivePath((previous) => (value ? [...previous.slice(0, depth), value] : previous.slice(0, depth)));
   };
-  return (
-    <div className="flex flex-col items-start gap-double">
-      <span className="text-xs text-muted-foreground">Click a category to expand a line above it; click the active one again to collapse it. Only one group is active per level, and "Tools" recurses into a second picker.</span>
-      <Ribbon id="ui.toolbar.demo" direction="up" rows={buildRecursiveCategoryRows(RECURSIVE_CATEGORY_DEMO_TREE, activePath, onActivate)} />
-    </div>
-  );
+  return <Ribbon id="ui.toolbar.demo" direction={direction} rows={buildRecursiveCategoryRows(tree, activePath, onActivate)} />;
 };
 
 export const RecursiveCategoryGroups: Story = {
-  name: "Recursive Category Groups (selection / tools / actions)",
+  name: "Window Panel: Recursive Category Groups (selection / tools)",
   args: { children: null },
-  render: () => <RecursiveCategoryGroupsDemo />,
+  render: () => (
+    <div className="flex flex-col items-start gap-double">
+      <span className="text-xs text-muted-foreground">A window's own bottom-left panel: only window-scoped categories (selection, tools). Click a category to expand a line above it; click the active one again to collapse it. Only one group is active per level, and "Tools" recurses into a second picker.</span>
+      <CategoryGroupsDemo tree={WINDOW_CATEGORY_DEMO_TREE} direction="up" />
+    </div>
+  ),
+};
+
+export const ModeWideFooterCategories: Story = {
+  name: "Footer: Mode-Wide Categories (actions / history)",
+  args: { children: null },
+  render: () => (
+    <div className="flex flex-col items-start gap-double">
+      <span className="text-xs text-muted-foreground">Categories that apply regardless of which window has focus (actions, history) render once in the shared footer instead of being duplicated into every window's panel. Same recursive, one-active-per-level picker, laid out horizontally.</span>
+      <CategoryGroupsDemo tree={FOOTER_CATEGORY_DEMO_TREE} direction="inline" />
+    </div>
+  ),
 };
 
 // #endregion 🗂️RecursiveCategoryGroups

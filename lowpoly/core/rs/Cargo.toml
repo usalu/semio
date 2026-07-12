@@ -24,6 +24,7 @@ js-sys = { version = "0.3.83", optional = true }
 serde-wasm-bindgen = { version = "0.6.5", optional = true }
 
 [dev-dependencies]
+cad-plugin = { path = "../../../cad/plugin/rs" }
 cad_document = { path = "../../../cad/rs" }
 kernel_3d_brepkit = { path = "../../../kernel/3d/brep/rs" }
 kernel_3d_engine = { path = "../../../kernel/3d/brep/engine/rs" }

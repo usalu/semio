@@ -143,6 +143,31 @@ module.exports = {
         ],
       },
     },
+    {
+      name: "ui-no-framework-packages",
+      severity: "error",
+      comment: "ui must stay presentational and business-logic free — no OS/plugin/framework coupling",
+      from: { path: "^ui/" },
+      to: {
+        path: ["^framework/", "^@semio-tech/framework-"],
+      },
+    },
+    {
+      name: "renderer-hosts-only-ui",
+      severity: "error",
+      comment: "framework/renderer/react/components hosts may depend only on ui/styling, framework/core protocol types, react, and each other — never os-shell, ui-interpreter, or app packages",
+      from: { path: "^framework/renderer/react/components/" },
+      to: {
+        pathNot: ["^framework/renderer/react/components/", "^@semio-tech/ui-", "^@semio-tech/framework-core", "^react$", "^react/", "^react-dom$", "^react-dom/", "^node:"],
+      },
+    },
+    {
+      name: "no-generated-edits-upstream",
+      severity: "error",
+      comment: "only framework/plugin/registry may import its generated plugin catalog directly — other consumers must go through generated/plugins.ts",
+      from: { pathNot: "^framework/plugin/registry/" },
+      to: { path: "^framework/plugin/registry/generated/plugins\\.json$" },
+    },
     ...crossTechnologyRules(),
   ],
   options: {

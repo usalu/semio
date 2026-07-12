@@ -579,6 +579,7 @@
         "@types/react": "^19.2.8",
         "@types/react-dom": "^19.2.3",
         "@vitejs/plugin-react": "^5.1.2",
+        "playwright": "^1.57.0",
         "react": "^19.2.3",
         "react-dom": "^19.2.3",
         "typescript": "^5.9.3",
@@ -757,6 +758,9 @@
     },
     "procedural/3d/rs": {
       "name": "@semio-tech/procedural-3d-rs",
+    },
+    "process/3d/rs": {
+      "name": "@semio-tech/process-3d-rs",
     },
     "puzzle/2d/rs": {
       "name": "@semio-tech/puzzle-2d-rs",
@@ -2076,6 +2080,8 @@
     "@semio-tech/procedural-2d-rs": ["@semio-tech/procedural-2d-rs@workspace:procedural/2d/rs"],
 
     "@semio-tech/procedural-3d-rs": ["@semio-tech/procedural-3d-rs@workspace:procedural/3d/rs"],
+
+    "@semio-tech/process-3d-rs": ["@semio-tech/process-3d-rs@workspace:process/3d/rs"],
 
     "@semio-tech/puzzle-2d-rs": ["@semio-tech/puzzle-2d-rs@workspace:puzzle/2d/rs"],
 

@@ -434,6 +434,9 @@ struct DagPlayLabels {
     selected_suffix: &'static str,
     // node-graph context menu
     delete_selection: &'static str,
+    // window-kind titles
+    window_main: &'static str,
+    window_compiled: &'static str,
 }
 
 const DAG_PLAY_LABELS_NATIVE_EN: DagPlayLabels = DagPlayLabels {
@@ -459,6 +462,8 @@ const DAG_PLAY_LABELS_NATIVE_EN: DagPlayLabels = DagPlayLabels {
     field_id: "Id",
     selected_suffix: "selected",
     delete_selection: "Delete selection",
+    window_main: "DAG",
+    window_compiled: "DSL",
 };
 
 const DAG_PLAY_LABELS_NATIVE_DE: DagPlayLabels = DagPlayLabels {
@@ -484,6 +489,8 @@ const DAG_PLAY_LABELS_NATIVE_DE: DagPlayLabels = DagPlayLabels {
     field_id: "Id",
     selected_suffix: "ausgewählt",
     delete_selection: "Auswahl löschen",
+    window_main: "DAG",
+    window_compiled: "DSL",
 };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; this app has no terminology variant.
@@ -1071,6 +1078,19 @@ impl PluginApp for DagPlayApp {
             DAG_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
             DAG_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_node_ids, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
+        }
+    }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = dag_play_labels(view_state);
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: None,
+            window_kind_labels: std::collections::HashMap::from([
+                (DAG_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()),
+                (DAG_PLAY_WINDOW_COMPILED.to_string(), labels.window_compiled.to_string()),
+            ]),
+            panel_tab_labels: std::collections::HashMap::new(),
+            mode_labels: std::collections::HashMap::new(),
         }
     }
 }

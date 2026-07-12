@@ -25,6 +25,13 @@
         "command": "bun ./script.ts check-no-px"
       }
     },
+    "check-no-raw-colors": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "ui/styling",
+        "command": "bun ./script.ts check-no-raw-colors"
+      }
+    },
     "test-rs": {
       "executor": "nx:run-commands",
       "options": {

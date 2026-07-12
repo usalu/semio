@@ -4713,6 +4713,7 @@ dependencies = [
 name = "lowpoly_core"
 version = "0.1.0"
 dependencies = [
+ "cad-plugin",
  "cad_document",
  "js-sys",
  "kernel_3d_brepkit",

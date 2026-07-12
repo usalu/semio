@@ -315,6 +315,9 @@ struct SequenceLabels {
     layout: &'static str,
     left_to_right: &'static str,
     top_to_bottom: &'static str,
+    window_main: &'static str,
+    window_script: &'static str,
+    window_compiled: &'static str,
 }
 
 const SEQUENCE_LABELS_NATIVE_EN: SequenceLabels = SequenceLabels {
@@ -338,6 +341,9 @@ const SEQUENCE_LABELS_NATIVE_EN: SequenceLabels = SequenceLabels {
     layout: "Layout",
     left_to_right: "Left to right",
     top_to_bottom: "Top to bottom",
+    window_main: "Sequence",
+    window_script: "Script",
+    window_compiled: "DSL",
 };
 
 const SEQUENCE_LABELS_NATIVE_DE: SequenceLabels = SequenceLabels {
@@ -361,6 +367,9 @@ const SEQUENCE_LABELS_NATIVE_DE: SequenceLabels = SequenceLabels {
     layout: "Layout",
     left_to_right: "Links nach rechts",
     top_to_bottom: "Oben nach unten",
+    window_main: "Sequenz",
+    window_script: "Skript",
+    window_compiled: "DSL",
 };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; this app has no terminology variants.
@@ -922,6 +931,20 @@ impl PluginApp for SequencePlayApp {
             SEQUENCE_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope.fixture, labels),
             SEQUENCE_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_step_ids, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
+        }
+    }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = sequence_labels(view_state);
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: None,
+            window_kind_labels: std::collections::HashMap::from([
+                (SEQUENCE_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()),
+                (SEQUENCE_PLAY_WINDOW_SCRIPT.to_string(), labels.window_script.to_string()),
+                (SEQUENCE_PLAY_WINDOW_COMPILED.to_string(), labels.window_compiled.to_string()),
+            ]),
+            panel_tab_labels: std::collections::HashMap::new(),
+            mode_labels: std::collections::HashMap::new(),
         }
     }
 }

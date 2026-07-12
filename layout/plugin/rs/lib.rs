@@ -620,6 +620,8 @@ struct LayoutLabels {
     redo: &'static str,
     group_export: &'static str,
     export_package: &'static str,
+    window_blueprint: &'static str,
+    window_preview: &'static str,
 }
 
 const LAYOUT_LABELS_NATIVE_EN: LayoutLabels = LayoutLabels {
@@ -671,6 +673,8 @@ const LAYOUT_LABELS_NATIVE_EN: LayoutLabels = LayoutLabels {
     redo: "Redo",
     group_export: "Export",
     export_package: "Package",
+    window_blueprint: "Blueprint",
+    window_preview: "Preview",
 };
 
 const LAYOUT_LABELS_NATIVE_DE: LayoutLabels = LayoutLabels {
@@ -722,6 +726,8 @@ const LAYOUT_LABELS_NATIVE_DE: LayoutLabels = LayoutLabels {
     redo: "Wiederholen",
     group_export: "Export",
     export_package: "Paket",
+    window_blueprint: "Entwurf",
+    window_preview: "Vorschau",
 };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
@@ -1939,6 +1945,19 @@ impl PluginApp for LayoutPlayApp {
             LAYOUT_PLAY_BODY_INSPECTION => build_inspector_tree(&play, labels),
             LAYOUT_PLAY_BODY_PREFLIGHT => build_preflight_tree(&play, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
+        }
+    }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = layout_labels(view_state);
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: None,
+            window_kind_labels: std::collections::HashMap::from([
+                (LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), labels.window_blueprint.to_string()),
+                (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), labels.window_preview.to_string()),
+            ]),
+            panel_tab_labels: std::collections::HashMap::new(),
+            mode_labels: std::collections::HashMap::new(),
         }
     }
 }

@@ -197,6 +197,9 @@ struct SStudioLabels {
     instance_id_prefix: &'static str,
     bound_value_prefix: &'static str,
     active_app: &'static str,
+    window_media_graph: &'static str,
+    window_media_vfs: &'static str,
+    window_compiled_dag: &'static str,
 }
 
 const S_STUDIO_LABELS_NATIVE_EN: SStudioLabels = SStudioLabels {
@@ -224,6 +227,9 @@ const S_STUDIO_LABELS_NATIVE_EN: SStudioLabels = SStudioLabels {
     instance_id_prefix: "Instance id",
     bound_value_prefix: "Bound value",
     active_app: "Active app",
+    window_media_graph: "Media Graph",
+    window_media_vfs: "Media VFS",
+    window_compiled_dag: "Compiled DAG",
 };
 
 const S_STUDIO_LABELS_NATIVE_DE: SStudioLabels = SStudioLabels {
@@ -251,6 +257,9 @@ const S_STUDIO_LABELS_NATIVE_DE: SStudioLabels = SStudioLabels {
     instance_id_prefix: "Instanz-ID",
     bound_value_prefix: "Gebundener Wert",
     active_app: "Aktive App",
+    window_media_graph: "Mediengraph",
+    window_media_vfs: "Media-VFS",
+    window_compiled_dag: "Kompilierter DAG",
 };
 
 /// 🗣️ Resolves the active Studio label set from the shell-provided locale.
@@ -2744,6 +2753,20 @@ impl PluginApp for SStudioApp {
             S_PLAY_WINDOW_MEDIA_GRAPH.into(),
             media_graph_measures(&envelope.runtime, &projection.app_instances, labels),
         )])
+    }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = s_studio_labels(view_state);
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: None,
+            window_kind_labels: std::collections::HashMap::from([
+                (S_PLAY_WINDOW_MEDIA_GRAPH.to_string(), labels.window_media_graph.to_string()),
+                (S_PLAY_WINDOW_MEDIA_VFS.to_string(), labels.window_media_vfs.to_string()),
+                (S_PLAY_WINDOW_COMPILED_DAG.to_string(), labels.window_compiled_dag.to_string()),
+            ]),
+            panel_tab_labels: std::collections::HashMap::new(),
+            mode_labels: std::collections::HashMap::new(),
+        }
     }
 }
 //#endregion 🔖SStudioApp

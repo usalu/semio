@@ -117,6 +117,21 @@ pub const FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID: &str = "framework.panel.inspec
 pub const FRAMEWORK_PANEL_TAB_PARAMETERS_ID: &str = "framework.panel.parameters";
 pub const FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL: &str = "Parameters";
 pub const FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID: &str = "framework.panel.parameters";
+
+/// 🗣️ Resolves a well-known framework panel-tab id to its native English/German label; unknown ids resolve to None so app-specific panel tabs are left untouched.
+pub fn framework_panel_tab_label(id: &str, is_de: bool) -> Option<&'static str> {
+    match (id, is_de) {
+        (FRAMEWORK_PANEL_TAB_DOCUMENT_ID, false) => Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL),
+        (FRAMEWORK_PANEL_TAB_DOCUMENT_ID, true) => Some("Dokument"),
+        (FRAMEWORK_PANEL_TAB_CATALOGUE_ID, false) => Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL),
+        (FRAMEWORK_PANEL_TAB_CATALOGUE_ID, true) => Some("Katalog"),
+        (FRAMEWORK_PANEL_TAB_INSPECTION_ID, false) => Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL),
+        (FRAMEWORK_PANEL_TAB_INSPECTION_ID, true) => Some("Inspektion"),
+        (FRAMEWORK_PANEL_TAB_PARAMETERS_ID, false) => Some(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL),
+        (FRAMEWORK_PANEL_TAB_PARAMETERS_ID, true) => Some("Parameter"),
+        _ => None,
+    }
+}
 //#endregion 🔖PanelTabConstants
 
 //#region 🔖WindowLayout
@@ -5236,6 +5251,36 @@ pub struct ViewState {
     pub terminology: Option<String>,
 }
 
+/// 🗣️ Locale/terminology-aware label patch for an already-instantiated app's manifest, resolved fresh per `ViewState`
+/// (unlike `AppDefinition`, which is assembled once at plugin-load time and cannot itself react to locale changes).
+/// The shell merges this over the static `AppDefinition` labels by id; ids absent from a map keep their static English label.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppLabelsOverlay {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub app_label: Option<String>,
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub window_kind_labels: std::collections::HashMap<String, String>,
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub panel_tab_labels: std::collections::HashMap<String, String>,
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub mode_labels: std::collections::HashMap<String, String>,
+}
+
+impl AppLabelsOverlay {
+    /// 🗣️ Starts an overlay pre-populated with the well-known framework panel-tab labels (Document/Catalogue/Inspection/Parameters) for every panel tab id supplied; apps then extend it with their own window-kind/mode labels.
+    pub fn with_framework_panel_tabs(panel_tab_ids: impl IntoIterator<Item = impl Into<String>>, is_de: bool) -> Self {
+        let mut overlay = Self::default();
+        for id in panel_tab_ids {
+            let id = id.into();
+            if let Some(label) = crate::layout::framework_panel_tab_label(&id, is_de) {
+                overlay.panel_tab_labels.insert(id, label.into());
+            }
+        }
+        overlay
+    }
+}
+
 //#region 🔖Kernel
 pub mod kernel {
 //! 🧠 Local-first action kernel contracts: actions, operations, capabilities, window I/O.
@@ -6115,6 +6160,7 @@ pub use layout::{
     FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID,
     FRAMEWORK_PANEL_TAB_PARAMETERS_ID, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
+    framework_panel_tab_label,
 };
 pub use mesh::{
     mesh_box, mesh_cone, mesh_cylinder, mesh_from_glb, mesh_from_indexed, mesh_from_kind, mesh_ico_sphere,

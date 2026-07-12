@@ -857,6 +857,8 @@ struct NoteLabels {
     add_math: &'static str,
     add_image: &'static str,
     add_group: &'static str,
+    window_composite: &'static str,
+    window_navigator: &'static str,
 }
 
 const NOTE_LABELS_NATIVE_EN: NoteLabels = NoteLabels {
@@ -874,6 +876,8 @@ const NOTE_LABELS_NATIVE_EN: NoteLabels = NoteLabels {
     add_math: "Add Math",
     add_image: "Add Image",
     add_group: "Add Group",
+    window_composite: "Canvas",
+    window_navigator: "Navigator",
 };
 
 const NOTE_LABELS_NATIVE_DE: NoteLabels = NoteLabels {
@@ -891,6 +895,8 @@ const NOTE_LABELS_NATIVE_DE: NoteLabels = NoteLabels {
     add_math: "Mathe hinzufügen",
     add_image: "Bild hinzufügen",
     add_group: "Gruppe hinzufügen",
+    window_composite: "Leinwand",
+    window_navigator: "Navigator",
 };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; note has no terminology axis, only language.
@@ -2056,6 +2062,19 @@ impl PluginApp for NoteApp {
             (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_measures(&play.document)),
             (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), note_navigator_measures(&play.document)),
         ])
+    }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = note_labels(view_state);
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: None,
+            window_kind_labels: std::collections::HashMap::from([
+                (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), labels.window_composite.to_string()),
+                (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), labels.window_navigator.to_string()),
+            ]),
+            panel_tab_labels: std::collections::HashMap::new(),
+            mode_labels: std::collections::HashMap::new(),
+        }
     }
 }
 //#endregion 🔖NoteApp

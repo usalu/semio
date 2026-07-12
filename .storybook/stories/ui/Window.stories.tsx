@@ -150,7 +150,6 @@ export const NoTools: Story = {
 
 const MousePointer = createIconComponent("mouse-pointer");
 const Wrench = createIconComponent("wrench");
-const Sparkles = createIconComponent("sparkles");
 const Move = createIconComponent("move");
 const RotateCw = createIconComponent("rotate-cw");
 const Maximize2 = createIconComponent("maximize2");
@@ -161,6 +160,7 @@ type CategoryDemoNode = { readonly id: string; readonly label: string; readonly 
   | { readonly kind: "group"; readonly children: readonly CategoryDemoNode[] }
 );
 
+/** @emoji 🪟 Only window-scoped categories (selection / tools) belong in a window's own panel — mode-wide categories like actions/history are shared across every window in the mode and render once in the footer instead (see .storybook/stories/ui/Toolbar.stories.tsx `ModeWideFooterCategories`). */
 const WINDOW_CATEGORY_DEMO_TREE: readonly CategoryDemoNode[] = [
   { id: "selection", label: "Selection", icon: MousePointer, kind: "leaves", leaves: [{ id: "direct", icon: MousePointer }] },
   {
@@ -170,7 +170,6 @@ const WINDOW_CATEGORY_DEMO_TREE: readonly CategoryDemoNode[] = [
     kind: "group",
     children: [{ id: "transform", label: "Transform", icon: Move, kind: "leaves", leaves: [{ id: "move", icon: Move }, { id: "rotate", icon: RotateCw }, { id: "scale", icon: Maximize2 }] }],
   },
-  { id: "actions", label: "Actions", icon: Sparkles, kind: "leaves", leaves: [{ id: "run", icon: Sparkles }] },
 ];
 
 /** @emoji 🗂️ Same at-most-one-active-per-level recursion as the "Recursive Category Groups" Toolbar story, sized for a window's bottom-left toolbar slot. */
@@ -238,7 +237,7 @@ const WindowWithRecursiveCategoryToolbar = () => {
 };
 
 export const WithRecursiveCategoryToolbar: Story = {
-  name: "With Recursive Category Toolbar (selection / tools / actions)",
+  name: "With Recursive Category Toolbar (selection / tools)",
   args: { id: "category-toolbar-window", children: null },
   render: () => <WindowWithRecursiveCategoryToolbar />,
 };

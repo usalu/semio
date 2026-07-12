@@ -628,6 +628,8 @@ struct LowpolyLabels {
     history: &'static str,
     paint: &'static str,
     uv: &'static str,
+    window_main: &'static str,
+    window_uv: &'static str,
 }
 
 const LOWPOLY_LABELS_NATIVE_EN: LowpolyLabels = LowpolyLabels {
@@ -651,6 +653,8 @@ const LOWPOLY_LABELS_NATIVE_EN: LowpolyLabels = LowpolyLabels {
     history: "History",
     paint: "Paint",
     uv: "UV",
+    window_main: "Model",
+    window_uv: "UV",
 };
 
 const LOWPOLY_LABELS_NATIVE_DE: LowpolyLabels = LowpolyLabels {
@@ -674,6 +678,8 @@ const LOWPOLY_LABELS_NATIVE_DE: LowpolyLabels = LowpolyLabels {
     history: "Verlauf",
     paint: "Malen",
     uv: "UV",
+    window_main: "Modell",
+    window_uv: "UV",
 };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; unsupported locales fall back to native English.
@@ -2317,6 +2323,19 @@ impl PluginApp for LowpolyPlayApp {
             LOWPOLY_PLAY_BODY_INSPECTION => build_inspector_tree(&envelope, labels),
             LOWPOLY_PLAY_BODY_LAYERS => build_layers_tree(&envelope, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
+        }
+    }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = lowpoly_labels(view_state);
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: None,
+            window_kind_labels: std::collections::HashMap::from([
+                (LOWPOLY_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()),
+                (LOWPOLY_PLAY_WINDOW_UV.to_string(), labels.window_uv.to_string()),
+            ]),
+            panel_tab_labels: std::collections::HashMap::new(),
+            mode_labels: std::collections::HashMap::new(),
         }
     }
 }

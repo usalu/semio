@@ -37,6 +37,10 @@ interface types {
     json: string,
   }
 
+  record app-labels-json {
+    json: string,
+  }
+
   record migrate-document-input {
     from-version: string,
     to-version: string,
@@ -63,6 +67,7 @@ interface plugin {
     plugin-tools-json,
     plugin-window-engagements-json,
     plugin-window-measures-json,
+    app-labels-json,
     migrate-document-input,
     migrate-document-output,
     plugin-error,
@@ -91,6 +96,10 @@ interface plugin {
     instance-id: u32,
     context: action-context-json,
   ) -> result<plugin-window-measures-json, plugin-error>;
+  app-labels: func(
+    instance-id: u32,
+    context: action-context-json,
+  ) -> result<app-labels-json, plugin-error>;
   migrate-document: func(input: migrate-document-input) -> result<migrate-document-output, plugin-error>;
 }
 

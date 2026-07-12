@@ -608,6 +608,26 @@ export type PluginViewState = {
 
 export type PluginUiNode = Record<string, unknown> & { readonly type: string };
 
+/** 🗣️ Locale/terminology-aware label patch for an app's window-kind/panel-tab/mode labels, resolved fresh per {@link PluginViewState} — merge over the static {@link PluginManifest} app labels by id. */
+export type PluginAppLabelsOverlay = {
+  readonly appLabel?: string;
+  readonly windowKindLabels: Readonly<Record<string, string>>;
+  readonly panelTabLabels: Readonly<Record<string, string>>;
+  readonly modeLabels: Readonly<Record<string, string>>;
+};
+
+const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = { windowKindLabels: {}, panelTabLabels: {}, modeLabels: {} };
+
+/** 🗣️ Rust's `skip_serializing_if` omits empty maps entirely, so a parsed overlay may be missing keys — fill them back in. */
+function normalizeAppLabelsOverlay(raw: Partial<PluginAppLabelsOverlay> | null | undefined): PluginAppLabelsOverlay {
+  return {
+    appLabel: raw?.appLabel,
+    windowKindLabels: raw?.windowKindLabels ?? {},
+    panelTabLabels: raw?.panelTabLabels ?? {},
+    modeLabels: raw?.modeLabels ?? {},
+  };
+}
+
 export type PluginContribution = {
   readonly kind: "formsQuestionKind";
   readonly appId: string;
@@ -650,6 +670,7 @@ export type PluginWasmHandle = {
   readonly tools: (instanceId: number, viewState: PluginViewState) => Promise<readonly Record<string, unknown>[]>;
   readonly windowEngagements: (instanceId: number, viewState: PluginViewState) => Promise<Readonly<Record<string, Record<string, unknown>>>>;
   readonly windowMeasures: (instanceId: number, viewState: PluginViewState) => Promise<Readonly<Record<string, readonly Record<string, unknown>[]>>>;
+  readonly appLabels: (instanceId: number, viewState: PluginViewState) => Promise<PluginAppLabelsOverlay>;
   readonly dispose: () => void;
 };
 
@@ -837,6 +858,7 @@ export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): Plugin
     tools: (instanceId, viewState) => runSerialized(() => handle.tools(instanceId, viewState)),
     windowEngagements: (instanceId, viewState) => runSerialized(() => handle.windowEngagements(instanceId, viewState)),
     windowMeasures: (instanceId, viewState) => runSerialized(() => handle.windowMeasures(instanceId, viewState)),
+    appLabels: (instanceId, viewState) => runSerialized(() => handle.appLabels(instanceId, viewState)),
     dispose: handle.dispose,
   };
 }
@@ -870,6 +892,7 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
       tools?: (instanceId: number, viewStateJson: string) => Promise<string>;
       windowEngagements?: (instanceId: number, viewStateJson: string) => Promise<string>;
       windowMeasures?: (instanceId: number, viewStateJson: string) => Promise<string>;
+      appLabels?: (instanceId: number, viewStateJson: string) => Promise<string>;
     }>;
     semio_plugin_manifest?: () => string;
     semio_plugin_create_app?: (appId: string) => number;
@@ -879,6 +902,7 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
     semio_plugin_tools?: (instanceId: number, viewStateJson: string) => string;
     semio_plugin_window_engagements?: (instanceId: number, viewStateJson: string) => string;
     semio_plugin_window_measures?: (instanceId: number, viewStateJson: string) => string;
+    semio_plugin_app_labels?: (instanceId: number, viewStateJson: string) => string;
   };
   if (module.default) await module.default();
   if (module.createPluginApi) {
@@ -908,6 +932,10 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
       windowMeasures: async (instanceId, viewState) => {
         if (!api.windowMeasures) return {};
         return JSON.parse(await api.windowMeasures(instanceId, JSON.stringify(viewState))) as Record<string, readonly Record<string, unknown>[]>;
+      },
+      appLabels: async (instanceId, viewState) => {
+        if (!api.appLabels) return EMPTY_APP_LABELS_OVERLAY;
+        return normalizeAppLabelsOverlay(JSON.parse(await api.appLabels(instanceId, JSON.stringify(viewState))));
       },
       dispose() {},
     });
@@ -953,6 +981,11 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
       if (!measures) return {};
       return JSON.parse(measures(instanceId, JSON.stringify(viewState))) as Record<string, readonly Record<string, unknown>[]>;
     },
+    async appLabels(instanceId: number, viewState: PluginViewState) {
+      const labels = module.semio_plugin_app_labels;
+      if (!labels) return EMPTY_APP_LABELS_OVERLAY;
+      return normalizeAppLabelsOverlay(JSON.parse(labels(instanceId, JSON.stringify(viewState))));
+    },
     dispose() {},
   });
 }
@@ -974,6 +1007,7 @@ export function pluginHandleForBridge(handle: PluginWasmHandle) {
     tools: (instanceId: number, viewStateJson: string) => handle.tools(instanceId, JSON.parse(viewStateJson) as PluginViewState).then((nodes) => JSON.stringify(nodes)),
     windowEngagements: (instanceId: number, viewStateJson: string) => handle.windowEngagements(instanceId, JSON.parse(viewStateJson) as PluginViewState).then((engagements) => JSON.stringify(engagements)),
     windowMeasures: (instanceId: number, viewStateJson: string) => handle.windowMeasures(instanceId, JSON.parse(viewStateJson) as PluginViewState).then((measures) => JSON.stringify(measures)),
+    appLabels: (instanceId: number, viewStateJson: string) => handle.appLabels(instanceId, JSON.parse(viewStateJson) as PluginViewState).then((overlay) => JSON.stringify(overlay)),
   };
 }
 //#endregion PluginRuntime

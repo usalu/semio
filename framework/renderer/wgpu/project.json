@@ -41,6 +41,13 @@
         "cwd": "framework/renderer/wgpu",
         "forwardAllArgs": true
       }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts lint",
+        "cwd": "framework/renderer/wgpu"
+      }
     }
   },
   "tags": ["scope:framework", "type:renderer"]

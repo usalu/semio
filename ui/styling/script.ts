@@ -615,7 +615,95 @@ class CheckNoPxScript extends BundleScript {
   }
 }
 
+const COLOR_SCAN_ROOTS = PX_SCAN_ROOTS.filter((root) => !root.startsWith("ui/styling"));
+
+const COLOR_SCAN_SKIP = [...PX_SCAN_SKIP, "/dist/", "/.vite/", "/.stage/", "/renderer-modules/", "/plugin-modules/", "generated/", "generated.rs", "generated.py", "Palette.g.cs", "palette.css"];
+
+const COLOR_PATTERNS: { name: string; re: RegExp }[] = [
+  { name: "raw-hex-color", re: /#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?(?:[0-9a-fA-F]{2})?\b/ },
+  { name: "raw-rgb-hsl-color", re: /\b(?:rgba?|hsla?)\(\s*[\d.]/ },
+  { name: "tailwind-neutral-color-class", re: /\b(?:bg|text|border|ring|fill|stroke|from|via|to|divide|outline|decoration|caret|accent|shadow)-(?:zinc|gray|slate|neutral|stone)-\d{2,3}\b/ },
+];
+
+function isColorScanExemptLine(line: string): boolean {
+  if (line.includes("expect(") || line.includes("toContain(") || line.includes("toBe(")) {
+    return true;
+  }
+  if (/^\s*(\/\/|\*|\/\*)/.test(line)) {
+    return true;
+  }
+  return false;
+}
+
+function shouldColorScanFile(path: string): boolean {
+  if (!/\.(tsx?|css|rs)$/.test(path)) {
+    return false;
+  }
+  return !COLOR_SCAN_SKIP.some((skip) => path.includes(skip));
+}
+
+function collectColorViolations(repoRootPath: string): { file: string; line: number; kind: string; text: string }[] {
+  const violations: { file: string; line: number; kind: string; text: string }[] = [];
+
+  const walk = (dir: string): void => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === "node_modules" || entry.name === ".repo") {
+          continue;
+        }
+        walk(full);
+        continue;
+      }
+      const rel = full.slice(repoRootPath.length + 1);
+      if (!shouldColorScanFile(rel)) {
+        continue;
+      }
+      const lines = readFileSync(full, "utf8").split("\n");
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i]!;
+        if (isColorScanExemptLine(line)) {
+          continue;
+        }
+        for (const { name, re } of COLOR_PATTERNS) {
+          if (re.test(line)) {
+            violations.push({ file: rel, line: i + 1, kind: name, text: line.trim() });
+            break;
+          }
+        }
+      }
+    }
+  };
+
+  for (const root of COLOR_SCAN_ROOTS) {
+    const abs = join(repoRootPath, root);
+    if (existsSync(abs)) {
+      walk(abs);
+    }
+  }
+  return violations;
+}
+
+/** @emoji 🚫 Fails when hardcoded hex/rgb/hsl colors or zinc/gray/slate/neutral/stone Tailwind classes remain outside `ui/styling` (design tokens are the single source of color truth). */
+class CheckNoRawColorsScript extends BundleScript {
+  run(): void {
+    const violations = collectColorViolations(repoRoot);
+    if (violations.length === 0) {
+      console.log("ui/styling: no hardcoded color violations");
+      return;
+    }
+    console.error(`ui/styling: found ${violations.length} hardcoded color violation(s):`);
+    for (const v of violations.slice(0, 80)) {
+      console.error(`  ${v.file}:${v.line} [${v.kind}] ${v.text}`);
+    }
+    if (violations.length > 80) {
+      console.error(`  … and ${violations.length - 80} more`);
+    }
+    process.exit(1);
+  }
+}
+
 if (import.meta.main) {
-  const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("fonts", FontsScript).register("check-no-px", CheckNoPxScript);
+  const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("fonts", FontsScript).register("check-no-px", CheckNoPxScript).register("check-no-raw-colors", CheckNoRawColorsScript);
   await runBundleScriptMain(router, import.meta.url);
 }

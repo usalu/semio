@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** @emoji 🧊 `@semio-tech/framework-renderer-wgpu` task router. */
 import { spawnSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, GIS_MAP_WGPU_TILE_PROXY_PORT, SEMIO_GIS_MAP_TILE_BASE_URL_ENV, getWorkspaceRoot, runBundleScriptMain, runVitest, frameworkOsPlaygroundDefaultPort } from "../../../repo/lib/js/index.ts";
 import { startGisMapTileProxyServer } from "../../../ui/styling/vite-elements-assets.ts";
@@ -134,6 +134,38 @@ class TestScript extends BundleScript {
   }
 }
 
+//#region 🔖LintScript
+/** 🎨Raw color-construction calls (`Rgba::new`/`from_srgb8`) must live only inside `ui/wgpu`'s theme module — the renderer takes every color via `ui_wgpu::Theme`. */
+function collectWgpuColorLiteralViolations(bundleRoot: string): string[] {
+  const libPath = join(bundleRoot, "rs", "lib.rs");
+  if (!existsSync(libPath)) return [];
+  const text = readFileSync(libPath, "utf8");
+  const violations: string[] = [];
+  const lines = text.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
+    if (/\bRgba::new\(|\bfrom_srgb8\(/.test(line)) {
+      violations.push(`rs/lib.rs:${i + 1}: ${line.trim()}`);
+    }
+  }
+  return violations;
+}
+
+class LintScript extends BundleScript {
+  run(_segments: string[]): void {
+    const violations = collectWgpuColorLiteralViolations(this.root);
+    if (violations.length === 0) {
+      console.log("framework-renderer-wgpu: color-literal lint passed");
+      return;
+    }
+    console.error(`framework-renderer-wgpu: found ${violations.length} raw color-construction call(s) outside ui/wgpu theme:`);
+    for (const v of violations.slice(0, 40)) console.error(`  ${v}`);
+    if (violations.length > 40) console.error(`  … and ${violations.length - 40} more`);
+    process.exit(1);
+  }
+}
+//#endregion 🔖LintScript
+
 const router = new ScriptRouter(import.meta.dir)
   .register("wasm", TrunkBuildScript)
   .register("build", TrunkBuildScript)
@@ -141,6 +173,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("dev", TrunkServeScript)
   .register("native", NativeRunScript)
   .register("native-build", NativeBuildScript)
-  .register("test", TestScript);
+  .register("test", TestScript)
+  .register("lint", LintScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "wasm" });

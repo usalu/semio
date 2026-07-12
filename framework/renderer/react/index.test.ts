@@ -45,6 +45,7 @@ import {
   appDocumentLabel,
   appWindowDocumentLabel,
   buildToolbarRibbonSegments,
+  dedupeToolNodesById,
   flattenPanelTabLeaves,
   groupToolNodesByCategory,
   isFlowGraphScene,
@@ -122,6 +123,7 @@ describe("framework plugin runtime", () => {
       tools: async () => [],
       windowEngagements: async () => ({}),
       windowMeasures: async () => ({}),
+      appLabels: async () => ({ windowKindLabels: {}, panelTabLabels: {}, modeLabels: {} }),
       dispose: () => {},
     });
     await Promise.all([handle.handleAction(1, "{}", {}), handle.handleAction(1, "{}", {}), handle.handleAction(1, "{}", {})]);
@@ -212,6 +214,7 @@ describe("framework external slots", () => {
       tools: async () => [],
       windowEngagements: async () => ({}),
       windowMeasures: async () => ({}),
+      appLabels: async () => ({ windowKindLabels: {}, panelTabLabels: {}, modeLabels: {} }),
       dispose: () => {},
     };
     const resolved = await resolveExternalSlots(
@@ -1467,6 +1470,49 @@ describe("toolbar ribbon", () => {
     ]);
     expect(grouped).toHaveLength(1);
     expect(grouped[0].id).toBe("actions");
+  });
+
+  it("reuses a category's single already-meaningful collection instead of re-wrapping it, avoiding a duplicate-looking picker level", () => {
+    const selectionCollection = {
+      id: "lowpoly-tools-selection",
+      kind: "collection" as const,
+      iconId: "mouse-pointer",
+      label: "Selection",
+      category: "selection" as const,
+      children: [{ id: "mesh", kind: "toggle" as const, iconId: "box", controllerId: "x", action: "mesh" }],
+    };
+    const grouped = groupToolNodesByCategory([selectionCollection]);
+    expect(grouped).toEqual([{ ...selectionCollection, order: 0 }]);
+    const segments = buildToolbarRibbonSegments(grouped, ["lowpoly-tools-selection"]);
+    const toolsSegment = segments.find((segment) => segment.kind === "tools" && segment.items.some((item) => item.id === "mesh"));
+    expect(toolsSegment).toBeTruthy();
+  });
+
+  it("still wraps a category with multiple top-level nodes in a synthetic collection", () => {
+    const grouped = groupToolNodesByCategory([
+      { id: "a", kind: "button", iconId: "box", controllerId: "x", action: "a", category: "actions" },
+      { id: "b", kind: "button", iconId: "box", controllerId: "x", action: "b", category: "actions" },
+    ]);
+    expect(grouped).toEqual([{ id: "actions", kind: "collection", iconId: "sparkles", text: "actions", order: 0, category: "actions", children: expect.any(Array) }]);
+  });
+
+  it("scopes grouping to the given categories only", () => {
+    const nodes = [
+      { id: "sel", kind: "toggle", iconId: "cursor", controllerId: "x", action: "sel", category: "selection" },
+      { id: "hist", kind: "button", iconId: "undo", controllerId: "x", action: "undo", category: "history" },
+    ];
+    expect(groupToolNodesByCategory(nodes, ["selection", "tools"]).map((node) => node.id)).toEqual(["selection"]);
+    expect(groupToolNodesByCategory(nodes, ["actions", "history"]).map((node) => node.id)).toEqual(["history"]);
+  });
+
+  it("deduplicates tool nodes by id across window tool lists for a single shared footer entry", () => {
+    const history = { id: "s-play.history", kind: "collection" as const, iconId: "clock", category: "history" as const, children: [] };
+    const deduped = dedupeToolNodesById([
+      [history, { id: "leaf-a", kind: "button" as const, iconId: "box", controllerId: "x", action: "a" }],
+      [history],
+      [],
+    ]);
+    expect(deduped).toEqual([history, { id: "leaf-a", kind: "button", iconId: "box", controllerId: "x", action: "a" }]);
   });
 
   it("renders ribbon toolbar with picker and batched toggles", () => {

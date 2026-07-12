@@ -132,6 +132,7 @@ import {
   resolvePluginRegistryId,
   type ActionDefinition,
   type NamedLayout,
+  type PluginAppLabelsOverlay,
   type PluginRegistryEntry,
   type PluginWasmHandle as CorePluginWasmHandle,
   type WindowLayout,
@@ -410,9 +411,12 @@ function panelSideForGroup(group: string): "left" | "right" {
   return "right";
 }
 
-function convertFrameworkLayoutNodeToModeLayout(node: WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode): WindowLayoutNode {
+function convertFrameworkLayoutNodeToModeLayout(
+  node: WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode,
+  appLabelsOverlay: PluginAppLabelsOverlay,
+): WindowLayoutNode {
   if (node.kind === "window") {
-    return { kind: "window", id: node.windowKindId, title: node.title };
+    return { kind: "window", id: node.windowKindId, title: resolveAppLabel(appLabelsOverlay, "windowKind", node.windowKindId, node.title ?? node.windowKindId) };
   }
   if (node.kind === "stack") {
     return {
@@ -421,20 +425,32 @@ function convertFrameworkLayoutNodeToModeLayout(node: WindowLayoutAxisNode | Win
       children: node.children.map((child) => ({
         kind: "window" as const,
         id: child.windowKindId,
-        title: child.title,
+        title: resolveAppLabel(appLabelsOverlay, "windowKind", child.windowKindId, child.title ?? child.windowKindId),
       })),
     };
   }
   return {
     kind: node.kind,
     size: node.size,
-    children: node.children.map((child) => convertFrameworkLayoutNodeToModeLayout(child)),
+    children: node.children.map((child) => convertFrameworkLayoutNodeToModeLayout(child, appLabelsOverlay)),
   };
 }
 
-function convertFrameworkLayoutToModeLayout(layout: WindowLayout | undefined, windowIds: readonly string[]): WindowLayoutNode {
+/** @emoji 🗣️ Re-resolves every window's title from the current app-labels overlay in place, preserving the tree's structure/sizes/arrangement — used to react to a locale/terminology switch without discarding the user's live layout. */
+function retitleWindowLayoutNode(node: WindowLayoutNode, appLabelsOverlay: PluginAppLabelsOverlay): WindowLayoutNode {
+  if (node.kind === "window") {
+    return { ...node, title: resolveAppLabel(appLabelsOverlay, "windowKind", node.id, node.title ?? node.id) };
+  }
+  return { ...node, children: node.children.map((child) => retitleWindowLayoutNode(child, appLabelsOverlay)) } as WindowLayoutNode;
+}
+
+function convertFrameworkLayoutToModeLayout(
+  layout: WindowLayout | undefined,
+  windowIds: readonly string[],
+  appLabelsOverlay: PluginAppLabelsOverlay,
+): WindowLayoutNode {
   if (!layout?.root) return createEvenWindowLayout(windowIds.length ? windowIds : ["main"]);
-  return convertFrameworkLayoutNodeToModeLayout(layout.root);
+  return convertFrameworkLayoutNodeToModeLayout(layout.root, appLabelsOverlay);
 }
 
 function modeLayoutNodeToFramework(node: WindowLayoutNode): WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode {
@@ -546,7 +562,7 @@ function isViewportSurface(surfaceKind: string | undefined): boolean {
 function defaultViewportEngagement(): WindowEngagement {
   return {
     sessionActive: true,
-    status: [{ id: "framework.viewport.status", text: "Viewport" }],
+    status: [{ id: "framework.viewport.status", text: shellLabel("ui.engagement.viewport") }],
   };
 }
 
@@ -618,24 +634,26 @@ function panelTabDefinitionToNode(
   panelUiByKey: Readonly<Record<string, UiNode>>,
   onAction: (action: ActionDescriptor) => void,
   order: number,
+  appLabelsOverlay: PluginAppLabelsOverlay,
 ): PanelTabNode {
+  const label = resolveAppLabel(appLabelsOverlay, "panelTab", tab.id, tab.label);
   if (tab.children && tab.children.length > 0) {
     return {
       kind: "branch",
       id: tab.id,
       icon: panelTabIcon(tab.id, group),
-      name: tab.label,
+      name: label,
       order,
-      children: tab.children.map((child, childOrder) => panelTabDefinitionToNode(child, group, panelUiByKey, onAction, childOrder)),
+      children: tab.children.map((child, childOrder) => panelTabDefinitionToNode(child, group, panelUiByKey, onAction, childOrder, appLabelsOverlay)),
     };
   }
   return {
     kind: "leaf",
     id: tab.id,
     icon: panelTabIcon(tab.id, group),
-    name: tab.label,
+    name: label,
     order,
-    tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tab.id] ?? { type: "text", value: "Loading…" }, onAction)),
+    tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tab.id] ?? { type: "text", value: shellLabel("ui.common.loading") }, onAction)),
   };
 }
 
@@ -709,6 +727,15 @@ function shellLabel(key: UiTranslationKey): string {
   return resolveTranslationLabel(uiI18n.t(key)) ?? key;
 }
 
+/** @emoji 🗣️ Stable empty overlay reference so components depending on it don't re-render before the first `appLabels` fetch resolves. */
+const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = { windowKindLabels: {}, panelTabLabels: {}, modeLabels: {} };
+
+/** @emoji 🗣️ Resolves a window-kind/panel-tab/mode id's locale-aware label from the active app's overlay, falling back to the static manifest label. */
+function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKind" | "panelTab" | "mode", id: string, fallback: string): string {
+  const map = kind === "windowKind" ? overlay.windowKindLabels : kind === "panelTab" ? overlay.panelTabLabels : overlay.modeLabels;
+  return map[id] ?? fallback;
+}
+
 /** @emoji 🗣️ Resolves a terminology id's display name; chrome-known ids get a translated label, app-declared ids fall back to their raw id. */
 function shellTerminologyLabel(id: string): string {
   const isChromeKnown = id === "native" || id === "reuse";
@@ -778,7 +805,7 @@ function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, o
 
 function windowToolbarNode(tools: readonly ToolNode[] | undefined, windowId: string, onAction: (action: ActionDescriptor) => void): ReactNode {
   if (!tools?.length) return undefined;
-  const grouped = groupToolNodesByCategory(tools);
+  const grouped = groupToolNodesByCategory(tools, WINDOW_TOOL_CATEGORIES);
   if (!grouped.length) return undefined;
   return <ToolTree id={`ui.toolbar.${windowId}`} tools={grouped} onAction={onAction} direction="up" />;
 }
@@ -808,7 +835,7 @@ class ShellRenderErrorBoundary extends Component<{ readonly children: ReactNode 
     if (this.state.hasError) {
       return (
         <p className="p-4 text-sm text-destructive" role="alert">
-          Render error: {this.state.message}
+          {shellLabel("ui.common.renderError")}: {this.state.message}
         </p>
       );
     }
@@ -828,6 +855,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const [windowMeasuresByKind, setWindowMeasuresByKind] = useState<Readonly<Record<string, readonly WindowMeasure[]>>>({});
   const [panelUiByKey, setPanelUiByKey] = useState<Readonly<Record<string, UiNode>>>({});
   const [toolNodesByKind, setToolNodesByKind] = useState<Readonly<Record<string, readonly ToolNode[]>>>({});
+  const [appLabelsOverlay, setAppLabelsOverlay] = useState<PluginAppLabelsOverlay>(EMPTY_APP_LABELS_OVERLAY);
   const [spawnedWindowUi, setSpawnedWindowUi] = useState<UiNode | null>(null);
   const [spawnedWindowEngagements, setSpawnedWindowEngagements] = useState<Readonly<Record<string, WindowEngagement>>>({});
   const [spawnedWindowMeasures, setSpawnedWindowMeasures] = useState<Readonly<Record<string, readonly WindowMeasure[]>>>({});
@@ -914,7 +942,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           }
           return [];
         });
-        if (loaded.length === 0) throw new Error("No plugins loaded");
+        if (loaded.length === 0) throw new Error(shellLabel("ui.common.noPluginsLoaded"));
         if (cancelled) return;
         const loadedState = loaded.map((handle) => ({ handle, manifest: handle.manifest }));
         setLoadedPlugins(loadedState);
@@ -1000,6 +1028,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       }
       rendered.push(await plugin.windowEngagements(nextSession.instanceId, viewState));
       rendered.push(await plugin.windowMeasures(nextSession.instanceId, viewState));
+      const appLabelsOverlay = await plugin.appLabels(nextSession.instanceId, viewState);
       if (generation !== refreshGenerationRef.current) return;
       const windowNodes = await Promise.all(rendered.slice(0, windowCount).map((node) => resolveExternalSlots(node as UiNode, slotContext)));
       const panelNodes = await Promise.all(rendered.slice(windowCount, windowCount + panelTabLeaves.length).map((node) => resolveExternalSlots(node as UiNode, slotContext)));
@@ -1010,6 +1039,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       setWindowUiByKind(Object.fromEntries(nextSession.app.windowKinds.map((kind, index) => [kind.id, windowNodes[index]! as UiNode])));
       setWindowEngagementsByKind(dynamicEngagements);
       setWindowMeasuresByKind(dynamicMeasures);
+      setAppLabelsOverlay(appLabelsOverlay);
       setPanelUiByKey(Object.fromEntries(panelTabLeaves.map((tab, index) => [tab.id, panelNodes[index]! as UiNode])));
       const activeModeId = viewState.activeModeId ?? nextSession.app.defaultModeId ?? nextSession.app.modes[0]?.id;
       const staticTools = nextSession.app.modes.find((mode) => mode.id === activeModeId)?.tools ?? [];
@@ -1027,7 +1057,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         layoutSeedKeyRef.current = layoutSeedKey;
         setExtraWindowInstances([]);
         extraWindowCounterRef.current = 0;
-        setShellLayout(convertFrameworkLayoutToModeLayout(nextSession.app.defaultLayout, windowIds));
+        setShellLayout(convertFrameworkLayoutToModeLayout(nextSession.app.defaultLayout, windowIds, appLabelsOverlay));
         const defaultWindowId = findDefaultActiveWindowKindId(nextSession.app.defaultLayout, nextSession.app.windowKinds);
         if (defaultWindowId) setActiveWindowId(defaultWindowId);
         else if (windowIds[0]) setActiveWindowId(windowIds[0]);
@@ -1035,6 +1065,14 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     },
     [loadedPlugins, uiLocale, uiTerminology],
   );
+
+  /** @emoji 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync with the app-labels overlay on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale. */
+  useEffect(() => {
+    setShellLayout((current) => (current ? retitleWindowLayoutNode(current, appLabelsOverlay) : current));
+    setExtraWindowInstances((current) =>
+      current.map((entry) => ({ ...entry, title: resolveAppLabel(appLabelsOverlay, "windowKind", entry.windowKindId, entry.title) })),
+    );
+  }, [appLabelsOverlay]);
 
   const refreshSpawnedUi = useCallback(
     async (spawned: SpawnedAppEntry, viewState: ViewState) => {
@@ -1130,6 +1168,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         convertFrameworkLayoutToModeLayout(
           app.defaultLayout,
           app.windowKinds.map((kind) => kind.id),
+          appLabelsOverlay,
         ),
       );
       setActiveWindowId(findDefaultActiveWindowKindId(app.defaultLayout, app.windowKinds) ?? app.windowKinds[0]?.id ?? null);
@@ -1140,7 +1179,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       await refreshUi(nextSession);
       return nextSession;
     },
-    [loadedPlugins, refreshUi, session],
+    [loadedPlugins, refreshUi, session, appLabelsOverlay],
   );
 
   const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, documentJson: string, viewState: ViewState) => {
@@ -1635,11 +1674,11 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       const windowIds = session.app.windowKinds.map((kind) => kind.id);
       setExtraWindowInstances([]);
       extraWindowCounterRef.current = 0;
-      setShellLayout(convertFrameworkLayoutToModeLayout(layout, windowIds));
+      setShellLayout(convertFrameworkLayoutToModeLayout(layout, windowIds, appLabelsOverlay));
       const defaultWindowId = findDefaultActiveWindowKindId(layout, session.app.windowKinds);
       if (defaultWindowId) setActiveWindowId(defaultWindowId);
     },
-    [session],
+    [session, appLabelsOverlay],
   );
 
   const applyModeChange = useCallback((modeId: string) => {
@@ -1653,6 +1692,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           convertFrameworkLayoutToModeLayout(
             layout,
             current.app.windowKinds.map((kind) => kind.id),
+            appLabelsOverlay,
           ),
         );
         const defaultWindowId = findDefaultActiveWindowKindId(layout, current.app.windowKinds);
@@ -1660,7 +1700,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       }
       return { ...current, viewState: { ...current.viewState, activeModeId: modeId } };
     });
-  }, []);
+  }, [appLabelsOverlay]);
 
   const handleTemplateDrop = useCallback(
     (payload: WindowTemplateDropPayload, target: ModeCanvasDropTarget) => {
@@ -1669,25 +1709,26 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       if (!kind) return;
       extraWindowCounterRef.current += 1;
       const instanceId = `${payload.windowKindId}-${extraWindowCounterRef.current}`;
-      setExtraWindowInstances((current) => [...current, { id: instanceId, windowKindId: payload.windowKindId, title: kind.label }]);
+      setExtraWindowInstances((current) => [...current, { id: instanceId, windowKindId: payload.windowKindId, title: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label) }]);
       setShellLayout((current) => {
         const base =
           current ??
           convertFrameworkLayoutToModeLayout(
             session.app.defaultLayout,
             session.app.windowKinds.map((entry) => entry.id),
+            appLabelsOverlay,
           );
         return insertWindowAtDropZone(base, instanceId, target);
       });
       setActiveWindowId(instanceId);
     },
-    [session],
+    [appLabelsOverlay, session],
   );
 
   const displayHostRef = useRef<ReturnType<typeof useNamedLayoutHost> | null>(null);
   const displayHost = useNamedLayoutHost({
     appId: session?.app.id ?? "framework-os",
-    windowKinds: session?.app.windowKinds ?? [],
+    windowKinds: session?.app.windowKinds.map((kind) => ({ ...kind, label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label) })) ?? [],
     builtinLayouts: session?.app.namedLayouts ?? [],
     currentLayout: captureCurrentFrameworkLayout(shellLayout, session?.app.defaultLayout),
     onApplyLayout: applyNamedLayout,
@@ -1908,7 +1949,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     if (!session) return [];
     const pluginLeftTabs = session.app.panelTabs
       .filter((tab) => panelSideForGroup(tab.group) === "left")
-      .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order));
+      .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay));
     if (studioMode && session.app.id === S_PLAY_APP_ID && pluginLeftTabs.length > 0) return pluginLeftTabs;
     const hasPluginDocumentTab = pluginLeftTabs.some((tab) => tab.id === FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
     if (hasPluginDocumentTab) return pluginLeftTabs;
@@ -1916,21 +1957,27 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       kind: "leaf",
       id: FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
       icon: shellTabIcon(FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID),
-      name: FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+      name: shellLabel("ui.panel.document"),
       order: 0,
       tree: staticTreePanelDefinition({
-        sections: [{ id: "document.root", label: "Document", items: [{ id: "document.empty", label: studioMode ? `${panel?.spawnedApps.length ?? 0} spawned app(s)` : "—" }] }],
+        sections: [
+          {
+            id: "document.root",
+            label: shellLabel("ui.panel.document"),
+            items: [{ id: "document.empty", label: studioMode ? `${panel?.spawnedApps.length ?? 0} ${shellLabel("ui.panel.spawnedAppsSuffix")}` : shellLabel("ui.panel.documentEmpty") }],
+          },
+        ],
       }),
     };
     return [documentTab, ...pluginLeftTabs];
-  }, [onAction, panel?.spawnedApps.length, panelUiByKey, session, studioMode]);
+  }, [appLabelsOverlay, onAction, panel?.spawnedApps.length, panelUiByKey, session, studioMode, uiLocale]);
 
   const detailsRightTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
     return session.app.panelTabs
       .filter((tab) => panelSideForGroup(tab.group) === "right")
-      .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order));
-  }, [onAction, panelUiByKey, session]);
+      .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay));
+  }, [appLabelsOverlay, onAction, panelUiByKey, session]);
 
   const settingsRightTabs = useMemo((): PanelTabNode[] => frameworkSettingsTabs, [frameworkSettingsTabs]);
 
@@ -2054,7 +2101,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
                 data-state={isActive ? "on" : undefined}
                 onClick={() => applyModeChange(mode.id)}
                 icon={<span className="hidden" />}
-                text={mode.label}
+                text={resolveAppLabel(appLabelsOverlay, "mode", mode.id, mode.label)}
               />
             );
           })}
@@ -2062,7 +2109,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       );
     }
     return [{ key: "center", centered: true, content: <div className="flex min-w-0 items-center gap-double">{centerContent}</div> }];
-  }, [activeExampleId, activeModeId, applyModeChange, exampleOptions, onAction, session]);
+  }, [activeExampleId, activeModeId, appLabelsOverlay, applyModeChange, exampleOptions, onAction, session]);
 
   const searchItems = useMemo(() => {
     if (!session) return [];
@@ -2070,8 +2117,8 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     for (const tab of flattenPanelTabLeaves(session.app.panelTabs)) {
       items.push({
         id: `panel.${tab.id}`,
-        label: tab.label,
-        category: "Panels",
+        label: resolveAppLabel(appLabelsOverlay, "panelTab", tab.id, tab.label),
+        category: shellLabel("ui.search.category.panels"),
         icon: <Icon icon="panel-left" size="small" />,
         onSelect: () => onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId: tab.id } }),
       });
@@ -2079,8 +2126,8 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     for (const kind of session.app.windowKinds) {
       items.push({
         id: `window.${kind.id}`,
-        label: kind.label,
-        category: "Windows",
+        label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label),
+        category: shellLabel("ui.search.category.windows"),
         icon: <Icon icon="app-window" size="small" />,
         onSelect: () => setActiveWindowId(kind.id),
       });
@@ -2094,7 +2141,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         id: `action.${action.id}`,
         label: action.label,
         description: action.keys ?? keysByActionId.get(action.id),
-        category: action.category ?? (action.kind === "history" ? "History" : "Actions"),
+        category: action.category ?? (action.kind === "history" ? shellLabel("ui.toolbar.parent.history") : shellLabel("ui.toolbar.parent.actions")),
         onSelect: () => onAction({ controllerId: session.app.controllerId, action: action.id }),
       });
     }
@@ -2104,7 +2151,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         id: `keybinding.${binding.keys}`,
         label: binding.action.action,
         description: binding.keys,
-        category: "Actions",
+        category: shellLabel("ui.toolbar.parent.actions"),
         onSelect: () => onAction(binding.action),
       });
     }
@@ -2112,43 +2159,49 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       for (const program of panel.programs) {
         items.push({
           id: `spawn.${program.programId}`,
-          label: `Spawn ${appDocumentLabel(program.document)}`,
-          category: "Catalogue",
+          label: `${shellLabel("ui.palette.spawnPrefix")} ${appDocumentLabel(program.document)}`,
+          category: shellLabel("ui.search.category.catalogue"),
           onSelect: () => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "spawnApp", args: { programId: program.programId } }),
         });
       }
       items.push(
         {
           id: "studio.undo",
-          label: "Undo",
-          category: "Studio",
+          label: shellLabel("ui.palette.undo"),
+          category: shellLabel("ui.search.category.studio"),
           icon: <Icon icon="undo-2" size="small" />,
           onSelect: () => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "undo" }),
         },
         {
           id: "studio.redo",
-          label: "Redo",
-          category: "Studio",
+          label: shellLabel("ui.palette.redo"),
+          category: shellLabel("ui.search.category.studio"),
           icon: <Icon icon="redo-2" size="small" />,
           onSelect: () => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "redo" }),
         },
         {
           id: "studio.home",
-          label: "Go Home",
-          category: "Navigation",
+          label: shellLabel("ui.palette.goHome"),
+          category: shellLabel("ui.search.category.navigation"),
           onSelect: () => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "goHome" }),
         },
       );
     }
     return items;
-  }, [onAction, panel, session, studioMode]);
+  }, [appLabelsOverlay, onAction, panel, session, studioMode, uiLocale]);
 
   const footerItems = [];
 
+  const footerModeToolTree = useMemo(() => {
+    const deduped = dedupeToolNodesById([...Object.values(toolNodesByKind), spawnedToolNodes]);
+    const grouped = groupToolNodesByCategory(deduped, FOOTER_TOOL_CATEGORIES);
+    if (!grouped.length) return undefined;
+    return <ToolTree id="ui.toolbar.footer" tools={grouped} onAction={onAction} />;
+  }, [onAction, spawnedToolNodes, toolNodesByKind]);
+
   const footerToolbar = useMemo(() => {
     const syncTools = buildFrameworkSyncTools(syncBackboneUri) as readonly ToolNode[];
-    if (!syncTools.length) return undefined;
-    return (
+    const syncCard = syncTools.length ? (
       <SyncAttachCard
         activeUri={syncBackboneUri}
         cardKind={syncCardKind}
@@ -2160,8 +2213,15 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         onAttach={attachSyncBackbone}
         onDetach={detachSyncBackbone}
       />
+    ) : undefined;
+    if (!footerModeToolTree && !syncCard) return undefined;
+    return (
+      <>
+        {footerModeToolTree}
+        {syncCard}
+      </>
     );
-  }, [attachSyncBackbone, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath]);
+  }, [attachSyncBackbone, detachSyncBackbone, footerModeToolTree, onAction, syncBackboneUri, syncCardKind, syncDraftPath]);
 
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
@@ -2188,7 +2248,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     if (Object.keys(windowUiByKind).length === 0) return [];
     const baseWindows = session.app.windowKinds.map((kind) => ({
       id: kind.id,
-      title: appWindowDocumentLabel(session.app, kind.label),
+      title: appWindowDocumentLabel(session.app, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label)),
       fill: true,
       showControls: true,
       measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.measures, onAction),
@@ -2196,7 +2256,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       toolbar: windowToolbarNode(toolNodesByKind[kind.id], kind.id, onAction),
       children: (
         <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id}>
-          {interpretUiNode(windowUiByKind[kind.id] ?? { type: "text", value: `Missing window: ${kind.id}` }, { onAction })}
+          {interpretUiNode(windowUiByKind[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }, { onAction })}
         </ChromeAwareWindowScrollSurface>
       ),
     }));
@@ -2214,22 +2274,24 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           toolbar: windowToolbarNode(toolNodesByKind[kind.id], instance.id, onAction),
           children: (
             <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id}>
-              {interpretUiNode(windowUiByKind[kind.id] ?? { type: "text", value: `Missing window: ${kind.id}` }, { onAction })}
+              {interpretUiNode(windowUiByKind[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }, { onAction })}
             </ChromeAwareWindowScrollSurface>
           ),
         },
       ];
     });
     return [...baseWindows, ...extraWindows];
-  }, [extraWindowInstances, loadedPlugins, onAction, panel, session, spawnedToolNodes, spawnedWindowEngagements, spawnedWindowMeasures, spawnedWindowUi, studioMode, toolNodesByKind, windowEngagementsByKind, windowMeasuresByKind, windowUiByKind]);
+  }, [appLabelsOverlay, extraWindowInstances, loadedPlugins, onAction, panel, session, spawnedToolNodes, spawnedWindowEngagements, spawnedWindowMeasures, spawnedWindowUi, studioMode, toolNodesByKind, uiLocale, windowEngagementsByKind, windowMeasuresByKind, windowUiByKind]);
 
   const effectiveModeLayout = useMemo(
-    () => shellLayout ?? (session ? convertFrameworkLayoutToModeLayout(session.app.defaultLayout, modeWindows.map((window) => window.id)) : { kind: "stack" as const, children: [] }),
-    [modeWindows, session, shellLayout],
+    () =>
+      shellLayout ??
+      (session ? convertFrameworkLayoutToModeLayout(session.app.defaultLayout, modeWindows.map((window) => window.id), appLabelsOverlay) : { kind: "stack" as const, children: [] }),
+    [appLabelsOverlay, modeWindows, session, shellLayout],
   );
 
   const canvas = useMemo(() => {
-    if (!session) return <p className="p-4 text-sm text-muted-foreground">Loading plugins…</p>;
+    if (!session) return <p className="p-4 text-sm text-muted-foreground">{shellLabel("ui.common.loadingPlugins")}</p>;
     if (error)
       return (
         <p className="p-4 text-sm text-destructive" role="alert">
@@ -2240,14 +2302,14 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
     const studioHomeBar =
       studioMode && session.app.id === S_PLAY_APP_ID && !panel?.activeSpawnedId ? (
         <button type="button" className="border-b border-border/60 px-3 py-2 text-left text-sm text-muted-foreground hover:bg-muted/40 hover:text-foreground" onClick={() => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "goHome" })}>
-          ← Home
+          ← {shellLabel("ui.common.home")}
         </button>
       ) : null;
     const focusedSpawned = panel?.activeSpawnedId ? panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId) : undefined;
     const focusedBar = focusedSpawned ? (
       <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2 text-sm text-muted-foreground">
         <button type="button" className="hover:text-foreground" onClick={() => (openStudioIdRef.current ? navigateHistory(`/studios/${openStudioIdRef.current}`) : onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "closeFocusedInstance" }))}>
-          ← Back to Media Graph
+          ← {shellLabel("ui.common.backToMediaGraph")}
         </button>
         <span>·</span>
         <span>{appDocumentLabel(focusedSpawned.document)}</span>
@@ -2272,7 +2334,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           }}
         />
         <div className="min-h-0 flex-1">
-          <App modes={modes.map((mode) => ({ id: mode.id, label: mode.label, children: null }))} activeModeId={session.viewState.activeModeId ?? modes[0]?.id ?? session.app.id} onActiveModeChange={applyModeChange} chrome={false}>
+          <App modes={modes.map((mode) => ({ id: mode.id, label: resolveAppLabel(appLabelsOverlay, "mode", mode.id, mode.label), children: null }))} activeModeId={session.viewState.activeModeId ?? modes[0]?.id ?? session.app.id} onActiveModeChange={applyModeChange} chrome={false}>
             <Mode
               className="h-full w-full"
               mobile={mobile}
@@ -2294,6 +2356,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
                     convertFrameworkLayoutToModeLayout(
                       session.app.defaultLayout,
                       modeWindows.map((window) => window.id),
+                      appLabelsOverlay,
                     ),
                 );
               }}
@@ -2302,7 +2365,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
         </div>
       </div>
     );
-  }, [activeWindowId, effectiveModeLayout, error, handleTemplateDrop, mobile, modeWindows, navigateHistory, onAction, panel, session, studioMode, updateStudioPanel]);
+  }, [activeWindowId, effectiveModeLayout, error, handleTemplateDrop, mobile, modeWindows, navigateHistory, onAction, panel, session, studioMode, uiLocale, updateStudioPanel]);
 
   return (
     <UIFindProvider>
@@ -3131,7 +3194,8 @@ export type ToolNode =
       readonly onChange: ActionDescriptor;
     };
 
-export const UI_INSPECTOR_MIXED_PLACEHOLDER = "Mixed";
+/** @emoji 🌐 Locale-resolved mixed-value placeholder for this renderer layer; framework/core/js/index.ts keeps its own non-reactive low-level default. */
+export const UI_INSPECTOR_MIXED_PLACEHOLDER = shellLabel("ui.common.mixedValues");
 
 export const FRAMEWORK_PANEL_TAB_DOCUMENT_ID = "framework.panel.document";
 export const FRAMEWORK_PANEL_TAB_CATALOGUE_ID = "framework.panel.catalogue";
@@ -3159,6 +3223,8 @@ export type PluginWasmHandle = {
   readonly renderWithDocument?: (instanceId: number, bodyKey: string, viewState: ViewState, documentJson: string) => Promise<UiNode>;
   readonly tools: (instanceId: number, viewState: ViewState) => Promise<readonly ToolNode[]>;
   readonly windowEngagements: (instanceId: number, viewState: ViewState) => Promise<Readonly<Record<string, WindowEngagement>>>;
+  readonly windowMeasures: (instanceId: number, viewState: ViewState) => Promise<Readonly<Record<string, readonly WindowMeasure[]>>>;
+  readonly appLabels: (instanceId: number, viewState: ViewState) => Promise<PluginAppLabelsOverlay>;
   readonly dispose: () => void;
 };
 
@@ -3185,6 +3251,7 @@ function adaptPluginHandle(handle: CorePluginWasmHandle): PluginWasmHandle {
     tools: async (instanceId, viewState) => (await handle.tools(instanceId, viewState)) as unknown as ToolNode[],
     windowEngagements: async (instanceId, viewState) => (await handle.windowEngagements(instanceId, viewState)) as unknown as Readonly<Record<string, WindowEngagement>>,
     windowMeasures: async (instanceId, viewState) => (await handle.windowMeasures(instanceId, viewState)) as unknown as Readonly<Record<string, readonly WindowMeasure[]>>,
+    appLabels: (instanceId, viewState) => handle.appLabels(instanceId, viewState),
     dispose: () => handle.dispose(),
   };
 }
@@ -3829,6 +3896,12 @@ export function sortToolNodes(nodes: readonly ToolNode[]): ToolNode[] {
 
 const TOOL_CATEGORY_ORDER: readonly ToolCategory[] = ["selection", "tools", "actions", "history", "sync"];
 
+/** @emoji 🪟 Categories that are scoped to whatever window/pane the user is interacting with — selecting or editing content varies per window, so these live in each window's own bottom-left panel. */
+const WINDOW_TOOL_CATEGORIES: readonly ToolCategory[] = ["selection", "tools"];
+
+/** @emoji 🦶 Categories that apply regardless of which window has focus — undoing, running document-wide actions, or syncing are mode-wide, so they live once in the shared footer instead of being duplicated into every window. */
+const FOOTER_TOOL_CATEGORIES: readonly ToolCategory[] = ["actions", "history"];
+
 const TOOL_CATEGORY_ICON_ID: Readonly<Record<ToolCategory, string>> = {
   selection: "mouse-pointer",
   tools: "wrench",
@@ -3843,24 +3916,34 @@ function toolNodeCategory(node: ToolNode): ToolCategory {
   return node.kind === "button" ? "actions" : "tools";
 }
 
-/** @emoji 🗂️ Buckets a window's top-level tool nodes into synthetic category collections (selection/tools/actions/history/sync) so activating a category expands the panel with another line, matching {@link buildToolbarRibbonSegments}'s one-active-group-per-level picker. Separators default to `tools` (mirrors Rust `ToolNode::category()`), so dividers between same-category runs survive; dividers that only separated different categories become redundant once those categories are separate picker lines. */
-export function groupToolNodesByCategory(nodes: readonly ToolNode[]): ToolNode[] {
+/** @emoji 🗂️ Buckets top-level tool nodes into the given categories (default: all) so activating a category expands the panel with another line, matching {@link buildToolbarRibbonSegments}'s one-active-group-per-level picker. A category with a single already-meaningful collection is used as-is instead of being re-wrapped in a synthetic one, avoiding a redundant picker level with a duplicate-looking label (e.g. a lone "Selection" collection nested under a "Selection" category chip). Separators default to `tools` (mirrors Rust `ToolNode::category()`), so dividers between same-category runs survive; dividers that only separated different categories become redundant once those categories are separate picker lines. */
+export function groupToolNodesByCategory(nodes: readonly ToolNode[], categories: readonly ToolCategory[] = TOOL_CATEGORY_ORDER): ToolNode[] {
   const buckets = new Map<ToolCategory, ToolNode[]>();
   for (const node of nodes) {
     const category = toolNodeCategory(node);
+    if (!categories.includes(category)) continue;
     const bucket = buckets.get(category) ?? [];
     bucket.push(node);
     buckets.set(category, bucket);
   }
-  return TOOL_CATEGORY_ORDER.filter((category) => hasInteractiveToolNodes(buckets.get(category))).map((category, order) => ({
-    id: category,
-    kind: "collection" as const,
-    iconId: TOOL_CATEGORY_ICON_ID[category],
-    text: category,
-    order,
-    category,
-    children: buckets.get(category)!,
-  }));
+  return categories
+    .filter((category) => hasInteractiveToolNodes(buckets.get(category)))
+    .map((category, order) => {
+      const bucket = buckets.get(category)!;
+      if (bucket.length === 1 && bucket[0].kind === "collection") return { ...bucket[0], order };
+      return { id: category, kind: "collection" as const, iconId: TOOL_CATEGORY_ICON_ID[category], text: category, order, category, children: bucket };
+    });
+}
+
+/** @emoji 🦶 Deduplicates tool nodes by id across every window's tool set (mode-wide tools are attached identically to each window kind when a plugin doesn't differentiate per window), for a single shared footer entry per tool. */
+export function dedupeToolNodesById(nodeLists: readonly (readonly ToolNode[])[]): ToolNode[] {
+  const seen = new Map<string, ToolNode>();
+  for (const nodes of nodeLists) {
+    for (const node of nodes) {
+      if (!seen.has(node.id)) seen.set(node.id, node);
+    }
+  }
+  return [...seen.values()];
 }
 
 //#endregion 🗂️ToolCategoryGrouping

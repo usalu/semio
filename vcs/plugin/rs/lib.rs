@@ -450,6 +450,8 @@ struct VcsLabels {
     alternatives: &'static str,
     no_checkpoints: &'static str,
     checkpoints: &'static str,
+    window_editor: &'static str,
+    window_history: &'static str,
 }
 
 const VCS_LABELS_NATIVE_EN: VcsLabels = VcsLabels {
@@ -466,6 +468,8 @@ const VCS_LABELS_NATIVE_EN: VcsLabels = VcsLabels {
     alternatives: "Alternatives",
     no_checkpoints: "(no checkpoints)",
     checkpoints: "checkpoints",
+    window_editor: "Editor",
+    window_history: "History",
 };
 
 const VCS_LABELS_NATIVE_DE: VcsLabels = VcsLabels {
@@ -482,6 +486,8 @@ const VCS_LABELS_NATIVE_DE: VcsLabels = VcsLabels {
     alternatives: "Alternativen",
     no_checkpoints: "(keine Checkpoints)",
     checkpoints: "Checkpoints",
+    window_editor: "Editor",
+    window_history: "Verlauf",
 };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; no terminology variant exists for this app.
@@ -881,6 +887,19 @@ impl PluginApp for VcsPlayApp {
             VCS_PLAY_BODY_DOCUMENT => build_document_tree(&play.envelope, &play.selected_checkpoint_ids, labels),
             VCS_PLAY_BODY_INSPECTION => build_inspection_tree(&materialized, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
+        }
+    }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = vcs_labels(view_state);
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: None,
+            window_kind_labels: std::collections::HashMap::from([
+                (VCS_PLAY_WINDOW_EDITOR.to_string(), labels.window_editor.to_string()),
+                (VCS_PLAY_WINDOW_HISTORY.to_string(), labels.window_history.to_string()),
+            ]),
+            panel_tab_labels: std::collections::HashMap::new(),
+            mode_labels: std::collections::HashMap::new(),
         }
     }
 }

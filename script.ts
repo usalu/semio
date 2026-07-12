@@ -533,6 +533,33 @@ export class LintScript extends Script {
 }
 //#endregion 🔖LintScript
 
+//#region 🔖VerifyScript
+/** 🧪Aggregates lint + generated-catalog freshness + region/host-contract script lints (`gate`, the cheap pre-`ticket_close` step every refactor session runs), plus the full test suite for the top-level `verify` verb. */
+export class VerifyScript extends Script {
+  async run(segments: string[]): Promise<void> {
+    await this.runGate();
+    if (segments[0] === "gate") return;
+    runCmd("bun", ["nx", "run-many", "-t", "test", "--all", "--exclude", "workspace"], { cwd: this.root });
+  }
+
+  private async runGate(): Promise<void> {
+    // Deliberately calls dependency-cruiser directly rather than `LintScript`/`nx run-many -t lint --all`:
+    // several unrelated projects (repo/client/vscode, compose-js, …) have pre-existing broken eslint configs,
+    // and framework-renderer-wgpu:lint has known pending color-literal violations (see spawn_task follow-ups) —
+    // this gate must stay a meaningful, currently-green signal for refactor sessions, not inherit that noise.
+    console.log("[verify] dependency-cruiser boundaries…");
+    runCmd("bunx", ["dependency-cruiser@16", "compose", "framework", "flow", "layout", "puzzle", "ui", "draw", "note", "sequence", "s", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
+    console.log("[verify] generated catalog freshness…");
+    runCmd("bun", ["nx", "run", "@semio-tech/plugin-registry:check"], { cwd: this.root });
+    console.log("[verify] region/host-contract script lints…");
+    runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-react:lint"], { cwd: this.root });
+    runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:plugin", "lint"], { cwd: this.root });
+    runCmd("bun", ["nx", "run", "@semio-tech/ui-styling-tokens:check-no-px"], { cwd: this.root });
+    console.log("[verify] gate passed.");
+  }
+}
+//#endregion 🔖VerifyScript
+
 //#region 🔖FormatScript
 export class FormatScript extends Script {
   run(_segments: string[]): void {
@@ -919,6 +946,7 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("dev", DevScript)
   .register("generate", GenerateScript)
   .register("lint", LintScript)
+  .register("verify", VerifyScript)
   .register("format", FormatScript)
   .register("test", TestScript)
   .register("build", BuildScript)

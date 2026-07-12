@@ -156,3 +156,69 @@ export function buildFrameworkSyncTools(activeUri: string | null): readonly Fram
   ];
 }
 //#endregion 🔖Backbone
+
+//#region 🧪Tests
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+
+  describe("@semio-tech/framework-os-core program registration", () => {
+    it("builds baseline resources and ports", () => {
+      expect(osBaselineResource("document", "note-1", "Note 1")).toEqual({ kind: "document", id: "note-1", label: "Note 1" });
+      expect(osOutPort("document")).toEqual({ id: "out", label: "Out", resourceKind: "document" });
+      expect(osInPort("document", "in", "In", true)).toEqual({ id: "in", label: "In", resourceKind: "document", required: true });
+    });
+
+    it("merges program definitions and registers vcs handlers without throwing", () => {
+      expect(() => mergeOsProgramDefinition("draw-play", { id: "draw-play" })).not.toThrow();
+      let called = false;
+      registerAppVcsHandler(() => {
+        called = true;
+      });
+      expect(called).toBe(false);
+    });
+  });
+
+  describe("@semio-tech/framework-os-core backbone", () => {
+    it("classifies backbone uri kinds", () => {
+      expect(backboneKindFromUri("file:///tmp/a.json")).toBe("file");
+      expect(backboneKindFromUri("folder:///tmp")).toBe("folder");
+      expect(backboneKindFromUri("remote://host:1234/doc-1")).toBe("remote");
+      expect(backboneKindFromUri("other://x")).toBe("unknown");
+    });
+
+    it("builds and parses backbone uris", () => {
+      expect(buildFileBackboneUri("tmp/a.json")).toBe("file:///tmp/a.json");
+      expect(buildFolderBackboneUri("tmp")).toBe("folder:///tmp");
+      expect(buildRemoteBackboneUri("localhost:1234", "doc-1")).toBe("remote://localhost:1234/doc-1");
+      expect(parseRemoteBackboneUri("remote://localhost:1234/doc-1")).toEqual({ hostPort: "localhost:1234", documentId: "doc-1" });
+      expect(parseRemoteBackboneUri("file:///tmp/a.json")).toBeNull();
+    });
+
+    it("derives a backbone ref from a uri", () => {
+      expect(documentBackboneRef("folder:///tmp")).toEqual({ kind: "folder", uri: "folder:///tmp" });
+    });
+
+    it("wraps and unwraps document envelopes", () => {
+      const envelopeJson = wrapDocumentEnvelope({ nodes: [] }, "doc-1", "file:///tmp/a.json");
+      const envelope = JSON.parse(envelopeJson) as { schema: string; id: string; projection: unknown; backbone: unknown };
+      expect(envelope.schema).toBe("document/v1");
+      expect(envelope.id).toBe("doc-1");
+      expect(documentFromEnvelopeJson(envelopeJson)).toEqual({ nodes: [] });
+    });
+
+    it("preserves an existing vcs envelope instead of re-wrapping it", () => {
+      const existing = { vcs: { edits: [], changes: [], checkpoints: [], alternatives: [], operations: [] }, projection: { a: 1 } };
+      const envelopeJson = wrapDocumentEnvelope(existing, "doc-1", "file:///tmp/a.json");
+      const envelope = JSON.parse(envelopeJson) as { projection: unknown; vcs: unknown };
+      expect(envelope.projection).toEqual({ a: 1 });
+    });
+
+    it("builds sync tools reflecting the active backbone kind", () => {
+      const tools = buildFrameworkSyncTools("folder:///tmp");
+      expect(tools.map((tool) => tool.id)).toEqual(["framework.sync.file", "framework.sync.folder", "framework.sync.remote"]);
+      expect(tools.find((tool) => tool.id === "framework.sync.folder")?.pressed).toBe(true);
+      expect(tools.find((tool) => tool.id === "framework.sync.file")?.pressed).toBe(false);
+    });
+  });
+}
+//#endregion 🧪Tests

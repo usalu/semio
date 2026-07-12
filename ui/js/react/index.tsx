@@ -2456,6 +2456,27 @@ export type UiTranslationSchema = {
       readonly description: UiLabelValue;
       readonly placeholder: UiLabelValue;
       readonly empty: UiLabelValue;
+      readonly category: {
+        readonly panels: UiLabelValue;
+        readonly windows: UiLabelValue;
+        readonly catalogue: UiLabelValue;
+        readonly studio: UiLabelValue;
+        readonly navigation: UiLabelValue;
+      };
+    };
+    readonly palette: {
+      readonly undo: UiLabelValue;
+      readonly redo: UiLabelValue;
+      readonly goHome: UiLabelValue;
+      readonly spawnPrefix: UiLabelValue;
+    };
+    readonly panel: {
+      readonly document: UiLabelValue;
+      readonly catalogue: UiLabelValue;
+      readonly inspection: UiLabelValue;
+      readonly parameters: UiLabelValue;
+      readonly documentEmpty: UiLabelValue;
+      readonly spawnedAppsSuffix: UiLabelValue;
     };
     readonly find: {
       readonly toggle: UiLabelValue;
@@ -2562,6 +2583,13 @@ export type UiTranslationSchema = {
       readonly mixedValues: UiLabelValue;
       readonly name: UiLabelValue;
       readonly save: UiLabelValue;
+      readonly loading: UiLabelValue;
+      readonly loadingPlugins: UiLabelValue;
+      readonly renderError: UiLabelValue;
+      readonly noPluginsLoaded: UiLabelValue;
+      readonly missingWindow: UiLabelValue;
+      readonly home: UiLabelValue;
+      readonly backToMediaGraph: UiLabelValue;
     };
     readonly docs: {
       readonly navigation: {
@@ -2581,6 +2609,7 @@ export type UiTranslationSchema = {
       readonly actions: UiLabelValue;
       readonly suggestions: UiLabelValue;
       readonly noMatches: UiLabelValue;
+      readonly viewport: UiLabelValue;
     };
   };
   readonly settings: {
@@ -2758,6 +2787,27 @@ export const uiChromeTranslationBundles = {
               beginner: "Keine Ergebnisse gefunden.",
             },
           },
+          category: {
+            panels: { label: { normal: "Panels", beginner: "Panels" } },
+            windows: { label: { normal: "Fenster", beginner: "Fenster" } },
+            catalogue: { label: { normal: "Katalog", beginner: "Katalog" } },
+            studio: { label: { normal: "Studio", beginner: "Studio" } },
+            navigation: { label: { normal: "Navigation", beginner: "Navigation" } },
+          },
+        },
+        palette: {
+          undo: { label: { normal: "Rueckgaengig", beginner: "Rueckgaengig" } },
+          redo: { label: { normal: "Wiederholen", beginner: "Wiederholen" } },
+          goHome: { label: { normal: "Nach Hause", beginner: "Nach Hause" } },
+          spawnPrefix: { label: { normal: "Erzeugen", beginner: "Erzeugen" } },
+        },
+        panel: {
+          document: { label: { normal: "Dokument", beginner: "Dokument" } },
+          catalogue: { label: { normal: "Katalog", beginner: "Katalog" } },
+          inspection: { label: { normal: "Inspektion", beginner: "Inspektion" } },
+          parameters: { label: { normal: "Parameter", beginner: "Parameter" } },
+          documentEmpty: { label: { normal: "—", beginner: "—" } },
+          spawnedAppsSuffix: { label: { normal: "gestartete App(s)", beginner: "gestartete App(s)" } },
         },
         find: {
           toggle: {
@@ -2949,6 +2999,13 @@ export const uiChromeTranslationBundles = {
           },
           name: { label: { normal: "Name", beginner: "Name" } },
           save: { label: { normal: "Speichern", beginner: "Speichern" } },
+          loading: { label: { normal: "Laedt…", beginner: "Laedt…" } },
+          loadingPlugins: { label: { normal: "Plugins werden geladen…", beginner: "Plugins werden geladen…" } },
+          renderError: { label: { normal: "Renderfehler", beginner: "Renderfehler" } },
+          noPluginsLoaded: { label: { normal: "Keine Plugins geladen", beginner: "Keine Plugins geladen" } },
+          missingWindow: { label: { normal: "Fehlendes Fenster", beginner: "Fehlendes Fenster" } },
+          home: { label: { normal: "Startseite", beginner: "Startseite" } },
+          backToMediaGraph: { label: { normal: "Zurueck zum Media Graph", beginner: "Zurueck zum Media Graph" } },
         },
         docs: {
           navigation: {
@@ -3011,6 +3068,12 @@ export const uiChromeTranslationBundles = {
             label: {
               normal: "Keine Treffer",
               beginner: "Keine passenden Aktionen",
+            },
+          },
+          viewport: {
+            label: {
+              normal: "Ansicht",
+              beginner: "Ansicht",
             },
           },
         },
@@ -3165,6 +3228,27 @@ export const uiChromeTranslationBundles = {
               beginner: "No results found.",
             },
           },
+          category: {
+            panels: { label: { normal: "Panels", beginner: "Panels" } },
+            windows: { label: { normal: "Windows", beginner: "Windows" } },
+            catalogue: { label: { normal: "Catalogue", beginner: "Catalogue" } },
+            studio: { label: { normal: "Studio", beginner: "Studio" } },
+            navigation: { label: { normal: "Navigation", beginner: "Navigation" } },
+          },
+        },
+        palette: {
+          undo: { label: { normal: "Undo", beginner: "Undo" } },
+          redo: { label: { normal: "Redo", beginner: "Redo" } },
+          goHome: { label: { normal: "Go Home", beginner: "Go Home" } },
+          spawnPrefix: { label: { normal: "Spawn", beginner: "Spawn" } },
+        },
+        panel: {
+          document: { label: { normal: "Document", beginner: "Document" } },
+          catalogue: { label: { normal: "Catalogue", beginner: "Catalogue" } },
+          inspection: { label: { normal: "Inspection", beginner: "Inspection" } },
+          parameters: { label: { normal: "Parameters", beginner: "Parameters" } },
+          documentEmpty: { label: { normal: "—", beginner: "—" } },
+          spawnedAppsSuffix: { label: { normal: "spawned app(s)", beginner: "spawned app(s)" } },
         },
         find: {
           toggle: {
@@ -3356,6 +3440,13 @@ export const uiChromeTranslationBundles = {
           },
           name: { label: { normal: "Name", beginner: "Name" } },
           save: { label: { normal: "Save", beginner: "Save" } },
+          loading: { label: { normal: "Loading…", beginner: "Loading…" } },
+          loadingPlugins: { label: { normal: "Loading plugins…", beginner: "Loading plugins…" } },
+          renderError: { label: { normal: "Render error", beginner: "Render error" } },
+          noPluginsLoaded: { label: { normal: "No plugins loaded", beginner: "No plugins loaded" } },
+          missingWindow: { label: { normal: "Missing window", beginner: "Missing window" } },
+          home: { label: { normal: "Home", beginner: "Home" } },
+          backToMediaGraph: { label: { normal: "Back to Media Graph", beginner: "Back to Media Graph" } },
         },
         docs: {
           navigation: {
@@ -3418,6 +3509,12 @@ export const uiChromeTranslationBundles = {
             label: {
               normal: "No matches",
               beginner: "No matching actions",
+            },
+          },
+          viewport: {
+            label: {
+              normal: "Viewport",
+              beginner: "Viewport",
             },
           },
         },

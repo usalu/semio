@@ -545,6 +545,8 @@ struct RasterLabels {
     catalogue_pixel: &'static str,
     catalogue_group: &'static str,
     catalogue_adjustment: &'static str,
+    window_composite: &'static str,
+    window_navigator: &'static str,
 }
 
 const RASTER_LABELS_NATIVE_EN: RasterLabels = RasterLabels {
@@ -558,6 +560,8 @@ const RASTER_LABELS_NATIVE_EN: RasterLabels = RasterLabels {
     catalogue_pixel: "pixel — paintable bitmap layer",
     catalogue_group: "group — nested layer stack",
     catalogue_adjustment: "adjustment — non-destructive filter",
+    window_composite: "Composite",
+    window_navigator: "Navigator",
 };
 
 const RASTER_LABELS_NATIVE_DE: RasterLabels = RasterLabels {
@@ -571,6 +575,8 @@ const RASTER_LABELS_NATIVE_DE: RasterLabels = RasterLabels {
     catalogue_pixel: "pixel — bearbeitbare Bitmap-Ebene",
     catalogue_group: "group — verschachtelter Ebenenstapel",
     catalogue_adjustment: "adjustment — zerstörungsfreier Filter",
+    window_composite: "Komposit",
+    window_navigator: "Navigator",
 };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
@@ -1213,6 +1219,19 @@ impl PluginApp for RasterApp {
             RASTER_PLAY_BODY_CATALOGUE => render_catalogue_panel(labels),
             RASTER_PLAY_BODY_PROPERTIES => render_properties_panel(&play.document, view_state, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
+        }
+    }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = raster_labels(view_state);
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: None,
+            window_kind_labels: std::collections::HashMap::from([
+                (RASTER_PLAY_WINDOW_COMPOSITE.to_string(), labels.window_composite.to_string()),
+                (RASTER_PLAY_WINDOW_NAVIGATOR.to_string(), labels.window_navigator.to_string()),
+            ]),
+            panel_tab_labels: std::collections::HashMap::new(),
+            mode_labels: std::collections::HashMap::new(),
         }
     }
 }

@@ -196,6 +196,8 @@ fn imperative_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 //#region 🔖Terminology
 /// 🗣️ Complete UI label set for the imperative app; one field per label makes every locale combination compile-checked.
 struct ImperativeLabels {
+    window_main: &'static str,
+    window_script: &'static str,
     col_index: &'static str,
     col_id: &'static str,
     col_kind: &'static str,
@@ -213,6 +215,8 @@ struct ImperativeLabels {
 }
 
 const IMPERATIVE_LABELS_NATIVE_EN: ImperativeLabels = ImperativeLabels {
+    window_main: "Imperative",
+    window_script: "Script",
     col_index: "#",
     col_id: "Id",
     col_kind: "Kind",
@@ -230,6 +234,8 @@ const IMPERATIVE_LABELS_NATIVE_EN: ImperativeLabels = ImperativeLabels {
 };
 
 const IMPERATIVE_LABELS_NATIVE_DE: ImperativeLabels = ImperativeLabels {
+    window_main: "Imperativ",
+    window_script: "Skript",
     col_index: "#",
     col_id: "ID",
     col_kind: "Art",
@@ -539,6 +545,19 @@ impl PluginApp for ImperativePlayApp {
             IMPERATIVE_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
             IMPERATIVE_PLAY_BODY_INSPECTOR => build_inspector_tree(&document(&play), &play.runtime.selected_step_ids, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
+        }
+    }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = imperative_labels(view_state);
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: None,
+            window_kind_labels: std::collections::HashMap::from([
+                (IMPERATIVE_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()),
+                (IMPERATIVE_PLAY_WINDOW_SCRIPT.to_string(), labels.window_script.to_string()),
+            ]),
+            panel_tab_labels: std::collections::HashMap::new(),
+            mode_labels: std::collections::HashMap::new(),
         }
     }
 }
