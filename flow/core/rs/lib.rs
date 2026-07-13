@@ -4009,86 +4009,247 @@ pub fn dwg_decode_mesh_json(data_base64: &str) -> String {
 
 // #region 🔖DocumentVcs
 use vcs::{
-    create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
+    collection_diff_from_op, create_document_vcs_envelope, invert_collection_op, CollectionDiff, CollectionOp,
+    DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable,
 };
 
-pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.document";
+pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.fixture";
 
+//#region 🔖CollectionSupport
+impl Identified<String> for Widget {
+    fn id(&self) -> &String {
+        match self {
+            Widget::Neuron { id, .. }
+            | Widget::InputSlider { id, .. }
+            | Widget::InputStepper { id, .. }
+            | Widget::InputNote { id, .. }
+            | Widget::InputImage { id, .. }
+            | Widget::Variable { id, .. }
+            | Widget::OutputPreview { id, .. }
+            | Widget::OutputAction { id, .. }
+            | Widget::OutputExport { id, .. }
+            | Widget::Cluster { id, .. } => id,
+        }
+    }
+}
+
+/// 🩹 Whole-value replacement patch — flow widgets are heterogeneous enum variants, so a granular
+/// per-field patch buys nothing; `Patch { patch: Widget }` LWW-replaces and inverts to the prior widget.
+impl Patchable<Widget> for Widget {
+    fn apply_patch(&mut self, patch: &Widget) -> Widget {
+        std::mem::replace(self, patch.clone())
+    }
+}
+
+impl Identified<String> for SynapseSpec {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+impl Patchable<SynapseSpec> for SynapseSpec {
+    fn apply_patch(&mut self, patch: &SynapseSpec) -> SynapseSpec {
+        std::mem::replace(self, patch.clone())
+    }
+}
+
+/// ▶️ Applies a `CollectionDiff` (removed → modified → added) to an owned `Vec`.
+fn apply_flow_collection_diff<TId, TItem, TPatch>(items: &mut Vec<TItem>, diff: &CollectionDiff<TId, TPatch, TItem>)
+where
+    TId: PartialEq,
+    TItem: Identified<TId> + Clone + Patchable<TPatch>,
+{
+    for id in &diff.removed {
+        items.retain(|item| item.id() != id);
+    }
+    for patch in &diff.modified {
+        if let Some(item) = items.iter_mut().find(|item| item.id() == &patch.id) {
+            item.apply_patch(&patch.patch);
+        }
+    }
+    for added in &diff.added {
+        items.push(added.clone());
+    }
+}
+
+/// ➕ Merges an incoming `CollectionDiff` into an existing one (coalescing two edits' diffs).
+fn absorb_flow_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(
+    target: &mut Option<CollectionDiff<TId, TPatch, TItem>>,
+    incoming: Option<CollectionDiff<TId, TPatch, TItem>>,
+) {
+    if let Some(next) = incoming {
+        match target {
+            Some(existing) => {
+                existing.removed.extend(next.removed);
+                existing.modified.extend(next.modified);
+                existing.added.extend(next.added);
+            }
+            None => *target = Some(next),
+        }
+    }
+}
+//#endregion 🔖CollectionSupport
+
+//#region 🔖Ops
+/// 📍 One node-layout assignment inside a `SetLayout` op; `None` removes the entry.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FlowVcsProjection {
-    pub flow: serde_json::Value,
-    pub tree: serde_json::Value,
+pub struct FlowLayoutEntry {
+    pub id: String,
+    pub layout: Option<WidgetLayout>,
+}
+
+/// 🌊 Typed, invertible flow-document operation. `Widgets`/`Synapses` are id-keyed collection ops for
+/// granular convergence; `SetLayout` moves nodes; `SetFixture` replaces the whole fixture (import/reset).
+/// The camera is ephemeral view state (plugin runtime), never a document op.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum FlowOp {
+    Widgets(CollectionOp<String, Widget, Widget>),
+    Synapses(CollectionOp<String, SynapseSpec, SynapseSpec>),
+    SetLayout { entries: Vec<FlowLayoutEntry> },
+    SetFixture { fixture: FlowFixture },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FlowDiff {
-    pub flow: Option<serde_json::Value>,
-    pub tree: Option<serde_json::Value>,
+    pub fixture: Option<FlowFixture>,
+    pub widgets: Option<CollectionDiff<String, Widget, Widget>>,
+    pub synapses: Option<CollectionDiff<String, SynapseSpec, SynapseSpec>>,
+    pub layout: Option<Vec<FlowLayoutEntry>>,
 }
 
-impl OperationDiff<FlowVcsProjection> for FlowDiff {
-    fn apply(&self, projection: &FlowVcsProjection) -> FlowVcsProjection {
-        FlowVcsProjection {
-            flow: self.flow.clone().unwrap_or_else(|| projection.flow.clone()),
-            tree: self.tree.clone().unwrap_or_else(|| projection.tree.clone()),
+impl OperationDiff<FlowFixture> for FlowDiff {
+    fn apply(&self, projection: &FlowFixture) -> FlowFixture {
+        if let Some(fixture) = &self.fixture {
+            return fixture.clone();
         }
+        let mut next = projection.clone();
+        if let Some(diff) = &self.widgets {
+            apply_flow_collection_diff(&mut next.widgets, diff);
+        }
+        if let Some(diff) = &self.synapses {
+            apply_flow_collection_diff(&mut next.synapses, diff);
+        }
+        if let Some(entries) = &self.layout {
+            for entry in entries {
+                match &entry.layout {
+                    Some(layout) => {
+                        next.layout.insert(entry.id.clone(), layout.clone());
+                    }
+                    None => {
+                        next.layout.remove(&entry.id);
+                    }
+                }
+            }
+        }
+        next
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.flow.is_some() {
-            self.flow = other.flow;
+        if other.fixture.is_some() {
+            *self = FlowDiff { fixture: other.fixture, ..Default::default() };
+            return;
         }
-        if other.tree.is_some() {
-            self.tree = other.tree;
+        absorb_flow_collection_diff(&mut self.widgets, other.widgets);
+        absorb_flow_collection_diff(&mut self.synapses, other.synapses);
+        if let Some(mut entries) = other.layout {
+            self.layout.get_or_insert_with(Vec::new).append(&mut entries);
         }
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum FlowOp {
-    SetFlow { flow: serde_json::Value },
-    SetTree { tree: serde_json::Value },
-}
-
-impl Operation<FlowVcsProjection> for FlowOp {
+impl Operation<FlowFixture> for FlowOp {
     type Diff = FlowDiff;
 
-    fn diff(&self, _projection: &FlowVcsProjection) -> FlowDiff {
+    fn diff(&self, projection: &FlowFixture) -> FlowDiff {
         match self {
-            FlowOp::SetFlow { flow } => FlowDiff {
-                flow: Some(flow.clone()),
+            FlowOp::Widgets(op) => FlowDiff {
+                widgets: Some(collection_diff_from_op(&projection.widgets, op)),
                 ..Default::default()
             },
-            FlowOp::SetTree { tree } => FlowDiff {
-                tree: Some(tree.clone()),
+            FlowOp::Synapses(op) => FlowDiff {
+                synapses: Some(collection_diff_from_op(&projection.synapses, op)),
                 ..Default::default()
             },
+            FlowOp::SetLayout { entries } => FlowDiff { layout: Some(entries.clone()), ..Default::default() },
+            FlowOp::SetFixture { fixture } => FlowDiff { fixture: Some(fixture.clone()), ..Default::default() },
         }
     }
 
-    fn backwards(&self, projection: &FlowVcsProjection) -> Vec<Self> {
+    fn backwards(&self, projection: &FlowFixture) -> Vec<Self> {
         match self {
-            FlowOp::SetFlow { .. } => vec![FlowOp::SetFlow {
-                flow: projection.flow.clone(),
+            FlowOp::Widgets(op) => vec![FlowOp::Widgets(invert_collection_op(&projection.widgets, op))],
+            FlowOp::Synapses(op) => vec![FlowOp::Synapses(invert_collection_op(&projection.synapses, op))],
+            FlowOp::SetLayout { entries } => vec![FlowOp::SetLayout {
+                entries: entries
+                    .iter()
+                    .map(|entry| FlowLayoutEntry { id: entry.id.clone(), layout: projection.layout.get(&entry.id).cloned() })
+                    .collect(),
             }],
-            FlowOp::SetTree { .. } => vec![FlowOp::SetTree {
-                tree: projection.tree.clone(),
-            }],
+            FlowOp::SetFixture { .. } => vec![FlowOp::SetFixture { fixture: projection.clone() }],
         }
     }
 }
 
-pub type FlowEnvelope = DocumentVcsEnvelope<FlowVcsProjection, FlowOp>;
-pub type FlowStore = DocumentVcsStore<FlowVcsProjection, FlowOp>;
-
-pub fn empty_flow_projection() -> FlowVcsProjection {
-    FlowVcsProjection {
-        flow: serde_json::json!({}),
-        tree: serde_json::json!({}),
+/// 🌉 Host-mutation → granular-ops bridge: diffs a `FlowFixture` before/after a `FlowHost` mutation into
+/// the minimal set of `FlowOp`s, so the rich stateful engine keeps owning mutation logic (port wiring,
+/// cycle checks, cluster collapse) while the document store still records convergent, invertible ops.
+/// The camera is intentionally excluded (it is plugin runtime state).
+pub fn flow_fixture_ops(before: &FlowFixture, after: &FlowFixture) -> Vec<FlowOp> {
+    let mut ops = Vec::new();
+    let after_widget_ids: std::collections::BTreeSet<&str> = after.widgets.iter().map(|widget| widget_id_for(widget)).collect();
+    for widget in &before.widgets {
+        let id = widget_id_for(widget);
+        if !after_widget_ids.contains(id) {
+            ops.push(FlowOp::Widgets(CollectionOp::Remove { id: id.to_string() }));
+        }
     }
+    for (index, widget) in after.widgets.iter().enumerate() {
+        let id = widget_id_for(widget);
+        match before.widgets.iter().find(|entry| widget_id_for(entry) == id) {
+            None => ops.push(FlowOp::Widgets(CollectionOp::Add { index, item: widget.clone() })),
+            Some(prev) if prev != widget => ops.push(FlowOp::Widgets(CollectionOp::Patch { id: id.to_string(), patch: widget.clone() })),
+            Some(_) => {}
+        }
+    }
+    let after_synapse_ids: std::collections::BTreeSet<&str> = after.synapses.iter().map(|synapse| synapse.id.as_str()).collect();
+    for synapse in &before.synapses {
+        if !after_synapse_ids.contains(synapse.id.as_str()) {
+            ops.push(FlowOp::Synapses(CollectionOp::Remove { id: synapse.id.clone() }));
+        }
+    }
+    for (index, synapse) in after.synapses.iter().enumerate() {
+        match before.synapses.iter().find(|entry| entry.id == synapse.id) {
+            None => ops.push(FlowOp::Synapses(CollectionOp::Add { index, item: synapse.clone() })),
+            Some(prev) if *prev != *synapse => ops.push(FlowOp::Synapses(CollectionOp::Patch { id: synapse.id.clone(), patch: synapse.clone() })),
+            Some(_) => {}
+        }
+    }
+    let mut entries = Vec::new();
+    for (id, layout) in &after.layout {
+        if before.layout.get(id) != Some(layout) {
+            entries.push(FlowLayoutEntry { id: id.clone(), layout: Some(layout.clone()) });
+        }
+    }
+    for id in before.layout.keys() {
+        if !after.layout.contains_key(id) {
+            entries.push(FlowLayoutEntry { id: id.clone(), layout: None });
+        }
+    }
+    if !entries.is_empty() {
+        ops.push(FlowOp::SetLayout { entries });
+    }
+    ops
+}
+//#endregion 🔖Ops
+
+pub type FlowEnvelope = DocumentVcsEnvelope<FlowFixture, FlowOp>;
+pub type FlowStore = DocumentVcsStore<FlowFixture, FlowOp>;
+
+pub fn empty_flow_projection() -> FlowFixture {
+    FlowFixture::default()
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -4419,26 +4580,76 @@ pub mod forms_bridge {
 mod flow_vcs_tests {
     use super::*;
 
+    fn sample_widget(id: &str) -> Widget {
+        Widget::InputNote { id: id.into(), text: format!("note {id}") }
+    }
+
+    fn round_trip(fixture: &FlowFixture, op: &FlowOp) -> FlowFixture {
+        let forward = vcs::apply_operation(fixture, op);
+        let backwards = op.backwards(fixture);
+        let mut restored = forward.clone();
+        for back in &backwards {
+            restored = vcs::apply_operation(&restored, back);
+        }
+        assert_eq!(&restored, fixture, "backwards() must exactly restore the pre-op fixture");
+        forward
+    }
+
     #[test]
-    fn flow_document_vcs_replays_ops() {
-        let mut store = FlowStore::new(create_document_vcs_envelope(
-            FLOW_DOCUMENT_SCHEMA,
-            "flow",
-            empty_flow_projection(),
-            None,
-        ));
-        store
-            .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![FlowOp::SetFlow {
-                    flow: serde_json::json!({ "id": "f1" }),
-                }],
-                description: None,
-            })
-            .expect("apply");
-        assert_eq!(
-            store.projection().expect("projection").flow,
-            serde_json::json!({ "id": "f1" })
-        );
+    fn widget_add_patch_remove_round_trip() {
+        let fixture = FlowFixture { widgets: Vec::new(), synapses: Vec::new(), ..FlowFixture::default() };
+        let add = FlowOp::Widgets(CollectionOp::Add { index: 0, item: sample_widget("w1") });
+        let with_widget = round_trip(&fixture, &add);
+        assert_eq!(with_widget.widgets.len(), 1);
+
+        let patch = FlowOp::Widgets(CollectionOp::Patch {
+            id: "w1".into(),
+            patch: Widget::InputNote { id: "w1".into(), text: "renamed".into() },
+        });
+        let patched = round_trip(&with_widget, &patch);
+        assert!(matches!(&patched.widgets[0], Widget::InputNote { text, .. } if text == "renamed"));
+
+        let remove = FlowOp::Widgets(CollectionOp::Remove { id: "w1".into() });
+        let removed = round_trip(&patched, &remove);
+        assert!(removed.widgets.is_empty());
+    }
+
+    #[test]
+    fn set_layout_round_trip() {
+        let fixture = FlowFixture::default();
+        let op = FlowOp::SetLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 12.0, y: 34.0 }) }] };
+        let next = round_trip(&fixture, &op);
+        assert_eq!(next.layout.get("slider"), Some(&WidgetLayout { x: 12.0, y: 34.0 }));
+    }
+
+    #[test]
+    fn flow_fixture_ops_diffs_widgets_synapses_layout() {
+        let before = FlowFixture { widgets: vec![sample_widget("a"), sample_widget("b")], synapses: Vec::new(), ..FlowFixture::default() };
+        let mut after = before.clone();
+        after.widgets.retain(|widget| Identified::id(widget) != "a");
+        after.widgets.push(sample_widget("c"));
+        after.layout.insert("c".into(), WidgetLayout { x: 1.0, y: 2.0 });
+        let ops = flow_fixture_ops(&before, &after);
+        let materialized = ops.iter().fold(before.clone(), |acc, op| vcs::apply_operation(&acc, op));
+        assert_eq!(materialized.widgets.len(), 2);
+        assert!(materialized.widgets.iter().any(|widget| Identified::id(widget) == "c"));
+        assert!(materialized.widgets.iter().all(|widget| Identified::id(widget) != "a"));
+        assert_eq!(materialized.layout.get("c"), Some(&WidgetLayout { x: 1.0, y: 2.0 }));
+    }
+
+    #[test]
+    fn coalesced_layout_drag_produces_one_edit() {
+        let mut store = FlowStore::new(create_document_vcs_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_projection(), None));
+        for y in [10.0, 20.0, 30.0] {
+            store
+                .dispatch(DocumentVcsCommand::AmendLast {
+                    operations: vec![FlowOp::SetLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 0.0, y }) }] }],
+                    coalesce_key: Some("move-slider".into()),
+                })
+                .expect("drag tick");
+        }
+        assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced drag must produce exactly one edit");
+        assert_eq!(store.projection().expect("projection").layout.get("slider"), Some(&WidgetLayout { x: 0.0, y: 30.0 }));
     }
 }
 // #endregion 🔖DocumentVcs

@@ -945,7 +945,8 @@ function defaultViewportEngagement(): WindowEngagement {
 
 function resolveWindowEngagement(kind: AppDefinition["windowKinds"][number], byKind: Readonly<Record<string, WindowEngagement>>): WindowEngagement | undefined {
   const surfaceKind = (kind as { surfaceKind?: string }).surfaceKind;
-  return byKind[kind.id] ?? kind.engagement ?? (isViewportSurface(surfaceKind) ? defaultViewportEngagement() : undefined);
+  const declaredEngagement = kind.options.engagement.kind === "some" ? kind.options.engagement.value : undefined;
+  return byKind[kind.id] ?? declaredEngagement ?? (isViewportSurface(surfaceKind) ? defaultViewportEngagement() : undefined);
 }
 
 function windowEngagementToSpec(engagement: WindowEngagement | undefined, onAction: (action: ActionDescriptor) => void): EngagementSpec | undefined {
@@ -1061,7 +1062,7 @@ export function spawnedWindowChromeForKind(
 ): { readonly engagement?: EngagementSpec; readonly measures: ReactNode } {
   return {
     engagement: windowEngagementToSpec(resolveWindowEngagement(kind, engagementsByKind), onAction),
-    measures: windowMeasuresOverlay(measuresByKind[kind.id] ?? kind.measures, onAction),
+    measures: windowMeasuresOverlay(measuresByKind[kind.id] ?? kind.options.measures, onAction),
   };
 }
 
@@ -1437,7 +1438,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       dispatch({ type: "SET_WINDOW_ENGAGEMENTS_BY_KIND", value: dynamicEngagements });
       dispatch({ type: "SET_WINDOW_MEASURES_BY_KIND", value: dynamicMeasures });
       dispatch({ type: "SET_APP_LABELS_OVERLAY", value: appLabelsOverlay });
-      dispatch({ type: "SET_PANEL_UI_BY_KEY", value: Object.fromEntries(panelTabLeaves.map((tab, index) => [tab.id, panelNodes[index]! as UiNode])) });
+      dispatch({ type: "SET_PANEL_UI_BY_KEY", value: Object.fromEntries(panelTabLeaves.map((tab, index) => [panelTabKindId(tab.kind), panelNodes[index]! as UiNode])) });
       const activeModeId = viewState.activeModeId ?? nextSession.app.defaultModeId ?? nextSession.app.modes[0]?.id;
       const staticTools = nextSession.app.modes.find((mode) => mode.id === activeModeId)?.tools ?? [];
       dispatch({
@@ -2535,12 +2536,13 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     if (!session) return [];
     const items: UISearchItem[] = [];
     for (const tab of flattenPanelTabLeaves(session.app.panelTabs)) {
+      const tabId = panelTabKindId(tab.kind);
       items.push({
-        id: `panel.${tab.id}`,
-        label: resolveAppLabel(appLabelsOverlay, "panelTab", tab.id, tab.label),
+        id: `panel.${tabId}`,
+        label: resolveAppLabel(appLabelsOverlay, "panelTab", tabId, tab.label),
         category: shellLabel("ui.search.category.panels"),
         icon: <Icon icon="panel-left" size="small" />,
-        onSelect: () => onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId: tab.id } }),
+        onSelect: () => onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } }),
       });
     }
     for (const kind of session.app.windowKinds) {
@@ -2673,7 +2675,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       title: appWindowDocumentLabel(session.app, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label)),
       fill: true,
       showControls: true,
-      measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.measures, onAction),
+      measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.options.measures, onAction),
       engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onAction),
       toolbar: windowToolbarNode(toolNodesByKind[kind.id], kind.id, onAction),
       children: (
@@ -2691,7 +2693,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           title: instance.title,
           fill: true,
           showControls: true,
-          measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.measures, onAction),
+          measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.options.measures, onAction),
           engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onAction),
           toolbar: windowToolbarNode(toolNodesByKind[kind.id], instance.id, onAction),
           children: (

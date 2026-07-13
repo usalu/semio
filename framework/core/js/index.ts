@@ -1054,8 +1054,15 @@ export function panelTabKindId(kind: PanelTabKind): string {
 /** 🌳 Mirrors Rust `PanelTabDefinition` — a leaf carries `bodyKey`, a branch carries `children`; `group` is only meaningful on root entries. */
 export type AppPanelTabDefinition = GeneratedPanelTabDefinition;
 
-/** 📦 Mirrors Rust `AppDefinition` — generated 1:1 from `framework/core/rs/lib.rs` via ts-rs. */
-export type AppDefinition = GeneratedAppDefinition;
+/** 📦 Mirrors Rust `AppDefinition` — generated 1:1 from `framework/core/rs/lib.rs` via ts-rs, except
+ * `defaultLayout`/`namedLayouts` which keep this file's narrower hand-refined `WindowLayout` (ts-rs
+ * widens `WindowLayoutAxisNode.kind`/`WindowLayoutStackNode.kind` to plain `string` since the Rust
+ * field is a runtime `String`, not an enum — the narrower `"row" | "column" | "stack" | "window"`
+ * literal unions here are domain knowledge worth keeping for exhaustive switches). */
+export type AppDefinition = Omit<GeneratedAppDefinition, "defaultLayout" | "namedLayouts"> & {
+  readonly defaultLayout?: WindowLayout;
+  readonly namedLayouts: readonly NamedLayout[];
+};
 export type AppModeDefinition = GeneratedModeDefinition;
 export type AppWindowKindDefinition = GeneratedWindowKindDefinition;
 export type AppWindowOptions = GeneratedWindowOptions;

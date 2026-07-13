@@ -693,9 +693,9 @@ mod tests {
 
     #[test]
     fn stock_from_catalogue_merges_contributed_kinds_without_duplicating() {
-        let mut app = VcsDocumentApp::new(SourcingCurateApp::default());
+        let mut app = new_app();
         // Reset to the empty fixture so stockFromCatalogue starts from a genuinely empty stock.
-        app.load_document(&serde_json::to_string(&empty_document()).unwrap()).expect("load empty document");
+        app.handle_action("setDocument", Some(&json!({ "document": empty_document() })), &view_state(), &meta()).expect("load empty document");
         assert!(app.projection().expect("projection").stock.is_empty());
 
         app.handle_action("stockFromCatalogue", None, &view_state(), &meta()).expect("populate");

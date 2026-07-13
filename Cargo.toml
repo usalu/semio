@@ -51,6 +51,9 @@ members = [
     "sourcing/plugin/rs",
     "sequence/core/rs",
     "sequence/plugin/rs",
+    "procedural/2d/rs",
+    "procedural/3d/rs",
+    "procedural/plugin/rs",
     "trinity/rewrite/engine/rs",
     "trinity/jack/core/rs",
     "trinity/ram/rs",
@@ -74,6 +77,8 @@ members = [
     "writer/rs",
     "writer/plugin/rs",
     "note/plugin/rs",
+    "layout/rs",
+    "layout/plugin/rs",
 ]
 
 resolver = "2"

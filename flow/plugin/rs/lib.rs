@@ -2,16 +2,18 @@
 
 use flow_core::{
     dag::{dag_lod_scale_json, DagDrawLod, DagFixture},
-    flow_backed_node_graph_extras, flow_neuron_kind_infos_json, flow_operator_catalogue_json, FLOW_LOD_MODE_AUTOMATIC,
+    flow_backed_node_graph_extras, flow_fixture_ops, flow_neuron_kind_infos_json, flow_operator_catalogue_json,
+    FLOW_DOCUMENT_SCHEMA, FLOW_LOD_MODE_AUTOMATIC,
     forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
-    CameraJson, FlowFixture, FlowHost, Widget,
+    CameraJson, FlowFixture, FlowHost, FlowOp, Widget,
 };
-use semio_framework_plugin::{SurfaceKind, PanelGroup, 
+use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout,
     handle_generation_action, render_generation_form_body, render_generation_preview_text, render_generations_tree,
     selected_generation, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
-    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, App, ActionDescriptor, GenerationPlayState,
-    NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode,
+    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionEmit, App, ActionDescriptor, DocumentApp,
+    DocumentView, GenerationPlayState,
+    NodeGraphScene, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID,     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -20,7 +22,6 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use std::sync::LazyLock;
 
 //#region 🔖Constants
 const FLOW_PLAY_APP_ID: &str = "flow-play";
@@ -50,21 +51,20 @@ const FLOW_EXTENSIONS: &[(&str, &str, &str, &str, &str)] = &[
 //#endregion 🔖Constants
 
 //#region 🔖Types
+/// 🎛️ Ephemeral view/config state — selection, camera, live eval preview, LOD/catalogue/extension
+/// config, and the generate-mode exploration surface — lives in the app struct, never the document,
+/// so panning, selecting, and previewing never pollute undo history.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", default)]
 struct FlowPlayRuntime {
-    #[serde(default)]
     selected_node_ids: Vec<String>,
-    #[serde(default)]
+    camera: CameraJson,
     last_eval_json: String,
-    #[serde(default = "default_flow_lod_mode")]
     lod_mode: String,
-    #[serde(default)]
     proximity_distance: f64,
-    #[serde(default = "default_catalogue_sections_json")]
     catalogue_sections_json: String,
-    #[serde(default)]
     extension_enabled: HashMap<String, bool>,
+    generation: GenerationPlayState,
 }
 
 fn default_flow_lod_mode() -> String {
@@ -79,23 +79,15 @@ impl Default for FlowPlayRuntime {
     fn default() -> Self {
         Self {
             selected_node_ids: Vec::new(),
+            camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             last_eval_json: String::new(),
             lod_mode: default_flow_lod_mode(),
             proximity_distance: 0.0,
             catalogue_sections_json: default_catalogue_sections_json(),
             extension_enabled: HashMap::new(),
+            generation: GenerationPlayState::default(),
         }
     }
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct FlowPlayEnvelope {
-    fixture: FlowFixture,
-    #[serde(default)]
-    runtime: FlowPlayRuntime,
-    #[serde(default)]
-    generation: GenerationPlayState,
 }
 
 #[derive(Serialize)]
@@ -132,22 +124,6 @@ struct MediaGraphEdgeRecord {
 //#endregion 🔖Types
 
 //#region 🔖DocumentHelpers
-fn default_envelope() -> FlowPlayEnvelope {
-    FlowPlayEnvelope {
-        fixture: FlowFixture::default(),
-        runtime: FlowPlayRuntime::default(),
-        generation: GenerationPlayState::default(),
-    }
-}
-
-fn parse_envelope(document_json: &str) -> FlowPlayEnvelope {
-    serde_json::from_str(document_json).unwrap_or_else(|_| default_envelope())
-}
-
-fn set_document_op(envelope: &FlowPlayEnvelope) -> String {
-    json!({ "op": "setDocument", "document": envelope }).to_string()
-}
-
 fn flow_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor {
         controller_id: FLOW_PLAY_APP_ID.into(),
