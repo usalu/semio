@@ -1582,17 +1582,18 @@ pub fn rgba_to_hex(color: [f64; 4]) -> String {
     format!("#{}{}{}", channel(color[0]), channel(color[1]), channel(color[2]))
 }
 
-pub fn patch_layer_field(doc: &DrawDocument, layer_id: &str, field: &str, value: &serde_json::Value) -> DrawDocument {
-    let Some(layer) = find_draw_layer(doc, layer_id) else {
-        return doc.clone();
-    };
-    match field {
-        "name" => apply_draw_edit_op(doc, &DrawOp::SetLayerName { layer_id: layer_id.into(), name: value.as_str().unwrap_or("").into() }),
-        "opacity" => apply_draw_edit_op(doc, &DrawOp::SetLayerOpacity { layer_id: layer_id.into(), opacity: value.as_f64().unwrap_or(1.0) }),
-        "visible" => apply_draw_edit_op(doc, &DrawOp::SetLayerVisible { layer_id: layer_id.into(), visible: value.as_bool().unwrap_or(true) }),
-        "locked" => apply_draw_edit_op(doc, &DrawOp::SetLayerLocked { layer_id: layer_id.into(), locked: value.as_bool().unwrap_or(false) }),
-        "blendMode" => apply_draw_edit_op(doc, &DrawOp::SetLayerBlendMode { layer_id: layer_id.into(), blend_mode: value.as_str().unwrap_or("normal").into() }),
-        "booleanOp" => apply_draw_edit_op(doc, &DrawOp::SetBooleanOp { layer_id: layer_id.into(), boolean_op: value.as_str().unwrap_or("union").into() }),
+/// 🩹 Resolves an inspector field write (`name`/`opacity`/`fillColor`/`transformX`/…) to the granular
+/// {@link DrawOp} that carries it, so field edits flow through the typed VCS as convergent operations
+/// instead of whole-document snapshots. Returns `None` for a missing layer or an unmapped field.
+pub fn draw_op_for_layer_field(doc: &DrawDocument, layer_id: &str, field: &str, value: &serde_json::Value) -> Option<DrawOp> {
+    let layer = find_draw_layer(doc, layer_id)?;
+    let op = match field {
+        "name" => DrawOp::SetLayerName { layer_id: layer_id.into(), name: value.as_str().unwrap_or("").into() },
+        "opacity" => DrawOp::SetLayerOpacity { layer_id: layer_id.into(), opacity: value.as_f64().unwrap_or(1.0) },
+        "visible" => DrawOp::SetLayerVisible { layer_id: layer_id.into(), visible: value.as_bool().unwrap_or(true) },
+        "locked" => DrawOp::SetLayerLocked { layer_id: layer_id.into(), locked: value.as_bool().unwrap_or(false) },
+        "blendMode" => DrawOp::SetLayerBlendMode { layer_id: layer_id.into(), blend_mode: value.as_str().unwrap_or("normal").into() },
+        "booleanOp" => DrawOp::SetBooleanOp { layer_id: layer_id.into(), boolean_op: value.as_str().unwrap_or("union").into() },
         "transformX" | "transformY" | "transformScaleX" | "transformScaleY" | "transformRotation" => {
             let mut transform = layer_base(layer).transform.clone();
             match field {
@@ -1602,17 +1603,17 @@ pub fn patch_layer_field(doc: &DrawDocument, layer_id: &str, field: &str, value:
                 "transformScaleY" => transform.scale_y = value.as_f64().unwrap_or(1.0),
                 _ => transform.rotation = value.as_f64().unwrap_or(0.0),
             }
-            apply_draw_edit_op(doc, &DrawOp::SetLayerTransform { layer_id: layer_id.into(), transform })
+            DrawOp::SetLayerTransform { layer_id: layer_id.into(), transform }
         }
         "fillColor" => {
             let alpha = layer_base(layer).attributes.fill.as_ref().and_then(|fill| match fill {
                 FillStyle::Solid { color } => Some(color[3]),
                 FillStyle::LinearGradient { .. } | FillStyle::RadialGradient { .. } => Some(1.0),
             }).unwrap_or(1.0);
-            apply_draw_edit_op(doc, &DrawOp::SetFill {
+            DrawOp::SetFill {
                 layer_id: layer_id.into(),
                 fill: Some(FillStyle::Solid { color: hex_to_rgba(value.as_str().unwrap_or("#000000"), alpha) }),
-            })
+            }
         }
         "strokeWidth" => {
             let stroke = layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle {
@@ -1622,30 +1623,32 @@ pub fn patch_layer_field(doc: &DrawDocument, layer_id: &str, field: &str, value:
                 join: "miter".into(),
                 dash: None,
             });
-            apply_draw_edit_op(doc, &DrawOp::SetStroke {
+            DrawOp::SetStroke {
                 layer_id: layer_id.into(),
                 stroke: Some(StrokeStyle { width: value.as_f64().unwrap_or(1.0), ..stroke }),
-            })
+            }
         }
         "traceThreshold" => {
-            if let DrawLayerNode::Trace(trace) = layer {
-                let mut params = trace.params.clone();
-                params.threshold = value.as_f64().unwrap_or(0.5);
-                apply_draw_edit_op(doc, &DrawOp::SetTraceParams { layer_id: layer_id.into(), params })
-            } else {
-                doc.clone()
-            }
+            let DrawLayerNode::Trace(trace) = layer else { return None };
+            let mut params = trace.params.clone();
+            params.threshold = value.as_f64().unwrap_or(0.5);
+            DrawOp::SetTraceParams { layer_id: layer_id.into(), params }
         }
         "traceSimplify" => {
-            if let DrawLayerNode::Trace(trace) = layer {
-                let mut params = trace.params.clone();
-                params.simplify_epsilon = value.as_f64().unwrap_or(1.5);
-                apply_draw_edit_op(doc, &DrawOp::SetTraceParams { layer_id: layer_id.into(), params })
-            } else {
-                doc.clone()
-            }
+            let DrawLayerNode::Trace(trace) = layer else { return None };
+            let mut params = trace.params.clone();
+            params.simplify_epsilon = value.as_f64().unwrap_or(1.5);
+            DrawOp::SetTraceParams { layer_id: layer_id.into(), params }
         }
-        _ => doc.clone(),
+        _ => return None,
+    };
+    Some(op)
+}
+
+pub fn patch_layer_field(doc: &DrawDocument, layer_id: &str, field: &str, value: &serde_json::Value) -> DrawDocument {
+    match draw_op_for_layer_field(doc, layer_id, field, value) {
+        Some(op) => apply_draw_edit_op(doc, &op),
+        None => doc.clone(),
     }
 }
 //#endregion 🔖EditOps

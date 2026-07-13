@@ -3235,6 +3235,822 @@ mod ui_node_wire_format_tests {
 // #endregion component
 
 #[cfg(feature = "engine")]
+pub mod arena {
+// #region arena
+//! 🕳️ Hand-rolled generational arena for retained-mode tree nodes. No third-party slotmap dep: a
+//! wrapper around an external crate's handle type would hide nothing and add a dependency for a
+//! ~120-line data structure (repo rule: don't wrap external types without adding value).
+
+/// 🪪 Opaque handle into an `Arena`: a slot index plus a generation counter. A stale `NodeId`
+/// (same index, old generation) never aliases a value inserted into a recycled slot.
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub struct NodeId {
+    index: u32,
+    generation: u32,
+}
+
+enum Slot<T> {
+    Occupied { generation: u32, value: T },
+    Free { generation: u32, next_free: Option<u32> },
+}
+
+/// 🌳 Generational-index arena: O(1) insert/remove/get, freed slots recycled via an intrusive free
+/// list threaded through `Slot::Free`.
+pub struct Arena<T> {
+    slots: Vec<Slot<T>>,
+    free_head: Option<u32>,
+}
+
+impl<T> Default for Arena<T> {
+    fn default() -> Self {
+        Self { slots: Vec::new(), free_head: None }
+    }
+}
+
+impl<T> Arena<T> {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn insert(&mut self, value: T) -> NodeId {
+        match self.free_head {
+            Some(index) => {
+                let (generation, next_free) = match &self.slots[index as usize] {
+                    Slot::Free { generation, next_free } => (*generation, *next_free),
+                    Slot::Occupied { .. } => unreachable!("free list points at an occupied slot"),
+                };
+                self.free_head = next_free;
+                self.slots[index as usize] = Slot::Occupied { generation, value };
+                NodeId { index, generation }
+            }
+            None => {
+                let index = self.slots.len() as u32;
+                self.slots.push(Slot::Occupied { generation: 0, value });
+                NodeId { index, generation: 0 }
+            }
+        }
+    }
+
+    pub fn remove(&mut self, id: NodeId) -> Option<T> {
+        let slot = self.slots.get_mut(id.index as usize)?;
+        match slot {
+            Slot::Occupied { generation, .. } if *generation == id.generation => {
+                let next_free = self.free_head;
+                let freed_generation = generation.wrapping_add(1);
+                let previous = std::mem::replace(slot, Slot::Free { generation: freed_generation, next_free });
+                self.free_head = Some(id.index);
+                match previous {
+                    Slot::Occupied { value, .. } => Some(value),
+                    Slot::Free { .. } => unreachable!(),
+                }
+            }
+            _ => None,
+        }
+    }
+
+    pub fn get(&self, id: NodeId) -> Option<&T> {
+        match self.slots.get(id.index as usize)? {
+            Slot::Occupied { generation, value } if *generation == id.generation => Some(value),
+            _ => None,
+        }
+    }
+
+    pub fn get_mut(&mut self, id: NodeId) -> Option<&mut T> {
+        match self.slots.get_mut(id.index as usize)? {
+            Slot::Occupied { generation, value } if *generation == id.generation => Some(value),
+            _ => None,
+        }
+    }
+
+    pub fn contains(&self, id: NodeId) -> bool {
+        self.get(id).is_some()
+    }
+
+    /// 🚶 Iterates every live `(NodeId, &T)` pair; freed slots are skipped.
+    pub fn iter(&self) -> impl Iterator<Item = (NodeId, &T)> {
+        self.slots.iter().enumerate().filter_map(|(index, slot)| match slot {
+            Slot::Occupied { generation, value } => Some((NodeId { index: index as u32, generation: *generation }, value)),
+            Slot::Free { .. } => None,
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn insert_and_get_round_trip() {
+        let mut arena = Arena::new();
+        let id = arena.insert(42);
+        assert_eq!(arena.get(id), Some(&42));
+    }
+
+    #[test]
+    fn remove_invalidates_the_old_node_id() {
+        let mut arena = Arena::new();
+        let id = arena.insert(1);
+        assert_eq!(arena.remove(id), Some(1));
+        assert_eq!(arena.get(id), None);
+        assert_eq!(arena.remove(id), None);
+    }
+
+    #[test]
+    fn reused_slot_bumps_generation_so_old_id_does_not_alias_new_value() {
+        let mut arena = Arena::new();
+        let a = arena.insert(1);
+        arena.remove(a);
+        let b = arena.insert(2);
+        assert_eq!(b.index, a.index);
+        assert_ne!(b.generation, a.generation);
+        assert_eq!(arena.get(a), None);
+        assert_eq!(arena.get(b), Some(&2));
+    }
+
+    #[test]
+    fn iterates_over_live_slots_only() {
+        let mut arena = Arena::new();
+        let a = arena.insert(10);
+        let b = arena.insert(20);
+        arena.remove(a);
+        let remaining: Vec<i32> = arena.iter().map(|(_, value)| *value).collect();
+        assert_eq!(remaining, vec![20]);
+        assert!(arena.contains(b));
+        assert!(!arena.contains(a));
+    }
+}
+// #endregion arena
+}
+
+#[cfg(feature = "engine")]
+pub mod tree {
+// #region tree
+//! 🌲 Retained scene-graph: one `UiTree` per window, holding `Node`s in a generational `Arena`
+//! with parent/first-child/last-child/sibling links and dirty-flag propagation. The engine facade
+//! (a later milestone) holds `HashMap<window_id, UiTree>`.
+
+use crate::arena::{Arena, NodeId};
+use crate::component::ui::UiNode;
+
+/// 🔑 Stable child identity for keyed reconciliation: the source `UiNode`'s explicit `id` field
+/// when it has one, else a `(variant, ordinal)` positional fallback.
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub enum NodeKey {
+    Explicit(String),
+    Positional(u32, u32),
+}
+
+/// 🚩 Per-node dirty/interaction bits. Hand-rolled over a `u16` (no `bitflags` dep) to keep the
+/// crate dependency-free for this ~10-flag set.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub struct NodeFlags(u16);
+
+impl NodeFlags {
+    pub const HOVERED: NodeFlags = NodeFlags(1 << 0);
+    pub const ACTIVE: NodeFlags = NodeFlags(1 << 1);
+    pub const FOCUSED: NodeFlags = NodeFlags(1 << 2);
+    pub const DIRTY_LAYOUT: NodeFlags = NodeFlags(1 << 3);
+    pub const DIRTY_PAINT: NodeFlags = NodeFlags(1 << 4);
+    pub const SUBTREE_DIRTY: NodeFlags = NodeFlags(1 << 5);
+    pub const OVERLAY: NodeFlags = NodeFlags(1 << 6);
+    pub const CLIPS_CHILDREN: NodeFlags = NodeFlags(1 << 7);
+    pub const HIT_TRANSPARENT: NodeFlags = NodeFlags(1 << 8);
+    pub const HAS_POPUP: NodeFlags = NodeFlags(1 << 9);
+
+    pub const fn empty() -> Self {
+        NodeFlags(0)
+    }
+
+    pub fn set(&mut self, flag: NodeFlags, on: bool) {
+        if on {
+            self.0 |= flag.0;
+        } else {
+            self.0 &= !flag.0;
+        }
+    }
+
+    pub fn contains(&self, flag: NodeFlags) -> bool {
+        self.0 & flag.0 == flag.0
+    }
+}
+
+/// 🧩 Retained per-node widget spec. For M2 a thin clone of the last-applied `UiNode` (used as the
+/// reconcile diff baseline); refined into per-variant retained fields in M4.
+#[derive(Clone, Debug, PartialEq)]
+pub struct WidgetSpec(pub UiNode);
+
+/// 🎛️ Placeholder for interactive per-node state (focus/scroll offset/live-edit buffer, …); filled
+/// in by the milestones that need it (M5 events, M6 shell).
+#[derive(Clone, Debug, Default)]
+pub struct WidgetState;
+
+/// 📐 Resolved rect from the last taffy layout pass, in the node's **parent-relative** coordinate
+/// space (taffy's own `Layout::location`/`Layout::size` semantics — no extra transform needed when
+/// consuming it; a later paint milestone accumulates ancestor offsets while walking the tree, same
+/// as it already walks parent/child links for painting). `cached_text_measure` mirrors the last
+/// `(text, wrap width bucket)` this node was measured at, so `flex::LayoutEngine` can skip
+/// re-shaping an unchanged text node against an unchanged constraint.
+#[derive(Clone, Debug, Default)]
+pub struct LayoutBucket {
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
+    pub cached_text_measure: Option<((String, Option<u32>), (f32, f32))>,
+}
+
+/// 🎨 M4 decision: stays an empty marker. Every `paint::paint_*` function recomputes its `DrawList`
+/// entries fresh from `spec`+`layout`+`theme` on each visit instead of caching tessellation output —
+/// the composite widgets that would benefit most from caching (Select's open menu, Tree's rows)
+/// aren't retained children yet (that's a later reconcile milestone), so there's nothing stable to
+/// key a cache on without duplicating that future work; recomputing a handful of quads/glyph-runs
+/// per dirty node per frame is cheap relative to the tessellation this replaces. Revisit once
+/// composite expansion lands and glyph-run caching becomes worth the bookkeeping.
+#[derive(Clone, Debug, Default)]
+pub struct PaintBucket;
+
+/// 🍃 One retained tree node: tree links, identity, spec/state/layout/paint buckets, dirty flags.
+pub struct Node {
+    pub parent: Option<NodeId>,
+    pub first_child: Option<NodeId>,
+    pub last_child: Option<NodeId>,
+    pub prev_sibling: Option<NodeId>,
+    pub next_sibling: Option<NodeId>,
+    pub key: NodeKey,
+    pub spec: WidgetSpec,
+    pub state: WidgetState,
+    pub layout: LayoutBucket,
+    pub paint: PaintBucket,
+    pub flags: NodeFlags,
+}
+
+impl Node {
+    pub fn new(key: NodeKey, spec: WidgetSpec) -> Self {
+        Self {
+            parent: None,
+            first_child: None,
+            last_child: None,
+            prev_sibling: None,
+            next_sibling: None,
+            key,
+            spec,
+            state: WidgetState::default(),
+            layout: LayoutBucket::default(),
+            paint: PaintBucket::default(),
+            flags: NodeFlags::empty(),
+        }
+    }
+}
+
+/// 🌲 One window's retained scene-graph: a generational arena of `Node`s plus its root.
+#[derive(Default)]
+pub struct UiTree {
+    arena: Arena<Node>,
+    pub root: Option<NodeId>,
+}
+
+impl UiTree {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn node(&self, id: NodeId) -> Option<&Node> {
+        self.arena.get(id)
+    }
+
+    pub fn node_mut(&mut self, id: NodeId) -> Option<&mut Node> {
+        self.arena.get_mut(id)
+    }
+
+    pub fn contains(&self, id: NodeId) -> bool {
+        self.arena.contains(id)
+    }
+
+    /// 🔗 Inserts `node` as the last child of `parent` (or as a root if `parent` is `None` and no
+    /// root exists yet), threading the sibling links.
+    pub fn insert_child(&mut self, parent: Option<NodeId>, mut node: Node) -> NodeId {
+        node.parent = parent;
+        let id = self.arena.insert(node);
+        match parent {
+            Some(parent_id) => {
+                let prev_last = self.arena.get(parent_id).and_then(|p| p.last_child);
+                if let Some(prev_last_id) = prev_last {
+                    if let Some(prev_last_node) = self.arena.get_mut(prev_last_id) {
+                        prev_last_node.next_sibling = Some(id);
+                    }
+                }
+                if let Some(child) = self.arena.get_mut(id) {
+                    child.prev_sibling = prev_last;
+                }
+                if let Some(parent_node) = self.arena.get_mut(parent_id) {
+                    if parent_node.first_child.is_none() {
+                        parent_node.first_child = Some(id);
+                    }
+                    parent_node.last_child = Some(id);
+                }
+            }
+            None => {
+                if self.root.is_none() {
+                    self.root = Some(id);
+                }
+            }
+        }
+        id
+    }
+
+    /// 🧹 Detaches `id` from its parent/siblings and recursively removes its subtree, freeing every
+    /// arena slot involved.
+    pub fn remove(&mut self, id: NodeId) {
+        let Some(node) = self.arena.get(id) else { return };
+        let (parent, prev_sibling, next_sibling) = (node.parent, node.prev_sibling, node.next_sibling);
+        let children: Vec<NodeId> = self.children(id).collect();
+        for child in children {
+            self.remove(child);
+        }
+        match prev_sibling {
+            Some(prev_id) => {
+                if let Some(prev) = self.arena.get_mut(prev_id) {
+                    prev.next_sibling = next_sibling;
+                }
+            }
+            None => {
+                if let Some(parent_id) = parent {
+                    if let Some(parent_node) = self.arena.get_mut(parent_id) {
+                        parent_node.first_child = next_sibling;
+                    }
+                }
+            }
+        }
+        match next_sibling {
+            Some(next_id) => {
+                if let Some(next) = self.arena.get_mut(next_id) {
+                    next.prev_sibling = prev_sibling;
+                }
+            }
+            None => {
+                if let Some(parent_id) = parent {
+                    if let Some(parent_node) = self.arena.get_mut(parent_id) {
+                        parent_node.last_child = prev_sibling;
+                    }
+                }
+            }
+        }
+        if self.root == Some(id) {
+            self.root = None;
+        }
+        self.arena.remove(id);
+    }
+
+    /// 🚨 Sets `flags` on `id` (setting `DIRTY_LAYOUT` implies `DIRTY_PAINT`, since layout changes
+    /// always require a repaint), then bubbles `SUBTREE_DIRTY` up the parent chain, stopping at the
+    /// first ancestor that already carries it — every ancestor above it is necessarily already
+    /// marked too, so walking further is wasted work.
+    pub fn mark_dirty(&mut self, id: NodeId, flags: NodeFlags) {
+        let mut flags = flags;
+        if flags.contains(NodeFlags::DIRTY_LAYOUT) {
+            flags.set(NodeFlags::DIRTY_PAINT, true);
+        }
+        let parent = match self.arena.get_mut(id) {
+            Some(node) => {
+                node.flags.set(flags, true);
+                node.parent
+            }
+            None => return,
+        };
+        let mut cursor = parent;
+        while let Some(ancestor_id) = cursor {
+            let Some(ancestor) = self.arena.get_mut(ancestor_id) else { break };
+            if ancestor.flags.contains(NodeFlags::SUBTREE_DIRTY) {
+                break;
+            }
+            ancestor.flags.set(NodeFlags::SUBTREE_DIRTY, true);
+            cursor = ancestor.parent;
+        }
+    }
+
+    /// 🚶 Iterates the direct children of `id` in tree order via the first-child/next-sibling links.
+    pub fn children(&self, id: NodeId) -> impl Iterator<Item = NodeId> + '_ {
+        let mut next = self.arena.get(id).and_then(|n| n.first_child);
+        std::iter::from_fn(move || {
+            let current = next?;
+            next = self.arena.get(current).and_then(|n| n.next_sibling);
+            Some(current)
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::component::ui::{UiNode, UiTextNode};
+
+    fn text(value: &str) -> UiNode {
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None })
+    }
+
+    fn leaf(discriminant: u32, ordinal: u32, value: &str) -> Node {
+        Node::new(NodeKey::Positional(discriminant, ordinal), WidgetSpec(text(value)))
+    }
+
+    #[test]
+    fn insert_and_iterate_children_in_order() {
+        let mut tree = UiTree::new();
+        let root = tree.insert_child(None, leaf(0, 0, "root"));
+        let a = tree.insert_child(Some(root), leaf(1, 0, "a"));
+        let b = tree.insert_child(Some(root), leaf(1, 1, "b"));
+        let grandchild = tree.insert_child(Some(b), leaf(1, 0, "c"));
+
+        let children: Vec<NodeId> = tree.children(root).collect();
+        assert_eq!(children, vec![a, b]);
+        let grandchildren: Vec<NodeId> = tree.children(b).collect();
+        assert_eq!(grandchildren, vec![grandchild]);
+        assert_eq!(tree.children(grandchild).count(), 0);
+    }
+
+    #[test]
+    fn mark_dirty_sets_layout_and_paint_and_bubbles_subtree_dirty_to_root() {
+        let mut tree = UiTree::new();
+        let root = tree.insert_child(None, leaf(0, 0, "root"));
+        let mid = tree.insert_child(Some(root), leaf(1, 0, "mid"));
+        let grandchild = tree.insert_child(Some(mid), leaf(1, 0, "leaf"));
+
+        tree.mark_dirty(grandchild, NodeFlags::DIRTY_LAYOUT);
+
+        let grandchild_flags = tree.node(grandchild).unwrap().flags;
+        assert!(grandchild_flags.contains(NodeFlags::DIRTY_LAYOUT));
+        assert!(grandchild_flags.contains(NodeFlags::DIRTY_PAINT));
+        assert!(tree.node(mid).unwrap().flags.contains(NodeFlags::SUBTREE_DIRTY));
+        assert!(tree.node(root).unwrap().flags.contains(NodeFlags::SUBTREE_DIRTY));
+    }
+
+    #[test]
+    fn mark_dirty_stops_bubbling_once_it_hits_an_already_dirty_ancestor() {
+        let mut tree = UiTree::new();
+        let root = tree.insert_child(None, leaf(0, 0, "root"));
+        let mid = tree.insert_child(Some(root), leaf(1, 0, "mid"));
+        let leaf_a = tree.insert_child(Some(mid), leaf(1, 0, "a"));
+        let leaf_b = tree.insert_child(Some(mid), leaf(1, 1, "b"));
+
+        tree.mark_dirty(leaf_a, NodeFlags::DIRTY_PAINT);
+        assert!(tree.node(mid).unwrap().flags.contains(NodeFlags::SUBTREE_DIRTY));
+        assert!(tree.node(root).unwrap().flags.contains(NodeFlags::SUBTREE_DIRTY));
+
+        // mid and root already carry SUBTREE_DIRTY; this second call must still end up correct
+        // (leaf_b itself dirtied, ancestors still dirtied) even though it stops bubbling at `mid`.
+        tree.mark_dirty(leaf_b, NodeFlags::DIRTY_PAINT);
+        assert!(tree.node(leaf_b).unwrap().flags.contains(NodeFlags::DIRTY_PAINT));
+        assert!(!tree.node(leaf_a).unwrap().flags.contains(NodeFlags::SUBTREE_DIRTY));
+        assert!(tree.node(mid).unwrap().flags.contains(NodeFlags::SUBTREE_DIRTY));
+        assert!(tree.node(root).unwrap().flags.contains(NodeFlags::SUBTREE_DIRTY));
+    }
+
+    #[test]
+    fn remove_detaches_node_and_frees_its_children_slots() {
+        let mut tree = UiTree::new();
+        let root = tree.insert_child(None, leaf(0, 0, "root"));
+        let mid = tree.insert_child(Some(root), leaf(1, 0, "mid"));
+        let grandchild = tree.insert_child(Some(mid), leaf(1, 0, "leaf"));
+
+        tree.remove(mid);
+
+        assert!(!tree.contains(mid));
+        assert!(!tree.contains(grandchild));
+        assert!(tree.contains(root));
+        assert_eq!(tree.children(root).count(), 0);
+    }
+}
+// #endregion tree
+}
+
+#[cfg(feature = "engine")]
+pub mod reconcile {
+// #region reconcile
+//! 🔁 Keyed single-pass reconciliation: applies an incoming declarative `UiNode` tree to a retained
+//! `UiTree`, matching children by key, diffing matched nodes, and marking the minimal dirty flags.
+//! Composite widget expansion (`Section`/`Tree`/`NumberStepper`/`Vec3`/`Select`+popup into synthetic
+//! retained children) lands in a later milestone; M2 recurses into `Stack`, `Section`, and `Field`
+//! only — other variants are reconciled as diffed leaves (no recursive keyed matching of their
+//! nested payload, e.g. `Tree`'s sections/items or `Select`'s items).
+
+use std::collections::{HashMap, HashSet};
+
+use crate::arena::NodeId;
+use crate::component::ui::UiNode;
+use crate::tree::{Node, NodeFlags, NodeKey, UiTree, WidgetSpec};
+
+fn variant_discriminant(node: &UiNode) -> u32 {
+    match node {
+        UiNode::Stack(_) => 0,
+        UiNode::Text(_) => 1,
+        UiNode::Button(_) => 2,
+        UiNode::Separator(_) => 3,
+        UiNode::Input(_) => 4,
+        UiNode::Select(_) => 5,
+        UiNode::Toggle(_) => 6,
+        UiNode::Vec3(_) => 7,
+        UiNode::KeyValue(_) => 8,
+        UiNode::Slider(_) => 9,
+        UiNode::NumberStepper(_) => 10,
+        UiNode::Ring(_) => 11,
+        UiNode::IconSelect(_) => 12,
+        UiNode::Field(_) => 13,
+        UiNode::Section(_) => 14,
+        UiNode::Tree(_) => 15,
+        UiNode::Image(_) => 16,
+        UiNode::ComponentScene(_) => 17,
+        UiNode::ExternalSlot(_) => 18,
+    }
+}
+
+fn explicit_id(node: &UiNode) -> Option<&str> {
+    match node {
+        UiNode::Stack(n) => n.id.as_deref(),
+        UiNode::Button(n) => n.id.as_deref(),
+        UiNode::Input(n) => Some(n.id.as_str()),
+        UiNode::Select(n) => Some(n.id.as_str()),
+        UiNode::Toggle(n) => Some(n.id.as_str()),
+        UiNode::Vec3(n) => Some(n.id.as_str()),
+        UiNode::Slider(n) => Some(n.id.as_str()),
+        UiNode::NumberStepper(n) => Some(n.id.as_str()),
+        UiNode::Ring(n) => Some(n.id.as_str()),
+        UiNode::IconSelect(n) => Some(n.id.as_str()),
+        UiNode::Field(n) => Some(n.id.as_str()),
+        UiNode::Section(n) => Some(n.id.as_str()),
+        UiNode::Image(n) => Some(n.id.as_str()),
+        UiNode::ComponentScene(n) => Some(n.surface_id.as_str()),
+        UiNode::ExternalSlot(n) => Some(n.body_key.as_str()),
+        UiNode::Text(_) | UiNode::Separator(_) | UiNode::KeyValue(_) | UiNode::Tree(_) => None,
+    }
+}
+
+fn node_key(node: &UiNode, ordinal: u32) -> NodeKey {
+    match explicit_id(node) {
+        Some(id) if !id.is_empty() => NodeKey::Explicit(id.to_string()),
+        _ => NodeKey::Positional(variant_discriminant(node), ordinal),
+    }
+}
+
+fn children_of(node: &UiNode) -> Vec<&UiNode> {
+    match node {
+        UiNode::Stack(n) => n.children.iter().collect(),
+        UiNode::Section(n) => n.children.iter().collect(),
+        UiNode::Field(n) => vec![n.child.as_ref()],
+        _ => Vec::new(),
+    }
+}
+
+/// ⚖️ Whether the two nodes' *own* scalar fields (excluding nested `UiNode` children, which are
+/// reconciled and dirtied independently) are equal.
+fn own_fields_equal(previous: &UiNode, next: &UiNode) -> bool {
+    match (previous, next) {
+        (UiNode::Stack(p), UiNode::Stack(n)) => {
+            p.direction == n.direction
+                && p.gap == n.gap
+                && p.padding == n.padding
+                && p.id == n.id
+                && p.selected == n.selected
+                && p.activate == n.activate
+                && p.drop_action == n.drop_action
+                && p.children.len() == n.children.len()
+        }
+        (UiNode::Section(p), UiNode::Section(n)) => {
+            p.id == n.id && p.label == n.label && p.default_open == n.default_open && p.children.len() == n.children.len()
+        }
+        (UiNode::Field(p), UiNode::Field(n)) => {
+            p.id == n.id && p.label == n.label && p.description == n.description && p.required == n.required && p.error == n.error
+        }
+        _ => previous == next,
+    }
+}
+
+/// 📐 Whether the field(s) that differ between `previous` and `next` affect measurement/layout (as
+/// opposed to paint-only state like `selected`/`pressed`/`disabled`).
+fn layout_affecting_change(previous: &UiNode, next: &UiNode) -> bool {
+    match (previous, next) {
+        (UiNode::Stack(p), UiNode::Stack(n)) => {
+            p.direction != n.direction || p.gap != n.gap || p.padding != n.padding || p.children.len() != n.children.len()
+        }
+        (UiNode::Text(p), UiNode::Text(n)) => p.value != n.value,
+        (UiNode::Field(p), UiNode::Field(n)) => p.label != n.label || p.description != n.description,
+        (UiNode::Section(p), UiNode::Section(n)) => p.label != n.label || p.children.len() != n.children.len(),
+        _ => false,
+    }
+}
+
+impl UiTree {
+    /// 🔁 Applies an incoming declarative `UiNode` tree to this retained tree: keyed single-pass
+    /// child matching, minimal-dirty-flag diffing of matched nodes, insertion of unmatched incoming
+    /// children, removal of unmatched existing children. Re-applying an identical tree sets zero
+    /// dirty flags anywhere in the tree.
+    pub fn apply_tree(&mut self, incoming: &UiNode) {
+        let key = node_key(incoming, 0);
+        match self.root {
+            Some(root_id) if self.node(root_id).map(|n| &n.key) == Some(&key) => {
+                self.diff_and_update(root_id, incoming);
+                self.reconcile_children(root_id, incoming);
+            }
+            Some(root_id) => {
+                self.remove(root_id);
+                self.root = None;
+                self.insert_new_root(key, incoming);
+            }
+            None => self.insert_new_root(key, incoming),
+        }
+    }
+
+    fn insert_new_root(&mut self, key: NodeKey, incoming: &UiNode) {
+        let id = self.insert_child(None, Node::new(key, WidgetSpec(incoming.clone())));
+        self.mark_dirty(id, NodeFlags::DIRTY_LAYOUT);
+        self.root = Some(id);
+        self.reconcile_children(id, incoming);
+    }
+
+    fn diff_and_update(&mut self, id: NodeId, incoming: &UiNode) {
+        let (needs_layout, needs_paint) = match self.node(id) {
+            Some(node) if own_fields_equal(&node.spec.0, incoming) => (false, false),
+            Some(node) if layout_affecting_change(&node.spec.0, incoming) => (true, true),
+            Some(_) => (false, true),
+            None => return,
+        };
+        if let Some(node) = self.node_mut(id) {
+            node.spec = WidgetSpec(incoming.clone());
+        }
+        if needs_layout {
+            self.mark_dirty(id, NodeFlags::DIRTY_LAYOUT);
+        } else if needs_paint {
+            self.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+        }
+    }
+
+    fn reconcile_children(&mut self, parent: NodeId, incoming: &UiNode) {
+        let incoming_children = children_of(incoming);
+        let existing_children: Vec<NodeId> = self.children(parent).collect();
+
+        let mut existing_by_key: HashMap<NodeKey, NodeId> = HashMap::with_capacity(existing_children.len());
+        for child_id in &existing_children {
+            if let Some(node) = self.node(*child_id) {
+                existing_by_key.insert(node.key.clone(), *child_id);
+            }
+        }
+
+        let mut used_keys: HashSet<NodeKey> = HashSet::with_capacity(incoming_children.len());
+        let mut matched_ids: HashSet<NodeId> = HashSet::with_capacity(incoming_children.len());
+        for (ordinal, child) in incoming_children.iter().enumerate() {
+            let key = node_key(child, ordinal as u32);
+            let matched_id = match existing_by_key.get(&key) {
+                Some(existing_id) if !used_keys.contains(&key) => {
+                    used_keys.insert(key);
+                    self.diff_and_update(*existing_id, child);
+                    self.reconcile_children(*existing_id, child);
+                    *existing_id
+                }
+                _ => {
+                    let id = self.insert_child(Some(parent), Node::new(key, WidgetSpec((*child).clone())));
+                    self.mark_dirty(id, NodeFlags::DIRTY_LAYOUT);
+                    self.reconcile_children(id, child);
+                    id
+                }
+            };
+            matched_ids.insert(matched_id);
+        }
+
+        for existing_id in existing_children {
+            if !matched_ids.contains(&existing_id) {
+                self.remove(existing_id);
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::component::layout::ActionDescriptor;
+    use crate::component::ui::{UiButtonNode, UiStackNode, UiTextNode};
+    use crate::tree::NodeFlags;
+
+    fn action() -> ActionDescriptor {
+        ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None }
+    }
+
+    fn text(value: &str) -> UiNode {
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None })
+    }
+
+    fn button(id: &str, label: &str) -> UiNode {
+        UiNode::Button(UiButtonNode {
+            id: Some(id.into()),
+            icon_id: "icon".into(),
+            label: label.into(),
+            action: action(),
+            style: None,
+            disabled: None,
+        })
+    }
+
+    fn stack(id: &str, children: Vec<UiNode>) -> UiNode {
+        UiNode::Stack(UiStackNode {
+            direction: "column".into(),
+            gap: None,
+            padding: None,
+            id: Some(id.into()),
+            selected: None,
+            activate: None,
+            drop_action: None,
+            children,
+        })
+    }
+
+    fn clear_dirty(tree: &mut UiTree, id: NodeId) {
+        if let Some(node) = tree.node_mut(id) {
+            node.flags.set(NodeFlags::DIRTY_LAYOUT, false);
+            node.flags.set(NodeFlags::DIRTY_PAINT, false);
+            node.flags.set(NodeFlags::SUBTREE_DIRTY, false);
+        }
+        let children: Vec<NodeId> = tree.children(id).collect();
+        for child in children {
+            clear_dirty(tree, child);
+        }
+    }
+
+    fn any_dirty(tree: &UiTree, id: NodeId) -> bool {
+        let node = tree.node(id).unwrap();
+        let dirty = node.flags.contains(NodeFlags::DIRTY_LAYOUT)
+            || node.flags.contains(NodeFlags::DIRTY_PAINT)
+            || node.flags.contains(NodeFlags::SUBTREE_DIRTY);
+        dirty || tree.children(id).any(|child| any_dirty(tree, child))
+    }
+
+    #[test]
+    fn reapplying_an_identical_tree_sets_zero_dirty_flags() {
+        let mut tree = UiTree::new();
+        let ui = stack("root", vec![text("hello"), button("btn", "Go")]);
+        tree.apply_tree(&ui);
+        let root = tree.root.unwrap();
+        // fresh insert marks everything dirty; that's expected and not under test here.
+        clear_dirty(&mut tree, root);
+
+        tree.apply_tree(&ui);
+
+        assert!(!any_dirty(&tree, root));
+    }
+
+    #[test]
+    fn text_value_change_dirties_that_node_and_ancestors_but_not_siblings() {
+        let mut tree = UiTree::new();
+        tree.apply_tree(&stack("root", vec![text("hello"), text("world")]));
+        let root = tree.root.unwrap();
+        clear_dirty(&mut tree, root);
+
+        tree.apply_tree(&stack("root", vec![text("changed"), text("world")]));
+
+        let children: Vec<NodeId> = tree.children(root).collect();
+        let first = tree.node(children[0]).unwrap();
+        assert!(first.flags.contains(NodeFlags::DIRTY_LAYOUT));
+        assert!(first.flags.contains(NodeFlags::DIRTY_PAINT));
+        let second = tree.node(children[1]).unwrap();
+        assert!(!second.flags.contains(NodeFlags::DIRTY_LAYOUT));
+        assert!(!second.flags.contains(NodeFlags::DIRTY_PAINT));
+        assert!(tree.node(root).unwrap().flags.contains(NodeFlags::SUBTREE_DIRTY));
+    }
+
+    #[test]
+    fn adding_a_child_inserts_exactly_one_new_dirty_node_and_leaves_siblings_untouched() {
+        let mut tree = UiTree::new();
+        tree.apply_tree(&stack("root", vec![text("hello")]));
+        let root = tree.root.unwrap();
+        clear_dirty(&mut tree, root);
+
+        tree.apply_tree(&stack("root", vec![text("hello"), text("new")]));
+
+        let children: Vec<NodeId> = tree.children(root).collect();
+        assert_eq!(children.len(), 2);
+        let first = tree.node(children[0]).unwrap();
+        assert!(!first.flags.contains(NodeFlags::DIRTY_LAYOUT));
+        assert!(!first.flags.contains(NodeFlags::DIRTY_PAINT));
+        let second = tree.node(children[1]).unwrap();
+        assert!(second.flags.contains(NodeFlags::DIRTY_LAYOUT));
+    }
+
+    #[test]
+    fn removing_a_child_frees_its_arena_slot() {
+        let mut tree = UiTree::new();
+        tree.apply_tree(&stack("root", vec![text("hello"), text("bye")]));
+        let root = tree.root.unwrap();
+        let children_before: Vec<NodeId> = tree.children(root).collect();
+        let removed_id = children_before[1];
+
+        tree.apply_tree(&stack("root", vec![text("hello")]));
+
+        assert!(!tree.contains(removed_id));
+        assert_eq!(tree.children(root).count(), 1);
+    }
+}
+// #endregion reconcile
+}
+
+
+#[cfg(feature = "engine")]
 pub mod chrome {
 // #region chrome
 //! 🎛 Bordered chrome primitives shared by widgets and shell renderers.
@@ -8025,6 +8841,366 @@ mod tests {
 }
 
 #[cfg(feature = "engine")]
+pub mod flex {
+// #region flex
+//! 📏 Taffy-backed flex layout for the retained tree (`tree`/`reconcile`). Taffy's own types
+//! (`taffy::TaffyTree`, `taffy::NodeId`, `taffy::Style`, …) are fully wrapped by `LayoutEngine` and
+//! never appear in any item visible outside this crate — `LayoutEngine` itself is `pub(crate)`
+//! (narrowest visibility that compiles) since only the retained `engine` façade needs it.
+//! Style mapping reuses `layout::gap_for_token`/`layout::padding_for_token` (the old immediate-mode
+//! `layout` region stays in place — `widgets`/`chrome` still call its `layout_vertical`/
+//! `layout_horizontal` directly, so it isn't deleted this milestone). Pixel-parity requirement: every
+//! child of a `Stack` gets `flex_grow: 1.0` so leftover main-axis space distributes equally among
+//! siblings, matching the old hand-rolled stack layout's `extra_per_child` behaviour.
+
+use std::collections::HashMap;
+
+use taffy::prelude::*;
+
+use crate::arena::NodeId;
+use crate::component::ui::UiNode;
+use crate::layout::{gap_for_token, padding_for_token};
+use crate::text::FontAtlas;
+use crate::theme::Theme;
+use crate::tree::{NodeFlags, UiTree};
+
+/// 🖋️ Default text size (px) used for intrinsic measurement during layout, ahead of the per-node
+/// resolved style a later paint milestone introduces.
+const DEFAULT_TEXT_SIZE_PX: f32 = 14.0;
+
+/// 🍃 Per-taffy-leaf context: which retained nodes need a measure callback (only `Text`) and which
+/// don't (everything else measures as zero-size content, matching the pre-taffy immediate-mode
+/// widgets that size themselves from fixed control-height/theme metrics rather than intrinsic text).
+enum LeafContext {
+    None,
+    Text(String),
+}
+
+/// 🖇️ Reads intrinsic content size for taffy's leaf-measurement callback. Implemented for
+/// `text::FontAtlas` so taffy can ask fontdue for wrap-aware text metrics without ui_wgpu's flex
+/// module depending on fontdue directly.
+pub(crate) trait TextMeasure {
+    fn measure(&mut self, text: &str, max_width: Option<f32>) -> (f32, f32);
+}
+
+impl TextMeasure for FontAtlas {
+    fn measure(&mut self, text: &str, max_width: Option<f32>) -> (f32, f32) {
+        match max_width {
+            Some(width) if width > 0.0 => self.measure_text_wrapped(text, width, DEFAULT_TEXT_SIZE_PX),
+            _ => self.measure_text(text, DEFAULT_TEXT_SIZE_PX),
+        }
+    }
+}
+
+fn quantize_width(width: Option<f32>) -> Option<u32> {
+    width.map(|w| w.round().max(0.0) as u32)
+}
+
+/// 📦 Maps a retained node's `WidgetSpec` to a taffy `Style`. Only `Stack` becomes a real flex
+/// container (direction/gap/padding from its own fields); every other variant is a content leaf
+/// (auto-sized, measured via `LeafContext` where applicable). `flex_grow` is layered on top by the
+/// caller for children of a `Stack`, not set here, since it depends on the *parent's* kind.
+fn style_for(node: &UiNode) -> Style {
+    match node {
+        UiNode::Stack(stack) => {
+            let vertical = stack.direction != "horizontal";
+            Style {
+                display: Display::Flex,
+                flex_direction: if vertical { FlexDirection::Column } else { FlexDirection::Row },
+                gap: Size { width: length(0.0), height: length(0.0) },
+                padding: Rect { left: length(0.0), right: length(0.0), top: length(0.0), bottom: length(0.0) },
+                size: Size { width: auto(), height: auto() },
+                ..Default::default()
+            }
+        }
+        _ => Style { size: Size { width: auto(), height: auto() }, ..Default::default() },
+    }
+}
+
+/// 🎚️ Applies `theme`-resolved gap/padding onto a freshly built `Stack` style (kept separate from
+/// `style_for` so the latter stays theme-independent and trivially testable).
+fn apply_stack_metrics(style: &mut Style, stack: &crate::component::ui::UiStackNode, theme: &Theme) {
+    let gap = gap_for_token(theme, stack.gap.as_deref());
+    let padding = padding_for_token(theme, stack.padding.as_deref());
+    style.gap = Size { width: length(gap), height: length(gap) };
+    style.padding = Rect { left: length(padding), right: length(padding), top: length(padding), bottom: length(padding) };
+}
+
+fn leaf_context(node: &UiNode) -> LeafContext {
+    match node {
+        UiNode::Text(text) => LeafContext::Text(text.value.clone()),
+        _ => LeafContext::None,
+    }
+}
+
+/// 🧮 Owns a taffy flexbox tree mirroring one retained `UiTree` and the `NodeId -> taffy::NodeId`
+/// mapping between them. Used only by the `engine` façade (a later milestone); never exposed
+/// outside the crate.
+pub(crate) struct LayoutEngine {
+    taffy: TaffyTree<LeafContext>,
+    mapping: HashMap<NodeId, taffy::NodeId>,
+}
+
+impl Default for LayoutEngine {
+    fn default() -> Self {
+        Self { taffy: TaffyTree::new(), mapping: HashMap::new() }
+    }
+}
+
+impl LayoutEngine {
+    pub(crate) fn new() -> Self {
+        Self::default()
+    }
+
+    /// 🔁 Runs a taffy layout pass over `tree` rooted at `root` if (and only if) anything in the
+    /// tree carries `DIRTY_LAYOUT`/`SUBTREE_DIRTY` (checking the root alone suffices — `mark_dirty`
+    /// always bubbles `SUBTREE_DIRTY` to the root, so an all-clean tree is a single flag read, no
+    /// walk). Returns whether a layout pass actually ran.
+    pub(crate) fn compute(
+        &mut self,
+        tree: &mut UiTree,
+        root: NodeId,
+        atlas: &mut FontAtlas,
+        theme: &Theme,
+        available_width: f32,
+        available_height: f32,
+    ) -> bool {
+        let Some(root_node) = tree.node(root) else { return false };
+        let needs_layout = root_node.flags.contains(NodeFlags::DIRTY_LAYOUT) || root_node.flags.contains(NodeFlags::SUBTREE_DIRTY);
+        if !needs_layout {
+            return false;
+        }
+
+        self.prune_removed(tree);
+        let root_taffy = self.sync(tree, theme, root, false);
+
+        let mut root_style = self.taffy.style(root_taffy).cloned().unwrap_or_default();
+        root_style.size = Size { width: length(available_width), height: length(available_height) };
+        let _ = self.taffy.set_style(root_taffy, root_style);
+
+        let available = Size { width: AvailableSpace::Definite(available_width), height: AvailableSpace::Definite(available_height) };
+        let _ = self.taffy.compute_layout_with_measure(root_taffy, available, |known_dimensions, available_space, _node_id, node_context, _style| {
+            if let (Some(width), Some(height)) = (known_dimensions.width, known_dimensions.height) {
+                return Size { width, height };
+            }
+            match node_context {
+                Some(LeafContext::Text(text)) => {
+                    let max_width = known_dimensions.width.or_else(|| available_space.width.into_option());
+                    let (measured_w, measured_h) = atlas.measure(text, max_width);
+                    Size { width: known_dimensions.width.unwrap_or(measured_w), height: known_dimensions.height.unwrap_or(measured_h) }
+                }
+                _ => Size::ZERO,
+            }
+        });
+
+        self.write_back(tree, atlas, root);
+        true
+    }
+
+    /// 🧹 Drops taffy-side nodes whose retained counterpart no longer exists (removed by
+    /// `reconcile`), so the mapping doesn't grow unbounded across the tree's lifetime.
+    fn prune_removed(&mut self, tree: &UiTree) {
+        let stale: Vec<NodeId> = self.mapping.keys().copied().filter(|id| !tree.contains(*id)).collect();
+        for id in stale {
+            if let Some(taffy_id) = self.mapping.remove(&id) {
+                let _ = self.taffy.remove(taffy_id);
+            }
+        }
+    }
+
+    /// 🌲 Depth-first: ensures every retained node reachable from `id` has a taffy counterpart,
+    /// refreshing style/children only for nodes that are new or carry `DIRTY_LAYOUT` (everything
+    /// else keeps its existing taffy node untouched, letting taffy's own layout cache skip
+    /// recomputation for genuinely unchanged subtrees). `flex_grow_child` is true when `id`'s
+    /// parent is a `Stack`, applying the equal-leftover-distribution pixel-parity rule.
+    fn sync(&mut self, tree: &UiTree, theme: &Theme, id: NodeId, flex_grow_child: bool) -> taffy::NodeId {
+        let node = tree.node(id).expect("sync called with a live NodeId");
+        let is_stack = matches!(node.spec.0, UiNode::Stack(_));
+        let dirty = node.flags.contains(NodeFlags::DIRTY_LAYOUT);
+        let existing = self.mapping.get(&id).copied();
+
+        let children: Vec<NodeId> = tree.children(id).collect();
+        let child_taffy_ids: Vec<taffy::NodeId> =
+            children.iter().map(|&child_id| self.sync(tree, theme, child_id, is_stack)).collect();
+
+        let taffy_id = match existing {
+            Some(taffy_id) if !dirty => taffy_id,
+            Some(taffy_id) => {
+                let style = self.style_with_grow(&node.spec.0, theme, flex_grow_child);
+                let _ = self.taffy.set_style(taffy_id, style);
+                taffy_id
+            }
+            None => {
+                let style = self.style_with_grow(&node.spec.0, theme, flex_grow_child);
+                self.taffy.new_leaf_with_context(style, leaf_context(&node.spec.0)).expect("taffy leaf insert")
+            }
+        };
+        if existing.is_none() || dirty {
+            let _ = self.taffy.set_children(taffy_id, &child_taffy_ids);
+        }
+        self.mapping.insert(id, taffy_id);
+        taffy_id
+    }
+
+    fn style_with_grow(&self, node: &UiNode, theme: &Theme, flex_grow_child: bool) -> Style {
+        let mut style = style_for(node);
+        if let UiNode::Stack(stack) = node {
+            apply_stack_metrics(&mut style, stack, theme);
+        }
+        if flex_grow_child {
+            style.flex_grow = 1.0;
+        }
+        style
+    }
+
+    /// 📝 Copies taffy's resolved `location`/`size` into each node's `LayoutBucket` (parent-relative,
+    /// same space taffy itself uses — see `tree::LayoutBucket`'s doc comment) and clears
+    /// `DIRTY_LAYOUT`. Text nodes also get their `cached_text_measure` refreshed at the node's final
+    /// resolved width, so a following unchanged-constraint measurement is a cache hit.
+    fn write_back(&mut self, tree: &mut UiTree, atlas: &mut FontAtlas, id: NodeId) {
+        if let Some(&taffy_id) = self.mapping.get(&id) {
+            if let Ok(layout) = self.taffy.layout(taffy_id) {
+                let (x, y, width, height) = (layout.location.x, layout.location.y, layout.size.width, layout.size.height);
+                let text_value = match tree.node(id).map(|n| &n.spec.0) {
+                    Some(UiNode::Text(text)) => Some(text.value.clone()),
+                    _ => None,
+                };
+                if let Some(node) = tree.node_mut(id) {
+                    node.layout.x = x;
+                    node.layout.y = y;
+                    node.layout.width = width;
+                    node.layout.height = height;
+                    node.flags.set(NodeFlags::DIRTY_LAYOUT, false);
+                    // write_back always walks the whole subtree from `root`, so by the time it
+                    // finishes every descendant is up to date and SUBTREE_DIRTY can clear too —
+                    // otherwise it would never clear and `compute`'s early-out would never fire.
+                    node.flags.set(NodeFlags::SUBTREE_DIRTY, false);
+                }
+                if let Some(value) = text_value {
+                    let key = (value.clone(), quantize_width(Some(width)));
+                    let already_cached = tree.node(id).and_then(|n| n.layout.cached_text_measure.as_ref().map(|(k, _)| k.clone())) == Some(key.clone());
+                    if !already_cached {
+                        let measured = atlas.measure(&value, Some(width));
+                        if let Some(node) = tree.node_mut(id) {
+                            node.layout.cached_text_measure = Some((key, measured));
+                        }
+                    }
+                }
+            }
+        }
+        let children: Vec<NodeId> = tree.children(id).collect();
+        for child in children {
+            self.write_back(tree, atlas, child);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::component::ui::{UiStackNode, UiTextNode};
+
+    fn text(value: &str) -> UiNode {
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None })
+    }
+
+    fn stack(direction: &str, children: Vec<UiNode>) -> UiNode {
+        UiNode::Stack(UiStackNode {
+            direction: direction.into(),
+            gap: Some("none".into()),
+            padding: Some("none".into()),
+            id: None,
+            selected: None,
+            activate: None,
+            drop_action: None,
+            children,
+        })
+    }
+
+    #[test]
+    fn vertical_stack_lays_children_top_to_bottom_with_correct_y_offsets() {
+        let mut tree = UiTree::new();
+        tree.apply_tree(&stack("vertical", vec![text("hello"), text("a longer line of text")]));
+        let root = tree.root.unwrap();
+        let mut engine = LayoutEngine::new();
+        let mut atlas = FontAtlas::builtin();
+        let theme = Theme::default();
+
+        let ran = engine.compute(&mut tree, root, &mut atlas, &theme, 400.0, 400.0);
+        assert!(ran);
+
+        let children: Vec<NodeId> = tree.children(root).collect();
+        assert_eq!(children.len(), 2);
+        let first = &tree.node(children[0]).unwrap().layout;
+        let second = &tree.node(children[1]).unwrap().layout;
+        assert_eq!(first.y, 0.0);
+        assert!(second.y >= first.y + first.height);
+    }
+
+    #[test]
+    fn horizontal_stack_distributes_equal_leftover_width_across_children() {
+        let mut tree = UiTree::new();
+        let children = vec![
+            UiNode::Separator(crate::component::ui::UiSeparatorNode {}),
+            UiNode::Separator(crate::component::ui::UiSeparatorNode {}),
+            UiNode::Separator(crate::component::ui::UiSeparatorNode {}),
+        ];
+        tree.apply_tree(&stack("horizontal", children));
+        let root = tree.root.unwrap();
+        let mut engine = LayoutEngine::new();
+        let mut atlas = FontAtlas::builtin();
+        let theme = Theme::default();
+
+        engine.compute(&mut tree, root, &mut atlas, &theme, 300.0, 100.0);
+
+        let widths: Vec<f32> = tree.children(root).map(|id| tree.node(id).unwrap().layout.width).collect();
+        assert_eq!(widths.len(), 3);
+        for w in &widths {
+            assert!((*w - 100.0).abs() < 0.5, "expected equal-thirds width, got {w}");
+        }
+    }
+
+    #[test]
+    fn recomputing_with_nothing_dirty_is_a_no_op() {
+        let mut tree = UiTree::new();
+        tree.apply_tree(&stack("vertical", vec![text("hello")]));
+        let root = tree.root.unwrap();
+        let mut engine = LayoutEngine::new();
+        let mut atlas = FontAtlas::builtin();
+        let theme = Theme::default();
+
+        assert!(engine.compute(&mut tree, root, &mut atlas, &theme, 200.0, 200.0));
+        let first_pass = tree.node(root).unwrap().layout.clone();
+
+        let ran_again = engine.compute(&mut tree, root, &mut atlas, &theme, 200.0, 200.0);
+        assert!(!ran_again, "DIRTY_LAYOUT/SUBTREE_DIRTY are cleared after a pass, so a second call must early-out");
+        let second_pass = tree.node(root).unwrap().layout.clone();
+        assert_eq!((first_pass.x, first_pass.y, first_pass.width, first_pass.height), (second_pass.x, second_pass.y, second_pass.width, second_pass.height));
+    }
+
+    #[test]
+    fn text_measurement_is_cached_per_unchanged_width() {
+        let mut atlas = FontAtlas::builtin();
+        let first = atlas.measure("hello world", Some(120.0));
+        let second = atlas.measure("hello world", Some(120.0));
+        assert_eq!(first, second);
+
+        let mut tree = UiTree::new();
+        tree.apply_tree(&stack("vertical", vec![text("cache me")]));
+        let root = tree.root.unwrap();
+        let mut engine = LayoutEngine::new();
+        let theme = Theme::default();
+        engine.compute(&mut tree, root, &mut atlas, &theme, 200.0, 200.0);
+
+        let child = tree.children(root).next().unwrap();
+        let cached = tree.node(child).unwrap().layout.cached_text_measure.clone();
+        assert!(cached.is_some(), "text node should have a cached measurement after layout");
+    }
+}
+// #endregion flex
+}
+
+#[cfg(feature = "engine")]
 pub mod shaders {
 // #region shaders
 //! 🧊 WGSL shader sources for the raw wgpu UI renderer.
@@ -8462,7 +9638,7 @@ pub struct FontAtlas {
     pub height: u32,
     pub pixels: Vec<u8>,
     source: FontSource,
-    glyphs: HashMap<char, GlyphEntry>,
+    glyphs: HashMap<(char, u32), GlyphEntry>,
     cursor_x: u32,
     cursor_y: u32,
     row_height: u32,
@@ -8612,17 +9788,29 @@ impl FontAtlas {
         })
     }
 
-    pub fn ensure_glyph(&mut self, ch: char) -> &GlyphEntry {
-        if !self.glyphs.contains_key(&ch) {
-            self.rasterize_glyph(ch);
-        }
-        self.glyphs.get(&ch).expect("glyph inserted")
+    /// 🔑 Quantizes a float px size to the glyph-cache's integer key component, so float jitter
+    /// (e.g. 15.999999 vs 16.0) doesn't fragment the cache into near-duplicate entries.
+    fn quantize_size(size_px: f32) -> u32 {
+        size_px.round().max(1.0) as u32
     }
 
-    fn rasterize_glyph(&mut self, ch: char) {
+    /// 🔍 Fetches (rasterizing on first use) the glyph for `ch` at `size_px`, keyed by
+    /// `(char, size_px)` so the same character rasterized at two different sizes never returns the
+    /// wrong bitmap (the pre-fix bug: a `char`-only key meant later sizes reused the first size's
+    /// rasterization, blurring text at any size other than whichever was cached first).
+    pub fn ensure_glyph(&mut self, ch: char, size_px: f32) -> &GlyphEntry {
+        let key = (ch, Self::quantize_size(size_px));
+        if !self.glyphs.contains_key(&key) {
+            self.rasterize_glyph(key);
+        }
+        self.glyphs.get(&key).expect("glyph inserted")
+    }
+
+    fn rasterize_glyph(&mut self, key: (char, u32)) {
+        let (ch, size_px) = key;
         let (metrics, bitmap, width, height) = match &self.source {
             FontSource::Fontdue(font) => {
-                let (metrics, bitmap) = font.rasterize(ch, 16.0);
+                let (metrics, bitmap) = font.rasterize(ch, size_px as f32);
                 (metrics, bitmap, metrics.width as u32, metrics.height as u32)
             }
             FontSource::Bitmap => self.rasterize_bitmap(ch),
@@ -8643,7 +9831,7 @@ impl FontAtlas {
             }
         }
         self.glyphs.insert(
-            ch,
+            key,
             GlyphEntry {
                 atlas_x,
                 atlas_y,
@@ -8688,13 +9876,12 @@ impl FontAtlas {
     }
 
     pub fn measure_text(&mut self, text: &str, size: f32) -> (f32, f32) {
-        let scale = size / 16.0;
         let mut width = 0.0f32;
         let mut max_height = 0.0f32;
         for ch in text.chars() {
-            let glyph = self.ensure_glyph(ch);
-            width += glyph.advance * scale;
-            max_height = max_height.max((glyph.height as f32 + glyph.bearing_y) * scale);
+            let glyph = self.ensure_glyph(ch, size);
+            width += glyph.advance;
+            max_height = max_height.max(glyph.height as f32 + glyph.bearing_y);
         }
         (width, max_height.max(size))
     }
@@ -8739,8 +9926,19 @@ mod tests {
         assert!(FontAtlas::from_bytes(&[]).is_ok());
         let woff2 = b"wOF2\x00\x01\x00\x00";
         let mut atlas = FontAtlas::from_bytes(woff2).expect("woff2 should fall back to builtin");
-        let glyph = atlas.ensure_glyph('A');
+        let glyph = atlas.ensure_glyph('A', 16.0);
         assert!(glyph.width > 0);
+    }
+
+    #[test]
+    fn same_char_at_different_sizes_does_not_collide_in_the_glyph_cache() {
+        let mut atlas = FontAtlas::builtin();
+        atlas.ensure_glyph('A', 16.0);
+        assert_eq!(atlas.glyphs.len(), 1);
+        atlas.ensure_glyph('A', 32.0);
+        assert_eq!(atlas.glyphs.len(), 2, "a second size for the same char must add a new cache entry, not collide");
+        atlas.ensure_glyph('A', 16.0);
+        assert_eq!(atlas.glyphs.len(), 2, "re-requesting an already-cached (char, size) must not insert again");
     }
 }
 
@@ -9069,6 +10267,1462 @@ mod tests {
     }
 }
 // #endregion theme
+}
+
+#[cfg(feature = "engine")]
+pub mod paint {
+// #region paint
+//! 🖌️ Retained paint pass. Per-`UiNode`-variant drawing logic mechanically ported from the
+//! immediate-mode `widgets::render_*` functions (see that region's doc comment for why it still
+//! exists), reading resolved geometry from `tree::LayoutBucket` (accumulating parent-relative
+//! offsets while walking, since taffy's `Layout::location` is parent-relative — see that struct's
+//! doc comment) instead of the old `bounds: Rect` argument an immediate-mode caller threaded down.
+//! Interaction-derived visuals (hover/focus/active/pressed) read `NodeFlags`/`WidgetState` — both
+//! still default/empty until M5 (events) wires them up, which is fine and expected here.
+//! `WidgetState`-backed composites (Select's open popup, Tree's live scroll offset, an Input's
+//! in-progress edit buffer) paint their *closed*/rest-state appearance only; a later milestone
+//! (M5 events, M6 shell) both wires the state and expands these composites into retained children.
+
+use crate::arena::NodeId;
+use crate::chrome::{chrome_item_bg, item_bg, item_text, push_control_border, push_icon, ICON_TINY};
+use crate::component::ui::{
+    UiButtonNode, UiComponentSceneNode, UiExternalSlotNode, UiFieldNode, UiIconSelectNode,
+    UiImageNode, UiInputNode, UiKeyValueNode, UiNode, UiNumberStepperNode, UiRingNode,
+    UiSectionNode, UiSelectNode, UiSliderNode, UiTextNode, UiToggleNode, UiTreeItemNode,
+    UiTreeNode, UiVec3Node,
+};
+use crate::draw::{DrawList, IconAtlas};
+use crate::geometry::Rect;
+use crate::text::FontAtlas;
+use crate::theme::Theme;
+use crate::tree::{NodeFlags, UiTree};
+use crate::widgets::{draw_text_on, wrap_text};
+
+const PANEL_HEADER: f32 = 24.0;
+const TREE_ROW_HEIGHT: f32 = 24.0;
+const TREE_INDENT_PER_LEVEL: f32 = 10.0;
+const TREE_TOGGLE_WIDTH: f32 = 14.0;
+const TREE_ICON_SIZE: f32 = 14.0;
+
+/// 🖼️ Top-level entry point: unconditionally walks and (re)paints every node reachable from `root`,
+/// clearing `DIRTY_PAINT` as it visits (mirroring `flex::LayoutEngine::write_back`'s clear-as-you-go
+/// pattern) but never touching `DIRTY_LAYOUT`/`SUBTREE_DIRTY` — clearing those is `flex`'s job and
+/// `flex::LayoutEngine::compute` already runs (and clears them) before paint each frame, per the
+/// intended pipeline. Deliberately has **no internal early-out**: `DrawList` only supports a full
+/// clear-and-rebuild (no API to remove/replace a single dirty subtree's prior draw calls while
+/// leaving clean siblings' draw calls in place), so a genuinely incremental repaint isn't safe to
+/// build yet. Whether to call `paint_tree` at all this frame — i.e. "was anything dirty" — is a
+/// decision a later milestone's `engine` facade owns (it already knows from driving `flex::compute`
+/// and `reconcile::apply_tree`), not something `paint_tree` decides for itself.
+pub(crate) fn paint_tree(tree: &mut UiTree, root: NodeId, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+    paint_node(tree, root, 0.0, 0.0, theme, atlas, icons, draw);
+    clear_dirty_paint(tree, root);
+}
+
+fn clear_dirty_paint(tree: &mut UiTree, id: NodeId) {
+    if let Some(node) = tree.node_mut(id) {
+        node.flags.set(NodeFlags::DIRTY_PAINT, false);
+    }
+    let children: Vec<NodeId> = tree.children(id).collect();
+    for child in children {
+        clear_dirty_paint(tree, child);
+    }
+}
+
+/// 🎯 Per-variant paint dispatcher for one retained node, given `(origin_x, origin_y)` — the
+/// absolute position of *this node's parent's* content-box origin (so `origin + node.layout.{x,y}`
+/// is this node's own absolute top-left, matching taffy's parent-relative `Layout::location`).
+pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+    let Some(node) = tree.node(id) else { return };
+    let abs_x = origin_x + node.layout.x;
+    let abs_y = origin_y + node.layout.y;
+    let bounds = Rect::new(abs_x, abs_y, node.layout.width, node.layout.height);
+    let flags = node.flags;
+    match &node.spec.0 {
+        UiNode::Stack(_) => paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, draw),
+        UiNode::Text(text) => paint_text(text, bounds, theme, atlas, draw),
+        UiNode::Separator(_) => paint_separator(bounds, theme, draw),
+        UiNode::Button(button) => paint_button(button, bounds, flags, theme, atlas, icons, draw),
+        UiNode::Input(input) => paint_input(input, bounds, flags, theme, atlas, draw),
+        UiNode::Select(select) => paint_select(select, bounds, flags, theme, atlas, icons, draw),
+        UiNode::Toggle(toggle) => paint_toggle(toggle, bounds, flags, theme, atlas, icons, draw),
+        UiNode::Vec3(vec3) => paint_vec3(vec3, bounds, theme, atlas, draw),
+        UiNode::KeyValue(kv) => paint_key_value(kv, bounds, theme, atlas, draw),
+        UiNode::Slider(slider) => paint_slider(slider, bounds, theme, draw),
+        UiNode::NumberStepper(stepper) => paint_number_stepper(stepper, bounds, theme, atlas, draw),
+        UiNode::Ring(ring) => paint_ring(ring, bounds, theme, draw),
+        UiNode::IconSelect(select) => paint_icon_select(select, bounds, flags, theme, atlas, icons, draw),
+        UiNode::Field(field) => {
+            paint_field(field, bounds, theme, atlas, draw);
+            paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, draw);
+        }
+        UiNode::Section(section) => {
+            paint_section(section, bounds, theme, atlas, icons, draw);
+            paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, draw);
+        }
+        UiNode::Tree(tree_node) => paint_tree_widget(tree_node, bounds, theme, atlas, icons, draw),
+        UiNode::Image(image) => paint_image(image, bounds, theme, atlas, draw),
+        UiNode::ComponentScene(scene) => paint_component_scene(scene, bounds, theme, draw),
+        UiNode::ExternalSlot(slot) => paint_external_slot(slot, bounds, theme, atlas, draw),
+    }
+}
+
+/// 🧱 `Stack`'s own paint is a no-op (it's pure layout); recurses into its retained children, each
+/// offset by this node's absolute top-left. Also reused by `Field`/`Section`, whose single/`children`
+/// nested `UiNode`s reconcile already expands into retained children (see `reconcile::children_of`).
+fn paint_stack(tree: &UiTree, id: NodeId, abs_x: f32, abs_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+    let children: Vec<NodeId> = tree.children(id).collect();
+    for child in children {
+        paint_node(tree, child, abs_x, abs_y, theme, atlas, icons, draw);
+    }
+}
+
+fn paint_text(node: &UiTextNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
+    let emphasize = node.emphasize.unwrap_or(false);
+    let size = if emphasize { theme.font_size_emphasized } else { theme.font_size_body };
+    let color = if emphasize { theme.text } else { theme.text_muted };
+    let lines = wrap_text(atlas, &node.value, bounds.w.max(1.0), size);
+    let line_h = size * 1.35;
+    for (index, line) in lines.iter().enumerate() {
+        draw_text_on(draw, atlas, line, bounds.x, bounds.y + line_h * index as f32 + size, size, color);
+    }
+}
+
+fn paint_separator(bounds: Rect, theme: &Theme, draw: &mut DrawList) {
+    let y = bounds.y + bounds.h * 0.5;
+    draw.push_line(bounds.x, y, bounds.x + bounds.w, y, theme.separator, 1.0);
+}
+
+fn paint_button(node: &UiButtonNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+    let hovered = flags.contains(NodeFlags::HOVERED);
+    let bg = item_bg(theme, false, hovered);
+    push_control_border(draw, bounds, theme, theme.border_normal, bg);
+    let mut text_x = bounds.x + theme.padding_standard;
+    let icon_key = if node.icon_id.is_empty() { node.label.as_str() } else { node.icon_id.as_str() };
+    if let Some(icons) = icons {
+        if icons.icon_uv(icon_key).is_some() {
+            push_icon(draw, icons, icon_key, text_x, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, item_text(theme, false, hovered));
+            text_x += ICON_TINY + theme.gap_standard;
+        }
+    }
+    draw_text_on(draw, atlas, &node.label, text_x, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, item_text(theme, false, hovered));
+}
+
+fn paint_input(node: &UiInputNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
+    let focused = flags.contains(NodeFlags::FOCUSED);
+    let border = if focused { theme.border_emphasized } else { theme.border_normal };
+    push_control_border(draw, bounds, theme, border, theme.input_bg);
+    let (display, muted): (&str, bool) = if node.value.is_empty() {
+        (node.placeholder.as_deref().unwrap_or(""), true)
+    } else {
+        (node.value.as_str(), false)
+    };
+    draw_text_on(draw, atlas, display, bounds.x + 8.0, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, if muted { theme.text_muted } else { theme.text });
+}
+
+fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+    let hovered = flags.contains(NodeFlags::HOVERED);
+    let bg = if hovered { theme.button_hover } else { theme.input_bg };
+    push_control_border(draw, bounds, theme, theme.border_normal, bg);
+    let label = node
+        .items
+        .iter()
+        .find(|item| item.value == node.value)
+        .map(|item| item.label.as_str())
+        .unwrap_or_else(|| node.placeholder.as_deref().unwrap_or("Select…"));
+    draw_text_on(draw, atlas, label, bounds.x + theme.padding_standard, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
+    if let Some(icons) = icons {
+        push_icon(draw, icons, "chevron-down", bounds.x + bounds.w - theme.padding_standard - ICON_TINY, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
+    }
+    // Select's open dropdown menu is popup state the old `WidgetContext::open_selects` map tracked;
+    // reconcile doesn't expand `Select` into a retained popup child yet (that's later shell/M6
+    // work), so there's no "open" state here to paint against — closed rest-state only for M4.
+}
+
+fn paint_toggle(node: &UiToggleNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+    let hovered = flags.contains(NodeFlags::HOVERED);
+    let bg = item_bg(theme, node.pressed, hovered);
+    push_control_border(draw, bounds, theme, theme.border_normal, bg);
+    let mut content_x = bounds.x + theme.padding_standard;
+    if let Some(icons) = icons {
+        if icons.icon_uv(&node.icon_id).is_some() {
+            push_icon(draw, icons, &node.icon_id, content_x, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, item_text(theme, node.pressed, hovered));
+            content_x += ICON_TINY + theme.gap_standard;
+        }
+    }
+    if let Some(text) = &node.text {
+        draw_text_on(draw, atlas, text, content_x, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, item_text(theme, node.pressed, hovered));
+    }
+}
+
+fn paint_vec3(node: &UiVec3Node, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
+    let values = node.value.unwrap_or([0.0, 0.0, 0.0]);
+    let gap = theme.gap_standard;
+    let seg_w = (bounds.w - gap * 2.0) / 3.0;
+    for index in 0..3 {
+        let x = bounds.x + index as f32 * (seg_w + gap);
+        let row = Rect::new(x, bounds.y, seg_w, bounds.h);
+        push_control_border(draw, row, theme, theme.border_normal, theme.input_bg);
+        let text = format!("{:.3}", values[index]);
+        draw_text_on(draw, atlas, &text, row.x + 8.0, row.y + (row.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
+    }
+}
+
+fn paint_key_value(node: &UiKeyValueNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
+    let label_w = node
+        .entries
+        .iter()
+        .map(|entry| atlas.measure_text(&entry.label, theme.font_size_small).0)
+        .fold(0.0f32, f32::max);
+    let value_x = bounds.x + label_w + theme.gap_standard * 2.0;
+    let row_h = theme.control_height;
+    for (index, entry) in node.entries.iter().enumerate() {
+        let y = bounds.y + index as f32 * row_h;
+        draw_text_on(draw, atlas, &entry.label, bounds.x, y + (row_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text_muted);
+        draw_text_on(draw, atlas, &entry.value, value_x, y + (row_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
+    }
+}
+
+fn paint_slider(node: &UiSliderNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) {
+    let track_y = bounds.y + bounds.h * 0.5;
+    draw.push_rounded([bounds.x, track_y - 2.0, bounds.w, 4.0], theme.separator, 2.0);
+    let range = (node.max - node.min).max(f64::EPSILON);
+    let t = ((node.value - node.min) / range).clamp(0.0, 1.0);
+    let knob_x = bounds.x + bounds.w * t as f32;
+    draw.push_rounded([knob_x - 6.0, track_y - 6.0, 12.0, 12.0], theme.accent, 6.0);
+}
+
+fn paint_number_stepper(node: &UiNumberStepperNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
+    let seg = bounds.w / 3.0;
+    let minus = Rect::new(bounds.x, bounds.y, seg, bounds.h);
+    let center = Rect::new(bounds.x + seg, bounds.y, seg, bounds.h);
+    let plus = Rect::new(bounds.x + seg * 2.0, bounds.y, seg, bounds.h);
+    let hair = theme.stroke_hairline;
+    push_control_border(draw, bounds, theme, theme.border_normal, theme.input_bg);
+    draw.push_solid([bounds.x + seg, bounds.y, hair, bounds.h], theme.border_normal);
+    draw.push_solid([bounds.x + seg * 2.0, bounds.y, hair, bounds.h], theme.border_normal);
+    draw_text_on(draw, atlas, "−", minus.x + seg * 0.5 - 4.0, minus.y + 18.0, theme.font_size_body, theme.text);
+    let text = format!("{:.3}", node.value);
+    draw_text_on(draw, atlas, &text, center.x + 8.0, center.y + (center.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
+    draw_text_on(draw, atlas, "+", plus.x + seg * 0.5 - 4.0, plus.y + 18.0, theme.font_size_body, theme.text);
+}
+
+fn paint_ring(node: &UiRingNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) {
+    let cx = bounds.x + bounds.w * 0.5;
+    let cy = bounds.y + bounds.h * 0.5;
+    let radius = bounds.w.min(bounds.h) * 0.4;
+    let segments = 48usize;
+    let mut points = Vec::with_capacity(segments + 1);
+    for i in 0..=segments {
+        let angle = std::f32::consts::TAU * i as f32 / segments as f32;
+        points.push([cx + angle.cos() * radius, cy + angle.sin() * radius]);
+    }
+    for window in points.windows(2) {
+        draw.push_line(window[0][0], window[0][1], window[1][0], window[1][1], theme.separator, 2.0);
+    }
+    let disabled = node.disabled.unwrap_or(false);
+    let knob_angle = std::f32::consts::TAU * node.t as f32;
+    let kx = cx + knob_angle.cos() * radius;
+    let ky = cy + knob_angle.sin() * radius;
+    let accent = if disabled { theme.text_muted } else { theme.accent };
+    draw.push_rounded([kx - 6.0, ky - 6.0, 12.0, 12.0], accent, 6.0);
+}
+
+fn paint_icon_select(node: &UiIconSelectNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+    let hovered = flags.contains(NodeFlags::HOVERED);
+    push_control_border(draw, bounds, theme, theme.border_normal, chrome_item_bg(theme, false, hovered));
+    let content_x = bounds.x + theme.padding_standard;
+    let has_icon = icons.and_then(|icons| icons.icon_uv(&node.value)).is_some();
+    if let (true, Some(icons)) = (has_icon, icons) {
+        push_icon(draw, icons, &node.value, content_x, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
+    } else {
+        draw_text_on(draw, atlas, &node.value, content_x, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
+    }
+}
+
+/// 📝 A `Field`'s label; its `child` control is a retained child painted separately by `paint_stack`.
+fn paint_field(node: &UiFieldNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
+    draw_text_on(draw, atlas, &node.label, bounds.x, bounds.y + theme.font_size_small, theme.font_size_small, theme.text_muted);
+}
+
+/// 📂 A `Section`'s header chevron+label; its `children` are retained children painted separately by
+/// `paint_stack`. Collapsed state reads `default_open` directly (no `WidgetState`-backed toggle
+/// persistence yet — that's M5/M6, same caveat as `paint_select`'s closed-only popup).
+fn paint_section(node: &UiSectionNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+    let Some(label) = &node.label else { return };
+    let collapsed = !node.default_open.unwrap_or(true);
+    let chevron = if collapsed { "chevron-right" } else { "chevron-down" };
+    if let Some(icons) = icons {
+        push_icon(draw, icons, chevron, bounds.x, bounds.y + (PANEL_HEADER - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
+    }
+    draw_text_on(draw, atlas, label, bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard, bounds.y + (PANEL_HEADER + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
+}
+
+fn paint_tree_widget(node: &UiTreeNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+    draw.push_scissor(bounds);
+    let mut y = bounds.y;
+    for section in &node.sections {
+        if let Some(label) = &section.label {
+            draw_text_on(draw, atlas, label, bounds.x + TREE_TOGGLE_WIDTH, y + (PANEL_HEADER + theme.font_size_small) * 0.5 - 2.0, theme.font_size_small, theme.text_muted);
+            y += PANEL_HEADER;
+        }
+        for item in &section.items {
+            y = paint_tree_item(item, bounds.x, bounds.w, y, 1, node, theme, atlas, icons, draw);
+        }
+    }
+    draw.pop_scissor();
+}
+
+/// 🌳 Recursive row painter for one `Tree` item (and, if expanded, its nested `items`). Drag/drop
+/// guides and hover-reveal actions from the old `render_tree_item` stay out of scope for M4 (no
+/// hit-testing/drag state exists yet — M5); this paints the static row chrome only.
+fn paint_tree_item(
+    item: &UiTreeItemNode,
+    x: f32,
+    width: f32,
+    y: f32,
+    depth: u32,
+    tree_node: &UiTreeNode,
+    theme: &Theme,
+    atlas: &mut FontAtlas,
+    icons: Option<&IconAtlas>,
+    draw: &mut DrawList,
+) -> f32 {
+    if item.is_hidden.unwrap_or(false) {
+        return y;
+    }
+    let row = Rect::new(x, y, width, TREE_ROW_HEIGHT);
+    let selected = tree_node.selected_ids.as_deref().unwrap_or(&[]).iter().any(|id| id == &item.id);
+    let highlighted = tree_node.highlighted_ids.as_deref().unwrap_or(&[]).iter().any(|id| id == &item.id);
+    if selected {
+        draw.push_rounded([row.x, row.y, row.w, row.h], theme.selected, theme.border_radius);
+    } else if highlighted {
+        draw.push_rounded([row.x, row.y, row.w, row.h], theme.row_hover, theme.border_radius);
+    }
+    let indent = x + (depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
+    let expandable = item.items.as_ref().is_some_and(|items| !items.is_empty());
+    if expandable {
+        if let Some(icons) = icons {
+            let chevron = if item.default_open.unwrap_or(false) { "chevron-down" } else { "chevron-right" };
+            push_icon(draw, icons, chevron, indent - TREE_TOGGLE_WIDTH, row.y + (TREE_ROW_HEIGHT - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
+        }
+    }
+    if let (Some(icons), Some(icon_id)) = (icons, item.icon_id.as_deref()) {
+        push_icon(draw, icons, icon_id, indent, row.y + (TREE_ROW_HEIGHT - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, theme.text_element);
+    }
+    let label_x = indent + if item.icon_id.is_some() { TREE_ICON_SIZE + theme.gap_standard } else { 0.0 };
+    draw_text_on(draw, atlas, &item.label, label_x, row.y + (TREE_ROW_HEIGHT + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
+    let mut next_y = y + TREE_ROW_HEIGHT;
+    if expandable && item.default_open.unwrap_or(false) {
+        for child in item.items.as_ref().unwrap() {
+            next_y = paint_tree_item(child, x, width, next_y, depth + 1, tree_node, theme, atlas, icons, draw);
+        }
+    }
+    next_y
+}
+
+/// 🖼️ No host-side texture-upload queue exists in `ui_wgpu` yet (that lives in the renderer's
+/// `plugin_bridge`/`engine_canvas`, outside this milestone's scope); paints a raster quad keyed by
+/// `src` on the assumption a later host/`scene_slots` milestone populates `RasterTextureStore` under
+/// that same key, falling back to `alt` text when there's nothing to show yet.
+fn paint_image(node: &UiImageNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
+    if node.src.is_empty() {
+        if let Some(alt) = &node.alt {
+            draw_text_on(draw, atlas, alt, bounds.x + 4.0, bounds.y + 16.0, theme.font_size_small, theme.text_muted);
+        }
+        return;
+    }
+    draw.push_raster_quad(&node.src, [bounds.x, bounds.y, bounds.w, bounds.h], [0.0, 0.0, 1.0, 1.0], 1.0);
+}
+
+/// 🎬 Scene surfaces (canvas2d/world3d/node-graph/…) are painted by a `SceneHost` after layout hands
+/// it slot rects (plan's `scene_slots`, M6) — this milestone paints placeholder chrome only, so the
+/// retained tree has *something* visible in that rect before scene-host wiring lands.
+fn paint_component_scene(node: &UiComponentSceneNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) {
+    let _ = &node.surface_id;
+    push_control_border(draw, bounds, theme, theme.border_normal, theme.panel);
+}
+
+/// 🧩 Same placeholder-chrome treatment as `paint_component_scene`: the plugin body itself is a host
+/// concern (`plugin_bridge`), out of scope here; label the slot with its `body_key` for now.
+fn paint_external_slot(node: &UiExternalSlotNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
+    push_control_border(draw, bounds, theme, theme.border_normal, theme.panel);
+    draw_text_on(draw, atlas, &node.body_key, bounds.x + theme.padding_standard, bounds.y + (bounds.h + theme.font_size_small) * 0.5 - 2.0, theme.font_size_small, theme.text_muted);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::component::ui::{UiSeparatorNode, UiStackNode};
+    use crate::flex::LayoutEngine;
+
+    fn text(value: &str) -> UiNode {
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None })
+    }
+
+    fn stack(children: Vec<UiNode>) -> UiNode {
+        UiNode::Stack(UiStackNode {
+            direction: "vertical".into(),
+            gap: Some("none".into()),
+            padding: Some("none".into()),
+            id: None,
+            selected: None,
+            activate: None,
+            drop_action: None,
+            children,
+        })
+    }
+
+    fn setup(ui: &UiNode) -> (UiTree, NodeId, Theme, FontAtlas) {
+        let mut tree = UiTree::new();
+        tree.apply_tree(ui);
+        let root = tree.root.unwrap();
+        let theme = Theme::default();
+        let mut atlas = FontAtlas::builtin();
+        let mut engine = LayoutEngine::new();
+        engine.compute(&mut tree, root, &mut atlas, &theme, 400.0, 400.0);
+        (tree, root, theme, atlas)
+    }
+
+    #[test]
+    fn painting_a_text_node_emits_glyph_instances() {
+        let (mut tree, root, theme, mut atlas) = setup(&text("hi"));
+        let mut draw = DrawList::default();
+
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+
+        let total_instances: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
+        assert!(total_instances > 0, "text node should emit at least one glyph instance");
+    }
+
+    #[test]
+    fn painting_a_stack_recurses_into_every_child() {
+        let ui = stack(vec![text("a"), UiNode::Separator(UiSeparatorNode {}), text("b")]);
+        let (mut tree, root, theme, mut atlas) = setup(&ui);
+        let mut draw = DrawList::default();
+
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+
+        let total_instances: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
+        let total_vectors: usize = draw.layers.iter().map(|layer| layer.vector_vertices.len()).sum();
+        assert!(total_instances > 0, "text children should have emitted glyphs");
+        assert!(total_vectors > 0, "separator child should have emitted a line");
+    }
+
+    #[test]
+    fn paint_tree_clears_dirty_paint_but_leaves_layout_dirt_flags_untouched() {
+        let (mut tree, root, theme, mut atlas) = setup(&text("hi"));
+        assert!(tree.node(root).unwrap().flags.contains(NodeFlags::DIRTY_PAINT));
+        let mut draw = DrawList::default();
+
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+
+        let after_first = tree.node(root).unwrap().flags;
+        assert!(!after_first.contains(NodeFlags::DIRTY_PAINT));
+        assert!(!after_first.contains(NodeFlags::DIRTY_LAYOUT), "paint must not touch DIRTY_LAYOUT, that's flex's job");
+        assert!(!after_first.contains(NodeFlags::SUBTREE_DIRTY), "flex::compute already cleared SUBTREE_DIRTY before paint ran");
+
+        // Second call must be a no-op w.r.t. these flags — repeat of the M3 SUBTREE_DIRTY bug class
+        // (calling twice shouldn't set or double-clear something it shouldn't).
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        let after_second = tree.node(root).unwrap().flags;
+        assert_eq!(after_first, after_second);
+    }
+}
+// #endregion paint
+}
+
+#[cfg(feature = "engine")]
+pub mod events {
+// #region events
+//! 🎯 Retained-mode input routing (`UiEvent` in, `UiCommand` out): reverse-paint-order hit testing
+//! with clip pruning and overlay priority, pointer capture, Tab-order focus, and parent-chain
+//! bubbling. Conceptually replaces the old immediate-mode `input` region's per-frame
+//! `hit_targets`/`DragState` bookkeeping, but that region stays fully in place — `widgets`/`chrome`
+//! and, transitively, `framework/renderer/wgpu` and `infinite_world` still consume it directly, and
+//! the cutover to this module is later-phase renderer-thinning work (see the plan). `events` is
+//! purely additive: it depends on `tree`/`component`/`geometry` only, never on `input`.
+
+use crate::arena::NodeId;
+use crate::component::layout::ActionDescriptor;
+use crate::component::ui::UiNode;
+use crate::geometry::Rect;
+use crate::tree::{NodeFlags, UiTree};
+
+//#region 🔖UiEvent
+/// 🖱️ Mouse button identity for `UiEvent::{PointerDown,PointerUp}`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PointerButton {
+    Primary,
+    Secondary,
+    Middle,
+}
+
+/// ⌨️ Modifier keys held during a keyboard event. A minimal fresh type rather than reusing
+/// `input::PointerModifiers`, so this module stays decoupled from the region it conceptually
+/// replaces (see module doc comment).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct EventModifiers {
+    pub shift: bool,
+    pub ctrl: bool,
+    pub alt: bool,
+    pub meta: bool,
+}
+
+/// 📥 Input events the host feeds into `EventRouter::dispatch`.
+#[derive(Clone, Debug, PartialEq)]
+pub enum UiEvent {
+    PointerDown { x: f32, y: f32, button: PointerButton },
+    PointerUp { x: f32, y: f32, button: PointerButton },
+    PointerMove { x: f32, y: f32 },
+    Scroll { x: f32, y: f32, delta_x: f32, delta_y: f32 },
+    KeyDown { key: String, modifiers: EventModifiers },
+    KeyUp { key: String, modifiers: EventModifiers },
+    TextInput { text: String },
+}
+//#endregion 🔖UiEvent
+
+//#region 🔖HitTest
+/// 🎯 Reverse-paint-order hit test from `root`: `paint::paint_stack` walks first_child→last_child
+/// (parent background first, then children in that order, each drawn over the last), so the
+/// topmost node at any point is the *last*-painted one — this walk visits children last-first to
+/// match. Overlay-flagged (`NodeFlags::OVERLAY`) children are tested before normal siblings at
+/// every level, so a popup always wins over base content underneath it. `CLIPS_CHILDREN` prunes
+/// early: a point outside that node's own bounds skips testing its children entirely, even if a
+/// child's own (unclipped) rect would nominally contain the point. `HIT_TRANSPARENT` nodes are
+/// skipped for the match itself (their children are still tested — pass-through). Returns the
+/// deepest/topmost matching node.
+pub(crate) fn hit_test(tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<NodeId> {
+    hit_test_node(tree, root, 0.0, 0.0, x, y)
+}
+
+fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32, y: f32) -> Option<NodeId> {
+    let node = tree.node(id)?;
+    let abs_x = origin_x + node.layout.x;
+    let abs_y = origin_y + node.layout.y;
+    let inside = Rect::new(abs_x, abs_y, node.layout.width, node.layout.height).contains(x, y);
+    if node.flags.contains(NodeFlags::CLIPS_CHILDREN) && !inside {
+        return None;
+    }
+    let mut overlays: Vec<NodeId> = Vec::new();
+    let mut normal: Vec<NodeId> = Vec::new();
+    for child in tree.children(id) {
+        match tree.node(child) {
+            Some(child_node) if child_node.flags.contains(NodeFlags::OVERLAY) => overlays.push(child),
+            _ => normal.push(child),
+        }
+    }
+    for child in overlays.into_iter().rev().chain(normal.into_iter().rev()) {
+        if let Some(hit) = hit_test_node(tree, child, abs_x, abs_y, x, y) {
+            return Some(hit);
+        }
+    }
+    // A bare `Stack` is a layout-only container with no interaction semantics of its own — it
+    // must never be the hit result itself, only a pass-through to its children (same intent as
+    // `HIT_TRANSPARENT`, just implicit for this variant instead of flag-driven).
+    let is_plain_container = matches!(node.spec.0, UiNode::Stack(_));
+    if inside && !node.flags.contains(NodeFlags::HIT_TRANSPARENT) && !is_plain_container {
+        Some(id)
+    } else {
+        None
+    }
+}
+//#endregion 🔖HitTest
+
+//#region 🔖Capture
+/// 🫳 What kind of interaction currently holds pointer capture. A coarser-grained, retained-mode
+/// replacement for the old `input::DragState`/`TreeDragState` pair.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CaptureKind {
+    Press,
+    Drag,
+}
+
+/// 🔒 Once a node captures, subsequent pointer-move/up events route directly to it regardless of
+/// what's actually under the pointer, until released on `PointerUp` (or explicit `release`).
+#[derive(Clone, Copy, Debug, Default)]
+struct CaptureState {
+    target: Option<(NodeId, CaptureKind)>,
+}
+
+impl CaptureState {
+    fn release(&mut self) -> Option<(NodeId, CaptureKind)> {
+        self.target.take()
+    }
+}
+//#endregion 🔖Capture
+
+//#region 🔖Focus
+/// 🎯 Which `UiNode` variants participate in Tab-order focus cycling.
+fn is_focusable(node: &UiNode) -> bool {
+    matches!(
+        node,
+        UiNode::Input(_)
+            | UiNode::Button(_)
+            | UiNode::Select(_)
+            | UiNode::Toggle(_)
+            | UiNode::Slider(_)
+            | UiNode::NumberStepper(_)
+            | UiNode::Ring(_)
+            | UiNode::IconSelect(_)
+    )
+}
+
+fn collect_focusable(tree: &UiTree, id: NodeId, out: &mut Vec<NodeId>) {
+    if let Some(node) = tree.node(id) {
+        if is_focusable(&node.spec.0) {
+            out.push(id);
+        }
+    }
+    for child in tree.children(id) {
+        collect_focusable(tree, child, out);
+    }
+}
+
+/// 🔦 Currently-focused node plus a lazily-rebuilt document-order Tab cycle over focusable nodes.
+struct FocusState {
+    focused: Option<NodeId>,
+    tab_order: Vec<NodeId>,
+}
+
+impl FocusState {
+    fn new() -> Self {
+        Self { focused: None, tab_order: Vec::new() }
+    }
+
+    /// 🎯 Sets/clears focus, flipping `NodeFlags::FOCUSED` on the old and new targets and marking
+    /// both `DIRTY_PAINT` (a focus ring likely needs repainting) via `UiTree::mark_dirty`. A no-op
+    /// (no flag churn) when `node` already matches the current focus.
+    fn set_focus(&mut self, tree: &mut UiTree, node: Option<NodeId>) {
+        if self.focused == node {
+            return;
+        }
+        if let Some(previous) = self.focused {
+            if let Some(previous_node) = tree.node_mut(previous) {
+                previous_node.flags.set(NodeFlags::FOCUSED, false);
+            }
+            tree.mark_dirty(previous, NodeFlags::DIRTY_PAINT);
+        }
+        if let Some(next) = node {
+            if let Some(next_node) = tree.node_mut(next) {
+                next_node.flags.set(NodeFlags::FOCUSED, true);
+            }
+            tree.mark_dirty(next, NodeFlags::DIRTY_PAINT);
+        }
+        self.focused = node;
+    }
+
+    fn clear_focus(&mut self, tree: &mut UiTree) {
+        self.set_focus(tree, None);
+    }
+
+    fn rebuild_tab_order(&mut self, tree: &UiTree, root: NodeId) {
+        self.tab_order.clear();
+        collect_focusable(tree, root, &mut self.tab_order);
+    }
+
+    fn focus_next(&mut self, tree: &mut UiTree, root: NodeId) {
+        self.rebuild_tab_order(tree, root);
+        if self.tab_order.is_empty() {
+            self.set_focus(tree, None);
+            return;
+        }
+        let next_index = match self.focused.and_then(|id| self.tab_order.iter().position(|&candidate| candidate == id)) {
+            Some(index) => (index + 1) % self.tab_order.len(),
+            None => 0,
+        };
+        self.set_focus(tree, Some(self.tab_order[next_index]));
+    }
+
+    fn focus_prev(&mut self, tree: &mut UiTree, root: NodeId) {
+        self.rebuild_tab_order(tree, root);
+        if self.tab_order.is_empty() {
+            self.set_focus(tree, None);
+            return;
+        }
+        let previous_index = match self.focused.and_then(|id| self.tab_order.iter().position(|&candidate| candidate == id)) {
+            Some(index) => (index + self.tab_order.len() - 1) % self.tab_order.len(),
+            None => self.tab_order.len() - 1,
+        };
+        self.set_focus(tree, Some(self.tab_order[previous_index]));
+    }
+}
+//#endregion 🔖Focus
+
+//#region 🔖Bubble
+/// 🫧 Walks from `from` up through `parent` links (including `from` itself), calling `handler(id)`
+/// for each ancestor until it returns `true` ("handled, stop bubbling") or the root is reached.
+pub(crate) fn bubble<F: FnMut(NodeId) -> bool>(tree: &UiTree, from: NodeId, mut handler: F) {
+    let mut cursor = Some(from);
+    while let Some(id) = cursor {
+        if handler(id) {
+            return;
+        }
+        cursor = tree.node(id).and_then(|node| node.parent);
+    }
+}
+//#endregion 🔖Bubble
+
+//#region 🔖UiCommand
+/// 📤 What the engine emits for the host to act on, drained once per tick.
+#[derive(Clone, Debug, PartialEq)]
+pub enum UiCommand {
+    /// 🧩 A widget's declarative `ActionDescriptor` fired (currently: a `Button` clicked while it
+    /// still had the node the pointer went down on under the pointer at release).
+    App { window_id: String, action: ActionDescriptor },
+    /// 🔦 Focus moved (or cleared) as a result of routing an event.
+    FocusChanged { window_id: String, node: Option<NodeId> },
+}
+
+/// 🧭 Owns capture + focus state for one window's retained tree and turns `UiEvent`s into
+/// `NodeFlags` updates (`HOVERED`/`ACTIVE`/`FOCUSED`, each mirrored into `DIRTY_PAINT` via
+/// `UiTree::mark_dirty`) plus a minimal, correct (not speculative) set of `UiCommand`s: focus
+/// changes, and `Button` click → its `ActionDescriptor`. Per-widget-variant semantics beyond that
+/// (drag-to-reorder a `Tree`, slider drag-to-set-value, …) are a documented gap for a later
+/// milestone.
+pub(crate) struct EventRouter {
+    window_id: String,
+    capture: CaptureState,
+    focus: FocusState,
+    hovered: Option<NodeId>,
+}
+
+impl EventRouter {
+    pub(crate) fn new(window_id: impl Into<String>) -> Self {
+        Self { window_id: window_id.into(), capture: CaptureState::default(), focus: FocusState::new(), hovered: None }
+    }
+
+    fn resolve_target(&self, tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<NodeId> {
+        match self.capture.target {
+            Some((id, _)) => Some(id),
+            None => hit_test(tree, root, x, y),
+        }
+    }
+
+    /// 👆 Flips `NodeFlags::HOVERED` off the previous hover target and on the new one (a no-op when
+    /// they're the same node), dirtying whichever ends up actually changed.
+    fn update_hover(&mut self, tree: &mut UiTree, target: Option<NodeId>) {
+        if self.hovered == target {
+            return;
+        }
+        if let Some(previous) = self.hovered {
+            if let Some(node) = tree.node_mut(previous) {
+                node.flags.set(NodeFlags::HOVERED, false);
+            }
+            tree.mark_dirty(previous, NodeFlags::DIRTY_PAINT);
+        }
+        if let Some(next) = target {
+            if let Some(node) = tree.node_mut(next) {
+                node.flags.set(NodeFlags::HOVERED, true);
+            }
+            tree.mark_dirty(next, NodeFlags::DIRTY_PAINT);
+        }
+        self.hovered = target;
+    }
+
+    /// 🚦 Resolves the event's target (capture target if captured, else `hit_test`), updates
+    /// interaction flags, and returns any `UiCommand`s the event produced.
+    pub(crate) fn dispatch(&mut self, tree: &mut UiTree, root: NodeId, event: &UiEvent) -> Vec<UiCommand> {
+        let mut commands = Vec::new();
+        match event {
+            UiEvent::PointerMove { x, y } => {
+                let target = self.resolve_target(tree, root, *x, *y);
+                self.update_hover(tree, target);
+            }
+            UiEvent::PointerDown { x, y, .. } => {
+                let target = hit_test(tree, root, *x, *y);
+                self.update_hover(tree, target);
+                if let Some(id) = target {
+                    if let Some(node) = tree.node_mut(id) {
+                        node.flags.set(NodeFlags::ACTIVE, true);
+                    }
+                    tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+                    self.capture.target = Some((id, CaptureKind::Press));
+                    let focusable = tree.node(id).is_some_and(|node| is_focusable(&node.spec.0));
+                    if focusable {
+                        self.focus.set_focus(tree, Some(id));
+                        commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: Some(id) });
+                    }
+                } else {
+                    self.focus.clear_focus(tree);
+                    commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
+                }
+            }
+            UiEvent::PointerUp { x, y, .. } => {
+                if let Some((active_id, _)) = self.capture.release() {
+                    if let Some(node) = tree.node_mut(active_id) {
+                        node.flags.set(NodeFlags::ACTIVE, false);
+                    }
+                    tree.mark_dirty(active_id, NodeFlags::DIRTY_PAINT);
+                    if hit_test(tree, root, *x, *y) == Some(active_id) {
+                        if let Some(node) = tree.node(active_id) {
+                            if let UiNode::Button(button) = &node.spec.0 {
+                                commands.push(UiCommand::App { window_id: self.window_id.clone(), action: button.action.clone() });
+                            }
+                        }
+                    }
+                }
+                let target = self.resolve_target(tree, root, *x, *y);
+                self.update_hover(tree, target);
+            }
+            UiEvent::KeyDown { key, modifiers } => {
+                if key == "Tab" {
+                    if modifiers.shift {
+                        self.focus.focus_prev(tree, root);
+                    } else {
+                        self.focus.focus_next(tree, root);
+                    }
+                    commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: self.focus.focused });
+                }
+            }
+            UiEvent::KeyUp { .. } | UiEvent::TextInput { .. } | UiEvent::Scroll { .. } => {}
+        }
+        commands
+    }
+}
+//#endregion 🔖UiCommand
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::component::ui::{UiButtonNode, UiSeparatorNode, UiStackNode, UiTextNode};
+    use crate::tree::{Node, NodeKey, WidgetSpec};
+
+    fn action() -> ActionDescriptor {
+        ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None }
+    }
+
+    fn stack_ui() -> UiNode {
+        UiNode::Stack(UiStackNode {
+            direction: "vertical".into(),
+            gap: None,
+            padding: None,
+            id: None,
+            selected: None,
+            activate: None,
+            drop_action: None,
+            children: Vec::new(),
+        })
+    }
+
+    fn text_ui(value: &str) -> UiNode {
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None })
+    }
+
+    fn separator_ui() -> UiNode {
+        UiNode::Separator(UiSeparatorNode {})
+    }
+
+    fn button_ui(id: &str) -> UiNode {
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: id.into(), action: action(), style: None, disabled: None })
+    }
+
+    fn leaf(tree: &mut UiTree, parent: Option<NodeId>, ordinal: u32, node: UiNode, rect: (f32, f32, f32, f32)) -> NodeId {
+        let id = tree.insert_child(parent, Node::new(NodeKey::Positional(ordinal, ordinal), WidgetSpec(node)));
+        let bucket = tree.node_mut(id).unwrap();
+        bucket.layout.x = rect.0;
+        bucket.layout.y = rect.1;
+        bucket.layout.width = rect.2;
+        bucket.layout.height = rect.3;
+        id
+    }
+
+    fn set_flag(tree: &mut UiTree, id: NodeId, flag: NodeFlags) {
+        tree.node_mut(id).unwrap().flags.set(flag, true);
+    }
+
+    #[test]
+    fn hit_test_finds_the_topmost_of_two_non_overlapping_siblings() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let left = leaf(&mut tree, Some(root), 1, text_ui("left"), (0.0, 0.0, 100.0, 100.0));
+        let right = leaf(&mut tree, Some(root), 2, text_ui("right"), (100.0, 0.0, 100.0, 100.0));
+
+        assert_eq!(hit_test(&tree, root, 50.0, 50.0), Some(left));
+        assert_eq!(hit_test(&tree, root, 150.0, 50.0), Some(right));
+    }
+
+    #[test]
+    fn hit_test_respects_clips_children_pruning() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let clipper = leaf(&mut tree, Some(root), 1, stack_ui(), (0.0, 0.0, 50.0, 50.0));
+        set_flag(&mut tree, clipper, NodeFlags::CLIPS_CHILDREN);
+        // child's own rect extends far outside the clipper's 50x50 bounds.
+        let overflowing_child = leaf(&mut tree, Some(clipper), 1, text_ui("overflow"), (0.0, 0.0, 500.0, 500.0));
+
+        assert_eq!(hit_test(&tree, root, 400.0, 400.0), None, "point outside the clipper must not match the overflowing child");
+        assert_eq!(hit_test(&tree, root, 10.0, 10.0), Some(overflowing_child), "inside the clip bounds the child still matches");
+    }
+
+    #[test]
+    fn hit_test_skips_hit_transparent_node_but_still_matches_its_children() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let overlay_glass = leaf(&mut tree, Some(root), 1, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        set_flag(&mut tree, overlay_glass, NodeFlags::HIT_TRANSPARENT);
+        let child = leaf(&mut tree, Some(overlay_glass), 1, text_ui("under-glass"), (10.0, 10.0, 50.0, 50.0));
+
+        assert_eq!(hit_test(&tree, root, 30.0, 30.0), Some(child));
+        assert_eq!(hit_test(&tree, root, 150.0, 150.0), None, "hit-transparent node itself must never match outside its children");
+    }
+
+    #[test]
+    fn capture_routes_move_and_up_to_the_captured_node_regardless_of_pointer_position() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let a = leaf(&mut tree, Some(root), 1, separator_ui(), (0.0, 0.0, 100.0, 100.0));
+        let _b = leaf(&mut tree, Some(root), 2, separator_ui(), (100.0, 0.0, 100.0, 100.0));
+        let mut router = EventRouter::new("main");
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 50.0, y: 50.0, button: PointerButton::Primary });
+        assert_eq!(router.capture.target.map(|(id, _)| id), Some(a));
+
+        // pointer moved far outside `a`'s bounds and into `b`'s — capture must still target `a`.
+        router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 150.0, y: 50.0 });
+        assert_eq!(router.hovered, Some(a));
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 150.0, y: 50.0, button: PointerButton::Primary });
+        assert_eq!(router.capture.target, None, "capture releases on PointerUp");
+    }
+
+    #[test]
+    fn focus_next_and_prev_cycle_only_through_focusable_nodes() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 300.0, 100.0));
+        leaf(&mut tree, Some(root), 1, text_ui("not focusable"), (0.0, 0.0, 50.0, 20.0));
+        let button_a = leaf(&mut tree, Some(root), 2, button_ui("a"), (50.0, 0.0, 50.0, 20.0));
+        leaf(&mut tree, Some(root), 3, separator_ui(), (100.0, 0.0, 50.0, 20.0));
+        let button_b = leaf(&mut tree, Some(root), 4, button_ui("b"), (150.0, 0.0, 50.0, 20.0));
+        let mut focus = FocusState::new();
+
+        focus.focus_next(&mut tree, root);
+        assert_eq!(focus.focused, Some(button_a));
+        focus.focus_next(&mut tree, root);
+        assert_eq!(focus.focused, Some(button_b));
+        focus.focus_next(&mut tree, root);
+        assert_eq!(focus.focused, Some(button_a), "cycles back to the first focusable node");
+
+        focus.focus_prev(&mut tree, root);
+        assert_eq!(focus.focused, Some(button_b), "wraps to the last focusable node going backwards");
+    }
+
+    #[test]
+    fn set_focus_flips_the_focused_flag_in_both_directions() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 100.0, 100.0));
+        let a = leaf(&mut tree, Some(root), 1, button_ui("a"), (0.0, 0.0, 50.0, 20.0));
+        let b = leaf(&mut tree, Some(root), 2, button_ui("b"), (0.0, 20.0, 50.0, 20.0));
+        let mut focus = FocusState::new();
+
+        focus.set_focus(&mut tree, Some(a));
+        assert!(tree.node(a).unwrap().flags.contains(NodeFlags::FOCUSED));
+        assert!(!tree.node(b).unwrap().flags.contains(NodeFlags::FOCUSED));
+
+        focus.set_focus(&mut tree, Some(b));
+        assert!(!tree.node(a).unwrap().flags.contains(NodeFlags::FOCUSED), "moving focus away must clear the old node's flag");
+        assert!(tree.node(b).unwrap().flags.contains(NodeFlags::FOCUSED));
+
+        focus.clear_focus(&mut tree);
+        assert!(!tree.node(b).unwrap().flags.contains(NodeFlags::FOCUSED), "clearing focus must clear the flag, not just the router's own field");
+    }
+
+    #[test]
+    fn clicking_a_button_emits_its_action_descriptor_as_a_ui_command() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 100.0, 100.0));
+        let button = leaf(&mut tree, Some(root), 1, button_ui("go"), (0.0, 0.0, 100.0, 40.0));
+        let mut router = EventRouter::new("main");
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
+
+        let expected = action();
+        assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { window_id, action } if window_id == "main" && *action == expected)));
+        let _ = button;
+    }
+
+    #[test]
+    fn releasing_off_the_captured_button_does_not_fire_its_action() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 100.0, 100.0));
+        leaf(&mut tree, Some(root), 1, button_ui("go"), (0.0, 0.0, 40.0, 40.0));
+        let mut router = EventRouter::new("main");
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 90.0, y: 90.0, button: PointerButton::Primary });
+
+        assert!(commands.iter().all(|cmd| !matches!(cmd, UiCommand::App { .. })), "release outside the pressed button must not fire its action");
+    }
+
+    #[test]
+    fn bubble_stops_when_a_handler_returns_true() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 100.0, 100.0));
+        let mid = leaf(&mut tree, Some(root), 1, stack_ui(), (0.0, 0.0, 100.0, 100.0));
+        let leaf_node = leaf(&mut tree, Some(mid), 1, text_ui("leaf"), (0.0, 0.0, 20.0, 20.0));
+
+        let mut visited = Vec::new();
+        bubble(&tree, leaf_node, |id| {
+            visited.push(id);
+            id == mid
+        });
+
+        assert_eq!(visited, vec![leaf_node, mid], "bubbling must stop at `mid` and never reach `root`");
+    }
+}
+// #endregion events
+}
+
+#[cfg(feature = "engine")]
+pub mod scene_slots {
+// #region scene_slots
+//! 🎬 Scene-host bridge: after each layout+paint pass the engine collects every `ComponentScene`
+//! leaf's resolved absolute rect into a `SceneSlot` and hands it to a caller-provided `SceneHost`,
+//! which owns the actual scene rendering (world3d via `infinite_world`, canvas2d, vello surfaces).
+//! `ui_wgpu` never links vello/resvg/tiny-skia itself — it only orchestrates slot geometry and event
+//! routing, matching the plan's dependency-graph invariant that those crates stay in the renderer.
+
+use crate::arena::NodeId;
+use crate::component::ui::{SurfaceKind, UiNode};
+use crate::draw::DrawList;
+use crate::events::{UiCommand, UiEvent};
+use crate::geometry::Rect;
+use crate::tree::UiTree;
+
+/// 🎬 One `ComponentScene` leaf's resolved absolute rect, ready to hand to a `SceneHost`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SceneSlot {
+    pub node: NodeId,
+    pub surface_id: String,
+    pub kind: SurfaceKind,
+    pub rect: Rect,
+}
+
+/// 🖇️ External scene renderer/router — the only place vello/world3d/etc-specific code may live;
+/// `ui_wgpu` calls into it after layout+paint with resolved slot geometry, never the reverse.
+pub trait SceneHost {
+    /// 🖌️ Pushes this slot's own draw calls (e.g. a `ScenePass3d`) into the shared `DrawList`.
+    fn paint_slot(&mut self, slot: &SceneSlot, draw: &mut DrawList);
+    /// 🕹️ Routes an event that hit this slot to the host, returning any `UiCommand`s it produces.
+    fn handle_event(&mut self, slot: &SceneSlot, event: &UiEvent) -> Vec<UiCommand>;
+}
+
+/// 📥 Walks `tree` from `root`, collecting every `ComponentScene` leaf's absolute rect (ancestor
+/// offsets accumulated the same way `events::hit_test_node`/`paint::paint_node` do). Always includes
+/// every reachable scene node regardless of `DIRTY_PAINT`/`DIRTY_LAYOUT` — scene leaves are
+/// always-dirty unless the host opts into its own caching, so `ui_wgpu` doesn't try to cache on the
+/// host's behalf this milestone.
+pub(crate) fn collect_scene_slots(tree: &UiTree, root: NodeId) -> Vec<SceneSlot> {
+    let mut slots = Vec::new();
+    collect_scene_slots_node(tree, root, 0.0, 0.0, &mut slots);
+    slots
+}
+
+fn collect_scene_slots_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, out: &mut Vec<SceneSlot>) {
+    let Some(node) = tree.node(id) else { return };
+    let abs_x = origin_x + node.layout.x;
+    let abs_y = origin_y + node.layout.y;
+    if let UiNode::ComponentScene(scene) = &node.spec.0 {
+        out.push(SceneSlot {
+            node: id,
+            surface_id: scene.surface_id.clone(),
+            kind: scene.component_kind,
+            rect: Rect::new(abs_x, abs_y, node.layout.width, node.layout.height),
+        });
+    }
+    for child in tree.children(id) {
+        collect_scene_slots_node(tree, child, abs_x, abs_y, out);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::component::ui::{UiComponentSceneNode, UiStackNode, UiTextNode};
+    use crate::flex::LayoutEngine;
+    use crate::text::FontAtlas;
+    use crate::theme::Theme;
+
+    fn text(value: &str) -> UiNode {
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None })
+    }
+
+    fn scene(surface_id: &str) -> UiNode {
+        UiNode::ComponentScene(UiComponentSceneNode {
+            surface_id: surface_id.into(),
+            controller_id: "ctrl".into(),
+            component_kind: SurfaceKind::World3d,
+            pane_id: None,
+            binding_id: None,
+            canvas_2d: None,
+            world_3d: None,
+            node_graph: None,
+            text_editor: None,
+            table: None,
+            raster: None,
+            virtual_file_system: None,
+            gis_map: None,
+            puzzle2d_board: None,
+            icon_render: None,
+            note_canvas: None,
+            vcs_history: None,
+            protocol_list: None,
+        })
+    }
+
+    fn stack(children: Vec<UiNode>) -> UiNode {
+        UiNode::Stack(UiStackNode {
+            direction: "vertical".into(),
+            gap: Some("none".into()),
+            padding: Some("standard".into()),
+            id: None,
+            selected: None,
+            activate: None,
+            drop_action: None,
+            children,
+        })
+    }
+
+    #[test]
+    fn collects_a_scene_leaf_with_its_absolute_rect_accounting_for_ancestor_offsets() {
+        let mut tree = UiTree::new();
+        tree.apply_tree(&stack(vec![text("above"), scene("surface.one")]));
+        let root = tree.root.unwrap();
+        let mut engine = LayoutEngine::new();
+        let mut atlas = FontAtlas::builtin();
+        let theme = Theme::default();
+        engine.compute(&mut tree, root, &mut atlas, &theme, 400.0, 400.0);
+
+        let slots = collect_scene_slots(&tree, root);
+        assert_eq!(slots.len(), 1);
+        let slot = &slots[0];
+        assert_eq!(slot.surface_id, "surface.one");
+        assert_eq!(slot.kind, SurfaceKind::World3d);
+        // The scene leaf is the stack's second child (below the text sibling plus the stack's own
+        // top padding) -- a nonzero absolute y proves ancestor offsets were accumulated, not just
+        // the leaf's own parent-relative `LayoutBucket` coordinates.
+        assert!(slot.rect.y > 0.0, "expected the scene leaf offset below its text sibling, got y={}", slot.rect.y);
+        assert!(slot.rect.w > 0.0 && slot.rect.h > 0.0);
+    }
+
+    #[test]
+    fn finds_no_slots_when_the_tree_has_no_scene_nodes() {
+        let mut tree = UiTree::new();
+        tree.apply_tree(&stack(vec![text("only text")]));
+        let root = tree.root.unwrap();
+        assert!(collect_scene_slots(&tree, root).is_empty());
+    }
+
+    #[test]
+    fn collects_multiple_scene_leaves_in_document_order() {
+        let mut tree = UiTree::new();
+        tree.apply_tree(&stack(vec![scene("surface.a"), scene("surface.b")]));
+        let root = tree.root.unwrap();
+        let mut engine = LayoutEngine::new();
+        let mut atlas = FontAtlas::builtin();
+        let theme = Theme::default();
+        engine.compute(&mut tree, root, &mut atlas, &theme, 400.0, 400.0);
+
+        let slots = collect_scene_slots(&tree, root);
+        let ids: Vec<&str> = slots.iter().map(|slot| slot.surface_id.as_str()).collect();
+        assert_eq!(ids, vec!["surface.a", "surface.b"]);
+    }
+}
+// #endregion scene_slots
+}
+
+#[cfg(feature = "engine")]
+pub mod shell {
+// #region shell
+//! 🪟 Retained representation of dock/split/tab/window-cap chrome, built from the declarative
+//! `WindowLayout` vocabulary (not `UiNode` — window-shell chrome isn't expressed as app-declarative
+//! `UiNode`s). `Shell` owns its own `UiTree` so a later `engine` facade milestone can run the same
+//! layout/paint/events passes over shell chrome that it runs over app content trees.
+//! `set_window_layout` does a full teardown+rebuild each call rather than keyed diffing (window
+//! layouts change far less often per-frame than widget content, so a full rebuild is a reasonable v1
+//! — incremental shell-tree diffing is a documented gap for a later milestone). Drag-to-reorder/
+//! drop-zone computation is stubbed this milestone (see `dispatch`'s doc comment): only hit-testing
+//! plus click-to-activate-tab is fully implemented.
+
+use crate::arena::NodeId;
+use crate::component::layout::{
+    ActionDescriptor, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
+    WindowLayoutStackNode, WindowLayoutWindowNode,
+};
+use crate::component::ui::{UiButtonNode, UiNode, UiStackNode};
+use crate::events::{hit_test, UiEvent};
+use crate::tree::{Node, NodeFlags, NodeKey, UiTree, WidgetSpec};
+
+const SHELL_AXIS: u32 = 200;
+const SHELL_STACK: u32 = 201;
+
+/// 📤 What `Shell::dispatch` surfaces to the host: chrome-level interactions that aren't app
+/// `ActionDescriptor`s (those still flow through `events::UiCommand::App`).
+#[derive(Clone, Debug, PartialEq)]
+pub enum ShellEvent {
+    /// 🫳 A window-cap/tab-header press started a potential drag. `Shell::dispatch` never emits this
+    /// yet — see its doc comment for what's stubbed vs. implemented this milestone.
+    PanelDragStarted { pane_id: String },
+    /// 📥 A dragged pane was released over a drop zone. `Shell::dispatch` never emits this yet (no
+    /// drop-target geometry is computed this milestone); kept in the enum so the host-facing API
+    /// shape is settled ahead of the drag-and-drop implementation landing in a later milestone.
+    PanelDropped { pane_id: String, target: String },
+    /// 🖱️ A tab/window-cap was clicked (pointer down and up over the same window leaf).
+    TabActivated { window_id: String },
+}
+
+/// 🪟 Retained dock/split/tab/window-cap/navbar chrome, driven by declarative `WindowLayout`.
+pub struct Shell {
+    tree: UiTree,
+    layout: Option<WindowLayout>,
+    navbar: Vec<String>,
+    pressed: Option<NodeId>,
+}
+
+impl Shell {
+    /// 🌱 An empty shell: no layout applied yet, no navbar items.
+    pub fn new() -> Self {
+        Self { tree: UiTree::new(), layout: None, navbar: Vec::new(), pressed: None }
+    }
+
+    /// 🔁 Rebuilds the shell's retained tree from `layout` (full teardown+rebuild, see module doc).
+    /// Axis nodes become row/column `Stack` containers; stack (tab-group) nodes become `Stack`
+    /// containers marked `CLIPS_CHILDREN` (a tab group clips its content to its own bounds); each
+    /// window leaf becomes a `Button`-shaped hit target keyed by its `instance_id` (falling back to
+    /// `window_kind_id`) — a plain `Stack` can never itself be a hit target
+    /// (`events::hit_test`'s bare-`Stack`-is-pass-through-only rule), so window caps deliberately use
+    /// a non-`Stack` variant instead.
+    pub fn set_window_layout(&mut self, layout: WindowLayout) {
+        let mut tree = UiTree::new();
+        let root_id = tree.insert_child(None, Node::new(NodeKey::Explicit("shell.root".into()), WidgetSpec(root_stack())));
+        tree.mark_dirty(root_id, NodeFlags::DIRTY_LAYOUT);
+        build_root(&mut tree, root_id, &layout.root);
+        self.tree = tree;
+        self.layout = Some(layout);
+        self.pressed = None;
+    }
+
+    /// 🧭 Minimal stub: stores whatever navbar-relevant labels the host provides. A full navbar data
+    /// model and pixel-perfect chrome painting are deferred to a later milestone — getting the tree
+    /// integration point right matters more than the visual right now.
+    pub fn set_navbar(&mut self, items: Vec<String>) {
+        self.navbar = items;
+    }
+
+    /// 📖 The declarative layout last applied via `set_window_layout`, if any.
+    pub fn window_layout(&self) -> Option<&WindowLayout> {
+        self.layout.as_ref()
+    }
+
+    /// 🌳 Read access to the shell's retained tree, for a later `engine` facade to layout/paint/route.
+    pub fn tree(&self) -> &UiTree {
+        &self.tree
+    }
+
+    /// 🌳 Mutable access to the shell's retained tree.
+    pub fn tree_mut(&mut self) -> &mut UiTree {
+        &mut self.tree
+    }
+
+    /// 🧭 The stub navbar item labels currently set via `set_navbar`.
+    pub fn navbar(&self) -> &[String] {
+        &self.navbar
+    }
+
+    /// 🕹️ Hit-tests `event` against the shell's own retained tree and surfaces `ShellEvent`s. Fully
+    /// implemented: `PointerDown` over a window-cap captures it; a matching `PointerUp` over the
+    /// *same* window-cap emits `TabActivated`. Stubbed: no `PanelDragStarted`/`PanelDropped` are
+    /// emitted yet — drag-to-reorder needs drop-zone geometry this milestone doesn't compute
+    /// (documented gap, deferred to Phase 4's shell carve-over).
+    pub fn dispatch(&mut self, event: &UiEvent) -> Vec<ShellEvent> {
+        let mut out = Vec::new();
+        let Some(root) = self.tree.root else { return out };
+        match event {
+            UiEvent::PointerDown { x, y, .. } => {
+                self.pressed = hit_test(&self.tree, root, *x, *y);
+            }
+            UiEvent::PointerUp { x, y, .. } => {
+                let released = hit_test(&self.tree, root, *x, *y);
+                if let (Some(pressed_id), Some(released_id)) = (self.pressed.take(), released) {
+                    if pressed_id == released_id {
+                        if let Some(NodeKey::Explicit(window_id)) = self.tree.node(released_id).map(|node| node.key.clone()) {
+                            out.push(ShellEvent::TabActivated { window_id });
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+        out
+    }
+}
+
+impl Default for Shell {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+fn root_stack() -> UiNode {
+    UiNode::Stack(UiStackNode {
+        direction: "column".into(),
+        gap: None,
+        padding: None,
+        id: Some("shell.root".into()),
+        selected: None,
+        activate: None,
+        drop_action: None,
+        children: Vec::new(),
+    })
+}
+
+fn build_root(tree: &mut UiTree, parent: NodeId, root: &WindowLayoutRoot) {
+    match root {
+        WindowLayoutRoot::Axis(axis) => build_axis(tree, parent, axis, 0),
+        WindowLayoutRoot::Stack(stack) => build_stack(tree, parent, stack, 0),
+    }
+}
+
+fn build_axis(tree: &mut UiTree, parent: NodeId, axis: &WindowLayoutAxisNode, ordinal: u32) {
+    let spec = UiNode::Stack(UiStackNode {
+        direction: axis.kind.clone(),
+        gap: Some("none".into()),
+        padding: None,
+        id: None,
+        selected: None,
+        activate: None,
+        drop_action: None,
+        children: Vec::new(),
+    });
+    let id = tree.insert_child(Some(parent), Node::new(NodeKey::Positional(SHELL_AXIS, ordinal), WidgetSpec(spec)));
+    tree.mark_dirty(id, NodeFlags::DIRTY_LAYOUT);
+    for (index, child) in axis.children.iter().enumerate() {
+        match child {
+            WindowLayoutChild::Axis(nested) => build_axis(tree, id, nested, index as u32),
+            WindowLayoutChild::Stack(nested) => build_stack(tree, id, nested, index as u32),
+        }
+    }
+}
+
+/// 🗂️ A tab group: a `Stack` container marked `CLIPS_CHILDREN` (its content clips to its own bounds)
+/// whose children are the window-cap `Button` leaves built by `build_window`.
+fn build_stack(tree: &mut UiTree, parent: NodeId, stack: &WindowLayoutStackNode, ordinal: u32) {
+    let spec = UiNode::Stack(UiStackNode {
+        direction: "column".into(),
+        gap: None,
+        padding: None,
+        id: None,
+        selected: None,
+        activate: None,
+        drop_action: None,
+        children: Vec::new(),
+    });
+    let id = tree.insert_child(Some(parent), Node::new(NodeKey::Positional(SHELL_STACK, ordinal), WidgetSpec(spec)));
+    if let Some(node) = tree.node_mut(id) {
+        node.flags.set(NodeFlags::CLIPS_CHILDREN, true);
+    }
+    tree.mark_dirty(id, NodeFlags::DIRTY_LAYOUT);
+    for (index, window) in stack.children.iter().enumerate() {
+        build_window(tree, id, window, index as u32);
+    }
+}
+
+/// 🪟 One window-cap/tab-header hit target, keyed by `instance_id` (falling back to
+/// `window_kind_id`). Modeled as a `Button` rather than a `Stack` specifically so `events::hit_test`
+/// treats it as a matchable leaf, not a pass-through container (see `set_window_layout`'s doc
+/// comment).
+fn build_window(tree: &mut UiTree, parent: NodeId, window: &WindowLayoutWindowNode, ordinal: u32) {
+    let _ = ordinal;
+    let window_id = window.instance_id.clone().unwrap_or_else(|| window.window_kind_id.clone());
+    let label = window.title.clone().unwrap_or_else(|| window.window_kind_id.clone());
+    let spec = UiNode::Button(UiButtonNode {
+        id: Some(window_id.clone()),
+        icon_id: String::new(),
+        label,
+        action: ActionDescriptor { controller_id: "shell.window".into(), action: "activate".into(), args: None },
+        style: None,
+        disabled: None,
+    });
+    let id = tree.insert_child(Some(parent), Node::new(NodeKey::Explicit(window_id), WidgetSpec(spec)));
+    tree.mark_dirty(id, NodeFlags::DIRTY_LAYOUT);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::flex::LayoutEngine;
+    use crate::text::FontAtlas;
+    use crate::theme::Theme;
+
+    fn single_window_layout(window_kind_id: &str) -> WindowLayout {
+        crate::even_window_layout(&[window_kind_id.to_string()])
+    }
+
+    fn run_layout(shell: &mut Shell) {
+        let root = shell.tree().root.expect("set_window_layout must produce a root");
+        let mut engine = LayoutEngine::new();
+        let mut atlas = FontAtlas::builtin();
+        let theme = Theme::default();
+        engine.compute(shell.tree_mut(), root, &mut atlas, &theme, 400.0, 400.0);
+    }
+
+    fn count_nodes(tree: &UiTree, id: NodeId) -> usize {
+        1 + tree.children(id).map(|child| count_nodes(tree, child)).sum::<usize>()
+    }
+
+    #[test]
+    fn set_window_layout_with_one_window_produces_the_expected_retained_tree_shape() {
+        let mut shell = Shell::new();
+        shell.set_window_layout(single_window_layout("app.viewport"));
+
+        let root = shell.tree().root.expect("expected a root node");
+        // shell.root -> tab-group Stack -> one Button window leaf = 3 nodes.
+        assert_eq!(count_nodes(shell.tree(), root), 3);
+        let tab_group = shell.tree().children(root).next().expect("expected a tab-group child");
+        assert!(shell.tree().node(tab_group).unwrap().flags.contains(NodeFlags::CLIPS_CHILDREN));
+        let window_leaf = shell.tree().children(tab_group).next().expect("expected a window leaf");
+        assert!(matches!(shell.tree().node(window_leaf).unwrap().spec.0, UiNode::Button(_)));
+    }
+
+    #[test]
+    fn set_window_layout_called_twice_with_the_same_layout_is_idempotent_and_does_not_panic() {
+        let mut shell = Shell::new();
+        shell.set_window_layout(single_window_layout("app.viewport"));
+        let first_count = count_nodes(shell.tree(), shell.tree().root.unwrap());
+
+        shell.set_window_layout(single_window_layout("app.viewport"));
+        let second_count = count_nodes(shell.tree(), shell.tree().root.unwrap());
+
+        assert_eq!(first_count, second_count);
+        assert_eq!(shell.window_layout(), Some(&single_window_layout("app.viewport")));
+    }
+
+    #[test]
+    fn pointer_down_and_up_on_the_same_window_cap_activates_its_tab() {
+        let mut shell = Shell::new();
+        shell.set_window_layout(single_window_layout("app.viewport"));
+        run_layout(&mut shell);
+
+        let down = shell.dispatch(&UiEvent::PointerDown { x: 10.0, y: 10.0, button: crate::events::PointerButton::Primary });
+        assert!(down.is_empty(), "press alone must not activate a tab");
+
+        let up = shell.dispatch(&UiEvent::PointerUp { x: 10.0, y: 10.0, button: crate::events::PointerButton::Primary });
+        assert_eq!(up, vec![ShellEvent::TabActivated { window_id: "app.viewport".into() }]);
+    }
+
+    #[test]
+    fn pointer_down_then_up_outside_the_pressed_window_cap_does_not_activate_a_tab() {
+        let mut shell = Shell::new();
+        shell.set_window_layout(single_window_layout("app.viewport"));
+        run_layout(&mut shell);
+
+        shell.dispatch(&UiEvent::PointerDown { x: 10.0, y: 10.0, button: crate::events::PointerButton::Primary });
+        let up = shell.dispatch(&UiEvent::PointerUp { x: -50.0, y: -50.0, button: crate::events::PointerButton::Primary });
+        assert!(up.is_empty(), "releasing outside every hit target must not activate a tab");
+    }
+}
+// #endregion shell
 }
 
 #[cfg(feature = "engine")]
@@ -10601,16 +13255,15 @@ pub fn draw_text_on(
     size: f32,
     color: Rgba,
 ) {
-    let scale = size / 16.0;
     let atlas_w = atlas.width as f32;
     let atlas_h = atlas.height as f32;
     let mut cursor_x = x;
     for ch in text.chars() {
-        let glyph = atlas.ensure_glyph(ch);
-        let gw = glyph.width as f32 * scale;
-        let gh = glyph.height as f32 * scale;
-        let gx = cursor_x + glyph.bearing_x * scale;
-        let gy = y - gh - glyph.bearing_y * scale;
+        let glyph = atlas.ensure_glyph(ch, size);
+        let gw = glyph.width as f32;
+        let gh = glyph.height as f32;
+        let gx = cursor_x + glyph.bearing_x;
+        let gy = y - gh - glyph.bearing_y;
         let uv_rect = [
             glyph.atlas_x as f32 / atlas_w,
             glyph.atlas_y as f32 / atlas_h,
@@ -10618,7 +13271,7 @@ pub fn draw_text_on(
             (glyph.atlas_y + glyph.height) as f32 / atlas_h,
         ];
         draw.push_glyph([gx, gy, gw.max(1.0), gh.max(1.0)], color, uv_rect);
-        cursor_x += glyph.advance * scale;
+        cursor_x += glyph.advance;
     }
 }
 
@@ -10631,16 +13284,15 @@ pub fn draw_text_overlay_on(
     size: f32,
     color: Rgba,
 ) {
-    let scale = size / 16.0;
     let atlas_w = atlas.width as f32;
     let atlas_h = atlas.height as f32;
     let mut cursor_x = x;
     for ch in text.chars() {
-        let glyph = atlas.ensure_glyph(ch);
-        let gw = glyph.width as f32 * scale;
-        let gh = glyph.height as f32 * scale;
-        let gx = cursor_x + glyph.bearing_x * scale;
-        let gy = y - gh - glyph.bearing_y * scale;
+        let glyph = atlas.ensure_glyph(ch, size);
+        let gw = glyph.width as f32;
+        let gh = glyph.height as f32;
+        let gx = cursor_x + glyph.bearing_x;
+        let gy = y - gh - glyph.bearing_y;
         let uv_rect = [
             glyph.atlas_x as f32 / atlas_w,
             glyph.atlas_y as f32 / atlas_h,
@@ -10648,21 +13300,20 @@ pub fn draw_text_overlay_on(
             (glyph.atlas_y + glyph.height) as f32 / atlas_h,
         ];
         draw.push_glyph_overlay([gx, gy, gw.max(1.0), gh.max(1.0)], color, uv_rect);
-        cursor_x += glyph.advance * scale;
+        cursor_x += glyph.advance;
     }
 }
 
 pub fn draw_text<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
-    let scale = size / 16.0;
     let atlas_w = ctx.atlas.width as f32;
     let atlas_h = ctx.atlas.height as f32;
     let mut cursor_x = x;
     for ch in text.chars() {
-        let glyph = ctx.atlas.ensure_glyph(ch);
-        let gw = glyph.width as f32 * scale;
-        let gh = glyph.height as f32 * scale;
-        let gx = cursor_x + glyph.bearing_x * scale;
-        let gy = y - gh - glyph.bearing_y * scale;
+        let glyph = ctx.atlas.ensure_glyph(ch, size);
+        let gw = glyph.width as f32;
+        let gh = glyph.height as f32;
+        let gx = cursor_x + glyph.bearing_x;
+        let gy = y - gh - glyph.bearing_y;
         let uv_rect = [
             glyph.atlas_x as f32 / atlas_w,
             glyph.atlas_y as f32 / atlas_h,
@@ -10670,7 +13321,7 @@ pub fn draw_text<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, 
             (glyph.atlas_y + glyph.height) as f32 / atlas_h,
         ];
         ctx.draw.push_glyph([gx, gy, gw.max(1.0), gh.max(1.0)], color, uv_rect);
-        cursor_x += glyph.advance * scale;
+        cursor_x += glyph.advance;
     }
 }
 
@@ -10837,9 +13488,10 @@ pub use theme::{GlassTier, Rgba, Theme};
 pub use component::layout::{
     collect_window_kind_ids_from_layout, create_default_layout, create_named_layout, create_stack_layout,
     create_tab_stack_layout, create_window_layout, even_window_layout, merge_named_layouts, ActionDescriptor,
-    NamedLayout, StyleSpec, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
-    WindowEngagementOption, WindowEngagementSlot, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild,
-    WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, WindowOptions,
+    MeasureSelectItem, NamedLayout, StyleSpec, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
+    WindowEngagementOption, WindowEngagementPossible, WindowEngagementSlot, WindowEngagementStatus, WindowLayout,
+    WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
+    WindowMeasure, WindowOptions,
     default_viewport_engagement, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -10853,11 +13505,21 @@ pub use component::ui::*;
 
 // 🖥️ Retained-mode engine surface (feature = "engine" only).
 #[cfg(feature = "engine")]
+pub use arena::{Arena, NodeId};
+#[cfg(feature = "engine")]
+pub use tree::{Node, NodeFlags, NodeKey, LayoutBucket, PaintBucket, UiTree, WidgetSpec, WidgetState};
+#[cfg(feature = "engine")]
 pub use cursor::{resolve_semio_cursor, apply_window_cursor, CursorDragState, SemioCursor};
 #[cfg(all(feature = "engine", target_arch = "wasm32"))]
 pub use cursor::apply_canvas_cursor;
 #[cfg(feature = "engine")]
 pub use draw::{mesh_content_version, DrawList, IconAtlas, MeshGpuStore, RasterTextureStore, ear_clip_polygon, paint_selection_marquee};
+#[cfg(feature = "engine")]
+pub use events::{CaptureKind, EventModifiers, PointerButton, UiCommand, UiEvent};
+#[cfg(feature = "engine")]
+pub use scene_slots::{SceneHost, SceneSlot};
+#[cfg(feature = "engine")]
+pub use shell::{Shell, ShellEvent};
 #[cfg(feature = "engine")]
 pub use gpu::GpuContext;
 #[cfg(feature = "engine")]

@@ -19,6 +19,7 @@ path = "lib.rs"
 
 [dependencies]
 presentation_deck = { path = "../../rs" }
+vcs = { path = "../../../../../vcs/rs" }
 semio-framework-core = { path = "../../../../core/rs" }
 semio-framework-os = { path = "../../../../product/os/core/rs" }
 semio-framework-plugin = { path = "../../../../plugin/rs" }

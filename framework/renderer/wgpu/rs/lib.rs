@@ -5577,7 +5577,7 @@ use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use ui_wgpu::input::{DragAxis, KeyAction};
-use ui_wgpu::{draw_text, draw_text_wrapped, HitKind, HitTarget, Rect, Rgba, Theme};
+use ui_wgpu::{draw_text, draw_text_wrapped, render_widget, HitKind, HitTarget, Rect, Rgba, Theme, WidgetNode};
 
 //#region SceneRuntime
 #[derive(Clone, Copy, Debug, Default)]
@@ -9567,6 +9567,7 @@ fn render_icon_render(
         icon_render: None,
         note_canvas: None,
         vcs_history: None,
+        protocol_list: None,
     };
 
     let state = icon_render_states
@@ -10278,6 +10279,10 @@ use infinite_world::{
     handle_world3d_pointer_drag, handle_world3d_pointer_move, handle_world3d_wheel, World3dState,
 };
 use crate::plugin_bridge::{is_studio_mode, PluginBridgeEntry};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_sync::{
+    DocumentActorMsg, DocumentEvent, DocumentHost, DocumentSyncStatus, PersistenceBinding, RemoteState,
+};
 use semio_framework_core::{
     app_document_label, app_window_document_label, AppDefinition, ExampleDefinition,
     ModeDefinition, PanelGroup, PanelTabDefinition, ViewState,
@@ -10433,6 +10438,22 @@ pub struct ActiveSession {
     pub view_state: ViewState,
 }
 
+//#region 🔖NativeSyncChannel
+/// @emoji 🧵 One open document's live `framework/sync` actor channel held by the native wgpu shell.
+/// Mirrors `os-shell.tsx`'s `openDocumentSessionsRef` entry: the shell owns the `cmd_tx`/event
+/// receiver while the sandboxed plugin instance's store pumps through the registered
+/// `ChannelBackbone` (see `framework/product/os/core/rs`'s `host_runtime` canonical sequence).
+#[cfg(not(target_arch = "wasm32"))]
+pub struct ShellSyncChannel {
+    pub document_id: String,
+    pub actor_uri: String,
+    pub instance_id: u32,
+    pub plugin_id: String,
+    pub cmd_tx: tokio::sync::mpsc::UnboundedSender<DocumentActorMsg>,
+    pub events: tokio::sync::broadcast::Receiver<DocumentEvent>,
+}
+//#endregion 🔖NativeSyncChannel
+
 pub struct ShellState {
     pub plugins: Vec<PluginBridgeEntry>,
     pub plugin_filter: String,
@@ -10519,6 +10540,16 @@ pub struct ShellState {
     pub sync_card_draft: String,
     pub sync_card_anchor: Option<(f32, f32)>,
     pub last_envelope_json: Option<String>,
+    /// @emoji 🏛️ Shell-lifetime document-host actor registry (native only); the browser wgpu build
+    /// has no native `DocumentHost` — its sync flows through the React shell's `backbone-worker.ts`.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub document_host: DocumentHost,
+    /// @emoji 🧵 The currently attached document's live actor channel (native only).
+    #[cfg(not(target_arch = "wasm32"))]
+    pub sync_channel: Option<ShellSyncChannel>,
+    /// @emoji 🚦 Latest sync health for the active document's status badge (native only).
+    #[cfg(not(target_arch = "wasm32"))]
+    pub sync_status: Option<DocumentSyncStatus>,
     pub window_engagements: HashMap<String, WindowEngagement>,
     pub window_measures: HashMap<String, Vec<WindowMeasure>>,
     pub tool_collection_expanded: HashMap<String, bool>,
@@ -10688,6 +10719,12 @@ impl ShellState {
             sync_card_draft: String::new(),
             sync_card_anchor: None,
             last_envelope_json: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            document_host: DocumentHost::new(),
+            #[cfg(not(target_arch = "wasm32"))]
+            sync_channel: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            sync_status: None,
             window_engagements: HashMap::new(),
             window_measures: HashMap::new(),
             tool_collection_expanded: HashMap::new(),
@@ -11286,197 +11323,209 @@ impl ShellState {
         Some(format!("{}-{}", session.plugin_id, session.instance_id))
     }
 
-    async fn shell_backbone_read(&self, uri: &str) -> Result<Option<String>, String> {
-        #[cfg(target_arch = "wasm32")]
-        {
-            if uri.starts_with("remote://") {
-                let rest = uri.trim_start_matches("remote://");
-                let (host_port, document_id) = rest
-                    .split_once('/')
-                    .ok_or_else(|| "invalid remote backbone uri".to_string())?;
-                let url = format!("http://{host_port}/documents/{document_id}/envelope");
-                let window = web_sys::window().ok_or("window missing")?;
-                let response = wasm_bindgen_futures::JsFuture::from(window.fetch_with_str(&url))
-                    .await
-                    .map_err(|_| "remote backbone fetch failed".to_string())?;
-                let response: web_sys::Response = response.dyn_into().map_err(|_| "response cast failed".to_string())?;
-                if response.status() == 404 {
-                    return Ok(None);
-                }
-                if !response.ok() {
-                    return Err(format!("remote backbone read failed ({})", response.status()));
-                }
-                let text = wasm_bindgen_futures::JsFuture::from(response.text().map_err(|_| "text failed")?)
-                    .await
-                    .map_err(|_| "remote backbone text failed".to_string())?;
-                let text = text.as_string().ok_or("remote backbone body missing".to_string())?;
-                let value: serde_json::Value = serde_json::from_str(&text).map_err(|err| err.to_string())?;
-                return Ok(Some(
-                    serde_json::to_string(value.get("envelope").unwrap_or(&value)).map_err(|err| err.to_string())?,
-                ));
-            }
-            let url = format!("/semio-backbone?uri={}", js_sys::encode_uri_component(uri));
-            let window = web_sys::window().ok_or("window missing")?;
-            let response = wasm_bindgen_futures::JsFuture::from(window.fetch_with_str(&url))
-                .await
-                .map_err(|_| "backbone fetch failed".to_string())?;
-            let response: web_sys::Response = response.dyn_into().map_err(|_| "response cast failed".to_string())?;
-            if response.status() == 404 {
-                return Ok(None);
-            }
-            if !response.ok() {
-                return Err(format!("backbone read failed ({})", response.status()));
-            }
-            let text = wasm_bindgen_futures::JsFuture::from(response.text().map_err(|_| "text failed")?)
-                .await
-                .map_err(|_| "backbone text failed".to_string())?;
-            return Ok(text.as_string());
+    //#region 🔖NativeBackboneSync
+    /// @emoji 🧭 Parses a shell sync-card uri into the `framework/sync` persistence bindings a
+    /// document actor opens. `folder://` → the multi-document sqlite store; `file://x.json` → its
+    /// parent folder's store (single-blob export demoted per the plan); `remote://host:port` → the
+    /// hub over WebSocket. Superseded the fetch/CRUD `shell_backbone_read`/`write` pair.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn parse_persistence_binding(uri: &str) -> Result<Vec<PersistenceBinding>, String> {
+        if let Some(rest) = uri.strip_prefix("remote://") {
+            let host_port = rest.split_once('/').map(|(host, _)| host).unwrap_or(rest);
+            return Ok(vec![PersistenceBinding::Hub {
+                base_url: format!("http://{host_port}"),
+                token: None,
+            }]);
         }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let _ = uri;
-            Ok(None)
+        if let Some(path) = uri.strip_prefix("folder://") {
+            return Ok(vec![PersistenceBinding::Folder { path: std::path::PathBuf::from(path) }]);
         }
+        if let Some(path) = uri.strip_prefix("file://") {
+            let parent = std::path::Path::new(path)
+                .parent()
+                .map(std::path::Path::to_path_buf)
+                .unwrap_or_else(|| std::path::PathBuf::from("."));
+            return Ok(vec![PersistenceBinding::Folder { path: parent }]);
+        }
+        Err(format!("unsupported backbone uri: {uri}"))
     }
 
-    async fn shell_backbone_write(&self, uri: &str, payload: &str) -> Result<(), String> {
-        #[cfg(target_arch = "wasm32")]
-        {
-            if uri.starts_with("remote://") {
-                let rest = uri.trim_start_matches("remote://");
-                let (host_port, document_id) = rest
-                    .split_once('/')
-                    .ok_or_else(|| "invalid remote backbone uri".to_string())?;
-                let current_url = format!("http://{host_port}/documents/{document_id}/envelope");
-                let window = web_sys::window().ok_or("window missing")?;
-                let current = wasm_bindgen_futures::JsFuture::from(window.fetch_with_str(&current_url))
-                    .await
-                    .map_err(|_| "remote version fetch failed".to_string())?;
-                let current: web_sys::Response = current.dyn_into().map_err(|_| "response cast failed".to_string())?;
-                let version = if current.ok() {
-                    let text = wasm_bindgen_futures::JsFuture::from(current.text().map_err(|_| "text failed")?)
-                        .await
-                        .map_err(|_| "remote version text failed".to_string())?;
-                    serde_json::from_str::<serde_json::Value>(&text.as_string().unwrap_or_default())
-                        .ok()
-                        .and_then(|value| value.get("version").and_then(|v| v.as_u64()))
-                        .unwrap_or(0)
-                } else {
-                    0
-                };
-                let body = serde_json::json!({
-                    "version": version,
-                    "envelope": serde_json::from_str::<serde_json::Value>(payload).unwrap_or_else(|_| serde_json::json!({})),
-                });
-                let init = web_sys::RequestInit::new();
-                init.set_method("PUT");
-                init.set_body(&wasm_bindgen::JsValue::from_str(&body.to_string()));
-                let headers = web_sys::Headers::new().map_err(|_| "headers failed".to_string())?;
-                headers
-                    .set("content-type", "application/json")
-                    .map_err(|_| "content-type failed".to_string())?;
-                init.set_headers(&headers);
-                let request = web_sys::Request::new_with_str_and_init(&current_url, &init)
-                    .map_err(|_| "request failed".to_string())?;
-                let response = wasm_bindgen_futures::JsFuture::from(window.fetch_with_request(&request))
-                    .await
-                    .map_err(|_| "remote backbone write failed".to_string())?;
-                let response: web_sys::Response = response.dyn_into().map_err(|_| "response cast failed".to_string())?;
-                if !response.ok() {
-                    return Err(format!("remote backbone write failed ({})", response.status()));
+    /// @emoji ✂️ Tears down the active document channel: detaches the plugin's backbone, deregisters
+    /// the host channel end, and stops the actor (flushing pending outbound ops). Step 7 of the
+    /// `host_runtime` canonical sequence.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn detach_sync_backbone_internal(&mut self) {
+        if let Some(channel) = self.sync_channel.take() {
+            let _ = channel.cmd_tx.send(DocumentActorMsg::Detach);
+            if let Some(runtime) = self
+                .plugins
+                .iter()
+                .find(|entry| entry.plugin_id == channel.plugin_id)
+                .and_then(|entry| entry.wasm_runtime())
+            {
+                let _ = runtime.detach_backbone(channel.instance_id);
+                let _ = runtime.deregister_host_backbone(&channel.actor_uri);
+            }
+            self.document_host.close(&channel.document_id);
+        }
+        self.sync_status = None;
+    }
+
+    /// @emoji 📬 Drains the active document actor's event stream into the plugin store and the sync
+    /// badge. Called once per native frame — the render loop already redraws continuously (winit
+    /// `ControlFlow::Poll`), so a `try_recv` poll suffices and no `EventLoopProxy` wake is needed.
+    /// `RemoteOps` are force-applied via `apply_operations` (idempotent by op id), which also covers
+    /// idle frames where the sandboxed store never pumps its `ChannelBackbone` on its own. Returns
+    /// whether anything changed (and a re-render was issued).
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn pump_sync_events(&mut self) -> bool {
+        use tokio::sync::broadcast::error::TryRecvError;
+        let (instance_id, plugin_id, events) = {
+            let Some(channel) = self.sync_channel.as_mut() else {
+                return false;
+            };
+            let mut events: Vec<DocumentEvent> = Vec::new();
+            loop {
+                match channel.events.try_recv() {
+                    Ok(event) => events.push(event),
+                    Err(TryRecvError::Empty) | Err(TryRecvError::Closed) => break,
+                    Err(TryRecvError::Lagged(_)) => continue,
                 }
-                web_sys::console::log_1(&format!("[DEBUG] remote backbone synced {uri}").into());
-                return Ok(());
             }
-            let url = format!("/semio-backbone?uri={}", js_sys::encode_uri_component(uri));
-            let window = web_sys::window().ok_or("window missing")?;
-            let init = web_sys::RequestInit::new();
-            init.set_method("PUT");
-            init.set_body(&wasm_bindgen::JsValue::from_str(payload));
-            let headers = web_sys::Headers::new().map_err(|_| "headers failed".to_string())?;
-            headers
-                .set("content-type", "application/json")
-                .map_err(|_| "content-type failed".to_string())?;
-            init.set_headers(&headers);
-            let request = web_sys::Request::new_with_str_and_init(&url, &init)
-                .map_err(|_| "request failed".to_string())?;
-            let response = wasm_bindgen_futures::JsFuture::from(window.fetch_with_request(&request))
-                .await
-                .map_err(|_| "backbone write failed".to_string())?;
-            let response: web_sys::Response = response.dyn_into().map_err(|_| "response cast failed".to_string())?;
-            if !response.ok() {
-                return Err(format!("backbone write failed ({})", response.status()));
+            if events.is_empty() {
+                return false;
             }
-            web_sys::console::log_1(&format!("[DEBUG] backbone synced {uri}").into());
-            return Ok(());
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let _ = (uri, payload);
-            Ok(())
-        }
-    }
-
-    fn wrap_document_envelope(&self, document: &serde_json::Value, document_id: &str, uri: &str) -> String {
-        if document.get("vcs").is_some() {
-            let mut envelope = document.clone();
-            if let Some(obj) = envelope.as_object_mut() {
-                obj.insert(
-                    "backbone".into(),
-                    serde_json::json!({ "kind": backbone_kind_from_uri(uri), "uri": uri }),
-                );
-            }
-            return serde_json::to_string(&envelope).unwrap_or_else(|_| "{}".into());
-        }
-        serde_json::json!({
-            "schema": "document/v1",
-            "id": document_id,
-            "projection": document,
-            "vcs": { "edits": [], "changes": [], "checkpoints": [], "alternatives": [], "operations": [] },
-            "backbone": { "kind": backbone_kind_from_uri(uri), "uri": uri },
-        })
-        .to_string()
-    }
-
-    async fn attach_sync_backbone(&mut self, uri: String) -> Result<(), String> {
-        let session = self.session.clone().ok_or("session missing")?;
-        let plugin = self
+            (channel.instance_id, channel.plugin_id.clone(), events)
+        };
+        let runtime = self
             .plugins
             .iter()
-            .find(|entry| entry.plugin_id == session.plugin_id)
-            .ok_or("plugin missing")?
-            .clone();
-        let document_id = self.sync_document_id().unwrap_or_else(|| "document".into());
-        let mut envelope_json = self.shell_backbone_read(&uri).await?;
-        if envelope_json.is_none() {
-            let empty = self.wrap_document_envelope(&serde_json::json!({}), &document_id, &uri);
-            self.shell_backbone_write(&uri, &empty).await?;
-            envelope_json = Some(empty);
+            .find(|entry| entry.plugin_id == plugin_id)
+            .and_then(|entry| entry.wasm_runtime());
+        let mut changed = false;
+        for event in events {
+            match event {
+                DocumentEvent::RemoteOps { envelopes } => {
+                    if let (Some(runtime), Ok(json)) = (runtime.as_ref(), serde_json::to_string(&envelopes)) {
+                        match runtime.apply_operations(instance_id, &json) {
+                            Ok(()) => changed = true,
+                            Err(error) => eprintln!("[DEBUG] wgpu shell apply_operations failed: {error}"),
+                        }
+                    }
+                }
+                DocumentEvent::SnapshotReplaced { envelope_json } => {
+                    if let Some(runtime) = runtime.as_ref() {
+                        match runtime.load_app_document(instance_id, &envelope_json) {
+                            Ok(()) => changed = true,
+                            Err(error) => eprintln!("[DEBUG] wgpu shell load_app_document failed: {error}"),
+                        }
+                    }
+                }
+                DocumentEvent::Status(status) => {
+                    self.sync_status = Some(status);
+                    changed = true;
+                }
+                DocumentEvent::Presence { .. } => {
+                    // 👥 The Rust `semio_framework_core::ViewState` has no presence field yet (only the
+                    // TS shell threads `presencePeersJson`); presence roster display in the native
+                    // wgpu shell is a documented follow-up once core `ViewState` carries it.
+                }
+                DocumentEvent::Conflict(_) => {
+                    self.sync_card_kind = Some("conflict".into());
+                    changed = true;
+                }
+            }
         }
-        let envelope_json = envelope_json.ok_or("backbone empty")?;
-        self.last_envelope_json = Some(envelope_json.clone());
-        let envelope: serde_json::Value = serde_json::from_str(&envelope_json).map_err(|err| err.to_string())?;
-        let document = envelope
-            .get("projection")
-            .cloned()
-            .or_else(|| envelope.get("document").cloned())
-            .unwrap_or(envelope);
-        let action = ActionDescriptor {
-            controller_id: session.app.controller_id.clone(),
-            action: "setDocument".into(),
-            args: Some(serde_json::json!({ "document": document })),
+        if changed {
+            let _ = self.refresh_ui().await;
+        }
+        changed
+    }
+
+    /// @emoji 🚦 Human-readable summary of a document's sync health for the attach card, mirroring
+    /// the React shell's `syncStatusLabel`.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn sync_status_label(status: &DocumentSyncStatus) -> String {
+        let remote = match &status.remote {
+            RemoteState::Live { peer_count } => {
+                format!("live · {peer_count} peer{}", if *peer_count == 1 { "" } else { "s" })
+            }
+            RemoteState::Connecting => "connecting…".to_string(),
+            RemoteState::Backoff { .. } => "reconnecting…".to_string(),
+            RemoteState::Detached => "offline".to_string(),
         };
-        let action_json = serde_json::to_string(&action).map_err(|err| err.to_string())?;
-        let result = plugin
-            .handle_action(session.instance_id, &action_json, &session.view_state)
-            .await?;
-        let ops = patch_ops_from_action_result(&result);
-        self.sync_backbone_uri = Some(uri);
-        self.sync_card_kind = None;
-        self.apply_ops(&ops).await?;
+        let persisted = if status.persisted { "saved" } else { "unsaved" };
+        let pending = if status.pending_ops > 0 {
+            format!(" · {} pending", status.pending_ops)
+        } else {
+            String::new()
+        };
+        format!("{remote} · {persisted}{pending}")
+    }
+    //#endregion 🔖NativeBackboneSync
+
+    /// @emoji 🔗 Opens the shell's active app document on a `framework/sync` `DocumentHost` actor and
+    /// wires the sandboxed plugin store to it, following `framework/product/os/core/rs`'s
+    /// `host_runtime` canonical sequence (open → subscribe → register host channel → plugin
+    /// `attach-backbone`). The React shell's `openDocument` is the TS twin of this exact sequence.
+    async fn attach_sync_backbone(&mut self, uri: String) -> Result<(), String> {
+        let session = self.session.clone().ok_or("session missing")?;
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let runtime = self
+                .plugins
+                .iter()
+                .find(|entry| entry.plugin_id == session.plugin_id)
+                .ok_or("plugin missing")?
+                .wasm_runtime()
+                .ok_or("native plugin runtime missing")?;
+            let document_id = self.sync_document_id().unwrap_or_else(|| "document".into());
+            let schema = session.app.document.join(".");
+            let bindings = Self::parse_persistence_binding(&uri)?;
+            self.detach_sync_backbone_internal();
+            let actor_uri = format!("actor://{document_id}");
+            let channels = self.document_host.open(semio_framework_sync::DocumentActorConfig {
+                document_id: document_id.clone(),
+                schema,
+                bindings,
+                watch_external: true,
+                actor: format!("wgpu-{}", session.instance_id),
+            });
+            let events = self.document_host.subscribe(&document_id);
+            runtime
+                .register_host_backbone(&actor_uri, Box::new(channels.channel_backbone))
+                .map_err(|error| format!("register host backbone: {error}"))?;
+            runtime
+                .attach_backbone(session.instance_id, &actor_uri)
+                .map_err(|error| format!("plugin attach backbone: {error}"))?;
+            let cmd_tx = channels.cmd_tx.clone();
+            let _ = cmd_tx.send(DocumentActorMsg::LocalOps { envelopes: Vec::new() });
+            self.sync_channel = Some(ShellSyncChannel {
+                document_id,
+                actor_uri,
+                instance_id: session.instance_id,
+                plugin_id: session.plugin_id.clone(),
+                cmd_tx,
+                events,
+            });
+            self.sync_status = Some(DocumentSyncStatus::default());
+            self.sync_backbone_uri = Some(uri);
+            self.sync_card_kind = None;
+            eprintln!(
+                "[DEBUG] wgpu shell attached backbone {}",
+                self.sync_backbone_uri.as_deref().unwrap_or_default()
+            );
+            self.refresh_ui().await?;
+            Ok(())
+        }
         #[cfg(target_arch = "wasm32")]
-        web_sys::console::log_1(&"[DEBUG] attached backbone".into());
-        Ok(())
+        {
+            let _ = &session;
+            self.sync_backbone_uri = Some(uri);
+            self.sync_card_kind = None;
+            web_sys::console::log_1(&"[DEBUG] attached backbone (browser wgpu: relayed via host-shim)".into());
+            Ok(())
+        }
     }
 
     async fn handle_sync_action(&mut self, action: ActionDescriptor) -> Result<(), String> {
@@ -11535,6 +11584,8 @@ impl ShellState {
                 self.attach_sync_backbone(uri).await
             }
             "detach" => {
+                #[cfg(not(target_arch = "wasm32"))]
+                self.detach_sync_backbone_internal();
                 self.sync_backbone_uri = None;
                 self.sync_card_kind = None;
                 self.last_envelope_json = None;
@@ -11649,20 +11700,10 @@ impl ShellState {
             for op_json in batch {
             let op: serde_json::Value = serde_json::from_str(&op_json).unwrap_or(serde_json::Value::Null);
             if op.get("op").and_then(|v| v.as_str()) == Some("setDocument") {
+                // 🔗 Document sync now flows through the `framework/sync` `DocumentHost` actor + the
+                // plugin store's `ChannelBackbone` (see `attach_sync_backbone`), not a CRUD envelope
+                // write on every `setDocument` — the old `shell_backbone_write` mirror is deleted.
                 document_changed = true;
-                if let (Some(uri), Some(document)) = (
-                    self.sync_backbone_uri.clone(),
-                    op.get("document"),
-                ) {
-                    let document_id = self.sync_document_id().unwrap_or_else(|| "document".into());
-                    let envelope_json = self.wrap_document_envelope(document, &document_id, &uri);
-                    self.last_envelope_json = Some(envelope_json.clone());
-                    let write_uri = uri.clone();
-                    if let Err(error) = self.shell_backbone_write(&write_uri, &envelope_json).await {
-                        #[cfg(target_arch = "wasm32")]
-                        web_sys::console::log_1(&format!("[DEBUG] backbone auto-sync failed {error}").into());
-                    }
-                }
             }
             if op.get("op").and_then(|v| v.as_str()) == Some("setPanel") {
                 if let Some(panel) = op.get("panel") {
@@ -15350,6 +15391,20 @@ impl ShellState {
                     theme.font_size_small,
                     theme.text_muted,
                 );
+                #[cfg(not(target_arch = "wasm32"))]
+                if let Some(status) = &self.sync_status {
+                    chrome_text(
+                        overlay,
+                        atlas,
+                        input,
+                        theme,
+                        &Self::sync_status_label(status),
+                        card_x + theme.padding_standard,
+                        card_y + theme.padding_standard + (theme.font_size_small + 4.0) * 2.0,
+                        theme.font_size_small,
+                        theme.text_muted,
+                    );
+                }
             }
             let input_y = card_y + 52.0;
             let input_h = theme.control_height;
@@ -16793,6 +16848,7 @@ impl AppRuntime {
         {
             self.poll_native_plugin_hot_swap();
             self.maybe_reload_native_plugins();
+            pollster::block_on(self.shell.pump_sync_events());
         }
         self.theme = resolve_theme(&self.shell.appearance_id);
         self.theme_dark = appearance_is_dark(&self.shell.appearance_id);

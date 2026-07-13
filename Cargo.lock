@@ -1257,6 +1257,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "vcs",
 ]
 
 [[package]]
@@ -1404,6 +1405,33 @@ name = "dpi"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8b14ccef22fc6f5a8f4d7d768562a182c04ce9a3b3157b91390b52ddfdf1a76"
+
+[[package]]
+name = "draw"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "image",
+ "kernel_2d_engine",
+ "kernel_2d_rs",
+ "semio-framework-core",
+ "serde",
+ "serde_json",
+ "vcs",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "draw-plugin"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "draw",
+ "semio-framework-os",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "earcutr"
@@ -3630,6 +3658,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "mathematical-plugin"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_geometry",
+ "mathematical_graph",
+ "mathematical_graph_drawing",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "vcs",
+]
+
+[[package]]
 name = "mathematical_algebra"
 version = "0.1.0"
 
@@ -3888,6 +3930,17 @@ dependencies = [
  "rayon",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "note-plugin"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "vcs",
 ]
 
 [[package]]
@@ -4661,6 +4714,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "presentation-plugin"
+version = "0.1.0"
+dependencies = [
+ "presentation_deck",
+ "semio-framework-core",
+ "semio-framework-os",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "vcs",
+]
+
+[[package]]
+name = "presentation_deck"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "vcs",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "presser"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4823,6 +4899,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "vcs",
 ]
 
 [[package]]
@@ -4838,6 +4915,7 @@ dependencies = [
  "image",
  "infinite_board_port_directed_normal",
  "js-sys",
+ "mathematical_geometry",
  "reasoning_mindmap",
  "serde",
  "serde-wasm-bindgen",
@@ -5011,6 +5089,35 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca45419789ae5a7899559e9512e58ca889e41f04f1f2445e9f4b290ceccd1d08"
 
 [[package]]
+name = "raster"
+version = "0.1.0"
+dependencies = [
+ "image",
+ "infinite_cavas",
+ "js-sys",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "ui_styling",
+ "vcs",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "raster-plugin"
+version = "0.1.0"
+dependencies = [
+ "raster",
+ "semio-framework-os",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "vcs",
+]
+
+[[package]]
 name = "raw-window-handle"
 version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5067,10 +5174,12 @@ name = "reasoning-mindmap-plugin"
 version = "0.1.0"
 dependencies = [
  "puzzle_2d",
+ "reasoning_mindmap",
  "reasoning_mindmap_wires",
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "vcs",
 ]
 
 [[package]]
@@ -5594,12 +5703,15 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
+ "semio-framework-sync",
  "serde",
  "serde_json",
  "tiny-skia",
+ "tokio",
  "ui_wgpu",
  "ureq",
  "usvg 0.45.1",
+ "vcs",
  "vello",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -5644,6 +5756,7 @@ dependencies = [
  "sequence_core",
  "serde",
  "serde_json",
+ "vcs",
 ]
 
 [[package]]
@@ -5659,6 +5772,7 @@ dependencies = [
  "neural_engine",
  "serde",
  "serde_json",
+ "vcs",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -8770,6 +8884,31 @@ name = "writeable"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ffae5123b2d3fc086436f8834ae3ab053a283cfac8fe0a0b8eaae044768a4c4"
+
+[[package]]
+name = "writer"
+version = "0.1.0"
+dependencies = [
+ "framework_editor",
+ "serde",
+ "serde_json",
+ "vcs",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "writer-plugin"
+version = "0.1.0"
+dependencies = [
+ "regex",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "trinity_jack",
+ "trinity_ram",
+ "vcs",
+ "writer",
+]
 
 [[package]]
 name = "xkbcommon-dl"

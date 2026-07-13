@@ -923,6 +923,12 @@ pub trait DocumentApp: Send + 'static {
     fn app_labels(&self, _view_state: &ViewState) -> AppLabelsOverlay {
         AppLabelsOverlay::default()
     }
+    /// 🌱 One-time hook for seeding the store's history (checkpoints/alternatives) beyond the bare
+    /// `initial_projection` — called once from `VcsDocumentApp::new`, right after the store is
+    /// constructed, via direct `store.dispatch(...)` calls. Default no-op; only apps whose fixture is
+    /// itself a rich history (e.g. a history-UI demo/exerciser) need this — every plugin driven purely
+    /// by user actions leaves it untouched.
+    fn seed(&self, _store: &mut DocumentVcsStore<Self::Projection, Self::Op>) {}
 }
 
 /// @emoji 🗄️ Object-safe runtime contract every hosted app satisfies. Owns persistent document state
@@ -993,9 +999,11 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             app.initial_projection(),
             None,
         );
+        let mut store = DocumentVcsStore::new(envelope);
+        app.seed(&mut store);
         Self {
             app,
-            store: DocumentVcsStore::new(envelope),
+            store,
             cache: None,
         }
     }
@@ -1003,6 +1011,13 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     #[cfg(test)]
     pub(crate) fn test_projection(&self) -> A::Projection {
         self.store.projection().expect("materialize projection")
+    }
+
+    /// @emoji 📸 Materializes and returns the current projection — the typed counterpart to
+    /// `render`'s `UiNode` output, for callers (host code, downstream plugin crates' own tests) that
+    /// need direct structural access to document state instead of a rendered node.
+    pub fn projection(&self) -> Result<A::Projection, String> {
+        self.store.projection().map_err(|error| error.to_string())
     }
 
     fn build_history_view(&self) -> HistoryView {

@@ -39,7 +39,7 @@ fontdue = { version = "0.9.3", optional = true }
 bytemuck = { version = "1.24.0", features = ["derive"], optional = true }
 winit = { version = "0.30.12", default-features = false, features = ["rwh_06"], optional = true }
 wgpu = { version = "27.0.1", default-features = false, features = ["wgsl"], optional = true }
-taffy = { version = "0.9", default-features = false, features = ["std", "flexbox"], optional = true }
+taffy = { version = "0.9", default-features = false, features = ["std", "flexbox", "taffy_tree"], optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wgpu = { version = "27.0.1", default-features = false, features = ["webgpu", "wgsl"], optional = true }

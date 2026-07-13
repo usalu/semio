@@ -20,7 +20,7 @@ import {
   runViteBunxDev,
   frameworkOsPlaygroundDefaultPort,
 } from "../../../../repo/lib/js/index.ts";
-import { applyBackboneMessage, BACKBONE_ENDPOINT_PATH, backboneKindFromUri } from "@semio-tech/framework-os-core";
+import { BACKBONE_ENDPOINT_PATH, backboneKindFromUri } from "@semio-tech/framework-os-core";
 import { generatePluginRegistry, isStudioPluginFilter, type PluginRegistryEntry } from "../../../plugin/registry/script.ts";
 
 const repoRoot = getWorkspaceRoot();
@@ -56,8 +56,6 @@ function resolveCatalogFilterPluginId(filterPlugin?: string): string | undefined
 //#endregion 🔖PlaygroundVariantResolution
 
 //#region BackboneVitePlugin
-const hostBackboneFiles = new Map<string, string>();
-
 /** Lazily imports `bun:sqlite` — a static top-level import breaks Vite's config bundler, which loads this module's exports under Node before the dev server (and its Bun runtime) exists. */
 let backboneDatabaseCtor: typeof import("bun:sqlite").Database | undefined;
 async function backboneDatabaseCtorLazy(): Promise<typeof import("bun:sqlite").Database> {
@@ -65,8 +63,14 @@ async function backboneDatabaseCtorLazy(): Promise<typeof import("bun:sqlite").D
   return backboneDatabaseCtor;
 }
 
-async function readBackbonePayload(uri: string): Promise<string | null> {
-  if (uri.startsWith("presence:")) return hostBackboneFiles.get(uri) ?? null;
+/** @emoji 🗂️ Same convention as `vcs::FolderSqliteStorage` (`.semio/documents.db`, a `document(id,
+ * schema, json, updated_at)` table) so a folder-bound studio opened by the browser dev path and a
+ * native (wgpu) reader agree on the same file. `documentId` defaults to the studio's own
+ * single-document convention (mirrors os-core's `STUDIO_FOLDER_DOCUMENT_ID`) when the caller doesn't
+ * pass one — app documents (per `OsDocumentRef`) always pass their own id explicitly. */
+const STUDIO_FOLDER_DOCUMENT_ID = "studio";
+
+async function readBackbonePayload(uri: string, documentId: string | null): Promise<string | null> {
   const kind = backboneKindFromUri(uri);
   if (kind === "file") {
     const path = uri.slice("file://".length);
@@ -75,22 +79,18 @@ async function readBackbonePayload(uri: string): Promise<string | null> {
   }
   if (kind === "folder") {
     const folder = uri.slice("folder://".length);
-    const dbPath = join(folder, ".semio", "document.db");
+    const dbPath = join(folder, ".semio", "documents.db");
     if (!existsSync(dbPath)) return null;
     const Database = await backboneDatabaseCtorLazy();
     const db = new Database(dbPath);
-    db.run("CREATE TABLE IF NOT EXISTS document (id INTEGER PRIMARY KEY CHECK (id = 1), json TEXT NOT NULL)");
-    const row = db.query("SELECT json FROM document WHERE id = 1").get() as { json?: string } | null;
+    db.run("CREATE TABLE IF NOT EXISTS document (id TEXT PRIMARY KEY, schema TEXT, json TEXT NOT NULL, updated_at INTEGER NOT NULL)");
+    const row = db.query("SELECT json FROM document WHERE id = ?1").get(documentId ?? STUDIO_FOLDER_DOCUMENT_ID) as { json?: string } | null;
     return row?.json ?? null;
   }
   return null;
 }
 
-async function writeBackbonePayload(uri: string, payload: string): Promise<void> {
-  if (uri.startsWith("presence:")) {
-    hostBackboneFiles.set(uri, payload);
-    return;
-  }
+async function writeBackbonePayload(uri: string, documentId: string | null, schema: string | null, payload: string): Promise<void> {
   const kind = backboneKindFromUri(uri);
   if (kind === "file") {
     const path = uri.slice("file://".length);
@@ -100,22 +100,63 @@ async function writeBackbonePayload(uri: string, payload: string): Promise<void>
   }
   if (kind === "folder") {
     const folder = uri.slice("folder://".length);
-    const dbPath = join(folder, ".semio", "document.db");
+    const dbPath = join(folder, ".semio", "documents.db");
     mkdirSync(dirname(dbPath), { recursive: true });
     const Database = await backboneDatabaseCtorLazy();
     const db = new Database(dbPath);
-    db.run("CREATE TABLE IF NOT EXISTS document (id INTEGER PRIMARY KEY CHECK (id = 1), json TEXT NOT NULL)");
-    db.run("INSERT INTO document (id, json) VALUES (1, ?1) ON CONFLICT(id) DO UPDATE SET json = excluded.json", [payload]);
+    db.run("CREATE TABLE IF NOT EXISTS document (id TEXT PRIMARY KEY, schema TEXT, json TEXT NOT NULL, updated_at INTEGER NOT NULL)");
+    db.run(
+      "INSERT INTO document (id, schema, json, updated_at) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, json = excluded.json, updated_at = excluded.updated_at",
+      [documentId ?? STUDIO_FOLDER_DOCUMENT_ID, schema ?? "", payload, Date.now()],
+    );
     return;
   }
   throw new Error(`unsupported backbone uri: ${uri}`);
 }
 
-/** @emoji 💾 Vite middleware for browser file/folder backbone IO. */
+/** 👁️ Per-folder-uri debounced watchers feeding every subscribed SSE response for that uri — one
+ * `node:fs.watch` per folder regardless of subscriber count. Mirrors `framework/sync`'s native
+ * `notify` watcher (200ms debounce) so both the dev-browser and native paths agree on cadence. */
+const folderWatchSubscribers = new Map<string, Set<{ write: (chunk: string) => void }>>();
+const folderWatchHandles = new Map<string, ReturnType<typeof watch>>();
+const FOLDER_WATCH_DEBOUNCE_MS = 200;
+
+function subscribeFolderWatch(uri: string, subscriber: { write: (chunk: string) => void }): () => void {
+  if (!folderWatchSubscribers.has(uri)) folderWatchSubscribers.set(uri, new Set());
+  const subscribers = folderWatchSubscribers.get(uri)!;
+  subscribers.add(subscriber);
+  if (!folderWatchHandles.has(uri) && backboneKindFromUri(uri) === "folder") {
+    const folder = uri.slice("folder://".length);
+    mkdirSync(join(folder, ".semio"), { recursive: true });
+    let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+    const handle = watch(join(folder, ".semio"), { persistent: false }, () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        for (const sub of folderWatchSubscribers.get(uri) ?? []) sub.write("data: changed\n\n");
+      }, FOLDER_WATCH_DEBOUNCE_MS);
+    });
+    folderWatchHandles.set(uri, handle);
+  }
+  return () => {
+    subscribers.delete(subscriber);
+    if (subscribers.size === 0) {
+      folderWatchHandles.get(uri)?.close();
+      folderWatchHandles.delete(uri);
+      folderWatchSubscribers.delete(uri);
+    }
+  };
+}
+
+type BackboneServerRequest = { method?: string; url?: string; on: (event: string, handler: (chunk?: unknown) => void) => void };
+type BackboneServerResponse = { statusCode: number; setHeader: (name: string, value: string) => void; write: (chunk: string) => void; end: (body?: string) => void };
+
+/** @emoji 💾 Vite middleware for browser file/folder backbone IO: `GET|PUT ${BACKBONE_ENDPOINT_PATH}?uri=&documentId=&schema=`
+ * for read/write, plus `GET ${BACKBONE_ENDPOINT_PATH}/watch?uri=` (SSE) for external-edit notification —
+ * `backbone-worker.ts`'s folder transport degrades to polling if this endpoint isn't reachable. */
 export function semioBackboneVitePlugin() {
   return {
     name: "semio-backbone",
-    configureServer(server: { middlewares: { use: (handler: (req: { method?: string; url?: string }, res: { statusCode: number; setHeader: (name: string, value: string) => void; end: (body?: string) => void }, next: () => void) => void) => void } }) {
+    configureServer(server: { middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void } }) {
       server.middlewares.use((req, res, next) => {
         if (!req.url?.startsWith(BACKBONE_ENDPOINT_PATH)) return next();
         const requestUrl = new URL(req.url, "http://127.0.0.1");
@@ -125,8 +166,25 @@ export function semioBackboneVitePlugin() {
           res.end("missing uri");
           return;
         }
+        if (requestUrl.pathname === `${BACKBONE_ENDPOINT_PATH}/watch`) {
+          if (req.method !== "GET") {
+            res.statusCode = 405;
+            res.end("method not allowed");
+            return;
+          }
+          res.statusCode = 200;
+          res.setHeader("content-type", "text/event-stream");
+          res.setHeader("cache-control", "no-cache");
+          res.setHeader("connection", "keep-alive");
+          res.write(": connected\n\n");
+          const unsubscribe = subscribeFolderWatch(uri, res);
+          req.on("close", unsubscribe);
+          return;
+        }
+        const documentId = requestUrl.searchParams.get("documentId");
+        const schema = requestUrl.searchParams.get("schema");
         if (req.method === "GET") {
-          readBackbonePayload(uri)
+          readBackbonePayload(uri, documentId)
             .then((payload) => {
               if (payload == null) {
                 res.statusCode = 404;
@@ -146,10 +204,10 @@ export function semioBackboneVitePlugin() {
         if (req.method === "PUT") {
           let body = "";
           req.on("data", (chunk) => {
-            body += chunk;
+            body += String(chunk);
           });
           req.on("end", () => {
-            writeBackbonePayload(uri, body)
+            writeBackbonePayload(uri, documentId, schema, body)
               .then(() => {
                 res.statusCode = 200;
                 res.setHeader("content-type", "application/json");
@@ -195,6 +253,17 @@ function replyError(requestId, message) {
 self.addEventListener("message", async (event) => {
   const msg = event.data ?? {};
   const { type, requestId } = msg;
+  // 🔗 Backbone relay passthrough (main thread ⇄ host-shim): inbound messages from the sync actor
+  // (\`backbone-worker.ts\`) land in the shared queue the host-shim's \`backbonePoll\` drains; the shim's
+  // \`backboneSend\` posts \`backboneOutbound\` straight up to the main thread, so there is nothing to do
+  // for it here. These carry no requestId, so they must be handled before the request/response guard.
+  if (type === "backboneInbound") {
+    const queues = (globalThis.__semioBackboneInbound ??= new Map());
+    const queue = queues.get(msg.uri) ?? [];
+    for (const message of msg.messages ?? []) queue.push(message);
+    queues.set(msg.uri, queue);
+    return;
+  }
   if (!requestId || !type) return;
   try {
     if (type === "init") {
@@ -442,10 +511,14 @@ function transpilePluginComponent(artifact: string, outDir: string, componentBas
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`));
 }
 
-/** @emoji 🗄️ JS implementation of the `semio:framework/host` component import — localStorage first, sync dev-server backbone fallback. */
+/** @emoji 🗄️ JS implementation of the `semio:framework/host` component import. The backbone imports are
+ * a pure in-memory queue exchange: `backbone-send` posts an outbound message up to the plugin worker's
+ * parent (the main thread) which relays it into `backbone-worker.ts` (the real sync actor), and
+ * `backbone-poll` drains an inbound queue the worker fills from `backboneInbound` postMessages. A
+ * WASI-P2 plugin worker never owns a socket/fetch itself (WS-B design), so there is no localStorage or
+ * synchronous XHR here anymore. */
 function hostShimSource(): string {
   return `/** @generated semio plugin host shim */
-const BACKBONE_STORAGE_PREFIX = "semio.backbone.";
 
 export function log(level, message) {
   if (level === "error") console.error(\`[plugin] \${message}\`);
@@ -480,80 +553,41 @@ export function networkFetch(origin, path) {
   throw \`network-fetch unsupported: \${origin}\${path}\`;
 }
 
-function syncBackboneRequest(method, uri, body) {
-  const request = new XMLHttpRequest();
-  request.open(method, \`${BACKBONE_ENDPOINT_PATH}?uri=\${encodeURIComponent(uri)}\`, false);
-  request.send(body);
-  return request;
+// 🔗 Per-uri inbound queues (serialized \`BackboneMessage\`s), shared on the worker global so the plugin
+// worker's \`backboneInbound\` relay (see pluginWorkerSource) can fill them while this shim drains them —
+// the two scripts live in the same worker realm but are separate modules.
+function backboneInboundQueues() {
+  return (globalThis.__semioBackboneInbound ??= new Map());
 }
+const backboneAttached = new Set();
 
-function readBackboneEntry(uri) {
-  if (typeof localStorage !== "undefined") {
-    return localStorage.getItem(\`\${BACKBONE_STORAGE_PREFIX}\${uri}\`);
-  }
-  const response = syncBackboneRequest("GET", uri, null);
-  return response.status === 200 ? response.responseText : null;
-}
-
-function writeBackboneEntry(uri, payload) {
-  if (typeof localStorage !== "undefined") {
-    localStorage.setItem(\`\${BACKBONE_STORAGE_PREFIX}\${uri}\`, payload);
-    return;
-  }
-  const response = syncBackboneRequest("PUT", uri, payload);
-  if (response.status !== 200) throw \`backbone write failed: \${uri}\`;
-}
-
-const backbonePolled = new Set();
-
-/** @emoji 📨 Mirrors vcs::storage_receive — first poll after attach yields the stored snapshot, then goes quiet until the next send. */
-export function backbonePoll(uri) {
-  if (backbonePolled.has(uri)) return [];
-  backbonePolled.add(uri);
-  const stored = readBackboneEntry(uri);
-  if (stored == null) return [];
-  return [JSON.stringify({ kind: "snapshot", envelopeJson: stored })];
-}
-
-/**
- * @emoji 🔀 Applies an incoming backbone message on top of a previously stored envelope: a
- * snapshot message overwrites, an ops message appends into vcs.edits deduped by id. Hand-ported
- * from (and must be kept in sync with) applyBackboneMessage in
- * framework/product/os/core/js/index.ts until a build-time inlining step exists.
- */
-function applyBackboneMessage(storedEnvelopeJson, messageJson) {
-  const message = JSON.parse(messageJson);
-  if (message.kind === "snapshot") return message.envelopeJson;
-  if (message.kind === "ops") {
-    if (storedEnvelopeJson == null) throw \`cannot append ops before a snapshot exists\`;
-    const envelope = JSON.parse(storedEnvelopeJson);
-    const edits = envelope?.vcs?.edits;
-    if (!Array.isArray(edits)) throw \`stored envelope missing vcs.edits\`;
-    const seen = new Set(edits.map((edit) => edit?.id).filter((id) => typeof id === "string"));
-    for (const opEnvelope of message.envelopes ?? []) {
-      const editJson = opEnvelope?.diff?.payload;
-      const id = editJson?.id;
-      if (typeof id === "string") {
-        if (seen.has(id)) continue;
-        seen.add(id);
-      }
-      edits.push(editJson);
-    }
-    return JSON.stringify(envelope);
-  }
-  throw \`unsupported backbone message kind: \${message.kind}\`;
-}
-
-/** @emoji 📨 Mirrors vcs::storage_send — delegates the snapshot/ops merge to applyBackboneMessage. */
+/** @emoji 📤 Enqueues an outbound message to the main thread, which relays it into \`backbone-worker.ts\`
+ * (the sync actor). A plugin worker can't own the socket/fetch itself, so this is postMessage-only. */
 export function backboneSend(uri, messageJson) {
-  const message = JSON.parse(messageJson);
-  if (message.kind === "ops") {
-    const stored = readBackboneEntry(uri);
-    if (stored == null) throw \`cannot append ops before a snapshot exists: \${uri}\`;
-    writeBackboneEntry(uri, applyBackboneMessage(stored, messageJson));
-    return;
+  backboneAttached.add(uri);
+  // Only a worker's \`postMessage\` takes a single argument and reaches the parent; on the main thread
+  // \`window.postMessage\` needs a targetOrigin, so the relay is a no-op there (WorkerGlobalScope is
+  // defined in both classic and module workers, undefined on the main thread).
+  if (typeof WorkerGlobalScope !== "undefined" && typeof self !== "undefined" && typeof self.postMessage === "function") {
+    self.postMessage({ type: "backboneOutbound", uri, message: messageJson });
   }
-  writeBackboneEntry(uri, applyBackboneMessage(null, messageJson));
+}
+
+/** @emoji 📥 Drains the inbound queue the worker filled from \`backboneInbound\` postMessages. Returns
+ * serialized \`BackboneMessage\`s (never blocks — an empty queue yields \`[]\`). */
+export function backbonePoll(uri) {
+  backboneAttached.add(uri);
+  const queues = backboneInboundQueues();
+  const queue = queues.get(uri);
+  if (!queue || queue.length === 0) return [];
+  queues.set(uri, []);
+  return queue;
+}
+
+/** @emoji 📶 Reports whether this shim has seen traffic for a uri (the real transport health lives in
+ * \`backbone-worker.ts\`; the sandboxed plugin only needs attached/detached). */
+export function backboneStatus(uri) {
+  return backboneAttached.has(uri) ? "attached" : "detached";
 }
 `;
 }

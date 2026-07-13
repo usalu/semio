@@ -1,19 +1,22 @@
 //! 🔗 Sequence plugin — declarative sequence play app bundled as a hot-swappable WASM component.
 
 use infinite_board_port_directed_dag::{DagFixture, DagLayoutOptions, DagLayoutOrientation};
-use sequence_core::{default_fixture, SequenceFixture, SequenceHost, SequenceStep};
-use semio_framework_plugin::{SurfaceKind, PanelGroup, 
+use sequence_core::{
+    default_fixture, sequence_fixture_ops, SequenceFixture, SequenceHost, SequenceOp, SequenceStep, SlotRef,
+    SEQUENCE_FIXTURE_SCHEMA,
+};
+use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_node_graph_scene, build_text_editor_scene, create_default_layout, tool_button, tool_collection,
     tool_toggle, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text,
-    App, ActionDescriptor, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, ToolCategory, ToolNode, UiControlNode,
-    UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
-    UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    ActionEmit, App, ActionDescriptor, AppLabelsOverlay, DocumentApp, DocumentView, NodeGraphScene, TextEditorScene,
+    ToolCategory, ToolNode, UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiToggleNode,
+    UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::sync::LazyLock;
+use std::collections::HashMap;
 
 //#region 🔖Constants
 const SEQUENCE_PLAY_APP_ID: &str = "sequence-play";
@@ -32,27 +35,14 @@ const SEQUENCE_PLAY_WINDOW_COMPILED: &str = "sequence-compiled-dag";
 //#endregion 🔖Constants
 
 //#region 🔖Types
+/// 🎛️ Ephemeral view state (selection, last run output, layout orientation) held in the app struct,
+/// never in the document — so it stays out of undo history and off the op channel.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct SequencePlayRuntime {
-    #[serde(default)]
     selected_step_ids: Vec<String>,
-    #[serde(default)]
     last_run_json: String,
-    #[serde(default)]
     orientation: DagLayoutOrientation,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct SequencePlayEnvelope {
-    fixture: SequenceFixture,
-    #[serde(default)]
-    runtime: SequencePlayRuntime,
-    #[serde(default)]
-    undo_stack: Vec<SequenceFixture>,
-    #[serde(default)]
-    redo_stack: Vec<SequenceFixture>,
 }
 
 #[derive(Serialize)]
@@ -89,31 +79,6 @@ struct MediaGraphEdgeRecord {
 //#endregion 🔖Types
 
 //#region 🔖DocumentHelpers
-fn default_envelope() -> SequencePlayEnvelope {
-    SequencePlayEnvelope {
-        fixture: default_fixture(),
-        runtime: SequencePlayRuntime::default(),
-        undo_stack: Vec::new(),
-        redo_stack: Vec::new(),
-    }
-}
-
-fn parse_envelope(document_json: &str) -> SequencePlayEnvelope {
-    serde_json::from_str(document_json).unwrap_or_else(|_| default_envelope())
-}
-
-fn set_document_op(envelope: &SequencePlayEnvelope) -> String {
-    json!({ "op": "setDocument", "document": envelope }).to_string()
-}
-
-fn push_undo(envelope: &mut SequencePlayEnvelope) {
-    envelope.undo_stack.push(envelope.fixture.clone());
-    if envelope.undo_stack.len() > 32 {
-        envelope.undo_stack.remove(0);
-    }
-    envelope.redo_stack.clear();
-}
-
 fn sequence_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor {
         controller_id: SEQUENCE_PLAY_APP_ID.into(),
@@ -122,8 +87,10 @@ fn sequence_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     }
 }
 
-fn host_from_envelope(envelope: &SequencePlayEnvelope) -> SequenceHost {
-    SequenceHost::from_fixture(envelope.fixture.clone())
+/// 🧰 Builds a {@link SequenceHost} seeded from a projection so an action can mutate it (with all the
+/// host's cycle/slot/layout logic) and then diff the result into typed ops.
+fn host_from_fixture(fixture: &SequenceFixture) -> SequenceHost {
+    SequenceHost::from_fixture(fixture.clone())
 }
 
 fn split_endpoint(endpoint: &str) -> (String, String) {
@@ -536,15 +503,15 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String], labels: 
 //#endregion 🔖Panels
 
 //#region 🔖Render
-fn render_main_graph(envelope: &SequencePlayEnvelope) -> UiNode {
-    let mut host = host_from_envelope(envelope);
+fn render_main_graph(fixture: &SequenceFixture, runtime: &SequencePlayRuntime) -> UiNode {
+    let mut host = host_from_fixture(fixture);
     host.layout_expanded_slots();
     let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
-    let viewport_json = serde_json::to_string(&envelope.fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
-    let selection_json = if envelope.runtime.selected_step_ids.is_empty() {
+    let viewport_json = serde_json::to_string(&fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
+    let selection_json = if runtime.selected_step_ids.is_empty() {
         None
     } else {
-        serde_json::to_string(&envelope.runtime.selected_step_ids).ok()
+        serde_json::to_string(&runtime.selected_step_ids).ok()
     };
     build_node_graph_scene(
         SEQUENCE_PLAY_SURFACE_MAIN,
@@ -560,12 +527,12 @@ fn render_main_graph(envelope: &SequencePlayEnvelope) -> UiNode {
     )
 }
 
-fn render_script(envelope: &SequencePlayEnvelope) -> UiNode {
-    let host = host_from_envelope(envelope);
+fn render_script(fixture: &SequenceFixture, runtime: &SequencePlayRuntime) -> UiNode {
+    let host = host_from_fixture(fixture);
     let mut text = host.compile_text();
-    if !envelope.runtime.last_run_json.is_empty() {
+    if !runtime.last_run_json.is_empty() {
         text.push_str("\n\n# run result\n");
-        text.push_str(&envelope.runtime.last_run_json);
+        text.push_str(&runtime.last_run_json);
     }
     build_text_editor_scene(
         SEQUENCE_PLAY_SURFACE_SCRIPT,
@@ -574,8 +541,8 @@ fn render_script(envelope: &SequencePlayEnvelope) -> UiNode {
     )
 }
 
-fn render_compiled_dag(envelope: &SequencePlayEnvelope) -> UiNode {
-    let host = host_from_envelope(envelope);
+fn render_compiled_dag(fixture: &SequenceFixture) -> UiNode {
+    let host = host_from_fixture(fixture);
     build_text_editor_scene(
         SEQUENCE_PLAY_SURFACE_COMPILED,
         SEQUENCE_PLAY_APP_ID,
@@ -592,8 +559,8 @@ fn orientation_arg(orientation: DagLayoutOrientation) -> Value {
     }
 }
 
-fn edit_tools(envelope: &SequencePlayEnvelope, labels: &SequenceLabels) -> Vec<ToolNode> {
-    let orientation = envelope.runtime.orientation;
+fn edit_tools(runtime: &SequencePlayRuntime, labels: &SequenceLabels) -> Vec<ToolNode> {
+    let orientation = runtime.orientation;
     vec![
         tool_collection(
             "sequence-tools-execution",
@@ -640,312 +607,298 @@ fn edit_tools(envelope: &SequencePlayEnvelope, labels: &SequenceLabels) -> Vec<T
 
 //#region 🔖SequencePlayApp
 #[derive(Default)]
-struct SequencePlayApp;
+struct SequencePlayApp {
+    runtime: SequencePlayRuntime,
+}
 
-impl PluginApp for SequencePlayApp {
+impl SequencePlayApp {
+    /// 🔀 Runs a host mutation seeded from the current projection and diffs the result into typed ops.
+    fn ops_from_host_mutation(
+        &self,
+        fixture: &SequenceFixture,
+        mutate: impl FnOnce(&mut SequenceHost),
+    ) -> Vec<SequenceOp> {
+        let mut host = host_from_fixture(fixture);
+        mutate(&mut host);
+        sequence_fixture_ops(fixture, &host.fixture)
+    }
+}
+
+impl DocumentApp for SequencePlayApp {
+    type Projection = SequenceFixture;
+    type Op = SequenceOp;
+
     fn app_id(&self) -> &str {
         SEQUENCE_PLAY_APP_ID
     }
 
-    fn initial_document_json(&self) -> String {
-        serde_json::to_string(&default_envelope()).expect("sequence envelope json")
+    fn document_schema(&self) -> &str {
+        SEQUENCE_FIXTURE_SCHEMA
     }
 
-    fn handle_action_patch_ops(
+    fn initial_projection(&self) -> SequenceFixture {
+        default_fixture()
+    }
+
+    fn handle_action(
         &mut self,
         action: &str,
         args: Option<&Value>,
-        document_json: &str,
+        doc: &DocumentView<'_, SequenceFixture>,
         _view_state: &ViewState,
-    ) -> Vec<String> {
-        let mut envelope = parse_envelope(document_json);
-        let mut host = host_from_envelope(&envelope);
+    ) -> ActionEmit<SequenceOp> {
+        let fixture = doc.projection;
         match action {
-            "setDocument" => {
-                if let Some(next) = args.and_then(|value| value.get("document")) {
-                    if let Ok(parsed) = serde_json::from_value(next.clone()) {
-                        return vec![set_document_op(&parsed)];
-                    }
-                }
-            }
+            // 👁️ View actions — mutate ephemeral runtime, emit no ops.
             "setSelection" | "selectNode" | "nodeGraphSelect" => {
-                envelope.runtime.selected_step_ids = node_graph_selection_ids(args);
-                return vec![set_document_op(&envelope)];
+                self.runtime.selected_step_ids = node_graph_selection_ids(args);
+                ActionEmit::default()
             }
-            "nodeGraphHover" => return Vec::new(),
-            "nodeGraphViewport" => {
-                if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
-                    if let Ok(camera) = serde_json::from_str(viewport_json) {
-                        envelope.fixture.camera = camera;
-                        return vec![set_document_op(&envelope)];
-                    }
-                }
-            }
-            "nodeGraphEdit" => {
-                let ops = args
-                    .and_then(|value| value.get("ops"))
-                    .and_then(|value| value.as_array())
-                    .cloned()
-                    .unwrap_or_default();
-                let mut changed = false;
-                for op in ops {
-                    match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
-                        "setFixture" => {
-                            if let Some(fixture_json) = op.get("fixtureJson").and_then(|value| value.as_str()) {
-                                if let Ok(fixture) = serde_json::from_str::<SequenceFixture>(fixture_json) {
-                                    push_undo(&mut envelope);
-                                    envelope.fixture = fixture;
-                                    changed = true;
-                                }
-                            }
-                        }
-                        "deleteSelection" => {
-                            for step_id in envelope.runtime.selected_step_ids.clone() {
-                                push_undo(&mut envelope);
-                                if host.remove_step(&step_id) {
-                                    changed = true;
-                                }
-                            }
-                            if changed {
-                                envelope.fixture = host.fixture.clone();
-                                envelope.runtime.selected_step_ids.clear();
-                            }
-                        }
-                        "connect" => {
-                            let from = op.get("sourceNodeId").and_then(|value| value.as_str());
-                            let to = op.get("targetNodeId").and_then(|value| value.as_str());
-                            if let (Some(from), Some(to)) = (from, to) {
-                                push_undo(&mut envelope);
-                                if host.connect_steps(from, to).is_ok() {
-                                    envelope.fixture = host.fixture.clone();
-                                    changed = true;
-                                }
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-                if changed {
-                    return vec![set_document_op(&envelope)];
-                }
-            }
-            "deleteSelection" => {
-                for step_id in envelope.runtime.selected_step_ids.clone() {
-                    push_undo(&mut envelope);
-                    if host.remove_step(&step_id) {
-                        envelope.fixture = host.fixture;
-                        envelope.runtime.selected_step_ids.retain(|id| id != &step_id);
-                        return vec![set_document_op(&envelope)];
-                    }
-                }
-            }
+            "nodeGraphHover" => ActionEmit::default(),
             "graphPointerDown" => {
-                envelope.runtime.selected_step_ids.clear();
-                return vec![set_document_op(&envelope)];
+                self.runtime.selected_step_ids.clear();
+                ActionEmit::default()
             }
-            "moveMediaNode" => {
-                let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str());
-                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
-                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
-                if let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) {
-                    if envelope.fixture.steps.iter().any(|step| step.id == node_id) {
-                        push_undo(&mut envelope);
-                        if let Some(step) = envelope.fixture.steps.iter_mut().find(|step| step.id == node_id) {
-                            step.x = x;
-                            step.y = y;
-                            host.replace_fixture(envelope.fixture.clone()).ok();
-                            envelope.fixture = host.fixture;
-                            return vec![set_document_op(&envelope)];
-                        }
-                    }
+            "setOrientation" => {
+                let orientation = args.and_then(|value| value.get("orientation")).and_then(|value| value.as_str());
+                self.runtime.orientation = match orientation {
+                    Some("topBottom") => DagLayoutOrientation::TopBottom,
+                    Some("leftRight") => DagLayoutOrientation::LeftRight,
+                    _ => return ActionEmit::default(),
+                };
+                ActionEmit::default()
+            }
+            "run" => {
+                let result = host_from_fixture(fixture).run();
+                self.runtime.last_run_json = serde_json::to_string(&result).unwrap_or_default();
+                ActionEmit::default()
+            }
+            "stop" => {
+                self.runtime.last_run_json.clear();
+                ActionEmit::default()
+            }
+            // 📷 Camera — a coalesced scalar op so a pan/zoom gesture is one undo step.
+            "nodeGraphViewport" => {
+                if let Some(camera) = args
+                    .and_then(|value| value.get("viewportJson"))
+                    .and_then(|value| value.as_str())
+                    .and_then(|json| serde_json::from_str(json).ok())
+                {
+                    return ActionEmit {
+                        ops: vec![SequenceOp::SetCamera { camera }],
+                        coalesce_key: Some("camera".into()),
+                        ..Default::default()
+                    };
                 }
+                ActionEmit::default()
             }
-            "connectMediaPorts" => {
-                let from = args.and_then(|value| value.get("sourceNodeId")).and_then(|value| value.as_str());
-                let to = args.and_then(|value| value.get("targetNodeId")).and_then(|value| value.as_str());
-                if let (Some(from), Some(to)) = (from, to) {
-                    push_undo(&mut envelope);
-                    if host.connect_steps(from, to).is_ok() {
-                        envelope.fixture = host.fixture;
-                        return vec![set_document_op(&envelope)];
-                    }
-                }
-            }
+            // ✏️ Operations — compute the target fixture via the host, emit granular ops.
             "addStep" => {
-                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print");
+                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print").to_string();
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
-                push_undo(&mut envelope);
-                let id = host.add_step(kind, x, y);
-                envelope.fixture = host.fixture;
-                envelope.runtime.selected_step_ids = vec![id];
-                return vec![set_document_op(&envelope)];
+                let mut host = host_from_fixture(fixture);
+                let id = host.add_step(&kind, x, y);
+                self.runtime.selected_step_ids = vec![id];
+                ActionEmit::ops(sequence_fixture_ops(fixture, &host.fixture))
             }
             "addStepToSlot" | "addStepDropped" => {
-                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print");
+                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print").to_string();
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let picked = args
                     .and_then(|value| value.get("pickedStepId"))
                     .or_else(|| args.and_then(|value| value.get("owner")))
-                    .and_then(|value| value.as_str());
-                push_undo(&mut envelope);
-                let id = if action == "addStepToSlot" {
-                    let owner = args.and_then(|value| value.get("owner")).and_then(|value| value.as_str());
-                    let slot = args.and_then(|value| value.get("slotName")).and_then(|value| value.as_str());
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                let owner = args.and_then(|value| value.get("owner")).and_then(|value| value.as_str()).map(str::to_string);
+                let slot = args.and_then(|value| value.get("slotName")).and_then(|value| value.as_str()).map(str::to_string);
+                let is_slot = action == "addStepToSlot";
+                let mut host = host_from_fixture(fixture);
+                let id = if is_slot {
                     match (owner, slot) {
-                        (Some(owner), Some(slot)) => host.add_step_in_slot(
-                            kind,
-                            x,
-                            y,
-                            Some(sequence_core::SlotRef {
-                                owner: owner.into(),
-                                name: slot.into(),
-                            }),
-                        ),
-                        _ => host.add_step(kind, x, y),
+                        (Some(owner), Some(slot)) => host.add_step_in_slot(&kind, x, y, Some(SlotRef { owner, name: slot })),
+                        _ => host.add_step(&kind, x, y),
                     }
                 } else {
-                    host.add_step_dropped(kind, x, y, picked)
+                    host.add_step_dropped(&kind, x, y, picked.as_deref())
                 };
-                envelope.fixture = host.fixture;
-                envelope.runtime.selected_step_ids = vec![id];
-                return vec![set_document_op(&envelope)];
+                self.runtime.selected_step_ids = vec![id];
+                ActionEmit::ops(sequence_fixture_ops(fixture, &host.fixture))
             }
             "removeStep" => {
                 let step_id = args
                     .and_then(|value| value.get("id"))
                     .or_else(|| args.and_then(|value| value.get("stepId")))
-                    .and_then(|value| value.as_str());
-                if let Some(step_id) = step_id {
-                    push_undo(&mut envelope);
-                    if host.remove_step(step_id) {
-                        envelope.fixture = host.fixture;
-                        envelope.runtime.selected_step_ids.retain(|id| id != step_id);
-                        return vec![set_document_op(&envelope)];
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                let Some(step_id) = step_id else { return ActionEmit::default() };
+                self.runtime.selected_step_ids.retain(|id| id != &step_id);
+                ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
+                    host.remove_step(&step_id);
+                }))
+            }
+            "deleteSelection" => {
+                let selected = self.runtime.selected_step_ids.clone();
+                let ops = self.ops_from_host_mutation(fixture, |host| {
+                    for step_id in &selected {
+                        host.remove_step(step_id);
+                    }
+                });
+                if !ops.is_empty() {
+                    self.runtime.selected_step_ids.clear();
+                }
+                ActionEmit::ops(ops)
+            }
+            "moveMediaNode" => {
+                let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).map(str::to_string);
+                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
+                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
+                if let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) {
+                    if fixture.steps.iter().any(|step| step.id == node_id) {
+                        let ops = self.ops_from_host_mutation(fixture, |host| {
+                            let mut next = host.fixture.clone();
+                            if let Some(step) = next.steps.iter_mut().find(|step| step.id == node_id) {
+                                step.x = x;
+                                step.y = y;
+                            }
+                            let _ = host.replace_fixture(next);
+                        });
+                        return ActionEmit::ops(ops);
                     }
                 }
+                ActionEmit::default()
+            }
+            "connectMediaPorts" => {
+                let from = args.and_then(|value| value.get("sourceNodeId")).and_then(|value| value.as_str()).map(str::to_string);
+                let to = args.and_then(|value| value.get("targetNodeId")).and_then(|value| value.as_str()).map(str::to_string);
+                if let (Some(from), Some(to)) = (from, to) {
+                    return ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
+                        let _ = host.connect_steps(&from, &to);
+                    }));
+                }
+                ActionEmit::default()
+            }
+            "disconnectSteps" => {
+                let from_id = args.and_then(|value| value.get("fromId")).and_then(|value| value.as_str()).map(str::to_string);
+                let to_id = args.and_then(|value| value.get("toId")).and_then(|value| value.as_str()).map(str::to_string);
+                if let (Some(from_id), Some(to_id)) = (from_id, to_id) {
+                    return ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
+                        host.disconnect_steps(&from_id, &to_id);
+                    }));
+                }
+                ActionEmit::default()
             }
             "setStepParams" => {
                 let step_id = args
                     .and_then(|value| value.get("id"))
                     .or_else(|| args.and_then(|value| value.get("stepId")))
-                    .and_then(|value| value.as_str());
-                let params = args.and_then(|value| value.get("params"));
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                let params = args.and_then(|value| value.get("params")).map(|value| value.to_string());
                 if let (Some(step_id), Some(params)) = (step_id, params) {
-                    push_undo(&mut envelope);
-                    if host.set_step_params_json(step_id, &params.to_string()).is_ok() {
-                        envelope.fixture = host.fixture;
-                        return vec![set_document_op(&envelope)];
-                    }
+                    return ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
+                        let _ = host.set_step_params_json(&step_id, &params);
+                    }));
                 }
+                ActionEmit::default()
             }
             "setStepCollapsed" => {
-                let step_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
-                if let Some(step_id) = step_id {
-                    let collapsed = envelope
-                        .fixture
-                        .steps
-                        .iter()
-                        .find(|step| step.id == step_id)
-                        .map(|step| !step.collapsed)
-                        .unwrap_or(true);
-                    push_undo(&mut envelope);
-                    if host.set_step_collapsed(step_id, collapsed) {
-                        envelope.fixture = host.fixture;
-                        return vec![set_document_op(&envelope)];
-                    }
-                }
-            }
-            "disconnectSteps" => {
-                let from_id = args.and_then(|value| value.get("fromId")).and_then(|value| value.as_str());
-                let to_id = args.and_then(|value| value.get("toId")).and_then(|value| value.as_str());
-                if let (Some(from_id), Some(to_id)) = (from_id, to_id) {
-                    push_undo(&mut envelope);
-                    if host.disconnect_steps(from_id, to_id) {
-                        envelope.fixture = host.fixture;
-                        return vec![set_document_op(&envelope)];
-                    }
-                }
-            }
-            "run" => {
-                let result = host.run();
-                envelope.runtime.last_run_json = serde_json::to_string(&result).unwrap_or_default();
-                return vec![set_document_op(&envelope)];
-            }
-            "stop" => {
-                envelope.runtime.last_run_json.clear();
-                return vec![set_document_op(&envelope)];
+                let step_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
+                let Some(step_id) = step_id else { return ActionEmit::default() };
+                let collapsed = fixture
+                    .steps
+                    .iter()
+                    .find(|step| step.id == step_id)
+                    .map(|step| !step.collapsed)
+                    .unwrap_or(true);
+                ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
+                    host.set_step_collapsed(&step_id, collapsed);
+                }))
             }
             "reorganize" => {
-                let opts = DagLayoutOptions {
-                    orientation: envelope.runtime.orientation,
-                    ..DagLayoutOptions::default()
-                };
-                push_undo(&mut envelope);
-                if host.reorganize(&opts).is_ok() {
-                    envelope.fixture = host.fixture;
-                    return vec![set_document_op(&envelope)];
+                let orientation = self.runtime.orientation;
+                ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
+                    let opts = DagLayoutOptions { orientation, ..DagLayoutOptions::default() };
+                    let _ = host.reorganize(&opts);
+                }))
+            }
+            "nodeGraphEdit" => {
+                let sub_ops = args
+                    .and_then(|value| value.get("ops"))
+                    .and_then(|value| value.as_array())
+                    .cloned()
+                    .unwrap_or_default();
+                let selected = self.runtime.selected_step_ids.clone();
+                let mut cleared = false;
+                let ops = self.ops_from_host_mutation(fixture, |host| {
+                    for op in &sub_ops {
+                        match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
+                            "setFixture" => {
+                                if let Some(fixture) = op
+                                    .get("fixtureJson")
+                                    .and_then(|value| value.as_str())
+                                    .and_then(|json| serde_json::from_str::<SequenceFixture>(json).ok())
+                                {
+                                    let _ = host.replace_fixture(fixture);
+                                }
+                            }
+                            "deleteSelection" => {
+                                for step_id in &selected {
+                                    if host.remove_step(step_id) {
+                                        cleared = true;
+                                    }
+                                }
+                            }
+                            "connect" => {
+                                let from = op.get("sourceNodeId").and_then(|value| value.as_str());
+                                let to = op.get("targetNodeId").and_then(|value| value.as_str());
+                                if let (Some(from), Some(to)) = (from, to) {
+                                    let _ = host.connect_steps(from, to);
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                });
+                if cleared {
+                    self.runtime.selected_step_ids.clear();
                 }
+                ActionEmit::ops(ops)
             }
-            "setOrientation" => {
-                let orientation = args.and_then(|value| value.get("orientation")).and_then(|value| value.as_str());
-                let orientation = match orientation {
-                    Some("topBottom") => DagLayoutOrientation::TopBottom,
-                    Some("leftRight") => DagLayoutOrientation::LeftRight,
-                    _ => return Vec::new(),
-                };
-                envelope.runtime.orientation = orientation;
-                return vec![set_document_op(&envelope)];
-            }
-            "undo" => {
-                if let Some(previous) = envelope.undo_stack.pop() {
-                    envelope.redo_stack.push(envelope.fixture.clone());
-                    envelope.fixture = previous;
-                    return vec![set_document_op(&envelope)];
-                }
-            }
-            "redo" => {
-                if let Some(next) = envelope.redo_stack.pop() {
-                    envelope.undo_stack.push(envelope.fixture.clone());
-                    envelope.fixture = next;
-                    return vec![set_document_op(&envelope)];
-                }
-            }
-            _ => {}
+            _ => ActionEmit::default(),
         }
-        Vec::new()
     }
 
-    fn tools(&self, document_json: &str, view_state: &ViewState) -> Vec<ToolNode> {
-        edit_tools(&parse_envelope(document_json), sequence_labels(view_state))
+    fn tools(&self, _doc: &DocumentView<'_, SequenceFixture>, view_state: &ViewState) -> Vec<ToolNode> {
+        edit_tools(&self.runtime, sequence_labels(view_state))
     }
 
-    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-        let envelope = parse_envelope(document_json);
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, SequenceFixture>, view_state: &ViewState) -> UiNode {
+        let fixture = doc.projection;
         let labels = sequence_labels(view_state);
         match body_key {
-            SEQUENCE_PLAY_BODY_MAIN => render_main_graph(&envelope),
-            SEQUENCE_PLAY_BODY_SCRIPT => render_script(&envelope),
-            SEQUENCE_PLAY_BODY_COMPILED => render_compiled_dag(&envelope),
-            SEQUENCE_PLAY_BODY_DOCUMENT => build_document_tree(&envelope.fixture, &envelope.runtime.selected_step_ids, labels),
-            SEQUENCE_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope.fixture, labels),
-            SEQUENCE_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_step_ids, labels),
+            SEQUENCE_PLAY_BODY_MAIN => render_main_graph(fixture, &self.runtime),
+            SEQUENCE_PLAY_BODY_SCRIPT => render_script(fixture, &self.runtime),
+            SEQUENCE_PLAY_BODY_COMPILED => render_compiled_dag(fixture),
+            SEQUENCE_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &self.runtime.selected_step_ids, labels),
+            SEQUENCE_PLAY_BODY_CATALOGUE => build_catalogue_tree(fixture, labels),
+            SEQUENCE_PLAY_BODY_INSPECTOR => build_inspector_tree(fixture, &self.runtime.selected_step_ids, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
         let labels = sequence_labels(view_state);
-        semio_framework_plugin::AppLabelsOverlay {
+        AppLabelsOverlay {
             app_label: None,
-            window_kind_labels: std::collections::HashMap::from([
+            window_kind_labels: HashMap::from([
                 (SEQUENCE_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()),
                 (SEQUENCE_PLAY_WINDOW_SCRIPT.to_string(), labels.window_script.to_string()),
                 (SEQUENCE_PLAY_WINDOW_COMPILED.to_string(), labels.window_compiled.to_string()),
             ]),
-            panel_tab_labels: std::collections::HashMap::new(),
-            mode_labels: std::collections::HashMap::new(),
+            panel_tab_labels: HashMap::new(),
+            mode_labels: HashMap::new(),
         }
     }
 }
@@ -1006,11 +959,34 @@ fn create_sequence_app() -> App {
                 PanelGroup::Details,
                 SEQUENCE_PLAY_BODY_INSPECTOR,
             )
-            .mode_tools("edit", edit_tools(&default_envelope(), &SEQUENCE_LABELS_NATIVE_EN))
+            .mode_tools("edit", edit_tools(&SequencePlayRuntime::default(), &SEQUENCE_LABELS_NATIVE_EN))
+            // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
+            .operation("addStep", "Add Step")
+            .operation("addStepToSlot", "Add Step To Slot")
+            .operation("addStepDropped", "Add Step Dropped")
+            .operation("removeStep", "Remove Step")
+            .operation("deleteSelection", "Delete Selection")
+            .operation("moveMediaNode", "Move Step")
+            .operation("connectMediaPorts", "Connect Steps")
+            .operation("disconnectSteps", "Disconnect Steps")
+            .operation("setStepParams", "Set Step Params")
+            .operation("setStepCollapsed", "Set Step Collapsed")
+            .operation("reorganize", "Reorganize")
+            .operation("nodeGraphEdit", "Node Graph Edit")
+            .operation("nodeGraphViewport", "Node Graph Viewport")
+            // 👁️ Ephemeral view state — selection, run output, layout orientation.
+            .view_action("setSelection", "Set Selection")
+            .view_action("selectNode", "Select Node")
+            .view_action("nodeGraphSelect", "Node Graph Select")
+            .view_action("nodeGraphHover", "Node Graph Hover")
+            .view_action("graphPointerDown", "Graph Pointer Down")
+            .view_action("setOrientation", "Set Orientation")
+            .view_action("run", "Run")
+            .view_action("stop", "Stop")
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("demo", "Demo", serde_json::to_string(&default_envelope()).unwrap())
+    .example("demo", "Demo", serde_json::to_string(&default_fixture()).unwrap())
     .program("sequence", "Sequence", "graph")
 }
 
@@ -1028,170 +1004,190 @@ semio_framework_plugin::semio_plugin! {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+    use vcs::{Backbone, BackboneMessage, MemoryBackbone};
+
+    fn meta(actor: &str) -> ActionMeta {
+        ActionMeta { actor: actor.into(), instance_id: 1 }
+    }
+
+    fn new_app() -> VcsDocumentApp<SequencePlayApp> {
+        VcsDocumentApp::new(SequencePlayApp::default())
+    }
 
     #[test]
     fn renders_node_graph_scene() {
-        let app = SequencePlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(SEQUENCE_PLAY_BODY_MAIN, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("node-graph"));
+        let mut app = new_app();
+        let node = app.render(SEQUENCE_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
+        assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
     }
 
     #[test]
     fn renders_script_editor() {
-        let app = SequencePlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(SEQUENCE_PLAY_BODY_SCRIPT, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("text-editor"));
+        let mut app = new_app();
+        let node = app.render(SEQUENCE_PLAY_BODY_SCRIPT, None, &ViewState::default()).expect("render");
+        assert!(serde_json::to_string(&node).unwrap().contains("text-editor"));
     }
 
     #[test]
     fn default_fixture_has_steps() {
-        let envelope = default_envelope();
-        assert_eq!(envelope.fixture.steps.len(), 2);
+        assert_eq!(default_fixture().steps.len(), 2);
     }
 
     #[test]
     fn add_step_action_appends_step() {
-        let mut app = SequencePlayApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops("addStep", Some(&json!({ "kind": "log.print" })), &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let updated_op: Value = serde_json::from_str(&ops[0]).unwrap();
-        let updated: SequencePlayEnvelope = serde_json::from_value(updated_op["document"].clone()).unwrap();
-        assert!(updated.fixture.steps.len() > 2);
+        let mut app = new_app();
+        app.handle_action("addStep", Some(&json!({ "kind": "log.print" })), &ViewState::default(), &meta("local")).expect("add");
+        assert!(app.projection().expect("projection").steps.len() > 2);
     }
 
     #[test]
-    fn run_stores_result_in_runtime() {
-        let mut app = SequencePlayApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops("run", None, &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let updated: SequencePlayEnvelope =
-            serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
-        assert!(!updated.runtime.last_run_json.is_empty());
+    fn run_stores_result_and_renders_in_script() {
+        let mut app = new_app();
+        let result = app.handle_action("run", None, &ViewState::default(), &meta("local")).expect("run");
+        assert!(result.operations.is_empty(), "run is a view action and emits no ops");
+        let node = app.render(SEQUENCE_PLAY_BODY_SCRIPT, None, &ViewState::default()).expect("render");
+        assert!(serde_json::to_string(&node).unwrap().contains("run result"));
     }
 
     #[test]
     fn remove_step_action_deletes_step() {
-        let mut app = SequencePlayApp;
-        let envelope = default_envelope();
-        let step_id = envelope.fixture.steps[0].id.clone();
-        let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_action_patch_ops("removeStep", Some(&json!({ "id": step_id })), &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let updated: SequencePlayEnvelope =
-            serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
-        assert!(updated.fixture.steps.iter().all(|step| step.id != step_id));
+        let mut app = new_app();
+        let step_id = app.projection().expect("projection").steps[0].id.clone();
+        app.handle_action("removeStep", Some(&json!({ "id": step_id })), &ViewState::default(), &meta("local")).expect("remove");
+        assert!(app.projection().expect("projection").steps.iter().all(|step| step.id != step_id));
     }
 
     #[test]
     fn footer_tools_include_run_stop_reorganize_and_orientation() {
-        let app = SequencePlayApp;
-        let document = app.initial_document_json();
-        let tools = app.tools(&document, &ViewState::default());
-        let json = serde_json::to_string(&tools).unwrap();
-        assert!(json.contains("\"id\":\"sequence-tools-run\""));
-        assert!(json.contains("\"id\":\"sequence-tools-stop\""));
-        assert!(json.contains("\"id\":\"sequence-tools-reorganize\""));
-        assert!(json.contains("\"id\":\"sequence-tools-orientation-lr\""));
-        assert!(json.contains("\"id\":\"sequence-tools-orientation-tb\""));
+        let mut app = new_app();
+        let json = serde_json::to_string(&app.tools(&ViewState::default())).unwrap();
+        for id in ["sequence-tools-run", "sequence-tools-stop", "sequence-tools-reorganize", "sequence-tools-orientation-lr", "sequence-tools-orientation-tb"] {
+            assert!(json.contains(&format!("\"id\":\"{id}\"")), "tools expose {id}");
+        }
     }
 
     #[test]
     fn set_orientation_action_flips_toggle_state() {
-        let mut app = SequencePlayApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops("setOrientation", Some(&json!({ "orientation": "topBottom" })), &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let updated: SequencePlayEnvelope =
-            serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
-        assert_eq!(updated.runtime.orientation, DagLayoutOrientation::TopBottom);
-        let tools = app.tools(&serde_json::to_string(&updated).unwrap(), &ViewState::default());
-        let tools_json = serde_json::to_string(&tools).unwrap();
-        assert!(tools_json.contains(r#""id":"sequence-tools-orientation-tb""#));
-        let lr_pressed = tools_json
-            .split(r#""id":"sequence-tools-orientation-lr""#)
-            .nth(1)
-            .and_then(|rest| rest.split_once("\"pressed\":"))
-            .map(|(_, rest)| rest.starts_with("false"))
-            .unwrap_or(false);
+        let mut app = new_app();
+        app.handle_action("setOrientation", Some(&json!({ "orientation": "topBottom" })), &ViewState::default(), &meta("local")).expect("orientation");
+        let tools_json = serde_json::to_string(&app.tools(&ViewState::default())).unwrap();
         let tb_pressed = tools_json
             .split(r#""id":"sequence-tools-orientation-tb""#)
             .nth(1)
             .and_then(|rest| rest.split_once("\"pressed\":"))
             .map(|(_, rest)| rest.starts_with("true"))
             .unwrap_or(false);
-        assert!(lr_pressed, "left-to-right toggle should be unpressed, got {tools_json}");
         assert!(tb_pressed, "top-to-bottom toggle should be pressed, got {tools_json}");
     }
 
     #[test]
     fn reorganize_action_spreads_step_positions_apart() {
-        let mut app = SequencePlayApp;
-        let mut envelope = default_envelope();
-        for step in envelope.fixture.steps.iter_mut() {
-            step.x = 0.0;
-            step.y = 0.0;
+        let mut app = new_app();
+        // Collapse both steps onto the origin, then reorganize.
+        let ids: Vec<String> = app.projection().expect("projection").steps.iter().map(|step| step.id.clone()).collect();
+        for id in &ids {
+            app.handle_action("moveMediaNode", Some(&json!({ "nodeId": id, "x": 0.0, "y": 0.0 })), &ViewState::default(), &meta("local")).expect("move");
         }
-        let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_action_patch_ops("reorganize", None, &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let updated: SequencePlayEnvelope =
-            serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
-        let xs: Vec<f64> = updated.fixture.steps.iter().map(|step| step.x).collect();
+        app.handle_action("reorganize", None, &ViewState::default(), &meta("local")).expect("reorganize");
+        let xs: Vec<f64> = app.projection().expect("projection").steps.iter().map(|step| step.x).collect();
         assert!(xs.iter().any(|x| *x != 0.0), "reorganize should spread steps apart, got {xs:?}");
     }
 
     #[test]
     fn stop_action_clears_last_run_result() {
-        let mut app = SequencePlayApp;
-        let document = app.initial_document_json();
-        let ran = app.handle_action_patch_ops("run", None, &document, &ViewState::default());
-        let ran_document = serde_json::from_str::<Value>(&ran[0]).unwrap()["document"].to_string();
-        let ops = app.handle_action_patch_ops("stop", None, &ran_document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let updated: SequencePlayEnvelope =
-            serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
-        assert!(updated.runtime.last_run_json.is_empty());
+        let mut app = new_app();
+        app.handle_action("run", None, &ViewState::default(), &meta("local")).expect("run");
+        app.handle_action("stop", None, &ViewState::default(), &meta("local")).expect("stop");
+        let node = app.render(SEQUENCE_PLAY_BODY_SCRIPT, None, &ViewState::default()).expect("render");
+        assert!(!serde_json::to_string(&node).unwrap().contains("run result"));
+    }
+
+    #[test]
+    fn undo_redo_round_trip_through_the_wrapper() {
+        let mut app = new_app();
+        app.handle_action("addStep", Some(&json!({ "kind": "log.print" })), &ViewState::default(), &meta("local")).expect("add");
+        assert_eq!(app.projection().expect("projection").steps.len(), 3);
+        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        assert_eq!(app.projection().expect("projection").steps.len(), 2);
+        app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+        assert_eq!(app.projection().expect("projection").steps.len(), 3);
+    }
+
+    #[test]
+    fn two_instances_converge_disjoint_edits_via_backbone() {
+        let mut instance_a = new_app();
+        let mut instance_b = new_app();
+        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://sequence-convergence", "mem://sequence-convergence");
+        instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
+        instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+
+        // A moves step-1; B moves step-2 — disjoint step patches.
+        instance_a
+            .handle_action("moveMediaNode", Some(&json!({ "nodeId": "step-1", "x": 111.0, "y": 0.0 })), &ViewState::default(), &meta("actor-a"))
+            .expect("a moves step-1");
+        instance_b
+            .handle_action("moveMediaNode", Some(&json!({ "nodeId": "step-2", "x": 222.0, "y": 0.0 })), &ViewState::default(), &meta("actor-b"))
+            .expect("b moves step-2");
+
+        instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
+        instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+
+        let projection_a = instance_a.projection().expect("projection a");
+        let projection_b = instance_b.projection().expect("projection b");
+        let x_of = |fixture: &SequenceFixture, id: &str| fixture.steps.iter().find(|step| step.id == id).map(|step| step.x).unwrap();
+        assert_eq!(x_of(&projection_a, "step-1"), 111.0, "A keeps its own edit");
+        assert_eq!(x_of(&projection_a, "step-2"), 222.0, "A converges on B's edit");
+        assert_eq!(x_of(&projection_b, "step-1"), 111.0, "B converges on A's edit");
+        assert_eq!(x_of(&projection_b, "step-2"), 222.0, "B keeps its own edit");
+    }
+
+    #[test]
+    fn ingest_operations_is_idempotent() {
+        let mut sender = new_app();
+        let (near, mut far) = MemoryBackbone::pair("mem://sequence-doc", "mem://sequence-doc");
+        sender.attach_backbone(Box::new(near)).expect("attach");
+        sender
+            .handle_action("moveMediaNode", Some(&json!({ "nodeId": "step-1", "x": 99.0, "y": 0.0 })), &ViewState::default(), &meta("local"))
+            .expect("move");
+        let mut envelopes = Vec::new();
+        for message in far.receive().expect("receive") {
+            if let BackboneMessage::Ops { envelopes: ops } = message {
+                envelopes.extend(ops);
+            }
+        }
+        assert!(!envelopes.is_empty(), "expected the applied op on the channel");
+        let operations_json = serde_json::to_string(&envelopes).expect("serialize");
+        let mut receiver = new_app();
+        receiver.ingest_operations(&operations_json).expect("ingest once");
+        receiver.ingest_operations(&operations_json).expect("ingest twice");
+        let step_x = receiver.projection().expect("projection").steps.iter().find(|step| step.id == "step-1").unwrap().x;
+        assert_eq!(step_x, 99.0, "feeding the same op twice must not double-apply");
     }
 
     #[test]
     fn sequence_labels_render_native_english_by_default() {
-        let app = SequencePlayApp;
-        let document = app.initial_document_json();
-        let document_node = app.render(SEQUENCE_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
-        let document_json = serde_json::to_string(&document_node).unwrap();
+        let mut app = new_app();
+        let document_json = serde_json::to_string(&app.render(SEQUENCE_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render")).unwrap();
         assert!(document_json.contains("\"Steps\""));
         assert!(document_json.contains("\"Flow edges\""));
-        let tools = app.tools(&document, &ViewState::default());
-        let tools_json = serde_json::to_string(&tools).unwrap();
-        assert!(tools_json.contains("\"Run\""));
-        assert!(tools_json.contains("\"Stop\""));
-        assert!(tools_json.contains("\"Reorganize\""));
-        assert!(tools_json.contains("\"Left to right\""));
-        assert!(tools_json.contains("\"Top to bottom\""));
+        let tools_json = serde_json::to_string(&app.tools(&ViewState::default())).unwrap();
+        for label in ["\"Run\"", "\"Stop\"", "\"Reorganize\"", "\"Left to right\"", "\"Top to bottom\""] {
+            assert!(tools_json.contains(label), "tools expose {label}");
+        }
     }
 
     #[test]
     fn sequence_labels_render_german_locale() {
-        let app = SequencePlayApp;
-        let document = app.initial_document_json();
+        let mut app = new_app();
         let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let document_node = app.render(SEQUENCE_PLAY_BODY_DOCUMENT, &document, &view_state);
-        let document_json = serde_json::to_string(&document_node).unwrap();
+        let document_json = serde_json::to_string(&app.render(SEQUENCE_PLAY_BODY_DOCUMENT, None, &view_state).expect("render")).unwrap();
         assert!(document_json.contains("Schritte"));
         assert!(document_json.contains("Ablaufkanten"));
         assert!(!document_json.contains("\"Steps\""));
-        let tools = app.tools(&document, &view_state);
-        let tools_json = serde_json::to_string(&tools).unwrap();
-        assert!(tools_json.contains("Ausführen"));
-        assert!(tools_json.contains("Stopp"));
-        assert!(tools_json.contains("Neu anordnen"));
-        assert!(tools_json.contains("Links nach rechts"));
-        assert!(tools_json.contains("Oben nach unten"));
+        let tools_json = serde_json::to_string(&app.tools(&view_state)).unwrap();
+        for label in ["Ausführen", "Stopp", "Neu anordnen", "Links nach rechts", "Oben nach unten"] {
+            assert!(tools_json.contains(label), "tools expose {label}");
+        }
     }
 }

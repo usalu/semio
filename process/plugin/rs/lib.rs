@@ -9,18 +9,18 @@ pub mod app_3d {
         StlSolidImporter,
     };
     use kernel_3d_engine::{BrepKernel, GeometryHandle};
-    use process_3d::{Pose, ProcessMeasure, ProcessStep, SolidSpec, Stock, StepOrigin};
+    use process_3d::{Pose, Process3dOp, ProcessMeasure, ProcessStep, ProcessStepPatch, SolidSpec, Stock, StepOrigin};
+    use semio_framework_core::kernel::HostEffect;
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_world_3d_scene, create_default_layout, mesh_from_indexed_with_face_groups, mesh_from_kind, tool_button,
         tool_toggle, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, world3d_camera_json, world3d_mesh_id_from_url, world3d_scene,
-        world3d_sun_measures, world3d_selection_json, ActionDescriptor, App, MeshData, MeshExporter, MeshImporter, PanelGroup, PluginApp, SurfaceKind, ToolCategory, ToolNode,
-        UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
-        ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure, WorldSunConfig,
-        FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-        FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+        world3d_sun_measures, world3d_selection_json, ActionDescriptor, ActionEmit, App, DocumentApp, DocumentView, MeshData, MeshExporter,
+        MeshImporter, PanelGroup, SurfaceKind, ToolCategory, ToolNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction,
+        UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
+        WindowEngagementOption, WindowEngagementStatus, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
         FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     };
-    use semio_framework_plugin::layout::WindowEngagementStatus;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use std::collections::hash_map::DefaultHasher;
@@ -28,6 +28,7 @@ pub mod app_3d {
     use std::hash::{Hash, Hasher};
     use std::sync::atomic::{AtomicU32, Ordering};
     use std::sync::{Mutex, OnceLock};
+    use vcs::CollectionOp;
 
     //#region 🔖Constants
     const PROCESS_3D_PLAY_APP_ID: &str = "process3d-play";
@@ -42,11 +43,6 @@ pub mod app_3d {
     const PROCESS3D_ENGAGEMENT_TOOL_CUT: &str = "process3d.tool.cut";
     const PROCESS3D_ENGAGEMENT_TOOL_DRILL: &str = "process3d.tool.drill";
     const PROCESS3D_ENGAGEMENT_TOOL_ATTACH: &str = "process3d.tool.attach";
-    /// ⏪ Actions that mutate the shared `fixture` in place and should be undoable — excludes `setDocument`/
-    /// `setActiveExample` (wholesale envelope swaps) and view-only state (selection/hover/camera/tool/cursor).
-    const PROCESS3D_UNDOABLE_ACTIONS: &[&str] =
-        &["addStep", "removeStep", "removeSelectedStep", "updateStep", "moveStep", "setStepEnabled", "patchInspector", "setStock", "worldFaceDragEnd"];
-    const PROCESS3D_UNDO_STACK_MAX: usize = 50;
     const PROCESS3D_TESSELLATION_TOLERANCE: f64 = 0.05;
     const PROCESS3D_FALLBACK_MESH_KIND: &str = "box";
     const PROCESS3D_KERNEL_MEMO_CAP: usize = 128;
@@ -178,52 +174,20 @@ pub mod app_3d {
         "select".into()
     }
 
+    /// 🎛️ Ephemeral view state (selection, camera, active tool, sun) — lives in the app struct, not
+    /// the document, so it never pollutes undo history.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct Process3dPreviewCache {
-        signature: u64,
-        meshes_json: String,
-        instances_json: String,
-    }
-
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[serde(rename_all = "camelCase", default)]
     struct Process3dRuntime {
-        #[serde(default)]
         selected_id: Option<String>,
-        #[serde(default)]
         hovered_id: Option<String>,
         /// 🖱️ Id of the brep face currently picked in the viewport (drag-to-cut/attach target).
-        #[serde(default)]
         selected_face_id: Option<u32>,
-        #[serde(default = "default_selection_method")]
         selection_method: String,
-        #[serde(default = "default_active_tool")]
         active_tool: String,
-        #[serde(default)]
         engagement_input: String,
-        #[serde(default)]
         camera: Process3dCamera,
-        /// ⏮️ Fixture snapshots for undo, pushed before structural edits.
-        #[serde(default)]
-        undo_stack: Vec<process_3d::Process3dDocument>,
-        /// ⏭️ Fixture snapshots for redo, cleared whenever a new edit is snapshotted.
-        #[serde(default)]
-        redo_stack: Vec<process_3d::Process3dDocument>,
-        #[serde(default)]
-        preview_cache: Option<Process3dPreviewCache>,
-        #[serde(default)]
         sun: WorldSunConfig,
-        /// 💾 Pending native-geometry export payload, flushed by `export_download_ops` into a
-        /// `downloadMediaExport` op; mirrors `cad`'s `pending_export*` runtime fields.
-        #[serde(default)]
-        pending_export: Option<Value>,
-        #[serde(default)]
-        pending_export_filename: Option<String>,
-        #[serde(default)]
-        pending_export_mime: Option<String>,
-        #[serde(default)]
-        pending_export_encoding: Option<String>,
     }
 
     impl Default for Process3dRuntime {
@@ -236,53 +200,17 @@ pub mod app_3d {
                 active_tool: default_active_tool(),
                 engagement_input: String::new(),
                 camera: Process3dCamera::default(),
-                undo_stack: Vec::new(),
-                redo_stack: Vec::new(),
-                preview_cache: None,
                 sun: WorldSunConfig::default(),
-                pending_export: None,
-                pending_export_filename: None,
-                pending_export_mime: None,
-                pending_export_encoding: None,
             }
         }
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct Process3dEnvelope {
-        fixture: process_3d::Process3dDocument,
-        #[serde(default)]
-        runtime: Process3dRuntime,
+    fn default_document() -> process_3d::Process3dDocument {
+        serde_json::from_str(TIMBER_EXAMPLE_JSON).unwrap_or_default()
     }
 
-    fn envelope_from_fixture_json(json_text: &str) -> Option<Process3dEnvelope> {
-        serde_json::from_str::<process_3d::Process3dDocument>(json_text).ok().map(|fixture| {
-            let mut envelope = Process3dEnvelope { fixture, runtime: Process3dRuntime::default() };
-            refresh_preview_cache(&mut envelope.runtime, &envelope.fixture);
-            envelope
-        })
-    }
-
-    fn default_envelope() -> Process3dEnvelope {
-        envelope_from_fixture_json(TIMBER_EXAMPLE_JSON)
-            .unwrap_or_else(|| Process3dEnvelope { fixture: process_3d::Process3dDocument::default(), runtime: Process3dRuntime::default() })
-    }
-
-    fn plate_envelope() -> Process3dEnvelope {
-        envelope_from_fixture_json(PLATE_EXAMPLE_JSON).unwrap_or_else(default_envelope)
-    }
-
-    fn empty_envelope() -> Process3dEnvelope {
-        Process3dEnvelope { fixture: process_3d::Process3dDocument::default(), runtime: Process3dRuntime::default() }
-    }
-
-    fn parse_envelope(document_json: &str) -> Process3dEnvelope {
-        serde_json::from_str(document_json).unwrap_or_else(|_| default_envelope())
-    }
-
-    fn set_document_op(envelope: &Process3dEnvelope) -> String {
-        json!({ "op": "setDocument", "document": envelope }).to_string()
+    fn plate_document() -> process_3d::Process3dDocument {
+        serde_json::from_str(PLATE_EXAMPLE_JSON).unwrap_or_else(|_| default_document())
     }
 
     fn process3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -294,23 +222,23 @@ pub mod app_3d {
         Some([array.first()?.as_f64()?, array.get(1)?.as_f64()?, array.get(2)?.as_f64()?])
     }
 
-    fn selected_ids(envelope: &Process3dEnvelope) -> Vec<String> {
-        envelope.runtime.selected_id.clone().into_iter().collect()
+    fn selected_ids(runtime: &Process3dRuntime) -> Vec<String> {
+        runtime.selected_id.clone().into_iter().collect()
     }
 
     /// 🖱️ Extends the base object-selection JSON with face-picking/drag fields: `targets.face` lets the
     /// renderer hit-test individual triangles; `engagementSessionActive` gates the ground-click placement
     /// path used by the cut/drill/attach tools; `faceDragActive` gates the push/pull drag gesture, only
     /// while the select tool is active (so a click-to-place tool doesn't also start a face drag).
-    fn process3d_selection_json(envelope: &Process3dEnvelope) -> String {
-        let mut value: Value = serde_json::from_str(&world3d_selection_json(&envelope.runtime.selection_method, &selected_ids(envelope), envelope.runtime.hovered_id.as_deref()))
+    fn process3d_selection_json(runtime: &Process3dRuntime) -> String {
+        let mut value: Value = serde_json::from_str(&world3d_selection_json(&runtime.selection_method, &selected_ids(runtime), runtime.hovered_id.as_deref()))
             .unwrap_or_else(|_| json!({}));
         if let Some(object) = value.as_object_mut() {
-            object.insert("engagementSessionActive".into(), json!(envelope.runtime.active_tool != "select"));
+            object.insert("engagementSessionActive".into(), json!(runtime.active_tool != "select"));
             object.insert("selectionMode".into(), json!("face"));
             object.insert("targets".into(), json!({ "mesh": true, "face": true, "vertex": false, "edge": false }));
-            object.insert("componentIds".into(), json!(envelope.runtime.selected_face_id.map(|id| vec![id]).unwrap_or_default()));
-            object.insert("faceDragActive".into(), json!(envelope.runtime.active_tool == "select"));
+            object.insert("componentIds".into(), json!(runtime.selected_face_id.map(|id| vec![id]).unwrap_or_default()));
+            object.insert("faceDragActive".into(), json!(runtime.active_tool == "select"));
         }
         value.to_string()
     }
@@ -327,17 +255,27 @@ pub mod app_3d {
         hash_value(fixture)
     }
 
-    fn remove_step(fixture: &mut process_3d::Process3dDocument, id: &str) -> bool {
-        let Some(index) = fixture.steps.iter().position(|step| step.id == id) else {
-            return false;
-        };
-        fixture.steps.retain(|step| step.id != id);
+    /// ✂️➕🗑️ Read-only op builders for the two structural collection edits every mutating action needs:
+    /// inserting a step at the resolved-up-to cursor (and advancing it), and removing a step by id (and
+    /// pulling the cursor back if it sat past the removed step). Building `Process3dOp`s from an immutable
+    /// `&Process3dDocument` keeps `handle_action` free of manual mutation — the VCS store applies them.
+    fn insert_step_ops(fixture: &process_3d::Process3dDocument, step: ProcessStep) -> Vec<Process3dOp> {
+        let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len()).min(fixture.steps.len());
+        vec![
+            Process3dOp::Steps { collection: CollectionOp::Add { index: cursor, item: step } },
+            Process3dOp::SetCursor { resolved_up_to: Some(cursor + 1) },
+        ]
+    }
+
+    fn remove_step_ops(fixture: &process_3d::Process3dDocument, id: &str) -> Option<Vec<Process3dOp>> {
+        let index = fixture.steps.iter().position(|step| step.id == id)?;
+        let mut ops = vec![Process3dOp::Steps { collection: CollectionOp::Remove { id: id.to_string() } }];
         if let Some(cursor) = fixture.resolved_up_to {
             if cursor > index {
-                fixture.resolved_up_to = Some(cursor - 1);
+                ops.push(Process3dOp::SetCursor { resolved_up_to: Some(cursor - 1) });
             }
         }
-        true
+        Some(ops)
     }
 
     fn default_cut_measure() -> ProcessMeasure {
@@ -350,13 +288,6 @@ pub mod app_3d {
 
     fn default_attach_measure() -> ProcessMeasure {
         ProcessMeasure::Attach { component: SolidSpec::Cylinder { radius: 0.03, height: 0.2 }, pose: Pose::default() }
-    }
-
-    /// ✂️➕ Inserts a new step at the cursor, advances the cursor past it, and selects it.
-    fn insert_step_at_cursor(fixture: &mut process_3d::Process3dDocument, step: ProcessStep) {
-        let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len()).min(fixture.steps.len());
-        fixture.steps.insert(cursor, step);
-        fixture.resolved_up_to = Some((cursor + 1).min(fixture.steps.len()));
     }
 
     //#region 🔖Modules
@@ -393,6 +324,7 @@ pub mod app_3d {
     }
 
     /// 📐 The stock dimensions a validation rule is checked against.
+    #[derive(Clone, Copy)]
     struct ValidationContext {
         stock_width: f64,
         stock_depth: f64,
@@ -695,16 +627,22 @@ pub mod app_3d {
         }
     }
 
-    fn apply_process3d_inspector_patch(fixture: &mut process_3d::Process3dDocument, target: &str, field: &str, value: Option<&Value>) -> bool {
+    /// 🩹 Builds the `Process3dOp` for one inspector field edit — clones the target (stock or step),
+    /// mutates the clone via `apply_stock_patch`/`apply_step_patch`, then wraps it back into a
+    /// `SetStock`/`Steps::Patch` op so the store computes the true pre-state inverse.
+    fn process3d_inspector_patch_op(fixture: &process_3d::Process3dDocument, target: &str, field: &str, value: Option<&Value>) -> Option<Process3dOp> {
         if target == fixture.stock.id {
-            return apply_stock_patch(&mut fixture.stock, field, value);
+            let mut stock = fixture.stock.clone();
+            return if apply_stock_patch(&mut stock, field, value) { Some(Process3dOp::SetStock { stock }) } else { None };
         }
-        if let Some(step_id) = target.strip_prefix("step:") {
-            if let Some(step) = fixture.steps.iter_mut().find(|step| step.id == step_id) {
-                return apply_step_patch(step, field, value);
-            }
+        let step_id = target.strip_prefix("step:")?;
+        let step = fixture.steps.iter().find(|step| step.id == step_id)?;
+        let mut updated = step.clone();
+        if !apply_step_patch(&mut updated, field, value) {
+            return None;
         }
-        false
+        let patch = ProcessStepPatch { label: Some(updated.label), enabled: None, measure: Some(updated.measure), origin: None };
+        Some(Process3dOp::Steps { collection: CollectionOp::Patch { id: step_id.to_string(), patch } })
     }
     //#endregion 🔖InspectorPatch
     //#endregion 🔖Document
@@ -906,33 +844,40 @@ pub mod app_3d {
         (meshes.to_string(), instances.to_string())
     }
 
-    fn refresh_preview_cache(runtime: &mut Process3dRuntime, fixture: &process_3d::Process3dDocument) {
-        let signature = fixture_signature(fixture);
-        if runtime.preview_cache.as_ref().is_some_and(|entry| entry.signature == signature) {
-            return;
-        }
-        let (meshes_json, instances_json) = evaluated_preview_payload(fixture);
-        runtime.preview_cache = Some(Process3dPreviewCache { signature, meshes_json, instances_json });
+    /// 🧊 In-memory memo of the last evaluated preview payload, keyed by document signature — `render`
+    /// only sees `&self`, so this lives in a process-wide `Mutex` (mirrors `PROCESS_BREP_KERNEL` above)
+    /// rather than the app struct.
+    struct Process3dPreviewCache {
+        signature: u64,
+        meshes_json: String,
+        instances_json: String,
     }
 
-    fn preview_payload_cached(runtime: &Process3dRuntime, fixture: &process_3d::Process3dDocument) -> (String, String) {
+    static PROCESS3D_PREVIEW_CACHE: OnceLock<Mutex<Option<Process3dPreviewCache>>> = OnceLock::new();
+
+    fn process3d_preview_cache() -> &'static Mutex<Option<Process3dPreviewCache>> {
+        PROCESS3D_PREVIEW_CACHE.get_or_init(|| Mutex::new(None))
+    }
+
+    fn preview_payload_cached(fixture: &process_3d::Process3dDocument) -> (String, String) {
         let signature = fixture_signature(fixture);
-        if let Some(cache) = &runtime.preview_cache {
-            if cache.signature == signature {
-                return (cache.meshes_json.clone(), cache.instances_json.clone());
+        if let Ok(cache) = process3d_preview_cache().lock() {
+            if let Some(entry) = cache.as_ref() {
+                if entry.signature == signature {
+                    return (entry.meshes_json.clone(), entry.instances_json.clone());
+                }
             }
         }
-        evaluated_preview_payload(fixture)
-    }
-
-    fn finalize_document_op(envelope: &mut Process3dEnvelope) -> String {
-        refresh_preview_cache(&mut envelope.runtime, &envelope.fixture);
-        set_document_op(envelope)
+        let (meshes_json, instances_json) = evaluated_preview_payload(fixture);
+        if let Ok(mut cache) = process3d_preview_cache().lock() {
+            *cache = Some(Process3dPreviewCache { signature, meshes_json: meshes_json.clone(), instances_json: instances_json.clone() });
+        }
+        (meshes_json, instances_json)
     }
     //#endregion 🔖KernelReplay
 
     //#region 🔖MediaImportExport
-    /// 📤 A pending native-geometry export ready for `pending_export`/`export_download_ops`.
+    /// 📤 A pending native-geometry export ready to become a `HostEffect::DownloadMediaExport`.
     struct Process3dModelExport {
         filename: String,
         data: Value,
@@ -1018,27 +963,6 @@ pub mod app_3d {
         fixture.stock = Stock { id: "stock".into(), label: label.into(), solid: SolidSpec::ImportedSolid { solid_handle: handle.0 }, pose: Pose::default() };
         Some(fixture)
     }
-
-    fn export_download_ops(envelope: &Process3dEnvelope) -> Vec<String> {
-        let Some(data) = envelope.runtime.pending_export.clone() else {
-            return Vec::new();
-        };
-        let filename = envelope.runtime.pending_export_filename.clone().unwrap_or_else(|| "process3d.step".into());
-        let mime_type = envelope.runtime.pending_export_mime.clone().unwrap_or_else(|| "application/step".into());
-        let payload = match data {
-            Value::String(text) => text,
-            other => serde_json::to_string(&other).unwrap_or_default(),
-        };
-        let encoding = envelope.runtime.pending_export_encoding.clone();
-        vec![json!({
-            "op": "downloadMediaExport",
-            "filename": filename,
-            "mimeType": mime_type,
-            "data": payload,
-            "encoding": encoding,
-        })
-        .to_string()]
-    }
     //#endregion 🔖MediaImportExport
 
     //#region 🔖Panels
@@ -1108,14 +1032,14 @@ pub mod app_3d {
         })
     }
 
-    fn build_document_tree(envelope: &Process3dEnvelope, labels: &Process3dLabels) -> UiNode {
-        let stock = &envelope.fixture.stock;
+    fn build_document_tree(fixture: &process_3d::Process3dDocument, runtime: &Process3dRuntime, labels: &Process3dLabels) -> UiNode {
+        let stock = &fixture.stock;
         let stock_item = UiTreeItemNode {
             id: stock.id.clone(),
             label: stock.label.clone(),
             description: None,
             icon_id: Some("box".into()),
-            selected: Some(envelope.runtime.selected_id.as_deref() == Some(stock.id.as_str())),
+            selected: Some(runtime.selected_id.as_deref() == Some(stock.id.as_str())),
             default_open: None,
             action: Some(process3d_action("setSelection", Some(json!({ "id": stock.id })))),
             hover_action: None,
@@ -1127,9 +1051,8 @@ pub mod app_3d {
             control: None,
             is_hidden: None,
         };
-        let cursor = envelope.fixture.resolved_up_to.unwrap_or(envelope.fixture.steps.len());
-        let step_items: Vec<UiTreeItemNode> = envelope
-            .fixture
+        let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len());
+        let step_items: Vec<UiTreeItemNode> = fixture
             .steps
             .iter()
             .enumerate()
@@ -1138,7 +1061,7 @@ pub mod app_3d {
                 label: step.label.clone(),
                 description: if index >= cursor { Some("pending".into()) } else { None },
                 icon_id: Some(process3d_measure_icon(&step.measure).into()),
-                selected: Some(envelope.runtime.selected_id.as_deref() == Some(step.id.as_str())),
+                selected: Some(runtime.selected_id.as_deref() == Some(step.id.as_str())),
                 default_open: None,
                 action: Some(process3d_action("setSelection", Some(json!({ "id": step.id })))),
                 hover_action: Some(process3d_action("setHover", Some(json!({ "id": step.id })))),
@@ -1178,8 +1101,8 @@ pub mod app_3d {
 
     /// 🏭 Builds one catalogue tree item per machine modification kind across all modules, disabling
     /// (non-clickable, with a reason) any kind the current stock doesn't satisfy.
-    fn build_catalogue_tree(envelope: &Process3dEnvelope, labels: &Process3dLabels) -> UiNode {
-        let ctx = validation_context_for_stock(&envelope.fixture.stock);
+    fn build_catalogue_tree(fixture: &process_3d::Process3dDocument, labels: &Process3dLabels) -> UiNode {
+        let ctx = validation_context_for_stock(&fixture.stock);
         let mut sections: Vec<UiTreeSectionNode> = ALL_MODULES
             .iter()
             .map(|module| {
@@ -1311,33 +1234,33 @@ pub mod app_3d {
         }])
     }
 
-    fn build_inspector_tree(envelope: &Process3dEnvelope, labels: &Process3dLabels) -> UiNode {
-        let Some(selected_id) = envelope.runtime.selected_id.as_deref() else {
+    fn build_inspector_tree(fixture: &process_3d::Process3dDocument, runtime: &Process3dRuntime, labels: &Process3dLabels) -> UiNode {
+        let Some(selected_id) = runtime.selected_id.as_deref() else {
             return ui_text(labels.no_selection);
         };
-        if selected_id == envelope.fixture.stock.id {
-            return build_stock_inspector(&envelope.fixture.stock, &envelope.fixture, labels);
+        if selected_id == fixture.stock.id {
+            return build_stock_inspector(&fixture.stock, fixture, labels);
         }
-        if let Some(step) = envelope.fixture.steps.iter().find(|step| step.id == selected_id) {
-            return build_step_inspector(step, &envelope.fixture.stock, labels);
+        if let Some(step) = fixture.steps.iter().find(|step| step.id == selected_id) {
+            return build_step_inspector(step, &fixture.stock, labels);
         }
         ui_text(labels.no_selection)
     }
     //#endregion 🔖Panels
 
     //#region 🔖Engagement
-    fn process3d_engagement(envelope: &Process3dEnvelope) -> WindowEngagement {
-        let len = envelope.fixture.steps.len();
-        let cursor = envelope.fixture.resolved_up_to.unwrap_or(len);
-        let volume = processed_volume(&envelope.fixture).unwrap_or(0.0);
+    fn process3d_engagement(fixture: &process_3d::Process3dDocument, runtime: &Process3dRuntime) -> WindowEngagement {
+        let len = fixture.steps.len();
+        let cursor = fixture.resolved_up_to.unwrap_or(len);
+        let volume = processed_volume(fixture).unwrap_or(0.0);
         WindowEngagement {
-            session_active: Some(envelope.runtime.active_tool != "select"),
+            session_active: Some(runtime.active_tool != "select"),
             options: Some(vec![
                 WindowEngagementOption {
                     id: PROCESS3D_ENGAGEMENT_TOOL_SELECT.into(),
                     label: Some("Select".into()),
                     icon_id: Some("cursor".into()),
-                    pressed: Some(envelope.runtime.active_tool == "select"),
+                    pressed: Some(runtime.active_tool == "select"),
                     disabled: None,
                     action: Some(process3d_action("setActiveTool", Some(json!({ "tool": "select" })))),
                 },
@@ -1345,7 +1268,7 @@ pub mod app_3d {
                     id: PROCESS3D_ENGAGEMENT_TOOL_CUT.into(),
                     label: Some("Cut".into()),
                     icon_id: Some("scissors".into()),
-                    pressed: Some(envelope.runtime.active_tool == "cut"),
+                    pressed: Some(runtime.active_tool == "cut"),
                     disabled: None,
                     action: Some(process3d_action("setActiveTool", Some(json!({ "tool": "cut" })))),
                 },
@@ -1353,7 +1276,7 @@ pub mod app_3d {
                     id: PROCESS3D_ENGAGEMENT_TOOL_DRILL.into(),
                     label: Some("Drill".into()),
                     icon_id: Some("circle-dot".into()),
-                    pressed: Some(envelope.runtime.active_tool == "drill"),
+                    pressed: Some(runtime.active_tool == "drill"),
                     disabled: None,
                     action: Some(process3d_action("setActiveTool", Some(json!({ "tool": "drill" })))),
                 },
@@ -1361,14 +1284,14 @@ pub mod app_3d {
                     id: PROCESS3D_ENGAGEMENT_TOOL_ATTACH.into(),
                     label: Some("Attach".into()),
                     icon_id: Some("plus".into()),
-                    pressed: Some(envelope.runtime.active_tool == "attach"),
+                    pressed: Some(runtime.active_tool == "attach"),
                     disabled: None,
                     action: Some(process3d_action("setActiveTool", Some(json!({ "tool": "attach" })))),
                 },
             ]),
             input: Some(WindowEngagementInput {
                 id: Some("process3d-engagement".into()),
-                value: Some(envelope.runtime.engagement_input.clone()),
+                value: Some(runtime.engagement_input.clone()),
                 placeholder: Some("cut, drill, attach, back, forward, all".into()),
                 disabled: None,
                 on_change: Some(process3d_action("engagementInput", None)),
@@ -1397,62 +1320,72 @@ pub mod app_3d {
 
     //#region 🔖Process3dPlayApp
     #[derive(Default)]
-    pub struct Process3dPlayApp;
+    pub struct Process3dPlayApp {
+        runtime: Process3dRuntime,
+    }
 
-    impl PluginApp for Process3dPlayApp {
+    impl DocumentApp for Process3dPlayApp {
+        type Projection = process_3d::Process3dDocument;
+        type Op = Process3dOp;
+
         fn app_id(&self) -> &str {
             PROCESS_3D_PLAY_APP_ID
         }
 
-        fn initial_document_json(&self) -> String {
-            serde_json::to_string(&default_envelope()).expect("process3d envelope json")
+        fn document_schema(&self) -> &str {
+            process_3d::PROCESS_3D_SCHEMA
         }
 
-        fn handle_action_patch_ops(&mut self, action: &str, args: Option<&Value>, document_json: &str, _view_state: &ViewState) -> Vec<String> {
-            let mut envelope = parse_envelope(document_json);
-            if PROCESS3D_UNDOABLE_ACTIONS.contains(&action) {
-                envelope.runtime.undo_stack.push(envelope.fixture.clone());
-                if envelope.runtime.undo_stack.len() > PROCESS3D_UNDO_STACK_MAX {
-                    envelope.runtime.undo_stack.remove(0);
-                }
-                envelope.runtime.redo_stack.clear();
-            }
+        fn initial_projection(&self) -> process_3d::Process3dDocument {
+            default_document()
+        }
+
+        fn handle_action(
+            &mut self,
+            action: &str,
+            args: Option<&Value>,
+            doc: &DocumentView<'_, process_3d::Process3dDocument>,
+            view_state: &ViewState,
+        ) -> ActionEmit<Process3dOp> {
             match action {
                 "setDocument" => {
-                    if let Some(document) = args.and_then(|value| value.get("document")) {
-                        if let Ok(parsed) = serde_json::from_value::<Process3dEnvelope>(document.clone()) {
-                            return vec![set_document_op(&parsed)];
+                    if let Some(document_value) = args.and_then(|value| value.get("document")) {
+                        if let Ok(document) = serde_json::from_value::<process_3d::Process3dDocument>(document_value.clone()) {
+                            self.runtime.selected_id = None;
+                            return ActionEmit::ops(vec![Process3dOp::SetDocument { document }]);
                         }
                     }
+                    ActionEmit::default()
                 }
                 "setActiveExample" => {
                     let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
-                    envelope = match example_id {
-                        PROCESS3D_EXAMPLE_PLATE | "plate" => plate_envelope(),
-                        "empty" => empty_envelope(),
-                        _ => default_envelope(),
+                    let document = match example_id {
+                        PROCESS3D_EXAMPLE_PLATE | "plate" => plate_document(),
+                        "empty" => process_3d::Process3dDocument::default(),
+                        _ => default_document(),
                     };
-                    return vec![finalize_document_op(&mut envelope)];
+                    self.runtime.selected_id = None;
+                    ActionEmit::ops(vec![Process3dOp::SetDocument { document }])
                 }
                 "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => {
-                    apply_world3d_sun_action(&mut envelope.runtime.sun, action, args);
-                    return vec![set_document_op(&envelope)];
+                    apply_world3d_sun_action(&mut self.runtime.sun, action, args);
+                    ActionEmit::default()
                 }
                 "setSelection" => {
-                    envelope.runtime.selected_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
-                    return vec![set_document_op(&envelope)];
+                    self.runtime.selected_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
+                    ActionEmit::default()
                 }
                 "setHover" => {
-                    envelope.runtime.hovered_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
-                    return vec![set_document_op(&envelope)];
+                    self.runtime.hovered_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
+                    ActionEmit::default()
                 }
                 "setCamera" => {
                     if let Some(camera) = args.and_then(|value| value.get("camera")) {
                         if let Ok(parsed) = serde_json::from_value(camera.clone()) {
-                            envelope.runtime.camera = parsed;
-                            return vec![set_document_op(&envelope)];
+                            self.runtime.camera = parsed;
                         }
                     }
+                    ActionEmit::default()
                 }
                 "addStep" => {
                     let position = args.and_then(|value| value.get("position")).and_then(value_as_vec3);
@@ -1472,66 +1405,67 @@ pub mod app_3d {
                         Some((&GEOMETRY_MODULE, machine, kind))
                     };
                     let Some((module, machine, kind)) = resolved else {
-                        return Vec::new();
+                        return ActionEmit::default();
                     };
-                    let failures = validate_modification(machine, kind, &validation_context_for_stock(&envelope.fixture.stock));
+                    let failures = validate_modification(machine, kind, &validation_context_for_stock(&doc.projection.stock));
                     if !failures.is_empty() {
-                        return Vec::new();
+                        return ActionEmit::default();
                     }
                     let origin = StepOrigin { module_id: module.id.to_string(), machine_id: machine.id.to_string(), modification_kind_id: kind.id.to_string() };
                     let step = ProcessStep { id: next_step_id(), label: kind.label.to_string(), enabled: true, origin: Some(origin), measure: measure_for_modification(machine, kind, position) };
-                    envelope.runtime.selected_id = Some(step.id.clone());
-                    insert_step_at_cursor(&mut envelope.fixture, step);
-                    return vec![finalize_document_op(&mut envelope)];
+                    self.runtime.selected_id = Some(step.id.clone());
+                    ActionEmit::ops(insert_step_ops(doc.projection, step))
                 }
                 "removeStep" => {
                     if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
-                        if remove_step(&mut envelope.fixture, id) {
-                            if envelope.runtime.selected_id.as_deref() == Some(id) {
-                                envelope.runtime.selected_id = None;
+                        if let Some(ops) = remove_step_ops(doc.projection, id) {
+                            if self.runtime.selected_id.as_deref() == Some(id) {
+                                self.runtime.selected_id = None;
                             }
-                            return vec![finalize_document_op(&mut envelope)];
+                            return ActionEmit::ops(ops);
                         }
                     }
+                    ActionEmit::default()
                 }
                 "removeSelectedStep" => {
-                    if let Some(id) = envelope.runtime.selected_id.clone() {
-                        if remove_step(&mut envelope.fixture, &id) {
-                            envelope.runtime.selected_id = None;
-                            return vec![finalize_document_op(&mut envelope)];
+                    if let Some(id) = self.runtime.selected_id.clone() {
+                        if let Some(ops) = remove_step_ops(doc.projection, &id) {
+                            self.runtime.selected_id = None;
+                            return ActionEmit::ops(ops);
                         }
                     }
+                    ActionEmit::default()
                 }
                 "moveStep" => {
                     if let (Some(id), Some(index)) =
                         (args.and_then(|value| value.get("id")).and_then(|value| value.as_str()), args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()))
                     {
-                        if let Some(from) = envelope.fixture.steps.iter().position(|step| step.id == id) {
-                            let step = envelope.fixture.steps.remove(from);
-                            let at = (index as usize).min(envelope.fixture.steps.len());
-                            envelope.fixture.steps.insert(at, step);
-                            return vec![finalize_document_op(&mut envelope)];
+                        if doc.projection.steps.iter().any(|step| step.id == id) {
+                            return ActionEmit::ops(vec![Process3dOp::Steps { collection: CollectionOp::Move { id: id.to_string(), to_index: index as usize } }]);
                         }
                     }
+                    ActionEmit::default()
                 }
                 "updateStep" => {
                     if let Some(step_value) = args.and_then(|value| value.get("step")) {
                         if let Ok(step) = serde_json::from_value::<ProcessStep>(step_value.clone()) {
-                            if let Some(existing) = envelope.fixture.steps.iter_mut().find(|entry| entry.id == step.id) {
-                                *existing = step;
-                                return vec![finalize_document_op(&mut envelope)];
+                            if doc.projection.steps.iter().any(|existing| existing.id == step.id) {
+                                let patch = ProcessStepPatch { label: Some(step.label.clone()), enabled: Some(step.enabled), measure: Some(step.measure.clone()), origin: Some(step.origin.clone()) };
+                                return ActionEmit::ops(vec![Process3dOp::Steps { collection: CollectionOp::Patch { id: step.id, patch } }]);
                             }
                         }
                     }
+                    ActionEmit::default()
                 }
                 "setStepEnabled" => {
                     if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
                         let enabled = args.and_then(|value| value.get("enabled")).and_then(|value| value.as_bool()).unwrap_or(true);
-                        if let Some(step) = envelope.fixture.steps.iter_mut().find(|step| step.id == id) {
-                            step.enabled = enabled;
-                            return vec![finalize_document_op(&mut envelope)];
+                        if doc.projection.steps.iter().any(|step| step.id == id) {
+                            let patch = ProcessStepPatch { enabled: Some(enabled), ..Default::default() };
+                            return ActionEmit::ops(vec![Process3dOp::Steps { collection: CollectionOp::Patch { id: id.to_string(), patch } }]);
                         }
                     }
+                    ActionEmit::default()
                 }
                 "setStock" => {
                     let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("box");
@@ -1540,18 +1474,18 @@ pub mod app_3d {
                         "sphere" => SolidSpec::Sphere { radius: 0.5 },
                         _ => SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 },
                     };
-                    envelope.fixture.stock = Stock { id: envelope.fixture.stock.id.clone(), label: process3d_labels(_view_state).stock.into(), solid, pose: Pose::default() };
-                    envelope.fixture.steps.clear();
-                    envelope.fixture.resolved_up_to = None;
-                    envelope.runtime.selected_id = None;
-                    return vec![finalize_document_op(&mut envelope)];
+                    let stock = Stock { id: doc.projection.stock.id.clone(), label: process3d_labels(view_state).stock.into(), solid, pose: Pose::default() };
+                    let document = process_3d::Process3dDocument { stock, steps: Vec::new(), resolved_up_to: None };
+                    self.runtime.selected_id = None;
+                    ActionEmit::ops(vec![Process3dOp::SetDocument { document }])
                 }
                 "patchInspector" => {
                     let target = args.and_then(|value| value.get("target")).and_then(|value| value.as_str()).unwrap_or("");
                     let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
                     let value = args.and_then(|value| value.get("value"));
-                    if apply_process3d_inspector_patch(&mut envelope.fixture, target, field, value) {
-                        return vec![finalize_document_op(&mut envelope)];
+                    match process3d_inspector_patch_op(doc.projection, target, field, value) {
+                        Some(op) => ActionEmit::ops(vec![op]),
+                        None => ActionEmit::default(),
                     }
                 }
                 "setCursor" => {
@@ -1559,8 +1493,7 @@ pub mod app_3d {
                         None | Some(Value::Null) => None,
                         Some(value) => value.as_u64().map(|n| n as usize),
                     };
-                    envelope.fixture.resolved_up_to = resolved.map(|n| n.min(envelope.fixture.steps.len()));
-                    return vec![finalize_document_op(&mut envelope)];
+                    ActionEmit::ops(vec![Process3dOp::SetCursor { resolved_up_to: resolved.map(|n| n.min(doc.projection.steps.len())) }])
                 }
                 "stepCursor" | "stepCursorBack" | "stepCursorForward" => {
                     let delta = match action {
@@ -1568,54 +1501,61 @@ pub mod app_3d {
                         "stepCursorForward" => 1,
                         _ => args.and_then(|value| value.get("delta")).and_then(|value| value.as_i64()).unwrap_or(0),
                     };
-                    let len = envelope.fixture.steps.len();
-                    let current = envelope.fixture.resolved_up_to.unwrap_or(len) as i64;
-                    envelope.fixture.resolved_up_to = Some((current + delta).clamp(0, len as i64) as usize);
-                    return vec![finalize_document_op(&mut envelope)];
+                    let len = doc.projection.steps.len();
+                    let current = doc.projection.resolved_up_to.unwrap_or(len) as i64;
+                    ActionEmit::ops(vec![Process3dOp::SetCursor { resolved_up_to: Some((current + delta).clamp(0, len as i64) as usize) }])
                 }
                 "setActiveTool" => {
                     let tool = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()).unwrap_or("select");
-                    envelope.runtime.active_tool = match tool {
+                    self.runtime.active_tool = match tool {
                         "cut" => "cut",
                         "drill" => "drill",
                         "attach" => "attach",
                         _ => "select",
                     }
                     .into();
-                    envelope.runtime.selected_face_id = None;
-                    return vec![set_document_op(&envelope)];
+                    self.runtime.selected_face_id = None;
+                    ActionEmit::default()
                 }
                 "engagementInput" => {
                     if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
-                        envelope.runtime.engagement_input = value.into();
-                        return vec![set_document_op(&envelope)];
+                        self.runtime.engagement_input = value.into();
                     }
+                    ActionEmit::default()
                 }
                 "engagementAbort" => {
-                    envelope.runtime.engagement_input = String::new();
-                    envelope.runtime.active_tool = "select".into();
-                    return vec![set_document_op(&envelope)];
+                    self.runtime.engagement_input = String::new();
+                    self.runtime.active_tool = "select".into();
+                    ActionEmit::default()
                 }
                 "engagementSubmit" => {
-                    let command = envelope.runtime.engagement_input.trim().to_lowercase();
-                    envelope.runtime.engagement_input = String::new();
-                    let len = envelope.fixture.steps.len();
-                    let current = envelope.fixture.resolved_up_to.unwrap_or(len);
+                    let command = self.runtime.engagement_input.trim().to_lowercase();
+                    self.runtime.engagement_input = String::new();
+                    let len = doc.projection.steps.len();
+                    let current = doc.projection.resolved_up_to.unwrap_or(len);
                     match command.split_whitespace().next() {
-                        Some("cut") => envelope.runtime.active_tool = "cut".into(),
-                        Some("drill") => envelope.runtime.active_tool = "drill".into(),
-                        Some("attach") => envelope.runtime.active_tool = "attach".into(),
-                        Some("back") => envelope.fixture.resolved_up_to = Some(current.saturating_sub(1)),
-                        Some("forward") => envelope.fixture.resolved_up_to = Some((current + 1).min(len)),
-                        Some("all") => envelope.fixture.resolved_up_to = None,
-                        _ => {}
+                        Some("cut") => {
+                            self.runtime.active_tool = "cut".into();
+                            ActionEmit::default()
+                        }
+                        Some("drill") => {
+                            self.runtime.active_tool = "drill".into();
+                            ActionEmit::default()
+                        }
+                        Some("attach") => {
+                            self.runtime.active_tool = "attach".into();
+                            ActionEmit::default()
+                        }
+                        Some("back") => ActionEmit::ops(vec![Process3dOp::SetCursor { resolved_up_to: Some(current.saturating_sub(1)) }]),
+                        Some("forward") => ActionEmit::ops(vec![Process3dOp::SetCursor { resolved_up_to: Some((current + 1).min(len)) }]),
+                        Some("all") => ActionEmit::ops(vec![Process3dOp::SetCursor { resolved_up_to: None }]),
+                        _ => ActionEmit::default(),
                     }
-                    return vec![finalize_document_op(&mut envelope)];
                 }
                 "worldPointerDown" => {
-                    let tool = envelope.runtime.active_tool.clone();
+                    let tool = self.runtime.active_tool.clone();
                     if tool == "select" {
-                        return Vec::new();
+                        return ActionEmit::default();
                     }
                     if let Some(point) = args.and_then(|value| value.get("position")).and_then(value_as_vec3) {
                         let measure_kind = match tool.as_str() {
@@ -1626,22 +1566,22 @@ pub mod app_3d {
                         let (machine, kind) = geometry_machine_for_measure(measure_kind);
                         let origin = StepOrigin { module_id: GEOMETRY_MODULE.id.to_string(), machine_id: machine.id.to_string(), modification_kind_id: kind.id.to_string() };
                         let step = ProcessStep { id: next_step_id(), label: kind.label.to_string(), enabled: true, origin: Some(origin), measure: measure_for_modification(machine, kind, Some(point)) };
-                        envelope.runtime.selected_id = Some(step.id.clone());
-                        insert_step_at_cursor(&mut envelope.fixture, step);
-                        envelope.runtime.active_tool = "select".into();
-                        return vec![finalize_document_op(&mut envelope)];
+                        self.runtime.selected_id = Some(step.id.clone());
+                        self.runtime.active_tool = "select".into();
+                        return ActionEmit::ops(insert_step_ops(doc.projection, step));
                     }
+                    ActionEmit::default()
                 }
                 "worldPick" => {
                     let granularity = args.and_then(|value| value.get("granularity")).and_then(|value| value.as_str()).unwrap_or("mesh");
                     if granularity == "face" {
-                        envelope.runtime.selected_face_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_u64()).map(|id| id as u32);
-                        return vec![set_document_op(&envelope)];
+                        self.runtime.selected_face_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_u64()).map(|id| id as u32);
                     }
+                    ActionEmit::default()
                 }
                 "worldFaceDragEnd" => {
-                    if envelope.runtime.active_tool != "select" {
-                        return Vec::new();
+                    if self.runtime.active_tool != "select" {
+                        return ActionEmit::default();
                     }
                     let normal = args.and_then(|value| value.get("normal")).and_then(value_as_vec3);
                     let point = args.and_then(|value| value.get("startPoint")).and_then(value_as_vec3);
@@ -1650,99 +1590,79 @@ pub mod app_3d {
                         Some([entries.first()?.as_f64()?, entries.get(1)?.as_f64()?])
                     });
                     if let (Some(normal), Some(point), Some(distance)) = (normal, point, distance) {
-                        if let Some(step) = process3d_step_from_face_drag(normal, point, distance, face_extent, process3d_labels(_view_state)) {
-                            envelope.runtime.selected_id = Some(step.id.clone());
-                            envelope.runtime.selected_face_id = None;
-                            insert_step_at_cursor(&mut envelope.fixture, step);
-                            return vec![finalize_document_op(&mut envelope)];
+                        if let Some(step) = process3d_step_from_face_drag(normal, point, distance, face_extent, process3d_labels(view_state)) {
+                            self.runtime.selected_id = Some(step.id.clone());
+                            self.runtime.selected_face_id = None;
+                            return ActionEmit::ops(insert_step_ops(doc.projection, step));
                         }
                     }
-                }
-                "undo" => {
-                    if let Some(previous) = envelope.runtime.undo_stack.pop() {
-                        envelope.runtime.redo_stack.push(envelope.fixture.clone());
-                        envelope.fixture = previous;
-                        return vec![finalize_document_op(&mut envelope)];
-                    }
-                }
-                "redo" => {
-                    if let Some(next) = envelope.runtime.redo_stack.pop() {
-                        envelope.runtime.undo_stack.push(envelope.fixture.clone());
-                        envelope.fixture = next;
-                        return vec![finalize_document_op(&mut envelope)];
-                    }
+                    ActionEmit::default()
                 }
                 "exportModel" => {
                     let format = args.and_then(|value| value.get("format")).and_then(|value| value.as_str()).unwrap_or("step");
-                    if let Some(export) = export_process3d_model(&envelope.fixture, format) {
-                        envelope.runtime.pending_export = Some(export.data);
-                        envelope.runtime.pending_export_filename = Some(export.filename);
-                        envelope.runtime.pending_export_mime = Some(export.mime_type);
-                        envelope.runtime.pending_export_encoding = export.encoding;
+                    match export_process3d_model(doc.projection, format) {
+                        Some(export) => ActionEmit::effect(HostEffect::DownloadMediaExport {
+                            filename: export.filename,
+                            mime_type: export.mime_type,
+                            data: match export.data {
+                                Value::String(text) => text,
+                                other => serde_json::to_string(&other).unwrap_or_default(),
+                            },
+                            encoding: export.encoding,
+                        }),
+                        None => ActionEmit::default(),
                     }
-                    let mut ops = vec![set_document_op(&envelope)];
-                    ops.extend(export_download_ops(&envelope));
-                    return ops;
                 }
-                "loadModelRequest" => {
-                    envelope.runtime.pending_export = None;
-                    envelope.runtime.pending_export_filename = None;
-                    envelope.runtime.pending_export_mime = None;
-                    envelope.runtime.pending_export_encoding = None;
-                    return vec![json!({
-                        "op": "requestFileOpen",
-                        "accept": ".stp,.step,.obj,.stl,.glb",
-                        "importAction": "importModelFile",
-                        "readAs": "dataUrl",
-                    })
-                    .to_string()];
-                }
+                "loadModelRequest" => ActionEmit::effect(HostEffect::RequestFileOpen {
+                    accept: ".stp,.step,.obj,.stl,.glb".into(),
+                    read_as: Some("dataUrl".into()),
+                    import_action: "importModelFile".into(),
+                }),
                 "importModelFile" => {
                     let name = args.and_then(|value| value.get("name")).and_then(|value| value.as_str()).unwrap_or("").to_ascii_lowercase();
                     let payload = args.and_then(|value| value.get("payload")).cloned().or_else(|| args.cloned());
                     let Some(data_url) = payload.as_ref().and_then(Value::as_str) else {
-                        return Vec::new();
+                        return ActionEmit::default();
                     };
-                    if let Some(next) = import_process3d_model(&name, data_url) {
-                        envelope.fixture = next;
-                        envelope.runtime.selected_id = None;
-                        return vec![finalize_document_op(&mut envelope)];
+                    match import_process3d_model(&name, data_url) {
+                        Some(document) => {
+                            self.runtime.selected_id = None;
+                            ActionEmit::ops(vec![Process3dOp::SetDocument { document }])
+                        }
+                        None => ActionEmit::default(),
                     }
                 }
-                _ => {}
+                _ => ActionEmit::default(),
             }
-            Vec::new()
         }
 
-        fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-            let envelope = parse_envelope(document_json);
+        fn render(&self, body_key: &str, doc: &DocumentView<'_, process_3d::Process3dDocument>, view_state: &ViewState) -> UiNode {
             let labels = process3d_labels(view_state);
             match body_key {
                 PROCESS_3D_PLAY_BODY_MAIN => {
-                    let (meshes_json, instances_json) = preview_payload_cached(&envelope.runtime, &envelope.fixture);
+                    let (meshes_json, instances_json) = preview_payload_cached(doc.projection);
                     build_world_3d_scene(
                         PROCESS_3D_PLAY_SURFACE_MAIN,
                         PROCESS_3D_PLAY_APP_ID,
                         world3d_scene(
-                            world3d_camera_json(envelope.runtime.camera.position, envelope.runtime.camera.target, envelope.runtime.camera.fov),
+                            world3d_camera_json(self.runtime.camera.position, self.runtime.camera.target, self.runtime.camera.fov),
                             meshes_json,
                             instances_json,
-                            process3d_selection_json(&envelope),
-                            &envelope.runtime.sun,
+                            process3d_selection_json(&self.runtime),
+                            &self.runtime.sun,
                         ),
                     )
                 }
-                PROCESS_3D_PLAY_BODY_DOCUMENT => build_document_tree(&envelope, labels),
-                PROCESS_3D_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope, labels),
-                PROCESS_3D_PLAY_BODY_INSPECTION => build_inspector_tree(&envelope, labels),
+                PROCESS_3D_PLAY_BODY_DOCUMENT => build_document_tree(doc.projection, &self.runtime, labels),
+                PROCESS_3D_PLAY_BODY_CATALOGUE => build_catalogue_tree(doc.projection, labels),
+                PROCESS_3D_PLAY_BODY_INSPECTION => build_inspector_tree(doc.projection, &self.runtime, labels),
                 _ => ui_text(format!("Unknown body: {body_key}")),
             }
         }
 
-        fn tools(&self, document_json: &str, view_state: &ViewState) -> Vec<ToolNode> {
-            let envelope = parse_envelope(document_json);
+        fn tools(&self, _doc: &DocumentView<'_, process_3d::Process3dDocument>, view_state: &ViewState) -> Vec<ToolNode> {
             let labels = process3d_labels(view_state);
-            let active_tool = envelope.runtime.active_tool.as_str();
+            let active_tool = self.runtime.active_tool.as_str();
             vec![
                 tool_toggle("process3d.tool.select", "cursor", labels.select, active_tool == "select", process3d_action("setActiveTool", Some(json!({ "tool": "select" }))))
                     .with_category(ToolCategory::Selection),
@@ -1763,14 +1683,12 @@ pub mod app_3d {
             ]
         }
 
-        fn window_engagements(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-            let envelope = parse_envelope(document_json);
-            HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.into(), process3d_engagement(&envelope))])
+        fn window_engagements(&self, doc: &DocumentView<'_, process_3d::Process3dDocument>, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+            HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.into(), process3d_engagement(doc.projection, &self.runtime))])
         }
 
-        fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-            let envelope = parse_envelope(document_json);
-            HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.into(), vec![world3d_sun_measures("process3d", &envelope.runtime.sun, process3d_action)])])
+        fn window_measures(&self, _doc: &DocumentView<'_, process_3d::Process3dDocument>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+            HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.into(), vec![world3d_sun_measures("process3d", &self.runtime.sun, process3d_action)])])
         }
     }
     //#endregion 🔖Process3dPlayApp
@@ -1783,7 +1701,13 @@ pub mod app_3d {
                 .icon_id("hammer")
                 .mode("edit", "Edit")
                 .default_mode_id("edit")
-                .window_kind_with_engagement(PROCESS_3D_PLAY_WINDOW_MAIN, "Workpiece", PROCESS_3D_PLAY_BODY_MAIN, SurfaceKind::World3d, process3d_engagement(&default_envelope()))
+                .window_kind_with_engagement(
+                    PROCESS_3D_PLAY_WINDOW_MAIN,
+                    "Workpiece",
+                    PROCESS_3D_PLAY_BODY_MAIN,
+                    SurfaceKind::World3d,
+                    process3d_engagement(&default_document(), &Process3dRuntime::default()),
+                )
                 .default_layout(create_default_layout(&[PROCESS_3D_PLAY_WINDOW_MAIN.into()], "row", None, Some(&["Workpiece".into()])))
                 .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PROCESS_3D_PLAY_BODY_DOCUMENT)
                 .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PROCESS_3D_PLAY_BODY_CATALOGUE)
@@ -1802,8 +1726,8 @@ pub mod app_3d {
     }
 
     fn process3d_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
-        let envelope: Process3dEnvelope = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
-        processed_mesh(&envelope.fixture).ok_or_else(|| "process3d: kernel replay failed".to_string())
+        let document: process_3d::Process3dDocument = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
+        processed_mesh(&document).ok_or_else(|| "process3d: kernel replay failed".to_string())
     }
 
     fn process3d_document_from_mesh(_mesh: &MeshData) -> Result<Value, String> {
@@ -1822,19 +1746,28 @@ pub mod app_3d {
     #[cfg(test)]
     mod tests {
         use super::*;
+        use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
 
-        #[test]
-        fn default_envelope_parses_timber_example() {
-            let envelope = default_envelope();
-            assert_eq!(envelope.fixture.steps.len(), 4);
-            assert!(envelope.fixture.resolved_up_to.is_none());
+        fn meta(actor: &str) -> ActionMeta {
+            ActionMeta { actor: actor.into(), instance_id: 1 }
+        }
+
+        fn new_app() -> VcsDocumentApp<Process3dPlayApp> {
+            VcsDocumentApp::new(Process3dPlayApp::default())
         }
 
         #[test]
-        fn plate_envelope_parses_and_opens_mid_timeline() {
-            let envelope = plate_envelope();
-            assert_eq!(envelope.fixture.steps.len(), 3);
-            assert_eq!(envelope.fixture.resolved_up_to, Some(2));
+        fn default_document_parses_timber_example() {
+            let document = default_document();
+            assert_eq!(document.steps.len(), 4);
+            assert!(document.resolved_up_to.is_none());
+        }
+
+        #[test]
+        fn plate_document_parses_and_opens_mid_timeline() {
+            let document = plate_document();
+            assert_eq!(document.steps.len(), 3);
+            assert_eq!(document.resolved_up_to, Some(2));
         }
 
         #[test]
@@ -1912,92 +1845,83 @@ pub mod app_3d {
 
         #[test]
         fn toggle_sun_round_trips_through_runtime_and_defaults_off() {
-            let mut app = Process3dPlayApp::default();
-            let document_json = app.initial_document_json();
-            let envelope = parse_envelope(&document_json);
-            assert!(!envelope.runtime.sun.enabled, "sun must be off by default");
-            let measures = app.window_measures(&document_json, &ViewState::default());
-            assert!(measures.contains_key(PROCESS_3D_PLAY_WINDOW_MAIN));
-            let ops = app.handle_action_patch_ops("toggleSun", None, &document_json, &ViewState::default());
-            let patched: Value = serde_json::from_str(&ops[0]).expect("patch op json");
-            assert_eq!(patched["document"]["runtime"]["sun"]["enabled"], json!(true));
+            let mut app = new_app();
+            let measures = app.window_measures(&ViewState::default());
+            let sun_group = |measures: &HashMap<String, Vec<WindowMeasure>>| {
+                measures[PROCESS_3D_PLAY_WINDOW_MAIN]
+                    .iter()
+                    .find_map(|measure| match measure {
+                        WindowMeasure::Group { id, children, .. } if id == "process3d-measure-sun" => Some(children.clone()),
+                        _ => None,
+                    })
+                    .expect("sun measure group")
+            };
+            let children = sun_group(&measures);
+            assert!(children.iter().any(|measure| matches!(measure, WindowMeasure::Toggle { pressed, .. } if !*pressed)));
+            app.handle_action("toggleSun", None, &ViewState::default(), &meta("local")).expect("toggle");
+            let measures = app.window_measures(&ViewState::default());
+            let children = sun_group(&measures);
+            assert!(children.iter().any(|measure| matches!(measure, WindowMeasure::Toggle { pressed, .. } if *pressed)));
         }
 
         #[test]
         fn add_step_action_inserts_and_selects() {
-            let mut app = Process3dPlayApp::default();
-            let document_json = app.initial_document_json();
-            let view_state = ViewState::default();
-            let ops = app.handle_action_patch_ops("addStep", Some(&json!({ "measure": "drill" })), &document_json, &view_state);
-            assert_eq!(ops.len(), 1);
-            let patched: Value = serde_json::from_str(&ops[0]).expect("patch op json");
-            let document = &patched["document"];
-            let steps = document["fixture"]["steps"].as_array().expect("steps array");
-            assert_eq!(steps.len(), 5);
-            assert_eq!(document["runtime"]["selectedId"], steps.last().expect("last step")["id"]);
+            let mut app = new_app();
+            app.handle_action("addStep", Some(&json!({ "measure": "drill" })), &ViewState::default(), &meta("local")).expect("add step");
+            let document = app.projection().expect("projection");
+            assert_eq!(document.steps.len(), 5);
+            let node = app.render(PROCESS_3D_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
+            let node_json = serde_json::to_string(&node).unwrap();
+            assert!(!node_json.contains("No selection"), "expected the newly added step to be selected: {node_json}");
         }
 
         #[test]
         fn undo_after_add_step_restores_previous_step_count() {
-            let mut app = Process3dPlayApp::default();
-            let document_json = app.initial_document_json();
-            let view_state = ViewState::default();
-            let ops = app.handle_action_patch_ops("addStep", Some(&json!({ "measure": "cut" })), &document_json, &view_state);
-            let after_add: Value = serde_json::from_str(&ops[0]).expect("patch op json");
-            let after_add_json = after_add["document"].to_string();
-            let ops = app.handle_action_patch_ops("undo", None, &after_add_json, &view_state);
-            let after_undo: Value = serde_json::from_str(&ops[0]).expect("patch op json");
-            let steps = after_undo["document"]["fixture"]["steps"].as_array().expect("steps array");
-            assert_eq!(steps.len(), 4);
+            let mut app = new_app();
+            app.handle_action("addStep", Some(&json!({ "measure": "cut" })), &ViewState::default(), &meta("local")).expect("add step");
+            assert_eq!(app.projection().expect("projection").steps.len(), 5);
+            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            assert_eq!(app.projection().expect("projection").steps.len(), 4);
         }
 
         #[test]
         fn set_active_tool_updates_runtime_and_tools_pressed_state() {
-            let mut app = Process3dPlayApp::default();
-            let document_json = app.initial_document_json();
-            let view_state = ViewState::default();
-            let ops = app.handle_action_patch_ops("setActiveTool", Some(&json!({ "tool": "cut" })), &document_json, &view_state);
-            let patched: Value = serde_json::from_str(&ops[0]).expect("patch op json");
-            assert_eq!(patched["document"]["runtime"]["activeTool"], json!("cut"));
-            let updated_document_json = patched["document"].to_string();
-            let tools = app.tools(&updated_document_json, &view_state);
+            let mut app = new_app();
+            app.handle_action("setActiveTool", Some(&json!({ "tool": "cut" })), &ViewState::default(), &meta("local")).expect("set tool");
+            let tools = app.tools(&ViewState::default());
             let cut_pressed = tools.iter().any(|tool| matches!(tool, ToolNode::Toggle { id, pressed: Some(true), .. } if id == "process3d.tool.cut"));
             assert!(cut_pressed, "expected the cut tool toggle to report pressed after setActiveTool");
             let select_pressed = tools.iter().any(|tool| matches!(tool, ToolNode::Toggle { id, pressed: Some(true), .. } if id == "process3d.tool.select"));
             assert!(!select_pressed, "select toggle must not report pressed while cut is active");
         }
 
+        fn step_pose(step: &ProcessStep) -> [f64; 3] {
+            match &step.measure {
+                ProcessMeasure::Cut { pose, .. } | ProcessMeasure::Drill { pose, .. } | ProcessMeasure::Attach { pose, .. } => pose.position,
+            }
+        }
+
         #[test]
         fn world_pointer_down_reads_position_key_not_point() {
-            let mut app = Process3dPlayApp::default();
-            let document_json = app.initial_document_json();
-            let view_state = ViewState::default();
-            let ops = app.handle_action_patch_ops("setActiveTool", Some(&json!({ "tool": "cut" })), &document_json, &view_state);
-            let after_tool_json = serde_json::from_str::<Value>(&ops[0]).expect("patch op json")["document"].to_string();
-            let ops = app.handle_action_patch_ops("worldPointerDown", Some(&json!({ "position": [1.0, 2.0, 3.0] })), &after_tool_json, &view_state);
-            assert_eq!(ops.len(), 1, "worldPointerDown must read the `position` key the renderer actually sends");
-            let patched: Value = serde_json::from_str(&ops[0]).expect("patch op json");
-            let steps = patched["document"]["fixture"]["steps"].as_array().expect("steps array");
-            let last = steps.last().expect("inserted step");
-            assert_eq!(last["pose"]["position"], json!([1.0, 2.0, 3.0]));
+            let mut app = new_app();
+            app.handle_action("setActiveTool", Some(&json!({ "tool": "cut" })), &ViewState::default(), &meta("local")).expect("set tool");
+            let result = app.handle_action("worldPointerDown", Some(&json!({ "position": [1.0, 2.0, 3.0] })), &ViewState::default(), &meta("local")).expect("pointer down");
+            assert!(!result.operations.is_empty(), "worldPointerDown must read the `position` key the renderer actually sends");
+            let document = app.projection().expect("projection");
+            let last = document.steps.last().expect("inserted step");
+            assert_eq!(step_pose(last), [1.0, 2.0, 3.0]);
         }
 
         #[test]
         fn repeated_world_pointer_down_places_steps_at_distinct_positions() {
-            let mut app = Process3dPlayApp::default();
-            let document_json = app.initial_document_json();
-            let view_state = ViewState::default();
-            let ops = app.handle_action_patch_ops("setActiveTool", Some(&json!({ "tool": "cut" })), &document_json, &view_state);
-            let step1_input = serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string();
-            let ops = app.handle_action_patch_ops("worldPointerDown", Some(&json!({ "position": [1.0, 0.0, 0.0] })), &step1_input, &view_state);
-            let after_first_json = serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string();
-            let ops = app.handle_action_patch_ops("setActiveTool", Some(&json!({ "tool": "cut" })), &after_first_json, &view_state);
-            let step2_input = serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string();
-            let ops = app.handle_action_patch_ops("worldPointerDown", Some(&json!({ "position": [2.0, 0.0, 0.0] })), &step2_input, &view_state);
-            let after_second: Value = serde_json::from_str(&ops[0]).unwrap();
-            let steps = after_second["document"]["fixture"]["steps"].as_array().unwrap();
-            let last_two: Vec<&Value> = steps.iter().rev().take(2).collect();
-            assert_ne!(last_two[0]["pose"]["position"], last_two[1]["pose"]["position"], "repeated clicks at different points must produce distinct step poses");
+            let mut app = new_app();
+            app.handle_action("setActiveTool", Some(&json!({ "tool": "cut" })), &ViewState::default(), &meta("local")).expect("tool 1");
+            app.handle_action("worldPointerDown", Some(&json!({ "position": [1.0, 0.0, 0.0] })), &ViewState::default(), &meta("local")).expect("pointer 1");
+            app.handle_action("setActiveTool", Some(&json!({ "tool": "cut" })), &ViewState::default(), &meta("local")).expect("tool 2");
+            app.handle_action("worldPointerDown", Some(&json!({ "position": [2.0, 0.0, 0.0] })), &ViewState::default(), &meta("local")).expect("pointer 2");
+            let document = app.projection().expect("projection");
+            let last_two: Vec<&ProcessStep> = document.steps.iter().rev().take(2).collect();
+            assert_ne!(step_pose(last_two[0]), step_pose(last_two[1]), "repeated clicks at different points must produce distinct step poses");
         }
 
         #[test]
@@ -2051,72 +1975,59 @@ pub mod app_3d {
 
         #[test]
         fn world_face_drag_end_cut_reduces_volume_end_to_end() {
-            let mut app = Process3dPlayApp::default();
-            let mut fixture = process_3d::Process3dDocument::default();
-            fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
-            let stock_volume = processed_volume(&fixture).expect("stock volume");
-            let envelope = Process3dEnvelope { fixture, runtime: Process3dRuntime::default() };
-            let document_json = serde_json::to_string(&envelope).expect("envelope json");
-            let ops = app.handle_action_patch_ops(
+            let mut app = new_app();
+            app.handle_action("setStock", Some(&json!({ "kind": "box" })), &ViewState::default(), &meta("local")).expect("set stock");
+            let stock_volume = processed_volume(&app.projection().expect("projection")).expect("stock volume");
+            let result = app.handle_action(
                 "worldFaceDragEnd",
                 Some(&json!({ "normal": [0.0, 0.0, 1.0], "startPoint": [0.5, 0.5, 1.0], "distance": -0.5, "faceExtent": [1.0, 1.0] })),
-                &document_json,
                 &ViewState::default(),
-            );
-            assert_eq!(ops.len(), 1);
-            let patched: Value = serde_json::from_str(&ops[0]).expect("patch op json");
-            let new_fixture: process_3d::Process3dDocument = serde_json::from_value(patched["document"]["fixture"].clone()).expect("fixture");
-            assert_eq!(new_fixture.steps.len(), 1);
-            assert!(matches!(new_fixture.steps[0].measure, ProcessMeasure::Cut { .. }));
-            let new_volume = processed_volume(&new_fixture).expect("volume after cut");
+                &meta("local"),
+            ).expect("face drag");
+            assert!(!result.operations.is_empty());
+            let document = app.projection().expect("projection");
+            assert_eq!(document.steps.len(), 1);
+            assert!(matches!(document.steps[0].measure, ProcessMeasure::Cut { .. }));
+            let new_volume = processed_volume(&document).expect("volume after cut");
             assert!(new_volume < stock_volume, "face-drag cut should reduce volume below stock ({new_volume} vs {stock_volume})");
         }
 
         #[test]
         fn world_face_drag_end_attach_increases_volume_end_to_end() {
-            let mut app = Process3dPlayApp::default();
-            let mut fixture = process_3d::Process3dDocument::default();
-            fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
-            let stock_volume = processed_volume(&fixture).expect("stock volume");
-            let envelope = Process3dEnvelope { fixture, runtime: Process3dRuntime::default() };
-            let document_json = serde_json::to_string(&envelope).expect("envelope json");
-            let ops = app.handle_action_patch_ops(
+            let mut app = new_app();
+            app.handle_action("setStock", Some(&json!({ "kind": "box" })), &ViewState::default(), &meta("local")).expect("set stock");
+            let stock_volume = processed_volume(&app.projection().expect("projection")).expect("stock volume");
+            let result = app.handle_action(
                 "worldFaceDragEnd",
                 Some(&json!({ "normal": [0.0, 0.0, 1.0], "startPoint": [0.5, 0.5, 1.0], "distance": 0.5, "faceExtent": [0.2, 0.2] })),
-                &document_json,
                 &ViewState::default(),
-            );
-            assert_eq!(ops.len(), 1);
-            let patched: Value = serde_json::from_str(&ops[0]).expect("patch op json");
-            let new_fixture: process_3d::Process3dDocument = serde_json::from_value(patched["document"]["fixture"].clone()).expect("fixture");
-            assert_eq!(new_fixture.steps.len(), 1);
-            assert!(matches!(new_fixture.steps[0].measure, ProcessMeasure::Attach { .. }));
-            let new_volume = processed_volume(&new_fixture).expect("volume after attach");
+                &meta("local"),
+            ).expect("face drag");
+            assert!(!result.operations.is_empty());
+            let document = app.projection().expect("projection");
+            assert_eq!(document.steps.len(), 1);
+            assert!(matches!(document.steps[0].measure, ProcessMeasure::Attach { .. }));
+            let new_volume = processed_volume(&document).expect("volume after attach");
             assert!(new_volume > stock_volume, "face-drag attach should increase volume above stock ({new_volume} vs {stock_volume})");
         }
 
         #[test]
         fn world_face_drag_end_ignored_while_a_placement_tool_is_active() {
-            let mut app = Process3dPlayApp::default();
-            let document_json = app.initial_document_json();
-            let view_state = ViewState::default();
-            let ops = app.handle_action_patch_ops("setActiveTool", Some(&json!({ "tool": "cut" })), &document_json, &view_state);
-            let after_tool_json = serde_json::from_str::<Value>(&ops[0]).expect("patch op json")["document"].to_string();
-            let ops = app.handle_action_patch_ops(
+            let mut app = new_app();
+            app.handle_action("setActiveTool", Some(&json!({ "tool": "cut" })), &ViewState::default(), &meta("local")).expect("set tool");
+            let result = app.handle_action(
                 "worldFaceDragEnd",
                 Some(&json!({ "normal": [0.0, 0.0, 1.0], "startPoint": [0.5, 0.5, 1.0], "distance": -0.5 })),
-                &after_tool_json,
-                &view_state,
-            );
-            assert!(ops.is_empty(), "worldFaceDragEnd should be a no-op while a placement tool is active, not the select tool");
+                &ViewState::default(),
+                &meta("local"),
+            ).expect("face drag");
+            assert!(result.operations.is_empty(), "worldFaceDragEnd should be a no-op while a placement tool is active, not the select tool");
         }
 
         #[test]
         fn render_world_scene_contains_processed_mesh() {
-            let app = Process3dPlayApp::default();
-            let document_json = app.initial_document_json();
-            let view_state = ViewState::default();
-            let node = app.render(PROCESS_3D_PLAY_BODY_MAIN, &document_json, &view_state);
+            let mut app = new_app();
+            let node = app.render(PROCESS_3D_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
             let node_json = serde_json::to_string(&node).expect("scene json");
             assert!(node_json.contains("processed"), "expected the processed mesh id in scene json: {node_json}");
         }
@@ -2142,10 +2053,8 @@ pub mod app_3d {
         /// table saw's 0.315m or the diamond saw's 0.35m — a real mix of valid and disabled items.
         #[test]
         fn catalogue_lists_wood_and_concrete_with_mixed_validity_on_default_stock() {
-            let mut app = Process3dPlayApp::default();
-            let document_json = app.initial_document_json();
-            let view_state = ViewState::default();
-            let node = app.render(PROCESS_3D_PLAY_BODY_CATALOGUE, &document_json, &view_state);
+            let mut app = new_app();
+            let node = app.render(PROCESS_3D_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
             let node_json = serde_json::to_string(&node).expect("catalogue json");
             assert!(node_json.contains("Circular Saw"), "expected wood's circular saw in the catalogue: {node_json}");
             assert!(node_json.contains("Table Saw"), "expected wood's table saw in the catalogue: {node_json}");
@@ -2155,82 +2064,66 @@ pub mod app_3d {
 
         #[test]
         fn add_step_via_catalogue_sets_origin_and_builds_capability_sized_tool() {
-            let mut app = Process3dPlayApp::default();
-            let document_json = app.initial_document_json();
-            let view_state = ViewState::default();
-            let ops = app.handle_action_patch_ops(
+            let mut app = new_app();
+            let result = app.handle_action(
                 "addStep",
                 Some(&json!({ "moduleId": "wood", "machineId": "circularSaw", "modificationKindId": "crosscut" })),
-                &document_json,
-                &view_state,
-            );
-            assert_eq!(ops.len(), 1, "circular saw crosscut should be valid against the default timber beam stock");
-            let patched: Value = serde_json::from_str(&ops[0]).expect("patch op json");
-            let steps = patched["document"]["fixture"]["steps"].as_array().expect("steps array");
-            let last = steps.last().expect("inserted step");
-            assert_eq!(last["origin"]["moduleId"], "wood");
-            assert_eq!(last["origin"]["machineId"], "circularSaw");
-            assert_eq!(last["origin"]["modificationKindId"], "crosscut");
-            assert_eq!(last["measure"], "cut");
-            let radius = last["tool"]["radius"].as_f64().expect("tool radius");
+                &ViewState::default(),
+                &meta("local"),
+            ).expect("add step");
+            assert!(!result.operations.is_empty(), "circular saw crosscut should be valid against the default timber beam stock");
+            let document = app.projection().expect("projection");
+            let last = document.steps.last().expect("inserted step");
+            let origin = last.origin.as_ref().expect("origin");
+            assert_eq!(origin.module_id, "wood");
+            assert_eq!(origin.machine_id, "circularSaw");
+            assert_eq!(origin.modification_kind_id, "crosscut");
+            let ProcessMeasure::Cut { tool: SolidSpec::Cylinder { radius, .. }, .. } = &last.measure else {
+                panic!("expected a cylinder cut tool, got {:?}", last.measure);
+            };
             assert!((radius - 0.092).abs() < 1e-9, "circular saw diameter 0.184 should size the tool to radius 0.092, got {radius}");
         }
 
         /// 🪵 Table saw needs >= 0.315m stock height; the default timber beam is only 0.24m tall.
         #[test]
         fn add_step_via_catalogue_rejected_when_validation_fails() {
-            let mut app = Process3dPlayApp::default();
-            let document_json = app.initial_document_json();
-            let view_state = ViewState::default();
-            let ops = app.handle_action_patch_ops(
+            let mut app = new_app();
+            let result = app.handle_action(
                 "addStep",
                 Some(&json!({ "moduleId": "wood", "machineId": "tableSaw", "modificationKindId": "crosscut" })),
-                &document_json,
-                &view_state,
-            );
-            assert!(ops.is_empty(), "table saw crosscut should be rejected server-side against undersized stock");
+                &ViewState::default(),
+                &meta("local"),
+            ).expect("add step");
+            assert!(result.operations.is_empty(), "table saw crosscut should be rejected server-side against undersized stock");
         }
 
         #[test]
         fn measure_arg_routes_to_geometry_module() {
-            let mut app = Process3dPlayApp::default();
-            let document_json = app.initial_document_json();
-            let view_state = ViewState::default();
-            let ops = app.handle_action_patch_ops("addStep", Some(&json!({ "measure": "cut" })), &document_json, &view_state);
-            assert_eq!(ops.len(), 1);
-            let patched: Value = serde_json::from_str(&ops[0]).expect("patch op json");
-            let steps = patched["document"]["fixture"]["steps"].as_array().expect("steps array");
-            let last = steps.last().expect("inserted step");
-            assert_eq!(last["origin"]["moduleId"], "geometry");
-            assert_eq!(last["origin"]["machineId"], "saw");
-            assert_eq!(last["origin"]["modificationKindId"], "cut");
-            assert_eq!(last["measure"], "cut");
+            let mut app = new_app();
+            app.handle_action("addStep", Some(&json!({ "measure": "cut" })), &ViewState::default(), &meta("local")).expect("add step");
+            let document = app.projection().expect("projection");
+            let last = document.steps.last().expect("inserted step");
+            let origin = last.origin.as_ref().expect("origin");
+            assert_eq!(origin.module_id, "geometry");
+            assert_eq!(origin.machine_id, "saw");
+            assert_eq!(origin.modification_kind_id, "cut");
+            assert!(matches!(last.measure, ProcessMeasure::Cut { .. }));
         }
 
         #[test]
         fn inspector_shows_validation_warning_after_stock_shrinks_below_step_requirement() {
-            let mut app = Process3dPlayApp::default();
-            let document_json = app.initial_document_json();
-            let view_state = ViewState::default();
-            let ops = app.handle_action_patch_ops(
+            let mut app = new_app();
+            let add_result = app.handle_action(
                 "addStep",
                 Some(&json!({ "moduleId": "wood", "machineId": "circularSaw", "modificationKindId": "crosscut" })),
-                &document_json,
-                &view_state,
-            );
-            let after_add: Value = serde_json::from_str(&ops[0]).expect("patch op json");
-            let step_id = after_add["document"]["runtime"]["selectedId"].as_str().expect("selected id").to_string();
-            let after_add_json = after_add["document"].to_string();
-
-            let ops = app.handle_action_patch_ops("patchInspector", Some(&json!({ "target": "beam", "field": "height", "value": 0.05 })), &after_add_json, &view_state);
-            let after_shrink: Value = serde_json::from_str(&ops[0]).expect("patch op json");
-            let shrunk_json = after_shrink["document"].to_string();
-
-            let ops = app.handle_action_patch_ops("setSelection", Some(&json!({ "id": step_id })), &shrunk_json, &view_state);
-            let after_select: Value = serde_json::from_str(&ops[0]).expect("patch op json");
-            let selected_json = after_select["document"].to_string();
-
-            let node = app.render(PROCESS_3D_PLAY_BODY_INSPECTION, &selected_json, &view_state);
+                &ViewState::default(),
+                &meta("local"),
+            ).expect("add step");
+            assert!(!add_result.operations.is_empty());
+            app.handle_action("patchInspector", Some(&json!({ "target": "beam", "field": "height", "value": 0.05 })), &ViewState::default(), &meta("local")).expect("shrink stock");
+            let step_id = app.projection().expect("projection").steps.last().expect("step").id.clone();
+            app.handle_action("setSelection", Some(&json!({ "id": step_id })), &ViewState::default(), &meta("local")).expect("select");
+            let node = app.render(PROCESS_3D_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
             let node_json = serde_json::to_string(&node).expect("inspector json");
             assert!(node_json.contains("needs stock"), "expected a validation warning after shrinking stock below the step's requirement: {node_json}");
         }

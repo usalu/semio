@@ -6,7 +6,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./js/index.ts"
+    ".": "./js/index.ts",
+    "./backbone-worker": "./js/backbone-worker.ts"
   },
   "dependencies": {
     "@semio-tech/framework-core": "workspace:*",

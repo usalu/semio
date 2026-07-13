@@ -4,16 +4,18 @@ pub mod app_wires {
     //! 🧠 Mindmap Wires plugin — declarative WIRES play app bundled as a hot-swappable WASM component.
 
     use puzzle_2d::Puzzle2dExtension;
+    use reasoning_mindmap::{
+        empty_mindmap_wires_document, find_board_node, MindmapWiresDocument, MindmapWiresOp,
+    };
     use reasoning_mindmap_wires::{DefaultWiresExtension, RelationshipKind};
     use semio_framework_plugin::{SurfaceKind,
-        build_canvas_2d_scene, create_default_layout, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
-        Canvas2dScene, ActionDescriptor, PanelGroup, PluginApp, PluginBundle, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
-        ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+        build_canvas_2d_scene, create_default_layout, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
+        ActionEmit, App, Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView, PanelGroup, UiNode, UiTreeItemNode,
+        UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
         FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     };
     use serde::{Deserialize, Serialize};
-    use serde_json::{json, Value};
-    use std::sync::LazyLock;
+    use serde_json::{json, Map, Value};
 
     //#region 🔖Constants
     const WIRES_PLAY_APP_ID: &str = "reasoning-wires-play";
@@ -78,7 +80,7 @@ pub mod app_wires {
     }
     //#endregion 🔖Terminology
 
-    //#region 🔖Envelope
+    //#region 🔖Runtime
     /// 🖱️ In-flight pointer drag of one board node, tracked by screen delta so no viewport size is needed.
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -88,14 +90,12 @@ pub mod app_wires {
         last_y: f64,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    /// 🎛️ Ephemeral view state (selection + in-flight drag) held in the app struct, never in the
+    /// document — so it stays out of undo history and off the op channel.
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    struct ReasoningWiresPlayEnvelope {
-        wires_fixture: Value,
-        board_fixture: Value,
-        #[serde(default)]
+    struct WiresPlayRuntime {
         selected_ids: Vec<String>,
-        #[serde(default)]
         drag: Option<WiresDragState>,
     }
 
@@ -116,23 +116,6 @@ pub mod app_wires {
             "edges": [],
             "wires": []
         })
-    }
-
-    fn default_envelope() -> ReasoningWiresPlayEnvelope {
-        ReasoningWiresPlayEnvelope {
-            wires_fixture: default_empty_wires_fixture(),
-            board_fixture: default_empty_board_fixture(),
-            selected_ids: Vec::new(),
-            drag: None,
-        }
-    }
-
-    fn parse_envelope(document_json: &str) -> ReasoningWiresPlayEnvelope {
-        serde_json::from_str(document_json).unwrap_or_else(|_| default_envelope())
-    }
-
-    fn set_document_op(envelope: &ReasoningWiresPlayEnvelope) -> String {
-        json!({ "op": "setDocument", "document": envelope }).to_string()
     }
 
     fn wires_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -215,12 +198,10 @@ pub mod app_wires {
         board
     }
 
-    fn envelope_from_wires_fixture(wires: Value) -> ReasoningWiresPlayEnvelope {
-        ReasoningWiresPlayEnvelope {
+    fn document_from_wires_fixture(wires: Value) -> MindmapWiresDocument {
+        MindmapWiresDocument {
             board_fixture: wires_fixture_board(&wires),
             wires_fixture: wires,
-            selected_ids: Vec::new(),
-            drag: None,
         }
     }
 
@@ -317,7 +298,7 @@ pub mod app_wires {
             })
             .collect()
     }
-    //#endregion 🔖Envelope
+    //#endregion 🔖Runtime
 
     //#region 🔖Canvas
     fn relationship_edge_layers(wires: &Value, board: &Value) -> Vec<Value> {
@@ -351,24 +332,6 @@ pub mod app_wires {
         if let Ok(parsed) = serde_json::from_str(&layout_json) {
             *board = parsed;
         }
-    }
-
-    /// 🖱️ Nudges one board node's position by a world-space delta during a pointer drag.
-    fn translate_node(board: &mut Value, node_id: &str, dx: f64, dy: f64) -> bool {
-        let Some(node) = board
-            .get_mut("nodes")
-            .and_then(|value| value.as_array_mut())
-            .and_then(|nodes| nodes.iter_mut().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(node_id)))
-        else {
-            return false;
-        };
-        let x = node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0);
-        let y = node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0);
-        if let Some(obj) = node.as_object_mut() {
-            obj.insert("x".into(), json!(x + dx));
-            obj.insert("y".into(), json!(y + dy));
-        }
-        true
     }
 
     fn render_canvas(board: &Value, wires: &Value) -> UiNode {
@@ -410,9 +373,9 @@ pub mod app_wires {
         }
     }
 
-    fn render_document_panel(envelope: &ReasoningWiresPlayEnvelope, labels: &WiresLabels) -> UiNode {
-        let wires = &envelope.wires_fixture;
-        let board = &envelope.board_fixture;
+    fn render_document_panel(document: &MindmapWiresDocument, selected: &[String], labels: &WiresLabels) -> UiNode {
+        let wires = &document.wires_fixture;
+        let board = &document.board_fixture;
         let identity_items: Vec<UiTreeItemNode> = wires_identities(wires)
             .iter()
             .filter_map(|identity| {
@@ -497,7 +460,7 @@ pub mod app_wires {
                     },
                 },
             ],
-            selected_ids: Some(document_tree_selected_ids(board, &envelope.selected_ids)),
+            selected_ids: Some(document_tree_selected_ids(board, selected)),
             highlighted_ids: None,
             selection_change: Some(wires_action("setSelection", None)),
             drop_action: None,
@@ -593,18 +556,17 @@ pub mod app_wires {
     //#endregion 🔖CataloguePanel
 
     //#region 🔖InspectorPanel
-    fn render_properties_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
-        let selected_nodes: Vec<&Value> = envelope
-            .selected_ids
+    fn render_properties_panel(document: &MindmapWiresDocument, selected: &[String]) -> UiNode {
+        let selected_nodes: Vec<&Value> = selected
             .iter()
             .filter_map(|id| {
-                fixture_nodes(&envelope.board_fixture)
+                fixture_nodes(&document.board_fixture)
                     .iter()
                     .find(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))
             })
             .collect();
         if selected_nodes.is_empty() {
-            let extension = DefaultWiresExtension::from_fixture_json(&envelope.wires_fixture.to_string()).ok();
+            let extension = DefaultWiresExtension::from_fixture_json(&document.wires_fixture.to_string()).ok();
             return ui_stack_vertical(vec![
                 ui_text(format!("Schema: {WIRES_FIXTURE_SCHEMA}")),
                 ui_text(format!(
@@ -615,11 +577,11 @@ pub mod app_wires {
                     "Relationships: {}",
                     extension.as_ref().map(|ext| ext.relationships.len()).unwrap_or(0)
                 )),
-                ui_text(format!("Board nodes: {}", fixture_nodes(&envelope.board_fixture).len())),
+                ui_text(format!("Board nodes: {}", fixture_nodes(&document.board_fixture).len())),
             ]);
         }
         let node = selected_nodes[0];
-        let identity = wires_identities(&envelope.wires_fixture)
+        let identity = wires_identities(&document.wires_fixture)
             .iter()
             .find(|identity| identity.get("nodeId").and_then(|value| value.as_str()) == node.get("id").and_then(|value| value.as_str()));
         ui_stack_vertical(vec![
@@ -670,154 +632,180 @@ pub mod app_wires {
 
     //#region 🔖WiresPlayApp
     #[derive(Default)]
-    pub struct WiresPlayApp;
+    pub struct WiresPlayApp {
+        runtime: WiresPlayRuntime,
+    }
 
-    impl PluginApp for WiresPlayApp {
+    /// 📐 A JSON node's position, defaulting missing coordinates to the origin.
+    fn node_position(node: &Value) -> (f64, f64) {
+        (
+            node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0),
+            node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0),
+        )
+    }
+
+    impl DocumentApp for WiresPlayApp {
+        type Projection = MindmapWiresDocument;
+        type Op = MindmapWiresOp;
+
         fn app_id(&self) -> &str {
             WIRES_PLAY_APP_ID
         }
 
-        fn initial_document_json(&self) -> String {
-            serde_json::to_string(&default_envelope()).expect("wires envelope json")
+        fn document_schema(&self) -> &str {
+            WIRES_FIXTURE_SCHEMA
         }
 
-        fn handle_action_patch_ops(
+        fn initial_projection(&self) -> MindmapWiresDocument {
+            empty_mindmap_wires_document()
+        }
+
+        fn handle_action(
             &mut self,
             action: &str,
             args: Option<&Value>,
-            document_json: &str,
+            doc: &DocumentView<'_, MindmapWiresDocument>,
             _view_state: &ViewState,
-        ) -> Vec<String> {
-            let mut envelope = parse_envelope(document_json);
+        ) -> ActionEmit<MindmapWiresOp> {
+            let document = doc.projection;
             match action {
-                "setDocument" => {
-                    if let Some(next) = args.and_then(|value| value.get("document")) {
-                        if let Ok(parsed) = serde_json::from_value(next.clone()) {
-                            return vec![set_document_op(&parsed)];
-                        }
-                    }
-                }
+                // 👁️ View actions — mutate ephemeral runtime, emit no ops.
                 "setSelection" | "documentSelect" => {
-                    envelope.selected_ids = selection_ids(args);
-                    return vec![set_document_op(&envelope)];
-                }
-                "setActiveExample" => {
-                    let example_id = args
-                        .and_then(|value| value.get("exampleId"))
-                        .and_then(|value| value.as_str())
-                        .unwrap_or("");
-                    envelope = if example_id.is_empty() || example_id == "empty" {
-                        default_envelope()
-                    } else if example_id == WIRES_PLAY_EXAMPLE_METABOLISM_ID {
-                        envelope_from_wires_fixture(
-                            serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).unwrap_or_else(|_| default_empty_wires_fixture()),
-                        )
-                    } else {
-                        default_envelope()
-                    };
-                    return vec![set_document_op(&envelope)];
-                }
-                "addNode" => {
-                    let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("identity");
-                    let id = format!("node-{}", envelope.board_fixture.get("nodes").and_then(|v| v.as_array()).map(|a| a.len()).unwrap_or(0) + 1);
-                    if let Some(nodes) = envelope.board_fixture.get_mut("nodes").and_then(|value| value.as_array_mut()) {
-                        nodes.push(json!({
-                            "id": id,
-                            "nodeKind": kind,
-                            "shape": "circle",
-                            "x": 0.0,
-                            "y": 0.0,
-                            "radius": 24.0,
-                            "text": id,
-                            "handles": []
-                        }));
-                    }
-                    envelope.selected_ids = vec![id];
-                    return vec![set_document_op(&envelope)];
-                }
-                "addRelationship" => {
-                    let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("owns");
-                    let edge_id = format!("edge-{}", fixture_edges(&envelope.board_fixture).len() + 1);
-                    if let Some(edges) = envelope.board_fixture.get_mut("edges").and_then(|value| value.as_array_mut()) {
-                        edges.push(json!({
-                            "id": edge_id,
-                            "edgeKind": format!("wires.{kind}"),
-                            "source": "node-1",
-                            "target": "node-2"
-                        }));
-                    }
-                    if let Some(relationships) = envelope.wires_fixture.get_mut("relationships").and_then(|value| value.as_array_mut()) {
-                        relationships.push(json!({
-                            "edgeId": edge_id,
-                            "kind": kind,
-                            "sourceIdentityId": 1,
-                            "targetIdentityId": 2
-                        }));
-                    }
-                    envelope.selected_ids = vec![edge_id];
-                    return vec![set_document_op(&envelope)];
-                }
-                "deleteSelection" => {
-                    let selected: std::collections::HashSet<&str> = envelope.selected_ids.iter().map(String::as_str).collect();
-                    if let Some(nodes) = envelope.board_fixture.get_mut("nodes").and_then(|value| value.as_array_mut()) {
-                        nodes.retain(|node| {
-                            node.get("id")
-                                .and_then(|value| value.as_str())
-                                .is_none_or(|id| !selected.contains(id))
-                        });
-                    }
-                    if let Some(edges) = envelope.board_fixture.get_mut("edges").and_then(|value| value.as_array_mut()) {
-                        edges.retain(|edge| {
-                            edge.get("id")
-                                .and_then(|value| value.as_str())
-                                .is_none_or(|id| !selected.contains(id))
-                        });
-                    }
-                    envelope.selected_ids.clear();
-                    return vec![set_document_op(&envelope)];
-                }
-                "forceLayout" | "reorganize" => {
-                    force_layout_board(&mut envelope.board_fixture);
-                    return vec![set_document_op(&envelope)];
+                    self.runtime.selected_ids = selection_ids(args);
+                    ActionEmit::default()
                 }
                 "canvasPointerDown" => {
                     let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
                     let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                     let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                    if let Some(id) = id.filter(|id| fixture_nodes(&envelope.board_fixture).iter().any(|node| node.get("id").and_then(|value| value.as_str()) == Some(*id))) {
-                        envelope.selected_ids = vec![id.to_string()];
-                        envelope.drag = Some(WiresDragState { node_id: id.to_string(), last_x: x, last_y: y });
-                        return vec![set_document_op(&envelope)];
+                    if let Some(id) = id.filter(|id| find_board_node(document, id).is_some()) {
+                        self.runtime.selected_ids = vec![id.to_string()];
+                        self.runtime.drag = Some(WiresDragState { node_id: id.to_string(), last_x: x, last_y: y });
                     }
+                    ActionEmit::default()
+                }
+                "canvasPointerUp" => {
+                    self.runtime.drag = None;
+                    ActionEmit::default()
+                }
+                // ✏️ Operations — dispatched as VCS operations with a true inverse.
+                "setActiveExample" => {
+                    let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
+                    let next = if example_id == WIRES_PLAY_EXAMPLE_METABOLISM_ID {
+                        document_from_wires_fixture(
+                            serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).unwrap_or_else(|_| default_empty_wires_fixture()),
+                        )
+                    } else {
+                        empty_mindmap_wires_document()
+                    };
+                    self.runtime.selected_ids.clear();
+                    self.runtime.drag = None;
+                    ActionEmit::ops(vec![MindmapWiresOp::ReplaceDocument {
+                        wires_fixture: next.wires_fixture,
+                        board_fixture: next.board_fixture,
+                    }])
+                }
+                "addNode" => {
+                    let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("identity");
+                    let id = format!("node-{}", fixture_nodes(&document.board_fixture).len() + 1);
+                    let node = json!({
+                        "id": id,
+                        "nodeKind": kind,
+                        "shape": "circle",
+                        "x": 0.0,
+                        "y": 0.0,
+                        "radius": 24.0,
+                        "text": id,
+                        "handles": []
+                    });
+                    self.runtime.selected_ids = vec![id];
+                    ActionEmit::ops(vec![MindmapWiresOp::AddNode { node }])
+                }
+                "addRelationship" => {
+                    let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("owns");
+                    let edge_id = format!("edge-{}", fixture_edges(&document.board_fixture).len() + 1);
+                    let edge = json!({
+                        "id": edge_id,
+                        "edgeKind": format!("wires.{kind}"),
+                        "source": "node-1",
+                        "target": "node-2"
+                    });
+                    let relationship = json!({
+                        "edgeId": edge_id,
+                        "kind": kind,
+                        "sourceIdentityId": 1,
+                        "targetIdentityId": 2
+                    });
+                    self.runtime.selected_ids = vec![edge_id];
+                    ActionEmit::ops(vec![MindmapWiresOp::AddRelationship { edge, relationship }])
+                }
+                "deleteSelection" => {
+                    let mut ops = Vec::new();
+                    for id in &self.runtime.selected_ids {
+                        if find_board_node(document, id).is_some() {
+                            ops.push(MindmapWiresOp::RemoveNode { node_id: id.clone() });
+                        } else if fixture_edges(&document.board_fixture)
+                            .iter()
+                            .any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))
+                        {
+                            ops.push(MindmapWiresOp::RemoveEdge { edge_id: id.clone() });
+                        }
+                    }
+                    if !ops.is_empty() {
+                        self.runtime.selected_ids.clear();
+                    }
+                    ActionEmit::ops(ops)
+                }
+                "forceLayout" | "reorganize" => {
+                    let mut board = document.board_fixture.clone();
+                    force_layout_board(&mut board);
+                    let ops: Vec<MindmapWiresOp> = fixture_nodes(&board)
+                        .iter()
+                        .filter_map(|node| {
+                            let id = node.get("id").and_then(|value| value.as_str())?;
+                            let (nx, ny) = node_position(node);
+                            let (ox, oy) = find_board_node(document, id).map(node_position).unwrap_or((nx, ny));
+                            if nx == ox && ny == oy {
+                                return None;
+                            }
+                            let mut patch = Map::new();
+                            patch.insert("x".into(), json!(nx));
+                            patch.insert("y".into(), json!(ny));
+                            Some(MindmapWiresOp::PatchNode { node_id: id.to_string(), patch })
+                        })
+                        .collect();
+                    ActionEmit::ops(ops)
                 }
                 "canvasPointerMove" => {
                     let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                     let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                    if let Some(drag) = envelope.drag.clone() {
-                        let zoom = fixture_camera(&envelope.board_fixture).2.max(1e-6);
-                        translate_node(&mut envelope.board_fixture, &drag.node_id, (x - drag.last_x) / zoom, (y - drag.last_y) / zoom);
-                        envelope.drag = Some(WiresDragState { node_id: drag.node_id, last_x: x, last_y: y });
-                        return vec![set_document_op(&envelope)];
+                    let Some(drag) = self.runtime.drag.clone() else { return ActionEmit::default() };
+                    let Some(node) = find_board_node(document, &drag.node_id) else { return ActionEmit::default() };
+                    let zoom = fixture_camera(&document.board_fixture).2.max(1e-6);
+                    let (cur_x, cur_y) = node_position(node);
+                    let (dx, dy) = ((x - drag.last_x) / zoom, (y - drag.last_y) / zoom);
+                    let mut patch = Map::new();
+                    patch.insert("x".into(), json!(cur_x + dx));
+                    patch.insert("y".into(), json!(cur_y + dy));
+                    self.runtime.drag = Some(WiresDragState { node_id: drag.node_id.clone(), last_x: x, last_y: y });
+                    ActionEmit {
+                        ops: vec![MindmapWiresOp::PatchNode { node_id: drag.node_id.clone(), patch }],
+                        coalesce_key: Some(format!("drag:{}", drag.node_id)),
+                        ..Default::default()
                     }
                 }
-                "canvasPointerUp" => {
-                    if envelope.drag.take().is_some() {
-                        return vec![set_document_op(&envelope)];
-                    }
-                }
-                _ => {}
+                _ => ActionEmit::default(),
             }
-            Vec::new()
         }
 
-        fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-            let envelope = parse_envelope(document_json);
+        fn render(&self, body_key: &str, doc: &DocumentView<'_, MindmapWiresDocument>, view_state: &ViewState) -> UiNode {
+            let document = doc.projection;
             let labels = wires_labels(view_state);
             match body_key {
-                WIRES_PLAY_BODY_COMPOSITE => render_canvas(&envelope.board_fixture, &envelope.wires_fixture),
-                WIRES_PLAY_BODY_DOCUMENT => render_document_panel(&envelope, labels),
-                WIRES_PLAY_BODY_CATALOGUE => render_catalogue_panel(&envelope.wires_fixture, labels),
-                WIRES_PLAY_BODY_PROPERTIES => render_properties_panel(&envelope),
+                WIRES_PLAY_BODY_COMPOSITE => render_canvas(&document.board_fixture, &document.wires_fixture),
+                WIRES_PLAY_BODY_DOCUMENT => render_document_panel(document, &self.runtime.selected_ids, labels),
+                WIRES_PLAY_BODY_CATALOGUE => render_catalogue_panel(&document.wires_fixture, labels),
+                WIRES_PLAY_BODY_PROPERTIES => render_properties_panel(document, &self.runtime.selected_ids),
                 _ => ui_text(format!("Unknown body: {body_key}")),
             }
         }
@@ -840,13 +828,26 @@ pub mod app_wires {
                     "row",
                     Some(&[100.0]),
                     Some(&["Canvas".into()]),
-                )),
+                ))
+                // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
+                .operation("setActiveExample", "Set Active Example")
+                .operation("addNode", "Add Node")
+                .operation("addRelationship", "Add Relationship")
+                .operation("deleteSelection", "Delete Selection")
+                .operation("forceLayout", "Force Layout")
+                .operation("reorganize", "Reorganize")
+                .operation("canvasPointerMove", "Canvas Pointer Move")
+                // 👁️ Ephemeral view state — selection and in-flight drag.
+                .view_action("setSelection", "Set Selection")
+                .view_action("documentSelect", "Document Select")
+                .view_action("canvasPointerDown", "Canvas Pointer Down")
+                .view_action("canvasPointerUp", "Canvas Pointer Up"),
         )
-        .example("empty", "Empty", serde_json::to_string(&default_envelope()).unwrap())
+        .example("empty", "Empty", serde_json::to_string(&empty_mindmap_wires_document()).unwrap())
         .example(
             WIRES_PLAY_EXAMPLE_METABOLISM_ID,
             "Metabolism",
-            serde_json::to_string(&envelope_from_wires_fixture(
+            serde_json::to_string(&document_from_wires_fixture(
                 serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).unwrap_or_else(|_| default_empty_wires_fixture()),
             ))
             .unwrap(),
@@ -859,61 +860,68 @@ pub mod app_wires {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::PluginApp;
+        use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+        use vcs::{Backbone, BackboneMessage, MemoryBackbone};
+
+        fn meta(actor: &str) -> ActionMeta {
+            ActionMeta { actor: actor.into(), instance_id: 1 }
+        }
+
+        fn new_app() -> VcsDocumentApp<WiresPlayApp> {
+            VcsDocumentApp::new(WiresPlayApp::default())
+        }
+
+        fn metabolism_app() -> VcsDocumentApp<WiresPlayApp> {
+            let mut app = new_app();
+            let document =
+                document_from_wires_fixture(serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).expect("metabolism fixture"));
+            app.load_document(
+                &serde_json::to_string(&vcs::create_document_vcs_envelope::<MindmapWiresDocument, MindmapWiresOp>(
+                    WIRES_FIXTURE_SCHEMA,
+                    "reasoning-wires",
+                    document,
+                    None,
+                ))
+                .unwrap(),
+            )
+            .expect("load metabolism");
+            app
+        }
 
         #[test]
         fn renders_canvas_scene() {
-            let app = WiresPlayApp;
-            let document = app.initial_document_json();
-            let node = app.render(WIRES_PLAY_BODY_COMPOSITE, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("canvas-2d"));
+            let mut app = new_app();
+            let node = app.render(WIRES_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render");
+            assert!(serde_json::to_string(&node).unwrap().contains("canvas-2d"));
         }
 
         #[test]
         fn wires_labels_resolve_native_by_default() {
-            let app = WiresPlayApp;
-            let envelope = envelope_from_wires_fixture(
-                serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).expect("metabolism fixture"),
-            );
-            let document = serde_json::to_string(&envelope).unwrap();
-            let node = app.render(WIRES_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
+            let mut app = metabolism_app();
+            let json = serde_json::to_string(&app.render(WIRES_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render")).unwrap();
             assert!(json.contains("Identities"));
             assert!(json.contains("Relationships"));
-            let catalogue = app.render(WIRES_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
-            let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+            let catalogue_json = serde_json::to_string(&app.render(WIRES_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render")).unwrap();
             assert!(catalogue_json.contains("Identity kinds"));
             assert!(catalogue_json.contains("Relationship kinds"));
         }
 
         #[test]
         fn wires_labels_resolve_native_in_german() {
-            let app = WiresPlayApp;
-            let envelope = envelope_from_wires_fixture(
-                serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).expect("metabolism fixture"),
-            );
-            let document = serde_json::to_string(&envelope).unwrap();
+            let mut app = metabolism_app();
             let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-            let node = app.render(WIRES_PLAY_BODY_DOCUMENT, &document, &view_state);
-            let json = serde_json::to_string(&node).unwrap();
+            let json = serde_json::to_string(&app.render(WIRES_PLAY_BODY_DOCUMENT, None, &view_state).expect("render")).unwrap();
             assert!(json.contains("Identitäten"));
             assert!(json.contains("Beziehungen"));
-            let catalogue = app.render(WIRES_PLAY_BODY_CATALOGUE, &document, &view_state);
-            let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+            let catalogue_json = serde_json::to_string(&app.render(WIRES_PLAY_BODY_CATALOGUE, None, &view_state).expect("render")).unwrap();
             assert!(catalogue_json.contains("Identitätsarten"));
             assert!(catalogue_json.contains("Beziehungsarten"));
         }
 
         #[test]
         fn document_has_identities_section() {
-            let app = WiresPlayApp;
-            let envelope = envelope_from_wires_fixture(
-                serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).expect("metabolism fixture"),
-            );
-            let document = serde_json::to_string(&envelope).unwrap();
-            let node = app.render(WIRES_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
+            let mut app = metabolism_app();
+            let json = serde_json::to_string(&app.render(WIRES_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render")).unwrap();
             assert!(json.contains("wires-play-document.identities"));
             assert!(json.contains("Metabolism"));
         }
@@ -931,52 +939,50 @@ pub mod app_wires {
             assert_eq!(relationship_kind_display_name("is", &WIRES_LABELS_NATIVE_EN), "Is");
         }
 
-        fn apply_ops(document: &str, ops: &[String]) -> ReasoningWiresPlayEnvelope {
-            let mut envelope = parse_envelope(document);
-            for op in ops {
-                let parsed: Value = serde_json::from_str(op).unwrap();
-                envelope = serde_json::from_value(parsed["document"].clone()).unwrap();
-            }
-            envelope
+        #[test]
+        fn add_node_appends_and_selects() {
+            let mut app = new_app();
+            app.handle_action("addNode", Some(&json!({ "kind": "identity" })), &ViewState::default(), &meta("local")).expect("add");
+            let projection = app.projection().expect("projection");
+            assert_eq!(fixture_nodes(&projection.board_fixture).len(), 1);
+            assert!(find_board_node(&projection, "node-1").is_some());
         }
 
         #[test]
         fn pointer_drag_translates_node_by_screen_delta() {
-            let mut app = WiresPlayApp;
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("addNode", Some(&json!({ "kind": "identity" })), &document, &ViewState::default());
-            let with_node = apply_ops(&document, &ops);
-            let document = serde_json::to_string(&with_node).unwrap();
-            let ops = app.handle_action_patch_ops("canvasPointerDown", Some(&json!({ "id": "node-1", "x": 100.0, "y": 100.0 })), &document, &ViewState::default());
-            let dragging = apply_ops(&document, &ops);
-            assert_eq!(dragging.drag.as_ref().map(|drag| drag.node_id.as_str()), Some("node-1"));
-            let document = serde_json::to_string(&dragging).unwrap();
-            let ops = app.handle_action_patch_ops("canvasPointerMove", Some(&json!({ "x": 140.0, "y": 130.0 })), &document, &ViewState::default());
-            let moved = apply_ops(&document, &ops);
-            let node = fixture_nodes(&moved.board_fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some("node-1")).expect("node-1");
+            let mut app = new_app();
+            app.handle_action("addNode", Some(&json!({ "kind": "identity" })), &ViewState::default(), &meta("local")).expect("add");
+            app.handle_action("canvasPointerDown", Some(&json!({ "id": "node-1", "x": 100.0, "y": 100.0 })), &ViewState::default(), &meta("local")).expect("down");
+            app.handle_action("canvasPointerMove", Some(&json!({ "x": 140.0, "y": 130.0 })), &ViewState::default(), &meta("local")).expect("move");
+            let node = find_board_node(&app.projection().expect("projection"), "node-1").expect("node-1").clone();
             assert_eq!(node.get("x").and_then(|value| value.as_f64()), Some(40.0));
             assert_eq!(node.get("y").and_then(|value| value.as_f64()), Some(30.0));
-            let document = serde_json::to_string(&moved).unwrap();
-            let ops = app.handle_action_patch_ops("canvasPointerUp", Some(&json!({ "x": 140.0, "y": 130.0 })), &document, &ViewState::default());
-            let released = apply_ops(&document, &ops);
-            assert!(released.drag.is_none());
+            app.handle_action("canvasPointerUp", Some(&json!({ "x": 140.0, "y": 130.0 })), &ViewState::default(), &meta("local")).expect("up");
+            // A coalesced drag collapses to a single undo step restoring the origin.
+            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            let node = find_board_node(&app.projection().expect("projection"), "node-1").expect("node-1").clone();
+            assert_eq!(node.get("x").and_then(|value| value.as_f64()), Some(0.0));
+        }
+
+        #[test]
+        fn delete_selection_removes_node() {
+            let mut app = new_app();
+            app.handle_action("addNode", Some(&json!({ "kind": "identity" })), &ViewState::default(), &meta("local")).expect("add");
+            app.handle_action("setSelection", Some(&json!({ "ids": ["node-1"] })), &ViewState::default(), &meta("local")).expect("select");
+            app.handle_action("deleteSelection", None, &ViewState::default(), &meta("local")).expect("delete");
+            assert!(fixture_nodes(&app.projection().expect("projection").board_fixture).is_empty());
         }
 
         #[test]
         fn force_layout_action_repositions_metabolism_nodes() {
-            let mut app = WiresPlayApp;
-            let envelope = envelope_from_wires_fixture(serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).expect("metabolism fixture"));
-            let before: Vec<(f64, f64)> = fixture_nodes(&envelope.board_fixture)
+            let mut app = metabolism_app();
+            let before: Vec<(f64, f64)> = fixture_nodes(&app.projection().expect("projection").board_fixture)
                 .iter()
-                .map(|node| (node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0), node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0)))
+                .map(node_position)
                 .collect();
-            let document = serde_json::to_string(&envelope).unwrap();
-            let ops = app.handle_action_patch_ops("forceLayout", None, &document, &ViewState::default());
-            let laid_out = apply_ops(&document, &ops);
-            let after: Vec<(f64, f64)> = fixture_nodes(&laid_out.board_fixture)
-                .iter()
-                .map(|node| (node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0), node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0)))
-                .collect();
+            app.handle_action("forceLayout", None, &ViewState::default(), &meta("local")).expect("force layout");
+            let after: Vec<(f64, f64)> =
+                fixture_nodes(&app.projection().expect("projection").board_fixture).iter().map(node_position).collect();
             assert_eq!(before.len(), after.len());
             assert_ne!(before, after, "force layout should move at least one node");
         }
@@ -986,19 +992,88 @@ pub mod app_wires {
             let _extension = Puzzle2dExtension;
             let wires: Value = serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).unwrap();
             let board = wires_fixture_board(&wires);
-            assert_eq!(
-                board.get("schema").and_then(|value| value.as_str()),
-                Some(PUZZLE2D_FIXTURE_SCHEMA)
-            );
+            assert_eq!(board.get("schema").and_then(|value| value.as_str()), Some(PUZZLE2D_FIXTURE_SCHEMA));
             assert_eq!(fixture_nodes(&board).len(), 7);
+        }
+
+        #[test]
+        fn undo_redo_round_trip_through_the_wrapper() {
+            let mut app = new_app();
+            app.handle_action("addNode", Some(&json!({ "kind": "identity" })), &ViewState::default(), &meta("local")).expect("add");
+            assert_eq!(fixture_nodes(&app.projection().expect("projection").board_fixture).len(), 1);
+            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            assert!(fixture_nodes(&app.projection().expect("projection").board_fixture).is_empty());
+            app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+            assert_eq!(fixture_nodes(&app.projection().expect("projection").board_fixture).len(), 1);
+        }
+
+        /// 🧪 The definitional merge proof: A adds a node while B renames another node — disjoint edits
+        /// on one backbone that must both survive on both instances (impossible under whole-document LWW).
+        #[test]
+        fn two_instances_converge_disjoint_graph_edits_via_backbone() {
+            let mut instance_a = new_app();
+            let mut instance_b = new_app();
+            // Seed both from an identical base projection carrying node-1/node-2 (as initial state, not
+            // as edits) so the only edits on the channel are A's and B's disjoint ones.
+            let seed_node = |id: &str| json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] });
+            let mut base = empty_mindmap_wires_document();
+            base = vcs::apply_operation(&base, &MindmapWiresOp::AddNode { node: seed_node("node-1") });
+            base = vcs::apply_operation(&base, &MindmapWiresOp::AddNode { node: seed_node("node-2") });
+            let base_envelope = serde_json::to_string(&vcs::create_document_vcs_envelope::<MindmapWiresDocument, MindmapWiresOp>(
+                WIRES_FIXTURE_SCHEMA,
+                "reasoning-wires",
+                base,
+                None,
+            ))
+            .unwrap();
+            instance_a.load_document(&base_envelope).expect("load a");
+            instance_b.load_document(&base_envelope).expect("load b");
+            let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://mindmap-convergence", "mem://mindmap-convergence");
+            instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
+            instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+
+            // A adds node-3 (a new node); B moves node-2 (a PatchNode) — disjoint edits on the graph.
+            instance_a.handle_action("addNode", Some(&json!({ "kind": "identity" })), &ViewState::default(), &meta("actor-a")).expect("a adds node");
+            instance_b.handle_action("canvasPointerDown", Some(&json!({ "id": "node-2", "x": 0.0, "y": 0.0 })), &ViewState::default(), &meta("actor-b")).expect("b down");
+            instance_b.handle_action("canvasPointerMove", Some(&json!({ "x": 50.0, "y": 60.0 })), &ViewState::default(), &meta("actor-b")).expect("b move");
+            instance_b.handle_action("canvasPointerUp", Some(&json!({ "x": 50.0, "y": 60.0 })), &ViewState::default(), &meta("actor-b")).expect("b up");
+
+            instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
+            instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+
+            let projection_a = instance_a.projection().expect("projection a");
+            let projection_b = instance_b.projection().expect("projection b");
+            // A's added node-3 survives on both.
+            assert!(find_board_node(&projection_a, "node-3").is_some(), "A keeps its own node");
+            assert!(find_board_node(&projection_b, "node-3").is_some(), "B converges on A's node");
+            // B's move of node-2 survives on both.
+            let x_of = |document: &MindmapWiresDocument| find_board_node(document, "node-2").map(node_position).unwrap().0;
+            assert_eq!(x_of(&projection_a), 50.0, "A converges on B's move");
+            assert_eq!(x_of(&projection_b), 50.0, "B keeps its own move");
+        }
+
+        #[test]
+        fn ingest_operations_is_idempotent() {
+            let mut sender = new_app();
+            let (near, mut far) = MemoryBackbone::pair("mem://mindmap-doc", "mem://mindmap-doc");
+            sender.attach_backbone(Box::new(near)).expect("attach");
+            sender.handle_action("addNode", Some(&json!({ "kind": "identity" })), &ViewState::default(), &meta("local")).expect("add");
+            let mut envelopes = Vec::new();
+            for message in far.receive().expect("receive") {
+                if let BackboneMessage::Ops { envelopes: ops } = message {
+                    envelopes.extend(ops);
+                }
+            }
+            assert!(!envelopes.is_empty(), "expected the applied op on the channel");
+            let operations_json = serde_json::to_string(&envelopes).expect("serialize");
+            let mut receiver = new_app();
+            receiver.ingest_operations(&operations_json).expect("ingest once");
+            receiver.ingest_operations(&operations_json).expect("ingest twice");
+            assert_eq!(fixture_nodes(&receiver.projection().expect("projection").board_fixture).len(), 1, "no double-apply");
         }
     }
     //#endregion 🧪Tests
 }
-
-use std::sync::LazyLock;
-
-use semio_framework_plugin::{install_plugin_bundle, PluginBundle};
 
 //#region 🔖Bundle
 fn register_reasoning_mindmap_exports() {}

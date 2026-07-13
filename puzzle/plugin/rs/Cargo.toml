@@ -35,6 +35,7 @@ path = "lib.rs"
 semio-framework-core = { path = "../../../framework/core/rs" }
 semio-framework-os = { path = "../../../framework/product/os/core/rs" }
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }
+vcs = { path = "../../../vcs/rs" }
 puzzle_2d = { path = "../../2d/rs" }
 puzzle_3d = { path = "../../3d/rs" }
 puzzle_5d = { path = "../../5d/rs" }

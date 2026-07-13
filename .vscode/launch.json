@@ -448,6 +448,57 @@
       }
     },
     {
+      "name": "🛠️dev🧮mathematical⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:mathematical",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "MATHEMATICAL_PLAY_PORT": "6084",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 141
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6084)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧮mathematical🧊wgpu🌐wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:mathematical",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "MATHEMATICAL_PLAY_PORT": "6184",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 141.1
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6184)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧮mathematical🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native mathematical",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 141.2
+      }
+    },
+    {
       "name": "🛠️dev🌊flow⚛️react",
       "type": "node-terminal",
       "request": "launch",
@@ -2080,7 +2131,8 @@
       "command": "bun nx run os-hub:dev",
       "cwd": "${workspaceFolder}",
       "env": {
-        "OS_HUB_PORT": "6070"
+        "OS_HUB_PORT": "8787",
+        "OS_HUB_DB": "${workspaceFolder}/.semio/hub-dev.db"
       },
       "presentation": {
         "group": "3_dev",
@@ -2273,6 +2325,17 @@
       "presentation": {
         "group": "3_dev",
         "order": 391.1
+      }
+    },
+    {
+      "name": "🧪verify🔁os-sync",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cargo test -p semio-framework-sync -p vcs",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.2
       }
     },
     {
@@ -2650,5 +2713,16 @@
       }
     }
     // #endregion
+  ],
+  "compounds": [
+    {
+      "name": "🧭compound🖥️s⚛️react🗄️os-hub",
+      "configurations": ["🛠️dev🗄️os-hub", "🛠️dev🖥️s⚛️react"],
+      "stopAll": true,
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.15
+      }
+    }
   ]
 }

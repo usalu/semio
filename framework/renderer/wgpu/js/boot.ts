@@ -2,7 +2,7 @@
 /** @emoji 🧊 Trunk boot glue — loads wasm plugins and starts the wgpu renderer. */
 // #endregion 🧲Header
 
-import { patchOpsFromActionResponse } from "@semio-tech/framework-core";
+import { parseActionResponse } from "@semio-tech/framework-core";
 import { PLUGIN_TARGETS } from "../../../plugin/registry/generated/plugins.ts";
 
 declare const DEFAULT_PLUGIN_FILTER: string;
@@ -203,7 +203,7 @@ async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): P
     manifest,
     createApp: (appId: string) => client.createApp(appId),
     destroyApp: (instanceId: number) => client.destroyApp(instanceId),
-    handleAction: async (instanceId: number, actionJson: string, viewState: unknown) => patchOpsFromActionResponse(await client.handleAction(instanceId, actionJson, viewState)),
+    handleAction: async (instanceId: number, actionJson: string, viewState: unknown) => parseActionResponse(await client.handleAction(instanceId, actionJson, viewState)),
     render: async (instanceId: number, bodyKey: string, viewState: unknown) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState))),
     renderWithDocument: async (instanceId: number, bodyKey: string, viewState: unknown, documentJson: string) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState), documentJson)),
     tools: async (instanceId: number, viewState: unknown) => JSON.parse(await client.tools(instanceId, JSON.stringify(viewState))),

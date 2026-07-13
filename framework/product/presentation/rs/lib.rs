@@ -1,8 +1,8 @@
 //! 🎞️ Presentation deck document + typed VCS on `vcs`.
 
 use vcs::{
-    create_document_vcs_envelope, CollectionDiff, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore,
-    ItemPatch, Operation, OperationDiff,
+    collection_diff_from_op, create_document_vcs_envelope, invert_collection_op, CollectionDiff, CollectionOp,
+    DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable,
 };
 use serde::{Deserialize, Serialize};
 
@@ -224,246 +224,148 @@ pub fn build_tile_morph_prompt(source: &FigureTileSource, drafts: &[FigureTileDr
     lines.join("\n")
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum PresentationEdit {
-    SetSource { source: FigureTileSource },
-    ReplaceSource { source: FigureTileSource, reset_tiles: bool },
-    SetSourceFrame { frame: FigureTileFrame },
-    AddTile { tile: FigureTileDraft, index: Option<usize> },
-    RemoveTile { tile_id: String },
-    RemoveTiles { tile_ids: Vec<String> },
-    RenameTile { tile_id: String, name: String },
-    RenameTiles { tile_ids: Vec<String>, name: String },
-    SetTiles { tiles: Vec<FigureTileDraft> },
-    ClearTiles,
-    PatchTileCrop { tile_id: String, crop: FigureTileFrame },
-    PatchTileCrops { tile_ids: Vec<String>, field: String, value: f64 },
-    SetDocument { document: PresentationDeck },
-}
-
-pub fn apply_presentation_edit(deck: PresentationDeck, edit: &PresentationEdit) -> PresentationDeck {
-    match edit {
-        PresentationEdit::SetSource { source } => PresentationDeck { source: source.clone(), ..deck },
-        PresentationEdit::ReplaceSource { source, reset_tiles } => PresentationDeck {
-            source: source.clone(),
-            tiles: if *reset_tiles { Vec::new() } else { deck.tiles },
-            ..deck
-        },
-        PresentationEdit::SetSourceFrame { frame } => PresentationDeck {
-            source: FigureTileSource {
-                frame: frame.clone(),
-                ..deck.source
-            },
-            ..deck
-        },
-        PresentationEdit::AddTile { tile, index } => {
-            let mut tiles = deck.tiles;
-            let at = index.unwrap_or(tiles.len()).min(tiles.len());
-            tiles.insert(at, tile.clone());
-            PresentationDeck { tiles, ..deck }
-        }
-        PresentationEdit::RemoveTile { tile_id } => PresentationDeck {
-            tiles: deck.tiles.into_iter().filter(|tile| tile.id != *tile_id).collect(),
-            ..deck
-        },
-        PresentationEdit::RemoveTiles { tile_ids } => {
-            let remove: std::collections::HashSet<&str> = tile_ids.iter().map(String::as_str).collect();
-            PresentationDeck {
-                tiles: deck.tiles.into_iter().filter(|tile| !remove.contains(tile.id.as_str())).collect(),
-                ..deck
-            }
-        }
-        PresentationEdit::RenameTile { tile_id, name } => apply_presentation_edit(
-            deck,
-            &PresentationEdit::RenameTiles {
-                tile_ids: vec![tile_id.clone()],
-                name: name.clone(),
-            },
-        ),
-        PresentationEdit::RenameTiles { tile_ids, name } => {
-            let targets: std::collections::HashSet<&str> = tile_ids.iter().map(String::as_str).collect();
-            PresentationDeck {
-                tiles: deck
-                    .tiles
-                    .into_iter()
-                    .map(|tile| {
-                        if targets.contains(tile.id.as_str()) {
-                            FigureTileDraft { name: name.clone(), ..tile }
-                        } else {
-                            tile
-                        }
-                    })
-                    .collect(),
-                ..deck
-            }
-        }
-        PresentationEdit::SetTiles { tiles } => PresentationDeck {
-            tiles: tiles.clone(),
-            ..deck
-        },
-        PresentationEdit::ClearTiles => PresentationDeck {
-            tiles: Vec::new(),
-            ..deck
-        },
-        PresentationEdit::PatchTileCrop { tile_id, crop } => PresentationDeck {
-            tiles: deck
-                .tiles
-                .into_iter()
-                .map(|tile| {
-                    if tile.id == *tile_id {
-                        FigureTileDraft {
-                            crop: clamp_tile_crop(crop.clone()),
-                            ..tile
-                        }
-                    } else {
-                        tile
-                    }
-                })
-                .collect(),
-            ..deck
-        },
-        PresentationEdit::PatchTileCrops { tile_ids, field, value } => {
-            let targets: std::collections::HashSet<&str> = tile_ids.iter().map(String::as_str).collect();
-            PresentationDeck {
-                tiles: deck
-                    .tiles
-                    .into_iter()
-                    .map(|tile| {
-                        if !targets.contains(tile.id.as_str()) {
-                            return tile;
-                        }
-                        let mut crop = tile.crop.clone();
-                        match field.as_str() {
-                            "x" => crop.x = *value,
-                            "y" => crop.y = *value,
-                            "width" => crop.width = *value,
-                            "height" => crop.height = *value,
-                            _ => {}
-                        }
-                        FigureTileDraft {
-                            crop: clamp_tile_crop(crop),
-                            ..tile
-                        }
-                    })
-                    .collect(),
-                ..deck
-            }
-        }
-        PresentationEdit::SetDocument { document } => document.clone(),
-    }
-}
 //#endregion 🔖TilePlay
 
 //#region 🔖Ops
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum PresentationOp {
-    SetSource {
-        source: FigureTileSource,
-    },
-    AddTile {
-        tile: FigureTileDraft,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        index: Option<usize>,
-    },
-    RemoveTile {
-        tile_id: String,
-    },
-    RenameTile {
-        tile_id: String,
-        name: String,
-    },
+//#region 🔖CollectionSupport
+impl Identified<String> for FigureTileDraft {
+    fn id(&self) -> &String {
+        &self.id
+    }
 }
 
+/// 🩹 Sparse patch of a `FigureTileDraft` — the mutable per-tile fields (name and crop).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FigureTileDraftPatch {
     pub name: Option<String>,
+    pub crop: Option<FigureTileFrame>,
+}
+
+impl Patchable<FigureTileDraftPatch> for FigureTileDraft {
+    fn apply_patch(&mut self, patch: &FigureTileDraftPatch) -> FigureTileDraftPatch {
+        let inverse = FigureTileDraftPatch {
+            name: patch.name.as_ref().map(|_| self.name.clone()),
+            crop: patch.crop.as_ref().map(|_| self.crop.clone()),
+        };
+        if let Some(name) = &patch.name {
+            self.name = name.clone();
+        }
+        if let Some(crop) = &patch.crop {
+            self.crop = crop.clone();
+        }
+        inverse
+    }
+}
+
+/// ▶️ Applies a `CollectionDiff` (removed → modified → added) to an owned `Vec` — `vcs::CollectionDiff`
+/// has no generic apply of its own since `modified` patches require the item's `Patchable` impl.
+fn apply_tile_diff(tiles: &mut Vec<FigureTileDraft>, diff: &CollectionDiff<String, FigureTileDraftPatch, FigureTileDraft>) {
+    for id in &diff.removed {
+        tiles.retain(|tile| tile.id != *id);
+    }
+    for patch in &diff.modified {
+        if let Some(tile) = tiles.iter_mut().find(|tile| tile.id == patch.id) {
+            tile.apply_patch(&patch.patch);
+        }
+    }
+    for added in &diff.added {
+        tiles.push(added.clone());
+    }
+}
+
+/// ➕ Merges an incoming tile `CollectionDiff` into an existing one (coalescing two edits' diffs).
+fn absorb_tile_diff(
+    target: &mut Option<CollectionDiff<String, FigureTileDraftPatch, FigureTileDraft>>,
+    incoming: Option<CollectionDiff<String, FigureTileDraftPatch, FigureTileDraft>>,
+) {
+    if let Some(b) = incoming {
+        match target {
+            Some(a) => {
+                a.removed.extend(b.removed);
+                a.modified.extend(b.modified);
+                a.added.extend(b.added);
+            }
+            None => *target = Some(b),
+        }
+    }
+}
+//#endregion 🔖CollectionSupport
+
+/// 📦 Typed presentation-deck operation. Tile add/remove/patch/move flow through a generic
+/// {@link CollectionOp} for granular convergence; `SetSource`/`SetTiles` are scalar/bulk writes and
+/// `SetDeck` replaces the whole projection (import/reset). Ephemeral view state (selection, engagement
+/// draft, clipboard) lives in the plugin's runtime, never in the document.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum PresentationOp {
+    Tiles(CollectionOp<String, FigureTileDraft, FigureTileDraftPatch>),
+    SetSource { source: FigureTileSource },
+    SetTiles { tiles: Vec<FigureTileDraft> },
+    SetDeck { deck: PresentationDeck },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PresentationDiff {
+    pub deck: Option<PresentationDeck>,
     pub source: Option<FigureTileSource>,
     pub tiles: Option<CollectionDiff<String, FigureTileDraftPatch, FigureTileDraft>>,
+    pub set_tiles: Option<Vec<FigureTileDraft>>,
 }
 
 impl OperationDiff<PresentationDeck> for PresentationDiff {
     fn apply(&self, projection: &PresentationDeck) -> PresentationDeck {
+        if let Some(deck) = &self.deck {
+            return deck.clone();
+        }
         let mut next = projection.clone();
         if let Some(source) = &self.source {
             next.source = source.clone();
         }
-        if let Some(tiles) = &self.tiles {
-            for id in &tiles.removed {
-                next.tiles.retain(|tile| tile.id != *id);
-            }
-            for patch in &tiles.modified {
-                for tile in &mut next.tiles {
-                    if tile.id == patch.id {
-                        if let Some(name) = &patch.patch.name {
-                            tile.name = name.clone();
-                        }
-                    }
-                }
-            }
-            for added in &tiles.added {
-                next.tiles.push(added.clone());
-            }
+        if let Some(tiles) = &self.set_tiles {
+            next.tiles = tiles.clone();
+        }
+        if let Some(diff) = &self.tiles {
+            apply_tile_diff(&mut next.tiles, diff);
         }
         next
     }
 
     fn absorb(&mut self, other: Self) {
+        if other.deck.is_some() {
+            self.deck = other.deck;
+            return;
+        }
         if other.source.is_some() {
             self.source = other.source;
         }
-        match (&mut self.tiles, other.tiles) {
-            (Some(a), Some(b)) => {
-                a.removed.extend(b.removed);
-                a.modified.extend(b.modified);
-                a.added.extend(b.added);
-            }
-            (None, Some(b)) => self.tiles = Some(b),
-            _ => {}
+        if other.set_tiles.is_some() {
+            self.set_tiles = other.set_tiles;
         }
+        absorb_tile_diff(&mut self.tiles, other.tiles);
     }
 }
 
 impl Operation<PresentationDeck> for PresentationOp {
     type Diff = PresentationDiff;
 
-    fn diff(&self, _projection: &PresentationDeck) -> PresentationDiff {
+    fn diff(&self, projection: &PresentationDeck) -> PresentationDiff {
         match self {
+            PresentationOp::Tiles(op) => PresentationDiff {
+                tiles: Some(collection_diff_from_op(&projection.tiles, op)),
+                ..Default::default()
+            },
             PresentationOp::SetSource { source } => PresentationDiff {
                 source: Some(source.clone()),
                 ..Default::default()
             },
-            PresentationOp::AddTile { tile, .. } => PresentationDiff {
-                tiles: Some(CollectionDiff {
-                    added: vec![tile.clone()],
-                    ..Default::default()
-                }),
+            PresentationOp::SetTiles { tiles } => PresentationDiff {
+                set_tiles: Some(tiles.clone()),
                 ..Default::default()
             },
-            PresentationOp::RemoveTile { tile_id } => PresentationDiff {
-                tiles: Some(CollectionDiff {
-                    removed: vec![tile_id.clone()],
-                    ..Default::default()
-                }),
-                ..Default::default()
-            },
-            PresentationOp::RenameTile { tile_id, name } => PresentationDiff {
-                tiles: Some(CollectionDiff {
-                    modified: vec![ItemPatch {
-                        id: tile_id.clone(),
-                        patch: FigureTileDraftPatch {
-                            name: Some(name.clone()),
-                        },
-                    }],
-                    ..Default::default()
-                }),
+            PresentationOp::SetDeck { deck } => PresentationDiff {
+                deck: Some(deck.clone()),
                 ..Default::default()
             },
         }
@@ -471,32 +373,16 @@ impl Operation<PresentationDeck> for PresentationOp {
 
     fn backwards(&self, projection: &PresentationDeck) -> Vec<Self> {
         match self {
+            PresentationOp::Tiles(op) => vec![PresentationOp::Tiles(invert_collection_op(&projection.tiles, op))],
             PresentationOp::SetSource { .. } => vec![PresentationOp::SetSource {
                 source: projection.source.clone(),
             }],
-            PresentationOp::AddTile { tile, .. } => vec![PresentationOp::RemoveTile {
-                tile_id: tile.id.clone(),
+            PresentationOp::SetTiles { .. } => vec![PresentationOp::SetTiles {
+                tiles: projection.tiles.clone(),
             }],
-            PresentationOp::RemoveTile { tile_id } => projection
-                .tiles
-                .iter()
-                .find(|t| t.id == *tile_id)
-                .map(|tile| vec![PresentationOp::AddTile {
-                    tile: tile.clone(),
-                    index: None,
-                }])
-                .unwrap_or_default(),
-            PresentationOp::RenameTile { tile_id, .. } => projection
-                .tiles
-                .iter()
-                .find(|t| t.id == *tile_id)
-                .map(|tile| {
-                    vec![PresentationOp::RenameTile {
-                        tile_id: tile_id.clone(),
-                        name: tile.name.clone(),
-                    }]
-                })
-                .unwrap_or_default(),
+            PresentationOp::SetDeck { .. } => vec![PresentationOp::SetDeck {
+                deck: projection.clone(),
+            }],
         }
     }
 }
@@ -596,8 +482,18 @@ mod tests {
         assert!(prompt.contains("Source media"));
     }
 
+    fn round_trip(deck: &PresentationDeck, op: &PresentationOp) -> PresentationDeck {
+        let forward = vcs::apply_operation(deck, op);
+        let mut restored = forward.clone();
+        for back in op.backwards(deck) {
+            restored = vcs::apply_operation(&restored, &back);
+        }
+        assert_eq!(&restored, deck, "backwards() must exactly restore the pre-op deck");
+        forward
+    }
+
     #[test]
-    fn apply_edit_seeds_and_clears() {
+    fn set_tiles_and_clear_round_trip() {
         let deck = default_presentation_deck();
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec {
             source: &deck.source,
@@ -606,10 +502,40 @@ mod tests {
             gap: 0.0,
             key_prefix: "tile",
         });
-        let seeded = apply_presentation_edit(deck, &PresentationEdit::SetTiles { tiles: tiles.clone() });
+        let seeded = round_trip(&deck, &PresentationOp::SetTiles { tiles: tiles.clone() });
         assert_eq!(seeded.tiles.len(), 4);
-        let cleared = apply_presentation_edit(seeded, &PresentationEdit::ClearTiles);
+        let cleared = round_trip(&seeded, &PresentationOp::SetTiles { tiles: Vec::new() });
         assert!(cleared.tiles.is_empty());
+    }
+
+    #[test]
+    fn tile_add_patch_remove_round_trip() {
+        let deck = default_presentation_deck();
+        let tile = FigureTileDraft {
+            id: "t1".into(),
+            name: "A".into(),
+            crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 },
+        };
+        let added = round_trip(&deck, &PresentationOp::Tiles(CollectionOp::Add { index: 0, item: tile }));
+        assert_eq!(added.tiles.len(), 1);
+        let renamed = round_trip(
+            &added,
+            &PresentationOp::Tiles(CollectionOp::Patch {
+                id: "t1".into(),
+                patch: FigureTileDraftPatch { name: Some("Renamed".into()), crop: None },
+            }),
+        );
+        assert_eq!(renamed.tiles[0].name, "Renamed");
+        let recropped = round_trip(
+            &renamed,
+            &PresentationOp::Tiles(CollectionOp::Patch {
+                id: "t1".into(),
+                patch: FigureTileDraftPatch { name: None, crop: Some(FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 }) },
+            }),
+        );
+        assert_eq!(recropped.tiles[0].crop.width, 0.4);
+        let removed = round_trip(&recropped, &PresentationOp::Tiles(CollectionOp::Remove { id: "t1".into() }));
+        assert!(removed.tiles.is_empty());
     }
 
     #[test]
@@ -622,8 +548,9 @@ mod tests {
         ));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![PresentationOp::AddTile {
-                    tile: FigureTileDraft {
+                operations: vec![PresentationOp::Tiles(CollectionOp::Add {
+                    index: 0,
+                    item: FigureTileDraft {
                         id: "t1".into(),
                         name: "A".into(),
                         crop: FigureTileFrame {
@@ -633,8 +560,7 @@ mod tests {
                             height: 1.0,
                         },
                     },
-                    index: None,
-                }],
+                })],
                 description: None,
             })
             .expect("apply");

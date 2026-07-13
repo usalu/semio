@@ -1301,3 +1301,330 @@ mod tests {
         assert!(fixture.edges.iter().all(|edge| edge.route_style == dag::EdgeRouteStyle::SharpSz));
     }
 }
+
+// #region 🔖DocumentVcs
+use vcs::{
+    collection_diff_from_op, invert_collection_op, CollectionDiff, CollectionOp, Identified, ItemPatch, Operation,
+    OperationDiff, Patchable,
+};
+
+pub const SEQUENCE_FIXTURE_SCHEMA: &str = "sequence.fixture";
+
+pub type SequenceEnvelope = vcs::DocumentVcsEnvelope<SequenceFixture, SequenceOp>;
+pub type SequenceStore = vcs::DocumentVcsStore<SequenceFixture, SequenceOp>;
+
+// #region 🔖Collections
+impl Identified<String> for SequenceStep {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+impl Identified<String> for SequenceEdge {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+/// 🩹 Sparse patch for a step — only the fields user actions ever mutate after creation (kind/slot
+/// are fixed for a step's lifetime, so add/remove carries those instead).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SequenceStepPatch {
+    pub params: Option<Dictionary>,
+    pub x: Option<f64>,
+    pub y: Option<f64>,
+    pub collapsed: Option<bool>,
+}
+
+impl Patchable<SequenceStepPatch> for SequenceStep {
+    fn apply_patch(&mut self, patch: &SequenceStepPatch) -> SequenceStepPatch {
+        let inverse = SequenceStepPatch {
+            params: patch.params.as_ref().map(|_| self.params.clone()),
+            x: patch.x.map(|_| self.x),
+            y: patch.y.map(|_| self.y),
+            collapsed: patch.collapsed.map(|_| self.collapsed),
+        };
+        if let Some(params) = &patch.params {
+            self.params = params.clone();
+        }
+        if let Some(x) = patch.x {
+            self.x = x;
+        }
+        if let Some(y) = patch.y {
+            self.y = y;
+        }
+        if let Some(collapsed) = patch.collapsed {
+            self.collapsed = collapsed;
+        }
+        inverse
+    }
+}
+
+/// 🩹 Sparse patch for an edge endpoint rewire.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SequenceEdgePatch {
+    pub from: Option<String>,
+    pub to: Option<String>,
+}
+
+impl Patchable<SequenceEdgePatch> for SequenceEdge {
+    fn apply_patch(&mut self, patch: &SequenceEdgePatch) -> SequenceEdgePatch {
+        let inverse = SequenceEdgePatch {
+            from: patch.from.as_ref().map(|_| self.from.clone()),
+            to: patch.to.as_ref().map(|_| self.to.clone()),
+        };
+        if let Some(from) = &patch.from {
+            self.from = from.clone();
+        }
+        if let Some(to) = &patch.to {
+            self.to = to.clone();
+        }
+        inverse
+    }
+}
+
+fn apply_collection_diff<TId, TItem, TPatch>(items: &mut Vec<TItem>, diff: &CollectionDiff<TId, TPatch, TItem>)
+where
+    TId: PartialEq,
+    TItem: Identified<TId> + Clone + Patchable<TPatch>,
+{
+    for id in &diff.removed {
+        items.retain(|item| item.id() != id);
+    }
+    for patch in &diff.modified {
+        if let Some(item) = items.iter_mut().find(|item| item.id() == &patch.id) {
+            item.apply_patch(&patch.patch);
+        }
+    }
+    for added in &diff.added {
+        items.push(added.clone());
+    }
+}
+
+fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(
+    target: &mut Option<CollectionDiff<TId, TPatch, TItem>>,
+    incoming: Option<CollectionDiff<TId, TPatch, TItem>>,
+) {
+    if let Some(b) = incoming {
+        match target {
+            Some(a) => {
+                a.removed.extend(b.removed);
+                a.modified.extend(b.modified);
+                a.added.extend(b.added);
+            }
+            None => *target = Some(b),
+        }
+    }
+}
+// #endregion 🔖Collections
+
+// #region 🔖Ops
+/// 🧮 Typed sequence operation: id-keyed step/edge collection edits plus the scalar canvas camera.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum SequenceOp {
+    Steps(CollectionOp<String, SequenceStep, SequenceStepPatch>),
+    Edges(CollectionOp<String, SequenceEdge, SequenceEdgePatch>),
+    SetCamera { camera: DagCamera },
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SequenceDiff {
+    pub steps: Option<CollectionDiff<String, SequenceStepPatch, SequenceStep>>,
+    pub edges: Option<CollectionDiff<String, SequenceEdgePatch, SequenceEdge>>,
+    pub camera: Option<DagCamera>,
+}
+
+impl OperationDiff<SequenceFixture> for SequenceDiff {
+    fn apply(&self, projection: &SequenceFixture) -> SequenceFixture {
+        let mut next = projection.clone();
+        if let Some(diff) = &self.steps {
+            apply_collection_diff(&mut next.steps, diff);
+        }
+        if let Some(diff) = &self.edges {
+            apply_collection_diff(&mut next.edges, diff);
+        }
+        if let Some(camera) = &self.camera {
+            next.camera = camera.clone();
+        }
+        next
+    }
+
+    fn absorb(&mut self, other: Self) {
+        absorb_collection_diff(&mut self.steps, other.steps);
+        absorb_collection_diff(&mut self.edges, other.edges);
+        if other.camera.is_some() {
+            self.camera = other.camera;
+        }
+    }
+}
+
+impl Operation<SequenceFixture> for SequenceOp {
+    type Diff = SequenceDiff;
+
+    fn diff(&self, projection: &SequenceFixture) -> SequenceDiff {
+        match self {
+            SequenceOp::Steps(op) => SequenceDiff {
+                steps: Some(collection_diff_from_op(&projection.steps, op)),
+                ..Default::default()
+            },
+            SequenceOp::Edges(op) => SequenceDiff {
+                edges: Some(collection_diff_from_op(&projection.edges, op)),
+                ..Default::default()
+            },
+            SequenceOp::SetCamera { camera } => SequenceDiff { camera: Some(camera.clone()), ..Default::default() },
+        }
+    }
+
+    fn backwards(&self, projection: &SequenceFixture) -> Vec<Self> {
+        match self {
+            SequenceOp::Steps(op) => vec![SequenceOp::Steps(invert_collection_op(&projection.steps, op))],
+            SequenceOp::Edges(op) => vec![SequenceOp::Edges(invert_collection_op(&projection.edges, op))],
+            SequenceOp::SetCamera { .. } => vec![SequenceOp::SetCamera { camera: projection.camera.clone() }],
+        }
+    }
+}
+
+/// 🔀 Diffs two fixtures into a minimal typed op set: removed/added/patched steps and edges plus a
+/// camera change. Lets action handlers keep computing the target fixture via {@link SequenceHost}
+/// (with all its cycle/slot/layout logic) while emitting granular, mergeable ops.
+pub fn sequence_fixture_ops(before: &SequenceFixture, after: &SequenceFixture) -> Vec<SequenceOp> {
+    let mut ops = Vec::new();
+    for step in &before.steps {
+        if !after.steps.iter().any(|entry| entry.id == step.id) {
+            ops.push(SequenceOp::Steps(CollectionOp::Remove { id: step.id.clone() }));
+        }
+    }
+    for (index, step) in after.steps.iter().enumerate() {
+        match before.steps.iter().find(|entry| entry.id == step.id) {
+            None => ops.push(SequenceOp::Steps(CollectionOp::Add { index, item: step.clone() })),
+            Some(prior) => {
+                let patch = SequenceStepPatch {
+                    params: (prior.params != step.params).then(|| step.params.clone()),
+                    x: (prior.x != step.x).then_some(step.x),
+                    y: (prior.y != step.y).then_some(step.y),
+                    collapsed: (prior.collapsed != step.collapsed).then_some(step.collapsed),
+                };
+                if patch != SequenceStepPatch::default() {
+                    ops.push(SequenceOp::Steps(CollectionOp::Patch { id: step.id.clone(), patch }));
+                }
+            }
+        }
+    }
+    for edge in &before.edges {
+        if !after.edges.iter().any(|entry| entry.id == edge.id) {
+            ops.push(SequenceOp::Edges(CollectionOp::Remove { id: edge.id.clone() }));
+        }
+    }
+    for (index, edge) in after.edges.iter().enumerate() {
+        match before.edges.iter().find(|entry| entry.id == edge.id) {
+            None => ops.push(SequenceOp::Edges(CollectionOp::Add { index, item: edge.clone() })),
+            Some(prior) => {
+                let patch = SequenceEdgePatch {
+                    from: (prior.from != edge.from).then(|| edge.from.clone()),
+                    to: (prior.to != edge.to).then(|| edge.to.clone()),
+                };
+                if patch != SequenceEdgePatch::default() {
+                    ops.push(SequenceOp::Edges(CollectionOp::Patch { id: edge.id.clone(), patch }));
+                }
+            }
+        }
+    }
+    if before.camera != after.camera {
+        ops.push(SequenceOp::SetCamera { camera: after.camera.clone() });
+    }
+    ops
+}
+// #endregion 🔖Ops
+
+// #region 🧪OpsTests
+#[cfg(test)]
+mod ops_tests {
+    use super::*;
+    use vcs::{apply_operation, create_document_vcs_envelope, DocumentVcsCommand};
+
+    fn round_trip(fixture: &SequenceFixture, op: &SequenceOp) -> SequenceFixture {
+        let forward = apply_operation(fixture, op);
+        let mut restored = forward.clone();
+        for back in op.backwards(fixture) {
+            restored = apply_operation(&restored, &back);
+        }
+        assert_eq!(&restored, fixture, "backwards() must restore the pre-op fixture");
+        forward
+    }
+
+    #[test]
+    fn add_remove_patch_steps_round_trip() {
+        let fixture = default_fixture();
+        let step = SequenceStep {
+            id: "step-99".into(),
+            kind: "log.print".into(),
+            params: Dictionary::new(),
+            x: 5.0,
+            y: 6.0,
+            slot: None,
+            collapsed: false,
+        };
+        let added = round_trip(&fixture, &SequenceOp::Steps(CollectionOp::Add { index: 2, item: step }));
+        assert_eq!(added.steps.len(), 3);
+        let patched = round_trip(
+            &added,
+            &SequenceOp::Steps(CollectionOp::Patch {
+                id: "step-99".into(),
+                patch: SequenceStepPatch { x: Some(120.0), ..Default::default() },
+            }),
+        );
+        assert_eq!(patched.steps.iter().find(|step| step.id == "step-99").unwrap().x, 120.0);
+        let removed = round_trip(&patched, &SequenceOp::Steps(CollectionOp::Remove { id: "step-99".into() }));
+        assert!(!removed.steps.iter().any(|step| step.id == "step-99"));
+    }
+
+    #[test]
+    fn set_camera_round_trip() {
+        let fixture = default_fixture();
+        let next = round_trip(&fixture, &SequenceOp::SetCamera { camera: DagCamera { x: 10.0, y: 20.0, zoom: 2.0 } });
+        assert_eq!(next.camera.zoom, 2.0);
+    }
+
+    #[test]
+    fn fixture_ops_capture_move_and_connect() {
+        let mut host = SequenceHost::default();
+        let before = host.fixture.clone();
+        let id = host.add_step("math.add", 40.0, 40.0);
+        let ops = sequence_fixture_ops(&before, &host.fixture);
+        assert!(ops.iter().any(|op| matches!(op, SequenceOp::Steps(CollectionOp::Add { item, .. }) if item.id == id)));
+    }
+
+    #[test]
+    fn store_applies_and_undoes_step_add() {
+        let mut store = SequenceStore::new(create_document_vcs_envelope(
+            SEQUENCE_FIXTURE_SCHEMA,
+            "sequence",
+            default_fixture(),
+            None,
+        ));
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![SequenceOp::Steps(CollectionOp::Add {
+                    index: 2,
+                    item: SequenceStep {
+                        id: "step-7".into(),
+                        kind: "log.print".into(),
+                        params: Dictionary::new(),
+                        x: 0.0,
+                        y: 0.0,
+                        slot: None,
+                        collapsed: false,
+                    },
+                })],
+                description: None,
+            })
+            .expect("apply");
+        assert_eq!(store.projection().expect("projection").steps.len(), 3);
+    }
+}
+// #endregion 🧪OpsTests
+// #endregion 🔖DocumentVcs

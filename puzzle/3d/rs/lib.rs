@@ -1869,67 +1869,189 @@ impl Puzzle3dPrecomputeSession {
 }
 
 //#region 🔖DocumentVcs
-use vcs::{
-    create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
-};
+// 🧩 Puzzle 3d document VCS on `vcs`: granular JSON-document operations over the bare fixture
+// projection (objects/attractions/targetVolumes/references keyed by id, camera + scalar fields)
+// with a whole-document fallback, so disjoint edits converge instead of clobbering.
+use vcs::{create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 
 pub const PUZZLE_3D_SCHEMA: &str = "puzzle.3d";
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Puzzle3dDocument {
-    pub revision: i64,
-}
+/// 🧩 The puzzle-3d projection is the bare fixture json (schema/camera/objects/attractions/…).
+pub type Puzzle3dProjection = serde_json::Value;
+pub type Puzzle3dEnvelope = DocumentVcsEnvelope<Puzzle3dProjection, Puzzle3dOp>;
+pub type Puzzle3dStore = DocumentVcsStore<Puzzle3dProjection, Puzzle3dOp>;
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Puzzle3dDiff {
-    pub revision: Option<i64>,
-}
-
-impl OperationDiff<Puzzle3dDocument> for Puzzle3dDiff {
-    fn apply(&self, projection: &Puzzle3dDocument) -> Puzzle3dDocument {
-        Puzzle3dDocument {
-            revision: self.revision.unwrap_or(projection.revision),
-        }
-    }
-
-    fn absorb(&mut self, other: Self) {
-        if other.revision.is_some() {
-            self.revision = other.revision;
-        }
-    }
-}
-
+/// 🔧 One granular mutation of a JSON puzzle document. `UpsertItem`/`RemoveItem` address an element
+/// of a top-level id-keyed array so disjoint edits converge; `SetField` writes a scalar/object field
+/// (`camera`, …); `ReplaceDocument` swaps the whole document (example load, engine fill, layout).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "camelCase")]
 pub enum Puzzle3dOp {
-    SetRevision { revision: i64 },
+    UpsertItem { collection: String, item: serde_json::Value },
+    RemoveItem { collection: String, id: String },
+    SetField { key: String, value: serde_json::Value },
+    ReplaceDocument { document: serde_json::Value },
 }
 
-impl Operation<Puzzle3dDocument> for Puzzle3dOp {
+/// 🧮 An ordered list of granular ops replayed over the projection; coalesced edits concatenate.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct Puzzle3dDiff {
+    pub ops: Vec<Puzzle3dOp>,
+}
+
+fn puzzle3d_item_id(item: &serde_json::Value) -> Option<&str> {
+    item.get("id").and_then(|value| value.as_str())
+}
+
+fn apply_puzzle3d_op(document: &mut serde_json::Value, op: &Puzzle3dOp) {
+    match op {
+        Puzzle3dOp::UpsertItem { collection, item } => {
+            let Some(object) = document.as_object_mut() else {
+                return;
+            };
+            let array = object.entry(collection.clone()).or_insert_with(|| serde_json::Value::Array(Vec::new()));
+            let Some(array) = array.as_array_mut() else {
+                return;
+            };
+            if let Some(id) = puzzle3d_item_id(item).map(str::to_string) {
+                if let Some(slot) = array.iter_mut().find(|entry| puzzle3d_item_id(entry) == Some(id.as_str())) {
+                    *slot = item.clone();
+                    return;
+                }
+            }
+            array.push(item.clone());
+        }
+        Puzzle3dOp::RemoveItem { collection, id } => {
+            if let Some(array) = document.get_mut(collection).and_then(|value| value.as_array_mut()) {
+                array.retain(|entry| puzzle3d_item_id(entry) != Some(id.as_str()));
+            }
+        }
+        Puzzle3dOp::SetField { key, value } => {
+            if let Some(object) = document.as_object_mut() {
+                object.insert(key.clone(), value.clone());
+            }
+        }
+        Puzzle3dOp::ReplaceDocument { document: next } => *document = next.clone(),
+    }
+}
+
+fn puzzle3d_find_item<'a>(document: &'a serde_json::Value, collection: &str, id: &str) -> Option<&'a serde_json::Value> {
+    document.get(collection).and_then(|value| value.as_array()).and_then(|array| array.iter().find(|entry| puzzle3d_item_id(entry) == Some(id)))
+}
+
+impl OperationDiff<Puzzle3dProjection> for Puzzle3dDiff {
+    fn apply(&self, projection: &Puzzle3dProjection) -> Puzzle3dProjection {
+        let mut next = projection.clone();
+        for op in &self.ops {
+            apply_puzzle3d_op(&mut next, op);
+        }
+        next
+    }
+
+    fn absorb(&mut self, other: Self) {
+        self.ops.extend(other.ops);
+    }
+}
+
+impl Operation<Puzzle3dProjection> for Puzzle3dOp {
     type Diff = Puzzle3dDiff;
 
-    fn diff(&self, _projection: &Puzzle3dDocument) -> Puzzle3dDiff {
-        match self {
-            Puzzle3dOp::SetRevision { revision } => Puzzle3dDiff {
-                revision: Some(*revision),
-            },
-        }
+    fn diff(&self, _projection: &Puzzle3dProjection) -> Puzzle3dDiff {
+        Puzzle3dDiff { ops: vec![self.clone()] }
     }
 
-    fn backwards(&self, projection: &Puzzle3dDocument) -> Vec<Self> {
-        vec![Puzzle3dOp::SetRevision {
-            revision: projection.revision,
-        }]
+    fn backwards(&self, projection: &Puzzle3dProjection) -> Vec<Self> {
+        match self {
+            Puzzle3dOp::UpsertItem { collection, item } => {
+                let id = puzzle3d_item_id(item).unwrap_or_default();
+                match puzzle3d_find_item(projection, collection, id) {
+                    Some(previous) => vec![Puzzle3dOp::UpsertItem { collection: collection.clone(), item: previous.clone() }],
+                    None => vec![Puzzle3dOp::RemoveItem { collection: collection.clone(), id: id.to_string() }],
+                }
+            }
+            Puzzle3dOp::RemoveItem { collection, id } => match puzzle3d_find_item(projection, collection, id) {
+                Some(previous) => vec![Puzzle3dOp::UpsertItem { collection: collection.clone(), item: previous.clone() }],
+                None => Vec::new(),
+            },
+            Puzzle3dOp::SetField { key, .. } => vec![Puzzle3dOp::SetField { key: key.clone(), value: projection.get(key).cloned().unwrap_or(serde_json::Value::Null) }],
+            Puzzle3dOp::ReplaceDocument { .. } => vec![Puzzle3dOp::ReplaceDocument { document: projection.clone() }],
+        }
     }
 }
 
-pub type Puzzle3dEnvelope = DocumentVcsEnvelope<Puzzle3dDocument, Puzzle3dOp>;
-pub type Puzzle3dStore = DocumentVcsStore<Puzzle3dDocument, Puzzle3dOp>;
+fn puzzle3d_is_id_keyed_array(value: Option<&serde_json::Value>) -> bool {
+    value.and_then(|value| value.as_array()).is_some_and(|array| array.iter().all(|entry| puzzle3d_item_id(entry).is_some()))
+}
 
-pub fn empty_puzzle3d_projection() -> Puzzle3dDocument {
-    Puzzle3dDocument { revision: 0 }
+fn puzzle3d_collect_collection_delta(collection: &str, before: &[serde_json::Value], after: &[serde_json::Value], ops: &mut Vec<Puzzle3dOp>) {
+    for entry in after {
+        let id = puzzle3d_item_id(entry).unwrap_or_default();
+        if before.iter().find(|candidate| puzzle3d_item_id(candidate) == Some(id)) != Some(entry) {
+            ops.push(Puzzle3dOp::UpsertItem { collection: collection.to_string(), item: entry.clone() });
+        }
+    }
+    for entry in before {
+        let id = puzzle3d_item_id(entry).unwrap_or_default();
+        if !after.iter().any(|candidate| puzzle3d_item_id(candidate) == Some(id)) {
+            ops.push(Puzzle3dOp::RemoveItem { collection: collection.to_string(), id: id.to_string() });
+        }
+    }
+}
+
+/// 🧮 Computes the granular op sequence turning `before` into `after`, falling back to a single
+/// `ReplaceDocument` whenever the granular replay would not reproduce `after` exactly.
+pub fn puzzle3d_document_delta_ops(before: &serde_json::Value, after: &serde_json::Value) -> Vec<Puzzle3dOp> {
+    if before == after {
+        return Vec::new();
+    }
+    let ops = match (before.as_object(), after.as_object()) {
+        (Some(before_object), Some(after_object)) => {
+            let mut keys: Vec<&String> = before_object.keys().chain(after_object.keys()).collect();
+            keys.sort();
+            keys.dedup();
+            let mut ops = Vec::new();
+            for key in keys {
+                let before_value = before_object.get(key);
+                let after_value = after_object.get(key);
+                if before_value == after_value {
+                    continue;
+                }
+                match after_value {
+                    Some(after_value) if puzzle3d_is_id_keyed_array(before_value) && puzzle3d_is_id_keyed_array(Some(after_value)) => {
+                        let before_array = before_value.and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[]);
+                        puzzle3d_collect_collection_delta(key, before_array, after_value.as_array().map(Vec::as_slice).unwrap_or(&[]), &mut ops);
+                    }
+                    Some(after_value) => ops.push(Puzzle3dOp::SetField { key: key.clone(), value: after_value.clone() }),
+                    None => ops.push(Puzzle3dOp::SetField { key: key.clone(), value: serde_json::Value::Null }),
+                }
+            }
+            ops
+        }
+        _ => vec![Puzzle3dOp::ReplaceDocument { document: after.clone() }],
+    };
+    let mut replay = before.clone();
+    for op in &ops {
+        apply_puzzle3d_op(&mut replay, op);
+    }
+    if &replay == after {
+        ops
+    } else {
+        vec![Puzzle3dOp::ReplaceDocument { document: after.clone() }]
+    }
+}
+
+pub fn empty_puzzle3d_projection() -> serde_json::Value {
+    serde_json::json!({
+        "schema": PUZZLE_3D_SCHEMA,
+        "domain": "architecture",
+        "camera": {},
+        "meta": {},
+        "objects": [],
+        "attractions": [],
+        "targetVolumes": [],
+        "references": []
+    })
 }
 
 //#region 🔖WasmBridge
@@ -2001,7 +2123,7 @@ mod puzzle3d_vcs_tests {
     use super::*;
 
     #[test]
-    fn puzzle3d_document_vcs_replays_ops() {
+    fn puzzle3d_document_vcs_replays_granular_ops() {
         let mut store = Puzzle3dStore::new(create_document_vcs_envelope(
             PUZZLE_3D_SCHEMA,
             "puzzle3d",
@@ -2010,11 +2132,31 @@ mod puzzle3d_vcs_tests {
         ));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![Puzzle3dOp::SetRevision { revision: 3 }],
+                operations: vec![Puzzle3dOp::UpsertItem { collection: "objects".into(), item: serde_json::json!({ "id": "o1", "origin": [0.0, 0.0, 0.0] }) }],
                 description: None,
             })
             .expect("apply");
-        assert_eq!(store.projection().expect("projection").revision, 3);
+        let projection = store.projection().expect("projection");
+        assert_eq!(projection.get("objects").and_then(|value| value.as_array()).map(Vec::len), Some(1));
+    }
+
+    #[test]
+    fn puzzle3d_delta_ops_round_trip_and_stay_granular() {
+        let before = serde_json::json!({ "schema": PUZZLE_3D_SCHEMA, "camera": { "zoom": 1.0 }, "objects": [{ "id": "o1", "origin": [0.0, 0.0, 0.0] }, { "id": "o2", "origin": [1.0, 0.0, 0.0] }], "attractions": [] });
+        let after = serde_json::json!({ "schema": PUZZLE_3D_SCHEMA, "camera": { "zoom": 2.0 }, "objects": [{ "id": "o2", "origin": [9.0, 0.0, 0.0] }, { "id": "o3", "origin": [2.0, 0.0, 0.0] }], "attractions": [] });
+        let ops = puzzle3d_document_delta_ops(&before, &after);
+        assert!(!ops.iter().any(|op| matches!(op, Puzzle3dOp::ReplaceDocument { .. })));
+        let mut forward = before.clone();
+        let mut inverses = Vec::new();
+        for op in &ops {
+            inverses.extend(op.backwards(&forward));
+            forward = op.diff(&forward).apply(&forward);
+        }
+        assert_eq!(forward, after);
+        for inverse in inverses.iter().rev() {
+            forward = inverse.diff(&forward).apply(&forward);
+        }
+        assert_eq!(forward, before);
     }
 }
 // #endregion 🔖DocumentVcs

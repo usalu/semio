@@ -1394,17 +1394,130 @@ mod tests {
 // #endregion 🧪Tests
 
 // #region 🔖DocumentVcs
-use vcs::{
-    create_document_vcs_envelope, CollectionDiff, DocumentVcsEnvelope, DocumentVcsStore, ItemPatch, Operation,
-    OperationDiff,
-};
+use vcs::{Operation, OperationDiff};
+
+pub const RASTER_DOCUMENT_SCHEMA: &str = "raster.document";
+
+// #region 🔖Projection
+/// 🎞️ Non-destructive raster document: a nested layer tree (pixel/group/adjustment) over a pannable
+/// camera, plus embedded image assets. This is the authoritative projection shared by the wasm
+/// compositor bridge and the `raster-plugin` `DocumentApp`. Ephemeral tool/brush/selection state
+/// lives in the plugin's app struct, never here.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RasterCamera {
+    #[serde(default)]
+    pub x: f64,
+    #[serde(default)]
+    pub y: f64,
+    #[serde(default = "default_one")]
+    pub zoom: f64,
+}
+
+impl Default for RasterCamera {
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0, zoom: 1.0 }
+    }
+}
+
+fn one_f32() -> f32 {
+    1.0
+}
+
+fn default_blend() -> String {
+    "normal".into()
+}
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct RasterLayerRef {
-    pub id: String,
-    pub name: String,
-    pub visible: bool,
+pub struct RasterTransform {
+    #[serde(default)]
+    pub x: f64,
+    #[serde(default)]
+    pub y: f64,
+    #[serde(default = "default_one")]
+    pub scale_x: f64,
+    #[serde(default = "default_one")]
+    pub scale_y: f64,
+    #[serde(default)]
+    pub rotation: f64,
+}
+
+impl Default for RasterTransform {
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0, scale_x: 1.0, scale_y: 1.0, rotation: 0.0 }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RasterLayerMask {
+    #[serde(default = "default_true")]
+    pub enabled: bool,
+    #[serde(default = "default_true")]
+    pub linked: bool,
+    #[serde(default)]
+    pub invert: bool,
+    pub width: Option<u32>,
+    pub height: Option<u32>,
+}
+
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum RasterLayerNode {
+    #[serde(rename = "pixel", rename_all = "camelCase")]
+    Pixel {
+        id: String,
+        name: String,
+        #[serde(default = "default_true")]
+        visible: bool,
+        #[serde(default = "one_f32")]
+        opacity: f32,
+        #[serde(default = "default_blend")]
+        blend_mode: String,
+        #[serde(default)]
+        transform: RasterTransform,
+        mask: Option<RasterLayerMask>,
+        width: Option<u32>,
+        height: Option<u32>,
+        image_key: Option<String>,
+    },
+    #[serde(rename = "group", rename_all = "camelCase")]
+    Group {
+        id: String,
+        name: String,
+        #[serde(default = "default_true")]
+        visible: bool,
+        #[serde(default = "one_f32")]
+        opacity: f32,
+        #[serde(default = "default_blend")]
+        blend_mode: String,
+        #[serde(default)]
+        transform: RasterTransform,
+        mask: Option<RasterLayerMask>,
+        children: Vec<RasterLayerNode>,
+    },
+    #[serde(rename = "adjustment", rename_all = "camelCase")]
+    Adjustment {
+        id: String,
+        name: String,
+        #[serde(default = "default_true")]
+        visible: bool,
+        #[serde(default = "one_f32")]
+        opacity: f32,
+        #[serde(default = "default_blend")]
+        blend_mode: String,
+        #[serde(default)]
+        transform: RasterTransform,
+        adjustment_kind: String,
+    },
+}
+
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RasterImageAsset {
+    pub mime: String,
+    pub data: String,
 }
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -1412,68 +1525,326 @@ pub struct RasterLayerRef {
 pub struct RasterProjection {
     pub schema: String,
     pub id: String,
-    pub layers: Vec<RasterLayerRef>,
+    #[serde(default)]
+    pub title: Option<String>,
+    #[serde(default)]
+    pub camera: RasterCamera,
+    #[serde(default)]
+    pub layers: Vec<RasterLayerNode>,
+    #[serde(default)]
+    pub assets: HashMap<String, RasterImageAsset>,
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum RasterOp {
-    AddLayer { layer: RasterLayerRef },
-    RemoveLayer { layer_id: String },
-    SetLayerVisible { layer_id: String, visible: bool },
-    RenameLayer { layer_id: String, name: String },
+pub fn empty_raster_projection() -> RasterProjection {
+    RasterProjection {
+        schema: RASTER_DOCUMENT_SCHEMA.into(),
+        id: "raster".into(),
+        title: Some("Untitled".into()),
+        camera: RasterCamera::default(),
+        layers: Vec::new(),
+        assets: HashMap::new(),
+    }
+}
+// #endregion 🔖Projection
+
+// #region 🔖Tree
+pub fn layer_node_id(layer: &RasterLayerNode) -> &str {
+    match layer {
+        RasterLayerNode::Pixel { id, .. } | RasterLayerNode::Group { id, .. } | RasterLayerNode::Adjustment { id, .. } => id,
+    }
 }
 
+pub fn layer_name(layer: &RasterLayerNode) -> &str {
+    match layer {
+        RasterLayerNode::Pixel { name, .. } | RasterLayerNode::Group { name, .. } | RasterLayerNode::Adjustment { name, .. } => name,
+    }
+}
+
+pub fn layer_visible(layer: &RasterLayerNode) -> bool {
+    match layer {
+        RasterLayerNode::Pixel { visible, .. } | RasterLayerNode::Group { visible, .. } | RasterLayerNode::Adjustment { visible, .. } => *visible,
+    }
+}
+
+pub fn layer_opacity(layer: &RasterLayerNode) -> f32 {
+    match layer {
+        RasterLayerNode::Pixel { opacity, .. } | RasterLayerNode::Group { opacity, .. } | RasterLayerNode::Adjustment { opacity, .. } => *opacity,
+    }
+}
+
+pub fn find_layer<'a>(layers: &'a [RasterLayerNode], target_id: &str) -> Option<&'a RasterLayerNode> {
+    for layer in layers {
+        if layer_node_id(layer) == target_id {
+            return Some(layer);
+        }
+        if let RasterLayerNode::Group { children, .. } = layer {
+            if let Some(found) = find_layer(children, target_id) {
+                return Some(found);
+            }
+        }
+    }
+    None
+}
+
+/// 🧭 Finds a layer's parent-group id (`None` at the root) and its index among its siblings.
+pub fn locate_layer(layers: &[RasterLayerNode], target_id: &str) -> Option<(Option<String>, usize)> {
+    fn walk(layers: &[RasterLayerNode], parent: Option<&str>, target_id: &str) -> Option<(Option<String>, usize)> {
+        for (index, layer) in layers.iter().enumerate() {
+            if layer_node_id(layer) == target_id {
+                return Some((parent.map(str::to_string), index));
+            }
+            if let RasterLayerNode::Group { id, children, .. } = layer {
+                if let Some(found) = walk(children, Some(id), target_id) {
+                    return Some(found);
+                }
+            }
+        }
+        None
+    }
+    walk(layers, None, target_id)
+}
+
+pub fn flatten_raster_layers(layers: &[RasterLayerNode]) -> Vec<&RasterLayerNode> {
+    let mut out = Vec::new();
+    fn visit<'a>(layers: &'a [RasterLayerNode], out: &mut Vec<&'a RasterLayerNode>) {
+        for layer in layers {
+            out.push(layer);
+            if let RasterLayerNode::Group { children, .. } = layer {
+                visit(children, out);
+            }
+        }
+    }
+    visit(layers, &mut out);
+    out
+}
+
+fn remove_layer_from_tree(layers: &mut Vec<RasterLayerNode>, target_id: &str) -> Option<RasterLayerNode> {
+    if let Some(index) = layers.iter().position(|layer| layer_node_id(layer) == target_id) {
+        return Some(layers.remove(index));
+    }
+    for layer in layers.iter_mut() {
+        if let RasterLayerNode::Group { children, .. } = layer {
+            if let Some(removed) = remove_layer_from_tree(children, target_id) {
+                return Some(removed);
+            }
+        }
+    }
+    None
+}
+
+fn insert_layer(layers: &mut Vec<RasterLayerNode>, parent_id: Option<&str>, index: usize, layer: RasterLayerNode) {
+    match parent_id {
+        None => {
+            let at = index.min(layers.len());
+            layers.insert(at, layer);
+        }
+        Some(parent_id) => {
+            for node in layers.iter_mut() {
+                if let RasterLayerNode::Group { id, children, .. } = node {
+                    if id == parent_id {
+                        let at = index.min(children.len());
+                        children.insert(at, layer);
+                        return;
+                    }
+                    insert_layer(children, Some(parent_id), index, layer.clone());
+                }
+            }
+        }
+    }
+}
+
+fn apply_layer_patch(node: &mut RasterLayerNode, patch: &RasterLayerPatch) -> RasterLayerPatch {
+    let mut inverse = RasterLayerPatch::default();
+    match node {
+        RasterLayerNode::Pixel { name, visible, opacity, blend_mode, transform, width, height, .. } => {
+            if let Some(value) = &patch.name {
+                inverse.name = Some(name.clone());
+                *name = value.clone();
+            }
+            if let Some(value) = patch.visible {
+                inverse.visible = Some(*visible);
+                *visible = value;
+            }
+            if let Some(value) = patch.opacity {
+                inverse.opacity = Some(*opacity);
+                *opacity = value;
+            }
+            if let Some(value) = &patch.blend_mode {
+                inverse.blend_mode = Some(blend_mode.clone());
+                *blend_mode = value.clone();
+            }
+            if let Some(value) = patch.transform_x {
+                inverse.transform_x = Some(transform.x);
+                transform.x = value;
+            }
+            if let Some(value) = patch.transform_y {
+                inverse.transform_y = Some(transform.y);
+                transform.y = value;
+            }
+            if let Some(value) = patch.width {
+                inverse.width = Some(width.unwrap_or(512));
+                *width = Some(value);
+            }
+            if let Some(value) = patch.height {
+                inverse.height = Some(height.unwrap_or(512));
+                *height = Some(value);
+            }
+        }
+        RasterLayerNode::Group { name, visible, opacity, blend_mode, transform, .. } => {
+            if let Some(value) = &patch.name {
+                inverse.name = Some(name.clone());
+                *name = value.clone();
+            }
+            if let Some(value) = patch.visible {
+                inverse.visible = Some(*visible);
+                *visible = value;
+            }
+            if let Some(value) = patch.opacity {
+                inverse.opacity = Some(*opacity);
+                *opacity = value;
+            }
+            if let Some(value) = &patch.blend_mode {
+                inverse.blend_mode = Some(blend_mode.clone());
+                *blend_mode = value.clone();
+            }
+            if let Some(value) = patch.transform_x {
+                inverse.transform_x = Some(transform.x);
+                transform.x = value;
+            }
+            if let Some(value) = patch.transform_y {
+                inverse.transform_y = Some(transform.y);
+                transform.y = value;
+            }
+        }
+        RasterLayerNode::Adjustment { name, visible, opacity, blend_mode, adjustment_kind, .. } => {
+            if let Some(value) = &patch.name {
+                inverse.name = Some(name.clone());
+                *name = value.clone();
+            }
+            if let Some(value) = patch.visible {
+                inverse.visible = Some(*visible);
+                *visible = value;
+            }
+            if let Some(value) = patch.opacity {
+                inverse.opacity = Some(*opacity);
+                *opacity = value;
+            }
+            if let Some(value) = &patch.blend_mode {
+                inverse.blend_mode = Some(blend_mode.clone());
+                *blend_mode = value.clone();
+            }
+            if let Some(value) = &patch.adjustment_kind {
+                inverse.adjustment_kind = Some(adjustment_kind.clone());
+                *adjustment_kind = value.clone();
+            }
+        }
+    }
+    inverse
+}
+
+fn patch_layer_in_tree(layers: &mut [RasterLayerNode], target_id: &str, patch: &RasterLayerPatch) -> Option<RasterLayerPatch> {
+    for layer in layers.iter_mut() {
+        if layer_node_id(layer) == target_id {
+            return Some(apply_layer_patch(layer, patch));
+        }
+        if let RasterLayerNode::Group { children, .. } = layer {
+            if let Some(inverse) = patch_layer_in_tree(children, target_id, patch) {
+                return Some(inverse);
+            }
+        }
+    }
+    None
+}
+// #endregion 🔖Tree
+
+// #region 🔖Ops
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RasterLayerPatch {
     pub name: Option<String>,
     pub visible: Option<bool>,
+    pub opacity: Option<f32>,
+    pub blend_mode: Option<String>,
+    pub transform_x: Option<f64>,
+    pub transform_y: Option<f64>,
+    pub width: Option<u32>,
+    pub height: Option<u32>,
+    pub adjustment_kind: Option<String>,
+}
+
+/// 🧩 One atomic tree mutation — the building block of {@link RasterDiff}, kept ordered so a diff can
+/// coalesce several edits (e.g. a multi-layer patch) while still inverting each mechanically.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "step", rename_all = "camelCase")]
+pub enum RasterStep {
+    AddLayer { parent_id: Option<String>, index: usize, layer: RasterLayerNode },
+    RemoveLayer { layer_id: String },
+    PatchLayer { layer_id: String, patch: RasterLayerPatch },
+    MoveLayer { layer_id: String, parent_id: Option<String>, index: usize },
+}
+
+fn apply_step(layers: &mut Vec<RasterLayerNode>, step: &RasterStep) {
+    match step {
+        RasterStep::AddLayer { parent_id, index, layer } => insert_layer(layers, parent_id.as_deref(), *index, layer.clone()),
+        RasterStep::RemoveLayer { layer_id } => {
+            remove_layer_from_tree(layers, layer_id);
+        }
+        RasterStep::PatchLayer { layer_id, patch } => {
+            patch_layer_in_tree(layers, layer_id, patch);
+        }
+        RasterStep::MoveLayer { layer_id, parent_id, index } => {
+            if let Some(node) = remove_layer_from_tree(layers, layer_id) {
+                insert_layer(layers, parent_id.as_deref(), *index, node);
+            }
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum RasterOp {
+    AddLayer { parent_id: Option<String>, index: usize, layer: RasterLayerNode },
+    RemoveLayer { layer_id: String },
+    PatchLayer { layer_id: String, patch: RasterLayerPatch },
+    MoveLayer { layer_id: String, parent_id: Option<String>, index: usize },
+    SetCamera { camera: RasterCamera },
+    ReplaceDocument { document: RasterProjection },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RasterDiff {
-    pub layers: Option<CollectionDiff<String, RasterLayerPatch, RasterLayerRef>>,
+    pub steps: Vec<RasterStep>,
+    pub camera: Option<RasterCamera>,
+    pub replace: Option<Box<RasterProjection>>,
 }
 
 impl OperationDiff<RasterProjection> for RasterDiff {
     fn apply(&self, projection: &RasterProjection) -> RasterProjection {
-        let mut next = projection.clone();
-        if let Some(layers) = &self.layers {
-            for id in &layers.removed {
-                next.layers.retain(|layer| layer.id != *id);
-            }
-            for patch in &layers.modified {
-                for layer in &mut next.layers {
-                    if layer.id == patch.id {
-                        if let Some(name) = &patch.patch.name {
-                            layer.name = name.clone();
-                        }
-                        if let Some(visible) = patch.patch.visible {
-                            layer.visible = visible;
-                        }
-                    }
-                }
-            }
-            for added in &layers.added {
-                next.layers.push(added.clone());
-            }
+        let mut next = self.replace.as_ref().map(|document| (**document).clone()).unwrap_or_else(|| projection.clone());
+        for step in &self.steps {
+            apply_step(&mut next.layers, step);
+        }
+        if let Some(camera) = &self.camera {
+            next.camera = camera.clone();
         }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        match (&mut self.layers, other.layers) {
-            (Some(a), Some(b)) => {
-                a.removed.extend(b.removed);
-                a.modified.extend(b.modified);
-                a.added.extend(b.added);
-            }
-            (None, Some(b)) => self.layers = Some(b),
-            _ => {}
+        if let Some(replace) = other.replace {
+            self.replace = Some(replace);
+            self.steps.clear();
+        }
+        self.steps.extend(other.steps);
+        if other.camera.is_some() {
+            self.camera = other.camera;
         }
     }
+}
+
+fn step_diff(step: RasterStep) -> RasterDiff {
+    RasterDiff { steps: vec![step], ..Default::default() }
 }
 
 impl Operation<RasterProjection> for RasterOp {
@@ -1481,93 +1852,50 @@ impl Operation<RasterProjection> for RasterOp {
 
     fn diff(&self, _projection: &RasterProjection) -> RasterDiff {
         match self {
-            RasterOp::AddLayer { layer } => RasterDiff {
-                layers: Some(CollectionDiff {
-                    added: vec![layer.clone()],
-                    ..Default::default()
-                }),
-            },
-            RasterOp::RemoveLayer { layer_id } => RasterDiff {
-                layers: Some(CollectionDiff {
-                    removed: vec![layer_id.clone()],
-                    ..Default::default()
-                }),
-            },
-            RasterOp::SetLayerVisible { layer_id, visible } => RasterDiff {
-                layers: Some(CollectionDiff {
-                    modified: vec![ItemPatch {
-                        id: layer_id.clone(),
-                        patch: RasterLayerPatch {
-                            visible: Some(*visible),
-                            ..Default::default()
-                        },
-                    }],
-                    ..Default::default()
-                }),
-            },
-            RasterOp::RenameLayer { layer_id, name } => RasterDiff {
-                layers: Some(CollectionDiff {
-                    modified: vec![ItemPatch {
-                        id: layer_id.clone(),
-                        patch: RasterLayerPatch {
-                            name: Some(name.clone()),
-                            ..Default::default()
-                        },
-                    }],
-                    ..Default::default()
-                }),
-            },
+            RasterOp::AddLayer { parent_id, index, layer } => {
+                step_diff(RasterStep::AddLayer { parent_id: parent_id.clone(), index: *index, layer: layer.clone() })
+            }
+            RasterOp::RemoveLayer { layer_id } => step_diff(RasterStep::RemoveLayer { layer_id: layer_id.clone() }),
+            RasterOp::PatchLayer { layer_id, patch } => {
+                step_diff(RasterStep::PatchLayer { layer_id: layer_id.clone(), patch: patch.clone() })
+            }
+            RasterOp::MoveLayer { layer_id, parent_id, index } => {
+                step_diff(RasterStep::MoveLayer { layer_id: layer_id.clone(), parent_id: parent_id.clone(), index: *index })
+            }
+            RasterOp::SetCamera { camera } => RasterDiff { camera: Some(camera.clone()), ..Default::default() },
+            RasterOp::ReplaceDocument { document } => RasterDiff { replace: Some(Box::new(document.clone())), ..Default::default() },
         }
     }
 
     fn backwards(&self, projection: &RasterProjection) -> Vec<Self> {
         match self {
-            RasterOp::AddLayer { layer } => vec![RasterOp::RemoveLayer {
-                layer_id: layer.id.clone(),
-            }],
-            RasterOp::RemoveLayer { layer_id } => projection
-                .layers
-                .iter()
-                .find(|l| l.id == *layer_id)
-                .map(|layer| vec![RasterOp::AddLayer { layer: layer.clone() }])
-                .unwrap_or_default(),
-            RasterOp::SetLayerVisible { layer_id, visible } => projection
-                .layers
-                .iter()
-                .find(|l| l.id == *layer_id)
-                .map(|layer| {
-                    vec![RasterOp::SetLayerVisible {
-                        layer_id: layer_id.clone(),
-                        visible: layer.visible,
-                    }]
-                })
-                .unwrap_or_default(),
-            RasterOp::RenameLayer { layer_id, .. } => projection
-                .layers
-                .iter()
-                .find(|l| l.id == *layer_id)
-                .map(|layer| {
-                    vec![RasterOp::RenameLayer {
-                        layer_id: layer_id.clone(),
-                        name: layer.name.clone(),
-                    }]
-                })
-                .unwrap_or_default(),
+            RasterOp::AddLayer { layer, .. } => vec![RasterOp::RemoveLayer { layer_id: layer_node_id(layer).to_string() }],
+            RasterOp::RemoveLayer { layer_id } => match (locate_layer(&projection.layers, layer_id), find_layer(&projection.layers, layer_id)) {
+                (Some((parent_id, index)), Some(layer)) => vec![RasterOp::AddLayer { parent_id, index, layer: layer.clone() }],
+                _ => Vec::new(),
+            },
+            RasterOp::PatchLayer { layer_id, patch } => {
+                let mut probe = projection.layers.clone();
+                match patch_layer_in_tree(&mut probe, layer_id, patch) {
+                    Some(inverse) => vec![RasterOp::PatchLayer { layer_id: layer_id.clone(), patch: inverse }],
+                    None => Vec::new(),
+                }
+            }
+            RasterOp::MoveLayer { layer_id, .. } => match locate_layer(&projection.layers, layer_id) {
+                Some((parent_id, index)) => vec![RasterOp::MoveLayer { layer_id: layer_id.clone(), parent_id, index }],
+                None => Vec::new(),
+            },
+            RasterOp::SetCamera { .. } => vec![RasterOp::SetCamera { camera: projection.camera.clone() }],
+            RasterOp::ReplaceDocument { .. } => vec![RasterOp::ReplaceDocument { document: projection.clone() }],
         }
     }
 }
 
-pub type RasterEnvelope = DocumentVcsEnvelope<RasterProjection, RasterOp>;
-pub type RasterStore = DocumentVcsStore<RasterProjection, RasterOp>;
+pub type RasterEnvelope = vcs::DocumentVcsEnvelope<RasterProjection, RasterOp>;
+pub type RasterStore = vcs::DocumentVcsStore<RasterProjection, RasterOp>;
+// #endregion 🔖Ops
 
-pub fn empty_raster_projection() -> RasterProjection {
-    RasterProjection {
-        schema: "raster.document".into(),
-        id: "raster".into(),
-        layers: Vec::new(),
-    }
-}
-
+// #region 🔖WasmDocumentVcs
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub struct RasterDocumentVcs {
@@ -1615,33 +1943,101 @@ impl RasterDocumentVcs {
         self.store.borrow().generation() as u32
     }
 }
+// #endregion 🔖WasmDocumentVcs
 
+// #region 🧪DocumentVcsTests
 #[cfg(test)]
 mod raster_vcs_tests {
     use super::*;
-    use vcs::DocumentVcsCommand;
+    use vcs::{apply_operation, create_document_vcs_envelope, DocumentVcsCommand};
+
+    fn pixel_layer(id: &str, name: &str) -> RasterLayerNode {
+        RasterLayerNode::Pixel {
+            id: id.into(),
+            name: name.into(),
+            visible: true,
+            opacity: 1.0,
+            blend_mode: "normal".into(),
+            transform: RasterTransform::default(),
+            mask: None,
+            width: Some(512),
+            height: Some(512),
+            image_key: None,
+        }
+    }
+
+    fn round_trip(projection: &RasterProjection, op: &RasterOp) -> RasterProjection {
+        let forward = apply_operation(projection, op);
+        let mut restored = forward.clone();
+        for back in op.backwards(projection) {
+            restored = apply_operation(&restored, &back);
+        }
+        assert_eq!(&restored, projection, "backwards() must restore the pre-op projection");
+        forward
+    }
 
     #[test]
-    fn raster_document_vcs_uses_framework_engine() {
+    fn add_remove_patch_layer_round_trip() {
+        let projection = empty_raster_projection();
+        let added = round_trip(&projection, &RasterOp::AddLayer { parent_id: None, index: 0, layer: pixel_layer("l1", "Base") });
+        assert_eq!(added.layers.len(), 1);
+        let patched = round_trip(
+            &added,
+            &RasterOp::PatchLayer { layer_id: "l1".into(), patch: RasterLayerPatch { name: Some("Renamed".into()), visible: Some(false), ..Default::default() } },
+        );
+        assert_eq!(layer_name(&patched.layers[0]), "Renamed");
+        assert!(!layer_visible(&patched.layers[0]));
+        let removed = round_trip(&patched, &RasterOp::RemoveLayer { layer_id: "l1".into() });
+        assert!(removed.layers.is_empty());
+    }
+
+    #[test]
+    fn move_layer_into_group_round_trip() {
+        let mut projection = empty_raster_projection();
+        projection.layers.push(RasterLayerNode::Group {
+            id: "g1".into(),
+            name: "Group".into(),
+            visible: true,
+            opacity: 1.0,
+            blend_mode: "normal".into(),
+            transform: RasterTransform::default(),
+            mask: None,
+            children: Vec::new(),
+        });
+        projection.layers.push(pixel_layer("l1", "Base"));
+        let moved = round_trip(&projection, &RasterOp::MoveLayer { layer_id: "l1".into(), parent_id: Some("g1".into()), index: 0 });
+        let RasterLayerNode::Group { children, .. } = &moved.layers[0] else { panic!("expected group") };
+        assert_eq!(children.len(), 1);
+        assert_eq!(layer_node_id(&children[0]), "l1");
+    }
+
+    #[test]
+    fn set_camera_and_replace_round_trip() {
+        let projection = empty_raster_projection();
+        let next = round_trip(&projection, &RasterOp::SetCamera { camera: RasterCamera { x: 4.0, y: 5.0, zoom: 2.0 } });
+        assert_eq!(next.camera.zoom, 2.0);
+        let mut replacement = empty_raster_projection();
+        replacement.layers.push(pixel_layer("l9", "Replaced"));
+        let replaced = round_trip(&projection, &RasterOp::ReplaceDocument { document: replacement.clone() });
+        assert_eq!(replaced, replacement);
+    }
+
+    #[test]
+    fn store_applies_layer_add() {
         let mut store = RasterStore::new(create_document_vcs_envelope(
-            "raster.document",
+            RASTER_DOCUMENT_SCHEMA,
             "raster",
             empty_raster_projection(),
             None,
         ));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![RasterOp::AddLayer {
-                    layer: RasterLayerRef {
-                        id: "l1".into(),
-                        name: "Base".into(),
-                        visible: true,
-                    },
-                }],
+                operations: vec![RasterOp::AddLayer { parent_id: None, index: 0, layer: pixel_layer("l1", "Base") }],
                 description: None,
             })
             .expect("apply");
         assert_eq!(store.projection().expect("projection").layers.len(), 1);
     }
 }
+// #endregion 🧪DocumentVcsTests
 // #endregion 🔖DocumentVcs

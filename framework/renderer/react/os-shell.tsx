@@ -122,6 +122,8 @@ import { ICONS, type IconName } from "@semio-tech/ui-asset";
 import { declarativeTreeDragController, interpretUiNode, uiTreeNodeToTreePanelConfig } from "./ui-interpreter.tsx";
 import {
   DEFAULT_PLUGIN_REGISTRY,
+  type ActionResponse,
+  type HostEffect,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
   FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -224,11 +226,12 @@ import {
   buildFolderBackboneUri,
   buildFrameworkSyncTools,
   buildRemoteBackboneUri,
-  documentFromEnvelopeJson,
-  readBackboneEnvelope,
-  wrapDocumentEnvelope,
-  writeBackboneEnvelope,
+  type BackboneWorkerRequest,
+  type BackboneWorkerResponse,
+  type DocumentActorMsg,
+  type DocumentSyncStatus,
   type FrameworkSyncToolLeaf,
+  type PersistenceBinding,
 } from "@semio-tech/framework-os-core";
 
 /** 🔁 Re-exported so `node-graph-host.tsx`/`text-editor-host.tsx` can import action-name maps from this shell module rather than reaching into `@semio-tech/framework-core` directly. */
@@ -374,6 +377,8 @@ type SyncState = {
   readonly syncBackboneUri: string | null;
   readonly syncCardKind: SyncCardKind | null;
   readonly syncDraftPath: string;
+  /** 🚦 Per-document sync health fed by `backbone-worker.ts`'s `DocumentEvent::Status` events, keyed by `documentId`. */
+  readonly syncStatusByDocumentId: Readonly<Record<string, DocumentSyncStatus>>;
 };
 
 export type ShellState = {
@@ -431,7 +436,8 @@ export type ShellAction =
   | { readonly type: "SET_UI_THEME_DRAFT"; readonly value: Updatable<UiTheme | null> }
   | { readonly type: "SET_SYNC_BACKBONE_URI"; readonly value: Updatable<string | null> }
   | { readonly type: "SET_SYNC_CARD_KIND"; readonly value: Updatable<SyncCardKind | null> }
-  | { readonly type: "SET_SYNC_DRAFT_PATH"; readonly value: Updatable<string> };
+  | { readonly type: "SET_SYNC_DRAFT_PATH"; readonly value: Updatable<string> }
+  | { readonly type: "SET_SYNC_STATUS_FOR_DOCUMENT"; readonly documentId: string; readonly status: DocumentSyncStatus };
 //#endregion actions
 
 //#region slice reducers
@@ -511,6 +517,7 @@ function syncReducer(state: SyncState, action: ShellAction): SyncState {
     case "SET_SYNC_BACKBONE_URI": return { ...state, syncBackboneUri: resolveUpdatable(action.value, state.syncBackboneUri) };
     case "SET_SYNC_CARD_KIND": return { ...state, syncCardKind: resolveUpdatable(action.value, state.syncCardKind) };
     case "SET_SYNC_DRAFT_PATH": return { ...state, syncDraftPath: resolveUpdatable(action.value, state.syncDraftPath) };
+    case "SET_SYNC_STATUS_FOR_DOCUMENT": return { ...state, syncStatusByDocumentId: { ...state.syncStatusByDocumentId, [action.documentId]: action.status } };
     default: return state;
   }
 }
@@ -564,7 +571,7 @@ export function initialShellState(_props: { readonly pluginFilter?: string; read
       uiCustomThemes: readStoredUiCustomThemes(),
       uiThemeDraft: null,
     },
-    sync: { syncBackboneUri: null, syncCardKind: null, syncDraftPath: "" },
+    sync: { syncBackboneUri: null, syncCardKind: null, syncDraftPath: "", syncStatusByDocumentId: {} },
   };
 }
 //#endregion 🧮ShellStore
@@ -1224,7 +1231,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const { leftPanelVisible, rightPanelVisible, leftPanelSize, rightPanelSize, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, leftPanelPath, rightPanelPath, extraWindowInstances } = shellState.layout;
   const { searchOpen, findOpen } = shellState.overlays;
   const { uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft } = shellState.uiPrefs;
-  const { syncBackboneUri, syncCardKind, syncDraftPath } = shellState.sync;
+  const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
   const importStudioInputRef = useRef<HTMLInputElement>(null);
   const refreshGenerationRef = useRef(0);
   const spawnedRefreshGenerationRef = useRef(0);
@@ -1241,7 +1248,44 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     const found = builtinUiThemes().find((t) => t.id === uiThemeId) ?? uiCustomThemes[uiThemeId];
     return found ?? readStoredUiChromeThemeSnapshot() ?? semioTheme();
   }, [uiThemeId, uiCustomThemes, uiThemeDraft]);
-  const lastEnvelopeJsonRef = useRef<string | null>(null);
+  /** 🧵 Lazily-created worker running `backbone-worker.ts` — one per shell instance, reused across `openDocument` calls. */
+  const backboneWorkerRef = useRef<Worker | null>(null);
+  /** 🖋️ Stable per-tab actor id for hub `Hello`/presence frames and op-origin filtering. */
+  const shellActorIdRef = useRef<string>(`client-${Math.random().toString(36).slice(2)}`);
+  /** 🗂️ Which session/plugin owns each open document id, so incoming worker events route correctly. */
+  const openDocumentSessionsRef = useRef<Map<string, { session: ActiveSession; plugin: PluginWasmHandle }>>(new Map());
+
+  const ensureBackboneWorker = useCallback((): Worker => {
+    if (backboneWorkerRef.current) return backboneWorkerRef.current;
+    const worker = new Worker(new URL("../../product/os/core/js/backbone-worker.ts", import.meta.url), { type: "module" });
+    worker.onmessage = (messageEvent: MessageEvent<BackboneWorkerResponse>) => {
+      const message = messageEvent.data;
+      if (message.kind !== "event") return;
+      const entry = openDocumentSessionsRef.current.get(message.documentId);
+      if (!entry) return;
+      const { event } = message;
+      if (event.kind === "status") {
+        dispatch({ type: "SET_SYNC_STATUS_FOR_DOCUMENT", documentId: message.documentId, status: { persisted: event.persisted, pendingOps: event.pendingOps, remote: event.remote } });
+      } else if (event.kind === "presence") {
+        // 👥 Presence now flows only through here (the deleted `presence:` URI hack used to be the
+        // source) — plugins keep reading it via `ViewState.presencePeersJson`.
+        const peersJson = JSON.stringify(event.peers.map((peer) => ({ clientId: peer.actor, name: peer.label ?? peer.actor, selectionCount: 0 })));
+        dispatch({
+          type: "SET_SESSION",
+          value: (current) => (current && current.instanceId === entry.session.instanceId ? { ...current, viewState: { ...current.viewState, presencePeersJson: peersJson } } : current),
+        });
+      } else if (event.kind === "remoteOps" && entry.plugin.applyOperations) {
+        void entry.plugin.applyOperations(entry.session.instanceId, JSON.stringify(event.envelopes));
+      } else if (event.kind === "snapshotReplaced" && entry.plugin.loadAppDocument) {
+        void entry.plugin.loadAppDocument(entry.session.instanceId, event.envelopeJson);
+      } else if (event.kind === "conflict") {
+        console.warn("[os-shell] sync conflict", message.documentId, event.message);
+      }
+    };
+    backboneWorkerRef.current = worker;
+    return worker;
+  }, []);
+
   const { uri: shellUri, canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, navigate: navigateHistory } = useUIHistory("/", studioMode);
 
   const namedLayoutStore = useMemo(() => new NamedLayoutStore(session?.app.id ?? "framework-os", createBrowserStoragePort()), [session?.app.id]);
@@ -1262,8 +1306,12 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   useEffect(() => {
     dispatch({ type: "SET_SYNC_BACKBONE_URI", value: null });
     dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
-    lastEnvelopeJsonRef.current = null;
   }, [panel?.activeSpawnedId, session, studioMode]);
+
+  useEffect(() => {
+    const worker = backboneWorkerRef.current;
+    return () => worker?.terminate();
+  }, []);
 
   useEffect(() => {
     if (activeAppTitle) document.title = activeAppTitle;
@@ -1585,40 +1633,32 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     [loadedPlugins, session, syncSpawnedPluginDocument, updateStudioPanel],
   );
 
-  const processPluginOps = useCallback(
-    async (ops: readonly string[], baseSession: ActiveSession) => {
+  /**
+   * 🐚 Consumes a plugin action's typed `requestedEffects: HostEffect[]` (WS-D's `ActionResponse`) —
+   * replaces the deleted `processPluginOps` string-matching. The legacy `setDocument`-mirror
+   * backbone-write block is gone entirely: document content sync now flows through
+   * `openDocument`/`closeDocument`'s worker-backed `DocumentHost` lifecycle, not a per-op JS mirror.
+   */
+  const applyHostEffects = useCallback(
+    async (effects: readonly HostEffect[], baseSession: ActiveSession) => {
       let nextViewState = baseSession.viewState;
-      for (const opJson of ops) {
-        const op = JSON.parse(opJson) as {
-          op?: string;
-          uri?: string;
-          panel?: StudioPanelState;
-          programId?: string;
-          appId?: string;
-          osInstanceId?: string;
-          label?: string;
-          documentJson?: string;
-          filename?: string;
-          mimeType?: string;
-          data?: string;
-          encoding?: string;
-          accept?: string;
-          importAction?: string;
-          readAs?: string;
-          items?: readonly { filename: string; request: unknown }[];
-        };
-        if (op.op === "setPanel" && op.panel) {
-          nextViewState = { ...nextViewState, panelJson: panelJsonFromState(op.panel) };
-        }
-        if (op.op === "navigate" && typeof op.uri === "string") {
-          navigateHistory(op.uri);
+      for (const effect of effects) {
+        if (effect === "requestSync") continue;
+        if ("setPanel" in effect) {
+          nextViewState = { ...nextViewState, panelJson: effect.setPanel.panelJson };
           continue;
         }
-        if (op.op === "downloadMediaExport" && op.filename && op.mimeType && op.data) {
-          downloadMediaExport(op.filename, op.mimeType, op.data, op.encoding);
+        if ("navigate" in effect) {
+          navigateHistory(effect.navigate.uri);
+          continue;
         }
-        if (op.op === "iconRenderExport" && op.items) {
-          for (const item of op.items) {
+        if ("downloadMediaExport" in effect) {
+          const { filename, mimeType, data, encoding } = effect.downloadMediaExport;
+          downloadMediaExport(filename, mimeType, data, encoding);
+          continue;
+        }
+        if ("iconRenderExport" in effect) {
+          for (const item of effect.iconRenderExport.items) {
             try {
               const result = await iconRenderPort.render(item.request as Parameters<typeof iconRenderPort.render>[0]);
               downloadDataUrl(item.filename, result.dataUrl);
@@ -1626,47 +1666,54 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
               console.error(`icon render export failed for ${item.filename}`, error);
             }
           }
+          continue;
         }
-        if (op.op === "requestFileOpen" && op.importAction) {
-          const opened = await requestFileOpen(op.accept ?? ".json,.spatial.json", op.readAs);
+        if ("requestFileOpen" in effect) {
+          const { accept, readAs, importAction } = effect.requestFileOpen;
+          const opened = await requestFileOpen(accept || ".json,.spatial.json", readAs);
           if (opened) {
             const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
             if (pluginEntry) {
-              const importOps = await pluginEntry.handle.handleAction(
+              const importResponse = await pluginEntry.handle.handleAction(
                 baseSession.instanceId,
                 JSON.stringify({
                   controllerId: baseSession.app.controllerId,
-                  action: op.importAction,
+                  action: importAction,
                   args: { payload: opened.contents, name: opened.name },
                 }),
                 baseSession.viewState,
               );
-              await processPluginOps(importOps, baseSession);
+              await applyHostEffects(importResponse.requestedEffects ?? [], baseSession);
             }
           }
+          continue;
         }
-        if (op.op === "spawnPluginInstance" && op.programId && op.appId) {
+        if ("spawnPluginInstance" in effect) {
+          const { programId, appId, osInstanceId, label, documentJson } = effect.spawnPluginInstance;
           const currentPanel = parsePanelState(nextViewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
-          const program = currentPanel.programs.find((entry) => entry.programId === op.programId && entry.appId === op.appId) ?? currentPanel.programs.find((entry) => entry.programId === op.programId);
-          if (program) await ensureSpawnedPlugin(program, op.label, op.osInstanceId, op.documentJson);
+          const program = currentPanel.programs.find((entry) => entry.programId === programId && entry.appId === appId) ?? currentPanel.programs.find((entry) => entry.programId === programId);
+          if (program) await ensureSpawnedPlugin(program, label, osInstanceId, documentJson);
+          continue;
         }
-        if (op.op === "openPluginInstance" && op.programId && op.appId) {
+        if ("openPluginInstance" in effect) {
+          const { programId, appId, osInstanceId } = effect.openPluginInstance;
           const currentPanel = parsePanelState(nextViewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
-          const program = currentPanel.programs.find((entry) => entry.programId === op.programId && entry.appId === op.appId) ?? currentPanel.programs.find((entry) => entry.programId === op.programId);
+          const program = currentPanel.programs.find((entry) => entry.programId === programId && entry.appId === appId) ?? currentPanel.programs.find((entry) => entry.programId === programId);
           if (program) {
-            await ensureSpawnedPlugin(program, op.label, op.osInstanceId, op.documentJson);
-            if (op.osInstanceId && openStudioIdRef.current) {
-              openInstanceIdRef.current = op.osInstanceId;
-              navigateHistory(`/studios/${openStudioIdRef.current}/instances/${op.osInstanceId}`);
+            await ensureSpawnedPlugin(program, undefined, osInstanceId, undefined);
+            if (osInstanceId && openStudioIdRef.current) {
+              openInstanceIdRef.current = osInstanceId;
+              navigateHistory(`/studios/${openStudioIdRef.current}/instances/${osInstanceId}`);
             }
           } else {
             console.warn(
               "[os-shell] openPluginInstance: no program matches",
-              { programId: op.programId, appId: op.appId },
+              { programId, appId },
               "available:",
               currentPanel.programs.map((entry) => `${entry.programId}/${entry.appId}`),
             );
           }
+          continue;
         }
       }
       const nextSession = { ...baseSession, viewState: nextViewState };
@@ -1686,20 +1733,8 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       } else if (session?.instanceId === nextSession.instanceId || baseSession.instanceId === nextSession.instanceId) {
         await refreshUi(nextSession);
       }
-      if (syncBackboneUri) {
-        for (const opJson of ops) {
-          const op = JSON.parse(opJson) as { op?: string; document?: unknown };
-          if (op.op !== "setDocument" || op.document == null) continue;
-          const docId = syncDocumentId(session, panel, studioMode);
-          const envelopeJson = wrapDocumentEnvelope(op.document, docId, syncBackboneUri);
-          lastEnvelopeJsonRef.current = envelopeJson;
-          void writeBackboneEnvelope(syncBackboneUri, envelopeJson).catch(() => {
-            /* backbone auto-sync is best-effort */
-          });
-        }
-      }
     },
-    [ensureSpawnedPlugin, loadedPlugins, navigateHistory, panel, refreshSpawnedUi, refreshUi, session, studioMode, syncBackboneUri],
+    [ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, session, studioMode],
   );
 
   const applyShellUri = useCallback(
@@ -1728,16 +1763,16 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       if (openInstanceIdRef.current === (instanceId ?? null)) return;
       openInstanceIdRef.current = instanceId ?? null;
       if (instanceId) {
-        const ops = await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: S_PLAY_CONTROLLER_ID, action: "openInstance", args: { instanceId } }), studioSession.viewState);
-        await processPluginOps(ops, studioSession);
+        const response = await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: S_PLAY_CONTROLLER_ID, action: "openInstance", args: { instanceId } }), studioSession.viewState);
+        await applyHostEffects(response.requestedEffects ?? [], studioSession);
       } else {
-        const ops = await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: S_PLAY_CONTROLLER_ID, action: "closeFocusedInstance" }), studioSession.viewState);
+        const response = await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: S_PLAY_CONTROLLER_ID, action: "closeFocusedInstance" }), studioSession.viewState);
         const currentPanel = parsePanelState(studioSession.viewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
         updateStudioPanel(buildStudioPanelState(currentPanel.programs, currentPanel.spawnedApps, currentPanel.activePanelTab, undefined));
-        await processPluginOps(ops, studioSession);
+        await applyHostEffects(response.requestedEffects ?? [], studioSession);
       }
     },
-    [loadedPlugins, processPluginOps, refreshUi, studioMode, switchToSApp, updateStudioPanel],
+    [applyHostEffects, loadedPlugins, refreshUi, studioMode, switchToSApp, updateStudioPanel],
   );
 
   useEffect(() => {
@@ -1759,37 +1794,82 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     return session;
   }, [loadedPlugins, panel, session, studioMode]);
 
-  const attachSyncBackbone = useCallback(
-    async (uri: string) => {
+  /**
+   * 🧵 `openDocument(ref, bindings)` — replaces `attachSyncBackbone`'s URI-string mirror. Spins up (or
+   * reuses) `backbone-worker.ts`, tells it to open the document, subscribes to its postMessage events,
+   * and calls the plugin instance's `attachBackbone`/`loadAppDocument` WIT-exported methods (WS-D) so
+   * the plugin-side store starts pumping through the same logical channel. The `actor://<documentId>`
+   * uri mirrors `framework/sync`'s `ChannelBackbone::pair` convention on the Rust side.
+   *
+   * Full loop note: this wires the main-thread half of the contract. The remaining hop — the
+   * sandboxed plugin's own `backbone-send`/`backbone-poll` WIT host-import calls relaying through its
+   * dedicated plugin worker, through this main thread, into `backbone-worker.ts` — is
+   * `framework/product/os/dev/script.ts`'s `pluginWorkerSource` responsibility (dev workflow, deferred
+   * per this session's priority order if not otherwise completed); see that file's own notes.
+   */
+  const openDocument = useCallback(
+    async (ref: { readonly documentId: string; readonly schema: string }, bindings: readonly PersistenceBinding[]) => {
       const targetSession = resolveSyncTargetSession();
       if (!targetSession) return;
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle;
       if (!plugin) return;
-      const docId = syncDocumentId(targetSession, panel, studioMode);
-      let envelopeJson = await readBackboneEnvelope(uri);
-      if (!envelopeJson) {
-        envelopeJson = wrapDocumentEnvelope({}, docId, uri);
-        await writeBackboneEnvelope(uri, envelopeJson);
-      }
-      lastEnvelopeJsonRef.current = envelopeJson;
-      const document = documentFromEnvelopeJson(envelopeJson);
-      const ops = await plugin.handleAction(
-        targetSession.instanceId,
-        JSON.stringify({ controllerId: targetSession.app.controllerId, action: "setDocument", args: { document } }),
-        targetSession.viewState,
-      );
+      const worker = ensureBackboneWorker();
+      openDocumentSessionsRef.current.set(ref.documentId, { session: targetSession, plugin });
+      const request: BackboneWorkerRequest = {
+        kind: "open",
+        documentId: ref.documentId,
+        schema: ref.schema,
+        bindings,
+        watchExternal: true,
+        actor: shellActorIdRef.current,
+      };
+      worker.postMessage(request);
+      const uri = `actor://${ref.documentId}`;
+      if (plugin.attachBackbone) await plugin.attachBackbone(targetSession.instanceId, uri);
       dispatch({ type: "SET_SYNC_BACKBONE_URI", value: uri });
       dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
-      await processPluginOps(ops, targetSession);
     },
-    [loadedPlugins, panel, processPluginOps, resolveSyncTargetSession, studioMode],
+    [loadedPlugins, resolveSyncTargetSession],
+  );
+
+  const closeDocument = useCallback((documentId: string) => {
+    const entry = openDocumentSessionsRef.current.get(documentId);
+    if (entry?.plugin.detachBackbone) void entry.plugin.detachBackbone(entry.session.instanceId);
+    openDocumentSessionsRef.current.delete(documentId);
+    const request: BackboneWorkerRequest = { kind: "close", documentId };
+    backboneWorkerRef.current?.postMessage(request);
+  }, []);
+
+  /** @deprecated superseded by {@link openDocument}; kept as a thin URI-parsing adapter only for the
+   * existing sync-card UI (`onAction`'s `attach` handler below), which still collects a single uri
+   * from file/folder/remote pickers — translates that uri into an `OsDocumentRef` + `PersistenceBinding`. */
+  const attachSyncBackbone = useCallback(
+    async (uri: string) => {
+      const targetSession = resolveSyncTargetSession();
+      if (!targetSession) return;
+      const documentId = syncDocumentId(targetSession, panel, studioMode);
+      const bindings: PersistenceBinding[] = uri.startsWith("remote://")
+        ? (() => {
+            const rest = uri.slice("remote://".length);
+            const slash = rest.indexOf("/");
+            const baseUrl = slash > 0 ? `http://${rest.slice(0, slash)}` : `http://${rest}`;
+            return [{ kind: "hub", baseUrl }];
+          })()
+        : uri.startsWith("folder://")
+          ? [{ kind: "folder", path: uri.slice("folder://".length) }]
+          : uri.startsWith("file://")
+            ? [{ kind: "folder", path: uri.slice("file://".length).replace(/\/[^/]*$/, "") }]
+            : [];
+      await openDocument({ documentId, schema: targetSession.app.document.join(".") }, bindings);
+    },
+    [openDocument, panel, resolveSyncTargetSession, studioMode],
   );
 
   const detachSyncBackbone = useCallback(() => {
+    if (syncBackboneUri) closeDocument(syncBackboneUri.replace(/^actor:\/\//, ""));
     dispatch({ type: "SET_SYNC_BACKBONE_URI", value: null });
     dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
-    lastEnvelopeJsonRef.current = null;
-  }, []);
+  }, [closeDocument, syncBackboneUri]);
 
   const spawnProgram = useCallback(
     async (program: StudioProgramEntry) => {
@@ -1901,37 +1981,19 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
             })()
           : session;
 
+      // 🚫 The old `setDocument` → `patchAppSource` mirror (spawned-instance content write-back on the
+      // os document) is deleted — app content no longer embeds on the os document at all
+      // (`OsAppInstance.document` is now just an `OsDocumentRef` handle). A spawned instance's content
+      // sync now goes through its own `openDocument`-opened `DocumentHost` channel, same as any other
+      // document; there is no host-side JS mirroring step anymore.
       void plugin
         .handleAction(targetSession.instanceId, JSON.stringify(action), targetSession.viewState)
-        .then(async (ops) => {
-          if (studioMode && session.pluginId === "s" && panel?.activeSpawnedId && action.controllerId !== session.app.controllerId) {
-            const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
-            const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === "s")?.handle;
-            if (spawned && sPlugin) {
-              for (const opJson of ops) {
-                const op = JSON.parse(opJson) as { op?: string; document?: unknown };
-                if (op.op === "setDocument" && op.document != null) {
-                  const patchOps = await sPlugin.handleAction(
-                    session.instanceId,
-                    JSON.stringify({
-                      controllerId: S_PLAY_CONTROLLER_ID,
-                      action: "patchAppSource",
-                      args: { instanceId: spawned.id, inline: JSON.stringify(op.document) },
-                    }),
-                    session.viewState,
-                  );
-                  await processPluginOps(patchOps, session);
-                }
-              }
-            }
-          }
-          await processPluginOps(ops, targetSession);
-        })
+        .then((response) => applyHostEffects(response.requestedEffects ?? [], targetSession))
         .catch((actionError) => {
           console.error("[DEBUG] action failed", actionError);
         });
     },
-    [attachSyncBackbone, detachSyncBackbone, findPluginForAction, loadedPlugins, panel, processPluginOps, session, spawnProgram, studioMode, syncBackboneUri, syncDraftPath, updateStudioPanel],
+    [applyHostEffects, attachSyncBackbone, detachSyncBackbone, findPluginForAction, loadedPlugins, panel, session, spawnProgram, studioMode, syncBackboneUri, syncDraftPath, updateStudioPanel],
   );
 
   const onActionRef = useRef(onAction);
@@ -2553,12 +2615,14 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
 
   const footerToolbar = useMemo(() => {
     const syncTools = buildFrameworkSyncTools(syncBackboneUri) as readonly ToolNode[];
+    const syncStatus = syncBackboneUri ? (syncStatusByDocumentId[syncBackboneUri.replace(/^actor:\/\//, "")] ?? null) : null;
     const syncCard = syncTools.length ? (
       <SyncAttachCard
         activeUri={syncBackboneUri}
         cardKind={syncCardKind}
         draftPath={syncDraftPath}
         syncTools={syncTools}
+        status={syncStatus}
         onAction={onAction}
         onDraftPathChange={(value) => dispatch({ type: "SET_SYNC_DRAFT_PATH", value })}
         onClose={() => dispatch({ type: "SET_SYNC_CARD_KIND", value: null })}
@@ -2573,7 +2637,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         {syncCard}
       </>
     );
-  }, [attachSyncBackbone, detachSyncBackbone, footerModeToolTree, onAction, syncBackboneUri, syncCardKind, syncDraftPath]);
+  }, [attachSyncBackbone, detachSyncBackbone, footerModeToolTree, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId]);
 
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
@@ -2787,13 +2851,19 @@ export type PluginWasmHandle = {
   readonly manifest: PluginManifest;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
-  readonly handleAction: (instanceId: number, actionJson: string, viewState: ViewState) => Promise<string[]>;
+  readonly handleAction: (instanceId: number, actionJson: string, viewState: ViewState) => Promise<ActionResponse>;
   readonly render: (instanceId: number, bodyKey: string, viewState: ViewState) => Promise<UiNode>;
   readonly renderWithDocument?: (instanceId: number, bodyKey: string, viewState: ViewState, documentJson: string) => Promise<UiNode>;
   readonly tools: (instanceId: number, viewState: ViewState) => Promise<readonly ToolNode[]>;
   readonly windowEngagements: (instanceId: number, viewState: ViewState) => Promise<Readonly<Record<string, WindowEngagement>>>;
   readonly windowMeasures: (instanceId: number, viewState: ViewState) => Promise<Readonly<Record<string, readonly WindowMeasure[]>>>;
   readonly appLabels: (instanceId: number, viewState: ViewState) => Promise<PluginAppLabelsOverlay>;
+  /** 🔗 The `DocumentApp` document-sync surface (WS-D) — optional since not every plugin has migrated onto it yet (WS-F). */
+  readonly applyOperations?: (instanceId: number, operationsJson: string) => Promise<void>;
+  readonly readAppDocument?: (instanceId: number) => Promise<string>;
+  readonly loadAppDocument?: (instanceId: number, documentJson: string) => Promise<void>;
+  readonly attachBackbone?: (instanceId: number, uri: string) => Promise<void>;
+  readonly detachBackbone?: (instanceId: number) => Promise<void>;
   readonly dispose: () => void;
 };
 
@@ -2821,6 +2891,11 @@ function adaptPluginHandle(handle: CorePluginWasmHandle): PluginWasmHandle {
     windowEngagements: async (instanceId, viewState) => (await handle.windowEngagements(instanceId, viewState)) as unknown as Readonly<Record<string, WindowEngagement>>,
     windowMeasures: async (instanceId, viewState) => (await handle.windowMeasures(instanceId, viewState)) as unknown as Readonly<Record<string, readonly WindowMeasure[]>>,
     appLabels: (instanceId, viewState) => handle.appLabels(instanceId, viewState),
+    applyOperations: handle.applyOperations ? (instanceId, operationsJson) => handle.applyOperations!(instanceId, operationsJson) : undefined,
+    readAppDocument: handle.readAppDocument ? (instanceId) => handle.readAppDocument!(instanceId) : undefined,
+    loadAppDocument: handle.loadAppDocument ? (instanceId, documentJson) => handle.loadAppDocument!(instanceId, documentJson) : undefined,
+    attachBackbone: handle.attachBackbone ? (instanceId, uri) => handle.attachBackbone!(instanceId, uri) : undefined,
+    detachBackbone: handle.detachBackbone ? (instanceId) => handle.detachBackbone!(instanceId) : undefined,
     dispose: () => handle.dispose(),
   };
 }
@@ -3401,6 +3476,7 @@ type SyncAttachCardProps = {
   readonly cardKind: SyncCardKind | null;
   readonly draftPath: string;
   readonly syncTools: readonly FrameworkSyncToolLeaf[];
+  readonly status: DocumentSyncStatus | null;
   readonly onAction: (action: ActionDescriptor) => void;
   readonly onDraftPathChange: (value: string) => void;
   readonly onClose: () => void;
@@ -3408,7 +3484,24 @@ type SyncAttachCardProps = {
   readonly onDetach: () => void;
 };
 
-function SyncAttachCard({ activeUri, cardKind, draftPath, syncTools, onAction, onDraftPathChange, onClose, onAttach, onDetach }: SyncAttachCardProps): ReactElement {
+/** 🚦 Minimal status label for a `DocumentSyncStatus` — matches this file's small-badge-text style
+ * (see the `activeUri` line right below it), not a new component system. */
+function syncStatusLabel(status: DocumentSyncStatus | null): string | null {
+  if (!status) return null;
+  const remote =
+    status.remote.kind === "live"
+      ? `live · ${status.remote.peerCount} peer${status.remote.peerCount === 1 ? "" : "s"}`
+      : status.remote.kind === "connecting"
+        ? "connecting…"
+        : status.remote.kind === "backoff"
+          ? "reconnecting…"
+          : "offline";
+  const persisted = status.persisted ? "saved" : "unsaved";
+  const pending = status.pendingOps > 0 ? ` · ${status.pendingOps} pending` : "";
+  return `${remote} · ${persisted}${pending}`;
+}
+
+function SyncAttachCard({ activeUri, cardKind, draftPath, syncTools, status, onAction, onDraftPathChange, onClose, onAttach, onDetach }: SyncAttachCardProps): ReactElement {
   const open = cardKind != null;
   const placeholder =
     cardKind === "remote" ? "127.0.0.1:8787/demo" : cardKind === "folder" ? "/absolute/project/folder" : "/absolute/document.json";
@@ -3442,6 +3535,7 @@ function SyncAttachCard({ activeUri, cardKind, draftPath, syncTools, onAction, o
           <div className="space-y-1">
             <p className="text-sm font-medium capitalize">{cardKind} backbone</p>
             {activeUri ? <p className="break-all text-xs text-muted-foreground">{activeUri}</p> : null}
+            {activeUri && status ? <p className="text-xs text-muted-foreground">{syncStatusLabel(status)}</p> : null}
           </div>
           <Input value={draftPath} placeholder={placeholder} onChange={(event) => onDraftPathChange(event.target.value)} />
           <div className="flex items-center gap-2">

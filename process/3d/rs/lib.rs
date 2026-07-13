@@ -175,6 +175,9 @@ pub enum Process3dOp {
     Steps { collection: CollectionOp<String, ProcessStep, ProcessStepPatch> },
     SetStock { stock: Stock },
     SetCursor { resolved_up_to: Option<usize> },
+    /// 🔁 Wholesale document swap (loading a different example fixture) — a true inverse restores the
+    /// exact prior document, mirroring `ShootingOp::SetFixture`.
+    SetDocument { document: Process3dDocument },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -186,10 +189,15 @@ pub struct Process3dDiff {
     pub stock: Option<Stock>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cursor: Option<Option<usize>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub document: Option<Process3dDocument>,
 }
 
 impl OperationDiff<Process3dDocument> for Process3dDiff {
     fn apply(&self, projection: &Process3dDocument) -> Process3dDocument {
+        if let Some(document) = &self.document {
+            return document.clone();
+        }
         let mut next = projection.clone();
         if let Some(op) = &self.steps {
             apply_collection_op(&mut next.steps, op);
@@ -207,6 +215,13 @@ impl OperationDiff<Process3dDocument> for Process3dDiff {
     }
 
     fn absorb(&mut self, other: Self) {
+        if other.document.is_some() {
+            self.document = other.document;
+            self.steps = None;
+            self.stock = None;
+            self.cursor = None;
+            return;
+        }
         if other.steps.is_some() {
             self.steps = other.steps;
         }
@@ -227,6 +242,7 @@ impl vcs::Operation<Process3dDocument> for Process3dOp {
             Process3dOp::Steps { collection } => Process3dDiff { steps: Some(collection.clone()), ..Default::default() },
             Process3dOp::SetStock { stock } => Process3dDiff { stock: Some(stock.clone()), ..Default::default() },
             Process3dOp::SetCursor { resolved_up_to } => Process3dDiff { cursor: Some(*resolved_up_to), ..Default::default() },
+            Process3dOp::SetDocument { document } => Process3dDiff { document: Some(document.clone()), ..Default::default() },
         }
     }
 
@@ -237,6 +253,7 @@ impl vcs::Operation<Process3dDocument> for Process3dOp {
             }
             Process3dOp::SetStock { .. } => vec![Process3dOp::SetStock { stock: projection.stock.clone() }],
             Process3dOp::SetCursor { .. } => vec![Process3dOp::SetCursor { resolved_up_to: projection.resolved_up_to }],
+            Process3dOp::SetDocument { .. } => vec![Process3dOp::SetDocument { document: projection.clone() }],
         }
     }
 }

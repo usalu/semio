@@ -2149,7 +2149,7 @@ mod tests {
 
     #[test]
     fn run_dag_fixture_query() {
-        let fixture = include_str!("../../port/directed/dag/example/demo.dag.json");
+        let fixture = include_str!("../../../../infinite/board/port/directed/dag/example/demo.dag.json");
         let graph = BoardQueryableGraph::from_dag_fixture_json(fixture).unwrap();
         let result = run_query(&graph, "MATCH (n:computation) RETURN n.name").unwrap();
         assert!(!result.rows.is_empty());
@@ -2172,7 +2172,7 @@ mod tests {
 
     #[test]
     fn run_port_filtered_query() {
-        let fixture = include_str!("../../port/directed/dag/example/demo.dag.json");
+        let fixture = include_str!("../../../../infinite/board/port/directed/dag/example/demo.dag.json");
         let graph = BoardQueryableGraph::from_dag_fixture_json(fixture).unwrap();
         let result = run_query(&graph, "MATCH (n:computation@out)-[:wire]->(m:slider) RETURN n.name, m.name");
         assert!(result.is_ok());

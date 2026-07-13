@@ -1,23 +1,24 @@
 //! 📽️ Presentation plugin — tile play app bundled as a hot-swappable WASM component.
 
 use presentation_deck::{
-    apply_presentation_edit, build_tile_morph_prompt, default_presentation_deck, parse_grid_engagement,
-    populate_tile_drafts_from_grid, PresentationDeck, PresentationEdit, FigureTileDraft, FigureTileFrame,
-    FigureTileGridSeedSpec, FigureTileSource, PRESENTATION_DOCUMENT_SCHEMA,
+    build_tile_morph_prompt, clamp_tile_crop, default_presentation_deck, parse_grid_engagement,
+    populate_tile_drafts_from_grid, FigureTileDraft, FigureTileDraftPatch, FigureTileFrame,
+    FigureTileGridSeedSpec, FigureTileSource, PresentationDeck, PresentationOp, PRESENTATION_DOCUMENT_SCHEMA,
 };
-use semio_framework_plugin::{SurfaceKind, PanelGroup, 
+use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
-    ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, App,
-    Canvas2dScene, ActionDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInputNode,
-    UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
+    ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionEmit, App,
+    Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView, UiFieldNode, UiInputNode, UiInspectorFieldGroup,
+    UiNode, UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
+use vcs::CollectionOp;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::collections::HashSet;
 use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::LazyLock;
 
 //#region 🔖Constants
 const PRESENTATION_PLAY_APP_ID: &str = "presentation-tile-play";
@@ -32,7 +33,9 @@ const PRESENTATION_PLAY_WINDOW_MAIN: &str = "tile-editor";
 static TILE_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖Constants
 
-//#region 🔖Envelope
+//#region 🔖Runtime
+/// 🎛️ Ephemeral view state (selection, engagement draft, clipboard prompt) — lives in the app struct,
+/// not the document, so it never pollutes undo history.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct PresentationPlayRuntime {
@@ -44,29 +47,6 @@ struct PresentationPlayRuntime {
     clipboard_prompt: Option<String>,
     #[serde(default)]
     clipboard_epoch: u64,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct PresentationPlayEnvelope {
-    deck: PresentationDeck,
-    #[serde(default)]
-    runtime: PresentationPlayRuntime,
-}
-
-fn default_envelope() -> PresentationPlayEnvelope {
-    PresentationPlayEnvelope {
-        deck: default_presentation_deck(),
-        runtime: PresentationPlayRuntime::default(),
-    }
-}
-
-fn parse_envelope(document_json: &str) -> PresentationPlayEnvelope {
-    serde_json::from_str(document_json).unwrap_or_else(|_| default_envelope())
-}
-
-fn set_document_op(envelope: &PresentationPlayEnvelope) -> String {
-    json!({ "op": "setDocument", "document": envelope }).to_string()
 }
 
 fn presentation_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -82,16 +62,18 @@ fn new_tile_id(prefix: &str) -> String {
     format!("{prefix}-{serial}")
 }
 
-fn apply_edit(envelope: &mut PresentationPlayEnvelope, edit: PresentationEdit) {
-    envelope.deck = apply_presentation_edit(envelope.deck.clone(), &edit);
-}
-
 fn selection_ids(args: Option<&Value>) -> Vec<String> {
     args.and_then(|value| value.get("ids"))
         .and_then(|value| serde_json::from_value(value.clone()).ok())
         .unwrap_or_default()
 }
-//#endregion 🔖Envelope
+
+/// 🧹 Retains only the ids that reference an existing tile in `deck`.
+fn valid_tile_ids(deck: &PresentationDeck, ids: Vec<String>) -> Vec<String> {
+    let valid: HashSet<&str> = deck.tiles.iter().map(|tile| tile.id.as_str()).collect();
+    ids.into_iter().filter(|id| valid.contains(id.as_str())).collect()
+}
+//#endregion 🔖Runtime
 
 //#region 🔖CanvasLayers
 #[derive(Serialize)]
@@ -270,9 +252,8 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
     }
 }
 
-fn build_document_tree(envelope: &PresentationPlayEnvelope, labels: &PresentationLabels) -> UiNode {
-    let items: Vec<UiTreeItemNode> = envelope
-        .deck
+fn build_document_tree(deck: &PresentationDeck, selected: &[String], labels: &PresentationLabels) -> UiNode {
+    let items: Vec<UiTreeItemNode> = deck
         .tiles
         .iter()
         .map(|tile| UiTreeItemNode {
@@ -283,12 +264,12 @@ fn build_document_tree(envelope: &PresentationPlayEnvelope, labels: &Presentatio
                 tile.crop.x, tile.crop.y, tile.crop.width, tile.crop.height
             )),
             icon_id: None,
-            selected: Some(envelope.runtime.selected_ids.contains(&tile.id)),
+            selected: Some(selected.contains(&tile.id)),
             default_open: None,
             action: Some(presentation_action("setSelectedIds", Some(json!({ "ids": [tile.id] })))),
-        hover_action: None,
-        unhover_action: None,
-        actions: None,
+            hover_action: None,
+            unhover_action: None,
+            actions: None,
             draggable: None,
             drag_data: None,
             items: None,
@@ -307,7 +288,7 @@ fn build_document_tree(envelope: &PresentationPlayEnvelope, labels: &Presentatio
                 items
             },
         }],
-        selected_ids: Some(envelope.runtime.selected_ids.clone()),
+        selected_ids: Some(selected.to_vec()),
         highlighted_ids: None,
         selection_change: Some(presentation_action("setSelectedIds", Some(json!({ "ids": [] })))),
         drop_action: None,
@@ -348,8 +329,8 @@ fn inspector_crop_field(tile_ids: &[String], field: &str, label: &str, values: &
     })
 }
 
-fn build_details_tree(envelope: &PresentationPlayEnvelope, labels: &PresentationLabels) -> UiNode {
-    if envelope.runtime.selected_ids.is_empty() {
+fn build_details_tree(deck: &PresentationDeck, selected: &[String], labels: &PresentationLabels) -> UiNode {
+    if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "presentation.play.details.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
@@ -357,11 +338,9 @@ fn build_details_tree(envelope: &PresentationPlayEnvelope, labels: &Presentation
             children: vec![ui_text(labels.details_select_tile)],
         }]);
     }
-    let tiles: Vec<&FigureTileDraft> = envelope
-        .runtime
-        .selected_ids
+    let tiles: Vec<&FigureTileDraft> = selected
         .iter()
-        .filter_map(|id| envelope.deck.tiles.iter().find(|tile| &tile.id == id))
+        .filter_map(|id| deck.tiles.iter().find(|tile| &tile.id == id))
         .collect();
     if tiles.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
@@ -457,7 +436,7 @@ fn catalogue_button(id: &str, label: &str, action: &str, args: Option<Value>) ->
     })
 }
 
-fn build_catalogue_tree(envelope: &PresentationPlayEnvelope, labels: &PresentationLabels) -> UiNode {
+fn build_catalogue_tree(deck: &PresentationDeck, labels: &PresentationLabels) -> UiNode {
     ui_declarative_sections_to_tree(&[
         UiSectionNode {
             id: "presentation.play.catalogue.templates".into(),
@@ -498,7 +477,7 @@ fn build_catalogue_tree(envelope: &PresentationPlayEnvelope, labels: &Presentati
                     child: Box::new(UiNode::Input(UiInputNode {
                         id: "presentation.play.catalogue.figure.src.readonly".into(),
                         input_kind: "text".into(),
-                        value: envelope.deck.source.src.clone(),
+                        value: deck.source.src.clone(),
                         placeholder: None,
                         commit: None,
                         on_change: presentation_action("noop", None),
@@ -511,7 +490,7 @@ fn build_catalogue_tree(envelope: &PresentationPlayEnvelope, labels: &Presentati
                     required: None,
                     error: None,
                 }),
-                ui_text(format!("{}: {}", labels.catalogue_media_kind, envelope.deck.source.kind)),
+                ui_text(format!("{}: {}", labels.catalogue_media_kind, deck.source.kind)),
             ],
         },
     ])
@@ -519,7 +498,7 @@ fn build_catalogue_tree(envelope: &PresentationPlayEnvelope, labels: &Presentati
 //#endregion 🔖Panels
 
 //#region 🔖Render
-fn render_main_canvas(envelope: &PresentationPlayEnvelope) -> UiNode {
+fn render_main_canvas(deck: &PresentationDeck, selected: &[String]) -> UiNode {
     build_canvas_2d_scene(
         PRESENTATION_PLAY_SURFACE_ID,
         PRESENTATION_PLAY_CONTROLLER_ID,
@@ -527,7 +506,7 @@ fn render_main_canvas(envelope: &PresentationPlayEnvelope) -> UiNode {
             camera_x: 0.0,
             camera_y: 0.0,
             zoom: 1.0,
-            layers_json: deck_to_canvas_layers(&envelope.deck, &envelope.runtime.selected_ids),
+            layers_json: deck_to_canvas_layers(deck, selected),
         },
     )
 }
@@ -535,97 +514,85 @@ fn render_main_canvas(envelope: &PresentationPlayEnvelope) -> UiNode {
 
 //#region 🔖PresentationPlayApp
 #[derive(Default)]
-struct PresentationPlayApp;
+struct PresentationPlayApp {
+    runtime: PresentationPlayRuntime,
+}
 
-impl PluginApp for PresentationPlayApp {
+impl DocumentApp for PresentationPlayApp {
+    type Projection = PresentationDeck;
+    type Op = PresentationOp;
+
     fn app_id(&self) -> &str {
         PRESENTATION_PLAY_APP_ID
     }
 
-    fn initial_document_json(&self) -> String {
-        serde_json::to_string(&default_envelope()).expect("presentation envelope json")
+    fn document_schema(&self) -> &str {
+        PRESENTATION_DOCUMENT_SCHEMA
     }
 
-    fn handle_action_patch_ops(
+    fn initial_projection(&self) -> PresentationDeck {
+        default_presentation_deck()
+    }
+
+    fn handle_action(
         &mut self,
         action: &str,
         args: Option<&Value>,
-        document_json: &str,
+        doc: &DocumentView<'_, PresentationDeck>,
         _view_state: &ViewState,
-    ) -> Vec<String> {
-        let mut envelope = parse_envelope(document_json);
+    ) -> ActionEmit<PresentationOp> {
+        let deck = doc.projection;
         match action {
-            "setDocument" => {
-                if let Some(next) = args.and_then(|value| value.get("document")) {
-                    if let Ok(parsed) = serde_json::from_value(next.clone()) {
-                        return vec![set_document_op(&parsed)];
-                    }
-                }
-            }
             "setSelectedIds" => {
-                let ids = selection_ids(args);
-                let valid: std::collections::HashSet<&str> = envelope.deck.tiles.iter().map(|tile| tile.id.as_str()).collect();
-                envelope.runtime.selected_ids = ids.into_iter().filter(|id| valid.contains(id.as_str())).collect();
-                return vec![set_document_op(&envelope)];
+                self.runtime.selected_ids = valid_tile_ids(deck, selection_ids(args));
+                ActionEmit::default()
             }
             "seedGrid" => {
                 let rows = args.and_then(|v| v.get("rows")).and_then(|v| v.as_u64()).unwrap_or(3) as u32;
                 let columns = args.and_then(|v| v.get("columns")).and_then(|v| v.as_u64()).unwrap_or(5) as u32;
                 let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec {
-                    source: &envelope.deck.source,
+                    source: &deck.source,
                     rows,
                     columns,
                     gap: 0.0,
                     key_prefix: "tile",
                 });
-                apply_edit(&mut envelope, PresentationEdit::SetTiles { tiles: tiles.clone() });
-                envelope.runtime.selected_ids = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
-                return vec![set_document_op(&envelope)];
+                self.runtime.selected_ids = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
+                ActionEmit::ops(vec![PresentationOp::SetTiles { tiles }])
             }
             "addTile" => {
                 let id = new_tile_id("tile");
                 let crop = args
                     .and_then(|v| v.get("crop"))
                     .and_then(|v| serde_json::from_value(v.clone()).ok())
-                    .unwrap_or(FigureTileFrame {
-                        x: 0.1,
-                        y: 0.1,
-                        width: 0.2,
-                        height: 0.2,
-                    });
-                apply_edit(
-                    &mut envelope,
-                    PresentationEdit::AddTile {
-                        tile: FigureTileDraft {
-                            id: id.clone(),
-                            name: id.clone(),
-                            crop,
-                        },
-                        index: None,
-                    },
-                );
-                envelope.runtime.selected_ids = vec![id];
-                return vec![set_document_op(&envelope)];
+                    .unwrap_or(FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
+                let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop };
+                self.runtime.selected_ids = vec![id];
+                ActionEmit::ops(vec![PresentationOp::Tiles(CollectionOp::Add {
+                    index: deck.tiles.len(),
+                    item: tile,
+                })])
             }
             "deleteTile" => {
                 let target = args
                     .and_then(|v| v.get("id"))
                     .and_then(|v| v.as_str())
                     .map(|id| vec![id.to_string()])
-                    .unwrap_or_else(|| envelope.runtime.selected_ids.clone());
-                if !target.is_empty() {
-                    apply_edit(&mut envelope, PresentationEdit::RemoveTiles { tile_ids: target.clone() });
-                    envelope.runtime.selected_ids.retain(|id| !target.contains(id));
+                    .unwrap_or_else(|| self.runtime.selected_ids.clone());
+                let target = valid_tile_ids(deck, target);
+                if target.is_empty() {
+                    return ActionEmit::default();
                 }
-                return vec![set_document_op(&envelope)];
+                self.runtime.selected_ids.retain(|id| !target.contains(id));
+                ActionEmit::ops(target.into_iter().map(|id| PresentationOp::Tiles(CollectionOp::Remove { id })).collect())
             }
             "deleteSelection" => {
-                if !envelope.runtime.selected_ids.is_empty() {
-                    let remove = envelope.runtime.selected_ids.clone();
-                    apply_edit(&mut envelope, PresentationEdit::RemoveTiles { tile_ids: remove });
-                    envelope.runtime.selected_ids.clear();
+                let target = valid_tile_ids(deck, self.runtime.selected_ids.clone());
+                if target.is_empty() {
+                    return ActionEmit::default();
                 }
-                return vec![set_document_op(&envelope)];
+                self.runtime.selected_ids.clear();
+                ActionEmit::ops(target.into_iter().map(|id| PresentationOp::Tiles(CollectionOp::Remove { id })).collect())
             }
             "renameTile" | "renameTiles" => {
                 let ids: Vec<String> = args
@@ -637,22 +604,26 @@ impl PluginApp for PresentationPlayApp {
                     .and_then(|v| v.as_str())
                     .map(str::trim)
                     .filter(|value| !value.is_empty());
-                if let Some(name) = name {
-                    let valid: Vec<String> = ids
-                        .into_iter()
-                        .filter(|id| envelope.deck.tiles.iter().any(|tile| &tile.id == id))
-                        .collect();
-                    if !valid.is_empty() {
-                        apply_edit(
-                            &mut envelope,
-                            PresentationEdit::RenameTiles {
-                                tile_ids: valid,
-                                name: name.into(),
-                            },
-                        );
+                match name {
+                    Some(name) => {
+                        let valid = valid_tile_ids(deck, ids);
+                        if valid.is_empty() {
+                            return ActionEmit::default();
+                        }
+                        ActionEmit::ops(
+                            valid
+                                .into_iter()
+                                .map(|id| {
+                                    PresentationOp::Tiles(CollectionOp::Patch {
+                                        id,
+                                        patch: FigureTileDraftPatch { name: Some(name.into()), crop: None },
+                                    })
+                                })
+                                .collect(),
+                        )
                     }
+                    None => ActionEmit::default(),
                 }
-                return vec![set_document_op(&envelope)];
             }
             "patchTileCrops" | "patchTileCrop" => {
                 let ids: Vec<String> = args
@@ -661,27 +632,40 @@ impl PluginApp for PresentationPlayApp {
                     .unwrap_or_default();
                 let field = args.and_then(|v| v.get("field")).and_then(|v| v.as_str()).unwrap_or("");
                 let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_f64());
-                if let Some(value) = value {
-                    let valid: Vec<String> = ids
-                        .into_iter()
-                        .filter(|id| envelope.deck.tiles.iter().any(|tile| &tile.id == id))
-                        .collect();
-                    if !valid.is_empty() && !field.is_empty() {
-                        apply_edit(
-                            &mut envelope,
-                            PresentationEdit::PatchTileCrops {
-                                tile_ids: valid,
-                                field: field.into(),
-                                value,
-                            },
-                        );
+                match value {
+                    Some(value) if !field.is_empty() => {
+                        let targets: HashSet<&str> = ids.iter().map(String::as_str).collect();
+                        let ops: Vec<PresentationOp> = deck
+                            .tiles
+                            .iter()
+                            .filter(|tile| targets.contains(tile.id.as_str()))
+                            .map(|tile| {
+                                let mut crop = tile.crop.clone();
+                                match field {
+                                    "x" => crop.x = value,
+                                    "y" => crop.y = value,
+                                    "width" => crop.width = value,
+                                    "height" => crop.height = value,
+                                    _ => {}
+                                }
+                                PresentationOp::Tiles(CollectionOp::Patch {
+                                    id: tile.id.clone(),
+                                    patch: FigureTileDraftPatch { name: None, crop: Some(clamp_tile_crop(crop)) },
+                                })
+                            })
+                            .collect();
+                        if ops.is_empty() {
+                            ActionEmit::default()
+                        } else {
+                            ActionEmit::ops(ops)
+                        }
                     }
+                    _ => ActionEmit::default(),
                 }
-                return vec![set_document_op(&envelope)];
             }
             "setSource" => {
                 if let Some(source_value) = args {
-                    let mut partial = envelope.deck.source.clone();
+                    let mut partial = deck.source.clone();
                     if let Some(src) = source_value.get("src").and_then(|v| v.as_str()) {
                         partial.src = src.into();
                     }
@@ -698,141 +682,120 @@ impl PluginApp for PresentationPlayApp {
                             partial = source;
                         }
                     }
-                    let replaced = partial.src != envelope.deck.source.src;
-                    apply_edit(
-                        &mut envelope,
-                        PresentationEdit::ReplaceSource {
-                            source: partial,
-                            reset_tiles: replaced,
-                        },
-                    );
+                    let replaced = partial.src != deck.source.src;
+                    let mut ops = vec![PresentationOp::SetSource { source: partial }];
                     if replaced {
-                        envelope.runtime.selected_ids.clear();
+                        ops.push(PresentationOp::SetTiles { tiles: Vec::new() });
+                        self.runtime.selected_ids.clear();
                     }
-                    return vec![set_document_op(&envelope)];
+                    return ActionEmit::ops(ops);
                 }
+                ActionEmit::default()
             }
             "setFrame" => {
                 if let Some(frame_value) = args.and_then(|v| v.get("frame")) {
                     if let Ok(frame) = serde_json::from_value::<FigureTileFrame>(frame_value.clone()) {
-                        let mut source = envelope.deck.source.clone();
+                        let mut source = deck.source.clone();
                         source.frame = frame;
-                        apply_edit(
-                            &mut envelope,
-                            PresentationEdit::ReplaceSource {
-                                source,
-                                reset_tiles: false,
-                            },
-                        );
-                        return vec![set_document_op(&envelope)];
+                        return ActionEmit::ops(vec![PresentationOp::SetSource { source }]);
                     }
                 }
+                ActionEmit::default()
             }
             "setActiveExample" => {
                 let example_id = args.and_then(|v| v.get("exampleId")).and_then(|v| v.as_str()).unwrap_or("demo");
                 if example_id == "demo" || example_id.is_empty() {
-                    envelope.deck = default_presentation_deck();
+                    self.runtime.selected_ids.clear();
+                    return ActionEmit::ops(vec![PresentationOp::SetDeck { deck: default_presentation_deck() }]);
                 }
-                envelope.runtime.selected_ids.clear();
-                return vec![set_document_op(&envelope)];
+                ActionEmit::default()
             }
             "clearTiles" => {
-                apply_edit(&mut envelope, PresentationEdit::ClearTiles);
-                envelope.runtime.selected_ids.clear();
-                return vec![set_document_op(&envelope)];
+                self.runtime.selected_ids.clear();
+                ActionEmit::ops(vec![PresentationOp::SetTiles { tiles: Vec::new() }])
             }
             "copyPrompt" => {
-                envelope.runtime.clipboard_prompt =
-                    Some(build_tile_morph_prompt(&envelope.deck.source, &envelope.deck.tiles));
-                envelope.runtime.clipboard_epoch += 1;
-                return vec![set_document_op(&envelope)];
+                self.runtime.clipboard_prompt = Some(build_tile_morph_prompt(&deck.source, &deck.tiles));
+                self.runtime.clipboard_epoch += 1;
+                ActionEmit::default()
             }
             "engagementInput" => {
                 if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()) {
-                    envelope.runtime.engagement_input = value.into();
-                    return vec![set_document_op(&envelope)];
+                    self.runtime.engagement_input = value.into();
                 }
+                ActionEmit::default()
             }
             "engagementSubmit" => {
                 let value = args
                     .and_then(|v| v.get("value"))
                     .and_then(|v| v.as_str())
-                    .unwrap_or(envelope.runtime.engagement_input.as_str());
+                    .map(str::to_string)
+                    .unwrap_or_else(|| self.runtime.engagement_input.clone());
                 let trimmed = value.trim();
                 if let Some((rows, columns)) = parse_grid_engagement(trimmed) {
                     let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec {
-                        source: &envelope.deck.source,
+                        source: &deck.source,
                         rows,
                         columns,
                         gap: 0.0,
                         key_prefix: "tile",
                     });
-                    apply_edit(&mut envelope, PresentationEdit::SetTiles { tiles: tiles.clone() });
-                    envelope.runtime.selected_ids = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
-                    envelope.runtime.engagement_input.clear();
-                } else {
-                    let token = trimmed.to_lowercase();
-                    match token.as_str() {
-                        "add" => {
-                            let id = new_tile_id("tile");
-                            apply_edit(
-                                &mut envelope,
-                                PresentationEdit::AddTile {
-                                    tile: FigureTileDraft {
-                                        id: id.clone(),
-                                        name: id.clone(),
-                                        crop: FigureTileFrame {
-                                            x: 0.1,
-                                            y: 0.1,
-                                            width: 0.2,
-                                            height: 0.2,
-                                        },
-                                    },
-                                    index: None,
-                                },
-                            );
-                            envelope.runtime.selected_ids = vec![id];
-                            envelope.runtime.engagement_input.clear();
-                        }
-                        "clear" => {
-                            apply_edit(&mut envelope, PresentationEdit::ClearTiles);
-                            envelope.runtime.selected_ids.clear();
-                            envelope.runtime.engagement_input.clear();
-                        }
-                        "copy" | "copy prompt" => {
-                            envelope.runtime.clipboard_prompt =
-                                Some(build_tile_morph_prompt(&envelope.deck.source, &envelope.deck.tiles));
-                            envelope.runtime.clipboard_epoch += 1;
-                            envelope.runtime.engagement_input.clear();
-                        }
-                        _ => {}
-                    }
+                    self.runtime.selected_ids = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
+                    self.runtime.engagement_input.clear();
+                    return ActionEmit::ops(vec![PresentationOp::SetTiles { tiles }]);
                 }
-                return vec![set_document_op(&envelope)];
+                match trimmed.to_lowercase().as_str() {
+                    "add" => {
+                        let id = new_tile_id("tile");
+                        let tile = FigureTileDraft {
+                            id: id.clone(),
+                            name: id.clone(),
+                            crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 },
+                        };
+                        self.runtime.selected_ids = vec![id];
+                        self.runtime.engagement_input.clear();
+                        ActionEmit::ops(vec![PresentationOp::Tiles(CollectionOp::Add {
+                            index: deck.tiles.len(),
+                            item: tile,
+                        })])
+                    }
+                    "clear" => {
+                        self.runtime.selected_ids.clear();
+                        self.runtime.engagement_input.clear();
+                        ActionEmit::ops(vec![PresentationOp::SetTiles { tiles: Vec::new() }])
+                    }
+                    "copy" | "copy prompt" => {
+                        self.runtime.clipboard_prompt = Some(build_tile_morph_prompt(&deck.source, &deck.tiles));
+                        self.runtime.clipboard_epoch += 1;
+                        self.runtime.engagement_input.clear();
+                        ActionEmit::default()
+                    }
+                    _ => ActionEmit::default(),
+                }
             }
             "canvasPointerDown" => {
                 if let Some(layer_id) = args.and_then(|v| v.get("layerId")).and_then(|v| v.as_str()) {
-                    if envelope.deck.tiles.iter().any(|tile| tile.id == layer_id) {
-                        envelope.runtime.selected_ids = vec![layer_id.into()];
-                        return vec![set_document_op(&envelope)];
+                    if deck.tiles.iter().any(|tile| tile.id == layer_id) {
+                        self.runtime.selected_ids = vec![layer_id.into()];
+                        return ActionEmit::default();
                     }
                 }
-                envelope.runtime.selected_ids.clear();
-                return vec![set_document_op(&envelope)];
+                self.runtime.selected_ids.clear();
+                ActionEmit::default()
             }
-            _ => {}
+            _ => ActionEmit::default(),
         }
-        Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-        let envelope = parse_envelope(document_json);
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, PresentationDeck>, view_state: &ViewState) -> UiNode {
+        let deck = doc.projection;
+        let selected = &self.runtime.selected_ids;
         let labels = presentation_labels(view_state);
         match body_key {
-            PRESENTATION_PLAY_BODY_MAIN => render_main_canvas(&envelope),
-            PRESENTATION_PLAY_BODY_DOCUMENT => build_document_tree(&envelope, labels),
-            PRESENTATION_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope, labels),
-            PRESENTATION_PLAY_BODY_DETAILS => build_details_tree(&envelope, labels),
+            PRESENTATION_PLAY_BODY_MAIN => render_main_canvas(deck, selected),
+            PRESENTATION_PLAY_BODY_DOCUMENT => build_document_tree(deck, selected, labels),
+            PRESENTATION_PLAY_BODY_CATALOGUE => build_catalogue_tree(deck, labels),
+            PRESENTATION_PLAY_BODY_DETAILS => build_details_tree(deck, selected, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -870,14 +833,34 @@ fn create_presentation_app() -> App {
                 FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
                 PanelGroup::Details,
                 PRESENTATION_PLAY_BODY_DETAILS,
-            ),
+            )
+            // ✏️ Document-mutating: dispatched as VCS operations with a true inverse.
+            .operation("seedGrid", "Seed Grid")
+            .operation("addTile", "Add Tile")
+            .operation("deleteTile", "Delete Tile")
+            .operation("deleteSelection", "Delete Selection")
+            .operation("renameTile", "Rename Tile")
+            .operation("renameTiles", "Rename Tiles")
+            .operation("patchTileCrop", "Patch Tile Crop")
+            .operation("patchTileCrops", "Patch Tile Crops")
+            .operation("setSource", "Set Source")
+            .operation("setFrame", "Set Frame")
+            .operation("setActiveExample", "Set Active Example")
+            .operation("clearTiles", "Clear Tiles")
+            .operation("engagementSubmit", "Engagement Submit")
+            // 👁️ Ephemeral view state — selection, engagement draft, clipboard.
+            .view_action("setSelectedIds", "Set Selected Ids")
+            .view_action("copyPrompt", "Copy Prompt")
+            .view_action("engagementInput", "Engagement Input")
+            .view_action("canvasPointerDown", "Canvas Pointer Down")
+            .view_action("noop", "No Op"),
     )
-    .example("demo", "Demo", serde_json::to_string(&default_envelope()).unwrap())
+    .example("demo", "Demo", serde_json::to_string(&default_presentation_deck()).unwrap())
     .program("presentation", "Presentation", "deck")
 }
 
 fn presentation_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
-    semio_framework_os::title_card_svg(value.get("deck").unwrap_or(value), "Presentation", 1280, 720)
+    semio_framework_os::title_card_svg(value, "Presentation", 1280, 720)
 }
 
 /// 📥 Builds a degenerate-but-valid one-slide deck from a rasterized DWG drawing, for the DWG import path.
@@ -900,8 +883,7 @@ fn presentation_document_json_from_dwg(drawing: &semio_framework_core::DwgDrawin
             crop: frame,
         }],
     };
-    let envelope = PresentationPlayEnvelope { deck, runtime: PresentationPlayRuntime::default() };
-    serde_json::to_value(&envelope).map_err(|error| error.to_string())
+    serde_json::to_value(&deck).map_err(|error| error.to_string())
 }
 
 fn register_presentation_exports() {
@@ -922,56 +904,54 @@ semio_framework_plugin::semio_plugin! {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+
+    fn meta(actor: &str) -> ActionMeta {
+        ActionMeta { actor: actor.into(), instance_id: 1 }
+    }
+
+    fn new_app() -> VcsDocumentApp<PresentationPlayApp> {
+        VcsDocumentApp::new(PresentationPlayApp::default())
+    }
+
+    fn seed_2x2(app: &mut VcsDocumentApp<PresentationPlayApp>) {
+        app.handle_action("seedGrid", Some(&json!({ "rows": 2, "columns": 2 })), &ViewState::default(), &meta("local"))
+            .expect("seed grid");
+    }
 
     #[test]
     fn renders_canvas_scene() {
-        let app = PresentationPlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(PRESENTATION_PLAY_BODY_MAIN, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(PRESENTATION_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("canvas-2d"));
     }
 
     #[test]
     fn seed_grid_action_adds_tiles() {
-        let mut app = PresentationPlayApp;
-        let mut document = app.initial_document_json();
-        for op in app.handle_action_patch_ops("seedGrid", Some(&json!({ "rows": 2, "columns": 2 })), &document, &ViewState::default()) {
-            if let Ok(value) = serde_json::from_str::<Value>(&op) {
-                if value.get("op").and_then(|v| v.as_str()) == Some("setDocument") {
-                    document = serde_json::to_string(&value.get("document").unwrap()).unwrap();
-                }
-            }
-        }
-        let envelope = parse_envelope(&document);
-        assert_eq!(envelope.deck.tiles.len(), 4);
+        let mut app = new_app();
+        seed_2x2(&mut app);
+        assert_eq!(app.projection().expect("projection").tiles.len(), 4);
     }
 
     #[test]
     fn deck_schema_is_presentation() {
-        let envelope = default_envelope();
-        assert_eq!(envelope.deck.schema, PRESENTATION_DOCUMENT_SCHEMA);
+        assert_eq!(default_presentation_deck().schema, PRESENTATION_DOCUMENT_SCHEMA);
     }
 
     #[test]
     fn source_frame_renders_as_actual_image_layer_behind_tiles() {
-        let mut app = PresentationPlayApp;
-        let mut document = app.initial_document_json();
-        for op in app.handle_action_patch_ops("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &document, &ViewState::default()) {
-            if let Ok(value) = serde_json::from_str::<Value>(&op) {
-                if value.get("op").and_then(|v| v.as_str()) == Some("setDocument") {
-                    document = serde_json::to_string(&value.get("document").unwrap()).unwrap();
-                }
-            }
-        }
-        let envelope = parse_envelope(&document);
-        let layers_json = deck_to_canvas_layers(&envelope.deck, &envelope.runtime.selected_ids);
+        let mut app = new_app();
+        app.handle_action("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &ViewState::default(), &meta("local"))
+            .expect("seed grid");
+        let deck = app.projection().expect("projection");
+        let layers_json = deck_to_canvas_layers(&deck, &[]);
         let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
-        assert!(!envelope.deck.source.src.trim().is_empty());
+        assert!(!deck.source.src.trim().is_empty());
         let source_layer = layers.first().expect("source layer is first (renders behind tiles)");
         assert_eq!(source_layer.get("id").and_then(|v| v.as_str()), Some("source-frame"));
         assert_eq!(source_layer.get("kind").and_then(|v| v.as_str()), Some("image"));
-        assert_eq!(source_layer.get("dataUrl").and_then(|v| v.as_str()), Some(envelope.deck.source.src.as_str()));
+        assert_eq!(source_layer.get("dataUrl").and_then(|v| v.as_str()), Some(deck.source.src.as_str()));
         for tile_layer in &layers[1..] {
             assert_ne!(tile_layer.get("kind").and_then(|v| v.as_str()), Some("image"));
             assert!(tile_layer.get("dataUrl").is_none() || tile_layer.get("dataUrl") == Some(&Value::Null));
@@ -980,18 +960,82 @@ mod tests {
 
     #[test]
     fn document_lists_seeded_tiles() {
-        let mut app = PresentationPlayApp;
-        let mut document = app.initial_document_json();
-        for op in app.handle_action_patch_ops("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &document, &ViewState::default()) {
-            if let Ok(value) = serde_json::from_str::<Value>(&op) {
-                if let Some(doc) = value.get("document") {
-                    document = doc.to_string();
-                }
-            }
-        }
-        let node = app.render(PRESENTATION_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
+        let mut app = new_app();
+        app.handle_action("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &ViewState::default(), &meta("local"))
+            .expect("seed grid");
+        let node = app.render(PRESENTATION_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("tile-r0-c0"));
+    }
+
+    #[test]
+    fn add_delete_and_rename_tile_round_trip_through_ops() {
+        let mut app = new_app();
+        app.handle_action("addTile", None, &ViewState::default(), &meta("local")).expect("add tile");
+        let tile_id = app.projection().expect("projection").tiles[0].id.clone();
+        app.handle_action("renameTiles", Some(&json!({ "ids": [tile_id], "value": "Hero" })), &ViewState::default(), &meta("local"))
+            .expect("rename");
+        assert_eq!(app.projection().expect("projection").tiles[0].name, "Hero");
+        app.handle_action("deleteTile", Some(&json!({ "id": tile_id })), &ViewState::default(), &meta("local"))
+            .expect("delete");
+        assert!(app.projection().expect("projection").tiles.is_empty());
+    }
+
+    #[test]
+    fn patch_tile_crop_clamps_and_is_reversible() {
+        let mut app = new_app();
+        app.handle_action("addTile", None, &ViewState::default(), &meta("local")).expect("add tile");
+        let tile_id = app.projection().expect("projection").tiles[0].id.clone();
+        app.handle_action(
+            "patchTileCrops",
+            Some(&json!({ "ids": [tile_id], "field": "width", "value": 0.5 })),
+            &ViewState::default(),
+            &meta("local"),
+        )
+        .expect("patch crop");
+        assert_eq!(app.projection().expect("projection").tiles[0].crop.width, 0.5);
+        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        assert_eq!(app.projection().expect("projection").tiles[0].crop.width, 0.2);
+    }
+
+    #[test]
+    fn undo_redo_round_trip_through_the_wrapper() {
+        let mut app = new_app();
+        seed_2x2(&mut app);
+        assert_eq!(app.projection().expect("projection").tiles.len(), 4);
+        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        assert!(app.projection().expect("projection").tiles.is_empty());
+        app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+        assert_eq!(app.projection().expect("projection").tiles.len(), 4);
+    }
+
+    #[test]
+    fn presentation_labels_resolve_native_by_default() {
+        let app = new_app();
+        // render needs &mut for cache; use a fresh app to render catalogue.
+        let mut app = app;
+        let node = app.render(PRESENTATION_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Tile templates"));
+        assert!(json.contains("Split 2×2 grid"));
+        assert!(json.contains("Active source"));
+        assert!(!json.contains("Kachelvorlagen"));
+    }
+
+    #[test]
+    fn presentation_labels_translate_panels_in_german() {
+        let mut app = new_app();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let catalogue_node = app.render(PRESENTATION_PLAY_BODY_CATALOGUE, None, &view_state).expect("render");
+        let catalogue_json = serde_json::to_string(&catalogue_node).unwrap();
+        assert!(catalogue_json.contains("Kachelvorlagen"));
+        assert!(catalogue_json.contains("2×2-Raster teilen"));
+        assert!(catalogue_json.contains("Aktive Quelle"));
+        assert!(!catalogue_json.contains("Tile templates"));
+
+        let document_node = app.render(PRESENTATION_PLAY_BODY_DOCUMENT, None, &view_state).expect("render");
+        let document_json = serde_json::to_string(&document_node).unwrap();
+        assert!(document_json.contains("Kacheln"));
     }
 
     #[test]
@@ -1012,48 +1056,49 @@ mod tests {
             extmax: [10.0, 10.0, 0.0],
         };
         let document = presentation_document_json_from_dwg(&drawing).expect("from_dwg");
-        let envelope: PresentationPlayEnvelope = serde_json::from_value(document).expect("envelope");
-        assert_eq!(envelope.deck.schema, PRESENTATION_DOCUMENT_SCHEMA);
-        assert_eq!(envelope.deck.tiles.len(), 1);
-        assert_eq!(envelope.deck.tiles[0].name, "Imported Drawing");
-        assert!(envelope.deck.source.src.starts_with("data:image/png;base64,"));
+        let deck: PresentationDeck = serde_json::from_value(document).expect("deck");
+        assert_eq!(deck.schema, PRESENTATION_DOCUMENT_SCHEMA);
+        assert_eq!(deck.tiles.len(), 1);
+        assert_eq!(deck.tiles[0].name, "Imported Drawing");
+        assert!(deck.source.src.starts_with("data:image/png;base64,"));
     }
 
     #[test]
     fn from_dwg_never_errors_on_empty_drawing() {
         let drawing = semio_framework_core::DwgDrawing::default();
         let document = presentation_document_json_from_dwg(&drawing).expect("from_dwg on empty drawing");
-        let envelope: PresentationPlayEnvelope = serde_json::from_value(document).expect("envelope");
-        assert_eq!(envelope.deck.tiles.len(), 1);
+        let deck: PresentationDeck = serde_json::from_value(document).expect("deck");
+        assert_eq!(deck.tiles.len(), 1);
     }
 
+    /// 🧪 Two independent instances start empty, apply DISJOINT edits (A adds a tile, B sets the
+    /// source), and exchanging ops over a `MemoryBackbone` converges both sides to contain BOTH edits —
+    /// impossible with whole-document snapshots, which would clobber one another.
     #[test]
-    fn presentation_labels_resolve_native_by_default() {
-        let app = PresentationPlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(PRESENTATION_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("Tile templates"));
-        assert!(json.contains("Split 2×2 grid"));
-        assert!(json.contains("Active source"));
-        assert!(!json.contains("Kachelvorlagen"));
-    }
+    fn two_instances_converge_disjoint_edits_via_backbone() {
+        use vcs::MemoryBackbone;
+        let mut instance_a = new_app();
+        let mut instance_b = new_app();
+        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://presentation-convergence", "mem://presentation-convergence");
+        instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
+        instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
 
-    #[test]
-    fn presentation_labels_translate_panels_in_german() {
-        let app = PresentationPlayApp;
-        let document = app.initial_document_json();
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let catalogue_node = app.render(PRESENTATION_PLAY_BODY_CATALOGUE, &document, &view_state);
-        let catalogue_json = serde_json::to_string(&catalogue_node).unwrap();
-        assert!(catalogue_json.contains("Kachelvorlagen"));
-        assert!(catalogue_json.contains("2×2-Raster teilen"));
-        assert!(catalogue_json.contains("Aktive Quelle"));
-        assert!(!catalogue_json.contains("Tile templates"));
+        instance_a
+            .handle_action("addTile", Some(&json!({ "crop": { "x": 0.0, "y": 0.0, "width": 0.3, "height": 0.3 } })), &ViewState::default(), &meta("actor-a"))
+            .expect("a adds tile");
+        instance_b
+            .handle_action("setSource", Some(&json!({ "kind": "video" })), &ViewState::default(), &meta("actor-b"))
+            .expect("b sets source kind");
 
-        let document_node = app.render(PRESENTATION_PLAY_BODY_DOCUMENT, &document, &view_state);
-        let document_json = serde_json::to_string(&document_node).unwrap();
-        assert!(document_json.contains("Kacheln"));
+        instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
+        instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+
+        let projection_a = instance_a.projection().expect("projection");
+        let projection_b = instance_b.projection().expect("projection");
+        assert_eq!(projection_a.tiles.len(), 1, "instance A keeps its own tile");
+        assert_eq!(projection_b.tiles.len(), 1, "instance B converges on A's tile");
+        assert_eq!(projection_a.source.kind, "video", "instance A converges on B's source edit");
+        assert_eq!(projection_b.source.kind, "video", "instance B keeps its own source edit");
     }
 }
 //#endregion 🧪Tests

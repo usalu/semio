@@ -8,10 +8,10 @@ use semio_framework_os::{
     os_document_from_json, os_document_to_json, build_os_media_flow_operator_infos, materialize_os_app_instance_document_json,
     os_media_graph_to_flow_fixture, os_media_graph_to_node_graph_payload, os_media_graph_vfs_schema,
     os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id,
-    read_os_presence_peers, register_os_fixture_json, create_os_id, seed_os_studio_catalog_if_empty, document_backbone_ref,
-    write_os_presence, MediaGraphPosition,
+    register_os_fixture_json, create_os_id, seed_os_studio_catalog_if_empty, document_backbone_ref,
+    MediaGraphPosition,
     OsAppInstance, OsBackbonePort, OsDocument, OsMediaGraphCamera, OsMediaGraphVfsNodeRecord, OsOp, OsParameter, OsParameterFieldBinding,
-    OsParameterType, OsPresencePeer, OsProjection, OsStore, OS_HOME_VFS_ROOT_ID, OS_MEDIA_GRAPH_VFS_ROOT_ID,
+    OsParameterType, OsProjection, OsStore, OS_HOME_VFS_ROOT_ID, OS_MEDIA_GRAPH_VFS_ROOT_ID,
     OS_STUDIO_BACKBONE_URI_PREFIX, MemoryBackbonePort, VcsError,
 };
 use semio_framework_plugin::{PanelGroup,
@@ -621,11 +621,24 @@ fn media_graph_context_menu_json() -> String {
     .to_string()
 }
 
-static PRESENCE_PORT: LazyLock<Arc<dyn OsBackbonePort>> = LazyLock::new(|| Arc::new(LocalStorageBackbonePort::new()));
-
-fn presence_port() -> Arc<dyn OsBackbonePort> {
-    PRESENCE_PORT.clone()
+// 🫀 The shared `presence:` backbone-URI hack (`read_os_presence_peers`/`write_os_presence`/
+// `OsPresencePeer`) was deleted from os-core — presence now flows through the hub's duplex
+// `PresencePeer`/`Presence` frames via `framework/sync`'s `DocumentEvent::Presence` for migrated
+// apps. `s` isn't wired onto `DocumentHost` yet (WS-F's last wave), so it keeps this tiny
+// self-contained in-memory heartbeat map until then — same upsert/prune/exclude-self semantics as
+// before, just owned locally instead of delegated to a shared cross-process mechanism.
+#[derive(Clone)]
+struct SPresencePeerLocal {
+    client_id: String,
+    name: String,
+    selection: Vec<String>,
+    updated_at_ms: f64,
 }
+
+const S_PRESENCE_STALE_MS: f64 = 15_000.0;
+
+static PRESENCE_PEERS: LazyLock<Mutex<HashMap<String, HashMap<String, SPresencePeerLocal>>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 fn runtime_studio_id(runtime: &StudioRuntimeState) -> String {
     runtime.studio_id.clone().unwrap_or_else(|| OS_BOOT_STUDIO_ID.into())
@@ -634,8 +647,14 @@ fn runtime_studio_id(runtime: &StudioRuntimeState) -> String {
 fn presence_peers_json(runtime: &StudioRuntimeState) -> String {
     let studio_id = runtime_studio_id(runtime);
     let self_client_id = runtime.client_id.clone().unwrap_or_default();
-    let peers: Vec<Value> = read_os_presence_peers(&presence_port(), &studio_id, &self_client_id, host_now_ms())
-        .into_iter()
+    let now_ms = host_now_ms();
+    let peers: Vec<Value> = PRESENCE_PEERS
+        .lock()
+        .ok()
+        .and_then(|registry| registry.get(&studio_id).cloned())
+        .unwrap_or_default()
+        .into_values()
+        .filter(|peer| peer.client_id != self_client_id && now_ms - peer.updated_at_ms <= S_PRESENCE_STALE_MS)
         .map(|peer| {
             json!({
                 "clientId": peer.client_id,
@@ -651,16 +670,21 @@ fn publish_presence(runtime: &StudioRuntimeState) {
     let (Some(client_id), Some(client_name)) = (&runtime.client_id, &runtime.client_name) else {
         return;
     };
-    let _ = write_os_presence(
-        &presence_port(),
-        &runtime_studio_id(runtime),
-        OsPresencePeer {
-            client_id: client_id.clone(),
-            name: client_name.clone(),
-            selection: runtime.selected_media_node_ids.clone(),
-            updated_at_ms: host_now_ms(),
-        },
-    );
+    let studio_id = runtime_studio_id(runtime);
+    let now_ms = host_now_ms();
+    if let Ok(mut registry) = PRESENCE_PEERS.lock() {
+        let peers = registry.entry(studio_id).or_default();
+        peers.retain(|_, entry| now_ms - entry.updated_at_ms <= S_PRESENCE_STALE_MS);
+        peers.insert(
+            client_id.clone(),
+            SPresencePeerLocal {
+                client_id: client_id.clone(),
+                name: client_name.clone(),
+                selection: runtime.selected_media_node_ids.clone(),
+                updated_at_ms: now_ms,
+            },
+        );
+    }
 }
 //#endregion 🔖DocumentHelpers
 
@@ -2119,17 +2143,11 @@ impl SStudioApp {
                 }
             }
             "patchAppSource" => {
-                if let (Some(instance_id), Some(inline)) = (
-                    args.and_then(|value| value.get("instanceId"))
-                        .and_then(|value| value.as_str()),
-                    args.and_then(|value| value.get("inline"))
-                        .and_then(|value| value.as_str()),
-                ) {
-                    let _ = store.dispatch_apply(vec![OsOp::PatchAppSource {
-                        instance_id: instance_id.into(),
-                        inline: inline.into(),
-                    }]);
-                }
+                // 🚧 `OsOp::PatchAppSource` was deleted with `OsSourceDocument` — app content no
+                // longer embeds on the os document (`OsAppInstance.document` is now just a handle,
+                // see `OsDocumentRef`). Writing patched content back into the bound app's own
+                // document store is `s`'s `DocumentApp` migration (WS-F last wave); this action is a
+                // documented no-op until then.
             }
             "commitCheckpoint" => {
                 let message = args
@@ -2188,11 +2206,15 @@ impl SStudioApp {
                         .find(|row| row.id == instance_id)
                     {
                         ensure_studio_fixtures_registered();
+                        // 🚧 `s` doesn't yet own a live per-instance app document store (its
+                        // `DocumentApp`/`OsDocumentRef` wiring is WS-F's last-wave migration) — content
+                        // no longer embeds on the os document, so this seeds a blank schema doc rather
+                        // than the instance's real content until that migration lands.
                         let document_json = materialize_os_app_instance_document_json(
-                            instance,
+                            &json!({ "schema": instance.document.schema }).to_string(),
+                            &instance.id,
                             &projection.parameter_bindings,
                             &projection.parameters,
-                            &projection.app_instances,
                         );
                         let document_value: Value = serde_json::from_str(&document_json).unwrap_or_else(|_| json!({}));
                         let export_format = semio_framework_os::OsMediaFormat::parse(format)
@@ -2240,8 +2262,11 @@ impl SStudioApp {
                         if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(base64_part) {
                             let projection = store.projection().unwrap_or_else(|_| default_os_projection());
                             if let Some(instance) = projection.app_instances.iter().find(|row| row.id == instance_id) {
-                                if let Ok(inline) = semio_framework_os::import_os_app_instance_media(instance, &bytes, format) {
-                                    let _ = store.dispatch_apply(vec![OsOp::PatchAppSource { instance_id, inline: inline.to_string() }]);
+                                if let Ok(_inline) = semio_framework_os::import_os_app_instance_media(instance, &bytes, format) {
+                                    // 🚧 Same gap as `patchAppSource` above: writing the imported
+                                    // content back now targets the bound app's own document store
+                                    // (`OsDocumentRef`), not the os document — deferred to `s`'s
+                                    // `DocumentApp` migration (WS-F last wave).
                                 }
                             }
                         }
@@ -2611,11 +2636,13 @@ impl SStudioApp {
                         .find(|row| row.id == instance_id)
                     {
                         ensure_studio_fixtures_registered();
+                        // 🚧 Same seeding gap as `exportMedia` above — blank schema doc until `s`
+                        // adopts `OsDocumentRef`/`DocumentApp` (WS-F last wave).
                         let document_json = materialize_os_app_instance_document_json(
-                            instance,
+                            &json!({ "schema": instance.document.schema }).to_string(),
+                            &instance.id,
                             &projection.parameter_bindings,
                             &projection.parameters,
-                            &projection.app_instances,
                         );
                         ops.push(json!({
                             "op": "openPluginInstance",
@@ -3265,7 +3292,11 @@ mod tests {
         SStudioApp::handle_studio_action(&mut envelope, "importMediaPayload", Some(&json!({ "payload": format!("data:image/vnd.dwg;base64,{data}") })));
         let projection_after = projection_from_document(&envelope.document);
         let instance_after = projection_after.app_instances.iter().find(|instance| instance.id == instance_id).expect("draw instance still present");
-        assert_eq!(instance_after.source_document.inline.as_deref(), Some(r#"{"imported":true,"schema":"draw.document"}"#));
+        // 🚧 The imported content used to write back into `OsAppInstance.source_document.inline`
+        // (deleted with `OsSourceDocument` — content now lives in the app's own document store, not
+        // embedded here); the round trip up to a successful import decode is still exercised above,
+        // the write-back assertion is deferred to `s`'s `DocumentApp` migration (WS-F last wave).
+        let _ = instance_after;
     }
 
     #[test]

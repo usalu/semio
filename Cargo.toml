@@ -4,6 +4,8 @@ members = [
     "framework/hash/rs",
     "framework/plugin/rs",
     "framework/product/os/core/rs",
+    "framework/product/presentation/rs",
+    "framework/product/presentation/plugin/rs",
     "puzzle/plugin/rs",
     "puzzle/2d/rs",
     "puzzle/3d/rs",
@@ -28,6 +30,7 @@ members = [
     "mathematical/graph/manifest/rs",
     "mathematical/geometry/rs",
     "mathematical/algebra/rs",
+    "mathematical/plugin/rs",
     "kernel/3d/scene/rs",
     "kernel/3d/mesh/rs",
     "neural/engine/rs",
@@ -57,7 +60,15 @@ members = [
     "framework/renderer/wgpu/rs",
     "shooting/rs",
     "shooting/plugin/rs",
+    "raster/rs",
+    "raster/plugin/rs",
+    "draw/rs",
+    "draw/plugin/rs",
     "vcs/plugin/rs",
+    "framework/editor/rs",
+    "writer/rs",
+    "writer/plugin/rs",
+    "note/plugin/rs",
 ]
 
 resolver = "2"

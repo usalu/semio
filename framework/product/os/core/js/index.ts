@@ -198,6 +198,120 @@ export function buildFrameworkSyncTools(activeUri: string | null): readonly Fram
 }
 //#endregion 🔖Backbone
 
+//#region 🔖SyncProtocol
+/**
+ * 🔁 TS mirror of `framework/sync`'s Rust actor protocol (`DocumentActorConfig`/`DocumentActorMsg`/
+ * `DocumentEvent`/`DocumentSyncStatus`/`RemoteState`/`PersistenceBinding`) — the wire/postMessage
+ * shapes `backbone-worker.ts` speaks, kept camelCase-tag-identical to the Rust side (`#[serde(tag =
+ * "kind", rename_all = "camelCase")]`) so a shared JSON fixture suite (`framework/sync/fixtures/`)
+ * stays plausible across both runtimes even though this file is a deliberately dumb TS twin (no
+ * materialization — it only relays queues, exactly like the Rust actor's `ChannelBackbone` side).
+ */
+export type OpEnvelope = {
+  readonly id: string;
+  readonly actor: string;
+  readonly document: string;
+  readonly schemaVersion: string;
+  readonly deps?: readonly string[];
+  readonly payloadHash: string;
+  readonly diff: { readonly schemaId: string; readonly payload: unknown };
+  readonly inverse: {
+    readonly targetOperation: string;
+    readonly inverseDiff: { readonly schemaId: string; readonly payload: unknown };
+    readonly baseVersion: number;
+    readonly dependencies?: readonly string[];
+    readonly undoPolicy: string;
+  };
+};
+
+/** 📡 Wire-protocol presence identity — distinct from the UI-rendering {@link PresencePeer} scene prop. */
+export type DocumentPresencePeer = {
+  readonly actor: string;
+  readonly label?: string;
+  readonly selectionJson?: string;
+  readonly connectedAtMs: number;
+  readonly userId?: string;
+  readonly role?: string;
+};
+
+/** 📨 Client→server hub wire frames — mirrors Rust `HubClientFrame` byte-for-byte. */
+export type HubClientFrame =
+  | { readonly kind: "hello"; readonly actor: string; readonly token?: string; readonly sinceVersion: number }
+  | { readonly kind: "ops"; readonly envelopes: readonly OpEnvelope[] }
+  | { readonly kind: "putEnvelope"; readonly version: number; readonly envelope: unknown }
+  | { readonly kind: "presence"; readonly peer: DocumentPresencePeer }
+  | { readonly kind: "bye" };
+
+/** 📬 Server→client hub wire frames — mirrors Rust `HubServerFrame` byte-for-byte. */
+export type HubServerFrame =
+  | { readonly kind: "welcome"; readonly version: number; readonly envelope?: unknown; readonly presence: readonly DocumentPresencePeer[]; readonly backlog: readonly OpEnvelope[] }
+  | { readonly kind: "ops"; readonly version: number; readonly envelopes: readonly OpEnvelope[]; readonly origin: string }
+  | { readonly kind: "snapshotReplaced"; readonly version: number; readonly envelope: unknown }
+  | { readonly kind: "presence"; readonly peers: readonly DocumentPresencePeer[] }
+  | { readonly kind: "ack"; readonly opId: string; readonly version: number }
+  | { readonly kind: "conflict"; readonly message: string }
+  | { readonly kind: "error"; readonly message: string };
+
+/** 🗃️ A durable place a document synchronizes with — mirrors Rust `PersistenceBinding`. */
+export type PersistenceBinding =
+  | { readonly kind: "folder"; readonly path: string }
+  | { readonly kind: "hub"; readonly baseUrl: string; readonly token?: string };
+
+/** 🧾 Everything the worker needs to open one document's actor — mirrors `DocumentActorConfig`. */
+export type DocumentActorConfig = {
+  readonly documentId: string;
+  readonly schema: string;
+  readonly bindings: readonly PersistenceBinding[];
+  readonly watchExternal?: boolean;
+  readonly actor: string;
+};
+
+/** 📨 Caller→actor control messages — mirrors Rust `DocumentActorMsg`. */
+export type DocumentActorMsg =
+  | { readonly kind: "localOps"; readonly envelopes: readonly OpEnvelope[] }
+  | { readonly kind: "localSnapshot"; readonly envelopeJson: string }
+  | { readonly kind: "presenceHeartbeat"; readonly peer: DocumentPresencePeer }
+  | { readonly kind: "externalChanged" }
+  | { readonly kind: "detach" };
+
+/** 📶 Connection state of a document's remote (hub) transport — mirrors Rust `RemoteState`. */
+export type RemoteState =
+  | { readonly kind: "detached" }
+  | { readonly kind: "connecting" }
+  | { readonly kind: "live"; readonly peerCount: number }
+  | { readonly kind: "backoff"; readonly retryInMs: number };
+
+/** 🚦 Sync health snapshot for status badges — mirrors Rust `DocumentSyncStatus`. */
+export type DocumentSyncStatus = {
+  readonly persisted: boolean;
+  readonly pendingOps: number;
+  readonly remote: RemoteState;
+};
+
+/** ⚠️ A structural sync conflict — loosely typed pending a full mirror of `vcs::StudioConflict`; the
+ * shell only needs enough to render a conflict card / offer "fork alternative" vs "take theirs". */
+export type SyncConflict = { readonly message?: string } & Record<string, unknown>;
+
+/** 📬 Actor→subscriber events — mirrors Rust `DocumentEvent`. */
+export type DocumentEvent =
+  | { readonly kind: "remoteOps"; readonly envelopes: readonly OpEnvelope[] }
+  | { readonly kind: "snapshotReplaced"; readonly envelopeJson: string }
+  | ({ readonly kind: "status" } & DocumentSyncStatus)
+  | { readonly kind: "presence"; readonly peers: readonly DocumentPresencePeer[] }
+  | ({ readonly kind: "conflict" } & SyncConflict);
+
+/** 📤 Main thread → `backbone-worker.ts` messages. */
+export type BackboneWorkerRequest =
+  | ({ readonly kind: "open" } & DocumentActorConfig)
+  | { readonly kind: "close"; readonly documentId: string }
+  | { readonly kind: "send"; readonly documentId: string; readonly message: DocumentActorMsg };
+
+/** 📥 `backbone-worker.ts` → main thread messages. */
+export type BackboneWorkerResponse =
+  | { readonly kind: "event"; readonly documentId: string; readonly event: DocumentEvent }
+  | { readonly kind: "ready" };
+//#endregion 🔖SyncProtocol
+
 //#region 🧪Tests
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;

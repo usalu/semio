@@ -68,68 +68,185 @@ pub fn puzzle5d_grip_kinds_compatible(source_kind: &str, target_kind: &str) -> b
 }
 //#endregion 🔖KindCompatibility
 
-use vcs::{
-    create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
-};
+// 🧩 Puzzle 5d document VCS on `vcs`: granular JSON-document operations over the bare document
+// projection (parts keyed by id, camera + scalar fields) with a whole-document fallback, so
+// disjoint edits converge instead of clobbering.
+use vcs::{create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 pub const PUZZLE_5D_SCHEMA: &str = "puzzle.5d";
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Puzzle5dDocument {
-    pub revision: i64,
-}
+/// 🧩 The puzzle-5d projection is the bare document json (schema/camera/parts/…).
+pub type Puzzle5dProjection = Value;
+pub type Puzzle5dEnvelope = DocumentVcsEnvelope<Puzzle5dProjection, Puzzle5dOp>;
+pub type Puzzle5dStore = DocumentVcsStore<Puzzle5dProjection, Puzzle5dOp>;
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Puzzle5dDiff {
-    pub revision: Option<i64>,
-}
-
-impl OperationDiff<Puzzle5dDocument> for Puzzle5dDiff {
-    fn apply(&self, projection: &Puzzle5dDocument) -> Puzzle5dDocument {
-        Puzzle5dDocument {
-            revision: self.revision.unwrap_or(projection.revision),
-        }
-    }
-
-    fn absorb(&mut self, other: Self) {
-        if other.revision.is_some() {
-            self.revision = other.revision;
-        }
-    }
-}
-
+/// 🔧 One granular mutation of a JSON puzzle document. `UpsertItem`/`RemoveItem` address an element
+/// of a top-level id-keyed array so disjoint edits converge; `SetField` writes a scalar/object field;
+/// `ReplaceDocument` swaps the whole document (example load, engine fill, layout).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "camelCase")]
 pub enum Puzzle5dOp {
-    SetRevision { revision: i64 },
+    UpsertItem { collection: String, item: Value },
+    RemoveItem { collection: String, id: String },
+    SetField { key: String, value: Value },
+    ReplaceDocument { document: Value },
 }
 
-impl Operation<Puzzle5dDocument> for Puzzle5dOp {
+/// 🧮 An ordered list of granular ops replayed over the projection; coalesced edits concatenate.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct Puzzle5dDiff {
+    pub ops: Vec<Puzzle5dOp>,
+}
+
+fn puzzle5d_item_id(item: &Value) -> Option<&str> {
+    item.get("id").and_then(|value| value.as_str())
+}
+
+fn apply_puzzle5d_op(document: &mut Value, op: &Puzzle5dOp) {
+    match op {
+        Puzzle5dOp::UpsertItem { collection, item } => {
+            let Some(object) = document.as_object_mut() else {
+                return;
+            };
+            let array = object.entry(collection.clone()).or_insert_with(|| Value::Array(Vec::new()));
+            let Some(array) = array.as_array_mut() else {
+                return;
+            };
+            if let Some(id) = puzzle5d_item_id(item).map(str::to_string) {
+                if let Some(slot) = array.iter_mut().find(|entry| puzzle5d_item_id(entry) == Some(id.as_str())) {
+                    *slot = item.clone();
+                    return;
+                }
+            }
+            array.push(item.clone());
+        }
+        Puzzle5dOp::RemoveItem { collection, id } => {
+            if let Some(array) = document.get_mut(collection).and_then(|value| value.as_array_mut()) {
+                array.retain(|entry| puzzle5d_item_id(entry) != Some(id.as_str()));
+            }
+        }
+        Puzzle5dOp::SetField { key, value } => {
+            if let Some(object) = document.as_object_mut() {
+                object.insert(key.clone(), value.clone());
+            }
+        }
+        Puzzle5dOp::ReplaceDocument { document: next } => *document = next.clone(),
+    }
+}
+
+fn puzzle5d_find_item<'a>(document: &'a Value, collection: &str, id: &str) -> Option<&'a Value> {
+    document.get(collection).and_then(|value| value.as_array()).and_then(|array| array.iter().find(|entry| puzzle5d_item_id(entry) == Some(id)))
+}
+
+impl OperationDiff<Puzzle5dProjection> for Puzzle5dDiff {
+    fn apply(&self, projection: &Puzzle5dProjection) -> Puzzle5dProjection {
+        let mut next = projection.clone();
+        for op in &self.ops {
+            apply_puzzle5d_op(&mut next, op);
+        }
+        next
+    }
+
+    fn absorb(&mut self, other: Self) {
+        self.ops.extend(other.ops);
+    }
+}
+
+impl Operation<Puzzle5dProjection> for Puzzle5dOp {
     type Diff = Puzzle5dDiff;
 
-    fn diff(&self, _projection: &Puzzle5dDocument) -> Puzzle5dDiff {
-        match self {
-            Puzzle5dOp::SetRevision { revision } => Puzzle5dDiff {
-                revision: Some(*revision),
-            },
-        }
+    fn diff(&self, _projection: &Puzzle5dProjection) -> Puzzle5dDiff {
+        Puzzle5dDiff { ops: vec![self.clone()] }
     }
 
-    fn backwards(&self, projection: &Puzzle5dDocument) -> Vec<Self> {
-        vec![Puzzle5dOp::SetRevision {
-            revision: projection.revision,
-        }]
+    fn backwards(&self, projection: &Puzzle5dProjection) -> Vec<Self> {
+        match self {
+            Puzzle5dOp::UpsertItem { collection, item } => {
+                let id = puzzle5d_item_id(item).unwrap_or_default();
+                match puzzle5d_find_item(projection, collection, id) {
+                    Some(previous) => vec![Puzzle5dOp::UpsertItem { collection: collection.clone(), item: previous.clone() }],
+                    None => vec![Puzzle5dOp::RemoveItem { collection: collection.clone(), id: id.to_string() }],
+                }
+            }
+            Puzzle5dOp::RemoveItem { collection, id } => match puzzle5d_find_item(projection, collection, id) {
+                Some(previous) => vec![Puzzle5dOp::UpsertItem { collection: collection.clone(), item: previous.clone() }],
+                None => Vec::new(),
+            },
+            Puzzle5dOp::SetField { key, .. } => vec![Puzzle5dOp::SetField { key: key.clone(), value: projection.get(key).cloned().unwrap_or(Value::Null) }],
+            Puzzle5dOp::ReplaceDocument { .. } => vec![Puzzle5dOp::ReplaceDocument { document: projection.clone() }],
+        }
     }
 }
 
-pub type Puzzle5dEnvelope = DocumentVcsEnvelope<Puzzle5dDocument, Puzzle5dOp>;
-pub type Puzzle5dStore = DocumentVcsStore<Puzzle5dDocument, Puzzle5dOp>;
+fn puzzle5d_is_id_keyed_array(value: Option<&Value>) -> bool {
+    value.and_then(|value| value.as_array()).is_some_and(|array| array.iter().all(|entry| puzzle5d_item_id(entry).is_some()))
+}
 
-pub fn empty_puzzle5d_projection() -> Puzzle5dDocument {
-    Puzzle5dDocument { revision: 0 }
+fn puzzle5d_collect_collection_delta(collection: &str, before: &[Value], after: &[Value], ops: &mut Vec<Puzzle5dOp>) {
+    for entry in after {
+        let id = puzzle5d_item_id(entry).unwrap_or_default();
+        if before.iter().find(|candidate| puzzle5d_item_id(candidate) == Some(id)) != Some(entry) {
+            ops.push(Puzzle5dOp::UpsertItem { collection: collection.to_string(), item: entry.clone() });
+        }
+    }
+    for entry in before {
+        let id = puzzle5d_item_id(entry).unwrap_or_default();
+        if !after.iter().any(|candidate| puzzle5d_item_id(candidate) == Some(id)) {
+            ops.push(Puzzle5dOp::RemoveItem { collection: collection.to_string(), id: id.to_string() });
+        }
+    }
+}
+
+/// 🧮 Computes the granular op sequence turning `before` into `after`, falling back to a single
+/// `ReplaceDocument` whenever the granular replay would not reproduce `after` exactly.
+pub fn puzzle5d_document_delta_ops(before: &Value, after: &Value) -> Vec<Puzzle5dOp> {
+    if before == after {
+        return Vec::new();
+    }
+    let ops = match (before.as_object(), after.as_object()) {
+        (Some(before_object), Some(after_object)) => {
+            let mut keys: Vec<&String> = before_object.keys().chain(after_object.keys()).collect();
+            keys.sort();
+            keys.dedup();
+            let mut ops = Vec::new();
+            for key in keys {
+                let before_value = before_object.get(key);
+                let after_value = after_object.get(key);
+                if before_value == after_value {
+                    continue;
+                }
+                match after_value {
+                    Some(after_value) if puzzle5d_is_id_keyed_array(before_value) && puzzle5d_is_id_keyed_array(Some(after_value)) => {
+                        let before_array = before_value.and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[]);
+                        puzzle5d_collect_collection_delta(key, before_array, after_value.as_array().map(Vec::as_slice).unwrap_or(&[]), &mut ops);
+                    }
+                    Some(after_value) => ops.push(Puzzle5dOp::SetField { key: key.clone(), value: after_value.clone() }),
+                    None => ops.push(Puzzle5dOp::SetField { key: key.clone(), value: Value::Null }),
+                }
+            }
+            ops
+        }
+        _ => vec![Puzzle5dOp::ReplaceDocument { document: after.clone() }],
+    };
+    let mut replay = before.clone();
+    for op in &ops {
+        apply_puzzle5d_op(&mut replay, op);
+    }
+    if &replay == after {
+        ops
+    } else {
+        vec![Puzzle5dOp::ReplaceDocument { document: after.clone() }]
+    }
+}
+
+pub fn empty_puzzle5d_projection() -> Value {
+    serde_json::json!({
+        "schema": PUZZLE_5D_SCHEMA,
+        "parts": []
+    })
 }
 
 //#region 🔖WasmBridge
@@ -201,7 +318,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn puzzle5d_document_vcs_replays_ops() {
+    fn puzzle5d_document_vcs_replays_granular_ops() {
         let mut store = Puzzle5dStore::new(create_document_vcs_envelope(
             PUZZLE_5D_SCHEMA,
             "puzzle5d",
@@ -210,11 +327,12 @@ mod tests {
         ));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![Puzzle5dOp::SetRevision { revision: 5 }],
+                operations: vec![Puzzle5dOp::UpsertItem { collection: "parts".into(), item: serde_json::json!({ "id": "p1" }) }],
                 description: None,
             })
             .expect("apply");
-        assert_eq!(store.projection().expect("projection").revision, 5);
+        let projection = store.projection().expect("projection");
+        assert_eq!(projection.get("parts").and_then(|value| value.as_array()).map(Vec::len), Some(1));
     }
 
     #[test]

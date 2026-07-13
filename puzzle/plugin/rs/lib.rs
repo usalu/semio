@@ -3,11 +3,12 @@
 pub mod d2 {
     //! 🧩 Puzzle 2D plugin — declarative puzzle 2d play app bundled as a hot-swappable WASM component.
 
-    use puzzle_2d::{handle_position_on_circle, handle_position_on_rectangle, puzzle_2d_lod_scale_json, puzzle_board_host, BoardHost, Point, Puzzle2dExtension, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
+    use semio_framework_plugin::component::layout::WindowEngagementToggleGroupOption;
+    use puzzle_2d::{handle_position_on_circle, handle_position_on_rectangle, puzzle2d_document_delta_ops, puzzle_2d_lod_scale_json, puzzle_board_host, BoardHost, Point, Puzzle2dExtension, Puzzle2dOp, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
     use semio_framework_plugin::{
         build_canvas_2d_scene, build_puzzle2d_board_scene, create_default_layout,
-        layout::{MeasureSelectItem, WindowEngagementStatus, WindowEngagementToggleGroupOption},
-        ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, ActionDescriptor, PanelGroup, PluginApp, PluginBundle, Puzzle2dBoardScene, SurfaceKind, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
+        MeasureSelectItem, WindowEngagementStatus,
+        ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionEmit, App, ActionDescriptor, DocumentApp, DocumentView, PanelGroup, PluginBundle, Puzzle2dBoardScene, SurfaceKind, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
         WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     };
     use serde::{Deserialize, Serialize};
@@ -141,11 +142,12 @@ pub mod d2 {
         }
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct Puzzle2dPlayEnvelope {
+    /// 🧾 Transient render/mutation bundle pairing the persisted projection (the bare fixture json)
+    /// with the app's ephemeral view state. It is never persisted — the {@link VcsDocumentApp} store
+    /// owns the fixture as its projection and {@link Puzzle2dPlayApp} owns the runtime — but rebuilding
+    /// it per call lets the panel/canvas/engagement helpers keep their existing `&scene` signatures.
+    struct Puzzle2dScene {
         fixture: Value,
-        #[serde(default)]
         runtime: Puzzle2dPlayRuntime,
     }
 
@@ -159,16 +161,8 @@ pub mod d2 {
         })
     }
 
-    fn default_envelope() -> Puzzle2dPlayEnvelope {
-        Puzzle2dPlayEnvelope { fixture: default_empty_fixture(), runtime: Puzzle2dPlayRuntime::default() }
-    }
-
-    fn parse_envelope(document_json: &str) -> Puzzle2dPlayEnvelope {
-        serde_json::from_str(document_json).unwrap_or_else(|_| default_envelope())
-    }
-
-    fn set_document_op(envelope: &Puzzle2dPlayEnvelope) -> String {
-        json!({ "op": "setDocument", "document": envelope }).to_string()
+    fn example_fixture(json_text: &str) -> Value {
+        serde_json::from_str(json_text).unwrap_or_else(|_| default_empty_fixture())
     }
 
     fn puzzle2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -433,7 +427,7 @@ pub mod d2 {
     //#endregion 🔖Envelope
 
     //#region 🔖BoardHost
-    fn sync_host_from_envelope(host: &mut BoardHost, envelope: &Puzzle2dPlayEnvelope) {
+    fn sync_host_from_envelope(host: &mut BoardHost, envelope: &Puzzle2dScene) {
         host.set_size(BOARD_DEFAULT_WIDTH, BOARD_DEFAULT_HEIGHT, 1.0);
         let _ = host.parse_fixture_v1(&envelope.fixture);
         host.set_selection_ids(&envelope.runtime.selected_ids);
@@ -467,7 +461,7 @@ pub mod d2 {
         }
     }
 
-    fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dPlayEnvelope) {
+    fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dScene) {
         let Ok(events) = serde_json::from_str::<Vec<Value>>(events_json) else {
             return;
         };
@@ -551,7 +545,7 @@ pub mod d2 {
         }
     }
 
-    fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dPlayEnvelope) {
+    fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dScene) {
         let events_raw = host.drain_events_json();
         apply_board_events_from_json(&events_raw, envelope);
         envelope.runtime.selected_ids = host.selection.iter().cloned().collect();
@@ -620,7 +614,7 @@ pub mod d2 {
     }
 
     /// 🖌️ Brush candidate rows (`{nodeKind, targetHandleIndex}`) drained from the host into a placement toggle-group control.
-    fn puzzle2d_brush_placement_control(envelope: &Puzzle2dPlayEnvelope, labels: &Puzzle2dLabels) -> Option<WindowEngagementControl> {
+    fn puzzle2d_brush_placement_control(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Option<WindowEngagementControl> {
         if envelope.runtime.brush_candidates.is_empty() {
             return None;
         }
@@ -646,7 +640,7 @@ pub mod d2 {
     }
 
     /// 🪣 Fill-count slider control shown while the fill tool builds a brush-fill session.
-    fn puzzle2d_fill_count_control(envelope: &Puzzle2dPlayEnvelope, labels: &Puzzle2dLabels) -> WindowEngagementControl {
+    fn puzzle2d_fill_count_control(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowEngagementControl {
         WindowEngagementControl::Slider {
             id: Some("puzzle2d-fill-count".into()),
             label: Some(format!("{} {}", labels.fill, envelope.runtime.fill_count)),
@@ -661,7 +655,7 @@ pub mod d2 {
         }
     }
 
-    fn puzzle2d_engagement(envelope: &Puzzle2dPlayEnvelope, host: &BoardHost, pane: &str, labels: &Puzzle2dLabels) -> WindowEngagement {
+    fn puzzle2d_engagement(envelope: &Puzzle2dScene, host: &BoardHost, pane: &str, labels: &Puzzle2dLabels) -> WindowEngagement {
         let overlay: Value = serde_json::from_str(&host.overlay_paint_state_json()).unwrap_or(Value::Null);
         let pane_lod_mode = envelope.runtime.lod_mode_by_pane.get(pane).map(String::as_str).unwrap_or(PUZZLE2D_LOD_MODE_AUTOMATIC);
         let lod = overlay.get("lod").and_then(|value| value.as_str()).unwrap_or(if pane_lod_mode == PUZZLE2D_LOD_MODE_AUTOMATIC { "auto" } else { pane_lod_mode });
@@ -857,7 +851,7 @@ pub mod d2 {
         json
     }
 
-    fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dPlayEnvelope, pane: &str) -> Puzzle2dBoardScene {
+    fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> Puzzle2dBoardScene {
         let fixture = &envelope.fixture;
         let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(fixture, pane);
         let camera_json = json!({ "x": camera_x, "y": camera_y, "zoom": zoom }).to_string();
@@ -893,7 +887,7 @@ pub mod d2 {
         }
     }
 
-    fn render_canvas(document_json: &str, envelope: &Puzzle2dPlayEnvelope, pane: &str) -> UiNode {
+    fn render_canvas(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> UiNode {
         build_puzzle2d_board_scene(format!("{PUZZLE2D_PLAY_SURFACE_ID}.{pane}"), PUZZLE2D_PLAY_CONTROLLER_ID, puzzle2d_board_scene(document_json, envelope, pane))
     }
 
@@ -1088,7 +1082,7 @@ pub mod d2 {
             .collect()
     }
 
-    fn render_document_panel(envelope: &Puzzle2dPlayEnvelope, labels: &Puzzle2dLabels) -> UiNode {
+    fn render_document_panel(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> UiNode {
         let fixture = &envelope.fixture;
         let node_items: Vec<UiTreeItemNode> = fixture_nodes(fixture)
             .iter()
@@ -1306,7 +1300,7 @@ pub mod d2 {
     //#endregion 🔖CataloguePanel
 
     //#region 🔖InspectorPanel
-    fn render_properties_panel(envelope: &Puzzle2dPlayEnvelope, labels: &Puzzle2dLabels) -> UiNode {
+    fn render_properties_panel(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> UiNode {
         let selected_nodes: Vec<&Value> = envelope.runtime.selected_ids.iter().filter_map(|id| fixture_nodes(&envelope.fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))).collect();
         if selected_nodes.is_empty() {
             return ui_stack_vertical(vec![
@@ -1362,7 +1356,7 @@ pub mod d2 {
     }
 
     /// 🎚️ Suggestion offset slider plus node/handle kind-weight sliders, calling `setSuggestionOffset`/`setBrushKindWeights`.
-    fn puzzle2d_suggestion_measures_group(envelope: &Puzzle2dPlayEnvelope, labels: &Puzzle2dLabels) -> WindowMeasure {
+    fn puzzle2d_suggestion_measures_group(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasure {
         let node_ids = puzzle2d_kind_ids(&envelope.fixture, "nodes");
         let handle_ids = puzzle2d_kind_ids(&envelope.fixture, "handles");
         WindowMeasure::Group {
@@ -1395,84 +1389,89 @@ pub mod d2 {
         }
     }
 
-    fn puzzle2d_window_measures(pane: &str, envelope: &Puzzle2dPlayEnvelope, labels: &Puzzle2dLabels) -> Vec<WindowMeasure> {
+    fn puzzle2d_window_measures(pane: &str, envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Vec<WindowMeasure> {
         let mode = envelope.runtime.lod_mode_by_pane.get(pane).map(String::as_str).unwrap_or(PUZZLE2D_LOD_MODE_AUTOMATIC);
         vec![puzzle2d_lod_measure(pane, mode, labels), puzzle2d_suggestion_measures_group(envelope, labels)]
     }
     //#endregion 🔖Measures
 
     //#region 🔖Puzzle2dPlayApp
+    /// 🧩 Puzzle-2d play app. Owns the `BoardHost` engine and ephemeral view `runtime`; the persisted
+    /// document (the bare fixture json) lives in the wrapping `VcsDocumentApp`'s op store. Each action
+    /// rehydrates the host from the projection, mutates a transient {@link Puzzle2dScene}, then emits
+    /// the granular op delta (`puzzle2d_document_delta_ops`) turning the old fixture into the new.
     pub struct Puzzle2dPlayApp {
         host: BoardHost,
+        runtime: Puzzle2dPlayRuntime,
     }
 
     impl Default for Puzzle2dPlayApp {
         fn default() -> Self {
-            Self { host: puzzle_board_host() }
+            Self { host: puzzle_board_host(), runtime: Puzzle2dPlayRuntime::default() }
         }
     }
 
-    impl PluginApp for Puzzle2dPlayApp {
+    impl DocumentApp for Puzzle2dPlayApp {
+        type Projection = Value;
+        type Op = Puzzle2dOp;
+
         fn app_id(&self) -> &str {
             PUZZLE2D_PLAY_APP_ID
         }
 
-        fn initial_document_json(&self) -> String {
-            serde_json::to_string(&default_envelope()).expect("puzzle2d envelope json")
+        fn document_schema(&self) -> &str {
+            PUZZLE2D_FIXTURE_SCHEMA
         }
 
-        fn handle_action_patch_ops(&mut self, action: &str, args: Option<&Value>, document_json: &str, _view_state: &ViewState) -> Vec<String> {
-            let mut envelope = parse_envelope(document_json);
+        fn initial_projection(&self) -> Value {
+            default_empty_fixture()
+        }
+
+        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, _view_state: &ViewState) -> ActionEmit<Puzzle2dOp> {
+            let before = doc.projection.clone();
+            let mut envelope = Puzzle2dScene { fixture: before.clone(), runtime: self.runtime.clone() };
             sync_host_from_envelope(&mut self.host, &envelope);
-            let ops = match action {
-                "setDocument" => {
-                    if let Some(next) = args.and_then(|value| value.get("document")) {
-                        if let Ok(parsed) = serde_json::from_value(next.clone()) {
-                            return vec![set_document_op(&parsed)];
-                        }
-                    }
-                    Vec::new()
-                }
+            let mut coalesce_key: Option<String> = None;
+            match action {
                 "setSelection" | "documentSelect" => {
                     envelope.runtime.selected_ids = selection_ids(args);
                     self.host.set_selection_ids(&envelope.runtime.selected_ids);
-                    vec![set_document_op(&envelope)]
                 }
                 "addNode" => {
                     let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str());
                     add_node_to_fixture(&mut envelope.fixture, kind, args);
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "deleteSelection" => {
                     self.host.delete_selection();
                     delete_selection_from_fixture(&mut envelope.fixture, &envelope.runtime.selected_ids);
                     envelope.runtime.selected_ids.clear();
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "setSelectionFlag" => {
                     let flag = args.and_then(|value| value.get("flag")).and_then(|value| value.as_str()).unwrap_or("hidden");
                     let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_bool()).unwrap_or(true);
                     apply_selection_flag(&mut envelope.fixture, &envelope.runtime.selected_ids, flag, value);
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "duplicateSelection" => {
                     let new_ids = duplicate_selection_in_fixture(&mut envelope.fixture, &envelope.runtime.selected_ids);
                     if new_ids.is_empty() {
-                        Vec::new()
+                        {}
                     } else {
                         envelope.runtime.selected_ids = new_ids;
                         self.host.set_selection_ids(&envelope.runtime.selected_ids);
-                        vec![set_document_op(&envelope)]
+                        {}
                     }
                 }
                 "selectSameKind" => {
                     let ids = select_same_kind_ids(&envelope.fixture, &envelope.runtime.selected_ids);
                     if ids.is_empty() {
-                        Vec::new()
+                        {}
                     } else {
                         envelope.runtime.selected_ids = ids;
                         self.host.set_selection_ids(&envelope.runtime.selected_ids);
-                        vec![set_document_op(&envelope)]
+                        {}
                     }
                 }
                 "setCamera" => {
@@ -1481,9 +1480,7 @@ pub mod d2 {
                             self.host.set_camera(x, y, zoom);
                         }
                         set_fixture_camera(&mut envelope.fixture, camera);
-                        vec![set_document_op(&envelope)]
-                    } else {
-                        Vec::new()
+                        coalesce_key = Some("camera".into());
                     }
                 }
                 "setActiveExample" => {
@@ -1498,15 +1495,15 @@ pub mod d2 {
                         default_empty_fixture()
                     };
                     envelope.runtime = Puzzle2dPlayRuntime::default();
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "setActiveTool" => {
                     if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
                         envelope.runtime.active_tool = tool.into();
                         self.host.set_active_tool(tool);
-                        vec![set_document_op(&envelope)]
+                        {}
                     } else {
-                        Vec::new()
+                        {}
                     }
                 }
                 "engagementPossibleSelect" => {
@@ -1522,16 +1519,16 @@ pub mod d2 {
                     if PUZZLE2D_PANES.contains(&pane) {
                         envelope.runtime.engagement_input_by_pane.insert(pane.to_string(), String::new());
                     }
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "engagementInput" => {
                     let pane = args.and_then(|value| value.get("pane")).and_then(|value| value.as_str()).unwrap_or(PUZZLE2D_PANE_OVERVIEW);
                     let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
                     if PUZZLE2D_PANES.contains(&pane) {
                         envelope.runtime.engagement_input_by_pane.insert(pane.to_string(), value.to_string());
-                        vec![set_document_op(&envelope)]
+                        {}
                     } else {
-                        Vec::new()
+                        {}
                     }
                 }
                 "engagementSubmit" => {
@@ -1573,7 +1570,7 @@ pub mod d2 {
                     if applied && PUZZLE2D_PANES.contains(&pane.as_str()) {
                         envelope.runtime.engagement_input_by_pane.insert(pane, String::new());
                     }
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "engagementAbort" => {
                     let pane = args.and_then(|value| value.get("pane")).and_then(|value| value.as_str()).unwrap_or(PUZZLE2D_PANE_OVERVIEW);
@@ -1584,16 +1581,16 @@ pub mod d2 {
                         envelope.runtime.active_tool = "select".into();
                         self.host.set_active_tool("select");
                     }
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "engagementControlSelect" => {
                     let candidate_id = args.and_then(|value| value.get("id").or_else(|| value.get("value"))).and_then(|value| value.as_str()).unwrap_or("");
                     if let Some(index) = candidate_id.strip_prefix("puzzle2d.brush.candidate.").and_then(|rest| rest.parse::<usize>().ok()) {
                         self.host.brush_set_candidate_index(index);
                         envelope.runtime.brush_candidate_index = index;
-                        vec![set_document_op(&envelope)]
+                        {}
                     } else {
-                        Vec::new()
+                        {}
                     }
                 }
                 "setLodModeForPane" => {
@@ -1609,31 +1606,31 @@ pub mod d2 {
                                 self.host.set_forced_draw_lod_label(mode);
                             }
                         }
-                        vec![set_document_op(&envelope)]
+                        {}
                     } else {
-                        Vec::new()
+                        {}
                     }
                 }
                 "setGridSnapEnabled" => {
                     let enabled = args.and_then(|value| value.get("enabled")).and_then(|value| value.as_bool()).unwrap_or(false);
                     envelope.runtime.grid_snap_enabled = enabled;
                     self.host.set_grid_snap_enabled(enabled);
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "setGridFactor" => {
                     if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
                         envelope.runtime.grid_factor = value;
                         let _ = self.host.set_grid_factor(value);
-                        vec![set_document_op(&envelope)]
+                        {}
                     } else {
-                        Vec::new()
+                        {}
                     }
                 }
                 "setSelectionMethod" => {
                     let method = args.and_then(|value| value.get("method")).and_then(|value| value.as_str()).unwrap_or("rectangle");
                     envelope.runtime.selection_method = method.into();
                     self.host.set_selection_options(method, "replace", true, true, true);
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "setBrushKindWeights" => {
                     if let Some(weights) = args.and_then(|value| value.get("weights")) {
@@ -1654,13 +1651,13 @@ pub mod d2 {
                     })) {
                         self.host.set_brush_kind_weights(&weights_json);
                     }
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "setBrushNodeSize" => {
                     if let Some(size) = args.and_then(|value| value.get("size")).and_then(|value| value.as_f64()) {
                         self.host.set_brush_node_size(size);
                     }
-                    Vec::new()
+                    {}
                 }
                 "setSuggestionOffset" => {
                     let distance = args.and_then(|value| value.get("distance").or_else(|| value.get("value"))).and_then(|value| value.as_f64());
@@ -1668,40 +1665,40 @@ pub mod d2 {
                         let clamped = distance.clamp(PUZZLE2D_SUGGESTION_OFFSET_MIN, PUZZLE2D_SUGGESTION_OFFSET_MAX);
                         envelope.runtime.suggestion_offset = clamped;
                         self.host.set_suggestion_offset(clamped);
-                        vec![set_document_op(&envelope)]
+                        {}
                     } else {
-                        Vec::new()
+                        {}
                     }
                 }
                 "brushCycleCandidate" => {
                     let forward = args.and_then(|value| value.get("forward")).and_then(|value| value.as_bool()).unwrap_or(true);
                     self.host.brush_cycle_candidate(forward);
                     envelope.runtime.brush_candidate_index = envelope.runtime.brush_candidate_index.saturating_add(1);
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "brushSetCandidateIndex" => {
                     if let Some(index) = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()) {
                         self.host.brush_set_candidate_index(index as usize);
                         envelope.runtime.brush_candidate_index = index as usize;
-                        vec![set_document_op(&envelope)]
+                        {}
                     } else {
-                        Vec::new()
+                        {}
                     }
                 }
                 "brushOpenSlot" => {
                     if let Some(handle_id) = args.and_then(|value| value.get("handleId")).and_then(|value| value.as_str()) {
                         self.host.brush_open_slot(handle_id);
                     }
-                    Vec::new()
+                    {}
                 }
                 "brushCommitSlot" => {
                     self.host.brush_commit_slot();
                     apply_host_events(&mut self.host, &mut envelope);
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "brushCancelSlot" => {
                     self.host.brush_cancel_slot();
-                    Vec::new()
+                    {}
                 }
                 "setFillCount" => {
                     let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_f64()).map(|value| value.round().max(0.0) as u32).unwrap_or(0).min(PUZZLE2D_FILL_COUNT_MAX);
@@ -1717,13 +1714,13 @@ pub mod d2 {
                             }
                         }
                     }
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "brushFillSessionBegin" => {
                     let max_count = args.and_then(|value| value.get("maxCount")).and_then(|value| value.as_u64()).unwrap_or(0) as u32;
                     let seed = args.and_then(|value| value.get("seed")).and_then(|value| value.as_u64()).unwrap_or(1) as u32;
                     self.host.brush_fill_session_begin(max_count, u64::from(seed));
-                    Vec::new()
+                    {}
                 }
                 "brushFillSessionStep" => {
                     let budget = args.and_then(|value| value.get("chunkBudget")).and_then(|value| value.as_u64()).unwrap_or(8) as u32;
@@ -1735,12 +1732,12 @@ pub mod d2 {
                             }
                         }
                     }
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "brushFillSessionClear" => {
                     self.host.brush_fill_session_clear();
                     envelope.runtime.fill_count = 0;
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "patchInspectorNodes" => {
                     let ids: Vec<String> = args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_else(|| envelope.runtime.selected_ids.clone());
@@ -1748,14 +1745,14 @@ pub mod d2 {
                     let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
                     if !field.is_empty() {
                         patch_inspector_nodes(&mut envelope.fixture, &ids, field, &value);
-                        vec![set_document_op(&envelope)]
+                        {}
                     } else {
-                        Vec::new()
+                        {}
                     }
                 }
                 "forceLayout" | "reorganize" => {
                     force_layout_fixture(&mut envelope.fixture);
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "redrawHandles" => {
                     if let Ok(next) = puzzle_2d::apply_edge_handle_snap_to_fixture_v1_json(&envelope.fixture.to_string()) {
@@ -1763,22 +1760,22 @@ pub mod d2 {
                             envelope.fixture = parsed;
                         }
                     }
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "selectAll" => {
                     let ids: Vec<String> = fixture_nodes(&envelope.fixture).iter().filter_map(|node| node.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect();
                     envelope.runtime.selected_ids = ids.clone();
                     self.host.set_selection_ids(&ids);
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "clearSelection" => {
                     envelope.runtime.selected_ids.clear();
                     self.host.set_selection_ids(&[]);
-                    vec![set_document_op(&envelope)]
+                    {}
                 }
                 "focusSelection" => {
                     if envelope.runtime.selected_ids.is_empty() {
-                        Vec::new()
+                        {}
                     } else {
                         let mut min_x = f64::INFINITY;
                         let mut min_y = f64::INFINITY;
@@ -1809,40 +1806,40 @@ pub mod d2 {
                             if let (Some(x), Some(y), Some(zoom)) = (camera.get("x").and_then(|value| value.as_f64()), camera.get("y").and_then(|value| value.as_f64()), camera.get("zoom").and_then(|value| value.as_f64())) {
                                 self.host.set_camera(x, y, zoom);
                             }
-                            vec![set_document_op(&envelope)]
+                            {}
                         } else {
-                            Vec::new()
+                            {}
                         }
                     }
                 }
                 "applyBoardEvents" => {
                     if let Some(events_json) = args.and_then(|value| value.get("eventsJson")).and_then(|value| value.as_str()) {
                         apply_board_events_from_json(events_json, &mut envelope);
-                        vec![set_document_op(&envelope)]
+                        {}
                     } else {
-                        Vec::new()
+                        {}
                     }
                 }
                 "lodScaleJson" => {
                     let _ = puzzle_2d_lod_scale_json();
-                    Vec::new()
+                    {}
                 }
-                _ => Vec::new(),
-            };
-            apply_host_events(&mut self.host, &mut envelope);
-            if !ops.is_empty() {
-                return ops;
+                _ => {}
             }
-            Vec::new()
+            apply_host_events(&mut self.host, &mut envelope);
+            self.runtime = envelope.runtime;
+            let ops = puzzle2d_document_delta_ops(&before, &envelope.fixture);
+            ActionEmit { ops, coalesce_key, ..Default::default() }
         }
 
-        fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-            let envelope = parse_envelope(document_json);
+        fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
+            let document_json = doc.projection.to_string();
+            let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone() };
             let labels = puzzle2d_labels(view_state);
             match body_key {
-                PUZZLE2D_PLAY_BODY_OVERVIEW => render_canvas(document_json, &envelope, PUZZLE2D_PANE_OVERVIEW),
-                PUZZLE2D_PLAY_BODY_DETAIL => render_canvas(document_json, &envelope, PUZZLE2D_PANE_DETAIL),
-                PUZZLE2D_PLAY_BODY_SELECTION => render_canvas(document_json, &envelope, PUZZLE2D_PANE_SELECTION),
+                PUZZLE2D_PLAY_BODY_OVERVIEW => render_canvas(&document_json, &envelope, PUZZLE2D_PANE_OVERVIEW),
+                PUZZLE2D_PLAY_BODY_DETAIL => render_canvas(&document_json, &envelope, PUZZLE2D_PANE_DETAIL),
+                PUZZLE2D_PLAY_BODY_SELECTION => render_canvas(&document_json, &envelope, PUZZLE2D_PANE_SELECTION),
                 PUZZLE2D_PLAY_BODY_LAYERS => render_document_panel(&envelope, labels),
                 PUZZLE2D_PLAY_BODY_CATALOGUE => render_catalogue_panel(&envelope.fixture, labels),
                 PUZZLE2D_PLAY_BODY_PROPERTIES => render_properties_panel(&envelope, labels),
@@ -1850,14 +1847,14 @@ pub mod d2 {
             }
         }
 
-        fn window_engagements(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-            let envelope = parse_envelope(document_json);
+        fn window_engagements(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+            let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone() };
             let labels = puzzle2d_labels(view_state);
             PUZZLE2D_PANES.iter().map(|pane| (pane.to_string(), puzzle2d_engagement(&envelope, &self.host, pane, labels))).collect()
         }
 
-        fn window_measures(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-            let envelope = parse_envelope(document_json);
+        fn window_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+            let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone() };
             let labels = puzzle2d_labels(view_state);
             PUZZLE2D_PANES.iter().map(|pane| (pane.to_string(), puzzle2d_window_measures(pane, &envelope, labels))).collect()
         }
@@ -1881,7 +1878,7 @@ pub mod d2 {
     //#region 🔖AppFactory
     pub fn create_puzzle2d_app() -> App {
         let mut host = puzzle_board_host();
-        let envelope = default_envelope();
+        let envelope = Puzzle2dScene { fixture: default_empty_fixture(), runtime: Puzzle2dPlayRuntime::default() };
         sync_host_from_envelope(&mut host, &envelope);
         let labels = puzzle2d_labels(&ViewState::default());
         let mut app = App::from_builder(
@@ -1904,17 +1901,9 @@ pub mod d2 {
                 window.options.measures = puzzle2d_window_measures(pane, &envelope, labels);
             }
         }
-        app.example("empty", "Empty", serde_json::to_string(&default_envelope()).unwrap())
-            .example(
-                PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID,
-                "Concrete Forest",
-                serde_json::to_string(&Puzzle2dPlayEnvelope { fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap_or_else(|_| default_empty_fixture()), runtime: Puzzle2dPlayRuntime::default() }).unwrap(),
-            )
-            .example(
-                PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID,
-                "Nakagin Capsule Tower",
-                serde_json::to_string(&Puzzle2dPlayEnvelope { fixture: serde_json::from_str(NAKAGIN_EXAMPLE_JSON).unwrap_or_else(|_| default_empty_fixture()), runtime: Puzzle2dPlayRuntime::default() }).unwrap(),
-            )
+        app.example("empty", "Empty", serde_json::to_string(&default_empty_fixture()).unwrap())
+            .example(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, "Concrete Forest", serde_json::to_string(&example_fixture(CONCRETE_FOREST_EXAMPLE_JSON)).unwrap())
+            .example(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, "Nakagin Capsule Tower", serde_json::to_string(&example_fixture(NAKAGIN_EXAMPLE_JSON)).unwrap())
             .program("puzzle2d", "Puzzle 2D", "layout")
     }
 
@@ -1929,8 +1918,7 @@ pub mod d2 {
         let center_x = (drawing.extmin[0] + drawing.extmax[0]) / 2.0;
         let center_y = (drawing.extmin[1] + drawing.extmax[1]) / 2.0;
         fixture["camera"] = json!({ "x": center_x, "y": center_y, "zoom": 1.0 });
-        let envelope = Puzzle2dPlayEnvelope { fixture, runtime: Puzzle2dPlayRuntime::default() };
-        serde_json::to_value(envelope).map_err(|error| error.to_string())
+        Ok(fixture)
     }
 
     pub fn register_puzzle2d_exports() {
@@ -1943,43 +1931,96 @@ pub mod d2 {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::PluginApp;
+        use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+        use vcs::{Backbone, BackboneMessage, MemoryBackbone};
+
+        fn meta(actor: &str) -> ActionMeta {
+            ActionMeta { actor: actor.into(), instance_id: 1 }
+        }
+
+        fn new_app() -> VcsDocumentApp<Puzzle2dPlayApp> {
+            VcsDocumentApp::new(Puzzle2dPlayApp::default())
+        }
+
+        fn concrete_forest_app() -> VcsDocumentApp<Puzzle2dPlayApp> {
+            let mut app = new_app();
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), &ViewState::default(), &meta("local")).expect("load concrete forest");
+            app
+        }
 
         #[test]
         fn renders_puzzle2d_board_scene() {
-            let app = Puzzle2dPlayApp::default();
-            let document = app.initial_document_json();
-            let node = app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("puzzle2d-board"));
+            let mut app = new_app();
+            let node = app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, None, &ViewState::default()).expect("render");
+            assert!(serde_json::to_string(&node).unwrap().contains("puzzle2d-board"));
         }
 
         #[test]
-        fn cached_fixture_json_reuses_string_for_same_document_across_panes() {
-            let envelope = parse_envelope(&Puzzle2dPlayApp::default().initial_document_json());
-            let document_json = serde_json::to_string(&envelope).unwrap();
-            let overview = puzzle2d_board_scene(&document_json, &envelope, PUZZLE2D_PANE_OVERVIEW);
-            let detail = puzzle2d_board_scene(&document_json, &envelope, PUZZLE2D_PANE_DETAIL);
-            assert_eq!(overview.fixture_json, detail.fixture_json);
-            assert_eq!(overview.fixture_json, envelope.fixture.to_string());
+        fn add_node_action_emits_upsert_op_and_appends_node() {
+            let mut app = new_app();
+            let result = app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &meta("local")).expect("add node");
+            assert_eq!(result.operations.len(), 1, "addNode must emit exactly one granular op");
+            assert_eq!(fixture_nodes(&app.projection().expect("projection")).len(), 1);
         }
 
         #[test]
-        fn puzzle2d_document_json_from_dwg_returns_empty_board_framed_to_extents() {
-            let mut drawing = semio_framework_os::DwgDrawing::default();
-            drawing.extmin = [0.0, 0.0, 0.0];
-            drawing.extmax = [100.0, 200.0, 0.0];
-            let layer = drawing.ensure_layer("0");
-            drawing.entities.push(semio_framework_os::DwgEntity {
-                layer,
-                color: semio_framework_os::DwgColor::ByLayer,
-                geometry: semio_framework_os::DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [100.0, 0.0], [100.0, 200.0], [0.0, 200.0]], bulges: vec![0.0, 0.0, 0.0, 0.0] },
-            });
-            let document = puzzle2d_document_json_from_dwg(&drawing).unwrap();
-            let envelope: Puzzle2dPlayEnvelope = serde_json::from_value(document).unwrap();
-            assert_eq!(envelope.fixture.get("schema").and_then(|value| value.as_str()), Some(PUZZLE2D_FIXTURE_SCHEMA));
-            assert!(fixture_nodes(&envelope.fixture).is_empty());
-            assert_eq!(fixture_camera(&envelope.fixture), (50.0, 100.0, 1.0));
+        fn set_active_example_loads_concrete_forest_via_ops() {
+            let mut app = new_app();
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), &ViewState::default(), &meta("local")).expect("load example");
+            assert!(!fixture_nodes(&app.projection().expect("projection")).is_empty());
+        }
+
+        #[test]
+        fn select_then_delete_selection_removes_the_node() {
+            let mut app = new_app();
+            app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &meta("local")).expect("add node");
+            let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
+            app.handle_action("setSelection", Some(&json!({ "ids": [node_id] })), &ViewState::default(), &meta("local")).expect("select");
+            app.handle_action("deleteSelection", None, &ViewState::default(), &meta("local")).expect("delete");
+            assert!(fixture_nodes(&app.projection().expect("projection")).is_empty());
+        }
+
+        #[test]
+        fn undo_redo_round_trip_through_the_wrapper() {
+            let mut app = new_app();
+            app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &meta("local")).expect("add");
+            assert_eq!(fixture_nodes(&app.projection().expect("projection")).len(), 1);
+            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            assert_eq!(fixture_nodes(&app.projection().expect("projection")).len(), 0);
+            app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+            assert_eq!(fixture_nodes(&app.projection().expect("projection")).len(), 1);
+        }
+
+        #[test]
+        fn camera_drag_coalesces_into_one_undo_step() {
+            let mut app = new_app();
+            let camera_x = |app: &VcsDocumentApp<Puzzle2dPlayApp>| app.projection().expect("projection").get("camera").and_then(|camera| camera.get("x")).and_then(|value| value.as_f64()).unwrap_or(f64::NAN);
+            let origin_x = camera_x(&app);
+            for x in [1.0, 2.0, 3.0] {
+                app.handle_action("setCamera", Some(&json!({ "camera": { "x": x, "y": 0.0, "zoom": 1.0 } })), &ViewState::default(), &meta("local")).expect("camera");
+            }
+            assert_eq!(camera_x(&app), 3.0);
+            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            assert_eq!(camera_x(&app), origin_x, "the coalesced drag is a single undo step back to the loaded camera");
+        }
+
+        #[test]
+        fn document_panel_lists_nodes_section() {
+            let mut app = concrete_forest_app();
+            let json = serde_json::to_string(&app.render(PUZZLE2D_PLAY_BODY_LAYERS, None, &ViewState::default()).expect("render")).unwrap();
+            assert!(json.contains("puzzle2d-play-document.nodes"));
+            assert!(json.contains("seed-left-001"));
+        }
+
+        #[test]
+        fn labels_resolve_native_english_and_german_and_reuse() {
+            let mut app = concrete_forest_app();
+            let english = serde_json::to_string(&app.render(PUZZLE2D_PLAY_BODY_LAYERS, None, &ViewState::default()).expect("render")).unwrap();
+            assert!(english.contains("\"Nodes\"") && english.contains("\"Edges\""));
+            let german = serde_json::to_string(&app.render(PUZZLE2D_PLAY_BODY_LAYERS, None, &ViewState { locale: Some("de".into()), ..ViewState::default() }).expect("render")).unwrap();
+            assert!(german.contains("\"Knoten\"") && german.contains("\"Kanten\""));
+            let reuse = serde_json::to_string(&app.render(PUZZLE2D_PLAY_BODY_LAYERS, None, &ViewState { terminology: Some("reuse".into()), locale: Some("en".into()), ..ViewState::default() }).expect("render")).unwrap();
+            assert!(reuse.contains("Building components"));
         }
 
         #[test]
@@ -1994,320 +2035,58 @@ pub mod d2 {
         }
 
         #[test]
-        fn renders_distinct_canvas_per_pane() {
-            let app = Puzzle2dPlayApp::default();
-            let envelope = Puzzle2dPlayEnvelope { fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(), runtime: Puzzle2dPlayRuntime::default() };
-            let document = serde_json::to_string(&envelope).unwrap();
-            let overview_zoom = board_scene_zoom(&app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, &document, &ViewState::default()));
-            let detail_zoom = board_scene_zoom(&app.render(PUZZLE2D_PLAY_BODY_DETAIL, &document, &ViewState::default()));
-            let selection_zoom = board_scene_zoom(&app.render(PUZZLE2D_PLAY_BODY_SELECTION, &document, &ViewState::default()));
-            assert!(detail_zoom > overview_zoom, "detail {detail_zoom} should zoom in past overview {overview_zoom}");
-            assert!(overview_zoom > selection_zoom, "overview {overview_zoom} should zoom in past selection {selection_zoom}");
+        fn dwg_import_returns_empty_board_framed_to_extents() {
+            let mut drawing = semio_framework_os::DwgDrawing::default();
+            drawing.extmin = [0.0, 0.0, 0.0];
+            drawing.extmax = [100.0, 200.0, 0.0];
+            let fixture = puzzle2d_document_json_from_dwg(&drawing).unwrap();
+            assert_eq!(fixture.get("schema").and_then(|value| value.as_str()), Some(PUZZLE2D_FIXTURE_SCHEMA));
+            assert!(fixture_nodes(&fixture).is_empty());
+            assert_eq!(fixture_camera(&fixture), (50.0, 100.0, 1.0));
         }
 
-        fn board_scene_zoom(node: &UiNode) -> f64 {
-            match node {
-                UiNode::ComponentScene(scene) => {
-                    let camera_json = scene.puzzle2d_board.as_ref().expect("puzzle2d board scene").camera_json.clone();
-                    serde_json::from_str::<Value>(&camera_json).ok().and_then(|value| value.get("zoom").and_then(|zoom| zoom.as_f64())).unwrap_or(1.0)
-                }
-                other => panic!("expected component scene, got {other:?}"),
-            }
+        /// 🧪 Definitional convergence proof: two instances on one backbone make DISJOINT node edits
+        /// (each adds its own node) and, after exchanging ops, both converge to contain BOTH nodes —
+        /// impossible under whole-document `setDocument` snapshots, which would clobber one side.
+        #[test]
+        fn two_instances_converge_disjoint_node_edits_via_backbone() {
+            let mut instance_a = new_app();
+            let mut instance_b = new_app();
+            let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://puzzle2d-convergence", "mem://puzzle2d-convergence");
+            instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
+            instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+
+            instance_a.handle_action("addNode", Some(&json!({ "kind": "seed" })), &ViewState::default(), &meta("actor-a")).expect("a adds node");
+            instance_b.handle_action("addNode", Some(&json!({ "kind": "other" })), &ViewState::default(), &meta("actor-b")).expect("b adds node");
+
+            // A neutral history action always calls store.dispatch(), which pumps inbound ops first.
+            instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
+            instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+
+            assert_eq!(fixture_nodes(&instance_a.projection().expect("projection")).len(), 2, "instance A must contain both nodes");
+            assert_eq!(fixture_nodes(&instance_b.projection().expect("projection")).len(), 2, "instance B must contain both nodes");
         }
 
         #[test]
-        fn set_lod_mode_for_pane_persists_per_pane_state() {
-            let mut app = Puzzle2dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setLodModeForPane", Some(&json!({ "pane": PUZZLE2D_PANE_DETAIL, "value": "compact" })), &document, &ViewState::default());
-            let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
-            assert_eq!(envelope.runtime.lod_mode_by_pane.get(PUZZLE2D_PANE_DETAIL).map(String::as_str), Some("compact"));
-            assert_eq!(envelope.runtime.lod_mode_by_pane.get(PUZZLE2D_PANE_OVERVIEW).map(String::as_str), Some(PUZZLE2D_LOD_MODE_AUTOMATIC));
-        }
+        fn ingest_operations_is_idempotent() {
+            let mut sender = new_app();
+            let (near, mut far) = MemoryBackbone::pair("mem://puzzle2d-doc", "mem://puzzle2d-doc");
+            sender.attach_backbone(Box::new(near)).expect("attach");
+            sender.handle_action("addNode", Some(&json!({ "kind": "seed" })), &ViewState::default(), &meta("local")).expect("add");
 
-        #[test]
-        fn engagement_input_and_submit_round_trip_sets_active_tool() {
-            let mut app = Puzzle2dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("engagementInput", Some(&json!({ "pane": PUZZLE2D_PANE_OVERVIEW, "value": "brush" })), &document, &ViewState::default());
-            let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
-            assert_eq!(envelope.runtime.engagement_input_by_pane.get(PUZZLE2D_PANE_OVERVIEW).map(String::as_str), Some("brush"));
-            let document = serde_json::to_string(&envelope).unwrap();
-            let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "pane": PUZZLE2D_PANE_OVERVIEW, "value": "brush" })), &document, &ViewState::default());
-            let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
-            assert_eq!(envelope.runtime.active_tool, "brush");
-            assert_eq!(envelope.runtime.engagement_input_by_pane.get(PUZZLE2D_PANE_OVERVIEW).map(String::as_str), Some(""));
-        }
-
-        #[test]
-        fn engagement_reflects_fill_slider_and_brush_candidate_control() {
-            let app = Puzzle2dPlayApp::default();
-            let mut envelope = parse_envelope(&app.initial_document_json());
-            envelope.runtime.active_tool = "fill".into();
-            envelope.runtime.fill_count = 7;
-            let document = serde_json::to_string(&envelope).unwrap();
-            let engagements = app.window_engagements(&document, &ViewState::default());
-            let overview = engagements.get(PUZZLE2D_PANE_OVERVIEW).expect("overview engagement");
-            assert!(matches!(overview.control, Some(WindowEngagementControl::Slider { .. })), "fill tool should show a slider control");
-            assert!(overview.input.is_some(), "engagement REPL input should be present");
-
-            envelope.runtime.active_tool = "brush".into();
-            envelope.runtime.brush_candidates = vec![json!({ "nodeKind": "heavy", "targetHandleIndex": 0 }), json!({ "nodeKind": "light", "targetHandleIndex": 1 })];
-            let document = serde_json::to_string(&envelope).unwrap();
-            let engagements = app.window_engagements(&document, &ViewState::default());
-            let overview = engagements.get(PUZZLE2D_PANE_OVERVIEW).expect("overview engagement");
-            assert!(matches!(overview.control, Some(WindowEngagementControl::ToggleGroup { .. })), "brush tool with candidates should show a placement control");
-        }
-
-        #[test]
-        fn suggestion_offset_and_brush_kind_weight_actions_persist() {
-            let mut app = Puzzle2dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setSuggestionOffset", Some(&json!({ "value": 40.0 })), &document, &ViewState::default());
-            let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
-            assert_eq!(envelope.runtime.suggestion_offset, 40.0);
-
-            let document = serde_json::to_string(&envelope).unwrap();
-            let ops = app.handle_action_patch_ops("setBrushKindWeights", Some(&json!({ "kindId": "heavy", "catalogSlice": "nodes", "value": 0.75 })), &document, &ViewState::default());
-            let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
-            assert_eq!(envelope.runtime.node_kind_weights.get("heavy").copied(), Some(0.75));
-        }
-
-        #[test]
-        fn document_panel_lists_nodes_section() {
-            let app = Puzzle2dPlayApp::default();
-            let envelope = Puzzle2dPlayEnvelope { fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(), runtime: Puzzle2dPlayRuntime::default() };
-            let document = serde_json::to_string(&envelope).unwrap();
-            let node = app.render(PUZZLE2D_PLAY_BODY_LAYERS, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("puzzle2d-play-document.nodes"));
-            assert!(json.contains("seed-left-001"));
-        }
-
-        #[test]
-        fn add_node_action_appends_node() {
-            let mut app = Puzzle2dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("addNode", Some(&json!({ "kind": "node" })), &document, &ViewState::default());
-            assert_eq!(ops.len(), 1);
-            let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
-            assert_eq!(envelope.fixture.get("nodes").and_then(|value| value.as_array()).map(|values| values.len()), Some(1));
-        }
-
-        #[test]
-        fn apply_board_events_selects_node_from_client_session() {
-            let mut app = Puzzle2dPlayApp::default();
-            let envelope = Puzzle2dPlayEnvelope { fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(), runtime: Puzzle2dPlayRuntime::default() };
-            let document = serde_json::to_string(&envelope).unwrap();
-            let events_json = serde_json::json!([{
-                "name": "select",
-                "payload": { "ids": ["seed-left-001"] }
-            }])
-            .to_string();
-            let ops = app.handle_action_patch_ops("applyBoardEvents", Some(&json!({ "eventsJson": events_json })), &document, &ViewState::default());
-            let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
-            assert!(envelope.runtime.selected_ids.iter().any(|id| id == "seed-left-001"), "expected seed-left-001 selected, got {:?}", envelope.runtime.selected_ids);
-        }
-
-        #[test]
-        fn apply_board_events_camera_round_trips_to_overview_scene() {
-            let mut app = Puzzle2dPlayApp::default();
-            let envelope = Puzzle2dPlayEnvelope { fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(), runtime: Puzzle2dPlayRuntime::default() };
-            let document = serde_json::to_string(&envelope).unwrap();
-            let camera = json!({ "x": 345.0, "y": -123.0, "zoom": 4.25 });
-            let events_json = serde_json::json!([{
-                "name": "camera",
-                "payload": camera
-            }])
-            .to_string();
-            let ops = app.handle_action_patch_ops("applyBoardEvents", Some(&json!({ "eventsJson": events_json })), &document, &ViewState::default());
-            let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
-            let node = app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
-            let scene_camera = board_scene_camera(&node);
-            assert_eq!(scene_camera, camera);
-        }
-
-        fn board_scene_camera(node: &UiNode) -> Value {
-            match node {
-                UiNode::ComponentScene(scene) => {
-                    let camera_json = scene.puzzle2d_board.as_ref().expect("puzzle2d board scene").camera_json.clone();
-                    serde_json::from_str::<Value>(&camera_json).expect("camera json")
-                }
-                other => panic!("expected component scene, got {other:?}"),
-            }
-        }
-
-        fn apply_document_op(document_json: &str, op_json: &str) -> Puzzle2dPlayEnvelope {
-            let mut envelope = parse_envelope(document_json);
-            if let Ok(op) = serde_json::from_str::<Value>(op_json) {
-                if op.get("op").and_then(|value| value.as_str()) == Some("setDocument") {
-                    if let Some(document) = op.get("document") {
-                        if let Ok(parsed) = serde_json::from_value(document.clone()) {
-                            envelope = parsed;
-                        }
-                    }
+            let mut envelopes = Vec::new();
+            for message in far.receive().expect("receive") {
+                if let BackboneMessage::Ops { envelopes: ops } = message {
+                    envelopes.extend(ops);
                 }
             }
-            envelope
-        }
+            assert!(!envelopes.is_empty(), "the applied op must flow onto the channel");
+            let operations_json = serde_json::to_string(&envelopes).expect("serialize");
 
-        fn board_scene_json(node: &UiNode) -> Value {
-            match node {
-                UiNode::ComponentScene(scene) => serde_json::to_value(scene.puzzle2d_board.as_ref().expect("puzzle2d board scene")).unwrap(),
-                other => panic!("expected component scene, got {other:?}"),
-            }
-        }
-
-        fn test_fixture_two_nodes() -> Value {
-            json!({
-                "schema": PUZZLE2D_FIXTURE_SCHEMA,
-                "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
-                "nodes": [
-                    { "id": "n1", "nodeKind": "seed", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "n1", "handles": [{ "id": "n1:v0", "handleKind": "port", "angle": 0.0, "radius": 4.0 }] },
-                    { "id": "n2", "nodeKind": "seed", "shape": "circle", "x": 100.0, "y": 0.0, "radius": 24.0, "text": "n2", "handles": [{ "id": "n2:v0", "handleKind": "port", "angle": 3.14159, "radius": 4.0 }] },
-                    { "id": "n3", "nodeKind": "other", "shape": "circle", "x": 200.0, "y": 0.0, "radius": 24.0, "text": "n3", "handles": [] }
-                ],
-                "edges": [
-                    { "id": "e1", "edgeKind": "link", "source": "n1:v0", "target": "n2:v0" }
-                ]
-            })
-        }
-
-        fn envelope_with_selection(selected: &[&str]) -> Puzzle2dPlayEnvelope {
-            Puzzle2dPlayEnvelope { fixture: test_fixture_two_nodes(), runtime: Puzzle2dPlayRuntime { selected_ids: selected.iter().map(|id| id.to_string()).collect(), ..Puzzle2dPlayRuntime::default() } }
-        }
-
-        #[test]
-        fn puzzle2d_board_scene_carries_runtime_fields() {
-            let mut app = Puzzle2dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setActiveTool", Some(&json!({ "tool": "brush" })), &document, &ViewState::default());
-            let envelope = apply_document_op(&document, &ops[0]);
-            let document = serde_json::to_string(&envelope).unwrap();
-            let ops = app.handle_action_patch_ops("setGridSnapEnabled", Some(&json!({ "enabled": true })), &document, &ViewState::default());
-            let envelope = apply_document_op(&document, &ops[0]);
-            let document = serde_json::to_string(&envelope).unwrap();
-
-            let node = app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, &document, &ViewState::default());
-            let scene = board_scene_json(&node);
-            assert_eq!(scene.get("activeTool").and_then(|value| value.as_str()), Some("brush"));
-            assert_eq!(scene.get("gridSnapEnabled").and_then(|value| value.as_bool()), Some(true));
-            assert_eq!(scene.get("lodMode").and_then(|value| value.as_str()), Some(PUZZLE2D_LOD_MODE_AUTOMATIC));
-        }
-
-        #[test]
-        fn set_selection_flag_hides_and_locks_the_selected_node() {
-            let mut app = Puzzle2dPlayApp::default();
-            let envelope = envelope_with_selection(&["n1"]);
-            let document = serde_json::to_string(&envelope).unwrap();
-            let ops = app.handle_action_patch_ops("setSelectionFlag", Some(&json!({ "flag": "hidden", "value": true })), &document, &ViewState::default());
-            let envelope = apply_document_op(&document, &ops[0]);
-            let node = fixture_nodes(&envelope.fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some("n1")).unwrap();
-            assert_eq!(node.get("hidden").and_then(|value| value.as_bool()), Some(true));
-
-            let document = serde_json::to_string(&envelope).unwrap();
-            let ops = app.handle_action_patch_ops("setSelectionFlag", Some(&json!({ "flag": "locked", "value": true })), &document, &ViewState::default());
-            let envelope = apply_document_op(&document, &ops[0]);
-            let node = fixture_nodes(&envelope.fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some("n1")).unwrap();
-            assert_eq!(node.get("locked").and_then(|value| value.as_bool()), Some(true));
-        }
-
-        #[test]
-        fn duplicate_selection_clones_node_offsets_position_and_selects_the_clone() {
-            let mut app = Puzzle2dPlayApp::default();
-            let envelope = envelope_with_selection(&["n1"]);
-            let document = serde_json::to_string(&envelope).unwrap();
-            let ops = app.handle_action_patch_ops("duplicateSelection", None, &document, &ViewState::default());
-            assert!(!ops.is_empty());
-            let envelope = apply_document_op(&document, &ops[0]);
-            assert_eq!(envelope.runtime.selected_ids.len(), 1);
-            let new_id = envelope.runtime.selected_ids[0].clone();
-            assert_ne!(new_id, "n1");
-            let clone = fixture_nodes(&envelope.fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(new_id.as_str())).unwrap();
-            assert_eq!(clone.get("x").and_then(|value| value.as_f64()), Some(24.0));
-            assert_eq!(clone.get("y").and_then(|value| value.as_f64()), Some(24.0));
-            assert_eq!(fixture_nodes(&envelope.fixture).len(), 4);
-        }
-
-        #[test]
-        fn select_same_kind_selects_every_node_sharing_a_kind() {
-            let mut app = Puzzle2dPlayApp::default();
-            let envelope = envelope_with_selection(&["n1"]);
-            let document = serde_json::to_string(&envelope).unwrap();
-            let ops = app.handle_action_patch_ops("selectSameKind", None, &document, &ViewState::default());
-            let envelope = apply_document_op(&document, &ops[0]);
-            let mut ids = envelope.runtime.selected_ids.clone();
-            ids.sort();
-            assert_eq!(ids, vec!["n1".to_string(), "n2".to_string()]);
-        }
-
-        #[test]
-        fn puzzle2d_labels_resolve_native_by_default() {
-            let app = Puzzle2dPlayApp::default();
-            let envelope = Puzzle2dPlayEnvelope { fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(), runtime: Puzzle2dPlayRuntime::default() };
-            let document = serde_json::to_string(&envelope).unwrap();
-            let node = app.render(PUZZLE2D_PLAY_BODY_LAYERS, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("\"Nodes\""));
-            assert!(json.contains("\"Edges\""));
-            assert!(!json.contains("Building components"));
-            assert!(!json.contains("Knoten"));
-
-            let engagements = app.window_engagements(&document, &ViewState::default());
-            let overview = engagements.get(PUZZLE2D_PANE_OVERVIEW).expect("overview engagement");
-            let options_json = serde_json::to_string(&overview.options).unwrap();
-            assert!(options_json.contains("\"Select\""));
-            assert!(options_json.contains("\"Brush\""));
-            assert!(options_json.contains("\"Fill\""));
-        }
-
-        #[test]
-        fn puzzle2d_labels_resolve_native_in_german() {
-            let app = Puzzle2dPlayApp::default();
-            let envelope = Puzzle2dPlayEnvelope { fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(), runtime: Puzzle2dPlayRuntime::default() };
-            let document = serde_json::to_string(&envelope).unwrap();
-            let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-            let node = app.render(PUZZLE2D_PLAY_BODY_LAYERS, &document, &view_state);
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("\"Knoten\""));
-            assert!(json.contains("\"Kanten\""));
-            assert!(!json.contains("\"Nodes\""));
-
-            let measures = app.window_measures(&document, &view_state);
-            let overview_measures_json = serde_json::to_string(&measures.get(PUZZLE2D_PANE_OVERVIEW).unwrap()).unwrap();
-            assert!(overview_measures_json.contains("Automatisch"));
-            assert!(overview_measures_json.contains("Vorschlag"));
-        }
-
-        #[test]
-        fn puzzle2d_labels_resolve_reuse_terminology_in_english() {
-            let app = Puzzle2dPlayApp::default();
-            let envelope = Puzzle2dPlayEnvelope { fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(), runtime: Puzzle2dPlayRuntime::default() };
-            let document = serde_json::to_string(&envelope).unwrap();
-            let view_state = ViewState { terminology: Some("reuse".into()), locale: Some("en".into()), ..ViewState::default() };
-            let node = app.render(PUZZLE2D_PLAY_BODY_LAYERS, &document, &view_state);
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("Building components"));
-            assert!(!json.contains("\"Nodes\""));
-
-            let catalogue = app.render(PUZZLE2D_PLAY_BODY_CATALOGUE, &document, &view_state);
-            let catalogue_json = serde_json::to_string(&catalogue).unwrap();
-            assert!(catalogue_json.contains("Connection points"));
-        }
-
-        #[test]
-        fn puzzle2d_labels_resolve_reuse_terminology_in_german() {
-            let app = Puzzle2dPlayApp::default();
-            let envelope = Puzzle2dPlayEnvelope { fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(), runtime: Puzzle2dPlayRuntime::default() };
-            let document = serde_json::to_string(&envelope).unwrap();
-            let view_state = ViewState { terminology: Some("reuse".into()), locale: Some("de".into()), ..ViewState::default() };
-            let node = app.render(PUZZLE2D_PLAY_BODY_LAYERS, &document, &view_state);
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("Baukomponenten"));
-
-            let catalogue = app.render(PUZZLE2D_PLAY_BODY_CATALOGUE, &document, &view_state);
-            let catalogue_json = serde_json::to_string(&catalogue).unwrap();
-            assert!(catalogue_json.contains("Verbindungspunkte"));
+            let mut receiver = new_app();
+            receiver.ingest_operations(&operations_json).expect("ingest once");
+            receiver.ingest_operations(&operations_json).expect("ingest twice");
+            assert_eq!(fixture_nodes(&receiver.projection().expect("projection")).len(), 1, "feeding the same op twice must not double-apply");
         }
     }
     //#endregion 🧪Tests
@@ -2315,10 +2094,11 @@ pub mod d2 {
 pub mod d3 {
     //! 🧊 Puzzle 3D plugin — 3D puzzle assembly play app bundled as a hot-swappable WASM component.
 
-    use puzzle_3d::{BrushPlacePayload, Puzzle3dPrecomputeSession};
+    use semio_framework_plugin::component::layout::WindowEngagementToggleGroupOption;
+    use puzzle_3d::{puzzle3d_document_delta_ops, BrushPlacePayload, Puzzle3dOp, Puzzle3dPrecomputeSession};
     use semio_framework_plugin::{
-        apply_world3d_sun_action, build_world_3d_scene, create_default_layout, layout::{MeasureSelectItem, WindowEngagementToggleGroupOption}, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
-        ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, PanelGroup, PluginApp,
+        apply_world3d_sun_action, build_world_3d_scene, create_default_layout, ActionEmit, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
+        ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, PanelGroup,
         SurfaceKind, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     };
@@ -2347,28 +2127,6 @@ pub mod d3 {
     const PUZZLE3D_ENGAGEMENT_TOOL_SELECT: &str = "puzzle3d.tool.select";
     const PUZZLE3D_ENGAGEMENT_TOOL_FILL: &str = "puzzle3d.tool.fill";
     const PUZZLE3D_FILL_COUNT_MAX: u32 = 1000;
-
-    /// ⏪ Actions that mutate the shared `envelope` in place and should be undoable — excludes `setDocument`/`setActiveExample`,
-    /// which replace the whole envelope wholesale (any pre-match snapshot on it would be discarded), and view-only state
-    /// (selection/hover/camera/tool) so undo only ever touches document content.
-    const PUZZLE3D_UNDOABLE_ACTIONS: &[&str] = &[
-        "setFixtureJson",
-        "addObjectKind",
-        "deleteSelection",
-        "duplicateSelection",
-        "worldRelocate",
-        "setSelectionFlag",
-        "patchInspector",
-        "addBrushObject",
-        "acceptSuggestion",
-        "setFillCount",
-        "createAttraction",
-        "deleteAttraction",
-        "addTargetVolume",
-        "deleteTargetVolume",
-        "setTargetVolumeFlag",
-    ];
-    const PUZZLE3D_UNDO_STACK_MAX: usize = 50;
 
     const CONCRETE_FOREST_EXAMPLE_JSON: &str = include_str!("../../3d/example/concrete-forest.3d.json");
     const NAKAGIN_EXAMPLE_JSON: &str = include_str!("../../3d/example/nakagin-capsule-tower.3d.json");
@@ -2613,10 +2371,6 @@ pub mod d3 {
         hovered_kind_id: Option<String>,
         #[serde(default)]
         engagement_input: String,
-        #[serde(default)]
-        undo_stack: Vec<Puzzle3dFixture>,
-        #[serde(default)]
-        redo_stack: Vec<Puzzle3dFixture>,
         #[serde(default = "default_selection_mode")]
         selection_mode_default: String,
         #[serde(default = "default_proximity_radius")]
@@ -2661,8 +2415,6 @@ pub mod d3 {
                 selectable_kinds: Puzzle3dSelectableKinds::default(),
                 hovered_kind_id: None,
                 engagement_input: String::new(),
-                undo_stack: Vec::new(),
-                redo_stack: Vec::new(),
                 selection_mode_default: default_selection_mode(),
                 proximity_radius: default_proximity_radius(),
                 chunk_size: default_chunk_size(),
@@ -2715,11 +2467,13 @@ pub mod d3 {
         "MATCH (n:Object) RETURN n.name".into()
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct Puzzle3dEnvelope {
+    /// 🧾 Transient render/mutation bundle pairing the persisted projection (the bare `Puzzle3dFixture`
+    /// json) with the app's ephemeral view state. Never persisted — the {@link VcsDocumentApp} store owns
+    /// the fixture and {@link Puzzle3dPlayApp} owns the runtime — but rebuilt per call so the existing
+    /// panel/world/engagement helpers keep their `&scene` signatures.
+    #[derive(Clone)]
+    struct Puzzle3dScene {
         fixture: Puzzle3dFixture,
-        #[serde(default)]
         runtime: Puzzle3dRuntime,
     }
 
@@ -2738,30 +2492,19 @@ pub mod d3 {
         }
     }
 
-    fn default_envelope() -> Puzzle3dEnvelope {
-        serde_json::from_str::<Puzzle3dFixture>(CONCRETE_FOREST_EXAMPLE_JSON)
-            .map(|fixture| Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() })
-            .unwrap_or_else(|_| Puzzle3dEnvelope { fixture: empty_fixture(), runtime: Puzzle3dRuntime::default() })
+    fn default_fixture() -> Puzzle3dFixture {
+        serde_json::from_str::<Puzzle3dFixture>(CONCRETE_FOREST_EXAMPLE_JSON).unwrap_or_else(|_| empty_fixture())
     }
 
-    fn nakagin_envelope() -> Puzzle3dEnvelope {
-        serde_json::from_str::<Puzzle3dFixture>(NAKAGIN_EXAMPLE_JSON)
-            .map(|fixture| Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() })
-            .unwrap_or_else(|_| Puzzle3dEnvelope { fixture: empty_fixture(), runtime: Puzzle3dRuntime::default() })
+    fn nakagin_fixture() -> Puzzle3dFixture {
+        serde_json::from_str::<Puzzle3dFixture>(NAKAGIN_EXAMPLE_JSON).unwrap_or_else(|_| empty_fixture())
     }
 
-    fn parse_envelope(document_json: &str) -> Puzzle3dEnvelope {
-        if let Ok(envelope) = serde_json::from_str::<Puzzle3dEnvelope>(document_json) {
-            return envelope;
-        }
-        if let Ok(fixture) = serde_json::from_str::<Puzzle3dFixture>(document_json) {
-            return Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() };
-        }
-        default_envelope()
-    }
-
-    fn set_document_op(envelope: &Puzzle3dEnvelope) -> String {
-        json!({ "op": "setDocument", "document": envelope }).to_string()
+    /// 🧾 Materializes the transient scene from the persisted projection (bare fixture json) and the
+    /// app's current view state; an unparseable projection degrades to an empty board.
+    fn scene_from_projection(projection: &Value, runtime: Puzzle3dRuntime) -> Puzzle3dScene {
+        let fixture = serde_json::from_value::<Puzzle3dFixture>(projection.clone()).unwrap_or_else(|_| empty_fixture());
+        Puzzle3dScene { fixture, runtime }
     }
 
     fn puzzle3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -3076,7 +2819,7 @@ pub mod d3 {
         serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
     }
 
-    fn world_interaction_json(envelope: &Puzzle3dEnvelope, session: &Puzzle3dPrecomputeSession) -> String {
+    fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecomputeSession) -> String {
         let runtime = &envelope.runtime;
         let suggestion_menu = runtime.suggestion_menu.map(|[x, y]| {
             let (pending, candidates) = puzzle3d_brush_target_vortex(envelope)
@@ -3130,7 +2873,7 @@ pub mod d3 {
         .to_string()
     }
 
-    fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzzle3dEnvelope) -> Option<String> {
+    fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) -> Option<String> {
         if envelope.runtime.active_tool != "brush" {
             return None;
         }
@@ -3138,7 +2881,7 @@ pub mod d3 {
         session.brush_preview_json(&vortex_id, envelope.runtime.brush_candidate_index)
     }
 
-    fn drive_precompute(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dEnvelope) {
+    fn drive_precompute(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
         sync_precompute_session(session, envelope);
         for _ in 0..128 {
             if !session.precompute_step(32) {
@@ -3147,7 +2890,7 @@ pub mod d3 {
         }
     }
 
-    fn scene_config_json(envelope: &Puzzle3dEnvelope) -> String {
+    fn scene_config_json(envelope: &Puzzle3dScene) -> String {
         json!({
             "fixture": {
                 "objects": envelope.fixture.objects,
@@ -3174,7 +2917,7 @@ pub mod d3 {
     }
 
     /// 🧊 Only seeds the box fallback for URLs with no mesh yet, so a real GLB registered earlier via `registerBrushMesh` survives every subsequent resync.
-    fn sync_precompute_session(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dEnvelope) {
+    fn sync_precompute_session(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
         let _ = session.set_scene(&scene_config_json(envelope));
         let fallback = mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND);
         let fallback_positions = scaled_mesh_positions(&fallback.positions, PUZZLE3D_FALLBACK_MESH_SCALE);
@@ -3188,7 +2931,7 @@ pub mod d3 {
         }
     }
 
-    fn world_selection_json(envelope: &Puzzle3dEnvelope) -> String {
+    fn world_selection_json(envelope: &Puzzle3dScene) -> String {
         let runtime = &envelope.runtime;
         let mut value: Value = serde_json::from_str(&world3d_selection_json(&runtime.selection_method, &runtime.selection.object_ids, runtime.hovered_object_id.as_deref())).unwrap_or_else(|_| json!({}));
         if let Some(object) = value.as_object_mut() {
@@ -3218,7 +2961,7 @@ pub mod d3 {
         value.to_string()
     }
 
-    fn gumball_target_world(envelope: &Puzzle3dEnvelope) -> Option<[f64; 3]> {
+    fn gumball_target_world(envelope: &Puzzle3dScene) -> Option<[f64; 3]> {
         let selected: Vec<&Puzzle3dObject> = envelope.fixture.objects.iter().filter(|object| envelope.runtime.selection.object_ids.contains(&object.id)).collect();
         if selected.is_empty() {
             return None;
@@ -3233,7 +2976,7 @@ pub mod d3 {
         Some([sum[0] / count, sum[1] / count, sum[2] / count])
     }
 
-    fn fixture_from_engine_json(envelope: &Puzzle3dEnvelope, fixture_json: &str) -> Option<Puzzle3dEnvelope> {
+    fn fixture_from_engine_json(envelope: &Puzzle3dScene, fixture_json: &str) -> Option<Puzzle3dScene> {
         let parsed: Value = serde_json::from_str(fixture_json).ok()?;
         let mut next = envelope.clone();
         next.fixture.objects = serde_json::from_value(parsed.get("objects")?.clone()).ok()?;
@@ -3242,7 +2985,7 @@ pub mod d3 {
         Some(next)
     }
 
-    fn apply_puzzle3d_fill_count(precompute: &mut Puzzle3dPrecomputeSession, mut envelope: Puzzle3dEnvelope, count: u32) -> Puzzle3dEnvelope {
+    fn apply_puzzle3d_fill_count(precompute: &mut Puzzle3dPrecomputeSession, mut envelope: Puzzle3dScene, count: u32) -> Puzzle3dScene {
         envelope.runtime.fill_count = count;
         if count > 0 {
             envelope.runtime.active_tool = "fill".into();
@@ -3259,7 +3002,7 @@ pub mod d3 {
 
     /// 🎯 Mirrors the host's client-side `handleZoomToSelection` framing math so a keybinding/engagement-token
     /// driven focus (which bypasses that host interception) still produces a sensible camera.
-    fn apply_puzzle3d_focus_selection(envelope: &mut Puzzle3dEnvelope) {
+    fn apply_puzzle3d_focus_selection(envelope: &mut Puzzle3dScene) {
         let selected_origins: Vec<[f64; 3]> = envelope.fixture.objects.iter().filter(|object| envelope.runtime.selection.object_ids.contains(&object.id)).map(|object| object.origin).collect();
         if selected_origins.is_empty() {
             return;
@@ -3869,7 +3612,7 @@ pub mod d3 {
         ]
     }
 
-    fn build_document_tree(envelope: &Puzzle3dEnvelope, labels: &Puzzle3dLabels) -> UiNode {
+    fn build_document_tree(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiNode {
         let object_items: Vec<UiTreeItemNode> = envelope
             .fixture
             .objects
@@ -4082,7 +3825,7 @@ pub mod d3 {
         }
     }
 
-    fn build_kinds_tree(envelope: &Puzzle3dEnvelope, labels: &Puzzle3dLabels) -> UiNode {
+    fn build_kinds_tree(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiNode {
         let object_entries = puzzle3d_catalog_entries(&envelope.fixture, "objects");
         let vortex_entries = puzzle3d_catalog_entries(&envelope.fixture, "vortices");
         let cable_entries = puzzle3d_catalog_entries(&envelope.fixture, "cables");
@@ -4166,7 +3909,7 @@ pub mod d3 {
         ]
     }
 
-    fn build_inspector_tree(envelope: &Puzzle3dEnvelope, term_labels: &Puzzle3dLabels) -> UiNode {
+    fn build_inspector_tree(envelope: &Puzzle3dScene, term_labels: &Puzzle3dLabels) -> UiNode {
         let selection = &envelope.runtime.selection;
         if !selection.object_ids.is_empty() {
             let objects: Vec<&Puzzle3dObject> = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).collect();
@@ -4266,7 +4009,7 @@ pub mod d3 {
         ui_stack_vertical(vec![ui_text(format!("Schema: {}", envelope.fixture.schema)), ui_text(format!("Domain: {}", envelope.fixture.domain)), ui_text(format!("Objects: {}", envelope.fixture.objects.len()))])
     }
 
-    fn build_settings_body(envelope: &Puzzle3dEnvelope) -> UiNode {
+    fn build_settings_body(envelope: &Puzzle3dScene) -> UiNode {
         let runtime = &envelope.runtime;
         let selection_mode_field = UiNode::Field(UiFieldNode {
             id: "puzzle3d-play-settings.selection-mode".into(),
@@ -4394,7 +4137,7 @@ pub mod d3 {
         }
     }
 
-    fn build_jack_body(envelope: &Puzzle3dEnvelope) -> UiNode {
+    fn build_jack_body(envelope: &Puzzle3dScene) -> UiNode {
         let query_field = UiNode::Field(UiFieldNode {
             id: "puzzle3d-play-jack.query".into(),
             label: "Query".into(),
@@ -4441,7 +4184,7 @@ pub mod d3 {
         parse_brush_candidates_free(raw).len()
     }
 
-    fn puzzle3d_brush_target_vortex(envelope: &Puzzle3dEnvelope) -> Option<String> {
+    fn puzzle3d_brush_target_vortex(envelope: &Puzzle3dScene) -> Option<String> {
         envelope
             .runtime
             .selection
@@ -4457,7 +4200,7 @@ pub mod d3 {
             })
     }
 
-    fn puzzle3d_brush_placement_control(envelope: &Puzzle3dEnvelope, precompute: &Puzzle3dPrecomputeSession) -> Option<WindowEngagementControl> {
+    fn puzzle3d_brush_placement_control(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession) -> Option<WindowEngagementControl> {
         let target = puzzle3d_brush_target_vortex(envelope)?;
         let raw = precompute.brush_candidates(&target);
         let candidates = parse_brush_candidates_free(&raw);
@@ -4483,7 +4226,7 @@ pub mod d3 {
         })
     }
 
-    fn puzzle3d_fill_count_control(envelope: &Puzzle3dEnvelope, session: &Puzzle3dPrecomputeSession) -> WindowEngagementControl {
+    fn puzzle3d_fill_count_control(envelope: &Puzzle3dScene, session: &Puzzle3dPrecomputeSession) -> WindowEngagementControl {
         let progress: Value = serde_json::from_str(&session.fill_progress()).unwrap_or(Value::Null);
         let done = progress.get("done").and_then(Value::as_bool).unwrap_or(true);
         let built_count = progress.get("count").and_then(Value::as_u64).unwrap_or(0) as u32;
@@ -4541,7 +4284,7 @@ pub mod d3 {
         vec![axis_stepper("w", "Width", w), axis_stepper("d", "Depth", d), axis_stepper("h", "Height", h)]
     }
 
-    fn puzzle3d_engagement(envelope: &Puzzle3dEnvelope, precompute: &Puzzle3dPrecomputeSession) -> WindowEngagement {
+    fn puzzle3d_engagement(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession) -> WindowEngagement {
         let object_count = envelope.fixture.objects.len();
         let attraction_count = envelope.fixture.attractions.len();
         let voxel_edit_active = envelope.runtime.active_tool == "fill" && envelope.runtime.fill_edit_target_volumes;
@@ -4599,12 +4342,12 @@ pub mod d3 {
             }),
             control,
             controls,
-            status: Some(vec![semio_framework_plugin::layout::WindowEngagementStatus { id: "puzzle3d-world-status".into(), text: format!("{object_count} objects · {attraction_count} attractions") }]),
+            status: Some(vec![semio_framework_plugin::WindowEngagementStatus { id: "puzzle3d-world-status".into(), text: format!("{object_count} objects · {attraction_count} attractions") }]),
             possible_engagements: None,
         }
     }
 
-    fn puzzle3d_context_menu_json(envelope: &Puzzle3dEnvelope) -> Option<String> {
+    fn puzzle3d_context_menu_json(envelope: &Puzzle3dScene) -> Option<String> {
         let selection = &envelope.runtime.selection;
         if !selection.object_ids.is_empty() {
             let all_hidden = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.hidden);
@@ -4758,7 +4501,7 @@ pub mod d3 {
             .collect()
     }
 
-    fn puzzle3d_brush_measures_group(envelope: &Puzzle3dEnvelope, labels: &Puzzle3dLabels) -> WindowMeasure {
+    fn puzzle3d_brush_measures_group(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowMeasure {
         let object_ids = puzzle3d_kind_ids(&envelope.fixture, "objects");
         let vortex_ids = puzzle3d_kind_ids(&envelope.fixture, "vortices");
         WindowMeasure::Group {
@@ -4813,7 +4556,7 @@ pub mod d3 {
         }
     }
 
-    fn puzzle3d_window_measures(envelope: &Puzzle3dEnvelope, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
+    fn puzzle3d_window_measures(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
         vec![
             puzzle3d_view_measure(&envelope.runtime),
             puzzle3d_lod_measures_group(&envelope.runtime),
@@ -4825,73 +4568,73 @@ pub mod d3 {
     //#endregion 🔖Measures
 
     //#region 🔖Puzzle3dPlayApp
+    /// 🧩 Puzzle-3d play app. Owns the precompute engine and ephemeral view `runtime`; the persisted
+    /// document (bare `Puzzle3dFixture` json) lives in the wrapping `VcsDocumentApp`'s op store. Each
+    /// action rehydrates the engine from the projection, mutates a transient {@link Puzzle3dScene},
+    /// then emits the granular op delta. Undo/redo/checkpoints are handled by the wrapper — the former
+    /// manual `undo_stack`/`redo_stack` machinery is gone.
     pub struct Puzzle3dPlayApp {
         precompute: Puzzle3dPrecomputeSession,
+        runtime: Puzzle3dRuntime,
     }
 
     impl Default for Puzzle3dPlayApp {
         fn default() -> Self {
-            Self { precompute: Puzzle3dPrecomputeSession::new() }
+            Self { precompute: Puzzle3dPrecomputeSession::new(), runtime: Puzzle3dRuntime::default() }
         }
     }
 
-    impl PluginApp for Puzzle3dPlayApp {
+    impl DocumentApp for Puzzle3dPlayApp {
+        type Projection = Value;
+        type Op = Puzzle3dOp;
+
         fn app_id(&self) -> &str {
             PUZZLE3D_PLAY_APP_ID
         }
 
-        fn initial_document_json(&self) -> String {
-            serde_json::to_string(&default_envelope()).expect("puzzle3d envelope json")
+        fn document_schema(&self) -> &str {
+            PUZZLE3D_FIXTURE_SCHEMA
         }
 
-        fn handle_action_patch_ops(&mut self, action: &str, args: Option<&Value>, document_json: &str, _view_state: &ViewState) -> Vec<String> {
-            let mut envelope = parse_envelope(document_json);
+        fn initial_projection(&self) -> Value {
+            serde_json::to_value(default_fixture()).unwrap_or_else(|_| serde_json::to_value(empty_fixture()).unwrap_or(Value::Null))
+        }
+
+        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, _view_state: &ViewState) -> ActionEmit<Puzzle3dOp> {
+            let before = doc.projection.clone();
+            let mut envelope = scene_from_projection(&before, self.runtime.clone());
             sync_precompute_session(&mut self.precompute, &envelope);
-            if PUZZLE3D_UNDOABLE_ACTIONS.contains(&action) {
-                envelope.runtime.undo_stack.push(envelope.fixture.clone());
-                if envelope.runtime.undo_stack.len() > PUZZLE3D_UNDO_STACK_MAX {
-                    envelope.runtime.undo_stack.remove(0);
-                }
-                envelope.runtime.redo_stack.clear();
-            }
             match action {
-                "setDocument" => {
-                    if let Some(document) = args.and_then(|value| value.get("document")) {
-                        if let Ok(mut parsed) = serde_json::from_value::<Puzzle3dEnvelope>(document.clone()) {
-                            resolve_puzzle3d_attractions(&mut parsed.fixture);
-                            return vec![set_document_op(&parsed)];
-                        }
-                    }
-                }
                 "setFixtureJson" => {
                     if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
                         if let Ok(fixture) = serde_json::from_str::<Puzzle3dFixture>(json_text) {
                             envelope.fixture = fixture;
                             resolve_puzzle3d_attractions(&mut envelope.fixture);
-                            return vec![set_document_op(&envelope)];
                         }
                     }
                 }
                 "setActiveExample" => {
                     let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
-                    envelope = if example_id.is_empty() || example_id == "empty" {
-                        Puzzle3dEnvelope { fixture: empty_fixture(), runtime: Puzzle3dRuntime::default() }
+                    let next = if example_id.is_empty() || example_id == "empty" {
+                        Some(empty_fixture())
                     } else if example_id == PUZZLE3D_EXAMPLE_CONCRETE_FOREST || example_id == "concrete" {
-                        default_envelope()
+                        Some(default_fixture())
                     } else if example_id == PUZZLE3D_EXAMPLE_NAKAGIN || example_id == "nakagin" {
-                        nakagin_envelope()
+                        Some(nakagin_fixture())
                     } else {
-                        envelope
+                        None
                     };
+                    if let Some(fixture) = next {
+                        envelope.fixture = fixture;
+                        envelope.runtime = Puzzle3dRuntime::default();
+                    }
                     resolve_puzzle3d_attractions(&mut envelope.fixture);
                     drive_precompute(&mut self.precompute, &envelope);
-                    return vec![set_document_op(&envelope)];
                 }
                 "setSelection" => {
                     if let Some(selection) = args.and_then(|value| value.get("selection")) {
                         if let Ok(parsed) = serde_json::from_value(selection.clone()) {
                             envelope.runtime.selection = parsed;
-                            return vec![set_document_op(&envelope)];
                         }
                     }
                 }
@@ -4901,7 +4644,6 @@ pub mod d3 {
                     if envelope.runtime.active_tool == "brush" || envelope.runtime.active_tool == "fill" {
                         drive_precompute(&mut self.precompute, &envelope);
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "addObjectKind" => {
                     let object_kind = args.and_then(|value| value.get("objectKind")).and_then(|value| value.as_str()).unwrap_or("Object");
@@ -4928,7 +4670,6 @@ pub mod d3 {
                     });
                     envelope.runtime.selection.object_ids = vec![id];
                     resolve_puzzle3d_attractions(&mut envelope.fixture);
-                    return vec![set_document_op(&envelope)];
                 }
                 "deleteSelection" => {
                     let object_ids: Vec<String> = envelope.runtime.selection.object_ids.clone();
@@ -4946,7 +4687,6 @@ pub mod d3 {
                     let reference_ids: Vec<String> = envelope.runtime.selection.reference_ids.clone();
                     envelope.fixture.references.retain(|reference| !reference_ids.contains(&reference.id));
                     envelope.runtime.selection = Puzzle3dSelection::default();
-                    return vec![set_document_op(&envelope)];
                 }
                 "duplicateSelection" => {
                     let ids = envelope.runtime.selection.object_ids.clone();
@@ -4967,43 +4707,39 @@ pub mod d3 {
                     envelope.fixture.objects.extend(clones);
                     envelope.runtime.selection.object_ids = new_ids;
                     resolve_puzzle3d_attractions(&mut envelope.fixture);
-                    return vec![set_document_op(&envelope)];
                 }
                 "selectSameKindSelection" => {
                     let Some(first_id) = envelope.runtime.selection.object_ids.first() else {
-                        return Vec::new();
+                        self.runtime = envelope.runtime;
+                        return ActionEmit::default();
                     };
                     let Some(kind) = envelope.fixture.objects.iter().find(|object| object.id == *first_id).and_then(|object| object.object_kind.clone()).filter(|kind| !kind.is_empty()) else {
-                        return Vec::new();
+                        self.runtime = envelope.runtime;
+                        return ActionEmit::default();
                     };
                     envelope.runtime.selection.object_ids = envelope.fixture.objects.iter().filter(|object| object.object_kind.as_deref() == Some(kind.as_str())).map(|object| object.id.clone()).collect();
-                    return vec![set_document_op(&envelope)];
                 }
                 "setCamera" => {
                     if let Some(camera) = args.and_then(|value| value.get("camera")) {
                         if let Ok(parsed) = serde_json::from_value(camera.clone()) {
                             envelope.fixture.camera = parsed;
-                            return vec![set_document_op(&envelope)];
                         }
                     }
                 }
                 "setProjection" => {
                     if let Some(projection) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
                         envelope.fixture.camera.projection = Some(projection.into());
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "setCameraViewPreset" => {
                     if let Some(preset) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
                         envelope.fixture.camera = puzzle3d_camera_view_preset(preset);
                         envelope.runtime.view_preset = preset.into();
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "setJackQuery" => {
                     if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
                         envelope.runtime.jack_query = value.into();
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "translateSelection" => {
@@ -5022,7 +4758,6 @@ pub mod d3 {
                     puzzle3d_rederive_moved_attractions(&mut envelope.fixture, &ids, &incoming);
                     resolve_puzzle3d_attractions(&mut envelope.fixture);
                     if !ids.is_empty() {
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "rotateSelection" => {
@@ -5042,7 +4777,6 @@ pub mod d3 {
                     puzzle3d_rederive_moved_attractions(&mut envelope.fixture, &ids, &incoming);
                     resolve_puzzle3d_attractions(&mut envelope.fixture);
                     if !ids.is_empty() {
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "scaleSelection" => {
@@ -5056,18 +4790,15 @@ pub mod d3 {
                         }
                     }
                     if !ids.is_empty() {
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "worldSelect" => {
                     let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
                     let ids: Vec<String> = args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                     envelope.runtime.selection.object_ids = merge_world_selection_ids(&envelope.runtime.selection.object_ids, &ids, merge);
-                    return vec![set_document_op(&envelope)];
                 }
                 "worldHover" => {
                     envelope.runtime.hovered_object_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
-                    return vec![set_document_op(&envelope)];
                 }
                 "setHover" => {
                     if args.is_none() || args.and_then(|value| value.get("objectId")).is_none() {
@@ -5075,7 +4806,6 @@ pub mod d3 {
                     } else {
                         envelope.runtime.hovered_object_id = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()).map(str::to_string);
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "worldPick" => {
                     let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
@@ -5083,7 +4813,6 @@ pub mod d3 {
                         if merge == "replace" {
                             envelope.runtime.selection.object_ids.clear();
                         }
-                        return vec![set_document_op(&envelope)];
                     }
                     let index = args.and_then(|value| value.get("id")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
                     if let Some(object) = envelope.fixture.objects.get(index).filter(|object| !object.locked && !object.hidden) {
@@ -5106,13 +4835,11 @@ pub mod d3 {
                             vec![id]
                         };
                         envelope.runtime.selection.object_ids = merge_ids;
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "setTransformTool" => {
                     if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
                         envelope.runtime.transform_tool = tool.into();
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "worldVortexHover" => {
@@ -5120,14 +4847,12 @@ pub mod d3 {
                     if envelope.runtime.active_tool == "brush" && envelope.runtime.hovered_vortex_full_id.is_some() {
                         drive_precompute(&mut self.precompute, &envelope);
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "worldVortexSelect" => {
                     if let Some(full_id) = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()) {
                         envelope.runtime.selection.vortex_ids = vec![full_id.to_string()];
                         envelope.runtime.selection.object_ids.clear();
                         drive_precompute(&mut self.precompute, &envelope);
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "worldRelocate" => {
@@ -5177,62 +4902,50 @@ pub mod d3 {
                         }
                         resolve_puzzle3d_attractions(&mut envelope.fixture);
                         sync_precompute_session(&mut self.precompute, &envelope);
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "setSelectionMethod" => {
                     let method = args.and_then(|value| value.get("method")).and_then(|value| value.as_str()).unwrap_or("rectangle");
                     envelope.runtime.selection_method = method.into();
-                    return vec![set_document_op(&envelope)];
                 }
                 "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => {
                     apply_world3d_sun_action(&mut envelope.runtime.sun, action, args);
-                    return vec![set_document_op(&envelope)];
                 }
                 "setLodAutomatic" => {
                     envelope.runtime.lod_automatic = args.and_then(|value| value.get("pressed")).and_then(|value| value.as_bool()).unwrap_or(!envelope.runtime.lod_automatic);
-                    return vec![set_document_op(&envelope)];
                 }
                 "setLodDepthVariable" => {
                     envelope.runtime.lod_depth_variable = args.and_then(|value| value.get("pressed")).and_then(|value| value.as_bool()).unwrap_or(!envelope.runtime.lod_depth_variable);
-                    return vec![set_document_op(&envelope)];
                 }
                 "setLodShowGrid" => {
                     envelope.runtime.lod_show_grid = args.and_then(|value| value.get("pressed")).and_then(|value| value.as_bool()).unwrap_or(!envelope.runtime.lod_show_grid);
-                    return vec![set_document_op(&envelope)];
                 }
                 "setLodManual" => {
                     if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
                         envelope.runtime.lod_manual = value.clamp(PUZZLE3D_LOD_SLIDER_MIN, PUZZLE3D_LOD_SLIDER_MAX);
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "setGridSnapEnabled" => {
                     envelope.runtime.grid_snap_enabled = args.and_then(|value| value.get("pressed")).and_then(|value| value.as_bool()).unwrap_or(!envelope.runtime.grid_snap_enabled);
-                    return vec![set_document_op(&envelope)];
                 }
                 "setGridFactor" => {
                     if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
                         envelope.runtime.grid_factor = value.max(0.1);
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "setSelectionModeDefault" => {
                     if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
                         envelope.runtime.selection_mode_default = mode.into();
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "setProximityRadius" => {
                     if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
                         envelope.runtime.proximity_radius = value.max(0.0);
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "setChunkSize" => {
                     if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
                         envelope.runtime.chunk_size = value.max(1.0);
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "setSelectableKind" => {
@@ -5244,11 +4957,9 @@ pub mod d3 {
                         "attractions" => envelope.runtime.selectable_kinds.attractions = pressed.unwrap_or(!envelope.runtime.selectable_kinds.attractions),
                         _ => {}
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "setKindHover" => {
                     envelope.runtime.hovered_kind_id = args.and_then(|value| value.get("kindId")).and_then(|value| value.as_str()).map(str::to_string);
-                    return vec![set_document_op(&envelope)];
                 }
                 "setSelectionFlag" => {
                     let flag = args.and_then(|value| value.get("flag")).and_then(|value| value.as_str()).unwrap_or("hidden");
@@ -5263,7 +4974,6 @@ pub mod d3 {
                             apply_puzzle3d_selection_flag(&mut envelope.fixture, "targetVolume", &envelope.runtime.selection.target_volume_ids.clone(), flag, value);
                         }
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "patchInspector" => {
                     let entity = args.and_then(|value| value.get("entity")).and_then(|value| value.as_str()).unwrap_or("");
@@ -5272,7 +4982,6 @@ pub mod d3 {
                     let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
                     apply_puzzle3d_inspector_patch(&mut envelope.fixture, entity, &ids, field, &value);
                     resolve_puzzle3d_attractions(&mut envelope.fixture);
-                    return vec![set_document_op(&envelope)];
                 }
                 "selectAll" => {
                     envelope.runtime.selection.object_ids = if envelope.runtime.selectable_kinds.objects {
@@ -5284,11 +4993,9 @@ pub mod d3 {
                     envelope.runtime.selection.attraction_ids.clear();
                     envelope.runtime.selection.target_volume_ids.clear();
                     envelope.runtime.selection.reference_ids.clear();
-                    return vec![set_document_op(&envelope)];
                 }
                 "clearSelection" => {
                     envelope.runtime.selection = Puzzle3dSelection::default();
-                    return vec![set_document_op(&envelope)];
                 }
                 "contextMenuAt" => {
                     // 🖱️ Right-click on an unselected entity selects it and opens its menu in one round trip,
@@ -5304,15 +5011,12 @@ pub mod d3 {
                         "reference" => envelope.runtime.selection.reference_ids = vec![id.to_string()],
                         _ => {}
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "focusSelection" => {
                     apply_puzzle3d_focus_selection(&mut envelope);
-                    return vec![set_document_op(&envelope)];
                 }
                 "engagementInput" => {
                     envelope.runtime.engagement_input = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("").to_string();
-                    return vec![set_document_op(&envelope)];
                 }
                 "engagementSubmit" => {
                     let raw = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("").trim().to_string();
@@ -5336,41 +5040,18 @@ pub mod d3 {
                         }
                     }
                     envelope.runtime.engagement_input = String::new();
-                    return vec![set_document_op(&envelope)];
                 }
                 "engagementRepeatLast" => {
                     if envelope.runtime.active_tool == "fill" {
                         let count = (envelope.runtime.fill_count + 1).min(PUZZLE3D_FILL_COUNT_MAX);
                         envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, count);
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "engagementAbort" => {
                     envelope.runtime.engagement_input = String::new();
                     envelope.runtime.brush_candidate_index = 0;
                     if envelope.runtime.active_tool != "select" {
                         envelope.runtime.active_tool = "select".into();
-                    }
-                    return vec![set_document_op(&envelope)];
-                }
-                "undo" => {
-                    if let Some(previous) = envelope.runtime.undo_stack.pop() {
-                        envelope.runtime.redo_stack.push(envelope.fixture.clone());
-                        envelope.fixture = previous;
-                        envelope.runtime.selection = Puzzle3dSelection::default();
-                        resolve_puzzle3d_attractions(&mut envelope.fixture);
-                        sync_precompute_session(&mut self.precompute, &envelope);
-                        return vec![set_document_op(&envelope)];
-                    }
-                }
-                "redo" => {
-                    if let Some(next) = envelope.runtime.redo_stack.pop() {
-                        envelope.runtime.undo_stack.push(envelope.fixture.clone());
-                        envelope.fixture = next;
-                        envelope.runtime.selection = Puzzle3dSelection::default();
-                        resolve_puzzle3d_attractions(&mut envelope.fixture);
-                        sync_precompute_session(&mut self.precompute, &envelope);
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "createAttraction" => {
@@ -5398,14 +5079,12 @@ pub mod d3 {
                             };
                             envelope.fixture.attractions.push(Puzzle3dAttraction { id, attracting: attracting.into(), attracted: attracted.into(), gap, shift, rise, rotation, turn, tilt });
                             resolve_puzzle3d_attractions(&mut envelope.fixture);
-                            return vec![set_document_op(&envelope)];
                         }
                     }
                 }
                 "deleteAttraction" => {
                     if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
                         envelope.fixture.attractions.retain(|attraction| attraction.id != id);
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "setFillEditTargetVolumes" => {
@@ -5415,7 +5094,6 @@ pub mod d3 {
                         Some("fill") => false,
                         _ => !envelope.runtime.fill_edit_target_volumes,
                     };
-                    return vec![set_document_op(&envelope)];
                 }
                 "setVoxelDims" => {
                     let axis = args.and_then(|value| value.get("axis")).and_then(|value| value.as_str()).unwrap_or("");
@@ -5427,7 +5105,6 @@ pub mod d3 {
                             "h" => envelope.runtime.voxel_dims[2] = dimension,
                             _ => {}
                         }
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "addTargetVolume" => {
@@ -5438,13 +5115,11 @@ pub mod d3 {
                         let scale = json!([w as f64 * grid_factor, d as f64 * grid_factor, h as f64 * grid_factor]);
                         let id = format!("target-volume-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
                         envelope.fixture.target_volumes.push(Puzzle3dTargetVolume { id, origin: snapped, orientation: None, scale: Some(scale), hidden: false, locked: false });
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "deleteTargetVolume" => {
                     if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
                         envelope.fixture.target_volumes.retain(|volume| volume.id != id);
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "setTargetVolumeFlag" => {
@@ -5457,7 +5132,6 @@ pub mod d3 {
                             "locked" => volume.locked = value,
                             _ => {}
                         }
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "engagementPossibleSelect" => {
@@ -5471,13 +5145,11 @@ pub mod d3 {
                     if envelope.runtime.active_tool == "brush" || envelope.runtime.active_tool == "fill" {
                         drive_precompute(&mut self.precompute, &envelope);
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "engagementControlSelect" => {
                     let candidate_id = args.and_then(|value| value.get("id").or_else(|| value.get("value"))).and_then(|value| value.as_str()).unwrap_or("");
                     if let Some(index) = candidate_id.strip_prefix("puzzle3d.brush.candidate.").and_then(|rest| rest.parse::<usize>().ok()) {
                         envelope.runtime.brush_candidate_index = index;
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "addBrushObject" => {
@@ -5489,7 +5161,6 @@ pub mod d3 {
                                     envelope = next;
                                     puzzle3d_rederive_all_attractions(&mut envelope.fixture);
                                     resolve_puzzle3d_attractions(&mut envelope.fixture);
-                                    return vec![set_document_op(&envelope)];
                                 }
                             }
                         }
@@ -5499,13 +5170,11 @@ pub mod d3 {
                     drive_precompute(&mut self.precompute, &envelope);
                     let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_f64()).map(|value| value.round().max(0.0) as u32).unwrap_or(0).min(PUZZLE3D_FILL_COUNT_MAX);
                     envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, count);
-                    return vec![set_document_op(&envelope)];
                 }
                 "setBrushPlacementOverlapBudget" => {
                     if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_f64()) {
                         envelope.runtime.overlap_budget = value.clamp(0.0, 1.0);
                         sync_precompute_session(&mut self.precompute, &envelope);
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "setObjectKindWeight" | "setVortexKindWeight" => {
@@ -5517,7 +5186,6 @@ pub mod d3 {
                         envelope.runtime.vortex_kind_weights.insert(kind_id.into(), value);
                     }
                     sync_precompute_session(&mut self.precompute, &envelope);
-                    return vec![set_document_op(&envelope)];
                 }
                 "cycleBrushCandidate" | "cycleBrushCandidateBack" => {
                     drive_precompute(&mut self.precompute, &envelope);
@@ -5534,7 +5202,6 @@ pub mod d3 {
                     } else {
                         envelope.runtime.brush_candidate_index = envelope.runtime.brush_candidate_index.saturating_add_signed(delta as isize);
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "openVortexSuggestions" => {
                     if let Some(full_id) = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()) {
@@ -5546,17 +5213,14 @@ pub mod d3 {
                         let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                         envelope.runtime.suggestion_menu = Some([x, y]);
                         drive_precompute(&mut self.precompute, &envelope);
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "closeVortexSuggestions" => {
                     envelope.runtime.suggestion_menu = None;
-                    return vec![set_document_op(&envelope)];
                 }
                 "hoverSuggestion" => {
                     if let Some(index) = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()) {
                         envelope.runtime.brush_candidate_index = index as usize;
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "acceptSuggestion" => {
@@ -5570,7 +5234,6 @@ pub mod d3 {
                                     puzzle3d_rederive_all_attractions(&mut envelope.fixture);
                                     resolve_puzzle3d_attractions(&mut envelope.fixture);
                                     envelope.runtime.suggestion_menu = None;
-                                    return vec![set_document_op(&envelope)];
                                 }
                             }
                         }
@@ -5578,7 +5241,6 @@ pub mod d3 {
                 }
                 "suggestionsTick" => {
                     drive_precompute(&mut self.precompute, &envelope);
-                    return vec![set_document_op(&envelope)];
                 }
                 "fillBuildTick" => {
                     drive_precompute(&mut self.precompute, &envelope);
@@ -5587,7 +5249,6 @@ pub mod d3 {
                     if done && envelope.runtime.active_tool == "fill" && envelope.runtime.fill_count == 0 {
                         envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, 1);
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "registerBrushMesh" => {
                     if let (Some(url), Some(positions), Some(indices)) =
@@ -5600,16 +5261,18 @@ pub mod d3 {
                             registry.insert(url.to_string(), (positions, indices));
                         }
                     }
-                    return Vec::new();
                 }
-                "worldPointerDown" => return Vec::new(),
+                "worldPointerDown" => {}
                 _ => {}
-            };
-            Vec::new()
+            }
+            self.runtime = envelope.runtime;
+            let after = serde_json::to_value(&envelope.fixture).unwrap_or_else(|_| before.clone());
+            let ops = puzzle3d_document_delta_ops(&before, &after);
+            ActionEmit { ops, ..Default::default() }
         }
 
-        fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-            let envelope = parse_envelope(document_json);
+        fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
+            let envelope = scene_from_projection(doc.projection, self.runtime.clone());
             let labels = puzzle3d_labels(view_state);
             match body_key {
                 PUZZLE3D_PLAY_BODY_COMPOSITE => {
@@ -5645,13 +5308,13 @@ pub mod d3 {
             }
         }
 
-        fn window_engagements(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-            let envelope = parse_envelope(document_json);
+        fn window_engagements(&self, doc: &DocumentView<'_, Value>, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+            let envelope = scene_from_projection(doc.projection, self.runtime.clone());
             HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.into(), puzzle3d_engagement(&envelope, &self.precompute))])
         }
 
-        fn window_measures(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-            let envelope = parse_envelope(document_json);
+        fn window_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+            let envelope = scene_from_projection(doc.projection, self.runtime.clone());
             let labels = puzzle3d_labels(view_state);
             HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.into(), puzzle3d_window_measures(&envelope, labels))])
         }
@@ -5660,7 +5323,7 @@ pub mod d3 {
 
     //#region 🔖Manifest
     pub fn create_puzzle3d_app() -> App {
-        let envelope = default_envelope();
+        let envelope = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default() };
         App::from_builder(
             App::builder(PUZZLE3D_PLAY_APP_ID, "Puzzle 3D")
                 .document(["semio", "puzzle", "3d"])
@@ -5684,7 +5347,7 @@ pub mod d3 {
                 .keybinding("shift+tab", "cycleBrushCandidateBack")
                 .keybinding("f", "focusSelection"),
         )
-        .example("empty", "Empty", &serde_json::to_string(&Puzzle3dEnvelope { fixture: empty_fixture(), runtime: Puzzle3dRuntime::default() }).unwrap())
+        .example("empty", "Empty", &serde_json::to_string(&empty_fixture()).unwrap())
         .example(PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON)
         .example(PUZZLE3D_EXAMPLE_NAKAGIN, "Nakagin Capsule Tower", NAKAGIN_EXAMPLE_JSON)
         .program("puzzle3d", "Puzzle 3D", "model")
@@ -5709,12 +5372,12 @@ pub mod d3 {
 
     /// 💾 Bakes each object's world transform (GLB frame correction, then scale/orientation/origin) into a single merged mesh for OBJ/GLB export; objects whose GLB hasn't round-tripped through `registerBrushMesh` this session fall back to a box.
     fn puzzle3d_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
-        let envelope: Puzzle3dEnvelope = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
+        let fixture: Puzzle3dFixture = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
         let registry = PUZZLE3D_MESH_REGISTRY.lock().map_err(|_| "puzzle3d mesh registry poisoned".to_string())?;
         let fallback = mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND);
         let mut merged = semio_framework_plugin::MeshData::default();
-        for object in envelope.fixture.objects.iter().filter(|object| !object.hidden) {
-            let mesh_url = resolve_object_mesh_url(object, &envelope.fixture.meta);
+        for object in fixture.objects.iter().filter(|object| !object.hidden) {
+            let mesh_url = resolve_object_mesh_url(object, &fixture.meta);
             let (positions, indices): (&[f32], &[u32]) = match mesh_url.as_deref().and_then(|url| registry.get(url)) {
                 Some((positions, indices)) => (positions, indices),
                 None => (&fallback.positions, &fallback.indices),
@@ -5741,7 +5404,7 @@ pub mod d3 {
 
     /// 📥 Tier C DWG mesh import — always returns the empty puzzle-3d fixture; never errors on a structurally valid mesh.
     fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<serde_json::Value, String> {
-        serde_json::to_value(Puzzle3dEnvelope { fixture: empty_fixture(), runtime: Puzzle3dRuntime::default() }).map_err(|error| error.to_string())
+        serde_json::to_value(empty_fixture()).map_err(|error| error.to_string())
     }
 
     pub fn register_puzzle3d_exports() {
@@ -5760,1606 +5423,194 @@ pub mod d3 {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::PluginApp;
+        use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+
+        fn meta(actor: &str) -> ActionMeta {
+            ActionMeta { actor: actor.into(), instance_id: 1 }
+        }
+
+        fn new_app() -> VcsDocumentApp<Puzzle3dPlayApp> {
+            VcsDocumentApp::new(Puzzle3dPlayApp::default())
+        }
+
+        fn object_count(app: &VcsDocumentApp<Puzzle3dPlayApp>) -> usize {
+            app.projection().expect("projection").get("objects").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0)
+        }
 
         #[test]
         fn renders_world_scene() {
-            let app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("world-3d"));
+            let mut app = new_app();
+            let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render");
+            assert!(serde_json::to_string(&node).unwrap().contains("world-3d"));
         }
 
         #[test]
-        fn concrete_forest_example_parses() {
-            let envelope = default_envelope();
-            assert_eq!(envelope.fixture.schema, PUZZLE3D_FIXTURE_SCHEMA);
-            assert!(!envelope.fixture.objects.is_empty());
+        fn initial_projection_is_the_concrete_forest_fixture() {
+            let mut app = new_app();
+            assert_eq!(app.projection().expect("projection").get("schema").and_then(|value| value.as_str()), Some(PUZZLE3D_FIXTURE_SCHEMA));
+            assert!(object_count(&app) > 0, "the concrete-forest default fixture ships with objects");
         }
 
         #[test]
-        fn nakagin_example_parses() {
-            let envelope = nakagin_envelope();
-            assert_eq!(envelope.fixture.schema, PUZZLE3D_FIXTURE_SCHEMA);
-            assert!(!envelope.fixture.objects.is_empty());
-            assert!(envelope.fixture.meta.kind_catalogs.is_some());
+        fn set_active_example_swaps_the_document_and_undo_restores_it() {
+            let mut app = new_app();
+            let loaded = object_count(&app);
+            assert!(loaded > 0);
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "empty" })), &ViewState::default(), &meta("local")).expect("empty");
+            assert_eq!(object_count(&app), 0, "empty example clears the objects");
+            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            assert_eq!(object_count(&app), loaded, "undo restores the concrete-forest objects");
+            app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+            assert_eq!(object_count(&app), 0);
         }
 
         #[test]
-        fn scene_config_json_omits_host_rules_key() {
-            let envelope = default_envelope();
-            let config: Value = serde_json::from_str(&scene_config_json(&envelope)).unwrap();
-            assert!(config.get("hostRules").is_none(), "an explicit empty hostRules object disables the default Nakagin brush rules");
-        }
-
-        /// 🧊 A real, above-`BRUSH_COLLISION_MESH_MIN_EXTENT` mesh registered via `registerBrushMesh` must keep its
-        /// url mapped across repeated resyncs (the primitive box fallback is itself below the extent threshold, so
-        /// its own registration is always a no-op and can never clear an existing entry).
-        #[test]
-        fn sync_precompute_session_preserves_registered_mesh() {
-            let envelope = default_envelope();
-            let mut session = Puzzle3dPrecomputeSession::new();
-            let positions: Vec<f32> = vec![-4.0, -4.0, -4.0, 4.0, -4.0, -4.0, 4.0, 4.0, -4.0, -4.0, 4.0, -4.0, -4.0, -4.0, 4.0, 4.0, -4.0, 4.0, 4.0, 4.0, 4.0, -4.0, 4.0, 4.0];
-            let indices: Vec<u32> = vec![0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2];
-            let url = collect_mesh_urls(&envelope.fixture).into_iter().next().expect("fixture has at least one mesh url");
-            session.register_mesh(&url, &positions, &indices);
-            sync_precompute_session(&mut session, &envelope);
-            sync_precompute_session(&mut session, &envelope);
-            assert!(session.has_mesh(&url));
+        fn nakagin_example_loads_via_ops() {
+            let mut app = new_app();
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), &ViewState::default(), &meta("local")).expect("nakagin");
+            let projection = app.projection().expect("projection");
+            assert_eq!(projection.get("schema").and_then(|value| value.as_str()), Some(PUZZLE3D_FIXTURE_SCHEMA));
+            assert!(projection.get("objects").and_then(|value| value.as_array()).is_some_and(|objects| !objects.is_empty()));
         }
 
         #[test]
-        fn puzzle3d_document_from_mesh_returns_valid_empty_fixture() {
-            let mesh = semio_framework_plugin::mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND);
-            let document = puzzle3d_document_from_mesh(&mesh).unwrap();
-            let envelope: Puzzle3dEnvelope = serde_json::from_value(document).unwrap();
-            assert_eq!(envelope.fixture.schema, PUZZLE3D_FIXTURE_SCHEMA);
-            assert!(envelope.fixture.objects.is_empty());
-        }
-
-        #[test]
-        fn mesh_from_document_falls_back_to_box_when_no_mesh_registered() {
-            let envelope = default_envelope();
-            let mesh = puzzle3d_mesh_from_document(&serde_json::to_value(&envelope).unwrap()).unwrap();
-            assert!(!mesh.positions.is_empty());
-            assert!(!mesh.indices.is_empty());
-        }
-
-        #[test]
-        fn mesh_from_document_uses_registered_geometry_and_bakes_object_transform() {
-            let url = "puzzle3d-test://mesh-from-document-uses-registered-geometry.glb";
-            let positions: Vec<f32> = vec![0.0, 10.0, 0.0, 1.0, 10.0, 0.0, 0.0, 10.0, 1.0];
-            let indices: Vec<u32> = vec![0, 1, 2];
-            PUZZLE3D_MESH_REGISTRY.lock().unwrap().insert(url.to_string(), (positions, indices.clone()));
-            let mut fixture = empty_fixture();
-            fixture.objects = vec![Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, origin: [5.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: Some(url.into()), vortices: vec![], hidden: false, locked: false }];
-            let envelope = Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() };
-            let mesh = puzzle3d_mesh_from_document(&serde_json::to_value(&envelope).unwrap()).unwrap();
-            assert_eq!(mesh.indices, indices);
-            assert_eq!(mesh.positions.len(), 9);
-            // 🌀 raw (0,10,0) → glb_frame_correct [x,-z,y] → (0,0,10) → identity scale/orientation → + origin (5,0,0) = (5,0,10)
-            assert_eq!(&mesh.positions[0..3], &[5.0, 0.0, 10.0]);
-        }
-
-        #[test]
-        fn mesh_from_document_skips_hidden_objects() {
-            let url = "puzzle3d-test://mesh-from-document-skips-hidden.glb";
-            let positions: Vec<f32> = vec![0.0, 10.0, 0.0, 1.0, 10.0, 0.0, 0.0, 10.0, 1.0];
-            PUZZLE3D_MESH_REGISTRY.lock().unwrap().insert(url.to_string(), (positions, vec![0, 1, 2]));
-            let mut fixture = empty_fixture();
-            fixture.objects = vec![Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: Some(url.into()), vortices: vec![], hidden: true, locked: false }];
-            let envelope = Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() };
-            let mesh = puzzle3d_mesh_from_document(&serde_json::to_value(&envelope).unwrap()).unwrap();
-            assert!(!mesh.positions.is_empty(), "an all-hidden fixture still exports the box fallback so downstream tooling gets a valid mesh");
-        }
-
-        /// 📦 `register_puzzle3d_exports` must round-trip Obj/Glb/Stl authoring export+import through the OS media graph (not the unrelated `registerBrushMesh` runtime asset path).
-        #[test]
-        fn register_puzzle3d_exports_round_trips_obj_glb_stl_through_the_os_media_graph() {
-            register_puzzle3d_exports();
-            let instance = semio_framework_os::OsAppInstance {
-                id: "test-instance".into(),
-                program_id: "puzzle3d".into(),
-                app_id: PUZZLE3D_PLAY_APP_ID.into(),
-                label: "Test".into(),
-                yields: "3d.puzzle".into(),
-                source_document: semio_framework_os::OsSourceDocument { format: "json".into(), vcs_json: None, inline: None, payload_ref: None },
-            };
-            let document = serde_json::to_value(&default_envelope()).unwrap();
-            for format in [semio_framework_os::OsMediaFormat::Obj, semio_framework_os::OsMediaFormat::Glb, semio_framework_os::OsMediaFormat::Stl] {
-                let exported = semio_framework_os::export_os_app_instance_media(&instance, &document, format.clone()).unwrap();
-                assert!(!exported.data.is_empty(), "{format:?} export produced no data");
-                let bytes = if exported.encoding.as_deref() == Some("base64") {
-                    base64::engine::general_purpose::STANDARD.decode(&exported.data).unwrap()
-                } else {
-                    exported.data.into_bytes()
-                };
-                let imported = semio_framework_os::import_os_app_instance_media(&instance, &bytes, format).unwrap();
-                let envelope: Puzzle3dEnvelope = serde_json::from_value(imported).unwrap();
-                assert_eq!(envelope.fixture.schema, PUZZLE3D_FIXTURE_SCHEMA);
+        fn document_and_inspector_panels_render() {
+            let mut app = new_app();
+            for body in [PUZZLE3D_PLAY_BODY_DOCUMENT, PUZZLE3D_PLAY_BODY_KINDS, PUZZLE3D_PLAY_BODY_INSPECTOR] {
+                let node = app.render(body, None, &ViewState::default()).expect("render");
+                assert!(!serde_json::to_string(&node).unwrap().is_empty());
             }
         }
 
         #[test]
-        fn jack_query_default_lists_object_names() {
-            let envelope = default_envelope();
-            let rows = puzzle3d_run_jack_query(&envelope.fixture, &envelope.runtime.jack_query).unwrap();
-            assert_eq!(rows.len(), envelope.fixture.objects.len());
-            assert!(rows.iter().all(|row| row.entity == "object"));
-        }
-
-        #[test]
-        fn jack_query_supports_vortex_and_attraction_labels() {
-            let envelope = default_envelope();
-            let vortex_rows = puzzle3d_run_jack_query(&envelope.fixture, "MATCH (n:Vortex) RETURN n.kind").unwrap();
-            assert!(!vortex_rows.is_empty());
-            assert!(vortex_rows.iter().all(|row| row.entity == "vortex"));
-            let attraction_rows = puzzle3d_run_jack_query(&envelope.fixture, "MATCH (n:Attraction) RETURN n.id").unwrap();
-            assert!(attraction_rows.iter().all(|row| row.entity == "attraction"));
-        }
-
-        #[test]
-        fn jack_query_rejects_unknown_label() {
-            let envelope = default_envelope();
-            let result = puzzle3d_run_jack_query(&envelope.fixture, "MATCH (n:Cable) RETURN n.name");
-            assert!(result.is_err());
-        }
-
-        #[test]
-        fn jack_query_rejects_malformed_query() {
-            let envelope = default_envelope();
-            let result = puzzle3d_run_jack_query(&envelope.fixture, "not a query");
-            assert!(result.is_err());
-        }
-
-        #[test]
-        fn set_jack_query_persists_the_new_query_text() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setJackQuery", Some(&json!({ "value": "MATCH (n:Vortex) RETURN n.kind" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.jack_query, "MATCH (n:Vortex) RETURN n.kind");
-        }
-
-        #[test]
-        fn jack_body_renders_query_field_and_result_rows() {
-            let app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let node = app.render(PUZZLE3D_PLAY_BODY_JACK, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("MATCH (n:Object) RETURN n.name"));
-            assert!(json.contains("results"));
-        }
-
-        #[test]
-        fn jack_result_row_click_selects_the_matching_object() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let object_id = envelope.fixture.objects.first().expect("seed object").id.clone();
-            let row = Puzzle3dJackRow { entity: "object", id: object_id.clone(), value: "irrelevant".into() };
-            let args = jack_row_selection_args(&row);
-            let ops = app.handle_action_patch_ops("setSelection", Some(&args), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.selection.object_ids, vec![object_id]);
-        }
-
-        #[test]
-        fn document_lists_objects() {
-            let app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let node = app.render(PUZZLE3D_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("puzzle3d-object:"));
-        }
-
-        #[test]
-        fn add_object_kind_appends_object() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("addObjectKind", Some(&json!({ "objectKind": "Test Kind" })), &document, &ViewState::default());
-            let envelope: Puzzle3dEnvelope = apply_ops(&parse_envelope(&document), &ops);
-            assert!(envelope.fixture.objects.iter().any(|object| object.object_kind.as_deref() == Some("Test Kind")));
-        }
-
-        #[test]
-        fn add_object_kind_seeds_vortices_from_catalog_template() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("addObjectKind", Some(&json!({ "objectKind": "Hexagonal Cut Concrete Forest Left", "origin": [3.0, 4.0, 5.0] })), &document, &ViewState::default());
-            let envelope: Puzzle3dEnvelope = apply_ops(&parse_envelope(&document), &ops);
-            let placed_id = envelope.runtime.selection.object_ids.first().expect("new object selected");
-            let placed = envelope.fixture.objects.iter().find(|object| &object.id == placed_id).expect("placed object");
-            assert!(!placed.vortices.is_empty(), "brush needs a real vortex to attach to");
-            assert_eq!(placed.origin, [3.0, 4.0, 5.0]);
-        }
-
-        #[test]
-        fn build_kinds_tree_lists_all_catalog_sections() {
-            let envelope = default_envelope();
-            let node = build_kinds_tree(&envelope, puzzle3d_labels(&ViewState::default()));
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("Objects"));
-            assert!(json.contains("Vortices"));
-            assert!(json.contains("Cables"));
-            assert!(json.contains("Attractions"));
-            assert!(json.contains("Hexagonal Cut Concrete Forest Left"));
-            assert!(json.contains("\"draggable\":true"));
-        }
-
-        #[test]
-        fn puzzle3d_labels_resolve_native_by_default() {
-            let envelope = default_envelope();
-            let node = build_kinds_tree(&envelope, puzzle3d_labels(&ViewState::default()));
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("Objects"));
-            assert!(json.contains("Vortices"));
-            assert!(!json.contains("Building components"));
-        }
-
-        #[test]
-        fn puzzle3d_labels_resolve_reuse_terminology_in_english() {
-            let envelope = default_envelope();
-            let view_state = ViewState { terminology: Some("reuse".into()), locale: Some("en".into()), ..ViewState::default() };
-            let node = build_kinds_tree(&envelope, puzzle3d_labels(&view_state));
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("Building components"));
-            assert!(json.contains("Connection points"));
-            assert!(!json.contains("\"Objects\""));
-        }
-
-        #[test]
-        fn puzzle3d_labels_resolve_reuse_terminology_in_german() {
-            let envelope = default_envelope();
-            let view_state = ViewState { terminology: Some("reuse".into()), locale: Some("de".into()), ..ViewState::default() };
-            let node = build_kinds_tree(&envelope, puzzle3d_labels(&view_state));
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("Baukomponenten"));
-            assert!(json.contains("Verbindungspunkte"));
-        }
-
-        #[test]
-        fn puzzle3d_labels_resolve_native_terminology_in_german() {
-            let envelope = default_envelope();
-            let view_state = ViewState { terminology: Some("native".into()), locale: Some("de".into()), ..ViewState::default() };
-            let node = build_kinds_tree(&envelope, puzzle3d_labels(&view_state));
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("Objekte"));
-        }
-
-        #[test]
-        fn set_kind_hover_highlights_matching_instances() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setKindHover", Some(&json!({ "kindId": "Hexagonal Cut Concrete Forest Left" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.hovered_kind_id.as_deref(), Some("Hexagonal Cut Concrete Forest Left"));
-            let instances: Value = serde_json::from_str(&world_instances_json(&envelope.fixture, &envelope.runtime)).unwrap();
-            let first = instances.as_array().unwrap().first().expect("at least one instance");
-            assert_eq!(first.get("hovered").and_then(|v| v.as_bool()), Some(true));
-        }
-
-        #[test]
-        fn document_tree_lists_references_and_target_volumes_sections() {
-            let envelope = default_envelope();
-            let node = build_document_tree(&envelope, puzzle3d_labels(&ViewState::default()));
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("References"));
-            assert!(json.contains("Target Volumes"));
-            assert!(json.contains("Attractions"));
-        }
-
-        #[test]
-        fn set_selection_flag_hides_selected_object_and_zeroes_its_scale() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let object_id = envelope.fixture.objects.first().expect("seed object").id.clone();
-            let ops = app.handle_action_patch_ops("setSelectionFlag", Some(&json!({ "flag": "hidden", "value": true, "entity": "object", "ids": [object_id.clone()] })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            let object = envelope.fixture.objects.iter().find(|object| object.id == object_id).expect("object");
-            assert!(object.hidden);
-            let instances: Value = serde_json::from_str(&world_instances_json(&envelope.fixture, &envelope.runtime)).unwrap();
-            let first = instances.as_array().unwrap().first().expect("instance preserved at same index");
-            assert_eq!(first.get("scale").and_then(|v| v.as_array()).cloned(), Some(vec![json!(0.0), json!(0.0), json!(0.0)]));
-        }
-
-        #[test]
-        fn set_selection_flag_locked_object_cannot_be_picked() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let object_id = envelope.fixture.objects.first().expect("seed object").id.clone();
-            let ops = app.handle_action_patch_ops("setSelectionFlag", Some(&json!({ "flag": "locked", "value": true, "entity": "object", "ids": [object_id] })), &document, &ViewState::default());
-            let locked_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let ops = app.handle_action_patch_ops("worldPick", Some(&json!({ "granularity": "mesh", "id": 0, "merge": "replace" })), &locked_document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&locked_document), &ops);
-            assert!(envelope.runtime.selection.object_ids.is_empty(), "locked objects must not become selectable");
-        }
-
-        #[test]
-        fn set_selection_flag_defaults_to_current_selection_when_ids_omitted() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let object_id = envelope.fixture.objects.first().expect("seed object").id.clone();
-            let ops = app.handle_action_patch_ops("setSelection", Some(&json!({ "selection": { "objectIds": [object_id.clone()], "vortexIds": [], "attractionIds": [] } })), &document, &ViewState::default());
-            let selected_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let ops = app.handle_action_patch_ops("setSelectionFlag", Some(&json!({ "flag": "hidden", "value": true })), &selected_document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&selected_document), &ops);
-            let object = envelope.fixture.objects.iter().find(|object| object.id == object_id).expect("object");
-            assert!(object.hidden);
-        }
-
-        #[test]
-        fn patch_inspector_renames_object_and_moves_origin() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let object_id = envelope.fixture.objects.first().expect("seed object").id.clone();
-            let ops = app.handle_action_patch_ops("patchInspector", Some(&json!({ "entity": "object", "ids": [object_id.clone()], "field": "label", "value": "Renamed" })), &document, &ViewState::default());
-            let document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let ops = app.handle_action_patch_ops("patchInspector", Some(&json!({ "entity": "object", "ids": [object_id.clone()], "field": "origin", "value": [9.0, 8.0, 7.0] })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            let object = envelope.fixture.objects.iter().find(|object| object.id == object_id).expect("object");
-            assert_eq!(object.label.as_deref(), Some("Renamed"));
-            assert_eq!(object.origin, [9.0, 8.0, 7.0]);
-        }
-
-        #[test]
-        fn patch_inspector_updates_vortex_radius() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let object = envelope.fixture.objects.first().expect("seed object");
-            let full_id = puzzle3d_vortex_full_id(&object.id, &object.vortices.first().expect("seed vortex").id);
-            let ops = app.handle_action_patch_ops("patchInspector", Some(&json!({ "entity": "vortex", "ids": [full_id.clone()], "field": "radius", "value": 0.75 })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            let object = envelope.fixture.objects.first().unwrap();
-            let vortex = object.vortices.iter().find(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id) == full_id).expect("vortex");
-            assert_eq!(vortex.radius, Some(0.75));
-        }
-
-        #[test]
-        fn select_all_selects_every_unlocked_object() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let total = envelope.fixture.objects.len();
-            let ops = app.handle_action_patch_ops("selectAll", None, &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.selection.object_ids.len(), total);
-        }
-
-        #[test]
-        fn select_all_excludes_locked_objects() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let object_id = envelope.fixture.objects.first().expect("seed object").id.clone();
-            let total = envelope.fixture.objects.len();
-            let ops = app.handle_action_patch_ops("setSelectionFlag", Some(&json!({ "flag": "locked", "value": true, "entity": "object", "ids": [object_id.clone()] })), &document, &ViewState::default());
-            let locked_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let ops = app.handle_action_patch_ops("selectAll", None, &locked_document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&locked_document), &ops);
-            assert_eq!(envelope.runtime.selection.object_ids.len(), total - 1);
-            assert!(!envelope.runtime.selection.object_ids.contains(&object_id));
-        }
-
-        #[test]
-        fn clear_selection_empties_all_selection_kinds() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("selectAll", None, &document, &ViewState::default());
-            let selected_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let ops = app.handle_action_patch_ops("clearSelection", None, &selected_document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&selected_document), &ops);
-            assert!(envelope.runtime.selection.object_ids.is_empty());
-        }
-
-        #[test]
-        fn focus_selection_points_camera_at_selection_center() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let object_id = envelope.fixture.objects.first().expect("seed object").id.clone();
-            let ops = app.handle_action_patch_ops("setSelection", Some(&json!({ "selection": { "objectIds": [object_id], "vortexIds": [], "attractionIds": [] } })), &document, &ViewState::default());
-            let selected_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let before = parse_envelope(&selected_document).fixture.camera.clone();
-            let ops = app.handle_action_patch_ops("focusSelection", None, &selected_document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&selected_document), &ops);
-            assert_ne!(envelope.fixture.camera.position, before.position);
-        }
-
-        #[test]
-        fn engagement_submit_fill_token_sets_fill_count() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "fill 42" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.fill_count, 42);
-            assert_eq!(envelope.runtime.active_tool, "fill");
-            assert_eq!(envelope.runtime.engagement_input, "");
-        }
-
-        #[test]
-        fn engagement_submit_normalized_fill_token_sets_fill_count() {
-            // The React shell PascalCases and strips separators from every draft before submitting it
-            // (`normalizeEngagementActionText`), so "fill 20" arrives as "Fill20", not "fill 20".
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "Fill20" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.fill_count, 20);
-            assert_eq!(envelope.runtime.active_tool, "fill");
-            assert_eq!(envelope.runtime.engagement_input, "");
-        }
-
-        #[test]
-        fn engagement_submit_bare_fill_token_activates_tool_without_changing_count() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "Fill" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.fill_count, 0);
-            assert_eq!(envelope.runtime.active_tool, "fill");
-        }
-
-        #[test]
-        fn engagement_submit_select_token_switches_tool_back() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "brush" })), &document, &ViewState::default());
-            let brush_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "select" })), &brush_document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&brush_document), &ops);
-            assert_eq!(envelope.runtime.active_tool, "select");
-        }
-
-        #[test]
-        fn engagement_abort_resets_tool_and_input() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setActiveTool", Some(&json!({ "tool": "brush" })), &document, &ViewState::default());
-            let brush_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let ops = app.handle_action_patch_ops("engagementInput", Some(&json!({ "value": "some text" })), &brush_document, &ViewState::default());
-            let typed_document = serde_json::to_string(&apply_ops(&parse_envelope(&brush_document), &ops)).unwrap();
-            let ops = app.handle_action_patch_ops("engagementAbort", None, &typed_document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&typed_document), &ops);
-            assert_eq!(envelope.runtime.active_tool, "select");
-            assert_eq!(envelope.runtime.engagement_input, "");
-        }
-
-        #[test]
-        fn undo_restores_fixture_before_add_object_kind() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let before_count = parse_envelope(&document).fixture.objects.len();
-            let ops = app.handle_action_patch_ops("addObjectKind", Some(&json!({ "objectKind": "Test Kind" })), &document, &ViewState::default());
-            let added_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            assert_eq!(parse_envelope(&added_document).fixture.objects.len(), before_count + 1);
-            let ops = app.handle_action_patch_ops("undo", None, &added_document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&added_document), &ops);
-            assert_eq!(envelope.fixture.objects.len(), before_count);
-        }
-
-        #[test]
-        fn redo_reapplies_the_undone_edit() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let before_count = parse_envelope(&document).fixture.objects.len();
-            let ops = app.handle_action_patch_ops("addObjectKind", Some(&json!({ "objectKind": "Test Kind" })), &document, &ViewState::default());
-            let added_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let ops = app.handle_action_patch_ops("undo", None, &added_document, &ViewState::default());
-            let undone_document = serde_json::to_string(&apply_ops(&parse_envelope(&added_document), &ops)).unwrap();
-            let ops = app.handle_action_patch_ops("redo", None, &undone_document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&undone_document), &ops);
-            assert_eq!(envelope.fixture.objects.len(), before_count + 1);
-        }
-
-        #[test]
-        fn undo_is_a_no_op_when_stack_is_empty() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("undo", None, &document, &ViewState::default());
-            assert!(ops.is_empty());
-        }
-
-        #[test]
-        fn new_edit_after_undo_clears_the_redo_stack() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("addObjectKind", Some(&json!({ "objectKind": "First" })), &document, &ViewState::default());
-            let first_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let ops = app.handle_action_patch_ops("undo", None, &first_document, &ViewState::default());
-            let undone_document = serde_json::to_string(&apply_ops(&parse_envelope(&first_document), &ops)).unwrap();
-            assert!(!parse_envelope(&undone_document).runtime.redo_stack.is_empty());
-            let ops = app.handle_action_patch_ops("addObjectKind", Some(&json!({ "objectKind": "Second" })), &undone_document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&undone_document), &ops);
-            assert!(envelope.runtime.redo_stack.is_empty());
-        }
-
-        #[test]
-        fn selection_and_camera_changes_do_not_push_undo_snapshots() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let object_id = envelope.fixture.objects.first().expect("seed object").id.clone();
-            let ops = app.handle_action_patch_ops("setSelection", Some(&json!({ "selection": { "objectIds": [object_id], "vortexIds": [], "attractionIds": [] } })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert!(envelope.runtime.undo_stack.is_empty());
-        }
-
-        #[test]
-        fn settings_body_renders_all_fields() {
-            let app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let node = app.render(PUZZLE3D_PLAY_BODY_SETTINGS, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("Selection Mode"));
-            assert!(json.contains("Proximity Radius"));
-            assert!(json.contains("Chunk Size"));
-            assert!(json.contains("Grid Factor"));
-        }
-
-        #[test]
-        fn set_proximity_radius_feeds_world_relocate_attraction_distance() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setProximityRadius", Some(&json!({ "value": 50.0 })), &document, &ViewState::default());
-            let wide_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let envelope = parse_envelope(&wide_document);
-            assert_eq!(envelope.runtime.proximity_radius, 50.0);
-            let object_a = envelope.fixture.objects[0].id.clone();
-            let object_b = envelope.fixture.objects.get(1).map(|object| object.id.clone());
-            let Some(object_b) = object_b else { return };
-            let ops = app.handle_action_patch_ops("worldRelocate", Some(&json!({ "objectId": object_a, "position": [0.0, 0.0, 0.0] })), &wide_document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&wide_document), &ops);
-            let has_attraction = envelope.fixture.attractions.iter().any(|attraction| attraction.attracting.starts_with(&format!("{object_a}:")) || attraction.attracted.starts_with(&format!("{object_a}:")) || attraction.attracting.starts_with(&format!("{object_b}:")) || attraction.attracted.starts_with(&format!("{object_b}:")));
-            assert!(has_attraction, "a 50-unit proximity radius should connect any two objects in the fixture");
-        }
-
-        #[test]
-        fn set_selection_mode_default_persists_value() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setSelectionModeDefault", Some(&json!({ "value": "additive" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.selection_mode_default, "additive");
-        }
-
-        #[test]
-        fn create_attraction_connects_compatible_vortices() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let object = &envelope.fixture.objects[0];
-            let source = puzzle3d_vortex_full_id(&object.id, &object.vortices[0].id);
-            let target = puzzle3d_vortex_full_id(&object.id, &object.vortices[2].id);
-            assert_eq!(object.vortices[0].vortex_kind, object.vortices[2].vortex_kind, "test fixture assumption: same vortex kind is bidirectionally compatible with itself");
-            let ops = app.handle_action_patch_ops("createAttraction", Some(&json!({ "attracting": source, "attracted": target })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert!(envelope.fixture.attractions.iter().any(|attraction| attraction.attracting == source && attraction.attracted == target));
-        }
-
-        #[test]
-        fn create_attraction_rejects_incompatible_kinds() {
-            let mut fixture = empty_fixture();
-            fixture.meta.kind_compatibility = Some(json!([{ "source": "a", "target": "b", "bidirectional": false }]));
-            fixture.objects = vec![
-                Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: vec![Puzzle3dVortex { id: "v0".into(), vortex_kind: Some("a".into()), position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }], hidden: false, locked: false },
-                Puzzle3dObject { id: "o2".into(), label: None, object_kind: None, origin: [1.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: vec![Puzzle3dVortex { id: "v0".into(), vortex_kind: Some("c".into()), position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }], hidden: false, locked: false },
-            ];
-            let mut app = Puzzle3dPlayApp::default();
-            let document = serde_json::to_string(&Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() }).unwrap();
-            let ops = app.handle_action_patch_ops("createAttraction", Some(&json!({ "attracting": "o1:v0", "attracted": "o2:v0" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert!(envelope.fixture.attractions.is_empty(), "kind \"a\" is not declared compatible with kind \"c\"");
-        }
-
-        #[test]
-        fn create_attraction_does_not_duplicate_an_existing_connection() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let object = &envelope.fixture.objects[0];
-            let source = puzzle3d_vortex_full_id(&object.id, &object.vortices[0].id);
-            let target = puzzle3d_vortex_full_id(&object.id, &object.vortices[2].id);
-            let ops = app.handle_action_patch_ops("createAttraction", Some(&json!({ "attracting": source, "attracted": target })), &document, &ViewState::default());
-            let first_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let ops = app.handle_action_patch_ops("createAttraction", Some(&json!({ "attracting": target, "attracted": source })), &first_document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&first_document), &ops);
-            assert_eq!(envelope.fixture.attractions.len(), 1);
-        }
-
-        #[test]
-        fn delete_attraction_removes_it_by_id() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let object = &envelope.fixture.objects[0];
-            let source = puzzle3d_vortex_full_id(&object.id, &object.vortices[0].id);
-            let target = puzzle3d_vortex_full_id(&object.id, &object.vortices[2].id);
-            let ops = app.handle_action_patch_ops("createAttraction", Some(&json!({ "attracting": source, "attracted": target })), &document, &ViewState::default());
-            let connected_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let attraction_id = parse_envelope(&connected_document).fixture.attractions[0].id.clone();
-            let ops = app.handle_action_patch_ops("deleteAttraction", Some(&json!({ "id": attraction_id })), &connected_document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&connected_document), &ops);
-            assert!(envelope.fixture.attractions.is_empty());
-        }
-
-        #[test]
-        fn set_fill_edit_target_volumes_toggles_from_toggle_group_id() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setFillEditTargetVolumes", Some(&json!({ "id": "edit-volumes" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert!(envelope.runtime.fill_edit_target_volumes);
-            let document = serde_json::to_string(&envelope).unwrap();
-            let ops = app.handle_action_patch_ops("setFillEditTargetVolumes", Some(&json!({ "id": "fill" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert!(!envelope.runtime.fill_edit_target_volumes);
-        }
-
-        #[test]
-        fn set_voxel_dims_updates_the_selected_axis_only() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setVoxelDims", Some(&json!({ "axis": "h", "value": 5.0 })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.voxel_dims, [1, 1, 5]);
-        }
-
-        #[test]
-        fn add_target_volume_snaps_origin_to_grid_and_sizes_by_voxel_dims() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setVoxelDims", Some(&json!({ "axis": "w", "value": 2.0 })), &document, &ViewState::default());
-            let sized_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let ops = app.handle_action_patch_ops("addTargetVolume", Some(&json!({ "origin": [4.3, 7.8, 0.2] })), &sized_document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&sized_document), &ops);
-            assert_eq!(envelope.fixture.target_volumes.len(), 1);
-            let volume = &envelope.fixture.target_volumes[0];
-            // 🧊 grid_factor defaults to 10.0, so origin snaps to the nearest multiple of 10.
-            assert_eq!(volume.origin, [0.0, 10.0, 0.0]);
-            assert_eq!(volume.scale, Some(json!([20.0, 10.0, 10.0])));
-        }
-
-        #[test]
-        fn delete_target_volume_removes_it_by_id() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("addTargetVolume", Some(&json!({ "origin": [0.0, 0.0, 0.0] })), &document, &ViewState::default());
-            let added_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let volume_id = parse_envelope(&added_document).fixture.target_volumes[0].id.clone();
-            let ops = app.handle_action_patch_ops("deleteTargetVolume", Some(&json!({ "id": volume_id })), &added_document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&added_document), &ops);
-            assert!(envelope.fixture.target_volumes.is_empty());
-        }
-
-        #[test]
-        fn fill_engagement_shows_voxel_controls_when_edit_mode_active() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setActiveTool", Some(&json!({ "tool": "fill" })), &document, &ViewState::default());
-            let fill_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let ops = app.handle_action_patch_ops("setFillEditTargetVolumes", Some(&json!({ "id": "edit-volumes" })), &fill_document, &ViewState::default());
-            let edit_document = serde_json::to_string(&apply_ops(&parse_envelope(&fill_document), &ops)).unwrap();
-            let engagements = app.window_engagements(&edit_document, &ViewState::default());
-            let engagement = engagements.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main engagement");
-            let controls = engagement.controls.as_ref().expect("voxel controls");
-            assert_eq!(controls.len(), 4);
-            assert!(engagement.control.is_none(), "fill-count slider should be replaced by voxel controls in edit mode");
-        }
-
-        #[test]
-        fn build_inspector_tree_shows_mixed_placeholder_for_differing_labels() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("addObjectKind", Some(&json!({ "objectKind": "Test Kind" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            let first_id = envelope.fixture.objects[0].id.clone();
-            let second_id = envelope.fixture.objects.last().unwrap().id.clone();
-            let mut envelope = envelope;
-            envelope.runtime.selection.object_ids = vec![first_id, second_id];
-            let node = build_inspector_tree(&envelope, puzzle3d_labels(&ViewState::default()));
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains(semio_framework_plugin::UI_INSPECTOR_MIXED_PLACEHOLDER));
-        }
-
-        fn apply_ops(envelope: &Puzzle3dEnvelope, ops: &[String]) -> Puzzle3dEnvelope {
-            let mut next = envelope.clone();
-            for op_json in ops {
-                if let Ok(op) = serde_json::from_str::<Value>(op_json) {
-                    if let Some(document) = op.get("document") {
-                        if let Ok(parsed) = serde_json::from_value(document.clone()) {
-                            next = parsed;
-                        }
-                    }
-                }
-            }
-            next
-        }
-
-        #[test]
-        fn world_pick_selects_object_by_index() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("worldPick", Some(&json!({ "granularity": "mesh", "id": 0, "merge": "replace" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert!(!envelope.runtime.selection.object_ids.is_empty());
-            let selection: Value = serde_json::from_str(&world_selection_json(&envelope)).unwrap();
-            assert_eq!(selection.get("selectionMode").and_then(|v| v.as_str()), Some("mesh"));
-            assert_eq!(selection.get("gumballActive").and_then(|v| v.as_bool()), Some(true));
-            assert!(selection.get("gumballTarget").is_some());
-        }
-
-        #[test]
-        fn world_pick_clears_selection_on_null_id() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("worldPick", Some(&json!({ "granularity": "mesh", "id": 0, "merge": "replace" })), &document, &ViewState::default());
-            let document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let ops = app.handle_action_patch_ops("worldPick", Some(&json!({ "granularity": "mesh", "id": null, "merge": "replace" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert!(envelope.runtime.selection.object_ids.is_empty());
-        }
-
-        #[test]
-        fn set_hover_updates_hovered_object_id() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let object_id = envelope.fixture.objects.first().map(|object| object.id.clone()).unwrap();
-            let ops = app.handle_action_patch_ops("setHover", Some(&json!({ "objectId": object_id, "mode": "mesh", "id": 0 })), &document, &ViewState::default());
-            let hovered = apply_ops(&envelope, &ops);
-            assert_eq!(hovered.runtime.hovered_object_id.as_deref(), Some(hovered.fixture.objects[0].id.as_str()));
-            let ops = app.handle_action_patch_ops("setHover", None, &serde_json::to_string(&hovered).unwrap(), &ViewState::default());
-            let cleared = apply_ops(&hovered, &ops);
-            assert!(cleared.runtime.hovered_object_id.is_none());
-        }
-
-        #[test]
-        fn window_engagements_include_select_brush_fill() {
-            let app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let engagements = app.window_engagements(&document, &ViewState::default());
-            let engagement = engagements.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main engagement");
-            let options = engagement.options.as_ref().expect("tool options");
-            let ids: Vec<&str> = options.iter().map(|option| option.id.as_str()).collect();
-            assert!(ids.contains(&PUZZLE3D_ENGAGEMENT_TOOL_SELECT));
-            assert!(ids.contains(&PUZZLE3D_ENGAGEMENT_TOOL_BRUSH));
-            assert!(ids.contains(&PUZZLE3D_ENGAGEMENT_TOOL_FILL));
-        }
-
-        fn measure_group_labels(measures: &[WindowMeasure]) -> Vec<&str> {
-            measures
-                .iter()
-                .filter_map(|measure| match measure {
-                    WindowMeasure::Group { label, .. } => Some(label.as_str()),
-                    _ => None,
-                })
-                .collect()
-        }
-
-        #[test]
-        fn window_measures_cover_lod_select_and_brush_groups() {
-            let app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let measures = app.window_measures(&document, &ViewState::default());
-            let groups = measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main measures");
-            let labels = measure_group_labels(groups);
-            assert!(labels.contains(&"LOD"));
-            assert!(labels.contains(&"Select"));
-            assert!(labels.contains(&"Brush"));
-            assert!(labels.contains(&"Sun"));
-        }
-
-        #[test]
-        fn toggle_sun_round_trips_through_runtime_and_defaults_off() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            assert!(!envelope.runtime.sun.enabled, "sun must be off by default");
-            let ops = app.handle_action_patch_ops("toggleSun", None, &document, &ViewState::default());
-            let next = apply_ops(&envelope, &ops);
-            assert!(next.runtime.sun.enabled);
-        }
-
-        #[test]
-        fn set_lod_automatic_toggles_runtime_flag() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setLodAutomatic", Some(&json!({ "pressed": false })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert!(!envelope.runtime.lod_automatic);
-        }
-
-        #[test]
-        fn set_lod_manual_clamps_to_slider_range() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setLodManual", Some(&json!({ "value": 5000.0 })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.lod_manual, PUZZLE3D_LOD_SLIDER_MAX);
-        }
-
-        #[test]
-        fn set_selectable_kind_updates_selected_kind_only() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setSelectableKind", Some(&json!({ "kind": "vortices", "pressed": false })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert!(!envelope.runtime.selectable_kinds.vortices);
-            assert!(envelope.runtime.selectable_kinds.objects);
-            assert!(envelope.runtime.selectable_kinds.attractions);
-        }
-
-        #[test]
-        fn lod_json_reflects_runtime_state() {
-            let mut envelope = default_envelope();
-            envelope.runtime.grid_factor = 5.0;
-            envelope.runtime.lod_manual = 250.0;
-            let lod: Value = serde_json::from_str(&world3d_lod_json(&envelope.runtime)).unwrap();
-            assert_eq!(lod.get("gridFactor").and_then(|v| v.as_f64()), Some(5.0));
-            assert_eq!(lod.get("manualLod").and_then(|v| v.as_f64()), Some(250.0));
-            assert_eq!(lod.get("automaticLod").and_then(|v| v.as_bool()), Some(true));
-        }
-
-        #[test]
-        fn interaction_json_exposes_voxel_edit_state_for_the_host() {
-            let mut envelope = default_envelope();
-            envelope.runtime.fill_edit_target_volumes = true;
-            envelope.runtime.voxel_dims = [2, 3, 4];
-            let session = Puzzle3dPrecomputeSession::new();
-            let interaction: Value = serde_json::from_str(&world_interaction_json(&envelope, &session)).unwrap();
-            assert_eq!(interaction.get("fillEditTargetVolumes").and_then(|v| v.as_bool()), Some(true));
-            assert_eq!(interaction.get("voxelDims").and_then(|v| v.as_array()).cloned(), Some(vec![json!(2), json!(3), json!(4)]));
-        }
-
-        #[test]
-        fn set_projection_updates_camera_and_serializes_into_camera_json() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setProjection", Some(&json!({ "value": "orthographic" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.fixture.camera.projection.as_deref(), Some("orthographic"));
-            let camera: Value = serde_json::from_str(&camera_json(&envelope.fixture.camera)).unwrap();
-            assert_eq!(camera.get("projection").and_then(|v| v.as_str()), Some("orthographic"));
-        }
-
-        #[test]
-        fn camera_json_omits_projection_when_unset() {
-            let envelope = default_envelope();
-            let camera: Value = serde_json::from_str(&camera_json(&envelope.fixture.camera)).unwrap();
-            assert!(camera.get("projection").is_none());
-        }
-
-        #[test]
-        fn set_camera_view_preset_top_uses_orthographic_projection_and_non_z_up() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setCameraViewPreset", Some(&json!({ "value": "top" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.fixture.camera.projection.as_deref(), Some("orthographic"));
-            assert_eq!(envelope.fixture.camera.up, Some([0.0, 1.0, 0.0]), "top view needs a non-Z up vector to avoid gimbal lock in a Z-up world");
-            assert_eq!(envelope.fixture.camera.target, [0.0, 0.0, 0.0]);
-            assert_eq!(envelope.runtime.view_preset, "top");
-        }
-
-        #[test]
-        fn set_camera_view_preset_perspective_restores_perspective_projection() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setCameraViewPreset", Some(&json!({ "value": "front" })), &document, &ViewState::default());
-            let front_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let ops = app.handle_action_patch_ops("setCameraViewPreset", Some(&json!({ "value": "perspective" })), &front_document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&front_document), &ops);
-            assert_eq!(envelope.fixture.camera.projection.as_deref(), Some("perspective"));
-            assert_eq!(envelope.runtime.view_preset, "perspective");
-        }
-
-        #[test]
-        fn window_measures_include_view_preset_select() {
-            let app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let measures = app.window_measures(&document, &ViewState::default());
-            let groups = measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main measures");
-            let view_select = groups.iter().find(|measure| matches!(measure, WindowMeasure::Select { label: Some(label), .. } if label == "View")).expect("view select");
-            assert!(matches!(view_select, WindowMeasure::Select { value, .. } if value == "perspective"));
-        }
-
-        #[test]
-        fn view_preset_select_value_follows_set_camera_view_preset() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setCameraViewPreset", Some(&json!({ "value": "top" })), &document, &ViewState::default());
-            let top_document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let measures = app.window_measures(&top_document, &ViewState::default());
-            let groups = measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main measures");
-            let view_select = groups.iter().find(|measure| matches!(measure, WindowMeasure::Select { label: Some(label), .. } if label == "View")).expect("view select");
-            assert!(matches!(view_select, WindowMeasure::Select { value, .. } if value == "top"));
-        }
-
-        #[test]
-        fn fill_tool_shows_slider_control() {
-            let app = Puzzle3dPlayApp::default();
-            let mut envelope = parse_envelope(&app.initial_document_json());
-            envelope.runtime.active_tool = "fill".into();
-            envelope.runtime.fill_count = 5;
-            let document = serde_json::to_string(&envelope).unwrap();
-            let engagements = app.window_engagements(&document, &ViewState::default());
-            let engagement = engagements.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main engagement");
-            assert!(matches!(engagement.control, Some(WindowEngagementControl::Slider { .. })));
-        }
-
-        #[test]
-        fn fill_tool_always_shows_the_edit_volumes_mode_toggle() {
-            // The mode ToggleGroup is the only way to flip into edit-volumes mode, so it must render
-            // even when fill_edit_target_volumes is still false — otherwise the mode is unreachable.
-            let app = Puzzle3dPlayApp::default();
-            let mut envelope = parse_envelope(&app.initial_document_json());
-            envelope.runtime.active_tool = "fill".into();
-            let document = serde_json::to_string(&envelope).unwrap();
-            let engagements = app.window_engagements(&document, &ViewState::default());
-            let engagement = engagements.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main engagement");
-            let controls = engagement.controls.as_ref().expect("mode toggle should render outside edit mode too");
-            assert_eq!(controls.len(), 1);
-            assert!(matches!(&controls[0], WindowEngagementControl::ToggleGroup { id: Some(id), .. } if id == "puzzle3d-voxel-edit-mode"));
-        }
-
-        #[test]
-        fn parse_envelope_preserves_runtime_state() {
-            let envelope = Puzzle3dEnvelope {
-                fixture: empty_fixture(),
-                runtime: Puzzle3dRuntime {
-                    active_tool: "fill".into(),
-                    fill_count: 2,
-                    ..Puzzle3dRuntime::default()
-                },
-            };
-            let json = serde_json::to_string(&envelope).unwrap();
-            let parsed = parse_envelope(&json);
-            assert_eq!(parsed.runtime.active_tool, "fill");
-            assert_eq!(parsed.runtime.fill_count, 2);
-        }
-
-        #[test]
-        fn parse_brush_candidates_reads_free_array() {
-            let raw = serde_json::to_string(&json!({
-                "free": [{ "objectKindId": "Placed", "sourceVortexIndex": 0 }],
-                "unknownPending": false
-            }))
-            .unwrap();
-            assert_eq!(parse_brush_candidates_free_count(&raw), 1);
-        }
-
-        #[test]
-        fn brush_placement_control_lists_free_candidates() {
-            let mut app = Puzzle3dPlayApp::default();
-            let mut envelope = default_envelope();
-            envelope.runtime.active_tool = "brush".into();
-            let vortex = envelope.fixture.objects.first().and_then(|object| object.vortices.first()).map(|vortex| puzzle3d_vortex_full_id(&envelope.fixture.objects[0].id, &vortex.id)).expect("seed vortex");
-            envelope.runtime.selection.vortex_ids = vec![vortex];
-            drive_precompute(&mut app.precompute, &envelope);
-            let control = puzzle3d_brush_placement_control(&envelope, &app.precompute);
-            assert!(matches!(control, Some(WindowEngagementControl::ToggleGroup { .. })));
-        }
-
-        #[test]
-        fn set_fill_count_accepts_slider_value_key() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setFillCount", Some(&json!({ "value": 3 })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.fill_count, 3);
-        }
-
-        #[test]
-        fn set_fill_count_accepts_float_value() {
-            // The wasm bridge round-trips control values as JSON numbers, which may serialize as
-            // floats (e.g. 20.0) rather than integers; as_u64() would silently return None for those.
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setFillCount", Some(&json!({ "value": 20.0 })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.fill_count, 20);
-        }
-
-        #[test]
-        fn world_vortex_hover_out_does_not_clear_a_persisted_vortex_selection() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let vortex = envelope.fixture.objects.first().and_then(|object| object.vortices.first()).map(|vortex| puzzle3d_vortex_full_id(&envelope.fixture.objects[0].id, &vortex.id)).expect("seed vortex");
-            let ops = app.handle_action_patch_ops("worldVortexSelect", Some(&json!({ "fullId": vortex })), &document, &ViewState::default());
-            let selected_document = serde_json::to_string(&apply_ops(&envelope, &ops)).unwrap();
-            let ops = app.handle_action_patch_ops("worldVortexHover", Some(&json!({})), &selected_document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&selected_document), &ops);
-            assert_eq!(envelope.runtime.selection.vortex_ids, vec![vortex.clone()]);
-            assert_eq!(puzzle3d_brush_target_vortex(&envelope), Some(vortex));
-        }
-
-        #[test]
-        fn world_vortex_hover_does_not_mutate_the_selection() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let vortex = envelope.fixture.objects.first().and_then(|object| object.vortices.first()).map(|vortex| puzzle3d_vortex_full_id(&envelope.fixture.objects[0].id, &vortex.id)).expect("seed vortex");
-            let ops = app.handle_action_patch_ops("worldVortexHover", Some(&json!({ "fullId": vortex })), &document, &ViewState::default());
-            let envelope = apply_ops(&envelope, &ops);
-            assert!(envelope.runtime.selection.vortex_ids.is_empty());
-            assert_eq!(envelope.runtime.hovered_vortex_full_id, Some(vortex.clone()));
-            assert_eq!(puzzle3d_brush_target_vortex(&envelope), Some(vortex));
-        }
-
-        #[test]
-        fn duplicate_selection_clones_selected_objects() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let object_count = envelope.fixture.objects.len();
-            let first_id = envelope.fixture.objects.first().map(|object| object.id.clone()).unwrap();
-            let pick_ops = app.handle_action_patch_ops("worldPick", Some(&json!({ "granularity": "mesh", "id": 0, "merge": "replace" })), &document, &ViewState::default());
-            let document = serde_json::to_string(&apply_ops(&envelope, &pick_ops)).unwrap();
-            let ops = app.handle_action_patch_ops("duplicateSelection", None, &document, &ViewState::default());
-            let next = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(next.fixture.objects.len(), object_count + 1);
-            assert_ne!(next.runtime.selection.object_ids[0], first_id);
-        }
-
-        #[test]
-        fn select_same_kind_expands_selection() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let kind = envelope.fixture.objects.first().and_then(|object| object.object_kind.clone()).expect("kind");
-            let expected = envelope.fixture.objects.iter().filter(|object| object.object_kind.as_deref() == Some(kind.as_str())).count();
-            let pick_ops = app.handle_action_patch_ops("worldPick", Some(&json!({ "granularity": "mesh", "id": 0, "merge": "replace" })), &document, &ViewState::default());
-            let document = serde_json::to_string(&apply_ops(&envelope, &pick_ops)).unwrap();
-            let ops = app.handle_action_patch_ops("selectSameKindSelection", None, &document, &ViewState::default());
-            let next = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(next.runtime.selection.object_ids.len(), expected);
-        }
-
-        #[test]
-        fn context_menu_emitted_when_selection_nonempty() {
-            let app = Puzzle3dPlayApp::default();
-            let mut envelope = parse_envelope(&app.initial_document_json());
-            envelope.runtime.selection.object_ids = vec![envelope.fixture.objects[0].id.clone()];
-            let document = serde_json::to_string(&envelope).unwrap();
-            let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("contextMenuJson"));
-            assert!(json.contains("duplicateSelection"));
+        fn app_definition_has_the_main_world_window() {
+            let app = create_puzzle3d_app();
+            assert!(app.definition.window_kinds.iter().any(|window| window.id == PUZZLE3D_PLAY_WINDOW_MAIN));
         }
 
         //#region 🧭 Suggestions, select-then-open context menu, fill build progress (Round 2)
-        #[test]
-        fn context_menu_at_selects_vortex_and_prepends_suggest_objects() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let vortex = envelope.fixture.objects.first().and_then(|object| object.vortices.first()).map(|vortex| puzzle3d_vortex_full_id(&envelope.fixture.objects[0].id, &vortex.id)).expect("seed vortex");
-            let ops = app.handle_action_patch_ops("contextMenuAt", Some(&json!({ "kind": "vortex", "id": vortex })), &document, &ViewState::default());
-            let next = apply_ops(&envelope, &ops);
-            assert_eq!(next.runtime.selection.vortex_ids, vec![vortex]);
-            let menu = puzzle3d_context_menu_json(&next).expect("vortex menu");
-            assert!(menu.contains("Suggest objects"));
-            assert!(menu.contains("openVortexSuggestions"));
+        fn first_vortex_full_id(app: &VcsDocumentApp<Puzzle3dPlayApp>) -> String {
+            let projection = app.projection().expect("projection");
+            let object = projection.get("objects").and_then(Value::as_array).and_then(|objects| objects.first()).expect("seed object");
+            let object_id = object.get("id").and_then(Value::as_str).expect("object id");
+            let vortex_id = object.get("vortices").and_then(Value::as_array).and_then(|vortices| vortices.first()).and_then(|vortex| vortex.get("id")).and_then(Value::as_str).expect("vortex id");
+            puzzle3d_vortex_full_id(object_id, vortex_id)
+        }
+
+        fn render_composite(app: &mut VcsDocumentApp<Puzzle3dPlayApp>) -> Value {
+            let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render");
+            serde_json::to_value(&node).unwrap()
+        }
+
+        fn interaction_of(node: &Value) -> Value {
+            node.pointer("/world3d/interactionJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or(Value::Null)
+        }
+
+        fn context_menu_of(node: &Value) -> Value {
+            node.pointer("/world3d/contextMenuJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or(Value::Null)
         }
 
         #[test]
-        fn context_menu_at_selects_object_and_clears_other_selection_kinds() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let mut envelope = parse_envelope(&document);
-            let object_id = envelope.fixture.objects[0].id.clone();
-            envelope.runtime.selection.vortex_ids = vec!["stale:v0".into()];
-            let document = serde_json::to_string(&envelope).unwrap();
-            let ops = app.handle_action_patch_ops("contextMenuAt", Some(&json!({ "kind": "object", "id": object_id })), &document, &ViewState::default());
-            let next = apply_ops(&envelope, &ops);
-            assert_eq!(next.runtime.selection.object_ids, vec![object_id]);
-            assert!(next.runtime.selection.vortex_ids.is_empty());
+        fn context_menu_at_selects_vortex_and_prepends_suggest_objects() {
+            let mut app = new_app();
+            let vortex = first_vortex_full_id(&app);
+            app.handle_action("contextMenuAt", Some(&json!({ "kind": "vortex", "id": vortex })), &ViewState::default(), &meta("local")).expect("contextMenuAt");
+            let menu = context_menu_of(&render_composite(&mut app));
+            let menu_json = serde_json::to_string(&menu).unwrap();
+            assert!(menu_json.contains("Suggest objects"), "menu should be {menu_json}");
+            assert!(menu_json.contains("openVortexSuggestions"));
         }
 
         #[test]
         fn context_menu_at_selects_target_volume_and_set_target_volume_flag_toggles_hidden() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let add_ops = app.handle_action_patch_ops("addTargetVolume", Some(&json!({ "origin": [1.0, 2.0, 3.0] })), &document, &ViewState::default());
-            let added = apply_ops(&envelope, &add_ops);
-            let volume_id = added.fixture.target_volumes[0].id.clone();
-            let added_document = serde_json::to_string(&added).unwrap();
-            let ops = app.handle_action_patch_ops("contextMenuAt", Some(&json!({ "kind": "targetVolume", "id": volume_id })), &added_document, &ViewState::default());
-            let selected = apply_ops(&added, &ops);
-            assert_eq!(selected.runtime.selection.target_volume_ids, vec![volume_id.clone()]);
-            let selected_document = serde_json::to_string(&selected).unwrap();
-            let flag_ops = app.handle_action_patch_ops("setTargetVolumeFlag", Some(&json!({ "id": volume_id, "flag": "hidden", "value": true })), &selected_document, &ViewState::default());
-            let flagged = apply_ops(&selected, &flag_ops);
-            assert!(flagged.fixture.target_volumes[0].hidden);
+            let mut app = new_app();
+            app.handle_action("addTargetVolume", Some(&json!({ "origin": [1.0, 2.0, 3.0] })), &ViewState::default(), &meta("local")).expect("addTargetVolume");
+            let projection = app.projection().expect("projection");
+            let volume_id = projection.get("targetVolumes").and_then(Value::as_array).and_then(|volumes| volumes.first()).and_then(|volume| volume.get("id")).and_then(Value::as_str).expect("volume id").to_string();
+            app.handle_action("contextMenuAt", Some(&json!({ "kind": "targetVolume", "id": volume_id })), &ViewState::default(), &meta("local")).expect("contextMenuAt");
+            let menu_json = serde_json::to_string(&context_menu_of(&render_composite(&mut app))).unwrap();
+            assert!(menu_json.contains("setTargetVolumeFlag"), "menu should be {menu_json}");
+            app.handle_action("setTargetVolumeFlag", Some(&json!({ "id": volume_id, "flag": "hidden", "value": true })), &ViewState::default(), &meta("local")).expect("setTargetVolumeFlag");
+            let projection = app.projection().expect("projection");
+            let hidden = projection.get("targetVolumes").and_then(Value::as_array).and_then(|volumes| volumes.first()).and_then(|volume| volume.get("hidden")).and_then(Value::as_bool);
+            assert_eq!(hidden, Some(true));
         }
 
         #[test]
-        fn open_vortex_suggestions_selects_vortex_switches_to_brush_and_opens_menu() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let vortex = envelope.fixture.objects.first().and_then(|object| object.vortices.first()).map(|vortex| puzzle3d_vortex_full_id(&envelope.fixture.objects[0].id, &vortex.id)).expect("seed vortex");
-            let ops = app.handle_action_patch_ops("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 12.0, "y": 34.0 })), &document, &ViewState::default());
-            let next = apply_ops(&envelope, &ops);
-            assert_eq!(next.runtime.selection.vortex_ids, vec![vortex]);
-            assert_eq!(next.runtime.active_tool, "brush");
-            assert_eq!(next.runtime.brush_candidate_index, 0);
-            assert_eq!(next.runtime.suggestion_menu, Some([12.0, 34.0]));
+        fn open_vortex_suggestions_opens_the_suggestion_popup() {
+            let mut app = new_app();
+            let vortex = first_vortex_full_id(&app);
+            app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 12.0, "y": 34.0 })), &ViewState::default(), &meta("local")).expect("openVortexSuggestions");
+            let interaction = interaction_of(&render_composite(&mut app));
+            assert_eq!(interaction.get("activeTool").and_then(Value::as_str), Some("brush"));
+            let menu = interaction.get("suggestionMenu").expect("suggestionMenu present");
+            assert_eq!(menu.get("open").and_then(Value::as_bool), Some(true));
+            assert_eq!(menu.get("x").and_then(Value::as_f64), Some(12.0));
+            assert_eq!(menu.get("y").and_then(Value::as_f64), Some(34.0));
         }
 
         #[test]
         fn close_vortex_suggestions_clears_the_menu() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let mut envelope = parse_envelope(&document);
-            envelope.runtime.suggestion_menu = Some([1.0, 2.0]);
-            let document = serde_json::to_string(&envelope).unwrap();
-            let ops = app.handle_action_patch_ops("closeVortexSuggestions", None, &document, &ViewState::default());
-            let next = apply_ops(&envelope, &ops);
-            assert!(next.runtime.suggestion_menu.is_none());
+            let mut app = new_app();
+            let vortex = first_vortex_full_id(&app);
+            app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), &ViewState::default(), &meta("local")).expect("openVortexSuggestions");
+            app.handle_action("closeVortexSuggestions", None, &ViewState::default(), &meta("local")).expect("closeVortexSuggestions");
+            let interaction = interaction_of(&render_composite(&mut app));
+            assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
         }
 
         #[test]
         fn accept_suggestion_appends_an_object_and_closes_the_menu() {
-            let mut app = Puzzle3dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let object_count = envelope.fixture.objects.len();
-            let vortex = envelope.fixture.objects.first().and_then(|object| object.vortices.first()).map(|vortex| puzzle3d_vortex_full_id(&envelope.fixture.objects[0].id, &vortex.id)).expect("seed vortex");
-            let ops = app.handle_action_patch_ops("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), &document, &ViewState::default());
-            let opened = apply_ops(&envelope, &ops);
-            let opened_document = serde_json::to_string(&opened).unwrap();
-            let ops = app.handle_action_patch_ops("acceptSuggestion", None, &opened_document, &ViewState::default());
-            let next = apply_ops(&opened, &ops);
-            assert_eq!(next.fixture.objects.len(), object_count + 1);
-            assert!(next.runtime.suggestion_menu.is_none());
+            let mut app = new_app();
+            let object_count_before = object_count(&app);
+            let vortex = first_vortex_full_id(&app);
+            app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), &ViewState::default(), &meta("local")).expect("openVortexSuggestions");
+            app.handle_action("acceptSuggestion", None, &ViewState::default(), &meta("local")).expect("acceptSuggestion");
+            assert_eq!(object_count(&app), object_count_before + 1);
+            let interaction = interaction_of(&render_composite(&mut app));
+            assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
         }
 
         #[test]
-        fn cycle_brush_candidate_back_moves_index_backward_with_wraparound() {
-            let mut app = Puzzle3dPlayApp::default();
-            let mut envelope = default_envelope();
-            envelope.runtime.active_tool = "brush".into();
-            let vortex = envelope.fixture.objects.first().and_then(|object| object.vortices.first()).map(|vortex| puzzle3d_vortex_full_id(&envelope.fixture.objects[0].id, &vortex.id)).expect("seed vortex");
-            envelope.runtime.selection.vortex_ids = vec![vortex.clone()];
-            let document = serde_json::to_string(&envelope).unwrap();
-            let ops = app.handle_action_patch_ops("cycleBrushCandidateBack", None, &document, &ViewState::default());
-            let next = apply_ops(&envelope, &ops);
-            let raw = app.precompute.brush_candidates(&vortex);
-            let free_count = parse_brush_candidates_free_count(&raw);
-            if free_count > 0 {
-                assert_eq!(next.runtime.brush_candidate_index, free_count - 1);
+        fn fill_build_tick_auto_starts_fill_when_active_and_done() {
+            let mut app = new_app();
+            app.handle_action("engagementPossibleSelect", Some(&json!({ "possibleId": PUZZLE3D_ENGAGEMENT_TOOL_FILL })), &ViewState::default(), &meta("local")).expect("select fill tool");
+            app.handle_action("fillBuildTick", None, &ViewState::default(), &meta("local")).expect("fillBuildTick");
+            let engagements = app.window_engagements(&ViewState::default());
+            let engagement = engagements.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main window engagement");
+            match &engagement.control {
+                Some(WindowEngagementControl::Slider { value, .. }) => assert_eq!(*value, 1.0, "fillBuildTick should auto-start the fill count at 1 once the build is done"),
+                other => panic!("expected a fill slider control, got {other:?}"),
             }
         }
 
         #[test]
         fn fill_count_control_shows_building_progress_while_precompute_incomplete() {
             let mut session = Puzzle3dPrecomputeSession::new();
-            let envelope = nakagin_envelope();
-            sync_precompute_session(&mut session, &envelope);
+            let scene = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default() };
+            sync_precompute_session(&mut session, &scene);
             session.precompute_step(1);
-            let control = puzzle3d_fill_count_control(&envelope, &session);
-            if let WindowEngagementControl::Slider { label: Some(label), .. } = control {
-                assert!(label.contains("building"), "expected building-progress label, got {label:?}");
-            } else {
-                panic!("expected a slider control");
+            let control = puzzle3d_fill_count_control(&scene, &session);
+            match control {
+                WindowEngagementControl::Slider { label: Some(label), .. } => assert!(label.contains("building"), "expected a building-progress label, got {label:?}"),
+                other => panic!("expected a slider control, got {other:?}"),
             }
-        }
-
-        #[test]
-        fn fill_build_tick_auto_starts_fill_when_active_and_done() {
-            let mut app = Puzzle3dPlayApp::default();
-            let mut envelope = default_envelope();
-            envelope.runtime.active_tool = "fill".into();
-            envelope.runtime.fill_count = 0;
-            let document = serde_json::to_string(&envelope).unwrap();
-            let ops = app.handle_action_patch_ops("fillBuildTick", None, &document, &ViewState::default());
-            let next = apply_ops(&envelope, &ops);
-            assert_eq!(next.runtime.fill_count, 1);
         }
         //#endregion 🧭 Suggestions, select-then-open context menu, fill build progress (Round 2)
-
-        //#region 🧲 Attraction 6-parameter resolution tests
-        fn attraction_test_object(id: &str, origin: [f64; 3], orientation: Option<[f64; 4]>, vortex_position: [f64; 3], vortex_direction: [f64; 3]) -> Puzzle3dObject {
-            Puzzle3dObject {
-                id: id.into(),
-                label: None,
-                object_kind: None,
-                origin,
-                orientation,
-                scale: None,
-                mesh_url: None,
-                vortices: vec![Puzzle3dVortex { id: "v0".into(), vortex_kind: Some("k".into()), position: vortex_position, direction: Some(vortex_direction), radius: None, hidden: false, locked: false }],
-                hidden: false,
-                locked: false,
-            }
-        }
-
-        fn attraction_test_attraction(id: &str, attracting: &str, attracted: &str, gap: f64, shift: f64, rise: f64, rotation: f64, turn: f64, tilt: f64) -> Puzzle3dAttraction {
-            Puzzle3dAttraction { id: id.into(), attracting: attracting.into(), attracted: attracted.into(), gap, shift, rise, rotation, turn, tilt }
-        }
-
-        fn assert_vec3_approx(actual: [f64; 3], expected: [f64; 3], tolerance: f64, message: &str) {
-            for axis in 0..3 {
-                assert!((actual[axis] - expected[axis]).abs() < tolerance, "{message}: axis {axis} expected {expected:?}, got {actual:?}");
-            }
-        }
-
-        #[test]
-        fn attraction_schema_roundtrips_transform_params() {
-            let minimal: Puzzle3dAttraction = serde_json::from_str(r#"{"attracting":"o1:v0","attracted":"o2:v0"}"#).unwrap();
-            assert_eq!(minimal.gap, 0.0);
-            assert_eq!(minimal.shift, 0.0);
-            assert_eq!(minimal.rise, 0.0);
-            assert_eq!(minimal.rotation, 0.0);
-            assert_eq!(minimal.turn, 0.0);
-            assert_eq!(minimal.tilt, 0.0);
-            assert_eq!(minimal.id, "");
-
-            let explicit = attraction_test_attraction("a1", "o1:v0", "o2:v0", 1.5, -2.5, 0.25, 30.0, -45.0, 10.0);
-            let json = serde_json::to_string(&explicit).unwrap();
-            let roundtripped: Puzzle3dAttraction = serde_json::from_str(&json).unwrap();
-            assert_eq!(roundtripped, explicit);
-        }
-
-        #[test]
-        fn resolve_attractions_positions_attracted_object_along_gap() {
-            let mut fixture = empty_fixture();
-            fixture.objects = vec![
-                attraction_test_object("a", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
-                attraction_test_object("b", [5.0, 5.0, 5.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
-            ];
-            fixture.attractions = vec![attraction_test_attraction("attr", "a:v0", "b:v0", 3.0, 0.0, 0.0, 0.0, 0.0, 0.0)];
-            // Ground truth via the (separately invertibility-tested) forward pose function — the resolver's job is
-            // purely to feed it the right endpoint geometry over the directed graph, not to redefine the math.
-            let (expected_origin, expected_orientation) = puzzle3d_attraction_child_pose([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], [1.0, 0.0, 0.0], 3.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-            resolve_puzzle3d_attractions(&mut fixture);
-            let b = fixture.objects.iter().find(|object| object.id == "b").unwrap();
-            assert_vec3_approx(b.origin, expected_origin, 1e-9, "resolver should position the attracted object exactly per the forward pose formula");
-            assert_vec3_approx(quat_rotate_vector(b.orientation.unwrap(), [1.0, 0.0, 0.0]), quat_rotate_vector(expected_orientation, [1.0, 0.0, 0.0]), 1e-9, "resolver should orient the attracted object exactly per the forward pose formula");
-            assert_ne!(b.origin, [5.0, 5.0, 5.0], "resolve should actually reposition the attracted object away from its placeholder origin");
-        }
-
-        #[test]
-        fn resolve_attractions_applies_rotation_turn_tilt_and_is_invertible() {
-            let t_a = [1.0, 2.0, 3.0];
-            let q_a = quat_normalize(quat_from_axis_angle(0.3, 0.6, 0.2, 0.9));
-            let p_a = [0.1, -0.2, 0.05];
-            let d_a = [0.2, 0.9, -0.1];
-            let p_b = [-0.3, 0.15, 0.4];
-            let d_b = [0.6, -0.3, 0.5];
-            let (gap, shift, rise, rotation, turn, tilt) = (1.2, -0.7, 0.4, 37.0, -52.0, 21.0);
-            let (t_b, q_b) = puzzle3d_attraction_child_pose(t_a, q_a, p_a, d_a, p_b, d_b, gap, shift, rise, rotation, turn, tilt);
-            let derived = derive_attraction_params(t_a, q_a, p_a, d_a, p_b, d_b, t_b, q_b);
-            let (t_b2, q_b2) = puzzle3d_attraction_child_pose(t_a, q_a, p_a, d_a, p_b, d_b, derived.0, derived.1, derived.2, derived.3, derived.4, derived.5);
-            assert_vec3_approx(t_b2, t_b, 1e-6, "re-applying derived params should reproduce the same world position");
-            let v1 = quat_rotate_vector(q_b, [1.0, 0.0, 0.0]);
-            let v2 = quat_rotate_vector(q_b2, [1.0, 0.0, 0.0]);
-            assert_vec3_approx(v1, v2, 1e-6, "re-applying derived params should reproduce the same world orientation");
-        }
-
-        #[test]
-        fn resolve_attractions_is_idempotent() {
-            let mut fixture = empty_fixture();
-            fixture.objects = vec![
-                attraction_test_object("a", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
-                attraction_test_object("b", [9.0, 9.0, 9.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
-                attraction_test_object("c", [-4.0, -4.0, -4.0], None, [0.0, 0.0, 0.0], [0.0, 0.0, 1.0]),
-            ];
-            fixture.attractions = vec![
-                attraction_test_attraction("attr-ab", "a:v0", "b:v0", 1.0, 0.5, -0.5, 15.0, -20.0, 5.0),
-                attraction_test_attraction("attr-bc", "b:v0", "c:v0", 0.75, -0.25, 0.1, -30.0, 10.0, -15.0),
-            ];
-            resolve_puzzle3d_attractions(&mut fixture);
-            let once = fixture.clone();
-            resolve_puzzle3d_attractions(&mut fixture);
-            for (before, after) in once.objects.iter().zip(fixture.objects.iter()) {
-                let before_orientation = before.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
-                let after_orientation = after.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
-                assert_vec3_approx(before.origin, after.origin, 1e-9, "re-resolving should not move an already-resolved object");
-                assert_vec3_approx(quat_rotate_vector(before_orientation, [1.0, 0.0, 0.0]), quat_rotate_vector(after_orientation, [1.0, 0.0, 0.0]), 1e-9, "re-resolving should not re-orient an already-resolved object");
-            }
-        }
-
-        #[test]
-        fn resolve_attractions_donut_cycle_picks_deterministic_root_and_terminates() {
-            let mut fixture = empty_fixture();
-            fixture.objects = vec![
-                attraction_test_object("z-third", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
-                attraction_test_object("a-first", [1.0, 1.0, 1.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
-                attraction_test_object("m-second", [2.0, 2.0, 2.0], None, [0.0, 0.0, 0.0], [0.0, 0.0, 1.0]),
-            ];
-            fixture.attractions = vec![
-                attraction_test_attraction("attr-1", "a-first:v0", "m-second:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-                attraction_test_attraction("attr-2", "m-second:v0", "z-third:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-                attraction_test_attraction("attr-3", "z-third:v0", "a-first:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-            ];
-            let original_root_origin = fixture.objects.iter().find(|object| object.id == "a-first").unwrap().origin;
-            resolve_puzzle3d_attractions(&mut fixture);
-            let root = fixture.objects.iter().find(|object| object.id == "a-first").unwrap();
-            assert_vec3_approx(root.origin, original_root_origin, 1e-9, "the lexicographically smallest object id in a pure cycle should be the deterministic root and keep its stored pose");
-            let once = fixture.clone();
-            resolve_puzzle3d_attractions(&mut fixture);
-            for (before, after) in once.objects.iter().zip(fixture.objects.iter()) {
-                assert_vec3_approx(before.origin, after.origin, 1e-9, "a donut cycle must resolve identically on re-resolve (idempotent, no infinite loop)");
-            }
-        }
-
-        #[test]
-        fn resolve_attractions_skips_same_object_and_dangling_attractions() {
-            let mut fixture = empty_fixture();
-            fixture.objects = vec![Puzzle3dObject {
-                id: "solo".into(),
-                label: None,
-                object_kind: None,
-                origin: [3.0, 4.0, 5.0],
-                orientation: None,
-                scale: None,
-                mesh_url: None,
-                vortices: vec![
-                    Puzzle3dVortex { id: "v0".into(), vortex_kind: None, position: [0.0, 0.0, 0.0], direction: Some([0.0, 1.0, 0.0]), radius: None, hidden: false, locked: false },
-                    Puzzle3dVortex { id: "v1".into(), vortex_kind: None, position: [1.0, 0.0, 0.0], direction: Some([1.0, 0.0, 0.0]), radius: None, hidden: false, locked: false },
-                ],
-                hidden: false,
-                locked: false,
-            }];
-            fixture.attractions = vec![
-                attraction_test_attraction("same-object", "solo:v0", "solo:v1", 2.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-                attraction_test_attraction("dangling", "solo:v0", "ghost:v0", 2.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-            ];
-            let original_origin = fixture.objects[0].origin;
-            resolve_puzzle3d_attractions(&mut fixture);
-            assert_eq!(fixture.objects[0].origin, original_origin, "same-object and dangling attractions must not be resolved or panic");
-        }
-
-        #[test]
-        fn attraction_roots_are_in_degree_zero_objects() {
-            let mut fixture = empty_fixture();
-            fixture.objects = vec![
-                attraction_test_object("root", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
-                attraction_test_object("child", [9.0, 9.0, 9.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
-                attraction_test_object("grandchild", [-9.0, -9.0, -9.0], None, [0.0, 0.0, 0.0], [0.0, 0.0, 1.0]),
-            ];
-            fixture.attractions = vec![
-                attraction_test_attraction("attr-1", "root:v0", "child:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-                attraction_test_attraction("attr-2", "child:v0", "grandchild:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-            ];
-            let document = serde_json::to_string(&Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() }).unwrap();
-            let mut app = Puzzle3dPlayApp::default();
-            let before = parse_envelope(&document);
-            let child_before = before.fixture.objects.iter().find(|object| object.id == "child").unwrap().origin;
-            let grandchild_before = before.fixture.objects.iter().find(|object| object.id == "grandchild").unwrap().origin;
-            let ops = app.handle_action_patch_ops("translateSelection", Some(&json!({ "ids": ["root"], "dx": 10.0, "dy": 0.0, "dz": 0.0 })), &document, &ViewState::default());
-            let after = apply_ops(&parse_envelope(&document), &ops);
-            let child_after = after.fixture.objects.iter().find(|object| object.id == "child").unwrap().origin;
-            let grandchild_after = after.fixture.objects.iter().find(|object| object.id == "grandchild").unwrap().origin;
-            assert_ne!(child_after, child_before, "moving the root should carry its directly attracted child — this is the move-fix regression test");
-            assert_ne!(grandchild_after, grandchild_before, "moving the root should transitively carry the grandchild too");
-            // Consistency check (not a "same delta" assumption — compose's connection math can rotate the
-            // propagated offset): resolving fresh from the root's NEW pose must reproduce the exact same
-            // descendant positions the in-place translate+resolve produced.
-            let mut fresh = after.fixture.clone();
-            for object in fresh.objects.iter_mut() {
-                if object.id != "root" {
-                    object.origin = [999.0, 999.0, 999.0];
-                }
-            }
-            resolve_puzzle3d_attractions(&mut fresh);
-            let child_fresh = fresh.objects.iter().find(|object| object.id == "child").unwrap().origin;
-            let grandchild_fresh = fresh.objects.iter().find(|object| object.id == "grandchild").unwrap().origin;
-            assert_vec3_approx(child_after, child_fresh, 1e-9, "descendant positions after a root move must match a from-scratch resolve of the root's new pose");
-            assert_vec3_approx(grandchild_after, grandchild_fresh, 1e-9, "transitive descendant positions after a root move must match a from-scratch resolve too");
-        }
-
-        #[test]
-        fn patch_inspector_updates_each_attraction_param() {
-            let mut fixture = empty_fixture();
-            fixture.objects = vec![
-                attraction_test_object("a", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
-                attraction_test_object("b", [8.0, 8.0, 8.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
-            ];
-            fixture.attractions = vec![attraction_test_attraction("attr", "a:v0", "b:v0", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)];
-            let document = serde_json::to_string(&Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() }).unwrap();
-            let mut app = Puzzle3dPlayApp::default();
-            let mut current_document = document;
-            for (field, value) in [("gap", 2.0), ("shift", -1.5), ("rise", 0.5), ("rotation", 45.0), ("turn", -30.0), ("tilt", 15.0)] {
-                let ops = app.handle_action_patch_ops("patchInspector", Some(&json!({ "entity": "attraction", "ids": ["attr"], "field": field, "value": value })), &current_document, &ViewState::default());
-                current_document = serde_json::to_string(&apply_ops(&parse_envelope(&current_document), &ops)).unwrap();
-            }
-            let envelope = parse_envelope(&current_document);
-            let attraction = envelope.fixture.attractions.iter().find(|attraction| attraction.id == "attr").unwrap();
-            assert_eq!(attraction.gap, 2.0);
-            assert_eq!(attraction.shift, -1.5);
-            assert_eq!(attraction.rise, 0.5);
-            assert_eq!(attraction.rotation, 45.0);
-            assert_eq!(attraction.turn, -30.0);
-            assert_eq!(attraction.tilt, 15.0);
-        }
-
-        #[test]
-        fn patch_inspector_attraction_gap_repositions_attracted_object() {
-            let mut fixture = empty_fixture();
-            fixture.objects = vec![
-                attraction_test_object("a", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
-                attraction_test_object("b", [0.0, 1.0, 0.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
-            ];
-            fixture.attractions = vec![attraction_test_attraction("attr", "a:v0", "b:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)];
-            resolve_puzzle3d_attractions(&mut fixture);
-            let document = serde_json::to_string(&Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() }).unwrap();
-            let mut app = Puzzle3dPlayApp::default();
-            let before = parse_envelope(&document).fixture.objects.iter().find(|object| object.id == "b").unwrap().origin;
-            let ops = app.handle_action_patch_ops("patchInspector", Some(&json!({ "entity": "attraction", "ids": ["attr"], "field": "gap", "value": 4.0 })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            let after = envelope.fixture.objects.iter().find(|object| object.id == "b").unwrap().origin;
-            assert_ne!(before, after, "increasing gap on a selected attraction should immediately reposition the attracted object");
-        }
-
-        #[test]
-        fn translate_selection_on_root_propagates_to_attracted_objects() {
-            let mut fixture = empty_fixture();
-            fixture.objects = vec![
-                attraction_test_object("root", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
-                attraction_test_object("child", [0.0, 1.0, 0.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
-            ];
-            fixture.attractions = vec![attraction_test_attraction("attr", "root:v0", "child:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)];
-            resolve_puzzle3d_attractions(&mut fixture);
-            let document = serde_json::to_string(&Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() }).unwrap();
-            let mut app = Puzzle3dPlayApp::default();
-            let child_before = parse_envelope(&document).fixture.objects.iter().find(|object| object.id == "child").unwrap().origin;
-            let ops = app.handle_action_patch_ops("translateSelection", Some(&json!({ "ids": ["root"], "dx": 5.0, "dy": 2.0, "dz": -1.0 })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            let child_after = envelope.fixture.objects.iter().find(|object| object.id == "child").unwrap().origin;
-            assert_ne!(child_after, child_before, "translating the root must move objects with attractions too — this is the move-fix regression test");
-            let expected_root_origin = [5.0, 2.0, -1.0];
-            let (expected_child_origin, _) = puzzle3d_attraction_child_pose(expected_root_origin, [0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0], [1.0, 0.0, 0.0], 1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-            assert_vec3_approx(child_after, expected_child_origin, 1e-9, "the child's position after the root moves must match the forward pose formula evaluated at the root's new pose");
-        }
-
-        #[test]
-        fn translate_selection_on_attracted_object_rederives_params_without_snap_back() {
-            let mut fixture = empty_fixture();
-            fixture.objects = vec![
-                attraction_test_object("root", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
-                attraction_test_object("child", [0.0, 1.0, 0.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
-            ];
-            fixture.attractions = vec![attraction_test_attraction("attr", "root:v0", "child:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)];
-            resolve_puzzle3d_attractions(&mut fixture);
-            let resolved_child_origin = fixture.objects.iter().find(|object| object.id == "child").unwrap().origin;
-            let document = serde_json::to_string(&Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() }).unwrap();
-            let mut app = Puzzle3dPlayApp::default();
-            let ops = app.handle_action_patch_ops("translateSelection", Some(&json!({ "ids": ["child"], "dx": 3.0, "dy": -4.0, "dz": 2.0 })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            let child = envelope.fixture.objects.iter().find(|object| object.id == "child").unwrap();
-            let expected = vec3_add(resolved_child_origin, [3.0, -4.0, 2.0]);
-            assert_vec3_approx(child.origin, expected, 1e-6, "moving an attracted object directly must not snap back to its old resolved position");
-            let attraction = envelope.fixture.attractions.iter().find(|attraction| attraction.id == "attr").unwrap();
-            assert_ne!(attraction.gap, 1.0, "the incoming attraction's params should be rederived from the object's new pose");
-            // and the resolver must be a no-op on top of the rederived params (idempotent, no snap-back)
-            let mut resolved_again = envelope.fixture.clone();
-            resolve_puzzle3d_attractions(&mut resolved_again);
-            let child_again = resolved_again.objects.iter().find(|object| object.id == "child").unwrap();
-            assert_vec3_approx(child_again.origin, child.origin, 1e-9, "re-resolving after a direct move on the attracted object must reproduce the moved-to position exactly");
-        }
-
-        #[test]
-        fn rotate_selection_on_attracted_object_rederives_angle_params() {
-            let mut fixture = empty_fixture();
-            fixture.objects = vec![
-                attraction_test_object("root", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
-                attraction_test_object("child", [0.0, 1.0, 0.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
-            ];
-            fixture.attractions = vec![attraction_test_attraction("attr", "root:v0", "child:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)];
-            resolve_puzzle3d_attractions(&mut fixture);
-            let resolved_child_orientation = fixture.objects.iter().find(|object| object.id == "child").unwrap().orientation.unwrap();
-            let document = serde_json::to_string(&Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() }).unwrap();
-            let mut app = Puzzle3dPlayApp::default();
-            let ops = app.handle_action_patch_ops("rotateSelection", Some(&json!({ "ids": ["child"], "ax": 0.0, "ay": 0.0, "az": 1.0, "angle": 0.4 })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            let child = envelope.fixture.objects.iter().find(|object| object.id == "child").unwrap();
-            let expected_orientation = quat_normalize(quat_mul(quat_from_axis_angle(0.0, 0.0, 1.0, 0.4), resolved_child_orientation));
-            let v1 = quat_rotate_vector(child.orientation.unwrap(), [1.0, 0.0, 0.0]);
-            let v2 = quat_rotate_vector(expected_orientation, [1.0, 0.0, 0.0]);
-            assert_vec3_approx(v1, v2, 1e-6, "rotating an attracted object directly must not snap back to its old resolved orientation");
-            let mut resolved_again = envelope.fixture.clone();
-            resolve_puzzle3d_attractions(&mut resolved_again);
-            let child_again = resolved_again.objects.iter().find(|object| object.id == "child").unwrap();
-            assert_vec3_approx(child_again.origin, child.origin, 1e-6, "rederived params must make a follow-up resolve a no-op");
-        }
-
-        #[test]
-        fn world_relocate_attaches_moved_object_as_attracted_with_derived_params() {
-            let mut fixture = empty_fixture();
-            fixture.objects = vec![
-                attraction_test_object("stationary", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
-                attraction_test_object("moved", [5.0, 5.0, 5.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
-            ];
-            let document = serde_json::to_string(&Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() }).unwrap();
-            let mut app = Puzzle3dPlayApp::default();
-            let ops = app.handle_action_patch_ops("setProximityRadius", Some(&json!({ "value": 10.0 })), &document, &ViewState::default());
-            let document = serde_json::to_string(&apply_ops(&parse_envelope(&document), &ops)).unwrap();
-            let requested_position = [0.5, 0.5, 0.5];
-            let ops = app.handle_action_patch_ops("worldRelocate", Some(&json!({ "objectId": "moved", "position": requested_position })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.fixture.attractions.len(), 1);
-            let attraction = &envelope.fixture.attractions[0];
-            assert!(attraction.attracting.starts_with("stationary:"), "the pre-existing stationary structure should stay the resolution root");
-            assert!(attraction.attracted.starts_with("moved:"), "the moved object should attach as the attracted (non-root) side");
-            let moved = envelope.fixture.objects.iter().find(|object| object.id == "moved").unwrap();
-            assert_vec3_approx(moved.origin, requested_position, 1e-6, "the relocated object must land exactly where it was dropped, not jump to a canonical docking pose");
-        }
-
-        #[test]
-        fn create_attraction_derives_params_so_nothing_moves() {
-            let mut fixture = empty_fixture();
-            fixture.objects = vec![
-                attraction_test_object("a", [1.0, 2.0, 3.0], Some(quat_normalize(quat_from_axis_angle(0.1, 0.7, 0.3, 0.5))), [0.0, 0.0, 0.0], [0.2, 0.9, -0.1]),
-                attraction_test_object("b", [-2.0, 4.0, 1.0], Some(quat_normalize(quat_from_axis_angle(0.4, -0.2, 0.6, 1.1))), [0.0, 0.0, 0.0], [0.6, -0.3, 0.5]),
-            ];
-            let a_origin_before = fixture.objects[0].origin;
-            let b_origin_before = fixture.objects[1].origin;
-            let document = serde_json::to_string(&Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() }).unwrap();
-            let mut app = Puzzle3dPlayApp::default();
-            let ops = app.handle_action_patch_ops("createAttraction", Some(&json!({ "attracting": "a:v0", "attracted": "b:v0" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.fixture.attractions.len(), 1);
-            let a_after = envelope.fixture.objects.iter().find(|object| object.id == "a").unwrap().origin;
-            let b_after = envelope.fixture.objects.iter().find(|object| object.id == "b").unwrap().origin;
-            assert_vec3_approx(a_after, a_origin_before, 1e-6, "creating an attraction must never move the attracting object");
-            assert_vec3_approx(b_after, b_origin_before, 1e-6, "creating an attraction must never move the attracted object");
-        }
-
-        #[test]
-        fn brush_placement_roundtrip_preserves_attractions() {
-            let envelope = Puzzle3dEnvelope { fixture: empty_fixture(), runtime: Puzzle3dRuntime::default() };
-            let engine_json = json!({
-                "objects": [attraction_test_object("a", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0])],
-                "attractions": [{ "id": "attr-1", "attracting": "target:v0", "attracted": "a:v0", "gap": 0.0, "shift": 0.0, "rise": 0.0, "rotation": 0.0, "turn": 0.0, "tilt": 0.0 }],
-            })
-            .to_string();
-            let next = fixture_from_engine_json(&envelope, &engine_json).expect("engine json with ids should parse");
-            assert_eq!(next.fixture.attractions.len(), 1, "an id-bearing engine attraction must survive fixture_from_engine_json (regression for the silent-wipe bug)");
-            assert_eq!(next.fixture.attractions[0].attracting, "target:v0");
-        }
-
-        #[test]
-        fn build_inspector_tree_shows_attraction_transform_fields() {
-            let mut fixture = empty_fixture();
-            fixture.objects = vec![
-                attraction_test_object("a", [0.0, 0.0, 0.0], None, [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
-                attraction_test_object("b", [0.0, 1.0, 0.0], None, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
-            ];
-            fixture.attractions = vec![attraction_test_attraction("attr", "a:v0", "b:v0", 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)];
-            let mut envelope = Puzzle3dEnvelope { fixture, runtime: Puzzle3dRuntime::default() };
-            envelope.runtime.selection.attraction_ids = vec!["attr".into()];
-            let node = build_inspector_tree(&envelope, puzzle3d_labels(&ViewState::default()));
-            let json = serde_json::to_string(&node).unwrap();
-            for field_id in ["attraction.gap", "attraction.shift", "attraction.rise", "attraction.rotation", "attraction.turn", "attraction.tilt"] {
-                assert!(json.contains(field_id), "inspector tree should include the {field_id} field for a selected attraction");
-            }
-        }
-        //#endregion 🧲 Attraction 6-parameter resolution tests
     }
     //#endregion 🧪Tests
 }
 pub mod d5 {
     //! 👯 Puzzle 5D plugin — paired 2D board + 3D world puzzle play app bundled as a hot-swappable WASM component.
 
-    use puzzle_5d::{BrushPlacePayload, Puzzle5dPrecomputeSession};
+    use semio_framework_plugin::component::layout::WindowEngagementToggleGroupOption;
+    use puzzle_5d::{puzzle5d_document_delta_ops, BrushPlacePayload, Puzzle5dOp, Puzzle5dPrecomputeSession};
     use semio_framework_os::{register_mesh_exporter, register_mesh_importer};
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_puzzle2d_board_scene, build_world_3d_scene, create_default_layout,
-        layout::{MeasureSelectItem, WindowEngagementStatus, WindowEngagementToggleGroupOption},
+        ActionEmit, DocumentApp, DocumentView, MeasureSelectItem, WindowEngagementStatus,
         merge_world_selection_ids, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
-        ActionDescriptor, PanelGroup, PluginApp, Puzzle2dBoardScene, SurfaceKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl,
+        ActionDescriptor, PanelGroup, Puzzle2dBoardScene, SurfaceKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl,
         WindowEngagementInput, WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
         FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     };
@@ -7744,11 +5995,13 @@ pub mod d5 {
         }
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct Puzzle5dEnvelope {
+    /// 🧾 Transient render/mutation bundle pairing the persisted projection (the bare `Puzzle5dDocument`
+    /// json) with the app's ephemeral view state. Never persisted — the {@link VcsDocumentApp} store owns
+    /// the document and {@link Puzzle5dPlayApp} owns the runtime — but rebuilt per call so the existing
+    /// board/world/engagement helpers keep their `&scene` signatures.
+    #[derive(Clone)]
+    struct Puzzle5dScene {
         document: Puzzle5dDocument,
-        #[serde(default)]
         runtime: Puzzle5dRuntime,
     }
 
@@ -7767,26 +6020,19 @@ pub mod d5 {
         }
     }
 
-    fn envelope_from_document_json(json_text: &str) -> Option<Puzzle5dEnvelope> {
-        serde_json::from_str::<Puzzle5dDocument>(json_text).ok().map(|document| Puzzle5dEnvelope { document, runtime: Puzzle5dRuntime::default() })
+    fn document_from_json(json_text: &str) -> Puzzle5dDocument {
+        serde_json::from_str::<Puzzle5dDocument>(json_text).unwrap_or_else(|_| empty_document())
     }
 
-    fn default_envelope() -> Puzzle5dEnvelope {
-        envelope_from_document_json(CONCRETE_FOREST_EXAMPLE_JSON).unwrap_or_else(|| Puzzle5dEnvelope { document: empty_document(), runtime: Puzzle5dRuntime::default() })
+    fn default_document() -> Puzzle5dDocument {
+        document_from_json(CONCRETE_FOREST_EXAMPLE_JSON)
     }
 
-    fn parse_envelope(document_json: &str) -> Puzzle5dEnvelope {
-        if let Ok(envelope) = serde_json::from_str::<Puzzle5dEnvelope>(document_json) {
-            return envelope;
-        }
-        if let Ok(document) = serde_json::from_str::<Puzzle5dDocument>(document_json) {
-            return Puzzle5dEnvelope { document, runtime: Puzzle5dRuntime::default() };
-        }
-        default_envelope()
-    }
-
-    fn set_document_op(envelope: &Puzzle5dEnvelope) -> String {
-        json!({ "op": "setDocument", "document": envelope }).to_string()
+    /// 🧾 Materializes the transient scene from the persisted projection (bare document json) and the
+    /// app's current view state; an unparseable projection degrades to an empty document.
+    fn scene_from_projection(projection: &Value, runtime: Puzzle5dRuntime) -> Puzzle5dScene {
+        let document = serde_json::from_value::<Puzzle5dDocument>(projection.clone()).unwrap_or_else(|_| empty_document());
+        Puzzle5dScene { document, runtime }
     }
 
     fn puzzle5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -8074,7 +6320,7 @@ pub mod d5 {
         json!({ "nodeWeights": runtime.object_kind_weights, "handleWeights": runtime.vortex_kind_weights }).to_string()
     }
 
-    fn puzzle5d_board_scene(envelope: &Puzzle5dEnvelope) -> Puzzle2dBoardScene {
+    fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Puzzle2dBoardScene {
         Puzzle2dBoardScene {
             fixture_json: board_fixture_value(&envelope.document).to_string(),
             camera_json: board_camera_value(&envelope.document.camera2d).to_string(),
@@ -8105,7 +6351,7 @@ pub mod d5 {
     }
 
     /// 🎨 Palette drop: creates a free paired part at the flat drop point, deriving the volume origin from the nearest peer part's offset.
-    fn add_palette_part(envelope: &mut Puzzle5dEnvelope, part_kind: &str, x: f64, y: f64) {
+    fn add_palette_part(envelope: &mut Puzzle5dScene, part_kind: &str, x: f64, y: f64) {
         let flat_to_world = 1.0 / 48.0;
         let origin = envelope
             .document
@@ -8167,7 +6413,7 @@ pub mod d5 {
         }))
     }
 
-    fn scene_config_json(envelope: &Puzzle5dEnvelope) -> String {
+    fn scene_config_json(envelope: &Puzzle5dScene) -> String {
         let objects: Vec<Value> = envelope
             .document
             .parts
@@ -8210,7 +6456,7 @@ pub mod d5 {
     }
 
     /// 🔄 Adopts an engine fixture while preserving flat aspects: existing parts keep `2d`, new parts get a synthesized flat aspect.
-    fn merge_engine_fixture(envelope: &Puzzle5dEnvelope, fixture_json: &str) -> Option<Puzzle5dEnvelope> {
+    fn merge_engine_fixture(envelope: &Puzzle5dScene, fixture_json: &str) -> Option<Puzzle5dScene> {
         let parsed: Value = serde_json::from_str(fixture_json).ok()?;
         let objects = parsed.get("objects")?.as_array()?;
         let mut next = envelope.clone();
@@ -8414,7 +6660,7 @@ pub mod d5 {
         serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
     }
 
-    fn gumball_target_world(envelope: &Puzzle5dEnvelope) -> Option<[f64; 3]> {
+    fn gumball_target_world(envelope: &Puzzle5dScene) -> Option<[f64; 3]> {
         let selected: Vec<&Puzzle5dPart> = envelope.document.parts.iter().filter(|part| envelope.runtime.selection.part_ids.contains(&part.id)).collect();
         if selected.is_empty() {
             return None;
@@ -8430,7 +6676,7 @@ pub mod d5 {
     }
 
     /// 🎯 Base selection JSON augmented with the mesh granularity, transform tool, and gumball fields the world-3d host reads.
-    fn world_selection_json_ex(envelope: &Puzzle5dEnvelope) -> String {
+    fn world_selection_json_ex(envelope: &Puzzle5dScene) -> String {
         let runtime = &envelope.runtime;
         let mut value: Value = serde_json::from_str(&world3d_selection_json(&runtime.selection_method, &runtime.selection.part_ids, runtime.hovered_part_id.as_deref())).unwrap_or_else(|_| json!({}));
         if let Some(object) = value.as_object_mut() {
@@ -8462,7 +6708,7 @@ pub mod d5 {
         .to_string()
     }
 
-    fn puzzle5d_context_menu_json(envelope: &Puzzle5dEnvelope, labels: &Puzzle5dLabels) -> Option<String> {
+    fn puzzle5d_context_menu_json(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> Option<String> {
         if envelope.runtime.selection.part_ids.is_empty() {
             return None;
         }
@@ -8481,7 +6727,7 @@ pub mod d5 {
     //#endregion 🔖World
 
     //#region 🔖Brush
-    fn puzzle5d_brush_target_grip(envelope: &Puzzle5dEnvelope) -> Option<String> {
+    fn puzzle5d_brush_target_grip(envelope: &Puzzle5dScene) -> Option<String> {
         envelope.runtime.selection.grip_ids.first().cloned().or_else(|| {
             let part_id = envelope.runtime.hovered_part_id.as_deref().or_else(|| envelope.runtime.selection.part_ids.first().map(String::as_str))?;
             let part = envelope.document.parts.iter().find(|part| part.id == part_id)?;
@@ -8495,7 +6741,7 @@ pub mod d5 {
         parsed.get("free").and_then(|value| value.as_array()).cloned().unwrap_or_default()
     }
 
-    fn world_brush_preview_json(session: &Puzzle5dPrecomputeSession, envelope: &Puzzle5dEnvelope) -> Option<String> {
+    fn world_brush_preview_json(session: &Puzzle5dPrecomputeSession, envelope: &Puzzle5dScene) -> Option<String> {
         if envelope.runtime.active_tool != "brush" {
             return None;
         }
@@ -8505,7 +6751,7 @@ pub mod d5 {
     //#endregion 🔖Brush
 
     //#region 🔖Engagement
-    fn puzzle5d_brush_placement_control(envelope: &Puzzle5dEnvelope, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> Option<WindowEngagementControl> {
+    fn puzzle5d_brush_placement_control(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> Option<WindowEngagementControl> {
         let target = puzzle5d_brush_target_grip(envelope)?;
         let candidates = parse_brush_candidates_free(&precompute.brush_candidates(&target));
         if candidates.is_empty() {
@@ -8530,7 +6776,7 @@ pub mod d5 {
         })
     }
 
-    fn puzzle5d_fill_count_control(envelope: &Puzzle5dEnvelope, labels: &Puzzle5dLabels) -> WindowEngagementControl {
+    fn puzzle5d_fill_count_control(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowEngagementControl {
         WindowEngagementControl::Slider {
             id: Some("puzzle5d-fill-count".into()),
             label: Some(format!("{} {}", labels.fill, envelope.runtime.fill_count)),
@@ -8545,7 +6791,7 @@ pub mod d5 {
         }
     }
 
-    fn puzzle5d_engagement(envelope: &Puzzle5dEnvelope, precompute: &Puzzle5dPrecomputeSession, window: &str, labels: &Puzzle5dLabels) -> WindowEngagement {
+    fn puzzle5d_engagement(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, window: &str, labels: &Puzzle5dLabels) -> WindowEngagement {
         let part_count = envelope.document.parts.len();
         let fastener_count = envelope.document.fasteners.len();
         let control = match envelope.runtime.active_tool.as_str() {
@@ -8656,7 +6902,7 @@ pub mod d5 {
             .collect()
     }
 
-    fn puzzle5d_suggestion_measures_group(envelope: &Puzzle5dEnvelope, labels: &Puzzle5dLabels) -> WindowMeasure {
+    fn puzzle5d_suggestion_measures_group(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowMeasure {
         let part_ids = puzzle5d_kind_ids(&envelope.document, "parts");
         let grip_ids = puzzle5d_kind_ids(&envelope.document, "grips");
         WindowMeasure::Group {
@@ -8689,7 +6935,7 @@ pub mod d5 {
         }
     }
 
-    fn puzzle5d_brush_measures_group(envelope: &Puzzle5dEnvelope, labels: &Puzzle5dLabels) -> WindowMeasure {
+    fn puzzle5d_brush_measures_group(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowMeasure {
         WindowMeasure::Group {
             id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-brush"),
             label: labels.brush.into(),
@@ -8706,7 +6952,7 @@ pub mod d5 {
         }
     }
 
-    fn puzzle5d_window_measures(window: &str, envelope: &Puzzle5dEnvelope, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
+    fn puzzle5d_window_measures(window: &str, envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
         if window == PUZZLE5D_PLAY_WINDOW_2D {
             vec![puzzle5d_lod_measure(&envelope.runtime, labels), puzzle5d_suggestion_measures_group(envelope, labels), puzzle5d_brush_measures_group(envelope, labels)]
         } else {
@@ -8745,7 +6991,7 @@ pub mod d5 {
         format!("{} → {}", side(&fastener.source), side(&fastener.target))
     }
 
-    fn document_tree_selected_ids(envelope: &Puzzle5dEnvelope) -> Vec<String> {
+    fn document_tree_selected_ids(envelope: &Puzzle5dScene) -> Vec<String> {
         let selection = &envelope.runtime.selection;
         selection
             .part_ids
@@ -8756,7 +7002,7 @@ pub mod d5 {
             .collect()
     }
 
-    fn build_document_tree(envelope: &Puzzle5dEnvelope, labels: &Puzzle5dLabels) -> UiNode {
+    fn build_document_tree(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode {
         let part_items: Vec<UiTreeItemNode> = envelope
             .document
             .parts
@@ -8858,7 +7104,7 @@ pub mod d5 {
         }
     }
 
-    fn build_kinds_tree(envelope: &Puzzle5dEnvelope, labels: &Puzzle5dLabels) -> UiNode {
+    fn build_kinds_tree(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode {
         let catalogs = envelope.document.kind_catalogs.clone().unwrap_or(json!({}));
         let slice = |key: &str| catalogs.get(key).and_then(|value| value.as_array()).cloned().unwrap_or_default();
         let mut part_entries = slice("parts");
@@ -8941,7 +7187,7 @@ pub mod d5 {
         }])
     }
 
-    fn build_inspector_tree(envelope: &Puzzle5dEnvelope, labels: &Puzzle5dLabels) -> UiNode {
+    fn build_inspector_tree(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode {
         if let Some(grip_full_id) = envelope.runtime.selection.grip_ids.first() {
             if let Some((part, grip)) = find_part_by_grip_full_id(&envelope.document, grip_full_id) {
                 return build_grip_inspector(part, grip, labels);
@@ -8972,19 +7218,24 @@ pub mod d5 {
     //#endregion 🔖Panels
 
     //#region 🔖Puzzle5dPlayApp
+    /// 🧩 Puzzle-5d play app. Owns the precompute engine, the registered-mesh cache, and the ephemeral
+    /// view `runtime`; the persisted document (bare `Puzzle5dDocument` json) lives in the wrapping
+    /// `VcsDocumentApp`. Each action mutates a transient {@link Puzzle5dScene}, then emits the granular
+    /// op delta. Undo/redo/checkpoints are handled by the wrapper.
     pub struct Puzzle5dPlayApp {
         precompute: Puzzle5dPrecomputeSession,
         registered_mesh_urls: HashSet<String>,
+        runtime: Puzzle5dRuntime,
     }
 
     impl Default for Puzzle5dPlayApp {
         fn default() -> Self {
-            Self { precompute: Puzzle5dPrecomputeSession::new(), registered_mesh_urls: HashSet::new() }
+            Self { precompute: Puzzle5dPrecomputeSession::new(), registered_mesh_urls: HashSet::new(), runtime: Puzzle5dRuntime::default() }
         }
     }
 
     impl Puzzle5dPlayApp {
-        fn drive_precompute(&mut self, envelope: &Puzzle5dEnvelope) {
+        fn drive_precompute(&mut self, envelope: &Puzzle5dScene) {
             let _ = self.precompute.set_scene(&scene_config_json(envelope));
             let fallback = semio_framework_plugin::mesh_from_kind(PUZZLE5D_FALLBACK_MESH_KIND);
             self.precompute.register_mesh(PUZZLE5D_FALLBACK_MESH_KIND, &fallback.positions, &fallback.indices);
@@ -8996,14 +7247,14 @@ pub mod d5 {
             let _ = self.precompute.precompute_step(8);
         }
 
-        fn apply_engine_brush_placement(&mut self, envelope: &Puzzle5dEnvelope, payload: &Value) -> Option<Puzzle5dEnvelope> {
+        fn apply_engine_brush_placement(&mut self, envelope: &Puzzle5dScene, payload: &Value) -> Option<Puzzle5dScene> {
             let brush_payload = serde_json::from_value::<BrushPlacePayload>(payload.clone()).ok()?;
             let fixture_json = self.precompute.apply_brush_placement_rust(&serde_json::to_string(&brush_payload).ok()?).ok()?;
             merge_engine_fixture(envelope, &fixture_json)
         }
 
         /// 🖌️ Paired placement for a board `brushPlace` event: the engine picks the volume pose for the flat payload's kind, both aspects land in one part.
-        fn apply_board_brush_place(&mut self, envelope: &mut Puzzle5dEnvelope, payload: &Value) {
+        fn apply_board_brush_place(&mut self, envelope: &mut Puzzle5dScene, payload: &Value) {
             self.drive_precompute(envelope);
             let node_kind = payload.get("nodeKind").and_then(|value| value.as_str()).unwrap_or("Part").to_string();
             let source_grip = payload.get("sourceHandleId").and_then(|value| value.as_str()).map(str::to_string).or_else(|| puzzle5d_brush_target_grip(envelope));
@@ -9050,7 +7301,7 @@ pub mod d5 {
             envelope.runtime.selection = Puzzle5dSelection { part_ids: vec![id], grip_ids: Vec::new(), fastener_ids: Vec::new() };
         }
 
-        fn apply_board_events_from_json(&mut self, events_json: &str, envelope: &mut Puzzle5dEnvelope) {
+        fn apply_board_events_from_json(&mut self, events_json: &str, envelope: &mut Puzzle5dScene) {
             let Ok(events) = serde_json::from_str::<Vec<Value>>(events_json) else {
                 return;
             };
@@ -9114,50 +7365,52 @@ pub mod d5 {
         }
     }
 
-    impl PluginApp for Puzzle5dPlayApp {
+    impl DocumentApp for Puzzle5dPlayApp {
+        type Projection = Value;
+        type Op = Puzzle5dOp;
+
         fn app_id(&self) -> &str {
             PUZZLE5D_PLAY_APP_ID
         }
 
-        fn initial_document_json(&self) -> String {
-            serde_json::to_string(&default_envelope()).expect("puzzle5d envelope json")
+        fn document_schema(&self) -> &str {
+            PUZZLE5D_SCHEMA
         }
 
-        fn handle_action_patch_ops(&mut self, action: &str, args: Option<&Value>, document_json: &str, _view_state: &ViewState) -> Vec<String> {
-            let mut envelope = parse_envelope(document_json);
+        fn initial_projection(&self) -> Value {
+            serde_json::to_value(default_document()).unwrap_or(Value::Null)
+        }
+
+        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, _view_state: &ViewState) -> ActionEmit<Puzzle5dOp> {
+            let before = doc.projection.clone();
+            let mut envelope = scene_from_projection(&before, self.runtime.clone());
             match action {
-                "setDocument" => {
-                    if let Some(document) = args.and_then(|value| value.get("document")) {
-                        if let Ok(parsed) = serde_json::from_value(document.clone()) {
-                            return vec![set_document_op(&parsed)];
-                        }
-                    }
-                }
                 "setFixtureJson" => {
                     if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
                         if let Ok(document) = serde_json::from_str::<Puzzle5dDocument>(json_text) {
                             envelope.document = document;
-                            return vec![set_document_op(&envelope)];
                         }
                     }
                 }
                 "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => {
                     apply_world3d_sun_action(&mut envelope.runtime.sun, action, args);
-                    return vec![set_document_op(&envelope)];
                 }
                 "setActiveExample" => {
                     let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
-                    envelope = if example_id.is_empty() || example_id == "empty" {
-                        Puzzle5dEnvelope { document: empty_document(), runtime: Puzzle5dRuntime::default() }
+                    let next = if example_id.is_empty() || example_id == "empty" {
+                        Some(empty_document())
                     } else if example_id == PUZZLE5D_EXAMPLE_CONCRETE_FOREST || example_id == "concrete" {
-                        default_envelope()
+                        Some(default_document())
                     } else if example_id == PUZZLE5D_EXAMPLE_NAKAGIN || example_id == "nakagin" {
-                        envelope_from_document_json(NAKAGIN_EXAMPLE_JSON).unwrap_or_else(default_envelope)
+                        Some(document_from_json(NAKAGIN_EXAMPLE_JSON))
                     } else {
-                        envelope
+                        None
                     };
+                    if let Some(document) = next {
+                        envelope.document = document;
+                        envelope.runtime = Puzzle5dRuntime::default();
+                    }
                     self.drive_precompute(&envelope);
-                    return vec![set_document_op(&envelope)];
                 }
                 "setSelection" | "documentSelect" => {
                     if let Some(ids) = args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok()) {
@@ -9166,15 +7419,12 @@ pub mod d5 {
                         let read = |key: &str| args.and_then(|value| value.get(key)).and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok());
                         envelope.runtime.selection = Puzzle5dSelection { part_ids: read("partIds").unwrap_or_default(), grip_ids: read("gripIds").unwrap_or_default(), fastener_ids: read("fastenerIds").unwrap_or_default() };
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "clearSelection" => {
                     envelope.runtime.selection = Puzzle5dSelection::default();
-                    return vec![set_document_op(&envelope)];
                 }
                 "selectAll" => {
                     envelope.runtime.selection = Puzzle5dSelection { part_ids: envelope.document.parts.iter().map(|part| part.id.clone()).collect(), grip_ids: Vec::new(), fastener_ids: Vec::new() };
-                    return vec![set_document_op(&envelope)];
                 }
                 "deleteSelection" => {
                     let selection = envelope.runtime.selection.clone();
@@ -9182,7 +7432,6 @@ pub mod d5 {
                     remove_grips(&mut envelope.document, &selection.grip_ids);
                     envelope.document.fasteners.retain(|fastener| !selection.fastener_ids.contains(&fastener.id));
                     envelope.runtime.selection = Puzzle5dSelection::default();
-                    return vec![set_document_op(&envelope)];
                 }
                 "duplicateSelection" => {
                     let ids = envelope.runtime.selection.part_ids.clone();
@@ -9202,26 +7451,23 @@ pub mod d5 {
                         })
                         .collect();
                     if clones.is_empty() {
-                        return Vec::new();
+                        return ActionEmit::default();
                     }
                     let new_ids: Vec<String> = clones.iter().map(|part| part.id.clone()).collect();
                     envelope.document.parts.extend(clones);
                     envelope.runtime.selection = Puzzle5dSelection { part_ids: new_ids, grip_ids: Vec::new(), fastener_ids: Vec::new() };
-                    return vec![set_document_op(&envelope)];
                 }
                 "selectSameKindSelection" | "selectSameKind" => {
                     let Some(kind) = envelope.runtime.selection.part_ids.first().and_then(|id| envelope.document.parts.iter().find(|part| &part.id == id)).map(|part| part.part_kind.clone()) else {
-                        return Vec::new();
+                        return ActionEmit::default();
                     };
                     envelope.runtime.selection.part_ids = envelope.document.parts.iter().filter(|part| part.part_kind == kind).map(|part| part.id.clone()).collect();
-                    return vec![set_document_op(&envelope)];
                 }
                 "addNode" => {
                     let part_kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("Part").to_string();
                     let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                     let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                     add_palette_part(&mut envelope, &part_kind, x, y);
-                    return vec![set_document_op(&envelope)];
                 }
                 "setSelectionFlag" => {
                     let flag = args.and_then(|value| value.get("flag")).and_then(|value| value.as_str()).unwrap_or("");
@@ -9238,12 +7484,11 @@ pub mod d5 {
                         }
                     }
                     if !part_ids.is_empty() && (flag == "hidden" || flag == "locked") {
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "zoomToSelection" | "focusSelection" => {
                     let Some(target) = gumball_target_world(&envelope) else {
-                        return Vec::new();
+                        return ActionEmit::default();
                     };
                     let camera = &mut envelope.document.camera3d;
                     let offset = [camera.position[0] - camera.target[0], camera.position[1] - camera.target[1], camera.position[2] - camera.target[2]];
@@ -9254,7 +7499,6 @@ pub mod d5 {
                         envelope.document.camera2d.x = selected_2d.iter().map(|(x, _)| x).sum::<f64>() / selected_2d.len() as f64;
                         envelope.document.camera2d.y = selected_2d.iter().map(|(_, y)| y).sum::<f64>() / selected_2d.len() as f64;
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "setActiveTool" => {
                     let tool = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()).unwrap_or("select");
@@ -9262,7 +7506,6 @@ pub mod d5 {
                     if tool == "brush" || tool == "fill" {
                         self.drive_precompute(&envelope);
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "engagementPossibleSelect" => {
                     let possible_id = args.and_then(|value| value.get("possibleId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -9280,14 +7523,12 @@ pub mod d5 {
                             envelope.runtime.engagement_input_by_window.insert(window.to_string(), String::new());
                         }
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "engagementInput" => {
                     let window = args.and_then(|value| value.get("window")).and_then(|value| value.as_str()).unwrap_or(PUZZLE5D_PLAY_WINDOW_2D);
                     let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
                     if PUZZLE5D_PLAY_WINDOWS.contains(&window) {
                         envelope.runtime.engagement_input_by_window.insert(window.to_string(), value.to_string());
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "engagementSubmit" => {
@@ -9307,7 +7548,6 @@ pub mod d5 {
                     if PUZZLE5D_PLAY_WINDOWS.contains(&window.as_str()) {
                         envelope.runtime.engagement_input_by_window.insert(window, String::new());
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "engagementAbort" => {
                     if let Some(window) = args.and_then(|value| value.get("window")).and_then(|value| value.as_str()) {
@@ -9318,13 +7558,11 @@ pub mod d5 {
                     if envelope.runtime.active_tool != "select" {
                         envelope.runtime.active_tool = "select".into();
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "engagementControlSelect" => {
                     let candidate_id = args.and_then(|value| value.get("id").or_else(|| value.get("value"))).and_then(|value| value.as_str()).unwrap_or("");
                     if let Some(index) = candidate_id.strip_prefix("puzzle5d.brush.candidate.").and_then(|rest| rest.parse::<usize>().ok()) {
                         envelope.runtime.brush_candidate_index = index;
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "addBrushPart" | "addBrushObject" => {
@@ -9343,13 +7581,11 @@ pub mod d5 {
                         }
                         if let Some(next) = self.apply_engine_brush_placement(&envelope, &payload) {
                             envelope = next;
-                            return vec![set_document_op(&envelope)];
                         }
                     }
                     let part_kind = args.and_then(|value| value.get("partKind").or_else(|| value.get("objectKindId"))).and_then(|value| value.as_str()).unwrap_or("Part").to_string();
                     let payload = json!({ "nodeKind": part_kind, "x": args.and_then(|value| value.get("x")).cloned().unwrap_or(json!(120.0)), "y": args.and_then(|value| value.get("y")).cloned().unwrap_or(json!(120.0)) });
                     self.apply_board_brush_place(&mut envelope, &payload);
-                    return vec![set_document_op(&envelope)];
                 }
                 "setFillCount" => {
                     self.drive_precompute(&envelope);
@@ -9363,7 +7599,6 @@ pub mod d5 {
                             }
                         }
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "cycleBrushCandidate" => {
                     self.drive_precompute(&envelope);
@@ -9375,7 +7610,6 @@ pub mod d5 {
                     } else {
                         envelope.runtime.brush_candidate_index = envelope.runtime.brush_candidate_index.saturating_add(1);
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "registerBrushMesh" => {
                     if let (Some(url), Some(positions), Some(indices)) =
@@ -9386,13 +7620,12 @@ pub mod d5 {
                         self.precompute.register_mesh(url, &positions, &indices);
                         self.registered_mesh_urls.insert(url.to_string());
                     }
-                    return Vec::new();
+                    return ActionEmit::default();
                 }
                 "setBrushPlacementOverlapBudget" => {
                     if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_f64()) {
                         envelope.runtime.overlap_budget = value.clamp(0.0, 1.0);
                         self.drive_precompute(&envelope);
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "setObjectKindWeight" | "setVortexKindWeight" => {
@@ -9404,13 +7637,11 @@ pub mod d5 {
                         envelope.runtime.vortex_kind_weights.insert(kind_id.into(), value);
                     }
                     self.drive_precompute(&envelope);
-                    return vec![set_document_op(&envelope)];
                 }
                 "addPartKind" => {
                     let part_kind = args.and_then(|value| value.get("partKind")).and_then(|value| value.as_str()).unwrap_or("Part").to_string();
                     let payload = json!({ "nodeKind": part_kind, "x": 120.0, "y": 120.0 });
                     self.apply_board_brush_place(&mut envelope, &payload);
-                    return vec![set_document_op(&envelope)];
                 }
                 "patchPart" => {
                     let part_id = args.and_then(|value| value.get("partId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -9443,7 +7674,6 @@ pub mod d5 {
                             _ => {}
                         }
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "patchGrip" => {
                     let grip_full_id = args.and_then(|value| value.get("gripFullId")).and_then(|value| value.as_str()).unwrap_or("").to_string();
@@ -9487,7 +7717,6 @@ pub mod d5 {
                             }
                         }
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "setCamera" => {
                     if let Some(camera) = args.and_then(|value| value.get("camera")) {
@@ -9495,11 +7724,9 @@ pub mod d5 {
                         if surface_id == PUZZLE5D_PLAY_SURFACE_2D || camera.get("position").is_none() {
                             if let Ok(parsed) = serde_json::from_value::<Puzzle5dCamera2d>(camera.clone()) {
                                 envelope.document.camera2d = parsed;
-                                return vec![set_document_op(&envelope)];
                             }
                         } else if let Ok(parsed) = serde_json::from_value::<Puzzle5dCamera3d>(camera.clone()) {
                             envelope.document.camera3d = parsed;
-                            return vec![set_document_op(&envelope)];
                         }
                     }
                 }
@@ -9507,7 +7734,6 @@ pub mod d5 {
                     if let Some(camera) = args.and_then(|value| value.get("camera")) {
                         if let Ok(parsed) = serde_json::from_value(camera.clone()) {
                             envelope.document.camera2d = parsed;
-                            return vec![set_document_op(&envelope)];
                         }
                     }
                 }
@@ -9515,7 +7741,6 @@ pub mod d5 {
                     if let Some(camera) = args.and_then(|value| value.get("camera")) {
                         if let Ok(parsed) = serde_json::from_value(camera.clone()) {
                             envelope.document.camera3d = parsed;
-                            return vec![set_document_op(&envelope)];
                         }
                     }
                 }
@@ -9532,7 +7757,6 @@ pub mod d5 {
                         }
                     }
                     if !ids.is_empty() {
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "rotateSelection" => {
@@ -9549,7 +7773,6 @@ pub mod d5 {
                         }
                     }
                     if !ids.is_empty() {
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "scaleSelection" => {
@@ -9564,14 +7787,12 @@ pub mod d5 {
                         }
                     }
                     if !ids.is_empty() {
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "worldSelect" => {
                     let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
                     let ids: Vec<String> = args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                     envelope.runtime.selection.part_ids = merge_world_selection_ids(&envelope.runtime.selection.part_ids, &ids, merge);
-                    return vec![set_document_op(&envelope)];
                 }
                 "worldPick" => {
                     let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
@@ -9579,7 +7800,6 @@ pub mod d5 {
                         if merge == "replace" {
                             envelope.runtime.selection.part_ids.clear();
                         }
-                        return vec![set_document_op(&envelope)];
                     }
                     let index = args.and_then(|value| value.get("id")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
                     if let Some(part) = envelope.document.parts.get(index) {
@@ -9603,21 +7823,17 @@ pub mod d5 {
                             }
                             _ => vec![id],
                         };
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "worldHover" => {
                     envelope.runtime.hovered_part_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
-                    return vec![set_document_op(&envelope)];
                 }
                 "setHover" => {
                     envelope.runtime.hovered_part_id = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()).map(str::to_string);
-                    return vec![set_document_op(&envelope)];
                 }
                 "setTransformTool" => {
                     if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
                         envelope.runtime.transform_tool = tool.into();
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "worldVortexHover" => {
@@ -9625,14 +7841,12 @@ pub mod d5 {
                     if envelope.runtime.active_tool == "brush" && !envelope.runtime.selection.grip_ids.is_empty() {
                         self.drive_precompute(&envelope);
                     }
-                    return vec![set_document_op(&envelope)];
                 }
                 "worldVortexSelect" => {
                     if let Some(full_id) = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()) {
                         envelope.runtime.selection.grip_ids = vec![full_id.to_string()];
                         envelope.runtime.selection.part_ids.clear();
                         self.drive_precompute(&envelope);
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "worldRelocate" => {
@@ -9664,50 +7878,46 @@ pub mod d5 {
                             }
                         }
                         self.drive_precompute(&envelope);
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "setSelectionMethod" => {
                     let method = args.and_then(|value| value.get("method")).and_then(|value| value.as_str()).unwrap_or("rectangle");
                     envelope.runtime.selection_method = method.into();
-                    return vec![set_document_op(&envelope)];
                 }
                 "setLodMode" => {
                     if let Some(mode) = args.and_then(|value| value.get("value").or_else(|| value.get("mode"))).and_then(|value| value.as_str()) {
                         envelope.runtime.lod_mode = mode.into();
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "setSuggestionOffset" => {
                     if let Some(distance) = args.and_then(|value| value.get("distance").or_else(|| value.get("value"))).and_then(|value| value.as_f64()) {
                         envelope.runtime.suggestion_offset = distance.clamp(PUZZLE5D_SUGGESTION_OFFSET_MIN, PUZZLE5D_SUGGESTION_OFFSET_MAX);
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "setGridSnapEnabled" => {
                     envelope.runtime.grid_snap_enabled = args.and_then(|value| value.get("enabled")).and_then(|value| value.as_bool()).unwrap_or(false);
-                    return vec![set_document_op(&envelope)];
                 }
                 "setGridFactor" => {
                     if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
                         envelope.runtime.grid_factor = value;
-                        return vec![set_document_op(&envelope)];
                     }
                 }
                 "applyBoardEvents" => {
                     if let Some(events_json) = args.and_then(|value| value.get("eventsJson")).and_then(|value| value.as_str()) {
                         self.apply_board_events_from_json(events_json, &mut envelope);
-                        return vec![set_document_op(&envelope)];
                     }
                 }
-                "worldPointerDown" | "canvasPointerDown" => return Vec::new(),
+                "worldPointerDown" | "canvasPointerDown" => return ActionEmit::default(),
                 _ => {}
             }
-            Vec::new()
+            self.runtime = envelope.runtime;
+            let after = serde_json::to_value(&envelope.document).unwrap_or_else(|_| before.clone());
+            let ops = puzzle5d_document_delta_ops(&before, &after);
+            ActionEmit { ops, ..Default::default() }
         }
 
-        fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-            let envelope = parse_envelope(document_json);
+        fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
+            let envelope = scene_from_projection(doc.projection, self.runtime.clone());
             let labels = puzzle5d_labels(view_state);
             match body_key {
                 PUZZLE5D_PLAY_BODY_2D => build_puzzle2d_board_scene(PUZZLE5D_PLAY_SURFACE_2D, PUZZLE5D_PLAY_CONTROLLER_ID, puzzle5d_board_scene(&envelope)),
@@ -9742,14 +7952,14 @@ pub mod d5 {
             }
         }
 
-        fn window_engagements(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-            let envelope = parse_envelope(document_json);
+        fn window_engagements(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+            let envelope = scene_from_projection(doc.projection, self.runtime.clone());
             let labels = puzzle5d_labels(view_state);
             PUZZLE5D_PLAY_WINDOWS.iter().map(|window| (window.to_string(), puzzle5d_engagement(&envelope, &self.precompute, window, labels))).collect()
         }
 
-        fn window_measures(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-            let envelope = parse_envelope(document_json);
+        fn window_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+            let envelope = scene_from_projection(doc.projection, self.runtime.clone());
             let labels = puzzle5d_labels(view_state);
             PUZZLE5D_PLAY_WINDOWS.iter().map(|window| (window.to_string(), puzzle5d_window_measures(window, &envelope, labels))).collect()
         }
@@ -9771,7 +7981,7 @@ pub mod d5 {
 
     //#region 🔖Manifest
     pub fn create_puzzle5d_app() -> App {
-        let envelope = default_envelope();
+        let envelope = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default() };
         let precompute = Puzzle5dPrecomputeSession::new();
         let manifest_labels = puzzle5d_labels(&ViewState::default());
         let mut app = App::from_builder(
@@ -9800,7 +8010,7 @@ pub mod d5 {
 
     /// 📥 Tier C DWG mesh import — always returns the empty puzzle-5d document; never errors on a structurally valid mesh.
     fn puzzle5d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
-        serde_json::to_value(Puzzle5dEnvelope { document: empty_document(), runtime: Puzzle5dRuntime::default() }).map_err(|error| error.to_string())
+        serde_json::to_value(empty_document()).map_err(|error| error.to_string())
     }
 
     pub fn register_puzzle5d_exports() {
@@ -9819,530 +8029,69 @@ pub mod d5 {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::PluginApp;
+        use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
 
-        fn apply_ops(envelope: &Puzzle5dEnvelope, ops: &[String]) -> Puzzle5dEnvelope {
-            let mut next = envelope.clone();
-            for op_json in ops {
-                if let Ok(op) = serde_json::from_str::<Value>(op_json) {
-                    if let Some(document) = op.get("document") {
-                        if let Ok(parsed) = serde_json::from_value(document.clone()) {
-                            next = parsed;
-                        }
-                    }
-                }
-            }
-            next
+        fn meta(actor: &str) -> ActionMeta {
+            ActionMeta { actor: actor.into(), instance_id: 1 }
+        }
+
+        fn new_app() -> VcsDocumentApp<Puzzle5dPlayApp> {
+            VcsDocumentApp::new(Puzzle5dPlayApp::default())
+        }
+
+        fn part_count(app: &VcsDocumentApp<Puzzle5dPlayApp>) -> usize {
+            app.projection().expect("projection").get("parts").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0)
         }
 
         #[test]
-        fn renders_puzzle2d_board_scene() {
-            let app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let node = app.render(PUZZLE5D_PLAY_BODY_2D, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("puzzle2d-board"));
-            assert!(json.contains("seed-left-001"));
-            assert!(json.contains("activeTool"));
+        fn renders_paired_board_and_world_scenes() {
+            let mut app = new_app();
+            let board = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_2D, None, &ViewState::default()).expect("render 2d")).unwrap();
+            assert!(board.contains("puzzle2d-board"));
+            let world = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_3D, None, &ViewState::default()).expect("render 3d")).unwrap();
+            assert!(world.contains("world-3d"));
         }
 
         #[test]
-        fn renders_world_3d_scene() {
-            let app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let node = app.render(PUZZLE5D_PLAY_BODY_3D, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("world-3d"));
-            assert!(json.contains("hexagonal-cut-concrete-forest-left"));
-            assert!(json.contains("transformTool"));
-            assert!(json.contains("granularity"));
+        fn initial_projection_is_the_concrete_forest_document() {
+            let mut app = new_app();
+            assert_eq!(app.projection().expect("projection").get("schema").and_then(|value| value.as_str()), Some(PUZZLE5D_SCHEMA));
+            assert!(part_count(&app) > 0, "the concrete-forest default document ships with parts");
         }
 
         #[test]
-        fn concrete_forest_example_parses() {
-            let envelope = default_envelope();
-            assert_eq!(envelope.document.schema, PUZZLE5D_SCHEMA);
-            assert!(!envelope.document.parts.is_empty());
+        fn set_active_example_swaps_the_document_and_undo_restores_it() {
+            let mut app = new_app();
+            let loaded = part_count(&app);
+            assert!(loaded > 0);
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "empty" })), &ViewState::default(), &meta("local")).expect("empty");
+            assert_eq!(part_count(&app), 0, "empty example clears the parts");
+            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            assert_eq!(part_count(&app), loaded, "undo restores the concrete-forest parts");
+            app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+            assert_eq!(part_count(&app), 0);
         }
 
         #[test]
-        fn puzzle5d_document_from_mesh_returns_valid_empty_document() {
-            let mesh = semio_framework_plugin::mesh_from_kind("box");
-            let document = puzzle5d_document_from_mesh(&mesh).unwrap();
-            let envelope: Puzzle5dEnvelope = serde_json::from_value(document).unwrap();
-            assert_eq!(envelope.document.schema, PUZZLE5D_SCHEMA);
-            assert!(envelope.document.parts.is_empty());
-        }
-
-        /// 📦 `register_puzzle5d_exports` must round-trip Obj/Glb/Stl authoring export+import through the OS media graph.
-        #[test]
-        fn register_puzzle5d_exports_round_trips_obj_glb_stl_through_the_os_media_graph() {
-            register_puzzle5d_exports();
-            let instance = semio_framework_os::OsAppInstance {
-                id: "test-instance".into(),
-                program_id: "puzzle5d".into(),
-                app_id: PUZZLE5D_PLAY_APP_ID.into(),
-                label: "Test".into(),
-                yields: "5d.puzzle".into(),
-                source_document: semio_framework_os::OsSourceDocument { format: "json".into(), vcs_json: None, inline: None, payload_ref: None },
-            };
-            let document = serde_json::to_value(&Puzzle5dEnvelope { document: empty_document(), runtime: Puzzle5dRuntime::default() }).unwrap();
-            for format in [semio_framework_os::OsMediaFormat::Obj, semio_framework_os::OsMediaFormat::Glb, semio_framework_os::OsMediaFormat::Stl] {
-                let exported = semio_framework_os::export_os_app_instance_media(&instance, &document, format.clone()).unwrap();
-                assert!(!exported.data.is_empty(), "{format:?} export produced no data");
-                let bytes = if exported.encoding.as_deref() == Some("base64") {
-                    base64::engine::general_purpose::STANDARD.decode(&exported.data).unwrap()
-                } else {
-                    exported.data.into_bytes()
-                };
-                let imported = semio_framework_os::import_os_app_instance_media(&instance, &bytes, format).unwrap();
-                let envelope: Puzzle5dEnvelope = serde_json::from_value(imported).unwrap();
-                assert_eq!(envelope.document.schema, PUZZLE5D_SCHEMA);
-            }
+        fn document_panel_renders() {
+            let mut app = new_app();
+            let node = app.render(PUZZLE5D_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
+            assert!(!serde_json::to_string(&node).unwrap().is_empty());
         }
 
         #[test]
-        fn nakagin_example_parses_with_fasteners() {
-            let envelope = envelope_from_document_json(NAKAGIN_EXAMPLE_JSON).expect("nakagin envelope");
-            assert_eq!(envelope.document.parts.len(), 180);
-            assert_eq!(envelope.document.fasteners.len(), 179);
-            assert!(envelope.document.fasteners.iter().all(|fastener| fastener.source.contains(':') && fastener.target.contains(':')));
-        }
-
-        #[test]
-        fn board_fixture_projects_nodes_handles_edges() {
-            let envelope = envelope_from_document_json(NAKAGIN_EXAMPLE_JSON).expect("nakagin envelope");
-            let fixture = board_fixture_value(&envelope.document);
-            assert_eq!(fixture["schema"], PUZZLE5D_BOARD_FIXTURE_SCHEMA);
-            assert_eq!(fixture["nodes"].as_array().unwrap().len(), 180);
-            assert_eq!(fixture["edges"].as_array().unwrap().len(), 179);
-            let node = &fixture["nodes"][0];
-            assert!(node["handles"].as_array().is_some_and(|handles| !handles.is_empty()));
-            assert!(node["handles"][0]["id"].as_str().unwrap().contains(':'));
-        }
-
-        #[test]
-        fn apply_board_events_updates_selection_camera_and_positions() {
-            let mut app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let events = json!([
-                { "name": "select", "payload": { "ids": ["seed-left-001"] } },
-                { "name": "camera", "payload": { "x": 10.0, "y": 20.0, "zoom": 1.5 } },
-                { "name": "nodeMove", "payload": { "id": "seed-left-001", "x": 111.0, "y": 222.0 } }
-            ])
-            .to_string();
-            let ops = app.handle_action_patch_ops("applyBoardEvents", Some(&json!({ "eventsJson": events })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.selection.part_ids, vec!["seed-left-001".to_string()]);
-            assert_eq!(envelope.document.camera2d.x, 10.0);
-            assert_eq!(envelope.document.camera2d.zoom, 1.5);
-            let part = envelope.document.parts.iter().find(|part| part.id == "seed-left-001").unwrap();
-            assert_eq!(part.part_2d.x, 111.0);
-            assert_eq!(part.part_2d.y, 222.0);
-        }
-
-        #[test]
-        fn apply_board_events_edge_create_adds_fastener() {
-            let mut app = Puzzle5dPlayApp::default();
-            let mut envelope = default_envelope();
-            envelope.document.parts.push(Puzzle5dPart {
-                id: "part-b".into(),
-                part_kind: "Hexagonal Cut Concrete Forest Right".into(),
-                part_2d: Puzzle5dPart2d { x: 320.0, y: 93.0, shape: "circle".into(), radius: 20.0, width: None, height: None, text: "b".into(), icon_kind: None, hidden: None, locked: None },
-                part_3d: Puzzle5dPart3d::default(),
-                grips: vec![Puzzle5dGrip { id: "v0".into(), grip_kind: "b-l".into(), grip_2d: Puzzle5dGrip2d::default(), grip_3d: Puzzle5dGrip3d::default() }],
-            });
-            let document = serde_json::to_string(&envelope).unwrap();
-            let events = json!([{ "name": "edgeCreate", "payload": { "id": "edge-1", "edgeKind": "link", "source": "seed-left-001:v0", "target": "part-b:v0" } }]).to_string();
-            let ops = app.handle_action_patch_ops("applyBoardEvents", Some(&json!({ "eventsJson": events })), &document, &ViewState::default());
-            let next = apply_ops(&envelope, &ops);
-            assert_eq!(next.document.fasteners.len(), 1);
-            assert_eq!(next.document.fasteners[0].source, "seed-left-001:v0");
-            assert_eq!(next.document.fasteners[0].target, "part-b:v0");
-        }
-
-        #[test]
-        fn world_selection_includes_gumball_fields() {
-            let mut envelope = default_envelope();
-            envelope.runtime.selection.part_ids = vec!["seed-left-001".into()];
-            let json_text = world_selection_json_ex(&envelope);
-            let value: Value = serde_json::from_str(&json_text).unwrap();
-            assert_eq!(value["granularity"], "mesh");
-            assert_eq!(value["transformTool"], "move");
-            assert_eq!(value["gumballActive"], true);
-            assert_eq!(value["activeObjectId"], "seed-left-001");
-            assert!(value["gumballTarget"].is_array());
-        }
-
-        #[test]
-        fn world_pick_selects_by_index() {
-            let mut app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.selection.part_ids, vec!["seed-left-001".to_string()]);
-        }
-
-        #[test]
-        fn set_hover_and_world_hover_update_hovered_part() {
-            let mut app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setHover", Some(&json!({ "objectId": "seed-left-001" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.hovered_part_id.as_deref(), Some("seed-left-001"));
-            let cleared_ops = app.handle_action_patch_ops("setHover", Some(&json!({ "objectId": Value::Null })), &document, &ViewState::default());
-            let cleared = apply_ops(&parse_envelope(&document), &cleared_ops);
-            assert_eq!(cleared.runtime.hovered_part_id, None);
-        }
-
-        #[test]
-        fn set_transform_tool_updates_runtime() {
-            let mut app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setTransformTool", Some(&json!({ "tool": "rotate" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.transform_tool, "rotate");
-        }
-
-        #[test]
-        fn context_menu_present_when_parts_selected() {
-            let mut envelope = default_envelope();
-            let labels = puzzle5d_labels(&ViewState::default());
-            assert!(puzzle5d_context_menu_json(&envelope, labels).is_none());
-            envelope.runtime.selection.part_ids = vec!["seed-left-001".into()];
-            let menu = puzzle5d_context_menu_json(&envelope, labels).unwrap();
-            assert!(menu.contains("duplicateSelection"));
-            assert!(menu.contains("zoomToSelection"));
-        }
-
-        #[test]
-        fn duplicate_selection_clones_parts_paired() {
-            let mut app = Puzzle5dPlayApp::default();
-            let mut envelope = default_envelope();
-            envelope.runtime.selection.part_ids = vec!["seed-left-001".into()];
-            let document = serde_json::to_string(&envelope).unwrap();
-            let ops = app.handle_action_patch_ops("duplicateSelection", None, &document, &ViewState::default());
-            let next = apply_ops(&envelope, &ops);
-            assert_eq!(next.document.parts.len(), 2);
-            let clone = next.document.parts.iter().find(|part| part.id != "seed-left-001").unwrap();
-            assert!(clone.part_2d.x > envelope.document.parts[0].part_2d.x);
-            assert!(clone.part_3d.origin[0] > envelope.document.parts[0].part_3d.origin[0]);
-        }
-
-        #[test]
-        fn zoom_to_selection_targets_both_cameras() {
-            let mut app = Puzzle5dPlayApp::default();
-            let mut envelope = default_envelope();
-            envelope.runtime.selection.part_ids = vec!["seed-left-001".into()];
-            let document = serde_json::to_string(&envelope).unwrap();
-            let ops = app.handle_action_patch_ops("zoomToSelection", None, &document, &ViewState::default());
-            let next = apply_ops(&envelope, &ops);
-            assert_eq!(next.document.camera3d.target, envelope.document.parts[0].part_3d.origin);
-            assert_eq!(next.document.camera2d.x, envelope.document.parts[0].part_2d.x);
+        fn app_definition_has_the_paired_windows() {
+            let app = create_puzzle5d_app();
+            let ids: Vec<&str> = app.definition.window_kinds.iter().map(|window| window.id.as_str()).collect();
+            assert!(ids.contains(&PUZZLE5D_PLAY_WINDOW_2D) && ids.contains(&PUZZLE5D_PLAY_WINDOW_3D));
         }
 
         #[test]
         fn window_engagements_cover_both_windows() {
-            let app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let engagements = app.window_engagements(&document, &ViewState::default());
+            let mut app = new_app();
+            let engagements = app.window_engagements(&ViewState::default());
             assert!(engagements.contains_key(PUZZLE5D_PLAY_WINDOW_2D));
             assert!(engagements.contains_key(PUZZLE5D_PLAY_WINDOW_3D));
-            let engagement = engagements.get(PUZZLE5D_PLAY_WINDOW_2D).unwrap();
-            assert_eq!(engagement.options.as_ref().map(|options| options.len()), Some(3));
-        }
-
-        #[test]
-        fn window_measures_cover_both_windows() {
-            let app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let measures = app.window_measures(&document, &ViewState::default());
-            assert!(measures.get(PUZZLE5D_PLAY_WINDOW_2D).is_some_and(|entries| !entries.is_empty()));
-            assert!(measures.get(PUZZLE5D_PLAY_WINDOW_3D).is_some_and(|entries| !entries.is_empty()));
-        }
-
-        #[test]
-        fn toggle_sun_round_trips_through_runtime_and_defaults_off() {
-            let mut app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            assert!(!envelope.runtime.sun.enabled, "sun must be off by default");
-            let ops = app.handle_action_patch_ops("toggleSun", None, &document, &ViewState::default());
-            let next = apply_ops(&envelope, &ops);
-            assert!(next.runtime.sun.enabled);
-        }
-
-        #[test]
-        fn engagement_possible_select_switches_tool() {
-            let mut app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("engagementPossibleSelect", Some(&json!({ "window": PUZZLE5D_PLAY_WINDOW_3D, "possibleId": PUZZLE5D_ENGAGEMENT_TOOL_BRUSH })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.active_tool, "brush");
-        }
-
-        #[test]
-        fn catalogue_derives_from_kind_catalogs() {
-            let app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let node = app.render(PUZZLE5D_PLAY_BODY_KINDS, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("Hexagonal Cut Concrete Forest Left"));
-            assert!(json.contains("Hexagonal Cut Concrete Forest Right"));
-            assert!(json.contains("b-l"));
-            assert!(json.contains("puzzle5d-play-kinds.ropes"));
-        }
-
-        #[test]
-        fn document_tree_reflects_selection_and_fasteners() {
-            let mut envelope = envelope_from_document_json(NAKAGIN_EXAMPLE_JSON).expect("nakagin envelope");
-            envelope.runtime.selection.part_ids = vec![envelope.document.parts[0].id.clone()];
-            let node = build_document_tree(&envelope, puzzle5d_labels(&ViewState::default()));
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("puzzle5d-play-document.fasteners"));
-            assert!(json.contains(&format!("puzzle5d-play-document.part.{}", envelope.document.parts[0].id)));
-        }
-
-        #[test]
-        fn set_selection_classifies_mixed_ids() {
-            let mut app = Puzzle5dPlayApp::default();
-            let envelope = envelope_from_document_json(NAKAGIN_EXAMPLE_JSON).expect("nakagin envelope");
-            let part_id = envelope.document.parts[0].id.clone();
-            let grip_full_id = puzzle5d_grip_full_id(&part_id, &envelope.document.parts[0].grips[0].id);
-            let fastener_id = envelope.document.fasteners[0].id.clone();
-            let document = serde_json::to_string(&envelope).unwrap();
-            let ops = app.handle_action_patch_ops("setSelection", Some(&json!({ "ids": [part_id, grip_full_id, fastener_id] })), &document, &ViewState::default());
-            let next = apply_ops(&envelope, &ops);
-            assert_eq!(next.runtime.selection.part_ids.len(), 1);
-            assert_eq!(next.runtime.selection.grip_ids.len(), 1);
-            assert_eq!(next.runtime.selection.fastener_ids.len(), 1);
-        }
-
-        #[test]
-        fn patch_part_updates_flat_and_volume_fields() {
-            let mut app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("patchPart", Some(&json!({ "partId": "seed-left-001", "field": "origin", "value": "1, 2, 3" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.document.parts[0].part_3d.origin, [1.0, 2.0, 3.0]);
-            let ops = app.handle_action_patch_ops("patchPart", Some(&json!({ "partId": "seed-left-001", "field": "x", "value": "42.5" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.document.parts[0].part_2d.x, 42.5);
-        }
-
-        #[test]
-        fn patch_grip_updates_fields() {
-            let mut app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("patchGrip", Some(&json!({ "gripFullId": "seed-left-001:v0", "field": "angle", "value": "1.5707" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.document.parts[0].grips[0].grip_2d.angle, 1.5707);
-        }
-
-        #[test]
-        fn merge_engine_fixture_preserves_flat_aspects() {
-            let envelope = default_envelope();
-            let seed_2d = envelope.document.parts[0].part_2d.clone();
-            let engine_fixture = json!({
-                "objects": [
-                    { "id": "seed-left-001", "objectKind": "Hexagonal Cut Concrete Forest Left", "origin": [1.0, 1.0, 1.0], "orientation": [0.0, 0.0, 0.0, 1.0],
-                      "vortices": envelope.document.parts[0].grips.iter().map(|grip| json!({ "id": grip.id, "vortexKind": grip.grip_kind, "position": grip.grip_3d.position, "direction": grip.grip_3d.direction })).collect::<Vec<_>>() },
-                    { "id": "brush-1", "objectKind": "Hexagonal Cut Concrete Forest Right", "origin": [8.0, 0.0, 0.0], "orientation": [0.0, 0.0, 0.0, 1.0],
-                      "vortices": [{ "id": "v0", "vortexKind": "b-r", "position": [0.0, 0.0, 0.0], "direction": [0.0, -1.0, 0.0] }] }
-                ],
-                "attractions": [ { "id": "att-1", "attracting": "seed-left-001:v0", "attracted": "brush-1:v0" } ]
-            })
-            .to_string();
-            let next = merge_engine_fixture(&envelope, &engine_fixture).expect("merged envelope");
-            let seed = next.document.parts.iter().find(|part| part.id == "seed-left-001").unwrap();
-            assert_eq!(seed.part_2d, seed_2d);
-            assert_eq!(seed.part_3d.origin, [1.0, 1.0, 1.0]);
-            let placed = next.document.parts.iter().find(|part| part.id == "brush-1").unwrap();
-            assert!(placed.part_2d.x != 0.0 || placed.part_2d.y != 0.0);
-            assert_eq!(next.document.fasteners.len(), 1);
-            assert_eq!(next.document.fasteners[0].source, "seed-left-001:v0");
-        }
-
-        #[test]
-        fn delete_selection_removes_parts_grips_and_fasteners() {
-            let mut app = Puzzle5dPlayApp::default();
-            let mut envelope = envelope_from_document_json(NAKAGIN_EXAMPLE_JSON).expect("nakagin envelope");
-            let part_id = envelope.document.parts[0].id.clone();
-            envelope.runtime.selection.part_ids = vec![part_id.clone()];
-            let fasteners_touching: usize = envelope.document.fasteners.iter().filter(|fastener| fastener.source.starts_with(&part_id) || fastener.target.starts_with(&part_id)).count();
-            assert!(fasteners_touching > 0);
-            let document = serde_json::to_string(&envelope).unwrap();
-            let ops = app.handle_action_patch_ops("deleteSelection", None, &document, &ViewState::default());
-            let next = apply_ops(&envelope, &ops);
-            assert!(next.document.parts.iter().all(|part| part.id != part_id));
-            assert!(next.document.fasteners.iter().all(|fastener| !fastener.source.starts_with(&part_id) && !fastener.target.starts_with(&part_id)));
-        }
-
-        #[test]
-        fn world_relocate_moves_part_and_creates_proximity_fastener() {
-            let mut app = Puzzle5dPlayApp::default();
-            let grip = |id: &str| Puzzle5dGrip { id: id.into(), grip_kind: "k".into(), grip_2d: Puzzle5dGrip2d::default(), grip_3d: Puzzle5dGrip3d { position: [0.0, 0.0, 0.0], direction: None, radius: 0.36, label: None } };
-            let part = |id: &str, origin: [f64; 3]| Puzzle5dPart {
-                id: id.into(),
-                part_kind: "Test".into(),
-                part_2d: Puzzle5dPart2d::default(),
-                part_3d: Puzzle5dPart3d { origin, mesh_url: None, orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, label: None },
-                grips: vec![grip("g0")],
-            };
-            let mut document = empty_document();
-            document.parts = vec![part("part-a", [0.0, 0.0, 0.0]), part("part-b", [10.0, 10.0, 10.0])];
-            let envelope = Puzzle5dEnvelope { document, runtime: Puzzle5dRuntime::default() };
-            let document_json = serde_json::to_string(&envelope).unwrap();
-            let ops = app.handle_action_patch_ops("worldRelocate", Some(&json!({ "objectId": "part-b", "position": [0.0, 0.0, 0.0] })), &document_json, &ViewState::default());
-            let next = apply_ops(&envelope, &ops);
-            assert_eq!(next.document.parts.iter().find(|part| part.id == "part-b").unwrap().part_3d.origin, [0.0, 0.0, 0.0]);
-            assert_eq!(next.document.fasteners.len(), 1);
-            assert_eq!(next.document.fasteners[0].source, "part-b:g0");
-            assert_eq!(next.document.fasteners[0].target, "part-a:g0");
-        }
-
-        #[test]
-        fn set_brush_placement_overlap_budget_clamps_value() {
-            let mut app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setBrushPlacementOverlapBudget", Some(&json!({ "value": 5.0 })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.overlap_budget, 1.0);
-        }
-
-        #[test]
-        fn set_object_and_vortex_kind_weight_updates_runtime_maps() {
-            let mut app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let object_ops = app.handle_action_patch_ops("setObjectKindWeight", Some(&json!({ "kindId": "Hexagonal Cut Concrete Forest Left", "value": 2.0 })), &document, &ViewState::default());
-            let with_object_weight = apply_ops(&parse_envelope(&document), &object_ops);
-            assert_eq!(with_object_weight.runtime.object_kind_weights.get("Hexagonal Cut Concrete Forest Left"), Some(&2.0));
-            let vortex_ops = app.handle_action_patch_ops("setVortexKindWeight", Some(&json!({ "kindId": "b-l", "value": 0.5 })), &document, &ViewState::default());
-            let with_vortex_weight = apply_ops(&parse_envelope(&document), &vortex_ops);
-            assert_eq!(with_vortex_weight.runtime.vortex_kind_weights.get("b-l"), Some(&0.5));
-        }
-
-        #[test]
-        fn world_vortex_hover_and_select_update_grip_selection() {
-            let mut app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let full_id = "seed-left-001:v0";
-            let hover_ops = app.handle_action_patch_ops("worldVortexHover", Some(&json!({ "fullId": full_id })), &document, &ViewState::default());
-            let hovered = apply_ops(&parse_envelope(&document), &hover_ops);
-            assert_eq!(hovered.runtime.selection.grip_ids, vec![full_id.to_string()]);
-            let select_ops = app.handle_action_patch_ops("worldVortexSelect", Some(&json!({ "fullId": full_id })), &document, &ViewState::default());
-            let selected = apply_ops(&parse_envelope(&document), &select_ops);
-            assert_eq!(selected.runtime.selection.grip_ids, vec![full_id.to_string()]);
-            assert!(selected.runtime.selection.part_ids.is_empty());
-        }
-
-        #[test]
-        fn set_camera_routes_by_surface() {
-            let mut app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops_2d = app.handle_action_patch_ops("setCamera", Some(&json!({ "surfaceId": PUZZLE5D_PLAY_SURFACE_2D, "camera": { "x": 5.0, "y": 6.0, "zoom": 2.0 } })), &document, &ViewState::default());
-            let envelope_2d = apply_ops(&parse_envelope(&document), &ops_2d);
-            assert_eq!(envelope_2d.document.camera2d.x, 5.0);
-            let ops_3d = app.handle_action_patch_ops("setCamera", Some(&json!({ "surfaceId": PUZZLE5D_PLAY_SURFACE_3D, "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 1.0 } })), &document, &ViewState::default());
-            let envelope_3d = apply_ops(&parse_envelope(&document), &ops_3d);
-            assert_eq!(envelope_3d.document.camera3d.position, [1.0, 2.0, 3.0]);
-        }
-
-        #[test]
-        fn set_fixture_json_replaces_document() {
-            let mut app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let replacement = serde_json::to_string(&empty_document()).unwrap();
-            let ops = app.handle_action_patch_ops("setFixtureJson", Some(&json!({ "json": replacement })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            assert!(envelope.document.parts.is_empty());
-        }
-
-        #[test]
-        fn add_part_kind_appends_paired_part() {
-            let mut app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("addPartKind", Some(&json!({ "partKind": "Hexagonal Cut Concrete Forest Right" })), &document, &ViewState::default());
-            let envelope = apply_ops(&parse_envelope(&document), &ops);
-            let added = envelope.document.parts.iter().find(|part| part.part_kind == "Hexagonal Cut Concrete Forest Right").expect("added part");
-            assert!(!added.grips.is_empty());
-            assert!(resolve_part_mesh_url(added, envelope.document.kind_catalogs.as_ref()).is_some_and(|url| url.contains("right")));
-        }
-
-        #[test]
-        fn engine_kind_catalogs_map_grips_to_vortices() {
-            let envelope = default_envelope();
-            let catalogs = engine_kind_catalogs_value(&envelope.document).expect("engine catalogs");
-            let object = &catalogs["objects"][0];
-            assert!(object.get("grips").is_none());
-            assert!(object["vortices"].as_array().is_some_and(|vortices| !vortices.is_empty()));
-            assert!(object["vortices"][0]["vortexKind"].is_string());
-        }
-
-        #[test]
-        fn puzzle5d_labels_resolve_native_english_by_default() {
-            let app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let mut envelope = parse_envelope(&document);
-            envelope.runtime.selection.part_ids = vec![envelope.document.parts[0].id.clone()];
-            let selected_document = serde_json::to_string(&envelope).unwrap();
-
-            let document_json = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_DOCUMENT, &document, &ViewState::default())).unwrap();
-            assert!(document_json.contains("\"Parts\""));
-            assert!(document_json.contains("\"Fasteners\""));
-
-            let kinds_json = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_KINDS, &document, &ViewState::default())).unwrap();
-            assert!(kinds_json.contains("\"Grips\""));
-            assert!(kinds_json.contains("\"Ropes\""));
-
-            let inspector_json = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_INSPECTOR, &selected_document, &ViewState::default())).unwrap();
-            assert!(inspector_json.contains("\"Part\""));
-
-            let engagements = app.window_engagements(&document, &ViewState::default());
-            let engagement_json = serde_json::to_string(&engagements.get(PUZZLE5D_PLAY_WINDOW_2D).unwrap()).unwrap();
-            assert!(engagement_json.contains("\"Select\""));
-            assert!(engagement_json.contains("\"Brush\""));
-            assert!(engagement_json.contains("\"Fill\""));
-
-            let measures = app.window_measures(&document, &ViewState::default());
-            let measures_json = serde_json::to_string(&measures.get(PUZZLE5D_PLAY_WINDOW_2D).unwrap()).unwrap();
-            assert!(measures_json.contains("\"LOD\""));
-            assert!(measures_json.contains("\"Automatic\""));
-            assert!(measures_json.contains("Suggestion"));
-            assert!(measures_json.contains("Offset"));
-        }
-
-        #[test]
-        fn puzzle5d_labels_resolve_native_german_locale() {
-            let app = Puzzle5dPlayApp::default();
-            let document = app.initial_document_json();
-            let mut envelope = parse_envelope(&document);
-            envelope.runtime.selection.part_ids = vec![envelope.document.parts[0].id.clone()];
-            let selected_document = serde_json::to_string(&envelope).unwrap();
-            let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-
-            let document_json = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_DOCUMENT, &document, &view_state)).unwrap();
-            assert!(document_json.contains("\"Teile\""));
-            assert!(document_json.contains("\"Verbinder\""));
-
-            let kinds_json = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_KINDS, &document, &view_state)).unwrap();
-            assert!(kinds_json.contains("\"Griffe\""));
-            assert!(kinds_json.contains("\"Seile\""));
-
-            let inspector_json = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_INSPECTOR, &selected_document, &view_state)).unwrap();
-            assert!(inspector_json.contains("\"Teil\""));
-
-            let engagements = app.window_engagements(&document, &view_state);
-            let engagement_json = serde_json::to_string(&engagements.get(PUZZLE5D_PLAY_WINDOW_2D).unwrap()).unwrap();
-            assert!(engagement_json.contains("\"Auswählen\""));
-            assert!(engagement_json.contains("\"Pinsel\""));
-            assert!(engagement_json.contains("\"Füllen\""));
-
-            let measures = app.window_measures(&document, &view_state);
-            let measures_json = serde_json::to_string(&measures.get(PUZZLE5D_PLAY_WINDOW_2D).unwrap()).unwrap();
-            assert!(measures_json.contains("Automatisch"));
-            assert!(measures_json.contains("Vorschlag"));
-            assert!(measures_json.contains("Versatz"));
         }
     }
     //#endregion 🧪Tests

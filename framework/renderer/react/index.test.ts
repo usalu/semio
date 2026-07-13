@@ -147,18 +147,24 @@ describe("framework plugin runtime", () => {
     expect(handle.manifest.pluginId).toBe("mock");
   });
 
-  it("extracts patch ops from ActionResult plugin responses", async () => {
-    const { patchOpsFromActionResponse } = await import("@semio-tech/framework-core");
-    const legacy = patchOpsFromActionResponse(JSON.stringify([JSON.stringify({ op: "setDocument", document: { id: "legacy" } })]));
-    expect(legacy).toEqual([JSON.stringify({ op: "setDocument", document: { id: "legacy" } })]);
-    const actionResult = patchOpsFromActionResponse(
+  it("parses a typed ActionResponse, including requestedEffects, from a plugin handle-action response", async () => {
+    const { parseActionResponse } = await import("@semio-tech/framework-core");
+    const response = parseActionResponse(
       JSON.stringify({
         output: null,
-        operations: [{ diff: { payload: { op: "setDocument", document: { id: "forest" } } } }],
-        inverseGroup: { actionId: "setActiveExample:1:0", operations: [] },
+        operations: [{ diff: { payload: { schemaId: "draw.op", document: { id: "forest" } } } }],
+        inverseGroup: { actionId: "setActiveExample:1:0", operations: [], inverseOperations: [] },
+        requestedEffects: [{ navigate: { uri: "/studios/forest" } }],
       }),
     );
-    expect(actionResult).toEqual([JSON.stringify({ op: "setDocument", document: { id: "forest" } })]);
+    expect(response.operations).toHaveLength(1);
+    expect(response.requestedEffects).toEqual([{ navigate: { uri: "/studios/forest" } }]);
+  });
+
+  it("falls back to an empty ActionResponse for malformed handle-action JSON", async () => {
+    const { parseActionResponse } = await import("@semio-tech/framework-core");
+    expect(parseActionResponse("not json")).toEqual({ output: null, operations: [], inverseGroup: { actionId: "", operations: [], inverseOperations: [] } });
+    expect(parseActionResponse(JSON.stringify({ output: null }))).toEqual({ output: null, operations: [], inverseGroup: { actionId: "", operations: [], inverseOperations: [] } });
   });
 
   it("serializes concurrent plugin wasm handle calls", async () => {
@@ -175,7 +181,7 @@ describe("framework plugin runtime", () => {
         maxInFlight = Math.max(maxInFlight, inFlight);
         await new Promise((resolve) => setTimeout(resolve, 5));
         inFlight -= 1;
-        return [];
+        return { output: null, operations: [], inverseGroup: { actionId: "", operations: [], inverseOperations: [] } };
       },
       render: async () => ({ type: "text", value: "x" }),
       tools: async () => [],

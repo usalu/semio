@@ -6802,87 +6802,261 @@ mod tests {
 
 // #region 🔖DocumentVcs
 use vcs::{
-    create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
+    collection_diff_from_op, create_document_vcs_envelope, invert_collection_op, CollectionDiff, CollectionOp,
+    DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable,
 };
 
-pub const FLOW_DAG_SCHEMA: &str = "flow.dag";
+pub const DAG_DOCUMENT_SCHEMA: &str = "dag.fixture";
 
+fn dag_document_schema() -> String {
+    DAG_DOCUMENT_SCHEMA.into()
+}
+
+/// 🧾 The persistent DAG projection — nodes and edges only. Camera/viewport and selection are
+/// ephemeral view state kept in the plugin runtime, never recorded in the document's undo history.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FlowDagDocument {
-    pub nodes: Vec<serde_json::Value>,
-    pub edges: Vec<serde_json::Value>,
+pub struct DagDocument {
+    #[serde(default = "dag_document_schema")]
+    pub schema: String,
+    #[serde(default)]
+    pub nodes: Vec<DagNodeSpec>,
+    #[serde(default)]
+    pub edges: Vec<DagFixtureEdge>,
+}
+
+pub fn empty_dag_document() -> DagDocument {
+    DagDocument { schema: DAG_DOCUMENT_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() }
+}
+
+/// 🌱 The demo document seed (nodes/edges from `demo.dag.json`), sharing the fixture's example.
+pub fn default_dag_document() -> DagDocument {
+    dag_document_from_fixture(&DagFixture::default())
+}
+
+/// 🔁 Projects a {@link DagFixture} (which also carries a camera) down to the persistent {@link DagDocument}.
+pub fn dag_document_from_fixture(fixture: &DagFixture) -> DagDocument {
+    DagDocument { schema: fixture.schema.clone(), nodes: fixture.nodes.clone(), edges: fixture.edges.clone() }
+}
+
+/// 🔁 Rehydrates a full {@link DagFixture} from a {@link DagDocument} plus a runtime `camera`, so the
+/// existing fixture-shaped helpers (`dag_fixture_to_wire_literal`, `DagHost`, …) can be reused.
+pub fn dag_fixture_from_document(document: &DagDocument, camera: DagCamera) -> DagFixture {
+    DagFixture { schema: document.schema.clone(), camera, nodes: document.nodes.clone(), edges: document.edges.clone() }
+}
+
+//#region 🔖CollectionSupport
+impl Identified<String> for DagNodeSpec {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+impl Identified<String> for DagFixtureEdge {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+/// 🩹 Sparse patch of a {@link DagNodeSpec} — layout fields plus a whole-`kind` replacement for
+/// kind-specific edits (slider value/min/max, note text, …).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DagNodePatch {
+    pub name: Option<String>,
+    pub x: Option<f64>,
+    pub y: Option<f64>,
+    pub width: Option<f64>,
+    pub height: Option<f64>,
+    pub kind: Option<DagNodeKind>,
+}
+
+impl Patchable<DagNodePatch> for DagNodeSpec {
+    fn apply_patch(&mut self, patch: &DagNodePatch) -> DagNodePatch {
+        let inverse = DagNodePatch {
+            name: patch.name.as_ref().map(|_| self.name.clone()),
+            x: patch.x.map(|_| self.x),
+            y: patch.y.map(|_| self.y),
+            width: patch.width.map(|_| self.width),
+            height: patch.height.map(|_| self.height),
+            kind: patch.kind.as_ref().map(|_| self.kind.clone()),
+        };
+        if let Some(name) = &patch.name {
+            self.name = name.clone();
+        }
+        if let Some(x) = patch.x {
+            self.x = x;
+        }
+        if let Some(y) = patch.y {
+            self.y = y;
+        }
+        if let Some(width) = patch.width {
+            self.width = width;
+        }
+        if let Some(height) = patch.height {
+            self.height = height;
+        }
+        if let Some(kind) = &patch.kind {
+            self.kind = kind.clone();
+        }
+        inverse
+    }
+}
+
+/// 🩹 Sparse patch of a {@link DagFixtureEdge}'s endpoints.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DagEdgePatch {
+    pub source: Option<String>,
+    pub target: Option<String>,
+}
+
+impl Patchable<DagEdgePatch> for DagFixtureEdge {
+    fn apply_patch(&mut self, patch: &DagEdgePatch) -> DagEdgePatch {
+        let inverse = DagEdgePatch {
+            source: patch.source.as_ref().map(|_| self.source.clone()),
+            target: patch.target.as_ref().map(|_| self.target.clone()),
+        };
+        if let Some(source) = &patch.source {
+            self.source = source.clone();
+        }
+        if let Some(target) = &patch.target {
+            self.target = target.clone();
+        }
+        inverse
+    }
+}
+
+/// ▶️ Applies a `CollectionDiff` (removed → modified → added) to an owned `Vec` — `vcs::CollectionDiff`
+/// has no generic apply of its own since `modified` patches require the item's `Patchable` impl.
+fn apply_collection_diff<TId, TItem, TPatch>(items: &mut Vec<TItem>, diff: &CollectionDiff<TId, TPatch, TItem>)
+where
+    TId: PartialEq,
+    TItem: Identified<TId> + Clone + Patchable<TPatch>,
+{
+    for id in &diff.removed {
+        items.retain(|item| item.id() != id);
+    }
+    for patch in &diff.modified {
+        if let Some(item) = items.iter_mut().find(|item| item.id() == &patch.id) {
+            item.apply_patch(&patch.patch);
+        }
+    }
+    for added in &diff.added {
+        items.push(added.clone());
+    }
+}
+
+/// ➕ Merges an incoming `CollectionDiff` into an existing one (coalescing two edits' diffs).
+fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(
+    target: &mut Option<CollectionDiff<TId, TPatch, TItem>>,
+    incoming: Option<CollectionDiff<TId, TPatch, TItem>>,
+) {
+    if let Some(b) = incoming {
+        match target {
+            Some(a) => {
+                a.removed.extend(b.removed);
+                a.modified.extend(b.modified);
+                a.added.extend(b.added);
+            }
+            None => *target = Some(b),
+        }
+    }
+}
+//#endregion 🔖CollectionSupport
+
+/// 📦 Typed DAG operation. Node/edge add/remove/patch/move flow through a generic {@link CollectionOp}
+/// for granular convergence; `SetNodes`/`SetEdges` are bulk writes (relayout/rename) and `SetDocument`
+/// replaces the whole projection (import/reset).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum DagOp {
+    Nodes(CollectionOp<String, DagNodeSpec, DagNodePatch>),
+    Edges(CollectionOp<String, DagFixtureEdge, DagEdgePatch>),
+    SetNodes { nodes: Vec<DagNodeSpec> },
+    SetEdges { edges: Vec<DagFixtureEdge> },
+    SetDocument { document: DagDocument },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FlowDagDiff {
-    pub nodes: Option<Vec<serde_json::Value>>,
-    pub edges: Option<Vec<serde_json::Value>>,
+pub struct DagDiff {
+    pub document: Option<DagDocument>,
+    pub nodes: Option<CollectionDiff<String, DagNodePatch, DagNodeSpec>>,
+    pub edges: Option<CollectionDiff<String, DagEdgePatch, DagFixtureEdge>>,
+    pub set_nodes: Option<Vec<DagNodeSpec>>,
+    pub set_edges: Option<Vec<DagFixtureEdge>>,
 }
 
-impl OperationDiff<FlowDagDocument> for FlowDagDiff {
-    fn apply(&self, projection: &FlowDagDocument) -> FlowDagDocument {
-        FlowDagDocument {
-            nodes: self.nodes.clone().unwrap_or_else(|| projection.nodes.clone()),
-            edges: self.edges.clone().unwrap_or_else(|| projection.edges.clone()),
+impl OperationDiff<DagDocument> for DagDiff {
+    fn apply(&self, projection: &DagDocument) -> DagDocument {
+        if let Some(document) = &self.document {
+            return document.clone();
         }
+        let mut next = projection.clone();
+        if let Some(nodes) = &self.set_nodes {
+            next.nodes = nodes.clone();
+        }
+        if let Some(edges) = &self.set_edges {
+            next.edges = edges.clone();
+        }
+        if let Some(diff) = &self.nodes {
+            apply_collection_diff(&mut next.nodes, diff);
+        }
+        if let Some(diff) = &self.edges {
+            apply_collection_diff(&mut next.edges, diff);
+        }
+        next
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.nodes.is_some() {
-            self.nodes = other.nodes;
+        if other.document.is_some() {
+            self.document = other.document;
+            return;
         }
-        if other.edges.is_some() {
-            self.edges = other.edges;
+        if other.set_nodes.is_some() {
+            self.set_nodes = other.set_nodes;
         }
+        if other.set_edges.is_some() {
+            self.set_edges = other.set_edges;
+        }
+        absorb_collection_diff(&mut self.nodes, other.nodes);
+        absorb_collection_diff(&mut self.edges, other.edges);
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum FlowDagOp {
-    SetNodes { nodes: Vec<serde_json::Value> },
-    SetEdges { edges: Vec<serde_json::Value> },
-}
+impl Operation<DagDocument> for DagOp {
+    type Diff = DagDiff;
 
-impl Operation<FlowDagDocument> for FlowDagOp {
-    type Diff = FlowDagDiff;
-
-    fn diff(&self, _projection: &FlowDagDocument) -> FlowDagDiff {
+    fn diff(&self, projection: &DagDocument) -> DagDiff {
         match self {
-            FlowDagOp::SetNodes { nodes } => FlowDagDiff {
-                nodes: Some(nodes.clone()),
+            DagOp::Nodes(op) => DagDiff {
+                nodes: Some(collection_diff_from_op(&projection.nodes, op)),
                 ..Default::default()
             },
-            FlowDagOp::SetEdges { edges } => FlowDagDiff {
-                edges: Some(edges.clone()),
+            DagOp::Edges(op) => DagDiff {
+                edges: Some(collection_diff_from_op(&projection.edges, op)),
                 ..Default::default()
             },
+            DagOp::SetNodes { nodes } => DagDiff { set_nodes: Some(nodes.clone()), ..Default::default() },
+            DagOp::SetEdges { edges } => DagDiff { set_edges: Some(edges.clone()), ..Default::default() },
+            DagOp::SetDocument { document } => DagDiff { document: Some(document.clone()), ..Default::default() },
         }
     }
 
-    fn backwards(&self, projection: &FlowDagDocument) -> Vec<Self> {
+    fn backwards(&self, projection: &DagDocument) -> Vec<Self> {
         match self {
-            FlowDagOp::SetNodes { .. } => vec![FlowDagOp::SetNodes {
-                nodes: projection.nodes.clone(),
-            }],
-            FlowDagOp::SetEdges { .. } => vec![FlowDagOp::SetEdges {
-                edges: projection.edges.clone(),
-            }],
+            DagOp::Nodes(op) => vec![DagOp::Nodes(invert_collection_op(&projection.nodes, op))],
+            DagOp::Edges(op) => vec![DagOp::Edges(invert_collection_op(&projection.edges, op))],
+            DagOp::SetNodes { .. } => vec![DagOp::SetNodes { nodes: projection.nodes.clone() }],
+            DagOp::SetEdges { .. } => vec![DagOp::SetEdges { edges: projection.edges.clone() }],
+            DagOp::SetDocument { .. } => vec![DagOp::SetDocument { document: projection.clone() }],
         }
     }
 }
 
-pub type FlowDagEnvelope = DocumentVcsEnvelope<FlowDagDocument, FlowDagOp>;
-pub type FlowDagStore = DocumentVcsStore<FlowDagDocument, FlowDagOp>;
-
-pub fn empty_flow_dag_projection() -> FlowDagDocument {
-    FlowDagDocument {
-        nodes: Vec::new(),
-        edges: Vec::new(),
-    }
-}
+pub type DagEnvelope = DocumentVcsEnvelope<DagDocument, DagOp>;
+pub type DagStore = DocumentVcsStore<DagDocument, DagOp>;
 
 //#region 🔖WasmBridge
 #[cfg(target_arch = "wasm32")]
@@ -6892,24 +7066,24 @@ mod wasm_bridge {
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
-    pub struct FlowDagDocumentVcs {
-        store: RefCell<FlowDagStore>,
+    pub struct DagDocumentVcs {
+        store: RefCell<DagStore>,
     }
 
     #[wasm_bindgen]
-    impl FlowDagDocumentVcs {
+    impl DagDocumentVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<FlowDagDocumentVcs, JsValue> {
+        pub fn new(envelope_json: Option<String>) -> Result<DagDocumentVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: FlowDagEnvelope =
+                    let envelope: DagEnvelope =
                         serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-                    FlowDagStore::new(envelope)
+                    DagStore::new(envelope)
                 }
-                None => FlowDagStore::new(create_document_vcs_envelope(
-                    FLOW_DAG_SCHEMA,
+                None => DagStore::new(create_document_vcs_envelope(
+                    DAG_DOCUMENT_SCHEMA,
                     "dag",
-                    empty_flow_dag_projection(),
+                    empty_dag_document(),
                     None,
                 )),
             };
@@ -6949,26 +7123,67 @@ mod wasm_bridge {
 //#endregion 🔖WasmBridge
 
 #[cfg(test)]
-mod flow_dag_vcs_tests {
+mod dag_vcs_tests {
     use super::*;
 
+    fn sample_node(id: &str) -> DagNodeSpec {
+        DagNodeSpec { id: id.into(), name: id.into(), ..Default::default() }
+    }
+
+    fn round_trip(document: &DagDocument, op: &DagOp) -> DagDocument {
+        let forward = vcs::apply_operation(document, op);
+        let mut restored = forward.clone();
+        for back in op.backwards(document) {
+            restored = vcs::apply_operation(&restored, &back);
+        }
+        assert_eq!(&restored, document, "backwards() must exactly restore the pre-op document");
+        forward
+    }
+
     #[test]
-    fn flow_dag_document_vcs_replays_ops() {
-        let mut store = FlowDagStore::new(create_document_vcs_envelope(
-            FLOW_DAG_SCHEMA,
+    fn dag_document_vcs_replays_node_ops() {
+        let mut store = DagStore::new(create_document_vcs_envelope(
+            DAG_DOCUMENT_SCHEMA,
             "dag",
-            empty_flow_dag_projection(),
+            empty_dag_document(),
             None,
         ));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![FlowDagOp::SetNodes {
-                    nodes: vec![serde_json::json!({ "id": "n1" })],
-                }],
+                operations: vec![DagOp::Nodes(CollectionOp::Add { index: 0, item: sample_node("n1") })],
                 description: None,
             })
             .expect("apply");
         assert_eq!(store.projection().expect("projection").nodes.len(), 1);
+    }
+
+    #[test]
+    fn node_add_patch_remove_round_trip() {
+        let document = empty_dag_document();
+        let added = round_trip(&document, &DagOp::Nodes(CollectionOp::Add { index: 0, item: sample_node("n1") }));
+        assert_eq!(added.nodes.len(), 1);
+        let patched = round_trip(
+            &added,
+            &DagOp::Nodes(CollectionOp::Patch {
+                id: "n1".into(),
+                patch: DagNodePatch { name: Some("Renamed".into()), x: Some(42.0), ..Default::default() },
+            }),
+        );
+        assert_eq!(patched.nodes[0].name, "Renamed");
+        assert_eq!(patched.nodes[0].x, 42.0);
+        let removed = round_trip(&patched, &DagOp::Nodes(CollectionOp::Remove { id: "n1".into() }));
+        assert!(removed.nodes.is_empty());
+    }
+
+    #[test]
+    fn edge_add_remove_round_trip() {
+        let mut document = empty_dag_document();
+        document.nodes = vec![sample_node("a"), sample_node("b")];
+        let edge = DagFixtureEdge { id: "e1".into(), source: "a:out".into(), target: "b:in".into(), ..Default::default() };
+        let added = round_trip(&document, &DagOp::Edges(CollectionOp::Add { index: 0, item: edge }));
+        assert_eq!(added.edges.len(), 1);
+        let removed = round_trip(&added, &DagOp::Edges(CollectionOp::Remove { id: "e1".into() }));
+        assert!(removed.edges.is_empty());
     }
 }
 // #endregion 🔖DocumentVcs

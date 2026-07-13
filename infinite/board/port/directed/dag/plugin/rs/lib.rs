@@ -1,23 +1,24 @@
 //! 🔀 DAG plugin — declarative DAG play app bundled as a hot-swappable WASM component.
 
 use infinite_board_port_directed_dag::{
-    dag_fixture_to_wire_literal, dag_node_kind_tag, fit_node_size, note_widget_size, preview_widget_size,
-    stepper_widget_height, stepper_widget_width, would_create_cycle, DagCamera, DagFixture, DagFixtureEdge, DagHost,
-    DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, DagStepperField, IoPortSpec,
+    dag_fixture_from_document, dag_fixture_to_wire_literal, dag_node_kind_tag, default_dag_document, fit_node_size,
+    note_widget_size, preview_widget_size, stepper_widget_height, stepper_widget_width, would_create_cycle, DagCamera,
+    DagDocument, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodePatch, DagNodeSpec, DagOp,
+    DagPreviewContent, DagStepperField, IoPortSpec, DAG_DOCUMENT_SCHEMA,
 };
-use semio_framework_plugin::{SurfaceKind, PanelGroup, 
+use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_node_graph_scene, build_text_editor_scene, create_default_layout, ui_declarative_sections_to_tree,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field,
-    ui_text, App, ActionDescriptor, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, UiControlNode,
+    ui_text, ActionEmit, App, ActionDescriptor, DocumentApp, DocumentView, NodeGraphScene, TextEditorScene,
     UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
+use vcs::CollectionOp;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::BTreeSet;
-use std::sync::LazyLock;
 
 //#region 🔖Constants
 const DAG_PLAY_APP_ID: &str = "dag-play";
@@ -32,24 +33,23 @@ const DAG_PLAY_WINDOW_MAIN: &str = "dag-main";
 const DAG_PLAY_WINDOW_COMPILED: &str = "dag-compiled-dag";
 //#endregion 🔖Constants
 
-//#region 🔖Types
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+//#region 🔖Runtime
+/// 🎛️ Ephemeral view state — selection and camera/viewport — lives in the app struct, not the
+/// document, so panning/zooming and selecting never pollute undo history.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
 struct DagPlayRuntime {
-    #[serde(default)]
     selected_node_ids: Vec<String>,
-    #[serde(default)]
-    undo_fixtures: Vec<DagFixture>,
-    #[serde(default)]
-    redo_fixtures: Vec<DagFixture>,
+    camera: DagCamera,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct DagPlayEnvelope {
-    fixture: DagFixture,
-    #[serde(default)]
-    runtime: DagPlayRuntime,
+impl Default for DagPlayRuntime {
+    fn default() -> Self {
+        Self {
+            selected_node_ids: Vec::new(),
+            camera: DagFixture::default().camera,
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -83,35 +83,15 @@ struct MediaGraphEdgeRecord {
     target_node_id: String,
     target_port_id: String,
 }
-//#endregion 🔖Types
+//#endregion 🔖Runtime
 
 //#region 🔖DocumentHelpers
-fn default_envelope() -> DagPlayEnvelope {
-    DagPlayEnvelope {
-        fixture: DagFixture::default(),
-        runtime: DagPlayRuntime::default(),
-    }
-}
-
-fn parse_envelope(document_json: &str) -> DagPlayEnvelope {
-    serde_json::from_str(document_json).unwrap_or_else(|_| default_envelope())
-}
-
-fn set_document_op(envelope: &DagPlayEnvelope) -> String {
-    json!({ "op": "setDocument", "document": envelope }).to_string()
-}
-
 fn dag_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor {
         controller_id: DAG_PLAY_APP_ID.into(),
         action: action.into(),
         args,
     }
-}
-
-fn snapshot_dag(runtime: &mut DagPlayRuntime, fixture: &DagFixture) {
-    runtime.undo_fixtures.push(fixture.clone());
-    runtime.redo_fixtures.clear();
 }
 
 fn split_endpoint(endpoint: &str) -> (String, String) {
@@ -121,8 +101,8 @@ fn split_endpoint(endpoint: &str) -> (String, String) {
         .unwrap_or_else(|| (endpoint.to_string(), "out".into()))
 }
 
-fn fixture_to_media_graph(fixture: &DagFixture) -> (String, String) {
-    let nodes: Vec<MediaGraphNodeRecord> = fixture
+fn document_to_media_graph(document: &DagDocument) -> (String, String) {
+    let nodes: Vec<MediaGraphNodeRecord> = document
         .nodes
         .iter()
         .map(|node| MediaGraphNodeRecord {
@@ -152,7 +132,7 @@ fn fixture_to_media_graph(fixture: &DagFixture) -> (String, String) {
                 .collect(),
         })
         .collect();
-    let edges: Vec<MediaGraphEdgeRecord> = fixture
+    let edges: Vec<MediaGraphEdgeRecord> = document
         .edges
         .iter()
         .map(|edge| {
@@ -173,8 +153,8 @@ fn fixture_to_media_graph(fixture: &DagFixture) -> (String, String) {
     )
 }
 
-fn next_node_id(fixture: &DagFixture) -> String {
-    let max = fixture
+fn next_node_id(document: &DagDocument) -> String {
+    let max = document
         .nodes
         .iter()
         .filter_map(|node| node.id.strip_prefix('n').and_then(|suffix| suffix.parse::<u64>().ok()))
@@ -310,14 +290,15 @@ fn default_node_for_kind(kind: &str, id: &str, x: f64, y: f64) -> DagNodeSpec {
     node
 }
 
-fn connect_ports(fixture: &mut DagFixture, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<(), String> {
-    let existing: Vec<(String, String)> = fixture
+/// 🔗 Builds the `DagFixtureEdge` connecting two ports, or `Err` if it would introduce a cycle.
+fn connect_edge(document: &DagDocument, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<DagFixtureEdge, String> {
+    let existing: Vec<(String, String)> = document
         .edges
         .iter()
-        .filter_map(|edge| {
+        .map(|edge| {
             let (from, _) = split_endpoint(&edge.source);
             let (to, _) = split_endpoint(&edge.target);
-            Some((from, to))
+            (from, to)
         })
         .collect();
     if would_create_cycle(&existing, source_node_id, target_node_id) {
@@ -325,7 +306,7 @@ fn connect_ports(fixture: &mut DagFixture, source_node_id: &str, source_port_id:
     }
     let edge_id = format!(
         "e{}",
-        fixture
+        document
             .edges
             .iter()
             .filter_map(|edge| edge.id.strip_prefix('e').and_then(|suffix| suffix.parse::<u64>().ok()))
@@ -333,13 +314,63 @@ fn connect_ports(fixture: &mut DagFixture, source_node_id: &str, source_port_id:
             .unwrap_or(0)
             + 1
     );
-    fixture.edges.push(DagFixtureEdge {
+    Ok(DagFixtureEdge {
         id: edge_id,
         source: format!("{source_node_id}:{source_port_id}"),
         target: format!("{target_node_id}:{target_port_id}"),
         ..Default::default()
-    });
-    Ok(())
+    })
+}
+
+/// 🗑️ Ops removing `node_ids` and every edge touching them, for delete-node / delete-selection.
+fn remove_nodes_ops(document: &DagDocument, node_ids: &[String]) -> Vec<DagOp> {
+    let mut ops: Vec<DagOp> = document
+        .nodes
+        .iter()
+        .filter(|node| node_ids.contains(&node.id))
+        .map(|node| DagOp::Nodes(CollectionOp::Remove { id: node.id.clone() }))
+        .collect();
+    ops.extend(
+        document
+            .edges
+            .iter()
+            .filter(|edge| {
+                let (from, _) = split_endpoint(&edge.source);
+                let (to, _) = split_endpoint(&edge.target);
+                node_ids.iter().any(|id| id == &from || id == &to)
+            })
+            .map(|edge| DagOp::Edges(CollectionOp::Remove { id: edge.id.clone() })),
+    );
+    ops
+}
+
+/// 🩹 Builds the `DagNodePatch` for a `patchDagNodes` field write (name, or a slider param that also
+/// refits the widget size).
+fn node_patch_for_field(node: &DagNodeSpec, field: &str, raw_value: Option<&Value>) -> Option<DagNodePatch> {
+    match field {
+        "name" => raw_value
+            .and_then(|value| value.as_str())
+            .map(|value| DagNodePatch { name: Some(value.into()), ..Default::default() }),
+        "value" | "min" | "max" if matches!(node.kind, DagNodeKind::Slider { .. }) => {
+            let value = raw_value.and_then(|value| value.as_f64())?;
+            let mut updated = node.clone();
+            if let DagNodeKind::Slider { value: ref mut slider_value, min: ref mut slider_min, max: ref mut slider_max, .. } = updated.kind {
+                match field {
+                    "value" => *slider_value = value,
+                    "min" => *slider_min = value,
+                    _ => *slider_max = value,
+                }
+            }
+            fit_node_size(&mut updated);
+            Some(DagNodePatch {
+                kind: Some(updated.kind.clone()),
+                width: Some(updated.width),
+                height: Some(updated.height),
+                ..Default::default()
+            })
+        }
+        _ => None,
+    }
 }
 
 fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
@@ -406,11 +437,9 @@ fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, descri
 //#region 🔖Terminology
 /// 🗣️ Complete UI label set for the DAG app; one field per label makes every locale combination compile-checked.
 struct DagPlayLabels {
-    // document-tree section names
     nodes: &'static str,
     edges: &'static str,
     empty: &'static str,
-    // catalogue node-kind names
     kind_computation: &'static str,
     kind_slider: &'static str,
     kind_stepper: &'static str,
@@ -418,13 +447,10 @@ struct DagPlayLabels {
     kind_note: &'static str,
     kind_preview: &'static str,
     kind_screen: &'static str,
-    // inspector messages
     select_a_node: &'static str,
     node_not_found: &'static str,
-    // inspector group titles
     slider_group: &'static str,
     node_group: &'static str,
-    // inspector field labels
     field_value: &'static str,
     field_min: &'static str,
     field_max: &'static str,
@@ -432,9 +458,7 @@ struct DagPlayLabels {
     field_kind: &'static str,
     field_id: &'static str,
     selected_suffix: &'static str,
-    // node-graph context menu
     delete_selection: &'static str,
-    // window-kind titles
     window_main: &'static str,
     window_compiled: &'static str,
 }
@@ -505,8 +529,8 @@ fn dag_play_labels(view_state: &ViewState) -> &'static DagPlayLabels {
 //#endregion 🔖Terminology
 
 //#region 🔖Panels
-fn build_document_tree(fixture: &DagFixture, selected: &[String], labels: &DagPlayLabels) -> UiNode {
-    let node_items: Vec<UiTreeItemNode> = fixture
+fn build_document_tree(document: &DagDocument, selected: &[String], labels: &DagPlayLabels) -> UiNode {
+    let node_items: Vec<UiTreeItemNode> = document
         .nodes
         .iter()
         .map(|node| {
@@ -518,7 +542,7 @@ fn build_document_tree(fixture: &DagFixture, selected: &[String], labels: &DagPl
             )
         })
         .collect();
-    let edge_items: Vec<UiTreeItemNode> = fixture
+    let edge_items: Vec<UiTreeItemNode> = document
         .edges
         .iter()
         .map(|edge| {
@@ -639,7 +663,7 @@ fn inspector_text_field(node_ids: &[String], field_id: &str, label: &str, values
     })
 }
 
-fn build_inspector_tree(fixture: &DagFixture, selected: &[String], labels: &DagPlayLabels) -> UiNode {
+fn build_inspector_tree(document: &DagDocument, selected: &[String], labels: &DagPlayLabels) -> UiNode {
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "dag-play-inspector.empty".into(),
@@ -650,7 +674,7 @@ fn build_inspector_tree(fixture: &DagFixture, selected: &[String], labels: &DagP
     }
     let nodes: Vec<&DagNodeSpec> = selected
         .iter()
-        .filter_map(|id| fixture.nodes.iter().find(|node| &node.id == id))
+        .filter_map(|id| document.nodes.iter().find(|node| &node.id == id))
         .collect();
     if nodes.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
@@ -723,14 +747,13 @@ fn build_inspector_tree(fixture: &DagFixture, selected: &[String], labels: &DagP
 //#endregion 🔖Panels
 
 //#region 🔖Render
-fn render_main_graph(envelope: &DagPlayEnvelope, labels: &DagPlayLabels) -> UiNode {
-    let fixture = &envelope.fixture;
-    let (nodes_json, edges_json) = fixture_to_media_graph(fixture);
-    let viewport_json = serde_json::to_string(&fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
-    let selection_json = if envelope.runtime.selected_node_ids.is_empty() {
+fn render_main_graph(document: &DagDocument, camera: &DagCamera, selected: &[String], labels: &DagPlayLabels) -> UiNode {
+    let (nodes_json, edges_json) = document_to_media_graph(document);
+    let viewport_json = serde_json::to_string(camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
+    let selection_json = if selected.is_empty() {
         None
     } else {
-        serde_json::to_string(&envelope.runtime.selected_node_ids).ok()
+        serde_json::to_string(selected).ok()
     };
     let context_menu_json = json!([{
         "id": "delete-selection",
@@ -751,77 +774,83 @@ fn render_main_graph(envelope: &DagPlayEnvelope, labels: &DagPlayLabels) -> UiNo
     )
 }
 
-fn render_compiled_dag(fixture: &DagFixture) -> UiNode {
+fn render_compiled_dag(document: &DagDocument, camera: &DagCamera) -> UiNode {
+    let fixture = dag_fixture_from_document(document, camera.clone());
     build_text_editor_scene(
         DAG_PLAY_SURFACE_COMPILED,
         DAG_PLAY_APP_ID,
-        TextEditorScene::base(dag_fixture_to_wire_literal(fixture), Some("wire".into()), None),
+        TextEditorScene::base(dag_fixture_to_wire_literal(&fixture), Some("wire".into()), None),
     )
 }
 //#endregion 🔖Render
 
 //#region 🔖DagPlayApp
-struct DagPlayApp;
+#[derive(Default)]
+struct DagPlayApp {
+    runtime: DagPlayRuntime,
+}
 
-impl PluginApp for DagPlayApp {
+impl DagPlayApp {
+    /// 👁️ Parses the many selection-arg shapes (`ids`/`nodeIds` arrays or a single `nodeId`) into ids.
+    fn parse_selection(args: Option<&Value>) -> Vec<String> {
+        args.and_then(|value| value.get("nodeIds").or_else(|| value.get("ids")))
+            .and_then(|value| {
+                if value.is_array() {
+                    serde_json::from_value(value.clone()).ok()
+                } else {
+                    value.as_str().map(|id| vec![id.to_string()])
+                }
+            })
+            .or_else(|| {
+                args.and_then(|value| value.get("nodeId"))
+                    .and_then(|value| value.as_str())
+                    .map(|id| vec![id.to_string()])
+            })
+            .unwrap_or_default()
+    }
+}
+
+impl DocumentApp for DagPlayApp {
+    type Projection = DagDocument;
+    type Op = DagOp;
+
     fn app_id(&self) -> &str {
         DAG_PLAY_APP_ID
     }
 
-    fn initial_document_json(&self) -> String {
-        serde_json::to_string(&default_envelope()).expect("dag envelope json")
+    fn document_schema(&self) -> &str {
+        DAG_DOCUMENT_SCHEMA
     }
 
-    fn handle_action_patch_ops(
+    fn initial_projection(&self) -> DagDocument {
+        default_dag_document()
+    }
+
+    fn handle_action(
         &mut self,
         action: &str,
         args: Option<&Value>,
-        document_json: &str,
+        doc: &DocumentView<'_, DagDocument>,
         _view_state: &ViewState,
-    ) -> Vec<String> {
-        let mut envelope = parse_envelope(document_json);
+    ) -> ActionEmit<DagOp> {
+        let document = doc.projection;
         match action {
-            "setDocument" => {
-                if let Some(next) = args.and_then(|value| value.get("document")) {
-                    if let Ok(parsed) = serde_json::from_value(next.clone()) {
-                        envelope = parsed;
-                        return vec![set_document_op(&envelope)];
-                    }
-                }
-            }
             "setSelection" | "selectNode" | "nodeGraphSelect" => {
-                let ids = args
-                    .and_then(|value| value.get("nodeIds"))
-                    .and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok())
-                    .or_else(|| {
-                        args.and_then(|value| value.get("ids").or_else(|| value.get("nodeId").map(|_| value.get("nodeId")).flatten()))
-                            .and_then(|value| {
-                                if value.is_array() {
-                                    serde_json::from_value(value.clone()).ok()
-                                } else if let Some(id) = value.as_str() {
-                                    Some(vec![id.to_string()])
-                                } else {
-                                    None
-                                }
-                            })
-                    })
-                    .or_else(|| {
-                        args.and_then(|value| value.get("nodeId"))
-                            .and_then(|value| value.as_str())
-                            .map(|id| vec![id.to_string()])
-                    })
-                    .unwrap_or_default();
-                envelope.runtime.selected_node_ids = ids;
-                return vec![set_document_op(&envelope)];
+                self.runtime.selected_node_ids = Self::parse_selection(args);
+                ActionEmit::default()
             }
-            "nodeGraphHover" => return Vec::new(),
+            "nodeGraphHover" => ActionEmit::default(),
+            "graphPointerDown" => {
+                self.runtime.selected_node_ids.clear();
+                ActionEmit::default()
+            }
             "nodeGraphViewport" => {
                 if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
                     if let Ok(camera) = serde_json::from_str::<DagCamera>(viewport_json) {
-                        envelope.fixture.camera = camera;
-                        return vec![set_document_op(&envelope)];
+                        self.runtime.camera = camera;
                     }
                 }
+                ActionEmit::default()
             }
             "nodeGraphEdit" => {
                 let ops = args
@@ -829,30 +858,25 @@ impl PluginApp for DagPlayApp {
                     .and_then(|value| value.as_array())
                     .cloned()
                     .unwrap_or_default();
-                let mut changed = false;
+                let mut emitted: Vec<DagOp> = Vec::new();
                 for op in ops {
                     match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
                         "setFixture" => {
                             if let Some(fixture_json) = op.get("fixtureJson").and_then(|value| value.as_str()) {
                                 if let Ok(fixture) = serde_json::from_str::<DagFixture>(fixture_json) {
-                                    snapshot_dag(&mut envelope.runtime, &envelope.fixture);
-                                    envelope.fixture = fixture;
-                                    changed = true;
+                                    self.runtime.camera = fixture.camera.clone();
+                                    emitted.push(DagOp::SetDocument {
+                                        document: infinite_board_port_directed_dag::dag_document_from_fixture(&fixture),
+                                    });
                                 }
                             }
                         }
                         "deleteSelection" => {
-                            if !envelope.runtime.selected_node_ids.is_empty() {
-                                snapshot_dag(&mut envelope.runtime, &envelope.fixture);
-                                let ids: Vec<String> = envelope.runtime.selected_node_ids.clone();
-                                envelope.fixture.nodes.retain(|node| !ids.contains(&node.id));
-                                envelope.fixture.edges.retain(|edge| {
-                                    let (from, _) = split_endpoint(&edge.source);
-                                    let (to, _) = split_endpoint(&edge.target);
-                                    !ids.iter().any(|id| id == &from || id == &to)
-                                });
-                                envelope.runtime.selected_node_ids.clear();
-                                changed = true;
+                            let ids = self.runtime.selected_node_ids.clone();
+                            let removes = remove_nodes_ops(document, &ids);
+                            if !removes.is_empty() {
+                                self.runtime.selected_node_ids.clear();
+                                emitted.extend(removes);
                             }
                         }
                         "connect" => {
@@ -860,83 +884,61 @@ impl PluginApp for DagPlayApp {
                             let from_port = op.get("sourcePortId").and_then(|value| value.as_str());
                             let to = op.get("targetNodeId").and_then(|value| value.as_str());
                             let to_port = op.get("targetPortId").and_then(|value| value.as_str());
-                            if let (Some(from), Some(from_port), Some(to), Some(to_port)) =
-                                (from, from_port, to, to_port)
-                            {
-                                snapshot_dag(&mut envelope.runtime, &envelope.fixture);
-                                if connect_ports(&mut envelope.fixture, from, from_port, to, to_port).is_ok() {
-                                    changed = true;
+                            if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
+                                if let Ok(edge) = connect_edge(document, from, from_port, to, to_port) {
+                                    emitted.push(DagOp::Edges(CollectionOp::Add { index: document.edges.len(), item: edge }));
                                 }
                             }
                         }
                         _ => {}
                     }
                 }
-                if changed {
-                    return vec![set_document_op(&envelope)];
-                }
+                ActionEmit::ops(emitted)
             }
             "deleteSelection" => {
-                if !envelope.runtime.selected_node_ids.is_empty() {
-                    snapshot_dag(&mut envelope.runtime, &envelope.fixture);
-                    let ids: Vec<String> = envelope.runtime.selected_node_ids.clone();
-                    envelope.fixture.nodes.retain(|node| !ids.contains(&node.id));
-                    envelope.fixture.edges.retain(|edge| {
-                        let (from, _) = split_endpoint(&edge.source);
-                        let (to, _) = split_endpoint(&edge.target);
-                        !ids.iter().any(|id| id == &from || id == &to)
-                    });
-                    envelope.runtime.selected_node_ids.clear();
-                    return vec![set_document_op(&envelope)];
+                let ids = self.runtime.selected_node_ids.clone();
+                let removes = remove_nodes_ops(document, &ids);
+                if removes.is_empty() {
+                    return ActionEmit::default();
                 }
-            }
-            "graphPointerDown" => {
-                envelope.runtime.selected_node_ids.clear();
-                return vec![set_document_op(&envelope)];
-            }
-            "undo" => {
-                if let Some(previous) = envelope.runtime.undo_fixtures.pop() {
-                    envelope.runtime.redo_fixtures.push(envelope.fixture.clone());
-                    envelope.fixture = previous;
-                    return vec![set_document_op(&envelope)];
-                }
-            }
-            "redo" => {
-                if let Some(next) = envelope.runtime.redo_fixtures.pop() {
-                    envelope.runtime.undo_fixtures.push(envelope.fixture.clone());
-                    envelope.fixture = next;
-                    return vec![set_document_op(&envelope)];
-                }
+                self.runtime.selected_node_ids.clear();
+                ActionEmit::ops(removes)
             }
             "renameDagNode" => {
                 let old_id = args.and_then(|value| value.get("oldId")).and_then(|value| value.as_str());
                 let new_id = args.and_then(|value| value.get("value")).and_then(|value| value.as_str());
                 if let (Some(old_id), Some(new_id)) = (old_id, new_id) {
                     let trimmed = new_id.trim();
-                    if !trimmed.is_empty()
-                        && trimmed != old_id
-                        && !envelope.fixture.nodes.iter().any(|node| node.id == trimmed)
-                    {
-                        snapshot_dag(&mut envelope.runtime, &envelope.fixture);
-                        for node in &mut envelope.fixture.nodes {
-                            if node.id == old_id {
-                                node.id = trimmed.into();
-                            }
-                        }
-                        for edge in &mut envelope.fixture.edges {
-                            let (from_node, from_port) = split_endpoint(&edge.source);
-                            let (to_node, to_port) = split_endpoint(&edge.target);
-                            if from_node == old_id {
-                                edge.source = format!("{trimmed}:{from_port}");
-                            }
-                            if to_node == old_id {
-                                edge.target = format!("{trimmed}:{to_port}");
-                            }
-                        }
-                        envelope.runtime.selected_node_ids = vec![trimmed.into()];
-                        return vec![set_document_op(&envelope)];
+                    if !trimmed.is_empty() && trimmed != old_id && !document.nodes.iter().any(|node| node.id == trimmed) {
+                        let nodes: Vec<DagNodeSpec> = document
+                            .nodes
+                            .iter()
+                            .map(|node| {
+                                if node.id == old_id {
+                                    DagNodeSpec { id: trimmed.into(), ..node.clone() }
+                                } else {
+                                    node.clone()
+                                }
+                            })
+                            .collect();
+                        let edges: Vec<DagFixtureEdge> = document
+                            .edges
+                            .iter()
+                            .map(|edge| {
+                                let (from_node, from_port) = split_endpoint(&edge.source);
+                                let (to_node, to_port) = split_endpoint(&edge.target);
+                                DagFixtureEdge {
+                                    source: if from_node == old_id { format!("{trimmed}:{from_port}") } else { edge.source.clone() },
+                                    target: if to_node == old_id { format!("{trimmed}:{to_port}") } else { edge.target.clone() },
+                                    ..edge.clone()
+                                }
+                            })
+                            .collect();
+                        self.runtime.selected_node_ids = vec![trimmed.into()];
+                        return ActionEmit::ops(vec![DagOp::SetNodes { nodes }, DagOp::SetEdges { edges }]);
                     }
                 }
+                ActionEmit::default()
             }
             "removeNode" => {
                 let node_id = args
@@ -944,26 +946,24 @@ impl PluginApp for DagPlayApp {
                     .or_else(|| args.and_then(|value| value.get("id")))
                     .and_then(|value| value.as_str());
                 if let Some(node_id) = node_id {
-                    snapshot_dag(&mut envelope.runtime, &envelope.fixture);
-                    envelope.fixture.nodes.retain(|node| node.id != node_id);
-                    envelope.fixture.edges.retain(|edge| {
-                        let (from, _) = split_endpoint(&edge.source);
-                        let (to, _) = split_endpoint(&edge.target);
-                        from != node_id && to != node_id
-                    });
-                    envelope.runtime.selected_node_ids.retain(|id| id != node_id);
-                    return vec![set_document_op(&envelope)];
+                    let removes = remove_nodes_ops(document, &[node_id.to_string()]);
+                    if !removes.is_empty() {
+                        self.runtime.selected_node_ids.retain(|id| id != node_id);
+                        return ActionEmit::ops(removes);
+                    }
                 }
+                ActionEmit::default()
             }
             "disconnect" => {
                 let edge_id = args
                     .and_then(|value| value.get("edgeId"))
                     .or_else(|| args.and_then(|value| value.get("synapseId")))
                     .and_then(|value| value.as_str());
-                if let Some(edge_id) = edge_id {
-                    snapshot_dag(&mut envelope.runtime, &envelope.fixture);
-                    envelope.fixture.edges.retain(|edge| edge.id != edge_id);
-                    return vec![set_document_op(&envelope)];
+                match edge_id {
+                    Some(edge_id) if document.edges.iter().any(|edge| edge.id == edge_id) => {
+                        ActionEmit::ops(vec![DagOp::Edges(CollectionOp::Remove { id: edge_id.into() })])
+                    }
+                    _ => ActionEmit::default(),
                 }
             }
             "moveMediaNode" => {
@@ -971,112 +971,94 @@ impl PluginApp for DagPlayApp {
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
                 if let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) {
-                    if let Ok(mut host) = DagHost::load_fixture_json(&serde_json::to_string(&envelope.fixture).unwrap()) {
-                        let _ = host.set_widget_position(node_id, x, y);
-                        if let Ok(json) = host.fixture_json() {
-                            if let Ok(fixture) = serde_json::from_str(&json) {
-                                envelope.fixture = fixture;
-                                return vec![set_document_op(&envelope)];
-                            }
-                        }
+                    if document.nodes.iter().any(|node| node.id == node_id) {
+                        return ActionEmit {
+                            ops: vec![DagOp::Nodes(CollectionOp::Patch {
+                                id: node_id.into(),
+                                patch: DagNodePatch { x: Some(x), y: Some(y), ..Default::default() },
+                            })],
+                            coalesce_key: Some(format!("move-{node_id}")),
+                            ..Default::default()
+                        };
                     }
                 }
+                ActionEmit::default()
             }
             "connectMediaPorts" => {
                 let source_node_id = args.and_then(|value| value.get("sourceNodeId")).and_then(|value| value.as_str());
                 let source_port_id = args.and_then(|value| value.get("sourcePortId")).and_then(|value| value.as_str());
                 let target_node_id = args.and_then(|value| value.get("targetNodeId")).and_then(|value| value.as_str());
                 let target_port_id = args.and_then(|value| value.get("targetPortId")).and_then(|value| value.as_str());
-                if let (Some(from), Some(from_port), Some(to), Some(to_port)) =
-                    (source_node_id, source_port_id, target_node_id, target_port_id)
-                {
-                    snapshot_dag(&mut envelope.runtime, &envelope.fixture);
-                    if connect_ports(&mut envelope.fixture, from, from_port, to, to_port).is_ok() {
-                        return vec![set_document_op(&envelope)];
+                if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (source_node_id, source_port_id, target_node_id, target_port_id) {
+                    if let Ok(edge) = connect_edge(document, from, from_port, to, to_port) {
+                        return ActionEmit::ops(vec![DagOp::Edges(CollectionOp::Add { index: document.edges.len(), item: edge })]);
                     }
                 }
+                ActionEmit::default()
             }
             "addNode" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("computation");
-                let id = next_node_id(&envelope.fixture);
+                let id = next_node_id(document);
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
-                snapshot_dag(&mut envelope.runtime, &envelope.fixture);
-                envelope.fixture.nodes.push(default_node_for_kind(kind, &id, x, y));
-                envelope.runtime.selected_node_ids = vec![id];
-                return vec![set_document_op(&envelope)];
+                let node = default_node_for_kind(kind, &id, x, y);
+                self.runtime.selected_node_ids = vec![id];
+                ActionEmit::ops(vec![DagOp::Nodes(CollectionOp::Add { index: document.nodes.len(), item: node })])
             }
             "reorganize" => {
-                snapshot_dag(&mut envelope.runtime, &envelope.fixture);
-                if let Ok(mut host) = DagHost::load_fixture_json(&serde_json::to_string(&envelope.fixture).unwrap()) {
+                if let Ok(mut host) = DagHost::load_fixture_json(
+                    &serde_json::to_string(&dag_fixture_from_document(document, self.runtime.camera.clone())).unwrap_or_default(),
+                ) {
                     let _ = host.reorganize(&DagLayoutOptions::default());
                     if let Ok(json) = host.fixture_json() {
-                        if let Ok(fixture) = serde_json::from_str(&json) {
-                            envelope.fixture = fixture;
-                            return vec![set_document_op(&envelope)];
+                        if let Ok(fixture) = serde_json::from_str::<DagFixture>(&json) {
+                            return ActionEmit::ops(vec![DagOp::SetNodes { nodes: fixture.nodes }]);
                         }
                     }
                 }
+                ActionEmit::default()
             }
             "patchDagNodes" => {
-                snapshot_dag(&mut envelope.runtime, &envelope.fixture);
                 let node_ids: Vec<String> = args
                     .and_then(|value| value.get("nodeIds"))
                     .and_then(|value| serde_json::from_value(value.clone()).ok())
                     .unwrap_or_default();
                 let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
                 let raw_value = args.and_then(|value| value.get("value"));
-                for node in envelope.fixture.nodes.iter_mut() {
-                    if !node_ids.contains(&node.id) {
-                        continue;
+                let ops: Vec<DagOp> = document
+                    .nodes
+                    .iter()
+                    .filter(|node| node_ids.contains(&node.id))
+                    .filter_map(|node| {
+                        node_patch_for_field(node, field, raw_value)
+                            .map(|patch| DagOp::Nodes(CollectionOp::Patch { id: node.id.clone(), patch }))
+                    })
+                    .collect();
+                if ops.is_empty() {
+                    ActionEmit::default()
+                } else {
+                    ActionEmit {
+                        ops,
+                        coalesce_key: Some(format!("patch-{field}-{}", node_ids.join(","))),
+                        ..Default::default()
                     }
-                    match field {
-                        "name" => {
-                            if let Some(value) = raw_value.and_then(|value| value.as_str()) {
-                                node.name = value.into();
-                            }
-                        }
-                        "value" if matches!(node.kind, DagNodeKind::Slider { .. }) => {
-                            if let (Some(value), DagNodeKind::Slider { value: ref mut slider_value, .. }) =
-                                (raw_value.and_then(|value| value.as_f64()), &mut node.kind)
-                            {
-                                *slider_value = value;
-                            }
-                        }
-                        "min" if matches!(node.kind, DagNodeKind::Slider { .. }) => {
-                            if let (Some(value), DagNodeKind::Slider { min: ref mut min_value, .. }) =
-                                (raw_value.and_then(|value| value.as_f64()), &mut node.kind)
-                            {
-                                *min_value = value;
-                            }
-                        }
-                        "max" if matches!(node.kind, DagNodeKind::Slider { .. }) => {
-                            if let (Some(value), DagNodeKind::Slider { max: ref mut max_value, .. }) =
-                                (raw_value.and_then(|value| value.as_f64()), &mut node.kind)
-                            {
-                                *max_value = value;
-                            }
-                        }
-                        _ => {}
-                    }
-                    fit_node_size(node);
                 }
-                return vec![set_document_op(&envelope)];
             }
-            _ => {}
+            _ => ActionEmit::default(),
         }
-        Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-        let envelope = parse_envelope(document_json);
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, DagDocument>, view_state: &ViewState) -> UiNode {
+        let document = doc.projection;
+        let selected = &self.runtime.selected_node_ids;
+        let camera = &self.runtime.camera;
         let labels = dag_play_labels(view_state);
         match body_key {
-            DAG_PLAY_BODY_MAIN => render_main_graph(&envelope, labels),
-            DAG_PLAY_BODY_COMPILED => render_compiled_dag(&envelope.fixture),
-            DAG_PLAY_BODY_DOCUMENT => build_document_tree(&envelope.fixture, &envelope.runtime.selected_node_ids, labels),
+            DAG_PLAY_BODY_MAIN => render_main_graph(document, camera, selected, labels),
+            DAG_PLAY_BODY_COMPILED => render_compiled_dag(document, camera),
+            DAG_PLAY_BODY_DOCUMENT => build_document_tree(document, selected, labels),
             DAG_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
-            DAG_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_node_ids, labels),
+            DAG_PLAY_BODY_INSPECTOR => build_inspector_tree(document, selected, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -1129,10 +1111,26 @@ fn create_dag_app() -> App {
                 PanelGroup::Details,
                 DAG_PLAY_BODY_INSPECTOR,
             )
-            .keybinding("mod+z", "undo")
-            .keybinding("mod+shift+z", "redo"),
+            // ✏️ Document-mutating: dispatched as VCS operations with a true inverse.
+            .operation("addNode", "Add Node")
+            .operation("removeNode", "Remove Node")
+            .operation("deleteSelection", "Delete Selection")
+            .operation("nodeGraphEdit", "Node Graph Edit")
+            .operation("connectMediaPorts", "Connect Ports")
+            .operation("disconnect", "Disconnect")
+            .operation("moveMediaNode", "Move Node")
+            .operation("renameDagNode", "Rename Node")
+            .operation("reorganize", "Reorganize")
+            .operation("patchDagNodes", "Patch Nodes")
+            // 👁️ Ephemeral view state — selection and camera/viewport.
+            .view_action("setSelection", "Set Selection")
+            .view_action("selectNode", "Select Node")
+            .view_action("nodeGraphSelect", "Node Graph Select")
+            .view_action("nodeGraphHover", "Node Graph Hover")
+            .view_action("nodeGraphViewport", "Node Graph Viewport")
+            .view_action("graphPointerDown", "Graph Pointer Down"),
     )
-    .example("demo", "Demo", serde_json::to_string(&default_envelope()).unwrap())
+    .example("demo", "Demo", serde_json::to_string(&default_dag_document()).unwrap())
     .program("dag", "DAG", "graph")
 }
 
@@ -1145,15 +1143,24 @@ semio_framework_plugin::semio_plugin! {
 }
 //#endregion 🔖Manifest
 
+//#region 🧪Tests
 #[cfg(test)]
 mod tests {
     use super::*;
+    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+
+    fn meta(actor: &str) -> ActionMeta {
+        ActionMeta { actor: actor.into(), instance_id: 1 }
+    }
+
+    fn new_app() -> VcsDocumentApp<DagPlayApp> {
+        VcsDocumentApp::new(DagPlayApp::default())
+    }
 
     #[test]
     fn dag_play_labels_resolve_native_by_default() {
-        let app = DagPlayApp;
-        let document = serde_json::to_string(&default_envelope()).unwrap();
-        let node = app.render(DAG_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(DAG_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Nodes"));
         assert!(json.contains("Edges"));
@@ -1161,10 +1168,9 @@ mod tests {
 
     #[test]
     fn dag_play_labels_resolve_native_in_german() {
-        let app = DagPlayApp;
-        let document = serde_json::to_string(&default_envelope()).unwrap();
+        let mut app = new_app();
         let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let node = app.render(DAG_PLAY_BODY_DOCUMENT, &document, &view_state);
+        let node = app.render(DAG_PLAY_BODY_DOCUMENT, None, &view_state).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Knoten"));
         assert!(json.contains("Kanten"));
@@ -1172,72 +1178,124 @@ mod tests {
 
     #[test]
     fn renders_node_graph_scene() {
-        let app = DagPlayApp;
-        let document = serde_json::to_string(&default_envelope()).unwrap();
-        let node = app.render(DAG_PLAY_BODY_MAIN, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(DAG_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("node-graph"));
     }
 
     #[test]
     fn renders_compiled_dag_text_editor() {
-        let app = DagPlayApp;
-        let document = serde_json::to_string(&default_envelope()).unwrap();
-        let node = app.render(DAG_PLAY_BODY_COMPILED, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(DAG_PLAY_BODY_COMPILED, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("text-editor"));
     }
 
     #[test]
-    fn add_node_action_updates_fixture() {
-        let mut app = DagPlayApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops("addNode", Some(&json!({ "kind": "slider" })), &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let updated_op: Value = serde_json::from_str(&ops[0]).unwrap();
-        let updated: DagPlayEnvelope = serde_json::from_value(updated_op["document"].clone()).unwrap();
-        assert!(updated.fixture.nodes.iter().any(|node| matches!(node.kind, DagNodeKind::Slider { .. })));
+    fn add_node_action_updates_document() {
+        let mut app = new_app();
+        app.handle_action("addNode", Some(&json!({ "kind": "slider" })), &ViewState::default(), &meta("local")).expect("add node");
+        let document = app.projection().expect("projection");
+        assert!(document.nodes.iter().any(|node| matches!(node.kind, DagNodeKind::Slider { .. })));
     }
 
     #[test]
-    fn inspector_shows_selected_node() {
-        let mut envelope = default_envelope();
-        let node_id = envelope.fixture.nodes.first().map(|node| node.id.clone()).unwrap_or_else(|| "n1".into());
-        envelope.runtime.selected_node_ids = vec![node_id];
-        let app = DagPlayApp;
-        let node = app.render(DAG_PLAY_BODY_INSPECTOR, &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("field"));
-    }
-
-    #[test]
-    fn rename_dag_node_updates_fixture() {
-        let mut app = DagPlayApp;
-        let document = app.initial_document_json();
-        let envelope: DagPlayEnvelope = serde_json::from_str(&document).unwrap();
-        let old_id = envelope.fixture.nodes.first().map(|node| node.id.clone()).expect("node");
-        let ops = app.handle_action_patch_ops(
+    fn rename_dag_node_rewrites_nodes_and_edges() {
+        let mut app = new_app();
+        let old_id = app.projection().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
+        app.handle_action(
             "renameDagNode",
             Some(&json!({ "oldId": old_id, "value": "renamed-node" })),
-            &document,
             &ViewState::default(),
-        );
-        assert_eq!(ops.len(), 1);
-        let updated: DagPlayEnvelope =
-            serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
-        assert!(updated.fixture.nodes.iter().any(|node| node.id == "renamed-node"));
+            &meta("local"),
+        )
+        .expect("rename");
+        let document = app.projection().expect("projection");
+        assert!(document.nodes.iter().any(|node| node.id == "renamed-node"));
+        assert!(document.nodes.iter().all(|node| node.id != old_id));
     }
 
     #[test]
-    fn remove_node_deletes_from_fixture() {
-        let mut app = DagPlayApp;
-        let document = app.initial_document_json();
-        let envelope: DagPlayEnvelope = serde_json::from_str(&document).unwrap();
-        let node_id = envelope.fixture.nodes.first().map(|node| node.id.clone()).expect("node");
-        let ops = app.handle_action_patch_ops("removeNode", Some(&json!({ "nodeId": node_id })), &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let updated: DagPlayEnvelope =
-            serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
-        assert!(updated.fixture.nodes.iter().all(|node| node.id != node_id));
+    fn remove_node_deletes_node_and_connected_edges() {
+        let mut app = new_app();
+        let node_id = app.projection().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
+        app.handle_action("removeNode", Some(&json!({ "nodeId": node_id })), &ViewState::default(), &meta("local")).expect("remove");
+        let document = app.projection().expect("projection");
+        assert!(document.nodes.iter().all(|node| node.id != node_id));
+        assert!(document.edges.iter().all(|edge| {
+            let (from, _) = split_endpoint(&edge.source);
+            let (to, _) = split_endpoint(&edge.target);
+            from != node_id && to != node_id
+        }));
+    }
+
+    #[test]
+    fn add_node_then_undo_restores_document() {
+        let mut app = new_app();
+        let before = app.projection().expect("projection").nodes.len();
+        app.handle_action("addNode", Some(&json!({ "kind": "note" })), &ViewState::default(), &meta("local")).expect("add");
+        assert_eq!(app.projection().expect("projection").nodes.len(), before + 1);
+        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        assert_eq!(app.projection().expect("projection").nodes.len(), before);
+    }
+
+    #[test]
+    fn patch_slider_value_coalesces_into_one_edit() {
+        let mut app = new_app();
+        app.handle_action("addNode", Some(&json!({ "kind": "slider" })), &ViewState::default(), &meta("local")).expect("add slider");
+        let node_id = app
+            .projection()
+            .expect("projection")
+            .nodes
+            .iter()
+            .find(|node| matches!(node.kind, DagNodeKind::Slider { .. }))
+            .map(|node| node.id.clone())
+            .expect("slider");
+        for value in [1.0, 2.0, 5.0] {
+            app.handle_action(
+                "patchDagNodes",
+                Some(&json!({ "nodeIds": [node_id], "field": "value", "value": value })),
+                &ViewState::default(),
+                &meta("local"),
+            )
+            .expect("patch slider");
+        }
+        let slider_value = app
+            .projection()
+            .expect("projection")
+            .nodes
+            .iter()
+            .find(|node| node.id == node_id)
+            .and_then(|node| match &node.kind { DagNodeKind::Slider { value, .. } => Some(*value), _ => None })
+            .expect("slider value");
+        assert_eq!(slider_value, 5.0);
+    }
+
+    /// 🧪 Two instances apply DISJOINT edits (A adds a note node, B adds a slider node) and converge to
+    /// contain BOTH via a `MemoryBackbone` — impossible with whole-document snapshots.
+    #[test]
+    fn two_instances_converge_disjoint_edits_via_backbone() {
+        use vcs::MemoryBackbone;
+        let mut instance_a = new_app();
+        let mut instance_b = new_app();
+        let base = instance_a.projection().expect("projection").nodes.len();
+        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://dag-convergence", "mem://dag-convergence");
+        instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
+        instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+
+        instance_a.handle_action("addNode", Some(&json!({ "kind": "note" })), &ViewState::default(), &meta("actor-a")).expect("a adds note");
+        instance_b.handle_action("addNode", Some(&json!({ "kind": "slider" })), &ViewState::default(), &meta("actor-b")).expect("b adds slider");
+
+        instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
+        instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+
+        let projection_a = instance_a.projection().expect("projection");
+        let projection_b = instance_b.projection().expect("projection");
+        assert_eq!(projection_a.nodes.len(), base + 2, "instance A has both new nodes");
+        assert_eq!(projection_b.nodes.len(), base + 2, "instance B has both new nodes");
+        assert!(projection_a.nodes.iter().any(|node| matches!(node.kind, DagNodeKind::Note { .. })));
+        assert!(projection_a.nodes.iter().any(|node| matches!(node.kind, DagNodeKind::Slider { .. })));
     }
 }
+//#endregion 🧪Tests

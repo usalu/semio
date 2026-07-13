@@ -105,9 +105,10 @@ pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
 
 use grammar::{tokenize_language, GrammarToken};
 use trinity_jack::{complete, example_graph, format as jack_format, lint, semantic_tokens, Diagnostic};
+use writer::{empty_writer_projection, WriterCamera, WriterOp, WriterProjection};
 use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
     build_text_editor_scene, engagement_token_matches, strip_engagement_prefix, tool_button, ui_declarative_sections_to_tree, ui_text, App,
-    ActionDescriptor, PluginApp, PluginBundle, TextEditorScene, ToolCategory, ToolNode, UiNode, UiSectionNode,
+    ActionDescriptor, ActionEmit, DocumentApp, DocumentView, TextEditorScene, ToolCategory, ToolNode, UiNode, UiSectionNode,
     UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -115,7 +116,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, create_default_layout,
 };
-use semio_framework_plugin::layout::{WindowEngagementPossible, WindowEngagementStatus};
+use semio_framework_plugin::{WindowEngagementPossible, WindowEngagementStatus};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -139,58 +140,6 @@ const DAG_JACK_EXAMPLE_JSON: &str = include_str!("../../example/dag.jack.writer.
 //#endregion 🔖Constants
 
 //#region 🔖Document
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct WriterCamera {
-    #[serde(default)]
-    x: f64,
-    #[serde(default)]
-    y: f64,
-    #[serde(default = "default_zoom")]
-    zoom: f64,
-}
-
-fn default_zoom() -> f64 {
-    1.0
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct WriterDocument {
-    schema: String,
-    id: String,
-    language_id: String,
-    #[serde(default = "default_uri")]
-    uri: String,
-    #[serde(default)]
-    text: String,
-    #[serde(default = "default_camera")]
-    camera: WriterCamera,
-}
-
-fn default_uri() -> String {
-    "writer://empty".into()
-}
-
-fn default_camera() -> WriterCamera {
-    WriterCamera {
-        x: 0.0,
-        y: 0.0,
-        zoom: 1.0,
-    }
-}
-
-fn empty_writer_document() -> WriterDocument {
-    WriterDocument {
-        schema: WRITER_DOCUMENT_SCHEMA.into(),
-        id: "empty".into(),
-        language_id: "plaintext".into(),
-        uri: "writer://empty".into(),
-        text: String::new(),
-        camera: default_camera(),
-    }
-}
-
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct WriterEditorSelection {
@@ -260,43 +209,6 @@ struct WriterPlayRuntime {
     engagement_input: String,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct WriterPlayEnvelope {
-    #[serde(flatten)]
-    document: WriterDocument,
-    #[serde(default)]
-    runtime: WriterPlayRuntime,
-    #[serde(default)]
-    undo_stack: Vec<WriterDocument>,
-    #[serde(default)]
-    redo_stack: Vec<WriterDocument>,
-}
-
-fn parse_envelope(document_json: &str) -> WriterPlayEnvelope {
-    if let Ok(envelope) = serde_json::from_str::<WriterPlayEnvelope>(document_json) {
-        return envelope;
-    }
-    let document: WriterDocument = serde_json::from_str(document_json).unwrap_or_else(|_| empty_writer_document());
-    WriterPlayEnvelope {
-        document,
-        runtime: WriterPlayRuntime::default(),
-        undo_stack: Vec::new(),
-        redo_stack: Vec::new(),
-    }
-}
-
-fn set_document_op(envelope: &WriterPlayEnvelope) -> String {
-    json!({ "op": "setDocument", "document": envelope }).to_string()
-}
-
-fn push_undo_writer(play: &mut WriterPlayEnvelope) {
-    play.undo_stack.push(play.document.clone());
-    if play.undo_stack.len() > 32 {
-        play.undo_stack.remove(0);
-    }
-    play.redo_stack.clear();
-}
 //#endregion 🔖Document
 
 //#region 🔖JackAst
@@ -1203,7 +1115,7 @@ fn apply_jack_rename(text: &str, occurrences: &[(usize, usize)], new_name: &str)
 }
 
 /// 🐁 Resolves tree/editor hover cross-highlighting: (highlighted AST id, tree-hover span, hover occurrences).
-fn editor_hover_context(document: &WriterDocument, runtime: &WriterPlayRuntime) -> (Option<String>, Option<(usize, usize)>, Vec<(usize, usize)>) {
+fn editor_hover_context(document: &WriterProjection, runtime: &WriterPlayRuntime) -> (Option<String>, Option<(usize, usize)>, Vec<(usize, usize)>) {
     if document.language_id != "jack" {
         return (None, None, Vec::new());
     }
@@ -1333,7 +1245,7 @@ fn empty_tree_item(id: &str, label: &str) -> UiTreeItemNode {
     }
 }
 
-fn render_document_panel(document: &WriterDocument, runtime: &WriterPlayRuntime, labels: &WriterLabels) -> UiNode {
+fn render_document_panel(document: &WriterProjection, runtime: &WriterPlayRuntime, labels: &WriterLabels) -> UiNode {
     if document.language_id != "jack" {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "writer-document".into(),
@@ -1376,7 +1288,7 @@ fn render_catalogue_panel(labels: &WriterLabels) -> UiNode {
     }])
 }
 
-fn render_inspection_panel(document: &WriterDocument, labels: &WriterLabels) -> UiNode {
+fn render_inspection_panel(document: &WriterProjection, labels: &WriterLabels) -> UiNode {
     let mut sections = vec![
         UiSectionNode {
             id: "writer-inspector.document".into(),
@@ -1418,7 +1330,7 @@ fn render_inspection_panel(document: &WriterDocument, labels: &WriterLabels) -> 
 //#endregion 🔖Panels
 
 //#region 🔖Scene
-fn render_main_scene(document: &WriterDocument, runtime: &WriterPlayRuntime) -> UiNode {
+fn render_main_scene(document: &WriterProjection, runtime: &WriterPlayRuntime) -> UiNode {
     let is_jack = document.language_id == "jack";
     let selection = runtime.editor_selection.clone().unwrap_or_default();
     let cursor = selection.end;
@@ -1507,134 +1419,130 @@ fn render_main_scene(document: &WriterDocument, runtime: &WriterPlayRuntime) -> 
 //#region 🔖Engagement
 /// 💬 Natural-language engagement parsing (premigration `applyEngagement`). Accepts both the
 /// spaced form (wgpu REPL) and the React shell's PascalCased, separator-stripped drafts (e.g.
-/// `"Font16"`, `"LineNumbers"` — see `strip_engagement_prefix`).
-fn apply_engagement(play: &mut WriterPlayEnvelope, value: &str) {
+/// `"Font16"`, `"LineNumbers"` — see `strip_engagement_prefix`). Mutates ephemeral `runtime`
+/// state in place; returns `Some(new_text)` only for the `format` branch when the source changed,
+/// so the caller can emit a `SetText` op — every other branch returns `None` (view-only).
+fn apply_engagement(runtime: &mut WriterPlayRuntime, current_text: &str, language_id: &str, value: &str) -> Option<String> {
     let trimmed = value.trim();
-    play.runtime.engagement_input.clear();
-    play.runtime.revision += 1;
+    runtime.engagement_input.clear();
+    runtime.revision += 1;
     if trimmed.is_empty() {
-        return;
+        return None;
     }
     if engagement_token_matches(trimmed, "format") {
-        let formatted = format_writer_text(&play.document.text, &play.document.language_id);
-        if formatted != play.document.text {
-            push_undo_writer(play);
-            play.document.text = formatted;
-        }
-        play.runtime.format_signal += 1;
-        return;
+        runtime.format_signal += 1;
+        let formatted = format_writer_text(current_text, language_id);
+        return (formatted != current_text).then_some(formatted);
     }
     if engagement_token_matches(trimmed, "lint") {
-        play.runtime.lint_signal += 1;
-        return;
+        runtime.lint_signal += 1;
+        return None;
     }
     if engagement_token_matches(trimmed, "line numbers") || engagement_token_matches(trimmed, "numbers") || engagement_token_matches(trimmed, "gutter") {
-        play.runtime.editor_settings.show_line_numbers = !play.runtime.editor_settings.show_line_numbers;
-        return;
+        runtime.editor_settings.show_line_numbers = !runtime.editor_settings.show_line_numbers;
+        return None;
     }
     if let Some(rest) = strip_engagement_prefix(trimmed, "font size").or_else(|| strip_engagement_prefix(trimmed, "font")) {
         if let Ok(px) = rest.parse::<u32>() {
-            play.runtime.editor_settings.font_px = px;
+            runtime.editor_settings.font_px = px;
         }
-        return;
+        return None;
     }
     if let Some(rest) = strip_engagement_prefix(trimmed, "tab size").or_else(|| strip_engagement_prefix(trimmed, "tab")) {
         if let Ok(size) = rest.parse::<u32>() {
-            play.runtime.editor_settings.tab_size = size.max(1);
+            runtime.editor_settings.tab_size = size.max(1);
         }
     }
+    None
 }
 //#endregion 🔖Engagement
 
 //#region 🔖WriterApp
 #[derive(Default)]
-struct WriterApp;
+struct WriterApp {
+    /// 🎛️ Ephemeral view state (selection, hover, editor settings, signals, engagement draft) that
+    /// lives on the app struct — never in the document projection, so it emits no history entries.
+    runtime: WriterPlayRuntime,
+}
 
-impl PluginApp for WriterApp {
+impl DocumentApp for WriterApp {
+    type Projection = WriterProjection;
+    type Op = WriterOp;
+
     fn app_id(&self) -> &str {
         WRITER_PLAY_APP_ID
     }
 
-    fn initial_document_json(&self) -> String {
-        serde_json::to_string(&WriterPlayEnvelope {
-            document: empty_writer_document(),
-            runtime: WriterPlayRuntime::default(),
-            undo_stack: Vec::new(),
-            redo_stack: Vec::new(),
-        })
-        .expect("writer document json")
+    fn document_schema(&self) -> &str {
+        WRITER_DOCUMENT_SCHEMA
     }
 
-    fn handle_action_patch_ops(
+    fn initial_projection(&self) -> WriterProjection {
+        empty_writer_projection()
+    }
+
+    fn handle_action(
         &mut self,
         action: &str,
         args: Option<&Value>,
-        document_json: &str,
+        doc: &DocumentView<'_, WriterProjection>,
         _view_state: &ViewState,
-    ) -> Vec<String> {
-        let mut play = parse_envelope(document_json);
+    ) -> ActionEmit<WriterOp> {
+        // undo/redo/checkpoint/alternative never reach here — `VcsDocumentApp` intercepts them.
+        let document = doc.projection;
+        let str_arg = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str);
+        let usize_arg = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_u64).map(|value| value as usize);
         match action {
-            "textEdit" | "setDocument" => {
-                if let Some(text) = args.and_then(|value| value.get("text")).and_then(|value| value.as_str()) {
-                    push_undo_writer(&mut play);
-                    play.document.text = text.into();
-                    play.runtime.revision += 1;
-                    return vec![set_document_op(&play)];
+            "textEdit" | "setText" => {
+                if let Some(text) = str_arg("text") {
+                    return ActionEmit::ops(vec![WriterOp::SetText { text: text.into() }]);
                 }
+                ActionEmit::default()
+            }
+            "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
-                    if let Ok(parsed) = serde_json::from_value::<WriterPlayEnvelope>(next.clone()) {
-                        return vec![set_document_op(&parsed)];
-                    }
-                    if let Ok(parsed) = serde_json::from_value::<WriterDocument>(next.clone()) {
-                        play.document = parsed;
-                        return vec![set_document_op(&play)];
+                    if let Ok(parsed) = serde_json::from_value::<WriterProjection>(next.clone()) {
+                        return ActionEmit::ops(vec![WriterOp::SetDocument { document: parsed }]);
                     }
                 }
+                ActionEmit::default()
             }
-            "setDocumentJson" => {
-                if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
-                    if let Ok(parsed) = serde_json::from_str(json_text) {
-                        push_undo_writer(&mut play);
-                        play.document = parsed;
-                        play.runtime.revision += 1;
-                        return vec![set_document_op(&play)];
+            "setDocumentJson" | "setFixtureJson" => {
+                if let Some(json_text) = str_arg("json") {
+                    if let Ok(parsed) = serde_json::from_str::<WriterProjection>(json_text) {
+                        return ActionEmit::ops(vec![WriterOp::SetDocument { document: parsed }]);
                     }
                 }
+                ActionEmit::default()
             }
-            "setText" => {
-                if let Some(text) = args.and_then(|value| value.get("text")).and_then(|value| value.as_str()) {
-                    push_undo_writer(&mut play);
-                    play.document.text = text.into();
-                    play.runtime.revision += 1;
-                    return vec![set_document_op(&play)];
-                }
+            "setActiveExample" => {
+                let example_id = str_arg("exampleId").unwrap_or("empty");
+                let document = match example_id {
+                    "jack" => serde_json::from_str::<WriterProjection>(JACK_EXAMPLE_JSON).unwrap_or_else(|_| empty_writer_projection()),
+                    "dag.jack" => serde_json::from_str::<WriterProjection>(DAG_JACK_EXAMPLE_JSON).unwrap_or_else(|_| empty_writer_projection()),
+                    _ => empty_writer_projection(),
+                };
+                ActionEmit::ops(vec![WriterOp::SetDocument { document }])
             }
             "setCamera" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
-                    if let Ok(parsed) = serde_json::from_value(camera.clone()) {
-                        play.document.camera = parsed;
-                        play.runtime.revision += 1;
-                        return vec![set_document_op(&play)];
+                    if let Ok(parsed) = serde_json::from_value::<WriterCamera>(camera.clone()) {
+                        return ActionEmit::ops(vec![WriterOp::SetCamera { camera: parsed }]);
                     }
                 }
+                ActionEmit::default()
             }
             "formatDocument" => {
-                let formatted = format_writer_text(&play.document.text, &play.document.language_id);
-                if formatted != play.document.text {
-                    push_undo_writer(&mut play);
-                    play.document.text = formatted;
+                self.runtime.format_signal += 1;
+                let formatted = format_writer_text(&document.text, &document.language_id);
+                if formatted != document.text {
+                    return ActionEmit::ops(vec![WriterOp::SetText { text: formatted }]);
                 }
-                play.runtime.format_signal += 1;
-                play.runtime.revision += 1;
-                return vec![set_document_op(&play)];
-            }
-            "requestCompletions" => {
-                play.runtime.revision += 1;
-                return vec![set_document_op(&play)];
+                ActionEmit::default()
             }
             "commitRename" => {
-                let Some(new_text) = args.and_then(|value| value.get("text")).and_then(|value| value.as_str()) else {
-                    return Vec::new();
+                let Some(new_text) = str_arg("text") else {
+                    return ActionEmit::default();
                 };
                 let occurrences: Option<Vec<(usize, usize)>> = args
                     .and_then(|value| value.get("occurrences"))
@@ -1651,55 +1559,50 @@ impl PluginApp for WriterApp {
                     })
                     .filter(|items| !items.is_empty());
                 if let Some(occurrences) = occurrences {
-                    push_undo_writer(&mut play);
-                    play.document.text = apply_jack_rename(&play.document.text, &occurrences, new_text);
-                    play.runtime.revision += 1;
-                    return vec![set_document_op(&play)];
+                    let text = apply_jack_rename(&document.text, &occurrences, new_text);
+                    return ActionEmit::ops(vec![WriterOp::SetText { text }]);
                 }
-                if let (Some(start), Some(end)) = (
-                    args.and_then(|value| value.get("start")).and_then(|value| value.as_u64()),
-                    args.and_then(|value| value.get("end")).and_then(|value| value.as_u64()),
-                ) {
-                    let start = start as usize;
-                    let end = end as usize;
-                    if start <= end && end <= play.document.text.len() {
-                        push_undo_writer(&mut play);
-                        let mut next = play.document.text.clone();
-                        next.replace_range(start..end, new_text);
-                        play.document.text = next;
-                        play.runtime.revision += 1;
-                        return vec![set_document_op(&play)];
+                if let (Some(start), Some(end)) = (usize_arg("start"), usize_arg("end")) {
+                    if start <= end && end <= document.text.len() {
+                        let mut text = document.text.clone();
+                        text.replace_range(start..end, new_text);
+                        return ActionEmit::ops(vec![WriterOp::SetText { text }]);
                     }
                 }
+                ActionEmit::default()
+            }
+            "requestCompletions" => {
+                self.runtime.revision += 1;
+                ActionEmit::default()
             }
             "lintDocument" => {
-                play.runtime.lint_signal += 1;
-                play.runtime.revision += 1;
-                return vec![set_document_op(&play)];
+                self.runtime.lint_signal += 1;
+                self.runtime.revision += 1;
+                ActionEmit::default()
             }
             "textSelect" | "setEditorSelection" => {
-                let start = args.and_then(|value| value.get("start")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
-                let end = args.and_then(|value| value.get("end")).and_then(|value| value.as_u64()).unwrap_or(start as u64) as usize;
-                play.runtime.editor_selection = Some(WriterEditorSelection { start, end });
-                if play.document.language_id == "jack" {
-                    let root = parse_jack_ast(&play.document.text);
-                    play.runtime.selected_ast_ids = jack_ast_node_for_selection(&root, start.min(end), start.max(end))
+                let start = usize_arg("start").unwrap_or(0);
+                let end = usize_arg("end").unwrap_or(start);
+                self.runtime.editor_selection = Some(WriterEditorSelection { start, end });
+                if document.language_id == "jack" {
+                    let root = parse_jack_ast(&document.text);
+                    self.runtime.selected_ast_ids = jack_ast_node_for_selection(&root, start.min(end), start.max(end))
                         .map(|node| vec![node.id.clone()])
                         .unwrap_or_default();
                 } else {
-                    play.runtime.selected_ast_ids.clear();
+                    self.runtime.selected_ast_ids.clear();
                 }
-                play.runtime.revision += 1;
-                return vec![set_document_op(&play)];
+                self.runtime.revision += 1;
+                ActionEmit::default()
             }
             "selectAstNode" => {
-                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).unwrap_or("");
-                let start = args.and_then(|value| value.get("start")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
-                let end = args.and_then(|value| value.get("end")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
-                play.runtime.selected_ast_ids = if id.is_empty() { Vec::new() } else { vec![id.into()] };
-                play.runtime.editor_selection = Some(WriterEditorSelection { start, end });
-                play.runtime.revision += 1;
-                return vec![set_document_op(&play)];
+                let id = str_arg("id").unwrap_or("");
+                let start = usize_arg("start").unwrap_or(0);
+                let end = usize_arg("end").unwrap_or(0);
+                self.runtime.selected_ast_ids = if id.is_empty() { Vec::new() } else { vec![id.into()] };
+                self.runtime.editor_selection = Some(WriterEditorSelection { start, end });
+                self.runtime.revision += 1;
+                ActionEmit::default()
             }
             "setAstSelection" => {
                 let ids: Vec<String> = args
@@ -1707,131 +1610,98 @@ impl PluginApp for WriterApp {
                     .and_then(|value| value.as_array())
                     .map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect())
                     .unwrap_or_default();
-                play.runtime.selected_ast_ids = ids.clone();
+                self.runtime.selected_ast_ids = ids.clone();
                 if let Some(id) = ids.first() {
-                    if play.document.language_id == "jack" {
-                        let root = parse_jack_ast(&play.document.text);
-                        play.runtime.editor_selection = jack_ast_node_by_id(&root, id).map(|node| WriterEditorSelection { start: node.start, end: node.end });
+                    if document.language_id == "jack" {
+                        let root = parse_jack_ast(&document.text);
+                        self.runtime.editor_selection = jack_ast_node_by_id(&root, id).map(|node| WriterEditorSelection { start: node.start, end: node.end });
                     }
                 }
-                play.runtime.revision += 1;
-                return vec![set_document_op(&play)];
+                self.runtime.revision += 1;
+                ActionEmit::default()
             }
             "setAstHover" => {
-                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
-                if id != play.runtime.tree_hovered_ast_id {
-                    play.runtime.tree_hovered_ast_id = id;
-                    play.runtime.revision += 1;
-                    return vec![set_document_op(&play)];
+                let id = str_arg("id").map(str::to_string);
+                if id != self.runtime.tree_hovered_ast_id {
+                    self.runtime.tree_hovered_ast_id = id;
+                    self.runtime.revision += 1;
                 }
+                ActionEmit::default()
             }
             "textHover" => {
-                let start = args.and_then(|value| value.get("start")).and_then(|value| value.as_u64()).map(|v| v as usize);
-                let end = args.and_then(|value| value.get("end")).and_then(|value| value.as_u64()).map(|v| v as usize);
+                let start = usize_arg("start");
+                let end = usize_arg("end");
                 let offset = match (start, end) {
                     (Some(s), Some(e)) => Some(s + e.saturating_sub(s) / 2),
                     _ => None,
                 };
-                if offset != play.runtime.editor_hover_offset {
-                    play.runtime.editor_hover_offset = offset;
-                    play.runtime.revision += 1;
-                    return vec![set_document_op(&play)];
+                if offset != self.runtime.editor_hover_offset {
+                    self.runtime.editor_hover_offset = offset;
+                    self.runtime.revision += 1;
                 }
+                ActionEmit::default()
             }
             "toggleLineNumbers" => {
-                play.runtime.editor_settings.show_line_numbers = !play.runtime.editor_settings.show_line_numbers;
-                play.runtime.revision += 1;
-                return vec![set_document_op(&play)];
+                self.runtime.editor_settings.show_line_numbers = !self.runtime.editor_settings.show_line_numbers;
+                self.runtime.revision += 1;
+                ActionEmit::default()
             }
             "setEditorSetting" => {
-                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
+                let field = str_arg("field").unwrap_or("");
                 let value = args.and_then(|value| value.get("value"));
                 match field {
                     "fontPx" => {
-                        if let Some(px) = value.and_then(|v| v.as_u64()) {
-                            play.runtime.editor_settings.font_px = px as u32;
+                        if let Some(px) = value.and_then(Value::as_u64) {
+                            self.runtime.editor_settings.font_px = px as u32;
                         }
                     }
                     "lineHeight" => {
-                        if let Some(px) = value.and_then(|v| v.as_u64()) {
-                            play.runtime.editor_settings.line_height = px as u32;
+                        if let Some(px) = value.and_then(Value::as_u64) {
+                            self.runtime.editor_settings.line_height = px as u32;
                         }
                     }
                     "tabSize" => {
-                        if let Some(px) = value.and_then(|v| v.as_u64()) {
-                            play.runtime.editor_settings.tab_size = px.max(1) as u32;
+                        if let Some(px) = value.and_then(Value::as_u64) {
+                            self.runtime.editor_settings.tab_size = px.max(1) as u32;
                         }
                     }
-                    _ => return Vec::new(),
+                    _ => return ActionEmit::default(),
                 }
-                play.runtime.revision += 1;
-                return vec![set_document_op(&play)];
+                self.runtime.revision += 1;
+                ActionEmit::default()
             }
             "engagementInput" => {
-                let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("").to_string();
-                if value != play.runtime.engagement_input {
-                    play.runtime.engagement_input = value;
-                    play.runtime.revision += 1;
-                    return vec![set_document_op(&play)];
+                let value = str_arg("value").unwrap_or("").to_string();
+                if value != self.runtime.engagement_input {
+                    self.runtime.engagement_input = value;
+                    self.runtime.revision += 1;
                 }
+                ActionEmit::default()
             }
             "engagementSubmit" => {
-                let value = args
-                    .and_then(|value| value.get("value"))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string)
-                    .unwrap_or_else(|| play.runtime.engagement_input.clone());
-                apply_engagement(&mut play, &value);
-                return vec![set_document_op(&play)];
-            }
-            "undo" => {
-                if let Some(previous) = play.undo_stack.pop() {
-                    play.redo_stack.push(play.document.clone());
-                    play.document = previous;
-                    play.runtime.revision += 1;
-                    return vec![set_document_op(&play)];
+                let value = str_arg("value").map(str::to_string).unwrap_or_else(|| self.runtime.engagement_input.clone());
+                match apply_engagement(&mut self.runtime, &document.text, &document.language_id, &value) {
+                    Some(text) => ActionEmit::ops(vec![WriterOp::SetText { text }]),
+                    None => ActionEmit::default(),
                 }
             }
-            "redo" => {
-                if let Some(next) = play.redo_stack.pop() {
-                    play.undo_stack.push(play.document.clone());
-                    play.document = next;
-                    play.runtime.revision += 1;
-                    return vec![set_document_op(&play)];
-                }
-            }
-            "setActiveExample" => {
-                let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("empty");
-                let document = match example_id {
-                    "jack" => serde_json::from_str::<WriterDocument>(JACK_EXAMPLE_JSON).unwrap_or_else(|_| empty_writer_document()),
-                    "dag.jack" => serde_json::from_str::<WriterDocument>(DAG_JACK_EXAMPLE_JSON).unwrap_or_else(|_| empty_writer_document()),
-                    _ => empty_writer_document(),
-                };
-                return vec![set_document_op(&WriterPlayEnvelope {
-                    document,
-                    runtime: WriterPlayRuntime::default(),
-                    undo_stack: Vec::new(),
-                    redo_stack: Vec::new(),
-                })];
-            }
-            _ => {}
+            _ => ActionEmit::default(),
         }
-        Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-        let play = parse_envelope(document_json);
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, WriterProjection>, view_state: &ViewState) -> UiNode {
+        let document = doc.projection;
         let labels = writer_labels(view_state);
         match body_key {
-            WRITER_PLAY_BODY_MAIN => render_main_scene(&play.document, &play.runtime),
-            WRITER_PLAY_BODY_DOCUMENT => render_document_panel(&play.document, &play.runtime, labels),
+            WRITER_PLAY_BODY_MAIN => render_main_scene(document, &self.runtime),
+            WRITER_PLAY_BODY_DOCUMENT => render_document_panel(document, &self.runtime, labels),
             WRITER_PLAY_BODY_CATALOGUE => render_catalogue_panel(labels),
-            WRITER_PLAY_BODY_INSPECTION => render_inspection_panel(&play.document, labels),
+            WRITER_PLAY_BODY_INSPECTION => render_inspection_panel(document, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn tools(&self, _document_json: &str, view_state: &ViewState) -> Vec<ToolNode> {
+    fn tools(&self, _doc: &DocumentView<'_, WriterProjection>, view_state: &ViewState) -> Vec<ToolNode> {
         let labels = writer_labels(view_state);
         vec![
             tool_button("writer-format", "align-left", labels.format, play_action(WRITER_PLAY_CONTROLLER_ID, "formatDocument", None)).with_category(ToolCategory::Actions),
@@ -1839,9 +1709,8 @@ impl PluginApp for WriterApp {
         ]
     }
 
-    fn window_engagements(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-        let play = parse_envelope(document_json);
-        let settings = &play.runtime.editor_settings;
+    fn window_engagements(&self, _doc: &DocumentView<'_, WriterProjection>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+        let settings = &self.runtime.editor_settings;
         let labels = writer_labels(view_state);
         let engagement = WindowEngagement {
             session_active: Some(false),
@@ -1855,7 +1724,7 @@ impl PluginApp for WriterApp {
             }]),
             input: Some(WindowEngagementInput {
                 id: Some("writer-engagement-input".into()),
-                value: Some(play.runtime.engagement_input.clone()),
+                value: Some(self.runtime.engagement_input.clone()),
                 placeholder: Some(labels.engagement_placeholder.into()),
                 disabled: None,
                 on_change: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "engagementInput", None)),
@@ -1875,9 +1744,8 @@ impl PluginApp for WriterApp {
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), engagement)])
     }
 
-    fn window_measures(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let play = parse_envelope(document_json);
-        let settings = &play.runtime.editor_settings;
+    fn window_measures(&self, _doc: &DocumentView<'_, WriterProjection>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        let settings = &self.runtime.editor_settings;
         let labels = writer_labels(view_state);
         let measures = vec![
             WindowMeasure::Slider {
@@ -1959,7 +1827,7 @@ fn create_writer_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("empty", "Empty", serde_json::to_string(&empty_writer_document()).unwrap())
+    .example("empty", "Empty", serde_json::to_string(&empty_writer_projection()).unwrap())
     .example("jack", "Jack", JACK_EXAMPLE_JSON)
     .example("dag.jack", "Dag Jack", DAG_JACK_EXAMPLE_JSON)
     .program("writer", "Writer", "text.document")
@@ -1978,21 +1846,35 @@ semio_framework_plugin::semio_plugin! {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+
+    fn meta() -> ActionMeta {
+        ActionMeta { actor: "local".into(), instance_id: 1 }
+    }
+
+    fn new_app() -> VcsDocumentApp<WriterApp> {
+        VcsDocumentApp::new(WriterApp::default())
+    }
+
+    /// ✍️ Loads the canonical jack fixture into the store, returning the app ready to exercise.
+    fn app_with_jack() -> VcsDocumentApp<WriterApp> {
+        let mut app = new_app();
+        app.handle_action("setActiveExample", Some(&json!({ "exampleId": "jack" })), &ViewState::default(), &meta()).expect("load jack");
+        app
+    }
 
     #[test]
     fn renders_text_editor_scene() {
-        let app = WriterApp;
-        let document = serde_json::to_string(&empty_writer_document()).unwrap();
-        let node = app.render(WRITER_PLAY_BODY_MAIN, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(WRITER_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("text-editor"));
     }
 
     #[test]
     fn renders_document_tree_for_jack() {
-        let app = WriterApp;
-        let document = JACK_EXAMPLE_JSON.to_string();
-        let node = app.render(WRITER_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(WRITER_PLAY_BODY_DOCUMENT, Some(JACK_EXAMPLE_JSON), &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("\"type\":\"tree\""));
         assert!(json.contains("Query"));
@@ -2000,38 +1882,28 @@ mod tests {
 
     #[test]
     fn renders_catalogue_panel() {
-        let app = WriterApp;
-        let document = serde_json::to_string(&empty_writer_document()).unwrap();
-        let node = app.render(WRITER_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("jack"));
     }
 
     #[test]
     fn format_document_reformats_jack_query() {
-        let mut app = WriterApp;
-        let document = serde_json::to_string(&WriterPlayEnvelope {
-            document: WriterDocument {
-                schema: WRITER_DOCUMENT_SCHEMA.into(),
-                id: "jack".into(),
-                language_id: "jack".into(),
-                uri: "writer://jack".into(),
-                text: "MATCH (a:Piece)   WHERE a.name='core' RETURN a.name".into(),
-                camera: default_camera(),
-            },
-            runtime: WriterPlayRuntime::default(),
-            undo_stack: Vec::new(),
-            redo_stack: Vec::new(),
-        })
-        .unwrap();
-        let ops = app.handle_action_patch_ops("formatDocument", None, &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let envelope: WriterPlayEnvelope = serde_json::from_str(
-            &serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string(),
-        )
-        .unwrap();
-        assert!(envelope.document.text.contains('\n'));
-        assert_eq!(envelope.runtime.format_signal, 1);
+        let mut app = app_with_jack();
+        app.handle_action("setText", Some(&json!({ "text": "MATCH (a:Piece)   WHERE a.name='core' RETURN a.name" })), &ViewState::default(), &meta()).expect("set text");
+        let result = app.handle_action("formatDocument", None, &ViewState::default(), &meta()).expect("format");
+        assert_eq!(result.operations.len(), 1);
+        assert!(app.projection().expect("projection").text.contains('\n'));
+    }
+
+    #[test]
+    fn format_document_without_change_emits_no_op() {
+        // A no-op format (already-formatted or non-jack empty doc) bumps the format signal but must
+        // not record a history entry.
+        let mut app = new_app();
+        let result = app.handle_action("formatDocument", None, &ViewState::default(), &meta()).expect("format");
+        assert!(result.operations.is_empty());
     }
 
     #[test]
@@ -2041,17 +1913,42 @@ mod tests {
     }
 
     #[test]
-    fn set_text_action_updates_document() {
-        let mut app = WriterApp;
-        let document = serde_json::to_string(&empty_writer_document()).unwrap();
-        let ops = app.handle_action_patch_ops(
-            "setText",
-            Some(&json!({ "text": "MATCH (a) RETURN a" })),
-            &document,
-            &ViewState::default(),
-        );
-        assert_eq!(ops.len(), 1);
-        assert!(ops[0].contains("MATCH"));
+    fn set_text_action_updates_projection() {
+        let mut app = new_app();
+        let result = app.handle_action("setText", Some(&json!({ "text": "MATCH (a) RETURN a" })), &ViewState::default(), &meta()).expect("set text");
+        assert_eq!(result.operations.len(), 1);
+        assert_eq!(app.projection().expect("projection").text, "MATCH (a) RETURN a");
+    }
+
+    #[test]
+    fn set_text_undo_redo_round_trips_through_the_wrapper() {
+        let mut app = new_app();
+        app.handle_action("setText", Some(&json!({ "text": "first" })), &ViewState::default(), &meta()).expect("first");
+        app.handle_action("setText", Some(&json!({ "text": "second" })), &ViewState::default(), &meta()).expect("second");
+        assert_eq!(app.projection().expect("projection").text, "second");
+        let undo = app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        assert!(undo.operations.is_empty());
+        assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
+        assert_eq!(app.projection().expect("projection").text, "first");
+        app.handle_action("redo", None, &ViewState::default(), &meta()).expect("redo");
+        assert_eq!(app.projection().expect("projection").text, "second");
+    }
+
+    #[test]
+    fn set_camera_action_updates_projection() {
+        let mut app = new_app();
+        let result = app.handle_action("setCamera", Some(&json!({ "camera": { "x": 3.0, "y": 4.0, "zoom": 2.0 } })), &ViewState::default(), &meta()).expect("set camera");
+        assert_eq!(result.operations.len(), 1);
+        let projection = app.projection().expect("projection");
+        assert_eq!(projection.camera.x, 3.0);
+        assert_eq!(projection.camera.zoom, 2.0);
+    }
+
+    #[test]
+    fn view_action_emits_no_operations() {
+        let mut app = new_app();
+        let result = app.handle_action("toggleLineNumbers", None, &ViewState::default(), &meta()).expect("toggle");
+        assert!(result.operations.is_empty());
     }
 
     const CANONICAL_QUERY: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = 'core'\nRETURN a.name, b.name";
@@ -2137,45 +2034,32 @@ mod tests {
 
     #[test]
     fn commit_rename_with_occurrences_renames_all_spans() {
-        let mut app = WriterApp;
-        let document = serde_json::to_string(&WriterPlayEnvelope {
-            document: WriterDocument {
-                schema: WRITER_DOCUMENT_SCHEMA.into(),
-                id: "jack".into(),
-                language_id: "jack".into(),
-                uri: "writer://jack".into(),
-                text: CANONICAL_QUERY.into(),
-                camera: default_camera(),
-            },
-            runtime: WriterPlayRuntime::default(),
-            undo_stack: Vec::new(),
-            redo_stack: Vec::new(),
-        })
-        .unwrap();
+        let mut app = app_with_jack();
         let occurrences = jack_variable_occurrences(CANONICAL_QUERY, "a");
         assert_eq!(occurrences.len(), 3);
         let occurrences_json: Vec<Value> = occurrences.iter().map(|(s, e)| json!({ "start": s, "end": e })).collect();
-        let ops = app.handle_action_patch_ops(
+        let result = app.handle_action(
             "commitRename",
             Some(&json!({ "occurrences": occurrences_json, "text": "piece" })),
-            &document,
             &ViewState::default(),
-        );
-        assert_eq!(ops.len(), 1);
-        let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
-        assert_eq!(envelope.document.text.matches("piece").count(), 3);
-        assert_eq!(envelope.document.text.matches("a:Piece").count(), 0);
+            &meta(),
+        )
+        .expect("commit rename");
+        assert_eq!(result.operations.len(), 1);
+        let text = app.projection().expect("projection").text;
+        assert_eq!(text.matches("piece").count(), 3);
+        assert_eq!(text.matches("a:Piece").count(), 0);
     }
 
     #[test]
     fn engagement_submit_parses_font_size() {
-        let mut app = WriterApp;
-        let document = serde_json::to_string(&empty_writer_document()).unwrap();
-        let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "font 16" })), &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
-        assert_eq!(envelope.runtime.editor_settings.font_px, 16);
-        assert_eq!(envelope.runtime.engagement_input, "");
+        let mut app = new_app();
+        let result = app.handle_action("engagementSubmit", Some(&json!({ "value": "font 16" })), &ViewState::default(), &meta()).expect("submit");
+        // Font size is ephemeral view state — no history entry.
+        assert!(result.operations.is_empty());
+        let measures = app.window_measures(&ViewState::default());
+        let main = measures.get(WRITER_PLAY_WINDOW_KIND).expect("main measures");
+        assert!(main.iter().any(|m| matches!(m, WindowMeasure::Slider { id, value, .. } if id == "writer-font-size-measure" && *value == 16.0)));
     }
 
     #[test]
@@ -2183,28 +2067,38 @@ mod tests {
         // The React shell PascalCases and strips separators from every draft before submitting it
         // (`normalizeEngagementActionText`), so "font 16" arrives as "Font16", "tab 4" as "Tab4",
         // and "line numbers" as "LineNumbers".
-        let mut app = WriterApp;
-        let document = serde_json::to_string(&empty_writer_document()).unwrap();
+        let mut app = new_app();
+        let before_toggle = app
+            .window_engagements(&ViewState::default())
+            .get(WRITER_PLAY_WINDOW_KIND)
+            .and_then(|engagement| engagement.options.as_ref())
+            .and_then(|options| options.first())
+            .and_then(|option| option.pressed)
+            .expect("line-numbers pressed state");
 
-        let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "Font16" })), &document, &ViewState::default());
-        let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
-        assert_eq!(envelope.runtime.editor_settings.font_px, 16);
+        app.handle_action("engagementSubmit", Some(&json!({ "value": "Font16" })), &ViewState::default(), &meta()).expect("font");
+        app.handle_action("engagementSubmit", Some(&json!({ "value": "Tab4" })), &ViewState::default(), &meta()).expect("tab");
+        app.handle_action("engagementSubmit", Some(&json!({ "value": "LineNumbers" })), &ViewState::default(), &meta()).expect("line numbers");
 
-        let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "Tab4" })), &document, &ViewState::default());
-        let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
-        assert_eq!(envelope.runtime.editor_settings.tab_size, 4);
+        let measures = app.window_measures(&ViewState::default());
+        let main = measures.get(WRITER_PLAY_WINDOW_KIND).expect("main measures");
+        assert!(main.iter().any(|m| matches!(m, WindowMeasure::Slider { id, value, .. } if id == "writer-font-size-measure" && *value == 16.0)));
+        assert!(main.iter().any(|m| matches!(m, WindowMeasure::Slider { id, value, .. } if id == "writer-tab-size-measure" && *value == 4.0)));
 
-        let before_toggle: WriterPlayEnvelope = serde_json::from_str(&document).unwrap();
-        let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "LineNumbers" })), &document, &ViewState::default());
-        let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
-        assert_eq!(envelope.runtime.editor_settings.show_line_numbers, !before_toggle.runtime.editor_settings.show_line_numbers);
+        let after_toggle = app
+            .window_engagements(&ViewState::default())
+            .get(WRITER_PLAY_WINDOW_KIND)
+            .and_then(|engagement| engagement.options.as_ref())
+            .and_then(|options| options.first())
+            .and_then(|option| option.pressed)
+            .expect("line-numbers pressed state");
+        assert_eq!(after_toggle, !before_toggle);
     }
 
     #[test]
     fn window_measures_expose_font_line_height_tab_and_toggle() {
-        let app = WriterApp;
-        let document = serde_json::to_string(&empty_writer_document()).unwrap();
-        let measures = app.window_measures(&document, &ViewState::default());
+        let mut app = new_app();
+        let measures = app.window_measures(&ViewState::default());
         let main = measures.get(WRITER_PLAY_WINDOW_KIND).expect("main measures");
         assert_eq!(main.len(), 4);
         assert!(main.iter().any(|m| matches!(m, WindowMeasure::Toggle { id, .. } if id == "writer-line-numbers-measure")));
@@ -2212,9 +2106,8 @@ mod tests {
 
     #[test]
     fn window_engagements_expose_format_lint_placeholder() {
-        let app = WriterApp;
-        let document = serde_json::to_string(&empty_writer_document()).unwrap();
-        let engagements = app.window_engagements(&document, &ViewState::default());
+        let mut app = new_app();
+        let engagements = app.window_engagements(&ViewState::default());
         let main = engagements.get(WRITER_PLAY_WINDOW_KIND).expect("main engagement");
         let placeholder = main.input.as_ref().and_then(|i| i.placeholder.as_ref()).expect("placeholder");
         assert!(placeholder.contains("Format"));
@@ -2223,9 +2116,8 @@ mod tests {
 
     #[test]
     fn tools_include_format_and_lint_buttons() {
-        let app = WriterApp;
-        let document = serde_json::to_string(&empty_writer_document()).unwrap();
-        let tools = app.tools(&document, &ViewState::default());
+        let mut app = new_app();
+        let tools = app.tools(&ViewState::default());
         let json = serde_json::to_string(&tools).unwrap();
         assert!(json.contains("writer-format"));
         assert!(json.contains("writer-lint"));
@@ -2233,9 +2125,8 @@ mod tests {
 
     #[test]
     fn scene_emits_placeholders_selectable_spans_and_newline_gates_for_jack() {
-        let app = WriterApp;
-        let document = JACK_EXAMPLE_JSON.to_string();
-        let node = app.render(WRITER_PLAY_BODY_MAIN, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(WRITER_PLAY_BODY_MAIN, Some(JACK_EXAMPLE_JSON), &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("placeholdersJson"));
         assert!(json.contains("selectableSpansJson"));
@@ -2244,16 +2135,14 @@ mod tests {
 
     #[test]
     fn set_ast_hover_updates_tree_highlight_and_scene_hover() {
-        let mut app = WriterApp;
-        let document = JACK_EXAMPLE_JSON.to_string();
-        let root = parse_jack_ast(&parse_envelope(&document).document.text);
-        let ops = app.handle_action_patch_ops("setAstHover", Some(&json!({ "id": root.id })), &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let next_document = serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string();
-        let tree_node = app.render(WRITER_PLAY_BODY_DOCUMENT, &next_document, &ViewState::default());
+        let mut app = app_with_jack();
+        let root = parse_jack_ast(&app.projection().expect("projection").text);
+        let result = app.handle_action("setAstHover", Some(&json!({ "id": root.id })), &ViewState::default(), &meta()).expect("hover");
+        assert!(result.operations.is_empty());
+        let tree_node = app.render(WRITER_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render tree");
         let tree_json = serde_json::to_string(&tree_node).unwrap();
         assert!(tree_json.contains(&root.id));
-        let scene_node = app.render(WRITER_PLAY_BODY_MAIN, &next_document, &ViewState::default());
+        let scene_node = app.render(WRITER_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render scene");
         let scene_value = serde_json::to_value(&scene_node).unwrap();
         let hover_json = scene_value["textEditor"]["hoverJson"].as_str().expect("hoverJson string");
         let hover_range: Value = serde_json::from_str(hover_json).unwrap();
@@ -2263,7 +2152,7 @@ mod tests {
 
     #[test]
     fn manifest_includes_dag_jack_example() {
-        let bundle = writer_bundle();
+        let bundle = __semio_plugin_bundle();
         let manifest = &bundle.manifest;
         assert!(manifest.apps.iter().any(|a| a.id == WRITER_PLAY_APP_ID));
         assert!(manifest.examples.iter().any(|e| e.id == "dag.jack" && e.app_id == WRITER_PLAY_APP_ID));
@@ -2271,54 +2160,49 @@ mod tests {
 
     #[test]
     fn set_active_example_loads_jack_fixture() {
-        let mut app = WriterApp;
-        let document = serde_json::to_string(&empty_writer_document()).unwrap();
-        let ops = app.handle_action_patch_ops("setActiveExample", Some(&json!({ "exampleId": "jack" })), &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
-        assert_eq!(envelope.document.id, "jack");
-        assert!(envelope.document.text.contains("MATCH"));
+        let mut app = new_app();
+        let result = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "jack" })), &ViewState::default(), &meta()).expect("load");
+        assert_eq!(result.operations.len(), 1);
+        let projection = app.projection().expect("projection");
+        assert_eq!(projection.id, "jack");
+        assert!(projection.text.contains("MATCH"));
     }
 
     #[test]
     fn set_active_example_loads_dag_jack_fixture() {
-        let mut app = WriterApp;
-        let document = serde_json::to_string(&empty_writer_document()).unwrap();
-        let ops = app.handle_action_patch_ops("setActiveExample", Some(&json!({ "exampleId": "dag.jack" })), &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
-        assert_eq!(envelope.document.id, "dag-jack");
+        let mut app = new_app();
+        let result = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "dag.jack" })), &ViewState::default(), &meta()).expect("load");
+        assert_eq!(result.operations.len(), 1);
+        assert_eq!(app.projection().expect("projection").id, "dag-jack");
     }
 
     #[test]
     fn set_active_example_falls_back_to_empty_document() {
-        let mut app = WriterApp;
-        let document = JACK_EXAMPLE_JSON.to_string();
-        let ops = app.handle_action_patch_ops("setActiveExample", Some(&json!({ "exampleId": "empty" })), &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let envelope: WriterPlayEnvelope = serde_json::from_str(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string()).unwrap();
-        assert_eq!(envelope.document.id, "empty");
-        assert_eq!(envelope.document.text, "");
+        let mut app = app_with_jack();
+        let result = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "empty" })), &ViewState::default(), &meta()).expect("load");
+        assert_eq!(result.operations.len(), 1);
+        let projection = app.projection().expect("projection");
+        assert_eq!(projection.id, "empty");
+        assert_eq!(projection.text, "");
     }
 
     #[test]
     fn writer_labels_resolve_native_by_default() {
-        let app = WriterApp;
-        let document = serde_json::to_string(&empty_writer_document()).unwrap();
-        let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, &document, &ViewState::default());
+        let mut app = new_app();
+        let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
         let inspection_json = serde_json::to_string(&inspection).unwrap();
         assert!(inspection_json.contains("\"Document\""));
         assert!(inspection_json.contains("\"Camera\""));
-        let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
         let catalogue_json = serde_json::to_string(&catalogue).unwrap();
         assert!(catalogue_json.contains("\"Language\""));
         assert!(catalogue_json.contains("Cypher-inspired"));
-        let tools = app.tools(&document, &ViewState::default());
+        let tools = app.tools(&ViewState::default());
         let tools_json = serde_json::to_string(&tools).unwrap();
         assert!(tools_json.contains("\"category\":\"actions\""));
         assert!(tools_json.contains("\"Format\""));
         assert!(tools_json.contains("\"Lint\""));
-        let measures = app.window_measures(&document, &ViewState::default());
+        let measures = app.window_measures(&ViewState::default());
         let measures_json = serde_json::to_string(&measures).unwrap();
         assert!(measures_json.contains("Font size"));
         assert!(measures_json.contains("Line numbers"));
@@ -2327,26 +2211,25 @@ mod tests {
 
     #[test]
     fn writer_labels_resolve_german_locale() {
-        let app = WriterApp;
-        let document = serde_json::to_string(&empty_writer_document()).unwrap();
+        let mut app = new_app();
         let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, &document, &view_state);
+        let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &view_state).expect("render");
         let inspection_json = serde_json::to_string(&inspection).unwrap();
         assert!(inspection_json.contains("Dokument"));
         assert!(inspection_json.contains("Kamera"));
         assert!(!inspection_json.contains("\"Camera\""));
-        let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &view_state).expect("render");
         let catalogue_json = serde_json::to_string(&catalogue).unwrap();
         assert!(catalogue_json.contains("Sprache"));
-        let tools = app.tools(&document, &view_state);
+        let tools = app.tools(&view_state);
         let tools_json = serde_json::to_string(&tools).unwrap();
         assert!(tools_json.contains("Formatieren"));
         assert!(tools_json.contains("Prüfen"));
-        let measures = app.window_measures(&document, &view_state);
+        let measures = app.window_measures(&view_state);
         let measures_json = serde_json::to_string(&measures).unwrap();
         assert!(measures_json.contains("Schriftgröße"));
         assert!(measures_json.contains("Zeilennummern"));
-        let engagements = app.window_engagements(&document, &view_state);
+        let engagements = app.window_engagements(&view_state);
         let engagements_json = serde_json::to_string(&engagements).unwrap();
         assert!(engagements_json.contains("Texteditor"));
     }

@@ -1,22 +1,21 @@
 //! ✏️ Draw plugin — declarative draw app bundled as a hot-swappable WASM component.
 
 use draw::{
-    apply_draw_edit_op, create_draw_boolean_layer, create_draw_path_layer, create_draw_trace_layer, create_layer_by_kind,
+    create_draw_boolean_layer, create_draw_path_layer, create_draw_trace_layer, create_layer_by_kind,
     default_draw_document, default_layer_base, draw_layer_descendant_leaf_ids, draw_layer_world_bounds,
-    draw_play_boolean_child_row_id, draw_play_layer_id_from_tree_row_id, draw_play_layers_tree_row_id, draw_transform_to_matrix,
+    draw_op_for_layer_field, draw_play_boolean_child_row_id, draw_play_layer_id_from_tree_row_id, draw_play_layers_tree_row_id, draw_transform_to_matrix,
     empty_draw_projection, find_draw_layer, find_draw_layer_location, flatten_draw_document_to_scene_nodes,
-    flatten_draw_layers, layer_base, layer_id, layer_kind_label, layer_to_path_segments, patch_layer_field,
+    flatten_draw_layers, layer_base, layer_id, layer_kind_label, layer_to_path_segments,
     rgba_to_hex, DrawDocument, DrawLayerNode, DrawOp, PathSegment, DRAW_BLEND_MODES, DRAW_BOOLEAN_OPS, DRAW_DOCUMENT_SCHEMA,
 };
-use semio_framework_plugin::{SurfaceKind,
+use semio_framework_plugin::{SurfaceKind, ActionEmit, DocumentApp, DocumentView,
     build_canvas_2d_scene, create_default_layout, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_select, ui_inspector_mixed_slider, ui_inspector_mixed_text, ui_inspector_mixed_toggle,
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, tool_collection, tool_toggle, App, Canvas2dScene,
     ActionDescriptor, PanelGroup, ToolCategory, ToolNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSelectItem,
     UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
-    WindowEngagementInput,
+    WindowEngagementInput, WindowEngagementStatus,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
-    layout::WindowEngagementStatus,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -75,71 +74,6 @@ fn draw_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
         action: action.into(),
         args,
     }
-}
-
-fn parse_interaction(view_state: &ViewState) -> DrawInteractionState {
-    if let Some(selection_json) = &view_state.selection_json {
-        if let Ok(ids) = serde_json::from_str::<Vec<String>>(selection_json) {
-            return DrawInteractionState { selected_ids: ids, ..Default::default() };
-        }
-        if let Ok(value) = serde_json::from_str::<DrawInteractionState>(selection_json) {
-            return value;
-        }
-    }
-    view_state
-        .panel_json
-        .as_deref()
-        .and_then(|json| serde_json::from_str(json).ok())
-        .unwrap_or_default()
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct DrawPlayEnvelope {
-    #[serde(flatten)]
-    document: DrawDocument,
-    #[serde(default)]
-    undo_stack: Vec<DrawDocument>,
-    #[serde(default)]
-    redo_stack: Vec<DrawDocument>,
-    #[serde(default)]
-    interaction: DrawInteractionState,
-}
-
-fn parse_envelope(document_json: &str) -> DrawPlayEnvelope {
-    if let Ok(envelope) = serde_json::from_str::<DrawPlayEnvelope>(document_json) {
-        return envelope;
-    }
-    let document: DrawDocument = serde_json::from_str(document_json).unwrap_or_else(|_| empty_draw_projection());
-    DrawPlayEnvelope {
-        document,
-        undo_stack: Vec::new(),
-        redo_stack: Vec::new(),
-        interaction: DrawInteractionState::default(),
-    }
-}
-
-fn set_document_op(envelope: &DrawPlayEnvelope) -> String {
-    json!({ "op": "setDocument", "document": envelope }).to_string()
-}
-
-fn interaction_state(envelope: &DrawPlayEnvelope, view_state: &ViewState) -> DrawInteractionState {
-    if !envelope.interaction.selected_ids.is_empty()
-        || envelope.interaction.hovered_id.is_some()
-        || !envelope.interaction.engagement_input.is_empty()
-        || envelope.interaction.drag.is_some()
-    {
-        return envelope.interaction.clone();
-    }
-    parse_interaction(view_state)
-}
-
-fn push_undo(play: &mut DrawPlayEnvelope) {
-    play.undo_stack.push(play.document.clone());
-    if play.undo_stack.len() > 32 {
-        play.undo_stack.remove(0);
-    }
-    play.redo_stack.clear();
 }
 
 fn canvas_point_to_world(camera: &draw::DrawCamera, x: f64, y: f64, viewport_w: f64, viewport_h: f64) -> (f64, f64) {
@@ -296,15 +230,15 @@ fn best_pick_layer_id(targets: &[DrawPickTarget]) -> Option<String> {
     targets.iter().max_by_key(|target| target.generality).map(|target| target.layer_id.clone())
 }
 
-fn apply_point_pick(play: &mut DrawPlayEnvelope, world: [f64; 2], shift: bool, ctrl: bool, meta: bool, include_control_points: bool) {
-    let tolerance = DRAW_PICK_TOLERANCE_PX / play.document.camera.zoom.max(1e-6);
-    let targets = resolve_pick_targets_at(&play.document, world, tolerance, include_control_points);
+fn apply_point_pick(interaction: &mut DrawInteractionState, doc: &DrawDocument, world: [f64; 2], shift: bool, ctrl: bool, meta: bool, include_control_points: bool) {
+    let tolerance = DRAW_PICK_TOLERANCE_PX / doc.camera.zoom.max(1e-6);
+    let targets = resolve_pick_targets_at(doc, world, tolerance, include_control_points);
     let picked = best_pick_layer_id(&targets);
     let mode = selection_merge_mode(shift, ctrl, meta);
-    play.interaction.selected_ids = match picked {
-        Some(id) => merge_selection(mode, &play.interaction.selected_ids, &[id]),
+    interaction.selected_ids = match picked {
+        Some(id) => merge_selection(mode, &interaction.selected_ids, &[id]),
         None if mode == "default" => Vec::new(),
-        None => play.interaction.selected_ids.clone(),
+        None => interaction.selected_ids.clone(),
     };
 }
 
@@ -377,13 +311,15 @@ fn draft_preview_segments(tool: &str, points: &[[f64; 2]], cursor: [f64; 2]) -> 
     segments
 }
 
-fn commit_shape_drag(play: &mut DrawPlayEnvelope, tool: &str, start: [f64; 2], end: [f64; 2]) -> Option<String> {
+/// 🔷 Emits the ops that commit a shape drag (add the shape layer + return to direct-select) and
+/// records the new layer as the current selection; empty when the drag is too small to commit.
+fn commit_shape_drag(interaction: &mut DrawInteractionState, doc: &DrawDocument, tool: &str, start: [f64; 2], end: [f64; 2]) -> Vec<DrawOp> {
     let x = start[0].min(end[0]);
     let y = start[1].min(end[1]);
     let width = (end[0] - start[0]).abs();
     let height = (end[1] - start[1]).abs();
     if width < 1.0 && height < 1.0 {
-        return None;
+        return Vec::new();
     }
     let layer = DrawLayerNode::Shape(draw::DrawShapeBody {
         base: default_layer_base(match tool {
@@ -408,16 +344,18 @@ fn commit_shape_drag(play: &mut DrawPlayEnvelope, tool: &str, start: [f64; 2], e
         polygon: None,
     });
     let select_id = layer_id(&layer).to_string();
-    push_undo(play);
-    play.document = apply_draw_edit_op(&play.document, &DrawOp::AddLayer { parent_id: None, index: Some(play.document.layers.len()), layer });
-    play.document = apply_draw_edit_op(&play.document, &DrawOp::SetActiveTool { tool: "selectDirect".into() });
-    play.interaction.selected_ids = vec![select_id.clone()];
-    Some(select_id)
+    interaction.selected_ids = vec![select_id];
+    vec![
+        DrawOp::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer },
+        DrawOp::SetActiveTool { tool: "selectDirect".into() },
+    ]
 }
 
-fn commit_draft(play: &mut DrawPlayEnvelope, tool: &str, points: &[[f64; 2]]) -> Option<String> {
+/// ✒️ Emits the ops that commit a freehand/polygon draft into a path or polygon layer and records it
+/// as the current selection; empty when the draft has too few points to form a shape.
+fn commit_draft(interaction: &mut DrawInteractionState, doc: &DrawDocument, tool: &str, points: &[[f64; 2]]) -> Vec<DrawOp> {
     if points.len() < 2 {
-        return None;
+        return Vec::new();
     }
     let layer = if tool == "pen" {
         let mut segments = vec![PathSegment::Move { to: points[0] }];
@@ -437,31 +375,33 @@ fn commit_draft(play: &mut DrawPlayEnvelope, tool: &str, points: &[[f64; 2]]) ->
         })
     };
     let select_id = layer_id(&layer).to_string();
-    push_undo(play);
-    play.document = apply_draw_edit_op(&play.document, &DrawOp::AddLayer { parent_id: None, index: Some(play.document.layers.len()), layer });
-    play.document = apply_draw_edit_op(&play.document, &DrawOp::SetActiveTool { tool: "selectDirect".into() });
-    play.interaction.selected_ids = vec![select_id.clone()];
-    Some(select_id)
+    interaction.selected_ids = vec![select_id];
+    vec![
+        DrawOp::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer },
+        DrawOp::SetActiveTool { tool: "selectDirect".into() },
+    ]
 }
 
-fn commit_trace_at(play: &mut DrawPlayEnvelope, world: [f64; 2]) -> Option<String> {
-    let tolerance = DRAW_PICK_TOLERANCE_PX / play.document.camera.zoom.max(1e-6);
-    let hit_layer_id = best_pick_layer_id(&resolve_pick_targets_at(&play.document, world, tolerance, false));
+/// 🖍️ Emits the ops that add a trace layer over the picked image (or first asset) and records it as
+/// the current selection; empty when no bitmap source is available.
+fn commit_trace_at(interaction: &mut DrawInteractionState, doc: &DrawDocument, world: [f64; 2]) -> Vec<DrawOp> {
+    let tolerance = DRAW_PICK_TOLERANCE_PX / doc.camera.zoom.max(1e-6);
+    let hit_layer_id = best_pick_layer_id(&resolve_pick_targets_at(doc, world, tolerance, false));
     let source_key = hit_layer_id
-        .and_then(|id| find_draw_layer(&play.document, &id).cloned())
+        .and_then(|id| find_draw_layer(doc, &id).cloned())
         .and_then(|layer| match layer {
             DrawLayerNode::Image(image) => Some(image.image_key),
             _ => None,
         })
-        .or_else(|| play.document.assets.as_ref().and_then(|assets| assets.keys().next().cloned()));
-    let source_key = source_key?;
+        .or_else(|| doc.assets.as_ref().and_then(|assets| assets.keys().next().cloned()));
+    let Some(source_key) = source_key else { return Vec::new() };
     let layer = create_draw_trace_layer("Trace", &source_key);
     let select_id = layer_id(&layer).to_string();
-    push_undo(play);
-    play.document = apply_draw_edit_op(&play.document, &DrawOp::AddLayer { parent_id: None, index: Some(play.document.layers.len()), layer });
-    play.document = apply_draw_edit_op(&play.document, &DrawOp::SetActiveTool { tool: "selectDirect".into() });
-    play.interaction.selected_ids = vec![select_id.clone()];
-    Some(select_id)
+    interaction.selected_ids = vec![select_id];
+    vec![
+        DrawOp::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer },
+        DrawOp::SetActiveTool { tool: "selectDirect".into() },
+    ]
 }
 //#endregion 🔖ToolStateMachine
 
@@ -641,178 +581,125 @@ fn draw_labels(view_state: &ViewState) -> &'static DrawLabels {
 
 //#region 🔖DrawApp
 #[derive(Default)]
-struct DrawApp;
+struct DrawApp {
+    interaction: DrawInteractionState,
+}
 
-impl semio_framework_plugin::PluginApp for DrawApp {
+impl DocumentApp for DrawApp {
+    type Projection = DrawDocument;
+    type Op = DrawOp;
+
     fn app_id(&self) -> &str {
         DRAW_PLAY_APP_ID
     }
 
-    fn initial_document_json(&self) -> String {
-        serde_json::to_string(&DrawPlayEnvelope {
-            document: default_draw_document("empty", None),
-            undo_stack: Vec::new(),
-            redo_stack: Vec::new(),
-            interaction: DrawInteractionState::default(),
-        })
-        .expect("draw document json")
+    fn document_schema(&self) -> &str {
+        DRAW_DOCUMENT_SCHEMA
     }
 
-    fn handle_action_patch_ops(
+    fn initial_projection(&self) -> DrawDocument {
+        default_draw_document("empty", None)
+    }
+
+    fn handle_action(
         &mut self,
         action: &str,
         args: Option<&Value>,
-        document_json: &str,
-        view_state: &ViewState,
-    ) -> Vec<String> {
-        let mut play = parse_envelope(document_json);
-        let interaction = interaction_state(&play, view_state);
+        doc: &DocumentView<'_, DrawDocument>,
+        _view_state: &ViewState,
+    ) -> ActionEmit<DrawOp> {
+        let document = doc.projection;
         match action {
-            "setDocument" => {
+            //#region 🔖ContentOps
+            "setDocument" | "commitDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
-                    if let Ok(parsed) = serde_json::from_value::<DrawPlayEnvelope>(next.clone()) {
-                        return vec![set_document_op(&parsed)];
-                    }
-                    if let Ok(parsed) = serde_json::from_value::<DrawDocument>(next.clone()) {
-                        play.document = parsed;
-                        return vec![set_document_op(&play)];
+                    if let Ok(document) = serde_json::from_value::<DrawDocument>(next.clone()) {
+                        return ActionEmit::ops(vec![DrawOp::SetDocument { document }]);
                     }
                 }
+                ActionEmit::default()
             }
-            "setSelection" => {
-                play.interaction.selected_ids = args
-                    .and_then(|value| value.get("ids"))
-                    .and_then(|value| serde_json::from_value(value.clone()).ok())
-                    .unwrap_or_default();
-                return vec![set_document_op(&play)];
-            }
-            "setHover" => {
-                play.interaction.hovered_id = args
-                    .and_then(|value| value.get("id"))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string);
-                return vec![set_document_op(&play)];
-            }
-            "undo" => {
-                if let Some(previous) = play.undo_stack.pop() {
-                    play.redo_stack.push(play.document.clone());
-                    play.document = previous;
-                    return vec![set_document_op(&play)];
-                }
-            }
-            "redo" => {
-                if let Some(next) = play.redo_stack.pop() {
-                    play.undo_stack.push(play.document.clone());
-                    play.document = next;
-                    return vec![set_document_op(&play)];
-                }
-            }
-            "selectAll" => {
-                play.interaction.selected_ids = flatten_draw_layers(&play.document.layers)
-                    .into_iter()
-                    .map(|layer| layer_id(layer).to_string())
-                    .collect();
-                return vec![set_document_op(&play)];
-            }
-            "clearSelection" => {
-                play.interaction.selected_ids.clear();
-                return vec![set_document_op(&play)];
-            }
-            "setActiveTool" => {
-                if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
-                    push_undo(&mut play);
-                    play.document = apply_draw_edit_op(&play.document, &DrawOp::SetActiveTool { tool: tool.into() });
-                    return vec![set_document_op(&play)];
-                }
-            }
+            "setActiveTool" => match args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
+                Some(tool) => ActionEmit::ops(vec![DrawOp::SetActiveTool { tool: tool.into() }]),
+                None => ActionEmit::default(),
+            },
             "setCamera" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
-                    if let Ok(camera) = serde_json::from_value(camera.clone()) {
-                        play.document = apply_draw_edit_op(&play.document, &DrawOp::SetCamera { camera });
-                        return vec![set_document_op(&play)];
+                    if let Ok(camera) = serde_json::from_value::<draw::DrawCamera>(camera.clone()) {
+                        if camera == document.camera {
+                            return ActionEmit::default();
+                        }
+                        return ActionEmit { ops: vec![DrawOp::SetCamera { camera }], coalesce_key: Some("camera".into()), ..Default::default() };
                     }
                 }
+                ActionEmit::default()
             }
             "setCameraZoom" => {
                 let zoom = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-                let mut camera = play.document.camera.clone();
+                let mut camera = document.camera.clone();
                 camera.zoom = zoom;
-                play.document = apply_draw_edit_op(&play.document, &DrawOp::SetCamera { camera });
-                return vec![set_document_op(&play)];
+                if camera == document.camera {
+                    return ActionEmit::default();
+                }
+                ActionEmit { ops: vec![DrawOp::SetCamera { camera }], coalesce_key: Some("camera".into()), ..Default::default() }
             }
             "setSelectedOpacity" => {
                 let opacity = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-                let mut next = play.document.clone();
-                for layer_id in &interaction.selected_ids {
-                    next = apply_draw_edit_op(&next, &DrawOp::SetLayerOpacity { layer_id: layer_id.clone(), opacity });
+                let ops: Vec<DrawOp> = self
+                    .interaction
+                    .selected_ids
+                    .iter()
+                    .filter(|id| find_draw_layer(document, id).is_some())
+                    .map(|id| DrawOp::SetLayerOpacity { layer_id: id.clone(), opacity })
+                    .collect();
+                if ops.is_empty() {
+                    return ActionEmit::default();
                 }
-                push_undo(&mut play);
-                play.document = next;
-                return vec![set_document_op(&play)];
-            }
-            "engagementInput" => {
-                play.interaction.engagement_input = args
-                    .and_then(|value| value.get("value"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or(&interaction.engagement_input)
-                    .into();
-                return vec![set_document_op(&play)];
+                ActionEmit { ops, coalesce_key: Some("opacity".into()), ..Default::default() }
             }
             "engagementSubmit" => {
                 let value = args
                     .and_then(|value| value.get("value"))
                     .and_then(|value| value.as_str())
-                    .unwrap_or(&interaction.engagement_input)
-                    .trim();
-                if value.is_empty() || interaction.selected_ids.len() != 1 {
-                    return Vec::new();
+                    .map(str::to_string)
+                    .unwrap_or_else(|| self.interaction.engagement_input.clone());
+                let value = value.trim();
+                if value.is_empty() || self.interaction.selected_ids.len() != 1 {
+                    return ActionEmit::default();
                 }
-                push_undo(&mut play);
-                play.document = apply_draw_edit_op(
-                    &play.document,
-                    &DrawOp::SetLayerName {
-                        layer_id: interaction.selected_ids[0].clone(),
-                        name: value.into(),
-                    },
-                );
-                return vec![set_document_op(&play)];
+                ActionEmit::ops(vec![DrawOp::SetLayerName { layer_id: self.interaction.selected_ids[0].clone(), name: value.into() }])
             }
             "setActiveExample" => {
                 let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
-                push_undo(&mut play);
-                if example_id == "empty" || example_id.is_empty() {
-                    play.document = default_draw_document("empty", None);
+                let next = if example_id == "empty" || example_id.is_empty() {
+                    Some(default_draw_document("empty", None))
                 } else if example_id == DRAW_PLAY_EXAMPLE_DEFAULT_ID {
-                    play.document = serde_json::from_str(SEMIO_DRAW_EXAMPLE_JSON).unwrap_or_else(|_| empty_draw_projection());
+                    Some(serde_json::from_str(SEMIO_DRAW_EXAMPLE_JSON).unwrap_or_else(|_| empty_draw_projection()))
+                } else {
+                    None
+                };
+                match next {
+                    Some(document) => {
+                        self.interaction.selected_ids.clear();
+                        ActionEmit::ops(vec![DrawOp::SetDocument { document }])
+                    }
+                    None => ActionEmit::default(),
                 }
-                play.interaction.selected_ids.clear();
-                return vec![set_document_op(&play)];
             }
             "setFixtureJson" => {
                 let json_text = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()).unwrap_or("");
                 if json_text.contains(DRAW_DOCUMENT_SCHEMA) {
-                    if let Ok(parsed) = serde_json::from_str(json_text) {
-                        push_undo(&mut play);
-                        play.document = parsed;
-                        return vec![set_document_op(&play)];
+                    if let Ok(document) = serde_json::from_str::<DrawDocument>(json_text) {
+                        return ActionEmit::ops(vec![DrawOp::SetDocument { document }]);
                     }
                 }
+                ActionEmit::default()
             }
             "addLayer" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("path");
                 let layer = create_layer_by_kind(kind);
-                let select_id = layer_id(&layer).to_string();
-                push_undo(&mut play);
-                play.document = apply_draw_edit_op(
-                    &play.document,
-                    &DrawOp::AddLayer {
-                        parent_id: None,
-                        index: Some(play.document.layers.len()),
-                        layer,
-                    },
-                );
-                play.interaction.selected_ids = vec![select_id.clone()];
-                return vec![set_document_op(&play), json!({ "op": "selectLayer", "layerId": select_id }).to_string()];
+                self.interaction.selected_ids = vec![layer_id(&layer).to_string()];
+                ActionEmit::ops(vec![DrawOp::AddLayer { parent_id: None, index: Some(document.layers.len()), layer }])
             }
             "dropLayerKind" | "moveLayer" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str());
@@ -828,60 +715,39 @@ impl semio_framework_plugin::PluginApp for DrawApp {
                 if action == "dropLayerKind" {
                     if let Some(kind) = kind {
                         let layer = create_layer_by_kind(kind);
-                        let select_id = layer_id(&layer).to_string();
-                        let (parent_id, index) = resolve_reorder_target(&play.document, target_row_id, drop_position);
-                        push_undo(&mut play);
-                        play.document = apply_draw_edit_op(
-                            &play.document,
-                            &DrawOp::AddLayer { parent_id, index: Some(index), layer },
-                        );
-                        play.interaction.selected_ids = vec![select_id.clone()];
-                        return vec![set_document_op(&play), json!({ "op": "selectLayer", "layerId": select_id }).to_string()];
+                        let (parent_id, index) = resolve_reorder_target(document, target_row_id, drop_position);
+                        self.interaction.selected_ids = vec![layer_id(&layer).to_string()];
+                        return ActionEmit::ops(vec![DrawOp::AddLayer { parent_id, index: Some(index), layer }]);
                     }
                 } else if let Some(layer_id) = layer_id_arg {
-                    let (parent_id, index) = resolve_reorder_target(&play.document, target_row_id, drop_position);
-                    push_undo(&mut play);
-                    play.document = apply_draw_edit_op(
-                        &play.document,
-                        &DrawOp::ReorderLayer {
-                            layer_id: layer_id.into(),
-                            parent_id,
-                            index,
-                        },
-                    );
-                    return vec![set_document_op(&play)];
+                    let (parent_id, index) = resolve_reorder_target(document, target_row_id, drop_position);
+                    return ActionEmit::ops(vec![DrawOp::ReorderLayer { layer_id: layer_id.into(), parent_id, index }]);
                 }
+                ActionEmit::default()
             }
             "deleteLayer" => {
                 let layer_id = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()).unwrap_or("");
-                if !layer_id.is_empty() {
-                    push_undo(&mut play);
-                    play.document = apply_draw_edit_op(&play.document, &DrawOp::RemoveLayer { layer_id: layer_id.into() });
-                    play.interaction.selected_ids.retain(|id| id != layer_id);
-                    return vec![set_document_op(&play)];
+                if layer_id.is_empty() {
+                    return ActionEmit::default();
                 }
+                self.interaction.selected_ids.retain(|id| id != layer_id);
+                ActionEmit::ops(vec![DrawOp::RemoveLayer { layer_id: layer_id.into() }])
             }
             "duplicateLayer" => {
                 let layer_id = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()).unwrap_or("");
-                if !layer_id.is_empty() {
-                    push_undo(&mut play);
-                    play.document = apply_draw_edit_op(&play.document, &DrawOp::DuplicateLayer { layer_id: layer_id.into() });
-                    return vec![set_document_op(&play)];
+                if layer_id.is_empty() {
+                    return ActionEmit::default();
                 }
+                ActionEmit::ops(vec![DrawOp::DuplicateLayer { layer_id: layer_id.into() }])
             }
             "toggleLayerVisible" => {
                 let layer_id = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()).unwrap_or("");
-                if let Some(layer) = find_draw_layer(&play.document, layer_id) {
-                    let visible = !layer_base(layer).visible;
-                    push_undo(&mut play);
-                    play.document = apply_draw_edit_op(
-                        &play.document,
-                        &DrawOp::SetLayerVisible {
-                            layer_id: layer_id.into(),
-                            visible,
-                        },
-                    );
-                    return vec![set_document_op(&play)];
+                match find_draw_layer(document, layer_id) {
+                    Some(layer) => {
+                        let visible = !layer_base(layer).visible;
+                        ActionEmit::ops(vec![DrawOp::SetLayerVisible { layer_id: layer_id.into(), visible }])
+                    }
+                    None => ActionEmit::default(),
                 }
             }
             "combineBoolean" => {
@@ -891,22 +757,13 @@ impl semio_framework_plugin::PluginApp for DrawApp {
                     .and_then(|value| value.as_array())
                     .map(|values| values.iter().filter_map(|entry| entry.as_str().map(str::to_string)).collect::<Vec<_>>())
                     .filter(|values: &Vec<String>| !values.is_empty())
-                    .unwrap_or_else(|| interaction.selected_ids.clone());
-                if ids.len() >= 2 {
-                    let layer = create_draw_boolean_layer("Boolean", op, ids);
-                    let select_id = layer_id(&layer).to_string();
-                    push_undo(&mut play);
-                    play.document = apply_draw_edit_op(
-                        &play.document,
-                        &DrawOp::AddLayer {
-                            parent_id: None,
-                            index: Some(play.document.layers.len()),
-                            layer,
-                        },
-                    );
-                    play.interaction.selected_ids = vec![select_id.clone()];
-                    return vec![set_document_op(&play), json!({ "op": "selectLayer", "layerId": select_id }).to_string()];
+                    .unwrap_or_else(|| self.interaction.selected_ids.clone());
+                if ids.len() < 2 {
+                    return ActionEmit::default();
                 }
+                let layer = create_draw_boolean_layer("Boolean", op, ids);
+                self.interaction.selected_ids = vec![layer_id(&layer).to_string()];
+                ActionEmit::ops(vec![DrawOp::AddLayer { parent_id: None, index: Some(document.layers.len()), layer }])
             }
             "patchLayer" => {
                 let layer_id = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -916,10 +773,9 @@ impl semio_framework_plugin::PluginApp for DrawApp {
                     .or_else(|| args.and_then(|value| value.get("pressed")))
                     .cloned()
                     .unwrap_or(Value::Null);
-                if !layer_id.is_empty() && !field.is_empty() {
-                    push_undo(&mut play);
-                    play.document = patch_layer_field(&play.document, layer_id, field, &value);
-                    return vec![set_document_op(&play)];
+                match draw_op_for_layer_field(document, layer_id, field, &value) {
+                    Some(op) => ActionEmit::ops(vec![op]),
+                    None => ActionEmit::default(),
                 }
             }
             "patchLayers" => {
@@ -934,23 +790,50 @@ impl semio_framework_plugin::PluginApp for DrawApp {
                     .or_else(|| args.and_then(|value| value.get("pressed")))
                     .cloned()
                     .unwrap_or(Value::Null);
-                if !field.is_empty() {
-                    push_undo(&mut play);
-                    for layer_id in layer_ids {
-                        play.document = patch_layer_field(&play.document, &layer_id, field, &value);
-                    }
-                    return vec![set_document_op(&play)];
+                let ops: Vec<DrawOp> = layer_ids
+                    .iter()
+                    .filter_map(|id| draw_op_for_layer_field(document, id, field, &value))
+                    .collect();
+                if ops.is_empty() {
+                    return ActionEmit::default();
                 }
+                ActionEmit::ops(ops)
             }
-            "commitDocument" => {
-                if let Some(next) = args.and_then(|value| value.get("document")) {
-                    if let Ok(parsed) = serde_json::from_value::<DrawDocument>(next.clone()) {
-                        push_undo(&mut play);
-                        play.document = parsed;
-                        return vec![set_document_op(&play)];
-                    }
+            //#endregion 🔖ContentOps
+            //#region 🔖ViewState
+            "setSelection" => {
+                self.interaction.selected_ids = args
+                    .and_then(|value| value.get("ids"))
+                    .and_then(|value| serde_json::from_value(value.clone()).ok())
+                    .unwrap_or_default();
+                ActionEmit::default()
+            }
+            "setHover" => {
+                self.interaction.hovered_id = args
+                    .and_then(|value| value.get("id"))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                ActionEmit::default()
+            }
+            "selectAll" => {
+                self.interaction.selected_ids = flatten_draw_layers(&document.layers)
+                    .into_iter()
+                    .map(|layer| layer_id(layer).to_string())
+                    .collect();
+                ActionEmit::default()
+            }
+            "clearSelection" => {
+                self.interaction.selected_ids.clear();
+                ActionEmit::default()
+            }
+            "engagementInput" => {
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
+                    self.interaction.engagement_input = value.to_string();
                 }
+                ActionEmit::default()
             }
+            //#endregion 🔖ViewState
+            //#region 🔖CanvasGestures
             "canvasPointerDown" => {
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
@@ -959,44 +842,42 @@ impl semio_framework_plugin::PluginApp for DrawApp {
                 let shift = args.and_then(|value| value.get("shift")).and_then(|value| value.as_bool()).unwrap_or(false);
                 let ctrl = args.and_then(|value| value.get("ctrl")).and_then(|value| value.as_bool()).unwrap_or(false);
                 let meta = args.and_then(|value| value.get("meta")).and_then(|value| value.as_bool()).unwrap_or(false);
-                let (Some(x), Some(y)) = (x, y) else { return Vec::new() };
-                let (world_x, world_y) = canvas_point_to_world(&play.document.camera, x, y, viewport_w, viewport_h);
+                let (Some(x), Some(y)) = (x, y) else { return ActionEmit::default() };
+                let (world_x, world_y) = canvas_point_to_world(&document.camera, x, y, viewport_w, viewport_h);
                 let world = [world_x, world_y];
-                let tool = play.document.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
+                let tool = document.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
                 match tool.as_str() {
                     "selectMarquee" | "selectLasso" => {
-                        play.interaction.drag = Some(DrawDragState::Marquee {
+                        self.interaction.drag = Some(DrawDragState::Marquee {
                             method: if tool == "selectLasso" { "lasso".into() } else { "rectangle".into() },
                             start: world,
                             cursor: world,
                             merge: selection_merge_mode(shift, ctrl, meta).into(),
                             active: false,
                         });
-                        return vec![set_document_op(&play)];
+                        ActionEmit::default()
                     }
                     "shapeRect" | "shapeEllipse" | "shapeLine" => {
-                        play.interaction.drag = Some(DrawDragState::Shape { tool: tool.clone(), start: world, cursor: world });
-                        return vec![set_document_op(&play)];
+                        self.interaction.drag = Some(DrawDragState::Shape { tool: tool.clone(), start: world, cursor: world });
+                        ActionEmit::default()
                     }
                     "pen" | "shapePolygon" => {
-                        let matches_existing = matches!(&play.interaction.drag, Some(DrawDragState::Draft { tool: existing, .. }) if existing == &tool);
+                        let matches_existing = matches!(&self.interaction.drag, Some(DrawDragState::Draft { tool: existing, .. }) if existing == &tool);
                         if matches_existing {
-                            if let Some(DrawDragState::Draft { points, cursor, .. }) = &mut play.interaction.drag {
+                            if let Some(DrawDragState::Draft { points, cursor, .. }) = &mut self.interaction.drag {
                                 points.push(world);
                                 *cursor = world;
                             }
                         } else {
-                            play.interaction.drag = Some(DrawDragState::Draft { tool: tool.clone(), points: vec![world], cursor: world });
+                            self.interaction.drag = Some(DrawDragState::Draft { tool: tool.clone(), points: vec![world], cursor: world });
                         }
-                        return vec![set_document_op(&play)];
+                        ActionEmit::default()
                     }
                     "trace" => {
-                        if let Some(select_id) = commit_trace_at(&mut play, world) {
-                            return vec![set_document_op(&play), json!({ "op": "selectLayer", "layerId": select_id }).to_string()];
-                        }
-                        return Vec::new();
+                        let ops = commit_trace_at(&mut self.interaction, document, world);
+                        if ops.is_empty() { ActionEmit::default() } else { ActionEmit::ops(ops) }
                     }
-                    _ => {}
+                    _ => ActionEmit::default(),
                 }
             }
             "canvasPointerMove" => {
@@ -1004,14 +885,14 @@ impl semio_framework_plugin::PluginApp for DrawApp {
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
                 let viewport_w = args.and_then(|value| value.get("width")).and_then(|value| value.as_f64()).unwrap_or(800.0);
                 let viewport_h = args.and_then(|value| value.get("height")).and_then(|value| value.as_f64()).unwrap_or(600.0);
-                let (Some(x), Some(y)) = (x, y) else { return Vec::new() };
-                let (world_x, world_y) = canvas_point_to_world(&play.document.camera, x, y, viewport_w, viewport_h);
+                let (Some(x), Some(y)) = (x, y) else { return ActionEmit::default() };
+                let (world_x, world_y) = canvas_point_to_world(&document.camera, x, y, viewport_w, viewport_h);
                 let world = [world_x, world_y];
-                if let Some(drag) = &mut play.interaction.drag {
+                if let Some(drag) = &mut self.interaction.drag {
                     match drag {
                         DrawDragState::Marquee { start, cursor, active, .. } => {
                             let distance = ((world[0] - start[0]).powi(2) + (world[1] - start[1]).powi(2)).sqrt();
-                            let threshold_world = DRAW_MARQUEE_THRESHOLD_PX / play.document.camera.zoom.max(1e-6);
+                            let threshold_world = DRAW_MARQUEE_THRESHOLD_PX / document.camera.zoom.max(1e-6);
                             *active = *active || distance >= threshold_world;
                             *cursor = world;
                         }
@@ -1019,17 +900,13 @@ impl semio_framework_plugin::PluginApp for DrawApp {
                             *cursor = world;
                         }
                     }
-                    return vec![set_document_op(&play)];
+                    return ActionEmit::default();
                 }
-                let tool = play.document.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
+                let tool = document.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
                 let include_control_points = tool == "selectDirect";
-                let tolerance = DRAW_PICK_TOLERANCE_PX / play.document.camera.zoom.max(1e-6);
-                let next_hover = best_pick_layer_id(&resolve_pick_targets_at(&play.document, world, tolerance, include_control_points));
-                if next_hover == play.interaction.hovered_id {
-                    return Vec::new();
-                }
-                play.interaction.hovered_id = next_hover;
-                return vec![set_document_op(&play)];
+                let tolerance = DRAW_PICK_TOLERANCE_PX / document.camera.zoom.max(1e-6);
+                self.interaction.hovered_id = best_pick_layer_id(&resolve_pick_targets_at(document, world, tolerance, include_control_points));
+                ActionEmit::default()
             }
             "canvasPointerUp" => {
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
@@ -1039,85 +916,69 @@ impl semio_framework_plugin::PluginApp for DrawApp {
                 let shift = args.and_then(|value| value.get("shift")).and_then(|value| value.as_bool()).unwrap_or(false);
                 let ctrl = args.and_then(|value| value.get("ctrl")).and_then(|value| value.as_bool()).unwrap_or(false);
                 let meta = args.and_then(|value| value.get("meta")).and_then(|value| value.as_bool()).unwrap_or(false);
-                let (Some(x), Some(y)) = (x, y) else { return Vec::new() };
-                let (world_x, world_y) = canvas_point_to_world(&play.document.camera, x, y, viewport_w, viewport_h);
+                let (Some(x), Some(y)) = (x, y) else { return ActionEmit::default() };
+                let (world_x, world_y) = canvas_point_to_world(&document.camera, x, y, viewport_w, viewport_h);
                 let world = [world_x, world_y];
-                match play.interaction.drag.clone() {
-                    Some(DrawDragState::Draft { .. }) => {
-                        return Vec::new();
-                    }
+                match self.interaction.drag.clone() {
+                    Some(DrawDragState::Draft { .. }) => ActionEmit::default(),
                     Some(DrawDragState::Marquee { start, merge, active, .. }) => {
-                        play.interaction.drag = None;
+                        self.interaction.drag = None;
                         if active {
                             let crossing = world[0] < start[0];
-                            let hits = marquee_layer_hits(&play.document, start, world, crossing);
-                            play.interaction.selected_ids = merge_selection(&merge, &play.interaction.selected_ids, &hits);
+                            let hits = marquee_layer_hits(document, start, world, crossing);
+                            self.interaction.selected_ids = merge_selection(&merge, &self.interaction.selected_ids, &hits);
                         } else {
-                            apply_point_pick(&mut play, world, shift, ctrl, meta, false);
+                            apply_point_pick(&mut self.interaction, document, world, shift, ctrl, meta, false);
                         }
-                        return vec![set_document_op(&play)];
+                        ActionEmit::default()
                     }
                     Some(DrawDragState::Shape { tool, start, .. }) => {
-                        play.interaction.drag = None;
-                        if let Some(select_id) = commit_shape_drag(&mut play, &tool, start, world) {
-                            return vec![set_document_op(&play), json!({ "op": "selectLayer", "layerId": select_id }).to_string()];
-                        }
-                        return vec![set_document_op(&play)];
+                        self.interaction.drag = None;
+                        let ops = commit_shape_drag(&mut self.interaction, document, &tool, start, world);
+                        if ops.is_empty() { ActionEmit::default() } else { ActionEmit::ops(ops) }
                     }
                     None => {
-                        let tool = play.document.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
+                        let tool = document.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
                         if tool == "selectDirect" {
-                            apply_point_pick(&mut play, world, shift, ctrl, meta, true);
-                            return vec![set_document_op(&play)];
+                            apply_point_pick(&mut self.interaction, document, world, shift, ctrl, meta, true);
                         }
+                        ActionEmit::default()
                     }
                 }
             }
-            "canvasDoubleClick" => {
-                if let Some(DrawDragState::Draft { tool, points, .. }) = play.interaction.drag.clone() {
-                    play.interaction.drag = None;
-                    if let Some(select_id) = commit_draft(&mut play, &tool, &points) {
-                        return vec![set_document_op(&play), json!({ "op": "selectLayer", "layerId": select_id }).to_string()];
-                    }
-                    return vec![set_document_op(&play)];
+            "canvasDoubleClick" | "canvasCommitDraft" => {
+                if let Some(DrawDragState::Draft { tool, points, .. }) = self.interaction.drag.clone() {
+                    self.interaction.drag = None;
+                    let ops = commit_draft(&mut self.interaction, document, &tool, &points);
+                    if ops.is_empty() { ActionEmit::default() } else { ActionEmit::ops(ops) }
+                } else {
+                    ActionEmit::default()
                 }
             }
             "canvasEscape" => {
-                if play.interaction.drag.is_some() {
-                    play.interaction.drag = None;
-                    return vec![set_document_op(&play)];
-                }
+                self.interaction.drag = None;
+                ActionEmit::default()
             }
-            "canvasCommitDraft" => {
-                if let Some(DrawDragState::Draft { tool, points, .. }) = play.interaction.drag.clone() {
-                    play.interaction.drag = None;
-                    if let Some(select_id) = commit_draft(&mut play, &tool, &points) {
-                        return vec![set_document_op(&play), json!({ "op": "selectLayer", "layerId": select_id }).to_string()];
-                    }
-                    return vec![set_document_op(&play)];
-                }
-            }
-            _ => {}
+            //#endregion 🔖CanvasGestures
+            _ => ActionEmit::default(),
         }
-        Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-        let play = parse_envelope(document_json);
-        let interaction = interaction_state(&play, view_state);
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, DrawDocument>, view_state: &ViewState) -> UiNode {
+        let document = doc.projection;
+        let interaction = &self.interaction;
         let labels = draw_labels(view_state);
         match body_key {
-            DRAW_PLAY_BODY_COMPOSITE => render_canvas(&play.document, &interaction),
-            DRAW_PLAY_BODY_LAYERS => render_layers_panel(&play.document, &interaction, labels),
-            DRAW_PLAY_BODY_CATALOGUE => render_catalogue_panel(&play.document, &interaction, labels),
-            DRAW_PLAY_BODY_PROPERTIES => render_properties_panel(&play.document, &interaction, labels),
+            DRAW_PLAY_BODY_COMPOSITE => render_canvas(document, interaction),
+            DRAW_PLAY_BODY_LAYERS => render_layers_panel(document, interaction, labels),
+            DRAW_PLAY_BODY_CATALOGUE => render_catalogue_panel(document, interaction, labels),
+            DRAW_PLAY_BODY_PROPERTIES => render_properties_panel(document, interaction, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn tools(&self, document_json: &str, view_state: &ViewState) -> Vec<ToolNode> {
-        let play = parse_envelope(document_json);
-        let active = play.document.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
+    fn tools(&self, doc: &DocumentView<'_, DrawDocument>, view_state: &ViewState) -> Vec<ToolNode> {
+        let active = doc.projection.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
         let labels = draw_labels(view_state);
         let toggle = |id: &str, icon: &str, label: &str| {
             tool_toggle(
@@ -2105,21 +1966,30 @@ semio_framework_plugin::semio_plugin! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use draw::{create_draw_shape_layer_rect, DrawLayerNode};
-    use semio_framework_plugin::PluginApp;
+    use draw::create_draw_shape_layer_rect;
+    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
 
-    fn view_with_selection(ids: &[&str]) -> ViewState {
-        ViewState {
-            selection_json: Some(serde_json::to_string(&ids.iter().map(|id| id.to_string()).collect::<Vec<_>>()).unwrap()),
-            ..Default::default()
-        }
+    fn meta() -> ActionMeta {
+        ActionMeta { actor: "local".into(), instance_id: 1 }
+    }
+
+    fn new_app() -> VcsDocumentApp<DrawApp> {
+        VcsDocumentApp::new(DrawApp::default())
+    }
+
+    fn first_layer_id(app: &VcsDocumentApp<DrawApp>) -> String {
+        layer_id(&app.projection().expect("materialize projection").layers[0]).to_string()
+    }
+
+    fn last_layer_id(app: &VcsDocumentApp<DrawApp>) -> String {
+        let projection = app.projection().expect("materialize projection");
+        layer_id(projection.layers.last().expect("layer")).to_string()
     }
 
     #[test]
     fn renders_canvas_scene_with_segments() {
-        let app = DrawApp;
-        let document = SEMIO_DRAW_EXAMPLE_JSON.to_string();
-        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, Some(SEMIO_DRAW_EXAMPLE_JSON), &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("canvas-2d"));
         let value = serde_json::to_value(&node).unwrap();
@@ -2131,9 +2001,8 @@ mod tests {
 
     #[test]
     fn layers_panel_lists_default_layer() {
-        let app = DrawApp;
-        let document = serde_json::to_string(&default_draw_document("test", None)).unwrap();
-        let node = app.render(DRAW_PLAY_BODY_LAYERS, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(DRAW_PLAY_BODY_LAYERS, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("draw-play-layers.add.path"));
         assert!(json.contains("Layer 1"));
@@ -2141,52 +2010,54 @@ mod tests {
 
     #[test]
     fn catalogue_panel_lists_boolean_ops() {
-        let app = DrawApp;
-        let document = serde_json::to_string(&empty_draw_projection()).unwrap();
-        let node = app.render(DRAW_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(DRAW_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("draw-play-catalogue.path"));
         assert!(json.contains("Boolean union"));
     }
 
     #[test]
-    fn add_layer_action_appends_path() {
-        let mut app = DrawApp;
-        let document = serde_json::to_string(&empty_draw_projection()).unwrap();
-        let ops = app.handle_action_patch_ops("addLayer", Some(&json!({ "kind": "path" })), &document, &ViewState::default());
-        assert_eq!(ops.len(), 2);
-        let next: DrawDocument = serde_json::from_str(&document).unwrap();
-        let applied = apply_ops(&next, &ops);
-        assert!(applied.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Path(_))));
+    fn add_layer_action_emits_op_and_appends_path() {
+        let mut app = new_app();
+        let before = app.projection().unwrap().layers.len();
+        let result = app.handle_action("addLayer", Some(&json!({ "kind": "shape:rect" })), &ViewState::default(), &meta()).expect("add layer");
+        assert_eq!(result.operations.len(), 1);
+        let projection = app.projection().unwrap();
+        assert_eq!(projection.layers.len(), before + 1);
+        assert!(projection.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Shape(shape) if shape.shape_kind == "rect")));
     }
 
     #[test]
-    fn patch_layers_opacity_updates_selection() {
-        let mut app = DrawApp;
-        let mut document = default_draw_document("patch", None);
-        let layer_id = draw::layer_id(&document.layers[0]).to_string();
-        let document_json = serde_json::to_string(&document).unwrap();
-        let ops = app.handle_action_patch_ops(
-            "patchLayers",
-            Some(&json!({ "layerIds": [layer_id.clone()], "field": "opacity", "value": 0.5 })),
-            &document_json,
-            &view_with_selection(&[layer_id.as_str()]),
-        );
-        document = apply_ops(&document, &ops);
-        assert!((layer_base(&document.layers[0]).opacity - 0.5).abs() < f64::EPSILON);
+    fn patch_layers_opacity_emits_granular_op() {
+        let mut app = new_app();
+        let id = first_layer_id(&app);
+        let result = app
+            .handle_action("patchLayers", Some(&json!({ "layerIds": [id], "field": "opacity", "value": 0.5 })), &ViewState::default(), &meta())
+            .expect("patch");
+        assert_eq!(result.operations.len(), 1);
+        let projection = app.projection().unwrap();
+        assert!((layer_base(&projection.layers[0]).opacity - 0.5).abs() < f64::EPSILON);
     }
 
     #[test]
-    fn inspector_renders_orientation_fields_for_selection() {
-        let app = DrawApp;
-        let document = default_draw_document("inspector", None);
-        let layer_id = draw::layer_id(&document.layers[0]).to_string();
-        let document_json = serde_json::to_string(&document).unwrap();
-        let node = app.render(
-            DRAW_PLAY_BODY_PROPERTIES,
-            &document_json,
-            &view_with_selection(&[layer_id.as_str()]),
-        );
+    fn patch_layer_name_emits_op_and_changes_projection() {
+        let mut app = new_app();
+        let id = first_layer_id(&app);
+        let result = app
+            .handle_action("patchLayer", Some(&json!({ "layerId": id, "field": "name", "value": "Renamed" })), &ViewState::default(), &meta())
+            .expect("patch");
+        assert_eq!(result.operations.len(), 1);
+        assert_eq!(layer_base(&app.projection().unwrap().layers[0]).name, "Renamed");
+    }
+
+    #[test]
+    fn set_selection_view_action_emits_no_ops_and_drives_inspector() {
+        let mut app = new_app();
+        let id = first_layer_id(&app);
+        let result = app.handle_action("setSelection", Some(&json!({ "ids": [id] })), &ViewState::default(), &meta()).expect("select");
+        assert!(result.operations.is_empty(), "selection is ephemeral view state, not a document op");
+        let node = app.render(DRAW_PLAY_BODY_PROPERTIES, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Orientation"));
         assert!(json.contains("Position X"));
@@ -2194,11 +2065,10 @@ mod tests {
 
     #[test]
     fn set_active_tool_updates_document() {
-        let mut app = DrawApp;
-        let document = serde_json::to_string(&empty_draw_projection()).unwrap();
-        let ops = app.handle_action_patch_ops("setActiveTool", Some(&json!({ "tool": "pen" })), &document, &ViewState::default());
-        let next: DrawDocument = apply_ops(&empty_draw_projection(), &ops);
-        assert_eq!(next.active_tool.as_deref(), Some("pen"));
+        let mut app = new_app();
+        let result = app.handle_action("setActiveTool", Some(&json!({ "tool": "pen" })), &ViewState::default(), &meta()).expect("tool");
+        assert_eq!(result.operations.len(), 1);
+        assert_eq!(app.projection().unwrap().active_tool.as_deref(), Some("pen"));
     }
 
     #[test]
@@ -2210,22 +2080,16 @@ mod tests {
     }
 
     #[test]
-    fn combine_boolean_requires_two_ids() {
-        let mut app = DrawApp;
-        let mut document = default_draw_document("bool", None);
-        let second = create_draw_shape_layer_rect("Rect");
-        let second_id = draw::layer_id(&second).to_string();
-        document.layers.push(second);
-        let first_id = draw::layer_id(&document.layers[0]).to_string();
-        let document_json = serde_json::to_string(&document).unwrap();
-        let ops = app.handle_action_patch_ops(
-            "combineBoolean",
-            Some(&json!({ "op": "union", "ids": [first_id, second_id] })),
-            &document_json,
-            &ViewState::default(),
-        );
-        let next = apply_ops(&document, &ops);
-        assert!(next.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Boolean(_))));
+    fn combine_boolean_creates_boolean_layer() {
+        let mut app = new_app();
+        let first_id = first_layer_id(&app);
+        app.handle_action("addLayer", Some(&json!({ "kind": "shape:rect" })), &ViewState::default(), &meta()).expect("add rect");
+        let second_id = last_layer_id(&app);
+        let result = app
+            .handle_action("combineBoolean", Some(&json!({ "op": "union", "ids": [first_id, second_id] })), &ViewState::default(), &meta())
+            .expect("combine");
+        assert_eq!(result.operations.len(), 1);
+        assert!(app.projection().unwrap().layers.iter().any(|layer| matches!(layer, DrawLayerNode::Boolean(_))));
     }
 
     #[test]
@@ -2236,85 +2100,53 @@ mod tests {
         assert!((world_y - 55.0).abs() < 1e-9);
     }
 
-    fn dispatch(app: &mut DrawApp, document_json: &str, action: &str, args: Option<Value>, view_state: &ViewState) -> String {
-        let ops = app.handle_action_patch_ops(action, args.as_ref(), document_json, view_state);
-        for op_json in ops.iter().rev() {
-            if let Ok(op) = serde_json::from_str::<Value>(op_json) {
-                if op.get("op").and_then(|value| value.as_str()) == Some("setDocument") {
-                    if let Some(document) = op.get("document") {
-                        return document.to_string();
-                    }
-                }
-            }
-        }
-        document_json.to_string()
-    }
-
-    fn envelope_json(document: DrawDocument) -> String {
-        serde_json::to_string(&DrawPlayEnvelope {
-            document,
-            undo_stack: Vec::new(),
-            redo_stack: Vec::new(),
-            interaction: DrawInteractionState::default(),
-        })
-        .unwrap()
-    }
-
     #[test]
     fn shape_rect_drag_commits_rectangle_layer() {
-        let mut app = DrawApp;
-        let mut document = default_draw_document("shape-test", None);
-        document.active_tool = Some("shapeRect".into());
-        document.layers.clear();
-        let mut state = envelope_json(document);
-        state = dispatch(&mut app, &state, "canvasPointerDown", Some(json!({ "x": 500.0, "y": 400.0, "width": 1000.0, "height": 800.0 })), &ViewState::default());
-        state = dispatch(&mut app, &state, "canvasPointerMove", Some(json!({ "x": 600.0, "y": 500.0, "width": 1000.0, "height": 800.0 })), &ViewState::default());
-        state = dispatch(
-            &mut app,
-            &state,
-            "canvasPointerUp",
-            Some(json!({ "x": 600.0, "y": 500.0, "width": 1000.0, "height": 800.0, "shift": false, "ctrl": false, "meta": false })),
-            &ViewState::default(),
-        );
-        let envelope: DrawPlayEnvelope = serde_json::from_str(&state).unwrap();
-        assert!(envelope.document.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Shape(shape) if shape.shape_kind == "rect")));
-        assert_eq!(envelope.document.active_tool.as_deref(), Some("selectDirect"));
-        assert_eq!(envelope.interaction.selected_ids.len(), 1);
+        let mut app = new_app();
+        app.handle_action("setActiveTool", Some(&json!({ "tool": "shapeRect" })), &ViewState::default(), &meta()).expect("tool");
+        app.handle_action("canvasPointerDown", Some(&json!({ "x": 500.0, "y": 400.0, "width": 1000.0, "height": 800.0 })), &ViewState::default(), &meta()).expect("down");
+        app.handle_action("canvasPointerMove", Some(&json!({ "x": 600.0, "y": 500.0, "width": 1000.0, "height": 800.0 })), &ViewState::default(), &meta()).expect("move");
+        let result = app
+            .handle_action(
+                "canvasPointerUp",
+                Some(&json!({ "x": 600.0, "y": 500.0, "width": 1000.0, "height": 800.0, "shift": false, "ctrl": false, "meta": false })),
+                &ViewState::default(),
+                &meta(),
+            )
+            .expect("up");
+        assert_eq!(result.operations.len(), 2, "a shape drag commits as one edit adding the layer and restoring select-direct");
+        let projection = app.projection().unwrap();
+        assert!(projection.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Shape(shape) if shape.shape_kind == "rect")));
+        assert_eq!(projection.active_tool.as_deref(), Some("selectDirect"));
     }
 
     #[test]
     fn pen_draft_commits_path_layer_on_enter() {
-        let mut app = DrawApp;
-        let mut document = default_draw_document("pen-test", None);
-        document.active_tool = Some("pen".into());
-        document.layers.clear();
-        let mut state = envelope_json(document);
-        state = dispatch(&mut app, &state, "canvasPointerDown", Some(json!({ "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0 })), &ViewState::default());
-        state = dispatch(&mut app, &state, "canvasPointerDown", Some(json!({ "x": 500.0, "y": 300.0, "width": 800.0, "height": 600.0 })), &ViewState::default());
-        state = dispatch(&mut app, &state, "canvasCommitDraft", None, &ViewState::default());
-        let envelope: DrawPlayEnvelope = serde_json::from_str(&state).unwrap();
-        assert!(envelope.document.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Path(_))));
-        assert!(envelope.interaction.drag.is_none());
-        assert_eq!(envelope.document.active_tool.as_deref(), Some("selectDirect"));
+        let mut app = new_app();
+        app.handle_action("setActiveTool", Some(&json!({ "tool": "pen" })), &ViewState::default(), &meta()).expect("tool");
+        app.handle_action("canvasPointerDown", Some(&json!({ "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0 })), &ViewState::default(), &meta()).expect("p1");
+        app.handle_action("canvasPointerDown", Some(&json!({ "x": 500.0, "y": 300.0, "width": 800.0, "height": 600.0 })), &ViewState::default(), &meta()).expect("p2");
+        let result = app.handle_action("canvasCommitDraft", None, &ViewState::default(), &meta()).expect("commit");
+        assert_eq!(result.operations.len(), 2);
+        let projection = app.projection().unwrap();
+        assert!(projection.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Path(path) if !path.segments.is_empty())));
+        assert_eq!(projection.active_tool.as_deref(), Some("selectDirect"));
     }
 
     #[test]
     fn canvas_escape_cancels_draft_without_committing() {
-        let mut app = DrawApp;
-        let mut document = default_draw_document("escape-test", None);
-        document.active_tool = Some("pen".into());
-        document.layers.clear();
-        let mut state = envelope_json(document);
-        state = dispatch(&mut app, &state, "canvasPointerDown", Some(json!({ "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0 })), &ViewState::default());
-        state = dispatch(&mut app, &state, "canvasEscape", None, &ViewState::default());
-        let envelope: DrawPlayEnvelope = serde_json::from_str(&state).unwrap();
-        assert!(envelope.document.layers.is_empty());
-        assert!(envelope.interaction.drag.is_none());
+        let mut app = new_app();
+        let before = app.projection().unwrap().layers.len();
+        app.handle_action("setActiveTool", Some(&json!({ "tool": "pen" })), &ViewState::default(), &meta()).expect("tool");
+        app.handle_action("canvasPointerDown", Some(&json!({ "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0 })), &ViewState::default(), &meta()).expect("p1");
+        let result = app.handle_action("canvasEscape", None, &ViewState::default(), &meta()).expect("escape");
+        assert!(result.operations.is_empty());
+        assert_eq!(app.projection().unwrap().layers.len(), before);
     }
 
     #[test]
     fn marquee_select_covers_contained_layer_only() {
-        let mut app = DrawApp;
+        let mut app = new_app();
         let mut document = default_draw_document("marquee-test", None);
         document.layers.clear();
         document.active_tool = Some("selectMarquee".into());
@@ -2322,46 +2154,58 @@ mod tests {
         if let DrawLayerNode::Shape(shape) = &mut rect_a {
             shape.rect = Some(draw::DrawRect { x: 10.0, y: 10.0, width: 20.0, height: 20.0 });
         }
-        let rect_a_id = draw::layer_id(&rect_a).to_string();
+        let rect_a_id = layer_id(&rect_a).to_string();
         let mut rect_b = create_draw_shape_layer_rect("B");
         if let DrawLayerNode::Shape(shape) = &mut rect_b {
             shape.rect = Some(draw::DrawRect { x: 200.0, y: 200.0, width: 20.0, height: 20.0 });
         }
+        let rect_b_id = layer_id(&rect_b).to_string();
         document.layers.push(rect_a);
         document.layers.push(rect_b);
-        let mut state = envelope_json(document);
-        state = dispatch(&mut app, &state, "canvasPointerDown", Some(json!({ "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0 })), &ViewState::default());
-        state = dispatch(&mut app, &state, "canvasPointerMove", Some(json!({ "x": 460.0, "y": 360.0, "width": 800.0, "height": 600.0 })), &ViewState::default());
-        state = dispatch(
-            &mut app,
-            &state,
+        let document_value: Value = serde_json::to_value(&document).unwrap();
+        app.handle_action("setDocument", Some(&json!({ "document": document_value })), &ViewState::default(), &meta()).expect("load");
+        app.handle_action("canvasPointerDown", Some(&json!({ "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0 })), &ViewState::default(), &meta()).expect("down");
+        app.handle_action("canvasPointerMove", Some(&json!({ "x": 460.0, "y": 360.0, "width": 800.0, "height": 600.0 })), &ViewState::default(), &meta()).expect("move");
+        app.handle_action(
             "canvasPointerUp",
-            Some(json!({ "x": 460.0, "y": 360.0, "width": 800.0, "height": 600.0, "shift": false, "ctrl": false, "meta": false })),
+            Some(&json!({ "x": 460.0, "y": 360.0, "width": 800.0, "height": 600.0, "shift": false, "ctrl": false, "meta": false })),
             &ViewState::default(),
-        );
-        let envelope: DrawPlayEnvelope = serde_json::from_str(&state).unwrap();
-        assert_eq!(envelope.interaction.selected_ids, vec![rect_a_id]);
+            &meta(),
+        )
+        .expect("up");
+        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render");
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains(&format!("overlay:sel:{rect_a_id}")), "the contained rect A is selected");
+        assert!(!json.contains(&format!("overlay:sel:{rect_b_id}")), "the outside rect B is not selected");
     }
 
     #[test]
-    fn set_camera_does_not_push_undo() {
-        let mut app = DrawApp;
-        let document = serde_json::to_string(&empty_draw_projection()).unwrap();
-        let ops = app.handle_action_patch_ops("setCamera", Some(&json!({ "camera": { "x": 5.0, "y": 5.0, "zoom": 2.0 } })), &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let op: Value = serde_json::from_str(&ops[0]).unwrap();
-        let envelope: DrawPlayEnvelope = serde_json::from_value(op.get("document").unwrap().clone()).unwrap();
-        assert!(envelope.undo_stack.is_empty());
-        assert_eq!(envelope.document.camera.zoom, 2.0);
+    fn set_camera_emits_one_coalesced_op() {
+        let mut app = new_app();
+        let result = app
+            .handle_action("setCamera", Some(&json!({ "camera": { "x": 5.0, "y": 5.0, "zoom": 2.0 } })), &ViewState::default(), &meta())
+            .expect("camera");
+        assert_eq!(result.operations.len(), 1);
+        assert_eq!(app.projection().unwrap().camera.zoom, 2.0);
+    }
+
+    #[test]
+    fn add_layer_undo_round_trip_through_wrapper() {
+        let mut app = new_app();
+        let before = app.projection().unwrap().layers.len();
+        app.handle_action("addLayer", Some(&json!({ "kind": "path" })), &ViewState::default(), &meta()).expect("add");
+        assert_eq!(app.projection().unwrap().layers.len(), before + 1);
+        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        assert_eq!(app.projection().unwrap().layers.len(), before);
+        app.handle_action("redo", None, &ViewState::default(), &meta()).expect("redo");
+        assert_eq!(app.projection().unwrap().layers.len(), before + 1);
     }
 
     #[test]
     fn tools_marks_active_tool_pressed() {
-        let app = DrawApp;
-        let mut document = empty_draw_projection();
-        document.active_tool = Some("pen".into());
-        let document_json = serde_json::to_string(&document).unwrap();
-        let tools = app.tools(&document_json, &ViewState::default());
+        let mut app = new_app();
+        app.handle_action("setActiveTool", Some(&json!({ "tool": "pen" })), &ViewState::default(), &meta()).expect("tool");
+        let tools = app.tools(&ViewState::default());
         assert_eq!(tools.len(), 4);
         assert!(tools.iter().all(|tool| matches!(tool, ToolNode::Collection { .. })));
         let all_toggles: Vec<&ToolNode> = tools
@@ -2378,22 +2222,19 @@ mod tests {
 
     #[test]
     fn render_canvas_emits_selection_overlay() {
-        let app = DrawApp;
-        let mut document = default_draw_document("overlay-test", None);
-        document.layers.clear();
-        document.layers.push(create_draw_shape_layer_rect("Rect"));
-        let layer_id = draw::layer_id(&document.layers[0]).to_string();
-        let document_json = serde_json::to_string(&document).unwrap();
-        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, &document_json, &view_with_selection(&[layer_id.as_str()]));
+        let mut app = new_app();
+        app.handle_action("addLayer", Some(&json!({ "kind": "shape:rect" })), &ViewState::default(), &meta()).expect("add");
+        let id = last_layer_id(&app);
+        app.handle_action("setSelection", Some(&json!({ "ids": [id.clone()] })), &ViewState::default(), &meta()).expect("select");
+        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("overlay:sel:"));
+        assert!(json.contains(&format!("overlay:sel:{id}")));
     }
 
     #[test]
     fn draw_labels_resolve_native_by_default() {
-        let app = DrawApp;
-        let document = serde_json::to_string(&default_draw_document("test", None)).unwrap();
-        let node = app.render(DRAW_PLAY_BODY_LAYERS, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(DRAW_PLAY_BODY_LAYERS, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Add Path"));
         assert!(json.contains("Add Rectangle"));
@@ -2402,45 +2243,21 @@ mod tests {
 
     #[test]
     fn draw_labels_translate_panels_in_german() {
-        let app = DrawApp;
-        let document = serde_json::to_string(&default_draw_document("test", None)).unwrap();
+        let mut app = new_app();
         let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let layers_node = app.render(DRAW_PLAY_BODY_LAYERS, &document, &view_state);
+        let layers_node = app.render(DRAW_PLAY_BODY_LAYERS, None, &view_state).expect("render");
         let layers_json = serde_json::to_string(&layers_node).unwrap();
         assert!(layers_json.contains("Pfad hinzufügen"));
         assert!(layers_json.contains("Rechteck hinzufügen"));
         assert!(!layers_json.contains("Add Path"));
-        let catalogue_node = app.render(DRAW_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let catalogue_node = app.render(DRAW_PLAY_BODY_CATALOGUE, None, &view_state).expect("render");
         let catalogue_json = serde_json::to_string(&catalogue_node).unwrap();
         assert!(catalogue_json.contains("\"Ellipse\""));
         assert!(catalogue_json.contains("Nachzeichnung"));
-        let tools = app.tools(&document, &view_state);
+        let tools = app.tools(&view_state);
         let tools_json = serde_json::to_string(&tools).unwrap();
         assert!(tools_json.contains("Rahmenauswahl"));
         assert!(tools_json.contains("Zeichnen"));
-    }
-
-    fn apply_ops(document: &DrawDocument, ops: &[String]) -> DrawDocument {
-        let mut play = DrawPlayEnvelope {
-            document: document.clone(),
-            undo_stack: Vec::new(),
-            redo_stack: Vec::new(),
-            interaction: DrawInteractionState::default(),
-        };
-        for op_json in ops {
-            if let Ok(op) = serde_json::from_str::<serde_json::Value>(op_json) {
-                if op.get("op").and_then(|value| value.as_str()) == Some("setDocument") {
-                    if let Some(document) = op.get("document") {
-                        if let Ok(parsed) = serde_json::from_value::<DrawPlayEnvelope>(document.clone()) {
-                            play = parsed;
-                        } else if let Ok(parsed) = serde_json::from_value::<DrawDocument>(document.clone()) {
-                            play.document = parsed;
-                        }
-                    }
-                }
-            }
-        }
-        play.document
     }
 }
 //#endregion 🧪Tests
