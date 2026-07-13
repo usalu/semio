@@ -5371,7 +5371,7 @@ export const windowMeasuresResizeHandleLeftClass = "absolute top-0 bottom-0 left
 export const windowEngagementMaxWidthPx = domSizePx("layoutEngagementMaxUiSpacing");
 
 /** @emoji 📐 Outer overlay for floating window measures along the top-right edge. */
-export const windowMeasuresOverlayClass = "pointer-events-none absolute top-0 right-0 z-panel flex max-h-full flex-col items-end p-single";
+export const windowMeasuresOverlayClass = "pointer-events-none absolute top-0 right-0 z-panel flex max-h-full flex-col items-end p-0";
 
 /** @emoji 📐 Scrollable frosted rail for window measures (height follows content, capped by the window body). */
 export const windowMeasuresStackClass = cn(glassWindowOptionsClass, `pointer-events-auto flex h-auto max-h-full w-full min-w-0 shrink-0 flex-col gap-0 overflow-hidden border ${borderElementClass}/40 p-0 shadow-sm`);
@@ -5389,7 +5389,7 @@ export const windowMeasuresStackExpandedClass = "h-full max-h-full min-h-0";
 export const windowMeasuresStackFoldedClass = "w-fit max-w-full";
 
 /** @emoji 📐 Outer overlay for floating window engagement along the top-left edge. */
-export const windowEngagementOverlayClass = "pointer-events-none absolute top-0 left-0 z-panel flex max-h-full flex-col items-start p-single";
+export const windowEngagementOverlayClass = "pointer-events-none absolute top-0 left-0 z-panel flex max-h-full flex-col items-start p-0";
 
 /** @emoji 📐 Collapsed action chrome hugging the top-left corner. */
 export const windowEngagementOverlayFoldedClass = windowMeasuresOverlayFoldedClass;
@@ -5398,7 +5398,7 @@ export const windowEngagementOverlayFoldedClass = windowMeasuresOverlayFoldedCla
 export const windowEngagementBodyClass = "flex min-h-medium min-w-0 flex-auto flex-col justify-center gap-half overflow-hidden px-single";
 
 /** @emoji 📐 Outer overlay for the floating window toolbar along the bottom-left edge. */
-export const windowToolbarOverlayClass = "pointer-events-none absolute bottom-0 left-0 z-panel flex max-h-full flex-col items-start p-single";
+export const windowToolbarOverlayClass = "pointer-events-none absolute bottom-0 left-0 z-panel flex max-h-full flex-col items-start p-0";
 
 /** @emoji 📐 Horizontal tool row beside the toolbar chrome toggle: fixed to the chrome's height, never taller. */
 export const windowToolbarBodyClass = "flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto px-single";
@@ -24709,6 +24709,15 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="window-engagement-overlay"]')).toBeNull();
       expect(screen.queryByPlaceholderText("Action")).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
+    });
+
+    it("Window panel overlays use the window frame inset without adding a second edge gap", () => {
+      expect(windowMeasuresOverlayClass).toContain("p-0");
+      expect(windowEngagementOverlayClass).toContain("p-0");
+      expect(windowToolbarOverlayClass).toContain("p-0");
+      expect(windowMeasuresOverlayClass).not.toContain("p-single");
+      expect(windowEngagementOverlayClass).not.toContain("p-single");
+      expect(windowToolbarOverlayClass).not.toContain("p-single");
     });
 
     it("Window measures overlay uses a fixed right rail without clipping overflow", () => {

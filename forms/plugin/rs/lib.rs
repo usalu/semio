@@ -1716,177 +1716,209 @@ fn build_inspector_tree(
 
 //#region 🔖FormsPlayApp
 #[derive(Default)]
-struct FormsPlayApp;
+struct FormsPlayApp {
+    runtime: FormsPlayRuntime,
+}
 
-impl PluginApp for FormsPlayApp {
+impl DocumentApp for FormsPlayApp {
+    type Projection = FormSpec;
+    type Op = FormOp;
+
     fn app_id(&self) -> &str {
         FORMS_PLAY_APP_ID
     }
 
-    fn initial_document_json(&self) -> String {
-        serde_json::to_string(&building_component_envelope()).expect("forms envelope json")
+    fn document_schema(&self) -> &str {
+        FORMS_DOCUMENT_SCHEMA
     }
 
-    fn handle_action_patch_ops(
+    fn initial_projection(&self) -> FormSpec {
+        building_component_spec()
+    }
+
+    fn handle_action(
         &mut self,
         action: &str,
         args: Option<&Value>,
-        document_json: &str,
+        doc: &DocumentView<'_, FormSpec>,
         _view_state: &ViewState,
-    ) -> Vec<String> {
-        let mut play = parse_envelope(document_json);
-        let mut store = store_from_envelope(&play);
+    ) -> ActionEmit<FormOp> {
+        let spec = doc.projection;
         match action {
-            "setDocument" => {
-                if let Some(document) = args.and_then(|value| value.get("document")) {
-                    if let Ok(parsed) = serde_json::from_value::<FormsPlayEnvelope>(document.clone()) {
-                        return vec![set_document_op(&parsed)];
-                    }
-                }
-            }
+            // 👁️ View actions — mutate ephemeral runtime, emit no ops.
             "setSelection" => {
                 if let Some(ids) = args.and_then(|value| value.get("ids")).and_then(|value| value.as_array()) {
-                    play.selected_ids = ids
+                    self.runtime.selected_ids = ids
                         .iter()
                         .filter_map(|value| value.as_str().map(str::to_string))
                         .collect();
-                    return vec![set_document_op(&play)];
                 }
+                ActionEmit::default()
             }
+            "editEngagementInput" | "tryEngagementInput" => ActionEmit::default(),
+            "setTryValue" => {
+                let key = args.and_then(|value| value.get("key")).and_then(|value| value.as_str());
+                let raw_value = args
+                    .and_then(|value| value.get("value"))
+                    .or_else(|| args.and_then(|value| value.get("pressed")))
+                    .cloned();
+                let option_value = args.and_then(|value| value.get("optionValue")).and_then(|value| value.as_str());
+                let vector_index = args.and_then(|value| value.get("vectorIndex")).and_then(|value| value.as_u64()).map(|index| index as usize);
+                let param_key = args.and_then(|value| value.get("paramKey")).and_then(|value| value.as_str());
+                if let Some(key) = key {
+                    if let Some(option_value) = option_value {
+                        let mut selected = self
+                            .runtime
+                            .try_values
+                            .get(key)
+                            .and_then(|value| value.as_array().cloned())
+                            .unwrap_or_default();
+                        let pressed = raw_value.as_ref().and_then(|value| value.as_bool()).unwrap_or(false);
+                        if pressed {
+                            if !selected.iter().any(|entry| entry.as_str() == Some(option_value)) {
+                                selected.push(json!(option_value));
+                            }
+                        } else {
+                            selected.retain(|entry| entry.as_str() != Some(option_value));
+                        }
+                        self.runtime.try_values.insert(key.into(), Value::Array(selected));
+                    } else if let Some(index) = vector_index {
+                        if let Some(raw) = raw_value {
+                            patch_try_vector_field(&mut self.runtime, key, index, &raw);
+                        }
+                    } else if let Some(param_key) = param_key {
+                        if let Some(raw) = raw_value {
+                            patch_try_object_field(&mut self.runtime, key, param_key, &raw);
+                        }
+                    } else if let Some(raw) = raw_value {
+                        self.runtime.try_values.insert(key.into(), raw);
+                    }
+                }
+                ActionEmit::default()
+            }
+            "setTryValues" => {
+                if let Some(values) = args.and_then(|value| value.get("values")).and_then(|value| value.as_object()) {
+                    for (key, value) in values {
+                        self.runtime.try_values.insert(key.clone(), value.clone());
+                    }
+                }
+                ActionEmit::default()
+            }
+            "resetTry" => {
+                reset_try_runtime(&mut self.runtime);
+                ActionEmit::default()
+            }
+            "previousStep" => {
+                self.runtime.current_step_index = self.runtime.current_step_index.saturating_sub(1);
+                ActionEmit::default()
+            }
+            "nextStep" => {
+                if self.runtime.current_step_index + 1 < spec.steps.len() {
+                    let step = &spec.steps[self.runtime.current_step_index];
+                    let values = effective_try_values(spec, &self.runtime);
+                    if can_advance(step, &values) {
+                        self.runtime.current_step_index += 1;
+                    }
+                }
+                ActionEmit::default()
+            }
+            "submit" => ActionEmit::default(),
+            // ✏️ Operations — read the current spec, emit typed ops with a true inverse.
             "addStep" => {
-                let projection = store.projection().unwrap_or_else(|_| materialized_projection(&play));
                 let step = FormStep {
                     id: create_form_id("step"),
-                    title: format!("Step {}", projection.steps.len() + 1),
+                    title: format!("Step {}", spec.steps.len() + 1),
                     description: None,
                     blocks: Vec::new(),
                 };
-                let _ = store.dispatch(DocumentVcsCommand::Apply {
-                    operations: vec![FormOp::AddStep { step, index: None }],
-                    description: None,
-                });
-                play.try_values.clear();
-                return apply_store_action(&mut play, &mut store);
+                self.runtime.try_values.clear();
+                ActionEmit::ops(vec![FormOp::AddStep { step, index: None }])
             }
             "patchStep" => {
                 let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
                 let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
                 let raw_value = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
-                let projection = store.projection().unwrap_or_else(|_| materialized_projection(&play));
-                let Some(step) = projection.steps.iter().find(|step| step.id == step_id).cloned() else {
-                    return Vec::new();
+                let Some(step) = spec.steps.iter().find(|step| step.id == step_id).cloned() else {
+                    return ActionEmit::default();
                 };
                 let step = match field {
-                    "title" => FormStep {
-                        title: raw_value.into(),
-                        ..step
-                    },
+                    "title" => FormStep { title: raw_value.into(), ..step },
                     "description" => FormStep {
                         description: Some(raw_value.to_string()).filter(|description| !description.is_empty()),
                         ..step
                     },
-                    _ => return Vec::new(),
+                    _ => return ActionEmit::default(),
                 };
-                let _ = store.dispatch(DocumentVcsCommand::Apply {
-                    operations: vec![FormOp::UpdateStep { step }],
-                    description: None,
-                });
-                play.try_values.clear();
-                return apply_store_action(&mut play, &mut store);
+                self.runtime.try_values.clear();
+                ActionEmit {
+                    ops: vec![FormOp::UpdateStep { step }],
+                    coalesce_key: Some(format!("patch-step:{step_id}:{field}")),
+                    ..Default::default()
+                }
             }
             "removeStep" => {
                 let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
                 if step_id.is_empty() {
-                    return Vec::new();
+                    return ActionEmit::default();
                 }
-                let projection = store.projection().unwrap_or_else(|_| materialized_projection(&play));
-                let removed_ids: Vec<String> = projection
+                let removed_ids: Vec<String> = spec
                     .steps
                     .iter()
                     .filter(|step| step.id == step_id)
                     .flat_map(|step| step.blocks.iter().map(|question| question.id.clone()))
                     .collect();
-                let _ = store.dispatch(DocumentVcsCommand::Apply {
-                    operations: vec![FormOp::RemoveStep { step_id: step_id.into() }],
-                    description: None,
-                });
-                play.selected_ids.retain(|id| !removed_ids.contains(id));
-                play.try_values.clear();
-                return apply_store_action(&mut play, &mut store);
+                self.runtime.selected_ids.retain(|id| !removed_ids.contains(id));
+                self.runtime.try_values.clear();
+                ActionEmit::ops(vec![FormOp::RemoveStep { step_id: step_id.into() }])
             }
             "moveStep" => {
                 let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
                 let index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
                 if step_id.is_empty() {
-                    return Vec::new();
+                    return ActionEmit::default();
                 }
-                let _ = store.dispatch(DocumentVcsCommand::Apply {
-                    operations: vec![FormOp::MoveStep {
-                        step_id: step_id.into(),
-                        index,
-                    }],
-                    description: None,
-                });
-                play.try_values.clear();
-                return apply_store_action(&mut play, &mut store);
+                self.runtime.try_values.clear();
+                ActionEmit::ops(vec![FormOp::MoveStep { step_id: step_id.into(), index }])
             }
             "updateForm" | "updateProtocol" => {
                 let title = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
-                let _ = store.dispatch(DocumentVcsCommand::Apply {
-                    operations: vec![FormOp::UpdateProtocol {
+                ActionEmit {
+                    ops: vec![FormOp::UpdateProtocol {
                         title: Some(title.to_string()).filter(|title| !title.is_empty()),
                     }],
-                    description: None,
-                });
-                return apply_store_action(&mut play, &mut store);
+                    coalesce_key: Some("update-protocol".into()),
+                    ..Default::default()
+                }
             }
             "addQuestion" | "addBlock" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("text");
-                let projection = store.projection().unwrap_or_else(|_| materialized_projection(&play));
                 let step_id = args
                     .and_then(|value| value.get("stepId"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string)
-                    .or_else(|| projection.steps.first().map(|step| step.id.clone()));
+                    .or_else(|| spec.steps.first().map(|step| step.id.clone()));
                 let Some(step_id) = step_id else {
-                    return Vec::new();
+                    return ActionEmit::default();
                 };
                 let question = default_question_for_kind(kind, create_form_id("q"));
-                let select_id = question.id.clone();
-                let _ = store.dispatch(DocumentVcsCommand::Apply {
-                    operations: vec![FormOp::AddBlock {
-                        step_id,
-                        block: question,
-                        index: None,
-                    }],
-                    description: None,
-                });
-                play.try_values.clear();
-                play.selected_ids = vec![select_id];
-                return apply_store_action(&mut play, &mut store);
+                self.runtime.selected_ids = vec![question.id.clone()];
+                self.runtime.try_values.clear();
+                ActionEmit::ops(vec![FormOp::AddBlock { step_id, block: question, index: None }])
             }
             "removeQuestion" | "removeBlock" => {
                 let question_id = args
                     .and_then(|value| value.get("blockId").or_else(|| value.get("questionId")))
                     .and_then(|value| value.as_str())
                     .unwrap_or("");
-                if question_id.is_empty() {
-                    return Vec::new();
-                }
-                let projection = store.projection().unwrap_or_else(|_| materialized_projection(&play));
-                let Some(location) = find_question_location(&projection, question_id) else {
-                    return Vec::new();
+                let Some(location) = find_question_location(spec, question_id) else {
+                    return ActionEmit::default();
                 };
-                let _ = store.dispatch(DocumentVcsCommand::Apply {
-                    operations: vec![FormOp::RemoveBlock {
-                        step_id: location.step_id,
-                        block_id: question_id.into(),
-                    }],
-                    description: None,
-                });
-                play.selected_ids.retain(|id| id != question_id);
-                play.try_values.clear();
-                return apply_store_action(&mut play, &mut store);
+                self.runtime.selected_ids.retain(|id| id != question_id);
+                self.runtime.try_values.clear();
+                ActionEmit::ops(vec![FormOp::RemoveBlock {
+                    step_id: location.step_id,
+                    block_id: question_id.into(),
+                }])
             }
             "patchQuestions" => {
                 let question_ids: Vec<String> = args
@@ -1901,22 +1933,32 @@ impl PluginApp for FormsPlayApp {
                     .cloned()
                     .unwrap_or(Value::Null);
                 if question_ids.is_empty() || field.is_empty() {
-                    return Vec::new();
+                    return ActionEmit::default();
                 }
-                if field == "param" {
+                let ops: Vec<FormOp> = if field == "param" {
                     let param_key = args
                         .and_then(|value| value.get("paramKey"))
                         .and_then(|value| value.as_str())
                         .unwrap_or("");
-                    for question_id in question_ids {
-                        patch_building_component_param(&mut play, &mut store, &question_id, param_key, &raw_value);
-                    }
+                    question_ids
+                        .iter()
+                        .filter_map(|question_id| patch_building_component_param(spec, question_id, param_key, &raw_value))
+                        .collect()
                 } else {
-                    for question_id in question_ids {
-                        patch_question_field(&mut play, &mut store, &question_id, field, &raw_value);
-                    }
+                    question_ids
+                        .iter()
+                        .filter_map(|question_id| patch_question_field(spec, question_id, field, &raw_value))
+                        .collect()
+                };
+                self.runtime.try_values.clear();
+                if ops.is_empty() {
+                    return ActionEmit::default();
                 }
-                return apply_store_action(&mut play, &mut store);
+                ActionEmit {
+                    ops,
+                    coalesce_key: Some(format!("patch:{field}:{}", question_ids.join(","))),
+                    ..Default::default()
+                }
             }
             "patchQuestionOptions" => {
                 let question_ids: Vec<String> = args
@@ -1930,10 +1972,19 @@ impl PluginApp for FormsPlayApp {
                     .unwrap_or("");
                 let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
                 let raw_value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
-                for question_id in question_ids {
-                    patch_question_option(&mut play, &mut store, &question_id, option_value, field, &raw_value);
+                let ops: Vec<FormOp> = question_ids
+                    .iter()
+                    .filter_map(|question_id| patch_question_option(spec, question_id, option_value, field, &raw_value))
+                    .collect();
+                self.runtime.try_values.clear();
+                if ops.is_empty() {
+                    return ActionEmit::default();
                 }
-                return apply_store_action(&mut play, &mut store);
+                ActionEmit {
+                    ops,
+                    coalesce_key: Some(format!("patch-option:{option_value}:{field}")),
+                    ..Default::default()
+                }
             }
             "addQuestionOption" => {
                 let question_id = args.and_then(|value| value.get("questionId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -1941,9 +1992,9 @@ impl PluginApp for FormsPlayApp {
                     .and_then(|value| value.get("label"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("New option");
-                if !question_id.is_empty() {
-                    add_question_option(&mut play, &mut store, question_id, label);
-                    return apply_store_action(&mut play, &mut store);
+                match add_question_option(spec, question_id, label) {
+                    Some(op) => ActionEmit::ops(vec![op]),
+                    None => ActionEmit::default(),
                 }
             }
             "removeQuestionOption" => {
@@ -1952,9 +2003,9 @@ impl PluginApp for FormsPlayApp {
                     .and_then(|value| value.get("optionValue"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("");
-                if !question_id.is_empty() && !option_value.is_empty() {
-                    remove_question_option(&mut play, &mut store, question_id, option_value);
-                    return apply_store_action(&mut play, &mut store);
+                match remove_question_option(spec, question_id, option_value) {
+                    Some(op) => ActionEmit::ops(vec![op]),
+                    None => ActionEmit::default(),
                 }
             }
             "patchVectorField" => {
@@ -1966,9 +2017,13 @@ impl PluginApp for FormsPlayApp {
                     .or_else(|| args.and_then(|value| value.get("pressed")))
                     .cloned()
                     .unwrap_or(Value::Null);
-                if !question_id.is_empty() && !field_key.is_empty() {
-                    patch_vector_field(&mut play, &mut store, question_id, field_key, field, &raw_value);
-                    return apply_store_action(&mut play, &mut store);
+                match patch_vector_field(spec, question_id, field_key, field, &raw_value) {
+                    Some(op) => ActionEmit {
+                        ops: vec![op],
+                        coalesce_key: Some(format!("patch-vector:{question_id}:{field_key}:{field}")),
+                        ..Default::default()
+                    },
+                    None => ActionEmit::default(),
                 }
             }
             "addVectorField" => {
@@ -1977,17 +2032,17 @@ impl PluginApp for FormsPlayApp {
                     .and_then(|value| value.get("fieldKey"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("field");
-                if !question_id.is_empty() {
-                    add_vector_field(&mut play, &mut store, question_id, field_key);
-                    return apply_store_action(&mut play, &mut store);
+                match add_vector_field(spec, question_id, field_key) {
+                    Some(op) => ActionEmit::ops(vec![op]),
+                    None => ActionEmit::default(),
                 }
             }
             "removeVectorField" => {
                 let question_id = args.and_then(|value| value.get("questionId")).and_then(|value| value.as_str()).unwrap_or("");
                 let field_key = args.and_then(|value| value.get("fieldKey")).and_then(|value| value.as_str()).unwrap_or("");
-                if !question_id.is_empty() && !field_key.is_empty() {
-                    remove_vector_field(&mut play, &mut store, question_id, field_key);
-                    return apply_store_action(&mut play, &mut store);
+                match remove_vector_field(spec, question_id, field_key) {
+                    Some(op) => ActionEmit::ops(vec![op]),
+                    None => ActionEmit::default(),
                 }
             }
             "moveQuestion" | "moveBlock" => {
@@ -1995,35 +2050,28 @@ impl PluginApp for FormsPlayApp {
                     .and_then(|value| value.get("blockId").or_else(|| value.get("questionId")))
                     .and_then(|value| value.as_str());
                 let to_step_id = args.and_then(|value| value.get("toStepId")).and_then(|value| value.as_str());
-                let target_id = args
-                    .and_then(|value| value.get("targetId"))
-                    .and_then(|value| value.as_str());
+                let target_id = args.and_then(|value| value.get("targetId")).and_then(|value| value.as_str());
                 let position = args
                     .and_then(|value| value.get("position"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("inside");
                 let explicit_index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).map(|index| index as usize);
                 let (Some(question_id), Some(to_step_id)) = (question_id, to_step_id) else {
-                    return Vec::new();
+                    return ActionEmit::default();
                 };
-                let projection = store.projection().unwrap_or_else(|_| materialized_projection(&play));
-                let Some(source) = find_question_location(&projection, question_id) else {
-                    return Vec::new();
+                let Some(source) = find_question_location(spec, question_id) else {
+                    return ActionEmit::default();
                 };
                 let target_id = target_id.unwrap_or(question_id);
                 let index = explicit_index
-                    .unwrap_or_else(|| resolve_question_insert_index(&projection, to_step_id, target_id, position).unwrap_or(0));
-                let _ = store.dispatch(DocumentVcsCommand::Apply {
-                    operations: vec![FormOp::MoveBlock {
-                        block_id: question_id.into(),
-                        from_step_id: source.step_id,
-                        to_step_id: to_step_id.into(),
-                        index,
-                    }],
-                    description: None,
-                });
-                play.try_values.clear();
-                return apply_store_action(&mut play, &mut store);
+                    .unwrap_or_else(|| resolve_question_insert_index(spec, to_step_id, target_id, position).unwrap_or(0));
+                self.runtime.try_values.clear();
+                ActionEmit::ops(vec![FormOp::MoveBlock {
+                    block_id: question_id.into(),
+                    from_step_id: source.step_id,
+                    to_step_id: to_step_id.into(),
+                    index,
+                }])
             }
             "dropQuestionKind" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str());
@@ -2033,166 +2081,68 @@ impl PluginApp for FormsPlayApp {
                     .and_then(|value| value.as_str())
                     .unwrap_or("inside");
                 let (Some(kind), Some(target_id)) = (kind, target_id) else {
-                    return Vec::new();
+                    return ActionEmit::default();
                 };
-                let projection = store.projection().unwrap_or_else(|_| materialized_projection(&play));
-                let Some(step_id) = resolve_step_id_from_tree_target(&projection, target_id) else {
-                    return Vec::new();
+                let Some(step_id) = resolve_step_id_from_tree_target(spec, target_id) else {
+                    return ActionEmit::default();
                 };
-                let index = resolve_question_insert_index(&projection, &step_id, target_id, drop_position);
+                let index = resolve_question_insert_index(spec, &step_id, target_id, drop_position);
                 let question = default_question_for_kind(kind, create_form_id("q"));
-                let select_id = question.id.clone();
-                let _ = store.dispatch(DocumentVcsCommand::Apply {
-                    operations: vec![FormOp::AddBlock {
-                        step_id,
-                        block: question,
-                        index,
-                    }],
-                    description: None,
-                });
-                play.try_values.clear();
-                play.selected_ids = vec![select_id];
-                return apply_store_action(&mut play, &mut store);
-            }
-            "undo" => {
-                let _ = store.dispatch(DocumentVcsCommand::Undo);
-                play.try_values.clear();
-                return apply_store_action(&mut play, &mut store);
-            }
-            "redo" => {
-                let _ = store.dispatch(DocumentVcsCommand::Redo);
-                play.try_values.clear();
-                return apply_store_action(&mut play, &mut store);
-            }
-            "exportFixture" => {
-                let spec = store.projection().unwrap_or_else(|_| materialized_projection(&play));
-                let _ = serde_json::to_string_pretty(&spec).unwrap_or_default();
-                return Vec::new();
+                self.runtime.selected_ids = vec![question.id.clone()];
+                self.runtime.try_values.clear();
+                ActionEmit::ops(vec![FormOp::AddBlock { step_id, block: question, index }])
             }
             "setSpecJson" => {
-                if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
-                    if let Ok(spec) = serde_json::from_str::<FormSpec>(json_text) {
-                        let document_id = spec.id.clone();
-                        let envelope = create_document_vcs_envelope(FORMS_DOCUMENT_SCHEMA, &document_id, spec, None);
-                        store = FormsStore::new(envelope);
-                        reset_try_runtime(&mut play);
-                        play.selected_ids.clear();
-                        return apply_store_action(&mut play, &mut store);
-                    }
-                }
+                let Some(next) = args
+                    .and_then(|value| value.get("json"))
+                    .and_then(|value| value.as_str())
+                    .and_then(|json_text| serde_json::from_str::<FormSpec>(json_text).ok())
+                else {
+                    return ActionEmit::default();
+                };
+                reset_try_runtime(&mut self.runtime);
+                self.runtime.selected_ids.clear();
+                ActionEmit::ops(replace_spec_ops(spec, &next))
             }
-            "editEngagementInput" | "tryEngagementInput" => {}
             "setActiveExample" => {
                 let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
                 let json_text = match example_id {
                     "building-component" => BUILDING_COMPONENT_EXAMPLE_JSON,
                     "default" => DEFAULT_EXAMPLE_JSON,
                     "onboarding" => ONBOARDING_EXAMPLE_JSON,
-                    _ => return Vec::new(),
+                    _ => return ActionEmit::default(),
                 };
-                let spec: FormSpec = serde_json::from_str(json_text).unwrap_or_else(|_| materialized_projection(&play));
-                let document_id = spec.id.clone();
-                let envelope = create_document_vcs_envelope(FORMS_DOCUMENT_SCHEMA, &document_id, spec, None);
-                store = FormsStore::new(envelope);
-                reset_try_runtime(&mut play);
-                play.selected_ids.clear();
-                return apply_store_action(&mut play, &mut store);
+                let Ok(next) = serde_json::from_str::<FormSpec>(json_text) else {
+                    return ActionEmit::default();
+                };
+                reset_try_runtime(&mut self.runtime);
+                self.runtime.selected_ids.clear();
+                ActionEmit::ops(replace_spec_ops(spec, &next))
             }
-            "setTryValue" => {
-                let key = args.and_then(|value| value.get("key")).and_then(|value| value.as_str());
-                let raw_value = args
-                    .and_then(|value| value.get("value"))
-                    .or_else(|| args.and_then(|value| value.get("pressed")))
-                    .cloned();
-                let option_value = args.and_then(|value| value.get("optionValue")).and_then(|value| value.as_str());
-                let vector_index = args.and_then(|value| value.get("vectorIndex")).and_then(|value| value.as_u64()).map(|index| index as usize);
-                let param_key = args.and_then(|value| value.get("paramKey")).and_then(|value| value.as_str());
-                if let Some(key) = key {
-                    if let Some(option_value) = option_value {
-                        let mut selected = play
-                            .try_values
-                            .get(key)
-                            .and_then(|value| value.as_array().cloned())
-                            .unwrap_or_default();
-                        let pressed = raw_value.as_ref().and_then(|value| value.as_bool()).unwrap_or(false);
-                        if pressed {
-                            if !selected.iter().any(|entry| entry.as_str() == Some(option_value)) {
-                                selected.push(json!(option_value));
-                            }
-                        } else {
-                            selected.retain(|entry| entry.as_str() != Some(option_value));
-                        }
-                        play.try_values.insert(key.into(), Value::Array(selected));
-                    } else if let Some(index) = vector_index {
-                        if let Some(raw) = raw_value {
-                            patch_try_vector_field(&mut play, key, index, &raw);
-                        }
-                    } else if let Some(param_key) = param_key {
-                        if let Some(raw) = raw_value {
-                            patch_try_object_field(&mut play, key, param_key, &raw);
-                        }
-                    } else if let Some(raw) = raw_value {
-                        play.try_values.insert(key.into(), raw);
-                    }
-                    return vec![set_document_op(&play)];
-                }
+            // 🐚 Shell action — download the current form spec as JSON.
+            "exportFixture" => {
+                let json = serde_json::to_string_pretty(spec).unwrap_or_default();
+                ActionEmit::effect(HostEffect::DownloadMediaExport {
+                    filename: format!("{}.forms.json", spec.id),
+                    mime_type: "application/json".into(),
+                    data: json,
+                    encoding: None,
+                })
             }
-            "setTryValues" => {
-                if let Some(values) = args.and_then(|value| value.get("values")).and_then(|value| value.as_object()) {
-                    for (key, value) in values {
-                        play.try_values.insert(key.clone(), value.clone());
-                    }
-                    return vec![set_document_op(&play)];
-                }
-            }
-            "resetTry" => {
-                reset_try_runtime(&mut play);
-                return vec![set_document_op(&play)];
-            }
-            "previousStep" => {
-                if play.current_step_index > 0 {
-                    play.current_step_index -= 1;
-                    return vec![set_document_op(&play)];
-                }
-            }
-            "nextStep" => {
-                let spec = materialized_projection(&play);
-                if play.current_step_index + 1 < spec.steps.len() {
-                    let step = &spec.steps[play.current_step_index];
-                    let values = effective_try_values(&spec, &play);
-                    if can_advance(step, &values) {
-                        play.current_step_index += 1;
-                        return vec![set_document_op(&play)];
-                    }
-                }
-            }
-            "submit" => {
-                let spec = materialized_projection(&play);
-                if !spec.steps.is_empty() {
-                    let step_index = play.current_step_index.min(spec.steps.len() - 1);
-                    let step = &spec.steps[step_index];
-                    let values = effective_try_values(&spec, &play);
-                    if can_advance(step, &values) {
-                        return vec![set_document_op(&play)];
-                    }
-                }
-            }
-            _ => {}
+            _ => ActionEmit::default(),
         }
-        Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-        let play = parse_envelope(document_json);
-        let spec = materialized_projection(&play);
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, FormSpec>, view_state: &ViewState) -> UiNode {
+        let spec = doc.projection;
         let contributions = parse_contributions(view_state);
         let labels = forms_labels(view_state);
         match body_key {
-            FORMS_PLAY_BODY_BLUEPRINT => render_blueprint_builder(&spec, &play, &contributions, labels),
-            FORMS_PLAY_BODY_TRY => render_try_wizard(&spec, &play, &contributions, labels),
-            FORMS_PLAY_BODY_DOCUMENT => build_document_tree(&spec, &play.selected_ids, labels),
+            FORMS_PLAY_BODY_BLUEPRINT => render_blueprint_builder(spec, &self.runtime, &contributions, labels),
+            FORMS_PLAY_BODY_TRY => render_try_wizard(spec, &self.runtime, &contributions, labels),
+            FORMS_PLAY_BODY_DOCUMENT => build_document_tree(spec, &self.runtime.selected_ids, labels),
             FORMS_PLAY_BODY_CATALOGUE => build_catalogue_tree(&contributions, labels),
-            FORMS_PLAY_BODY_INSPECTION => build_inspector_tree(&spec, &play, &contributions, labels),
+            FORMS_PLAY_BODY_INSPECTION => build_inspector_tree(spec, &self.runtime, &contributions, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -2236,8 +2186,9 @@ fn create_forms_app() -> App {
             .operation("removeVectorField", "Remove Vector Field")
             .operation("moveQuestion", "Move Question")
             .operation("dropQuestionKind", "Drop Question Kind")
+            .operation("setActiveExample", "Set Active Example")
+            .operation("setSpecJson", "Set Spec JSON")
             .view_action("setSelection", "Set Selection")
-            .view_action("setActiveExample", "Set Active Example")
             .view_action("setTryValue", "Set Try Value")
             .view_action("setTryValues", "Set Try Values")
             .view_action("resetTry", "Reset Try")
@@ -2246,9 +2197,7 @@ fn create_forms_app() -> App {
             .view_action("submit", "Submit")
             .view_action("editEngagementInput", "Edit Engagement Input")
             .view_action("tryEngagementInput", "Try Engagement Input")
-            .shell_action("setDocument", "Set Document")
             .shell_action("exportFixture", "Export Fixture")
-            .shell_action("setSpecJson", "Set Spec JSON")
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .default_layout(create_default_layout(
@@ -2258,7 +2207,7 @@ fn create_forms_app() -> App {
                 Some(&["Blueprint".into(), "Try".into()]),
             )),
     )
-    .example("empty", "Empty", serde_json::to_string(&default_envelope()).unwrap())
+    .example("empty", "Empty", serde_json::to_string(&empty_forms_projection()).unwrap())
     .example("default", "Contact", DEFAULT_EXAMPLE_JSON)
     .example("onboarding", "Onboarding", ONBOARDING_EXAMPLE_JSON)
     .example("building-component", "Building Component", BUILDING_COMPONENT_EXAMPLE_JSON)

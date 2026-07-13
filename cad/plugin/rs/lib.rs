@@ -4668,155 +4668,151 @@ fn start_interaction_session(runtime: &mut CadPlayRuntime, pane: CadPaneId, inte
 }
 
 //#region 🔖CadApp
+/// @emoji 📐 The CAD play app. Document content lives in the wrapping `VcsDocumentApp`'s
+/// `DocumentVcsStore<CadScene, CadOp>`; only ephemeral view-state (selection, hover, engagement
+/// session, transform tool, sun) lives here on `runtime`. History (undo/redo/checkpoint) is
+/// intercepted and dispatched by the wrapper — no manual arms or keybindings.
 #[derive(Default)]
-struct CadApp;
+struct CadApp {
+    runtime: CadPlayRuntime,
+}
 
-impl PluginApp for CadApp {
+impl DocumentApp for CadApp {
+    type Projection = CadScene;
+    type Op = CadOp;
+
     fn app_id(&self) -> &str {
         CAD_PLAY_APP_ID
     }
 
-    fn initial_document_json(&self) -> String {
-        serde_json::to_string(&default_envelope()).expect("cad envelope json")
+    fn document_schema(&self) -> &str {
+        CAD_DOCUMENT_SCHEMA
     }
 
-    fn handle_action_patch_ops(
+    fn initial_projection(&self) -> CadScene {
+        default_document()
+    }
+
+    fn handle_action(
         &mut self,
         action: &str,
         args: Option<&Value>,
-        document_json: &str,
+        doc: &DocumentView<'_, CadScene>,
         _view_state: &ViewState,
-    ) -> Vec<String> {
-        let mut envelope = parse_envelope(document_json);
+    ) -> ActionEmit<CadOp> {
+        let document = doc.projection;
         match action {
-            "setDocument" => {
-                if let Some(document) = args.and_then(|value| value.get("document")) {
-                    if let Ok(parsed) = serde_json::from_value(document.clone()) {
-                        return vec![set_document_op(&parsed)];
-                    }
-                }
-            }
             "setActiveExample" => {
                 let example_id = args
                     .and_then(|value| value.get("exampleId"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("");
-                envelope = if example_id.is_empty() || example_id == "empty" {
-                    let document = default_document();
-                    CadPlayEnvelope {
-                        history: seed_cad_history(&document),
-                        document,
-                        runtime: CadPlayRuntime::default(),
-                        applied_edit_ids: Vec::new(),
-                        redo_edit_ids: Vec::new(),
-                    }
-                } else if example_id == "default" {
-                    default_envelope()
+                let (scene, runtime) = if example_id.is_empty() || example_id == "empty" || example_id == "default" {
+                    (default_document(), CadPlayRuntime::default())
                 } else if example_id == CAD_EXAMPLE_FOREST_LEFT || example_id == "forest-left" {
-                    forest_play_envelope()
+                    (
+                        forest_play_scene(),
+                        CadPlayRuntime {
+                            active_example_id: Some(CAD_EXAMPLE_FOREST_LEFT.into()),
+                            ..CadPlayRuntime::default()
+                        },
+                    )
                 } else {
-                    envelope
+                    return ActionEmit::default();
                 };
-                return vec![set_document_op(&envelope)];
+                self.runtime = runtime;
+                ActionEmit::ops(vec![CadOp::SetScene { scene: Box::new(scene) }])
             }
             "setActiveTool" => {
                 if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
-                    envelope.document.active_tool = Some(tool.into());
-                    return vec![set_document_op(&envelope)];
+                    return ActionEmit::ops(vec![CadOp::SetActiveTool { tool: Some(tool.into()) }]);
                 }
+                ActionEmit::default()
             }
             "setSelection" => {
-                let object_ids: Vec<String> = args
+                self.runtime.selected_object_ids = args
                     .and_then(|value| value.get("objectIds"))
                     .and_then(|value| serde_json::from_value(value.clone()).ok())
                     .unwrap_or_default();
-                envelope.runtime.selected_object_ids = object_ids;
-                envelope.runtime.selected_node_ids.clear();
-                envelope.runtime.selected_primitive_id = None;
-                envelope.runtime.selected_primitive_kind = None;
-                envelope.runtime.selected_reference_model_definition_id = None;
-                envelope.runtime.selected_reference_id = None;
-                return vec![set_document_op(&envelope)];
+                self.runtime.selected_node_ids.clear();
+                self.runtime.selected_primitive_id = None;
+                self.runtime.selected_primitive_kind = None;
+                self.runtime.selected_reference_model_definition_id = None;
+                self.runtime.selected_reference_id = None;
+                ActionEmit::default()
             }
             "setNodeSelection" => {
-                let node_ids: Vec<String> = args
+                self.runtime.selected_node_ids = args
                     .and_then(|value| value.get("nodeIds"))
                     .and_then(|value| serde_json::from_value(value.clone()).ok())
                     .unwrap_or_default();
-                envelope.runtime.selected_node_ids = node_ids;
-                envelope.runtime.selected_object_ids.clear();
-                return vec![set_document_op(&envelope)];
+                self.runtime.selected_object_ids.clear();
+                ActionEmit::default()
             }
             "setCamera" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
-                    if let Ok(parsed) = serde_json::from_value(camera.clone()) {
+                    if let Ok(parsed) = serde_json::from_value::<CadCamera>(camera.clone()) {
                         let pane = args
                             .and_then(|value| value.get("surfaceId"))
                             .and_then(|v| v.as_str())
                             .map(cad_pane_id_from_surface_id)
                             .unwrap_or(CadPaneId::Shape);
-                        *cad_pane_camera_mut(&mut envelope.document, pane) = parsed;
-                        return vec![set_document_op(&envelope)];
+                        return ActionEmit {
+                            ops: vec![CadOp::SetCamera { pane, camera: parsed }],
+                            coalesce_key: Some(format!("camera:{}", pane.model_definition_id())),
+                            ..Default::default()
+                        };
                     }
                 }
+                ActionEmit::default()
             }
             "setTransformTool" => {
                 if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
-                    envelope.runtime.transform_tool = tool.into();
-                    return vec![set_document_op(&envelope)];
+                    self.runtime.transform_tool = tool.into();
                 }
+                ActionEmit::default()
             }
             "translateSelection" => {
-                let ids = mesh_selection_ids(args, &envelope.runtime.selected_object_ids);
+                let ids = mesh_selection_ids(args, &self.runtime.selected_object_ids);
+                if ids.is_empty() {
+                    return ActionEmit::default();
+                }
                 let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let dz = args.and_then(|value| value.get("dz")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                if dispatch_cad_ops(
-                    &mut envelope,
-                    vec![CadOp::TranslateObjects {
-                        object_ids: ids,
-                        dx,
-                        dy,
-                        dz,
-                    }],
-                ) {
-                    return vec![set_document_op(&envelope)];
+                ActionEmit {
+                    ops: vec![CadOp::TranslateObjects { object_ids: ids, dx, dy, dz }],
+                    coalesce_key: Some("gumball.translate".into()),
+                    ..Default::default()
                 }
             }
             "rotateSelection" => {
-                let ids = mesh_selection_ids(args, &envelope.runtime.selected_object_ids);
+                let ids = mesh_selection_ids(args, &self.runtime.selected_object_ids);
+                if ids.is_empty() {
+                    return ActionEmit::default();
+                }
                 let ax = args.and_then(|value| value.get("ax")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let ay = args.and_then(|value| value.get("ay")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let az = args.and_then(|value| value.get("az")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let angle = args.and_then(|value| value.get("angle")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                if dispatch_cad_ops(
-                    &mut envelope,
-                    vec![CadOp::RotateObjects {
-                        object_ids: ids,
-                        ax,
-                        ay,
-                        az,
-                        angle,
-                    }],
-                ) {
-                    return vec![set_document_op(&envelope)];
+                ActionEmit {
+                    ops: vec![CadOp::RotateObjects { object_ids: ids, ax, ay, az, angle }],
+                    coalesce_key: Some("gumball.rotate".into()),
+                    ..Default::default()
                 }
             }
             "scaleSelection" => {
-                let ids = mesh_selection_ids(args, &envelope.runtime.selected_object_ids);
+                let ids = mesh_selection_ids(args, &self.runtime.selected_object_ids);
+                if ids.is_empty() {
+                    return ActionEmit::default();
+                }
                 let sx = args.and_then(|value| value.get("sx")).and_then(|value| value.as_f64()).unwrap_or(1.0);
                 let sy = args.and_then(|value| value.get("sy")).and_then(|value| value.as_f64()).unwrap_or(1.0);
                 let sz = args.and_then(|value| value.get("sz")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-                if dispatch_cad_ops(
-                    &mut envelope,
-                    vec![CadOp::ScaleObjects {
-                        object_ids: ids,
-                        sx,
-                        sy,
-                        sz,
-                    }],
-                ) {
-                    return vec![set_document_op(&envelope)];
+                ActionEmit {
+                    ops: vec![CadOp::ScaleObjects { object_ids: ids, sx, sy, sz }],
+                    coalesce_key: Some("gumball.scale".into()),
+                    ..Default::default()
                 }
             }
             "addObject" => {
@@ -4824,23 +4820,17 @@ impl PluginApp for CadApp {
                     .and_then(|value| value.get("typology"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("spatial.shape.primitive.box");
-                let pane = cad_pane_from_model_definition_id(&envelope.document.active_model_definition_id)
+                let pane = cad_pane_from_model_definition_id(&document.active_model_definition_id)
                     .unwrap_or(CadPaneId::Shape);
-                let object = make_object_for_typology(typology, cad_pane_objects(&envelope.document, pane).len(), pane);
-                let id = object.id.clone();
-                if dispatch_cad_ops(
-                    &mut envelope,
-                    vec![CadOp::AddObject { pane, object }],
-                ) {
-                    envelope.runtime.selected_object_ids = vec![id];
-                    return vec![set_document_op(&envelope)];
-                }
+                let object = make_object_for_typology(typology, cad_pane_objects(document, pane).len(), pane);
+                self.runtime.selected_object_ids = vec![object.id.clone()];
+                ActionEmit::ops(vec![CadOp::AddObject { pane, object }])
             }
             "patchObject" | "patchSelection" => {
                 let object_ids: Vec<String> = if action == "patchSelection" {
                     args.and_then(|value| value.get("objectIds"))
                         .and_then(|value| serde_json::from_value(value.clone()).ok())
-                        .unwrap_or_else(|| envelope.runtime.selected_object_ids.clone())
+                        .unwrap_or_else(|| self.runtime.selected_object_ids.clone())
                 } else {
                     args.and_then(|value| value.get("objectId"))
                         .and_then(|value| value.as_str())
@@ -4852,89 +4842,50 @@ impl PluginApp for CadApp {
                     .and_then(|value| value.as_str())
                     .unwrap_or("");
                 let value = args.and_then(|value| value.get("value"));
-                if patch_objects_in_envelope(&mut envelope, &object_ids, field, value) {
-                    return vec![set_document_op(&envelope)];
-                }
+                ActionEmit::ops(patch_objects_ops(document, &object_ids, field, value))
             }
             "deleteObject" => {
                 let object_id = args
                     .and_then(|value| value.get("objectId"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("");
-                if let Some(pane) = cad_find_object_pane(&envelope.document, object_id) {
-                    if dispatch_cad_ops(
-                        &mut envelope,
-                        vec![CadOp::RemoveObject {
-                            pane,
-                            object_id: object_id.into(),
-                        }],
-                    ) {
-                        envelope.runtime.selected_object_ids.retain(|id| id != object_id);
-                        return vec![set_document_op(&envelope)];
-                    }
+                if let Some(pane) = cad_find_object_pane(document, object_id) {
+                    self.runtime.selected_object_ids.retain(|id| id != object_id);
+                    return ActionEmit::ops(vec![CadOp::RemoveObject { pane, object_id: object_id.into() }]);
                 }
+                ActionEmit::default()
             }
             "duplicateObject" => {
                 let object_id = args
                     .and_then(|value| value.get("objectId"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("");
-                let duplicate_target = cad_all_objects(&envelope.document)
+                let duplicate_target = cad_all_objects(document)
                     .find(|(object, _)| object.id == object_id)
                     .map(|(object, pane)| (object.clone(), pane));
                 if let Some((mut duplicate, pane)) = duplicate_target {
                     duplicate.id = next_cad_id("object");
                     duplicate.label = format!("{} copy", duplicate.label);
-                    if dispatch_cad_ops(
-                        &mut envelope,
-                        vec![CadOp::AddObject {
-                            pane,
-                            object: duplicate.clone(),
-                        }],
-                    ) {
-                        envelope.runtime.selected_object_ids = vec![duplicate.id];
-                        return vec![set_document_op(&envelope)];
-                    }
+                    self.runtime.selected_object_ids = vec![duplicate.id.clone()];
+                    return ActionEmit::ops(vec![CadOp::AddObject { pane, object: duplicate }]);
                 }
+                ActionEmit::default()
             }
             "addNode" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("solid");
                 let id = next_cad_id("node");
-                let label = format!("Node {}", envelope.document.nodes.len() + 1);
+                let label = format!("Node {}", document.nodes.len() + 1);
                 let node = CadNode { id: id.clone(), label, kind: kind.into() };
-                if dispatch_cad_ops(&mut envelope, vec![CadOp::AddNode { node }]) {
-                    envelope.runtime.selected_node_ids = vec![id];
-                    return vec![set_document_op(&envelope)];
-                }
+                self.runtime.selected_node_ids = vec![id];
+                ActionEmit::ops(vec![CadOp::AddNode { node }])
             }
             "renameNode" => {
                 let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).unwrap_or("");
                 let label = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
-                if !node_id.is_empty() && !label.is_empty()
-                    && dispatch_cad_ops(
-                        &mut envelope,
-                        vec![CadOp::RenameNode {
-                            node_id: node_id.into(),
-                            label: label.into(),
-                        }],
-                    )
-                {
-                    return vec![set_document_op(&envelope)];
+                if node_id.is_empty() || label.is_empty() {
+                    return ActionEmit::default();
                 }
-            }
-            "undo" => {
-                let mut store = cad_history_store(&envelope);
-                if store.dispatch(DocumentVcsCommand::Undo).is_ok() {
-                    sync_cad_history(&mut envelope, &store);
-                    return vec![set_document_op(&envelope)];
-                }
-            }
-            "redo" => {
-                let mut store = cad_history_store(&envelope);
-                if store.dispatch(DocumentVcsCommand::Redo).is_ok() {
-                    sync_cad_history(&mut envelope, &store);
-                    return vec![set_document_op(&envelope)];
-                }
+                ActionEmit::ops(vec![CadOp::RenameNode { node_id: node_id.into(), label: label.into() }])
             }
             "worldSelect" => {
                 let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
@@ -4942,32 +4893,28 @@ impl PluginApp for CadApp {
                     .and_then(|value| value.get("ids"))
                     .and_then(|value| serde_json::from_value(value.clone()).ok())
                     .unwrap_or_default();
-                envelope.runtime.selected_object_ids =
-                    merge_world_selection_ids(&envelope.runtime.selected_object_ids, &ids, merge);
-                envelope.runtime.selected_node_ids.clear();
-                envelope.runtime.selected_primitive_id = None;
-                envelope.runtime.selected_primitive_kind = None;
-                envelope.runtime.selected_reference_model_definition_id = None;
-                envelope.runtime.selected_reference_id = None;
-                return vec![set_document_op(&envelope)];
+                self.runtime.selected_object_ids =
+                    merge_world_selection_ids(&self.runtime.selected_object_ids, &ids, merge);
+                self.runtime.selected_node_ids.clear();
+                self.runtime.selected_primitive_id = None;
+                self.runtime.selected_primitive_kind = None;
+                self.runtime.selected_reference_model_definition_id = None;
+                self.runtime.selected_reference_id = None;
+                ActionEmit::default()
             }
             "worldHover" => {
-                envelope.runtime.hovered_object_id = args
+                self.runtime.hovered_object_id = args
                     .and_then(|value| value.get("id"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string);
-                return vec![set_document_op(&envelope)];
+                ActionEmit::default()
             }
             "setHover" => {
-                if args.is_none() || args.and_then(|value| value.get("objectId")).is_none() {
-                    envelope.runtime.hovered_object_id = None;
-                } else {
-                    envelope.runtime.hovered_object_id = args
-                        .and_then(|value| value.get("objectId"))
-                        .and_then(|value| value.as_str())
-                        .map(str::to_string);
-                }
-                return vec![set_document_op(&envelope)];
+                self.runtime.hovered_object_id = args
+                    .and_then(|value| value.get("objectId"))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                ActionEmit::default()
             }
             "worldPick" => {
                 let merge = args
@@ -4979,11 +4926,11 @@ impl PluginApp for CadApp {
                     .map_or(true, |value| value.is_null())
                 {
                     if merge == "replace" {
-                        envelope.runtime.selected_object_ids.clear();
-                        envelope.runtime.selected_primitive_id = None;
-                        envelope.runtime.selected_primitive_kind = None;
+                        self.runtime.selected_object_ids.clear();
+                        self.runtime.selected_primitive_id = None;
+                        self.runtime.selected_primitive_kind = None;
                     }
-                    return vec![set_document_op(&envelope)];
+                    return ActionEmit::default();
                 }
                 let index = args
                     .and_then(|value| value.get("id"))
@@ -4999,68 +4946,62 @@ impl PluginApp for CadApp {
                             .map(cad_pane_id_from_suffix)
                     })
                     .unwrap_or(CadPaneId::Shape);
-                if let Some(object) = cad_pane_objects(&envelope.document, pane)
+                if let Some(object) = cad_pane_objects(document, pane)
                     .iter()
                     .filter(|object| object.visible)
                     .nth(index)
                 {
                     let id = object.id.clone();
-                    envelope.runtime.selected_object_ids =
-                        merge_world_selection_ids(&envelope.runtime.selected_object_ids, &[id], merge);
-                    envelope.runtime.selected_node_ids.clear();
-                    envelope.runtime.selected_primitive_id = None;
-                    envelope.runtime.selected_primitive_kind = None;
-                    envelope.runtime.selected_reference_model_definition_id = None;
-                    envelope.runtime.selected_reference_id = None;
+                    self.runtime.selected_object_ids =
+                        merge_world_selection_ids(&self.runtime.selected_object_ids, &[id], merge);
+                    self.runtime.selected_node_ids.clear();
+                    self.runtime.selected_primitive_id = None;
+                    self.runtime.selected_primitive_kind = None;
+                    self.runtime.selected_reference_model_definition_id = None;
+                    self.runtime.selected_reference_id = None;
                 }
-                return vec![set_document_op(&envelope)];
+                ActionEmit::default()
             }
             "setSelectionMethod" => {
-                let method = args
+                self.runtime.selection_method = args
                     .and_then(|value| value.get("method"))
                     .and_then(|value| value.as_str())
-                    .unwrap_or("rectangle");
-                envelope.runtime.selection_method = method.into();
-                return vec![set_document_op(&envelope)];
+                    .unwrap_or("rectangle")
+                    .into();
+                ActionEmit::default()
             }
             "focusModelDefinition" => {
                 if let Some(model_definition_id) = args
                     .and_then(|value| value.get("modelDefinitionId"))
                     .and_then(|value| value.as_str())
                 {
-                    envelope.document.active_model_definition_id = model_definition_id.into();
-                    return vec![set_document_op(&envelope)];
+                    return ActionEmit::ops(vec![CadOp::SetActiveModelDefinition {
+                        model_definition_id: model_definition_id.into(),
+                    }]);
                 }
+                ActionEmit::default()
             }
             "applyTransformation" => {
                 let qid = args
                     .and_then(|value| value.get("qid"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("");
-                if apply_transformation_to_envelope(&mut envelope, qid) {
-                    return vec![set_document_op(&envelope)];
-                }
+                ActionEmit::ops(apply_transformation_ops(document, qid))
             }
             "saveSelected" => {
-                envelope.runtime.pending_export = Some(export_spatial_json(&envelope, "selected"));
-                envelope.runtime.pending_export_filename = Some("cad.selected.spatial.json".into());
-                envelope.runtime.pending_export_mime = Some("application/json".into());
-                let mut ops = vec![set_document_op(&envelope)];
-                ops.extend(export_download_ops(&envelope));
-                return ops;
+                let view = CadPlayView { document: document.clone(), runtime: self.runtime.clone() };
+                ActionEmit::effect(cad_spatial_export_effect(
+                    export_spatial_json(&view, "selected"),
+                    "cad.selected.spatial.json",
+                ))
             }
             "saveInPlay" => {
-                if let Some(export) = export_solid_modelspace(&envelope, semio_framework_plugin::OsMediaFormat::Step) {
-                    apply_solid_export(&mut envelope, export);
-                } else {
-                    envelope.runtime.pending_export = Some(export_spatial_json(&envelope, "modelspace"));
-                    envelope.runtime.pending_export_filename = Some("cad.modelspace.spatial.json".into());
-                    envelope.runtime.pending_export_mime = Some("application/json".into());
-                    envelope.runtime.pending_export_encoding = None;
-                }
-                let mut ops = vec![set_document_op(&envelope)];
-                ops.extend(export_download_ops(&envelope));
-                return ops;
+                let view = CadPlayView { document: document.clone(), runtime: self.runtime.clone() };
+                let effect = match export_solid_modelspace(&view, semio_framework_plugin::OsMediaFormat::Step) {
+                    Some(export) => cad_solid_export_effect(export),
+                    None => cad_spatial_export_effect(export_spatial_json(&view, "modelspace"), "cad.modelspace.spatial.json"),
+                };
+                ActionEmit::effect(effect)
             }
             "saveCurrent" | "saveCurrentObj" | "saveCurrentStl" => {
                 let format = match action {
@@ -5068,33 +5009,20 @@ impl PluginApp for CadApp {
                     "saveCurrentStl" => semio_framework_plugin::OsMediaFormat::Stl,
                     _ => semio_framework_plugin::OsMediaFormat::Step,
                 };
-                let pane = cad_pane_from_model_definition_id(&envelope.document.active_model_definition_id)
+                let pane = cad_pane_from_model_definition_id(&document.active_model_definition_id)
                     .unwrap_or(CadPaneId::Shape);
-                if let Some(export) = export_solid_for_pane(&envelope, pane, format) {
-                    apply_solid_export(&mut envelope, export);
-                } else {
-                    envelope.runtime.pending_export = Some(export_spatial_json(&envelope, "current"));
-                    envelope.runtime.pending_export_filename = Some("cad.current.spatial.json".into());
-                    envelope.runtime.pending_export_mime = Some("application/json".into());
-                    envelope.runtime.pending_export_encoding = None;
-                }
-                let mut ops = vec![set_document_op(&envelope)];
-                ops.extend(export_download_ops(&envelope));
-                return ops;
+                let view = CadPlayView { document: document.clone(), runtime: self.runtime.clone() };
+                let effect = match export_solid_for_pane(&view, pane, format) {
+                    Some(export) => cad_solid_export_effect(export),
+                    None => cad_spatial_export_effect(export_spatial_json(&view, "current"), "cad.current.spatial.json"),
+                };
+                ActionEmit::effect(effect)
             }
-            "loadRawRequest" => {
-                envelope.runtime.pending_export = None;
-                envelope.runtime.pending_export_filename = None;
-                envelope.runtime.pending_export_mime = None;
-                envelope.runtime.pending_export_encoding = None;
-                return vec![json!({
-                    "op": "requestFileOpen",
-                    "accept": ".json,.spatial.json,.stp,.step,.obj,.stl,.glb",
-                    "importAction": "importCadFile",
-                    "readAs": "dataUrl",
-                })
-                .to_string()];
-            }
+            "loadRawRequest" => ActionEmit::effect(HostEffect::RequestFileOpen {
+                accept: ".json,.spatial.json,.stp,.step,.obj,.stl,.glb".into(),
+                read_as: Some("dataUrl".into()),
+                import_action: "importCadFile".into(),
+            }),
             "importCadFile" => {
                 let name = args
                     .and_then(|value| value.get("name"))
@@ -5105,33 +5033,24 @@ impl PluginApp for CadApp {
                     .and_then(|value| value.get("payload").or_else(|| value.get("modelSpace")))
                     .cloned()
                     .or_else(|| args.cloned());
-                let Some(payload) = payload else { return Vec::new() };
+                let Some(payload) = payload else { return ActionEmit::default() };
                 if let Some(object) = import_cad_object_by_extension(&name, &payload) {
-                    envelope.document.objects.push(object);
-                    envelope.history = seed_cad_history(&envelope.document);
-                    return vec![set_document_op(&envelope)];
+                    self.runtime.selected_object_ids = vec![object.id.clone()];
+                    return ActionEmit::ops(vec![CadOp::AddObject { pane: CadPaneId::Shape, object }]);
                 }
                 let payload = match payload {
                     Value::String(text) => serde_json::from_str::<Value>(&text).unwrap_or(Value::String(text)),
                     other => other,
                 };
                 let unwrapped = unwrap_spatial_load_payload(&payload).unwrap_or(payload);
-                if let Some(scene) = scene_from_spatial_payload(&unwrapped) {
-                    envelope.document = scene;
-                    envelope.history = seed_cad_history(&envelope.document);
-                    envelope.applied_edit_ids.clear();
-                    envelope.redo_edit_ids.clear();
-                    envelope.runtime.selected_object_ids.clear();
-                    envelope.runtime.engagement_session = None;
-                    return vec![set_document_op(&envelope)];
+                let scene = scene_from_spatial_payload(&unwrapped)
+                    .or_else(|| serde_json::from_value::<CadScene>(unwrapped).ok());
+                if let Some(scene) = scene {
+                    self.runtime.selected_object_ids.clear();
+                    self.runtime.engagement_session = None;
+                    return ActionEmit::ops(vec![CadOp::SetScene { scene: Box::new(scene) }]);
                 }
-                if let Ok(scene) = serde_json::from_value::<CadScene>(unwrapped) {
-                    envelope.document = scene;
-                    envelope.history = seed_cad_history(&envelope.document);
-                    envelope.applied_edit_ids.clear();
-                    envelope.redo_edit_ids.clear();
-                    return vec![set_document_op(&envelope)];
-                }
+                ActionEmit::default()
             }
             "setReferenceSelection" => {
                 let pane = args

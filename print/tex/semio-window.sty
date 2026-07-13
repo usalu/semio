@@ -457,11 +457,10 @@
 \tl_new:N \l_semio_termlist_title_tl
 \tl_new:N \l_semio_termlist_definition_tl
 \tl_new:N \l_semio_termlist_term_tl
-\tl_new:N \l_semio_termlist_label_tl
 
 \cs_new_protected:Npn \semio_termlist_term_ensure:nn #1#2 {
-  \exp_args:Ncn \prop_if_in:NnF { g_semio_#1_pages_prop } {#2} {
-    \exp_args:Ncn \seq_gput_right:Nn { g_semio_#1_terms_seq } {#2}
+  \exp_args:Nc \prop_if_in:NnF { g_semio_#1_pages_prop } {#2} {
+    \exp_args:Nc \seq_gput_right:Nn { g_semio_#1_terms_seq } {#2}
     \clist_clear:N \l_semio_termlist_labels_clist
     \exp_args:Nc \prop_gput:NnV { g_semio_#1_pages_prop } {#2} \l_semio_termlist_labels_clist
   }
@@ -481,20 +480,22 @@
     \exp_args:Nc \prop_gput:NnV { g_semio_#1_pages_prop } {#2} \l_semio_termlist_labels_clist
   }
 }
+\cs_generate_variant:Nn \semio_termlist_label_append:nnn { nnx }
 
 \cs_new_protected:Npn \semio_termlist_labels_csv:nn #1#2 {
   \tl_clear:N \l_tmpd_tl
   \exp_args:Nc \prop_get:NnNTF { g_semio_#1_pages_prop } {#2} \l_semio_termlist_labels_clist {
+    \typeout{[DEBUG]~labels_csv~T-branch~#1/#2~clist=\l_semio_termlist_labels_clist}
     \clist_map_inline:Nn \l_semio_termlist_labels_clist {
       \tl_if_empty:NTF \l_tmpd_tl { } { \tl_put_right:Nn \l_tmpd_tl { , } }
       \tl_put_right:Nn \l_tmpd_tl { ####1 }
     }
-  } { }
+  } { \typeout{[DEBUG]~labels_csv~F-branch~#1/#2~key-not-found} }
+  \typeout{[DEBUG]~labels_csv~result~#1/#2=\l_tmpd_tl}
 }
 
 \cs_new_protected:Npn \semio_termlist_use:nn #1#2 {
   \semio_termlist_term_ensure:nn {#1} {#2}
-  \tl_set:Nn \l_semio_termlist_term_tl {#2}
   \refstepcounter { semio#1usage }
   \group_begin:
   \ExplSyntaxOff
@@ -503,9 +504,8 @@
   \expandafter\label\expandafter{\semio@termlist@label}%
   \makeatother
   \group_end:
-  \tl_set:Nx \l_semio_termlist_label_tl { \semio@termlist@label }
-  \exp_args:NnVV \semio_termlist_label_append:nnn {#1} \l_semio_termlist_term_tl \l_semio_termlist_label_tl
-  \tl_use:N \l_semio_termlist_term_tl
+  \semio_termlist_label_append:nnx {#1} {#2} { \semio@termlist@label }
+  #2
 }
 
 \cs_new:Npn \semio_termlist_sort_compare:nn #1#2 {
@@ -514,8 +514,9 @@
     { \sort_return_reverse: }
 }
 
+\cs_generate_variant:Nn \seq_set_eq:NN { Nc }
 \cs_new_protected:Npn \semio_termlist_terms_sort:n #1 {
-  \exp_args:Nc \seq_set_eq:NN \l_semio_termlist_sorted_terms_seq { g_semio_#1_terms_seq }
+  \seq_set_eq:Nc \l_semio_termlist_sorted_terms_seq { g_semio_#1_terms_seq }
   \seq_sort:Nn \l_semio_termlist_sorted_terms_seq {
     \semio_termlist_sort_compare:nn { ####1 } { ######1 }
   }
@@ -1842,10 +1843,16 @@
 % \semio_window_break_suffix_apply: to decide whether page 1's hierarchy
 % chip needs a ":1" suffix. Wired into the `semio~window` tcbset style as
 % `overlay unbroken=` / `overlay last=`.
+% ⚠️ \newcommand bodies are tokenized *once*, in full, using whatever
+% catcodes are active at the point of definition — an `\ExplSyntaxOn` token
+% appearing *inside* an already-tokenized body cannot retroactively fix how
+% the "_"/":" characters right after it were scanned. So these two macros'
+% *definitions* (not just their bodies) must sit inside this ExplSyntaxOn
+% wrapper for their l3 (`\semio_window_..._:n`) call sites to tokenize as
+% single control sequences.
+\ExplSyntaxOn
 \newcommand{\semio@window@break@record}[1]{%
-  \ExplSyntaxOn
   \semio_window_break_record:n {#1}%
-  \ExplSyntaxOff
 }
 
 % 🪟 Redraws the *exact* header chip row (same \semio@window@header@muted
@@ -1862,6 +1869,7 @@
     \semio@window@header@muted{\semio@window@header@number:\semio@window@header@part@num}{\semio@window@header@title}%
   };%
 }
+\ExplSyntaxOff
 %endregion WindowBreakParts chrome
 
 \newcommand{\semio@chrome@heading@set}[1]{%
@@ -2757,7 +2765,7 @@
   \semio@chrome@dims@compute
 }
 
-\setlength{\headheight}{\dimexpr\semio@chrome@navbar@height+\semio@stroke@hairline\relax}
+\setlength{\headheight}{38.14006pt}
 \setlength{\headsep}{\semio@spacing@double}
 \newlength{\semio@chrome@footer@reserve}
 \setlength{\semio@chrome@footer@reserve}{\dimexpr\semio@spacing@double+\semio@chrome@footer@height+\semio@stroke@hairline\relax}

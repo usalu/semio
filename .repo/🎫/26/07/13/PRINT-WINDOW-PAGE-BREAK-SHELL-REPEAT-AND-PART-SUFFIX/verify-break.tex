@@ -1,0 +1,163 @@
+% !TEX program = tectonic
+% 🧪 Scratch verification fixture for PRINT-WINDOW-PAGE-BREAK-SHELL-REPEAT-AND-PART-SUFFIX.
+% Not a permanent template — kept only inside this ticket folder per repo rules.
+% Forces a Table window long enough to span multiple pages, to verify:
+%   (a) the window shell (border + header chip row) repeats on every continuation page,
+%   (b) the hierarchy chip shows ":<N>" per page-part once it has broken,
+%   (c) an ordinary single-page Table/Figure elsewhere renders unaffected,
+%   (d) \listoftables shows one non-suffixed entry for the broken table.
+\documentclass[type=report,theme=light,language=de]{semio}
+\title{Window Break Verify}
+\author{Test}
+\begin{document}
+
+\chapter{Short}
+\begin{Table}[title=Kurze Tabelle]
+  \SemioTableThree{%
+    \SemioTableHeaderRow{AP & Partner & Schwerpunkt}
+    \SemioTableRow{AP-Erfahrung & Leibniz Universität Hannover & Recherche, Interviews}
+    \SemioTableRow{AP-Plattform & Leibniz Universität Hannover & Generatoren}
+    \SemioTableRow{AP-Tool & UdK Berlin & HID, KI-Assistenz}
+  }%
+\end{Table}
+
+\begin{Figure}[title=Kurze Figur]
+  Ein einzelnes, nicht umbrechendes Fenster zum Vergleich.
+\end{Figure}
+
+\chapter{Long}
+\begin{Table}[title=Lange Tabelle]
+  \SemioTableThree{%
+    \SemioTableHeaderRow{AP & Partner & Schwerpunkt}
+    \SemioTableRow{AP-001 & UdK Berlin & Tragwerksplanung, Konstruktives Entwerfen}
+    \SemioTableRow{AP-002 & Leibniz Universität Hannover & Generatoren, Plattformarchitektur}
+    \SemioTableRow{AP-003 & UdK Berlin & HID, KI-Assistenz, Prototyping}
+    \SemioTableRow{AP-004 & Leibniz Universität Hannover & Energieperformance, Simulation}
+    \SemioTableRow{AP-005 & UdK Berlin & Tragwerksoptimierung}
+    \SemioTableRow{AP-006 & Leibniz Universität Hannover & Schnittstellendefinition}
+    \SemioTableRow{AP-007 & UdK Berlin & Materialkataster, Bauteilbörsen}
+    \SemioTableRow{AP-008 & Leibniz Universität Hannover & Community, Discourse}
+    \SemioTableRow{AP-009 & UdK Berlin & Journalpaper, Zenodo}
+    \SemioTableRow{AP-010 & Leibniz Universität Hannover & Recherche, Interviews, Auswertung, Dokumentation}
+    \SemioTableRow{AP-011 & UdK Berlin & Tragwerksplanung, Konstruktives Entwerfen}
+    \SemioTableRow{AP-012 & Leibniz Universität Hannover & Generatoren, Plattformarchitektur}
+    \SemioTableRow{AP-013 & UdK Berlin & HID, KI-Assistenz, Prototyping}
+    \SemioTableRow{AP-014 & Leibniz Universität Hannover & Energieperformance, Simulation}
+    \SemioTableRow{AP-015 & UdK Berlin & Tragwerksoptimierung}
+    \SemioTableRow{AP-016 & Leibniz Universität Hannover & Schnittstellendefinition}
+    \SemioTableRow{AP-017 & UdK Berlin & Materialkataster, Bauteilbörsen}
+    \SemioTableRow{AP-018 & Leibniz Universität Hannover & Community, Discourse}
+    \SemioTableRow{AP-019 & UdK Berlin & Journalpaper, Zenodo}
+    \SemioTableRow{AP-020 & Leibniz Universität Hannover & Recherche, Interviews, Auswertung, Dokumentation}
+    \SemioTableRow{AP-021 & UdK Berlin & Tragwerksplanung, Konstruktives Entwerfen}
+    \SemioTableRow{AP-022 & Leibniz Universität Hannover & Generatoren, Plattformarchitektur}
+    \SemioTableRow{AP-023 & UdK Berlin & HID, KI-Assistenz, Prototyping}
+    \SemioTableRow{AP-024 & Leibniz Universität Hannover & Energieperformance, Simulation}
+    \SemioTableRow{AP-025 & UdK Berlin & Tragwerksoptimierung}
+    \SemioTableRow{AP-026 & Leibniz Universität Hannover & Schnittstellendefinition}
+    \SemioTableRow{AP-027 & UdK Berlin & Materialkataster, Bauteilbörsen}
+    \SemioTableRow{AP-028 & Leibniz Universität Hannover & Community, Discourse}
+    \SemioTableRow{AP-029 & UdK Berlin & Journalpaper, Zenodo}
+    \SemioTableRow{AP-030 & Leibniz Universität Hannover & Recherche, Interviews, Auswertung, Dokumentation}
+    \SemioTableRow{AP-031 & UdK Berlin & Tragwerksplanung, Konstruktives Entwerfen}
+    \SemioTableRow{AP-032 & Leibniz Universität Hannover & Generatoren, Plattformarchitektur}
+    \SemioTableRow{AP-033 & UdK Berlin & HID, KI-Assistenz, Prototyping}
+    \SemioTableRow{AP-034 & Leibniz Universität Hannover & Energieperformance, Simulation}
+    \SemioTableRow{AP-035 & UdK Berlin & Tragwerksoptimierung}
+    \SemioTableRow{AP-036 & Leibniz Universität Hannover & Schnittstellendefinition}
+    \SemioTableRow{AP-037 & UdK Berlin & Materialkataster, Bauteilbörsen}
+    \SemioTableRow{AP-038 & Leibniz Universität Hannover & Community, Discourse}
+    \SemioTableRow{AP-039 & UdK Berlin & Journalpaper, Zenodo}
+    \SemioTableRow{AP-040 & Leibniz Universität Hannover & Recherche, Interviews, Auswertung, Dokumentation}
+    \SemioTableRow{AP-041 & UdK Berlin & Tragwerksplanung, Konstruktives Entwerfen}
+    \SemioTableRow{AP-042 & Leibniz Universität Hannover & Generatoren, Plattformarchitektur}
+    \SemioTableRow{AP-043 & UdK Berlin & HID, KI-Assistenz, Prototyping}
+    \SemioTableRow{AP-044 & Leibniz Universität Hannover & Energieperformance, Simulation}
+    \SemioTableRow{AP-045 & UdK Berlin & Tragwerksoptimierung}
+    \SemioTableRow{AP-046 & Leibniz Universität Hannover & Schnittstellendefinition}
+    \SemioTableRow{AP-047 & UdK Berlin & Materialkataster, Bauteilbörsen}
+    \SemioTableRow{AP-048 & Leibniz Universität Hannover & Community, Discourse}
+    \SemioTableRow{AP-049 & UdK Berlin & Journalpaper, Zenodo}
+    \SemioTableRow{AP-050 & Leibniz Universität Hannover & Recherche, Interviews, Auswertung, Dokumentation}
+    \SemioTableRow{AP-051 & UdK Berlin & Tragwerksplanung, Konstruktives Entwerfen}
+    \SemioTableRow{AP-052 & Leibniz Universität Hannover & Generatoren, Plattformarchitektur}
+    \SemioTableRow{AP-053 & UdK Berlin & HID, KI-Assistenz, Prototyping}
+    \SemioTableRow{AP-054 & Leibniz Universität Hannover & Energieperformance, Simulation}
+    \SemioTableRow{AP-055 & UdK Berlin & Tragwerksoptimierung}
+    \SemioTableRow{AP-056 & Leibniz Universität Hannover & Schnittstellendefinition}
+    \SemioTableRow{AP-057 & UdK Berlin & Materialkataster, Bauteilbörsen}
+    \SemioTableRow{AP-058 & Leibniz Universität Hannover & Community, Discourse}
+    \SemioTableRow{AP-059 & UdK Berlin & Journalpaper, Zenodo}
+    \SemioTableRow{AP-060 & Leibniz Universität Hannover & Recherche, Interviews, Auswertung, Dokumentation}
+    \SemioTableRow{AP-061 & UdK Berlin & Tragwerksplanung, Konstruktives Entwerfen}
+    \SemioTableRow{AP-062 & Leibniz Universität Hannover & Generatoren, Plattformarchitektur}
+    \SemioTableRow{AP-063 & UdK Berlin & HID, KI-Assistenz, Prototyping}
+    \SemioTableRow{AP-064 & Leibniz Universität Hannover & Energieperformance, Simulation}
+    \SemioTableRow{AP-065 & UdK Berlin & Tragwerksoptimierung}
+    \SemioTableRow{AP-066 & Leibniz Universität Hannover & Schnittstellendefinition}
+    \SemioTableRow{AP-067 & UdK Berlin & Materialkataster, Bauteilbörsen}
+    \SemioTableRow{AP-068 & Leibniz Universität Hannover & Community, Discourse}
+    \SemioTableRow{AP-069 & UdK Berlin & Journalpaper, Zenodo}
+    \SemioTableRow{AP-070 & Leibniz Universität Hannover & Recherche, Interviews, Auswertung, Dokumentation}
+    \SemioTableRow{AP-071 & UdK Berlin & Tragwerksplanung, Konstruktives Entwerfen}
+    \SemioTableRow{AP-072 & Leibniz Universität Hannover & Generatoren, Plattformarchitektur}
+    \SemioTableRow{AP-073 & UdK Berlin & HID, KI-Assistenz, Prototyping}
+    \SemioTableRow{AP-074 & Leibniz Universität Hannover & Energieperformance, Simulation}
+    \SemioTableRow{AP-075 & UdK Berlin & Tragwerksoptimierung}
+    \SemioTableRow{AP-076 & Leibniz Universität Hannover & Schnittstellendefinition}
+    \SemioTableRow{AP-077 & UdK Berlin & Materialkataster, Bauteilbörsen}
+    \SemioTableRow{AP-078 & Leibniz Universität Hannover & Community, Discourse}
+    \SemioTableRow{AP-079 & UdK Berlin & Journalpaper, Zenodo}
+    \SemioTableRow{AP-080 & Leibniz Universität Hannover & Recherche, Interviews, Auswertung, Dokumentation}
+    \SemioTableRow{AP-081 & UdK Berlin & Tragwerksplanung, Konstruktives Entwerfen}
+    \SemioTableRow{AP-082 & Leibniz Universität Hannover & Generatoren, Plattformarchitektur}
+    \SemioTableRow{AP-083 & UdK Berlin & HID, KI-Assistenz, Prototyping}
+    \SemioTableRow{AP-084 & Leibniz Universität Hannover & Energieperformance, Simulation}
+    \SemioTableRow{AP-085 & UdK Berlin & Tragwerksoptimierung}
+    \SemioTableRow{AP-086 & Leibniz Universität Hannover & Schnittstellendefinition}
+    \SemioTableRow{AP-087 & UdK Berlin & Materialkataster, Bauteilbörsen}
+    \SemioTableRow{AP-088 & Leibniz Universität Hannover & Community, Discourse}
+    \SemioTableRow{AP-089 & UdK Berlin & Journalpaper, Zenodo}
+    \SemioTableRow{AP-090 & Leibniz Universität Hannover & Recherche, Interviews, Auswertung, Dokumentation}
+    \SemioTableRow{AP-091 & UdK Berlin & Tragwerksplanung, Konstruktives Entwerfen}
+    \SemioTableRow{AP-092 & Leibniz Universität Hannover & Generatoren, Plattformarchitektur}
+    \SemioTableRow{AP-093 & UdK Berlin & HID, KI-Assistenz, Prototyping}
+    \SemioTableRow{AP-094 & Leibniz Universität Hannover & Energieperformance, Simulation}
+    \SemioTableRow{AP-095 & UdK Berlin & Tragwerksoptimierung}
+    \SemioTableRow{AP-096 & Leibniz Universität Hannover & Schnittstellendefinition}
+    \SemioTableRow{AP-097 & UdK Berlin & Materialkataster, Bauteilbörsen}
+    \SemioTableRow{AP-098 & Leibniz Universität Hannover & Community, Discourse}
+    \SemioTableRow{AP-099 & UdK Berlin & Journalpaper, Zenodo}
+    \SemioTableRow{AP-100 & Leibniz Universität Hannover & Recherche, Interviews, Auswertung, Dokumentation}
+    \SemioTableRow{AP-101 & UdK Berlin & Tragwerksplanung, Konstruktives Entwerfen}
+    \SemioTableRow{AP-102 & Leibniz Universität Hannover & Generatoren, Plattformarchitektur}
+    \SemioTableRow{AP-103 & UdK Berlin & HID, KI-Assistenz, Prototyping}
+    \SemioTableRow{AP-104 & Leibniz Universität Hannover & Energieperformance, Simulation}
+    \SemioTableRow{AP-105 & UdK Berlin & Tragwerksoptimierung}
+    \SemioTableRow{AP-106 & Leibniz Universität Hannover & Schnittstellendefinition}
+    \SemioTableRow{AP-107 & UdK Berlin & Materialkataster, Bauteilbörsen}
+    \SemioTableRow{AP-108 & Leibniz Universität Hannover & Community, Discourse}
+    \SemioTableRow{AP-109 & UdK Berlin & Journalpaper, Zenodo}
+    \SemioTableRow{AP-110 & Leibniz Universität Hannover & Recherche, Interviews, Auswertung, Dokumentation}
+    \SemioTableRow{AP-111 & UdK Berlin & Tragwerksplanung, Konstruktives Entwerfen}
+    \SemioTableRow{AP-112 & Leibniz Universität Hannover & Generatoren, Plattformarchitektur}
+    \SemioTableRow{AP-113 & UdK Berlin & HID, KI-Assistenz, Prototyping}
+    \SemioTableRow{AP-114 & Leibniz Universität Hannover & Energieperformance, Simulation}
+    \SemioTableRow{AP-115 & UdK Berlin & Tragwerksoptimierung}
+    \SemioTableRow{AP-116 & Leibniz Universität Hannover & Schnittstellendefinition}
+    \SemioTableRow{AP-117 & UdK Berlin & Materialkataster, Bauteilbörsen}
+    \SemioTableRow{AP-118 & Leibniz Universität Hannover & Community, Discourse}
+    \SemioTableRow{AP-119 & UdK Berlin & Journalpaper, Zenodo}
+    \SemioTableRow{AP-120 & Leibniz Universität Hannover & Recherche, Interviews, Auswertung, Dokumentation}
+  }%
+\end{Table}
+
+\begin{Figure}[title=Andere Kurze Figur]
+  Noch ein einzelnes, nicht umbrechendes Fenster zum Vergleich.
+\end{Figure}
+
+\appendix
+\chapter{Verzeichnisse}
+\makeregisters
+
+\end{document}

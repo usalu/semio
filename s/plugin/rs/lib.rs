@@ -12,7 +12,7 @@ use semio_framework_os::{
     MediaGraphPosition,
     OsAppInstance, OsBackbonePort, OsDocument, OsDocumentRef, OsMediaGraphCamera, OsMediaGraphVfsNodeRecord, OsOp, OsParameter, OsParameterFieldBinding,
     OsParameterType, OsProjection, OS_HOME_VFS_ROOT_ID, OS_MEDIA_GRAPH_VFS_ROOT_ID,
-    OS_STUDIO_BACKBONE_URI_PREFIX, MemoryBackbonePort, VcsError,
+    OS_STUDIO_BACKBONE_URI_PREFIX, OS_STUDIO_SCHEMA, MemoryBackbonePort, VcsError,
 };
 use semio_framework_plugin::{PanelGroup,
     build_node_graph_scene, build_text_editor_scene, build_virtual_file_system_scene,
@@ -1656,30 +1656,31 @@ fn render_compiled_dag(projection: &OsProjection) -> UiNode {
 //#region 🔖SHomeApp
 struct SHomeApp;
 
-impl PluginApp for SHomeApp {
+impl DocumentApp for SHomeApp {
+    type Projection = SHomeDocument;
+    type Op = SHomeOp;
+
     fn app_id(&self) -> &str {
         S_HOME_APP_ID
     }
 
-    fn initial_document_json(&self) -> String {
-        serde_json::to_string(&SHomeDocument {
-            schema: "s.home".into(),
-            catalog_generation: 0,
-        })
-        .expect("home document json")
+    fn document_schema(&self) -> &str {
+        "s.home"
     }
 
-    fn handle_action_patch_ops(
+    fn initial_projection(&self) -> SHomeDocument {
+        SHomeDocument { schema: "s.home".into(), catalog_generation: 0 }
+    }
+
+    fn handle_action(
         &mut self,
         action: &str,
         args: Option<&Value>,
-        document_json: &str,
+        doc: &DocumentView<'_, SHomeDocument>,
         _view_state: &ViewState,
-    ) -> Vec<String> {
-        let mut document: SHomeDocument = serde_json::from_str(document_json).unwrap_or(SHomeDocument {
-            schema: "s.home".into(),
-            catalog_generation: 0,
-        });
+    ) -> ActionEmit<SHomeOp> {
+        let generation = doc.projection.catalog_generation;
+        let bump = |value: u64| ActionEmit::ops(vec![SHomeOp::SetCatalogGeneration { value }]);
         let port = catalog_port();
         match action {
             "createStudio" => {
@@ -1694,7 +1695,7 @@ impl PluginApp for SHomeApp {
                 match kind {
                     "temporary" => {
                         if let Ok(entry) = create_os_studio(name, temp_catalog_port()) {
-                            return finish_create_ops(&mut document, &entry);
+                            return created_studio_emit(generation, &entry.id);
                         }
                     }
                     "folder" => {
@@ -1705,59 +1706,36 @@ impl PluginApp for SHomeApp {
                                 .and_then(|value| value.as_str())
                             {
                                 if let Ok(entry) = create_folder_studio(name, folder_path) {
-                                    return finish_create_ops(&mut document, &entry);
+                                    return created_studio_emit(generation, &entry.id);
                                 }
                             }
-                            return vec![json!({
-                                "op": "requestFolderPick",
-                                "importAction": "createStudio",
-                                "args": { "kind": "folder", "name": name }
-                            })
-                            .to_string()];
                         }
                         #[cfg(target_arch = "wasm32")]
                         {
                             let _ = name;
                         }
                     }
-                    "file" | _ => {
+                    _ => {
                         if let Ok(entry) = create_os_studio(name, port.clone()) {
-                            let mut ops = finish_create_ops(&mut document, &entry);
+                            let mut emit = created_studio_emit(generation, &entry.id);
                             if let Ok(studio_document) = load_os_studio_document(&entry.id, port.clone()) {
                                 if let Ok(json) = os_document_to_json(&studio_document) {
-                                    #[cfg(not(target_arch = "wasm32"))]
-                                    {
-                                        ops.insert(
-                                            1,
-                                            json!({
-                                                "op": "requestFileSave",
-                                                "filename": format!("{}.studio.json", entry.name.replace(' ', "-")),
-                                                "mimeType": "application/json",
-                                                "data": json,
-                                                "studioId": entry.id
-                                            })
-                                            .to_string(),
-                                        );
-                                    }
-                                    #[cfg(target_arch = "wasm32")]
-                                    {
-                                        ops.insert(
-                                            1,
-                                            json!({
-                                                "op": "downloadMediaExport",
-                                                "filename": format!("{}.studio.json", entry.name.replace(' ', "-")),
-                                                "mimeType": "application/json",
-                                                "data": json
-                                            })
-                                            .to_string(),
-                                        );
-                                    }
+                                    emit.effects.insert(
+                                        0,
+                                        HostEffect::DownloadMediaExport {
+                                            filename: format!("{}.studio.json", entry.name.replace(' ', "-")),
+                                            mime_type: "application/json".into(),
+                                            data: json,
+                                            encoding: None,
+                                        },
+                                    );
                                 }
                             }
-                            return ops;
+                            return emit;
                         }
                     }
                 }
+                ActionEmit::default()
             }
             "bindStudioFile" => {
                 #[cfg(not(target_arch = "wasm32"))]
@@ -1772,6 +1750,7 @@ impl PluginApp for SHomeApp {
                         let _ = bind_studio_file(studio_id, file_path);
                     }
                 }
+                ActionEmit::default()
             }
             "importStudio" => {
                 let json = args
@@ -1787,30 +1766,31 @@ impl PluginApp for SHomeApp {
                         args.and_then(|value| value.get("payload"))
                             .map(|value| value.to_string())
                     });
-                if let Some(json) = json {
-                    if import_os_studio_from_json(&json, port.clone()).is_ok() {
-                        document.catalog_generation += 1;
+                match json {
+                    Some(json) => {
+                        if import_os_studio_from_json(&json, port.clone()).is_ok() {
+                            bump(generation + 1)
+                        } else {
+                            ActionEmit::default()
+                        }
                     }
-                    return vec![set_home_document_op(&document)];
+                    None => ActionEmit::effect(HostEffect::RequestFileOpen {
+                        accept: ".json".into(),
+                        read_as: None,
+                        import_action: "importStudio".into(),
+                    }),
                 }
-                return vec![json!({
-                    "op": "requestFileOpen",
-                    "importAction": "importStudio",
-                    "accept": ".json"
-                })
-                .to_string()];
             }
             "openStudio" | "navigateVirtualFileSystemNode" => {
                 let studio_id = args
                     .and_then(|value| value.get("studioId").or_else(|| value.get("nodeId")))
                     .and_then(|value| value.as_str())
                     .and_then(|value| value.strip_prefix("studio:").or(Some(value)));
-                if let Some(studio_id) = studio_id {
-                    return vec![json!({
-                        "op": "navigate",
-                        "uri": format!("/studios/{studio_id}")
-                    })
-                    .to_string()];
+                match studio_id {
+                    Some(studio_id) => ActionEmit::effect(HostEffect::Navigate {
+                        uri: format!("/studios/{studio_id}"),
+                    }),
+                    None => ActionEmit::default(),
                 }
             }
             "deleteVirtualFileSystemNode" => {
@@ -1818,20 +1798,20 @@ impl PluginApp for SHomeApp {
                     .and_then(|value| value.get("nodeId"))
                     .and_then(|value| value.as_str())
                     .and_then(|value| value.strip_prefix("studio:"));
-                if let Some(studio_id) = studio_id {
-                    let _ = delete_os_studio(studio_id, port.clone());
-                    document.catalog_generation += 1;
+                match studio_id {
+                    Some(studio_id) => {
+                        let _ = delete_os_studio(studio_id, port.clone());
+                        bump(generation + 1)
+                    }
+                    None => ActionEmit::default(),
                 }
             }
-            "goHome" => {
-                return vec![json!({ "op": "navigate", "uri": "/" }).to_string()];
-            }
-            _ => {}
+            "goHome" => ActionEmit::effect(HostEffect::Navigate { uri: "/".into() }),
+            _ => ActionEmit::default(),
         }
-        vec![set_home_document_op(&document)]
     }
 
-    fn render(&self, body_key: &str, _document_json: &str, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, _doc: &DocumentView<'_, SHomeDocument>, view_state: &ViewState) -> UiNode {
         let labels = s_home_labels(view_state);
         match body_key {
             S_HOME_BODY => render_home_vfs(labels),
@@ -1842,27 +1822,68 @@ impl PluginApp for SHomeApp {
 //#endregion 🔖SHomeApp
 
 //#region 🔖SStudioApp
-struct SStudioApp;
+#[derive(Default)]
+struct SStudioApp {
+    runtime: StudioRuntimeState,
+}
 
 impl SStudioApp {
-    fn handle_studio_action(
-        envelope: &mut SStudioEnvelope,
+    /// @emoji 🎬 Seeds the studio app with the demo's first instance pre-selected (matching the old
+    /// `initial_studio_envelope` runtime) so the media-graph measure dropdown opens on a live app.
+    fn new() -> Self {
+        Self {
+            runtime: StudioRuntimeState {
+                active_instance_id: demo_studio_projection()
+                    .app_instances
+                    .first()
+                    .map(|instance| instance.id.clone()),
+                ..StudioRuntimeState::default()
+            },
+        }
+    }
+}
+
+impl DocumentApp for SStudioApp {
+    type Projection = OsProjection;
+    type Op = OsOp;
+
+    fn app_id(&self) -> &str {
+        S_PLAY_APP_ID
+    }
+
+    fn document_schema(&self) -> &str {
+        OS_STUDIO_SCHEMA
+    }
+
+    fn initial_projection(&self) -> OsProjection {
+        demo_studio_projection()
+    }
+
+    fn handle_action(
+        &mut self,
         action: &str,
         args: Option<&Value>,
-    ) -> Vec<String> {
-        let mut ops = Vec::new();
-        let mut store = store_from_envelope(envelope);
-        let mut runtime = envelope.runtime.clone();
+        doc: &DocumentView<'_, OsProjection>,
+        view_state: &ViewState,
+    ) -> ActionEmit<OsOp> {
+        let projection = doc.projection;
+        let mut ops: Vec<OsOp> = Vec::new();
+        let mut effects: Vec<HostEffect> = Vec::new();
+        let mut coalesce_key: Option<String> = None;
         match action {
             "setActivePanelTab" => {
                 if let Some(tab) = args.and_then(|value| value.get("tabId")).and_then(|value| value.as_str()) {
-                    let mut panel = StudioPanelState {
-                        active_panel_tab: tab.into(),
-                        ..Default::default()
-                    };
-                    ops.push(set_panel_op(&panel));
+                    let mut panel = parse_panel_state(view_state);
+                    panel.active_panel_tab = tab.into();
+                    return ActionEmit::effect(HostEffect::SetPanel { panel_json: panel_json(&panel) });
                 }
-                return ops;
+                return ActionEmit::default();
+            }
+            "navigateVirtualFileSystemNode" => {
+                if let Some(studio_id) = args.and_then(|value| value.get("studioId")).and_then(|value| value.as_str()) {
+                    return ActionEmit::effect(HostEffect::Navigate { uri: format!("/studios/{studio_id}") });
+                }
+                return ActionEmit::default();
             }
             "setParameter" | "patchParameter" => {
                 let parameter_id = args
@@ -1874,7 +1895,6 @@ impl SStudioApp {
                     .unwrap_or("value");
                 let value = args.and_then(|value| value.get("value")).cloned();
                 if let Some(parameter_id) = parameter_id {
-                    let projection = store.projection().unwrap_or_else(|_| default_os_projection());
                     let patch = if field == "addOption" {
                         value
                             .and_then(|value| value.as_str().map(str::to_string))
@@ -1923,7 +1943,9 @@ impl SStudioApp {
                         value.map(|value| json!({ field: value }))
                     };
                     if let Some(patch) = patch {
-                        let _ = store.patch_parameter(parameter_id, &patch).expect("patch parameter");
+                        if let Some(op) = patch_parameter_op(projection, parameter_id, &patch) {
+                            ops.push(op);
+                        }
                     }
                 }
             }
@@ -1941,16 +1963,16 @@ impl SStudioApp {
                     .and_then(|value| value.get("name"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("Parameter");
-                let _ = store.add_parameter(&parameter_type, name);
+                ops.push(add_parameter_op(&parameter_type, name));
             }
             "removeParameter" => {
                 if let Some(parameter_id) = args
                     .and_then(|value| value.get("parameterId"))
                     .and_then(|value| value.as_str())
                 {
-                    let _ = store.dispatch_apply(vec![OsOp::RemoveParameter {
+                    ops.push(OsOp::RemoveParameter {
                         parameter_id: parameter_id.into(),
-                    }]);
+                    });
                 }
             }
             "spawnApp" => {
@@ -1977,8 +1999,9 @@ impl SStudioApp {
                                 .unwrap_or(80.0),
                         })
                         .unwrap_or(MediaGraphPosition { x: 80.0, y: 80.0 });
-                    if let Ok(instance_id) = store.spawn_app_instance(program_id, app_id, None, position) {
-                        runtime.active_instance_id = Some(instance_id.clone());
+                    if let Some((op, instance_id)) = spawn_app_instance_op(program_id, app_id, None, position) {
+                        self.runtime.active_instance_id = Some(instance_id);
+                        ops.push(op);
                     }
                 }
             }
@@ -1988,11 +2011,12 @@ impl SStudioApp {
                     args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()),
                     args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()),
                 ) {
-                    let _ = store.dispatch_apply(vec![OsOp::MoveMediaNode {
+                    coalesce_key = Some(format!("moveMediaNode:{node_id}"));
+                    ops.push(OsOp::MoveMediaNode {
                         node_id: node_id.into(),
                         x,
                         y,
-                    }]);
+                    });
                 }
             }
             "connectMediaPorts" => {
@@ -2011,7 +2035,7 @@ impl SStudioApp {
                     args.and_then(|value| value.get("targetPortId"))
                         .and_then(|value| value.as_str()),
                 ) {
-                    let _ = store.dispatch_apply(vec![OsOp::ConnectMediaPorts {
+                    ops.push(OsOp::ConnectMediaPorts {
                         edge: semio_framework_os::OsMediaGraphEdge {
                             id: create_os_id("edge"),
                             source_node_id: source_node_id.into(),
@@ -2019,7 +2043,7 @@ impl SStudioApp {
                             target_node_id: target_node_id.into(),
                             target_port_id: target_port_id.into(),
                         },
-                    }]);
+                    });
                 }
             }
             "disconnectMediaEdge" => {
@@ -2027,9 +2051,9 @@ impl SStudioApp {
                     .and_then(|value| value.get("edgeId"))
                     .and_then(|value| value.as_str())
                 {
-                    let _ = store.dispatch_apply(vec![OsOp::DisconnectMediaEdge {
+                    ops.push(OsOp::DisconnectMediaEdge {
                         edge_id: edge_id.into(),
-                    }]);
+                    });
                 }
             }
             "removeAppInstance" => {
@@ -2037,45 +2061,39 @@ impl SStudioApp {
                     .and_then(|value| value.get("instanceId"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string)
-                    .or_else(|| {
-                        let projection = store.projection().unwrap_or_else(|_| default_os_projection());
-                        primary_selected_instance_id(&runtime, &projection)
-                    });
+                    .or_else(|| primary_selected_instance_id(&self.runtime, projection));
                 if let Some(instance_id) = instance_id {
-                    let _ = store.dispatch_apply(vec![OsOp::RemoveAppInstance {
+                    ops.push(OsOp::RemoveAppInstance {
                         instance_id: instance_id.clone(),
-                    }]);
-                    if runtime.active_instance_id.as_deref() == Some(instance_id.as_str()) {
-                        runtime.active_instance_id = None;
+                    });
+                    if self.runtime.active_instance_id.as_deref() == Some(instance_id.as_str()) {
+                        self.runtime.active_instance_id = None;
                     }
-                    if runtime.focused_instance_id.as_deref() == Some(instance_id.as_str()) {
-                        runtime.focused_instance_id = None;
+                    if self.runtime.focused_instance_id.as_deref() == Some(instance_id.as_str()) {
+                        self.runtime.focused_instance_id = None;
                     }
                 }
             }
             "deleteSelection" => {
-                let projection = store.projection().unwrap_or_else(|_| default_os_projection());
-                let instance_ids = selected_instance_ids(&runtime, &projection);
+                let instance_ids = selected_instance_ids(&self.runtime, projection);
                 for instance_id in instance_ids {
-                    let _ = store.dispatch_apply(vec![OsOp::RemoveAppInstance {
+                    ops.push(OsOp::RemoveAppInstance {
                         instance_id: instance_id.clone(),
-                    }]);
+                    });
                 }
-                runtime.selected_app_instance_ids.clear();
-                runtime.selected_media_node_ids.clear();
-                runtime.active_instance_id = None;
-                runtime.focused_instance_id = None;
+                self.runtime.selected_app_instance_ids.clear();
+                self.runtime.selected_media_node_ids.clear();
+                self.runtime.active_instance_id = None;
+                self.runtime.focused_instance_id = None;
             }
             "copyAppInstance" => {
-                let projection = store.projection().unwrap_or_else(|_| default_os_projection());
-                runtime.clipboard_instance_ids = selected_instance_ids(&runtime, &projection);
+                self.runtime.clipboard_instance_ids = selected_instance_ids(&self.runtime, projection);
             }
             "duplicateAppInstance" | "pasteAppInstance" => {
-                let projection = store.projection().unwrap_or_else(|_| default_os_projection());
                 let source_ids = if action == "pasteAppInstance" {
-                    runtime.clipboard_instance_ids.clone()
+                    self.runtime.clipboard_instance_ids.clone()
                 } else {
-                    selected_instance_ids(&runtime, &projection)
+                    selected_instance_ids(&self.runtime, projection)
                 };
                 for instance_id in source_ids {
                     let Some(instance) = projection
@@ -2096,19 +2114,19 @@ impl SStudioApp {
                         })
                         .unwrap_or(MediaGraphPosition { x: 80.0, y: 80.0 });
                     let label = format!("{} Copy", instance.label);
-                    if let Ok(new_id) = store.spawn_app_instance(
+                    if let Some((op, new_id)) = spawn_app_instance_op(
                         &instance.program_id,
                         &instance.app_id,
                         Some(&label),
                         position,
                     ) {
-                        runtime.active_instance_id = Some(new_id);
+                        self.runtime.active_instance_id = Some(new_id);
+                        ops.push(op);
                     }
                 }
             }
             "renameAppInstance" => {
-                let projection = store.projection().unwrap_or_else(|_| default_os_projection());
-                if let Some(instance_id) = primary_selected_instance_id(&runtime, &projection) {
+                if let Some(instance_id) = primary_selected_instance_id(&self.runtime, projection) {
                     let next_label = args
                         .and_then(|value| value.get("label"))
                         .and_then(|value| value.as_str())
@@ -2121,38 +2139,11 @@ impl SStudioApp {
                                 .map(|instance| format!("{} (renamed)", instance.label))
                         });
                     if let Some(label) = next_label {
-                        let _ = store.dispatch_apply(vec![OsOp::PatchAppInstance {
+                        ops.push(OsOp::PatchAppInstance {
                             instance_id,
                             label: Some(label),
-                        }]);
+                        });
                     }
-                }
-            }
-            "patchAppSource" => {
-                // 🚧 `OsOp::PatchAppSource` was deleted with `OsSourceDocument` — app content no
-                // longer embeds on the os document (`OsAppInstance.document` is now just a handle,
-                // see `OsDocumentRef`). Writing patched content back into the bound app's own
-                // document store is `s`'s `DocumentApp` migration (WS-F last wave); this action is a
-                // documented no-op until then.
-            }
-            "commitCheckpoint" => {
-                let message = args
-                    .and_then(|value| value.get("message"))
-                    .and_then(|value| value.as_str());
-                let _ = store.dispatch_json(&json!({
-                    "kind": "commitCheckpoint",
-                    "message": message
-                }).to_string());
-            }
-            "checkoutCheckpoint" => {
-                if let Some(checkpoint_id) = args
-                    .and_then(|value| value.get("checkpointId"))
-                    .and_then(|value| value.as_str())
-                {
-                    let _ = store.dispatch_json(&json!({
-                        "kind": "checkoutCheckpoint",
-                        "checkpointId": checkpoint_id
-                    }).to_string());
                 }
             }
             "setActiveExample" => {
@@ -2160,42 +2151,28 @@ impl SStudioApp {
                     .and_then(|value| value.get("exampleId"))
                     .and_then(|value| value.as_str())
                 {
-                    let Some(document_json) = studio_example_document_json(example_id) else {
-                        return vec![];
-                    };
-                    if let Ok(document) = os_document_from_json(&document_json) {
-                        let active_instance_id = projection_from_document(&document)
-                            .app_instances
-                            .first()
-                            .map(|instance| instance.id.clone());
-                        *envelope = SStudioEnvelope {
-                            document,
-                            runtime: StudioRuntimeState {
-                                studio_id: Some(example_id.into()),
-                                active_instance_id,
-                                ..StudioRuntimeState::default()
-                            },
-                        };
-                        return vec![set_studio_document_op(envelope)];
-                    }
+                    // 🧭 Examples are catalog documents in the new topology — selecting one navigates
+                    // the shell to that studio route; the host's `openDocument(ref)` loads it (no
+                    // in-place whole-document swap on the plugin side anymore).
+                    return ActionEmit::effect(HostEffect::Navigate { uri: format!("/studios/{example_id}") });
                 }
+                return ActionEmit::default();
             }
             "exportMedia" => {
                 if let (Some(instance_id), Some(format)) = (
                     args.and_then(|value| value.get("instanceId")).and_then(|value| value.as_str()),
                     args.and_then(|value| value.get("format")).and_then(|value| value.as_str()),
                 ) {
-                    let projection = store.projection().unwrap_or_else(|_| default_os_projection());
                     if let Some(instance) = projection
                         .app_instances
                         .iter()
                         .find(|row| row.id == instance_id)
                     {
                         ensure_studio_fixtures_registered();
-                        // 🚧 `s` doesn't yet own a live per-instance app document store (its
-                        // `DocumentApp`/`OsDocumentRef` wiring is WS-F's last-wave migration) — content
-                        // no longer embeds on the os document, so this seeds a blank schema doc rather
-                        // than the instance's real content until that migration lands.
+                        // 📤 `s` is a shell: the instance's live content lives in its own
+                        // `OsDocumentRef`-addressed document (owned by the host's backbone), so this
+                        // seeds a bare schema doc for the export handler rather than reaching into
+                        // another document's store from here.
                         let document_json = materialize_os_app_instance_document_json(
                             &json!({ "schema": instance.document.schema }).to_string(),
                             &instance.id,
@@ -2210,14 +2187,12 @@ impl SStudioApp {
                             &document_value,
                             export_format,
                         ) {
-                            ops.push(json!({
-                                "op": "downloadMediaExport",
-                                "filename": result.file_name,
-                                "mimeType": result.mime_type,
-                                "data": result.data,
-                                "encoding": result.encoding,
-                            })
-                            .to_string());
+                            effects.push(HostEffect::DownloadMediaExport {
+                                filename: result.file_name,
+                                mime_type: result.mime_type,
+                                data: result.data,
+                                encoding: result.encoding,
+                            });
                         }
                     }
                 }
@@ -2227,63 +2202,53 @@ impl SStudioApp {
                     args.and_then(|value| value.get("instanceId")).and_then(|value| value.as_str()),
                     args.and_then(|value| value.get("format")).and_then(|value| value.as_str()),
                 ) {
-                    runtime.pending_import_instance_id = Some(instance_id.to_string());
-                    runtime.pending_import_format = Some(format.to_string());
-                    ops.push(json!({
-                        "op": "requestFileOpen",
-                        "accept": format!(".{format}"),
-                        "readAs": "dataUrl",
-                        "importAction": "importMediaPayload",
-                    })
-                    .to_string());
+                    self.runtime.pending_import_instance_id = Some(instance_id.to_string());
+                    self.runtime.pending_import_format = Some(format.to_string());
+                    return ActionEmit::effect(HostEffect::RequestFileOpen {
+                        accept: format!(".{format}"),
+                        read_as: Some("dataUrl".into()),
+                        import_action: "importMediaPayload".into(),
+                    });
                 }
+                return ActionEmit::default();
             }
             "importMediaPayload" => {
-                if let (Some(instance_id), Some(format_name)) = (runtime.pending_import_instance_id.take(), runtime.pending_import_format.take()) {
+                if let (Some(instance_id), Some(format_name)) = (self.runtime.pending_import_instance_id.take(), self.runtime.pending_import_format.take()) {
                     let payload = args.and_then(|value| value.get("payload")).and_then(|value| value.as_str());
                     let format = semio_framework_os::OsMediaFormat::parse(&format_name);
                     if let (Some(payload), Some(format)) = (payload, format) {
                         use base64::Engine;
                         let base64_part = payload.split_once(',').map(|(_, data)| data).unwrap_or(payload);
                         if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(base64_part) {
-                            let projection = store.projection().unwrap_or_else(|_| default_os_projection());
                             if let Some(instance) = projection.app_instances.iter().find(|row| row.id == instance_id) {
-                                if let Ok(_inline) = semio_framework_os::import_os_app_instance_media(instance, &bytes, format) {
-                                    // 🚧 Same gap as `patchAppSource` above: writing the imported
-                                    // content back now targets the bound app's own document store
-                                    // (`OsDocumentRef`), not the os document — deferred to `s`'s
-                                    // `DocumentApp` migration (WS-F last wave).
-                                }
+                                // 📥 Decoding/validation happens here; the decoded content is applied
+                                // to the instance's own `OsDocumentRef` document by the host (a
+                                // cross-document op the shell can't author from its own store), so
+                                // this arm emits no studio op.
+                                let _ = semio_framework_os::import_os_app_instance_media(instance, &bytes, format);
                             }
                         }
                     }
                 }
-            }
-            "undo" => {
-                let _ = store.dispatch_json(r#"{"kind":"undo"}"#);
-            }
-            "redo" => {
-                let _ = store.dispatch_json(r#"{"kind":"redo"}"#);
+                return ActionEmit::default();
             }
             "selectInstance" => {
-                runtime.active_instance_id = args
+                self.runtime.active_instance_id = args
                     .and_then(|value| value.get("instanceId"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string);
-                if let Some(instance_id) = &runtime.active_instance_id {
-                    let projection = store.projection().unwrap_or_else(|_| default_os_projection());
+                if let Some(instance_id) = self.runtime.active_instance_id.clone() {
                     let node_id = projection
                         .media_graph
                         .nodes
                         .iter()
-                        .find(|node| node.instance_id == *instance_id)
+                        .find(|node| node.instance_id == instance_id)
                         .map(|node| node.id.clone());
-                    runtime.selected_app_instance_ids = vec![instance_id.clone()];
-                    runtime.selected_media_node_ids = node_id.into_iter().collect();
+                    self.runtime.selected_app_instance_ids = vec![instance_id];
+                    self.runtime.selected_media_node_ids = node_id.into_iter().collect();
                 }
             }
             "nodeGraphSelect" | "setMediaNodeSelection" => {
-                let projection = store.projection().unwrap_or_else(|_| default_os_projection());
                 let node_ids: Vec<String> = if args
                     .and_then(|value| value.get("selectAll"))
                     .and_then(|value| value.as_bool())
@@ -2301,8 +2266,8 @@ impl SStudioApp {
                         })
                         .unwrap_or_default()
                 };
-                runtime.selected_media_node_ids = node_ids.clone();
-                runtime.selected_app_instance_ids = node_ids
+                self.runtime.selected_media_node_ids = node_ids.clone();
+                self.runtime.selected_app_instance_ids = node_ids
                     .iter()
                     .filter_map(|node_id| {
                         projection
@@ -2313,18 +2278,16 @@ impl SStudioApp {
                             .map(|node| node.instance_id.clone())
                     })
                     .collect();
-                if runtime.selected_app_instance_ids.len() == 1 {
-                    runtime.active_instance_id = runtime.selected_app_instance_ids.first().cloned();
+                if self.runtime.selected_app_instance_ids.len() == 1 {
+                    self.runtime.active_instance_id = self.runtime.selected_app_instance_ids.first().cloned();
                 }
             }
             "reorganizeMediaGraph" => {
-                let projection = store.projection().unwrap_or_else(|_| default_os_projection());
-                let node_ids: Vec<String> = if runtime.selected_media_node_ids.is_empty() {
+                let node_ids: Vec<String> = if self.runtime.selected_media_node_ids.is_empty() {
                     projection.media_graph.nodes.iter().map(|node| node.id.clone()).collect()
                 } else {
-                    runtime.selected_media_node_ids.clone()
+                    self.runtime.selected_media_node_ids.clone()
                 };
-                let mut ops = Vec::new();
                 for (index, node_id) in node_ids.iter().enumerate() {
                     let col = (index % 4) as f64;
                     let row = (index / 4) as f64;
@@ -2334,12 +2297,9 @@ impl SStudioApp {
                         y: 80.0 + row * 160.0,
                     });
                 }
-                if !ops.is_empty() {
-                    let _ = store.dispatch_apply(ops);
-                }
             }
             "nodeGraphHover" | "textHover" => {
-                runtime.hovered_media_node_id = args
+                self.runtime.hovered_media_node_id = args
                     .and_then(|value| value.get("hoverJson"))
                     .and_then(|value| {
                         if value.is_null() {

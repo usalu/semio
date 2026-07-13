@@ -2,9 +2,7 @@
 //! session (`LowpolyDocument`) wrapping `kernel_3d_mesh` used by the plugin to run mesh edits and paint
 //! strokes and read them back out as typed [`LowpolyOp`]s.
 
-use kernel_3d_mesh::{
-    EdgeId, FaceId, HalfedgeMesh, MeshKernelError, MirrorAxis, Vec3, VertexId, WeldMode,
-};
+use kernel_3d_mesh::{EdgeId, FaceId, HalfedgeMesh, MeshKernelError, Vec3, VertexId};
 use serde::{Deserialize, Serialize};
 use vcs::{
     apply_collection_op, invert_collection_op, CollectionOp, Identified, Operation, OperationDiff,
@@ -741,30 +739,7 @@ impl LowpolyDocument {
 
     pub fn composite_layers(&self, object_id: &str) -> Result<Vec<u8>, String> {
         let idx = self.object_index(object_id)?;
-        let layers = &self.projection.objects[idx].paint_layers;
-        let mut out = vec![0u8; LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4];
-        for layer in layers.iter() {
-            if !layer.visible {
-                continue;
-            }
-            let pixels = layer.pixels.as_slice();
-            let opacity = layer.opacity.clamp(0.0, 1.0);
-            for (dst, src) in out.chunks_mut(4).zip(pixels.chunks(4)) {
-                let sa = (src.get(3).copied().unwrap_or(255) as f32 / 255.0) * opacity;
-                let da = dst[3] as f32 / 255.0;
-                let out_a = sa + da * (1.0 - sa);
-                if out_a < 1e-6 {
-                    continue;
-                }
-                for c in 0..3 {
-                    let sc = src.get(c).copied().unwrap_or(0) as f32 / 255.0;
-                    let dc = dst[c] as f32 / 255.0;
-                    dst[c] = ((sc * sa + dc * da * (1.0 - sa)) / out_a * 255.0).round().clamp(0.0, 255.0) as u8;
-                }
-                dst[3] = (out_a * 255.0).round().clamp(0.0, 255.0) as u8;
-            }
-        }
-        Ok(out)
+        Ok(composite_layer_pixels(&self.projection.objects[idx].paint_layers))
     }
 
     /// @emoji 🖌️ Stamps a soft brush (or eraser) into a layer's pixel buffer in place.
@@ -781,109 +756,137 @@ impl LowpolyDocument {
         eraser: bool,
     ) -> Result<(), String> {
         let layer_pixels = self.layer_pixels_mut(object_id, layer_index)?;
-        let size = LOWPOLY_PAINT_TEXTURE_SIZE as f32;
-        let cx = (u.clamp(0.0, 1.0) * (size - 1.0)).round() as i32;
-        let cy = ((1.0 - v.clamp(0.0, 1.0)) * (size - 1.0)).round() as i32;
-        let r = radius.max(0.5);
-        let r_i = r.ceil() as i32;
-        let hard = hardness.clamp(0.0, 1.0);
-        let alpha_scale = opacity.clamp(0.0, 1.0);
-        for y in (cy - r_i)..=(cy + r_i) {
-            for x in (cx - r_i)..=(cx + r_i) {
-                if x < 0 || y < 0 || x >= size as i32 || y >= size as i32 {
-                    continue;
-                }
-                let dx = x as f32 - cx as f32;
-                let dy = y as f32 - cy as f32;
-                let dist = (dx * dx + dy * dy).sqrt();
-                if dist > r {
-                    continue;
-                }
-                let t = 1.0 - dist / r;
-                let falloff = hard + (1.0 - hard) * t;
-                let stamp = (falloff * alpha_scale * 255.0).round().clamp(0.0, 255.0) as u8;
-                let offset = (y as usize * LOWPOLY_PAINT_TEXTURE_SIZE + x as usize) * 4;
-                if eraser {
-                    let current = layer_pixels[offset + 3];
-                    layer_pixels[offset + 3] = current.saturating_sub(stamp);
-                } else {
-                    for c in 0..3 {
-                        layer_pixels[offset + c] = color[c];
-                    }
-                    let current = layer_pixels[offset + 3];
-                    layer_pixels[offset + 3] = current.saturating_add(stamp).min(255);
-                }
-            }
-        }
+        stamp_brush(layer_pixels, u, v, radius, color, hardness, opacity, eraser);
         Ok(())
     }
 
     pub fn fill_bucket(&mut self, object_id: &str, layer_index: usize, u: f32, v: f32, color: [u8; 4]) -> Result<(), String> {
         let layer_pixels = self.layer_pixels_mut(object_id, layer_index)?;
-        let size = LOWPOLY_PAINT_TEXTURE_SIZE;
-        let sx = ((u.clamp(0.0, 1.0) * (size as f32 - 1.0)).round() as usize).min(size - 1);
-        let sy = (((1.0 - v.clamp(0.0, 1.0)) * (size as f32 - 1.0)).round() as usize).min(size - 1);
-        let start = (sy * size + sx) * 4;
-        let target = [
-            layer_pixels[start],
-            layer_pixels[start + 1],
-            layer_pixels[start + 2],
-            layer_pixels[start + 3],
-        ];
-        let mut stack = vec![(sx, sy)];
-        let mut visited = vec![false; size * size];
-        while let Some((x, y)) = stack.pop() {
-            let pi = y * size + x;
-            if visited[pi] {
-                continue;
-            }
-            visited[pi] = true;
-            let offset = pi * 4;
-            let pixel = [
-                layer_pixels[offset],
-                layer_pixels[offset + 1],
-                layer_pixels[offset + 2],
-                layer_pixels[offset + 3],
-            ];
-            if pixel != target {
-                continue;
-            }
-            for c in 0..4 {
-                layer_pixels[offset + c] = color[c];
-            }
-            if x > 0 {
-                stack.push((x - 1, y));
-            }
-            if x + 1 < size {
-                stack.push((x + 1, y));
-            }
-            if y > 0 {
-                stack.push((x, y - 1));
-            }
-            if y + 1 < size {
-                stack.push((x, y + 1));
-            }
-        }
+        flood_fill(layer_pixels, u, v, color);
         Ok(())
     }
 
     pub fn sample_pixel(&self, object_id: &str, u: f32, v: f32) -> Result<[u8; 4], String> {
         let composite = self.composite_layers(object_id)?;
-        let size = LOWPOLY_PAINT_TEXTURE_SIZE;
-        let x = ((u.clamp(0.0, 1.0) * (size as f32 - 1.0)).round() as usize).min(size - 1);
-        let y = (((1.0 - v.clamp(0.0, 1.0)) * (size as f32 - 1.0)).round() as usize).min(size - 1);
-        let offset = (y * size + x) * 4;
-        Ok([
-            composite[offset],
-            composite[offset + 1],
-            composite[offset + 2],
-            composite[offset + 3],
-        ])
+        Ok(sample_pixel_from(&composite, u, v))
     }
 
     pub fn map_kernel_err(e: MeshKernelError) -> String {
         map_err(e)
     }
+}
+
+/// @emoji 🎨 Alpha-composites an object's paint layers into one RGBA buffer (bottom to top).
+pub fn composite_layer_pixels(layers: &[LowpolyPaintLayer]) -> Vec<u8> {
+    let mut out = vec![0u8; LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4];
+    for layer in layers.iter() {
+        if !layer.visible {
+            continue;
+        }
+        let pixels = layer.pixels.as_slice();
+        let opacity = layer.opacity.clamp(0.0, 1.0);
+        for (dst, src) in out.chunks_mut(4).zip(pixels.chunks(4)) {
+            let sa = (src.get(3).copied().unwrap_or(255) as f32 / 255.0) * opacity;
+            let da = dst[3] as f32 / 255.0;
+            let out_a = sa + da * (1.0 - sa);
+            if out_a < 1e-6 {
+                continue;
+            }
+            for c in 0..3 {
+                let sc = src.get(c).copied().unwrap_or(0) as f32 / 255.0;
+                let dc = dst[c] as f32 / 255.0;
+                dst[c] = ((sc * sa + dc * da * (1.0 - sa)) / out_a * 255.0).round().clamp(0.0, 255.0) as u8;
+            }
+            dst[3] = (out_a * 255.0).round().clamp(0.0, 255.0) as u8;
+        }
+    }
+    out
+}
+
+/// @emoji 🖌️ Stamps a soft round brush (or eraser) into a raw RGBA buffer in place. Shared by the
+/// compute session and the plugin's mid-drag scratch buffer.
+pub fn stamp_brush(pixels: &mut [u8], u: f32, v: f32, radius: f32, color: [u8; 4], hardness: f32, opacity: f32, eraser: bool) {
+    let size = LOWPOLY_PAINT_TEXTURE_SIZE as f32;
+    let cx = (u.clamp(0.0, 1.0) * (size - 1.0)).round() as i32;
+    let cy = ((1.0 - v.clamp(0.0, 1.0)) * (size - 1.0)).round() as i32;
+    let r = radius.max(0.5);
+    let r_i = r.ceil() as i32;
+    let hard = hardness.clamp(0.0, 1.0);
+    let alpha_scale = opacity.clamp(0.0, 1.0);
+    for y in (cy - r_i)..=(cy + r_i) {
+        for x in (cx - r_i)..=(cx + r_i) {
+            if x < 0 || y < 0 || x >= size as i32 || y >= size as i32 {
+                continue;
+            }
+            let dx = x as f32 - cx as f32;
+            let dy = y as f32 - cy as f32;
+            let dist = (dx * dx + dy * dy).sqrt();
+            if dist > r {
+                continue;
+            }
+            let t = 1.0 - dist / r;
+            let falloff = hard + (1.0 - hard) * t;
+            let stamp = (falloff * alpha_scale * 255.0).round().clamp(0.0, 255.0) as u8;
+            let offset = (y as usize * LOWPOLY_PAINT_TEXTURE_SIZE + x as usize) * 4;
+            if eraser {
+                let current = pixels[offset + 3];
+                pixels[offset + 3] = current.saturating_sub(stamp);
+            } else {
+                for c in 0..3 {
+                    pixels[offset + c] = color[c];
+                }
+                let current = pixels[offset + 3];
+                pixels[offset + 3] = current.saturating_add(stamp).min(255);
+            }
+        }
+    }
+}
+
+/// @emoji 🪣 Flood-fills a contiguous same-color region of a raw RGBA buffer in place.
+pub fn flood_fill(pixels: &mut [u8], u: f32, v: f32, color: [u8; 4]) {
+    let size = LOWPOLY_PAINT_TEXTURE_SIZE;
+    let sx = ((u.clamp(0.0, 1.0) * (size as f32 - 1.0)).round() as usize).min(size - 1);
+    let sy = (((1.0 - v.clamp(0.0, 1.0)) * (size as f32 - 1.0)).round() as usize).min(size - 1);
+    let start = (sy * size + sx) * 4;
+    let target = [pixels[start], pixels[start + 1], pixels[start + 2], pixels[start + 3]];
+    let mut stack = vec![(sx, sy)];
+    let mut visited = vec![false; size * size];
+    while let Some((x, y)) = stack.pop() {
+        let pi = y * size + x;
+        if visited[pi] {
+            continue;
+        }
+        visited[pi] = true;
+        let offset = pi * 4;
+        let pixel = [pixels[offset], pixels[offset + 1], pixels[offset + 2], pixels[offset + 3]];
+        if pixel != target {
+            continue;
+        }
+        for c in 0..4 {
+            pixels[offset + c] = color[c];
+        }
+        if x > 0 {
+            stack.push((x - 1, y));
+        }
+        if x + 1 < size {
+            stack.push((x + 1, y));
+        }
+        if y > 0 {
+            stack.push((x, y - 1));
+        }
+        if y + 1 < size {
+            stack.push((x, y + 1));
+        }
+    }
+}
+
+/// @emoji 💧 Reads one RGBA sample from a composited buffer at UV.
+pub fn sample_pixel_from(composite: &[u8], u: f32, v: f32) -> [u8; 4] {
+    let size = LOWPOLY_PAINT_TEXTURE_SIZE;
+    let x = ((u.clamp(0.0, 1.0) * (size as f32 - 1.0)).round() as usize).min(size - 1);
+    let y = (((1.0 - v.clamp(0.0, 1.0)) * (size as f32 - 1.0)).round() as usize).min(size - 1);
+    let offset = (y * size + x) * 4;
+    [composite[offset], composite[offset + 1], composite[offset + 2], composite[offset + 3]]
 }
 
 /// @emoji 🧮 Coalesces a `before`/`after` layer-buffer pair into the minimal contiguous [`PixelRun`]s
