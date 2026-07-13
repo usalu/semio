@@ -1,0 +1,1275 @@
+{
+  "schema": "manifest",
+  "id": "nakagin",
+  "name": "Nakagin Capsule Tower",
+  "axes": {
+    "portModel": "ported",
+    "directedness": "directed"
+  },
+  "nodeKinds": [
+    {
+      "id": "Balcony",
+      "name": "Balcony",
+      "ports": [],
+      "presentation": {}
+    },
+    {
+      "id": "Base",
+      "name": "Base",
+      "ports": [
+        "core rectangular bottom"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "core rectangular bottom",
+            "angle": -2.3561944901923453,
+            "radius": 3
+          },
+          {
+            "handleKind": "core rectangular bottom",
+            "angle": -0.7853981633974483,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Base Blob",
+      "name": "Base Blob",
+      "ports": [
+        "core circular bottom"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "core circular bottom",
+            "angle": -2.3561944901923453,
+            "radius": 3
+          },
+          {
+            "handleKind": "core circular bottom",
+            "angle": -0.7853981633974483,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Bridge",
+      "name": "Bridge",
+      "ports": [
+        "platform right",
+        "platform left"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "platform right",
+            "angle": 0,
+            "radius": 3
+          },
+          {
+            "handleKind": "platform left",
+            "angle": 3.141592653589793,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Capital",
+      "name": "Capital",
+      "ports": [
+        "roof rectangular top"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "roof rectangular top",
+            "angle": -1.5707963267948966,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Capsule",
+      "name": "Capsule",
+      "ports": [],
+      "presentation": {}
+    },
+    {
+      "id": "Capsule Backslash",
+      "name": "Capsule Backslash",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": -1.5707963267948966,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Capsule J",
+      "name": "Capsule J",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": -1.5707963267948966,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Capsule L",
+      "name": "Capsule L",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": -1.5707963267948966,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Capsule P",
+      "name": "Capsule P",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": -1.5707963267948966,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Capsule q",
+      "name": "Capsule q",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": -0.450225596260715,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Capsule S",
+      "name": "Capsule S",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": -1.5707963267948966,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Capsule Slash",
+      "name": "Capsule Slash",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": -1.5707963267948966,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Capsule With Balcony Backslash",
+      "name": "Capsule With Balcony Backslash",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": -0.21109333322274654,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Capsule With Balcony J",
+      "name": "Capsule With Balcony J",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": 0.805003494254653,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Capsule With Balcony L",
+      "name": "Capsule With Balcony L",
+      "ports": [
+        "door capsule left"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule left",
+            "angle": -0.805003494254653,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Capsule With Balcony P",
+      "name": "Capsule With Balcony P",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": 0.21109333322274654,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Capsule With Balcony Q",
+      "name": "Capsule With Balcony Q",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": -0.21109333322274654,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Capsule With Balcony S",
+      "name": "Capsule With Balcony S",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": 0.805003494254653,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Capsule With Balcony Slash",
+      "name": "Capsule With Balcony Slash",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": 0.21109333322274654,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Capsule With Balcony Z",
+      "name": "Capsule With Balcony Z",
+      "ports": [
+        "door capsule left"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule left",
+            "angle": -0.805003494254653,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Capsule Z",
+      "name": "Capsule Z",
+      "ports": [
+        "door capsule left"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule left",
+            "angle": -0.805003494254653,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Cylindric Capital",
+      "name": "Cylindric Capital",
+      "ports": [
+        "roof circular top"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "roof circular top",
+            "angle": -1.5707963267948966,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Cylindric First Storey Tambour",
+      "name": "Cylindric First Storey Tambour",
+      "ports": [
+        "core circular top",
+        "tambour circular top",
+        "door tambour right",
+        "door tambour left"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "core circular top",
+            "angle": -3.141592653589793,
+            "radius": 3
+          },
+          {
+            "handleKind": "tambour circular top",
+            "angle": -3.141592653589793,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": -1.8121518132334324,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": -2.9002371671512575,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": 2.9002371671512575,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": 1.8121518132334324,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": 1.329440840356361,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": 0.24135548643853572,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": -0.24135548643853572,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": -1.329440840356361,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Cylindric Last Storey Tambour",
+      "name": "Cylindric Last Storey Tambour",
+      "ports": [
+        "tambour circular bottom",
+        "roof circular bottom",
+        "door tambour right",
+        "door tambour left"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "tambour circular bottom",
+            "angle": -3.141592653589793,
+            "radius": 3
+          },
+          {
+            "handleKind": "roof circular bottom",
+            "angle": -3.141592653589793,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": -1.8121518132334324,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": -2.9002371671512575,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": 2.9002371671512575,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": 1.8121518132334324,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": 1.329440840356361,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": 0.24135548643853572,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": -0.24135548643853572,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": -1.329440840356361,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Cylindric Single Storey Tambour",
+      "name": "Cylindric Single Storey Tambour",
+      "ports": [
+        "core circular top",
+        "roof circular bottom",
+        "door tambour right",
+        "door tambour left"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "core circular top",
+            "angle": -3.141592653589793,
+            "radius": 3
+          },
+          {
+            "handleKind": "roof circular bottom",
+            "angle": -3.141592653589793,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": -1.8121518132334324,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": -2.9002371671512575,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": 2.9002371671512575,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": 1.8121518132334324,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": 1.329440840356361,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": 0.24135548643853572,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": -0.24135548643853572,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": -1.329440840356361,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Cylindric Tambour",
+      "name": "Cylindric Tambour",
+      "ports": [
+        "tambour circular bottom",
+        "tambour circular top",
+        "door tambour right",
+        "door tambour left"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "tambour circular bottom",
+            "angle": 1.5707963267948966,
+            "radius": 3
+          },
+          {
+            "handleKind": "tambour circular top",
+            "angle": -1.5707963267948966,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": -0.31415926535897953,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": -1.256637061435917,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": -1.884955592153876,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": -2.8274333882308142,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": 2.827433388230814,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": 1.8849555921538763,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": 1.2566370614359168,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": 0.31415926535897953,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Ellipsoid",
+      "name": "Ellipsoid",
+      "ports": [],
+      "presentation": {}
+    },
+    {
+      "id": "First Storey Tambour",
+      "name": "First Storey Tambour",
+      "ports": [
+        "core rectangular top",
+        "tambour rectangular top",
+        "door tambour right",
+        "door tambour left"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "core rectangular top",
+            "angle": 1.5707963267948966,
+            "radius": 3
+          },
+          {
+            "handleKind": "tambour rectangular top",
+            "angle": -1.5707963267948966,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": -0.31415926535897953,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": -1.256637061435917,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": -1.884955592153876,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": -2.8274333882308142,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": 2.827433388230814,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": 1.8849555921538763,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": 1.2566370614359168,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": 0.31415926535897953,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Last Storey Tambour",
+      "name": "Last Storey Tambour",
+      "ports": [
+        "tambour rectangular bottom",
+        "roof rectangular bottom",
+        "door tambour right",
+        "door tambour left"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "tambour rectangular bottom",
+            "angle": 1.5707963267948966,
+            "radius": 3
+          },
+          {
+            "handleKind": "roof rectangular bottom",
+            "angle": -1.5707963267948966,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": -0.31415926535897953,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": -1.256637061435917,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": -1.884955592153876,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": -2.8274333882308142,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": 2.827433388230814,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": 1.8849555921538763,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": 1.2566370614359168,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": 0.31415926535897953,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Single Storey Tambour",
+      "name": "Single Storey Tambour",
+      "ports": [
+        "core circular top",
+        "roof rectangular bottom",
+        "door tambour right",
+        "door tambour left"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "core circular top",
+            "angle": -3.141592653589793,
+            "radius": 3
+          },
+          {
+            "handleKind": "roof rectangular bottom",
+            "angle": -3.141592653589793,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": -1.887082454707051,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": -2.8253065256776386,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": 2.8253065256776386,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": 1.887082454707051,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": 1.254510198882742,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": 0.3162861279121545,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": -0.3162861279121545,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": -1.254510198882742,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Tambour",
+      "name": "Tambour",
+      "ports": [
+        "tambour rectangular bottom",
+        "tambour rectangular top",
+        "door tambour right",
+        "door tambour left"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "tambour rectangular bottom",
+            "angle": 1.5707963267948966,
+            "radius": 3
+          },
+          {
+            "handleKind": "tambour rectangular top",
+            "angle": -1.5707963267948966,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": -0.31415926535897953,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": -1.256637061435917,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": -1.884955592153876,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": -2.8274333882308142,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": 2.827433388230814,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": 1.8849555921538763,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour right",
+            "angle": 1.2566370614359168,
+            "radius": 3
+          },
+          {
+            "handleKind": "door tambour left",
+            "angle": 0.31415926535897953,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Trapezoid",
+      "name": "Trapezoid",
+      "ports": [],
+      "presentation": {}
+    },
+    {
+      "id": "Trapezoid Capsule Backslash",
+      "name": "Trapezoid Capsule Backslash",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": -1.5707963267948966,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Trapezoid Capsule J",
+      "name": "Trapezoid Capsule J",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": -1.5707963267948966,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Trapezoid Capsule L",
+      "name": "Trapezoid Capsule L",
+      "ports": [
+        "door capsule left"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule left",
+            "angle": 1.5707963267948966,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Trapezoid Capsule P",
+      "name": "Trapezoid Capsule P",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": 1.5707963267948966,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Trapezoid Capsule Q",
+      "name": "Trapezoid Capsule Q",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": -1.5707963267948966,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Trapezoid Capsule S",
+      "name": "Trapezoid Capsule S",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": -1.5707963267948966,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Trapezoid Capsule Slash",
+      "name": "Trapezoid Capsule Slash",
+      "ports": [
+        "door capsule right"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule right",
+            "angle": 1.5707963267948966,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Trapezoid Capsule Z",
+      "name": "Trapezoid Capsule Z",
+      "ports": [
+        "door capsule left"
+      ],
+      "presentation": {
+        "handles": [
+          {
+            "handleKind": "door capsule left",
+            "angle": 1.5707963267948966,
+            "radius": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "Piece",
+      "name": "Piece",
+      "ports": [
+        "Connector"
+      ],
+      "properties": [
+        {
+          "name": "position",
+          "kind": "data",
+          "valueType": "object"
+        },
+        {
+          "name": "label",
+          "kind": "data",
+          "valueType": "string"
+        },
+        {
+          "name": "tier",
+          "kind": "data",
+          "valueType": "number"
+        },
+        {
+          "name": "flatPosition",
+          "kind": "derived",
+          "valueType": "object",
+          "expr": "flatFromConnections"
+        }
+      ]
+    }
+  ],
+  "edgeKinds": [
+    {
+      "id": "Connection",
+      "name": "Connection",
+      "properties": [
+        {
+          "name": "gap",
+          "kind": "data",
+          "valueType": "number"
+        },
+        {
+          "name": "rotation",
+          "kind": "data",
+          "valueType": "number"
+        },
+        {
+          "name": "tilt",
+          "kind": "data",
+          "valueType": "number"
+        },
+        {
+          "name": "rise",
+          "kind": "data",
+          "valueType": "number"
+        },
+        {
+          "name": "turn",
+          "kind": "data",
+          "valueType": "number"
+        },
+        {
+          "name": "shift",
+          "kind": "data",
+          "valueType": "number"
+        },
+        {
+          "name": "u",
+          "kind": "data",
+          "valueType": "number"
+        },
+        {
+          "name": "v",
+          "kind": "data",
+          "valueType": "number"
+        }
+      ]
+    },
+    {
+      "id": "edge.link",
+      "name": "Link",
+      "presentation": {
+        "id": "edge.link",
+        "name": "Link"
+      }
+    }
+  ],
+  "portKinds": [
+    {
+      "id": "Connector",
+      "name": "Connector",
+      "direction": "out",
+      "properties": []
+    },
+    {
+      "id": "core circular bottom",
+      "name": "core circular bottom",
+      "presentation": {
+        "color": "hsl(206 52% 48%)",
+        "defaultWireKind": "wire.link"
+      }
+    },
+    {
+      "id": "core circular top",
+      "name": "core circular top",
+      "presentation": {
+        "color": "hsl(290 52% 48%)",
+        "defaultWireKind": "wire.link"
+      }
+    },
+    {
+      "id": "core rectangular bottom",
+      "name": "core rectangular bottom",
+      "presentation": {
+        "color": "hsl(55 52% 48%)",
+        "defaultWireKind": "wire.link"
+      }
+    },
+    {
+      "id": "core rectangular top",
+      "name": "core rectangular top",
+      "presentation": {
+        "color": "hsl(37 52% 48%)",
+        "defaultWireKind": "wire.link"
+      }
+    },
+    {
+      "id": "door capsule right",
+      "name": "door capsule right",
+      "presentation": {
+        "color": "hsl(124 52% 48%)",
+        "defaultWireKind": "wire.link"
+      }
+    },
+    {
+      "id": "door capsule left",
+      "name": "door capsule left",
+      "presentation": {
+        "color": "hsl(239 52% 48%)",
+        "defaultWireKind": "wire.link"
+      }
+    },
+    {
+      "id": "door tambour left",
+      "name": "door tambour left",
+      "presentation": {
+        "color": "hsl(344 52% 48%)",
+        "defaultWireKind": "wire.link"
+      }
+    },
+    {
+      "id": "door tambour right",
+      "name": "door tambour right",
+      "presentation": {
+        "color": "hsl(91 52% 48%)",
+        "defaultWireKind": "wire.link"
+      }
+    },
+    {
+      "id": "platform right",
+      "name": "platform right",
+      "presentation": {
+        "color": "hsl(169 52% 48%)",
+        "defaultWireKind": "wire.link"
+      }
+    },
+    {
+      "id": "platform left",
+      "name": "platform left",
+      "presentation": {
+        "color": "hsl(215 52% 48%)",
+        "defaultWireKind": "wire.link"
+      }
+    },
+    {
+      "id": "roof circular bottom",
+      "name": "roof circular bottom",
+      "presentation": {
+        "color": "hsl(277 52% 48%)",
+        "defaultWireKind": "wire.link"
+      }
+    },
+    {
+      "id": "roof circular top",
+      "name": "roof circular top",
+      "presentation": {
+        "color": "hsl(215 52% 48%)",
+        "defaultWireKind": "wire.link"
+      }
+    },
+    {
+      "id": "roof rectangular bottom",
+      "name": "roof rectangular bottom",
+      "presentation": {
+        "color": "hsl(108 52% 48%)",
+        "defaultWireKind": "wire.link"
+      }
+    },
+    {
+      "id": "roof rectangular top",
+      "name": "roof rectangular top",
+      "presentation": {
+        "color": "hsl(100 52% 48%)",
+        "defaultWireKind": "wire.link"
+      }
+    },
+    {
+      "id": "tambour circular bottom",
+      "name": "tambour circular bottom",
+      "presentation": {
+        "color": "hsl(231 52% 48%)",
+        "defaultWireKind": "wire.link"
+      }
+    },
+    {
+      "id": "tambour circular top",
+      "name": "tambour circular top",
+      "presentation": {
+        "color": "hsl(156 52% 48%)",
+        "defaultWireKind": "wire.link"
+      }
+    },
+    {
+      "id": "tambour rectangular bottom",
+      "name": "tambour rectangular bottom",
+      "presentation": {
+        "color": "hsl(223 52% 48%)",
+        "defaultWireKind": "wire.link"
+      }
+    },
+    {
+      "id": "tambour rectangular top",
+      "name": "tambour rectangular top",
+      "presentation": {
+        "color": "hsl(108 52% 48%)",
+        "defaultWireKind": "wire.link"
+      }
+    }
+  ],
+  "wireKinds": [
+    {
+      "id": "wire.link",
+      "name": "Link",
+      "presentation": {
+        "defaultEdgeKind": "edge.link"
+      }
+    }
+  ],
+  "edgeTips": []
+}

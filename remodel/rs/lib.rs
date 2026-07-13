@@ -2,6 +2,7 @@
 
 use semio_framework_core::MeshData;
 use serde::{Deserialize, Serialize};
+use vcs::{Operation, OperationDiff};
 
 pub const REMODEL_DOCUMENT_SCHEMA: &str = "remodel.scene";
 
@@ -195,7 +196,8 @@ fn default_camera_fov() -> f64 {
     45.0
 }
 
-/// 🗂️ Top-level remodel project document.
+/// 🗂️ Top-level remodel project document — only persistent, undoable reconstruction state. Ephemeral
+/// viewport state (camera/selection/active tool) lives in the plugin runtime, never in the document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RemodelScene {
@@ -209,12 +211,6 @@ pub struct RemodelScene {
     pub job: ReconstructionJob,
     #[serde(default)]
     pub result: Option<RemodelMesh>,
-    #[serde(default)]
-    pub selection: SelectionState,
-    #[serde(default)]
-    pub active_tool: Option<String>,
-    #[serde(default)]
-    pub camera: CameraState,
 }
 
 /// 🌱 An empty scene seeded with a placeholder box mesh, so the 3D editor/preview always has
@@ -230,12 +226,111 @@ pub fn default_remodel_scene() -> RemodelScene {
             mesh: semio_framework_core::mesh_from_kind("box"),
             source: MeshSource::Placeholder,
         }),
-        selection: SelectionState::default(),
-        active_tool: Some("select".into()),
-        camera: CameraState::default(),
     }
 }
+
+pub fn default_active_tool() -> String {
+    "select".into()
+}
 //#endregion 🔖Domain
+
+//#region 🔖Ops
+/// 🔁 The document mutation vocabulary — one whole-field LWW register setter per independent
+/// `RemodelScene` field, so disjoint-field edits by concurrent instances converge cleanly. There is
+/// no `setDocument` catch-all: reconstruction is field-granular (import a video, tune params, publish
+/// the resulting mesh) and each field carries its own inverse from the pre-edit state.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum RemodelOp {
+    SetSourceVideo {
+        #[serde(default)]
+        video: Option<SourceVideo>,
+    },
+    SetParams {
+        params: ReconstructionParams,
+    },
+    SetJob {
+        job: ReconstructionJob,
+    },
+    SetResult {
+        #[serde(default)]
+        result: Option<RemodelMesh>,
+    },
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum RemodelDiff {
+    #[default]
+    Empty,
+    SetSourceVideo {
+        #[serde(default)]
+        video: Option<SourceVideo>,
+    },
+    SetParams {
+        params: ReconstructionParams,
+    },
+    SetJob {
+        job: ReconstructionJob,
+    },
+    SetResult {
+        #[serde(default)]
+        result: Option<RemodelMesh>,
+    },
+}
+
+pub fn apply_remodel_op(scene: &RemodelScene, op: &RemodelOp) -> RemodelScene {
+    let mut next = scene.clone();
+    match op {
+        RemodelOp::SetSourceVideo { video } => next.source_video = video.clone(),
+        RemodelOp::SetParams { params } => next.params = params.clone(),
+        RemodelOp::SetJob { job } => next.job = job.clone(),
+        RemodelOp::SetResult { result } => next.result = result.clone(),
+    }
+    next
+}
+
+impl OperationDiff<RemodelScene> for RemodelDiff {
+    fn apply(&self, projection: &RemodelScene) -> RemodelScene {
+        let op = match self {
+            RemodelDiff::Empty => return projection.clone(),
+            RemodelDiff::SetSourceVideo { video } => RemodelOp::SetSourceVideo { video: video.clone() },
+            RemodelDiff::SetParams { params } => RemodelOp::SetParams { params: params.clone() },
+            RemodelDiff::SetJob { job } => RemodelOp::SetJob { job: job.clone() },
+            RemodelDiff::SetResult { result } => RemodelOp::SetResult { result: result.clone() },
+        };
+        apply_remodel_op(projection, &op)
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if !matches!(other, RemodelDiff::Empty) {
+            *self = other;
+        }
+    }
+}
+
+impl Operation<RemodelScene> for RemodelOp {
+    type Diff = RemodelDiff;
+
+    fn diff(&self, _projection: &RemodelScene) -> RemodelDiff {
+        match self {
+            RemodelOp::SetSourceVideo { video } => RemodelDiff::SetSourceVideo { video: video.clone() },
+            RemodelOp::SetParams { params } => RemodelDiff::SetParams { params: params.clone() },
+            RemodelOp::SetJob { job } => RemodelDiff::SetJob { job: job.clone() },
+            RemodelOp::SetResult { result } => RemodelDiff::SetResult { result: result.clone() },
+        }
+    }
+
+    fn backwards(&self, projection: &RemodelScene) -> Vec<Self> {
+        vec![match self {
+            RemodelOp::SetSourceVideo { .. } => RemodelOp::SetSourceVideo { video: projection.source_video.clone() },
+            RemodelOp::SetParams { .. } => RemodelOp::SetParams { params: projection.params.clone() },
+            RemodelOp::SetJob { .. } => RemodelOp::SetJob { job: projection.job.clone() },
+            RemodelOp::SetResult { .. } => RemodelOp::SetResult { result: projection.result.clone() },
+        }]
+    }
+}
+//#endregion 🔖Ops
 
 //#region 🧪Tests
 #[cfg(test)]
@@ -257,6 +352,31 @@ mod tests {
         let json = serde_json::to_string(&scene).expect("serialize");
         let parsed: RemodelScene = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(parsed, scene);
+    }
+
+    #[test]
+    fn set_params_op_applies_and_reverts() {
+        let scene = default_remodel_scene();
+        let mut params = scene.params.clone();
+        params.max_frames = 42;
+        let op = RemodelOp::SetParams { params: params.clone() };
+        let next = apply_remodel_op(&scene, &op);
+        assert_eq!(next.params.max_frames, 42);
+        assert_eq!(op.diff(&scene).apply(&scene).params.max_frames, 42);
+        let inverse = op.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOp::SetParams { params: scene.params.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        assert_eq!(reverted.params, scene.params);
+    }
+
+    #[test]
+    fn set_result_op_clears_and_restores_mesh() {
+        let scene = default_remodel_scene();
+        let cleared = apply_remodel_op(&scene, &RemodelOp::SetResult { result: None });
+        assert!(cleared.result.is_none());
+        let inverse = RemodelOp::SetResult { result: None }.backwards(&scene);
+        let restored = inverse.iter().fold(cleared, |current, op| apply_remodel_op(&current, op));
+        assert_eq!(restored.result, scene.result);
     }
 }
 //#endregion 🧪Tests

@@ -21,10 +21,10 @@ use semio_framework_plugin::{PanelGroup,
     component::layout::WindowEngagementStatus, tool_button, tool_collection, ui_declarative_sections_to_tree,
     ui_inspector_all_equal, ui_text,
     ActionEmit, DocumentApp, DocumentView, HostEffect,
-    App, ActionDescriptor, ModeDefinition, NodeGraphScene, PluginBundle, SurfaceKind, TextEditorScene,
+    App, ActionDescriptor, NodeGraphScene, PluginBundle, SurfaceKind, TextEditorScene,
     ToolCategory,
-    UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiSectionNode,
-    UiSelectItem, UiSelectNode, UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+    UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiSectionNode,
+    UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, VirtualFileSystemScene,
     WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowLayout, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -151,20 +151,29 @@ struct SHomeDocument {
 /// @emoji 🔢 The Home launcher's only document op: pins the catalog-generation counter that forces a
 /// re-materialize of the studio list after a create/import/delete side-effect on the catalog port.
 /// It is its own {@link vcs::OperationDiff} (idempotent set), so forward/backward are symmetric.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "camelCase")]
 enum SHomeOp {
+    /// 🫙 The identity op — an `OperationDiff` needs `Default`; never emitted by `handle_action`.
+    #[default]
+    Noop,
     SetCatalogGeneration { value: u64 },
 }
 
 impl vcs::OperationDiff<SHomeDocument> for SHomeOp {
     fn apply(&self, projection: &SHomeDocument) -> SHomeDocument {
-        let SHomeOp::SetCatalogGeneration { value } = self;
-        SHomeDocument { catalog_generation: *value, ..projection.clone() }
+        match self {
+            SHomeOp::Noop => projection.clone(),
+            SHomeOp::SetCatalogGeneration { value } => {
+                SHomeDocument { catalog_generation: *value, ..projection.clone() }
+            }
+        }
     }
 
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        if !matches!(other, SHomeOp::Noop) {
+            *self = other;
+        }
     }
 }
 
@@ -342,25 +351,6 @@ fn register_studio_port(studio_id: &str, port: Arc<dyn OsBackbonePort>) {
     }
 }
 
-fn resolve_studio_port(studio_id: &str) -> Arc<dyn OsBackbonePort> {
-    if let Ok(guard) = STUDIO_PORTS.lock() {
-        if let Some(port) = guard.get(studio_id) {
-            return port.clone();
-        }
-    }
-    if load_os_studio_document(studio_id, catalog_port()).is_ok() {
-        return catalog_port();
-    }
-    if load_os_studio_document(studio_id, temp_catalog_port()).is_ok() {
-        return temp_catalog_port();
-    }
-    catalog_port()
-}
-
-fn load_studio_document(studio_id: &str) -> Result<OsDocument, VcsError> {
-    load_os_studio_document(studio_id, resolve_studio_port(studio_id))
-}
-
 fn list_all_studio_catalog_entries() -> Vec<semio_framework_os::OsStudioCatalogEntry> {
     let mut seen = HashSet::new();
     let mut entries = Vec::new();
@@ -499,19 +489,6 @@ fn s_home_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     }
 }
 
-fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
-    UiNode::Stack(UiStackNode {
-        direction: "horizontal".into(),
-        gap: Some("standard".into()),
-        padding: None,
-        children,
-        id: None,
-        selected: None,
-        activate: None,
-        drop_action: None,
-    })
-}
-
 fn parameter_entity_id(parameter: &OsParameter) -> &str {
     match parameter {
         OsParameter::Numeric { id, .. }
@@ -523,7 +500,8 @@ fn parameter_entity_id(parameter: &OsParameter) -> &str {
 
 /// @emoji ✨ Builds the `SpawnAppInstance` op (minting a deterministic instance id + app-document id
 /// embedded in the op, so replay never re-mints) plus the new instance id for the caller to focus.
-/// The pure op-builder counterpart of the deleted `OsStore::spawn_app_instance`.
+/// The store-free op-builder the plugin uses in place of os-core's `OsStore::spawn_app_instance`
+/// (a `DocumentApp` owns no store — its wrapper does).
 fn spawn_app_instance_op(
     program_id: &str,
     app_id: &str,
@@ -554,7 +532,7 @@ fn add_parameter_op(parameter_type: &OsParameterType, name: &str) -> OsOp {
 }
 
 /// @emoji 🩹 Builds a `PatchParameter` op by folding `patch` (a `{field: value}` object) into the
-/// current parameter — the pure op-builder counterpart of the deleted `OsStore::patch_parameter`.
+/// current parameter — the store-free op-builder used in place of os-core's `OsStore::patch_parameter`.
 fn patch_parameter_op(projection: &OsProjection, parameter_id: &str, patch: &Value) -> Option<OsOp> {
     let current = projection
         .parameters
@@ -2801,7 +2779,7 @@ fn create_studio_app() -> App {
         projection.app_instances.len(),
     );
     let measures = media_graph_measures(&runtime, &projection.app_instances, s_studio_labels(&ViewState::default()));
-    let mut builder = App::builder(S_PLAY_APP_ID, "Studio").document(["semio", "s", "studio"])
+    let builder = App::builder(S_PLAY_APP_ID, "Studio").document(["semio", "s", "studio"])
         .icon_id("s")
         .mode("main", "Studio")
         .default_mode_id("main")
@@ -2936,10 +2914,53 @@ semio_framework_plugin::plugin_exports!(bundle);
 mod tests {
     use super::*;
     use semio_framework_os::{
-        merge_os_program_definition, os_baseline_resource, os_in_port, os_out_port,
+        apply_os_operation, merge_os_program_definition, os_baseline_resource, os_in_port, os_out_port,
         validate_media_graph, OsAppResourceSpec, OsPlatformAppInput, OsPlatformInput,
     };
-    use semio_framework_plugin::{PanelGroup, ModeDefinition, ToolNode, UiControlNode, UiNode};
+    use semio_framework_plugin::{
+        ActionMeta, HistoryView, ModeDefinition, PluginApp, ToolNode, UiControlNode, UiNode,
+        VcsDocumentApp,
+    };
+    use vcs::{Backbone, BackboneMessage, MemoryBackbone};
+
+    //#region 🔧Harness
+    fn meta() -> ActionMeta {
+        ActionMeta { actor: "local".into(), instance_id: 1 }
+    }
+
+    fn empty_history() -> HistoryView {
+        HistoryView {
+            columns: Vec::new(),
+            can_undo: false,
+            can_redo: false,
+            active_alternative_id: None,
+            current_checkpoint_id: None,
+        }
+    }
+
+    /// 🎛️ Drives the typed `SStudioApp::handle_action` against a projection snapshot, returning its emit.
+    fn studio_emit(app: &mut SStudioApp, projection: &OsProjection, action: &str, args: Value) -> ActionEmit<OsOp> {
+        let history = empty_history();
+        let doc = DocumentView { projection, history: &history };
+        app.handle_action(action, Some(&args), &doc, &ViewState::default())
+    }
+
+    /// 📽️ Folds studio ops onto a projection the way the store would (minus history), for op-application asserts.
+    fn apply_ops(projection: &OsProjection, ops: &[OsOp]) -> OsProjection {
+        ops.iter().fold(projection.clone(), |current, op| apply_os_operation(&current, op))
+    }
+
+    /// 📡 Drains a `MemoryBackbone`'s outbound `Ops` frames into a serialized envelope list for `ingest_operations`.
+    fn drain(far: &mut MemoryBackbone) -> String {
+        let mut envelopes = Vec::new();
+        for message in far.receive().expect("receive") {
+            if let BackboneMessage::Ops { envelopes: ops } = message {
+                envelopes.extend(ops);
+            }
+        }
+        serde_json::to_string(&envelopes).expect("serialize envelopes")
+    }
+    //#endregion 🔧Harness
 
     fn seed_draw_program() {
         let mut resources = HashMap::new();
@@ -2975,8 +2996,7 @@ mod tests {
 
     #[test]
     fn demo_document_has_instances_and_edges() {
-        let envelope = initial_studio_envelope();
-        let projection = projection_from_document(&envelope.document);
+        let projection = demo_studio_projection();
         assert!(projection.app_instances.len() >= 5);
         assert!(projection.media_graph.nodes.len() >= 2);
         assert!(projection.media_graph.edges.len() >= 1);
@@ -2985,21 +3005,17 @@ mod tests {
 
     #[test]
     fn renders_media_graph_scene() {
-        let app = SStudioApp;
-        let envelope = initial_studio_document_json();
-        let node = app.render(S_PLAY_BODY_MEDIA_GRAPH, &envelope, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("node-graph"));
+        let mut app = VcsDocumentApp::new(SStudioApp::new());
+        let node = app.render(S_PLAY_BODY_MEDIA_GRAPH, None, &ViewState::default()).expect("render");
+        assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
     }
 
     #[test]
     fn renders_compiled_dag_editor() {
-        let app = SStudioApp;
-        let envelope = initial_studio_document_json();
-        let node = app.render(S_PLAY_BODY_COMPILED_DAG, &envelope, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("text-editor"));
-        let wire = compiled_dag_wire_literal(&parse_studio_envelope(&envelope).document);
+        let mut app = VcsDocumentApp::new(SStudioApp::new());
+        let node = app.render(S_PLAY_BODY_COMPILED_DAG, None, &ViewState::default()).expect("render");
+        assert!(serde_json::to_string(&node).unwrap().contains("text-editor"));
+        let wire = compiled_dag_wire_literal(&demo_studio_projection());
         assert!(wire.contains("appInstance") || wire.contains("draw"));
     }
 
@@ -3019,21 +3035,13 @@ mod tests {
     }
 
     #[test]
-    fn move_media_node_updates_projection() {
-        let mut envelope = initial_studio_envelope();
-        let node_id = projection_from_document(&envelope.document)
-            .media_graph
-            .nodes
-            .first()
-            .expect("node")
-            .id
-            .clone();
-        SStudioApp::handle_studio_action(
-            &mut envelope,
-            "moveMediaNode",
-            Some(&json!({ "nodeId": node_id, "x": 120.0, "y": 160.0 })),
-        );
-        let node = projection_from_document(&envelope.document)
+    fn move_media_node_emits_coalesced_move_op() {
+        let mut app = SStudioApp::new();
+        let projection = demo_studio_projection();
+        let node_id = projection.media_graph.nodes.first().expect("node").id.clone();
+        let emit = studio_emit(&mut app, &projection, "moveMediaNode", json!({ "nodeId": node_id, "x": 120.0, "y": 160.0 }));
+        assert_eq!(emit.coalesce_key.as_deref(), Some(format!("moveMediaNode:{node_id}").as_str()));
+        let node = apply_ops(&projection, &emit.ops)
             .media_graph
             .nodes
             .into_iter()
@@ -3046,90 +3054,68 @@ mod tests {
     #[test]
     fn spawns_draw_app_instance() {
         seed_draw_program();
-        let mut envelope = initial_studio_envelope();
-        let ops = SStudioApp::handle_studio_action(
-            &mut envelope,
-            "spawnApp",
-            Some(&json!({ "programId": "draw", "appId": "draw" })),
-        );
-        assert!(!ops.is_empty());
-        let projection = projection_from_document(&envelope.document);
-        assert!(projection
-            .app_instances
-            .iter()
-            .any(|instance| instance.program_id == "draw"));
+        let mut app = SStudioApp::new();
+        let projection = demo_studio_projection();
+        let emit = studio_emit(&mut app, &projection, "spawnApp", json!({ "programId": "draw", "appId": "draw" }));
+        assert!(!emit.ops.is_empty());
+        let next = apply_ops(&projection, &emit.ops);
+        assert_eq!(next.app_instances.len(), projection.app_instances.len() + 1);
+        assert_eq!(app.runtime.active_instance_id, next.app_instances.last().map(|i| i.id.clone()));
     }
 
     #[test]
     fn spawns_draw_app_instance_at_drop_position() {
         seed_draw_program();
-        let mut envelope = initial_studio_envelope();
-        let existing_ids: std::collections::HashSet<String> = projection_from_document(&envelope.document)
-            .app_instances
-            .iter()
-            .map(|instance| instance.id.clone())
-            .collect();
-        SStudioApp::handle_studio_action(
-            &mut envelope,
+        let mut app = SStudioApp::new();
+        let projection = demo_studio_projection();
+        let existing: HashSet<String> = projection.app_instances.iter().map(|i| i.id.clone()).collect();
+        let emit = studio_emit(
+            &mut app,
+            &projection,
             "spawnApp",
-            Some(&json!({ "programId": "draw", "appId": "draw", "position": { "x": 321.0, "y": 654.0 } })),
+            json!({ "programId": "draw", "appId": "draw", "position": { "x": 321.0, "y": 654.0 } }),
         );
-        let projection = projection_from_document(&envelope.document);
-        let instance_id = projection
+        let next = apply_ops(&projection, &emit.ops);
+        let instance = next
             .app_instances
             .iter()
-            .find(|instance| instance.program_id == "draw" && !existing_ids.contains(&instance.id))
-            .expect("newly spawned draw instance")
-            .id
-            .clone();
-        let node = projection
+            .find(|i| i.program_id == "draw" && !existing.contains(&i.id))
+            .expect("newly spawned draw instance");
+        let node = next
             .media_graph
             .nodes
             .iter()
-            .find(|row| row.instance_id == instance_id)
+            .find(|n| n.instance_id == instance.id)
             .expect("media node for spawned instance");
         assert!((node.x - 321.0).abs() < 0.01);
         assert!((node.y - 654.0).abs() < 0.01);
     }
 
     #[test]
-    fn open_instance_emits_open_plugin_instance_op_matching_spawned_program() {
+    fn open_instance_emits_open_plugin_instance_effect_matching_instance() {
         seed_draw_program();
-        let mut envelope = initial_studio_envelope();
-        let existing_ids: std::collections::HashSet<String> = projection_from_document(&envelope.document)
-            .app_instances
+        let mut app = SStudioApp::new();
+        let projection = demo_studio_projection();
+        let instance = projection.app_instances.iter().find(|i| i.program_id == "draw").expect("draw instance").clone();
+        let emit = studio_emit(&mut app, &projection, "openInstance", json!({ "instanceId": instance.id }));
+        assert!(emit.ops.is_empty(), "opening an instance is a host effect, not a document op");
+        let opened = emit
+            .effects
             .iter()
-            .map(|instance| instance.id.clone())
-            .collect();
-        SStudioApp::handle_studio_action(
-            &mut envelope,
-            "spawnApp",
-            Some(&json!({ "programId": "draw", "appId": "draw" })),
-        );
-        let instance_id = projection_from_document(&envelope.document)
-            .app_instances
-            .iter()
-            .find(|instance| instance.program_id == "draw" && !existing_ids.contains(&instance.id))
-            .expect("newly spawned draw instance")
-            .id
-            .clone();
-        let ops = SStudioApp::handle_studio_action(
-            &mut envelope,
-            "openInstance",
-            Some(&json!({ "instanceId": instance_id })),
-        );
-        let open_op = ops
-            .iter()
-            .map(|op_json| serde_json::from_str::<Value>(op_json).expect("op json"))
-            .find(|op| op.get("op").and_then(Value::as_str) == Some("openPluginInstance"))
-            .expect("openPluginInstance op");
-        assert_eq!(open_op.get("programId").and_then(Value::as_str), Some("draw"));
-        assert_eq!(open_op.get("appId").and_then(Value::as_str), Some("draw"));
-        assert_eq!(open_op.get("osInstanceId").and_then(Value::as_str), Some(instance_id.as_str()));
+            .find_map(|effect| match effect {
+                HostEffect::OpenPluginInstance { program_id, app_id, os_instance_id } => {
+                    Some((program_id.clone(), app_id.clone(), os_instance_id.clone()))
+                }
+                _ => None,
+            })
+            .expect("OpenPluginInstance effect");
+        assert_eq!(opened.0, "draw");
+        assert_eq!(opened.1, "draw");
+        assert_eq!(opened.2.as_deref(), Some(instance.id.as_str()));
     }
 
     #[test]
-    fn export_then_import_dwg_media_round_trips_app_source() {
+    fn export_media_emits_download_effect_and_import_requests_file_open() {
         use base64::Engine;
         seed_draw_program();
         semio_framework_os::register_os_media_export_handler("2d.drawing", semio_framework_os::OsMediaFormat::Dwg, |_doc| {
@@ -3144,83 +3130,132 @@ mod tests {
         });
         semio_framework_os::register_dwg_import_handler("2d.drawing", |_drawing| Ok(json!({ "schema": "draw.document", "imported": true })));
 
-        let mut envelope = initial_studio_envelope();
-        SStudioApp::handle_studio_action(&mut envelope, "spawnApp", Some(&json!({ "programId": "draw", "appId": "draw" })));
-        let projection = projection_from_document(&envelope.document);
-        let instance = projection.app_instances.iter().find(|instance| instance.program_id == "draw").expect("draw instance");
-        let instance_id = instance.id.clone();
+        let mut app = SStudioApp::new();
+        let projection = demo_studio_projection();
+        let instance = projection.app_instances.iter().find(|i| i.program_id == "draw").expect("draw instance").clone();
 
-        let export_ops = SStudioApp::handle_studio_action(&mut envelope, "exportMedia", Some(&json!({ "instanceId": instance_id, "format": "dwg" })));
-        let export_op: Value = export_ops.iter().find_map(|op| serde_json::from_str::<Value>(op).ok().filter(|value| value["op"] == "downloadMediaExport")).expect("download op");
-        let data = export_op["data"].as_str().expect("base64 dwg data").to_string();
+        let export = studio_emit(&mut app, &projection, "exportMedia", json!({ "instanceId": instance.id, "format": "dwg" }));
+        let (data, encoding) = export
+            .effects
+            .iter()
+            .find_map(|effect| match effect {
+                HostEffect::DownloadMediaExport { data, encoding, .. } => Some((data.clone(), encoding.clone())),
+                _ => None,
+            })
+            .expect("DownloadMediaExport effect");
         assert!(!data.is_empty());
-        assert_eq!(export_op["encoding"], "base64");
+        assert_eq!(encoding.as_deref(), Some("base64"));
 
-        let import_ops = SStudioApp::handle_studio_action(&mut envelope, "importMedia", Some(&json!({ "instanceId": instance_id, "format": "dwg" })));
-        assert!(import_ops.iter().any(|op| op.contains("requestFileOpen")));
+        let import = studio_emit(&mut app, &projection, "importMedia", json!({ "instanceId": instance.id, "format": "dwg" }));
+        assert!(import.effects.iter().any(|effect| matches!(
+            effect,
+            HostEffect::RequestFileOpen { import_action, .. } if import_action == "importMediaPayload"
+        )));
 
-        SStudioApp::handle_studio_action(&mut envelope, "importMediaPayload", Some(&json!({ "payload": format!("data:image/vnd.dwg;base64,{data}") })));
-        let projection_after = projection_from_document(&envelope.document);
-        let instance_after = projection_after.app_instances.iter().find(|instance| instance.id == instance_id).expect("draw instance still present");
-        // 🚧 The imported content used to write back into `OsAppInstance.source_document.inline`
-        // (deleted with `OsSourceDocument` — content now lives in the app's own document store, not
-        // embedded here); the round trip up to a successful import decode is still exercised above,
-        // the write-back assertion is deferred to `s`'s `DocumentApp` migration (WS-F last wave).
-        let _ = instance_after;
+        // Decoding is exercised here; the decoded content is applied to the instance's own
+        // `OsDocumentRef` document by the host, so this arm emits no studio op.
+        let payload = studio_emit(&mut app, &projection, "importMediaPayload", json!({ "payload": format!("data:image/vnd.dwg;base64,{data}") }));
+        assert!(payload.ops.is_empty());
     }
 
     #[test]
     fn commit_checkpoint_round_trips_projection() {
-        let mut envelope = initial_studio_envelope();
-        let before = projection_from_document(&envelope.document);
-        SStudioApp::handle_studio_action(
-            &mut envelope,
-            "commitCheckpoint",
-            Some(&json!({ "message": "snapshot" })),
-        );
-        let rematerialized = projection_from_document(&envelope.document);
-        assert_eq!(rematerialized.app_instances.len(), before.app_instances.len());
+        let mut app = VcsDocumentApp::new(SStudioApp::new());
+        let before = app.projection().expect("projection").app_instances.len();
+        app.handle_action("commitCheckpoint", Some(&json!({ "message": "snapshot" })), &ViewState::default(), &meta())
+            .expect("commit");
+        assert_eq!(app.projection().expect("projection").app_instances.len(), before);
     }
 
     #[test]
-    fn patch_parameter_via_store_works() {
-        let envelope = initial_studio_envelope();
-        let mut store = store_from_envelope(&envelope);
-        store
-            .patch_parameter("param-brush-size", &json!({ "value": 48.0 }))
-            .expect("patch");
-        let projection = store.projection().expect("projection");
-        match projection
-            .parameters
-            .iter()
-            .find(|entry| entry.id() == "param-brush-size")
-            .expect("parameter")
-        {
+    fn patch_parameter_op_updates_numeric_value() {
+        let projection = demo_studio_projection();
+        let op = patch_parameter_op(&projection, "param-brush-size", &json!({ "value": 48.0 })).expect("op");
+        let next = apply_os_operation(&projection, &op);
+        match next.parameters.iter().find(|entry| entry.id() == "param-brush-size").expect("parameter") {
             OsParameter::Numeric { value, .. } => assert_eq!(*value, 48.0),
             _ => panic!("expected numeric"),
         }
     }
 
     #[test]
-    fn patch_parameter_updates_value() {
-        let mut envelope = initial_studio_envelope();
-        let ops = SStudioApp::handle_studio_action(
-            &mut envelope,
+    fn patch_parameter_action_updates_value() {
+        let mut app = SStudioApp::new();
+        let projection = demo_studio_projection();
+        let emit = studio_emit(
+            &mut app,
+            &projection,
             "patchParameter",
-            Some(&json!({ "parameterId": "param-brush-size", "field": "value", "value": 48.0 })),
+            json!({ "parameterId": "param-brush-size", "field": "value", "value": 48.0 }),
         );
-        assert_eq!(ops.len(), 1);
-        let projection = store_from_envelope(&envelope)
-            .projection()
-            .expect("projection");
-        let parameter = projection
-            .parameters
-            .iter()
-            .find(|entry| entry.id() == "param-brush-size")
-            .expect("parameter");
-        match parameter {
+        assert_eq!(emit.ops.len(), 1);
+        let next = apply_ops(&projection, &emit.ops);
+        match next.parameters.iter().find(|entry| entry.id() == "param-brush-size").expect("parameter") {
             OsParameter::Numeric { value, .. } => assert_eq!(*value, 48.0),
             _ => panic!("expected numeric"),
+        }
+    }
+
+    #[test]
+    fn undo_redo_round_trip_on_spawn() {
+        seed_draw_program();
+        let mut app = VcsDocumentApp::new(SStudioApp::new());
+        let before = app.projection().expect("projection").app_instances.len();
+        app.handle_action("spawnApp", Some(&json!({ "programId": "draw", "appId": "draw" })), &ViewState::default(), &meta())
+            .expect("spawn");
+        let after = app.projection().expect("projection").app_instances.len();
+        assert_eq!(after, before + 1);
+        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        assert_eq!(app.projection().expect("projection").app_instances.len(), before);
+        app.handle_action("redo", None, &ViewState::default(), &meta()).expect("redo");
+        assert_eq!(app.projection().expect("projection").app_instances.len(), after);
+    }
+
+    #[test]
+    fn two_instances_converge_on_disjoint_edits_via_backbone() {
+        seed_draw_program();
+        let mut a = VcsDocumentApp::new(SStudioApp::new());
+        let mut b = VcsDocumentApp::new(SStudioApp::new());
+        // Load the SAME base envelope into both instances before attaching backbones.
+        let base = a.document_json().expect("base envelope");
+        b.load_document(&base).expect("load base");
+
+        let base_projection = a.projection().expect("projection");
+        let instance_id = base_projection.app_instances.first().expect("instance").id.clone();
+        let base_draw_count = base_projection.app_instances.iter().filter(|i| i.program_id == "draw").count();
+
+        let (a_near, mut a_far) = MemoryBackbone::pair("mem://s", "mem://s");
+        a.attach_backbone(Box::new(a_near)).expect("attach a");
+        let (b_near, mut b_far) = MemoryBackbone::pair("mem://s", "mem://s");
+        b.attach_backbone(Box::new(b_near)).expect("attach b");
+
+        // Disjoint edits: A spawns a new draw instance, B renames an existing instance.
+        a.handle_action("spawnApp", Some(&json!({ "programId": "draw", "appId": "draw" })), &ViewState::default(), &meta())
+            .expect("a spawn");
+        b.handle_action(
+            "patchAppInstances",
+            Some(&json!({ "instanceIds": [instance_id], "field": "label", "value": "Renamed" })),
+            &ViewState::default(),
+            &meta(),
+        )
+        .expect("b rename");
+
+        // Exchange ops both ways through the channel.
+        let a_ops = drain(&mut a_far);
+        let b_ops = drain(&mut b_far);
+        b.ingest_operations(&a_ops).expect("b ingest a");
+        a.ingest_operations(&b_ops).expect("a ingest b");
+
+        // Both converge to BOTH edits — op merge, not whole-document last-writer-wins clobber.
+        for app in [&a, &b] {
+            let projection = app.projection().expect("projection");
+            assert_eq!(
+                projection.app_instances.iter().filter(|i| i.program_id == "draw").count(),
+                base_draw_count + 1,
+                "A's spawn must survive on both instances",
+            );
+            let renamed = projection.app_instances.iter().find(|i| i.id == instance_id).expect("instance");
+            assert_eq!(renamed.label, "Renamed", "B's rename must survive on both instances");
         }
     }
 
@@ -3264,13 +3299,9 @@ mod tests {
     fn creates_studio_via_home_action() {
         let port = catalog_port();
         let before = list_os_studio_catalog_entries(port.clone()).expect("list").len();
-        let mut home = SHomeApp;
-        home.handle_action_patch_ops(
-            "createStudio",
-            Some(&json!({ "name": "Test Studio" })),
-            &home.initial_document_json(),
-            &ViewState::default(),
-        );
+        let mut home = VcsDocumentApp::new(SHomeApp);
+        home.handle_action("createStudio", Some(&json!({ "name": "Test Studio" })), &ViewState::default(), &meta())
+            .expect("create");
         let after = list_os_studio_catalog_entries(port).expect("list").len();
         assert!(after >= before);
     }
@@ -3292,13 +3323,11 @@ mod tests {
     #[test]
     fn temporary_studio_uses_ephemeral_port() {
         let mut home = SHomeApp;
-        let ops = home.handle_action_patch_ops(
-            "createStudio",
-            Some(&json!({ "name": "Temp Studio", "kind": "temporary" })),
-            &home.initial_document_json(),
-            &ViewState::default(),
-        );
-        assert!(ops.iter().any(|op| op.contains("navigate")));
+        let projection = SHomeDocument { schema: "s.home".into(), catalog_generation: 0 };
+        let history = empty_history();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let emit = home.handle_action("createStudio", Some(&json!({ "name": "Temp Studio", "kind": "temporary" })), &doc, &ViewState::default());
+        assert!(emit.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
         let persistent = list_os_studio_catalog_entries(catalog_port()).expect("list");
         assert!(!persistent.iter().any(|entry| entry.name == "Temp Studio"));
         let ephemeral = list_os_studio_catalog_entries(temp_catalog_port()).expect("list");
@@ -3307,85 +3336,47 @@ mod tests {
 
     #[test]
     fn patch_app_instances_updates_labels() {
-        let mut envelope = initial_studio_envelope();
-        let ids: Vec<String> = projection_from_document(&envelope.document)
-            .app_instances
-            .iter()
-            .take(2)
-            .map(|instance| instance.id.clone())
-            .collect();
-        SStudioApp::handle_studio_action(
-            &mut envelope,
+        let mut app = SStudioApp::new();
+        let projection = demo_studio_projection();
+        let ids: Vec<String> = projection.app_instances.iter().take(2).map(|i| i.id.clone()).collect();
+        let emit = studio_emit(
+            &mut app,
+            &projection,
             "patchAppInstances",
-            Some(&json!({ "instanceIds": ids, "field": "label", "value": "Batch Label" })),
+            json!({ "instanceIds": ids, "field": "label", "value": "Batch Label" }),
         );
-        let labels: Vec<String> = projection_from_document(&envelope.document)
+        let next = apply_ops(&projection, &emit.ops);
+        let labels: Vec<String> = next
             .app_instances
             .iter()
-            .filter(|instance| ids.contains(&instance.id))
-            .map(|instance| instance.label.clone())
+            .filter(|i| ids.contains(&i.id))
+            .map(|i| i.label.clone())
             .collect();
         assert!(labels.iter().all(|label| label == "Batch Label"));
     }
 
     #[test]
     fn open_and_close_focused_instance() {
-        let mut envelope = initial_studio_envelope();
-        let instance_id = projection_from_document(&envelope.document)
-            .app_instances
-            .first()
-            .expect("instance")
-            .id
-            .clone();
-        assert!(envelope.runtime.focused_instance_id.is_none());
-        SStudioApp::handle_studio_action(
-            &mut envelope,
-            "openInstance",
-            Some(&json!({ "instanceId": instance_id })),
-        );
-        assert_eq!(envelope.runtime.focused_instance_id.as_deref(), Some(instance_id.as_str()));
-        SStudioApp::handle_studio_action(&mut envelope, "closeFocusedInstance", None);
-        assert!(envelope.runtime.focused_instance_id.is_none());
-    }
-
-    #[test]
-    fn open_instance_emits_materialized_document_json() {
-        ensure_studio_fixtures_registered();
-        let mut envelope = initial_studio_envelope();
-        let instance_id = projection_from_document(&envelope.document)
-            .app_instances
-            .iter()
-            .find(|instance| instance.program_id == "draw")
-            .expect("draw instance")
-            .id
-            .clone();
-        let ops = SStudioApp::handle_studio_action(
-            &mut envelope,
-            "openInstance",
-            Some(&json!({ "instanceId": instance_id })),
-        );
-        let open_op = ops
-            .iter()
-            .find(|op| op.contains("openPluginInstance"))
-            .expect("open op");
-        let parsed: Value = serde_json::from_str(open_op).expect("json");
-        assert_eq!(parsed["op"], "openPluginInstance");
-        let document: Value = serde_json::from_str(parsed["documentJson"].as_str().expect("document json")).expect("document");
-        assert_eq!(document["schema"], "draw.document");
-        assert_eq!(document["id"], "semio");
+        let mut app = SStudioApp::new();
+        let projection = demo_studio_projection();
+        let instance_id = projection.app_instances.first().expect("instance").id.clone();
+        assert!(app.runtime.focused_instance_id.is_none());
+        studio_emit(&mut app, &projection, "openInstance", json!({ "instanceId": instance_id }));
+        assert_eq!(app.runtime.focused_instance_id.as_deref(), Some(instance_id.as_str()));
+        let emit = studio_emit(&mut app, &projection, "closeFocusedInstance", json!({}));
+        assert!(app.runtime.focused_instance_id.is_none());
+        assert!(emit.effects.iter().any(|effect| matches!(effect, HostEffect::SetPanel { .. })));
     }
 
     #[test]
     fn inspector_tree_exposes_label_field() {
-        let mut envelope = initial_studio_envelope();
-        let ids: Vec<String> = projection_from_document(&envelope.document)
-            .app_instances
-            .iter()
-            .take(2)
-            .map(|instance| instance.id.clone())
-            .collect();
-        envelope.runtime.selected_app_instance_ids = ids;
-        let tree = build_inspector_tree(&envelope.document, &envelope.runtime, s_studio_labels(&ViewState::default()));
+        let mut app = SStudioApp::new();
+        let projection = demo_studio_projection();
+        let ids: Vec<String> = projection.app_instances.iter().take(2).map(|i| i.id.clone()).collect();
+        app.runtime.selected_app_instance_ids = ids;
+        let history = empty_history();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let tree = app.render(S_PLAY_INSPECTOR_BODY_KEY, &doc, &ViewState::default());
         let UiNode::Tree(tree_node) = tree else {
             panic!("expected tree");
         };
@@ -3502,18 +3493,22 @@ mod tests {
     #[test]
     fn spawns_puzzle5d_and_shooting_with_multi_port_registrations() {
         seed_multi_port_programs();
-        let mut envelope = initial_studio_envelope();
-        SStudioApp::handle_studio_action(
-            &mut envelope,
+        let mut app = SStudioApp::new();
+        let mut projection = demo_studio_projection();
+        let emit = studio_emit(
+            &mut app,
+            &projection,
             "spawnApp",
-            Some(&json!({ "programId": "puzzle.5d", "appId": "puzzle5d", "position": { "x": 200, "y": 100 } })),
+            json!({ "programId": "puzzle.5d", "appId": "puzzle5d", "position": { "x": 200, "y": 100 } }),
         );
-        SStudioApp::handle_studio_action(
-            &mut envelope,
+        projection = apply_ops(&projection, &emit.ops);
+        let emit = studio_emit(
+            &mut app,
+            &projection,
             "spawnApp",
-            Some(&json!({ "programId": "shooting", "appId": "shooting", "position": { "x": 300, "y": 100 } })),
+            json!({ "programId": "shooting", "appId": "shooting", "position": { "x": 300, "y": 100 } }),
         );
-        let projection = projection_from_document(&envelope.document);
+        projection = apply_ops(&projection, &emit.ops);
         let puzzle_instance = projection.app_instances.iter().rev().nth(1).expect("puzzle");
         let shooting_instance = projection.app_instances.last().expect("shooting");
         let puzzle_node = projection
@@ -3534,69 +3529,53 @@ mod tests {
 
     #[test]
     fn unbind_parameter_field_removes_binding() {
-        let mut envelope = initial_studio_envelope();
-        let projection = projection_from_document(&envelope.document);
-        let instance = projection.app_instances.first().expect("instance");
-        let parameter = projection.parameters.first().expect("parameter");
-        let parameter_id = parameter_entity_id(parameter);
-        SStudioApp::handle_studio_action(
-            &mut envelope,
+        let mut app = SStudioApp::new();
+        let mut projection = demo_studio_projection();
+        let instance = projection.app_instances.first().expect("instance").clone();
+        let parameter_id = parameter_entity_id(projection.parameters.first().expect("parameter")).to_string();
+        let emit = studio_emit(
+            &mut app,
+            &projection,
             "bindParameterField",
-            Some(&json!({
-                "instanceId": instance.id,
-                "fieldPath": "label",
-                "parameterId": parameter_id,
-            })),
+            json!({ "instanceId": instance.id, "fieldPath": "label", "parameterId": parameter_id }),
         );
-        let bound = projection_from_document(&envelope.document)
+        projection = apply_ops(&projection, &emit.ops);
+        assert!(projection
             .parameter_bindings
             .iter()
-            .any(|row| row.instance_id == instance.id && row.field_path == "label");
-        assert!(bound);
-        SStudioApp::handle_studio_action(
-            &mut envelope,
+            .any(|row| row.instance_id == instance.id && row.field_path == "label"));
+        let emit = studio_emit(
+            &mut app,
+            &projection,
             "unbindParameterField",
-            Some(&json!({
-                "instanceId": instance.id,
-                "fieldPath": "label",
-            })),
+            json!({ "instanceId": instance.id, "fieldPath": "label" }),
         );
-        let still_bound = projection_from_document(&envelope.document)
+        projection = apply_ops(&projection, &emit.ops);
+        assert!(!projection
             .parameter_bindings
             .iter()
-            .any(|row| row.instance_id == instance.id && row.field_path == "label");
-        assert!(!still_bound);
+            .any(|row| row.instance_id == instance.id && row.field_path == "label"));
     }
 
     #[test]
     fn checkout_checkpoint_restores_projection() {
         seed_draw_program();
-        let mut envelope = initial_studio_envelope();
-        let before = projection_from_document(&envelope.document).app_instances.len();
-        let mut store = store_from_envelope(&envelope);
-        store
-            .spawn_app_instance("draw", "draw", None, MediaGraphPosition { x: 80.0, y: 80.0 })
+        let mut app = VcsDocumentApp::new(SStudioApp::new());
+        let before = app.projection().expect("projection").app_instances.len();
+        app.handle_action("spawnApp", Some(&json!({ "programId": "draw", "appId": "draw" })), &ViewState::default(), &meta())
             .expect("spawn");
-        store
-            .dispatch_json(r#"{"kind":"commitCheckpoint","message":"after-first-spawn"}"#)
+        app.handle_action("commitCheckpoint", Some(&json!({ "message": "after-first-spawn" })), &ViewState::default(), &meta())
             .expect("commit");
-        let checkpoint_id = store.document().vcs.checkpoints[0].id.clone();
-        let after_first = store.projection().expect("projection").app_instances.len();
+        let after_first = app.projection().expect("projection").app_instances.len();
         assert!(after_first > before);
-        store
-            .spawn_app_instance("draw", "draw", None, MediaGraphPosition { x: 120.0, y: 80.0 })
+        let envelope: Value = serde_json::from_str(&app.document_json().expect("document json")).expect("envelope json");
+        let checkpoint_id = envelope["vcs"]["checkpoints"][0]["id"].as_str().expect("checkpoint id").to_string();
+        app.handle_action("spawnApp", Some(&json!({ "programId": "draw", "appId": "draw" })), &ViewState::default(), &meta())
             .expect("spawn2");
-        assert!(store.projection().expect("projection2").app_instances.len() > after_first);
-        store
-            .dispatch_json(&json!({ "kind": "checkoutCheckpoint", "checkpointId": checkpoint_id }).to_string())
+        assert!(app.projection().expect("projection").app_instances.len() > after_first);
+        app.handle_action("checkoutCheckpoint", Some(&json!({ "checkpointId": checkpoint_id })), &ViewState::default(), &meta())
             .expect("checkout");
-        let restored = store.projection().expect("restored").app_instances.len();
-        assert_eq!(restored, after_first);
-        envelope = envelope_from_store(store, envelope.runtime);
-        assert_eq!(
-            projection_from_document(&envelope.document).app_instances.len(),
-            after_first
-        );
+        assert_eq!(app.projection().expect("projection").app_instances.len(), after_first);
     }
 
     #[test]
@@ -3636,8 +3615,8 @@ mod tests {
 
     #[test]
     fn media_graph_scene_uses_flow_engine_with_fixture() {
-        let app = SStudioApp;
-        let node = app.render(S_PLAY_BODY_MEDIA_GRAPH, &initial_studio_document_json(), &ViewState::default());
+        let mut app = VcsDocumentApp::new(SStudioApp::new());
+        let node = app.render(S_PLAY_BODY_MEDIA_GRAPH, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains(r#"\"engine\":\"flow\""#));
         assert!(json.contains("fixtureJson"));
@@ -3646,18 +3625,19 @@ mod tests {
 
     #[test]
     fn node_graph_edit_set_fixture_moves_node_and_persists_camera() {
-        let mut envelope = initial_studio_envelope();
-        let projection = projection_from_document(&envelope.document);
+        let mut app = SStudioApp::new();
+        let projection = demo_studio_projection();
         let node = projection.media_graph.nodes.first().expect("node").clone();
         let camera = OsMediaGraphCamera { x: 40.0, y: -20.0, zoom: 2.0 };
         let mut fixture = os_media_graph_to_flow_fixture(&projection.media_graph, &projection.app_instances, &camera);
         fixture["layout"][&node.id] = json!({ "x": 500.0 + node.width / 2.0, "y": 300.0 + node.height / 2.0 });
-        SStudioApp::handle_studio_action(
-            &mut envelope,
+        let emit = studio_emit(
+            &mut app,
+            &projection,
             "nodeGraphEdit",
-            Some(&json!({ "ops": [{ "op": "setFixture", "fixtureJson": fixture.to_string() }] })),
+            json!({ "ops": [{ "op": "setFixture", "fixtureJson": fixture.to_string() }] }),
         );
-        let moved = projection_from_document(&envelope.document)
+        let moved = apply_ops(&projection, &emit.ops)
             .media_graph
             .nodes
             .into_iter()
@@ -3665,65 +3645,53 @@ mod tests {
             .expect("node");
         assert!((moved.x - 500.0).abs() < 0.01);
         assert!((moved.y - 300.0).abs() < 0.01);
-        assert_eq!(envelope.runtime.media_graph_camera, Some(camera));
+        assert_eq!(app.runtime.media_graph_camera, Some(camera));
     }
 
     #[test]
     fn node_graph_viewport_persists_camera() {
-        let mut envelope = initial_studio_envelope();
-        SStudioApp::handle_studio_action(
-            &mut envelope,
-            "nodeGraphViewport",
-            Some(&json!({ "viewportJson": r#"{"x":7.0,"y":9.0,"zoom":0.5}"# })),
-        );
-        assert_eq!(
-            envelope.runtime.media_graph_camera,
-            Some(OsMediaGraphCamera { x: 7.0, y: 9.0, zoom: 0.5 })
-        );
+        let mut app = SStudioApp::new();
+        let projection = demo_studio_projection();
+        studio_emit(&mut app, &projection, "nodeGraphViewport", json!({ "viewportJson": r#"{"x":7.0,"y":9.0,"zoom":0.5}"# }));
+        assert_eq!(app.runtime.media_graph_camera, Some(OsMediaGraphCamera { x: 7.0, y: 9.0, zoom: 0.5 }));
     }
 
     #[test]
     fn presence_heartbeat_publishes_peer_for_other_clients() {
-        let mut envelope = initial_studio_envelope();
-        let first_node_id = projection_from_document(&envelope.document).media_graph.nodes[0].id.clone();
-        SStudioApp::handle_studio_action(
-            &mut envelope,
-            "nodeGraphSelect",
-            Some(&json!({ "nodeIds": [first_node_id] })),
-        );
-        SStudioApp::handle_studio_action(
-            &mut envelope,
-            "presenceHeartbeat",
-            Some(&json!({ "clientId": "client-test-a", "name": "Ada" })),
-        );
+        let mut app = SStudioApp::new();
+        let projection = demo_studio_projection();
+        let first_node_id = projection.media_graph.nodes[0].id.clone();
+        studio_emit(&mut app, &projection, "nodeGraphSelect", json!({ "nodeIds": [first_node_id] }));
+        studio_emit(&mut app, &projection, "presenceHeartbeat", json!({ "clientId": "client-test-a", "name": "Ada" }));
         let other_runtime = StudioRuntimeState {
             client_id: Some("client-test-b".into()),
-            studio_id: envelope.runtime.studio_id.clone(),
+            studio_id: app.runtime.studio_id.clone(),
             ..StudioRuntimeState::default()
         };
         let peers = presence_peers_json(&other_runtime);
         assert!(peers.contains("client-test-a"));
         assert!(peers.contains("Ada"));
         assert!(peers.contains(r#""selectionCount":1"#));
-        let self_view = presence_peers_json(&envelope.runtime);
+        let self_view = presence_peers_json(&app.runtime);
         assert!(!self_view.contains("client-test-a"));
     }
 
     #[test]
     fn s_labels_resolve_native_english_by_default() {
+        let history = empty_history();
         let home = SHomeApp;
-        let home_node = home.render(S_HOME_BODY, &home.initial_document_json(), &ViewState::default());
-        let home_json = serde_json::to_string(&home_node).unwrap();
-        assert!(home_json.contains("No studios yet. Create one from the toolbar."));
+        let home_doc = SHomeDocument { schema: "s.home".into(), catalog_generation: 0 };
+        let home_view = DocumentView { projection: &home_doc, history: &history };
+        let home_node = home.render(S_HOME_BODY, &home_view, &ViewState::default());
+        assert!(serde_json::to_string(&home_node).unwrap().contains("No studios yet. Create one from the toolbar."));
 
-        let app = SStudioApp;
-        let document = initial_studio_document_json();
-        let catalogue_node = app.render(S_PLAY_CATALOGUE_BODY_KEY, &document, &ViewState::default());
-        let catalogue_json = serde_json::to_string(&catalogue_node).unwrap();
+        let app = SStudioApp::new();
+        let projection = demo_studio_projection();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let catalogue_json = serde_json::to_string(&app.render(S_PLAY_CATALOGUE_BODY_KEY, &doc, &ViewState::default())).unwrap();
         assert!(catalogue_json.contains("\"Apps\""));
 
-        let parameters_node = app.render(S_PLAY_PARAMETERS_BODY_KEY, &document, &ViewState::default());
-        let parameters_json = serde_json::to_string(&parameters_node).unwrap();
+        let parameters_json = serde_json::to_string(&app.render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &ViewState::default())).unwrap();
         assert!(parameters_json.contains("Add Parameter"));
         assert!(parameters_json.contains("\"Name\""));
         assert!(parameters_json.contains("\"Remove\""));
@@ -3732,22 +3700,23 @@ mod tests {
 
     #[test]
     fn s_labels_resolve_native_german_locale() {
+        let history = empty_history();
         let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
         let home = SHomeApp;
-        let home_node = home.render(S_HOME_BODY, &home.initial_document_json(), &view_state);
-        let home_json = serde_json::to_string(&home_node).unwrap();
-        assert!(home_json.contains("Noch keine Studios vorhanden"));
+        let home_doc = SHomeDocument { schema: "s.home".into(), catalog_generation: 0 };
+        let home_view = DocumentView { projection: &home_doc, history: &history };
+        let home_node = home.render(S_HOME_BODY, &home_view, &view_state);
+        assert!(serde_json::to_string(&home_node).unwrap().contains("Noch keine Studios vorhanden"));
 
-        let app = SStudioApp;
-        let document = initial_studio_document_json();
-        let parameters_node = app.render(S_PLAY_PARAMETERS_BODY_KEY, &document, &view_state);
-        let parameters_json = serde_json::to_string(&parameters_node).unwrap();
+        let app = SStudioApp::new();
+        let projection = demo_studio_projection();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let parameters_json = serde_json::to_string(&app.render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &view_state)).unwrap();
         assert!(parameters_json.contains("Parameter hinzufügen"));
         assert!(parameters_json.contains("\"Entfernen\""));
         assert!(!parameters_json.contains("Add Parameter"));
 
-        let inspector_node = app.render(S_PLAY_INSPECTOR_BODY_KEY, &document, &view_state);
-        let inspector_json = serde_json::to_string(&inspector_node).unwrap();
+        let inspector_json = serde_json::to_string(&app.render(S_PLAY_INSPECTOR_BODY_KEY, &doc, &view_state)).unwrap();
         assert!(inspector_json.contains("Wähle Mediengraph-Knoten oder App-Instanzen im Arbeitsbereich aus."));
     }
 }

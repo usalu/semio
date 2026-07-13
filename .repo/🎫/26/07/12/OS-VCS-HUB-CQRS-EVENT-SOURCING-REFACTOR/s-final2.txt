@@ -1,0 +1,10 @@
+=== FINAL s crates test ===
+  --> infinite/cavas/rs/lib.rs:11:17
+  --> infinite/cavas/rs/lib.rs:12:17
+   --> infinite/cavas/rs/lib.rs:158:12
+   --> vcs/rs/lib.rs:405:27
+   --> vcs/rs/lib.rs:415:5
+test result: ok. 34 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+S_EXIT: 
+DONE_MARKER

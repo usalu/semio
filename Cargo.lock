@@ -5610,6 +5610,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
 
 [[package]]
+name = "remodel-plugin"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "kernel_3d_mesh",
+ "remodel_document",
+ "semio-framework-core",
+ "semio-framework-os",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "vcs",
+]
+
+[[package]]
+name = "remodel_document"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "serde",
+ "serde_json",
+ "vcs",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "renderdoc-sys"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

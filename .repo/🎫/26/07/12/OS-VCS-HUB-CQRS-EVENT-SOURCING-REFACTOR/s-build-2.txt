@@ -231,3 +231,107 @@ warning: associated function `color_from_json_rgba8` is never used
     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
 
 warning: `infinite_board_port_directed` (lib) generated 1 warning
+warning: unused imports: `DocumentVcsCommand` and `create_document_vcs_envelope`
+    --> infinite/board/port/directed/dag/rs/lib.rs:6805:30
+     |
+6805 |     collection_diff_from_op, create_document_vcs_envelope, invert_collection_op, CollectionDiff, CollectionOp,
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6806 |     DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable,
+     |     ^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `name_w`
+    --> infinite/board/port/directed/dag/rs/lib.rs:1036:10
+     |
+1036 |     let (name_w, name_h) = label_extent(&node.name, name_px);
+     |          ^^^^^^ help: if this is intentional, prefix it with an underscore: `_name_w`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: associated functions `node_handle_centers`, `paint_port_labels`, `paint_node_name`, and `port_labels_delegated_to_js_overlay` are never used
+    --> infinite/board/port/directed/dag/rs/lib.rs:3559:8
+     |
+1983 | impl DagHost {
+     | ------------ associated functions in this implementation
+...
+3559 |     fn node_handle_centers(node: &DagNodeSpec) -> Vec<cavas::Point> {
+     |        ^^^^^^^^^^^^^^^^^^^
+...
+3934 |     fn paint_port_labels(
+     |        ^^^^^^^^^^^^^^^^^
+...
+3992 |     fn paint_node_name(scene: &mut cavas::Scene, center_screen: cavas::Point, node: &DagNodeSpec, px: f64, label_fill: cavas::Colo...
+     |        ^^^^^^^^^^^^^^^
+...
+4206 |     fn port_labels_delegated_to_js_overlay(lod: DagDrawLod) -> bool {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `infinite_board_port_directed_dag` (lib) generated 3 warnings (run `cargo fix --lib -p infinite_board_port_directed_dag` to apply 2 suggestions)
+warning: unused imports: `ModeDefinition` and `UiControlNode`
+  --> s/plugin/rs/lib.rs:24:28
+   |
+24 |     App, ActionDescriptor, ModeDefinition, NodeGraphScene, PluginBundle, SurfaceKind, TextEditorScene,
+   |                            ^^^^^^^^^^^^^^
+25 |     ToolCategory,
+26 |     UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiSectionNode,
+   |                   ^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+error[E0277]: the trait bound `SHomeOp: Default` is not satisfied
+   --> s/plugin/rs/lib.rs:160:44
+    |
+160 | impl vcs::OperationDiff<SHomeDocument> for SHomeOp {
+    |                                            ^^^^^^^ the trait `Default` is not implemented for `SHomeOp`
+    |
+note: required by a bound in `OperationDiff`
+   --> vcs/rs/lib.rs:365:37
+    |
+365 | pub trait OperationDiff<P>: Clone + Default + Serialize + DeserializeOwned {
+    |                                     ^^^^^^^ required by this bound in `OperationDiff`
+help: consider annotating `SHomeOp` with `#[derive(Default)]`
+    |
+156 + #[derive(Default)]
+157 | enum SHomeOp {
+    |
+
+error[E0277]: the trait bound `SHomeOp: Default` is not satisfied
+   --> s/plugin/rs/lib.rs:172:17
+    |
+172 |     type Diff = SHomeOp;
+    |                 ^^^^^^^ the trait `Default` is not implemented for `SHomeOp`
+    |
+help: the trait `OperationDiff<SHomeDocument>` is implemented for `SHomeOp`
+   --> s/plugin/rs/lib.rs:160:1
+    |
+160 | impl vcs::OperationDiff<SHomeDocument> for SHomeOp {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: required for `<SHomeOp as vcs::Operation<SHomeDocument>>::Diff` to implement `OperationDiff<SHomeDocument>`
+note: required by a bound in `vcs::Operation::Diff`
+   --> vcs/rs/lib.rs:372:16
+    |
+372 |     type Diff: OperationDiff<P>;
+    |                ^^^^^^^^^^^^^^^^ required by this bound in `Operation::Diff`
+help: consider annotating `SHomeOp` with `#[derive(Default)]`
+    |
+156 + #[derive(Default)]
+157 | enum SHomeOp {
+    |
+
+warning: variable does not need to be mutable
+    --> s/plugin/rs/lib.rs:2804:9
+     |
+2804 |     let mut builder = App::builder(S_PLAY_APP_ID, "Studio").document(["semio", "s", "studio"])
+     |         ----^^^^^^^
+     |         |
+     |         help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+For more information about this error, try `rustc --explain E0277`.
+warning: `s-plugin` (lib) generated 2 warnings
+error: could not compile `s-plugin` (lib) due to 2 previous errors; 2 warnings emitted
+CARGO_EXIT: 

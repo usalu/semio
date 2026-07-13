@@ -1887,7 +1887,10 @@ pub type Puzzle3dStore = DocumentVcsStore<Puzzle3dProjection, Puzzle3dOp>;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "camelCase")]
 pub enum Puzzle3dOp {
-    UpsertItem { collection: String, item: serde_json::Value },
+    /// 📍 `index` only matters when `item`'s id is absent from the collection (a fresh insert): it then
+    /// inserts at that position instead of appending, so undoing a `RemoveItem`/updating over a fresh
+    /// insert restores the original array order rather than shuffling the item to the end.
+    UpsertItem { collection: String, item: serde_json::Value, #[serde(default, skip_serializing_if = "Option::is_none")] index: Option<usize> },
     RemoveItem { collection: String, id: String },
     SetField { key: String, value: serde_json::Value },
     ReplaceDocument { document: serde_json::Value },
@@ -1904,9 +1907,13 @@ fn puzzle3d_item_id(item: &serde_json::Value) -> Option<&str> {
     item.get("id").and_then(|value| value.as_str())
 }
 
+fn puzzle3d_item_index(document: &serde_json::Value, collection: &str, id: &str) -> Option<usize> {
+    document.get(collection).and_then(|value| value.as_array()).and_then(|array| array.iter().position(|entry| puzzle3d_item_id(entry) == Some(id)))
+}
+
 fn apply_puzzle3d_op(document: &mut serde_json::Value, op: &Puzzle3dOp) {
     match op {
-        Puzzle3dOp::UpsertItem { collection, item } => {
+        Puzzle3dOp::UpsertItem { collection, item, index } => {
             let Some(object) = document.as_object_mut() else {
                 return;
             };
@@ -1920,7 +1927,8 @@ fn apply_puzzle3d_op(document: &mut serde_json::Value, op: &Puzzle3dOp) {
                     return;
                 }
             }
-            array.push(item.clone());
+            let at = index.map(|at| at.min(array.len())).unwrap_or(array.len());
+            array.insert(at, item.clone());
         }
         Puzzle3dOp::RemoveItem { collection, id } => {
             if let Some(array) = document.get_mut(collection).and_then(|value| value.as_array_mut()) {
@@ -1963,15 +1971,15 @@ impl Operation<Puzzle3dProjection> for Puzzle3dOp {
 
     fn backwards(&self, projection: &Puzzle3dProjection) -> Vec<Self> {
         match self {
-            Puzzle3dOp::UpsertItem { collection, item } => {
+            Puzzle3dOp::UpsertItem { collection, item, .. } => {
                 let id = puzzle3d_item_id(item).unwrap_or_default();
                 match puzzle3d_find_item(projection, collection, id) {
-                    Some(previous) => vec![Puzzle3dOp::UpsertItem { collection: collection.clone(), item: previous.clone() }],
+                    Some(previous) => vec![Puzzle3dOp::UpsertItem { collection: collection.clone(), item: previous.clone(), index: puzzle3d_item_index(projection, collection, id) }],
                     None => vec![Puzzle3dOp::RemoveItem { collection: collection.clone(), id: id.to_string() }],
                 }
             }
             Puzzle3dOp::RemoveItem { collection, id } => match puzzle3d_find_item(projection, collection, id) {
-                Some(previous) => vec![Puzzle3dOp::UpsertItem { collection: collection.clone(), item: previous.clone() }],
+                Some(previous) => vec![Puzzle3dOp::UpsertItem { collection: collection.clone(), item: previous.clone(), index: puzzle3d_item_index(projection, collection, id) }],
                 None => Vec::new(),
             },
             Puzzle3dOp::SetField { key, .. } => vec![Puzzle3dOp::SetField { key: key.clone(), value: projection.get(key).cloned().unwrap_or(serde_json::Value::Null) }],
@@ -1988,7 +1996,7 @@ fn puzzle3d_collect_collection_delta(collection: &str, before: &[serde_json::Val
     for entry in after {
         let id = puzzle3d_item_id(entry).unwrap_or_default();
         if before.iter().find(|candidate| puzzle3d_item_id(candidate) == Some(id)) != Some(entry) {
-            ops.push(Puzzle3dOp::UpsertItem { collection: collection.to_string(), item: entry.clone() });
+            ops.push(Puzzle3dOp::UpsertItem { collection: collection.to_string(), item: entry.clone(), index: None });
         }
     }
     for entry in before {
@@ -2132,7 +2140,7 @@ mod puzzle3d_vcs_tests {
         ));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![Puzzle3dOp::UpsertItem { collection: "objects".into(), item: serde_json::json!({ "id": "o1", "origin": [0.0, 0.0, 0.0] }) }],
+                operations: vec![Puzzle3dOp::UpsertItem { collection: "objects".into(), item: serde_json::json!({ "id": "o1", "origin": [0.0, 0.0, 0.0] }), index: None }],
                 description: None,
             })
             .expect("apply");

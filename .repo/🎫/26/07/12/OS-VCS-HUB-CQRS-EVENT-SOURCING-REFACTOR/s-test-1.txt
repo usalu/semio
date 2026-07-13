@@ -1,0 +1,122 @@
+    Blocking waiting for file lock on build directory
+11 |         pub use vello::util;
+12 |         pub use vello::wgpu;
+157 |     impl Paint {
+158 |         fn into_brush(self) -> backend::peniko::Brush {
+27 | use brepkit_operations::fillet::{fillet_rolling_ball, fillet_variable, FilletRadiusLaw};
+767 |         let solid = fillet_rolling_ball(&mut self.topo, solid, &edges, radius).map_err(Self::map_err)?;
+792 |         let solid = fillet_rolling_ball(&mut self.topo, solid, &edge_ids, radius).map_err(Self::map_err)?;
+ 98 | enum Entity {
+...
+103 |     Shell(ShellId),
+132 | impl BrepkitKernel {
+...
+198 |     fn compound_id(&self, handle: &GeometryHandle) -> Result<CompoundId, BrepError> {
+405 | pub fn absorb_diff<P, Op>(projection: &P, existing: &mut Op::Diff, incoming: Op::Diff)
+415 |     projection: &P,
+3 | use serde::{Deserialize, Serialize};
+9 |     create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
+310 | use std::collections::BTreeMap;
+1383 |     pub fn local_backbone_storage(mut self) -> Self {
+387 |         let mut default_ancestor = default_ancestor;
+522 | ...de_shape: NodeShape, node_radius: f64, node_width: f64, node_height: f64) -> Option<Vec2> {
+397 |         let mut sor = nodes[v].mod_;
+399 |         let mut sol = nodes[vol].mod_;
+421 |                 sor += shift;
+...
+426 |             sor += nodes[vor].mod_;
+426 |             sor += nodes[vor].mod_;
+425 |             sol += nodes[vol].mod_;
+1019 |             other => {
+ 911 |             InteractionMode::Pan { start_screen, cam_x, cam_y, zoom } => {
+...
+ 917 |             InteractionMode::DragNode { node_id, offset } => {
+...
+ 932 |             InteractionMode::DragNodes { primary_id, offset } => {
+...
+ 958 |             InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, reconnecting, .. } => {
+...
+1019 |             other => {
+ 526 | impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
+...
+1269 |     fn apply_pick_selection(&mut self, hit: HitObject<P::Endpoint>, extend_selection: bool) {
+...
+1367 |     fn selection_to_string_set(&self) -> BTreeSet<String> {
+414 |     impl CanvasPalette {
+...
+460 |         fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
+6805 |     collection_diff_from_op, create_document_vcs_envelope, invert_collection_op, CollectionDiff, CollectionOp,
+6806 |     DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable,
+1036 |     let (name_w, name_h) = label_extent(&node.name, name_px);
+1983 | impl DagHost {
+...
+3559 |     fn node_handle_centers(node: &DagNodeSpec) -> Vec<cavas::Point> {
+...
+3934 |     fn paint_port_labels(
+...
+3992 |     fn paint_node_name(scene: &mut cavas::Scene, center_screen: cavas::Point, node: &DagNodeSpec, px: f64, label_fill: cavas::Colo...
+...
+4206 |     fn port_labels_delegated_to_js_overlay(lod: DagDrawLod) -> bool {
+24 |     App, ActionDescriptor, ModeDefinition, NodeGraphScene, PluginBundle, SurfaceKind, TextEditorScene,
+25 |     ToolCategory,
+26 |     UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiSectionNode,
+2952 |         ActionMeta, HistoryView, ModeDefinition, PanelGroup, PluginApp, ToolNode, UiControlNode, UiNode,
+2813 |     let mut builder = App::builder(S_PLAY_APP_ID, "Studio").document(["semio", "s", "studio"])
+354 | fn resolve_studio_port(studio_id: &str) -> Arc<dyn OsBackbonePort> {
+369 | fn load_studio_document(studio_id: &str) -> Result<OsDocument, VcsError> {
+511 | fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
+     Running unittests lib.rs (target/debug/deps/s_plugin-f73d4af102d30c5d)
+running 34 tests
+test tests::catalogue_tree_nests_apps_by_canonical_document ... ok
+test tests::home_explore_tools_include_create_collection ... ok
+test tests::home_manifest_uses_home_app_id ... ok
+test tests::inspector_tree_exposes_label_field ... ok
+test tests::media_graph_scene_uses_flow_engine_with_fixture ... ok
+test tests::demo_document_has_instances_and_edges ... ok
+test tests::commit_checkpoint_round_trips_projection ... ok
+test tests::export_media_emits_download_effect_and_import_requests_file_open ... ok
+test tests::move_media_node_emits_coalesced_move_op ... ok
+test tests::checkout_checkpoint_restores_projection ... ok
+test tests::node_graph_edit_set_fixture_moves_node_and_persists_camera ... ok
+test tests::open_and_close_focused_instance ... ok
+test tests::node_graph_viewport_persists_camera ... ok
+test tests::home_vfs_lists_seeded_studio ... ok
+test tests::open_instance_emits_open_plugin_instance_effect_matching_instance ... ok
+test tests::patch_app_instances_updates_labels ... ok
+test tests::creates_studio_via_home_action ... ok
+test tests::patch_parameter_op_updates_numeric_value ... ok
+test tests::patch_parameter_action_updates_value ... ok
+test tests::presence_heartbeat_publishes_peer_for_other_clients ... ok
+test tests::renders_compiled_dag_editor ... ok
+test tests::spawns_draw_app_instance ... ok
+test tests::renders_media_graph_scene ... ok
+test tests::spawns_draw_app_instance_at_drop_position ... ok
+test tests::s_labels_resolve_native_german_locale ... ok
+test tests::s_labels_resolve_native_english_by_default ... ok
+test tests::spawns_puzzle5d_and_shooting_with_multi_port_registrations ... ok
+test tests::studio_and_home_modes_expose_history_tools ... ok
+test tests::studio_document_persists_through_backbone_port ... ok
+test tests::temporary_studio_uses_ephemeral_port ... ok
+test tests::studio_manifest_uses_studio_app_id ... ok
+test tests::unbind_parameter_field_removes_binding ... ok
+test tests::undo_redo_round_trip_on_spawn ... ok
+test tests::two_instances_converge_on_disjoint_edits_via_backbone ... ok
+test result: ok. 34 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+     Running unittests lib.rs (target/debug/deps/s_studio-732bfa36f2d61f16)
+running 2 tests
+test tests::spawns_app_instance_through_cqrs_dispatch ... ok
+test tests::undo_after_spawn ... ok
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+   Doc-tests s_plugin
+error[E0463]: can't find crate for `semio_framework_os`
+3 | use semio_framework_os::{
+error[E0463]: can't find crate for `semio_framework_plugin`
+17 | use semio_framework_plugin::{PanelGroup,
+error[E0463]: can't find crate for `infinite_board_port_directed_dag`
+38 | use infinite_board_port_directed_dag::{
+error: aborting due to 3 previous errors
+For more information about this error, try `rustc --explain E0463`.
+error: doctest failed, to rerun pass `-p s-plugin --doc`
+Caused by:
+  process didn't exit successfully: `/Users/ueli/.rustup/toolchains/nightly-aarch64-apple-darwin/bin/rustdoc --edition=2021 --crate-type cdylib --crate-type rlib --color auto --crate-name s_plugin --test s/plugin/rs/lib.rs --test-run-directory /Users/ueli/Documents/semio/s/plugin/rs -L native=/Users/ueli/Documents/semio/target/debug/build/blake3-cd45f09a2eb9920a/out -L native=/Users/ueli/Documents/semio/target/debug/build/libsqlite3-sys-a31fd6e1fd027906/out -L native=/Users/ueli/Documents/semio/target/debug/build/psm-5211642f86d5223a/out --extern base64=/Users/ueli/Documents/semio/target/debug/deps/libbase64-e44ab22c80a7b658.rlib --extern base64=/Users/ueli/Documents/semio/target/debug/deps/libbase64-e44ab22c80a7b658.rmeta --extern infinite_board_port_directed_dag=/Users/ueli/Documents/semio/target/debug/deps/libinfinite_board_port_directed_dag.rlib --extern infinite_board_port_directed_dag=/Users/ueli/Documents/semio/target/debug/deps/libinfinite_board_port_directed_dag.rmeta --extern s_plugin=/Users/ueli/Documents/semio/target/debug/deps/libs_plugin.rlib --extern s_plugin=/Users/ueli/Documents/semio/target/debug/deps/libs_plugin.rmeta --extern semio_framework_os=/Users/ueli/Documents/semio/target/debug/deps/libsemio_framework_os-8352f56e6895771e.rlib --extern semio_framework_os=/Users/ueli/Documents/semio/target/debug/deps/libsemio_framework_os-8352f56e6895771e.rmeta --extern semio_framework_plugin=/Users/ueli/Documents/semio/target/debug/deps/libsemio_framework_plugin-59a78ded735b7c54.rlib --extern semio_framework_plugin=/Users/ueli/Documents/semio/target/debug/deps/libsemio_framework_plugin-59a78ded735b7c54.rmeta --extern serde=/Users/ueli/Documents/semio/target/debug/deps/libserde-6029fd30890ff31b.rlib --extern serde=/Users/ueli/Documents/semio/target/debug/deps/libserde-6029fd30890ff31b.rmeta --extern serde_json=/Users/ueli/Documents/semio/target/debug/deps/libserde_json-81325f788ae1f77f.rlib --extern serde_json=/Users/ueli/Documents/semio/target/debug/deps/libserde_json-81325f788ae1f77f.rmeta --extern vcs=/Users/ueli/Documents/semio/target/debug/deps/libvcs.rlib --extern vcs=/Users/ueli/Documents/semio/target/debug/deps/libvcs.rmeta -L dependency=/Users/ueli/Documents/semio/target/debug/deps -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' --error-format human` (exit status: 1)
+CARGO_EXIT: 

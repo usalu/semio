@@ -1,0 +1,7 @@
+warning: variable does not need to be mutable
+    --> s/plugin/rs/lib.rs:2801:9
+warning: function `resolve_studio_port` is never used
+   --> s/plugin/rs/lib.rs:354:4
+warning: function `load_studio_document` is never used
+   --> s/plugin/rs/lib.rs:369:4
+CARGO_EXIT: 

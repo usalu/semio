@@ -1,0 +1,45 @@
+warning: `infinite_cavas` (lib) generated 3 warnings (run `cargo fix --lib -p infinite_cavas` to apply 2 suggestions)
+warning: use of deprecated function `brepkit_operations::fillet::fillet_rolling_ball`: Use brepkit_blend::fillet_builder::FilletBuilder (via blend_ops::fillet_v2) instead.
+  --> kernel/3d/brep/rs/lib.rs:27:34
+warning: `kernel_3d_brepkit` (lib) generated 5 warnings
+warning: unused variable: `projection`
+   --> vcs/rs/lib.rs:405:27
+warning: `vcs` (lib) generated 2 warnings (run `cargo fix --lib -p vcs` to apply 2 suggestions)
+   Compiling protocol v0.1.0 (/Users/ueli/Documents/semio/protocol/rs)
+   Compiling semio-framework-sync v0.1.0 (/Users/ueli/Documents/semio/framework/sync/rs)
+   Compiling s_studio v0.1.0 (/Users/ueli/Documents/semio/s/rs)
+warning: unused imports: `DocumentVcsCommand` and `create_document_vcs_envelope`
+warning: `protocol` (lib) generated 1 warning (run `cargo fix --lib -p protocol` to apply 1 suggestion)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/framework/plugin/rs)
+warning: variable does not need to be mutable
+    --> framework/plugin/rs/lib.rs:1383:35
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+warning: unused imports: `Deserialize` and `Serialize`
+ --> mathematical/graph/manifest/rs/../generated/note_blocks.rs:3:13
+warning: `mathematical_graph_manifest` (lib) generated 1 warning (run `cargo fix --lib -p mathematical_graph_manifest` to apply 1 suggestion)
+   Compiling mathematical_graph_dsl v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/dsl/rs)
+warning: unused import: `std::collections::BTreeMap`
+   --> mathematical/graph/dsl/rs/lib.rs:310:5
+warning: `mathematical_graph_dsl` (lib) generated 1 warning (run `cargo fix --lib -p mathematical_graph_dsl` to apply 1 suggestion)
+warning: variable does not need to be mutable
+   --> mathematical/graph/drawing/rs/lib.rs:387:13
+warning: `mathematical_graph_drawing` (lib) generated 7 warnings (run `cargo fix --lib -p mathematical_graph_drawing` to apply 2 suggestions)
+warning: unreachable pattern
+    --> infinite/board/rs/lib.rs:1019:13
+warning: `infinite_board` (lib) generated 2 warnings
+   Compiling infinite_board_port_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/rs)
+warning: associated function `color_from_json_rgba8` is never used
+   --> infinite/board/port/directed/rs/lib.rs:460:12
+warning: `infinite_board_port_directed` (lib) generated 1 warning
+   Compiling infinite_board_port_directed_dag v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/dag/rs)
+warning: unused imports: `DocumentVcsCommand` and `create_document_vcs_envelope`
+    --> infinite/board/port/directed/dag/rs/lib.rs:6805:30
+warning: `infinite_board_port_directed_dag` (lib) generated 3 warnings (run `cargo fix --lib -p infinite_board_port_directed_dag` to apply 2 suggestions)
+   Compiling s-plugin v0.1.0 (/Users/ueli/Documents/semio/s/plugin/rs)
+warning: unused imports: `ModeDefinition` and `UiControlNode`
+  --> s/plugin/rs/lib.rs:24:28
+warning: `s-plugin` (lib) generated 5 warnings (run `cargo fix --lib -p s-plugin` to apply 2 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4m 10s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+CARGO_EXIT: 

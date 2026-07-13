@@ -2446,22 +2446,31 @@ mod tests {
         }]
     }
 
+    fn building_component_question() -> FormQuestion {
+        let mut question = question_shell("geometry".into(), "Geometry".into(), "buildingComponent".into());
+        question.fixture_slug = Some("hexagonal-mushroom-column".into());
+        question.params = Some(json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }));
+        question
+    }
+
     #[test]
     fn extension_question_emits_external_slot_when_contribution_registered() {
-        let mut app = new_app();
-        let mut view_state = ViewState::default();
-        view_state.contributions_json = Some(serde_json::to_string(&building_component_contributions()).unwrap());
-        app.handle_action("setSelection", Some(&json!({ "ids": ["geometry"] })), &view_state, &meta("local")).expect("select");
-        let json = render(&mut app, FORMS_PLAY_BODY_INSPECTION, &view_state);
+        let node = render_try_question(
+            &building_component_question(),
+            &Map::new(),
+            &building_component_contributions(),
+            None,
+            &FORMS_LABELS_NATIVE_EN,
+        );
+        let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("externalSlot"));
         assert!(json.contains("forms-module-procedural"));
     }
 
     #[test]
     fn extension_question_falls_back_without_contribution() {
-        let mut app = new_app();
-        app.handle_action("setSelection", Some(&json!({ "ids": ["geometry"] })), &ViewState::default(), &meta("local")).expect("select");
-        let json = render(&mut app, FORMS_PLAY_BODY_INSPECTION, &ViewState::default());
+        let node = render_try_question(&building_component_question(), &Map::new(), &[], None, &FORMS_LABELS_NATIVE_EN);
+        let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Extension unavailable"));
     }
 

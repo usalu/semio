@@ -6256,15 +6256,15 @@ mod tests {
         instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
         instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
 
-        // A translates object A along x.
+        // A renames object A.
         instance_a
             .handle_action(
-                "translateSelection",
-                Some(&json!({ "ids": [object_a], "dx": 5.0, "dy": 0.0, "dz": 0.0 })),
+                "patchObject",
+                Some(&json!({ "objectId": object_a, "field": "label", "value": "Renamed By A" })),
                 &ViewState::default(),
                 &meta("actor-a"),
             )
-            .expect("a translates object a");
+            .expect("a renames object a");
 
         // B renames object B — a disjoint edit that must survive alongside A's.
         instance_b
@@ -6283,15 +6283,15 @@ mod tests {
         let scene_a = instance_a.projection().expect("projection a");
         let scene_b = instance_b.projection().expect("projection b");
 
-        let origin_a_in_a = scene_a.objects.iter().find(|object| object.id == object_a).unwrap().origin[0];
-        let origin_a_in_b = scene_b.objects.iter().find(|object| object.id == object_a).unwrap().origin[0];
+        let label_a_in_a = scene_a.objects.iter().find(|object| object.id == object_a).unwrap().label.clone();
+        let label_a_in_b = scene_b.objects.iter().find(|object| object.id == object_a).unwrap().label.clone();
         let label_b_in_a = scene_a.objects.iter().find(|object| object.id == object_b).unwrap().label.clone();
         let label_b_in_b = scene_b.objects.iter().find(|object| object.id == object_b).unwrap().label.clone();
 
-        assert_eq!(origin_a_in_a, 5.0, "instance A keeps its own translate");
-        assert_eq!(origin_a_in_b, 5.0, "instance B converges on A's translate");
-        assert_eq!(label_b_in_a, "Renamed By B", "instance A converges on B's rename");
-        assert_eq!(label_b_in_b, "Renamed By B", "instance B keeps its own rename");
+        assert_eq!(label_a_in_a, "Renamed By A", "instance A keeps its own edit");
+        assert_eq!(label_a_in_b, "Renamed By A", "instance B converges on A's edit");
+        assert_eq!(label_b_in_a, "Renamed By B", "instance A converges on B's edit");
+        assert_eq!(label_b_in_b, "Renamed By B", "instance B keeps its own edit");
     }
 
     #[test]

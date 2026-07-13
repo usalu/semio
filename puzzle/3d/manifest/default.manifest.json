@@ -1,0 +1,10 @@
+{
+  "schema": "manifest",
+  "id": "puzzle3d-default",
+  "name": "Puzzle 3D Default",
+  "axes": { "portModel": "ported", "directedness": "directed" },
+  "portKinds": [{ "id": "vortex", "name": "Vortex", "presentation": { "defaultWireKind": "cable.link" } }],
+  "wireKinds": [{ "id": "cable.link", "name": "Cable", "presentation": { "defaultEdgeKind": "puzzle3d.attraction.link" } }],
+  "edgeKinds": [{ "id": "puzzle3d.attraction.link", "name": "Attraction" }],
+  "nodeKinds": []
+}

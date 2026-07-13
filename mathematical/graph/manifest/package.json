@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/graph-manifest",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./core/index.ts",
+    "./manifest.schema.json": "./generated/manifest.schema.json"
+  },
+  "scripts": {
+    "generate": "nx run @semio-tech/graph-manifest:generate",
+    "test": "nx run @semio-tech/graph-manifest:test"
+  }
+}

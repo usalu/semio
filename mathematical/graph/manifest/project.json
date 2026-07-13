@@ -1,0 +1,24 @@
+{
+  "name": "@semio-tech/graph-manifest",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "mathematical/graph/manifest",
+  "targets": {
+    "generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "mathematical/graph/manifest",
+        "command": "bun ./script.ts generate"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "generate"
+      ],
+      "options": {
+        "cwd": "mathematical/graph/manifest",
+        "command": "bun ./script.ts test"
+      }
+    }
+  }
+}

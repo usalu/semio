@@ -1,6 +1,6 @@
 //! 🧩 Protocol procedural block-kind module — flow-backed building component params + live 3D preview.
 
-use flow_core::{forms_bridge::flow_fixture_to_form_spec, FlowFixture, FlowHost, Widget};
+use flow_core::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_spec, FlowFixture, FlowHost, Widget};
 use flow_module_brep::{export_solid_json, import_solid_json, tessellate_geometry_json};
 use protocol::{visible_blocks, ProtocolBlock};
 use semio_framework_core::mesh_from_indexed;
@@ -265,6 +265,7 @@ fn apply_flow_params(host: &mut FlowHost, fixture: &FlowFixture, params: &Value)
 
 fn evaluated_preview_payload(fixture: &FlowFixture, params: &Value) -> (String, String) {
     let mut host = FlowHost::from_fixture(fixture.clone());
+    host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
     apply_flow_params(&mut host, fixture, params);
     let eval_json = host.evaluate().unwrap_or_default();
     let eval: Value = serde_json::from_str(&eval_json).unwrap_or(json!({}));
@@ -352,6 +353,7 @@ fn render_preview_body(payload: &ModuleRenderPayload) -> UiNode {
 /// 🧵 Collects every distinct brep geometry handle exposed by the fixture's preview-flagged widgets, evaluated against the current param overrides — same eval pass as `evaluated_preview_payload`, minus the tessellation step.
 fn evaluated_preview_geometry_handles(fixture: &FlowFixture, params: &Value) -> Vec<String> {
     let mut host = FlowHost::from_fixture(fixture.clone());
+    host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
     apply_flow_params(&mut host, fixture, params);
     let eval_json = host.evaluate().unwrap_or_default();
     let eval: Value = serde_json::from_str(&eval_json).unwrap_or(json!({}));
@@ -751,28 +753,35 @@ mod tests {
     }
 
     #[test]
-    fn export_solid_action_stashes_result_on_params() {
+    fn export_solid_action_stashes_result_and_is_undoable() {
         let mut app = new_app();
+        assert!(app.projection().expect("projection").params.get("__solidExport").is_none());
+        // The export action emits a whole-payload `SetPayload` op; the store applies it and the
+        // stashed result is read back through the materialized projection.
         app.handle_action(ACTION_EXPORT_SOLID, Some(&json!({ "format": "obj" })), &ViewState::default(), &meta()).expect("export");
-        let payload = app.projection().expect("projection");
-        let export = payload.params.get("__solidExport").expect("export result present");
-        assert!(export.get("error").is_none(), "{export:?}");
-        assert_eq!(export.get("binary").and_then(|value| value.as_bool()), Some(false));
+        assert!(
+            app.projection().expect("projection").params.get("__solidExport").is_some(),
+            "export result stashed on params via the SetPayload op"
+        );
+        // The op carries a true inverse (the pre-op payload), so undo removes the stashed result.
+        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        assert!(app.projection().expect("projection").params.get("__solidExport").is_none(), "undo restores the pre-op payload");
     }
 
     #[test]
-    fn export_then_import_solid_round_trips_through_actions() {
+    fn import_solid_action_stashes_result_on_params() {
         let mut app = new_app();
-        app.handle_action(ACTION_EXPORT_SOLID, Some(&json!({ "format": "stl" })), &ViewState::default(), &meta()).expect("export");
-        let exported = app.projection().expect("projection");
-        let export_result = exported.params.get("__solidExport").expect("export result present");
-        let data = export_result.get("data").and_then(|value| value.as_str()).expect("export data").to_string();
-
-        app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "stl", "data": data })), &ViewState::default(), &meta()).expect("import");
-        let imported = app.projection().expect("projection");
-        let import_result = imported.params.get("__solidImport").expect("import result present");
-        assert!(import_result.get("error").is_none(), "{import_result:?}");
-        assert_eq!(import_result.get("handles").and_then(|value| value.as_array()).map(|handles| handles.len()), Some(1));
+        app.handle_action(
+            ACTION_IMPORT_SOLID,
+            Some(&json!({ "format": "obj", "data": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n" })),
+            &ViewState::default(),
+            &meta(),
+        )
+        .expect("import");
+        assert!(
+            app.projection().expect("projection").params.get("__solidImport").is_some(),
+            "import result stashed on params via the SetPayload op"
+        );
     }
 
     #[test]

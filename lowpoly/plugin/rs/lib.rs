@@ -22,8 +22,8 @@ use semio_framework_plugin::{
     WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    MeasureSelectItem, WindowEngagementPossible, WindowEngagementStatus,
 };
-use semio_framework_plugin::layout::{MeasureSelectItem, WindowEngagementPossible, WindowEngagementStatus};
 use semio_framework_plugin::{tool_button, tool_collection, tool_toggle};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
@@ -1998,11 +1998,13 @@ impl DocumentApp for LowpolyPlayApp {
         let projection = doc.projection;
         let labels = lowpoly_labels(view_state);
         let view = self.view(projection);
-        let loaded = build_doc(projection, &self.runtime);
         if matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV) {
             self.refresh_texture_cache(projection);
         }
         let texture_cache = self.texture_cache.borrow().textures.clone();
+        let loaded = matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV | LOWPOLY_PLAY_BODY_DOCUMENT)
+            .then(|| build_doc(projection, &self.runtime))
+            .flatten();
         match body_key {
             LOWPOLY_PLAY_BODY_MAIN => match &loaded {
                 Some(loaded) => build_world_3d_scene(
@@ -2108,32 +2110,30 @@ fn apply_transform(doc: &mut LowpolyDocument, transform: Transform) -> Result<()
         "vertex" | "face" | "edge" => Some(doc.selection_vertex_ids()?),
         _ => None,
     };
+    let component = matches!(selection_mode.as_str(), "vertex" | "face" | "edge");
+    let verts = if component {
+        let verts = component_verts.ok_or_else(|| "no vertices".to_string())?;
+        if verts.is_empty() {
+            return Err("no component vertices in selection".into());
+        }
+        Some(verts)
+    } else {
+        None
+    };
     let mesh = doc.active_mesh_mut()?;
-    match (&transform, selection_mode.as_str()) {
-        (Transform::Translate(delta), "vertex" | "face" | "edge") => {
-            let verts = component_verts.as_ref().ok_or_else(|| "no vertices".to_string())?;
-            if verts.is_empty() {
-                return Err("no component vertices in selection".into());
-            }
-            mesh.move_vertices(verts, *delta).map_err(map_kernel_err)?;
-        }
-        (Transform::Translate(delta), _) => mesh.translate(*delta).map_err(map_kernel_err)?,
-        (Transform::Rotate { axis, angle }, "vertex" | "face" | "edge") => {
-            let verts = component_verts.as_ref().ok_or_else(|| "no vertices".to_string())?;
-            if verts.is_empty() {
-                return Err("no component vertices in selection".into());
-            }
-            mesh.rotate_vertices(verts, *axis, *angle, pivot).map_err(map_kernel_err)?;
-        }
-        (Transform::Rotate { axis, angle }, _) => mesh.rotate(*axis, *angle).map_err(map_kernel_err)?,
-        (Transform::Scale(scale), "vertex" | "face" | "edge") => {
-            let verts = component_verts.as_ref().ok_or_else(|| "no vertices".to_string())?;
-            if verts.is_empty() {
-                return Err("no component vertices in selection".into());
-            }
-            mesh.scale_vertices(verts, *scale, pivot).map_err(map_kernel_err)?;
-        }
-        (Transform::Scale(scale), _) => mesh.scale(*scale).map_err(map_kernel_err)?,
+    match transform {
+        Transform::Translate(delta) => match &verts {
+            Some(verts) => mesh.move_vertices(verts, delta).map_err(map_kernel_err)?,
+            None => mesh.translate(delta).map_err(map_kernel_err)?,
+        },
+        Transform::Rotate { axis, angle } => match &verts {
+            Some(verts) => mesh.rotate_vertices(verts, axis, angle, pivot).map_err(map_kernel_err)?,
+            None => mesh.rotate(axis, angle).map_err(map_kernel_err)?,
+        },
+        Transform::Scale(scale) => match &verts {
+            Some(verts) => mesh.scale_vertices(verts, scale, pivot).map_err(map_kernel_err)?,
+            None => mesh.scale(scale).map_err(map_kernel_err)?,
+        },
     }
     doc.sync_meshes_to_projection()
 }
