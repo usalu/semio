@@ -227,6 +227,34 @@
   }
 }
 
+\cs_new:Npn \semio_abbreviations_title_text: {
+  \str_case:Vn \l_semio_language_tl {
+    { de } { Abkürzungsverzeichnis }
+    { en } { List of Abbreviations }
+  }
+}
+
+\cs_new_protected:Npn \semio_abbreviations_header_term: {
+  \str_case:Vn \l_semio_language_tl {
+    { de } { Abkürzung }
+    { en } { Abbreviation }
+  }
+}
+
+\cs_new_protected:Npn \semio_abbreviations_header_definition: {
+  \str_case:Vn \l_semio_language_tl {
+    { de } { Bedeutung }
+    { en } { Meaning }
+  }
+}
+
+\cs_new_protected:Npn \semio_abbreviations_header_pages: {
+  \str_case:Vn \l_semio_language_tl {
+    { de } { Seiten }
+    { en } { Pages }
+  }
+}
+
 \cs_new_protected:Npn \semio_kind_number:nn #1 #2 {
   \semio@kind@number {#1} {#2}
 }
@@ -334,7 +362,6 @@
 \semio@kind@register@en{lemma}{Lemma}
 \semio@kind@register@en{proof}{Proof}
 \semio@kind@register@en{equation}{Equation}
-\semio@kind@register@en{abbreviations}{Abbreviations}
 \semio@kind@register@en{blockquote}{Blockquote}
 \semio@kind@register@en{epigraph}{Epigraph}
 \semio@kind@register@en{reference}{Reference}
@@ -355,7 +382,6 @@
 \semio@kind@register@de{lemma}{Lemma}
 \semio@kind@register@de{proof}{Beweis}
 \semio@kind@register@de{equation}{Gleichung}
-\semio@kind@register@de{abbreviations}{Abkürzungen}
 \semio@kind@register@de{blockquote}{Zitat}
 \semio@kind@register@de{epigraph}{Epigraph}
 \semio@kind@register@de{reference}{Referenz}
@@ -370,7 +396,6 @@
 \semio@kind@register@plural@en{lemma}{Lemmas}
 \semio@kind@register@plural@en{proof}{Proofs}
 \semio@kind@register@plural@en{equation}{Equations}
-\semio@kind@register@plural@en{abbreviations}{Abbreviations}
 \semio@kind@register@plural@en{blockquote}{Blockquotes}
 \semio@kind@register@plural@en{epigraph}{Epigraphs}
 \semio@kind@register@plural@en{reference}{References}
@@ -385,7 +410,6 @@
 \semio@kind@register@plural@de{lemma}{Lemmas}
 \semio@kind@register@plural@de{proof}{Beweise}
 \semio@kind@register@plural@de{equation}{Gleichungen}
-\semio@kind@register@plural@de{abbreviations}{Abkürzungen}
 \semio@kind@register@plural@de{blockquote}{Zitate}
 \semio@kind@register@plural@de{epigraph}{Epigraphen}
 \semio@kind@register@plural@de{reference}{Referenzen}
@@ -463,6 +487,9 @@
 \NewDocumentCommand \semio@glossary@header@term { } { \semio_glossary_header_term: }
 \NewDocumentCommand \semio@glossary@header@definition { } { \semio_glossary_header_definition: }
 \NewDocumentCommand \semio@glossary@header@pages { } { \semio_glossary_header_pages: }
+\NewDocumentCommand \semio@abbreviations@header@term { } { \semio_abbreviations_header_term: }
+\NewDocumentCommand \semio@abbreviations@header@definition { } { \semio_abbreviations_header_definition: }
+\NewDocumentCommand \semio@abbreviations@header@pages { } { \semio_abbreviations_header_pages: }
 \ExplSyntaxOff
 \makeatletter
 

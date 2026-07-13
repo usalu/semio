@@ -475,7 +475,7 @@ function tectonicEnv(): NodeJS.ProcessEnv {
 }
 
 function clearStaleTocAuxFiles(workDir: string, outDir: string, jobname: string): void {
-  for (const ext of [".sctoc", ".semio-toc", ".register-toc"]) {
+  for (const ext of [".sctoc", ".semio-toc", ".register-toc", ".window-breaks"]) {
     for (const dir of [workDir, outDir]) {
       const path = join(dir, `${jobname}${ext}`);
       if (existsSync(path)) rmSync(path);

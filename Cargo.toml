@@ -14,6 +14,8 @@ members = [
     "protocol/rs",
     "protocol/plugin/rs",
     "protocol/module/procedural/rs",
+    "forms/rs",
+    "forms/plugin/rs",
     "infinite/board/port/directed/normal/rs",
     "infinite/board/port/directed/rs",
     "infinite/board/port/directed/dag/rs",
@@ -72,6 +74,8 @@ members = [
     "shooting/plugin/rs",
     "raster/rs",
     "raster/plugin/rs",
+    "lowpoly/core/rs",
+    "lowpoly/plugin/rs",
     "draw/rs",
     "draw/plugin/rs",
     "vcs/plugin/rs",
@@ -89,6 +93,8 @@ members = [
     "imperative/module/logic/rs",
     "imperative/module/math/rs",
     "imperative/module/text/rs",
+    "cad/rs",
+    "cad/plugin/rs",
 ]
 
 resolver = "2"

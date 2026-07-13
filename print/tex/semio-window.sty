@@ -62,6 +62,77 @@
 \bool_new:N \l_semio_window_hierarchy_bool
 \bool_set_true:N \l_semio_window_hierarchy_bool
 
+%region WindowBreakParts state
+% 🧩 Two-pass (aux-file) state for the page-break part suffix (":<N>") on the
+% hierarchy chip — mirrors the `.register-toc` write-this-pass/read-next-pass
+% convention already used by \semio_window_toc_append:nnn above. Key = the
+% *unsuffixed* register number (\l_semio_window_register_number_tl, e.g.
+% "1.2.3.4.a") so this never touches the hierarchy path, the register/TOC
+% number, or any \label/\ref target — purely a display-time lookup.
+\tl_new:N \g_semio_window_current_regnum_tl
+\prop_new:N \g_semio_window_break_prop
+\iow_new:N \g_semio_window_break_iow
+\bool_new:N \g_semio_window_break_iow_open_bool
+\bool_gset_false:N \g_semio_window_break_iow_open_bool
+
+\cs_new_protected:Npn \semio_window_break_iow_open: {
+  \bool_if:NF \g_semio_window_break_iow_open_bool {
+    \iow_open:Nn \g_semio_window_break_iow { \c_sys_jobname_str .window-breaks }
+    \bool_gset_true:N \g_semio_window_break_iow_open_bool
+  }
+}
+
+\cs_new_protected:Npn \semio_window_break_aux_line:nn #1#2 {
+  \prop_gput:Nnn \g_semio_window_break_prop {#1} {#2}
+}
+\cs_new_protected:Npn \SemioWindowBreakLine #1#2 { \semio_window_break_aux_line:nn {#1}{#2} }
+
+\cs_new_protected:Npn \semio_window_break_aux_input:n #1 {
+  \file_if_exist_input:n {#1} { }
+}
+
+\cs_new_protected:Npn \semio_window_break_aux_load: {
+  \prop_gclear:N \g_semio_window_break_prop
+  \file_if_exist_input:n { \c_sys_jobname_str .window-breaks } { }
+  \prop_if_empty:NT \g_semio_window_break_prop {
+    \str_set:Nx \l_tmpa_str { dist / \c_sys_jobname_str .window-breaks }
+    \semio_window_break_aux_input:n { \l_tmpa_str }
+  }
+}
+
+\cs_new_protected:Npn \semio_window_break_write:nn #1#2 {
+  \tl_if_empty:nF {#1} {
+    \semio_window_break_iow_open:
+    \iow_now:Nx \g_semio_window_break_iow { \SemioWindowBreakLine {#1} {#2} }
+  }
+}
+\cs_generate_variant:Nn \semio_window_break_write:nn { Vn }
+
+\cs_new_protected:Npn \semio_window_break_record:n #1 {
+  \tl_if_empty:NF \g_semio_window_current_regnum_tl {
+    \semio_window_break_write:Vn \g_semio_window_current_regnum_tl {#1}
+  }
+}
+
+% 🔢 Called right after \semio_window_register_write:nn has computed the
+% (unsuffixed) \l_semio_window_register_number_tl for this window instance:
+% remembers it as the lookup key for the continuation-page overlay writer,
+% and — if the *previous* compile pass recorded this same window as having
+% rendered into >1 page-parts — appends ":1" to the page-1 header display
+% number only (\l_semio_window_number_tl), never to the register/hierarchy
+% number itself.
+\cs_new_protected:Npn \semio_window_break_suffix_apply: {
+  \tl_gset_eq:NN \g_semio_window_current_regnum_tl \l_semio_window_register_number_tl
+  \prop_get:NVNTF \g_semio_window_break_prop \l_semio_window_register_number_tl \l_tmpf_tl {
+    \int_compare:nNnT { \l_tmpf_tl } > { 1 } {
+      \tl_put_right:Nn \l_semio_window_number_tl { :1 }
+    }
+  } { }
+}
+
+\AtEndDocument { \iow_close:N \g_semio_window_break_iow }
+%endregion WindowBreakParts state
+
 \cs_new_protected:Npn \semio_window_register_write:nn #1#2 {
   \semio_hierarchy_path_sync_document:
   \tl_if_empty:NTF \g_semio_hierarchy_path_tl {
@@ -380,139 +451,156 @@
 \cs_new_protected:Npn \SemioTocTrack #1#2 { \semio_window_toc_append:nn {#1}{#2} }
 \cs_new_protected:Npn \SemioTocTrackNum #1#2#3 { \semio_window_toc_append:nnn {#1}{#2}{#3} }
 
-%region Glossary
-\seq_new:N \g_semio_glossary_terms_seq
-\prop_new:N \g_semio_glossary_definition_prop
-\prop_new:N \g_semio_glossary_pages_prop
-\seq_new:N \l_semio_glossary_sorted_terms_seq
-\clist_new:N \l_semio_glossary_labels_clist
-\tl_new:N \l_semio_glossary_title_tl
-\tl_new:N \l_semio_glossary_definition_tl
-\tl_new:N \l_semio_glossary_labels_tl
+%region Termlist (shared engine for Glossary + Abbreviations)
+\seq_new:N \l_semio_termlist_sorted_terms_seq
+\clist_new:N \l_semio_termlist_labels_clist
+\tl_new:N \l_semio_termlist_title_tl
+\tl_new:N \l_semio_termlist_definition_tl
+\tl_new:N \l_semio_termlist_term_tl
+\tl_new:N \l_semio_termlist_label_tl
 
-\cs_new_protected:Npn \semio_glossary_term_ensure:n #1 {
-  \prop_if_in:NnF \g_semio_glossary_pages_prop {#1} {
-    \seq_gput_right:Nn \g_semio_glossary_terms_seq {#1}
-    \clist_clear:N \l_semio_glossary_labels_clist
-    \prop_gput:NnV \g_semio_glossary_pages_prop {#1} \l_semio_glossary_labels_clist
+\cs_new_protected:Npn \semio_termlist_term_ensure:nn #1#2 {
+  \exp_args:Ncn \prop_if_in:NnF { g_semio_#1_pages_prop } {#2} {
+    \exp_args:Ncn \seq_gput_right:Nn { g_semio_#1_terms_seq } {#2}
+    \clist_clear:N \l_semio_termlist_labels_clist
+    \exp_args:Nc \prop_gput:NnV { g_semio_#1_pages_prop } {#2} \l_semio_termlist_labels_clist
   }
 }
 
-\cs_new_protected:Npn \semio_glossary_define:nn #1#2 {
-  \semio_glossary_term_ensure:n {#1}
-  \prop_gput:Nnn \g_semio_glossary_definition_prop {#1} {#2}
+\cs_new_protected:Npn \semio_termlist_define:nnn #1#2#3 {
+  \semio_termlist_term_ensure:nn {#1} {#2}
+  \exp_args:Nc \prop_gput:Nnn { g_semio_#1_definition_prop } {#2} {#3}
 }
 
-\cs_new_protected:Npn \semio_glossary_label_append:nn #1#2 {
-  \prop_get:NnNTF \g_semio_glossary_pages_prop {#1} \l_semio_glossary_labels_clist {
-    \clist_put_right:Nn \l_semio_glossary_labels_clist {#2}
-    \prop_gput:NnV \g_semio_glossary_pages_prop {#1} \l_semio_glossary_labels_clist
+\cs_new_protected:Npn \semio_termlist_label_append:nnn #1#2#3 {
+  \exp_args:Nc \prop_get:NnNTF { g_semio_#1_pages_prop } {#2} \l_semio_termlist_labels_clist {
+    \clist_put_right:Nn \l_semio_termlist_labels_clist {#3}
+    \exp_args:Nc \prop_gput:NnV { g_semio_#1_pages_prop } {#2} \l_semio_termlist_labels_clist
   } {
-    \clist_set:Nn \l_semio_glossary_labels_clist { {#2} }
-    \prop_gput:NnV \g_semio_glossary_pages_prop {#1} \l_semio_glossary_labels_clist
+    \clist_set:Nn \l_semio_termlist_labels_clist { {#3} }
+    \exp_args:Nc \prop_gput:NnV { g_semio_#1_pages_prop } {#2} \l_semio_termlist_labels_clist
   }
 }
 
-\cs_new_protected:Npn \semio_glossary_labels_csv:n #1 {
+\cs_new_protected:Npn \semio_termlist_labels_csv:nn #1#2 {
   \tl_clear:N \l_tmpd_tl
-  \prop_get:NnNTF \g_semio_glossary_pages_prop {#1} \l_semio_glossary_labels_clist {
-    \clist_map_inline:Nn \l_semio_glossary_labels_clist {
+  \exp_args:Nc \prop_get:NnNTF { g_semio_#1_pages_prop } {#2} \l_semio_termlist_labels_clist {
+    \clist_map_inline:Nn \l_semio_termlist_labels_clist {
       \tl_if_empty:NTF \l_tmpd_tl { } { \tl_put_right:Nn \l_tmpd_tl { , } }
-      \tl_put_right:Nn \l_tmpd_tl { ##1 }
+      \tl_put_right:Nn \l_tmpd_tl { ####1 }
     }
-  }
+  } { }
 }
 
-\tl_new:N \l_semio_glossary_term_tl
-\tl_new:N \l_semio_glossary_label_tl
-
-\cs_new_protected:Npn \semio_glossary_use:n #1 {
-  \semio_glossary_term_ensure:n {#1}
-  \tl_set:Nn \l_semio_glossary_term_tl {#1}
-  \refstepcounter { semioglossaryusage }
+\cs_new_protected:Npn \semio_termlist_use:nn #1#2 {
+  \semio_termlist_term_ensure:nn {#1} {#2}
+  \tl_set:Nn \l_semio_termlist_term_tl {#2}
+  \refstepcounter { semio#1usage }
   \group_begin:
   \ExplSyntaxOff
   \makeatletter
-  \xdef\semio@gls@label{semio-glossary-\thesemioglossaryusage}%
-  \expandafter\label\expandafter{\semio@gls@label}%
+  \xdef\semio@termlist@label{semio-#1-\csname thesemio#1usage\endcsname}%
+  \expandafter\label\expandafter{\semio@termlist@label}%
   \makeatother
   \group_end:
-  \tl_set:Nx \l_semio_glossary_label_tl { \semio@gls@label }
-  \exp_args:NVV \semio_glossary_label_append:nn \l_semio_glossary_term_tl \l_semio_glossary_label_tl
-  \tl_use:N \l_semio_glossary_term_tl
+  \tl_set:Nx \l_semio_termlist_label_tl { \semio@termlist@label }
+  \exp_args:NnVV \semio_termlist_label_append:nnn {#1} \l_semio_termlist_term_tl \l_semio_termlist_label_tl
+  \tl_use:N \l_semio_termlist_term_tl
 }
 
-\cs_new:Npn \semio_glossary_sort_compare:nn #1#2 {
+\cs_new:Npn \semio_termlist_sort_compare:nn #1#2 {
   \str_compare:nNnTF { #1 } < { #2 }
     { \sort_return_same: }
     { \sort_return_reverse: }
 }
 
-\cs_new_protected:Npn \semio_glossary_terms_sort: {
-  \seq_set_eq:NN \l_semio_glossary_sorted_terms_seq \g_semio_glossary_terms_seq
-  \seq_sort:Nn \l_semio_glossary_sorted_terms_seq {
-    \semio_glossary_sort_compare:nn { ####1 } { ######1 }
+\cs_new_protected:Npn \semio_termlist_terms_sort:n #1 {
+  \exp_args:Nc \seq_set_eq:NN \l_semio_termlist_sorted_terms_seq { g_semio_#1_terms_seq }
+  \seq_sort:Nn \l_semio_termlist_sorted_terms_seq {
+    \semio_termlist_sort_compare:nn { ####1 } { ######1 }
   }
 }
 
-\cs_new_protected:Npn \semio_glossary_body_init: {
+\cs_new_protected:Npn \semio_termlist_body_init:n #1 {
   \group_begin:
   \ExplSyntaxOff
   \makeatletter
-  \gdef\semio@glossary@table@body{}%
+  \expandafter\gdef\csname semio@#1@table@body\endcsname{}%
   \makeatother
   \group_end:
 }
 
-\cs_new_protected:Npn \semio_glossary_body_gappto:nnn #1#2#3 {
+\cs_new_protected:Npn \semio_termlist_body_gappto:nnnn #1#2#3#4 {
   \group_begin:
   \ExplSyntaxOff
   \makeatletter
-  \gappto\semio@glossary@table@body{\SemioGlossaryTableRow{#1}{#2}{#3}}%
+  \expandafter\gappto\csname semio@#1@table@body\endcsname{\SemioGlossaryTableRow{#2}{#3}{#4}}%
   \makeatother
   \group_end:
 }
-\cs_generate_variant:Nn \semio_glossary_body_gappto:nnn { VVV }
+\cs_generate_variant:Nn \semio_termlist_body_gappto:nnnn { nVVV }
 
-\cs_new_protected:Npn \semio_glossary_row_for_term:n #1 {
-  \tl_set:Nn \l_semio_glossary_term_tl {#1}
-  \prop_get:NnNTF \g_semio_glossary_definition_prop {#1} \l_semio_glossary_definition_tl { } {
-    \tl_clear:N \l_semio_glossary_definition_tl
+\cs_new_protected:Npn \semio_termlist_row_for_term:nn #1#2 {
+  \tl_set:Nn \l_semio_termlist_term_tl {#2}
+  \exp_args:Nc \prop_get:NnNTF { g_semio_#1_definition_prop } {#2} \l_semio_termlist_definition_tl { } {
+    \tl_clear:N \l_semio_termlist_definition_tl
   }
-  \semio_glossary_labels_csv:n {#1}
-  \relax
-  \semio_glossary_body_gappto:VVV
-    \l_semio_glossary_term_tl
-    \l_semio_glossary_definition_tl
+  \semio_termlist_labels_csv:nn {#1} {#2}
+  \semio_termlist_body_gappto:nVVV {#1}
+    \l_semio_termlist_term_tl
+    \l_semio_termlist_definition_tl
     \l_tmpd_tl
 }
 
-\cs_new_protected:Npn \semio_glossary_body_materialize: {
-  \semio_glossary_body_init:
-  \semio_glossary_terms_sort:
-  \seq_map_function:NN \l_semio_glossary_sorted_terms_seq \semio_glossary_row_for_term:n
+\cs_new_protected:Npn \semio_termlist_body_materialize:n #1 {
+  \semio_termlist_body_init:n {#1}
+  \semio_termlist_terms_sort:n {#1}
+  \seq_map_inline:Nn \l_semio_termlist_sorted_terms_seq {
+    \semio_termlist_row_for_term:nn {#1} {##1}
+  }
 }
 
-\cs_new_protected:Npn \SemioGlossaryListOf {
-  \int_compare:nNnT { \seq_count:N \g_semio_glossary_terms_seq } > { 0 } {
-    \semio_glossary_body_materialize:
-    \tl_set:Nx \l_semio_glossary_title_tl { \semio_glossary_title_text: }
+\cs_new_protected:Npn \semio_termlist_listof:n #1 {
+  \int_compare:nNnT { \exp_args:Nc \seq_count:N { g_semio_#1_terms_seq } } > { 0 } {
+    \semio_termlist_body_materialize:n {#1}
+    \tl_set:Nx \l_semio_termlist_title_tl { \use:c { semio_#1_title_text: } }
     \group_begin:
     \ExplSyntaxOff
     \makeatletter
-    \exp_args:NV \semio@register@window@open \l_semio_glossary_title_tl
-    \SemioTableGlossary{\semio@glossary@table@body}%
+    \exp_args:NV \semio@register@window@open \l_semio_termlist_title_tl
+    \semio@table@termlist {#1} {\csname semio@#1@table@body\endcsname}%
     \semio@register@window@close
     \makeatother
     \group_end:
   }
 }
 
-\cs_new_protected:Npn \GlossaryDefine #1#2 { \semio_glossary_define:nn {#1} {#2} }
-\cs_new_protected:Npn \Gls #1 { \semio_glossary_use:n {#1} }
-\cs_gset:cpn { listofglossaries } { \SemioGlossaryListOf }
-\semio@register@hooks@install { listofglossaries }
-%endregion Glossary
+\cs_new_protected:Npn \semio_termlist_new:nnnn #1#2#3#4 {
+  \exp_args:Nc \seq_new:N { g_semio_#1_terms_seq }
+  \exp_args:Nc \prop_new:N { g_semio_#1_definition_prop }
+  \exp_args:Nc \prop_new:N { g_semio_#1_pages_prop }
+  % 🩹 \makeatletter/\makeatother must stay scoped to this group — this
+  % function is called at file top level (see \semio_termlist_new:nnnn calls
+  % below), so an unwrapped \makeatother here would permanently flip the
+  % catcode of `@` to "other" for the rest of the package, breaking every
+  % `\semio@...`-named control sequence typed later in this file.
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \newcounter{semio#1usage}
+  \expandafter\gdef\csname semio@#1@table@body\endcsname{}%
+  \makeatother
+  \group_end:
+  \ExplSyntaxOn
+  \cs_new_protected:cpn {#2} ##1##2 { \semio_termlist_define:nnn {#1} {##1} {##2} }
+  \cs_new_protected:cpn {#3} ##1 { \semio_termlist_use:nn {#1} {##1} }
+  \cs_gset:cpn {#4} { \semio_termlist_listof:n {#1} }
+  \semio@register@hooks@install {#4}
+}
+
+\semio_termlist_new:nnnn { glossary } { GlossaryDefine } { Gls } { listofglossaries }
+\semio_termlist_new:nnnn { abbreviations } { AbbreviationDefine } { Abbr } { listofabbreviations }
+%endregion Termlist
 
 \cs_new_protected:Npn \semio_window_listof_cmd_define:nn #1#2 {
   \seq_new:c { g_semio_register_ #1 _num_seq }
@@ -554,10 +642,19 @@
     before~skip=0pt,
     after~skip=0pt,
     parbox=false,
+    % 🪟 Repeat the header chip row (title chip + hierarchy chip, see
+    % \semio@window@header@repeat) on every continuation page-part of a
+    % genuinely broken window, and record how many parts this instance
+    % rendered into into so the *next* compile pass can show the ":<N>"
+    % suffix on page 1 too (see \semio@window@break@record and the
+    % `.window-breaks` aux file loaded by \semio_window_break_aux_load:).
+    overlay~unbroken={\semio@window@break@record{1}},
+    overlay~first={},
+    overlay~middle={\semio@window@header@repeat},
+    overlay~last={\semio@window@header@repeat\semio@window@break@record{\arabic{tcbbreakpart}}},
   },
   semio~window~table/.style={
     semio~window,
-    breakable=false,
     top=0pt,
     left=0pt,
     right=0pt,
@@ -565,7 +662,6 @@
   },
   semio~window~row/.style={
     semio~window,
-    breakable=false,
     width=\linewidth,
   },
 }
@@ -848,11 +944,16 @@
 }
 
 \cs_new_protected:Npn \semio_window_tcb_open:n #1 {
+  % 🪟 No forced `breakable=false` here anymore — a "kind" window (Table,
+  % Figure, ...) genuinely inherits `breakable` from its `semio~window` tier
+  % style and may legitimately continue onto further pages; callers that need
+  % a non-breakable box (the generic \Window arrangement primitives) pass
+  % `breakable=false` explicitly in #1 themselves (see
+  % \semio_window_generic_begin:n / \semio_window_begin_row:n).
   \bool_if:NTF \l_semio_window_height_set_bool {
     \semio_window_height_tl_set:
     \begin{tcolorbox}[
       #1,
-      breakable=false,
       height=\tl_use:N \l_semio_window_height_tl,
       valign=\tl_use:N \l_semio_window_valign_tl,
       halign=\tl_use:N \l_semio_window_halign_tl
@@ -860,7 +961,6 @@
   } {
     \begin{tcolorbox}[
       #1,
-      breakable=false,
       valign=\tl_use:N \l_semio_window_valign_tl,
       halign=\tl_use:N \l_semio_window_halign_tl
     ]
@@ -954,6 +1054,7 @@
     }
     \tl_set:Nx \l_semio_window_kind_title_tl { \tl_use:N \l_semio_window_kind_title_tl }
     \tl_clear:N \l_semio_window_number_tl
+    \tl_gclear:N \g_semio_window_current_regnum_tl
   } {
     \bool_if:NTF \l_semio_window_hierarchy_bool {
       \refstepcounter {#1}
@@ -965,6 +1066,7 @@
       \tl_set:Nx \l_semio_window_kind_title_tl { \tl_use:N \l_semio_window_kind_title_tl }
       \semio_window_kind_number_set:n {#1}
       \semio_window_register_write:nn {#1} { \use:c { semio@window@#1@kind } }
+      \semio_window_break_suffix_apply:
     } {
       \tl_if_empty:NTF \l_semio_window_kind_title_tl {
         \tl_set:Nn \l_semio_window_kind_title_tl {
@@ -973,6 +1075,7 @@
       } { }
       \tl_set:Nx \l_semio_window_kind_title_tl { \tl_use:N \l_semio_window_kind_title_tl }
       \tl_clear:N \l_semio_window_number_tl
+      \tl_gclear:N \g_semio_window_current_regnum_tl
     }
   }
   \semio_window_header_store:
@@ -1011,7 +1114,6 @@
 \semio_window_kind_define:nnnnn { semiolemma } { lemma } { Lemma } { logical } { lemmas }
 \semio_window_kind_define:nnnnn { semioproof } { proof } { Proof } { logical } { proofs }
 \semio_window_kind_define:nnnnn { semioequation } { equation } { Equation } { logical } { equations }
-\semio_window_kind_define:nnnnn { semioabbreviations } { abbreviations } { Abbreviations } { structural } { abbreviations }
 \semio_window_kind_define:nnnnn { semioblockquote } { blockquote } { Blockquote } { structural } { blockquotes }
 \semio_window_kind_define:nnnnn { semioepigraph } { epigraph } { Epigraph } { structural } { epigraphs }
 
@@ -1441,6 +1543,9 @@
   \setcounter{tocdepth}{\semio@toc@depth@unlimited}
   \SemioChromeNavbarLabelsCompute
   \makeatother
+  \ExplSyntaxOn
+  \semio_window_break_aux_load:
+  \ExplSyntaxOff
 }
 
 \makeatletter
@@ -1544,18 +1649,6 @@
 
 \newcommand{\semio@register@data}[3]{%
   \SemioTableRegisterRow{#1}{#2}{#3}%
-}
-
-\newcounter{semioglossaryusage}
-
-\newcommand{\semio@glossary@table@body}{}
-
-\newcommand{\semio@glossary@table@header}{%
-  \SemioTableHeaderRow{%
-    \semio@glossary@header@term &
-    \semio@glossary@header@definition &
-    \semio@glossary@header@pages
-  }%
 }
 
 \newcommand{\semio@register@table@body}{}
@@ -1742,6 +1835,35 @@
   \semio@window@header@muted{\semio@window@header@number}{\semio@window@header@title}%
 }
 
+%region WindowBreakParts chrome
+% 🧩 Records (into the `.window-breaks` aux file, via
+% \semio_window_break_record:n) how many page-parts this window instance
+% rendered into on *this* compile pass — read back on the *next* pass by
+% \semio_window_break_suffix_apply: to decide whether page 1's hierarchy
+% chip needs a ":1" suffix. Wired into the `semio~window` tcbset style as
+% `overlay unbroken=` / `overlay last=`.
+\newcommand{\semio@window@break@record}[1]{%
+  \ExplSyntaxOn
+  \semio_window_break_record:n {#1}%
+  \ExplSyntaxOff
+}
+
+% 🪟 Redraws the *exact* header chip row (same \semio@window@header@muted
+% routine used for page 1, above/before the box) as a tcolorbox `overlay`
+% anchored to that page-part's own `frame` node, so a continuation page of a
+% genuinely broken window shows the identical title/hierarchy chip chrome —
+% just with the live `\thetcbbreakpart` part index appended to the number.
+% Wired into the `semio~window` tcbset style as `overlay middle=` /
+% `overlay last=` (never fires for `unbroken` or single-part boxes, so a
+% window that never breaks renders byte-for-byte as before).
+\newcommand{\semio@window@header@repeat}{%
+  \edef\semio@window@header@part@num{\arabic{tcbbreakpart}}%
+  \node[anchor=south, inner sep=0pt, yshift=\semio@stroke@hairline] at (frame.north) {%
+    \semio@window@header@muted{\semio@window@header@number:\semio@window@header@part@num}{\semio@window@header@title}%
+  };%
+}
+%endregion WindowBreakParts chrome
+
 \newcommand{\semio@chrome@heading@set}[1]{%
   \gdef\semio@chrome@heading{#1}%
 }
@@ -1922,7 +2044,7 @@
 }
 
 \newcommand{\semio@window@gap@inbox}[1]{%
-  \semio@window@header@gap@paint{semio-chrome-base}{#1}%
+  \semio@window@header@gap@paint{#1}%
 }
 
 \newcommand{\semio@heading@number@suffix}[1]{%
@@ -1951,7 +2073,7 @@
   \semio@heading@row@wrap{%
     \hbox to \linewidth{%
       \usebox{\semio@window@tab@box}%
-      \semio@window@header@gap@paint{semio-chrome-base}{#1}%
+      \semio@window@header@gap@paint{#1}%
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
@@ -1967,7 +2089,7 @@
   \semio@heading@row@wrap{%
     \hbox to \linewidth{%
       \usebox{\semio@window@tab@box}%
-      \semio@window@header@gap@paint{semio-chrome-base}{semio-chrome-border-normal}%
+      \semio@window@header@gap@paint{semio-chrome-border-normal}%
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
@@ -1983,7 +2105,7 @@
   \semio@heading@row@wrap{%
     \hbox to \linewidth{%
       \usebox{\semio@window@tab@box}%
-      \semio@window@header@gap@paint{semio-chrome-base}{semio-chrome-border-normal}%
+      \semio@window@header@gap@paint{semio-chrome-border-normal}%
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
@@ -2168,23 +2290,20 @@
 }
 %endregion NestedParagraphs
 
-\newcommand{\semio@window@header@gap@paint}[2]{%
+%region Header gap — transparent cutout between/after chips, closed only by the baseline stroke; {@link https://github.com/usalu/semio/issues/1965}
+\newcommand{\semio@window@header@gap@paint}[1]{%
   \semio@window@cap@body@h@set
   \semio@window@cap@raise{%
-    \hbox to \dimexpr\semio@window@gap@w\relax{%
-      \vbox to \semio@chrome@titlebar@height{%
-        \nointerlineskip
-        \hbox to \dimexpr\semio@window@gap@w\relax{%
-          \semio@window@cap@paint{\semio@window@gap@w}{#1}{\semio@window@cap@body@h}%
-        }%
-        \nointerlineskip
-        \hbox to \dimexpr\semio@window@gap@w\relax{%
-          \semio@window@stroke@h{#2}{\semio@window@gap@w}%
-        }%
+    \vbox to \semio@chrome@titlebar@height{%
+      \hbox to \dimexpr\semio@window@gap@w\relax{\rule{0pt}{\semio@window@cap@body@h}}%
+      \nointerlineskip
+      \hbox to \dimexpr\semio@window@gap@w\relax{%
+        \semio@window@stroke@h{#1}{\semio@window@gap@w}%
       }%
     }%
   }%
 }
+%endregion Header gap
 
 \newcommand{\semio@window@header@row@wrap}[1]{%
   \ifvmode\else\par\fi
@@ -2192,27 +2311,6 @@
   #1%
   \ifvmode\nointerlineskip\fi
 }
-
-%region L-shape (no ctrl chip) closure — {@link https://github.com/usalu/semio/issues/1965}
-\newcommand{\semio@window@header@close@paint}[2]{%
-  \semio@window@cap@body@h@set
-  \semio@window@cap@raise{%
-    \hbox to \dimexpr#1-\semio@stroke@hairline\relax{%
-      \vbox to \semio@chrome@titlebar@height{%
-        \nointerlineskip
-        \hbox to \dimexpr#1-\semio@stroke@hairline\relax{%
-          \semio@window@stroke@h{#2}{\dimexpr#1-\semio@stroke@hairline\relax}%
-        }%
-        \nointerlineskip
-        \hbox to \dimexpr#1-\semio@stroke@hairline\relax{%
-          \color{semio-chrome-canvas}\rule{\dimexpr#1-\semio@stroke@hairline\relax}{\semio@window@cap@body@h}%
-        }%
-      }%
-    }%
-  }%
-  \semio@window@cap@raise{\semio@window@stroke@v{#2}}%
-}
-%endregion L-shape (no ctrl chip) closure
 
 \newcommand{\semio@window@header@muted}[2]{%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{#2}}%
@@ -2224,7 +2322,7 @@
     \semio@window@header@row@wrap{%
       \hbox to \linewidth{%
         \usebox{\semio@window@tab@box}%
-        \semio@window@header@close@paint{\semio@window@gap@w}{semio-chrome-border-normal}%
+        \semio@window@header@gap@paint{semio-chrome-border-normal}%
       }%
     }%
   \else
@@ -2235,7 +2333,7 @@
     \semio@window@header@row@wrap{%
       \hbox to \linewidth{%
         \usebox{\semio@window@tab@box}%
-        \semio@window@header@gap@paint{semio-chrome-base}{semio-chrome-border-normal}%
+        \semio@window@header@gap@paint{semio-chrome-border-normal}%
         \usebox{\semio@window@ctrl@box}%
       }%
     }%
@@ -2531,9 +2629,9 @@
       \setlength{\fboxsep}{0pt}%
       \colorbox{semio-chrome-base}{%
         \vbox to \semio@chrome@navbar@height{%
-          \vskip0pt
+          \vfil
           \hbox to \headwidth{#1}%
-          \vskip1cm
+          \vskip\semio@spacing@single
         }%
       }%
     }%
@@ -2557,7 +2655,7 @@
         \vbox to \semio@chrome@footer@height{%
           \vskip\semio@spacing@single
           \hbox to \headwidth{#1}%
-          \vskip\dimexpr\semio@chrome@footer@height-\semio@chrome@row@height@footer-\semio@spacing@single\relax
+          \vfil
         }%
       }%
     }%

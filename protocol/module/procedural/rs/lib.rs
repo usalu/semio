@@ -5,17 +5,19 @@ use flow_module_brep::{export_solid_json, import_solid_json, tessellate_geometry
 use protocol::{visible_blocks, ProtocolBlock};
 use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{
-    build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, App,
-    ActionDescriptor, Contribution, PluginApp, PluginBundle, SurfaceKind, UiButtonNode,
+    build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, ActionEmit, App,
+    ActionDescriptor, Contribution, DocumentApp, DocumentView, PluginBundle, SurfaceKind, UiButtonNode,
     UiFieldNode, UiInputNode, UiNode, UiSliderNode, UiToggleNode, ViewState, world3d_default_camera,
     world3d_scene, world3d_selection_json, WorldSunConfig,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
+use vcs::{Operation, OperationDiff};
 
 //#region 🔖Constants
 const MODULE_PLUGIN_ID: &str = "protocol-module-procedural";
 const MODULE_APP_ID: &str = "protocol-module-procedural";
+const MODULE_DOCUMENT_SCHEMA: &str = "protocol.module.procedural.payload";
 const BODY_PARAMS: &str = "params";
 const BODY_PREVIEW: &str = "preview";
 const MODULE_WINDOW_PARAMS: &str = "protocol-module-procedural-params";
@@ -72,16 +74,59 @@ struct ModuleRenderPayload {
     interactive: bool,
 }
 
-fn parse_payload(document_json: &str) -> ModuleRenderPayload {
-    serde_json::from_str(document_json).unwrap_or(ModuleRenderPayload {
+/// 🌱 The module's default document — the hex-column fixture with its stock procedural params. Used
+/// as `DocumentApp::initial_projection`; live slot renders override it with the forms-supplied payload.
+fn default_payload() -> ModuleRenderPayload {
+    ModuleRenderPayload {
         fixture_slug: "hexagonal-mushroom-column".into(),
-        params: json!({}),
+        params: json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }),
         question_id: String::new(),
         controller_id: String::new(),
         surface: "try".into(),
         interactive: true,
-    })
+    }
 }
+
+//#region 🔖DocumentOp
+/// ✏️ Whole-payload replace op for the procedural block-kind slot document. The module's document is a
+/// transient render/params payload (not a collaboratively-edited structure), so its single operation
+/// swaps the payload wholesale — export/import stash their results on `params` and re-emit it. The VCS
+/// store still records the pre-op payload as a true inverse, so undo works.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+enum ModulePayloadOp {
+    SetPayload { payload: ModuleRenderPayload },
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ModulePayloadDiff {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    payload: Option<ModuleRenderPayload>,
+}
+
+impl OperationDiff<ModuleRenderPayload> for ModulePayloadDiff {
+    fn apply(&self, projection: &ModuleRenderPayload) -> ModuleRenderPayload {
+        self.payload.clone().unwrap_or_else(|| projection.clone())
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.payload.is_some() {
+            *self = other;
+        }
+    }
+}
+
+impl Operation<ModuleRenderPayload> for ModulePayloadOp {
+    type Diff = ModulePayloadDiff;
+
+    fn diff(&self, _projection: &ModuleRenderPayload) -> ModulePayloadDiff {
+        match self {
+            ModulePayloadOp::SetPayload { payload } => ModulePayloadDiff { payload: Some(payload.clone()) },
+        }
+    }
+}
+//#endregion 🔖DocumentOp
 
 fn fixture_json_for_slug(slug: &str) -> Option<&'static str> {
     match slug {
@@ -536,53 +581,52 @@ fn render_flow3d_question(payload: &ModuleRenderPayload, labels: &ModuleLabels) 
 //#endregion 🔖Params
 
 //#region 🔖App
+#[derive(Default)]
 struct ModuleApp;
 
-impl PluginApp for ModuleApp {
+impl DocumentApp for ModuleApp {
+    type Projection = ModuleRenderPayload;
+    type Op = ModulePayloadOp;
+
     fn app_id(&self) -> &str {
         MODULE_APP_ID
     }
 
-    fn initial_document_json(&self) -> String {
-        serde_json::to_string(&ModuleRenderPayload {
-            fixture_slug: "hexagonal-mushroom-column".into(),
-            params: json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }),
-            question_id: String::new(),
-            controller_id: String::new(),
-            surface: "try".into(),
-            interactive: true,
-        })
-        .unwrap_or_else(|_| "{}".into())
+    fn document_schema(&self) -> &str {
+        MODULE_DOCUMENT_SCHEMA
     }
 
-    fn handle_action_patch_ops(
+    fn initial_projection(&self) -> ModuleRenderPayload {
+        default_payload()
+    }
+
+    fn handle_action(
         &mut self,
         action: &str,
         args: Option<&Value>,
-        document_json: &str,
+        doc: &DocumentView<'_, ModuleRenderPayload>,
         _view_state: &ViewState,
-    ) -> Vec<String> {
+    ) -> ActionEmit<ModulePayloadOp> {
         match action {
             ACTION_EXPORT_SOLID => {
-                let mut payload = parse_payload(document_json);
+                let mut payload = doc.projection.clone();
                 handle_export_solid(&mut payload, args);
-                vec![serde_json::to_string(&payload).unwrap_or_else(|_| document_json.into())]
+                ActionEmit::ops(vec![ModulePayloadOp::SetPayload { payload }])
             }
             ACTION_IMPORT_SOLID => {
-                let mut payload = parse_payload(document_json);
+                let mut payload = doc.projection.clone();
                 handle_import_solid(&mut payload, args);
-                vec![serde_json::to_string(&payload).unwrap_or_else(|_| document_json.into())]
+                ActionEmit::ops(vec![ModulePayloadOp::SetPayload { payload }])
             }
-            _ => Vec::new(),
+            _ => ActionEmit::default(),
         }
     }
 
-    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-        let payload = parse_payload(document_json);
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, ModuleRenderPayload>, view_state: &ViewState) -> UiNode {
         let labels = module_labels(view_state);
         match body_key {
-            BODY_PARAMS => render_params_body(&payload, labels),
-            BODY_PREVIEW => render_preview_body(&payload),
+            BODY_PARAMS => render_params_body(doc.projection, labels),
+            BODY_PREVIEW => render_preview_body(doc.projection),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -592,6 +636,7 @@ fn create_module_app() -> App {
     App::from_builder(
         App::builder(MODULE_APP_ID, "Protocol Module Procedural")
             .document(["semio", "forms"])
+            .mode("edit", "Edit")
             .window_kind(MODULE_WINDOW_PARAMS, "Params", BODY_PARAMS, SurfaceKind::NodeGraph)
             .window_kind(MODULE_WINDOW_PREVIEW, "Preview", BODY_PREVIEW, SurfaceKind::World3d)
             .default_layout(create_default_layout(
@@ -614,7 +659,7 @@ fn module_bundle() -> PluginBundle {
             params_body_key: BODY_PARAMS.into(),
             preview_body_key: BODY_PREVIEW.into(),
         })
-        .register_app(create_module_app(), || Box::new(ModuleApp))
+        .register_document_app(create_module_app(), ModuleApp::default)
 }
 
 semio_framework_plugin::plugin_exports!(module_bundle);
@@ -624,7 +669,27 @@ semio_framework_plugin::plugin_exports!(module_bundle);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::Plugin;
+    use semio_framework_plugin::{ActionMeta, Plugin, PluginApp, VcsDocumentApp};
+
+    fn meta() -> ActionMeta {
+        ActionMeta { actor: "local".into(), instance_id: 1 }
+    }
+
+    fn new_app() -> VcsDocumentApp<ModuleApp> {
+        VcsDocumentApp::new(ModuleApp::default())
+    }
+
+    fn payload_json(params: Value) -> String {
+        serde_json::to_string(&ModuleRenderPayload {
+            fixture_slug: "hexagonal-mushroom-column".into(),
+            params,
+            question_id: "q".into(),
+            controller_id: "forms-play".into(),
+            surface: "try".into(),
+            interactive: true,
+        })
+        .unwrap()
+    }
 
     #[test]
     fn module_app_declares_window_kinds() {
@@ -654,33 +719,23 @@ mod tests {
 
     #[test]
     fn preview_body_emits_world_scene() {
-        let app = ModuleApp;
-        let document = serde_json::to_string(&ModuleRenderPayload {
-            fixture_slug: "hexagonal-mushroom-column".into(),
-            params: json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }),
-            question_id: "q".into(),
-            controller_id: "forms-play".into(),
-            surface: "try".into(),
-            interactive: true,
-        })
-        .unwrap();
-        let node = app.render(BODY_PREVIEW, &document, &ViewState::default());
+        let mut app = new_app();
+        let document = payload_json(json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }));
+        let node = app.render(BODY_PREVIEW, Some(&document), &ViewState::default()).expect("render");
         assert!(matches!(node, UiNode::ComponentScene(_)));
     }
 
     #[test]
     fn params_body_lists_flow_inputs() {
-        let app = ModuleApp;
-        let document = app.initial_document_json();
-        let node = app.render(BODY_PARAMS, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(BODY_PARAMS, None, &ViewState::default()).expect("render");
         assert!(matches!(node, UiNode::Stack(_)));
     }
 
     #[test]
     fn params_body_includes_media_export_buttons() {
-        let app = ModuleApp;
-        let document = app.initial_document_json();
-        let node = app.render(BODY_PARAMS, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(BODY_PARAMS, None, &ViewState::default()).expect("render");
         let UiNode::Stack(stack) = node else {
             panic!("expected a stack node");
         };
@@ -690,19 +745,9 @@ mod tests {
 
     #[test]
     fn export_solid_action_stashes_result_on_params() {
-        let mut app = ModuleApp;
-        let document = serde_json::to_string(&ModuleRenderPayload {
-            fixture_slug: "hexagonal-mushroom-column".into(),
-            params: json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }),
-            question_id: "q".into(),
-            controller_id: "forms-play".into(),
-            surface: "try".into(),
-            interactive: true,
-        })
-        .unwrap();
-        let ops = app.handle_action_patch_ops(ACTION_EXPORT_SOLID, Some(&json!({ "format": "obj" })), &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let payload: ModuleRenderPayload = serde_json::from_str(&ops[0]).unwrap();
+        let mut app = new_app();
+        app.handle_action(ACTION_EXPORT_SOLID, Some(&json!({ "format": "obj" })), &ViewState::default(), &meta()).expect("export");
+        let payload = app.projection().expect("projection");
         let export = payload.params.get("__solidExport").expect("export result present");
         assert!(export.get("error").is_none(), "{export:?}");
         assert_eq!(export.get("binary").and_then(|value| value.as_bool()), Some(false));
@@ -710,24 +755,14 @@ mod tests {
 
     #[test]
     fn export_then_import_solid_round_trips_through_actions() {
-        let mut app = ModuleApp;
-        let document = serde_json::to_string(&ModuleRenderPayload {
-            fixture_slug: "hexagonal-mushroom-column".into(),
-            params: json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }),
-            question_id: "q".into(),
-            controller_id: "forms-play".into(),
-            surface: "try".into(),
-            interactive: true,
-        })
-        .unwrap();
-        let export_ops = app.handle_action_patch_ops(ACTION_EXPORT_SOLID, Some(&json!({ "format": "stl" })), &document, &ViewState::default());
-        let exported: ModuleRenderPayload = serde_json::from_str(&export_ops[0]).unwrap();
+        let mut app = new_app();
+        app.handle_action(ACTION_EXPORT_SOLID, Some(&json!({ "format": "stl" })), &ViewState::default(), &meta()).expect("export");
+        let exported = app.projection().expect("projection");
         let export_result = exported.params.get("__solidExport").expect("export result present");
         let data = export_result.get("data").and_then(|value| value.as_str()).expect("export data").to_string();
 
-        let import_ops = app.handle_action_patch_ops(ACTION_IMPORT_SOLID, Some(&json!({ "format": "stl", "data": data })), &document, &ViewState::default());
-        assert_eq!(import_ops.len(), 1);
-        let imported: ModuleRenderPayload = serde_json::from_str(&import_ops[0]).unwrap();
+        app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "stl", "data": data })), &ViewState::default(), &meta()).expect("import");
+        let imported = app.projection().expect("projection");
         let import_result = imported.params.get("__solidImport").expect("import result present");
         assert!(import_result.get("error").is_none(), "{import_result:?}");
         assert_eq!(import_result.get("handles").and_then(|value| value.as_array()).map(|handles| handles.len()), Some(1));
@@ -735,20 +770,19 @@ mod tests {
 
     #[test]
     fn import_solid_action_reports_error_when_no_data_given() {
-        let mut app = ModuleApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops(ACTION_IMPORT_SOLID, Some(&json!({ "format": "obj" })), &document, &ViewState::default());
-        let payload: ModuleRenderPayload = serde_json::from_str(&ops[0]).unwrap();
+        let mut app = new_app();
+        app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "obj" })), &ViewState::default(), &meta()).expect("import");
+        let payload = app.projection().expect("projection");
         let import = payload.params.get("__solidImport").expect("import result present");
         assert!(import.get("error").is_some());
     }
 
     #[test]
-    fn unknown_action_yields_no_patch_ops() {
-        let mut app = ModuleApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops("noSuchAction", None, &document, &ViewState::default());
-        assert!(ops.is_empty());
+    fn unknown_action_yields_no_document_change() {
+        let mut app = new_app();
+        let before = app.projection().expect("projection");
+        app.handle_action("noSuchAction", None, &ViewState::default(), &meta()).expect("noop");
+        assert_eq!(app.projection().expect("projection"), before);
     }
 
     #[test]

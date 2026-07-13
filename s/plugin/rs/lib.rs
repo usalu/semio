@@ -3,15 +3,15 @@
 use semio_framework_os::{
     apply_flow_fixture_to_os_media_graph, create_os_studio, default_os_projection, delete_os_studio,
     import_os_studio_from_json, list_os_media_graph_vfs_children, list_os_programs,
-    list_os_studio_catalog_entries, load_os_studio_document, materialize_os_projection, media_port_spec_id,
-    os_app_registration,
-    os_document_from_json, os_document_to_json, build_os_media_flow_operator_infos, materialize_os_app_instance_document_json,
+    list_os_studio_catalog_entries, load_os_studio_document, media_port_spec_id,
+    create_default_os_parameter, os_app_primary_output_kind, os_app_registration, create_os_document_id,
+    os_document_to_json, build_os_media_flow_operator_infos, materialize_os_app_instance_document_json, patch_os_parameter,
     os_media_graph_to_flow_fixture, os_media_graph_to_node_graph_payload, os_media_graph_vfs_schema,
     os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id,
     register_os_fixture_json, create_os_id, seed_os_studio_catalog_if_empty, document_backbone_ref,
     MediaGraphPosition,
-    OsAppInstance, OsBackbonePort, OsDocument, OsMediaGraphCamera, OsMediaGraphVfsNodeRecord, OsOp, OsParameter, OsParameterFieldBinding,
-    OsParameterType, OsProjection, OsStore, OS_HOME_VFS_ROOT_ID, OS_MEDIA_GRAPH_VFS_ROOT_ID,
+    OsAppInstance, OsBackbonePort, OsDocument, OsDocumentRef, OsMediaGraphCamera, OsMediaGraphVfsNodeRecord, OsOp, OsParameter, OsParameterFieldBinding,
+    OsParameterType, OsProjection, OS_HOME_VFS_ROOT_ID, OS_MEDIA_GRAPH_VFS_ROOT_ID,
     OS_STUDIO_BACKBONE_URI_PREFIX, MemoryBackbonePort, VcsError,
 };
 use semio_framework_plugin::{PanelGroup,
@@ -20,7 +20,8 @@ use semio_framework_plugin::{PanelGroup,
     component::layout::MeasureSelectItem,
     component::layout::WindowEngagementStatus, tool_button, tool_collection, ui_declarative_sections_to_tree,
     ui_inspector_all_equal, ui_text,
-    App, ActionDescriptor, ModeDefinition, NodeGraphScene, PluginApp, PluginBundle, SurfaceKind, TextEditorScene,
+    ActionEmit, DocumentApp, DocumentView, HostEffect,
+    App, ActionDescriptor, ModeDefinition, NodeGraphScene, PluginBundle, SurfaceKind, TextEditorScene,
     ToolCategory,
     UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiSectionNode,
     UiSelectItem, UiSelectNode, UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
@@ -141,18 +142,42 @@ struct StudioRuntimeState {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct SStudioEnvelope {
-    document: OsDocument,
-    #[serde(default)]
-    runtime: StudioRuntimeState,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 struct SHomeDocument {
     schema: String,
     #[serde(default)]
     catalog_generation: u64,
+}
+
+/// @emoji 🔢 The Home launcher's only document op: pins the catalog-generation counter that forces a
+/// re-materialize of the studio list after a create/import/delete side-effect on the catalog port.
+/// It is its own {@link vcs::OperationDiff} (idempotent set), so forward/backward are symmetric.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+enum SHomeOp {
+    SetCatalogGeneration { value: u64 },
+}
+
+impl vcs::OperationDiff<SHomeDocument> for SHomeOp {
+    fn apply(&self, projection: &SHomeDocument) -> SHomeDocument {
+        let SHomeOp::SetCatalogGeneration { value } = self;
+        SHomeDocument { catalog_generation: *value, ..projection.clone() }
+    }
+
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+
+impl vcs::Operation<SHomeDocument> for SHomeOp {
+    type Diff = SHomeOp;
+
+    fn diff(&self, _projection: &SHomeDocument) -> SHomeOp {
+        self.clone()
+    }
+
+    fn backwards(&self, projection: &SHomeDocument) -> Vec<Self> {
+        vec![SHomeOp::SetCatalogGeneration { value: projection.catalog_generation }]
+    }
 }
 //#endregion 🔖Types
 
@@ -351,20 +376,14 @@ fn list_all_studio_catalog_entries() -> Vec<semio_framework_os::OsStudioCatalogE
     entries
 }
 
-fn studio_navigate_op(studio_id: &str) -> String {
-    json!({
-        "op": "navigate",
-        "uri": format!("/studios/{studio_id}")
-    })
-    .to_string()
-}
-
-fn finish_create_ops(document: &mut SHomeDocument, entry: &semio_framework_os::OsStudioCatalogEntry) -> Vec<String> {
-    document.catalog_generation += 1;
-    vec![
-        set_home_document_op(document),
-        studio_navigate_op(&entry.id),
-    ]
+/// @emoji 🧭 Builds the typed emit for a freshly-created studio: bump the catalog counter (op) and
+/// navigate the shell to the new studio route (host effect).
+fn created_studio_emit(catalog_generation: u64, studio_id: &str) -> ActionEmit<SHomeOp> {
+    ActionEmit {
+        ops: vec![SHomeOp::SetCatalogGeneration { value: catalog_generation + 1 }],
+        effects: vec![HostEffect::Navigate { uri: format!("/studios/{studio_id}") }],
+        ..Default::default()
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -440,27 +459,10 @@ fn demo_os_document() -> OsDocument {
     parse_demo_studio_document()
 }
 
-fn initial_studio_envelope() -> SStudioEnvelope {
-    SStudioEnvelope {
-        document: demo_os_document(),
-        runtime: StudioRuntimeState {
-            active_instance_id: demo_os_document()
-                .vcs
-                .initial_projection
-                .app_instances
-                .first()
-                .map(|instance| instance.id.clone()),
-            ..StudioRuntimeState::default()
-        },
-    }
-}
-
-fn initial_studio_document_json() -> String {
-    serde_json::to_string(&initial_studio_envelope()).expect("studio envelope json")
-}
-
-fn parse_studio_envelope(document_json: &str) -> SStudioEnvelope {
-    serde_json::from_str(document_json).unwrap_or_else(|_| initial_studio_envelope())
+/// @emoji 🌱 The demo studio's bare `OsProjection` — the studio app's `initial_projection`, parsed
+/// straight out of the packaged fixture (no envelope/runtime wrapper).
+fn demo_studio_projection() -> OsProjection {
+    demo_os_document().vcs.initial_projection
 }
 
 fn parse_panel_state(view_state: &ViewState) -> StudioPanelState {
@@ -476,22 +478,9 @@ fn parse_panel_state(view_state: &ViewState) -> StudioPanelState {
         })
 }
 
-fn projection_from_document(document: &OsDocument) -> OsProjection {
-    OsStore::new(document.clone())
-        .projection()
-        .unwrap_or_else(|_| default_os_projection())
-}
-
-fn set_home_document_op(document: &SHomeDocument) -> String {
-    json!({ "op": "setDocument", "document": document }).to_string()
-}
-
-fn set_studio_document_op(envelope: &SStudioEnvelope) -> String {
-    json!({ "op": "setDocument", "document": envelope }).to_string()
-}
-
-fn set_panel_op(panel: &StudioPanelState) -> String {
-    json!({ "op": "setPanel", "panel": panel }).to_string()
+/// @emoji 🗂️ Serializes a panel state for a typed {@link HostEffect::SetPanel} effect.
+fn panel_json(panel: &StudioPanelState) -> String {
+    serde_json::to_string(panel).unwrap_or_else(|_| "{}".into())
 }
 
 fn s_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -532,47 +521,49 @@ fn parameter_entity_id(parameter: &OsParameter) -> &str {
     }
 }
 
-fn store_from_envelope(envelope: &SStudioEnvelope) -> OsStore {
-    OsStore::new(envelope.document.clone())
+/// @emoji ✨ Builds the `SpawnAppInstance` op (minting a deterministic instance id + app-document id
+/// embedded in the op, so replay never re-mints) plus the new instance id for the caller to focus.
+/// The pure op-builder counterpart of the deleted `OsStore::spawn_app_instance`.
+fn spawn_app_instance_op(
+    program_id: &str,
+    app_id: &str,
+    label: Option<&str>,
+    position: MediaGraphPosition,
+) -> Option<(OsOp, String)> {
+    let registration = os_app_registration(program_id, app_id)?;
+    let instance_id = create_os_id("app");
+    let instance = OsAppInstance {
+        id: instance_id.clone(),
+        program_id: program_id.into(),
+        app_id: app_id.into(),
+        label: label.map(str::to_string).unwrap_or_else(|| registration.label.clone()),
+        yields: os_app_primary_output_kind(&registration),
+        document: OsDocumentRef {
+            document_id: create_os_document_id(),
+            schema: registration.source_format.clone(),
+        },
+    };
+    Some((OsOp::SpawnAppInstance { instance, position }, instance_id))
 }
 
-fn envelope_from_store(store: OsStore, runtime: StudioRuntimeState) -> SStudioEnvelope {
-    SStudioEnvelope {
-        document: store.document(),
-        runtime,
+/// @emoji ➕ Builds an `AddParameter` op with a fresh default parameter of the requested type.
+fn add_parameter_op(parameter_type: &OsParameterType, name: &str) -> OsOp {
+    OsOp::AddParameter {
+        parameter: create_default_os_parameter(parameter_type, name, None),
     }
 }
 
-fn studio_example_document_json(example_id: &str) -> Option<String> {
-    S_STUDIO_EXAMPLES
+/// @emoji 🩹 Builds a `PatchParameter` op by folding `patch` (a `{field: value}` object) into the
+/// current parameter — the pure op-builder counterpart of the deleted `OsStore::patch_parameter`.
+fn patch_parameter_op(projection: &OsProjection, parameter_id: &str, patch: &Value) -> Option<OsOp> {
+    let current = projection
+        .parameters
         .iter()
-        .find(|(id, _, _)| *id == example_id)
-        .map(|(_, _, json)| (*json).to_string())
-}
-
-fn studio_id_for_envelope(envelope: &SStudioEnvelope) -> Option<String> {
-    envelope
-        .runtime
-        .studio_id
-        .clone()
-        .or_else(|| {
-            if envelope.document.id.is_empty() {
-                None
-            } else {
-                Some(envelope.document.id.clone())
-            }
-        })
-}
-
-fn persist_studio_document(document: &OsDocument, studio_id: &str) {
-    let uri = format!("{OS_STUDIO_BACKBONE_URI_PREFIX}{studio_id}");
-    let _ = sync_os_studio_document_helper(document, &uri, &catalog_port());
-}
-
-fn persist_envelope_document(envelope: &SStudioEnvelope) {
-    if let Some(studio_id) = studio_id_for_envelope(envelope) {
-        persist_studio_document(&envelope.document, &studio_id);
-    }
+        .find(|parameter| parameter_entity_id(parameter) == parameter_id)?;
+    Some(OsOp::PatchParameter {
+        parameter_id: parameter_id.into(),
+        parameter: patch_os_parameter(current, patch),
+    })
 }
 
 fn primary_selected_instance_id(runtime: &StudioRuntimeState, projection: &OsProjection) -> Option<String> {
@@ -783,8 +774,7 @@ fn vfs_node_to_row(node: &OsMediaGraphVfsNodeRecord) -> Value {
     })
 }
 
-fn render_media_vfs(document: &OsDocument, labels: &SStudioLabels) -> UiNode {
-    let projection = projection_from_document(document);
+fn render_media_vfs(projection: &OsProjection, labels: &SStudioLabels) -> UiNode {
     let mut rows = vec![json!({
         "id": OS_MEDIA_GRAPH_VFS_ROOT_ID,
         "fileNodeKindId": "root",
@@ -1103,8 +1093,7 @@ fn parameter_constraint_fields(parameter: &OsParameter, labels: &SStudioLabels) 
     }
 }
 
-fn build_parameters_tree(document: &OsDocument, labels: &SStudioLabels) -> UiNode {
-    let projection = projection_from_document(document);
+fn build_parameters_tree(projection: &OsProjection, labels: &SStudioLabels) -> UiNode {
     let mut children = vec![UiSectionNode {
         id: "s-play-parameters.header".into(),
         label: Some(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL.into()),
@@ -1187,8 +1176,7 @@ fn build_parameters_tree(document: &OsDocument, labels: &SStudioLabels) -> UiNod
     ui_declarative_sections_to_tree(&children)
 }
 
-fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState, term_labels: &SStudioLabels) -> UiNode {
-    let projection = projection_from_document(document);
+fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState, term_labels: &SStudioLabels) -> UiNode {
     let media_node_ids = &runtime.selected_media_node_ids;
     let instance_ids = &runtime.selected_app_instance_ids;
     let mut children = vec![UiSectionNode {
@@ -1593,14 +1581,13 @@ fn media_graph_to_dag_fixture(projection: &OsProjection) -> DagFixture {
     }
 }
 
-fn compiled_dag_wire_literal(document: &OsDocument) -> String {
-    let projection = projection_from_document(document);
-    let fixture = media_graph_to_dag_fixture(&projection);
+fn compiled_dag_wire_literal(projection: &OsProjection) -> String {
+    let fixture = media_graph_to_dag_fixture(projection);
     dag_fixture_to_wire_literal(&fixture)
 }
 
-fn compiled_dag_engagement(document: &OsDocument) -> WindowEngagement {
-    let wire = compiled_dag_wire_literal(document);
+fn compiled_dag_engagement(projection: &OsProjection) -> WindowEngagement {
+    let wire = compiled_dag_wire_literal(projection);
     WindowEngagement {
         session_active: Some(false),
         options: None,
@@ -1617,8 +1604,7 @@ fn compiled_dag_engagement(document: &OsDocument) -> WindowEngagement {
 //#endregion 🔖CompiledDag
 
 //#region 🔖StudioWindows
-fn render_media_graph(document: &OsDocument, runtime: &StudioRuntimeState) -> UiNode {
-    let projection = projection_from_document(document);
+fn render_media_graph(projection: &OsProjection, runtime: &StudioRuntimeState) -> UiNode {
     let graph_payload = os_media_graph_to_node_graph_payload(&projection.media_graph, &projection.app_instances);
     let camera = runtime.media_graph_camera.clone().unwrap_or_default();
     let fixture = os_media_graph_to_flow_fixture(&projection.media_graph, &projection.app_instances, &camera);
@@ -1657,8 +1643,8 @@ fn render_media_graph(document: &OsDocument, runtime: &StudioRuntimeState) -> Ui
     )
 }
 
-fn render_compiled_dag(document: &OsDocument) -> UiNode {
-    let wire = compiled_dag_wire_literal(document);
+fn render_compiled_dag(projection: &OsProjection) -> UiNode {
+    let wire = compiled_dag_wire_literal(projection);
     build_text_editor_scene(
         S_PLAY_SURFACE_COMPILED_DAG,
         S_PLAY_CONTROLLER_ID,

@@ -2,14 +2,14 @@
 
 use forms::{
     can_advance, default_value_for_question, empty_forms_projection, initial_try_values, is_extension_question_kind,
-    visible_questions, FormOp, FormQuestion, FormQuestionOption, FormSpec, FormStep, FormVectorField, FormsEnvelope,
-    FormsStore, FORM_BUILTIN_KINDS, FORMS_DOCUMENT_SCHEMA,
+    visible_questions, FormOp, FormQuestion, FormQuestionOption, FormSpec, FormStep, FormVectorField,
+    FORM_BUILTIN_KINDS, FORMS_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{SurfaceKind,
     create_default_layout,
     ui_external_slot, ui_image, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
-    ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Contribution,
-    PanelGroup, ActionDescriptor, PluginApp, UiButtonNode,
+    ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionEmit, App, Contribution,
+    DocumentApp, DocumentView, HostEffect, PanelGroup, ActionDescriptor, UiButtonNode,
     UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode,
     UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState,
@@ -20,7 +20,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicU32, Ordering};
-use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentVcsCommand};
 
 //#region 🔖Constants
 const FORMS_PLAY_APP_ID: &str = "forms-play";
@@ -154,61 +153,21 @@ const AVATAR_PLACEHOLDER_PNG_BASE64: &str =
 static FORM_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖Constants
 
-//#region 🔖Envelope
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct FormsPlayEnvelope {
-    envelope: FormsEnvelope,
-    #[serde(default)]
-    applied_edit_ids: Vec<String>,
-    #[serde(default)]
+//#region 🔖Runtime
+/// 👁️ Ephemeral per-session view state — never part of the persisted `FormSpec` document. Blueprint
+/// selection, the Try wizard's active step, and its in-progress answer values all live here on the
+/// app struct, out of the VCS document.
+#[derive(Clone, Debug, Default)]
+struct FormsPlayRuntime {
     selected_ids: Vec<String>,
-    #[serde(default)]
     current_step_index: usize,
-    #[serde(default)]
     try_values: HashMap<String, Value>,
 }
 
-fn default_envelope() -> FormsPlayEnvelope {
-    let store = FormsStore::new(create_document_vcs_envelope(
-        FORMS_DOCUMENT_SCHEMA,
-        "forms-play",
-        empty_forms_projection(),
-        None,
-    ));
-    FormsPlayEnvelope {
-        envelope: store.envelope().clone(),
-        applied_edit_ids: store.applied_edit_ids().to_vec(),
-        selected_ids: Vec::new(),
-        current_step_index: 0,
-        try_values: HashMap::new(),
-    }
-}
-
-fn building_component_envelope() -> FormsPlayEnvelope {
-    let spec: FormSpec =
-        serde_json::from_str(BUILDING_COMPONENT_EXAMPLE_JSON).unwrap_or_else(|_| empty_forms_projection());
-    let store = FormsStore::new(create_document_vcs_envelope(
-        FORMS_DOCUMENT_SCHEMA,
-        "forms-play",
-        spec,
-        None,
-    ));
-    FormsPlayEnvelope {
-        envelope: store.envelope().clone(),
-        applied_edit_ids: store.applied_edit_ids().to_vec(),
-        selected_ids: Vec::new(),
-        current_step_index: 0,
-        try_values: HashMap::new(),
-    }
-}
-
-fn parse_envelope(document_json: &str) -> FormsPlayEnvelope {
-    serde_json::from_str(document_json).unwrap_or_else(|_| default_envelope())
-}
-
-fn set_document_op(envelope: &FormsPlayEnvelope) -> String {
-    json!({ "op": "setDocument", "document": envelope }).to_string()
+/// 🌱 The forms app's default document — the building-component fixture. Used as
+/// `DocumentApp::initial_projection`.
+fn building_component_spec() -> FormSpec {
+    serde_json::from_str(BUILDING_COMPONENT_EXAMPLE_JSON).unwrap_or_else(|_| empty_forms_projection())
 }
 
 fn forms_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -219,37 +178,35 @@ fn forms_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     }
 }
 
-fn store_from_envelope(play: &FormsPlayEnvelope) -> FormsStore {
-    let mut store = FormsStore::new(play.envelope.clone());
-    store.set_envelope(play.envelope.clone(), play.applied_edit_ids.clone());
-    store
-}
-
-fn sync_store_to_envelope(store: &FormsStore, play: &FormsPlayEnvelope) -> FormsPlayEnvelope {
-    FormsPlayEnvelope {
-        envelope: store.envelope().clone(),
-        applied_edit_ids: store.applied_edit_ids().to_vec(),
-        selected_ids: play.selected_ids.clone(),
-        current_step_index: play.current_step_index,
-        try_values: play.try_values.clone(),
-    }
-}
-
-fn effective_try_values(spec: &FormSpec, play: &FormsPlayEnvelope) -> Map<String, Value> {
-    let overrides: Map<String, Value> = play.try_values.iter().map(|(key, value)| (key.clone(), value.clone())).collect();
+fn effective_try_values(spec: &FormSpec, runtime: &FormsPlayRuntime) -> Map<String, Value> {
+    let overrides: Map<String, Value> = runtime.try_values.iter().map(|(key, value)| (key.clone(), value.clone())).collect();
     initial_try_values(spec, &overrides)
 }
 
-fn reset_try_runtime(play: &mut FormsPlayEnvelope) {
-    play.try_values.clear();
-    play.current_step_index = 0;
+fn reset_try_runtime(runtime: &mut FormsPlayRuntime) {
+    runtime.try_values.clear();
+    runtime.current_step_index = 0;
 }
 
-fn materialized_projection(play: &FormsPlayEnvelope) -> FormSpec {
-    materialize_document_projection(&play.envelope, &play.applied_edit_ids)
-        .unwrap_or_else(|_| play.envelope.vcs.initial_projection.clone())
+/// ✏️ Emits the ops that replace the current form spec's title + steps with those of `next` — a
+/// legitimate whole-document swap for import/example-switch, expressed granularly through the
+/// existing `FormOp` vocabulary (remove every current step, retitle, re-add the new steps) so it
+/// still records a true inverse.
+fn replace_spec_ops(current: &FormSpec, next: &FormSpec) -> Vec<FormOp> {
+    let mut ops: Vec<FormOp> = current
+        .steps
+        .iter()
+        .map(|step| FormOp::RemoveStep { step_id: step.id.clone() })
+        .collect();
+    if next.title != current.title {
+        ops.push(FormOp::UpdateProtocol { title: next.title.clone() });
+    }
+    for step in &next.steps {
+        ops.push(FormOp::AddStep { step: step.clone(), index: None });
+    }
+    ops
 }
-//#endregion 🔖Envelope
+//#endregion 🔖Runtime
 
 //#region 🔖Helpers
 struct QuestionLocation {
@@ -407,16 +364,16 @@ fn json_f64_value(value: &Value) -> f64 {
     value.as_f64().unwrap_or(0.0)
 }
 
-fn patch_try_object_field(play: &mut FormsPlayEnvelope, key: &str, field: &str, raw: &Value) {
-    let mut object = play.try_values.get(key).cloned().unwrap_or_else(|| json!({}));
+fn patch_try_object_field(runtime: &mut FormsPlayRuntime, key: &str, field: &str, raw: &Value) {
+    let mut object = runtime.try_values.get(key).cloned().unwrap_or_else(|| json!({}));
     if let Some(map) = object.as_object_mut() {
         map.insert(field.into(), raw.clone());
-        play.try_values.insert(key.into(), object);
+        runtime.try_values.insert(key.into(), object);
     }
 }
 
-fn patch_try_vector_field(play: &mut FormsPlayEnvelope, key: &str, index: usize, raw: &Value) {
-    let mut array = play
+fn patch_try_vector_field(runtime: &mut FormsPlayRuntime, key: &str, index: usize, raw: &Value) {
+    let mut array = runtime
         .try_values
         .get(key)
         .and_then(|value| value.as_array().cloned())
@@ -425,7 +382,7 @@ fn patch_try_vector_field(play: &mut FormsPlayEnvelope, key: &str, index: usize,
         array.push(json!(0.0));
     }
     array[index] = raw.clone();
-    play.try_values.insert(key.into(), Value::Array(array));
+    runtime.try_values.insert(key.into(), Value::Array(array));
 }
 
 fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
@@ -554,20 +511,18 @@ fn resolve_question_insert_index(spec: &FormSpec, step_id: &str, target_id: &str
     })
 }
 
-fn update_question(store: &mut FormsStore, step_id: &str, question: FormQuestion) {
-    let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![FormOp::UpdateBlock { step_id: step_id.into(), block: question }],
-        description: None,
-    });
+/// ✏️ Locates `question_id` in `spec`, applies `mutate` to a clone, and returns the `UpdateBlock` op
+/// that records the edit — the single seam every inspector patch flows through. Returns `None` if the
+/// question no longer exists.
+fn update_block_op(spec: &FormSpec, question_id: &str, mutate: impl FnOnce(&mut FormQuestion)) -> Option<FormOp> {
+    let location = find_question_location(spec, question_id)?;
+    let mut question = location.question;
+    mutate(&mut question);
+    Some(FormOp::UpdateBlock { step_id: location.step_id, block: question })
 }
 
-fn patch_question_field(play: &mut FormsPlayEnvelope, store: &mut FormsStore, question_id: &str, field: &str, raw_value: &Value) {
-    let spec = store.projection().unwrap_or_else(|_| materialized_projection(play));
-    let Some(location) = find_question_location(&spec, question_id) else {
-        return;
-    };
-    let mut question = location.question;
-    match field {
+fn patch_question_field(spec: &FormSpec, question_id: &str, field: &str, raw_value: &Value) -> Option<FormOp> {
+    update_block_op(spec, question_id, |question| match field {
         "label" => question.label = raw_value.as_str().unwrap_or("").to_string(),
         "kind" => question.kind = raw_value.as_str().unwrap_or("text").to_string(),
         "description" => question.description = raw_value.as_str().map(str::to_string),
@@ -584,148 +539,80 @@ fn patch_question_field(play: &mut FormsPlayEnvelope, store: &mut FormsStore, qu
         "accept" => question.accept = raw_value.as_str().map(str::to_string),
         "fixtureSlug" => question.fixture_slug = raw_value.as_str().map(str::to_string),
         _ => {}
-    }
-    update_question(store, &location.step_id, question);
-    reset_try_runtime(play);
+    })
 }
 
-fn patch_question_option(
-    play: &mut FormsPlayEnvelope,
-    store: &mut FormsStore,
-    question_id: &str,
-    option_value: &str,
-    field: &str,
-    raw_value: &Value,
-) {
-    let spec = store.projection().unwrap_or_else(|_| materialized_projection(play));
-    let Some(location) = find_question_location(&spec, question_id) else {
-        return;
-    };
-    let mut question = location.question;
-    let mut options = question.options.take().unwrap_or_default();
-    if let Some(option) = options.iter_mut().find(|entry| entry.value == option_value) {
-        if field == "label" {
-            option.label = raw_value.as_str().unwrap_or("").to_string();
+fn patch_question_option(spec: &FormSpec, question_id: &str, option_value: &str, field: &str, raw_value: &Value) -> Option<FormOp> {
+    update_block_op(spec, question_id, |question| {
+        let mut options = question.options.take().unwrap_or_default();
+        if let Some(option) = options.iter_mut().find(|entry| entry.value == option_value) {
+            if field == "label" {
+                option.label = raw_value.as_str().unwrap_or("").to_string();
+            }
         }
-    }
-    question.options = Some(options);
-    update_question(store, &location.step_id, question);
-    reset_try_runtime(play);
+        question.options = Some(options);
+    })
 }
 
-fn add_question_option(play: &mut FormsPlayEnvelope, store: &mut FormsStore, question_id: &str, label: &str) {
-    let spec = store.projection().unwrap_or_else(|_| materialized_projection(play));
-    let Some(location) = find_question_location(&spec, question_id) else {
-        return;
-    };
-    let mut question = location.question;
-    let mut options = question.options.take().unwrap_or_default();
+fn add_question_option(spec: &FormSpec, question_id: &str, label: &str) -> Option<FormOp> {
     let value = create_form_id("opt");
-    options.push(FormQuestionOption {
-        value,
-        label: label.into(),
-    });
-    question.options = Some(options);
-    update_question(store, &location.step_id, question);
-    reset_try_runtime(play);
+    update_block_op(spec, question_id, |question| {
+        let mut options = question.options.take().unwrap_or_default();
+        options.push(FormQuestionOption { value, label: label.into() });
+        question.options = Some(options);
+    })
 }
 
-fn remove_question_option(play: &mut FormsPlayEnvelope, store: &mut FormsStore, question_id: &str, option_value: &str) {
-    let spec = store.projection().unwrap_or_else(|_| materialized_projection(play));
-    let Some(location) = find_question_location(&spec, question_id) else {
-        return;
-    };
-    let mut question = location.question;
-    let mut options = question.options.take().unwrap_or_default();
-    options.retain(|entry| entry.value != option_value);
-    question.options = Some(options);
-    update_question(store, &location.step_id, question);
-    reset_try_runtime(play);
+fn remove_question_option(spec: &FormSpec, question_id: &str, option_value: &str) -> Option<FormOp> {
+    update_block_op(spec, question_id, |question| {
+        let mut options = question.options.take().unwrap_or_default();
+        options.retain(|entry| entry.value != option_value);
+        question.options = Some(options);
+    })
 }
 
-fn patch_vector_field(
-    play: &mut FormsPlayEnvelope,
-    store: &mut FormsStore,
-    question_id: &str,
-    field_key: &str,
-    field: &str,
-    raw_value: &Value,
-) {
-    let spec = store.projection().unwrap_or_else(|_| materialized_projection(play));
-    let Some(location) = find_question_location(&spec, question_id) else {
-        return;
-    };
-    let mut question = location.question;
-    let mut fields = question.fields.take().unwrap_or_default();
-    if let Some(entry) = fields.iter_mut().find(|item| item.key == field_key) {
-        match field {
-            "label" => entry.label = raw_value.as_str().map(str::to_string),
-            "value" => entry.value = raw_value.as_f64(),
-            _ => {}
+fn patch_vector_field(spec: &FormSpec, question_id: &str, field_key: &str, field: &str, raw_value: &Value) -> Option<FormOp> {
+    update_block_op(spec, question_id, |question| {
+        let mut fields = question.fields.take().unwrap_or_default();
+        if let Some(entry) = fields.iter_mut().find(|item| item.key == field_key) {
+            match field {
+                "label" => entry.label = raw_value.as_str().map(str::to_string),
+                "value" => entry.value = raw_value.as_f64(),
+                _ => {}
+            }
         }
+        question.fields = Some(fields);
+    })
+}
+
+fn add_vector_field(spec: &FormSpec, question_id: &str, key: &str) -> Option<FormOp> {
+    let location = find_question_location(spec, question_id)?;
+    if location.question.fields.iter().flatten().any(|entry| entry.key == key) {
+        return None;
     }
-    question.fields = Some(fields);
-    update_question(store, &location.step_id, question);
-    reset_try_runtime(play);
+    update_block_op(spec, question_id, |question| {
+        let mut fields = question.fields.take().unwrap_or_default();
+        fields.push(FormVectorField { key: key.into(), label: Some(key.into()), value: Some(0.0) });
+        question.fields = Some(fields);
+    })
 }
 
-fn add_vector_field(play: &mut FormsPlayEnvelope, store: &mut FormsStore, question_id: &str, key: &str) {
-    let spec = store.projection().unwrap_or_else(|_| materialized_projection(play));
-    let Some(location) = find_question_location(&spec, question_id) else {
-        return;
-    };
-    let mut question = location.question;
-    let mut fields = question.fields.take().unwrap_or_default();
-    if fields.iter().any(|entry| entry.key == key) {
-        return;
-    }
-    fields.push(FormVectorField {
-        key: key.into(),
-        label: Some(key.into()),
-        value: Some(0.0),
-    });
-    question.fields = Some(fields);
-    update_question(store, &location.step_id, question);
-    reset_try_runtime(play);
+fn remove_vector_field(spec: &FormSpec, question_id: &str, field_key: &str) -> Option<FormOp> {
+    update_block_op(spec, question_id, |question| {
+        let mut fields = question.fields.take().unwrap_or_default();
+        fields.retain(|entry| entry.key != field_key);
+        question.fields = Some(fields);
+    })
 }
 
-fn remove_vector_field(play: &mut FormsPlayEnvelope, store: &mut FormsStore, question_id: &str, field_key: &str) {
-    let spec = store.projection().unwrap_or_else(|_| materialized_projection(play));
-    let Some(location) = find_question_location(&spec, question_id) else {
-        return;
-    };
-    let mut question = location.question;
-    let mut fields = question.fields.take().unwrap_or_default();
-    fields.retain(|entry| entry.key != field_key);
-    question.fields = Some(fields);
-    update_question(store, &location.step_id, question);
-    reset_try_runtime(play);
-}
-
-fn patch_building_component_param(
-    play: &mut FormsPlayEnvelope,
-    store: &mut FormsStore,
-    question_id: &str,
-    param_key: &str,
-    raw_value: &Value,
-) {
-    let spec = store.projection().unwrap_or_else(|_| materialized_projection(play));
-    let Some(location) = find_question_location(&spec, question_id) else {
-        return;
-    };
-    let mut question = location.question;
-    let mut params = question.params.take().unwrap_or_else(|| json!({}));
-    if let Some(map) = params.as_object_mut() {
-        map.insert(param_key.into(), raw_value.clone());
-    }
-    question.params = Some(params);
-    update_question(store, &location.step_id, question);
-    reset_try_runtime(play);
-}
-
-fn apply_store_action(play: &mut FormsPlayEnvelope, store: &mut FormsStore) -> Vec<String> {
-    *play = sync_store_to_envelope(store, play);
-    vec![set_document_op(play)]
+fn patch_building_component_param(spec: &FormSpec, question_id: &str, param_key: &str, raw_value: &Value) -> Option<FormOp> {
+    update_block_op(spec, question_id, |question| {
+        let mut params = question.params.take().unwrap_or_else(|| json!({}));
+        if let Some(map) = params.as_object_mut() {
+            map.insert(param_key.into(), raw_value.clone());
+        }
+        question.params = Some(params);
+    })
 }
 
 fn catalogue_kinds(contributions: &[PluginContributionEntry], labels: &FormsLabels) -> Vec<(String, String, String)> {
@@ -953,7 +840,7 @@ fn forms_protocol_builder_config() -> semio_framework_plugin::ProtocolBuilderCon
     }
 }
 
-fn render_blueprint_builder(spec: &FormSpec, play: &FormsPlayEnvelope, contributions: &[PluginContributionEntry], labels: &FormsLabels) -> UiNode {
+fn render_blueprint_builder(spec: &FormSpec, runtime: &FormsPlayRuntime, contributions: &[PluginContributionEntry], labels: &FormsLabels) -> UiNode {
     let palette: Vec<semio_framework_plugin::ProtocolPaletteEntry> = catalogue_kinds(contributions, labels)
         .into_iter()
         .map(|(kind, label, icon_id)| semio_framework_plugin::ProtocolPaletteEntry {
@@ -967,7 +854,7 @@ fn render_blueprint_builder(spec: &FormSpec, play: &FormsPlayEnvelope, contribut
         FORMS_PLAY_SURFACE_BLUEPRINT,
         spec,
         &palette,
-        play.selected_ids.first().map(String::as_str),
+        runtime.selected_ids.first().map(String::as_str),
         &config,
     )
 }
@@ -1223,13 +1110,13 @@ fn render_try_question(
     }
 }
 
-fn render_try_wizard(spec: &FormSpec, play: &FormsPlayEnvelope, contributions: &[PluginContributionEntry], labels: &FormsLabels) -> UiNode {
+fn render_try_wizard(spec: &FormSpec, runtime: &FormsPlayRuntime, contributions: &[PluginContributionEntry], labels: &FormsLabels) -> UiNode {
     if spec.steps.is_empty() {
         return ui_text(labels.no_steps_in_form);
     }
-    let step_index = play.current_step_index.min(spec.steps.len().saturating_sub(1));
+    let step_index = runtime.current_step_index.min(spec.steps.len().saturating_sub(1));
     let step = &spec.steps[step_index];
-    let values = effective_try_values(spec, play);
+    let values = effective_try_values(spec, runtime);
     let visible = visible_questions(step, &values);
     let errors = forms::step_errors(step, &values);
     let advance = can_advance(step, &values);
@@ -1741,11 +1628,11 @@ fn question_kind_editor_fields(
 
 fn build_inspector_tree(
     spec: &FormSpec,
-    play: &FormsPlayEnvelope,
+    runtime: &FormsPlayRuntime,
     contributions: &[PluginContributionEntry],
     term_labels: &FormsLabels,
 ) -> UiNode {
-    let questions: Vec<FormQuestion> = play
+    let questions: Vec<FormQuestion> = runtime
         .selected_ids
         .iter()
         .filter_map(|id| find_question_location(spec, id).map(|location| location.question))

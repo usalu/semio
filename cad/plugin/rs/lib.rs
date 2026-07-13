@@ -2419,14 +2419,6 @@ struct CadPlayRuntime {
     engagement_session: Option<CadEngagementSession>,
     #[serde(default)]
     last_finalized_interaction_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pending_export: Option<Value>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pending_export_filename: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pending_export_mime: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pending_export_encoding: Option<String>,
     #[serde(default)]
     sun: WorldSunConfig,
 }
@@ -2457,27 +2449,18 @@ impl Default for CadPlayRuntime {
             engagement_pane: None,
             engagement_session: None,
             last_finalized_interaction_id: None,
-            pending_export: None,
-            pending_export_filename: None,
-            pending_export_mime: None,
-            pending_export_encoding: None,
             sun: WorldSunConfig::default(),
         }
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct CadPlayEnvelope {
+/// @emoji 🎛️ Ephemeral read/render view assembled per call from the store's materialized
+/// `CadScene` projection and the app's `CadPlayRuntime` view-state. Replaces the old persisted play
+/// envelope: its embedded history/undo stacks are now owned by the wrapping `VcsDocumentApp`'s
+/// `DocumentVcsStore`, and its runtime view-state lives directly on the `CadApp` struct.
+struct CadPlayView {
     document: CadScene,
-    #[serde(default)]
     runtime: CadPlayRuntime,
-    #[serde(default = "default_cad_history")]
-    history: CadEnvelope,
-    #[serde(default)]
-    applied_edit_ids: Vec<String>,
-    #[serde(default)]
-    redo_edit_ids: Vec<String>,
 }
 
 fn typology_mesh_kind(typology: &str) -> &'static str {
@@ -2589,55 +2572,15 @@ fn forest_play_document(source_json: &str, id: &str) -> CadScene {
     }
 }
 
-fn seed_cad_history(document: &CadScene) -> CadEnvelope {
-    create_document_vcs_envelope(
-        CAD_DOCUMENT_SCHEMA,
-        "cad-play",
-        document.clone(),
-        None,
-    )
-}
-
-fn default_cad_history() -> CadEnvelope {
-    seed_cad_history(&default_document())
-}
-
-fn forest_play_envelope() -> CadPlayEnvelope {
-    let document = forest_play_document(FOREST_LEFT_MODEL_JSON, CAD_EXAMPLE_FOREST_LEFT);
-    CadPlayEnvelope {
-        history: seed_cad_history(&document),
-        document,
-        runtime: CadPlayRuntime {
-            active_example_id: Some(CAD_EXAMPLE_FOREST_LEFT.into()),
-            ..CadPlayRuntime::default()
-        },
-        applied_edit_ids: Vec::new(),
-        redo_edit_ids: Vec::new(),
-    }
-}
-
-fn default_envelope() -> CadPlayEnvelope {
-    let document = default_document();
-    CadPlayEnvelope {
-        history: seed_cad_history(&document),
-        document,
-        runtime: CadPlayRuntime::default(),
-        applied_edit_ids: Vec::new(),
-        redo_edit_ids: Vec::new(),
-    }
-}
-
-fn parse_envelope(document_json: &str) -> CadPlayEnvelope {
-    serde_json::from_str(document_json).unwrap_or_else(|_| default_envelope())
+/// @emoji 🌲 The Concrete Forest Left example projection — a bare `CadScene` (no runtime/history),
+/// wrapped into a `DocumentVcsStore` by `VcsDocumentApp` when spawned.
+fn forest_play_scene() -> CadScene {
+    forest_play_document(FOREST_LEFT_MODEL_JSON, CAD_EXAMPLE_FOREST_LEFT)
 }
 
 fn next_cad_id(prefix: &str) -> String {
     let next = CAD_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
     format!("{prefix}-{next}")
-}
-
-fn set_document_op(envelope: &CadPlayEnvelope) -> String {
-    json!({ "op": "setDocument", "document": envelope }).to_string()
 }
 
 fn cad_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -2692,25 +2635,6 @@ fn cad_pane_suffix(pane: CadPaneId) -> &'static str {
     }
 }
 
-fn dispatch_cad_ops(envelope: &mut CadPlayEnvelope, operations: Vec<CadOp>) -> bool {
-    if operations.is_empty() {
-        return false;
-    }
-    let mut store = cad_history_store(envelope);
-    if store
-        .dispatch(DocumentVcsCommand::Apply {
-            operations,
-            description: None,
-        })
-        .is_ok()
-    {
-        sync_cad_history(envelope, &store);
-        true
-    } else {
-        false
-    }
-}
-
 fn qualified_transformation_id(model_definition_id: &str, transformation_id: &str) -> String {
     format!("{model_definition_id}.{transformation_id}")
 }
@@ -2746,28 +2670,31 @@ fn ensure_object_solid_handle(kernel: &mut dyn BrepKernel, object: &mut CadObjec
     }
 }
 
-fn apply_transformation_to_envelope(envelope: &mut CadPlayEnvelope, qid: &str) -> bool {
+/// @emoji 🔁 Derives the target-pane objects for transformation `qid` and returns the operations
+/// that both replace the target pane and refocus onto the target model definition — dispatched by
+/// the caller through the store (no direct mutation).
+fn apply_transformation_ops(document: &CadScene, qid: &str) -> Vec<CadOp> {
     let Some((model_definition_id, transformation_id)) = qid.rsplit_once('.') else {
-        return false;
+        return Vec::new();
     };
     let Some(spec) = CAD_TRANSFORMATION_SPECS.iter().find(|entry| {
         entry.source_model_definition_id == model_definition_id && entry.id == transformation_id
     }) else {
-        return false;
+        return Vec::new();
     };
     let Some(source_pane) = cad_pane_from_model_definition_id(spec.source_model_definition_id) else {
-        return false;
+        return Vec::new();
     };
     let Some(target_pane) = cad_pane_from_model_definition_id(spec.target_model_definition_id) else {
-        return false;
+        return Vec::new();
     };
     let objects = {
-        let source_objects: Vec<CadObject> = cad_pane_objects(&envelope.document, source_pane)
+        let source_objects: Vec<CadObject> = cad_pane_objects(document, source_pane)
             .iter()
             .cloned()
             .collect();
         let Ok(mut kernel) = cad_brep_kernel().lock() else {
-            return false;
+            return Vec::new();
         };
         let mut prepared = source_objects;
         for object in &mut prepared {
@@ -2790,17 +2717,15 @@ fn apply_transformation_to_envelope(envelope: &mut CadPlayEnvelope, qid: &str) -
             ),
         }
     };
-    let ops_ok = dispatch_cad_ops(
-        envelope,
-        vec![CadOp::SetPaneObjects {
+    vec![
+        CadOp::SetPaneObjects {
             pane: target_pane,
             objects,
-        }],
-    );
-    if ops_ok {
-        envelope.document.active_model_definition_id = spec.target_model_definition_id.into();
-    }
-    ops_ok
+        },
+        CadOp::SetActiveModelDefinition {
+            model_definition_id: spec.target_model_definition_id.into(),
+        },
+    ]
 }
 
 /// @emoji 📤 A pending native-geometry export ready for `pending_export`/`export_download_ops`.
@@ -2811,7 +2736,7 @@ struct CadSolidExport {
     encoding: Option<String>,
 }
 
-fn collect_pane_solids(kernel: &mut dyn BrepKernel, envelope: &CadPlayEnvelope, pane: CadPaneId) -> Vec<GeometryHandle> {
+fn collect_pane_solids(kernel: &mut dyn BrepKernel, envelope: &CadPlayView, pane: CadPaneId) -> Vec<GeometryHandle> {
     cad_pane_objects(&envelope.document, pane)
         .iter()
         .filter_map(|object| {
@@ -2821,7 +2746,7 @@ fn collect_pane_solids(kernel: &mut dyn BrepKernel, envelope: &CadPlayEnvelope, 
         .collect()
 }
 
-fn collect_modelspace_solids(kernel: &mut dyn BrepKernel, envelope: &CadPlayEnvelope) -> Vec<GeometryHandle> {
+fn collect_modelspace_solids(kernel: &mut dyn BrepKernel, envelope: &CadPlayView) -> Vec<GeometryHandle> {
     CadPaneId::all()
         .into_iter()
         .flat_map(|pane| collect_pane_solids(kernel, envelope, pane))
@@ -2852,7 +2777,7 @@ fn export_solids_as(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle], form
     }
 }
 
-fn export_solid_for_pane(envelope: &CadPlayEnvelope, pane: CadPaneId, format: semio_framework_plugin::OsMediaFormat) -> Option<CadSolidExport> {
+fn export_solid_for_pane(envelope: &CadPlayView, pane: CadPaneId, format: semio_framework_plugin::OsMediaFormat) -> Option<CadSolidExport> {
     let Ok(mut kernel) = cad_brep_kernel().lock() else {
         return None;
     };
@@ -2864,7 +2789,7 @@ fn export_solid_for_pane(envelope: &CadPlayEnvelope, pane: CadPaneId, format: se
     export_solids_as(&mut kernel, &solids, format, &stem)
 }
 
-fn export_solid_modelspace(envelope: &CadPlayEnvelope, format: semio_framework_plugin::OsMediaFormat) -> Option<CadSolidExport> {
+fn export_solid_modelspace(envelope: &CadPlayView, format: semio_framework_plugin::OsMediaFormat) -> Option<CadSolidExport> {
     let Ok(mut kernel) = cad_brep_kernel().lock() else {
         return None;
     };
@@ -2875,12 +2800,29 @@ fn export_solid_modelspace(envelope: &CadPlayEnvelope, format: semio_framework_p
     export_solids_as(&mut kernel, &solids, format, "cad.modelspace")
 }
 
-/// @emoji 📥 Stages a native-geometry export onto the runtime's pending-download slot.
-fn apply_solid_export(envelope: &mut CadPlayEnvelope, export: CadSolidExport) {
-    envelope.runtime.pending_export = Some(export.data);
-    envelope.runtime.pending_export_filename = Some(export.filename);
-    envelope.runtime.pending_export_mime = Some(export.mime_type);
-    envelope.runtime.pending_export_encoding = export.encoding;
+/// @emoji ⬇️ Converts a staged native-geometry export into a download host effect emitted directly
+/// to the shell (no document mutation, no pending-export runtime slot).
+fn cad_solid_export_effect(export: CadSolidExport) -> HostEffect {
+    let data = match export.data {
+        Value::String(text) => text,
+        other => serde_json::to_string(&other).unwrap_or_default(),
+    };
+    HostEffect::DownloadMediaExport {
+        filename: export.filename,
+        mime_type: export.mime_type,
+        data,
+        encoding: export.encoding,
+    }
+}
+
+/// @emoji ⬇️ Wraps a spatial-JSON export document into a download host effect.
+fn cad_spatial_export_effect(value: Value, filename: &str) -> HostEffect {
+    HostEffect::DownloadMediaExport {
+        filename: filename.into(),
+        mime_type: "application/json".into(),
+        data: serde_json::to_string(&value).unwrap_or_default(),
+        encoding: None,
+    }
 }
 
 /// @emoji 📦 Decodes a `requestFileOpen` payload (a `data:` URL when `readAs: "dataUrl"` was
@@ -2950,7 +2892,7 @@ fn import_cad_object_by_extension(name: &str, payload: &Value) -> Option<CadObje
     None
 }
 
-fn export_spatial_json(envelope: &CadPlayEnvelope, mode: &str) -> Value {
+fn export_spatial_json(envelope: &CadPlayView, mode: &str) -> Value {
     let models: Vec<Value> = CadPaneId::all()
         .into_iter()
         .map(|pane| {
@@ -3070,34 +3012,6 @@ fn scene_from_spatial_payload(payload: &Value) -> Option<CadScene> {
     None
 }
 
-fn export_download_ops(envelope: &CadPlayEnvelope) -> Vec<String> {
-    let Some(data) = envelope.runtime.pending_export.clone() else {
-        return Vec::new();
-    };
-    let filename = envelope
-        .runtime
-        .pending_export_filename
-        .clone()
-        .unwrap_or_else(|| "cad.spatial.json".into());
-    let mime_type = envelope
-        .runtime
-        .pending_export_mime
-        .clone()
-        .unwrap_or_else(|| "application/json".into());
-    let payload = match data {
-        Value::String(text) => text,
-        other => serde_json::to_string(&other).unwrap_or_default(),
-    };
-    let encoding = envelope.runtime.pending_export_encoding.clone();
-    vec![json!({
-        "op": "downloadMediaExport",
-        "filename": filename,
-        "mimeType": mime_type,
-        "data": payload,
-        "encoding": encoding,
-    })
-    .to_string()]
-}
 //#endregion 🔖PaneHelpers
 
 fn resolve_object_mesh_url(object: &CadObject) -> Option<String> {
@@ -3270,7 +3184,7 @@ fn world_references_json(document: &CadScene, pane: CadPaneId) -> Option<String>
     Some(serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()))
 }
 
-fn build_world_scene_for_pane(envelope: &CadPlayEnvelope, pane: CadPaneId, surface_id: &str) -> UiNode {
+fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_id: &str) -> UiNode {
     let objects = cad_pane_objects(&envelope.document, pane);
     let preview = envelope
         .runtime
@@ -3303,35 +3217,19 @@ fn build_world_scene_for_pane(envelope: &CadPlayEnvelope, pane: CadPaneId, surfa
     )
 }
 
-fn export_mesh_from_envelope(envelope: &CadPlayEnvelope) -> MeshData {
-    let selected = cad_all_objects(&envelope.document)
-        .find(|(object, _)| envelope.runtime.selected_object_ids.contains(&object.id));
-    let typology = selected
+/// @emoji 🧵 Tessellates a representative mesh for the OS mesh-exporter boundary — the document's
+/// first object across panes, or the default box typology for an empty scene (no runtime selection
+/// exists at this boundary).
+fn export_mesh_from_scene(document: &CadScene) -> MeshData {
+    let first = cad_all_objects(document).next();
+    let typology = first
         .map(|(object, _)| object.typology.as_str())
         .unwrap_or("spatial.shape.primitive.box");
-    let extent = selected.and_then(|(object, _)| object.extent);
-    let solid_handle = selected.and_then(|(object, _)| object.solid_handle.as_deref());
+    let extent = first.and_then(|(object, _)| object.extent);
+    let solid_handle = first.and_then(|(object, _)| object.solid_handle.as_deref());
     typology_brep_mesh(typology, extent, solid_handle)
 }
 
-//#region 🔖NodeHistory
-/// @emoji 🗄️ Reconstructs the node-history VCS store from the persisted envelope state.
-fn cad_history_store(envelope: &CadPlayEnvelope) -> CadStore {
-    let mut store = CadStore::new(envelope.history.clone());
-    store.set_state(envelope.history.clone(), envelope.applied_edit_ids.clone(), envelope.redo_edit_ids.clone());
-    store
-}
-
-/// @emoji 💾 Persists the store's materialized nodes + history + undo/redo stacks back onto the envelope.
-fn sync_cad_history(envelope: &mut CadPlayEnvelope, store: &CadStore) {
-    if let Ok(scene) = store.projection() {
-        envelope.document = scene;
-    }
-    envelope.history = store.envelope().clone();
-    envelope.applied_edit_ids = store.applied_edit_ids().to_vec();
-    envelope.redo_edit_ids = store.redo_edit_ids().to_vec();
-}
-//#endregion 🔖NodeHistory
 //#endregion 🔖Document
 
 //#region 🔖Terminology
@@ -3706,7 +3604,7 @@ fn document_tree_highlighted_ids(document: &CadScene, runtime: &CadPlayRuntime) 
     })
 }
 
-fn build_document_tree(envelope: &CadPlayEnvelope, labels: &CadLabels) -> UiNode {
+fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> UiNode {
     let node_items: Vec<UiTreeItemNode> = envelope
         .document
         .nodes
@@ -3813,7 +3711,7 @@ fn build_catalogue_tree(labels: &CadLabels) -> UiNode {
     })
 }
 
-fn build_properties_panel(envelope: &CadPlayEnvelope, labels: &CadLabels) -> UiNode {
+fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels) -> UiNode {
     if let (Some(object_id), Some(primitive_id)) = (
         envelope.runtime.selected_object_ids.first(),
         envelope.runtime.selected_primitive_id.as_deref(),
@@ -4231,7 +4129,7 @@ fn node_inspector_group(node: &CadNode, labels: &CadLabels) -> UiInspectorFieldG
     }
 }
 
-fn cad_window_engagement(envelope: &CadPlayEnvelope, pane: CadPaneId) -> WindowEngagement {
+fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId) -> WindowEngagement {
     let transform = envelope.runtime.transform_tool.clone();
     let selected_count = envelope.runtime.selected_object_ids.len();
     let model_definition_id = pane.model_definition_id();
@@ -4348,7 +4246,7 @@ fn cad_window_engagement(envelope: &CadPlayEnvelope, pane: CadPaneId) -> WindowE
     }
 }
 
-fn build_cad_play_toolbar(envelope: &CadPlayEnvelope, labels: &CadLabels) -> Vec<ToolNode> {
+fn build_cad_play_toolbar(envelope: &CadPlayView, labels: &CadLabels) -> Vec<ToolNode> {
     let active = envelope.document.active_model_definition_id.as_str();
     let view_tools: Vec<ToolNode> = CadPaneId::all()
         .into_iter()
@@ -4617,19 +4515,20 @@ fn parse_vec3_value(value: &Value) -> Option<[f64; 3]> {
     None
 }
 
-fn patch_objects_in_envelope(
-    envelope: &mut CadPlayEnvelope,
+/// @emoji 🩹 Builds the `PatchObject` operations that apply `field=value` across `object_ids`.
+fn patch_objects_ops(
+    document: &CadScene,
     object_ids: &[String],
     field: &str,
     value: Option<&Value>,
-) -> bool {
+) -> Vec<CadOp> {
     let patch = match object_patch_from_field(field, value) {
         Some(patch) => patch,
-        None => return false,
+        None => return Vec::new(),
     };
     let mut operations = Vec::new();
     for object_id in object_ids {
-        let Some(pane) = cad_find_object_pane(&envelope.document, object_id) else {
+        let Some(pane) = cad_find_object_pane(document, object_id) else {
             continue;
         };
         operations.push(CadOp::PatchObject {
@@ -4638,7 +4537,7 @@ fn patch_objects_in_envelope(
             patch: patch.clone(),
         });
     }
-    dispatch_cad_ops(envelope, operations)
+    operations
 }
 
 fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId) -> CadObject {
@@ -4674,98 +4573,93 @@ fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId)
     object
 }
 
-/// Commits `session` if it satisfies `can_commit`, dispatching the resulting object and clearing
-/// the session. Returns `true` when a commit happened (used by both the direct-event and
-/// keyed-transition REPL paths in `engagement_submit_line` — a state reached via either path can
-/// be commit-ready, e.g. box's explicit `confirm` step only reachable via a keyed transition).
-fn try_commit_session_if_ready(envelope: &mut CadPlayEnvelope, pane: CadPaneId, session: &CadEngagementSession) -> bool {
+/// Commits `session` if it satisfies `can_commit`, returning the `AddObject` operation and clearing
+/// the session runtime state. Returns the ops (empty when no commit happened) — used by both the
+/// direct-event and keyed-transition REPL paths in `engagement_submit_ops` (a state reached via
+/// either path can be commit-ready, e.g. box's explicit `confirm` step reachable via a keyed
+/// transition).
+fn try_commit_session_ops(document: &CadScene, runtime: &mut CadPlayRuntime, pane: CadPaneId, session: &CadEngagementSession) -> Vec<CadOp> {
     if !can_commit(session) {
-        return false;
+        return Vec::new();
     }
-    let label_count = cad_pane_objects(&envelope.document, pane).len();
+    let label_count = cad_pane_objects(document, pane).len();
     let Ok(mut kernel) = cad_brep_kernel().lock() else {
-        return false;
+        return Vec::new();
     };
     let Some(object) = commit_object(&mut kernel, session, label_count, |prefix| next_cad_id(prefix)) else {
-        return false;
+        return Vec::new();
     };
     drop(kernel);
     let id = object.id.clone();
     let interaction_id = session.interaction_id.clone();
-    if dispatch_cad_ops(envelope, vec![CadOp::AddObject { pane, object }]) {
-        envelope.runtime.selected_object_ids = vec![id];
-        envelope.runtime.engagement_input.clear();
-        envelope.runtime.last_finalized_interaction_id = Some(interaction_id);
-        envelope.runtime.engagement_session = None;
-        envelope.runtime.engagement_step = "Idle".into();
-        true
-    } else {
-        false
-    }
+    runtime.selected_object_ids = vec![id];
+    runtime.engagement_input.clear();
+    runtime.last_finalized_interaction_id = Some(interaction_id);
+    runtime.engagement_session = None;
+    runtime.engagement_step = "Idle".into();
+    vec![CadOp::AddObject { pane, object }]
 }
 
-fn engagement_submit_line(envelope: &mut CadPlayEnvelope, pane: CadPaneId) -> bool {
-    let input = envelope.runtime.engagement_input.trim();
+/// @emoji ⌨️ Advances the engagement REPL for the current `engagement_input`, mutating runtime
+/// session state and returning any commit operations produced.
+fn engagement_submit_ops(document: &CadScene, runtime: &mut CadPlayRuntime, pane: CadPaneId) -> Vec<CadOp> {
+    let input = runtime.engagement_input.trim().to_string();
     if input.is_empty() {
-        envelope.runtime.engagement_step = "Idle".into();
-        return false;
+        runtime.engagement_step = "Idle".into();
+        return Vec::new();
     }
     let model_definition_id = pane.model_definition_id();
-    let current_state = envelope.runtime.engagement_session.as_ref().map(|session| session.state.clone());
-    if let Some((event_kind, payload)) = parse_repl_line(input, current_state.as_deref()) {
+    let current_state = runtime.engagement_session.as_ref().map(|session| session.state.clone());
+    if let Some((event_kind, payload)) = parse_repl_line(&input, current_state.as_deref()) {
         // An active session's own events/keyed-transitions always take priority over starting an
         // unrelated interaction by key — otherwise a mid-flow keypress that happens to collide
         // with another interaction's top-level key (e.g. box's "d" for diagonal mode vs. length's
         // top-level key "d") would silently abandon the current session.
-        if let Some(session) = envelope.runtime.engagement_session.as_mut() {
+        if let Some(session) = runtime.engagement_session.as_mut() {
             if apply_event(session, &event_kind, payload.as_ref()) {
-                envelope.runtime.engagement_step = session.state.clone();
+                runtime.engagement_step = session.state.clone();
                 let session_snapshot = session.clone();
-                try_commit_session_if_ready(envelope, pane, &session_snapshot);
-                return true;
+                return try_commit_session_ops(document, runtime, pane, &session_snapshot);
             }
             for transition in keyed_transitions(session) {
-                if transition.key.eq_ignore_ascii_case(input) || transition.event_kind.eq_ignore_ascii_case(input) {
+                if transition.key.eq_ignore_ascii_case(&input) || transition.event_kind.eq_ignore_ascii_case(&input) {
                     if apply_event(session, &transition.event_kind, None) {
-                        envelope.runtime.engagement_step = session.state.clone();
-                        envelope.runtime.engagement_input.clear();
+                        runtime.engagement_step = session.state.clone();
+                        runtime.engagement_input.clear();
                         let session_snapshot = session.clone();
-                        try_commit_session_if_ready(envelope, pane, &session_snapshot);
-                        return true;
+                        return try_commit_session_ops(document, runtime, pane, &session_snapshot);
                     }
                 }
             }
         } else if let Some(entry) = resolve_interaction_key(&event_kind, model_definition_id) {
-            envelope.runtime.engagement_session = start_session(&entry.id, pane);
-            if let Some(session) = envelope.runtime.engagement_session.as_mut() {
+            runtime.engagement_session = start_session(&entry.id, pane);
+            if let Some(session) = runtime.engagement_session.as_mut() {
                 let _ = apply_event(session, "start", None);
             }
-            envelope.runtime.engagement_step = envelope
-                .runtime
+            runtime.engagement_step = runtime
                 .engagement_session
                 .as_ref()
                 .map(|session| session.state.clone())
                 .unwrap_or_else(|| "Idle".into());
-            envelope.runtime.engagement_input.clear();
-            return true;
+            runtime.engagement_input.clear();
+            return Vec::new();
         }
     }
-    envelope.runtime.engagement_step = format!("Unknown: {input}");
-    false
+    runtime.engagement_step = format!("Unknown: {input}");
+    Vec::new()
 }
 
 /// Starts a fresh engagement session for `interaction_id` in `pane` (used by
 /// `engagementPossibleSelect`'s start-by-id path and `engagementRepeatLast`).
-fn start_interaction_session(envelope: &mut CadPlayEnvelope, pane: CadPaneId, interaction_id: &str) -> bool {
+fn start_interaction_session(runtime: &mut CadPlayRuntime, pane: CadPaneId, interaction_id: &str) -> bool {
     let Some(entry) = interaction::interaction_by_id(interaction_id) else {
         return false;
     };
-    envelope.runtime.engagement_session = start_session(&entry.id, pane);
-    if let Some(session) = envelope.runtime.engagement_session.as_mut() {
+    runtime.engagement_session = start_session(&entry.id, pane);
+    if let Some(session) = runtime.engagement_session.as_mut() {
         let _ = apply_event(session, "start", None);
     }
-    envelope.runtime.engagement_step = envelope
-        .runtime
+    runtime.engagement_step = runtime
         .engagement_session
         .as_ref()
         .map(|session| session.state.clone())
@@ -6422,7 +6316,7 @@ mod tests {
         assert!(next.document.objects.last().unwrap().solid_handle.is_some());
     }
 
-    fn apply_ops(envelope: &CadPlayEnvelope, ops: &[String]) -> CadPlayEnvelope {
+    fn apply_ops(envelope: &CadPlayView, ops: &[String]) -> CadPlayEnvelope {
         let mut next = envelope.clone();
         for op_json in ops {
             if let Ok(op) = serde_json::from_str::<Value>(op_json) {

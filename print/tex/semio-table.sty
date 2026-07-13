@@ -197,12 +197,25 @@
     {\semio@register@header@year}%
 }
 
-\newcommand{\semio@glossary@table@header@long@repeat}{%
-  \semio@table@long@header@repeat@three
-    {\semio@glossary@header@term}
-    {\semio@glossary@header@definition}
-    {\semio@glossary@header@pages}%
+\newcommand{\semio@termlist@table@header}[1]{%
+  \SemioTableHeaderRow{%
+    \csname semio@#1@header@term\endcsname &
+    \csname semio@#1@header@definition\endcsname &
+    \csname semio@#1@header@pages\endcsname
+  }%
 }
+
+\newcommand{\semio@termlist@table@header@long@repeat}[1]{%
+  \semio@table@long@header@repeat@three
+    {\csname semio@#1@header@term\endcsname}
+    {\csname semio@#1@header@definition\endcsname}
+    {\csname semio@#1@header@pages\endcsname}%
+}
+
+\newcommand{\semio@glossary@table@header}{\semio@termlist@table@header{glossary}}
+\newcommand{\semio@glossary@table@header@long@repeat}{\semio@termlist@table@header@long@repeat{glossary}}
+\newcommand{\semio@abbreviations@table@header}{\semio@termlist@table@header{abbreviations}}
+\newcommand{\semio@abbreviations@table@header@long@repeat}{\semio@termlist@table@header@long@repeat{abbreviations}}
 
 \newcommand{\semio@table@long@render}[4]{%
   \global\semio@table@long@mode=1\relax
@@ -352,9 +365,12 @@
 }
 \ExplSyntaxOff
 
-\newcommand{\SemioTableGlossary}[1]{%
-  \expandafter\semio@table@long@render\expandafter{\semio@table@colspec@glossary@long}{\semio@glossary@table@header}{\semio@glossary@table@header@long@repeat}{#1}%
+\newcommand{\semio@table@termlist}[2]{%
+  \expandafter\semio@table@long@render\expandafter{\semio@table@colspec@glossary@long}{\csname semio@#1@table@header\endcsname}{\csname semio@#1@table@header@long@repeat\endcsname}{#2}%
 }
+
+\newcommand{\SemioTableGlossary}[1]{\semio@table@termlist{glossary}{#1}}
+\newcommand{\SemioTableAbbreviations}[1]{\semio@table@termlist{abbreviations}{#1}}
 
 \newcommand{\semio@table@begin@tabular}[1]{\begin{tabular}{#1}}
 

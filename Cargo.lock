@@ -646,6 +646,33 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04"
 
 [[package]]
+name = "cad-plugin"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "cad_document",
+ "kernel_3d_brepkit",
+ "kernel_3d_engine",
+ "semio-framework-core",
+ "semio-framework-os",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "ui_wgpu",
+ "vcs",
+]
+
+[[package]]
+name = "cad_document"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "vcs",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "calloop"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2010,6 +2037,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cb4cb245038516f5f85277875cdaa4f7d2c9a0fa0468de06ed190163b1581fcf"
 dependencies = [
  "percent-encoding",
+]
+
+[[package]]
+name = "forms"
+version = "0.1.0"
+dependencies = [
+ "protocol",
+ "serde",
+ "serde_json",
+ "vcs",
+]
+
+[[package]]
+name = "forms-plugin"
+version = "0.1.0"
+dependencies = [
+ "forms",
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "vcs",
 ]
 
 [[package]]
@@ -3791,6 +3840,37 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
 
 [[package]]
+name = "lowpoly-plugin"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "kernel_3d_mesh",
+ "lowpoly_core",
+ "png 0.17.16",
+ "semio-framework-os",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "lowpoly_core"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "cad-plugin",
+ "cad_document",
+ "kernel_3d_brepkit",
+ "kernel_3d_engine",
+ "kernel_3d_mesh",
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "vcs",
+]
+
+[[package]]
 name = "mach2"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5094,6 +5174,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "vcs",
 ]
 
 [[package]]

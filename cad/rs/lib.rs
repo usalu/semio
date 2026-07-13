@@ -400,6 +400,15 @@ pub struct CadNodePatch {
     pub label: Option<String>,
 }
 
+/// 🎥 A per-pane camera assignment carried by `CadOp::SetCamera`/`CadDiff` — pairs the target pane
+/// with its new camera so viewpoint moves flow through the store like any other document operation.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CadCameraSet {
+    pub pane: CadPaneId,
+    pub camera: CadCamera,
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CadReferencePatch {
@@ -472,6 +481,19 @@ pub enum CadOp {
         model_definition_id: String,
         references: Vec<CadReference>,
     },
+    SetActiveTool {
+        tool: Option<String>,
+    },
+    SetActiveModelDefinition {
+        model_definition_id: String,
+    },
+    SetCamera {
+        pane: CadPaneId,
+        camera: CadCamera,
+    },
+    SetScene {
+        scene: Box<CadScene>,
+    },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -484,6 +506,9 @@ pub struct CadDiff {
     pub references_by_model_definition_id: Option<HashMap<String, Vec<CadReference>>>,
     pub nodes: Option<CollectionDiff<String, CadNodePatch, CadNode>>,
     pub active_model_definition_id: Option<String>,
+    pub active_tool: Option<Option<String>>,
+    pub camera: Option<CadCameraSet>,
+    pub scene: Option<Box<CadScene>>,
 }
 
 fn apply_object_collection_diff(
@@ -590,6 +615,9 @@ fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
 
 impl OperationDiff<CadScene> for CadDiff {
     fn apply(&self, projection: &CadScene) -> CadScene {
+        if let Some(scene) = &self.scene {
+            return (**scene).clone();
+        }
         let mut next = projection.clone();
         if let Some(objects) = &self.objects {
             apply_object_collection_diff(&mut next.objects, objects);
@@ -629,10 +657,20 @@ impl OperationDiff<CadScene> for CadDiff {
         if let Some(active_model_definition_id) = &self.active_model_definition_id {
             next.active_model_definition_id = active_model_definition_id.clone();
         }
+        if let Some(active_tool) = &self.active_tool {
+            next.active_tool = active_tool.clone();
+        }
+        if let Some(set) = &self.camera {
+            *cad_pane_camera_mut(&mut next, set.pane) = set.camera.clone();
+        }
         next
     }
 
     fn absorb(&mut self, other: Self) {
+        if other.scene.is_some() {
+            self.scene = other.scene;
+            return;
+        }
         absorb_object_diff(&mut self.objects, other.objects);
         absorb_object_diff(&mut self.building_objects, other.building_objects);
         absorb_object_diff(&mut self.energy_objects, other.energy_objects);
@@ -652,6 +690,12 @@ impl OperationDiff<CadScene> for CadDiff {
         }
         if other.active_model_definition_id.is_some() {
             self.active_model_definition_id = other.active_model_definition_id;
+        }
+        if other.active_tool.is_some() {
+            self.active_tool = other.active_tool;
+        }
+        if other.camera.is_some() {
+            self.camera = other.camera;
         }
     }
 }
@@ -833,6 +877,25 @@ impl Operation<CadScene> for CadOp {
                 )])),
                 ..Default::default()
             },
+            CadOp::SetActiveTool { tool } => CadDiff {
+                active_tool: Some(tool.clone()),
+                ..Default::default()
+            },
+            CadOp::SetActiveModelDefinition { model_definition_id } => CadDiff {
+                active_model_definition_id: Some(model_definition_id.clone()),
+                ..Default::default()
+            },
+            CadOp::SetCamera { pane, camera } => CadDiff {
+                camera: Some(CadCameraSet {
+                    pane: *pane,
+                    camera: camera.clone(),
+                }),
+                ..Default::default()
+            },
+            CadOp::SetScene { scene } => CadDiff {
+                scene: Some(scene.clone()),
+                ..Default::default()
+            },
         }
     }
 
@@ -969,6 +1032,19 @@ impl Operation<CadScene> for CadOp {
                     references: before,
                 }]
             }
+            CadOp::SetActiveTool { .. } => vec![CadOp::SetActiveTool {
+                tool: projection.active_tool.clone(),
+            }],
+            CadOp::SetActiveModelDefinition { .. } => vec![CadOp::SetActiveModelDefinition {
+                model_definition_id: projection.active_model_definition_id.clone(),
+            }],
+            CadOp::SetCamera { pane, .. } => vec![CadOp::SetCamera {
+                pane: *pane,
+                camera: cad_pane_camera(projection, *pane).clone(),
+            }],
+            CadOp::SetScene { .. } => vec![CadOp::SetScene {
+                scene: Box::new(projection.clone()),
+            }],
         }
     }
 }
@@ -1784,6 +1860,61 @@ mod tests {
             .expect("translate");
         let scene = store.projection().expect("projection");
         assert_eq!(scene.objects[0].origin, [2.0, 1.0, 3.5]);
+    }
+
+    #[test]
+    fn set_scene_replaces_projection_and_inverts() {
+        let mut store = CadStore::new(create_document_vcs_envelope(
+            CAD_DOCUMENT_SCHEMA,
+            "cad",
+            empty_cad_projection(),
+            None,
+        ));
+        let mut replacement = empty_cad_projection();
+        replacement.id = "replaced".into();
+        replacement.nodes.push(CadNode {
+            id: "node-1".into(),
+            label: "Root".into(),
+            kind: "group".into(),
+        });
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![CadOp::SetScene { scene: Box::new(replacement) }],
+                description: None,
+            })
+            .expect("set scene");
+        assert_eq!(store.projection().expect("projection").id, "replaced");
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        assert_eq!(store.projection().expect("projection").id, "cad");
+        assert!(store.projection().expect("projection").nodes.is_empty());
+    }
+
+    #[test]
+    fn set_camera_and_active_tool_flow_through_ops() {
+        let mut store = CadStore::new(create_document_vcs_envelope(
+            CAD_DOCUMENT_SCHEMA,
+            "cad",
+            empty_cad_projection(),
+            None,
+        ));
+        let camera = CadCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], zoom: 2.0, fov: 60.0 };
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![
+                    CadOp::SetCamera { pane: CadPaneId::Building, camera: camera.clone() },
+                    CadOp::SetActiveTool { tool: Some("rotate".into()) },
+                ],
+                description: None,
+            })
+            .expect("apply");
+        let scene = store.projection().expect("projection");
+        assert_eq!(cad_pane_camera(&scene, CadPaneId::Building).zoom, 2.0);
+        assert_eq!(cad_pane_camera(&scene, CadPaneId::Shape).zoom, 1.0);
+        assert_eq!(scene.active_tool.as_deref(), Some("rotate"));
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        let scene = store.projection().expect("projection");
+        assert_eq!(cad_pane_camera(&scene, CadPaneId::Building).zoom, 1.0);
+        assert_eq!(scene.active_tool.as_deref(), Some("selectDirect"));
     }
 
     #[test]
