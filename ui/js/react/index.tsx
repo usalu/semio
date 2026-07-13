@@ -4667,17 +4667,24 @@ export function applyDockSkeleton(defaultDock: PanelDock, skeleton: DockSkeleton
   return { corners };
 }
 
+/** @emoji ↔️ Insert-position indicator shown between tab buttons while a drag hovers a row. */
+const panelTabInsertPreviewClass = "w-0.5 self-stretch rounded-full bg-accent shrink-0";
+
 /** @emoji 📑 Props for {@link PanelTabRow}. */
 interface PanelTabRowProps {
   readonly variant: PanelTabBarVariant;
+  /** @emoji 🧲 Present only for {@link CornerPanel} rows — enables drag-and-drop wiring via {@link usePanelDockContext}. */
+  readonly corner?: PanelCorner;
+  readonly parentPath?: readonly string[];
   readonly tabs: readonly PanelTabNode[];
   readonly activeId?: string;
   readonly onSelect: (tabId: string) => void;
 }
 
 /** @emoji 📑 One row of sibling tabs; stacked by {@link PanelTabBar} into a {@link Ribbon}. */
-const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, tabs, activeId, onSelect }) => {
+const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, corner, parentPath = [], tabs, activeId, onSelect }) => {
   const barRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const dock = usePanelDockContext();
   const tabSlot = variant === "corner" ? "corner-panel" : "mobile-panel";
   const sortedTabs = reactHostPort.useMemo(() => [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [tabs]);
   const resolvedActiveId = activeId ?? sortedTabs[0]?.id;
@@ -4690,27 +4697,76 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, tabs, activeId, onSe
     activeButton?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [resolvedActiveId, sortedTabs, tabSlot]);
 
+  const parentPathKey = parentPath.join("/");
+  const setRowRef = reactHostPort.useCallback(
+    (element: HTMLDivElement | null) => {
+      barRef.current = element;
+      if (corner && dock) dock.registerTabRowDropTarget(corner, parentPath, element);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [corner, dock, parentPathKey],
+  );
+
   if (sortedTabs.length === 0) return null;
 
   const barClass = variant === "corner" ? cornerPanelTabBarClass : mobilePanelTabBarClass;
   const buttonClass = variant === "corner" ? cornerPanelTabButtonClass : mobilePanelTabButtonClass;
+  const dropTarget = dock?.dropTarget;
+  const isDropRow = Boolean(corner && dropTarget?.kind === "insert" && dropTarget.corner === corner && dropTarget.parentPath.length === parentPath.length && dropTarget.parentPath.every((id, index) => id === parentPath[index]));
+  const dropInsertIndex = isDropRow && dropTarget?.kind === "insert" ? dropTarget.index : null;
 
   return (
-    <div ref={barRef} data-dim data-slot={`${tabSlot}-tabs`} className={barClass}>
-      {sortedTabs.map((tab) => {
+    <div ref={setRowRef} data-dim data-slot={`${tabSlot}-tabs`} className={barClass}>
+      {sortedTabs.map((tab, index) => {
         const Icon = tab.icon;
         const isActive = tab.id === resolvedActiveId;
+        const isDragSource = Boolean(corner && dock?.dragTabId === tab.id);
+        const isChildDropTarget = Boolean(corner && dropTarget?.kind === "child" && dropTarget.corner === corner && dropTarget.parentId === tab.id);
         return (
-          <ChromeControlHint key={tab.id} id={tab.id}>
-            <button data-slot={`${tabSlot}-tab-button`} id={tab.id} data-active={isActive ? "true" : undefined} onClick={() => onSelect(tab.id)} className={cn(buttonClass, isActive && panelTabActiveClass)}>
-              <span className={panelTabIconSlotClass}>
-                <Icon size={12} />
-              </span>
-              <span className={panelTabLabelClass}>{tab.name}</span>
-            </button>
-          </ChromeControlHint>
+          <React.Fragment key={tab.id}>
+            {dropInsertIndex === index ? <div data-slot="panel-tab-insert-preview" aria-hidden className={panelTabInsertPreviewClass} /> : null}
+            <ChromeControlHint id={tab.id}>
+              <button
+                data-slot={`${tabSlot}-tab-button`}
+                data-tab-id={tab.id}
+                data-tab-kind={tab.kind}
+                data-drag-source={isDragSource ? "true" : undefined}
+                data-drop-nest={isChildDropTarget ? "true" : undefined}
+                id={tab.id}
+                data-active={isActive ? "true" : undefined}
+                onClick={() => onSelect(tab.id)}
+                onPointerDown={corner && dock ? (event) => dock.startTabDrag(corner, tab.id, tab.name, event) : undefined}
+                onDragOver={
+                  corner && dock && tab.kind === "leaf"
+                    ? (event) => {
+                        if (event.dataTransfer.types.includes(PANEL_TREE_UNIT_MIME)) event.preventDefault();
+                      }
+                    : undefined
+                }
+                onDrop={
+                  corner && dock && tab.kind === "leaf"
+                    ? (event) => {
+                        if (!event.dataTransfer.types.includes(PANEL_TREE_UNIT_MIME)) return;
+                        event.preventDefault();
+                        const session = readActivePanelTreeUnitDrag();
+                        if (!session) return;
+                        dock.onTreeUnitDockDrop({ unitId: session.unitId, fromTabId: session.tabId, target: { corner, tabId: tab.id, index: Number.MAX_SAFE_INTEGER } });
+                        endPanelTreeUnitDrag();
+                      }
+                    : undefined
+                }
+                className={cn(buttonClass, isActive && panelTabActiveClass, isDragSource && "opacity-40", isChildDropTarget && "ring-2 ring-accent")}
+              >
+                <span className={panelTabIconSlotClass}>
+                  <Icon size={12} />
+                </span>
+                <span className={panelTabLabelClass}>{tab.name}</span>
+              </button>
+            </ChromeControlHint>
+          </React.Fragment>
         );
       })}
+      {dropInsertIndex === sortedTabs.length ? <div data-slot="panel-tab-insert-preview" aria-hidden className={panelTabInsertPreviewClass} /> : null}
     </div>
   );
 };
@@ -4718,6 +4774,8 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, tabs, activeId, onSe
 /** @emoji 📑 Props for {@link PanelTabBar}. */
 export interface PanelTabBarProps {
   readonly variant: PanelTabBarVariant;
+  /** @emoji 🧲 Present only when hosted by a {@link CornerPanel} under a {@link PanelDockProvider}. */
+  readonly corner?: PanelCorner;
   readonly tabs: readonly PanelTabNode[];
   readonly activePath: readonly string[];
   readonly onActivePathChange: (path: readonly string[]) => void;
@@ -4726,7 +4784,7 @@ export interface PanelTabBarProps {
 }
 
 /** @emoji 📑 Panel tab strip shared by {@link CornerPanel} and {@link MobilePanel} — one {@link PanelTabRow} per tree level, stacked in a {@link Ribbon}. */
-export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, tabs, activePath, onActivePathChange, direction = "down" }) => {
+export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, corner, tabs, activePath, onActivePathChange, direction = "down" }) => {
   const rows: RibbonRow[] = [];
   let level = tabs;
   let depth = 0;
@@ -4734,11 +4792,14 @@ export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, tabs, activeP
     const sorted = [...level].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     const activeId = activePath[depth] && sorted.some((tab) => tab.id === activePath[depth]) ? activePath[depth] : sorted[0]?.id;
     const rowDepth = depth;
+    const parentPath = activePath.slice(0, rowDepth);
     rows.push({
       key: `${variant}-row-${rowDepth}`,
       content: (
         <PanelTabRow
           variant={variant}
+          corner={corner}
+          parentPath={parentPath}
           tabs={sorted}
           activeId={activeId}
           onSelect={(tabId) => onActivePathChange(reconcileActivePath(tabs, [...activePath.slice(0, rowDepth), tabId], panelTabChildren))}
@@ -4752,6 +4813,437 @@ export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, tabs, activeP
   if (rows.length === 0) return null;
   return <Ribbon direction={direction} rows={rows} />;
 };
+
+// #region 🧲PanelDock
+// Composable drag-and-drop: tabs dock between all four corners (pointer-capture drag, mirrors 🧭ModeDockDrag);
+// tree units dock between leaf tabs (native HTML5 drag-and-drop, mirrors the window-template palette-drag session).
+
+//#region 🔀Transforms
+
+/** @emoji 🔀 True if `id` is `node.id` itself or belongs to one of its descendants. */
+export function isPanelTabInSubtree(node: PanelTabNode, id: string): boolean {
+  if (node.id === id) return true;
+  return node.kind === "branch" && node.children.some((child) => isPanelTabInSubtree(child, id));
+}
+
+/** @emoji 🔀 Locates a tab anywhere in `dock`, returning its home corner and the node itself. */
+export function findPanelTabInDock(dock: PanelDock, id: string): { readonly corner: PanelCorner; readonly node: PanelTabNode } | null {
+  for (const corner of PANEL_CORNERS) {
+    const path = findPanelTabPath(dock.corners[corner], id);
+    if (!path) continue;
+    const node = findPanelTabNode(dock.corners[corner], path);
+    if (node) return { corner, node };
+  }
+  return null;
+}
+
+function collectPanelTabSubtreeIds(node: PanelTabNode, into: Set<string>): void {
+  into.add(node.id);
+  if (node.kind === "branch") node.children.forEach((child) => collectPanelTabSubtreeIds(child, into));
+}
+
+/** @emoji 🔀 Reassigns `order` to match array position — call after any transform that reorders a sibling array so the existing order-based sort renders the new arrangement. */
+export function normalizePanelTabOrder(tabs: readonly PanelTabNode[]): readonly PanelTabNode[] {
+  return tabs.map((tab, index) => (tab.order === index ? tab : { ...tab, order: index }));
+}
+
+/** @emoji 🔀 Recursively drops branch tabs left with zero children. The complementary half of "deliberately emptied" — keeping such branches out of {@link applyDockSkeleton}'s auto-append — is handled there by its subtree-mention check, so an emptied branch never resurfaces with default children restored. */
+export function pruneEmptyPanelBranches(tabs: readonly PanelTabNode[]): readonly PanelTabNode[] {
+  const pruned = tabs.map((tab) => (tab.kind === "branch" ? { ...tab, children: pruneEmptyPanelBranches(tab.children) } : tab)).filter((tab) => tab.kind !== "branch" || tab.children.length > 0);
+  return pruned.length === tabs.length && pruned.every((tab, index) => tab === tabs[index]) ? tabs : pruned;
+}
+
+/** @emoji 🔀 Removes `id` wherever it lives in `tabs` (searching recursively into branches), pruning any ancestor branch left empty by the removal. Removal-first: callers compute insertion indices against this result, never the pre-removal tree. */
+function removePanelTabFromSiblings(tabs: readonly PanelTabNode[], id: string): { readonly tabs: readonly PanelTabNode[]; readonly removed: PanelTabNode | null } {
+  const directIndex = tabs.findIndex((tab) => tab.id === id);
+  if (directIndex >= 0) {
+    const removed = tabs[directIndex]!;
+    return { tabs: normalizePanelTabOrder([...tabs.slice(0, directIndex), ...tabs.slice(directIndex + 1)]), removed };
+  }
+  for (let index = 0; index < tabs.length; index++) {
+    const tab = tabs[index]!;
+    if (tab.kind !== "branch") continue;
+    const { tabs: nextChildren, removed } = removePanelTabFromSiblings(tab.children, id);
+    if (!removed) continue;
+    const next = nextChildren.length > 0 ? [...tabs.slice(0, index), { ...tab, children: nextChildren }, ...tabs.slice(index + 1)] : [...tabs.slice(0, index), ...tabs.slice(index + 1)];
+    return { tabs: normalizePanelTabOrder(next), removed };
+  }
+  return { tabs, removed: null };
+}
+
+function insertPanelTabAtPath(tabs: readonly PanelTabNode[], parentPath: readonly string[], node: PanelTabNode, index: number): readonly PanelTabNode[] {
+  if (parentPath.length === 0) {
+    const clampedIndex = Math.max(0, Math.min(index, tabs.length));
+    return normalizePanelTabOrder([...tabs.slice(0, clampedIndex), node, ...tabs.slice(clampedIndex)]);
+  }
+  const [headId, ...restPath] = parentPath;
+  const headIndex = tabs.findIndex((tab) => tab.id === headId);
+  if (headIndex < 0) return tabs;
+  const head = tabs[headIndex]!;
+  if (head.kind !== "branch") return tabs;
+  const next = [...tabs];
+  next[headIndex] = { ...head, children: insertPanelTabAtPath(head.children, restPath, node, index) };
+  return next;
+}
+
+function appendPanelTabAsChild(tabs: readonly PanelTabNode[], parentId: string, node: PanelTabNode): readonly PanelTabNode[] {
+  return tabs.map((tab) => {
+    if (tab.id === parentId && tab.kind === "branch") return { ...tab, children: normalizePanelTabOrder([...tab.children, node]) };
+    if (tab.kind === "branch") return { ...tab, children: appendPanelTabAsChild(tab.children, parentId, node) };
+    return tab;
+  });
+}
+
+/** @emoji 🎯 Where a dragged tab lands: `"insert"` places it among `parentPath`'s children at `index` (root when `parentPath` is empty); `"child"` appends it as the last child of the branch tab `parentId` (leaf targets never promote to branches in v1). */
+export type PanelTabDockTarget = { readonly kind: "insert"; readonly corner: PanelCorner; readonly parentPath: readonly string[]; readonly index: number } | { readonly kind: "child"; readonly corner: PanelCorner; readonly parentId: string };
+
+/** @emoji 🎯 A completed tab drag: move `tabId` (found via {@link findPanelTabInDock}, not `fromCorner` alone) to `target`. */
+export interface PanelTabDockMove {
+  readonly tabId: string;
+  readonly fromCorner: PanelCorner;
+  readonly target: PanelTabDockTarget;
+}
+
+/**
+ * 🎯 Pure move transform: removes the dragged tab's subtree from wherever it lives and reinserts it at `target`.
+ * Dropping a subtree into itself (as a child of one of its own descendants, or among the children of one) is a
+ * no-op returning the exact same {@link PanelDock} reference. Visibility is never touched here — the shell unfolds
+ * a folded target corner on drop.
+ **/
+export function moveTabInDock(dock: PanelDock, move: PanelTabDockMove): PanelDock {
+  const located = findPanelTabInDock(dock, move.tabId);
+  if (!located) return dock;
+  const { corner: fromCorner, node } = located;
+  const { target } = move;
+  if (target.kind === "child" && isPanelTabInSubtree(node, target.parentId)) return dock;
+  if (target.kind === "insert" && target.parentPath.some((id) => isPanelTabInSubtree(node, id))) return dock;
+
+  const { tabs: sourceTabs, removed } = removePanelTabFromSiblings(dock.corners[fromCorner], move.tabId);
+  if (!removed) return dock;
+
+  const corners: Record<PanelCorner, readonly PanelTabNode[]> = { ...dock.corners, [fromCorner]: sourceTabs };
+  corners[target.corner] = target.kind === "child" ? appendPanelTabAsChild(corners[target.corner], target.parentId, removed) : insertPanelTabAtPath(corners[target.corner], target.parentPath, removed, target.index);
+  return { corners };
+}
+
+function replacePanelTabNode(tabs: readonly PanelTabNode[], id: string, nextNode: PanelTabNode): readonly PanelTabNode[] {
+  return tabs.map((tab) => {
+    if (tab.id === id) return nextNode;
+    if (tab.kind === "branch") return { ...tab, children: replacePanelTabNode(tab.children, id, nextNode) };
+    return tab;
+  });
+}
+
+function replacePanelTabInDock(dock: PanelDock, id: string, nextNode: PanelTabNode): PanelDock {
+  const located = findPanelTabInDock(dock, id);
+  if (!located) return dock;
+  const corners = { ...dock.corners };
+  corners[located.corner] = replacePanelTabNode(dock.corners[located.corner], id, nextNode);
+  return { corners };
+}
+
+/** @emoji 🎯 Where a dragged tree unit lands: `tabId`'s (a leaf's) unit list, at `index`. */
+export interface PanelTreeUnitDockTarget {
+  readonly corner: PanelCorner;
+  readonly tabId: string;
+  readonly index: number;
+}
+
+/** @emoji 🎯 A completed tree-unit drag from leaf `fromTabId` to `target`. */
+export interface PanelTreeUnitDockMove {
+  readonly unitId: string;
+  readonly fromTabId: string;
+  readonly target: PanelTreeUnitDockTarget;
+}
+
+/** @emoji 🎯 Pure move transform for tree units — reorders within a leaf's own unit list, or moves a unit from one leaf tab's list into another's. */
+export function moveTreeUnitInDock(dock: PanelDock, move: PanelTreeUnitDockMove): PanelDock {
+  const from = findPanelTabInDock(dock, move.fromTabId);
+  if (!from || from.node.kind !== "leaf") return dock;
+  const fromNode = from.node;
+  const unit = fromNode.trees.find((candidate) => candidate.id === move.unitId);
+  if (!unit) return dock;
+
+  if (move.fromTabId === move.target.tabId) {
+    const withoutUnit = fromNode.trees.filter((candidate) => candidate.id !== move.unitId);
+    const clampedIndex = Math.max(0, Math.min(move.target.index, withoutUnit.length));
+    const nextUnits = normalizePanelTreeUnitOrder([...withoutUnit.slice(0, clampedIndex), unit, ...withoutUnit.slice(clampedIndex)]);
+    if (nextUnits.length === fromNode.trees.length && nextUnits.every((candidate, index) => candidate === fromNode.trees[index])) return dock;
+    return replacePanelTabInDock(dock, move.fromTabId, { ...fromNode, trees: nextUnits });
+  }
+
+  const to = findPanelTabInDock(dock, move.target.tabId);
+  if (!to || to.node.kind !== "leaf") return dock;
+  const toNode = to.node;
+  const fromNextUnits = normalizePanelTreeUnitOrder(fromNode.trees.filter((candidate) => candidate.id !== move.unitId));
+  const clampedIndex = Math.max(0, Math.min(move.target.index, toNode.trees.length));
+  const toNextUnits = normalizePanelTreeUnitOrder([...toNode.trees.slice(0, clampedIndex), unit, ...toNode.trees.slice(clampedIndex)]);
+  const afterSource = replacePanelTabInDock(dock, move.fromTabId, { ...fromNode, trees: fromNextUnits });
+  return replacePanelTabInDock(afterSource, move.target.tabId, { ...toNode, trees: toNextUnits });
+}
+
+function normalizePanelTreeUnitOrder(units: readonly PanelTreeUnit[]): readonly PanelTreeUnit[] {
+  return units.map((unit, index) => (unit.order === index ? unit : { ...unit, order: index }));
+}
+
+//#endregion 🔀Transforms
+
+//#region 🎯HitTesting
+
+/** @emoji 🎯 A registered {@link PanelTabRow} drop surface — v1's drop surfaces are the base row of every corner plus the rows along each corner's current active path (branches not on the active path aren't visible, so aren't registered). */
+export interface PanelTabRowDropTarget {
+  readonly corner: PanelCorner;
+  readonly parentPath: readonly string[];
+  readonly rowElement: HTMLElement;
+}
+
+function panelDockRowTabButtons(rowElement: HTMLElement, excludedIds: ReadonlySet<string>): HTMLElement[] {
+  return [...rowElement.querySelectorAll<HTMLElement>("[data-tab-id]")].filter((element) => !excludedIds.has(element.dataset.tabId ?? ""));
+}
+
+/**
+ * 🎯 Resolves a tab-drag drop target from registered rows and corner-chrome rects. A row hit lands on a branch
+ * button's 30–70% center band as `"child"` (nest into it), elsewhere as a midpoint `"insert"`; corner chrome
+ * (rendered even when folded) always resolves to a root append.
+ **/
+export function computeTabDockDropZone(pointerX: number, pointerY: number, rows: readonly PanelTabRowDropTarget[], chromeRects: ReadonlyMap<PanelCorner, DOMRect>, excludedIds: ReadonlySet<string>): PanelTabDockTarget | null {
+  for (const row of rows) {
+    const rect = row.rowElement.getBoundingClientRect();
+    if (pointerX < rect.left || pointerX > rect.right || pointerY < rect.top || pointerY > rect.bottom) continue;
+    const buttons = panelDockRowTabButtons(row.rowElement, excludedIds);
+    for (let index = 0; index < buttons.length; index++) {
+      const button = buttons[index]!;
+      const buttonRect = button.getBoundingClientRect();
+      if (pointerX < buttonRect.left || pointerX > buttonRect.right) continue;
+      const fraction = buttonRect.width > 0 ? (pointerX - buttonRect.left) / buttonRect.width : 0.5;
+      if (button.dataset.tabKind === "branch" && fraction > 0.3 && fraction < 0.7) {
+        return { kind: "child", corner: row.corner, parentId: button.dataset.tabId! };
+      }
+      return { kind: "insert", corner: row.corner, parentPath: row.parentPath, index: index + (fraction >= 0.5 ? 1 : 0) };
+    }
+    return { kind: "insert", corner: row.corner, parentPath: row.parentPath, index: buttons.length };
+  }
+  for (const [corner, rect] of chromeRects) {
+    if (pointerX >= rect.left && pointerX <= rect.right && pointerY >= rect.top && pointerY <= rect.bottom) {
+      return { kind: "insert", corner, parentPath: [], index: Number.MAX_SAFE_INTEGER };
+    }
+  }
+  return null;
+}
+
+//#endregion 🎯HitTesting
+
+//#region 🪟DragPreview
+
+const DOCK_DRAG_CURSOR_OFFSET_X = 8;
+const DOCK_DRAG_CURSOR_OFFSET_Y = 10;
+
+/** @emoji 🪟 Floating label following the cursor while dragging a panel tab or tree unit. */
+const DockDragChip: React.FC<{ readonly label: string; readonly x: number; readonly y: number }> = ({ label, x, y }) => (
+  <div
+    data-slot="dock-drag-chip"
+    className={cn("pointer-events-none fixed z-tutorial flex max-w-[12rem] shrink-0 items-center gap-half rounded-sm border px-single py-half text-xs text-element shadow-md select-none bg-window", borderNormalClass)}
+    style={{ left: x + DOCK_DRAG_CURSOR_OFFSET_X, top: y + DOCK_DRAG_CURSOR_OFFSET_Y }}
+  >
+    <span className="truncate">{label}</span>
+  </div>
+);
+
+//#endregion 🪟DragPreview
+
+//#region 🌱TreeUnitDrag
+
+/** @emoji 🌱 `dataTransfer` MIME identifying a tree-unit drag between leaf tabs. */
+export const PANEL_TREE_UNIT_MIME = "application/x-semio-panel-tree-unit";
+
+export interface PanelTreeUnitDragSession {
+  readonly tabId: string;
+  readonly unitId: string;
+  readonly label: string;
+}
+
+let activePanelTreeUnitDragSession: PanelTreeUnitDragSession | null = null;
+
+/** @emoji 🌱 Records the active tree-unit drag until drop or dragend. */
+export function beginPanelTreeUnitDrag(session: PanelTreeUnitDragSession): void {
+  activePanelTreeUnitDragSession = session;
+  panelGhostSessionBridge?.begin(null);
+}
+
+/** @emoji 🌱 Clears the active tree-unit drag session. */
+export function endPanelTreeUnitDrag(): void {
+  activePanelTreeUnitDragSession = null;
+  panelGhostSessionBridge?.end();
+}
+
+/** @emoji 🌱 Returns the in-flight tree-unit drag, if any. */
+export function readActivePanelTreeUnitDrag(): PanelTreeUnitDragSession | null {
+  return activePanelTreeUnitDragSession;
+}
+
+//#endregion 🌱TreeUnitDrag
+
+//#region 🎛️Provider
+
+interface PanelDockDragState {
+  readonly corner: PanelCorner;
+  readonly tabId: string;
+  readonly pointerId: number;
+  readonly label: string;
+  readonly x: number;
+  readonly y: number;
+}
+
+interface PanelDockPendingDrag {
+  readonly corner: PanelCorner;
+  readonly tabId: string;
+  readonly pointerId: number;
+  readonly label: string;
+  readonly startX: number;
+  readonly startY: number;
+}
+
+/** @emoji 🎛️ Business-free ui↔shell contract shared by every {@link CornerPanel} under one {@link PanelDockProvider}. */
+export interface PanelDockContextValue {
+  readonly dragTabId: string | null;
+  readonly dropTarget: PanelTabDockTarget | null;
+  readonly startTabDrag: (corner: PanelCorner, tabId: string, label: string, event: React.PointerEvent<HTMLElement>) => void;
+  readonly registerTabRowDropTarget: (corner: PanelCorner, parentPath: readonly string[], element: HTMLElement | null) => void;
+  readonly registerCornerChromeDropTarget: (corner: PanelCorner, element: HTMLElement | null) => void;
+  readonly onTreeUnitDockDrop: (move: PanelTreeUnitDockMove) => void;
+}
+
+const PanelDockContext = reactHostPort.createContext<PanelDockContextValue | null>(null);
+
+/** @emoji 🎛️ The enclosing {@link PanelDockProvider} contract, or `null` outside one (e.g. {@link MobilePanel}, which doesn't participate in the dock). */
+export function usePanelDockContext(): PanelDockContextValue | null {
+  return reactHostPort.useContext(PanelDockContext);
+}
+
+/** @emoji 🎛️ Props for {@link PanelDockProvider}. */
+export interface PanelDockProviderProps {
+  readonly dock: PanelDock;
+  readonly onTabDockDrop: (move: PanelTabDockMove) => void;
+  readonly onTreeUnitDockDrop: (move: PanelTreeUnitDockMove) => void;
+  readonly children: React.ReactNode;
+}
+
+/** @emoji 🎛️ Wraps a layout's corner panels, wiring pointer-capture tab dragging (mirrors {@link Mode}'s window-tab drag) across all of them. Tree-unit drags are native HTML5 DnD and don't need this provider — see {@link beginPanelTreeUnitDrag}. */
+export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTabDockDrop, onTreeUnitDockDrop, children }) => {
+  const panelGhost = usePanelGhost();
+  const [pendingDrag, setPendingDrag] = reactHostPort.useState<PanelDockPendingDrag | null>(null);
+  const [dragState, setDragState] = reactHostPort.useState<PanelDockDragState | null>(null);
+  const [dropTarget, setDropTarget] = reactHostPort.useState<PanelTabDockTarget | null>(null);
+  const dropTargetRef = reactHostPort.useRef<PanelTabDockTarget | null>(null);
+  const rowsRef = reactHostPort.useRef(new Map<string, PanelTabRowDropTarget>());
+  const chromeRef = reactHostPort.useRef(new Map<PanelCorner, HTMLElement>());
+  const excludedIdsRef = reactHostPort.useRef<ReadonlySet<string>>(new Set());
+  const dockRef = reactHostPort.useRef(dock);
+  dockRef.current = dock;
+
+  const registerTabRowDropTarget = reactHostPort.useCallback((corner: PanelCorner, parentPath: readonly string[], element: HTMLElement | null) => {
+    const key = `${corner}:${parentPath.join("/")}`;
+    if (!element) {
+      rowsRef.current.delete(key);
+      return;
+    }
+    rowsRef.current.set(key, { corner, parentPath, rowElement: element });
+  }, []);
+
+  const registerCornerChromeDropTarget = reactHostPort.useCallback((corner: PanelCorner, element: HTMLElement | null) => {
+    if (!element) {
+      chromeRef.current.delete(corner);
+      return;
+    }
+    chromeRef.current.set(corner, element);
+  }, []);
+
+  const refreshDropTarget = reactHostPort.useCallback((x: number, y: number) => {
+    const chromeRects = new Map<PanelCorner, DOMRect>();
+    chromeRef.current.forEach((element, corner) => chromeRects.set(corner, element.getBoundingClientRect()));
+    const zone = computeTabDockDropZone(x, y, [...rowsRef.current.values()], chromeRects, excludedIdsRef.current);
+    dropTargetRef.current = zone;
+    setDropTarget(zone);
+  }, []);
+
+  const startTabDrag = reactHostPort.useCallback((corner: PanelCorner, tabId: string, label: string, event: React.PointerEvent<HTMLElement>) => {
+    if (event.button !== 0) return;
+    setPendingDrag({ corner, tabId, pointerId: event.pointerId, label, startX: event.clientX, startY: event.clientY });
+  }, []);
+
+  reactHostPort.useEffect(() => {
+    if (!pendingDrag && !dragState) return;
+    const handleMove = (event: PointerEvent) => {
+      const activePointerId = dragState?.pointerId ?? pendingDrag?.pointerId;
+      if (activePointerId === undefined || event.pointerId !== activePointerId) return;
+      if (pendingDrag && !dragState) {
+        const distance = Math.hypot(event.clientX - pendingDrag.startX, event.clientY - pendingDrag.startY);
+        if (distance < 6) return;
+        const located = findPanelTabInDock(dockRef.current, pendingDrag.tabId);
+        const subtreeIds = new Set<string>();
+        if (located) collectPanelTabSubtreeIds(located.node, subtreeIds);
+        excludedIdsRef.current = subtreeIds;
+        panelGhost?.begin(null);
+        setDragState({ corner: pendingDrag.corner, tabId: pendingDrag.tabId, pointerId: pendingDrag.pointerId, label: pendingDrag.label, x: event.clientX, y: event.clientY });
+        setPendingDrag(null);
+        refreshDropTarget(event.clientX, event.clientY);
+        return;
+      }
+      if (!dragState) return;
+      setDragState((prev) => (prev ? { ...prev, x: event.clientX, y: event.clientY } : prev));
+      refreshDropTarget(event.clientX, event.clientY);
+    };
+    const handleUp = (event: PointerEvent) => {
+      const activePointerId = dragState?.pointerId ?? pendingDrag?.pointerId;
+      if (activePointerId === undefined || event.pointerId !== activePointerId) return;
+      if (dragState && dropTargetRef.current) {
+        onTabDockDrop({ tabId: dragState.tabId, fromCorner: dragState.corner, target: dropTargetRef.current });
+      }
+      panelGhost?.end();
+      setDragState(null);
+      setPendingDrag(null);
+      dropTargetRef.current = null;
+      setDropTarget(null);
+    };
+    document.addEventListener("pointermove", handleMove);
+    document.addEventListener("pointerup", handleUp);
+    return () => {
+      document.removeEventListener("pointermove", handleMove);
+      document.removeEventListener("pointerup", handleUp);
+    };
+  }, [pendingDrag, dragState, onTabDockDrop, panelGhost, refreshDropTarget]);
+
+  reactHostPort.useEffect(() => {
+    if (!dragState) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      panelGhost?.end();
+      setDragState(null);
+      setPendingDrag(null);
+      dropTargetRef.current = null;
+      setDropTarget(null);
+    };
+    document.addEventListener("keydown", handleKeyDown, true);
+    return () => document.removeEventListener("keydown", handleKeyDown, true);
+  }, [dragState, panelGhost]);
+
+  const contextValue = reactHostPort.useMemo<PanelDockContextValue>(
+    () => ({ dragTabId: dragState?.tabId ?? null, dropTarget, startTabDrag, registerTabRowDropTarget, registerCornerChromeDropTarget, onTreeUnitDockDrop }),
+    [dragState, dropTarget, startTabDrag, registerTabRowDropTarget, registerCornerChromeDropTarget, onTreeUnitDockDrop],
+  );
+
+  return (
+    <PanelDockContext.Provider value={contextValue}>
+      {children}
+      {dragState ? <DockDragChip label={dragState.label} x={dragState.x} y={dragState.y} /> : null}
+    </PanelDockContext.Provider>
+  );
+};
+
+//#endregion 🎛️Provider
+
+// #endregion 🧲PanelDock
 
 /** @emoji 📑 Mobile panel tab strip height. */
 export const mobilePanelTabBarClass = cn(panelTabBarClass, "h-large");
@@ -14627,31 +15119,77 @@ interface CornerPanelChromeProps {
 
 const CornerPanelChrome: React.FC<CornerPanelChromeProps> = ({ corner, visible, onToggle }) => {
   const isBottom = cornerVertical(corner) === "bottom";
+  const dock = usePanelDockContext();
+  const setChromeRef = reactHostPort.useCallback((element: HTMLDivElement | null) => dock?.registerCornerChromeDropTarget(corner, element), [dock, corner]);
+  const isDropRoot = dock?.dropTarget?.kind === "insert" && dock.dropTarget.corner === corner && dock.dropTarget.index === Number.MAX_SAFE_INTEGER;
   return (
     <div
+      ref={setChromeRef}
       data-slot="corner-panel-chrome"
       data-expanded={visible ? "true" : undefined}
-      className={cn("relative z-10 flex h-medium shrink-0 items-stretch", cornerHorizontal(corner) === "left" ? "justify-start" : "justify-end", visible && (isBottom ? borderNormalTopClass : borderNormalBottomClass))}
+      data-drop-root={isDropRoot ? "true" : undefined}
+      className={cn(
+        "relative z-10 flex h-medium shrink-0 items-stretch",
+        cornerHorizontal(corner) === "left" ? "justify-start" : "justify-end",
+        visible && (isBottom ? borderNormalTopClass : borderNormalBottomClass),
+        isDropRoot && "ring-2 ring-accent ring-inset",
+      )}
     >
       <Toggle id={`ui.panelToggle.${cornerKey(corner)}`} icon={<Icon icon={cornerToggleIconId(corner)} size="small" />} pressed={visible} onPressedChange={onToggle} className="w-fit border-0 bg-transparent" />
     </div>
   );
 };
 
-/** @emoji 🌲 Leaf-tab tree body shared by {@link CornerPanel} and {@link MobilePanel} — one section per unit (sorted by order); skipped when the active tab has no units. */
-const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({ units }: { readonly units: readonly PanelTreeUnit[] }) {
+/** @emoji 🌲 Leaf-tab tree body shared by {@link CornerPanel} and {@link MobilePanel} — one section per unit (sorted by order); skipped when the active tab has no units. Under a {@link PanelDockProvider}, each unit's header becomes a native-DnD handle draggable to another leaf tab's unit list (see {@link PANEL_TREE_UNIT_MIME}). */
+const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({ corner, tabId, units }: { readonly corner?: PanelCorner; readonly tabId: string; readonly units: readonly PanelTreeUnit[] }) {
+  const dock = usePanelDockContext();
   const sortedUnits = [...units].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const draggable = Boolean(dock && corner);
   return (
     <>
-      {sortedUnits.map((unit) => {
+      {sortedUnits.map((unit, index) => {
         const config = resolveTreePanelSource(unit.tree);
         const UnitIcon = unit.icon;
         return (
           <TreeStateProvider key={unit.id}>
-            {unit.label ? (
-              <div data-slot="panel-tree-unit-header" className="flex shrink-0 items-center gap-single px-single py-half text-2xs text-muted-foreground">
+            {unit.label || draggable ? (
+              <div
+                data-slot="panel-tree-unit-header"
+                draggable={draggable}
+                onDragStart={
+                  draggable
+                    ? (event) => {
+                        event.dataTransfer.effectAllowed = "move";
+                        event.dataTransfer.setData(PANEL_TREE_UNIT_MIME, unit.id);
+                        beginPanelTreeUnitDrag({ tabId, unitId: unit.id, label: unit.label ?? tabId });
+                      }
+                    : undefined
+                }
+                onDragEnd={draggable ? () => endPanelTreeUnitDrag() : undefined}
+                onDragOver={
+                  draggable
+                    ? (event) => {
+                        if (event.dataTransfer.types.includes(PANEL_TREE_UNIT_MIME)) event.preventDefault();
+                      }
+                    : undefined
+                }
+                onDrop={
+                  draggable
+                    ? (event) => {
+                        if (!event.dataTransfer.types.includes(PANEL_TREE_UNIT_MIME) || !dock || !corner) return;
+                        event.preventDefault();
+                        const session = readActivePanelTreeUnitDrag();
+                        if (!session) return;
+                        dock.onTreeUnitDockDrop({ unitId: session.unitId, fromTabId: session.tabId, target: { corner, tabId, index } });
+                        endPanelTreeUnitDrag();
+                      }
+                    : undefined
+                }
+                className={cn("flex shrink-0 items-center gap-single px-single py-half text-2xs text-muted-foreground", draggable && "cursor-grab active:cursor-grabbing")}
+              >
+                {draggable ? <Icon icon="grip-vertical" size="small" /> : null}
                 {UnitIcon ? <UnitIcon size={12} /> : null}
-                <span className="min-w-0 truncate">{unit.label}</span>
+                {unit.label ? <span className="min-w-0 truncate">{unit.label}</span> : null}
               </div>
             ) : null}
             <Tree
@@ -14782,10 +15320,10 @@ const CornerPanel: React.FC<CornerPanelProps> = ({ corner, visible = true, onVis
         </UiChromeLabelPolicyProvider>
         {visible ? (
           <>
-            {showTabBar ? <PanelTabBar activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="corner" direction={isBottom ? "up" : "down"} /> : null}
+            {showTabBar ? <PanelTabBar corner={corner} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="corner" direction={isBottom ? "up" : "down"} /> : null}
             <Scrollable className="relative z-10 flex-1 min-h-0">
               <div data-slot="corner-panel-content" className="flex min-h-0 flex-1 flex-col">
-                {activeTabTrees ? <PanelTreeUnitsPane units={activeTabTrees} /> : null}
+                {activeTabTrees && activeNode ? <PanelTreeUnitsPane corner={corner} tabId={activeNode.id} units={activeTabTrees} /> : null}
               </div>
             </Scrollable>
             {onSizeChange ? (
@@ -14856,7 +15394,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
         {showTabBar ? <PanelTabBar activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="mobile" /> : null}
         <Scrollable className="relative z-10 flex-1 min-h-0">
           <div data-slot="mobile-panel-content" className="flex min-h-0 flex-1 flex-col">
-            {activeTabTrees ? <PanelTreeUnitsPane units={activeTabTrees} /> : null}
+            {activeTabTrees && activeNode ? <PanelTreeUnitsPane tabId={activeNode.id} units={activeTabTrees} /> : null}
           </div>
         </Scrollable>
       </PanelGhostRoot>
@@ -26338,6 +26876,130 @@ if (treeVitest) {
       const resultWorkbench = result.corners["top-left"][0];
       expect(resultWorkbench?.kind === "branch" ? resultWorkbench.children : null).toEqual([]);
       expect(result.corners["bottom-right"][0]).toBe(documentLeaf);
+    });
+
+    it("isPanelTabInSubtree matches the node itself and any descendant, but not unrelated siblings", () => {
+      const StubIcon = (): null => null;
+      const child = singleTreeLeaf({ id: "child", icon: StubIcon, name: "Child", tree: { sections: [] } });
+      const branch: PanelTabNode = { kind: "branch", id: "parent", icon: StubIcon, name: "Parent", children: [child] };
+      expect(isPanelTabInSubtree(branch, "parent")).toBe(true);
+      expect(isPanelTabInSubtree(branch, "child")).toBe(true);
+      expect(isPanelTabInSubtree(branch, "unrelated")).toBe(false);
+      expect(isPanelTabInSubtree(child, "parent")).toBe(false);
+    });
+
+    it("moveTabInDock reorders within a row, moves across corners, appends as a child, and no-ops on own-subtree drops", () => {
+      const StubIcon = (): null => null;
+      const a = singleTreeLeaf({ id: "a", icon: StubIcon, name: "A", tree: { sections: [] } });
+      const b = singleTreeLeaf({ id: "b", icon: StubIcon, name: "B", tree: { sections: [] } });
+      const c = singleTreeLeaf({ id: "c", icon: StubIcon, name: "C", tree: { sections: [] } });
+      const branch: PanelTabNode = { kind: "branch", id: "branch", icon: StubIcon, name: "Branch", children: [] };
+      const dock: PanelDock = { corners: { "top-left": [a, b], "top-right": [branch], "bottom-left": [], "bottom-right": [c] } };
+
+      // Same-row reorder: move `b` before `a` (removal-first — index 0 in the post-removal row). Both items'
+      // `order` is reassigned to match their new position, so neither keeps its exact object reference here.
+      const reordered = moveTabInDock(dock, { tabId: "b", fromCorner: "top-left", target: { kind: "insert", corner: "top-left", parentPath: [], index: 0 } });
+      expect(reordered.corners["top-left"].map((tab) => tab.id)).toEqual(["b", "a"]);
+      expect(reordered.corners["top-left"].map((tab) => tab.order)).toEqual([0, 1]);
+
+      // Cross-corner move: `c` from bottom-right to top-left, at the end.
+      const moved = moveTabInDock(dock, { tabId: "c", fromCorner: "bottom-right", target: { kind: "insert", corner: "top-left", parentPath: [], index: 2 } });
+      expect(moved.corners["bottom-right"]).toEqual([]);
+      expect(moved.corners["top-left"].map((tab) => tab.id)).toEqual(["a", "b", "c"]);
+
+      // Child-append: `c` becomes a child of the empty `branch` tab in top-right.
+      const nested = moveTabInDock(dock, { tabId: "c", fromCorner: "bottom-right", target: { kind: "child", corner: "top-right", parentId: "branch" } });
+      const nestedBranch = nested.corners["top-right"][0];
+      expect(nestedBranch?.kind === "branch" ? nestedBranch.children.map((child) => child.id) : null).toEqual(["c"]);
+      expect(nested.corners["bottom-right"]).toEqual([]);
+
+      // Own-subtree guard: dropping `branch` as a child of itself, or inserting it under its own path, is a no-op (same reference).
+      expect(moveTabInDock(dock, { tabId: "branch", fromCorner: "top-right", target: { kind: "child", corner: "top-right", parentId: "branch" } })).toBe(dock);
+      expect(moveTabInDock(dock, { tabId: "branch", fromCorner: "top-right", target: { kind: "insert", corner: "top-right", parentPath: ["branch"], index: 0 } })).toBe(dock);
+    });
+
+    it("moveTabInDock recursively prunes a branch left empty by the move", () => {
+      const StubIcon = (): null => null;
+      const onlyChild = singleTreeLeaf({ id: "only-child", icon: StubIcon, name: "Only Child", tree: { sections: [] } });
+      const innerBranch: PanelTabNode = { kind: "branch", id: "inner", icon: StubIcon, name: "Inner", children: [onlyChild] };
+      const outerBranch: PanelTabNode = { kind: "branch", id: "outer", icon: StubIcon, name: "Outer", children: [innerBranch] };
+      const dock: PanelDock = { corners: { "top-left": [outerBranch], "top-right": [], "bottom-left": [], "bottom-right": [] } };
+      const result = moveTabInDock(dock, { tabId: "only-child", fromCorner: "top-left", target: { kind: "insert", corner: "top-right", parentPath: [], index: 0 } });
+      // Both `inner` (emptied) and `outer` (left with no children once `inner` is pruned) disappear from top-left.
+      expect(result.corners["top-left"]).toEqual([]);
+      expect(result.corners["top-right"].map((tab) => tab.id)).toEqual(["only-child"]);
+    });
+
+    it("pruneEmptyPanelBranches drops branches left with zero children at any depth, and returns the same reference when nothing changes", () => {
+      const StubIcon = (): null => null;
+      const leaf = singleTreeLeaf({ id: "leaf", icon: StubIcon, name: "Leaf", tree: { sections: [] } });
+      const emptyInner: PanelTabNode = { kind: "branch", id: "empty-inner", icon: StubIcon, name: "Empty Inner", children: [] };
+      const outer: PanelTabNode = { kind: "branch", id: "outer", icon: StubIcon, name: "Outer", children: [emptyInner] };
+      const tabs: readonly PanelTabNode[] = [leaf, outer];
+      expect(pruneEmptyPanelBranches(tabs).map((tab) => tab.id)).toEqual(["leaf"]);
+      const unchanged: readonly PanelTabNode[] = [leaf];
+      expect(pruneEmptyPanelBranches(unchanged)).toBe(unchanged);
+    });
+
+    it("moveTreeUnitInDock reorders units within a tab and moves a unit across tabs", () => {
+      const StubIcon = (): null => null;
+      const tabA: PanelTabNode = {
+        kind: "leaf",
+        id: "tab-a",
+        icon: StubIcon,
+        name: "Tab A",
+        trees: [
+          { id: "unit-1", tree: { sections: [] } },
+          { id: "unit-2", tree: { sections: [] } },
+        ],
+      };
+      const tabB: PanelTabNode = { kind: "leaf", id: "tab-b", icon: StubIcon, name: "Tab B", trees: [{ id: "unit-3", tree: { sections: [] } }] };
+      const dock: PanelDock = { corners: { "top-left": [tabA, tabB], "top-right": [], "bottom-left": [], "bottom-right": [] } };
+
+      const reordered = moveTreeUnitInDock(dock, { unitId: "unit-2", fromTabId: "tab-a", target: { corner: "top-left", tabId: "tab-a", index: 0 } });
+      const reorderedTabA = reordered.corners["top-left"][0];
+      expect(reorderedTabA?.kind === "leaf" ? reorderedTabA.trees.map((unit) => unit.id) : null).toEqual(["unit-2", "unit-1"]);
+
+      const crossTab = moveTreeUnitInDock(dock, { unitId: "unit-1", fromTabId: "tab-a", target: { corner: "top-left", tabId: "tab-b", index: 0 } });
+      const crossTabA = crossTab.corners["top-left"][0];
+      const crossTabB = crossTab.corners["top-left"][1];
+      expect(crossTabA?.kind === "leaf" ? crossTabA.trees.map((unit) => unit.id) : null).toEqual(["unit-2"]);
+      expect(crossTabB?.kind === "leaf" ? crossTabB.trees.map((unit) => unit.id) : null).toEqual(["unit-1", "unit-3"]);
+    });
+
+    it("computeTabDockDropZone resolves midpoint inserts, a branch's nest band, and corner-chrome root append; misses resolve to null", () => {
+      const fabricateRect = (element: HTMLElement, rect: { left: number; right: number; top: number; bottom: number }) => {
+        element.getBoundingClientRect = () => ({ ...rect, width: rect.right - rect.left, height: rect.bottom - rect.top, x: rect.left, y: rect.top, toJSON: () => ({}) });
+      };
+
+      const rowElement = document.createElement("div");
+      fabricateRect(rowElement, { left: 0, right: 200, top: 0, bottom: 20 });
+      const leafButton = document.createElement("button");
+      leafButton.dataset.tabId = "leaf-a";
+      leafButton.dataset.tabKind = "leaf";
+      fabricateRect(leafButton, { left: 0, right: 100, top: 0, bottom: 20 });
+      const branchButton = document.createElement("button");
+      branchButton.dataset.tabId = "branch-a";
+      branchButton.dataset.tabKind = "branch";
+      fabricateRect(branchButton, { left: 100, right: 200, top: 0, bottom: 20 });
+      rowElement.append(leafButton, branchButton);
+
+      const rows: readonly PanelTabRowDropTarget[] = [{ corner: "top-left", parentPath: [], rowElement }];
+
+      // Left half of the leaf button: insert-before (index 0).
+      expect(computeTabDockDropZone(20, 10, rows, new Map(), new Set())).toEqual({ kind: "insert", corner: "top-left", parentPath: [], index: 0 });
+      // Right half of the leaf button: insert-after (index 1).
+      expect(computeTabDockDropZone(80, 10, rows, new Map(), new Set())).toEqual({ kind: "insert", corner: "top-left", parentPath: [], index: 1 });
+      // Center 30–70% band of the branch button (100–200 wide -> 130..170): nest as a child.
+      expect(computeTabDockDropZone(150, 10, rows, new Map(), new Set())).toEqual({ kind: "child", corner: "top-left", parentId: "branch-a" });
+      // Excluding the branch button (e.g. it's the dragged subtree) falls through to append-at-end of the row.
+      expect(computeTabDockDropZone(150, 10, rows, new Map(), new Set(["branch-a"]))).toEqual({ kind: "insert", corner: "top-left", parentPath: [], index: 1 });
+
+      const chromeRects = new Map<PanelCorner, DOMRect>([["bottom-right", { left: 300, right: 340, top: 300, bottom: 340, width: 40, height: 40, x: 300, y: 300, toJSON: () => ({}) } as DOMRect]]);
+      expect(computeTabDockDropZone(320, 320, [], chromeRects, new Set())).toEqual({ kind: "insert", corner: "bottom-right", parentPath: [], index: Number.MAX_SAFE_INTEGER });
+
+      // Outside every registered surface: no drop.
+      expect(computeTabDockDropZone(9999, 9999, rows, chromeRects, new Set())).toBeNull();
     });
 
     it("resolves the four corner panel toggle keys in en and de", () => {

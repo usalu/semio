@@ -34,6 +34,20 @@
   \group_end:
 }
 
+%region PageNumbering
+\cs_new_protected:Npn \semio_frontmatter_begin: {
+  \renewcommand{\thepage}{\roman{page}}
+}
+
+\cs_new_protected:Npn \semio_mainmatter_begin: {
+  \clearpage
+  \setcounter{page}{1}
+  \renewcommand{\thepage}{\arabic{page}}
+}
+
+\NewDocumentCommand{\makemainmatter}{}{\semio_mainmatter_begin:}
+%endregion PageNumbering
+
 \cs_new_protected:Npn \semio_maketitle: {
   \begin{titlepage}
     \semio_theme_apply:
@@ -51,6 +65,7 @@
 \RenewDocumentCommand{\maketitle}{}{\semio_maketitle:}
 
 \NewDocumentCommand{\makecoverpages}{}{%
+  \semio_frontmatter_begin:
   \clearpage
   \newgeometry{left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm}
   \begin{titlepage}

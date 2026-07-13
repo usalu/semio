@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import type { GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
 import {
   App,
+  applyDockSkeleton,
   Button,
   ButtonGroup,
   ButtonGroupItem,
@@ -14,6 +15,9 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  dockSkeletonOf,
+  dockSkeletonsEqual,
+  findPanelTabInDock,
   Footer,
   Fuse,
   Icon,
@@ -21,8 +25,12 @@ import {
   Layout,
   LevelProvider,
   Mode,
+  moveTabInDock,
+  moveTreeUnitInDock,
   Navbar,
   NavbarExampleSelect,
+  PANEL_CORNERS,
+  PanelDockProvider,
   Popover,
   PopoverAnchor,
   PopoverContent,
@@ -34,6 +42,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  singleTreeLeaf,
   Toggle,
   ToggleGroup,
   ToolbarDivider,
@@ -60,9 +69,9 @@ import {
   staticTreePanelDefinition,
   UiChromeLabelPolicyProvider,
   UI_MOBILE_MEDIA_QUERY,
+  useCornerPanelChromeHotkeys,
   useElementsSurfaceChrome,
   useMediaQuery,
-  useSidePanelChromeHotkeys,
   useActionHotkey,
   readStoredUiChromeCompact,
   readStoredUiChromeExpertise,
@@ -105,7 +114,11 @@ import {
   type FuseResult,
   type ModeWindowDescriptor,
   type NavbarItem,
+  type PanelCorner,
+  type PanelDock,
+  type PanelTabDockMove,
   type PanelTabNode,
+  type PanelTreeUnitDockMove,
   type RibbonDirection,
   type RibbonRow,
   type TreeDataItem,
@@ -136,9 +149,11 @@ import {
   FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID,
   FRAMEWORK_PANEL_TAB_PARAMETERS_ID,
   FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
+  DockLayoutStore,
   NamedLayoutStore,
   createBrowserStoragePort,
   createNamedLayout,
+  type DockSkeleton,
   loadPluginModule as loadCorePluginModule,
   loadPluginWasm as loadCorePluginWasm,
   buildContributionsJson,
@@ -343,17 +358,21 @@ type SpawnedWindowState = {
 
 type ExtraWindowInstance = { readonly id: string; readonly windowKindId: string; readonly title: string };
 
+/** 🧭 Per-corner fold/size/active-tab-path state for one of the four {@link CornerPanel}s. */
+type CornerPanelState = {
+  readonly visible: boolean;
+  readonly size: number;
+  readonly path: readonly string[];
+};
+
 type ShellLayoutState = {
-  readonly leftPanelVisible: boolean;
-  readonly rightPanelVisible: boolean;
-  readonly leftPanelSize: number;
-  readonly rightPanelSize: number;
+  readonly cornerPanels: Record<PanelCorner, CornerPanelState>;
+  /** 🗄️ User-rearranged dock diff against `defaultDock`, persisted via `DockLayoutStore`; `null` means "use the computed default arrangement". */
+  readonly dockOverride: DockSkeleton | null;
   readonly activeWindowId: string | null;
   readonly shellLayout: WindowLayoutNode | null;
   readonly activeExampleId: string;
   readonly mobilePanelPath: readonly string[];
-  readonly leftPanelPath: readonly string[];
-  readonly rightPanelPath: readonly string[];
   readonly extraWindowInstances: readonly ExtraWindowInstance[];
 };
 
@@ -413,16 +432,15 @@ export type ShellAction =
   | { readonly type: "SET_SPAWNED_WINDOW_ENGAGEMENTS"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
   | { readonly type: "SET_SPAWNED_WINDOW_MEASURES"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
   | { readonly type: "SET_SPAWNED_TOOL_NODES"; readonly value: Updatable<readonly ToolNode[]> }
-  | { readonly type: "SET_LEFT_PANEL_VISIBLE"; readonly value: Updatable<boolean> }
-  | { readonly type: "SET_RIGHT_PANEL_VISIBLE"; readonly value: Updatable<boolean> }
-  | { readonly type: "SET_LEFT_PANEL_SIZE"; readonly value: Updatable<number> }
-  | { readonly type: "SET_RIGHT_PANEL_SIZE"; readonly value: Updatable<number> }
+  | { readonly type: "SET_CORNER_PANEL_VISIBLE"; readonly corner: PanelCorner; readonly value: Updatable<boolean> }
+  | { readonly type: "SET_CORNER_PANEL_SIZE"; readonly corner: PanelCorner; readonly value: Updatable<number> }
+  | { readonly type: "SET_CORNER_PANEL_PATH"; readonly corner: PanelCorner; readonly value: Updatable<readonly string[]> }
+  | { readonly type: "SET_DOCK_OVERRIDE"; readonly value: DockSkeleton | null }
+  | { readonly type: "RESET_DOCK" }
   | { readonly type: "SET_ACTIVE_WINDOW_ID"; readonly value: Updatable<string | null> }
   | { readonly type: "SET_SHELL_LAYOUT"; readonly value: Updatable<WindowLayoutNode | null> }
   | { readonly type: "SET_ACTIVE_EXAMPLE_ID"; readonly value: Updatable<string> }
   | { readonly type: "SET_MOBILE_PANEL_PATH"; readonly value: Updatable<readonly string[]> }
-  | { readonly type: "SET_LEFT_PANEL_PATH"; readonly value: Updatable<readonly string[]> }
-  | { readonly type: "SET_RIGHT_PANEL_PATH"; readonly value: Updatable<readonly string[]> }
   | { readonly type: "SET_EXTRA_WINDOW_INSTANCES"; readonly value: Updatable<readonly ExtraWindowInstance[]> }
   | { readonly type: "SET_SEARCH_OPEN"; readonly value: Updatable<boolean> }
   | { readonly type: "SET_FIND_OPEN"; readonly value: Updatable<boolean> }
@@ -475,16 +493,23 @@ function spawnedWindowReducer(state: SpawnedWindowState, action: ShellAction): S
 
 function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): ShellLayoutState {
   switch (action.type) {
-    case "SET_LEFT_PANEL_VISIBLE": return { ...state, leftPanelVisible: resolveUpdatable(action.value, state.leftPanelVisible) };
-    case "SET_RIGHT_PANEL_VISIBLE": return { ...state, rightPanelVisible: resolveUpdatable(action.value, state.rightPanelVisible) };
-    case "SET_LEFT_PANEL_SIZE": return { ...state, leftPanelSize: resolveUpdatable(action.value, state.leftPanelSize) };
-    case "SET_RIGHT_PANEL_SIZE": return { ...state, rightPanelSize: resolveUpdatable(action.value, state.rightPanelSize) };
+    case "SET_CORNER_PANEL_VISIBLE":
+      return { ...state, cornerPanels: { ...state.cornerPanels, [action.corner]: { ...state.cornerPanels[action.corner], visible: resolveUpdatable(action.value, state.cornerPanels[action.corner].visible) } } };
+    case "SET_CORNER_PANEL_SIZE":
+      return { ...state, cornerPanels: { ...state.cornerPanels, [action.corner]: { ...state.cornerPanels[action.corner], size: resolveUpdatable(action.value, state.cornerPanels[action.corner].size) } } };
+    case "SET_CORNER_PANEL_PATH":
+      return { ...state, cornerPanels: { ...state.cornerPanels, [action.corner]: { ...state.cornerPanels[action.corner], path: resolveUpdatable(action.value, state.cornerPanels[action.corner].path) } } };
+    case "SET_DOCK_OVERRIDE":
+      return { ...state, dockOverride: action.value };
+    case "RESET_DOCK": {
+      const cornerPanels = {} as Record<PanelCorner, CornerPanelState>;
+      for (const corner of PANEL_CORNERS) cornerPanels[corner] = { ...state.cornerPanels[corner], path: [] };
+      return { ...state, dockOverride: null, cornerPanels };
+    }
     case "SET_ACTIVE_WINDOW_ID": return { ...state, activeWindowId: resolveUpdatable(action.value, state.activeWindowId) };
     case "SET_SHELL_LAYOUT": return { ...state, shellLayout: resolveUpdatable(action.value, state.shellLayout) };
     case "SET_ACTIVE_EXAMPLE_ID": return { ...state, activeExampleId: resolveUpdatable(action.value, state.activeExampleId) };
     case "SET_MOBILE_PANEL_PATH": return { ...state, mobilePanelPath: resolveUpdatable(action.value, state.mobilePanelPath) };
-    case "SET_LEFT_PANEL_PATH": return { ...state, leftPanelPath: resolveUpdatable(action.value, state.leftPanelPath) };
-    case "SET_RIGHT_PANEL_PATH": return { ...state, rightPanelPath: resolveUpdatable(action.value, state.rightPanelPath) };
     case "SET_EXTRA_WINDOW_INSTANCES": return { ...state, extraWindowInstances: resolveUpdatable(action.value, state.extraWindowInstances) };
     default: return state;
   }
@@ -548,16 +573,17 @@ export function initialShellState(_props: { readonly pluginFilter?: string; read
     windowUi: { windowUiByKind: {}, windowEngagementsByKind: {}, windowMeasuresByKind: {}, panelUiByKey: {}, toolNodesByKind: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
     spawnedWindow: { spawnedWindowUi: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {}, spawnedToolNodes: [] },
     layout: {
-      leftPanelVisible: false,
-      rightPanelVisible: false,
-      leftPanelSize: DEFAULT_LEFT_PANEL_SIZE,
-      rightPanelSize: DEFAULT_RIGHT_PANEL_SIZE,
+      cornerPanels: {
+        "top-left": { visible: false, size: DEFAULT_CORNER_PANEL_SIZES["top-left"], path: [] },
+        "top-right": { visible: false, size: DEFAULT_CORNER_PANEL_SIZES["top-right"], path: [] },
+        "bottom-left": { visible: false, size: DEFAULT_CORNER_PANEL_SIZES["bottom-left"], path: [] },
+        "bottom-right": { visible: false, size: DEFAULT_CORNER_PANEL_SIZES["bottom-right"], path: [] },
+      },
+      dockOverride: null,
       activeWindowId: null,
       shellLayout: null,
       activeExampleId: "",
       mobilePanelPath: [],
-      leftPanelPath: [],
-      rightPanelPath: [],
       extraWindowInstances: [],
     },
     overlays: { searchOpen: false, findOpen: false },
@@ -591,10 +617,15 @@ const S_HOME_CONTROLLER_ID = "s-home";
 const S_PLAY_APP_ID = "studio";
 const S_PLAY_CONTROLLER_ID = "s-play";
 const S_PLAY_CATALOGUE_TAB_ID = "s-play-catalogue";
-const DEFAULT_LEFT_PANEL_SIZE = 280;
-const DEFAULT_RIGHT_PANEL_SIZE = 320;
+/** @emoji 🧭 Starting width/height for each corner panel — `top-left`/`top-right` mirror the old left/right side-panel defaults; `bottom-left`/`bottom-right` host the sync card and a compact tool tree, so a narrower default suits them. */
+const DEFAULT_CORNER_PANEL_SIZES: Record<PanelCorner, number> = {
+  "top-left": 280,
+  "top-right": 320,
+  "bottom-left": 240,
+  "bottom-right": 240,
+};
 
-/** @emoji 🌳 Root category ids for the nested side-panel tab tree — the top row of {@link leftPanelTabs}/{@link rightPanelTabs}. */
+/** @emoji 🌳 Root category ids for the nested dock tab tree — the top row of {@link defaultDock}'s per-corner tabs. */
 const FRAMEWORK_CATEGORY_WORKBENCH_ID = "framework.category.workbench";
 const FRAMEWORK_CATEGORY_DISPLAY_ID = "framework.category.display";
 const FRAMEWORK_CATEGORY_DETAILS_ID = "framework.category.details";
@@ -783,9 +814,13 @@ function parsePanelState(viewState: ViewState): StudioPanelState | null {
   }
 }
 
-function panelSideForGroup(group: string): "left" | "right" {
-  if (group === "workbench" || group === "document" || group === "display") return "left";
-  return "right";
+/** @emoji 🧭 Default corner a plugin-declared panel-tab `group` docks into. */
+function panelCornerForGroup(group: string): PanelCorner {
+  if (group === "workbench" || group === "document") return "top-left";
+  if (group === "details") return "top-right";
+  if (group === "display") return "bottom-left";
+  if (group === "settings") return "bottom-right";
+  return "top-right";
 }
 
 function convertFrameworkLayoutNodeToModeLayout(
@@ -1026,14 +1061,13 @@ function panelTabDefinitionToNode(
       children: tab.children.map((child, childOrder) => panelTabDefinitionToNode(child, group, panelUiByKey, onAction, childOrder, appLabelsOverlay)),
     };
   }
-  return {
-    kind: "leaf",
+  return singleTreeLeaf({
     id: tabId,
     icon: panelTabIcon(tabId, group),
     name: label,
     order,
     tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tabId] ?? { type: "text", value: shellLabel("ui.common.loading") }, onAction)),
-  };
+  });
 }
 
 function resolveCanvasBodyKey(app: AppDefinition): string {
@@ -1231,7 +1265,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const { loadedPlugins, session, error } = shellState.pluginRuntime;
   const { windowUiByKind, windowEngagementsByKind, windowMeasuresByKind, panelUiByKey, toolNodesByKind, appLabelsOverlay } = shellState.windowUi;
   const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures, spawnedToolNodes } = shellState.spawnedWindow;
-  const { leftPanelVisible, rightPanelVisible, leftPanelSize, rightPanelSize, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, leftPanelPath, rightPanelPath, extraWindowInstances } = shellState.layout;
+  const { cornerPanels, dockOverride, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, extraWindowInstances } = shellState.layout;
   const { searchOpen, findOpen } = shellState.overlays;
   const { uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft } = shellState.uiPrefs;
   const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
@@ -1292,6 +1326,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const { uri: shellUri, canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, navigate: navigateHistory } = useUIHistory("/", studioMode);
 
   const namedLayoutStore = useMemo(() => new NamedLayoutStore(session?.app.id ?? "framework-os", createBrowserStoragePort()), [session?.app.id]);
+  const dockLayoutStore = useMemo(() => new DockLayoutStore(createBrowserStoragePort(), session?.app.id), [session?.app.id]);
 
   const registry = useMemo(() => {
     const expanded = expandPluginRegistry(plugins, pluginFilter ? resolvePluginRegistryId(pluginFilter) : undefined, studioMode);
@@ -2017,9 +2052,8 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     };
   }, [studioSessionActive]);
 
-  useSidePanelChromeHotkeys({
-    onToggleLeft: () => dispatch({ type: "SET_LEFT_PANEL_VISIBLE", value: (visible) => !visible }),
-    onToggleRight: () => dispatch({ type: "SET_RIGHT_PANEL_VISIBLE", value: (visible) => !visible }),
+  useCornerPanelChromeHotkeys({
+    onToggle: (corner) => dispatch({ type: "SET_CORNER_PANEL_VISIBLE", corner, value: (visible) => !visible }),
   });
 
   useElementsSurfaceChrome({ appearance: uiAppearance, device: uiDevice, expertise: uiExpertise, compact: uiCompact });
@@ -2257,6 +2291,10 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       layout: uiLayout,
       setLayout: (value: UiChromeLayout) => dispatch({ type: "SET_UI_LAYOUT", value }),
       mobileActive: mobile,
+      onResetDock: () => {
+        dispatch({ type: "RESET_DOCK" });
+        dockLayoutStore.reset();
+      },
       locale: uiLocale,
       setLocale: (value: UiLocale) => dispatch({ type: "SET_UI_LOCALE", value }),
       terminology: uiTerminology,
@@ -2285,6 +2323,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     }),
     [
       session,
+      dockLayoutStore,
       uiCompact,
       uiExpertise,
       uiAppearance,
@@ -2360,7 +2399,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onAction, session]);
 
-  const activeRightPanelTab = session?.app.panelTabs.find((tab) => panelSideForGroup(tab.group) === "right");
+  const activeRightPanelTab = session?.app.panelTabs.find((tab) => panelCornerForGroup(tab.group) === "top-right");
   const activePanelTabId =
     panel?.activePanelTab ??
     (activeRightPanelTab ? panelTabKindId(activeRightPanelTab.kind) : undefined) ??
@@ -2369,13 +2408,12 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const workbenchLeftTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
     const pluginLeftTabs = session.app.panelTabs
-      .filter((tab) => panelSideForGroup(tab.group) === "left")
+      .filter((tab) => panelCornerForGroup(tab.group) === "top-left")
       .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay));
     if (studioMode && session.app.id === S_PLAY_APP_ID && pluginLeftTabs.length > 0) return pluginLeftTabs;
     const hasPluginDocumentTab = pluginLeftTabs.some((tab) => tab.id === FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
     if (hasPluginDocumentTab) return pluginLeftTabs;
-    const documentTab: PanelTabNode = {
-      kind: "leaf",
+    const documentTab = singleTreeLeaf({
       id: FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
       icon: shellTabIcon(FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID),
       name: shellLabel("ui.panel.document"),
@@ -2389,59 +2427,191 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           },
         ],
       }),
-    };
+    });
     return [documentTab, ...pluginLeftTabs];
   }, [appLabelsOverlay, onAction, panel?.spawnedApps.length, panelUiByKey, session, studioMode, uiLocale]);
 
   const detailsRightTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
     return session.app.panelTabs
-      .filter((tab) => panelSideForGroup(tab.group) === "right")
+      .filter((tab) => panelCornerForGroup(tab.group) === "top-right")
       .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay));
   }, [appLabelsOverlay, onAction, panelUiByKey, session]);
 
   const settingsRightTabs = useMemo((): PanelTabNode[] => frameworkSettingsTabs, [frameworkSettingsTabs]);
 
-  const leftPanelTabs = useMemo((): PanelTabNode[] => {
-    const categories: PanelTabNode[] = [
+  //#region 🧰FooterToolLeaves — bottom-right's tool tabs, replacing the old floating footer tool ribbon.
+  const dedupedModeTools = useMemo(() => dedupeToolNodesById([...Object.values(toolNodesByKind), spawnedToolNodes]), [spawnedToolNodes, toolNodesByKind]);
+
+  const frameworkToolsActionsTab = useMemo((): PanelTabNode | null => {
+    const grouped = groupToolNodesByCategory(dedupedModeTools, ["actions"]);
+    if (!grouped.length) return null;
+    return singleTreeLeaf({
+      id: "framework.tools.actions",
+      icon: shellTabIcon(TOOL_CATEGORY_ICON_ID.actions),
+      name: shellLabel("ui.panel.tools"),
+      order: 0,
+      tree: { sections: [{ id: "framework.tools.actions.root", label: "", items: [{ id: "framework.tools.actions.tree", label: "", control: <ToolTree id="ui.toolbar.footer.actions" tools={grouped} onAction={onAction} direction="up" /> }] }] },
+    });
+  }, [dedupedModeTools, onAction]);
+
+  const frameworkToolsHistoryTab = useMemo((): PanelTabNode | null => {
+    const grouped = groupToolNodesByCategory(dedupedModeTools, ["history"]);
+    if (!grouped.length) return null;
+    return singleTreeLeaf({
+      id: "framework.tools.history",
+      icon: shellTabIcon(TOOL_CATEGORY_ICON_ID.history),
+      name: shellLabel("ui.panel.toolsHistory"),
+      order: 1,
+      tree: { sections: [{ id: "framework.tools.history.root", label: "", items: [{ id: "framework.tools.history.tree", label: "", control: <ToolTree id="ui.toolbar.footer.history" tools={grouped} onAction={onAction} direction="up" /> }] }] },
+    });
+  }, [dedupedModeTools, onAction]);
+  //#endregion 🧰FooterToolLeaves
+
+  //#region 🔄SyncLeaf — bottom-left's sync tab, replacing the old floating footer SyncAttachCard.
+  const frameworkSyncTab = useMemo((): PanelTabNode | null => {
+    const syncTools = buildFrameworkSyncTools(syncBackboneUri) as readonly ToolNode[];
+    if (!syncTools.length) return null;
+    const syncStatus = syncBackboneUri ? (syncStatusByDocumentId[syncBackboneUri.replace(/^actor:\/\//, "")] ?? null) : null;
+    return singleTreeLeaf({
+      id: "framework.sync",
+      icon: shellTabIcon(TOOL_CATEGORY_ICON_ID.sync),
+      name: shellLabel("ui.panel.sync"),
+      order: 0,
+      tree: {
+        sections: [
+          {
+            id: "framework.sync.root",
+            label: "",
+            items: [
+              {
+                id: "framework.sync.card",
+                label: "",
+                control: (
+                  <SyncAttachCard
+                    activeUri={syncBackboneUri}
+                    cardKind={syncCardKind}
+                    draftPath={syncDraftPath}
+                    syncTools={syncTools}
+                    status={syncStatus}
+                    onAction={onAction}
+                    onDraftPathChange={(value) => dispatch({ type: "SET_SYNC_DRAFT_PATH", value })}
+                    onClose={() => dispatch({ type: "SET_SYNC_CARD_KIND", value: null })}
+                    onAttach={attachSyncBackbone}
+                    onDetach={detachSyncBackbone}
+                  />
+                ),
+              },
+            ],
+          },
+        ],
+      },
+    });
+  }, [attachSyncBackbone, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId]);
+  //#endregion 🔄SyncLeaf
+
+  //#region 🧭DockAssembly — default four-corner arrangement + persisted-override reconciliation + drag-and-drop wiring.
+  const defaultDock = useMemo((): PanelDock => {
+    const topLeft: PanelTabNode[] = [
       { kind: "branch", id: FRAMEWORK_CATEGORY_WORKBENCH_ID, icon: categoryTabIcon(workbenchLeftTabs, "folder"), name: shellLabel("ui.panelToggle.workbench"), order: 0, children: workbenchLeftTabs },
     ];
+    const bottomLeft: PanelTabNode[] = [];
     if (frameworkDisplayTabs.length > 0) {
-      categories.push({ kind: "branch", id: FRAMEWORK_CATEGORY_DISPLAY_ID, icon: categoryTabIcon(frameworkDisplayTabs, "layout-grid"), name: shellLabel("ui.panelToggle.display"), order: 1, children: frameworkDisplayTabs });
+      bottomLeft.push({ kind: "branch", id: FRAMEWORK_CATEGORY_DISPLAY_ID, icon: categoryTabIcon(frameworkDisplayTabs, "layout-grid"), name: shellLabel("ui.panelToggle.display"), order: 0, children: frameworkDisplayTabs });
     }
-    return categories;
-  }, [frameworkDisplayTabs, uiLocale, workbenchLeftTabs]);
-
-  const rightPanelTabs = useMemo(
-    (): PanelTabNode[] => [
+    if (frameworkSyncTab) bottomLeft.push(frameworkSyncTab);
+    const topRight: PanelTabNode[] = [
       { kind: "branch", id: FRAMEWORK_CATEGORY_DETAILS_ID, icon: categoryTabIcon(detailsRightTabs, "info"), name: shellLabel("ui.panelToggle.details"), order: 0, children: detailsRightTabs },
-      { kind: "branch", id: FRAMEWORK_CATEGORY_SETTINGS_ID, icon: categoryTabIcon(settingsRightTabs, "settings-2"), name: shellLabel("ui.panelToggle.settings"), order: 1, children: settingsRightTabs },
-    ],
-    [detailsRightTabs, settingsRightTabs, uiLocale],
+    ];
+    const bottomRight: PanelTabNode[] = [
+      { kind: "branch", id: FRAMEWORK_CATEGORY_SETTINGS_ID, icon: categoryTabIcon(settingsRightTabs, "settings-2"), name: shellLabel("ui.panelToggle.settings"), order: 0, children: settingsRightTabs },
+    ];
+    if (frameworkToolsActionsTab) bottomRight.push(frameworkToolsActionsTab);
+    if (frameworkToolsHistoryTab) bottomRight.push(frameworkToolsHistoryTab);
+    return { corners: { "top-left": topLeft, "top-right": topRight, "bottom-left": bottomLeft, "bottom-right": bottomRight } };
+  }, [detailsRightTabs, frameworkDisplayTabs, frameworkSyncTab, frameworkToolsActionsTab, frameworkToolsHistoryTab, settingsRightTabs, uiLocale, workbenchLeftTabs]);
+
+  useEffect(() => {
+    dispatch({ type: "SET_DOCK_OVERRIDE", value: dockLayoutStore.getSnapshot() });
+  }, [dockLayoutStore]);
+
+  const dock = useMemo((): PanelDock => applyDockSkeleton(defaultDock, dockOverride), [defaultDock, dockOverride]);
+
+  /** 🗄️ Skips the very first (pre-hydration) commit so a persisted skeleton isn't clobbered with `null` before the seeding effect above has a chance to read and apply it. */
+  const dockPersistedOnceRef = useRef(false);
+  useEffect(() => {
+    if (!dockPersistedOnceRef.current) {
+      dockPersistedOnceRef.current = true;
+      return;
+    }
+    const nextSkeleton = dockSkeletonOf(dock);
+    const defaultSkeleton = dockSkeletonOf(defaultDock);
+    dockLayoutStore.save(dockSkeletonsEqual(nextSkeleton, defaultSkeleton) ? null : nextSkeleton);
+  }, [dock, defaultDock, dockLayoutStore]);
+
+  const handleTabDockDrop = useCallback(
+    (move: PanelTabDockMove) => {
+      const nextDock = moveTabInDock(dock, move);
+      if (nextDock === dock) return;
+      const nextSkeleton = dockSkeletonOf(nextDock);
+      const defaultSkeleton = dockSkeletonOf(defaultDock);
+      dispatch({ type: "SET_DOCK_OVERRIDE", value: dockSkeletonsEqual(nextSkeleton, defaultSkeleton) ? null : nextSkeleton });
+      const targetPath = findPanelTabPath(nextDock.corners[move.target.corner], move.tabId);
+      if (targetPath) dispatch({ type: "SET_CORNER_PANEL_PATH", corner: move.target.corner, value: targetPath });
+      if (move.fromCorner !== move.target.corner) {
+        const sourceTabs = nextDock.corners[move.fromCorner];
+        dispatch({ type: "SET_CORNER_PANEL_PATH", corner: move.fromCorner, value: (prev) => reconcileActivePath(sourceTabs, prev, panelTabChildren) });
+      }
+      dispatch({ type: "SET_CORNER_PANEL_VISIBLE", corner: move.target.corner, value: true });
+    },
+    [dock, defaultDock],
   );
 
-  const leftPanelActivePath = useMemo((): readonly string[] => {
-    if (studioMode && session?.app.id === S_PLAY_APP_ID && leftPanelPath[0] !== FRAMEWORK_CATEGORY_DISPLAY_ID) {
-      const path = findPanelTabPath(leftPanelTabs, panel?.activePanelTab ?? S_PLAY_CATALOGUE_TAB_ID);
-      if (path) return path;
-    }
-    return reconcileActivePath(leftPanelTabs, leftPanelPath, panelTabChildren);
-  }, [leftPanelPath, leftPanelTabs, panel?.activePanelTab, session?.app.id, studioMode]);
+  const handleTreeUnitDockDrop = useCallback(
+    (move: PanelTreeUnitDockMove) => {
+      const nextDock = moveTreeUnitInDock(dock, move);
+      if (nextDock === dock) return;
+      const nextSkeleton = dockSkeletonOf(nextDock);
+      const defaultSkeleton = dockSkeletonOf(defaultDock);
+      dispatch({ type: "SET_DOCK_OVERRIDE", value: dockSkeletonsEqual(nextSkeleton, defaultSkeleton) ? null : nextSkeleton });
+      dispatch({ type: "SET_CORNER_PANEL_VISIBLE", corner: move.target.corner, value: true });
+    },
+    [dock, defaultDock],
+  );
 
-  const rightPanelActivePath = useMemo((): readonly string[] => {
-    if (rightPanelPath[0] !== FRAMEWORK_CATEGORY_SETTINGS_ID && panel?.activePanelTab) {
-      const path = findPanelTabPath(rightPanelTabs, panel.activePanelTab);
-      if (path) return path;
-    }
-    return reconcileActivePath(rightPanelTabs, rightPanelPath, panelTabChildren);
-  }, [panel?.activePanelTab, rightPanelPath, rightPanelTabs]);
+  const studioOverrideTabId = studioMode && session?.app.id === S_PLAY_APP_ID ? (panel?.activePanelTab ?? S_PLAY_CATALOGUE_TAB_ID) : undefined;
+  const studioOverrideCorner = studioOverrideTabId ? findPanelTabInDock(dock, studioOverrideTabId)?.corner : undefined;
+  const detailsOverrideTabId = panel?.activePanelTab;
+  const detailsOverrideCorner = detailsOverrideTabId ? findPanelTabInDock(dock, detailsOverrideTabId)?.corner : undefined;
 
-  const mobilePanelTabs = useMemo(() => [...leftPanelTabs, ...rightPanelTabs], [leftPanelTabs, rightPanelTabs]);
+  /** 🧭 Generalizes the old `leftPanelActivePath`/`rightPanelActivePath` studio/plugin "snap to the active panel tab" overrides across all four corners, resolved against whichever corner the target tab actually lives in right now. */
+  const cornerActivePaths = useMemo((): Record<PanelCorner, readonly string[]> => {
+    const result = {} as Record<PanelCorner, readonly string[]>;
+    for (const corner of PANEL_CORNERS) {
+      const tabs = dock.corners[corner];
+      const storedPath = cornerPanels[corner].path;
+      let resolved: readonly string[] | undefined;
+      if (studioOverrideCorner === corner && storedPath[0] !== FRAMEWORK_CATEGORY_DISPLAY_ID) {
+        resolved = findPanelTabPath(tabs, studioOverrideTabId!);
+      }
+      if (!resolved && detailsOverrideCorner === corner && storedPath[0] !== FRAMEWORK_CATEGORY_SETTINGS_ID) {
+        resolved = findPanelTabPath(tabs, detailsOverrideTabId!);
+      }
+      result[corner] = resolved ?? reconcileActivePath(tabs, storedPath, panelTabChildren);
+    }
+    return result;
+  }, [cornerPanels, detailsOverrideCorner, detailsOverrideTabId, dock, studioOverrideCorner, studioOverrideTabId]);
+  //#endregion 🧭DockAssembly
+
+  const mobilePanelTabs = useMemo(
+    () => [...defaultDock.corners["top-left"], ...defaultDock.corners["top-right"], ...defaultDock.corners["bottom-left"], ...defaultDock.corners["bottom-right"]],
+    [defaultDock],
+  );
 
   const mobilePanel = useMemo(() => {
     if (mobilePanelTabs.length === 0) return undefined;
     return {
-      visible: leftPanelVisible || rightPanelVisible,
+      visible: PANEL_CORNERS.some((corner) => cornerPanels[corner].visible),
       tabs: mobilePanelTabs,
       activeTabPath: mobilePanelPath,
       onActiveTabPathChange: (path: readonly string[]) => {
@@ -2452,7 +2622,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         }
       },
     };
-  }, [leftPanelVisible, mobilePanelPath, mobilePanelTabs, onAction, rightPanelVisible, session, studioMode]);
+  }, [cornerPanels, mobilePanelPath, mobilePanelTabs, onAction, session, studioMode]);
 
   const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
   const exampleOptions = useMemo(() => {
@@ -2612,41 +2782,6 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     return items;
   }, [appLabelsOverlay, onAction, panel, session, studioMode, uiLocale]);
 
-  const footerItems = [];
-
-  const footerModeToolTree = useMemo(() => {
-    const deduped = dedupeToolNodesById([...Object.values(toolNodesByKind), spawnedToolNodes]);
-    const grouped = groupToolNodesByCategory(deduped, FOOTER_TOOL_CATEGORIES);
-    if (!grouped.length) return undefined;
-    return <ToolTree id="ui.toolbar.footer" tools={grouped} onAction={onAction} direction="up" />;
-  }, [onAction, spawnedToolNodes, toolNodesByKind]);
-
-  const footerToolbar = useMemo(() => {
-    const syncTools = buildFrameworkSyncTools(syncBackboneUri) as readonly ToolNode[];
-    const syncStatus = syncBackboneUri ? (syncStatusByDocumentId[syncBackboneUri.replace(/^actor:\/\//, "")] ?? null) : null;
-    const syncCard = syncTools.length ? (
-      <SyncAttachCard
-        activeUri={syncBackboneUri}
-        cardKind={syncCardKind}
-        draftPath={syncDraftPath}
-        syncTools={syncTools}
-        status={syncStatus}
-        onAction={onAction}
-        onDraftPathChange={(value) => dispatch({ type: "SET_SYNC_DRAFT_PATH", value })}
-        onClose={() => dispatch({ type: "SET_SYNC_CARD_KIND", value: null })}
-        onAttach={attachSyncBackbone}
-        onDetach={detachSyncBackbone}
-      />
-    ) : undefined;
-    if (!footerModeToolTree && !syncCard) return undefined;
-    return (
-      <>
-        {footerModeToolTree}
-        {syncCard}
-      </>
-    );
-  }, [attachSyncBackbone, detachSyncBackbone, footerModeToolTree, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId]);
-
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
     if (studioMode && spawnedWindowUi && panel?.activeSpawnedId) {
@@ -2792,57 +2927,44 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     );
   }, [activeWindowId, effectiveModeLayout, error, handleTemplateDrop, mobile, modeWindows, navigateHistory, onAction, panel, session, studioMode, uiLocale, updateStudioPanel]);
 
+  const buildCornerPanelProps = useCallback(
+    (corner: PanelCorner) => ({
+      visible: cornerPanels[corner].visible,
+      onVisibleChange: (value: boolean) => dispatch({ type: "SET_CORNER_PANEL_VISIBLE", corner, value }),
+      size: cornerPanels[corner].size,
+      onSizeChange: (value: number) => dispatch({ type: "SET_CORNER_PANEL_SIZE", corner, value }),
+      tabs: dock.corners[corner],
+      activeTabPath: cornerActivePaths[corner],
+      onActiveTabPathChange: (path: readonly string[]) => {
+        dispatch({ type: "SET_CORNER_PANEL_PATH", corner, value: path });
+        const tabId = path[path.length - 1];
+        if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID) {
+          onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
+        }
+      },
+    }),
+    [cornerActivePaths, cornerPanels, dock, onAction, session, studioMode],
+  );
+
   return (
     <UIFindProvider>
       <LevelProvider level="window">
         <div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
-          <Layout
-            mobile={mobile}
-            mobilePanel={mobilePanel}
-            navbar={<Navbar items={navbarItems} showFullscreenToggle />}
-            footer={<Footer items={footerItems} toolbar={footerToolbar} />}
-            leftSidePanel={
-              workbenchLeftTabs.length > 0 || frameworkDisplayTabs.length > 0
-                ? {
-                    position: "left",
-                    visible: leftPanelVisible,
-                    onVisibleChange: (value) => dispatch({ type: "SET_LEFT_PANEL_VISIBLE", value }),
-                    size: leftPanelSize,
-                    onSizeChange: (value) => dispatch({ type: "SET_LEFT_PANEL_SIZE", value }),
-                    tabs: leftPanelTabs,
-                    activeTabPath: leftPanelActivePath,
-                    onActiveTabPathChange: (path) => {
-                      dispatch({ type: "SET_LEFT_PANEL_PATH", value: path });
-                      const tabId = path[path.length - 1];
-                      if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID) {
-                        onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
-                      }
-                    },
-                  }
-                : undefined
-            }
-            rightSidePanel={
-              detailsRightTabs.length > 0 || settingsRightTabs.length > 0
-                ? {
-                    position: "right",
-                    visible: rightPanelVisible,
-                    onVisibleChange: (value) => dispatch({ type: "SET_RIGHT_PANEL_VISIBLE", value }),
-                    size: rightPanelSize,
-                    onSizeChange: (value) => dispatch({ type: "SET_RIGHT_PANEL_SIZE", value }),
-                    tabs: rightPanelTabs,
-                    activeTabPath: rightPanelActivePath,
-                    onActiveTabPathChange: (path) => {
-                      dispatch({ type: "SET_RIGHT_PANEL_PATH", value: path });
-                      const tabId = path[path.length - 1];
-                      if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID) {
-                        onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
-                      }
-                    },
-                  }
-                : undefined
-            }
-            canvas={<ShellRenderErrorBoundary>{canvas}</ShellRenderErrorBoundary>}
-          />
+          <PanelDockProvider dock={dock} onTabDockDrop={handleTabDockDrop} onTreeUnitDockDrop={handleTreeUnitDockDrop}>
+            <Layout
+              mobile={mobile}
+              mobilePanel={mobilePanel}
+              navbar={<Navbar items={navbarItems} showFullscreenToggle />}
+              footer={<Footer items={[]} />}
+              cornerPanels={{
+                "top-left": dock.corners["top-left"].length > 0 ? buildCornerPanelProps("top-left") : undefined,
+                "top-right": dock.corners["top-right"].length > 0 ? buildCornerPanelProps("top-right") : undefined,
+                "bottom-left": dock.corners["bottom-left"].length > 0 ? buildCornerPanelProps("bottom-left") : undefined,
+                "bottom-right": dock.corners["bottom-right"].length > 0 ? buildCornerPanelProps("bottom-right") : undefined,
+              }}
+              canvas={<ShellRenderErrorBoundary>{canvas}</ShellRenderErrorBoundary>}
+            />
+          </PanelDockProvider>
         </div>
         <UISearch items={searchItems} open={searchOpen} onOpenChange={(value) => dispatch({ type: "SET_SEARCH_OPEN", value })} />
         <UIFind open={findOpen} onOpenChange={(value) => dispatch({ type: "SET_FIND_OPEN", value })} />
@@ -3599,9 +3721,6 @@ const TOOL_CATEGORY_ORDER: readonly ToolCategory[] = ["selection", "tools", "act
 /** @emoji 🪟 Categories that are scoped to whatever window/pane the user is interacting with — selecting or editing content varies per window, so these live in each window's own bottom-left panel. */
 const WINDOW_TOOL_CATEGORIES: readonly ToolCategory[] = ["selection", "tools"];
 
-/** @emoji 🦶 Categories that apply regardless of which window has focus — undoing, running document-wide actions, or syncing are mode-wide, so they live once in the shared footer instead of being duplicated into every window. */
-const FOOTER_TOOL_CATEGORIES: readonly ToolCategory[] = ["actions", "history"];
-
 const TOOL_CATEGORY_ICON_ID: Readonly<Record<ToolCategory, string>> = {
   selection: "mouse-pointer",
   tools: "wrench",
@@ -4001,8 +4120,7 @@ function buildDisplayLayoutTree(host: DisplayHostApi): TreePanelConfig {
 
 export function createFrameworkDisplayPanelTabs(getHost: () => DisplayHostApi | null): PanelTabNode[] {
   return [
-    {
-      kind: "leaf",
+    singleTreeLeaf({
       id: FRAMEWORK_DISPLAY_WINDOWS_TAB_ID,
       icon: shellTabIcon("framework.display.windows"),
       name: shellLabel("ui.display.tab.windows"),
@@ -4013,9 +4131,8 @@ export function createFrameworkDisplayPanelTabs(getHost: () => DisplayHostApi | 
           return host ? buildDisplayWindowsTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.display.unavailable") }] }] };
         },
       },
-    },
-    {
-      kind: "leaf",
+    }),
+    singleTreeLeaf({
       id: FRAMEWORK_DISPLAY_LAYOUT_TAB_ID,
       icon: shellTabIcon("framework.display.layout"),
       name: shellLabel("ui.display.tab.layout"),
@@ -4026,7 +4143,7 @@ export function createFrameworkDisplayPanelTabs(getHost: () => DisplayHostApi | 
           return host ? buildDisplayLayoutTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.display.unavailable") }] }] };
         },
       },
-    },
+    }),
   ];
 }
 //#endregion DisplayPanel
@@ -4046,6 +4163,8 @@ export type SettingsHostApi = {
   readonly layout: UiChromeLayout;
   readonly setLayout: (layout: UiChromeLayout) => void;
   readonly mobileActive: boolean;
+  /** 🧭 Clears the persisted corner-panel arrangement and folds every corner's active path back to its default — undefined when a shell doesn't wire up dock persistence. */
+  readonly onResetDock?: () => void;
   readonly locale: UiLocale;
   readonly setLocale: (locale: UiLocale) => void;
   readonly terminology: string;
@@ -4183,6 +4302,15 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
               </Select>
             ),
           },
+          ...(host.onResetDock
+            ? [
+                {
+                  id: "framework.settings.resetDock.action",
+                  label: shellLabel("ui.settings.resetDock"),
+                  control: <Button id="framework.settings.resetDock" size="sm" icon="rotate-ccw" text={shellLabel("ui.settings.resetDock")} onClick={() => host.onResetDock?.()} />,
+                },
+              ]
+            : []),
         ],
       },
     ],
@@ -4419,8 +4547,7 @@ function buildSettingsThemeTree(host: SettingsHostApi): TreePanelConfig {
 
 export function createFrameworkSettingsPanelTabs(getHost: () => SettingsHostApi | null): PanelTabNode[] {
   return [
-    {
-      kind: "leaf",
+    singleTreeLeaf({
       id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID,
       icon: shellTabIcon("framework.settings.general"),
       name: shellLabel("ui.panelToggle.settings"),
@@ -4431,9 +4558,8 @@ export function createFrameworkSettingsPanelTabs(getHost: () => SettingsHostApi 
           return host ? buildSettingsGeneralTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.settings.unavailable") }] }] };
         },
       },
-    },
-    {
-      kind: "leaf",
+    }),
+    singleTreeLeaf({
       id: FRAMEWORK_SETTINGS_THEME_TAB_ID,
       icon: shellTabIcon("paintbrush"),
       name: shellLabel("ui.settings.tab.theme"),
@@ -4444,7 +4570,7 @@ export function createFrameworkSettingsPanelTabs(getHost: () => SettingsHostApi 
           return host ? buildSettingsThemeTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.settings.unavailable") }] }] };
         },
       },
-    },
+    }),
   ];
 }
 
