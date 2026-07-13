@@ -1,7 +1,7 @@
 //! 🎛️ S Studio plugin — designer OS shell bundled as a hot-swappable WASM component.
 
 use semio_framework_os::{
-    apply_flow_fixture_to_os_media_graph, create_os_studio, default_os_projection, delete_os_studio,
+    apply_flow_fixture_to_os_media_graph, create_os_studio, delete_os_studio,
     import_os_studio_from_json, list_os_media_graph_vfs_children, list_os_programs,
     list_os_studio_catalog_entries, load_os_studio_document, media_port_spec_id,
     create_default_os_parameter, os_app_primary_output_kind, os_app_registration, create_os_document_id,
@@ -2320,7 +2320,7 @@ impl DocumentApp for SStudioApp {
                     .and_then(|value| value.as_str())
                     .and_then(|viewport_json| serde_json::from_str::<OsMediaGraphCamera>(viewport_json).ok())
                 {
-                    runtime.media_graph_camera = Some(camera);
+                    self.runtime.media_graph_camera = Some(camera);
                 }
             }
             "nodeGraphEdit" => {
@@ -2329,8 +2329,6 @@ impl DocumentApp for SStudioApp {
                     .and_then(|value| value.as_array())
                     .cloned()
                     .unwrap_or_default();
-                let projection = store.projection().unwrap_or_else(|_| default_os_projection());
-                let mut graph_ops = Vec::new();
                 for edit in &edit_ops {
                     match edit.get("op").and_then(|value| value.as_str()).unwrap_or("") {
                         "setFixture" => {
@@ -2340,9 +2338,9 @@ impl DocumentApp for SStudioApp {
                                     .and_then(|fixture| fixture.get("camera").cloned())
                                     .and_then(|camera| serde_json::from_value::<OsMediaGraphCamera>(camera).ok())
                                 {
-                                    runtime.media_graph_camera = Some(camera);
+                                    self.runtime.media_graph_camera = Some(camera);
                                 }
-                                graph_ops.extend(apply_flow_fixture_to_os_media_graph(&projection.media_graph, fixture_json));
+                                ops.extend(apply_flow_fixture_to_os_media_graph(&projection.media_graph, fixture_json));
                             }
                         }
                         "move" => {
@@ -2351,7 +2349,7 @@ impl DocumentApp for SStudioApp {
                                 edit.get("x").and_then(|value| value.as_f64()),
                                 edit.get("y").and_then(|value| value.as_f64()),
                             ) {
-                                graph_ops.push(OsOp::MoveMediaNode { node_id: node_id.into(), x, y });
+                                ops.push(OsOp::MoveMediaNode { node_id: node_id.into(), x, y });
                             }
                         }
                         "connect" => {
@@ -2361,7 +2359,7 @@ impl DocumentApp for SStudioApp {
                                 edit.get("targetNodeId").and_then(|value| value.as_str()),
                                 edit.get("targetPortId").and_then(|value| value.as_str()),
                             ) {
-                                graph_ops.push(OsOp::ConnectMediaPorts {
+                                ops.push(OsOp::ConnectMediaPorts {
                                     edge: semio_framework_os::OsMediaGraphEdge {
                                         id: create_os_id("edge"),
                                         source_node_id: source_node_id.into(),
@@ -2373,23 +2371,20 @@ impl DocumentApp for SStudioApp {
                             }
                         }
                         "deleteSelection" => {
-                            for node_id in &runtime.selected_media_node_ids {
+                            for node_id in &self.runtime.selected_media_node_ids {
                                 if let Some(node) = projection.media_graph.nodes.iter().find(|node| node.id == *node_id) {
-                                    graph_ops.push(OsOp::RemoveAppInstance { instance_id: node.instance_id.clone() });
+                                    ops.push(OsOp::RemoveAppInstance { instance_id: node.instance_id.clone() });
                                 }
                             }
                         }
                         _ => {}
                     }
                 }
-                if !graph_ops.is_empty() {
-                    let _ = store.dispatch_apply(graph_ops);
-                }
             }
             "presenceHeartbeat" => {
                 if let Some(client_id) = args.and_then(|value| value.get("clientId")).and_then(|value| value.as_str()) {
-                    runtime.client_id = Some(client_id.into());
-                    runtime.client_name = Some(
+                    self.runtime.client_id = Some(client_id.into());
+                    self.runtime.client_name = Some(
                         args.and_then(|value| value.get("name"))
                             .and_then(|value| value.as_str())
                             .unwrap_or("Guest")
@@ -2407,9 +2402,8 @@ impl DocumentApp for SStudioApp {
                             .collect()
                     })
                     .unwrap_or_default();
-                let projection = store.projection().unwrap_or_else(|_| default_os_projection());
-                runtime.selected_app_instance_ids = instance_ids.clone();
-                runtime.selected_media_node_ids = instance_ids
+                self.runtime.selected_app_instance_ids = instance_ids.clone();
+                self.runtime.selected_media_node_ids = instance_ids
                     .iter()
                     .filter_map(|instance_id| {
                         projection
@@ -2421,7 +2415,7 @@ impl DocumentApp for SStudioApp {
                     })
                     .collect();
                 if instance_ids.len() == 1 {
-                    runtime.active_instance_id = Some(instance_ids[0].clone());
+                    self.runtime.active_instance_id = Some(instance_ids[0].clone());
                 }
             }
             "patchMediaNodes" => {
@@ -2445,7 +2439,6 @@ impl DocumentApp for SStudioApp {
                             .and_then(|value| value.parse().ok())
                     });
                 if field == Some("position") && numeric.is_some() {
-                    let projection = store.projection().unwrap_or_else(|_| default_os_projection());
                     for node_id in node_ids {
                         if let Some(node) = projection.media_graph.nodes.iter().find(|row| row.id == node_id) {
                             let x = if axis == Some("x") {
@@ -2458,11 +2451,11 @@ impl DocumentApp for SStudioApp {
                             } else {
                                 node.y
                             };
-                            let _ = store.dispatch_apply(vec![OsOp::MoveMediaNode {
+                            ops.push(OsOp::MoveMediaNode {
                                 node_id,
                                 x,
                                 y,
-                            }]);
+                            });
                         }
                     }
                 }
@@ -2484,10 +2477,10 @@ impl DocumentApp for SStudioApp {
                 if field == Some("label") {
                     for instance_id in instance_ids {
                         if let Some(label) = value {
-                            let _ = store.dispatch_apply(vec![OsOp::PatchAppInstance {
+                            ops.push(OsOp::PatchAppInstance {
                                 instance_id,
                                 label: Some(label.into()),
-                            }]);
+                            });
                         }
                     }
                 }
@@ -2507,18 +2500,18 @@ impl DocumentApp for SStudioApp {
                     .unwrap_or("");
                 if !instance_id.is_empty() && !field_path.is_empty() {
                     if parameter_id.is_empty() || parameter_id == "__direct__" {
-                        let _ = store.dispatch_apply(vec![OsOp::UnbindParameterField {
+                        ops.push(OsOp::UnbindParameterField {
                             instance_id: instance_id.into(),
                             field_path: field_path.into(),
-                        }]);
+                        });
                     } else {
-                        let _ = store.dispatch_apply(vec![OsOp::BindParameterField {
+                        ops.push(OsOp::BindParameterField {
                             binding: OsParameterFieldBinding {
                                 parameter_id: parameter_id.into(),
                                 instance_id: instance_id.into(),
                                 field_path: field_path.into(),
                             },
-                        }]);
+                        });
                     }
                 }
             }
@@ -2532,10 +2525,10 @@ impl DocumentApp for SStudioApp {
                     .and_then(|value| value.as_str())
                     .unwrap_or("");
                 if !instance_id.is_empty() && !field_path.is_empty() {
-                    let _ = store.dispatch_apply(vec![OsOp::UnbindParameterField {
+                    ops.push(OsOp::UnbindParameterField {
                         instance_id: instance_id.into(),
                         field_path: field_path.into(),
-                    }]);
+                    });
                 }
             }
             "openStudio" => {
@@ -2543,73 +2536,52 @@ impl DocumentApp for SStudioApp {
                     .and_then(|value| value.get("studioId"))
                     .and_then(|value| value.as_str())
                 {
-                    if let Ok(document) = load_studio_document(studio_id) {
-                        *envelope = SStudioEnvelope {
-                            document,
-                            runtime: StudioRuntimeState {
-                                studio_id: Some(studio_id.into()),
-                                active_instance_id: envelope.runtime.active_instance_id.clone(),
-                                ..StudioRuntimeState::default()
-                            },
-                        };
-                        return vec![set_studio_document_op(envelope)];
-                    }
+                    // 🧭 Switching studios navigates the shell; the host loads the target document by
+                    // its `OsDocumentRef` (no in-place envelope swap on the plugin side).
+                    return ActionEmit::effect(HostEffect::Navigate { uri: format!("/studios/{studio_id}") });
                 }
+                return ActionEmit::default();
             }
             "openInstance" => {
-                let projection = store.projection().unwrap_or_else(|_| default_os_projection());
                 let instance_id = args
                     .and_then(|value| value.get("instanceId"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string)
-                    .or_else(|| primary_selected_instance_id(&runtime, &projection));
+                    .or_else(|| primary_selected_instance_id(&self.runtime, projection));
                 if let Some(instance_id) = instance_id {
-                    runtime.focused_instance_id = Some(instance_id.clone());
-                    runtime.active_instance_id = Some(instance_id.clone());
-                    runtime.selected_app_instance_ids = vec![instance_id.clone()];
-                    let projection = store.projection().unwrap_or_else(|_| default_os_projection());
+                    self.runtime.focused_instance_id = Some(instance_id.clone());
+                    self.runtime.active_instance_id = Some(instance_id.clone());
+                    self.runtime.selected_app_instance_ids = vec![instance_id.clone()];
                     if let Some(node) = projection
                         .media_graph
                         .nodes
                         .iter()
                         .find(|row| row.instance_id == instance_id)
                     {
-                        runtime.selected_media_node_ids = vec![node.id.clone()];
+                        self.runtime.selected_media_node_ids = vec![node.id.clone()];
                     }
                     if let Some(instance) = projection
                         .app_instances
                         .iter()
                         .find(|row| row.id == instance_id)
                     {
-                        ensure_studio_fixtures_registered();
-                        // 🚧 Same seeding gap as `exportMedia` above — blank schema doc until `s`
-                        // adopts `OsDocumentRef`/`DocumentApp` (WS-F last wave).
-                        let document_json = materialize_os_app_instance_document_json(
-                            &json!({ "schema": instance.document.schema }).to_string(),
-                            &instance.id,
-                            &projection.parameter_bindings,
-                            &projection.parameters,
-                        );
-                        ops.push(json!({
-                            "op": "openPluginInstance",
-                            "programId": instance.program_id,
-                            "appId": instance.app_id,
-                            "osInstanceId": instance.id,
-                            "label": instance.label,
-                            "documentJson": document_json,
-                        })
-                        .to_string());
+                        effects.push(HostEffect::OpenPluginInstance {
+                            program_id: instance.program_id.clone(),
+                            app_id: instance.app_id.clone(),
+                            os_instance_id: Some(instance.id.clone()),
+                        });
                     }
                 }
             }
             "closeFocusedInstance" => {
-                runtime.focused_instance_id = None;
+                self.runtime.focused_instance_id = None;
+                let mut panel = parse_panel_state(view_state);
+                panel.active_spawned_id = None;
+                return ActionEmit::effect(HostEffect::SetPanel { panel_json: panel_json(&panel) });
             }
-            "goHome" => {
-                return vec![json!({ "op": "navigate", "uri": "/" }).to_string()];
-            }
+            "goHome" => return ActionEmit::effect(HostEffect::Navigate { uri: "/".into() }),
             "mediaGraphEngagementInput" => {
-                runtime.media_graph_engagement_input = args
+                self.runtime.media_graph_engagement_input = args
                     .and_then(|value| value.get("value"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("")
@@ -2619,112 +2591,65 @@ impl DocumentApp for SStudioApp {
                 let raw = args
                     .and_then(|value| value.get("value"))
                     .and_then(|value| value.as_str())
-                    .unwrap_or(&runtime.media_graph_engagement_input);
+                    .map(str::to_string)
+                    .unwrap_or_else(|| self.runtime.media_graph_engagement_input.clone());
                 let mut parts = raw.split_whitespace();
                 if let (Some(program_id), Some(app_id)) = (parts.next(), parts.next()) {
-                    if let Ok(instance_id) = store.spawn_app_instance(
+                    if let Some((op, instance_id)) = spawn_app_instance_op(
                         program_id,
                         app_id,
                         None,
                         MediaGraphPosition { x: 80.0, y: 80.0 },
                     ) {
-                        runtime.active_instance_id = Some(instance_id);
+                        self.runtime.active_instance_id = Some(instance_id);
+                        ops.push(op);
                     }
                 }
             }
             "compiledDagEngagementInput" => {
-                runtime.compiled_dag_engagement_input = args
+                self.runtime.compiled_dag_engagement_input = args
                     .and_then(|value| value.get("value"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("")
                     .into();
             }
-            "compiledDagEngagementSubmit" => {
-                let _ = runtime.compiled_dag_engagement_input.clone();
-            }
+            "compiledDagEngagementSubmit" => {}
             _ => {}
         }
         if matches!(
             action,
             "presenceHeartbeat" | "nodeGraphSelect" | "setMediaNodeSelection" | "selectInstance" | "setAppInstanceSelection" | "deleteSelection"
         ) {
-            publish_presence(&runtime);
+            publish_presence(&self.runtime);
         }
-        *envelope = envelope_from_store(store, runtime);
-        persist_envelope_document(envelope);
-        ops.push(set_studio_document_op(envelope));
-        ops
-    }
-}
-
-impl PluginApp for SStudioApp {
-    fn app_id(&self) -> &str {
-        S_PLAY_APP_ID
+        ActionEmit {
+            ops,
+            coalesce_key,
+            effects,
+            ..Default::default()
+        }
     }
 
-    fn initial_document_json(&self) -> String {
-        initial_studio_document_json()
-    }
-
-    fn handle_action_patch_ops(
-        &mut self,
-        action: &str,
-        args: Option<&Value>,
-        document_json: &str,
-        view_state: &ViewState,
-    ) -> Vec<String> {
-        if action == "setActivePanelTab" {
-            if let Some(tab) = args.and_then(|value| value.get("tabId")).and_then(|value| value.as_str()) {
-                let mut panel = parse_panel_state(view_state);
-                panel.active_panel_tab = tab.into();
-                return vec![set_panel_op(&panel)];
-            }
-        }
-        if action == "closeFocusedInstance" {
-            let mut panel = parse_panel_state(view_state);
-            panel.active_spawned_id = None;
-            let mut envelope = parse_studio_envelope(document_json);
-            envelope.runtime.focused_instance_id = None;
-            return vec![set_panel_op(&panel), set_studio_document_op(&envelope)];
-        }
-        if action == "navigateVirtualFileSystemNode" {
-            if let Some(studio_id) = args
-                .and_then(|value| value.get("studioId"))
-                .and_then(|value| value.as_str())
-            {
-                return vec![json!({
-                    "op": "navigate",
-                    "uri": format!("/studios/{studio_id}")
-                })
-                .to_string()];
-            }
-        }
-        let mut envelope = parse_studio_envelope(document_json);
-        Self::handle_studio_action(&mut envelope, action, args)
-    }
-
-    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-        let envelope = parse_studio_envelope(document_json);
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, OsProjection>, view_state: &ViewState) -> UiNode {
+        let projection = doc.projection;
         let panel = parse_panel_state(view_state);
         let labels = s_studio_labels(view_state);
         match body_key {
-            S_PLAY_BODY_MEDIA_GRAPH => render_media_graph(&envelope.document, &envelope.runtime),
-            S_PLAY_BODY_MEDIA_VFS => render_media_vfs(&envelope.document, labels),
-            S_PLAY_BODY_COMPILED_DAG => render_compiled_dag(&envelope.document),
+            S_PLAY_BODY_MEDIA_GRAPH => render_media_graph(projection, &self.runtime),
+            S_PLAY_BODY_MEDIA_VFS => render_media_vfs(projection, labels),
+            S_PLAY_BODY_COMPILED_DAG => render_compiled_dag(projection),
             S_PLAY_CATALOGUE_BODY_KEY => build_catalogue_tree(&panel, labels),
-            S_PLAY_PARAMETERS_BODY_KEY => build_parameters_tree(&envelope.document, labels),
-            S_PLAY_INSPECTOR_BODY_KEY => build_inspector_tree(&envelope.document, &envelope.runtime, labels),
+            S_PLAY_PARAMETERS_BODY_KEY => build_parameters_tree(projection, labels),
+            S_PLAY_INSPECTOR_BODY_KEY => build_inspector_tree(projection, &self.runtime, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn window_measures(&self, document_json: &str, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let envelope = parse_studio_envelope(document_json);
-        let projection = projection_from_document(&envelope.document);
+    fn window_measures(&self, doc: &DocumentView<'_, OsProjection>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = s_studio_labels(view_state);
         HashMap::from([(
             S_PLAY_WINDOW_MEDIA_GRAPH.into(),
-            media_graph_measures(&envelope.runtime, &projection.app_instances, labels),
+            media_graph_measures(&self.runtime, &doc.projection.app_instances, labels),
         )])
     }
 
@@ -2865,7 +2790,7 @@ fn create_home_app() -> App {
 }
 
 fn create_studio_app() -> App {
-    let projection = projection_from_document(&demo_os_document());
+    let projection = demo_studio_projection();
     let runtime = StudioRuntimeState {
         active_instance_id: projection.app_instances.first().map(|instance| instance.id.clone()),
         ..StudioRuntimeState::default()
@@ -2940,7 +2865,6 @@ fn create_studio_app() -> App {
         .operation("duplicateAppInstance", "Duplicate App Instance")
         .operation("pasteAppInstance", "Paste App Instance")
         .operation("renameAppInstance", "Rename App Instance")
-        .operation("patchAppSource", "Patch App Source")
         .operation("patchMediaNodes", "Patch Media Nodes")
         .operation("patchAppInstances", "Patch App Instances")
         .operation("bindParameterField", "Bind Parameter Field")
@@ -2976,7 +2900,7 @@ fn create_studio_app() -> App {
         window.options.measures = measures;
         window.options.engagement = WindowEngagementSlot::Some(engagement);
     }
-    let compiled_engagement = compiled_dag_engagement(&demo_os_document());
+    let compiled_engagement = compiled_dag_engagement(&demo_studio_projection());
     if let Some(window) = definition
         .window_kinds
         .iter_mut()
@@ -3000,8 +2924,8 @@ fn create_studio_app() -> App {
 fn bundle() -> PluginBundle {
     PluginBundle::new("s", "S Studio", "0.1.0")
         .local_backbone_storage()
-        .register_app(create_home_app(), || Box::new(SHomeApp))
-        .register_app(create_studio_app(), || Box::new(SStudioApp))
+        .register_document_app(create_home_app(), || SHomeApp)
+        .register_document_app(create_studio_app(), SStudioApp::new)
 }
 
 semio_framework_plugin::plugin_exports!(bundle);

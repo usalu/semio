@@ -73,6 +73,15 @@
 \GlossaryDefine{Wizard}{Geführte Eingabeoberfläche zur schrittweisen Erfassung und Qualifizierung von Bauteildaten.}
 \GlossaryDefine{Test-Case}{Realer oder realitätsnaher Anwendungsfall, an dem die entwickelte digitale Kette geprüft wird.}
 
+\AbbreviationDefine{AP}{Arbeitspaket -- ein klar abgegrenzter Teilbereich des Projekts mit eigenen Zielen und Aufgaben, in den das Gesamtprojekt zur besseren Steuerung unterteilt ist.}
+\AbbreviationDefine{KI}{Künstliche Intelligenz -- Oberbegriff für Computerprogramme, die Aufgaben lösen, für die normalerweise menschliches Denken nötig ist, etwa Sprache verstehen oder Muster erkennen.}
+\AbbreviationDefine{LLM}{Large-Language-Model -- ein Computerprogramm, das mit sehr großen Textmengen trainiert wurde und dadurch selbstständig Texte verstehen, beantworten und formulieren kann.}
+\AbbreviationDefine{HID}{Human Interface Design -- die Gestaltung, wie Menschen ein Computerprogramm bedienen und mit ihm interagieren, etwa über Bildschirmansichten.}
+\AbbreviationDefine{REST}{Representational State Transfer -- ein verbreitetes technisches Verfahren, mit dem Computerprogramme über das Internet standardisiert Daten austauschen.}
+\AbbreviationDefine{NGS}{Nachhaltige Gebäudesysteme -- die an diesem Projekt beteiligte Abteilung der Leibniz Universität Hannover (LUH).}
+\AbbreviationDefine{KET}{Konstruktives Entwerfen und Tragwerksplanung -- die an diesem Projekt beteiligte Abteilung der Universität der Künste Berlin (UdK).}
+\AbbreviationDefine{BBSR}{Bundesinstitut für Bau-, Stadt- und Raumforschung -- die Bundesbehörde, die dieses Forschungsvorhaben fördert.}
+
 \begin{document}
 
 \makecoverpages
@@ -81,10 +90,10 @@
 
 \makeworkpackages{%
   \SemioTableThree{%
-    \SemioTableHeaderRow{AP & Partner & Schwerpunkt im Berichtszeitraum}
+    \SemioTableHeaderRow{\Abbr{AP} & Partner & Schwerpunkt im Berichtszeitraum}
     \SemioTableRow{AP-Erfahrung & Leibniz Universität Hannover & Recherche, Interviews, User Stories}
     \SemioTableRow{AP-Plattform & Leibniz Universität Hannover & Generatoren, Bauteileinspeisung}
-    \SemioTableRow{AP-Tool & Universität der Künste Berlin & HID, Lebenszyklusanalyse, Tragwerksanalyse, KI-Assistenz}
+    \SemioTableRow{AP-Tool & Universität der Künste Berlin & \Abbr{HID}, Lebenszyklusanalyse, Tragwerksanalyse, \Abbr{KI}-Assistenz}
     \SemioTableRow{AP-Validierung & Leibniz Universität Hannover & Test-Case, Entwurfsgrammatik, Entwicklung}
   }%
 }
@@ -110,7 +119,7 @@ Wie können Bauteilbörsen mit minimalem Aufwand planungsfähige Daten bereitste
 Wie können gleichzeitig Entwurfs-, LCA- und Tragwerksmodelle erstellt/modifiziert/evaluiert werden?
 
 \paragraph{Assistenz}
-Wie kann KI, insbesondere LLMs, während dem Entwurfsprozess unterstützen?
+Wie kann KI, insbesondere \Abbr{LLM}s, während dem Entwurfsprozess unterstützen?
 \end{SemioNest}
 
 Der Zwischenbericht folgt dabei der Struktur der Arbeitspakete. AP-Erfahrung leitet aus der Recherche und den Interviews User Stories ab. Die User Stories definieren die fachlichen Anforderungen für die Plattform und für das Tool. AP-Plattform und AP-Tool übersetzen diese Anforderungen in digitale Systemkomponenten. AP-Validierung prüft die entwickelten Ansätze anhand eines Test-Cases.
@@ -241,7 +250,7 @@ Für jede Typologiefamilie steht ein vorprogrammierter Generator mit einem defin
 
 Mit der Geometrie erzeugt der Generator weitere, mit ihr verknüpfte Repräsentationen desselben Bauteils. Sie bündeln die Größen, die für die spätere Bewertung nötig sind: eine ökobilanzielle Repräsentation mit Volumen, Masse und Materialangaben (Abschnitt~1.2.3.3), eine tragwerkliche mit Querschnitt, Materialkennwerten und Zustandsangaben (Abschnitt~1.2.3.4) sowie eine semantische, die Anschlussstellen und mögliche Rollen im Entwurf beschreibt. Diese Repräsentationen sind bereits am einzelnen Bauteil lesbar, bevor es im Aggregator mit anderen kombiniert wird.
 
-Im Berichtszeitraum baute die LUH (NGS) die Infrastruktur der Generatoren auf und implementierte prototypisch einen Generator für Stützen. Er erzeugt aus einem Parametersatz ein Bauteilobjekt, das im Bauteilkatalog angezeigt und im Aggregator verwendet werden kann. Die Struktur der Repräsentationen ist angelegt; ihre vollständige Befüllung sowie die Generatoren der übrigen Typologiefamilien sind konzipiert, aber noch nicht implementiert. Gleiches gilt für das durchgängige Mitführen der vier Nachweiszustände (Abschnitt~1.2.1.1.2.2) am erzeugten Objekt.
+Im Berichtszeitraum baute die LUH (\Abbr{NGS}) die Infrastruktur der Generatoren auf und implementierte prototypisch einen Generator für Stützen. Er erzeugt aus einem Parametersatz ein Bauteilobjekt, das im Bauteilkatalog angezeigt und im Aggregator verwendet werden kann. Die Struktur der Repräsentationen ist angelegt; ihre vollständige Befüllung sowie die Generatoren der übrigen Typologiefamilien sind konzipiert, aber noch nicht implementiert. Gleiches gilt für das durchgängige Mitführen der vier Nachweiszustände (Abschnitt~1.2.1.1.2.2) am erzeugten Objekt.
 
 \begin{Figure}[title=Generator-Pipeline]
 \textit{[Platzhalter: Generator-Pipeline.]}
@@ -259,7 +268,7 @@ Hochgeladene Dokumente werden am Bauteil hinterlegt und können die spätere Nac
 Welche Felder erscheinen, steuern vorgebaute Constraints. Sie werten die bisherigen Angaben aus und blenden die dazu passenden Felder ein. Wird als Materialklasse Beton gewählt, erscheint die Betonklasse; bei Holz treten stattdessen holzspezifische Angaben hervor. Die so erfassten Werte bildet der Wizard auf die Parameter des zugehörigen Generators ab. Die Einspeisung bleibt dadurch geführt, nachvollziehbar und an die digitale Objektbildung gebunden.
 
 \paragraph{REST-Schnittstelle}
-Für die maschinelle Einspeisung stellt das Bauteilportal eine REST-Schnittstelle bereit. Sie nimmt strukturierte Bauteildaten entgegen, wie sie bei Börsen mit eigener Bestandsführung oder Inventarsystemen vorliegen können, und bildet sie auf dasselbe Datenschema ab wie der Wizard.
+Für die maschinelle Einspeisung stellt das Bauteilportal eine \Abbr{REST}-Schnittstelle bereit. Sie nimmt strukturierte Bauteildaten entgegen, wie sie bei Börsen mit eigener Bestandsführung oder Inventarsystemen vorliegen können, und bildet sie auf dasselbe Datenschema ab wie der Wizard.
 \end{SemioNest}
 
 \subsubsection{AP-Tool}
@@ -307,7 +316,7 @@ Maßgeblich für das Ergebnis ist die Allokationsregel. Sie legt fest, ob urspr�
 Im Berichtszeitraum wurde die Lebenszyklusanalyse als Entwurfsgrammatik konzipiert. Die Repräsentationsstruktur ist angelegt. Die Bewertung auf Bauteilebene ist vorbereitet; ein Rulechecker zur Vorbewertung von Entwurfsvarianten im Aggregator ist noch nicht implementiert.
 
 \paragraph{Tragwerksanalyse}
-Die Tragwerksanalyse ist als tragwerkliche Vorprüfung in der Vorplanung angelegt. Sie soll Bauteile und Varianten nicht abschließend nachweisen, sondern tragwerksrelevante Eigenschaften, Rollen, Anschlussbedingungen und offene Prüfungen sichtbar machen. Die Bearbeitung liegt bei der UdK (KET).
+Die Tragwerksanalyse ist als tragwerkliche Vorprüfung in der Vorplanung angelegt. Sie soll Bauteile und Varianten nicht abschließend nachweisen, sondern tragwerksrelevante Eigenschaften, Rollen, Anschlussbedingungen und offene Prüfungen sichtbar machen. Die Bearbeitung liegt bei der UdK (\Abbr{KET}).
 
 Grundlage ist die tragwerkliche Repräsentation des Bauteilobjekts. Sie enthält aus der Geometrie abgeleitete Querschnitts- und Systemgrößen sowie die bei der Erfassung hinterlegten Material- und Zustandsangaben. Dazu gehören etwa Festigkeiten, Vorschädigungen und die Geometrie möglicher Anschlussstellen.
 
@@ -535,5 +544,6 @@ Die Kosten für die Nutzung von LLMs sind gestiegen,
 \appendix
 \section{Verzeichnisse}
 \listofglossaries
+\listofabbreviations
 
 \end{document}

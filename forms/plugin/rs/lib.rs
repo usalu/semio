@@ -25,7 +25,6 @@ use std::sync::atomic::{AtomicU32, Ordering};
 const FORMS_PLAY_APP_ID: &str = "forms-play";
 const FORMS_PLAY_CONTROLLER_ID: &str = "forms-play";
 const FORMS_PLAY_SURFACE_BLUEPRINT: &str = "forms.play.blueprint";
-const FORMS_PLAY_SURFACE_TRY: &str = "forms.play.try";
 const FORMS_PLAY_BODY_BLUEPRINT: &str = "forms.play.blueprint";
 const FORMS_PLAY_BODY_TRY: &str = "forms.play.try";
 const FORMS_PLAY_BODY_DOCUMENT: &str = "forms.play.document";
@@ -2230,47 +2229,44 @@ semio_framework_plugin::semio_plugin! {
 mod tests {
     use super::*;
     use forms::apply_form_edit_op;
-    use semio_framework_plugin::PluginApp;
+    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+    use vcs::MemoryBackbone;
 
-    fn apply_ops(document_json: &str, ops: &[String]) -> FormsPlayEnvelope {
-        let mut play = parse_envelope(document_json);
-        for op_json in ops {
-            if let Ok(op) = serde_json::from_str::<Value>(op_json) {
-                if op.get("op").and_then(|value| value.as_str()) == Some("setDocument") {
-                    if let Some(document) = op.get("document") {
-                        if let Ok(parsed) = serde_json::from_value(document.clone()) {
-                            play = parsed;
-                        }
-                    }
-                }
-            }
-        }
-        play
+    fn meta(actor: &str) -> ActionMeta {
+        ActionMeta { actor: actor.into(), instance_id: 1 }
+    }
+
+    fn new_app() -> VcsDocumentApp<FormsPlayApp> {
+        VcsDocumentApp::new(FormsPlayApp::default())
+    }
+
+    fn seed_example(app: &mut VcsDocumentApp<FormsPlayApp>, example_id: &str) {
+        app.handle_action(
+            "setActiveExample",
+            Some(&json!({ "exampleId": example_id })),
+            &ViewState::default(),
+            &meta("local"),
+        )
+        .expect("seed example");
+    }
+
+    fn render(app: &mut VcsDocumentApp<FormsPlayApp>, body_key: &str, view_state: &ViewState) -> String {
+        serde_json::to_string(&app.render(body_key, None, view_state).expect("render")).unwrap()
     }
 
     #[test]
     fn initial_document_seeds_building_component_fixture() {
-        let app = FormsPlayApp;
-        let document = app.initial_document_json();
-        let play = parse_envelope(&document);
-        let spec = materialized_projection(&play);
+        let app = new_app();
+        let spec = app.projection().expect("projection");
         assert!(!flatten_questions(&spec).is_empty());
-        assert!(
-            flatten_questions(&spec)
-                .iter()
-                .any(|(_, question)| question.kind == "buildingComponent")
-        );
+        assert!(flatten_questions(&spec).iter().any(|(_, question)| question.kind == "buildingComponent"));
     }
 
     #[test]
     fn renders_blueprint_builder_cards() {
-        let app = FormsPlayApp;
-        let document = app.initial_document_json();
-        let play = parse_envelope(&document);
-        let spec = materialized_projection(&play);
-        let first_question_id = spec.steps[0].blocks[0].id.clone();
-        let node = app.render(FORMS_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = new_app();
+        let first_question_id = app.projection().expect("projection").steps[0].blocks[0].id.clone();
+        let json = render(&mut app, FORMS_PLAY_BODY_BLUEPRINT, &ViewState::default());
         assert!(json.contains(r#""componentKind":"protocol-list""#));
         assert!(json.contains(r#""surfaceId":"forms.play.blueprint""#));
         assert!(json.contains("\"protocolList\""));
@@ -2279,36 +2275,31 @@ mod tests {
 
     #[test]
     fn blueprint_builder_card_reflects_selection() {
-        let app = FormsPlayApp;
-        let document = app.initial_document_json();
-        let mut play = parse_envelope(&document);
-        let spec = materialized_projection(&play);
-        let first_question_id = spec.steps[0].blocks[0].id.clone();
-        play.selected_ids = vec![first_question_id.clone()];
-        let node = app.render(FORMS_PLAY_BODY_BLUEPRINT, &serde_json::to_string(&play).unwrap(), &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = new_app();
+        let first_question_id = app.projection().expect("projection").steps[0].blocks[0].id.clone();
+        app.handle_action(
+            "setSelection",
+            Some(&json!({ "ids": [first_question_id.clone()] })),
+            &ViewState::default(),
+            &meta("local"),
+        )
+        .expect("select");
+        let json = render(&mut app, FORMS_PLAY_BODY_BLUEPRINT, &ViewState::default());
         assert!(json.contains(&format!(r#""selectedId":"{first_question_id}""#)));
     }
 
     #[test]
     fn try_wizard_gates_navigation_and_reports_inline_errors() {
-        let mut app = FormsPlayApp;
-        let ops = app.handle_action_patch_ops(
-            "setActiveExample",
-            Some(&json!({ "exampleId": "default" })),
-            &app.initial_document_json(),
-            &ViewState::default(),
-        );
-        let play = apply_ops(&app.initial_document_json(), &ops);
-        let clear_ops = app.handle_action_patch_ops(
+        let mut app = new_app();
+        seed_example(&mut app, "default");
+        app.handle_action(
             "setTryValues",
             Some(&json!({ "values": { "name": "", "email": "" } })),
-            &serde_json::to_string(&play).unwrap(),
             &ViewState::default(),
-        );
-        let cleared = apply_ops(&serde_json::to_string(&play).unwrap(), &clear_ops);
-        let node = app.render(FORMS_PLAY_BODY_TRY, &serde_json::to_string(&cleared).unwrap(), &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
+            &meta("local"),
+        )
+        .expect("clear values");
+        let json = render(&mut app, FORMS_PLAY_BODY_TRY, &ViewState::default());
         assert!(json.contains(r#""disabled":true"#));
         assert!(json.contains(r#""error":"#));
         assert!(json.contains("forms-try.back"));
@@ -2316,35 +2307,25 @@ mod tests {
 
     #[test]
     fn try_wizard_emits_slider_unit_and_number_bounds() {
-        let mut app = FormsPlayApp;
-        let ops = app.handle_action_patch_ops(
-            "setActiveExample",
-            Some(&json!({ "exampleId": "onboarding" })),
-            &app.initial_document_json(),
-            &ViewState::default(),
-        );
-        let play = apply_ops(&app.initial_document_json(), &ops);
-        let node = app.render(FORMS_PLAY_BODY_TRY, &serde_json::to_string(&play).unwrap(), &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = new_app();
+        seed_example(&mut app, "onboarding");
+        let json = render(&mut app, FORMS_PLAY_BODY_TRY, &ViewState::default());
         assert!(json.contains(r#""min":13.0"#) || json.contains(r#""min":13"#));
         assert!(json.contains(r#""max":120.0"#) || json.contains(r#""max":120"#));
-        let next_ops = app.handle_action_patch_ops(
+        app.handle_action(
             "setTryValues",
             Some(&json!({ "values": { "full-name": "Ada" } })),
-            &serde_json::to_string(&play).unwrap(),
             &ViewState::default(),
-        );
-        let filled = apply_ops(&serde_json::to_string(&play).unwrap(), &next_ops);
-        let step_ops = app.handle_action_patch_ops("nextStep", None, &serde_json::to_string(&filled).unwrap(), &ViewState::default());
-        let second = apply_ops(&serde_json::to_string(&filled).unwrap(), &step_ops);
-        let second_node = app.render(FORMS_PLAY_BODY_TRY, &serde_json::to_string(&second).unwrap(), &ViewState::default());
-        let second_json = serde_json::to_string(&second_node).unwrap();
+            &meta("local"),
+        )
+        .expect("fill");
+        app.handle_action("nextStep", None, &ViewState::default(), &meta("local")).expect("next");
+        let second_json = render(&mut app, FORMS_PLAY_BODY_TRY, &ViewState::default());
         assert!(second_json.contains(r#""unit":"%""#));
     }
 
     #[test]
     fn image_question_with_url_src_emits_image_node() {
-        let app = FormsPlayApp;
         let question = FormQuestion {
             src: Some("https://example.com/picture.png".into()),
             ..question_shell("q-image".into(), "Picture".into(), "image".into())
@@ -2353,90 +2334,81 @@ mod tests {
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains(r#""type":"image""#));
         assert!(json.contains("https://example.com/picture.png"));
-        let _ = app;
     }
 
     #[test]
     fn patch_step_updates_title_and_description() {
-        let mut app = FormsPlayApp;
-        let document = app.initial_document_json();
-        let step_id = materialized_projection(&parse_envelope(&document)).steps[0].id.clone();
-        let ops = app.handle_action_patch_ops(
+        let mut app = new_app();
+        let step_id = app.projection().expect("projection").steps[0].id.clone();
+        app.handle_action(
             "patchStep",
             Some(&json!({ "stepId": step_id, "field": "title", "value": "Renamed" })),
-            &document,
             &ViewState::default(),
-        );
-        let next = apply_ops(&document, &ops);
-        assert_eq!(materialized_projection(&next).steps[0].title, "Renamed");
+            &meta("local"),
+        )
+        .expect("patch step");
+        assert_eq!(app.projection().expect("projection").steps[0].title, "Renamed");
     }
 
     #[test]
     fn remove_and_move_step_actions() {
-        let mut app = FormsPlayApp;
-        let document = app.initial_document_json();
-        let add_ops = app.handle_action_patch_ops("addStep", None, &document, &ViewState::default());
-        let with_step = apply_ops(&document, &add_ops);
-        let with_step_json = serde_json::to_string(&with_step).unwrap();
-        let spec = materialized_projection(&with_step);
-        let last_step_id = spec.steps.last().unwrap().id.clone();
-        let move_ops = app.handle_action_patch_ops(
+        let mut app = new_app();
+        app.handle_action("addStep", None, &ViewState::default(), &meta("local")).expect("add step");
+        let last_step_id = app.projection().expect("projection").steps.last().unwrap().id.clone();
+        app.handle_action(
             "moveStep",
             Some(&json!({ "stepId": last_step_id, "index": 0 })),
-            &with_step_json,
             &ViewState::default(),
-        );
-        let moved = apply_ops(&with_step_json, &move_ops);
-        assert_eq!(materialized_projection(&moved).steps[0].id, last_step_id);
-        let remove_ops = app.handle_action_patch_ops(
+            &meta("local"),
+        )
+        .expect("move step");
+        assert_eq!(app.projection().expect("projection").steps[0].id, last_step_id);
+        app.handle_action(
             "removeStep",
             Some(&json!({ "stepId": last_step_id })),
-            &serde_json::to_string(&moved).unwrap(),
             &ViewState::default(),
-        );
-        let removed = apply_ops(&serde_json::to_string(&moved).unwrap(), &remove_ops);
-        assert!(materialized_projection(&removed).steps.iter().all(|step| step.id != last_step_id));
+            &meta("local"),
+        )
+        .expect("remove step");
+        assert!(app.projection().expect("projection").steps.iter().all(|step| step.id != last_step_id));
     }
 
     #[test]
     fn update_form_action_sets_title() {
-        let mut app = FormsPlayApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops(
+        let mut app = new_app();
+        app.handle_action(
             "updateForm",
             Some(&json!({ "field": "title", "value": "My Form" })),
-            &document,
             &ViewState::default(),
-        );
-        let next = apply_ops(&document, &ops);
-        assert_eq!(materialized_projection(&next).title.as_deref(), Some("My Form"));
+            &meta("local"),
+        )
+        .expect("update form");
+        assert_eq!(app.projection().expect("projection").title.as_deref(), Some("My Form"));
     }
 
     #[test]
     fn document_tree_declares_drop_action() {
-        let app = FormsPlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(FORMS_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = new_app();
+        let json = render(&mut app, FORMS_PLAY_BODY_DOCUMENT, &ViewState::default());
         assert!(json.contains(r#""dropAction""#));
         assert!(json.contains("dropQuestionKind"));
     }
 
     #[test]
     fn drop_question_kind_inserts_and_selects() {
-        let mut app = FormsPlayApp;
-        let document = app.initial_document_json();
-        let step_id = materialized_projection(&parse_envelope(&document)).steps[0].id.clone();
-        let ops = app.handle_action_patch_ops(
+        let mut app = new_app();
+        let step_id = app.projection().expect("projection").steps[0].id.clone();
+        app.handle_action(
             "dropQuestionKind",
             Some(&json!({ "kind": "slider", "targetId": forms_play_step_tree_id(&step_id), "dropPosition": "inside" })),
-            &document,
             &ViewState::default(),
-        );
-        let next = apply_ops(&document, &ops);
-        let spec = materialized_projection(&next);
+            &meta("local"),
+        )
+        .expect("drop kind");
+        let spec = app.projection().expect("projection");
         assert!(spec.steps[0].blocks.iter().any(|question| question.kind == "slider"));
-        assert_eq!(next.selected_ids.len(), 1);
+        let blueprint = render(&mut app, FORMS_PLAY_BODY_BLUEPRINT, &ViewState::default());
+        assert!(blueprint.contains(r#""selectedId":"#));
     }
 
     #[test]
@@ -2459,10 +2431,8 @@ mod tests {
         assert_eq!(app.definition.modes[0].id, "blueprint");
     }
 
-    #[test]
-    fn extension_question_emits_external_slot_when_contribution_registered() {
-        let app = FormsPlayApp;
-        let contributions = vec![PluginContributionEntry {
+    fn building_component_contributions() -> Vec<PluginContributionEntry> {
+        vec![PluginContributionEntry {
             plugin_id: "forms-module-procedural".into(),
             contribution: Contribution::ProtocolBlockKind {
                 app_id: "forms-module-procedural".into(),
@@ -2473,47 +2443,32 @@ mod tests {
                 params_body_key: "params".into(),
                 preview_body_key: "preview".into(),
             },
-        }];
+        }]
+    }
+
+    #[test]
+    fn extension_question_emits_external_slot_when_contribution_registered() {
+        let mut app = new_app();
         let mut view_state = ViewState::default();
-        view_state.contributions_json = Some(serde_json::to_string(&contributions).unwrap());
-        let mut play_app = FormsPlayApp;
-        let ops = play_app.handle_action_patch_ops(
-            "setActiveExample",
-            Some(&json!({ "exampleId": "building-component" })),
-            &app.initial_document_json(),
-            &view_state,
-        );
-        let mut play = apply_ops(&app.initial_document_json(), &ops);
-        play.current_step_index = 1;
-        let node = app.render(FORMS_PLAY_BODY_TRY, &serde_json::to_string(&play).unwrap(), &view_state);
-        let json = serde_json::to_string(&node).unwrap();
+        view_state.contributions_json = Some(serde_json::to_string(&building_component_contributions()).unwrap());
+        app.handle_action("setSelection", Some(&json!({ "ids": ["geometry"] })), &view_state, &meta("local")).expect("select");
+        let json = render(&mut app, FORMS_PLAY_BODY_INSPECTION, &view_state);
         assert!(json.contains("externalSlot"));
         assert!(json.contains("forms-module-procedural"));
     }
 
     #[test]
     fn extension_question_falls_back_without_contribution() {
-        let app = FormsPlayApp;
-        let mut play_app = FormsPlayApp;
-        let ops = play_app.handle_action_patch_ops(
-            "setActiveExample",
-            Some(&json!({ "exampleId": "building-component" })),
-            &app.initial_document_json(),
-            &ViewState::default(),
-        );
-        let mut play = apply_ops(&app.initial_document_json(), &ops);
-        play.current_step_index = 1;
-        let node = app.render(FORMS_PLAY_BODY_TRY, &serde_json::to_string(&play).unwrap(), &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = new_app();
+        app.handle_action("setSelection", Some(&json!({ "ids": ["geometry"] })), &ViewState::default(), &meta("local")).expect("select");
+        let json = render(&mut app, FORMS_PLAY_BODY_INSPECTION, &ViewState::default());
         assert!(json.contains("Extension unavailable"));
     }
 
     #[test]
     fn document_lists_steps() {
-        let app = FormsPlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(FORMS_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = new_app();
+        let json = render(&mut app, FORMS_PLAY_BODY_DOCUMENT, &ViewState::default());
         assert!(json.contains("forms-play-document.steps"));
         assert!(json.contains("Identity"));
         assert!(json.contains("Geometry"));
@@ -2521,54 +2476,52 @@ mod tests {
 
     #[test]
     fn catalogue_lists_question_kinds() {
-        let app = FormsPlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(FORMS_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = new_app();
+        let json = render(&mut app, FORMS_PLAY_BODY_CATALOGUE, &ViewState::default());
         assert!(json.contains("forms-play-catalogue.text"));
         assert!(json.contains("forms-play-catalogue.add-step"));
     }
 
     #[test]
     fn add_step_action_appends_step() {
-        let mut app = FormsPlayApp;
-        let document = app.initial_document_json();
-        let before = materialized_projection(&parse_envelope(&document)).steps.len();
-        let ops = app.handle_action_patch_ops("addStep", None, &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let next = apply_ops(&document, &ops);
-        assert_eq!(materialized_projection(&next).steps.len(), before + 1);
+        let mut app = new_app();
+        let before = app.projection().expect("projection").steps.len();
+        app.handle_action("addStep", None, &ViewState::default(), &meta("local")).expect("add step");
+        assert_eq!(app.projection().expect("projection").steps.len(), before + 1);
     }
 
     #[test]
     fn add_question_action_appends_question() {
-        let mut app = FormsPlayApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops(
-            "addQuestion",
-            Some(&json!({ "kind": "text" })),
-            &document,
-            &ViewState::default(),
-        );
-        let next = apply_ops(&document, &ops);
-        assert!(flatten_questions(&materialized_projection(&next))
-            .iter()
-            .any(|(_, question)| question.kind == "text"));
+        let mut app = new_app();
+        app.handle_action("addQuestion", Some(&json!({ "kind": "text" })), &ViewState::default(), &meta("local")).expect("add question");
+        assert!(flatten_questions(&app.projection().expect("projection")).iter().any(|(_, question)| question.kind == "text"));
+    }
+
+    #[test]
+    fn add_question_undo_redo_round_trip() {
+        let mut app = new_app();
+        let before = flatten_questions(&app.projection().expect("projection")).len();
+        app.handle_action("addQuestion", Some(&json!({ "kind": "text" })), &ViewState::default(), &meta("local")).expect("add");
+        assert_eq!(flatten_questions(&app.projection().expect("projection")).len(), before + 1);
+        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        assert_eq!(flatten_questions(&app.projection().expect("projection")).len(), before);
+        app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+        assert_eq!(flatten_questions(&app.projection().expect("projection")).len(), before + 1);
     }
 
     #[test]
     fn set_try_values_updates_runtime() {
-        let mut app = FormsPlayApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops(
+        let mut app = new_app();
+        seed_example(&mut app, "default");
+        app.handle_action(
             "setTryValues",
-            Some(&json!({ "values": { "q-text": "Ada" } })),
-            &document,
+            Some(&json!({ "values": { "name": "Ada" } })),
             &ViewState::default(),
-        );
-        assert_eq!(ops.len(), 1);
-        let next = apply_ops(&document, &ops);
-        assert_eq!(next.try_values.get("q-text").and_then(|v| v.as_str()), Some("Ada"));
+            &meta("local"),
+        )
+        .expect("set try values");
+        let json = render(&mut app, FORMS_PLAY_BODY_TRY, &ViewState::default());
+        assert!(json.contains("Ada"));
     }
 
     #[test]
@@ -2586,86 +2539,54 @@ mod tests {
 
     #[test]
     fn wizard_step_navigation() {
-        let mut app = FormsPlayApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops(
-            "setActiveExample",
-            Some(&json!({ "exampleId": "onboarding" })),
-            &document,
-            &ViewState::default(),
-        );
-        let play = apply_ops(&document, &ops);
-        assert_eq!(play.current_step_index, 0);
-        let next_ops = app.handle_action_patch_ops("nextStep", None, &serde_json::to_string(&play).unwrap(), &ViewState::default());
-        let next = apply_ops(&document, &next_ops);
-        assert_eq!(next.current_step_index, 1);
-        let back_ops = app.handle_action_patch_ops("previousStep", None, &serde_json::to_string(&next).unwrap(), &ViewState::default());
-        let back = apply_ops(&document, &back_ops);
-        assert_eq!(back.current_step_index, 0);
+        let mut app = new_app();
+        seed_example(&mut app, "onboarding");
+        assert!(render(&mut app, FORMS_PLAY_BODY_TRY, &ViewState::default()).contains("Step 1 / 3"));
+        app.handle_action("nextStep", None, &ViewState::default(), &meta("local")).expect("next");
+        assert!(render(&mut app, FORMS_PLAY_BODY_TRY, &ViewState::default()).contains("Step 2 / 3"));
+        app.handle_action("previousStep", None, &ViewState::default(), &meta("local")).expect("prev");
+        assert!(render(&mut app, FORMS_PLAY_BODY_TRY, &ViewState::default()).contains("Step 1 / 3"));
     }
 
     #[test]
     fn conditional_visibility_hides_team_size() {
-        let mut app = FormsPlayApp;
-        let ops = app.handle_action_patch_ops(
-            "setActiveExample",
-            Some(&json!({ "exampleId": "onboarding" })),
-            &app.initial_document_json(),
-            &ViewState::default(),
-        );
-        let play = apply_ops(&app.initial_document_json(), &ops);
-        let spec = materialized_projection(&play);
+        let mut app = new_app();
+        seed_example(&mut app, "onboarding");
+        let spec = app.projection().expect("projection");
         let advanced = spec.steps.iter().find(|step| step.id == "advanced").expect("advanced step");
-        let values = effective_try_values(&spec, &play);
+        let values = initial_try_values(&spec, &Map::new());
         assert_eq!(visible_questions(advanced, &values).len(), 1);
     }
 
     #[test]
     fn inspector_patch_updates_required() {
-        let mut app = FormsPlayApp;
-        let document = app.handle_action_patch_ops(
-            "setActiveExample",
-            Some(&json!({ "exampleId": "default" })),
-            &app.initial_document_json(),
-            &ViewState::default(),
-        );
-        let play = apply_ops(&app.initial_document_json(), &document);
-        let spec = materialized_projection(&play);
-        let name_id = spec.steps[0].blocks[0].id.clone();
-        let ops = app.handle_action_patch_ops(
+        let mut app = new_app();
+        seed_example(&mut app, "default");
+        let name_id = app.projection().expect("projection").steps[0].blocks[0].id.clone();
+        app.handle_action(
             "patchQuestions",
-            Some(&json!({ "questionIds": [name_id.clone()], "field": "required", "pressed": false })),
-            &serde_json::to_string(&play).unwrap(),
+            Some(&json!({ "questionIds": [name_id], "field": "required", "pressed": false })),
             &ViewState::default(),
-        );
-        let next = apply_ops(&serde_json::to_string(&play).unwrap(), &ops);
-        let next_spec = materialized_projection(&next);
-        let question = &next_spec.steps[0].blocks[0];
-        assert!(!question.required.unwrap_or(true));
+            &meta("local"),
+        )
+        .expect("patch required");
+        let spec = app.projection().expect("projection");
+        assert!(!spec.steps[0].blocks[0].required.unwrap_or(true));
     }
 
     #[test]
     fn renders_try_wizard() {
-        let mut app = FormsPlayApp;
-        let ops = app.handle_action_patch_ops(
-            "setActiveExample",
-            Some(&json!({ "exampleId": "default" })),
-            &app.initial_document_json(),
-            &ViewState::default(),
-        );
-        let play = apply_ops(&app.initial_document_json(), &ops);
-        let node = app.render(FORMS_PLAY_BODY_TRY, &serde_json::to_string(&play).unwrap(), &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = new_app();
+        seed_example(&mut app, "default");
+        let json = render(&mut app, FORMS_PLAY_BODY_TRY, &ViewState::default());
         assert!(json.contains("forms-try"));
         assert!(json.contains("Step 1"));
     }
 
     #[test]
     fn forms_labels_resolve_native_english_by_default() {
-        let app = FormsPlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(FORMS_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = new_app();
+        let json = render(&mut app, FORMS_PLAY_BODY_BLUEPRINT, &ViewState::default());
         assert!(json.contains("Boolean"));
         assert!(json.contains("Long Text"));
         assert!(json.contains("Slider"));
@@ -2674,20 +2595,48 @@ mod tests {
 
     #[test]
     fn forms_labels_resolve_german_locale() {
-        let app = FormsPlayApp;
-        let document = app.initial_document_json();
+        let mut app = new_app();
         let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let node = app.render(FORMS_PLAY_BODY_BLUEPRINT, &document, &view_state);
-        let json = serde_json::to_string(&node).unwrap();
+        let json = render(&mut app, FORMS_PLAY_BODY_BLUEPRINT, &view_state);
         assert!(json.contains("Boolescher Wert"));
         assert!(json.contains("Langtext"));
         assert!(json.contains("Schieberegler"));
         assert!(!json.contains("Boolean"));
-
-        let catalogue_node = app.render(FORMS_PLAY_BODY_CATALOGUE, &document, &view_state);
-        let catalogue_json = serde_json::to_string(&catalogue_node).unwrap();
+        let catalogue_json = render(&mut app, FORMS_PLAY_BODY_CATALOGUE, &view_state);
         assert!(catalogue_json.contains("Langtext"));
         assert!(catalogue_json.contains("Aktionen"));
     }
+
+    #[test]
+    fn two_instances_converge_disjoint_edits() {
+        let base = new_app();
+        let base_doc = base.document_json().expect("base document");
+        let base_spec = base.projection().expect("base projection");
+        let base_steps = base_spec.steps.len();
+        let base_blocks0 = base_spec.steps[0].blocks.len();
+
+        let mut a = new_app();
+        let mut b = new_app();
+        a.load_document(&base_doc).expect("load a");
+        b.load_document(&base_doc).expect("load b");
+        let (backbone_a, backbone_b) =
+            MemoryBackbone::pair("mem://forms-convergence", "mem://forms-convergence");
+        a.attach_backbone(Box::new(backbone_a)).expect("attach a");
+        b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+
+        // Disjoint edits: A adds a question to the first step, B adds a whole new step.
+        a.handle_action("addQuestion", Some(&json!({ "kind": "text" })), &ViewState::default(), &meta("actor-a")).expect("a adds question");
+        b.handle_action("addStep", None, &ViewState::default(), &meta("actor-b")).expect("b adds step");
+        a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
+        b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+
+        let spec_a = a.projection().expect("projection a");
+        let spec_b = b.projection().expect("projection b");
+        assert_eq!(spec_a.steps.len(), base_steps + 1, "A converges on B's new step");
+        assert_eq!(spec_b.steps.len(), base_steps + 1, "B keeps its own new step");
+        assert_eq!(spec_a.steps[0].blocks.len(), base_blocks0 + 1, "A keeps its own new question");
+        assert_eq!(spec_b.steps[0].blocks.len(), base_blocks0 + 1, "B converges on A's new question");
+    }
 }
 //#endregion 🧪Tests
+

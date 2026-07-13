@@ -11,16 +11,13 @@ pub const S_STUDIO_SCHEMA: &str = "s.studio";
 pub const S_MEDIA_GRAPH_SCHEMA: &str = "s.media-graph";
 
 //#region 🔖Schemas
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// @emoji 🔗 Handle to an app instance's own vcs document — app content is never embedded on the
+/// studio document, only referenced (mirrors os-core's `OsDocumentRef`).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SSourceDocument {
-    pub format: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub vcs_json: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub inline: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub payload_ref: Option<String>,
+pub struct SDocumentRef {
+    pub document_id: String,
+    pub schema: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -30,7 +27,8 @@ pub struct SAppInstance {
     pub program_id: String,
     pub app_id: String,
     pub label: String,
-    pub source_document: SSourceDocument,
+    pub yields: String,
+    pub document: SDocumentRef,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -100,10 +98,6 @@ pub enum StudioOp {
         #[serde(skip_serializing_if = "Option::is_none")]
         alternative_id: Option<String>,
     },
-    ApplyAppOperation {
-        instance_id: String,
-        next_source: SSourceDocument,
-    },
     SpawnAppInstance {
         instance: SAppInstance,
         position: MediaGraphPosition,
@@ -121,10 +115,6 @@ pub enum StudioOp {
         node_id: String,
         x: f64,
         y: f64,
-    },
-    PatchAppSource {
-        instance_id: String,
-        inline: String,
     },
 }
 
@@ -188,16 +178,6 @@ pub fn apply_studio_operation(projection: &SStudioProjection, operation: &Studio
         StudioOp::SetActiveAlternative { alternative_id } => {
             next.active_alternative_id = alternative_id.clone();
         }
-        StudioOp::ApplyAppOperation {
-            instance_id,
-            next_source,
-        } => {
-            for instance in &mut next.app_instances {
-                if instance.id == *instance_id {
-                    instance.source_document = next_source.clone();
-                }
-            }
-        }
         StudioOp::SpawnAppInstance { instance, position } => {
             if !next.programs.contains(&instance.program_id) {
                 next.programs.push(instance.program_id.clone());
@@ -243,13 +223,6 @@ pub fn apply_studio_operation(projection: &SStudioProjection, operation: &Studio
                 }
             }
         }
-        StudioOp::PatchAppSource { instance_id, inline } => {
-            for instance in &mut next.app_instances {
-                if instance.id == *instance_id {
-                    instance.source_document.inline = Some(inline.clone());
-                }
-            }
-        }
     }
     next
 }
@@ -266,10 +239,6 @@ pub enum StudioDiff {
     SetActiveAlternative {
         #[serde(skip_serializing_if = "Option::is_none")]
         alternative_id: Option<String>,
-    },
-    ApplyAppOperation {
-        instance_id: String,
-        next_source: SSourceDocument,
     },
     SpawnAppInstance {
         instance: SAppInstance,
@@ -289,10 +258,6 @@ pub enum StudioDiff {
         x: f64,
         y: f64,
     },
-    PatchAppSource {
-        instance_id: String,
-        inline: String,
-    },
 }
 
 impl OperationDiff<SStudioProjection> for StudioDiff {
@@ -304,10 +269,6 @@ impl OperationDiff<SStudioProjection> for StudioDiff {
             },
             StudioDiff::SetActiveAlternative { alternative_id } => StudioOp::SetActiveAlternative {
                 alternative_id: alternative_id.clone(),
-            },
-            StudioDiff::ApplyAppOperation { instance_id, next_source } => StudioOp::ApplyAppOperation {
-                instance_id: instance_id.clone(),
-                next_source: next_source.clone(),
             },
             StudioDiff::SpawnAppInstance { instance, position } => StudioOp::SpawnAppInstance {
                 instance: instance.clone(),
@@ -324,10 +285,6 @@ impl OperationDiff<SStudioProjection> for StudioDiff {
                 node_id: node_id.clone(),
                 x: *x,
                 y: *y,
-            },
-            StudioDiff::PatchAppSource { instance_id, inline } => StudioOp::PatchAppSource {
-                instance_id: instance_id.clone(),
-                inline: inline.clone(),
             },
         };
         apply_studio_operation(projection, &op)
@@ -351,10 +308,6 @@ impl Operation<SStudioProjection> for StudioOp {
             StudioOp::SetActiveAlternative { alternative_id } => StudioDiff::SetActiveAlternative {
                 alternative_id: alternative_id.clone(),
             },
-            StudioOp::ApplyAppOperation { instance_id, next_source } => StudioDiff::ApplyAppOperation {
-                instance_id: instance_id.clone(),
-                next_source: next_source.clone(),
-            },
             StudioOp::SpawnAppInstance { instance, position } => StudioDiff::SpawnAppInstance {
                 instance: instance.clone(),
                 position: position.clone(),
@@ -371,10 +324,6 @@ impl Operation<SStudioProjection> for StudioOp {
                 x: *x,
                 y: *y,
             },
-            StudioOp::PatchAppSource { instance_id, inline } => StudioDiff::PatchAppSource {
-                instance_id: instance_id.clone(),
-                inline: inline.clone(),
-            },
         }
     }
 
@@ -386,18 +335,7 @@ impl Operation<SStudioProjection> for StudioOp {
             StudioOp::SetActiveAlternative { .. } => vec![StudioOp::SetActiveAlternative {
                 alternative_id: projection.active_alternative_id.clone(),
             }],
-            StudioOp::ApplyAppOperation { instance_id, .. } => projection
-                .app_instances
-                .iter()
-                .find(|i| i.id == *instance_id)
-                .map(|instance| {
-                    vec![StudioOp::ApplyAppOperation {
-                        instance_id: instance_id.clone(),
-                        next_source: instance.source_document.clone(),
-                    }]
-                })
-                .unwrap_or_default(),
-            StudioOp::SpawnAppInstance { instance, position } => vec![StudioOp::RemoveAppInstance {
+            StudioOp::SpawnAppInstance { instance, .. } => vec![StudioOp::RemoveAppInstance {
                 instance_id: instance.id.clone(),
             }],
             StudioOp::RemoveAppInstance { instance_id } => projection
@@ -439,17 +377,6 @@ impl Operation<SStudioProjection> for StudioOp {
                         node_id: node_id.clone(),
                         x: node.x,
                         y: node.y,
-                    }]
-                })
-                .unwrap_or_default(),
-            StudioOp::PatchAppSource { instance_id, .. } => projection
-                .app_instances
-                .iter()
-                .find(|i| i.id == *instance_id)
-                .map(|instance| {
-                    vec![StudioOp::PatchAppSource {
-                        instance_id: instance_id.clone(),
-                        inline: instance.source_document.inline.clone().unwrap_or_default(),
                     }]
                 })
                 .unwrap_or_default(),
@@ -604,11 +531,10 @@ mod tests {
             program_id: "draw".into(),
             app_id: "draw".into(),
             label: "Draw".into(),
-            source_document: SSourceDocument {
-                format: "draw.document".into(),
-                vcs_json: None,
-                inline: Some("{}".into()),
-                payload_ref: None,
+            yields: "graph.dag".into(),
+            document: SDocumentRef {
+                document_id: "doc-1".into(),
+                schema: "draw.document".into(),
             },
         };
         store
@@ -630,11 +556,10 @@ mod tests {
             program_id: "draw".into(),
             app_id: "draw".into(),
             label: "Draw".into(),
-            source_document: SSourceDocument {
-                format: "draw.document".into(),
-                vcs_json: None,
-                inline: Some("{}".into()),
-                payload_ref: None,
+            yields: "graph.dag".into(),
+            document: SDocumentRef {
+                document_id: "doc-1".into(),
+                schema: "draw.document".into(),
             },
         };
         store

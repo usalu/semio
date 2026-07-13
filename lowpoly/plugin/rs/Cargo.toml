@@ -20,6 +20,7 @@ path = "lib.rs"
 [dependencies]
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }
 semio-framework-os = { path = "../../../framework/product/os/core/rs" }
+vcs = { path = "../../../vcs/rs" }
 lowpoly_core = { path = "../../core/rs" }
 kernel_3d_mesh = { path = "../../../kernel/3d/mesh/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

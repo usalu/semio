@@ -16630,7 +16630,6 @@ const Window: React.FC<WindowProps> = ({
   const measuresOverlaySizeStyle = measuresUnfolded ? ({ width: measuresWidthPx, maxWidth: "calc(100% - 0.5rem)", maxHeight: "100%" } satisfies React.CSSProperties) : undefined;
   const engagementZoneSizeStyle = windowEngagementZoneMaxWidthStyle(measuresReservePx, !!measures);
   const engagementZoneRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const engagementDraftRef = reactHostPort.useRef("");
   const engagementVisible = active && !measuresExpanded && !!engagement;
   const engagementExpanded = engagementVisible && !engagementFolded;
 
@@ -16638,21 +16637,6 @@ const Window: React.FC<WindowProps> = ({
     if (!measuresExpanded) return;
     setEngagementFolded(true);
   }, [measuresExpanded]);
-
-  reactHostPort.useEffect(() => {
-    const draft = engagement?.input?.value ?? "";
-    const hadDraft = engagementDraftRef.current.trim().length > 0;
-    const hasDraft = draft.trim().length > 0;
-    engagementDraftRef.current = draft;
-    if (!hasDraft || hadDraft) return;
-    setEngagementFolded(false);
-    queueMicrotask(() => focusActiveEngagementInput());
-  }, [engagement?.input?.value]);
-
-  reactHostPort.useEffect(() => {
-    if (!active || !engagement?.sessionActive) return;
-    setEngagementFolded(false);
-  }, [active, engagement?.sessionActive]);
 
   reactHostPort.useEffect(() => {
     if (!active || !engagement?.input?.onAbort) return;
@@ -16668,7 +16652,6 @@ const Window: React.FC<WindowProps> = ({
 
   reactHostPort.useEffect(() => {
     if (!active) {
-      engagementDraftRef.current = "";
       setEngagementFolded(true);
     }
   }, [active]);
@@ -24470,7 +24453,7 @@ if (import.meta.vitest) {
 
     it("Window shows engagement as a folded strip by default, same surface as window options", () => {
       const { container } = render(
-        <Window id="engagement-window" active engagement={{ input: { placeholder: "Action" }, status: [{ id: "s", content: "Idle" }] }}>
+        <Window id="engagement-window" active engagement={{ sessionActive: true, input: { value: "Box", placeholder: "Action" }, status: [{ id: "s", content: "Idle" }] }}>
           <div>Body</div>
         </Window>,
       );

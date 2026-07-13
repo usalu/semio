@@ -125,6 +125,10 @@ impl Operation<ModuleRenderPayload> for ModulePayloadOp {
             ModulePayloadOp::SetPayload { payload } => ModulePayloadDiff { payload: Some(payload.clone()) },
         }
     }
+
+    fn backwards(&self, projection: &ModuleRenderPayload) -> Vec<Self> {
+        vec![ModulePayloadOp::SetPayload { payload: projection.clone() }]
+    }
 }
 //#endregion 🔖DocumentOp
 
@@ -711,7 +715,10 @@ mod tests {
             params_body_key,
             preview_body_key,
             ..
-        } = &manifest.contributions[0];
+        } = &manifest.contributions[0]
+        else {
+            panic!("expected a ProtocolBlockKind contribution");
+        };
         assert_eq!(block_kind, "buildingComponent");
         assert_eq!(params_body_key, BODY_PARAMS);
         assert_eq!(preview_body_key, BODY_PREVIEW);

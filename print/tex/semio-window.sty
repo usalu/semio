@@ -118,14 +118,20 @@
 % (unsuffixed) \l_semio_window_register_number_tl for this window instance:
 % remembers it as the lookup key for the continuation-page overlay writer,
 % and — if the *previous* compile pass recorded this same window as having
-% rendered into >1 page-parts — appends ":1" to the page-1 header display
-% number only (\l_semio_window_number_tl), never to the register/hierarchy
-% number itself.
+% rendered into >1 page-parts — flags that page 1's header needs a ":1"
+% suffix. This never touches \l_semio_window_number_tl (still the plain
+% register/hierarchy number used by \label/\ref and continuation-page
+% chips, which append their *own* live ":<N>" — see
+% \semio@window@header@repeat) — only \g_semio_window_break_suffix_bool,
+% consumed by \semio_window_header_store_aux:nn to build a *separate*
+% page-1-only display macro (\semio@window@header@number@page1).
+\bool_new:N \g_semio_window_break_suffix_bool
 \cs_new_protected:Npn \semio_window_break_suffix_apply: {
   \tl_gset_eq:NN \g_semio_window_current_regnum_tl \l_semio_window_register_number_tl
+  \bool_gset_false:N \g_semio_window_break_suffix_bool
   \prop_get:NVNTF \g_semio_window_break_prop \l_semio_window_register_number_tl \l_tmpf_tl {
     \int_compare:nNnT { \l_tmpf_tl } > { 1 } {
-      \tl_put_right:Nn \l_semio_window_number_tl { :1 }
+      \bool_gset_true:N \g_semio_window_break_suffix_bool
     }
   } { }
 }
@@ -485,13 +491,11 @@
 \cs_new_protected:Npn \semio_termlist_labels_csv:nn #1#2 {
   \tl_clear:N \l_tmpd_tl
   \exp_args:Nc \prop_get:NnNTF { g_semio_#1_pages_prop } {#2} \l_semio_termlist_labels_clist {
-    \typeout{[DEBUG]~labels_csv~T-branch~#1/#2~clist=\l_semio_termlist_labels_clist}
     \clist_map_inline:Nn \l_semio_termlist_labels_clist {
       \tl_if_empty:NTF \l_tmpd_tl { } { \tl_put_right:Nn \l_tmpd_tl { , } }
-      \tl_put_right:Nn \l_tmpd_tl { ####1 }
+      \tl_put_right:Nn \l_tmpd_tl { ##1 }
     }
-  } { \typeout{[DEBUG]~labels_csv~F-branch~#1/#2~key-not-found} }
-  \typeout{[DEBUG]~labels_csv~result~#1/#2=\l_tmpd_tl}
+  } { }
 }
 
 \cs_new_protected:Npn \semio_termlist_use:nn #1#2 {
@@ -1004,6 +1008,25 @@
   \gdef\semio@window@header@title{#2}
   \makeatother
   \group_end:
+  % 🔢 A *separate* page-1-only display copy — see
+  % \semio_window_break_suffix_apply: — so the live ":<N>" that
+  % \semio@window@header@repeat appends to \semio@window@header@number on
+  % continuation pages never doubles up with this ":1".
+  \bool_if:NTF \g_semio_window_break_suffix_bool {
+    \group_begin:
+    \ExplSyntaxOff
+    \makeatletter
+    \gdef\semio@window@header@number@page1{#1:1}
+    \makeatother
+    \group_end:
+  } {
+    \group_begin:
+    \ExplSyntaxOff
+    \makeatletter
+    \gdef\semio@window@header@number@page1{#1}
+    \makeatother
+    \group_end:
+  }
 }
 
 
@@ -1056,6 +1079,7 @@
     \tl_set:Nx \l_semio_window_kind_title_tl { \tl_use:N \l_semio_window_kind_title_tl }
     \tl_clear:N \l_semio_window_number_tl
     \tl_gclear:N \g_semio_window_current_regnum_tl
+    \bool_gset_false:N \g_semio_window_break_suffix_bool
   } {
     \bool_if:NTF \l_semio_window_hierarchy_bool {
       \refstepcounter {#1}
@@ -1077,6 +1101,7 @@
       \tl_set:Nx \l_semio_window_kind_title_tl { \tl_use:N \l_semio_window_kind_title_tl }
       \tl_clear:N \l_semio_window_number_tl
       \tl_gclear:N \g_semio_window_current_regnum_tl
+    \bool_gset_false:N \g_semio_window_break_suffix_bool
     }
   }
   \semio_window_header_store:
@@ -1830,10 +1855,16 @@
 \def\semio@chrome@heading{}
 
 \def\semio@window@header@number{}
+\def\semio@window@header@number@page1{}
 \def\semio@window@header@title{}
 
 \newcommand{\semio@window@header@invoke}{%
-  \semio@window@header@muted{\semio@window@header@number}{\semio@window@header@title}%
+  % 🔢 Page 1 uses \semio@window@header@number@page1 (base number, plus a
+  % ":1" suffix if the *previous* compile pass recorded this window as
+  % having broken — see \semio_window_break_suffix_apply:), never the bare
+  % \semio@window@header@number that \semio@window@header@repeat reuses (and
+  % appends its own live ":<N>" to) on continuation pages.
+  \semio@window@header@muted{\semio@window@header@number@page1}{\semio@window@header@title}%
 }
 
 %region WindowBreakParts chrome
@@ -1846,14 +1877,18 @@
 % ⚠️ \newcommand bodies are tokenized *once*, in full, using whatever
 % catcodes are active at the point of definition — an `\ExplSyntaxOn` token
 % appearing *inside* an already-tokenized body cannot retroactively fix how
-% the "_"/":" characters right after it were scanned. So these two macros'
-% *definitions* (not just their bodies) must sit inside this ExplSyntaxOn
-% wrapper for their l3 (`\semio_window_..._:n`) call sites to tokenize as
-% single control sequences.
+% the "_"/":" characters right after it were scanned. So this macro's
+% *definition* (not just its body) must sit inside this ExplSyntaxOn wrapper
+% for its l3 (`\semio_window_break_record:n`) call site to tokenize as a
+% single control sequence. NB: ExplSyntaxOn also makes space (char 32) an
+% *ignored* character, not just kept at catcode 10 — that's why the rest of
+% this file spells literal spaces inside ExplSyntaxOn regions as "~"
+% (tcbset's `before~skip=0pt` etc.); this macro has none, so it's unaffected.
 \ExplSyntaxOn
 \newcommand{\semio@window@break@record}[1]{%
   \semio_window_break_record:n {#1}%
 }
+\ExplSyntaxOff
 
 % 🪟 Redraws the *exact* header chip row (same \semio@window@header@muted
 % routine used for page 1, above/before the box) as a tcolorbox `overlay`
@@ -1862,7 +1897,9 @@
 % just with the live `\thetcbbreakpart` part index appended to the number.
 % Wired into the `semio~window` tcbset style as `overlay middle=` /
 % `overlay last=` (never fires for `unbroken` or single-part boxes, so a
-% window that never breaks renders byte-for-byte as before).
+% window that never breaks renders byte-for-byte as before). Defined outside
+% ExplSyntaxOn — it needs real (non-ignored) spaces for the `\node[...]` key
+% list (see the ExplSyntaxOn note above).
 \newcommand{\semio@window@header@repeat}{%
   \edef\semio@window@header@part@num{\arabic{tcbbreakpart}}%
   \node[anchor=south, inner sep=0pt, yshift=\semio@stroke@hairline] at (frame.north) {%

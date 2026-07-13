@@ -1,0 +1,233 @@
+    Blocking waiting for file lock on build directory
+warning: unused import: `vello::util`
+  --> infinite/cavas/rs/lib.rs:11:17
+   |
+11 |         pub use vello::util;
+   |                 ^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `vello::wgpu`
+  --> infinite/cavas/rs/lib.rs:12:17
+   |
+12 |         pub use vello::wgpu;
+   |                 ^^^^^^^^^^^
+
+warning: method `into_brush` is never used
+   --> infinite/cavas/rs/lib.rs:158:12
+    |
+157 |     impl Paint {
+    |     ---------- method in this implementation
+158 |         fn into_brush(self) -> backend::peniko::Brush {
+    |            ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `infinite_cavas` (lib) generated 3 warnings (run `cargo fix --lib -p infinite_cavas` to apply 2 suggestions)
+warning: use of deprecated function `brepkit_operations::fillet::fillet_rolling_ball`: Use brepkit_blend::fillet_builder::FilletBuilder (via blend_ops::fillet_v2) instead.
+  --> kernel/3d/brep/rs/lib.rs:27:34
+   |
+27 | use brepkit_operations::fillet::{fillet_rolling_ball, fillet_variable, FilletRadiusLaw};
+   |                                  ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated function `brepkit_operations::fillet::fillet_rolling_ball`: Use brepkit_blend::fillet_builder::FilletBuilder (via blend_ops::fillet_v2) instead.
+   --> kernel/3d/brep/rs/lib.rs:767:21
+    |
+767 |         let solid = fillet_rolling_ball(&mut self.topo, solid, &edges, radius).map_err(Self::map_err)?;
+    |                     ^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated function `brepkit_operations::fillet::fillet_rolling_ball`: Use brepkit_blend::fillet_builder::FilletBuilder (via blend_ops::fillet_v2) instead.
+   --> kernel/3d/brep/rs/lib.rs:792:21
+    |
+792 |         let solid = fillet_rolling_ball(&mut self.topo, solid, &edge_ids, radius).map_err(Self::map_err)?;
+    |                     ^^^^^^^^^^^^^^^^^^^
+
+warning: variant `Shell` is never constructed
+   --> kernel/3d/brep/rs/lib.rs:103:5
+    |
+ 98 | enum Entity {
+    |      ------ variant in this enum
+...
+103 |     Shell(ShellId),
+    |     ^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `compound_id` is never used
+   --> kernel/3d/brep/rs/lib.rs:198:8
+    |
+132 | impl BrepkitKernel {
+    | ------------------ method in this implementation
+...
+198 |     fn compound_id(&self, handle: &GeometryHandle) -> Result<CompoundId, BrepError> {
+    |        ^^^^^^^^^^^
+
+warning: `kernel_3d_brepkit` (lib) generated 5 warnings
+warning: unused imports: `Deserialize` and `Serialize`
+ --> mathematical/graph/manifest/rs/../generated/note_blocks.rs:3:13
+  |
+3 | use serde::{Deserialize, Serialize};
+  |             ^^^^^^^^^^^  ^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `projection`
+   --> vcs/rs/lib.rs:405:27
+    |
+405 | pub fn absorb_diff<P, Op>(projection: &P, existing: &mut Op::Diff, incoming: Op::Diff)
+    |                           ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_projection`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `projection`
+   --> vcs/rs/lib.rs:415:5
+    |
+415 |     projection: &P,
+    |     ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_projection`
+
+warning: `mathematical_graph_manifest` (lib) generated 1 warning (run `cargo fix --lib -p mathematical_graph_manifest` to apply 1 suggestion)
+warning: `vcs` (lib) generated 2 warnings (run `cargo fix --lib -p vcs` to apply 2 suggestions)
+warning: unused import: `std::collections::BTreeMap`
+   --> mathematical/graph/dsl/rs/lib.rs:310:5
+    |
+310 | use std::collections::BTreeMap;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `DocumentVcsCommand` and `create_document_vcs_envelope`
+ --> protocol/rs/lib.rs:9:5
+  |
+9 |     create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `mathematical_graph_dsl` (lib) generated 1 warning (run `cargo fix --lib -p mathematical_graph_dsl` to apply 1 suggestion)
+warning: `protocol` (lib) generated 1 warning (run `cargo fix --lib -p protocol` to apply 1 suggestion)
+warning: variable does not need to be mutable
+   --> mathematical/graph/drawing/rs/lib.rs:387:13
+    |
+387 |         let mut default_ancestor = default_ancestor;
+    |             ----^^^^^^^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable `sor` is assigned to, but never used
+   --> mathematical/graph/drawing/rs/lib.rs:397:13
+    |
+397 |         let mut sor = nodes[v].mod_;
+    |             ^^^^^^^
+    |
+    = note: consider using `_sor` instead
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable `sol` is assigned to, but never used
+   --> mathematical/graph/drawing/rs/lib.rs:399:13
+    |
+399 |         let mut sol = nodes[vol].mod_;
+    |             ^^^^^^^
+    |
+    = note: consider using `_sol` instead
+
+warning: value assigned to `sor` is never read
+   --> mathematical/graph/drawing/rs/lib.rs:421:17
+    |
+421 |                 sor += shift;
+    |                 ^^^^^^^^^^^^ this value is reassigned later and never used
+...
+426 |             sor += nodes[vor].mod_;
+    |             ---------------------- `sor` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `sor` is never read
+   --> mathematical/graph/drawing/rs/lib.rs:426:13
+    |
+426 |             sor += nodes[vor].mod_;
+    |             ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: value assigned to `sol` is never read
+   --> mathematical/graph/drawing/rs/lib.rs:425:13
+    |
+425 |             sol += nodes[vol].mod_;
+    |             ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: unused variable: `node_radius`
+   --> mathematical/graph/drawing/rs/lib.rs:522:97
+    |
+522 | ...de_shape: NodeShape, node_radius: f64, node_width: f64, node_height: f64) -> Option<Vec2> {
+    |                         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_node_radius`
+
+warning: variable does not need to be mutable
+    --> framework/plugin/rs/lib.rs:1383:35
+     |
+1383 |     pub fn local_backbone_storage(mut self) -> Self {
+     |                                   ----^^^^
+     |                                   |
+     |                                   help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `mathematical_graph_drawing` (lib) generated 7 warnings (run `cargo fix --lib -p mathematical_graph_drawing` to apply 2 suggestions)
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+warning: unreachable pattern
+    --> infinite/board/rs/lib.rs:1019:13
+     |
+1019 |             other => {
+     |             ^^^^^ no value can reach this
+     |
+note: multiple earlier patterns match some of the same values
+    --> infinite/board/rs/lib.rs:1019:13
+     |
+ 911 |             InteractionMode::Pan { start_screen, cam_x, cam_y, zoom } => {
+     |             --------------------------------------------------------- matches some of the same values
+...
+ 917 |             InteractionMode::DragNode { node_id, offset } => {
+     |             --------------------------------------------- matches some of the same values
+...
+ 932 |             InteractionMode::DragNodes { primary_id, offset } => {
+     |             ------------------------------------------------- matches some of the same values
+...
+ 958 |             InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, reconnecting, .. } => {
+     |             --------------------------------------------------------------------------------------------- matches some of the same values
+...
+1019 |             other => {
+     |             ^^^^^ ...and 3 other patterns collectively make this unreachable
+     = note: `#[warn(unreachable_patterns)]` (part of `#[warn(unused)]`) on by default
+
+warning: methods `apply_pick_selection` and `selection_to_string_set` are never used
+    --> infinite/board/rs/lib.rs:1269:8
+     |
+ 526 | impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
+     | ---------------------------------------------------------- methods in this implementation
+...
+1269 |     fn apply_pick_selection(&mut self, hit: HitObject<P::Endpoint>, extend_selection: bool) {
+     |        ^^^^^^^^^^^^^^^^^^^^
+...
+1367 |     fn selection_to_string_set(&self) -> BTreeSet<String> {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `infinite_board` (lib) generated 2 warnings
+warning: associated function `color_from_json_rgba8` is never used
+   --> infinite/board/port/directed/rs/lib.rs:460:12
+    |
+414 |     impl CanvasPalette {
+    |     ------------------ associated function in this implementation
+...
+460 |         fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
+    |            ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `infinite_board_port_directed` (lib) generated 1 warning

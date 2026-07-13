@@ -4,7 +4,12 @@
   "name": "Demo Studio",
   "vcs": {
     "initialProjection": {
-      "programs": ["draw", "writer", "raster", "note"],
+      "programs": [
+        "draw",
+        "writer",
+        "raster",
+        "note"
+      ],
       "activeProgramId": null,
       "activeAlternativeId": null,
       "parameters": [
@@ -22,7 +27,10 @@
           "name": "Quality",
           "type": "categorical",
           "value": "High",
-          "options": ["Draft", "High"]
+          "options": [
+            "Draft",
+            "High"
+          ]
         }
       ],
       "parameterBindings": [
@@ -39,9 +47,9 @@
           "appId": "draw",
           "label": "Semio Emblem",
           "yields": "2d.drawing",
-          "sourceDocument": {
-            "format": "draw.document",
-            "payloadRef": "fixture:semio.draw.json"
+          "document": {
+            "documentId": "doc-app-draw-1",
+            "schema": "draw.document"
           }
         },
         {
@@ -50,9 +58,9 @@
           "appId": "draw",
           "label": "Emblem Copy",
           "yields": "2d.drawing",
-          "sourceDocument": {
-            "format": "draw.document",
-            "payloadRef": "fixture:semio.draw.json"
+          "document": {
+            "documentId": "doc-app-draw-2",
+            "schema": "draw.document"
           }
         },
         {
@@ -61,9 +69,9 @@
           "appId": "writer",
           "label": "Jack Notes",
           "yields": "text.document",
-          "sourceDocument": {
-            "format": "writer.document",
-            "payloadRef": "fixture:jack.writer.json"
+          "document": {
+            "documentId": "doc-app-writer-1",
+            "schema": "writer.document"
           }
         },
         {
@@ -72,8 +80,9 @@
           "appId": "raster",
           "label": "Raster Board",
           "yields": "2d.raster",
-          "sourceDocument": {
-            "format": "raster.document"
+          "document": {
+            "documentId": "doc-app-raster-1",
+            "schema": "raster.document"
           }
         },
         {
@@ -82,8 +91,9 @@
           "appId": "document",
           "label": "Note Board",
           "yields": "2d.note",
-          "sourceDocument": {
-            "format": "note.document"
+          "document": {
+            "documentId": "doc-app-note-2",
+            "schema": "note.document"
           }
         }
       ],
@@ -97,8 +107,20 @@
             "y": 80,
             "width": 160,
             "height": 72,
-            "inputs": [{ "id": "app-draw-1:out:in", "resourceKind": "2d.drawing", "direction": "in" }],
-            "outputs": [{ "id": "app-draw-1:out:out", "resourceKind": "2d.drawing", "direction": "out" }]
+            "inputs": [
+              {
+                "id": "app-draw-1:out:in",
+                "resourceKind": "2d.drawing",
+                "direction": "in"
+              }
+            ],
+            "outputs": [
+              {
+                "id": "app-draw-1:out:out",
+                "resourceKind": "2d.drawing",
+                "direction": "out"
+              }
+            ]
           },
           {
             "id": "node-app-draw-2",
@@ -107,8 +129,20 @@
             "y": 80,
             "width": 160,
             "height": 72,
-            "inputs": [{ "id": "app-draw-2:out:in", "resourceKind": "2d.drawing", "direction": "in" }],
-            "outputs": [{ "id": "app-draw-2:out:out", "resourceKind": "2d.drawing", "direction": "out" }]
+            "inputs": [
+              {
+                "id": "app-draw-2:out:in",
+                "resourceKind": "2d.drawing",
+                "direction": "in"
+              }
+            ],
+            "outputs": [
+              {
+                "id": "app-draw-2:out:out",
+                "resourceKind": "2d.drawing",
+                "direction": "out"
+              }
+            ]
           },
           {
             "id": "node-app-writer-1",
@@ -117,8 +151,20 @@
             "y": 80,
             "width": 160,
             "height": 72,
-            "inputs": [{ "id": "app-writer-1:out:in", "resourceKind": "text.document", "direction": "in" }],
-            "outputs": [{ "id": "app-writer-1:out:out", "resourceKind": "text.document", "direction": "out" }]
+            "inputs": [
+              {
+                "id": "app-writer-1:out:in",
+                "resourceKind": "text.document",
+                "direction": "in"
+              }
+            ],
+            "outputs": [
+              {
+                "id": "app-writer-1:out:out",
+                "resourceKind": "text.document",
+                "direction": "out"
+              }
+            ]
           },
           {
             "id": "node-app-raster-1",
@@ -128,10 +174,24 @@
             "width": 160,
             "height": 72,
             "inputs": [
-              { "id": "app-raster-1:out:in", "resourceKind": "2d.raster", "direction": "in" },
-              { "id": "app-raster-1:param.param-brush-size:in", "resourceKind": "parameter.value", "direction": "in" }
+              {
+                "id": "app-raster-1:out:in",
+                "resourceKind": "2d.raster",
+                "direction": "in"
+              },
+              {
+                "id": "app-raster-1:param.param-brush-size:in",
+                "resourceKind": "parameter.value",
+                "direction": "in"
+              }
             ],
-            "outputs": [{ "id": "app-raster-1:out:out", "resourceKind": "2d.raster", "direction": "out" }]
+            "outputs": [
+              {
+                "id": "app-raster-1:out:out",
+                "resourceKind": "2d.raster",
+                "direction": "out"
+              }
+            ]
           },
           {
             "id": "node-app-note-2",
@@ -140,8 +200,20 @@
             "y": 220,
             "width": 160,
             "height": 72,
-            "inputs": [{ "id": "app-note-2:out:in", "resourceKind": "2d.note", "direction": "in" }],
-            "outputs": [{ "id": "app-note-2:out:out", "resourceKind": "2d.note", "direction": "out" }]
+            "inputs": [
+              {
+                "id": "app-note-2:out:in",
+                "resourceKind": "2d.note",
+                "direction": "in"
+              }
+            ],
+            "outputs": [
+              {
+                "id": "app-note-2:out:out",
+                "resourceKind": "2d.note",
+                "direction": "out"
+              }
+            ]
           }
         ],
         "edges": [
