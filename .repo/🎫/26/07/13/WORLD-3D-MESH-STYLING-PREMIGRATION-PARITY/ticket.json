@@ -1,0 +1,13 @@
+{
+  "title": "World 3D Mesh Styling Premigration Parity",
+  "emoji": "🧊",
+  "status": "open",
+  "description": "Restore premigration 3D mesh/material styling parity in the shared React world-3d renderer (framework/renderer/react/components/world-3d-host.tsx), used by puzzle 3D/5D, lowpoly, cad, remodel, shooting, procedural. Currently meshes are flat --panel colored with no edges, hover uses a subtle wrong token, and there is no highlighted/suggested tint. Port the premigration style-kind paint table (neutral/hovered/selected/highlighted/disabled) from puzzle/3d/react/index.tsx + infinite/world/r3f/index.tsx at git tag `premigration`: CSS-token-driven fill/edge colors, EdgesGeometry border outlines (inline geometry + GLB), drei Outlines selection halo, per-state emissive, and the premigration 5-light rig. Puzzle plugin (puzzle/plugin/rs/lib.rs) emits dead hardcoded hex colors that must be removed, and needs to unfold kind_highlighted from hovered into its own highlighted flag.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1966"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪f27ca04b7d544e258c7892c006f6891a"
+  ]
+}

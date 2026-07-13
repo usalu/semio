@@ -898,6 +898,7 @@ function windowEngagementControlToSpec(control: WindowEngagementControl | undefi
     };
   }
   const dispatchNumeric = (action: ActionDescriptor | undefined, value: number) => {
+    console.log("[DEBUG] dispatchNumeric", action, value);
     if (!action) return;
     onAction({ ...action, args: { ...(action.args as object | undefined), value } });
   };
@@ -1989,9 +1990,13 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       // (`OsAppInstance.document` is now just an `OsDocumentRef` handle). A spawned instance's content
       // sync now goes through its own `openDocument`-opened `DocumentHost` channel, same as any other
       // document; there is no host-side JS mirroring step anymore.
+      console.log("[DEBUG] onAction dispatching " + JSON.stringify(action) + " instance " + targetSession.instanceId + " sessionInstance " + session.instanceId);
       void plugin
         .handleAction(targetSession.instanceId, JSON.stringify(action), targetSession.viewState)
-        .then((response) => applyHostEffects(response.requestedEffects ?? [], targetSession))
+        .then((response) => {
+          console.log("[DEBUG] onAction response " + JSON.stringify(response));
+          applyHostEffects(response.requestedEffects ?? [], targetSession);
+        })
         .catch((actionError) => {
           console.error("[DEBUG] action failed", actionError);
         });
@@ -2618,7 +2623,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     const deduped = dedupeToolNodesById([...Object.values(toolNodesByKind), spawnedToolNodes]);
     const grouped = groupToolNodesByCategory(deduped, FOOTER_TOOL_CATEGORIES);
     if (!grouped.length) return undefined;
-    return <ToolTree id="ui.toolbar.footer" tools={grouped} onAction={onAction} />;
+    return <ToolTree id="ui.toolbar.footer" tools={grouped} onAction={onAction} direction="up" />;
   }, [onAction, spawnedToolNodes, toolNodesByKind]);
 
   const footerToolbar = useMemo(() => {

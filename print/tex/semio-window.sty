@@ -1429,14 +1429,6 @@
   \setcounter{tocdepth}{\semio@toc@depth@unlimited}
   \semio@hierarchy@hooks@install
   \semio@heading@installall
-  \typeout{DEBUGDIMS row@height=\the\semio@chrome@row@height
-    row@height@footer=\the\semio@chrome@row@height@footer
-    navbar@height=\semio@chrome@navbar@height
-    footer@height=\semio@chrome@footer@height
-    icon@height=\the\semio@chrome@icon@height
-    icon@height@footer=\the\semio@chrome@icon@height@footer
-    headheight=\the\headheight headsep=\the\headsep footskip=\the\footskip
-    spacing@single=\semio@spacing@single font@chip=\semio@chrome@font@chip}
   \makeatother
   \ExplSyntaxOn
   \semio_chrome_footer_install:
@@ -2201,26 +2193,53 @@
   \ifvmode\nointerlineskip\fi
 }
 
+%region L-shape (no ctrl chip) closure — {@link https://github.com/usalu/semio/issues/1965}
+\newcommand{\semio@window@header@close@paint}[2]{%
+  \semio@window@cap@body@h@set
+  \semio@window@cap@raise{%
+    \hbox to \dimexpr#1-\semio@stroke@hairline\relax{%
+      \vbox to \semio@chrome@titlebar@height{%
+        \nointerlineskip
+        \hbox to \dimexpr#1-\semio@stroke@hairline\relax{%
+          \semio@window@stroke@h{#2}{\dimexpr#1-\semio@stroke@hairline\relax}%
+        }%
+        \nointerlineskip
+        \hbox to \dimexpr#1-\semio@stroke@hairline\relax{%
+          \color{semio-chrome-canvas}\rule{\dimexpr#1-\semio@stroke@hairline\relax}{\semio@window@cap@body@h}%
+        }%
+      }%
+    }%
+  }%
+  \semio@window@cap@raise{\semio@window@stroke@v{#2}}%
+}
+%endregion L-shape (no ctrl chip) closure
+
 \newcommand{\semio@window@header@muted}[2]{%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{#2}}%
   \edef\semio@window@header@numval{#1}%
-  \sbox{\semio@window@ctrl@box}{%
-    \if\relax\detokenize\expandafter{\semio@window@header@numval}\relax
-      \hbox{}%
-    \else
-      \semio@heading@cap@muted@tab{#1}%
-    \fi
-  }%
-  \setlength{\semio@window@gap@w}{%
-    \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
-  }%
-  \semio@window@header@row@wrap{%
-    \hbox to \linewidth{%
-      \usebox{\semio@window@tab@box}%
-      \semio@window@header@gap@paint{semio-chrome-base}{semio-chrome-border-normal}%
-      \usebox{\semio@window@ctrl@box}%
+  \if\relax\detokenize\expandafter{\semio@window@header@numval}\relax
+    \setlength{\semio@window@gap@w}{%
+      \dimexpr\linewidth-\wd\semio@window@tab@box\relax
     }%
-  }%
+    \semio@window@header@row@wrap{%
+      \hbox to \linewidth{%
+        \usebox{\semio@window@tab@box}%
+        \semio@window@header@close@paint{\semio@window@gap@w}{semio-chrome-border-normal}%
+      }%
+    }%
+  \else
+    \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted@tab{#1}}%
+    \setlength{\semio@window@gap@w}{%
+      \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
+    }%
+    \semio@window@header@row@wrap{%
+      \hbox to \linewidth{%
+        \usebox{\semio@window@tab@box}%
+        \semio@window@header@gap@paint{semio-chrome-base}{semio-chrome-border-normal}%
+        \usebox{\semio@window@ctrl@box}%
+      }%
+    }%
+  \fi
 }
 
 %region WindowArrangement

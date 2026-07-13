@@ -6147,7 +6147,7 @@ mod tests {
         let fixture = FlowFixture::default();
         let spec = flow_fixture_to_form_spec(&fixture);
         let kinds: Vec<&str> = spec.steps[0]
-            .questions
+            .blocks
             .iter()
             .map(|question| question.kind.as_str())
             .collect();
@@ -6160,7 +6160,7 @@ mod tests {
         let fixture = FlowFixture::default();
         let spec = flow_fixture_to_form_spec(&fixture);
         let slider_id = spec.steps[0]
-            .questions
+            .blocks
             .iter()
             .find(|question| question.kind == "slider")
             .map(|question| question.id.clone())

@@ -10,7 +10,7 @@ pub mod app_2d {
         GIS_MAP_SCHEMA,
     };
     use semio_framework_plugin::{SurfaceKind, PanelGroup,
-        build_gis_map_scene, create_default_layout, layout::MeasureSelectItem, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle,
+        build_gis_map_scene, create_default_layout, MeasureSelectItem, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle,
         ui_inspector_readonly_field, ui_text, ActionEmit, App, ActionDescriptor, DocumentApp, DocumentView, DwgDrawing, DwgGeometry, GisMapScene,
         UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiSliderNode,
         UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowMeasure,
@@ -465,8 +465,8 @@ pub mod app_2d {
 
     fn layer_weight_entries(runtime: &Gis2dPlayRuntime, labels: &Gis2dPlayLabels) -> Vec<(String, String, f64)> {
         let ids: Vec<String> = serde_json::from_str(&gis_map_layer_weight_slider_ids_json(
-            runtime.lod_mode,
-            runtime.render_mode,
+            &runtime.lod_mode,
+            &runtime.render_mode,
         ))
         .unwrap_or_default();
         ids.into_iter()
@@ -659,7 +659,7 @@ pub mod app_2d {
             .into_iter()
             .map(|(value, label)| UiSelectItem { value, label })
             .collect();
-        let selection: Value = serde_json::from_str(runtime.feature_selection_json).unwrap_or(json!({"positions":[],"routes":[]}));
+        let selection: Value = serde_json::from_str(&runtime.feature_selection_json).unwrap_or(json!({"positions":[],"routes":[]}));
         let selected_count = selection.get("positions").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0)
             + selection.get("routes").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0);
         let mut fields = vec![
@@ -765,7 +765,7 @@ pub mod app_2d {
                 },
             ]);
         }
-        let layer_id = runtime.selected_ids[0];
+        let layer_id = &runtime.selected_ids[0];
         let label = gis2d_layer_label(layer_id, labels);
         let visible = layer_visible(runtime, layer_id);
         let mixed = ui_inspector_mixed_toggle(&[visible]);

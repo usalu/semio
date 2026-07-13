@@ -16,7 +16,7 @@ pub mod app_2d {
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
         FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     };
-    use serde::{Deserialize, Serialize};
+    use serde::Serialize;
     use serde_json::{json, Value};
 
     //#region 🔖Constants

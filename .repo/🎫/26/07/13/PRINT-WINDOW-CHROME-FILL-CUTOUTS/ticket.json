@@ -1,13 +1,15 @@
 {
   "title": "Print Window Chrome Fill Cutouts",
   "emoji": "🖨️",
-  "status": "open",
+  "status": "closed",
   "description": "In the print report, windows are drawn with a top line/row that has small chip elements (tabs) on the left and right ends — e.g. a project/tab chip on the left and a page-number/control chip on the right. The window's border (outline stroke) already renders correctly, tracing the stepped shape: a \"U\" cutout when both left and right chips are present, and an \"L\" cutout when only the left chip is present. However, the window's background fill does not follow this same stepped shape — it doesn't have the matching U/L cutouts, so the fill is likely a plain rectangle that either bleeds into the notch area or fails to fill it correctly, creating a visual mismatch against the correctly-drawn border. Need to find where the window chrome fill is painted (likely print/tex/semio-window.sty: the cap/tab/gap painting commands such as semio@window@cap@paint, semio@window@header@gap@paint, semio@window@cap, semio@heading@pair, semio@heading@cap@muted, semio@paragraph@cap@muted, and the tcolorbox colback fill for the body) and correct the fill logic so it matches the border's U/L stepped outline in both the two-chip and one-chip cases.",
+  "summary": "Root cause: `\\semio@window@header@muted` (print/tex/semio-window.sty) always routed the trailing region after a title chip through `\\semio@window@header@gap@paint`, which fills with `semio-chrome-base` and only ever draws a bottom hairline — no top or right border stroke. For U-shape (title chip + number chip both present) this is correct: the gap is a genuine notch between two raised tabs, closed off visually by the two chips' own side strokes. For L-shape (title chip only, e.g. register-list headers like \"Verzeichnis der Abbildungen\"), the ctrl chip was an empty zero-width box, so that same unbordered gap fill stretched across the entire remaining line width with no right-edge border and no top border flush with the chip — leaving the window's top-right corner open, with the paint bleeding past where the border should close it. Fixed by branching `\\semio@window@header@muted`: the numbered (U) path is untouched; the unnumbered (L) path now calls a new `\\semio@window@header@close@paint` which paints a continuous top border flush with the chip, canvas fill, and closes with a right-edge hairline vertical stroke — so the L-outline is fully enclosed instead of left open. (Re-closing: this ticket was accidentally reopened by an unrelated ticket_reopen call that omitted a path — no further changes made here.)",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1965"
   },
   "goal": "🎯r2602",
   "sessions": [
-    "⚪c091b7506e7042989029b7e24ab994b2"
+    "⚪c091b7506e7042989029b7e24ab994b2",
+    "⚪55cbb4854d8c423bbf6128de46b8019b"
   ]
 }

@@ -5213,13 +5213,19 @@ export interface FooterProps {
 /**
  * Footer holds the data fields for a Footer record.
  **/
+/** @emoji 🪟 Footer floats over the canvas like a side panel — bottom-anchored, glass fill + frame, and grows upward with its own content (its `toolbar`'s ribbon) instead of reserving a fixed-height row. */
 const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible = true, toolbar }) => {
-  const level = useLevel();
   const sortedItems = [...items].sort((a, b) => (a.order || 0) - (b.order || 0));
-  const bgClass = getLevelBgClass(level);
   return (
-    <footer id="ui.footer" data-slot="footer" className={cn(borderNormalTopClass, "relative h-large transition-transform duration-200", bgClass, isVisible ? "translate-y-0" : "translate-y-full", className)}>
-      <div className="p-single flex gap-single items-center min-w-0 h-full w-full">
+    <footer
+      id="ui.footer"
+      data-slot="footer"
+      className={cn("absolute min-w-0 overflow-hidden box-border text-foreground transition-transform duration-200", isVisible ? "translate-y-0" : "translate-y-full", className)}
+      style={{ left: "var(--spacing-single)", right: "var(--spacing-single)", bottom: "var(--spacing-single)", maxHeight: "calc(100% - (var(--spacing-single) * 2))", zIndex: 20 }}
+    >
+      <div data-dim aria-hidden className={panelChromeFillLayerClass} />
+      <div data-dim data-slot="panel-chrome-frame" aria-hidden className={panelChromeFrameLayerClass} />
+      <div data-slot="footer-content" className="relative z-10 p-single flex gap-single items-end min-w-0 w-full">
         {sortedItems.length > 0 ? (
           <div className="h-medium flex shrink-0 items-center min-w-0">
             <ActionGroup className="border">
@@ -5281,10 +5287,10 @@ const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePa
           </div>
         </div>
       )}
-      {footer && <div className="flex-shrink-0">{footer}</div>}
-      {/* Positioned against the full screen (this root), so left/right panels float over the navbar and footer instead of stopping at them — same overlay relationship as a window's options rail over its canvas. */}
+      {/* Positioned against the full screen (this root), so left/right panels and the footer float over the navbar/canvas instead of stopping at them or reserving a fixed-height row — same overlay relationship as a window's options rail over its canvas. */}
       {!mobile && leftSidePanel ? <SidePanel {...leftSidePanel} position="left" /> : null}
       {!mobile && rightSidePanel ? <SidePanel {...rightSidePanel} position="right" /> : null}
+      {footer}
     </div>
   </GhostProvider>
 );
@@ -15427,6 +15433,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
           disabled={control.disabled}
           onValueChange={(values) => {
             const next = values[0];
+            console.log("[DEBUG] EngagementControlView slider onValueChange", next, "hasOnChange", !!control.onChange);
             if (next === undefined) return;
             lastNumericRef.current = next;
             control.onChange?.(next);
@@ -25947,7 +25954,8 @@ if (treeVitest) {
       expect(navbarMarkup).not.toContain("border-emphasized");
       expect(navbarMarkup).not.toContain("border-border");
       const footerMarkup = renderToStaticMarkup(<Footer items={[{ id: "ui.footer.minimize", icon: "minus" }]} />);
-      expect(footerMarkup).toContain(borderNormalTopClass);
+      expect(footerMarkup).toContain('data-slot="panel-chrome-frame"');
+      expect(footerMarkup).toContain(borderNormalClass);
       expect(footerMarkup).not.toContain("border-emphasized");
       const breadcrumbMarkup = renderToStaticMarkup(<Breadcrumb items={[{ content: "Home" }, { content: "Project" }]} />);
       expect(breadcrumbMarkup).toContain(borderNormalClass);
