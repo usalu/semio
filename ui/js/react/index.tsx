@@ -14442,9 +14442,15 @@ const SidePanelChrome: React.FC<SidePanelChromeProps> = ({ position, visible, on
   <div
     data-slot="side-panel-chrome"
     data-expanded={visible ? "true" : undefined}
-    className={cn("relative z-10 flex h-medium shrink-0 items-center p-single", position === "left" ? "justify-start" : "justify-end", visible && borderNormalBottomClass)}
+    className={cn("relative z-10 flex h-medium shrink-0 items-stretch", position === "left" ? "justify-start" : "justify-end", visible && borderNormalBottomClass)}
   >
-    <Toggle id={position === "left" ? "ui.panelToggle.left" : "ui.panelToggle.right"} icon={<Icon icon={position === "left" ? "panel-left" : "panel-right"} size="small" />} pressed={visible} onPressedChange={onToggle} />
+    <Toggle
+      id={position === "left" ? "ui.panelToggle.left" : "ui.panelToggle.right"}
+      icon={<Icon icon={position === "left" ? "panel-left" : "panel-right"} size="small" />}
+      pressed={visible}
+      onPressedChange={onToggle}
+      className="w-fit border-0 bg-transparent"
+    />
   </div>
 );
 
@@ -14547,11 +14553,11 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, onVisib
   const resizeSide = position === "left" ? "right" : "left";
 
   // Positioned against the whole display (Layout's root), not the row between navbar and footer, so it floats over both — spacing is relative to the screen edges only, like a window's options rail over its canvas.
-  // Folded (visible=false) drops the bottom/width constraints so the box hugs just its chrome row, the same way a folded window-options rail collapses to its toggle.
+  // Height hugs content up to that same display bound (`maxHeight`, not a fixed `bottom`) — taller content scrolls internally instead of forcing the box to fill the screen. Only the inner edge (the one facing the canvas) is width-resizable; height is never manually resizable.
   const positionStyle =
     position === "left"
-      ? { left: "var(--spacing-single)", top: "var(--spacing-single)", bottom: visible ? "var(--spacing-single)" : undefined, width: visible ? `${size}px` : undefined, zIndex }
-      : { right: "var(--spacing-single)", top: "var(--spacing-single)", bottom: visible ? "var(--spacing-single)" : undefined, width: visible ? `${size}px` : undefined, zIndex };
+      ? { left: "var(--spacing-single)", top: "var(--spacing-single)", maxHeight: "calc(100% - (var(--spacing-single) * 2))", width: visible ? `${size}px` : undefined, zIndex }
+      : { right: "var(--spacing-single)", top: "var(--spacing-single)", maxHeight: "calc(100% - (var(--spacing-single) * 2))", width: visible ? `${size}px` : undefined, zIndex };
 
   const resizeHandleClass = `absolute top-0 bottom-0 z-20 ${resizeSide === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize`;
 
@@ -14560,7 +14566,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, onVisib
       <PanelGhostRoot
         data-panel={position === "left" ? "leftSidePanel" : "rightSidePanel"}
         data-panel-visible={visible ? "true" : "false"}
-        className={cn("absolute min-w-0 overflow-hidden flex flex-col box-border text-foreground", !visible && "w-fit max-h-full", className)}
+        className={cn("absolute min-w-0 overflow-hidden flex flex-col box-border text-foreground", !visible && "w-fit", className)}
         style={positionStyle}
       >
         <div data-dim aria-hidden className={panelChromeFillLayerClass} />
@@ -25966,6 +25972,10 @@ if (treeVitest) {
       expect(panelMarkup).not.toMatch(/side-panel-tabs[^>]*border-emphasized/);
       expect(panelMarkup).toMatch(/side-panel-tabs[^>]*z-40/);
       expect(panelMarkup).toMatch(/panel-chrome-frame[^>]*z-30/);
+      const chromeMatch = panelMarkup.match(/<div data-slot="side-panel-chrome"[^>]*class="([^"]*)"/);
+      expect(chromeMatch?.[1]).not.toMatch(/\bp-single\b/);
+      const toggleGroupMatch = panelMarkup.match(/data-slot="toggle-group"[^>]*class="([^"]*)"/);
+      expect(toggleGroupMatch?.[1]).toMatch(/\bborder-0\b/);
       const measuresMarkup = renderToStaticMarkup(<div data-slot="window-measures-stack" className={windowMeasuresStackClass} />);
       expect(measuresMarkup).toContain("border-element/40");
       expect(measuresMarkup).not.toContain("border-emphasized");

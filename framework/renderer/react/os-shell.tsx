@@ -1294,7 +1294,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const namedLayoutStore = useMemo(() => new NamedLayoutStore(session?.app.id ?? "framework-os", createBrowserStoragePort()), [session?.app.id]);
 
   const registry = useMemo(() => {
-    const expanded = expandPluginRegistry(plugins, pluginFilter || undefined, studioMode);
+    const expanded = expandPluginRegistry(plugins, pluginFilter ? resolvePluginRegistryId(pluginFilter) : undefined, studioMode);
     if (studioMode) return expanded;
     return pluginFilter ? expanded : plugins;
   }, [pluginFilter, plugins, studioMode]);

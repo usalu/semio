@@ -2293,97 +2293,205 @@ pub mod app_3d {
 
     //#region 🔖Procedural3dPlayApp
     #[derive(Default)]
-    pub struct Procedural3dPlayApp;
+    pub struct Procedural3dPlayApp {
+        runtime: Procedural3dRuntime,
+    }
 
-    impl PluginApp for Procedural3dPlayApp {
+    impl Procedural3dPlayApp {
+        /// 🔀 Diffs a mutated fixture into ops and refreshes the ephemeral base preview cache.
+        fn commit_fixture(&mut self, before: &FlowFixture, target: &FlowFixture) -> Vec<Procedural3dOp> {
+            refresh_preview_cache(&mut self.runtime, target);
+            procedural3d_fixture_ops(before, target)
+        }
+
+        /// 🧬 Emits generation ops for the generate-mode actions, updating ephemeral selection and
+        /// preview from the post-op state. `selectGeneration` is a view action (no ops).
+        fn handle_generation(
+            &mut self,
+            action: &str,
+            args: Option<&Value>,
+            projection: &Procedural3dDocument,
+        ) -> ActionEmit<Procedural3dOp> {
+            let spec = flow_fixture_to_form_spec(&projection.fixture);
+            let mut state = projection.generation.clone();
+            state.selected_generation_id = self.runtime.selected_generation_id.clone();
+            if action == "selectGeneration" {
+                if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
+                    select_generation(&mut state, id);
+                }
+                self.runtime.selected_generation_id = state.selected_generation_id.clone();
+                refresh_generation_preview(&mut self.runtime, &projection.fixture, &state);
+                refresh_all_caches(&mut self.runtime, &projection.fixture, &state);
+                return ActionEmit::default();
+            }
+            let Some(ops) = generation_ops(action, args, &state, &spec) else {
+                return ActionEmit::default();
+            };
+            for op in &ops {
+                apply_generation_op(&mut state, op);
+            }
+            self.runtime.selected_generation_id = state.selected_generation_id.clone();
+            refresh_generation_preview(&mut self.runtime, &projection.fixture, &state);
+            refresh_all_caches(&mut self.runtime, &projection.fixture, &state);
+            let coalesce_key = (action == "updateGenerationValues").then(|| "generation-values".to_string());
+            ActionEmit {
+                ops: ops.into_iter().map(Procedural3dOp::Generation).collect(),
+                coalesce_key,
+                ..Default::default()
+            }
+        }
+
+        /// 🧭 Runs a gumball transform (translate/rotate/scale) as a fixture op, splicing transform
+        /// neurons via `ensure_gumball_node` and re-selecting the resulting transform widgets.
+        fn gumball_transform(
+            &mut self,
+            fixture: &FlowFixture,
+            args: Option<&Value>,
+            op: &str,
+            apply: impl Fn(&mut FlowHost, &str) -> bool,
+        ) -> ActionEmit<Procedural3dOp> {
+            let ids = mesh_selection_ids(args, &self.runtime.selected_node_ids);
+            let mut host = host_from_fixture(fixture);
+            let mut new_selection = Vec::new();
+            let mut changed = false;
+            for id in &ids {
+                if let Ok(transform_id) = ensure_gumball_node(&mut host, id, op) {
+                    if apply(&mut host, &transform_id) {
+                        new_selection.push(transform_id);
+                        changed = true;
+                    }
+                }
+            }
+            if changed {
+                let ops = self.commit_fixture(fixture, &host.fixture);
+                self.runtime.selected_node_ids = new_selection;
+                return ActionEmit::ops(ops);
+            }
+            ActionEmit::default()
+        }
+    }
+
+    impl DocumentApp for Procedural3dPlayApp {
+        type Projection = Procedural3dDocument;
+        type Op = Procedural3dOp;
+
         fn app_id(&self) -> &str {
             PROCEDURAL_3D_PLAY_APP_ID
         }
 
-        fn initial_document_json(&self) -> String {
-            serde_json::to_string(&default_envelope()).expect("procedural3d envelope json")
+        fn document_schema(&self) -> &str {
+            PROCEDURAL_3D_SCHEMA
         }
 
-        fn handle_action_patch_ops(
+        fn initial_projection(&self) -> Procedural3dDocument {
+            default_projection()
+        }
+
+        fn handle_action(
             &mut self,
             action: &str,
             args: Option<&Value>,
-            document_json: &str,
+            doc: &DocumentView<'_, Procedural3dDocument>,
             _view_state: &ViewState,
-        ) -> Vec<String> {
-            let mut envelope = parse_envelope(document_json);
-            let mut host = host_from_envelope(&envelope);
+        ) -> ActionEmit<Procedural3dOp> {
+            let fixture = &doc.projection.fixture;
             match action {
-                "setDocument" => {
-                    if let Some(document) = args.and_then(|value| value.get("document")) {
-                        if let Ok(mut parsed) = serde_json::from_value::<Procedural3dPlayView>(document.clone()) {
-                            return vec![finalize_document_op(&mut parsed)];
-                        }
-                    }
-                }
-                "setActiveExample" => {
-                    let example_id = args
-                        .and_then(|value| value.get("exampleId"))
-                        .and_then(|value| value.as_str())
-                        .unwrap_or("");
-                    envelope = if example_id.is_empty() || example_id == "empty" {
-                        Procedural3dPlayView {
-                            fixture: FlowFixture::default(),
-                            runtime: Procedural3dRuntime::default(),
-                            generation: GenerationPlayState::default(),
-                        }
-                    } else if example_id == PROCEDURAL_EXAMPLE_HEX_COLUMN || example_id == "demo" {
-                        envelope_from_fixture_json(HEX_COLUMN_EXAMPLE_JSON).unwrap_or_else(default_envelope)
-                    } else if example_id == PROCEDURAL_EXAMPLE_RECT_EXTRUDE {
-                        envelope_from_fixture_json(RECT_EXTRUDE_EXAMPLE_JSON).unwrap_or_else(default_envelope)
-                    } else if example_id == PROCEDURAL_EXAMPLE_SPHERE_TORUS {
-                        envelope_from_fixture_json(SPHERE_TORUS_EXAMPLE_JSON).unwrap_or_else(default_envelope)
-                    } else {
-                        envelope
-                    };
-                    return vec![finalize_document_op(&mut envelope)];
-                }
+                // 👁️ View actions — mutate ephemeral runtime, emit no ops.
                 "setSelection" | "selectNode" | "nodeGraphSelect" => {
-                    envelope.runtime.selected_node_ids = node_graph_selection_ids(args);
-                    return vec![finalize_document_op(&mut envelope)];
+                    self.runtime.selected_node_ids = node_graph_selection_ids(args);
+                    ActionEmit::default()
                 }
-                "nodeGraphHover" => return Vec::new(),
-                "nodeGraphViewport" => {
-                    if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
-                        if let Ok(camera) = serde_json::from_str(viewport_json) {
-                            envelope.fixture.camera = camera;
-                            return vec![finalize_document_op(&mut envelope)];
+                "nodeGraphHover" => ActionEmit::default(),
+                "worldPointerDown" | "graphPointerDown" => ActionEmit::default(),
+                "worldSelect" => {
+                    let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
+                    let ids: Vec<String> = args
+                        .and_then(|value| value.get("ids"))
+                        .and_then(|value| serde_json::from_value(value.clone()).ok())
+                        .unwrap_or_default();
+                    self.runtime.selected_node_ids = merge_world_selection_ids(&self.runtime.selected_node_ids, &ids, merge);
+                    ActionEmit::default()
+                }
+                "worldHover" => {
+                    self.runtime.hovered_node_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
+                    ActionEmit::default()
+                }
+                "setSelectionMethod" => {
+                    self.runtime.selection_method = args.and_then(|value| value.get("method")).and_then(|value| value.as_str()).unwrap_or("rectangle").into();
+                    ActionEmit::default()
+                }
+                "setLodMode" => {
+                    if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
+                        self.runtime.lod_mode = mode.into();
+                    }
+                    ActionEmit::default()
+                }
+                "setShowMode" => {
+                    if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
+                        self.runtime.show_mode = mode.into();
+                    }
+                    ActionEmit::default()
+                }
+                "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => {
+                    apply_world3d_sun_action(&mut self.runtime.sun, action, args);
+                    ActionEmit::default()
+                }
+                "setCamera" => {
+                    if let Some(camera) = args.and_then(|value| value.get("camera")) {
+                        if let Ok(parsed) = serde_json::from_value(camera.clone()) {
+                            self.runtime.preview_camera = parsed;
                         }
                     }
+                    ActionEmit::default()
+                }
+                // 📷 Canvas camera — a coalesced scalar op so a pan/zoom gesture is one undo step.
+                "nodeGraphViewport" => {
+                    if let Some(camera) = args
+                        .and_then(|value| value.get("viewportJson"))
+                        .and_then(|value| value.as_str())
+                        .and_then(|json| serde_json::from_str(json).ok())
+                    {
+                        return ActionEmit {
+                            ops: vec![Procedural3dOp::SetCamera { camera }],
+                            coalesce_key: Some("camera".into()),
+                            ..Default::default()
+                        };
+                    }
+                    ActionEmit::default()
+                }
+                // ✏️ Operations — compute the target fixture via the host, emit fixture ops.
+                "setActiveExample" => {
+                    let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
+                    let target = example_projection(example_id);
+                    let mut ops: Vec<Procedural3dOp> = doc
+                        .projection
+                        .generation
+                        .generations
+                        .iter()
+                        .map(|generation| Procedural3dOp::Generation(GenerationOp::Remove { id: generation.id.clone() }))
+                        .collect();
+                    ops.extend(procedural3d_fixture_ops(fixture, &target.fixture));
+                    self.runtime = Procedural3dRuntime::default();
+                    refresh_preview_cache(&mut self.runtime, &target.fixture);
+                    ActionEmit::ops(ops)
                 }
                 "nodeGraphEdit" => {
-                    let ops = args
-                        .and_then(|value| value.get("ops"))
-                        .and_then(|value| value.as_array())
-                        .cloned()
-                        .unwrap_or_default();
-                    let mut changed = false;
-                    for op in ops {
+                    let sub_ops = args.and_then(|value| value.get("ops")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
+                    let selected = self.runtime.selected_node_ids.clone();
+                    let mut host = host_from_fixture(fixture);
+                    let mut cleared = false;
+                    for op in &sub_ops {
                         match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
                             "setFixture" => {
-                                if let Some(fixture_json) = op.get("fixtureJson").and_then(|value| value.as_str()) {
-                                    if let Ok(fixture) = serde_json::from_str::<FlowFixture>(fixture_json) {
-                                        envelope.fixture = fixture;
-                                        changed = true;
-                                    }
+                                if let Some(new_fixture) = op.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| serde_json::from_str::<FlowFixture>(json).ok()) {
+                                    host.replace_fixture(new_fixture);
                                 }
                             }
                             "deleteSelection" => {
-                                for node_id in envelope.runtime.selected_node_ids.clone() {
-                                    if !changed {
-                                        snapshot_procedural3d(&mut envelope.runtime, &envelope.fixture);
+                                for id in &selected {
+                                    if host.remove_widget(id).is_ok() {
+                                        cleared = true;
                                     }
-                                    if host.remove_widget(&node_id).is_ok() {
-                                        changed = true;
-                                    }
-                                }
-                                if changed {
-                                    envelope.runtime.selected_node_ids.clear();
                                 }
                             }
                             "connect" => {
@@ -2391,93 +2499,61 @@ pub mod app_3d {
                                 let from_port = op.get("sourcePortId").and_then(|value| value.as_str());
                                 let to = op.get("targetNodeId").and_then(|value| value.as_str());
                                 let to_port = op.get("targetPortId").and_then(|value| value.as_str());
-                                if let (Some(from), Some(from_port), Some(to), Some(to_port)) =
-                                    (from, from_port, to, to_port)
-                                {
-                                    snapshot_procedural3d(&mut envelope.runtime, &envelope.fixture);
-                                    if host.connect_ports(from, from_port, to, to_port).is_ok() {
-                                        changed = true;
-                                    } else {
-                                        envelope.runtime.undo_fixtures.pop();
-                                    }
+                                if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
+                                    let _ = host.connect_ports(from, from_port, to, to_port);
                                 }
                             }
                             _ => {}
                         }
                     }
-                    if changed {
-                        envelope.fixture = host.fixture;
-                        return vec![finalize_document_op(&mut envelope)];
+                    let ops = self.commit_fixture(fixture, &host.fixture);
+                    if cleared {
+                        self.runtime.selected_node_ids.clear();
                     }
+                    ActionEmit::ops(ops)
                 }
                 "deleteSelection" => {
-                    for node_id in envelope.runtime.selected_node_ids.clone() {
-                        snapshot_procedural3d(&mut envelope.runtime, &envelope.fixture);
-                        if host.remove_widget(&node_id).is_ok() {
-                            envelope.fixture = host.fixture;
-                            envelope.runtime.selected_node_ids.retain(|id| id != &node_id);
-                            return vec![finalize_document_op(&mut envelope)];
+                    let selected = self.runtime.selected_node_ids.clone();
+                    let mut host = host_from_fixture(fixture);
+                    let mut cleared = false;
+                    for id in &selected {
+                        if host.remove_widget(id).is_ok() {
+                            cleared = true;
                         }
-                        envelope.runtime.undo_fixtures.pop();
                     }
+                    let ops = self.commit_fixture(fixture, &host.fixture);
+                    if cleared {
+                        self.runtime.selected_node_ids.clear();
+                    }
+                    ActionEmit::ops(ops)
                 }
                 "removeWidget" => {
                     let target_id = args
                         .and_then(|value| value.get("widgetId"))
                         .or_else(|| args.and_then(|value| value.get("id")))
-                        .and_then(|value| value.as_str());
+                        .and_then(|value| value.as_str())
+                        .map(str::to_string);
                     if let Some(target_id) = target_id {
-                        if envelope.fixture.widgets.iter().any(|widget| widget_id(widget) == target_id) {
-                            snapshot_procedural3d(&mut envelope.runtime, &envelope.fixture);
-                            if host.remove_widget(target_id).is_ok() {
-                                envelope.fixture = host.fixture;
-                                envelope.runtime.selected_node_ids.retain(|id| id != target_id);
-                                return vec![finalize_document_op(&mut envelope)];
-                            }
-                            envelope.runtime.undo_fixtures.pop();
+                        let mut host = host_from_fixture(fixture);
+                        if host.remove_widget(&target_id).is_ok() {
+                            let ops = self.commit_fixture(fixture, &host.fixture);
+                            self.runtime.selected_node_ids.retain(|id| id != &target_id);
+                            return ActionEmit::ops(ops);
                         }
                     }
-                }
-                "undo" => {
-                    if let Some(previous) = envelope.runtime.undo_fixtures.pop() {
-                        envelope.runtime.redo_fixtures.push(envelope.fixture.clone());
-                        envelope.fixture = previous;
-                        return vec![finalize_document_op(&mut envelope)];
-                    }
-                }
-                "redo" => {
-                    if let Some(next) = envelope.runtime.redo_fixtures.pop() {
-                        envelope.runtime.undo_fixtures.push(envelope.fixture.clone());
-                        envelope.fixture = next;
-                        return vec![finalize_document_op(&mut envelope)];
-                    }
-                }
-                "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => {
-                    apply_world3d_sun_action(&mut envelope.runtime.sun, action, args);
-                    return vec![finalize_document_op(&mut envelope)];
-                }
-                "setLodMode" => {
-                    if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
-                        envelope.runtime.lod_mode = mode.into();
-                        return vec![finalize_document_op(&mut envelope)];
-                    }
-                }
-                "setShowMode" => {
-                    if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
-                        envelope.runtime.show_mode = mode.into();
-                        return vec![finalize_document_op(&mut envelope)];
-                    }
+                    ActionEmit::default()
                 }
                 "moveMediaNode" => {
-                    let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str());
+                    let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).map(str::to_string);
                     let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
                     let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
                     if let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) {
-                        if host.move_widget(node_id, x, y).is_ok() {
-                            envelope.fixture = host.fixture;
-                            return vec![finalize_document_op(&mut envelope)];
+                        let mut host = host_from_fixture(fixture);
+                        if host.move_widget(&node_id, x, y).is_ok() {
+                            return ActionEmit::ops(self.commit_fixture(fixture, &host.fixture));
                         }
                     }
+                    ActionEmit::default()
                 }
                 "addWidget" => {
                     let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("inputSlider");
@@ -2487,203 +2563,78 @@ pub mod app_3d {
                     };
                     let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                     let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
-                    snapshot_procedural3d(&mut envelope.runtime, &envelope.fixture);
+                    let mut host = host_from_fixture(fixture);
                     if let Ok(id) = host.add_widget(&descriptor, x, y) {
-                        envelope.fixture = host.fixture;
-                        envelope.runtime.selected_node_ids = vec![id];
-                        return vec![finalize_document_op(&mut envelope)];
+                        let ops = self.commit_fixture(fixture, &host.fixture);
+                        self.runtime.selected_node_ids = vec![id];
+                        return ActionEmit::ops(ops);
                     }
-                    envelope.runtime.undo_fixtures.pop();
+                    ActionEmit::default()
                 }
                 "patchFlowWidgets" => {
-                    let widget_ids: Vec<String> = args
-                        .and_then(|value| value.get("widgetIds"))
-                        .and_then(|value| serde_json::from_value(value.clone()).ok())
-                        .unwrap_or_default();
+                    let widget_ids: Vec<String> = args.and_then(|value| value.get("widgetIds")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                     let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
-                    let raw_value = args.and_then(|value| value.get("value"));
-                    snapshot_procedural3d(&mut envelope.runtime, &envelope.fixture);
-                    for widget in envelope.fixture.widgets.iter_mut() {
+                    let raw_value = args.and_then(|value| value.get("value")).and_then(|entry| entry.as_f64());
+                    let mut next = fixture.clone();
+                    for widget in next.widgets.iter_mut() {
                         if !widget_ids.contains(&widget_id(widget).to_string()) {
                             continue;
                         }
-                        if let (Widget::InputSlider { value: ref mut slider_value, .. }, Some(value)) =
-                            (widget, raw_value.and_then(|entry| entry.as_f64()))
-                        {
+                        if let (Widget::InputSlider { value: slider_value, .. }, Some(value)) = (widget, raw_value) {
                             if field == "value" {
                                 *slider_value = value;
                             }
                         }
                     }
-                    return vec![finalize_document_op(&mut envelope)];
+                    ActionEmit::ops(self.commit_fixture(fixture, &next))
                 }
                 "reorganize" => {
-                    snapshot_procedural3d(&mut envelope.runtime, &envelope.fixture);
+                    let mut host = host_from_fixture(fixture);
                     if host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok() {
-                        envelope.fixture = host.fixture;
-                        return vec![finalize_document_op(&mut envelope)];
+                        return ActionEmit::ops(self.commit_fixture(fixture, &host.fixture));
                     }
-                    envelope.runtime.undo_fixtures.pop();
-                }
-                "worldSelect" => {
-                    let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
-                    let ids: Vec<String> = args
-                        .and_then(|value| value.get("ids"))
-                        .and_then(|value| serde_json::from_value(value.clone()).ok())
-                        .unwrap_or_default();
-                    envelope.runtime.selected_node_ids =
-                        merge_world_selection_ids(&envelope.runtime.selected_node_ids, &ids, merge);
-                    return vec![finalize_document_op(&mut envelope)];
-                }
-                "worldHover" => {
-                    envelope.runtime.hovered_node_id = args
-                        .and_then(|value| value.get("id"))
-                        .and_then(|value| value.as_str())
-                        .map(str::to_string);
-                    return vec![finalize_document_op(&mut envelope)];
-                }
-                "setSelectionMethod" => {
-                    let method = args
-                        .and_then(|value| value.get("method"))
-                        .and_then(|value| value.as_str())
-                        .unwrap_or("rectangle");
-                    envelope.runtime.selection_method = method.into();
-                    return vec![finalize_document_op(&mut envelope)];
-                }
-                "setCamera" => {
-                    if let Some(camera) = args.and_then(|value| value.get("camera")) {
-                        if let Ok(parsed) = serde_json::from_value(camera.clone()) {
-                            envelope.runtime.preview_camera = parsed;
-                            return vec![finalize_document_op(&mut envelope)];
-                        }
-                    }
+                    ActionEmit::default()
                 }
                 "translateSelection" => {
-                    let ids = mesh_selection_ids(args, &envelope.runtime.selected_node_ids);
                     let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                     let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                     let dz = args.and_then(|value| value.get("dz")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                    let mut new_selection = Vec::new();
-                    let mut changed = false;
-                    for id in &ids {
-                        let is_new = !host.fixture.widgets.iter().any(|widget| widget_id(widget) == gumball_widget_id(id, "translate")) && !id.ends_with("__gumball_translate");
-                        if is_new {
-                            snapshot_procedural3d(&mut envelope.runtime, &host.fixture);
-                        }
-                        match ensure_gumball_node(&mut host, id, "translate") {
-                            Ok(transform_id) => {
-                                let current = gumball_widget_offset(&host, &transform_id);
-                                let next = [current[0] + dx, current[1] + dy, current[2] + dz];
-                                if host.set_neuron_params(&transform_id, &gumball_translate_params_json(next)).is_ok() {
-                                    new_selection.push(transform_id);
-                                    changed = true;
-                                } else if is_new {
-                                    envelope.runtime.undo_fixtures.pop();
-                                }
-                            }
-                            Err(_) if is_new => {
-                                envelope.runtime.undo_fixtures.pop();
-                            }
-                            Err(_) => {}
-                        }
-                    }
-                    if changed {
-                        envelope.fixture = host.fixture;
-                        envelope.runtime.selected_node_ids = new_selection;
-                        return vec![finalize_document_op(&mut envelope)];
-                    }
+                    self.gumball_transform(fixture, args, "translate", move |host, transform_id| {
+                        let current = gumball_widget_offset(host, transform_id);
+                        let next = [current[0] + dx, current[1] + dy, current[2] + dz];
+                        host.set_neuron_params(transform_id, &gumball_translate_params_json(next)).is_ok()
+                    })
                 }
                 "rotateSelection" => {
-                    let ids = mesh_selection_ids(args, &envelope.runtime.selected_node_ids);
                     let ax = args.and_then(|value| value.get("ax")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                     let ay = args.and_then(|value| value.get("ay")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                     let az = args.and_then(|value| value.get("az")).and_then(|value| value.as_f64()).unwrap_or(1.0);
                     let angle = args.and_then(|value| value.get("angle")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                    let mut new_selection = Vec::new();
-                    let mut changed = false;
-                    for id in &ids {
-                        let is_new = !host.fixture.widgets.iter().any(|widget| widget_id(widget) == gumball_widget_id(id, "rotate")) && !id.ends_with("__gumball_rotate");
-                        if is_new {
-                            snapshot_procedural3d(&mut envelope.runtime, &host.fixture);
-                        }
-                        match ensure_gumball_node(&mut host, id, "rotate") {
-                            Ok(transform_id) => {
-                                let current_angle = gumball_widget_number_param(&host, &transform_id, "angle", 0.0);
-                                let params = gumball_rotate_params_json([ax, ay, az], current_angle + angle);
-                                if host.set_neuron_params(&transform_id, &params).is_ok() {
-                                    new_selection.push(transform_id);
-                                    changed = true;
-                                } else if is_new {
-                                    envelope.runtime.undo_fixtures.pop();
-                                }
-                            }
-                            Err(_) if is_new => {
-                                envelope.runtime.undo_fixtures.pop();
-                            }
-                            Err(_) => {}
-                        }
-                    }
-                    if changed {
-                        envelope.fixture = host.fixture;
-                        envelope.runtime.selected_node_ids = new_selection;
-                        return vec![finalize_document_op(&mut envelope)];
-                    }
+                    self.gumball_transform(fixture, args, "rotate", move |host, transform_id| {
+                        let current_angle = gumball_widget_number_param(host, transform_id, "angle", 0.0);
+                        host.set_neuron_params(transform_id, &gumball_rotate_params_json([ax, ay, az], current_angle + angle)).is_ok()
+                    })
                 }
                 "scaleSelection" => {
-                    let ids = mesh_selection_ids(args, &envelope.runtime.selected_node_ids);
                     let sx = args.and_then(|value| value.get("sx")).and_then(|value| value.as_f64()).unwrap_or(1.0);
                     let sy = args.and_then(|value| value.get("sy")).and_then(|value| value.as_f64()).unwrap_or(1.0);
                     let sz = args.and_then(|value| value.get("sz")).and_then(|value| value.as_f64()).unwrap_or(1.0);
                     let uniform_factor = (sx + sy + sz) / 3.0;
-                    let mut new_selection = Vec::new();
-                    let mut changed = false;
-                    for id in &ids {
-                        let is_new = !host.fixture.widgets.iter().any(|widget| widget_id(widget) == gumball_widget_id(id, "scale")) && !id.ends_with("__gumball_scale");
-                        if is_new {
-                            snapshot_procedural3d(&mut envelope.runtime, &host.fixture);
-                        }
-                        match ensure_gumball_node(&mut host, id, "scale") {
-                            Ok(transform_id) => {
-                                let current_factor = gumball_widget_number_param(&host, &transform_id, "factor", 1.0);
-                                let params = gumball_scale_params_json(current_factor * uniform_factor);
-                                if host.set_neuron_params(&transform_id, &params).is_ok() {
-                                    new_selection.push(transform_id);
-                                    changed = true;
-                                } else if is_new {
-                                    envelope.runtime.undo_fixtures.pop();
-                                }
-                            }
-                            Err(_) if is_new => {
-                                envelope.runtime.undo_fixtures.pop();
-                            }
-                            Err(_) => {}
-                        }
-                    }
-                    if changed {
-                        envelope.fixture = host.fixture;
-                        envelope.runtime.selected_node_ids = new_selection;
-                        return vec![finalize_document_op(&mut envelope)];
-                    }
+                    self.gumball_transform(fixture, args, "scale", move |host, transform_id| {
+                        let current_factor = gumball_widget_number_param(host, transform_id, "factor", 1.0);
+                        host.set_neuron_params(transform_id, &gumball_scale_params_json(current_factor * uniform_factor)).is_ok()
+                    })
                 }
-                "worldPointerDown" | "graphPointerDown" => return Vec::new(),
                 "addGeneration" | "removeGeneration" | "selectGeneration" | "renameGeneration" | "updateGenerationValues" => {
-                    let spec = flow_fixture_to_form_spec(&envelope.fixture);
-                    if handle_generation_action(action, args, &mut envelope.generation, &spec, PROCEDURAL_3D_PLAY_APP_ID)
-                    {
-                        if matches!(action, "addGeneration" | "selectGeneration" | "updateGenerationValues") {
-                            refresh_generation_preview(&mut envelope);
-                        }
-                        return vec![finalize_document_op(&mut envelope)];
-                    }
+                    self.handle_generation(action, args, doc.projection)
                 }
-                _ => {}
+                _ => ActionEmit::default(),
             }
-            Vec::new()
         }
 
-        fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-            let envelope = parse_envelope(document_json);
-            let host = host_from_envelope(&envelope);
+        fn render(&self, body_key: &str, doc: &DocumentView<'_, Procedural3dDocument>, view_state: &ViewState) -> UiNode {
+            let envelope = play_view(doc.projection, &self.runtime);
+            let host = host_from_fixture(&envelope.fixture);
             let labels = procedural3d_labels(view_state);
             match body_key {
                 PROCEDURAL_3D_PLAY_BODY_MAIN => {
@@ -2741,9 +2692,12 @@ pub mod app_3d {
             }
         }
 
-        fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> std::collections::HashMap<String, Vec<WindowMeasure>> {
-            let envelope = parse_envelope(document_json);
-            let measures = vec![world3d_sun_measures("procedural3d", &envelope.runtime.sun, procedural3d_action)];
+        fn window_measures(
+            &self,
+            _doc: &DocumentView<'_, Procedural3dDocument>,
+            _view_state: &ViewState,
+        ) -> std::collections::HashMap<String, Vec<WindowMeasure>> {
+            let measures = vec![world3d_sun_measures("procedural3d", &self.runtime.sun, procedural3d_action)];
             std::collections::HashMap::from([
                 (PROCEDURAL_3D_PLAY_WINDOW_PREVIEW.to_string(), measures.clone()),
                 (PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW.to_string(), measures),
@@ -2770,7 +2724,7 @@ pub mod app_3d {
         }
     }
 
-    fn node_graph_selection_ids(args: Option<&Value>) -> Vec<String> {
+        fn node_graph_selection_ids(args: Option<&Value>) -> Vec<String> {
         if let Some(ids) = args
             .and_then(|value| value.get("nodeIds"))
             .and_then(|value| serde_json::from_value(value.clone()).ok())
@@ -2922,19 +2876,19 @@ pub mod app_3d {
                 .keybinding("mod+z", "undo")
                 .keybinding("mod+shift+z", "redo"),
         )
-        .example(PROCEDURAL_EXAMPLE_HEX_COLUMN, "Hexagonal Mushroom Column", HEX_COLUMN_EXAMPLE_JSON)
-        .example(PROCEDURAL_EXAMPLE_RECT_EXTRUDE, "Rectangle Extrude Volume", RECT_EXTRUDE_EXAMPLE_JSON)
-        .example(PROCEDURAL_EXAMPLE_SPHERE_TORUS, "Sphere Cut With Torus", SPHERE_TORUS_EXAMPLE_JSON)
+        .example(PROCEDURAL_EXAMPLE_HEX_COLUMN, "Hexagonal Mushroom Column", example_document_json(PROCEDURAL_EXAMPLE_HEX_COLUMN))
+        .example(PROCEDURAL_EXAMPLE_RECT_EXTRUDE, "Rectangle Extrude Volume", example_document_json(PROCEDURAL_EXAMPLE_RECT_EXTRUDE))
+        .example(PROCEDURAL_EXAMPLE_SPHERE_TORUS, "Sphere Cut With Torus", example_document_json(PROCEDURAL_EXAMPLE_SPHERE_TORUS))
         .program("procedural3d", "Procedural 3D", "brep")
     }
 
     fn procedural3d_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
-        let envelope: Procedural3dPlayView = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
-        Ok(export_mesh_from_envelope(&envelope))
+        let projection: Procedural3dDocument = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
+        Ok(export_mesh_from_document(&projection))
     }
 
     fn procedural3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
-        serde_json::to_value(default_envelope()).map_err(|err| err.to_string())
+        serde_json::to_value(default_projection()).map_err(|err| err.to_string())
     }
 
     pub fn register_procedural3d_exports() {
@@ -2955,22 +2909,35 @@ pub mod app_3d {
         use kernel_3d_scene::{
             aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Mesh3d, Vec3,
         };
-        use semio_framework_plugin::PluginApp;
+        use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+        use vcs::MemoryBackbone;
+
+        fn meta(actor: &str) -> ActionMeta {
+            ActionMeta { actor: actor.into(), instance_id: 1 }
+        }
+
+        fn new_app() -> VcsDocumentApp<Procedural3dPlayApp> {
+            VcsDocumentApp::new(Procedural3dPlayApp::default())
+        }
+
+        fn slider_value(projection: &Procedural3dDocument, id: &str) -> Option<f64> {
+            projection.fixture.widgets.iter().find_map(|widget| match widget {
+                Widget::InputSlider { id: widget_id, value, .. } if widget_id == id => Some(*value),
+                _ => None,
+            })
+        }
 
         #[test]
         fn renders_node_graph_scene() {
-            let app = Procedural3dPlayApp;
-            let document = app.initial_document_json();
-            let node = app.render(PROCEDURAL_3D_PLAY_BODY_MAIN, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("node-graph"));
+            let mut app = new_app();
+            let node = app.render(PROCEDURAL_3D_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
+            assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
         }
 
         #[test]
         fn main_graph_scene_exports_flow_backed_node_graph_fields() {
-            let app = Procedural3dPlayApp;
-            let document = app.initial_document_json();
-            let node = app.render(PROCEDURAL_3D_PLAY_BODY_MAIN, &document, &ViewState::default());
+            let mut app = new_app();
+            let node = app.render(PROCEDURAL_3D_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
             let json = serde_json::to_string(&node).unwrap();
             let value: Value = serde_json::from_str(&json).expect("ui node json");
             let graph = value.get("nodeGraph").expect("nodeGraph");
@@ -2981,49 +2948,50 @@ pub mod app_3d {
         }
 
         #[test]
-        fn set_lod_mode_reads_value_arg() {
-            let mut app = Procedural3dPlayApp;
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setLodMode", Some(&json!({ "value": "wireframe" })), &document, &ViewState::default());
-            let envelope: Procedural3dPlayView = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.runtime.lod_mode, "wireframe");
+        fn set_lod_mode_is_a_view_action_with_no_document_ops() {
+            let mut app = new_app();
+            let before = app.projection().expect("projection");
+            app.handle_action("setLodMode", Some(&json!({ "value": "wireframe" })), &ViewState::default(), &meta("local")).expect("lod");
+            assert_eq!(app.projection().expect("projection"), before, "setLodMode must not mutate the document");
         }
 
         #[test]
-        fn toggle_sun_round_trips_through_runtime_and_defaults_off() {
-            let mut app = Procedural3dPlayApp;
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            assert!(!envelope.runtime.sun.enabled, "sun must be off by default");
-            let measures = app.window_measures(&document, &ViewState::default());
+        fn sun_measures_are_exposed_on_preview_windows() {
+            let mut app = new_app();
+            let measures = app.window_measures(&ViewState::default());
             assert!(measures.contains_key(PROCEDURAL_3D_PLAY_WINDOW_PREVIEW));
             assert!(measures.contains_key(PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW));
-            let ops = app.handle_action_patch_ops("toggleSun", None, &document, &ViewState::default());
-            let next: Procedural3dPlayView = apply_ops(&envelope, &ops);
-            assert!(next.runtime.sun.enabled);
+            // 👁️ Sun toggling is a view action: it must not record a document op.
+            let before = app.projection().expect("projection");
+            app.handle_action("toggleSun", None, &ViewState::default(), &meta("local")).expect("toggle sun");
+            assert_eq!(app.projection().expect("projection"), before, "toggleSun must not mutate the document");
         }
 
         #[test]
         fn set_active_example_loads_sphere_fixture() {
-            let mut app = Procedural3dPlayApp;
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops(
+            let mut app = new_app();
+            app.handle_action(
                 "setActiveExample",
                 Some(&json!({ "exampleId": PROCEDURAL_EXAMPLE_SPHERE_TORUS })),
-                &document,
                 &ViewState::default(),
-            );
-            let envelope: Procedural3dPlayView = apply_ops(&parse_envelope(&document), &ops);
-            assert!(envelope.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { neuronKind, .. } if neuronKind == "brep.prim3d.sphere")));
+                &meta("local"),
+            )
+            .expect("set example");
+            let projection = app.projection().expect("projection");
+            assert!(projection.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { neuronKind, .. } if neuronKind == "brep.prim3d.sphere")));
         }
 
         #[test]
         fn sphere_cut_example_preview_renders_meshes() {
-            let app = Procedural3dPlayApp;
-            let mut envelope = envelope_from_fixture_json(SPHERE_TORUS_EXAMPLE_JSON).expect("sphere fixture");
-            refresh_preview_cache(&mut envelope.runtime, &envelope.fixture);
-            let document = serde_json::to_string(&envelope).expect("envelope json");
-            let node = app.render(PROCEDURAL_3D_PLAY_BODY_PREVIEW, &document, &ViewState::default());
+            let mut app = new_app();
+            app.handle_action(
+                "setActiveExample",
+                Some(&json!({ "exampleId": PROCEDURAL_EXAMPLE_SPHERE_TORUS })),
+                &ViewState::default(),
+                &meta("local"),
+            )
+            .expect("set example");
+            let node = app.render(PROCEDURAL_3D_PLAY_BODY_PREVIEW, None, &ViewState::default()).expect("render");
             let parsed: ui_wgpu::UiNode = serde_json::from_str(&serde_json::to_string(&node).unwrap()).expect("preview ui json");
             match parsed {
                 ui_wgpu::UiNode::ComponentScene(scene) => {
@@ -3036,52 +3004,23 @@ pub mod app_3d {
         }
 
         #[test]
-        fn viewport_action_preserves_preview_cache() {
-            let mut app = Procedural3dPlayApp;
-            let document = app.initial_document_json();
-            let load_ops = app.handle_action_patch_ops(
-                "setActiveExample",
-                Some(&json!({ "exampleId": PROCEDURAL_EXAMPLE_SPHERE_TORUS })),
-                &document,
-                &ViewState::default(),
-            );
-            let mut envelope: Procedural3dPlayView = apply_ops(&parse_envelope(&document), &load_ops);
-            let cached = envelope.runtime.preview_cache.clone().expect("preview cache");
-            let document = serde_json::to_string(&envelope).unwrap();
-            let viewport_ops = app.handle_action_patch_ops(
-                "nodeGraphViewport",
-                Some(&json!({ "viewportJson": r#"{"x":12,"y":24,"zoom":2}"# })),
-                &document,
-                &ViewState::default(),
-            );
-            let next: Procedural3dPlayView = apply_ops(&envelope, &viewport_ops);
-            let next_cache = next.runtime.preview_cache.expect("preview cache after viewport");
-            assert_eq!(next_cache.signature, cached.signature);
-            assert_eq!(next_cache.meshes_json, cached.meshes_json);
-            assert_eq!(next_cache.instances_json, cached.instances_json);
-        }
-
-        #[test]
-        fn patch_flow_widgets_refreshes_preview_cache() {
-            let mut app = Procedural3dPlayApp;
-            let document = app.initial_document_json();
-            let before: Procedural3dPlayView = parse_envelope(&document);
-            let cached = before.runtime.preview_cache.clone().expect("preview cache");
-            let ops = app.handle_action_patch_ops(
+        fn patch_flow_widgets_edits_slider_value() {
+            let mut app = new_app();
+            app.handle_action(
                 "patchFlowWidgets",
                 Some(&json!({ "widgetIds": ["height"], "field": "value", "value": 9.5 })),
-                &document,
                 &ViewState::default(),
-            );
-            let after: Procedural3dPlayView = apply_ops(&before, &ops);
-            let next_cache = after.runtime.preview_cache.expect("preview cache after patch");
-            assert_ne!(next_cache.signature, cached.signature);
+                &meta("local"),
+            )
+            .expect("patch");
+            assert_eq!(slider_value(&app.projection().expect("projection"), "height"), Some(9.5));
         }
 
         #[test]
         fn preview_payload_has_meshes_and_instances() {
-            let envelope = default_envelope();
-            let (meshes_json, instances_json) = evaluated_preview_payload(&envelope.fixture, &envelope.runtime);
+            let projection = default_projection();
+            let runtime = Procedural3dRuntime::default();
+            let (meshes_json, instances_json) = evaluated_preview_payload(&projection.fixture, &runtime);
             assert_ne!(meshes_json, "[]", "meshes_json was empty");
             assert_ne!(instances_json, "[]", "instances_json was empty");
             let meshes: Vec<serde_json::Value> = serde_json::from_str(&meshes_json).expect("meshes json");
@@ -3096,17 +3035,17 @@ pub mod app_3d {
             }
             let camera = Camera3d {
                 position: Vec3::from_array([
-                    envelope.runtime.preview_camera.position[0] as f32,
-                    envelope.runtime.preview_camera.position[1] as f32,
-                    envelope.runtime.preview_camera.position[2] as f32,
+                    runtime.preview_camera.position[0] as f32,
+                    runtime.preview_camera.position[1] as f32,
+                    runtime.preview_camera.position[2] as f32,
                 ]),
                 target: Vec3::from_array([
-                    envelope.runtime.preview_camera.target[0] as f32,
-                    envelope.runtime.preview_camera.target[1] as f32,
-                    envelope.runtime.preview_camera.target[2] as f32,
+                    runtime.preview_camera.target[0] as f32,
+                    runtime.preview_camera.target[1] as f32,
+                    runtime.preview_camera.target[2] as f32,
                 ]),
                 up: Vec3::new(0.0, 0.0, 1.0),
-                fov_y: envelope.runtime.preview_camera.fov as f32 * std::f32::consts::PI / 180.0,
+                fov_y: runtime.preview_camera.fov as f32 * std::f32::consts::PI / 180.0,
                 near: 0.1,
                 far: 1000.0,
             };
@@ -3148,9 +3087,8 @@ pub mod app_3d {
 
         #[test]
         fn renders_world_preview_scene() {
-            let app = Procedural3dPlayApp;
-            let document = app.initial_document_json();
-            let node = app.render(PROCEDURAL_3D_PLAY_BODY_PREVIEW, &document, &ViewState::default());
+            let mut app = new_app();
+            let node = app.render(PROCEDURAL_3D_PLAY_BODY_PREVIEW, None, &ViewState::default()).expect("render");
             let json = serde_json::to_string(&node).unwrap();
             assert!(json.contains("world-3d"));
             let parsed: ui_wgpu::UiNode = serde_json::from_str(&json).expect("preview ui json");
@@ -3167,146 +3105,155 @@ pub mod app_3d {
 
         #[test]
         fn add_widget_action_appends_widget() {
-            let mut app = Procedural3dPlayApp;
-            let document = app.initial_document_json();
-            let before = parse_envelope(&document).fixture.widgets.len();
-            let ops = app.handle_action_patch_ops("addWidget", Some(&json!({ "kind": "inputNote" })), &document, &ViewState::default());
-            let envelope: Procedural3dPlayView = apply_ops(&parse_envelope(&document), &ops);
-            assert!(envelope.fixture.widgets.len() > before);
+            let mut app = new_app();
+            let before = app.projection().expect("projection").fixture.widgets.len();
+            app.handle_action("addWidget", Some(&json!({ "kind": "inputNote" })), &ViewState::default(), &meta("local")).expect("add");
+            assert!(app.projection().expect("projection").fixture.widgets.len() > before);
         }
 
         #[test]
         fn generate_mode_renders_surfaces() {
-            let app = Procedural3dPlayApp;
-            let document = app.initial_document_json();
-            let generations = app.render(PROCEDURAL_3D_PLAY_BODY_GENERATIONS, &document, &ViewState::default());
+            let mut app = new_app();
+            let generations = app.render(PROCEDURAL_3D_PLAY_BODY_GENERATIONS, None, &ViewState::default()).expect("render");
             assert!(serde_json::to_string(&generations).unwrap().contains("addGeneration"));
         }
 
         #[test]
-        fn add_generation_evaluates_preview() {
-            let mut app = Procedural3dPlayApp;
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("addGeneration", None, &document, &ViewState::default());
-            let envelope: Procedural3dPlayView = apply_ops(&parse_envelope(&document), &ops);
-            assert_eq!(envelope.generation.generations.len(), 1);
-            assert!(envelope.generation.preview_text.as_deref().unwrap_or("").len() > 2);
+        fn add_generation_records_an_undoable_generation_op() {
+            let mut app = new_app();
+            app.handle_action("addGeneration", None, &ViewState::default(), &meta("local")).expect("add generation");
+            assert_eq!(app.projection().expect("projection").generation.generations.len(), 1);
+            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            assert_eq!(app.projection().expect("projection").generation.generations.len(), 0);
         }
 
         #[test]
         fn translate_selection_persists_transform_into_flow_graph() {
-            let mut app = Procedural3dPlayApp;
-            let document = app.initial_document_json();
-            let before = parse_envelope(&document);
+            let mut app = new_app();
+            let before = app.projection().expect("projection");
             assert!(before.fixture.synapses.iter().any(|synapse| synapse.from == "extrude" && synapse.to == "column-preview"));
-            let ops = app.handle_action_patch_ops(
+            app.handle_action(
                 "translateSelection",
                 Some(&json!({ "ids": ["extrude"], "dx": 1.0, "dy": 2.0, "dz": 3.0 })),
-                &document,
                 &ViewState::default(),
-            );
-            let envelope = apply_ops(&before, &ops);
+                &meta("local"),
+            )
+            .expect("translate");
+            let projection = app.projection().expect("projection");
             let transform_id = "extrude__gumball_translate";
-            let transform = envelope.fixture.widgets.iter().find(|widget| widget_id(widget) == transform_id).expect("transform neuron created");
+            let transform = projection.fixture.widgets.iter().find(|widget| widget_id(widget) == transform_id).expect("transform neuron created");
             assert!(matches!(transform, Widget::Neuron { neuronKind, .. } if neuronKind == "brep.xform.translate"));
-            let offset = gumball_widget_offset(&host_from_envelope(&envelope), transform_id);
+            let offset = gumball_widget_offset(&host_from_fixture(&projection.fixture), transform_id);
             assert_eq!(offset, [1.0, 2.0, 3.0]);
-            let source = envelope.fixture.widgets.iter().find(|widget| widget_id(widget) == "extrude").expect("source widget");
+            let source = projection.fixture.widgets.iter().find(|widget| widget_id(widget) == "extrude").expect("source widget");
             assert!(matches!(source, Widget::Neuron { preview, .. } if !*preview), "source preview should turn off once gumball-transformed");
-            assert!(envelope.fixture.synapses.iter().any(|synapse| synapse.from == transform_id && synapse.to == "column-preview"), "downstream rewired through transform node");
-            assert!(!envelope.fixture.synapses.iter().any(|synapse| synapse.from == "extrude" && synapse.to == "column-preview"), "old direct edge removed");
-            assert_eq!(envelope.runtime.selected_node_ids, vec![transform_id.to_string()]);
-            assert_eq!(envelope.runtime.undo_fixtures.len(), 1);
+            assert!(projection.fixture.synapses.iter().any(|synapse| synapse.from == transform_id && synapse.to == "column-preview"), "downstream rewired through transform node");
+            assert!(!projection.fixture.synapses.iter().any(|synapse| synapse.from == "extrude" && synapse.to == "column-preview"), "old direct edge removed");
 
             // Re-grabbing the same transform accumulates the delta instead of creating a second node.
-            let document2 = serde_json::to_string(&envelope).unwrap();
-            let ops2 = app.handle_action_patch_ops(
+            app.handle_action(
                 "translateSelection",
                 Some(&json!({ "ids": [transform_id], "dx": 1.0, "dy": 0.0, "dz": 0.0 })),
-                &document2,
                 &ViewState::default(),
-            );
-            let envelope2 = apply_ops(&envelope, &ops2);
-            assert_eq!(envelope2.fixture.widgets.iter().filter(|widget| widget_id(widget) == transform_id).count(), 1);
-            assert_eq!(gumball_widget_offset(&host_from_envelope(&envelope2), transform_id), [2.0, 2.0, 3.0]);
-            assert_eq!(envelope2.runtime.undo_fixtures.len(), 1, "re-grab updates in place without an extra undo snapshot");
+                &meta("local"),
+            )
+            .expect("translate again");
+            let projection2 = app.projection().expect("projection");
+            assert_eq!(projection2.fixture.widgets.iter().filter(|widget| widget_id(widget) == transform_id).count(), 1);
+            assert_eq!(gumball_widget_offset(&host_from_fixture(&projection2.fixture), transform_id), [2.0, 2.0, 3.0]);
         }
 
         #[test]
         fn rotate_and_scale_selection_persist_into_flow_graph() {
-            let mut app = Procedural3dPlayApp;
-            let document = app.initial_document_json();
-            let envelope = parse_envelope(&document);
-            let rotate_ops = app.handle_action_patch_ops(
+            let mut app = new_app();
+            app.handle_action(
                 "rotateSelection",
                 Some(&json!({ "ids": ["extrude"], "angle": std::f64::consts::FRAC_PI_2 })),
-                &document,
                 &ViewState::default(),
-            );
-            let rotated = apply_ops(&envelope, &rotate_ops);
+                &meta("local"),
+            )
+            .expect("rotate");
+            let rotated = app.projection().expect("projection");
             let rotate_id = "extrude__gumball_rotate";
             assert!(rotated.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuronKind, .. } if id == rotate_id && neuronKind == "brep.xform.rotate")));
-            assert_eq!(gumball_widget_number_param(&host_from_envelope(&rotated), rotate_id, "angle", 0.0), std::f64::consts::FRAC_PI_2);
+            assert_eq!(gumball_widget_number_param(&host_from_fixture(&rotated.fixture), rotate_id, "angle", 0.0), std::f64::consts::FRAC_PI_2);
 
-            let scale_ops = app.handle_action_patch_ops(
+            let mut scale_app = new_app();
+            scale_app.handle_action(
                 "scaleSelection",
                 Some(&json!({ "ids": ["extrude"], "sx": 2.0, "sy": 2.0, "sz": 2.0 })),
-                &document,
                 &ViewState::default(),
-            );
-            let scaled = apply_ops(&envelope, &scale_ops);
+                &meta("local"),
+            )
+            .expect("scale");
+            let scaled = scale_app.projection().expect("projection");
             let scale_id = "extrude__gumball_scale";
             assert!(scaled.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuronKind, .. } if id == scale_id && neuronKind == "brep.xform.scale")));
-            assert_eq!(gumball_widget_number_param(&host_from_envelope(&scaled), scale_id, "factor", 1.0), 2.0);
+            assert_eq!(gumball_widget_number_param(&host_from_fixture(&scaled.fixture), scale_id, "factor", 1.0), 2.0);
         }
 
         #[test]
         fn undo_redo_round_trips_flow_graph_edits() {
-            let mut app = Procedural3dPlayApp;
-            let document = app.initial_document_json();
-            let before = parse_envelope(&document);
-            let add_ops = app.handle_action_patch_ops("addWidget", Some(&json!({ "kind": "inputNote" })), &document, &ViewState::default());
-            let after_add = apply_ops(&before, &add_ops);
-            assert!(after_add.fixture.widgets.len() > before.fixture.widgets.len());
-            assert_eq!(after_add.runtime.undo_fixtures.len(), 1);
-
-            let document_after_add = serde_json::to_string(&after_add).unwrap();
-            let undo_ops = app.handle_action_patch_ops("undo", None, &document_after_add, &ViewState::default());
-            let after_undo = apply_ops(&after_add, &undo_ops);
-            assert_eq!(after_undo.fixture.widgets.len(), before.fixture.widgets.len());
-            assert_eq!(after_undo.runtime.undo_fixtures.len(), 0);
-            assert_eq!(after_undo.runtime.redo_fixtures.len(), 1);
-
-            let document_after_undo = serde_json::to_string(&after_undo).unwrap();
-            let redo_ops = app.handle_action_patch_ops("redo", None, &document_after_undo, &ViewState::default());
-            let after_redo = apply_ops(&after_undo, &redo_ops);
-            assert_eq!(after_redo.fixture.widgets.len(), after_add.fixture.widgets.len());
-            assert_eq!(after_redo.runtime.redo_fixtures.len(), 0);
+            let mut app = new_app();
+            let before = app.projection().expect("projection").fixture.widgets.len();
+            app.handle_action("addWidget", Some(&json!({ "kind": "inputNote" })), &ViewState::default(), &meta("local")).expect("add");
+            assert!(app.projection().expect("projection").fixture.widgets.len() > before);
+            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            assert_eq!(app.projection().expect("projection").fixture.widgets.len(), before);
+            app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+            assert_eq!(app.projection().expect("projection").fixture.widgets.len(), before + 1);
         }
 
         #[test]
         fn remove_widget_action_deletes_by_id_and_supports_undo() {
-            let mut app = Procedural3dPlayApp;
-            let document = app.initial_document_json();
-            let before = parse_envelope(&document);
-            assert!(before.fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"));
-            let ops = app.handle_action_patch_ops("removeWidget", Some(&json!({ "widgetId": "sides" })), &document, &ViewState::default());
-            let after = apply_ops(&before, &ops);
-            assert!(!after.fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"));
-            assert_eq!(after.runtime.undo_fixtures.len(), 1);
-
-            let document_after = serde_json::to_string(&after).unwrap();
-            let undo_ops = app.handle_action_patch_ops("undo", None, &document_after, &ViewState::default());
-            let restored = apply_ops(&after, &undo_ops);
-            assert!(restored.fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"));
+            let mut app = new_app();
+            assert!(app.projection().expect("projection").fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"));
+            app.handle_action("removeWidget", Some(&json!({ "widgetId": "sides" })), &ViewState::default(), &meta("local")).expect("remove");
+            assert!(!app.projection().expect("projection").fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"));
+            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            assert!(app.projection().expect("projection").fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"));
         }
 
         #[test]
-        fn document_from_mesh_returns_valid_default_envelope() {
+        fn two_instances_converge_disjoint_widget_moves() {
+            let base = new_app();
+            let base_doc = base.document_json().expect("base document");
+            let mut a = new_app();
+            let mut b = new_app();
+            a.load_document(&base_doc).expect("load a");
+            b.load_document(&base_doc).expect("load b");
+            let (backbone_a, backbone_b) =
+                MemoryBackbone::pair("mem://procedural3d-convergence", "mem://procedural3d-convergence");
+            a.attach_backbone(Box::new(backbone_a)).expect("attach a");
+            b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+            let widgets: Vec<String> = a
+                .projection()
+                .expect("projection")
+                .fixture
+                .widgets
+                .iter()
+                .map(|widget| widget_id(widget).to_string())
+                .collect();
+            assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
+            let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
+            a.handle_action("moveMediaNode", Some(&json!({ "nodeId": w0, "x": 111.0, "y": 5.0 })), &ViewState::default(), &meta("actor-a")).expect("a moves w0");
+            b.handle_action("moveMediaNode", Some(&json!({ "nodeId": w1, "x": 222.0, "y": 6.0 })), &ViewState::default(), &meta("actor-b")).expect("b moves w1");
+            a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
+            b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+            let layout_a = a.projection().expect("projection a").fixture.layout;
+            let layout_b = b.projection().expect("projection b").fixture.layout;
+            assert_eq!(layout_a.get(&w0).map(|l| l.x), Some(111.0), "A keeps its own edit");
+            assert_eq!(layout_a.get(&w1).map(|l| l.x), Some(222.0), "A converges on B's edit");
+            assert_eq!(layout_b.get(&w0).map(|l| l.x), Some(111.0), "B converges on A's edit");
+            assert_eq!(layout_b.get(&w1).map(|l| l.x), Some(222.0), "B keeps its own edit");
+        }
+
+        #[test]
+        fn document_from_mesh_returns_valid_default_projection() {
             let mesh = semio_framework_plugin::MeshData::default();
             let document = procedural3d_document_from_mesh(&mesh).expect("dwg mesh import document");
-            let envelope: Procedural3dPlayView = serde_json::from_value(document).expect("parseable envelope");
-            assert_eq!(envelope.fixture.schema, "flow.fixture");
+            let projection: Procedural3dDocument = serde_json::from_value(document).expect("parseable projection");
+            assert_eq!(projection.fixture.schema, "flow.fixture");
         }
 
         #[test]
@@ -3314,47 +3261,30 @@ pub mod app_3d {
             use semio_framework_plugin::{
                 GlbExporter, GlbImporter, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter,
             };
-            let app = Procedural3dPlayApp;
-            let document = app.initial_document_json();
-            let document_json: Value = serde_json::from_str(&document).expect("initial document json");
+            let document_json = serde_json::to_value(default_projection()).expect("projection json");
             let mesh = procedural3d_mesh_from_document(&document_json).expect("mesh from document");
             assert!(!mesh.positions.is_empty());
 
             let obj_bytes = ObjExporter.export(&mesh).expect("obj export");
             let obj_mesh = ObjImporter.import(&obj_bytes).expect("obj import");
             let obj_document = procedural3d_document_from_mesh(&obj_mesh).expect("obj document from mesh");
-            let _: Procedural3dPlayView = serde_json::from_value(obj_document).expect("parseable obj envelope");
+            let _: Procedural3dDocument = serde_json::from_value(obj_document).expect("parseable obj projection");
 
             let glb_bytes = GlbExporter.export(&mesh).expect("glb export");
             let glb_mesh = GlbImporter.import(&glb_bytes).expect("glb import");
             let glb_document = procedural3d_document_from_mesh(&glb_mesh).expect("glb document from mesh");
-            let _: Procedural3dPlayView = serde_json::from_value(glb_document).expect("parseable glb envelope");
+            let _: Procedural3dDocument = serde_json::from_value(glb_document).expect("parseable glb projection");
 
             let stl_bytes = StlExporter.export(&mesh).expect("stl export");
             let stl_mesh = StlImporter.import(&stl_bytes).expect("stl import");
             let stl_document = procedural3d_document_from_mesh(&stl_mesh).expect("stl document from mesh");
-            let _: Procedural3dPlayView = serde_json::from_value(stl_document).expect("parseable stl envelope");
-        }
-
-        fn apply_ops(envelope: &Procedural3dPlayView, ops: &[String]) -> Procedural3dPlayView {
-            let mut next = envelope.clone();
-            for op_json in ops {
-                if let Ok(op) = serde_json::from_str::<Value>(op_json) {
-                    if let Some(document) = op.get("document") {
-                        if let Ok(parsed) = serde_json::from_value(document.clone()) {
-                            next = parsed;
-                        }
-                    }
-                }
-            }
-            next
+            let _: Procedural3dDocument = serde_json::from_value(stl_document).expect("parseable stl projection");
         }
 
         #[test]
         fn procedural3d_labels_resolve_native_english_by_default() {
-            let app = Procedural3dPlayApp;
-            let document = app.initial_document_json();
-            let node = app.render(PROCEDURAL_3D_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+            let mut app = new_app();
+            let node = app.render(PROCEDURAL_3D_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
             let json = serde_json::to_string(&node).unwrap();
             assert!(json.contains("\"Widgets\""));
             assert!(json.contains("\"Slider\""));
@@ -3363,15 +3293,14 @@ pub mod app_3d {
 
         #[test]
         fn procedural3d_labels_translate_catalogue_and_inspector_in_german() {
-            let app = Procedural3dPlayApp;
-            let document = app.initial_document_json();
+            let mut app = new_app();
             let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-            let catalogue = app.render(PROCEDURAL_3D_PLAY_BODY_CATALOGUE, &document, &view_state);
+            let catalogue = app.render(PROCEDURAL_3D_PLAY_BODY_CATALOGUE, None, &view_state).expect("render");
             let catalogue_json = serde_json::to_string(&catalogue).unwrap();
             assert!(catalogue_json.contains("\"Elemente\""));
             assert!(catalogue_json.contains("Schieberegler"));
             assert!(!catalogue_json.contains("\"Widgets\""));
-            let inspector = app.render(PROCEDURAL_3D_PLAY_BODY_INSPECTION, &document, &view_state);
+            let inspector = app.render(PROCEDURAL_3D_PLAY_BODY_INSPECTION, None, &view_state).expect("render");
             let inspector_json = serde_json::to_string(&inspector).unwrap();
             assert!(inspector_json.contains("Elemente:"));
         }

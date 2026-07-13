@@ -1429,6 +1429,14 @@
   \setcounter{tocdepth}{\semio@toc@depth@unlimited}
   \semio@hierarchy@hooks@install
   \semio@heading@installall
+  \typeout{DEBUGDIMS row@height=\the\semio@chrome@row@height
+    row@height@footer=\the\semio@chrome@row@height@footer
+    navbar@height=\semio@chrome@navbar@height
+    footer@height=\semio@chrome@footer@height
+    icon@height=\the\semio@chrome@icon@height
+    icon@height@footer=\the\semio@chrome@icon@height@footer
+    headheight=\the\headheight headsep=\the\headsep footskip=\the\footskip
+    spacing@single=\semio@spacing@single font@chip=\semio@chrome@font@chip}
   \makeatother
   \ExplSyntaxOn
   \semio_chrome_footer_install:
@@ -2497,7 +2505,11 @@
     \hbox to \headwidth{%
       \setlength{\fboxsep}{0pt}%
       \colorbox{semio-chrome-base}{%
-        \parbox[c][\semio@chrome@navbar@height][c]{\headwidth}{#1}%
+        \vbox to \semio@chrome@navbar@height{%
+          \vfil
+          \hbox to \headwidth{#1}%
+          \vskip\semio@spacing@single
+        }%
       }%
     }%
     \nointerlineskip
@@ -2517,7 +2529,11 @@
     \hbox to \headwidth{%
       \setlength{\fboxsep}{0pt}%
       \colorbox{semio-chrome-base}{%
-        \parbox[c][\semio@chrome@footer@height][c]{\headwidth}{#1}%
+        \vbox to \semio@chrome@footer@height{%
+          \vskip\semio@spacing@single
+          \hbox to \headwidth{#1}%
+          \vfil
+        }%
       }%
     }%
   }%

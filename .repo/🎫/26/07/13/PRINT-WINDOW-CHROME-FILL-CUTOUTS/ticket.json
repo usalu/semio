@@ -1,0 +1,13 @@
+{
+  "title": "Print Window Chrome Fill Cutouts",
+  "emoji": "🖨️",
+  "status": "open",
+  "description": "In the print report, windows are drawn with a top line/row that has small chip elements (tabs) on the left and right ends — e.g. a project/tab chip on the left and a page-number/control chip on the right. The window's border (outline stroke) already renders correctly, tracing the stepped shape: a \"U\" cutout when both left and right chips are present, and an \"L\" cutout when only the left chip is present. However, the window's background fill does not follow this same stepped shape — it doesn't have the matching U/L cutouts, so the fill is likely a plain rectangle that either bleeds into the notch area or fails to fill it correctly, creating a visual mismatch against the correctly-drawn border. Need to find where the window chrome fill is painted (likely print/tex/semio-window.sty: the cap/tab/gap painting commands such as semio@window@cap@paint, semio@window@header@gap@paint, semio@window@cap, semio@heading@pair, semio@heading@cap@muted, semio@paragraph@cap@muted, and the tcolorbox colback fill for the body) and correct the fill logic so it matches the border's U/L stepped outline in both the two-chip and one-chip cases.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1965"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪c091b7506e7042989029b7e24ab994b2"
+  ]
+}
