@@ -1680,6 +1680,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8bf7cc16383c4b8d58b9905a8509f02926ce3058053c056376248d958c9df1e8"
 
 [[package]]
+name = "flow-plugin"
+version = "0.1.0"
+dependencies = [
+ "flow_core",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "vcs",
+]
+
+[[package]]
 name = "flow_core"
 version = "0.1.0"
 dependencies = [
@@ -3051,6 +3062,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09e54e57b4c48b40f7aec75635392b12b3421fa26fe8b4332e63138ed278459c"
 
 [[package]]
+name = "imperative-plugin"
+version = "0.1.0"
+dependencies = [
+ "imperative_core",
+ "imperative_engine",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "vcs",
+]
+
+[[package]]
+name = "imperative_core"
+version = "0.1.0"
+dependencies = [
+ "imperative_engine",
+ "imperative_module_core",
+ "neural_engine",
+ "serde",
+ "serde_json",
+ "vcs",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "imperative_engine"
 version = "0.1.0"
 dependencies = [
@@ -3591,10 +3627,12 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "layout_rs",
+ "semio-framework-core",
  "semio-framework-os",
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "vcs",
 ]
 
 [[package]]
@@ -3612,6 +3650,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "swash",
+ "vcs",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",

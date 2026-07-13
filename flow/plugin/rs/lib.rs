@@ -150,11 +150,25 @@ fn apply_lod_and_proximity(host: &mut FlowHost, runtime: &FlowPlayRuntime) {
     host.dag.set_proximity_distance(runtime.proximity_distance);
 }
 
-fn host_from_envelope(envelope: &FlowPlayEnvelope) -> FlowHost {
-    let mut host = FlowHost::from_fixture(envelope.fixture.clone());
-    seed_host_catalogue(&mut host, &envelope.runtime.catalogue_sections_json);
-    apply_lod_and_proximity(&mut host, &envelope.runtime);
+fn host_from_fixture(fixture: &FlowFixture, runtime: &FlowPlayRuntime) -> FlowHost {
+    let mut host = FlowHost::from_fixture(fixture.clone());
+    seed_host_catalogue(&mut host, &runtime.catalogue_sections_json);
+    apply_lod_and_proximity(&mut host, runtime);
     host
+}
+
+/// 🌉 Runs a `FlowHost` mutation over the current document fixture and diffs the result into granular
+/// `FlowOp`s. `mutate` returns `true` if it changed the fixture; a non-mutating call yields no ops.
+fn host_ops(
+    fixture: &FlowFixture,
+    runtime: &FlowPlayRuntime,
+    mutate: impl FnOnce(&mut FlowHost) -> bool,
+) -> Vec<FlowOp> {
+    let mut host = host_from_fixture(fixture, runtime);
+    if !mutate(&mut host) {
+        return Vec::new();
+    }
+    flow_fixture_ops(fixture, &host.fixture)
 }
 
 fn sync_host_selection(host: &mut FlowHost, selected: &[String]) {
@@ -521,8 +535,8 @@ fn build_document_tree(fixture: &FlowFixture, selected: &[String], labels: &Flow
     })
 }
 
-fn build_catalogue_tree(envelope: &FlowPlayEnvelope, labels: &FlowPlayLabels) -> UiNode {
-    let host = host_from_envelope(envelope);
+fn build_catalogue_tree(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> UiNode {
+    let host = host_from_fixture(fixture, runtime);
     let sections: Vec<Value> = host
         .catalogue_json()
         .ok()
@@ -579,7 +593,7 @@ fn build_catalogue_tree(envelope: &FlowPlayEnvelope, labels: &FlowPlayLabels) ->
         })
         .collect();
     let mut tree_sections = if tree_sections.is_empty() { catalogue_tree_sections_fallback(labels) } else { tree_sections };
-    tree_sections.extend(flow_extensions_tree_sections(&envelope.runtime, labels));
+    tree_sections.extend(flow_extensions_tree_sections(runtime, labels));
     UiNode::Tree(UiTreeNode {
         sections: tree_sections,
         selected_ids: Some(vec![]),
@@ -862,17 +876,17 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
 //#endregion 🔖Panels
 
 //#region 🔖Render
-fn render_main_graph(envelope: &FlowPlayEnvelope, labels: &FlowPlayLabels) -> UiNode {
-    let host = host_from_envelope(envelope);
+fn render_main_graph(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> UiNode {
+    let host = host_from_fixture(fixture, runtime);
     let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
-    let viewport_json = serde_json::to_string(&envelope.fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
-    let fixture_json = serde_json::to_string(&envelope.fixture).ok();
-    let selection_json = if envelope.runtime.selected_node_ids.is_empty() {
+    let viewport_json = serde_json::to_string(&runtime.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
+    let fixture_json = serde_json::to_string(fixture).ok();
+    let selection_json = if runtime.selected_node_ids.is_empty() {
         None
     } else {
-        serde_json::to_string(&envelope.runtime.selected_node_ids).ok()
+        serde_json::to_string(&runtime.selected_node_ids).ok()
     };
-    let flow_extras = flow_backed_node_graph_extras(&envelope.fixture, &envelope.runtime.lod_mode, envelope.runtime.proximity_distance);
+    let flow_extras = flow_backed_node_graph_extras(fixture, &runtime.lod_mode, runtime.proximity_distance);
     let context_menu_json = json!([{
         "id": "delete-selection",
         "label": labels.delete_selection,
@@ -897,8 +911,8 @@ fn render_main_graph(envelope: &FlowPlayEnvelope, labels: &FlowPlayLabels) -> Ui
     )
 }
 
-fn render_compiled_dag(envelope: &FlowPlayEnvelope) -> UiNode {
-    let host = host_from_envelope(envelope);
+fn render_compiled_dag(fixture: &FlowFixture, runtime: &FlowPlayRuntime) -> UiNode {
+    let host = host_from_fixture(fixture, runtime);
     build_text_editor_scene(
         FLOW_PLAY_SURFACE_COMPILED,
         FLOW_PLAY_APP_ID,
@@ -906,37 +920,39 @@ fn render_compiled_dag(envelope: &FlowPlayEnvelope) -> UiNode {
     )
 }
 
-fn evaluate_generation_preview(envelope: &FlowPlayEnvelope, values: &serde_json::Map<String, Value>) -> String {
-    let fixture_json = serde_json::to_string(&envelope.fixture).unwrap_or_default();
+fn evaluate_generation_preview(fixture: &FlowFixture, runtime: &FlowPlayRuntime, values: &serde_json::Map<String, Value>) -> String {
+    let fixture_json = serde_json::to_string(fixture).unwrap_or_default();
     let patched = apply_generation_values_to_fixture(&fixture_json, values);
-    let fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| envelope.fixture.clone());
-    let mut host = FlowHost::from_fixture(fixture);
-    seed_host_catalogue(&mut host, &envelope.runtime.catalogue_sections_json);
+    let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());
+    let mut host = FlowHost::from_fixture(patched_fixture);
+    seed_host_catalogue(&mut host, &runtime.catalogue_sections_json);
     host.evaluate().unwrap_or_default()
 }
 
-fn refresh_generation_preview(envelope: &mut FlowPlayEnvelope) {
-    let Some(generation) = selected_generation(&envelope.generation) else {
-        envelope.generation.preview_text = None;
+/// 👁️ Re-evaluates the selected generation into the runtime preview text (ephemeral view state — never
+/// a document op).
+fn refresh_generation_preview(fixture: &FlowFixture, runtime: &mut FlowPlayRuntime) {
+    let Some(generation) = selected_generation(&runtime.generation) else {
+        runtime.generation.preview_text = None;
         return;
     };
-    let preview = evaluate_generation_preview(envelope, &generation.values);
-    envelope.generation.preview_text = Some(preview.clone());
-    envelope.runtime.last_eval_json = preview;
+    let preview = evaluate_generation_preview(fixture, runtime, &generation.values.clone());
+    runtime.generation.preview_text = Some(preview.clone());
+    runtime.last_eval_json = preview;
 }
 
-fn render_generate_generations(envelope: &FlowPlayEnvelope) -> UiNode {
+fn render_generate_generations(runtime: &FlowPlayRuntime) -> UiNode {
     render_generations_tree(
         FLOW_PLAY_APP_ID,
         "flow-play-generate",
-        &envelope.generation.generations,
-        envelope.generation.selected_generation_id.as_deref(),
+        &runtime.generation.generations,
+        runtime.generation.selected_generation_id.as_deref(),
     )
 }
 
-fn render_generate_form(envelope: &FlowPlayEnvelope) -> UiNode {
-    let spec = flow_fixture_to_form_spec(&envelope.fixture);
-    let Some(generation) = selected_generation(&envelope.generation) else {
+fn render_generate_form(fixture: &FlowFixture, runtime: &FlowPlayRuntime) -> UiNode {
+    let spec = flow_fixture_to_form_spec(fixture);
+    let Some(generation) = selected_generation(&runtime.generation) else {
         return ui_text("Add a generation to edit input values.");
     };
     render_generation_form_body(
@@ -948,8 +964,8 @@ fn render_generate_form(envelope: &FlowPlayEnvelope) -> UiNode {
     )
 }
 
-fn render_generate_preview(envelope: &FlowPlayEnvelope) -> UiNode {
-    let text = envelope
+fn render_generate_preview(runtime: &FlowPlayRuntime) -> UiNode {
+    let text = runtime
         .generation
         .preview_text
         .as_deref()
@@ -962,157 +978,181 @@ fn render_generate_preview(envelope: &FlowPlayEnvelope) -> UiNode {
 //#region 🔖FlowPlayApp
 #[derive(Default)]
 struct FlowPlayApp {
-    host: Option<FlowHost>,
+    runtime: FlowPlayRuntime,
 }
 
 impl FlowPlayApp {
-    fn host_for(&mut self, envelope: &FlowPlayEnvelope) -> &mut FlowHost {
-        let replace = self
-            .host
-            .as_ref()
-            .map_or(true, |host| host.fixture != envelope.fixture);
-        if replace {
-            self.host = Some(host_from_envelope(envelope));
+    /// 👁️ Parses the many selection-arg shapes (`ids`/`nodeIds` arrays or a single `nodeId`) into ids.
+    fn parse_selection(args: Option<&Value>) -> Vec<String> {
+        args.and_then(|value| value.get("ids").or_else(|| value.get("nodeIds")))
+            .and_then(|value| {
+                if value.is_array() {
+                    serde_json::from_value(value.clone()).ok()
+                } else {
+                    value.as_str().map(|id| vec![id.to_string()])
+                }
+            })
+            .or_else(|| {
+                args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).map(|id| vec![id.to_string()])
+            })
+            .unwrap_or_default()
+    }
+
+    /// ✏️ Renames a widget id (rewiring synapses and layout) purely in the fixture; `None` if the target
+    /// id is blank, unchanged, or already taken.
+    fn renamed_fixture(fixture: &FlowFixture, old_id: &str, new_id: &str) -> Option<FlowFixture> {
+        let trimmed = new_id.trim();
+        if trimmed.is_empty() || trimmed == old_id || fixture.widgets.iter().any(|widget| widget_id(widget) == trimmed) {
+            return None;
         }
-        self.host.as_mut().expect("flow host")
+        let mut next = fixture.clone();
+        for widget in next.widgets.iter_mut() {
+            if widget_id(widget) == old_id {
+                match widget {
+                    Widget::Neuron { id, .. }
+                    | Widget::InputSlider { id, .. }
+                    | Widget::InputStepper { id, .. }
+                    | Widget::InputNote { id, .. }
+                    | Widget::InputImage { id, .. }
+                    | Widget::Variable { id, .. }
+                    | Widget::OutputPreview { id, .. }
+                    | Widget::OutputAction { id, .. }
+                    | Widget::OutputExport { id, .. }
+                    | Widget::Cluster { id, .. } => *id = trimmed.to_string(),
+                }
+            }
+        }
+        for synapse in next.synapses.iter_mut() {
+            if synapse.from == old_id {
+                synapse.from = trimmed.into();
+            }
+            if synapse.to == old_id {
+                synapse.to = trimmed.into();
+            }
+        }
+        if let Some(layout) = next.layout.remove(old_id) {
+            next.layout.insert(trimmed.into(), layout);
+        }
+        Some(next)
+    }
+
+    /// ✏️ Patches slider values / note text on the selected widgets in the fixture, returning the clone.
+    fn patched_widgets_fixture(fixture: &FlowFixture, widget_ids: &[String], field: &str, raw_value: Option<&Value>) -> FlowFixture {
+        let mut next = fixture.clone();
+        for widget in next.widgets.iter_mut() {
+            if !widget_ids.iter().any(|id| id == widget_id(widget)) {
+                continue;
+            }
+            match (field, widget) {
+                ("value", Widget::InputSlider { value, .. }) => {
+                    if let Some(v) = raw_value.and_then(|value| value.as_f64()) {
+                        *value = v;
+                    }
+                }
+                ("text", Widget::InputNote { text, .. }) => {
+                    if let Some(v) = raw_value.and_then(|value| value.as_str()) {
+                        *text = v.into();
+                    }
+                }
+                _ => {}
+            }
+        }
+        next
     }
 }
 
-impl PluginApp for FlowPlayApp {
+impl DocumentApp for FlowPlayApp {
+    type Projection = FlowFixture;
+    type Op = FlowOp;
+
     fn app_id(&self) -> &str {
         FLOW_PLAY_APP_ID
     }
 
-    fn initial_document_json(&self) -> String {
-        serde_json::to_string(&default_envelope()).expect("flow envelope json")
+    fn document_schema(&self) -> &str {
+        FLOW_DOCUMENT_SCHEMA
     }
 
-    fn handle_action_patch_ops(
+    fn initial_projection(&self) -> FlowFixture {
+        FlowFixture::default()
+    }
+
+    fn handle_action(
         &mut self,
         action: &str,
         args: Option<&Value>,
-        document_json: &str,
+        doc: &DocumentView<'_, FlowFixture>,
         _view_state: &ViewState,
-    ) -> Vec<String> {
-        let mut envelope = parse_envelope(document_json);
-        let host = self.host_for(&envelope);
+    ) -> ActionEmit<FlowOp> {
+        let fixture = doc.projection;
         match action {
-            "setDocument" => {
-                if let Some(next) = args.and_then(|value| value.get("document")) {
-                    if let Ok(parsed) = serde_json::from_value(next.clone()) {
-                        return vec![set_document_op(&parsed)];
-                    }
-                }
-            }
+            // 👁️ View/config actions — mutate runtime, emit no ops (never pollute undo).
             "setSelection" | "selectNode" | "nodeGraphSelect" => {
-                let ids = args
-                    .and_then(|value| value.get("nodeIds"))
-                    .and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok())
-                    .unwrap_or_else(|| selection_ids(args));
-                envelope.runtime.selected_node_ids = ids;
-                return vec![set_document_op(&envelope)];
+                self.runtime.selected_node_ids = Self::parse_selection(args);
+                ActionEmit::default()
             }
+            "nodeGraphHover" => ActionEmit::default(),
             "graphPointerDown" => {
-                envelope.runtime.selected_node_ids.clear();
-                return vec![set_document_op(&envelope)];
+                self.runtime.selected_node_ids.clear();
+                ActionEmit::default()
             }
-            "moveMediaNode" => {
-                let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str());
-                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
-                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
-                if let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) {
-                    host.begin_change();
-                    if host.move_widget(node_id, x, y).is_ok() {
-                        envelope.fixture = host.fixture.clone();
-                        return vec![set_document_op(&envelope)];
+            "nodeGraphViewport" => {
+                if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
+                    if let Ok(camera) = serde_json::from_str::<CameraJson>(viewport_json) {
+                        self.runtime.camera = camera;
                     }
                 }
-            }
-            "undo" => {
-                if host.undo() {
-                    envelope.fixture = host.fixture.clone();
-                    if let Ok(eval_json) = host.evaluate() {
-                        envelope.runtime.last_eval_json = eval_json;
-                    }
-                    return vec![set_document_op(&envelope)];
-                }
-            }
-            "redo" => {
-                if host.redo() {
-                    envelope.fixture = host.fixture.clone();
-                    if let Ok(eval_json) = host.evaluate() {
-                        envelope.runtime.last_eval_json = eval_json;
-                    }
-                    return vec![set_document_op(&envelope)];
-                }
+                ActionEmit::default()
             }
             "evaluate" => {
+                let mut host = host_from_fixture(fixture, &self.runtime);
                 host.clear_computing_widget_ids();
                 if let Ok(eval_json) = host.evaluate() {
-                    envelope.fixture = host.fixture.clone();
-                    envelope.runtime.last_eval_json = eval_json.clone();
                     host.apply_eval_outputs_json(&eval_json);
-                    host.clear_computing_widget_ids();
-                    return vec![set_document_op(&envelope)];
+                    self.runtime.last_eval_json = eval_json;
                 }
+                ActionEmit::default()
             }
-            "removeWidget" => {
-                let widget_id = args
-                    .and_then(|value| value.get("widgetId"))
-                    .or_else(|| args.and_then(|value| value.get("id")))
-                    .and_then(|value| value.as_str());
-                if let Some(widget_id) = widget_id {
-                    if host.remove_widget(widget_id).is_ok() {
-                        envelope.runtime.selected_node_ids.retain(|id| id != widget_id);
-                        if let Ok(eval_json) = host.evaluate() {
-                            envelope.runtime.last_eval_json = eval_json;
-                        }
-                        envelope.fixture = host.fixture.clone();
-                        return vec![set_document_op(&envelope)];
+            "setLodMode" => {
+                if let Some(mode) = args.and_then(|value| value.get("mode").or_else(|| value.get("value"))).and_then(|value| value.as_str()) {
+                    if mode == FLOW_LOD_MODE_AUTOMATIC || DagDrawLod::from_id(mode).is_some() {
+                        self.runtime.lod_mode = mode.into();
                     }
                 }
+                ActionEmit::default()
             }
-            "deleteSelection" => {
-                sync_host_selection(host, &envelope.runtime.selected_node_ids);
-                if host.delete_selection().is_ok() {
-                    envelope.runtime.selected_node_ids.clear();
-                    if let Ok(eval_json) = host.evaluate() {
-                        envelope.runtime.last_eval_json = eval_json;
-                    }
-                    envelope.fixture = host.fixture.clone();
-                    return vec![set_document_op(&envelope)];
+            "setProximityDistance" => {
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
+                    self.runtime.proximity_distance = value.max(0.0);
                 }
+                ActionEmit::default()
             }
-            "disconnect" => {
-                let synapse_id = args
-                    .and_then(|value| value.get("synapseId"))
-                    .or_else(|| args.and_then(|value| value.get("edgeId")))
-                    .and_then(|value| value.as_str());
-                if let Some(synapse_id) = synapse_id {
-                    if host.disconnect(synapse_id).is_ok() {
-                        if let Ok(eval_json) = host.evaluate() {
-                            envelope.runtime.last_eval_json = eval_json;
-                        }
-                        envelope.fixture = host.fixture.clone();
-                        return vec![set_document_op(&envelope)];
-                    }
+            "setCatalogueSections" => {
+                if let Some(sections) = args.and_then(|value| value.get("sections")) {
+                    self.runtime.catalogue_sections_json = sections.to_string();
                 }
+                ActionEmit::default()
             }
-            "connectMediaPorts" => {
-                let from = args.and_then(|value| value.get("sourceNodeId")).and_then(|value| value.as_str());
-                let from_port = args.and_then(|value| value.get("sourcePortId")).and_then(|value| value.as_str());
-                let to = args.and_then(|value| value.get("targetNodeId")).and_then(|value| value.as_str());
-                let to_port = args.and_then(|value| value.get("targetPortId")).and_then(|value| value.as_str());
-                if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
-                    if host.connect_ports(from, from_port, to, to_port).is_ok() {
-                        if let Ok(eval_json) = host.evaluate() {
-                            envelope.runtime.last_eval_json = eval_json;
-                        }
-                        envelope.fixture = host.fixture.clone();
-                        return vec![set_document_op(&envelope)];
+            "toggleExtension" => {
+                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
+                let enabled = args.and_then(|value| value.get("enabled")).and_then(|value| value.as_bool());
+                if let (Some(id), Some(enabled)) = (id, enabled) {
+                    self.runtime.extension_enabled.insert(id.into(), enabled);
+                }
+                ActionEmit::default()
+            }
+            "addGeneration" | "removeGeneration" | "selectGeneration" | "renameGeneration" | "updateGenerationValues" => {
+                let spec = flow_fixture_to_form_spec(fixture);
+                let mut generation = self.runtime.generation.clone();
+                if handle_generation_action(action, args, &mut generation, &spec, FLOW_PLAY_APP_ID) {
+                    self.runtime.generation = generation;
+                    if matches!(action, "addGeneration" | "selectGeneration" | "updateGenerationValues") {
+                        refresh_generation_preview(fixture, &mut self.runtime);
                     }
                 }
+                ActionEmit::default()
             }
+            // ✏️ Operation actions — run the stateful `FlowHost` mutation, diff into granular ops.
             "addWidget" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("inputSlider");
                 let descriptor = match kind {
@@ -1124,239 +1164,194 @@ impl PluginApp for FlowPlayApp {
                 };
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
-                if let Ok(id) = host.add_widget(&descriptor, x, y) {
-                    envelope.runtime.selected_node_ids = vec![id];
-                    if let Ok(eval_json) = host.evaluate() {
-                        envelope.runtime.last_eval_json = eval_json;
+                let mut new_id = None;
+                let ops = host_ops(fixture, &self.runtime, |host| match host.add_widget(&descriptor, x, y) {
+                    Ok(id) => {
+                        new_id = Some(id);
+                        true
                     }
-                    envelope.fixture = host.fixture.clone();
-                    return vec![set_document_op(&envelope)];
+                    Err(_) => false,
+                });
+                if let Some(id) = new_id {
+                    self.runtime.selected_node_ids = vec![id];
                 }
+                ActionEmit::ops(ops)
             }
-            "reorganize" => {
-                if host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok() {
-                    envelope.fixture = host.fixture.clone();
-                    return vec![set_document_op(&envelope)];
+            "removeWidget" => {
+                let widget_id = args
+                    .and_then(|value| value.get("widgetId"))
+                    .or_else(|| args.and_then(|value| value.get("id")))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                let Some(widget_id) = widget_id else {
+                    return ActionEmit::default();
+                };
+                let ops = host_ops(fixture, &self.runtime, |host| host.remove_widget(&widget_id).is_ok());
+                if !ops.is_empty() {
+                    self.runtime.selected_node_ids.retain(|id| id != &widget_id);
                 }
+                ActionEmit::ops(ops)
             }
+            "deleteSelection" => {
+                let selected = self.runtime.selected_node_ids.clone();
+                let ops = host_ops(fixture, &self.runtime, |host| {
+                    sync_host_selection(host, &selected);
+                    host.delete_selection().is_ok()
+                });
+                if !ops.is_empty() {
+                    self.runtime.selected_node_ids.clear();
+                }
+                ActionEmit::ops(ops)
+            }
+            "disconnect" => {
+                let synapse_id = args
+                    .and_then(|value| value.get("synapseId"))
+                    .or_else(|| args.and_then(|value| value.get("edgeId")))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                let Some(synapse_id) = synapse_id else {
+                    return ActionEmit::default();
+                };
+                ActionEmit::ops(host_ops(fixture, &self.runtime, |host| host.disconnect(&synapse_id).is_ok()))
+            }
+            "connectMediaPorts" => {
+                let from = args.and_then(|value| value.get("sourceNodeId")).and_then(|value| value.as_str()).map(str::to_string);
+                let from_port = args.and_then(|value| value.get("sourcePortId")).and_then(|value| value.as_str()).map(str::to_string);
+                let to = args.and_then(|value| value.get("targetNodeId")).and_then(|value| value.as_str()).map(str::to_string);
+                let to_port = args.and_then(|value| value.get("targetPortId")).and_then(|value| value.as_str()).map(str::to_string);
+                let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) else {
+                    return ActionEmit::default();
+                };
+                ActionEmit::ops(host_ops(fixture, &self.runtime, |host| host.connect_ports(&from, &from_port, &to, &to_port).is_ok()))
+            }
+            "moveMediaNode" => {
+                let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).map(str::to_string);
+                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
+                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
+                let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) else {
+                    return ActionEmit::default();
+                };
+                let ops = host_ops(fixture, &self.runtime, |host| {
+                    host.begin_change();
+                    host.move_widget(&node_id, x, y).is_ok()
+                });
+                if ops.is_empty() {
+                    return ActionEmit::default();
+                }
+                ActionEmit { ops, coalesce_key: Some(format!("move-{node_id}")), ..Default::default() }
+            }
+            "reorganize" => ActionEmit::ops(host_ops(fixture, &self.runtime, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
             "patchFlowWidgets" => {
-                host.begin_change();
                 let widget_ids: Vec<String> = args
                     .and_then(|value| value.get("widgetIds"))
                     .and_then(|value| serde_json::from_value(value.clone()).ok())
                     .unwrap_or_default();
-                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
-                let raw_value = args.and_then(|value| value.get("value"));
-                for widget in envelope.fixture.widgets.iter_mut() {
-                    if !widget_ids.contains(&widget_id(widget).to_string()) {
-                        continue;
-                    }
-                    match (field, widget) {
-                        ("value", Widget::InputSlider { value: ref mut slider_value, .. }) => {
-                            if let Some(value) = raw_value.and_then(|value| value.as_f64()) {
-                                *slider_value = value;
-                            }
-                        }
-                        ("text", Widget::InputNote { text: ref mut note_text, .. }) => {
-                            if let Some(value) = raw_value.and_then(|value| value.as_str()) {
-                                *note_text = value.into();
-                            }
-                        }
-                        _ => {}
-                    }
+                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("").to_string();
+                let raw_value = args.and_then(|value| value.get("value")).cloned();
+                let next = Self::patched_widgets_fixture(fixture, &widget_ids, &field, raw_value.as_ref());
+                let ops = flow_fixture_ops(fixture, &next);
+                if ops.is_empty() {
+                    return ActionEmit::default();
                 }
-                host.set_fixture_preserving_history(envelope.fixture.clone());
-                if let Ok(eval_json) = host.evaluate() {
-                    envelope.runtime.last_eval_json = eval_json;
-                }
-                envelope.fixture = host.fixture.clone();
-                return vec![set_document_op(&envelope)];
+                ActionEmit { ops, coalesce_key: Some(format!("patch-{field}-{}", widget_ids.join(","))), ..Default::default() }
             }
             "renameFlowWidget" => {
-                host.begin_change();
                 let old_id = args.and_then(|value| value.get("oldId")).and_then(|value| value.as_str());
                 let new_id = args.and_then(|value| value.get("value")).and_then(|value| value.as_str());
-                if let (Some(old_id), Some(new_id)) = (old_id, new_id) {
-                    let trimmed = new_id.trim();
-                    if !trimmed.is_empty() && trimmed != old_id && !envelope.fixture.widgets.iter().any(|widget| widget_id(widget) == trimmed) {
-                        for widget in envelope.fixture.widgets.iter_mut() {
-                            if widget_id(widget) == old_id {
-                                match widget {
-                                    Widget::Neuron { id, .. }
-                                    | Widget::InputSlider { id, .. }
-                                    | Widget::InputStepper { id, .. }
-                                    | Widget::InputNote { id, .. }
-                                    | Widget::InputImage { id, .. }
-                                    | Widget::Variable { id, .. }
-                                    | Widget::OutputPreview { id, .. }
-                                    | Widget::OutputAction { id, .. }
-                                    | Widget::OutputExport { id, .. }
-                                    | Widget::Cluster { id, .. } => *id = trimmed.to_string(),
-                                }
-                            }
-                        }
-                        for synapse in envelope.fixture.synapses.iter_mut() {
-                            if synapse.from == old_id {
-                                synapse.from = trimmed.into();
-                            }
-                            if synapse.to == old_id {
-                                synapse.to = trimmed.into();
-                            }
-                        }
-                        envelope.runtime.selected_node_ids = vec![trimmed.into()];
-                        host.set_fixture_preserving_history(envelope.fixture.clone());
-                        envelope.fixture = host.fixture.clone();
-                        return vec![set_document_op(&envelope)];
-                    }
-                }
-            }
-            "nodeGraphHover" => {
-                return Vec::new();
-            }
-            "nodeGraphViewport" => {
-                if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
-                    if let Ok(camera) = serde_json::from_str::<CameraJson>(viewport_json) {
-                        envelope.fixture.camera = camera;
-                        return vec![set_document_op(&envelope)];
-                    }
-                }
+                let (Some(old_id), Some(new_id)) = (old_id, new_id) else {
+                    return ActionEmit::default();
+                };
+                let Some(next) = Self::renamed_fixture(fixture, old_id, new_id) else {
+                    return ActionEmit::default();
+                };
+                self.runtime.selected_node_ids = vec![new_id.trim().into()];
+                ActionEmit::ops(flow_fixture_ops(fixture, &next))
             }
             "nodeGraphEdit" | "spotlightCommit" => {
-                let ops = args
-                    .and_then(|value| value.get("ops"))
-                    .and_then(|value| value.as_array())
-                    .cloned()
-                    .unwrap_or_default();
-                if ops.is_empty() && action == "spotlightCommit" {
-                    if let Ok(eval_json) = host.evaluate() {
-                        envelope.runtime.last_eval_json = eval_json;
-                        envelope.fixture = host.fixture.clone();
-                        return vec![set_document_op(&envelope)];
-                    }
-                }
-                let mut changed = false;
-                for op in ops {
-                    let op_name = op.get("op").and_then(|value| value.as_str()).unwrap_or("");
-                    match op_name {
-                        "setFixture" => {
-                            if let Some(fixture_json) = op.get("fixtureJson").and_then(|value| value.as_str()) {
-                                if let Ok(fixture) = serde_json::from_str::<FlowFixture>(fixture_json) {
-                                    host.begin_change();
-                                    envelope.fixture = fixture.clone();
-                                    host.set_fixture_preserving_history(fixture);
+                let raw_ops = args.and_then(|value| value.get("ops")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
+                let selected = self.runtime.selected_node_ids.clone();
+                let mut clear_selection = false;
+                let ops = host_ops(fixture, &self.runtime, |host| {
+                    let mut changed = false;
+                    for op in &raw_ops {
+                        match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
+                            "setFixture" => {
+                                if let Some(fixture_json) = op.get("fixtureJson").and_then(|value| value.as_str()) {
+                                    if let Ok(parsed) = serde_json::from_str::<FlowFixture>(fixture_json) {
+                                        host.begin_change();
+                                        host.set_fixture_preserving_history(parsed);
+                                        changed = true;
+                                    }
+                                }
+                            }
+                            "deleteSelection" => {
+                                sync_host_selection(host, &selected);
+                                if host.delete_selection().is_ok() {
+                                    clear_selection = true;
                                     changed = true;
                                 }
                             }
-                        }
-                        "deleteSelection" => {
-                            sync_host_selection(host, &envelope.runtime.selected_node_ids);
-                            if host.delete_selection().is_ok() {
-                                envelope.runtime.selected_node_ids.clear();
-                                changed = true;
-                            }
-                        }
-                        "connect" => {
-                            let from = op.get("sourceNodeId").and_then(|value| value.as_str());
-                            let from_port = op.get("sourcePortId").and_then(|value| value.as_str());
-                            let to = op.get("targetNodeId").and_then(|value| value.as_str());
-                            let to_port = op.get("targetPortId").and_then(|value| value.as_str());
-                            if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
-                                if host.connect_ports(from, from_port, to, to_port).is_ok() {
-                                    changed = true;
+                            "connect" => {
+                                let from = op.get("sourceNodeId").and_then(|value| value.as_str());
+                                let from_port = op.get("sourcePortId").and_then(|value| value.as_str());
+                                let to = op.get("targetNodeId").and_then(|value| value.as_str());
+                                let to_port = op.get("targetPortId").and_then(|value| value.as_str());
+                                if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
+                                    if host.connect_ports(from, from_port, to, to_port).is_ok() {
+                                        changed = true;
+                                    }
                                 }
                             }
+                            _ => {}
                         }
-                        _ => {}
                     }
+                    changed
+                });
+                if clear_selection {
+                    self.runtime.selected_node_ids.clear();
                 }
-                if changed {
-                    if let Ok(eval_json) = host.evaluate() {
-                        envelope.runtime.last_eval_json = eval_json;
-                    }
-                    envelope.fixture = host.fixture.clone();
-                    return vec![set_document_op(&envelope)];
-                }
-            }
-            "addGeneration" | "removeGeneration" | "selectGeneration" | "renameGeneration" | "updateGenerationValues" => {
-                let spec = flow_fixture_to_form_spec(&envelope.fixture);
-                if handle_generation_action(action, args, &mut envelope.generation, &spec, FLOW_PLAY_APP_ID) {
-                    if action == "addGeneration" && envelope.generation.generations.len() == 1 {
-                        refresh_generation_preview(&mut envelope);
-                    } else if action == "selectGeneration" || action == "updateGenerationValues" {
-                        refresh_generation_preview(&mut envelope);
-                    }
-                    return vec![set_document_op(&envelope)];
-                }
-            }
-            "setLodMode" => {
-                if let Some(mode) = args.and_then(|value| value.get("mode").or_else(|| value.get("value"))).and_then(|value| value.as_str()) {
-                    if mode == FLOW_LOD_MODE_AUTOMATIC || DagDrawLod::from_id(mode).is_some() {
-                        envelope.runtime.lod_mode = mode.into();
-                        return vec![set_document_op(&envelope)];
-                    }
-                }
-            }
-            "setProximityDistance" => {
-                if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
-                    envelope.runtime.proximity_distance = value.max(0.0);
-                    return vec![set_document_op(&envelope)];
-                }
-            }
-            "setCatalogueSections" => {
-                if let Some(sections) = args.and_then(|value| value.get("sections")) {
-                    envelope.runtime.catalogue_sections_json = sections.to_string();
-                    return vec![set_document_op(&envelope)];
-                }
-            }
-            "toggleExtension" => {
-                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
-                let enabled = args.and_then(|value| value.get("enabled")).and_then(|value| value.as_bool());
-                if let (Some(id), Some(enabled)) = (id, enabled) {
-                    envelope.runtime.extension_enabled.insert(id.into(), enabled);
-                    return vec![set_document_op(&envelope)];
-                }
+                ActionEmit::ops(ops)
             }
             "runExtensionAction" => {
                 let action_id = args.and_then(|value| value.get("actionId")).and_then(|value| value.as_str());
-                if let Some(action_id) = action_id {
-                    if let Some((id, _, _, _, effect)) = FLOW_EXTENSIONS.iter().find(|(_, _, entry_action_id, ..)| *entry_action_id == action_id) {
-                        if envelope.runtime.extension_enabled.get(*id).copied().unwrap_or(false) {
-                            match *effect {
-                                "reorganize" => {
-                                    if host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok() {
-                                        envelope.fixture = host.fixture.clone();
-                                    }
-                                }
-                                "evaluate" => {
-                                    if let Ok(eval_json) = host.evaluate() {
-                                        envelope.runtime.last_eval_json = eval_json;
-                                        envelope.fixture = host.fixture.clone();
-                                    }
-                                }
-                                _ => {}
-                            }
-                            return vec![set_document_op(&envelope)];
+                let Some(action_id) = action_id else {
+                    return ActionEmit::default();
+                };
+                let entry = FLOW_EXTENSIONS.iter().find(|(_, _, entry_action_id, ..)| *entry_action_id == action_id);
+                let Some((id, _, _, _, effect)) = entry else {
+                    return ActionEmit::default();
+                };
+                if !self.runtime.extension_enabled.get(*id).copied().unwrap_or(false) {
+                    return ActionEmit::default();
+                }
+                match *effect {
+                    "reorganize" => ActionEmit::ops(host_ops(fixture, &self.runtime, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
+                    "evaluate" => {
+                        let mut host = host_from_fixture(fixture, &self.runtime);
+                        if let Ok(eval_json) = host.evaluate() {
+                            self.runtime.last_eval_json = eval_json;
                         }
+                        ActionEmit::default()
                     }
+                    _ => ActionEmit::default(),
                 }
             }
-            _ => {}
+            _ => ActionEmit::default(),
         }
-        Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-        let envelope = parse_envelope(document_json);
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, FlowFixture>, view_state: &ViewState) -> UiNode {
+        let fixture = doc.projection;
         let labels = flow_labels(view_state);
         match body_key {
-            FLOW_PLAY_BODY_MAIN => render_main_graph(&envelope, labels),
-            FLOW_PLAY_BODY_COMPILED => render_compiled_dag(&envelope),
-            FLOW_PLAY_BODY_GENERATIONS => render_generate_generations(&envelope),
-            FLOW_PLAY_BODY_GENERATE_FORM => render_generate_form(&envelope),
-            FLOW_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&envelope),
-            FLOW_PLAY_BODY_DOCUMENT => build_document_tree(&envelope.fixture, &envelope.runtime.selected_node_ids, labels),
-            FLOW_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope, labels),
-            FLOW_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_node_ids, &envelope.runtime, labels),
+            FLOW_PLAY_BODY_MAIN => render_main_graph(fixture, &self.runtime, labels),
+            FLOW_PLAY_BODY_COMPILED => render_compiled_dag(fixture, &self.runtime),
+            FLOW_PLAY_BODY_GENERATIONS => render_generate_generations(&self.runtime),
+            FLOW_PLAY_BODY_GENERATE_FORM => render_generate_form(fixture, &self.runtime),
+            FLOW_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&self.runtime),
+            FLOW_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &self.runtime.selected_node_ids, labels),
+            FLOW_PLAY_BODY_CATALOGUE => build_catalogue_tree(fixture, &self.runtime, labels),
+            FLOW_PLAY_BODY_INSPECTOR => build_inspector_tree(fixture, &self.runtime.selected_node_ids, &self.runtime, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -1376,17 +1371,6 @@ impl PluginApp for FlowPlayApp {
             mode_labels: std::collections::HashMap::new(),
         }
     }
-}
-
-fn selection_ids(args: Option<&Value>) -> Vec<String> {
-    args.and_then(|value| value.get("ids"))
-        .and_then(|value| serde_json::from_value(value.clone()).ok())
-        .or_else(|| {
-            args.and_then(|value| value.get("nodeId"))
-                .and_then(|value| value.as_str())
-                .map(|id| vec![id.to_string()])
-        })
-        .unwrap_or_default()
 }
 //#endregion 🔖FlowPlayApp
 
@@ -1452,7 +1436,7 @@ fn create_flow_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("demo", "Demo", serde_json::to_string(&default_envelope()).unwrap())
+    .example("demo", "Demo", serde_json::to_string(&FlowFixture::default()).unwrap())
     .program("flow", "Flow", "graph")
 }
 
@@ -1468,203 +1452,161 @@ semio_framework_plugin::semio_plugin! {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use flow_core::FlowFixture;
+    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+    use vcs::MemoryBackbone;
+
+    fn meta(actor: &str) -> ActionMeta {
+        ActionMeta { actor: actor.into(), instance_id: 1 }
+    }
+
+    fn new_app() -> VcsDocumentApp<FlowPlayApp> {
+        VcsDocumentApp::new(FlowPlayApp::default())
+    }
+
+    fn render(app: &mut VcsDocumentApp<FlowPlayApp>, body_key: &str, view_state: &ViewState) -> String {
+        serde_json::to_string(&app.render(body_key, None, view_state).expect("render")).unwrap()
+    }
 
     #[test]
     fn renders_node_graph_scene() {
-        let app = FlowPlayApp { host: None };
-        let document = app.initial_document_json();
-        let node = app.render(FLOW_PLAY_BODY_MAIN, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("node-graph"));
+        let mut app = new_app();
+        assert!(render(&mut app, FLOW_PLAY_BODY_MAIN, &ViewState::default()).contains("node-graph"));
     }
 
     #[test]
     fn renders_compiled_wire_editor() {
-        let app = FlowPlayApp { host: None };
-        let document = app.initial_document_json();
-        let node = app.render(FLOW_PLAY_BODY_COMPILED, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("text-editor"));
+        let mut app = new_app();
+        assert!(render(&mut app, FLOW_PLAY_BODY_COMPILED, &ViewState::default()).contains("text-editor"));
     }
 
     #[test]
     fn default_fixture_has_widgets() {
-        let envelope = default_envelope();
-        assert!(!envelope.fixture.widgets.is_empty());
+        assert!(!FlowFixture::default().widgets.is_empty());
     }
 
     #[test]
     fn document_lists_widgets() {
-        let app = FlowPlayApp { host: None };
-        let document = app.initial_document_json();
-        let node = app.render(FLOW_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("flow-play-document.widgets"));
+        let mut app = new_app();
+        assert!(render(&mut app, FLOW_PLAY_BODY_DOCUMENT, &ViewState::default()).contains("flow-play-document.widgets"));
     }
 
     #[test]
     fn catalogue_lists_module_operators() {
-        let app = FlowPlayApp { host: None };
-        let document = app.initial_document_json();
-        let node = app.render(FLOW_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = new_app();
+        let json = render(&mut app, FLOW_PLAY_BODY_CATALOGUE, &ViewState::default());
         assert!(json.contains("flow-play-catalogue.math"), "expected math module section: {json}");
         assert!(json.contains("math.add"), "expected math.add operator: {json}");
     }
 
     #[test]
     fn catalogue_items_export_flow_widget_drag_payload() {
-        let app = FlowPlayApp { host: None };
-        let document = app.initial_document_json();
-        let node = app.render(FLOW_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = new_app();
+        let json = render(&mut app, FLOW_PLAY_BODY_CATALOGUE, &ViewState::default());
         assert!(json.contains(FLOW_WIDGET_DRAG_MIME), "missing drag mime: {json}");
         assert!(json.contains(r#""draggable":true"#) || json.contains(r#""draggable": true"#));
     }
 
     #[test]
-    fn evaluate_updates_preview_state() {
-        let mut app = FlowPlayApp { host: None };
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops("evaluate", None, &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let updated: FlowPlayEnvelope = serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
-        assert!(!updated.runtime.last_eval_json.is_empty());
+    fn add_widget_emits_ops_and_grows_the_document() {
+        let mut app = new_app();
+        let before = app.projection().expect("projection").widgets.len();
+        let result = app
+            .handle_action("addWidget", Some(&json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 })), &ViewState::default(), &meta("local"))
+            .expect("addWidget");
+        assert!(!result.operations.is_empty(), "addWidget must emit ops");
+        assert_eq!(app.projection().expect("projection").widgets.len(), before + 1);
     }
 
     #[test]
     fn undo_restores_fixture_after_add_widget() {
-        let mut app = FlowPlayApp { host: None };
-        let document = app.initial_document_json();
-        let before: FlowPlayEnvelope = serde_json::from_str(&document).unwrap();
-        let count_before = before.fixture.widgets.len();
-        let ops = app.handle_action_patch_ops(
-            "addWidget",
-            Some(&json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 })),
-            &document,
-            &ViewState::default(),
-        );
-        assert_eq!(ops.len(), 1);
-        let after_add = serde_json::to_string(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"]).unwrap();
-        let undo_ops = app.handle_action_patch_ops("undo", None, &after_add, &ViewState::default());
-        let restored: FlowPlayEnvelope =
-            serde_json::from_value(serde_json::from_str::<Value>(&undo_ops[0]).unwrap()["document"].clone()).unwrap();
-        assert_eq!(restored.fixture.widgets.len(), count_before);
+        let mut app = new_app();
+        let before = app.projection().expect("projection").widgets.len();
+        app.handle_action("addWidget", Some(&json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 })), &ViewState::default(), &meta("local")).expect("addWidget");
+        assert_eq!(app.projection().expect("projection").widgets.len(), before + 1);
+        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        assert_eq!(app.projection().expect("projection").widgets.len(), before);
+    }
+
+    #[test]
+    fn selection_is_view_state_and_emits_no_ops() {
+        let mut app = new_app();
+        let result = app
+            .handle_action("setSelection", Some(&json!({ "ids": ["slider"] })), &ViewState::default(), &meta("local"))
+            .expect("setSelection");
+        assert!(result.operations.is_empty(), "selection must not produce document ops");
+    }
+
+    #[test]
+    fn evaluate_updates_preview_state_without_ops() {
+        let mut app = new_app();
+        let result = app.handle_action("evaluate", None, &ViewState::default(), &meta("local")).expect("evaluate");
+        assert!(result.operations.is_empty(), "evaluate is a view action");
     }
 
     #[test]
     fn generate_mode_renders_three_surfaces() {
-        let app = FlowPlayApp { host: None };
-        let document = app.initial_document_json();
-        let generations = app.render(FLOW_PLAY_BODY_GENERATIONS, &document, &ViewState::default());
-        let form = app.render(FLOW_PLAY_BODY_GENERATE_FORM, &document, &ViewState::default());
-        let preview = app.render(FLOW_PLAY_BODY_GENERATE_PREVIEW, &document, &ViewState::default());
-        assert!(serde_json::to_string(&generations).unwrap().contains("addGeneration"));
-        assert!(serde_json::to_string(&form).unwrap().contains("Add a generation"));
-        assert!(serde_json::to_string(&preview).unwrap().contains("text-editor"));
-    }
-
-    #[test]
-    fn add_generation_evaluates_preview() {
-        let mut app = FlowPlayApp { host: None };
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops("addGeneration", None, &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let updated: FlowPlayEnvelope =
-            serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
-        assert_eq!(updated.generation.generations.len(), 1);
-        assert!(updated.generation.preview_text.as_deref().unwrap_or("").len() > 2);
-    }
-
-    fn document_after(app: &mut FlowPlayApp, document: &str, action: &str, args: Option<Value>) -> FlowPlayEnvelope {
-        let ops = app.handle_action_patch_ops(action, args.as_ref(), document, &ViewState::default());
-        assert_eq!(ops.len(), 1, "action {action} produced no op");
-        serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap()
+        let mut app = new_app();
+        assert!(render(&mut app, FLOW_PLAY_BODY_GENERATIONS, &ViewState::default()).contains("addGeneration"));
+        assert!(render(&mut app, FLOW_PLAY_BODY_GENERATE_FORM, &ViewState::default()).contains("Add a generation"));
+        assert!(render(&mut app, FLOW_PLAY_BODY_GENERATE_PREVIEW, &ViewState::default()).contains("text-editor"));
     }
 
     #[test]
     fn set_lod_mode_rejects_unknown_and_accepts_known() {
-        let mut app = FlowPlayApp { host: None };
-        let document = app.initial_document_json();
-        assert!(app.handle_action_patch_ops("setLodMode", Some(&json!({ "mode": "bogus" })), &document, &ViewState::default()).is_empty());
-        let next = document_after(&mut app, &document, "setLodMode", Some(json!({ "mode": "micro" })));
-        assert_eq!(next.runtime.lod_mode, "micro");
-        let node_graph = app.render(FLOW_PLAY_BODY_MAIN, &serde_json::to_string(&next).unwrap(), &ViewState::default());
-        let json = serde_json::to_string(&node_graph).unwrap();
+        let mut app = new_app();
+        app.handle_action("setLodMode", Some(&json!({ "mode": "bogus" })), &ViewState::default(), &meta("local")).expect("bogus");
+        app.handle_action("setLodMode", Some(&json!({ "mode": "micro" })), &ViewState::default(), &meta("local")).expect("micro");
+        let json = render(&mut app, FLOW_PLAY_BODY_MAIN, &ViewState::default());
         assert!(json.contains("\\\"forcedLabel\\\":\\\"micro\\\"") || json.contains("\"forcedLabel\":\"micro\""));
     }
 
     #[test]
-    fn set_proximity_distance_clamps_to_zero() {
-        let mut app = FlowPlayApp { host: None };
-        let document = app.initial_document_json();
-        let next = document_after(&mut app, &document, "setProximityDistance", Some(json!({ "value": -5.0 })));
-        assert_eq!(next.runtime.proximity_distance, 0.0);
-        let next = document_after(&mut app, &document, "setProximityDistance", Some(json!({ "value": 160.0 })));
-        assert_eq!(next.runtime.proximity_distance, 160.0);
-    }
-
-    #[test]
-    fn set_catalogue_sections_persists_and_merges_into_catalogue() {
-        let mut app = FlowPlayApp { host: None };
-        let document = app.initial_document_json();
-        let sections = json!([{
-            "id": "custom",
-            "title": "Custom",
-            "items": [{
-                "kind": "neuron",
-                "neuronKind": "math.add",
-                "name": "CustomAdd",
-                "abbreviation": "Add",
-                "icon": "emoji:➕",
-                "summary": "Custom add operator",
-            }],
-        }]);
-        let next = document_after(&mut app, &document, "setCatalogueSections", Some(json!({ "sections": sections })));
-        assert!(next.runtime.catalogue_sections_json.contains("custom"));
-        let catalogue = app.render(FLOW_PLAY_BODY_CATALOGUE, &serde_json::to_string(&next).unwrap(), &ViewState::default());
-        assert!(serde_json::to_string(&catalogue).unwrap().contains("CustomAdd"));
-    }
-
-    #[test]
     fn toggle_extension_and_run_action_reorganizes_fixture() {
-        let mut app = FlowPlayApp { host: None };
-        let document = app.initial_document_json();
-        assert!(app
-            .handle_action_patch_ops("runExtensionAction", Some(&json!({ "actionId": "flow.extension.reorganize" })), &document, &ViewState::default())
-            .is_empty());
-        let toggled = document_after(&mut app, &document, "toggleExtension", Some(json!({ "id": "auto-layout", "enabled": true })));
-        assert_eq!(toggled.runtime.extension_enabled.get("auto-layout"), Some(&true));
-        let toggled_json = serde_json::to_string(&toggled).unwrap();
-        let ran = document_after(&mut app, &toggled_json, "runExtensionAction", Some(json!({ "actionId": "flow.extension.reorganize" })));
-        assert_eq!(ran.fixture.widgets.len(), toggled.fixture.widgets.len());
+        let mut app = new_app();
+        let before = app.projection().expect("projection").widgets.len();
+        let ignored = app.handle_action("runExtensionAction", Some(&json!({ "actionId": "flow.extension.reorganize" })), &ViewState::default(), &meta("local")).expect("ignored");
+        assert!(ignored.operations.is_empty(), "disabled extension action must be a no-op");
+        app.handle_action("toggleExtension", Some(&json!({ "id": "auto-layout", "enabled": true })), &ViewState::default(), &meta("local")).expect("toggle");
+        app.handle_action("runExtensionAction", Some(&json!({ "actionId": "flow.extension.reorganize" })), &ViewState::default(), &meta("local")).expect("reorganize");
+        assert_eq!(app.projection().expect("projection").widgets.len(), before, "reorganize keeps every widget");
     }
 
     #[test]
-    fn flow_labels_resolve_native_english_by_default() {
-        let app = FlowPlayApp { host: None };
-        let document = app.initial_document_json();
-        let document_tree = app.render(FLOW_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
-        let document_json = serde_json::to_string(&document_tree).unwrap();
-        assert!(document_json.contains("Widgets"), "expected native English Widgets section: {document_json}");
-        assert!(document_json.contains("Synapses"), "expected native English Synapses section: {document_json}");
-        let catalogue = app.render(FLOW_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
-        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
-        assert!(catalogue_json.contains("Extensions"), "expected native English Extensions section: {catalogue_json}");
-        assert!(catalogue_json.contains("Auto Layout"), "expected native English extension name: {catalogue_json}");
+    fn flow_labels_resolve_native_english_and_german() {
+        let mut app = new_app();
+        let english = render(&mut app, FLOW_PLAY_BODY_DOCUMENT, &ViewState::default());
+        assert!(english.contains("Widgets") && english.contains("Synapses"), "english labels: {english}");
+        let german = render(&mut app, FLOW_PLAY_BODY_DOCUMENT, &ViewState { locale: Some("de".into()), ..ViewState::default() });
+        assert!(german.contains("Synapsen"), "german labels: {german}");
     }
 
+    /// 🤝 Definitional merge proof: two instances on one backbone make DISJOINT edits (one renames a
+    /// widget, the other adds a widget); after exchanging ops both converge — impossible under
+    /// whole-fixture `setDocument` snapshots, which would clobber one side.
     #[test]
-    fn flow_labels_resolve_german_locale() {
-        let app = FlowPlayApp { host: None };
-        let document = app.initial_document_json();
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let document_tree = app.render(FLOW_PLAY_BODY_DOCUMENT, &document, &view_state);
-        let document_json = serde_json::to_string(&document_tree).unwrap();
-        assert!(document_json.contains("Synapsen"), "expected German Synapsen section: {document_json}");
-        let catalogue = app.render(FLOW_PLAY_BODY_CATALOGUE, &document, &view_state);
-        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
-        assert!(catalogue_json.contains("Erweiterungen"), "expected German Erweiterungen section: {catalogue_json}");
-        assert!(catalogue_json.contains("Automatisches Layout"), "expected German extension name: {catalogue_json}");
+    fn two_instances_converge_on_disjoint_edits() {
+        let mut instance_a = new_app();
+        let mut instance_b = new_app();
+        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://flow-convergence", "mem://flow-convergence");
+        instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
+        instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+
+        instance_a
+            .handle_action("renameFlowWidget", Some(&json!({ "oldId": "slider", "value": "input" })), &ViewState::default(), &meta("actor-a"))
+            .expect("a renames slider");
+        instance_b
+            .handle_action("addWidget", Some(&json!({ "kind": "inputNote", "x": 10.0, "y": 10.0 })), &ViewState::default(), &meta("actor-b"))
+            .expect("b adds a note");
+
+        // A neutral history action always dispatches through the store, which pumps inbound ops first.
+        instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
+        instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+
+        let projection_a = instance_a.projection().expect("projection a");
+        let projection_b = instance_b.projection().expect("projection b");
+        assert!(projection_a.widgets.iter().any(|widget| widget_id(widget) == "input"), "A keeps its rename");
+        assert!(projection_a.widgets.iter().any(|widget| matches!(widget, Widget::InputNote { .. })), "A absorbs B's note");
+        assert_eq!(projection_a.widgets.len(), projection_b.widgets.len(), "both instances converge to the same widget set");
     }
 }

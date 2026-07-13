@@ -4,18 +4,16 @@ use imperative_core::{default_document, Dictionary, ImperativeDocument, Imperati
 use imperative_engine::Step;
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_table_scene, build_text_editor_scene, create_stack_layout, ui_declarative_sections_to_tree,
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, ActionDescriptor, PluginApp, PluginBundle,
-    TableScene, TextEditorScene, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, ActionEmit, App, AppLabelsOverlay,
+    DocumentApp, DocumentView, TableScene, TextEditorScene, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+    ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
-use vcs::{
-    create_document_vcs_envelope, materialize_document_projection, CollectionOp, DocumentVcsCommand,
-    DocumentVcsEnvelope, DocumentVcsStore,
-};
+use vcs::CollectionOp;
 
 //#region 🔖Constants
 const IMPERATIVE_PLAY_APP_ID: &str = "imperative-play";
@@ -32,29 +30,13 @@ const IMPERATIVE_DOCUMENT_SCHEMA: &str = "imperative.document/v1";
 //#endregion 🔖Constants
 
 //#region 🔖Types
-type ImperativeStore = DocumentVcsStore<ImperativeDocument, ImperativeOp>;
-
+/// 🎛️ Ephemeral view state (step selection + last run output) — lives in the app struct, not the
+/// document, so it never pollutes undo history.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", default)]
 struct ImperativePlayRuntime {
-    #[serde(default)]
     selected_step_ids: Vec<String>,
-    #[serde(default)]
     run_output_json: String,
-}
-
-/// 🗄️ The document is a VCS envelope materialized by operation replay — no plain-JSON document,
-/// no separate undo/redo stacks; history lives entirely in `envelope.vcs.edits`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct ImperativePlayEnvelope {
-    envelope: DocumentVcsEnvelope<ImperativeDocument, ImperativeOp>,
-    #[serde(default)]
-    applied_edit_ids: Vec<String>,
-    #[serde(default)]
-    redo_edit_ids: Vec<String>,
-    #[serde(default)]
-    runtime: ImperativePlayRuntime,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -66,43 +48,6 @@ struct TableRow {
 //#endregion 🔖Types
 
 //#region 🔖DocumentHelpers
-fn default_envelope() -> ImperativePlayEnvelope {
-    ImperativePlayEnvelope {
-        envelope: create_document_vcs_envelope(IMPERATIVE_DOCUMENT_SCHEMA, IMPERATIVE_PLAY_APP_ID, default_document(), None),
-        applied_edit_ids: Vec::new(),
-        redo_edit_ids: Vec::new(),
-        runtime: ImperativePlayRuntime::default(),
-    }
-}
-
-fn parse_envelope(document_json: &str) -> ImperativePlayEnvelope {
-    serde_json::from_str(document_json).unwrap_or_else(|_| default_envelope())
-}
-
-fn set_document_op(play: &ImperativePlayEnvelope) -> String {
-    json!({ "op": "setDocument", "document": play }).to_string()
-}
-
-/// @emoji 🗄️ Reconstructs the VCS store from the persisted envelope + applied/redo edit ids.
-fn store_from_play(play: &ImperativePlayEnvelope) -> ImperativeStore {
-    let mut store = ImperativeStore::new(play.envelope.clone());
-    store.set_state(play.envelope.clone(), play.applied_edit_ids.clone(), play.redo_edit_ids.clone());
-    store
-}
-
-/// @emoji 💾 Persists the store's envelope + applied/redo edit ids back onto the play state.
-fn sync_play_from_store(play: &mut ImperativePlayEnvelope, store: &ImperativeStore) {
-    play.envelope = store.envelope().clone();
-    play.applied_edit_ids = store.applied_edit_ids().to_vec();
-    play.redo_edit_ids = store.redo_edit_ids().to_vec();
-}
-
-/// @emoji 🔂 Materializes the current document by replaying applied edits over the initial projection.
-fn document(play: &ImperativePlayEnvelope) -> ImperativeDocument {
-    materialize_document_projection(&play.envelope, &play.applied_edit_ids)
-        .unwrap_or_else(|_| play.envelope.vcs.initial_projection.clone())
-}
-
 /// 🆔 Allocates a fresh `step-N` id one past the highest suffix used anywhere in the document
 /// (including nested `control.*` bodies), deterministically from pre-state — no mutable counter.
 fn next_step_id(document: &ImperativeDocument) -> String {
@@ -119,7 +64,7 @@ fn next_step_id(document: &ImperativeDocument) -> String {
 /// 📍 Reads `owner`/`slot` off action args into a [`imperative_core::PathRef`] so nested
 /// control-step bodies (e.g. `control.if` then/else) resolve correctly; falls back to the root
 /// path unless both are present and `owner` names a real top-level step, avoiding an unresolvable
-/// or unknown reference that would otherwise panic the host.
+/// or unknown reference that would otherwise address nothing.
 fn path_ref_from_args(args: Option<&Value>, document: &ImperativeDocument) -> PathRef {
     let owner = args.and_then(|value| value.get("owner")).and_then(|value| value.as_str()).map(str::to_string);
     let slot = args.and_then(|value| value.get("slot")).and_then(|value| value.as_str()).map(str::to_string);
@@ -379,12 +324,11 @@ fn run_output_rows(run_output_json: &str, offset: usize) -> Vec<TableRow> {
     }
 }
 
-fn render_main_table(play: &ImperativePlayEnvelope, labels: &ImperativeLabels) -> UiNode {
-    let document = document(play);
+fn render_main_table(document: &ImperativeDocument, run_output_json: &str, labels: &ImperativeLabels) -> UiNode {
     let mut rows_json = table_rows(&document.path.steps);
-    if !play.runtime.run_output_json.is_empty() {
+    if !run_output_json.is_empty() {
         if let Ok(mut rows) = serde_json::from_str::<Vec<TableRow>>(&rows_json) {
-            rows.extend(run_output_rows(&play.runtime.run_output_json, rows.len()));
+            rows.extend(run_output_rows(run_output_json, rows.len()));
             rows_json = serde_json::to_string(&rows).unwrap_or(rows_json);
         }
     }
@@ -403,8 +347,8 @@ fn render_main_table(play: &ImperativePlayEnvelope, labels: &ImperativeLabels) -
     )
 }
 
-fn render_script(play: &ImperativePlayEnvelope) -> UiNode {
-    let host = ImperativeHost::from_document(document(play));
+fn render_script(document: &ImperativeDocument) -> UiNode {
+    let host = ImperativeHost::from_document(document.clone());
     build_text_editor_scene(
         IMPERATIVE_PLAY_SURFACE_SCRIPT,
         IMPERATIVE_PLAY_APP_ID,
@@ -415,39 +359,41 @@ fn render_script(play: &ImperativePlayEnvelope) -> UiNode {
 
 //#region 🔖ImperativePlayApp
 #[derive(Default)]
-struct ImperativePlayApp;
+struct ImperativePlayApp {
+    runtime: ImperativePlayRuntime,
+}
 
-impl PluginApp for ImperativePlayApp {
+impl DocumentApp for ImperativePlayApp {
+    type Projection = ImperativeDocument;
+    type Op = ImperativeOp;
+
     fn app_id(&self) -> &str {
         IMPERATIVE_PLAY_APP_ID
     }
 
-    fn initial_document_json(&self) -> String {
-        serde_json::to_string(&default_envelope()).expect("imperative envelope json")
+    fn document_schema(&self) -> &str {
+        IMPERATIVE_DOCUMENT_SCHEMA
     }
 
-    fn handle_action_patch_ops(
+    fn initial_projection(&self) -> ImperativeDocument {
+        default_document()
+    }
+
+    fn handle_action(
         &mut self,
         action: &str,
         args: Option<&Value>,
-        document_json: &str,
+        doc: &DocumentView<'_, ImperativeDocument>,
         _view_state: &ViewState,
-    ) -> Vec<String> {
-        let mut play = parse_envelope(document_json);
+    ) -> ActionEmit<ImperativeOp> {
+        let document = doc.projection;
         match action {
-            "setDocument" => {
-                if let Some(next) = args.and_then(|value| value.get("document")) {
-                    if let Ok(parsed) = serde_json::from_value(next.clone()) {
-                        return vec![set_document_op(&parsed)];
-                    }
-                }
-            }
             "setSelection" => {
-                play.runtime.selected_step_ids = args
+                self.runtime.selected_step_ids = args
                     .and_then(|value| value.get("ids"))
                     .and_then(|value| serde_json::from_value(value.clone()).ok())
                     .unwrap_or_default();
-                return vec![set_document_op(&play)];
+                ActionEmit::default()
             }
             "addStep" | "addStepAt" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print");
@@ -456,102 +402,78 @@ impl PluginApp for ImperativePlayApp {
                     .and_then(|value| value.as_u64())
                     .map(|value| value as usize)
                     .unwrap_or(usize::MAX);
-                let pre = document(&play);
-                let path_ref = path_ref_from_args(args, &pre);
-                let id = next_step_id(&pre);
+                let path_ref = path_ref_from_args(args, document);
+                let id = next_step_id(document);
                 let step = Step {
                     id: id.clone(),
                     kind: kind.into(),
                     params: Dictionary::new(),
                     bodies: BTreeMap::new(),
                 };
-                let op = ImperativeOp { path_ref, collection: CollectionOp::Add { index, item: step } };
-                let mut store = store_from_play(&play);
-                let _ = store.dispatch(DocumentVcsCommand::Apply { operations: vec![op], description: None });
-                sync_play_from_store(&mut play, &store);
-                play.runtime.selected_step_ids = vec![id];
-                return vec![set_document_op(&play)];
+                self.runtime.selected_step_ids = vec![id];
+                ActionEmit::ops(vec![ImperativeOp { path_ref, collection: CollectionOp::Add { index, item: step } }])
             }
             "removeStep" | "removeStepAt" => {
                 if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
-                    let pre = document(&play);
-                    let path_ref = path_ref_from_args(args, &pre);
-                    let op = ImperativeOp { path_ref, collection: CollectionOp::Remove { id: id.into() } };
-                    let mut store = store_from_play(&play);
-                    let _ = store.dispatch(DocumentVcsCommand::Apply { operations: vec![op], description: None });
-                    sync_play_from_store(&mut play, &store);
-                    play.runtime.selected_step_ids.retain(|step_id| step_id != id);
-                    return vec![set_document_op(&play)];
+                    if resolve_contains(document, args, id) {
+                        let path_ref = path_ref_from_args(args, document);
+                        self.runtime.selected_step_ids.retain(|step_id| step_id != id);
+                        return ActionEmit::ops(vec![ImperativeOp { path_ref, collection: CollectionOp::Remove { id: id.into() } }]);
+                    }
                 }
+                ActionEmit::default()
             }
             "moveStep" | "moveStepAt" => {
                 let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
                 let new_index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).map(|value| value as usize);
                 if let (Some(id), Some(new_index)) = (id, new_index) {
-                    let pre = document(&play);
-                    let path_ref = path_ref_from_args(args, &pre);
-                    let op = ImperativeOp { path_ref, collection: CollectionOp::Move { id: id.into(), to_index: new_index } };
-                    let mut store = store_from_play(&play);
-                    let _ = store.dispatch(DocumentVcsCommand::Apply { operations: vec![op], description: None });
-                    sync_play_from_store(&mut play, &store);
-                    return vec![set_document_op(&play)];
+                    if resolve_contains(document, args, id) {
+                        let path_ref = path_ref_from_args(args, document);
+                        return ActionEmit::ops(vec![ImperativeOp { path_ref, collection: CollectionOp::Move { id: id.into(), to_index: new_index } }]);
+                    }
                 }
+                ActionEmit::default()
             }
             "setStepParams" | "setStepParamsAt" => {
                 let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
                 let params = args.and_then(|value| value.get("params"));
                 if let (Some(id), Some(params)) = (id, params) {
                     if let Ok(patch) = serde_json::from_value::<Dictionary>(params.clone()) {
-                        let pre = document(&play);
-                        let path_ref = path_ref_from_args(args, &pre);
-                        let op = ImperativeOp { path_ref, collection: CollectionOp::Patch { id: id.into(), patch } };
-                        let mut store = store_from_play(&play);
-                        let _ = store.dispatch(DocumentVcsCommand::Apply { operations: vec![op], description: None });
-                        sync_play_from_store(&mut play, &store);
-                        return vec![set_document_op(&play)];
+                        if resolve_contains(document, args, id) {
+                            let path_ref = path_ref_from_args(args, document);
+                            return ActionEmit::ops(vec![ImperativeOp { path_ref, collection: CollectionOp::Patch { id: id.into(), patch } }]);
+                        }
                     }
                 }
+                ActionEmit::default()
             }
             "run" => {
-                let host = ImperativeHost::from_document(document(&play));
+                let host = ImperativeHost::from_document(document.clone());
                 let result = host.run();
-                play.runtime.run_output_json =
+                self.runtime.run_output_json =
                     serde_json::to_string(&result.scope).unwrap_or_else(|_| format!("{:?}", result.scope));
-                return vec![set_document_op(&play)];
+                ActionEmit::default()
             }
-            "undo" => {
-                let mut store = store_from_play(&play);
-                let _ = store.dispatch(DocumentVcsCommand::Undo);
-                sync_play_from_store(&mut play, &store);
-                return vec![set_document_op(&play)];
-            }
-            "redo" => {
-                let mut store = store_from_play(&play);
-                let _ = store.dispatch(DocumentVcsCommand::Redo);
-                sync_play_from_store(&mut play, &store);
-                return vec![set_document_op(&play)];
-            }
-            _ => {}
+            _ => ActionEmit::default(),
         }
-        Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-        let play = parse_envelope(document_json);
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, ImperativeDocument>, view_state: &ViewState) -> UiNode {
+        let document = doc.projection;
         let labels = imperative_labels(view_state);
         match body_key {
-            IMPERATIVE_PLAY_BODY_MAIN => render_main_table(&play, labels),
-            IMPERATIVE_PLAY_BODY_SCRIPT => render_script(&play),
-            IMPERATIVE_PLAY_BODY_DOCUMENT => build_document_tree(&document(&play), &play.runtime.selected_step_ids, labels),
+            IMPERATIVE_PLAY_BODY_MAIN => render_main_table(document, &self.runtime.run_output_json, labels),
+            IMPERATIVE_PLAY_BODY_SCRIPT => render_script(document),
+            IMPERATIVE_PLAY_BODY_DOCUMENT => build_document_tree(document, &self.runtime.selected_step_ids, labels),
             IMPERATIVE_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
-            IMPERATIVE_PLAY_BODY_INSPECTOR => build_inspector_tree(&document(&play), &play.runtime.selected_step_ids, labels),
+            IMPERATIVE_PLAY_BODY_INSPECTOR => build_inspector_tree(document, &self.runtime.selected_step_ids, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
         let labels = imperative_labels(view_state);
-        semio_framework_plugin::AppLabelsOverlay {
+        AppLabelsOverlay {
             app_label: None,
             window_kind_labels: std::collections::HashMap::from([
                 (IMPERATIVE_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()),
@@ -561,6 +483,29 @@ impl PluginApp for ImperativePlayApp {
             mode_labels: std::collections::HashMap::new(),
         }
     }
+}
+
+/// 🔎 Resolves the step list a `PathRef` addresses — the root path, or a nested `control.*` step's
+/// slot (an unmaterialized slot reads as empty).
+fn steps_at<'a>(document: &'a ImperativeDocument, path_ref: &PathRef) -> &'a [Step] {
+    match (&path_ref.owner, &path_ref.slot) {
+        (Some(owner), Some(slot)) => document
+            .path
+            .steps
+            .iter()
+            .find(|step| &step.id == owner)
+            .and_then(|step| step.bodies.get(slot))
+            .map(|path| path.steps.as_slice())
+            .unwrap_or(&[]),
+        _ => document.path.steps.as_slice(),
+    }
+}
+
+/// 🔎 True when the step `id` exists in the list the `owner`/`slot` args address — the pre-state
+/// guard the op arms share so a stale id never emits a no-op edit into history.
+fn resolve_contains(document: &ImperativeDocument, args: Option<&Value>, id: &str) -> bool {
+    let path_ref = path_ref_from_args(args, document);
+    steps_at(document, &path_ref).iter().any(|step| step.id == id)
 }
 //#endregion 🔖ImperativePlayApp
 
@@ -595,21 +540,10 @@ fn create_imperative_app() -> App {
                 PanelGroup::Details,
                 IMPERATIVE_PLAY_BODY_INSPECTOR,
             )
-            .operation("addStep", "Add Step")
-            .operation("addStepAt", "Add Step At")
-            .operation("removeStep", "Remove Step")
-            .operation("removeStepAt", "Remove Step At")
-            .operation("moveStep", "Move Step")
-            .operation("moveStepAt", "Move Step At")
-            .operation("setStepParams", "Set Step Params")
-            .operation("setStepParamsAt", "Set Step Params At")
-            .view_action("setSelection", "Set Selection")
-            .view_action("run", "Run")
-            .shell_action("setDocument", "Set Document")
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("demo", "Demo", serde_json::to_string(&default_envelope()).unwrap())
+    .example("demo", "Demo", serde_json::to_string(&default_document()).unwrap())
     .program("imperative", "Imperative", "graph")
 }
 
@@ -627,28 +561,36 @@ semio_framework_plugin::semio_plugin! {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+    use vcs::{Backbone, BackboneMessage, MemoryBackbone};
+
+    fn meta(actor: &str) -> ActionMeta {
+        ActionMeta { actor: actor.into(), instance_id: 1 }
+    }
+
+    fn new_app() -> VcsDocumentApp<ImperativePlayApp> {
+        VcsDocumentApp::new(ImperativePlayApp::default())
+    }
 
     #[test]
     fn app_definition_builds_without_panicking() {
         let app = create_imperative_app();
-        assert!(app.definition.actions.iter().any(|action| action.id == "addStep"));
-        assert!(app.definition.actions.iter().any(|action| action.id == "undo"));
+        assert_eq!(app.definition.id, IMPERATIVE_PLAY_APP_ID);
+        assert!(app.definition.keybindings.iter().any(|binding| binding.action.action == "undo"));
     }
 
     #[test]
     fn renders_table_scene() {
-        let app = ImperativePlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(IMPERATIVE_PLAY_BODY_MAIN, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(IMPERATIVE_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("table"));
     }
 
     #[test]
     fn imperative_labels_resolve_native_by_default() {
-        let app = ImperativePlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(IMPERATIVE_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(IMPERATIVE_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Set state"));
         assert!(json.contains("Print log"));
@@ -657,10 +599,9 @@ mod tests {
 
     #[test]
     fn imperative_labels_resolve_native_in_german() {
-        let app = ImperativePlayApp;
-        let document = app.initial_document_json();
+        let mut app = new_app();
         let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let node = app.render(IMPERATIVE_PLAY_BODY_CATALOGUE, &document, &view_state);
+        let node = app.render(IMPERATIVE_PLAY_BODY_CATALOGUE, None, &view_state).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Zustand setzen"));
         assert!(json.contains("Log ausgeben"));
@@ -669,118 +610,168 @@ mod tests {
 
     #[test]
     fn renders_script_editor() {
-        let app = ImperativePlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(IMPERATIVE_PLAY_BODY_SCRIPT, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(IMPERATIVE_PLAY_BODY_SCRIPT, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("text-editor"));
     }
 
     #[test]
     fn default_document_has_steps() {
-        let play = default_envelope();
-        assert_eq!(document(&play).path.steps.len(), 2);
+        let mut app = new_app();
+        assert_eq!(app.projection().expect("projection").path.steps.len(), 2);
     }
 
     #[test]
     fn add_step_action_appends_step() {
-        let mut app = ImperativePlayApp;
-        let document_json = app.initial_document_json();
-        let ops = app.handle_action_patch_ops("addStep", Some(&json!({ "kind": "log.print" })), &document_json, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let updated_op: Value = serde_json::from_str(&ops[0]).unwrap();
-        let updated: ImperativePlayEnvelope = serde_json::from_value(updated_op["document"].clone()).unwrap();
-        assert!(document(&updated).path.steps.len() > 2);
-    }
-
-    fn apply_ops(document_json: &str, ops: &[String]) -> ImperativePlayEnvelope {
-        let mut play = parse_envelope(document_json);
-        for op in ops {
-            let parsed: Value = serde_json::from_str(op).unwrap();
-            play = serde_json::from_value(parsed["document"].clone()).unwrap();
-        }
-        play
+        let mut app = new_app();
+        app.handle_action("addStep", Some(&json!({ "kind": "log.print" })), &ViewState::default(), &meta("local")).expect("add step");
+        assert!(app.projection().expect("projection").path.steps.len() > 2);
     }
 
     #[test]
     fn add_step_at_owner_slot_nests_into_control_body() {
-        let mut app = ImperativePlayApp;
-        let document_json = app.initial_document_json();
-        let ops = app.handle_action_patch_ops("addStepAt", Some(&json!({ "kind": "control.if" })), &document_json, &ViewState::default());
-        let with_owner = apply_ops(&document_json, &ops);
-        let owner_id = with_owner.runtime.selected_step_ids[0].clone();
-        let document_json = serde_json::to_string(&with_owner).unwrap();
-        let ops = app.handle_action_patch_ops(
+        let mut app = new_app();
+        app.handle_action("addStepAt", Some(&json!({ "kind": "control.if" })), &ViewState::default(), &meta("local")).expect("add owner");
+        let owner_id = app.projection().expect("projection").path.steps.last().expect("owner").id.clone();
+        let root_len = app.projection().expect("projection").path.steps.len();
+        app.handle_action(
             "addStepAt",
             Some(&json!({ "kind": "log.print", "owner": owner_id, "slot": "then" })),
-            &document_json,
             &ViewState::default(),
-        );
-        let nested = apply_ops(&document_json, &ops);
-        let nested_document = document(&nested);
-        let owner_step = nested_document.path.steps.iter().find(|step| step.id == owner_id).expect("owner step");
+            &meta("local"),
+        )
+        .expect("add nested");
+        let document = app.projection().expect("projection");
+        let owner_step = document.path.steps.iter().find(|step| step.id == owner_id).expect("owner step");
         assert_eq!(owner_step.bodies.get("then").map(|body| body.steps.len()), Some(1));
-        assert_eq!(
-            nested_document.path.steps.len(),
-            document(&with_owner).path.steps.len(),
-            "nested step lives in the slot, not the root path"
-        );
+        assert_eq!(document.path.steps.len(), root_len, "nested step lives in the slot, not the root path");
     }
 
     #[test]
     fn add_step_at_falls_back_to_root_for_unknown_owner() {
-        let mut app = ImperativePlayApp;
-        let document_json = app.initial_document_json();
-        let ops = app.handle_action_patch_ops(
+        let mut app = new_app();
+        app.handle_action(
             "addStepAt",
             Some(&json!({ "kind": "log.print", "owner": "missing-step", "slot": "then" })),
-            &document_json,
             &ViewState::default(),
-        );
-        let updated = apply_ops(&document_json, &ops);
-        let updated_document = document(&updated);
-        assert!(updated_document.path.steps.iter().any(|step| step.id == updated.runtime.selected_step_ids[0]));
+            &meta("local"),
+        )
+        .expect("add step");
+        let document = app.projection().expect("projection");
+        let added_id = document.path.steps.last().expect("added").id.clone();
+        assert!(document.path.steps.iter().any(|step| step.id == added_id));
     }
 
     #[test]
     fn run_action_expands_scope_into_readable_rows_without_truncation() {
-        let mut app = ImperativePlayApp;
-        let document_json = app.initial_document_json();
-        let ops = app.handle_action_patch_ops("run", None, &document_json, &ViewState::default());
-        let ran = apply_ops(&document_json, &ops);
-        assert!(!ran.runtime.run_output_json.is_empty());
-        let node = app.render(IMPERATIVE_PLAY_BODY_MAIN, &serde_json::to_string(&ran).unwrap(), &ViewState::default());
+        let mut app = new_app();
+        app.handle_action("run", None, &ViewState::default(), &meta("local")).expect("run");
+        let node = app.render(IMPERATIVE_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("counter"), "run output row shows the full scope key, not an 80-char blob");
     }
 
     #[test]
     fn undo_after_add_step_restores_original_document_exactly() {
-        let mut app = ImperativePlayApp;
-        let document_json = app.initial_document_json();
-        let original = document(&parse_envelope(&document_json));
-        let ops = app.handle_action_patch_ops("addStep", Some(&json!({ "kind": "log.print" })), &document_json, &ViewState::default());
-        let after_add = apply_ops(&document_json, &ops);
-        let document_json = serde_json::to_string(&after_add).unwrap();
-        let ops = app.handle_action_patch_ops("undo", None, &document_json, &ViewState::default());
-        let after_undo = apply_ops(&document_json, &ops);
-        assert_eq!(document(&after_undo), original, "undo is a true inverse of addStep");
-        let ops = app.handle_action_patch_ops("redo", None, &serde_json::to_string(&after_undo).unwrap(), &ViewState::default());
-        let after_redo = apply_ops(&serde_json::to_string(&after_undo).unwrap(), &ops);
-        assert_eq!(document(&after_redo), document(&after_add), "redo restores the post-apply state");
+        let mut app = new_app();
+        let original = app.projection().expect("projection");
+        app.handle_action("addStep", Some(&json!({ "kind": "log.print" })), &ViewState::default(), &meta("local")).expect("add step");
+        let after_add = app.projection().expect("projection");
+        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        assert_eq!(app.projection().expect("projection"), original, "undo is a true inverse of addStep");
+        app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+        assert_eq!(app.projection().expect("projection"), after_add, "redo restores the post-apply state");
     }
 
     #[test]
     fn remove_step_action_is_exact_inverse_of_add() {
-        let mut app = ImperativePlayApp;
-        let document_json = app.initial_document_json();
-        let original = document(&parse_envelope(&document_json));
-        let ops = app.handle_action_patch_ops("addStep", Some(&json!({ "kind": "math.add" })), &document_json, &ViewState::default());
-        let after_add = apply_ops(&document_json, &ops);
-        let added_id = after_add.runtime.selected_step_ids[0].clone();
-        let document_json = serde_json::to_string(&after_add).unwrap();
-        let ops = app.handle_action_patch_ops("removeStep", Some(&json!({ "id": added_id })), &document_json, &ViewState::default());
-        let after_remove = apply_ops(&document_json, &ops);
-        assert_eq!(document(&after_remove), original);
+        let mut app = new_app();
+        let original = app.projection().expect("projection");
+        app.handle_action("addStep", Some(&json!({ "kind": "math.add" })), &ViewState::default(), &meta("local")).expect("add step");
+        let added_id = app.projection().expect("projection").path.steps.last().expect("added").id.clone();
+        app.handle_action("removeStep", Some(&json!({ "id": added_id })), &ViewState::default(), &meta("local")).expect("remove step");
+        assert_eq!(app.projection().expect("projection"), original);
+    }
+
+    /// 🧪 The definitional regression proof: two independent instances start from the same document,
+    /// apply DISJOINT edits (A appends a root step, B patches an existing step's params), and
+    /// exchanging ops over a `MemoryBackbone` converges both sides to contain BOTH edits — impossible
+    /// under whole-document `setDocument` snapshots, which would clobber one side's write.
+    #[test]
+    fn two_instances_converge_disjoint_edits_via_backbone() {
+        let mut instance_a = new_app();
+        let mut instance_b = new_app();
+        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://imperative-convergence", "mem://imperative-convergence");
+        instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
+        instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+
+        // A appends a new root step.
+        instance_a
+            .handle_action("addStep", Some(&json!({ "kind": "math.add" })), &ViewState::default(), &meta("actor-a"))
+            .expect("a adds step");
+        let added_id = instance_a.projection().expect("projection").path.steps.last().expect("added").id.clone();
+
+        // B renames the first step's `key` param — a disjoint edit that must survive alongside A's.
+        instance_b
+            .handle_action(
+                "setStepParams",
+                Some(&json!({ "id": "step-1", "params": { "key": "renamed" } })),
+                &ViewState::default(),
+                &meta("actor-b"),
+            )
+            .expect("b patches params");
+
+        // Exchange: `commitCheckpoint` is a neutral history action that always pumps inbound ops via
+        // store.dispatch without touching applied_edit_ids the way undo would.
+        instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
+        instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+
+        let projection_a = instance_a.projection().expect("projection");
+        let projection_b = instance_b.projection().expect("projection");
+
+        assert!(projection_a.path.steps.iter().any(|step| step.id == added_id), "instance A must keep its own edit");
+        assert!(projection_b.path.steps.iter().any(|step| step.id == added_id), "instance B must converge on A's remote edit");
+        assert!(step_params_contains(&projection_a, "step-1", "renamed"), "instance A must converge on B's remote param edit");
+        assert!(step_params_contains(&projection_b, "step-1", "renamed"), "instance B must keep its own edit");
+    }
+
+    #[test]
+    fn ingest_operations_is_idempotent_for_imperative() {
+        let mut sender = new_app();
+        let (near, mut far) = MemoryBackbone::pair("mem://imperative-doc", "mem://imperative-doc");
+        sender.attach_backbone(Box::new(near)).expect("attach");
+        sender
+            .handle_action("addStep", Some(&json!({ "kind": "math.add" })), &ViewState::default(), &meta("local"))
+            .expect("add step");
+
+        let mut envelopes = Vec::new();
+        for message in far.receive().expect("receive") {
+            if let BackboneMessage::Ops { envelopes: ops } = message {
+                envelopes.extend(ops);
+            }
+        }
+        assert!(!envelopes.is_empty(), "expected the applied op to flow onto the channel");
+        let operations_json = serde_json::to_string(&envelopes).expect("serialize envelopes");
+
+        let mut receiver = new_app();
+        let baseline = receiver.projection().expect("projection").path.steps.len();
+        receiver.ingest_operations(&operations_json).expect("ingest once");
+        receiver.ingest_operations(&operations_json).expect("ingest twice");
+        assert_eq!(
+            receiver.projection().expect("projection").path.steps.len(),
+            baseline + 1,
+            "feeding the same op twice must not double-apply"
+        );
+    }
+
+    fn step_params_contains(document: &ImperativeDocument, step_id: &str, needle: &str) -> bool {
+        document
+            .path
+            .steps
+            .iter()
+            .find(|step| step.id == step_id)
+            .map(|step| serde_json::to_string(&step.params).unwrap_or_default().contains(needle))
+            .unwrap_or(false)
     }
 }

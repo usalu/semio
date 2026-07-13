@@ -4000,59 +4000,159 @@ mod tests {
 
 // #region 🔖DocumentVcs
 use vcs::{
-    create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
+    collection_diff_from_op, create_document_vcs_envelope, invert_collection_op, CollectionDiff, CollectionOp,
+    DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable,
 };
 use serde::{Deserialize, Serialize};
 
 pub const GIS_MAP_SCHEMA: &str = "gis.map";
 
+//#region 🔖Feature
+/// 🗺️ One id-keyed spatial feature (a position pin, route polyline, or region ring) carried as its full
+/// opaque descriptor payload — id-keyed so two authors editing different features converge granularly.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct MapFeature {
+    pub id: String,
+    pub data: serde_json::Value,
+}
+
+impl Identified<String> for MapFeature {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+/// 🩹 Whole-payload replacement patch (features are opaque JSON); inverts to the prior payload.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MapFeaturePatch {
+    pub data: Option<serde_json::Value>,
+}
+
+impl Patchable<MapFeaturePatch> for MapFeature {
+    fn apply_patch(&mut self, patch: &MapFeaturePatch) -> MapFeaturePatch {
+        let inverse = MapFeaturePatch { data: patch.data.as_ref().map(|_| self.data.clone()) };
+        if let Some(data) = &patch.data {
+            self.data = data.clone();
+        }
+        inverse
+    }
+}
+
+fn apply_map_collection_diff(items: &mut Vec<MapFeature>, diff: &CollectionDiff<String, MapFeaturePatch, MapFeature>) {
+    for id in &diff.removed {
+        items.retain(|item| &item.id != id);
+    }
+    for patch in &diff.modified {
+        if let Some(item) = items.iter_mut().find(|item| item.id == patch.id) {
+            item.apply_patch(&patch.patch);
+        }
+    }
+    for added in &diff.added {
+        items.push(added.clone());
+    }
+}
+
+fn absorb_map_collection_diff(
+    target: &mut Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>,
+    incoming: Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>,
+) {
+    if let Some(next) = incoming {
+        match target {
+            Some(existing) => {
+                existing.removed.extend(next.removed);
+                existing.modified.extend(next.modified);
+                existing.added.extend(next.added);
+            }
+            None => *target = Some(next),
+        }
+    }
+}
+//#endregion 🔖Feature
+
+/// 🗺️ The editable map document: three id-keyed feature collections. All view/config state (camera,
+/// render mode, vector style, LOD, selection, layer visibility, stroke weights) is plugin runtime, not
+/// document state, so panning and styling never enter undo history.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GisMapDocument {
-    pub layers: Vec<serde_json::Value>,
+    #[serde(default)]
+    pub positions: Vec<MapFeature>,
+    #[serde(default)]
+    pub routes: Vec<MapFeature>,
+    #[serde(default)]
+    pub regions: Vec<MapFeature>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GisMapDiff {
-    pub layers: Option<Vec<serde_json::Value>>,
+    pub document: Option<GisMapDocument>,
+    pub positions: Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>,
+    pub routes: Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>,
+    pub regions: Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>,
 }
 
 impl OperationDiff<GisMapDocument> for GisMapDiff {
     fn apply(&self, projection: &GisMapDocument) -> GisMapDocument {
-        GisMapDocument {
-            layers: self.layers.clone().unwrap_or_else(|| projection.layers.clone()),
+        if let Some(document) = &self.document {
+            return document.clone();
         }
+        let mut next = projection.clone();
+        if let Some(diff) = &self.positions {
+            apply_map_collection_diff(&mut next.positions, diff);
+        }
+        if let Some(diff) = &self.routes {
+            apply_map_collection_diff(&mut next.routes, diff);
+        }
+        if let Some(diff) = &self.regions {
+            apply_map_collection_diff(&mut next.regions, diff);
+        }
+        next
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.layers.is_some() {
-            self.layers = other.layers;
+        if other.document.is_some() {
+            *self = GisMapDiff { document: other.document, ..Default::default() };
+            return;
         }
+        absorb_map_collection_diff(&mut self.positions, other.positions);
+        absorb_map_collection_diff(&mut self.routes, other.routes);
+        absorb_map_collection_diff(&mut self.regions, other.regions);
     }
 }
 
+/// 🗺️ Typed, invertible map operation. `Positions`/`Routes`/`Regions` are id-keyed collection ops for
+/// granular convergence; `SetDocument` replaces the whole map (example import / reset).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "camelCase")]
 pub enum GisMapOp {
-    SetLayers { layers: Vec<serde_json::Value> },
+    Positions(CollectionOp<String, MapFeature, MapFeaturePatch>),
+    Routes(CollectionOp<String, MapFeature, MapFeaturePatch>),
+    Regions(CollectionOp<String, MapFeature, MapFeaturePatch>),
+    SetDocument { document: GisMapDocument },
 }
 
 impl Operation<GisMapDocument> for GisMapOp {
     type Diff = GisMapDiff;
 
-    fn diff(&self, _projection: &GisMapDocument) -> GisMapDiff {
+    fn diff(&self, projection: &GisMapDocument) -> GisMapDiff {
         match self {
-            GisMapOp::SetLayers { layers } => GisMapDiff {
-                layers: Some(layers.clone()),
-            },
+            GisMapOp::Positions(op) => GisMapDiff { positions: Some(collection_diff_from_op(&projection.positions, op)), ..Default::default() },
+            GisMapOp::Routes(op) => GisMapDiff { routes: Some(collection_diff_from_op(&projection.routes, op)), ..Default::default() },
+            GisMapOp::Regions(op) => GisMapDiff { regions: Some(collection_diff_from_op(&projection.regions, op)), ..Default::default() },
+            GisMapOp::SetDocument { document } => GisMapDiff { document: Some(document.clone()), ..Default::default() },
         }
     }
 
     fn backwards(&self, projection: &GisMapDocument) -> Vec<Self> {
-        vec![GisMapOp::SetLayers {
-            layers: projection.layers.clone(),
-        }]
+        match self {
+            GisMapOp::Positions(op) => vec![GisMapOp::Positions(invert_collection_op(&projection.positions, op))],
+            GisMapOp::Routes(op) => vec![GisMapOp::Routes(invert_collection_op(&projection.routes, op))],
+            GisMapOp::Regions(op) => vec![GisMapOp::Regions(invert_collection_op(&projection.regions, op))],
+            GisMapOp::SetDocument { .. } => vec![GisMapOp::SetDocument { document: projection.clone() }],
+        }
     }
 }
 
@@ -4060,7 +4160,41 @@ pub type GisMapEnvelope = DocumentVcsEnvelope<GisMapDocument, GisMapOp>;
 pub type GisMapStore = DocumentVcsStore<GisMapDocument, GisMapOp>;
 
 pub fn empty_gis_map_projection() -> GisMapDocument {
-    GisMapDocument { layers: Vec::new() }
+    GisMapDocument::default()
+}
+
+/// 📥 Parses a `{ positions, routes, regions }` map-descriptor JSON into a `GisMapDocument` — each
+/// array entry becomes a `MapFeature` keyed by its `id`, keeping the full object as the payload.
+pub fn gis_map_document_from_descriptor_json(json: &str) -> GisMapDocument {
+    let value: serde_json::Value = serde_json::from_str(json).unwrap_or_else(|_| serde_json::json!({}));
+    let features = |key: &str| -> Vec<MapFeature> {
+        value
+            .get(key)
+            .and_then(|entry| entry.as_array())
+            .map(|entries| {
+                entries
+                    .iter()
+                    .filter_map(|item| {
+                        let id = item.get("id").and_then(|value| value.as_str())?.to_string();
+                        Some(MapFeature { id, data: item.clone() })
+                    })
+                    .collect()
+            })
+            .unwrap_or_default()
+    };
+    GisMapDocument { positions: features("positions"), routes: features("routes"), regions: features("regions") }
+}
+
+/// 📤 Rebuilds the `{ positions, routes, regions }` map-descriptor JSON the `MapHost`/renderer consume,
+/// emitting each feature's opaque payload.
+pub fn gis_map_descriptor_json(document: &GisMapDocument) -> String {
+    let payloads = |features: &[MapFeature]| -> Vec<serde_json::Value> { features.iter().map(|feature| feature.data.clone()).collect() };
+    serde_json::json!({
+        "positions": payloads(&document.positions),
+        "routes": payloads(&document.routes),
+        "regions": payloads(&document.regions),
+    })
+    .to_string()
 }
 
 //#region 🔖WasmBridge
@@ -4131,23 +4265,55 @@ mod wasm_bridge {
 mod gis_map_vcs_tests {
     use super::*;
 
+    fn round_trip(document: &GisMapDocument, op: &GisMapOp) -> GisMapDocument {
+        let forward = vcs::apply_operation(document, op);
+        let backwards = op.backwards(document);
+        let mut restored = forward.clone();
+        for back in &backwards {
+            restored = vcs::apply_operation(&restored, back);
+        }
+        assert_eq!(&restored, document, "backwards() must exactly restore the pre-op document");
+        forward
+    }
+
+    fn feature(id: &str) -> MapFeature {
+        MapFeature { id: id.into(), data: serde_json::json!({ "id": id, "lon": 1.0, "lat": 2.0 }) }
+    }
+
+    #[test]
+    fn positions_add_patch_remove_round_trip() {
+        let document = GisMapDocument::default();
+        let added = round_trip(&document, &GisMapOp::Positions(CollectionOp::Add { index: 0, item: feature("p1") }));
+        assert_eq!(added.positions.len(), 1);
+        let patched = round_trip(
+            &added,
+            &GisMapOp::Positions(CollectionOp::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(serde_json::json!({ "id": "p1", "label": "Home" })) } }),
+        );
+        assert_eq!(patched.positions[0].data.get("label").and_then(|value| value.as_str()), Some("Home"));
+        let removed = round_trip(&patched, &GisMapOp::Positions(CollectionOp::Remove { id: "p1".into() }));
+        assert!(removed.positions.is_empty());
+    }
+
+    #[test]
+    fn descriptor_round_trips_through_document() {
+        let json = r#"{"positions":[{"id":"a","lon":1.0,"lat":2.0}],"routes":[{"id":"r","points":[]}],"regions":[]}"#;
+        let document = gis_map_document_from_descriptor_json(json);
+        assert_eq!(document.positions.len(), 1);
+        assert_eq!(document.routes.len(), 1);
+        let rebuilt = gis_map_document_from_descriptor_json(&gis_map_descriptor_json(&document));
+        assert_eq!(rebuilt, document);
+    }
+
     #[test]
     fn gis_map_document_vcs_replays_ops() {
-        let mut store = GisMapStore::new(create_document_vcs_envelope(
-            GIS_MAP_SCHEMA,
-            "gis",
-            empty_gis_map_projection(),
-            None,
-        ));
+        let mut store = GisMapStore::new(create_document_vcs_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_projection(), None));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![GisMapOp::SetLayers {
-                    layers: vec![serde_json::json!({ "id": "base" })],
-                }],
+                operations: vec![GisMapOp::Positions(CollectionOp::Add { index: 0, item: feature("p1") })],
                 description: None,
             })
             .expect("apply");
-        assert_eq!(store.projection().expect("projection").layers.len(), 1);
+        assert_eq!(store.projection().expect("projection").positions.len(), 1);
     }
 }
 // #endregion 🔖DocumentVcs

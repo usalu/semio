@@ -40,6 +40,8 @@ members = [
     "gis/2d/rs",
     "gis/3d/rs",
     "gis/plugin/rs",
+    "flow/core/rs",
+    "flow/plugin/rs",
     "kernel/3d/brep/rs",
     "kernel/3d/brep/engine/rs",
     "process/3d/rs",
@@ -79,6 +81,14 @@ members = [
     "note/plugin/rs",
     "layout/rs",
     "layout/plugin/rs",
+    "imperative/core/rs",
+    "imperative/engine/rs",
+    "imperative/plugin/rs",
+    "imperative/module/control/rs",
+    "imperative/module/core/rs",
+    "imperative/module/logic/rs",
+    "imperative/module/math/rs",
+    "imperative/module/text/rs",
 ]
 
 resolver = "2"

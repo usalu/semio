@@ -8,14 +8,14 @@ use serde::{Deserialize, Serialize};
 
 pub const LAYOUT_FIXTURE_SCHEMA: &str = "layout.fixture";
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct LayoutCamera {
     pub x: f64,
     pub y: f64,
     pub zoom: f64,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct LayoutRect {
     pub x: f64,
     pub y: f64,
@@ -25,7 +25,7 @@ pub struct LayoutRect {
     pub height: f64,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct LayoutBounds {
     pub x: f64,
     pub y: f64,
@@ -36,7 +36,7 @@ pub struct LayoutBounds {
     pub rotation: f64,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PageMargins {
     pub top: f64,
     pub right: f64,
@@ -44,13 +44,13 @@ pub struct PageMargins {
     pub left: f64,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PageColumns {
     pub count: u32,
     pub gutter: f64,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Layer {
     pub id: String,
     pub name: String,
@@ -60,7 +60,7 @@ pub struct Layer {
     pub object_ids: Vec<String>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind")]
 pub enum FrameKind {
     #[serde(rename = "rect")]
@@ -71,7 +71,7 @@ pub enum FrameKind {
     Image,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct FrameBase {
     pub id: String,
     #[serde(rename = "layerId")]
@@ -81,7 +81,7 @@ pub struct FrameBase {
     pub visible: Option<bool>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct RectFrame {
     #[serde(flatten)]
     pub base: FrameBase,
@@ -89,7 +89,7 @@ pub struct RectFrame {
     pub stroke: Option<[f32; 4]>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct TextFrame {
     #[serde(flatten)]
     pub base: FrameBase,
@@ -103,7 +103,7 @@ pub struct TextFrame {
     pub wrap_mode: String,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ImageFrame {
     #[serde(flatten)]
     pub base: FrameBase,
@@ -111,7 +111,7 @@ pub struct ImageFrame {
     pub link_id: String,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind")]
 pub enum Frame {
     #[serde(rename = "rect")]
@@ -183,7 +183,7 @@ impl Frame {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct TextStyleRun {
     pub start: usize,
     pub end: usize,
@@ -193,7 +193,7 @@ pub struct TextStyleRun {
     pub character_style_id: Option<String>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct TextStory {
     pub id: String,
     pub content: String,
@@ -201,7 +201,7 @@ pub struct TextStory {
     pub style_runs: Vec<TextStyleRun>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ParagraphStyle {
     pub id: String,
     pub name: String,
@@ -216,7 +216,7 @@ pub struct ParagraphStyle {
     pub alignment: String,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ImageLink {
     pub id: String,
     pub path: String,
@@ -231,7 +231,7 @@ pub struct ImageLink {
     pub proxy_data_url: Option<String>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PageOverride {
     #[serde(rename = "objectId")]
     pub object_id: String,
@@ -240,7 +240,7 @@ pub struct PageOverride {
     pub locked: Option<bool>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ParentPage {
     pub id: String,
     pub name: String,
@@ -252,7 +252,7 @@ pub struct ParentPage {
     pub frames: Vec<Frame>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Page {
     pub id: String,
     pub name: String,
@@ -272,7 +272,7 @@ pub struct Page {
     pub overrides: Vec<PageOverride>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Spread {
     pub id: String,
     pub name: String,
@@ -280,7 +280,7 @@ pub struct Spread {
     pub page_ids: Vec<String>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct GridSettings {
     #[serde(rename = "baselineGrid")]
     pub baseline_grid: f64,
@@ -290,7 +290,7 @@ pub struct GridSettings {
     pub snap_to_baseline: bool,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct LayoutDocument {
     pub schema: String,
     pub name: String,
@@ -1247,10 +1247,462 @@ mod tests {
 }
 
 
+mod ops {
+// #region ops
+//! 🧾 Typed VCS operation vocabulary for the layout document — the ops the layout plugin emits
+//! (page/story/link collections, per-page frame add/remove/patch, and camera). Each op computes a
+//! true pre-state inverse so undo/redo round-trips exactly. See {@link vcs::Operation}.
+
+use serde::{Deserialize, Serialize};
+use vcs::{
+    apply_collection_op, invert_collection_op, CollectionOp, Identified, Operation, OperationDiff, Patchable,
+};
+
+use crate::document::{Frame, ImageLink, LayoutCamera, LayoutDocument, Page, TextStory};
+
+//#region 🔖Ids
+impl Identified<String> for Page {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+impl Identified<String> for TextStory {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+impl Identified<String> for ImageLink {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+//#endregion 🔖Ids
+
+//#region 🔖Patches
+/// 📄 Sparse scalar patch for a {@link Page} (name, size, margins, columns).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PagePatch {
+    pub name: Option<String>,
+    pub width: Option<f64>,
+    pub height: Option<f64>,
+    pub margin_top: Option<f64>,
+    pub margin_right: Option<f64>,
+    pub margin_bottom: Option<f64>,
+    pub margin_left: Option<f64>,
+    pub columns_count: Option<u32>,
+    pub columns_gutter: Option<f64>,
+}
+
+impl Patchable<PagePatch> for Page {
+    fn apply_patch(&mut self, patch: &PagePatch) -> PagePatch {
+        let inverse = PagePatch {
+            name: patch.name.as_ref().map(|_| self.name.clone()),
+            width: patch.width.map(|_| self.width),
+            height: patch.height.map(|_| self.height),
+            margin_top: patch.margin_top.map(|_| self.margins.top),
+            margin_right: patch.margin_right.map(|_| self.margins.right),
+            margin_bottom: patch.margin_bottom.map(|_| self.margins.bottom),
+            margin_left: patch.margin_left.map(|_| self.margins.left),
+            columns_count: patch.columns_count.map(|_| self.columns.count),
+            columns_gutter: patch.columns_gutter.map(|_| self.columns.gutter),
+        };
+        if let Some(name) = &patch.name {
+            self.name = name.clone();
+        }
+        if let Some(value) = patch.width {
+            self.width = value;
+        }
+        if let Some(value) = patch.height {
+            self.height = value;
+        }
+        if let Some(value) = patch.margin_top {
+            self.margins.top = value;
+        }
+        if let Some(value) = patch.margin_right {
+            self.margins.right = value;
+        }
+        if let Some(value) = patch.margin_bottom {
+            self.margins.bottom = value;
+        }
+        if let Some(value) = patch.margin_left {
+            self.margins.left = value;
+        }
+        if let Some(value) = patch.columns_count {
+            self.columns.count = value;
+        }
+        if let Some(value) = patch.columns_gutter {
+            self.columns.gutter = value;
+        }
+        inverse
+    }
+}
+
+/// 📝 Sparse patch for a {@link TextStory}'s body content.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TextStoryPatch {
+    pub content: Option<String>,
+}
+
+impl Patchable<TextStoryPatch> for TextStory {
+    fn apply_patch(&mut self, patch: &TextStoryPatch) -> TextStoryPatch {
+        let inverse = TextStoryPatch { content: patch.content.as_ref().map(|_| self.content.clone()) };
+        if let Some(content) = &patch.content {
+            self.content = content.clone();
+        }
+        inverse
+    }
+}
+
+/// 🔗 Sparse patch for an {@link ImageLink}'s file path.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImageLinkPatch {
+    pub path: Option<String>,
+}
+
+impl Patchable<ImageLinkPatch> for ImageLink {
+    fn apply_patch(&mut self, patch: &ImageLinkPatch) -> ImageLinkPatch {
+        let inverse = ImageLinkPatch { path: patch.path.as_ref().map(|_| self.path.clone()) };
+        if let Some(path) = &patch.path {
+            self.path = path.clone();
+        }
+        inverse
+    }
+}
+
+/// 🖼️ Sparse patch for a {@link Frame}: bounds for any kind, fill/stroke for rects, wrap-mode/columns
+/// for text. The doubly-optional `fill`/`stroke` distinguishes "unchanged" (outer `None`) from
+/// "cleared" (inner `None`).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FramePatch {
+    pub x: Option<f64>,
+    pub y: Option<f64>,
+    pub width: Option<f64>,
+    pub height: Option<f64>,
+    pub fill: Option<Option<[f32; 4]>>,
+    pub stroke: Option<Option<[f32; 4]>>,
+    pub wrap_mode: Option<String>,
+    pub columns: Option<u32>,
+}
+
+/// 🩹 Applies a {@link FramePatch} in place and returns the patch that undoes it.
+pub fn apply_frame_patch(frame: &mut Frame, patch: &FramePatch) -> FramePatch {
+    let mut inverse = FramePatch::default();
+    {
+        let bounds = match frame {
+            Frame::Rect { bounds, .. } | Frame::Text { bounds, .. } | Frame::Image { bounds, .. } => bounds,
+        };
+        if patch.x.is_some() {
+            inverse.x = Some(bounds.x);
+        }
+        if patch.y.is_some() {
+            inverse.y = Some(bounds.y);
+        }
+        if patch.width.is_some() {
+            inverse.width = Some(bounds.width);
+        }
+        if patch.height.is_some() {
+            inverse.height = Some(bounds.height);
+        }
+        if let Some(value) = patch.x {
+            bounds.x = value;
+        }
+        if let Some(value) = patch.y {
+            bounds.y = value;
+        }
+        if let Some(value) = patch.width {
+            bounds.width = value;
+        }
+        if let Some(value) = patch.height {
+            bounds.height = value;
+        }
+    }
+    match frame {
+        Frame::Rect { fill, stroke, .. } => {
+            if patch.fill.is_some() {
+                inverse.fill = Some(*fill);
+            }
+            if patch.stroke.is_some() {
+                inverse.stroke = Some(*stroke);
+            }
+            if let Some(new) = patch.fill {
+                *fill = new;
+            }
+            if let Some(new) = patch.stroke {
+                *stroke = new;
+            }
+        }
+        Frame::Text { wrap_mode, columns, .. } => {
+            if patch.wrap_mode.is_some() {
+                inverse.wrap_mode = Some(wrap_mode.clone());
+            }
+            if patch.columns.is_some() {
+                inverse.columns = Some(*columns);
+            }
+            if let Some(new) = &patch.wrap_mode {
+                *wrap_mode = new.clone();
+            }
+            if let Some(new) = patch.columns {
+                *columns = new;
+            }
+        }
+        Frame::Image { .. } => {}
+    }
+    inverse
+}
+//#endregion 🔖Patches
+
+//#region 🔖Op
+/// 🧺 The typed layout document operation. Pages/stories/links are flat id-keyed collections; frames
+/// are nested per-page so they get bespoke add/remove/patch variants; camera is a coalesced view op.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum LayoutOp {
+    Pages(CollectionOp<String, Page, PagePatch>),
+    Stories(CollectionOp<String, TextStory, TextStoryPatch>),
+    Links(CollectionOp<String, ImageLink, ImageLinkPatch>),
+    AddFrame { page_id: String, index: usize, frame: Frame, layer_id: Option<String> },
+    RemoveFrame { page_id: String, frame_id: String },
+    PatchFrame { page_id: String, frame_id: String, patch: FramePatch },
+    SetCamera { blueprint: bool, camera: LayoutCamera },
+}
+
+fn apply_layout_op(doc: &mut LayoutDocument, op: &LayoutOp) {
+    match op {
+        LayoutOp::Pages(cop) => apply_collection_op(&mut doc.pages, cop),
+        LayoutOp::Stories(cop) => apply_collection_op(&mut doc.stories, cop),
+        LayoutOp::Links(cop) => apply_collection_op(&mut doc.links, cop),
+        LayoutOp::AddFrame { page_id, index, frame, layer_id } => {
+            if let Some(page) = doc.pages.iter_mut().find(|page| page.id == *page_id) {
+                let at = (*index).min(page.frames.len());
+                page.frames.insert(at, frame.clone());
+                if let Some(layer_id) = layer_id {
+                    if let Some(layer) = page.layers.iter_mut().find(|layer| layer.id == *layer_id) {
+                        layer.object_ids.push(frame.id().to_string());
+                    }
+                }
+            }
+        }
+        LayoutOp::RemoveFrame { page_id, frame_id } => {
+            if let Some(page) = doc.pages.iter_mut().find(|page| page.id == *page_id) {
+                page.frames.retain(|frame| frame.id() != frame_id);
+                for layer in &mut page.layers {
+                    layer.object_ids.retain(|id| id != frame_id);
+                }
+            }
+        }
+        LayoutOp::PatchFrame { page_id, frame_id, patch } => {
+            if let Some(page) = doc.pages.iter_mut().find(|page| page.id == *page_id) {
+                if let Some(frame) = page.frames.iter_mut().find(|frame| frame.id() == frame_id) {
+                    apply_frame_patch(frame, patch);
+                }
+            }
+        }
+        LayoutOp::SetCamera { blueprint, camera } => {
+            if *blueprint {
+                doc.camera = camera.clone();
+            } else {
+                doc.preview_camera = camera.clone();
+            }
+        }
+    }
+}
+
+fn backwards_layout_op(doc: &LayoutDocument, op: &LayoutOp) -> Vec<LayoutOp> {
+    match op {
+        LayoutOp::Pages(cop) => vec![LayoutOp::Pages(invert_collection_op(&doc.pages, cop))],
+        LayoutOp::Stories(cop) => vec![LayoutOp::Stories(invert_collection_op(&doc.stories, cop))],
+        LayoutOp::Links(cop) => vec![LayoutOp::Links(invert_collection_op(&doc.links, cop))],
+        LayoutOp::AddFrame { page_id, frame, .. } => {
+            vec![LayoutOp::RemoveFrame { page_id: page_id.clone(), frame_id: frame.id().to_string() }]
+        }
+        LayoutOp::RemoveFrame { page_id, frame_id } => {
+            if let Some(page) = doc.pages.iter().find(|page| page.id == *page_id) {
+                if let Some(index) = page.frames.iter().position(|frame| frame.id() == frame_id) {
+                    let frame = page.frames[index].clone();
+                    let layer_id = page
+                        .layers
+                        .iter()
+                        .find(|layer| layer.object_ids.iter().any(|id| id == frame_id))
+                        .map(|layer| layer.id.clone());
+                    return vec![LayoutOp::AddFrame { page_id: page_id.clone(), index, frame, layer_id }];
+                }
+            }
+            Vec::new()
+        }
+        LayoutOp::PatchFrame { page_id, frame_id, patch } => {
+            if let Some(page) = doc.pages.iter().find(|page| page.id == *page_id) {
+                if let Some(frame) = page.frames.iter().find(|frame| frame.id() == frame_id) {
+                    let mut clone = frame.clone();
+                    let inverse = apply_frame_patch(&mut clone, patch);
+                    return vec![LayoutOp::PatchFrame {
+                        page_id: page_id.clone(),
+                        frame_id: frame_id.clone(),
+                        patch: inverse,
+                    }];
+                }
+            }
+            Vec::new()
+        }
+        LayoutOp::SetCamera { blueprint, .. } => vec![LayoutOp::SetCamera {
+            blueprint: *blueprint,
+            camera: if *blueprint { doc.camera.clone() } else { doc.preview_camera.clone() },
+        }],
+    }
+}
+
+/// 📦 Op-list diff: layout ops fold sequentially over a cloned projection. `absorb` concatenates —
+/// coalesced camera drags stay one edit whose forwards replay to last-wins.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct LayoutDiff {
+    pub ops: Vec<LayoutOp>,
+}
+
+impl OperationDiff<LayoutDocument> for LayoutDiff {
+    fn apply(&self, projection: &LayoutDocument) -> LayoutDocument {
+        let mut next = projection.clone();
+        for op in &self.ops {
+            apply_layout_op(&mut next, op);
+        }
+        next
+    }
+
+    fn absorb(&mut self, other: Self) {
+        self.ops.extend(other.ops);
+    }
+}
+
+impl Operation<LayoutDocument> for LayoutOp {
+    type Diff = LayoutDiff;
+
+    fn diff(&self, _projection: &LayoutDocument) -> LayoutDiff {
+        LayoutDiff { ops: vec![self.clone()] }
+    }
+
+    fn backwards(&self, projection: &LayoutDocument) -> Vec<Self> {
+        backwards_layout_op(projection, self)
+    }
+}
+//#endregion 🔖Op
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::document::{parse_layout_document, Frame, LayoutBounds};
+
+    const SAMPLE: &str = r#"{"schema":"layout.fixture","name":"t","camera":{"x":0,"y":0,"zoom":1},"previewCamera":{"x":0,"y":0,"zoom":1},"grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[{"id":"story-1","content":"Hello","styleRuns":[]}],"links":[{"id":"link-1","path":"a.png","hash":"h","width":10,"height":10,"dpi":300}],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}],"printTarget":null}"#;
+
+    fn sample_doc() -> LayoutDocument {
+        parse_layout_document(SAMPLE).expect("sample doc")
+    }
+
+    fn new_rect(id: &str) -> Frame {
+        Frame::Rect {
+            id: id.into(),
+            layer_id: "layer-1".into(),
+            bounds: LayoutBounds { x: 0.0, y: 0.0, width: 20.0, height: 20.0, rotation: 0.0 },
+            locked: None,
+            visible: None,
+            fill: Some([0.1, 0.2, 0.3, 1.0]),
+            stroke: None,
+        }
+    }
+
+    fn round_trip(doc: &LayoutDocument, op: &LayoutOp) -> LayoutDocument {
+        let forward = vcs::apply_operation(doc, op);
+        let backs = op.backwards(doc);
+        let mut restored = forward.clone();
+        for back in &backs {
+            restored = vcs::apply_operation(&restored, back);
+        }
+        assert_eq!(&restored, doc, "backwards must restore the pre-op document");
+        forward
+    }
+
+    #[test]
+    fn pages_add_and_patch_round_trip() {
+        let doc = sample_doc();
+        let mut page_2 = doc.pages[0].clone();
+        page_2.id = "page-2".into();
+        let add = LayoutOp::Pages(CollectionOp::Add { index: 1, item: page_2 });
+        let with_page = round_trip(&doc, &add);
+        assert_eq!(with_page.pages.len(), 2);
+
+        let patch = LayoutOp::Pages(CollectionOp::Patch {
+            id: "page-1".into(),
+            patch: PagePatch { name: Some("Renamed".into()), width: Some(300.0), columns_count: Some(3), ..Default::default() },
+        });
+        let patched = round_trip(&doc, &patch);
+        let page = patched.pages.iter().find(|page| page.id == "page-1").unwrap();
+        assert_eq!(page.name, "Renamed");
+        assert_eq!(page.width, 300.0);
+        assert_eq!(page.columns.count, 3);
+    }
+
+    #[test]
+    fn frame_add_remove_patch_round_trip() {
+        let doc = sample_doc();
+        let add = LayoutOp::AddFrame { page_id: "page-1".into(), index: 1, frame: new_rect("frame-2"), layer_id: Some("layer-1".into()) };
+        let added = round_trip(&doc, &add);
+        assert_eq!(added.pages[0].frames.len(), 2);
+        assert!(added.pages[0].layers[0].object_ids.iter().any(|id| id == "frame-2"));
+
+        let remove = LayoutOp::RemoveFrame { page_id: "page-1".into(), frame_id: "frame-1".into() };
+        let removed = round_trip(&doc, &remove);
+        assert!(removed.pages[0].frames.iter().all(|frame| frame.id() != "frame-1"));
+
+        let patch = LayoutOp::PatchFrame {
+            page_id: "page-1".into(),
+            frame_id: "frame-1".into(),
+            patch: FramePatch { x: Some(99.0), fill: Some(Some([0.5, 0.5, 0.5, 1.0])), ..Default::default() },
+        };
+        let patched = round_trip(&doc, &patch);
+        let frame = patched.pages[0].frames.iter().find(|frame| frame.id() == "frame-1").unwrap();
+        assert_eq!(frame.bounds().x, 99.0);
+        let Frame::Rect { fill, .. } = frame else { panic!("expected rect") };
+        assert_eq!(fill.unwrap(), [0.5, 0.5, 0.5, 1.0]);
+    }
+
+    #[test]
+    fn story_and_link_patch_round_trip() {
+        let doc = sample_doc();
+        let story = LayoutOp::Stories(CollectionOp::Patch {
+            id: "story-1".into(),
+            patch: TextStoryPatch { content: Some("Edited".into()) },
+        });
+        let edited = round_trip(&doc, &story);
+        assert_eq!(edited.stories[0].content, "Edited");
+
+        let link = LayoutOp::Links(CollectionOp::Patch {
+            id: "link-1".into(),
+            patch: ImageLinkPatch { path: Some("b.png".into()) },
+        });
+        let relinked = round_trip(&doc, &link);
+        assert_eq!(relinked.links[0].path, "b.png");
+    }
+
+    #[test]
+    fn set_camera_round_trips_per_surface() {
+        let doc = sample_doc();
+        let op = LayoutOp::SetCamera { blueprint: true, camera: LayoutCamera { x: 5.0, y: 6.0, zoom: 2.0 } };
+        let moved = round_trip(&doc, &op);
+        assert_eq!(moved.camera.x, 5.0);
+        assert_eq!(moved.preview_camera.x, 0.0);
+    }
+}
+// #endregion ops
+}
+
 pub use document::*;
 pub use display::*;
 pub use engine::*;
 pub use export::*;
+pub use ops::*;
 
 #[cfg(target_arch = "wasm32")]
 mod wasm_session {

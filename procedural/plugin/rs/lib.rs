@@ -5,18 +5,19 @@ pub mod app_2d {
 
     use flow_core::{dag::DagFixture, flow_backed_node_graph_extras, flow_neuron_kind_infos_json, forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec}, FlowFixture, FlowHost, Widget};
     use flow_module_draw::render_scene_json;
-    use semio_framework_plugin::{SurfaceKind, PanelGroup, 
-        build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout, handle_generation_action,
-        render_generation_form_body, render_generation_preview_text, render_generations_tree, selected_generation,
-        ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical,
-        ui_text, App, Canvas2dScene, ActionDescriptor, GenerationPlayState, NodeGraphScene, PluginApp, PluginBundle,
-        UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
+    use procedural_2d::{procedural2d_fixture_ops, Procedural2dDocument, Procedural2dOp, PROCEDURAL_2D_SCHEMA};
+    use semio_framework_plugin::{SurfaceKind, PanelGroup,
+        apply_generation_op, build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout,
+        generation_ops, render_generation_form_body, render_generation_preview_text, render_generations_tree,
+        select_generation, selected_generation, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
+        ui_stack_vertical, ui_text, ActionEmit, App, Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView,
+        GenerationPlayState, NodeGraphScene, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode,
+        UiTreeSectionNode, ViewState,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
         FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     };
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
-    use std::sync::LazyLock;
 
     //#region 🔖Constants
     const PROCEDURAL2D_PLAY_APP_ID: &str = "procedural2d-play";
@@ -137,33 +138,50 @@ pub mod app_2d {
     //#endregion 🔖Terminology
 
     //#region 🔖Types
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    /// 👁️ Ephemeral per-session view state — never part of the persisted document. Selection, the
+    /// active show mode, the last evaluation outputs, and the derived generation preview all live
+    /// here on the app struct, out of the VCS document.
+    #[derive(Clone, Debug)]
     struct Procedural2dPlayRuntime {
-        #[serde(default)]
         selected_ids: Vec<String>,
-        #[serde(default = "default_show_mode")]
         show_mode: String,
-        #[serde(default)]
         eval_outputs_json: String,
-        #[serde(default)]
-        undo_stack: Vec<FlowFixture>,
-        #[serde(default)]
-        redo_stack: Vec<FlowFixture>,
+        selected_generation_id: Option<String>,
+        generation_preview_text: Option<String>,
+    }
+
+    impl Default for Procedural2dPlayRuntime {
+        fn default() -> Self {
+            Self {
+                selected_ids: Vec::new(),
+                show_mode: default_show_mode(),
+                eval_outputs_json: String::new(),
+                selected_generation_id: None,
+                generation_preview_text: None,
+            }
+        }
     }
 
     fn default_show_mode() -> String {
         "preview".into()
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct Procedural2dPlayEnvelope {
+    /// 🧾 Transient render/action bundle — the persisted projection (fixture + generations) with the
+    /// ephemeral runtime's selection and derived preview overlaid, so the pure panel/render helpers
+    /// keep reading a single value. Assembled per call; never serialized as the document.
+    struct Procedural2dPlayView {
         fixture: FlowFixture,
-        #[serde(default)]
         runtime: Procedural2dPlayRuntime,
-        #[serde(default)]
         generation: GenerationPlayState,
+    }
+
+    /// 🧾 Overlays the ephemeral runtime's selection and derived preview onto the persisted
+    /// generation state to build a {@link Procedural2dPlayView} for rendering.
+    fn play_view(projection: &Procedural2dDocument, runtime: &Procedural2dPlayRuntime) -> Procedural2dPlayView {
+        let mut generation = projection.generation.clone();
+        generation.selected_generation_id = runtime.selected_generation_id.clone();
+        generation.preview_text = runtime.generation_preview_text.clone();
+        Procedural2dPlayView { fixture: projection.fixture.clone(), runtime: runtime.clone(), generation }
     }
     //#endregion 🔖Types
 
@@ -172,20 +190,8 @@ pub mod app_2d {
         serde_json::from_str(DEFAULT_PROCEDURAL2D_FIXTURE_JSON).unwrap_or_default()
     }
 
-    fn default_envelope() -> Procedural2dPlayEnvelope {
-        Procedural2dPlayEnvelope {
-            fixture: default_fixture(),
-            runtime: Procedural2dPlayRuntime::default(),
-            generation: GenerationPlayState::default(),
-        }
-    }
-
-    fn parse_envelope(document_json: &str) -> Procedural2dPlayEnvelope {
-        serde_json::from_str(document_json).unwrap_or_else(|_| default_envelope())
-    }
-
-    fn set_document_op(envelope: &Procedural2dPlayEnvelope) -> String {
-        json!({ "op": "setDocument", "document": envelope }).to_string()
+    fn default_projection() -> Procedural2dDocument {
+        Procedural2dDocument { fixture: default_fixture(), generation: GenerationPlayState::default() }
     }
 
     fn procedural2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -196,18 +202,10 @@ pub mod app_2d {
         }
     }
 
-    fn host_from_envelope(envelope: &Procedural2dPlayEnvelope) -> FlowHost {
-        let mut host = FlowHost::from_fixture(envelope.fixture.clone());
+    fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
+        let mut host = FlowHost::from_fixture(fixture.clone());
         host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
         host
-    }
-
-    fn push_undo(play: &mut Procedural2dPlayEnvelope) {
-        play.runtime.undo_stack.push(play.fixture.clone());
-        if play.runtime.undo_stack.len() > 32 {
-            play.runtime.undo_stack.remove(0);
-        }
-        play.runtime.redo_stack.clear();
     }
 
     fn selection_ids(args: Option<&Value>) -> Vec<String> {
@@ -407,8 +405,8 @@ pub mod app_2d {
             .collect()
     }
 
-    fn eval_preview_layers(play: &Procedural2dPlayEnvelope, preview: bool) -> String {
-        let mut host = host_from_envelope(play);
+    fn eval_preview_layers(play: &Procedural2dPlayView, preview: bool) -> String {
+        let mut host = host_from_fixture(&play.fixture);
         let eval_json = if play.runtime.eval_outputs_json.is_empty() {
             host.evaluate().unwrap_or_default()
         } else {
@@ -452,15 +450,15 @@ pub mod app_2d {
         serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
     }
 
-    fn evaluate_generation_preview(play: &Procedural2dPlayEnvelope, values: &serde_json::Map<String, Value>) -> String {
-        let fixture_json = serde_json::to_string(&play.fixture).unwrap_or_default();
+    fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::Map<String, Value>) -> String {
+        let fixture_json = serde_json::to_string(fixture).unwrap_or_default();
         let patched = apply_generation_values_to_fixture(&fixture_json, values);
-        let fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| play.fixture.clone());
-        let mut host = FlowHost::from_fixture(fixture);
+        let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());
+        let mut host = FlowHost::from_fixture(patched_fixture);
         host.evaluate().unwrap_or_default()
     }
 
-    fn generation_preview_layers(play: &Procedural2dPlayEnvelope, eval_json: &str) -> String {
+    fn generation_preview_layers(eval_json: &str) -> String {
         let prefix = "procedural2d-generate-preview";
         let mut layers = Vec::new();
         if let Ok(outputs) = serde_json::from_str::<Value>(eval_json) {
@@ -475,14 +473,20 @@ pub mod app_2d {
         serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
     }
 
-    fn refresh_generation_preview(play: &mut Procedural2dPlayEnvelope) {
-        let Some(generation) = selected_generation(&play.generation) else {
-            play.generation.preview_text = None;
+    /// 👁️ Recomputes the ephemeral generation preview for the currently selected generation and
+    /// stores it on the runtime (never on the persisted document).
+    fn refresh_generation_preview(
+        runtime: &mut Procedural2dPlayRuntime,
+        fixture: &FlowFixture,
+        generation: &GenerationPlayState,
+    ) {
+        let Some(selected) = selected_generation(generation) else {
+            runtime.generation_preview_text = None;
             return;
         };
-        let preview = evaluate_generation_preview(play, &generation.values);
-        play.generation.preview_text = Some(preview.clone());
-        play.runtime.eval_outputs_json = preview;
+        let preview = evaluate_generation_preview(fixture, &selected.values);
+        runtime.generation_preview_text = Some(preview.clone());
+        runtime.eval_outputs_json = preview;
     }
     //#endregion 🔖DocumentHelpers
 
@@ -507,7 +511,7 @@ pub mod app_2d {
         }
     }
 
-    fn build_document_tree(play: &Procedural2dPlayEnvelope, labels: &Procedural2dLabels) -> UiNode {
+    fn build_document_tree(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -> UiNode {
         let widget_items: Vec<UiTreeItemNode> = play
             .fixture
             .widgets
@@ -622,7 +626,7 @@ pub mod app_2d {
         })
     }
 
-    fn build_inspector_tree(play: &Procedural2dPlayEnvelope, labels: &Procedural2dLabels) -> UiNode {
+    fn build_inspector_tree(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -> UiNode {
         if play.runtime.selected_ids.is_empty() {
             return ui_stack_vertical(vec![
                 ui_text(format!("{} flow.fixture", labels.schema_prefix)),
@@ -644,8 +648,8 @@ pub mod app_2d {
     //#endregion 🔖Panels
 
     //#region 🔖Render
-    fn render_main_graph(play: &Procedural2dPlayEnvelope) -> UiNode {
-        let host = host_from_envelope(play);
+    fn render_main_graph(play: &Procedural2dPlayView) -> UiNode {
+        let host = host_from_fixture(&play.fixture);
         let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
         let viewport_json = serde_json::to_string(&play.fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
         let selection_json = if play.runtime.selected_ids.is_empty() {
@@ -672,7 +676,7 @@ pub mod app_2d {
         )
     }
 
-    fn render_main_canvas(play: &Procedural2dPlayEnvelope) -> UiNode {
+    fn render_main_canvas(play: &Procedural2dPlayView) -> UiNode {
         build_canvas_2d_scene(
             PROCEDURAL2D_PLAY_SURFACE_MAIN,
             PROCEDURAL2D_PLAY_APP_ID,
@@ -685,7 +689,7 @@ pub mod app_2d {
         )
     }
 
-    fn render_preview_canvas(play: &Procedural2dPlayEnvelope) -> UiNode {
+    fn render_preview_canvas(play: &Procedural2dPlayView) -> UiNode {
         build_canvas_2d_scene(
             PROCEDURAL2D_PLAY_SURFACE_PREVIEW,
             PROCEDURAL2D_PLAY_APP_ID,
@@ -698,7 +702,7 @@ pub mod app_2d {
         )
     }
 
-    fn render_generate_generations(play: &Procedural2dPlayEnvelope) -> UiNode {
+    fn render_generate_generations(play: &Procedural2dPlayView) -> UiNode {
         render_generations_tree(
             PROCEDURAL2D_PLAY_APP_ID,
             "procedural2d-play-generate",
@@ -707,7 +711,7 @@ pub mod app_2d {
         )
     }
 
-    fn render_generate_form(play: &Procedural2dPlayEnvelope, labels: &Procedural2dLabels) -> UiNode {
+    fn render_generate_form(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -> UiNode {
         let spec = flow_fixture_to_form_spec(&play.fixture);
         let Some(generation) = selected_generation(&play.generation) else {
             return ui_text(labels.generate_hint);
@@ -721,7 +725,7 @@ pub mod app_2d {
         )
     }
 
-    fn render_generate_preview(play: &Procedural2dPlayEnvelope, labels: &Procedural2dLabels) -> UiNode {
+    fn render_generate_preview(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -> UiNode {
         let eval_json = play
             .generation
             .preview_text
@@ -731,7 +735,7 @@ pub mod app_2d {
         if eval_json.is_empty() {
             return ui_text(labels.preview_hint);
         }
-        let layers = generation_preview_layers(play, eval_json);
+        let layers = generation_preview_layers(eval_json);
         if layers == "[]" {
             return render_generation_preview_text(
                 PROCEDURAL2D_PLAY_SURFACE_GENERATE_PREVIEW,
@@ -754,114 +758,182 @@ pub mod app_2d {
 
     //#region 🔖Procedural2dPlayApp
     #[derive(Default)]
-    pub struct Procedural2dPlayApp;
+    pub struct Procedural2dPlayApp {
+        runtime: Procedural2dPlayRuntime,
+    }
 
-    impl PluginApp for Procedural2dPlayApp {
+    impl Procedural2dPlayApp {
+        /// 🔀 Runs a host mutation seeded from the projection fixture and diffs the result into ops.
+        fn ops_from_host_mutation(
+            &self,
+            fixture: &FlowFixture,
+            mutate: impl FnOnce(&mut FlowHost),
+        ) -> Vec<Procedural2dOp> {
+            let mut host = host_from_fixture(fixture);
+            mutate(&mut host);
+            procedural2d_fixture_ops(fixture, &host.fixture)
+        }
+
+        /// 🧬 Emits generation ops for the generate-mode actions, updating ephemeral selection and
+        /// preview from the post-op state. `selectGeneration` is a view action (no ops).
+        fn handle_generation(
+            &mut self,
+            action: &str,
+            args: Option<&Value>,
+            projection: &Procedural2dDocument,
+        ) -> ActionEmit<Procedural2dOp> {
+            let spec = flow_fixture_to_form_spec(&projection.fixture);
+            let mut state = projection.generation.clone();
+            state.selected_generation_id = self.runtime.selected_generation_id.clone();
+            if action == "selectGeneration" {
+                if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
+                    select_generation(&mut state, id);
+                }
+                self.runtime.selected_generation_id = state.selected_generation_id.clone();
+                refresh_generation_preview(&mut self.runtime, &projection.fixture, &state);
+                return ActionEmit::default();
+            }
+            let Some(ops) = generation_ops(action, args, &state, &spec) else {
+                return ActionEmit::default();
+            };
+            for op in &ops {
+                apply_generation_op(&mut state, op);
+            }
+            self.runtime.selected_generation_id = state.selected_generation_id.clone();
+            refresh_generation_preview(&mut self.runtime, &projection.fixture, &state);
+            let coalesce_key = (action == "updateGenerationValues").then(|| "generation-values".to_string());
+            ActionEmit {
+                ops: ops.into_iter().map(Procedural2dOp::Generation).collect(),
+                coalesce_key,
+                ..Default::default()
+            }
+        }
+    }
+
+    impl DocumentApp for Procedural2dPlayApp {
+        type Projection = Procedural2dDocument;
+        type Op = Procedural2dOp;
+
         fn app_id(&self) -> &str {
             PROCEDURAL2D_PLAY_APP_ID
         }
 
-        fn initial_document_json(&self) -> String {
-            serde_json::to_string(&default_envelope()).expect("procedural2d envelope json")
+        fn document_schema(&self) -> &str {
+            PROCEDURAL_2D_SCHEMA
         }
 
-        fn handle_action_patch_ops(
+        fn initial_projection(&self) -> Procedural2dDocument {
+            default_projection()
+        }
+
+        fn handle_action(
             &mut self,
             action: &str,
             args: Option<&Value>,
-            document_json: &str,
+            doc: &DocumentView<'_, Procedural2dDocument>,
             _view_state: &ViewState,
-        ) -> Vec<String> {
-            let mut play = parse_envelope(document_json);
+        ) -> ActionEmit<Procedural2dOp> {
+            let fixture = &doc.projection.fixture;
             match action {
-                "setDocument" => {
-                    if let Some(document) = args.and_then(|value| value.get("document")) {
-                        if let Ok(parsed) = serde_json::from_value::<Procedural2dPlayEnvelope>(document.clone()) {
-                            return vec![set_document_op(&parsed)];
-                        }
-                    }
-                }
+                // 👁️ View actions — mutate ephemeral runtime, emit no ops.
                 "setSelection" | "selectNode" | "nodeGraphSelect" => {
-                    play.runtime.selected_ids = selection_ids(args);
-                    return vec![set_document_op(&play)];
+                    self.runtime.selected_ids = selection_ids(args);
+                    ActionEmit::default()
                 }
-                "nodeGraphHover" => return Vec::new(),
-                "nodeGraphViewport" => {
-                    if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
-                        if let Ok(camera) = serde_json::from_str(viewport_json) {
-                            play.fixture.camera = camera;
-                            return vec![set_document_op(&play)];
-                        }
+                "nodeGraphHover" => ActionEmit::default(),
+                "setShowMode" => {
+                    if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
+                        self.runtime.show_mode = mode.into();
                     }
+                    ActionEmit::default()
                 }
+                "generate" => {
+                    self.runtime.eval_outputs_json = host_from_fixture(fixture).evaluate().unwrap_or_default();
+                    self.runtime.show_mode = "generate".into();
+                    ActionEmit::default()
+                }
+                "setEvalOutputs" => {
+                    if let Some(outputs) = args.and_then(|value| value.get("outputs")) {
+                        self.runtime.eval_outputs_json = outputs.to_string();
+                    } else if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
+                        self.runtime.eval_outputs_json = json_text.into();
+                    }
+                    ActionEmit::default()
+                }
+                "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "canvasWheel" => ActionEmit::default(),
+                // 📷 Camera — a coalesced scalar op so a pan/zoom gesture is one undo step.
+                "nodeGraphViewport" => {
+                    if let Some(camera) = args
+                        .and_then(|value| value.get("viewportJson"))
+                        .and_then(|value| value.as_str())
+                        .and_then(|json| serde_json::from_str(json).ok())
+                    {
+                        return ActionEmit {
+                            ops: vec![Procedural2dOp::SetCamera { camera }],
+                            coalesce_key: Some("camera".into()),
+                            ..Default::default()
+                        };
+                    }
+                    ActionEmit::default()
+                }
+                // ✏️ Operations — compute the target fixture via the host, emit fixture ops.
                 "nodeGraphEdit" => {
-                    let mut host = host_from_envelope(&play);
-                    let ops = args
+                    let sub_ops = args
                         .and_then(|value| value.get("ops"))
                         .and_then(|value| value.as_array())
                         .cloned()
                         .unwrap_or_default();
-                    let mut changed = false;
-                    for op in ops {
-                        match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
-                            "setFixture" => {
-                                if let Some(fixture_json) = op.get("fixtureJson").and_then(|value| value.as_str()) {
-                                    if let Ok(fixture) = serde_json::from_str::<FlowFixture>(fixture_json) {
-                                        push_undo(&mut play);
-                                        play.fixture = fixture;
-                                        changed = true;
+                    let selected = self.runtime.selected_ids.clone();
+                    let mut cleared = false;
+                    let ops = self.ops_from_host_mutation(fixture, |host| {
+                        for op in &sub_ops {
+                            match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
+                                "setFixture" => {
+                                    if let Some(fixture) = op
+                                        .get("fixtureJson")
+                                        .and_then(|value| value.as_str())
+                                        .and_then(|json| serde_json::from_str::<FlowFixture>(json).ok())
+                                    {
+                                        host.replace_fixture(fixture);
                                     }
                                 }
-                            }
-                            "deleteSelection" => {
-                                for id in play.runtime.selected_ids.clone() {
-                                    push_undo(&mut play);
-                                    if host.remove_widget(&id).is_ok() {
-                                        changed = true;
+                                "deleteSelection" => {
+                                    for id in &selected {
+                                        if host.remove_widget(id).is_ok() {
+                                            cleared = true;
+                                        }
                                     }
                                 }
-                                if changed {
-                                    play.fixture = host.fixture.clone();
-                                    play.runtime.selected_ids.clear();
-                                }
-                            }
-                            "connect" => {
-                                let from = op.get("sourceNodeId").and_then(|value| value.as_str());
-                                let from_port = op.get("sourcePortId").and_then(|value| value.as_str());
-                                let to = op.get("targetNodeId").and_then(|value| value.as_str());
-                                let to_port = op.get("targetPortId").and_then(|value| value.as_str());
-                                if let (Some(from), Some(from_port), Some(to), Some(to_port)) =
-                                    (from, from_port, to, to_port)
-                                {
-                                    push_undo(&mut play);
-                                    if host.connect_ports(from, from_port, to, to_port).is_ok() {
-                                        play.fixture = host.fixture.clone();
-                                        changed = true;
+                                "connect" => {
+                                    let from = op.get("sourceNodeId").and_then(|value| value.as_str());
+                                    let from_port = op.get("sourcePortId").and_then(|value| value.as_str());
+                                    let to = op.get("targetNodeId").and_then(|value| value.as_str());
+                                    let to_port = op.get("targetPortId").and_then(|value| value.as_str());
+                                    if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
+                                        let _ = host.connect_ports(from, from_port, to, to_port);
                                     }
                                 }
+                                _ => {}
                             }
-                            _ => {}
                         }
+                    });
+                    if cleared {
+                        self.runtime.selected_ids.clear();
                     }
-                    if changed {
-                        return vec![set_document_op(&play)];
-                    }
+                    ActionEmit::ops(ops)
                 }
                 "moveMediaNode" => {
-                    let mut host = host_from_envelope(&play);
-                    let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str());
+                    let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).map(str::to_string);
                     let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
                     let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
                     if let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) {
-                        push_undo(&mut play);
-                        if host.move_widget(node_id, x, y).is_ok() {
-                            play.fixture = host.fixture;
-                            return vec![set_document_op(&play)];
-                        }
+                        return ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
+                            let _ = host.move_widget(&node_id, x, y);
+                        }));
                     }
+                    ActionEmit::default()
                 }
                 "addWidget" => {
-                    let mut host = host_from_envelope(&play);
                     let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("inputSlider");
                     let descriptor = match kind {
                         "neuron" => json!({
@@ -873,101 +945,50 @@ pub mod app_2d {
                     };
                     let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                     let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
-                    push_undo(&mut play);
+                    let mut host = host_from_fixture(fixture);
                     if let Ok(id) = host.add_widget(&descriptor, x, y) {
-                        play.fixture = host.fixture;
-                        play.runtime.selected_ids = vec![id];
-                        return vec![set_document_op(&play)];
+                        self.runtime.selected_ids = vec![id];
+                        return ActionEmit::ops(procedural2d_fixture_ops(fixture, &host.fixture));
                     }
+                    ActionEmit::default()
                 }
                 "removeWidget" => {
-                    let mut host = host_from_envelope(&play);
-                    let widget_id = args.and_then(|value| value.get("widgetId")).and_then(|value| value.as_str());
+                    let widget_id = args.and_then(|value| value.get("widgetId")).and_then(|value| value.as_str()).map(str::to_string);
                     if let Some(widget_id) = widget_id {
-                        push_undo(&mut play);
-                        if host.remove_widget(widget_id).is_ok() {
-                            play.fixture = host.fixture;
-                            play.runtime.selected_ids.retain(|id| id != widget_id);
-                            return vec![set_document_op(&play)];
+                        let ops = self.ops_from_host_mutation(fixture, |host| {
+                            let _ = host.remove_widget(&widget_id);
+                        });
+                        if !ops.is_empty() {
+                            self.runtime.selected_ids.retain(|id| id != &widget_id);
                         }
+                        return ActionEmit::ops(ops);
                     }
+                    ActionEmit::default()
                 }
                 "connectMediaPorts" => {
-                    let mut host = host_from_envelope(&play);
-                    let from = args.and_then(|value| value.get("sourceNodeId")).and_then(|value| value.as_str());
-                    let from_port = args.and_then(|value| value.get("sourcePortId")).and_then(|value| value.as_str());
-                    let to = args.and_then(|value| value.get("targetNodeId")).and_then(|value| value.as_str());
-                    let to_port = args.and_then(|value| value.get("targetPortId")).and_then(|value| value.as_str());
+                    let from = args.and_then(|value| value.get("sourceNodeId")).and_then(|value| value.as_str()).map(str::to_string);
+                    let from_port = args.and_then(|value| value.get("sourcePortId")).and_then(|value| value.as_str()).map(str::to_string);
+                    let to = args.and_then(|value| value.get("targetNodeId")).and_then(|value| value.as_str()).map(str::to_string);
+                    let to_port = args.and_then(|value| value.get("targetPortId")).and_then(|value| value.as_str()).map(str::to_string);
                     if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
-                        push_undo(&mut play);
-                        if host.connect_ports(from, from_port, to, to_port).is_ok() {
-                            play.fixture = host.fixture;
-                            return vec![set_document_op(&play)];
-                        }
+                        return ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
+                            let _ = host.connect_ports(&from, &from_port, &to, &to_port);
+                        }));
                     }
+                    ActionEmit::default()
                 }
-                "reorganize" => {
-                    let mut host = host_from_envelope(&play);
-                    push_undo(&mut play);
-                    if host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok() {
-                        play.fixture = host.fixture;
-                        return vec![set_document_op(&play)];
-                    }
-                }
-                "setShowMode" => {
-                    if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
-                        play.runtime.show_mode = mode.into();
-                        return vec![set_document_op(&play)];
-                    }
-                }
-                "generate" => {
-                    push_undo(&mut play);
-                    let mut host = host_from_envelope(&play);
-                    play.runtime.eval_outputs_json = host.evaluate().unwrap_or_default();
-                    play.runtime.show_mode = "generate".into();
-                    return vec![set_document_op(&play)];
-                }
-                "setEvalOutputs" => {
-                    if let Some(outputs) = args.and_then(|value| value.get("outputs")) {
-                        play.runtime.eval_outputs_json = outputs.to_string();
-                        return vec![set_document_op(&play)];
-                    }
-                    if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
-                        play.runtime.eval_outputs_json = json_text.into();
-                        return vec![set_document_op(&play)];
-                    }
-                }
-                "undo" => {
-                    if let Some(previous) = play.runtime.undo_stack.pop() {
-                        play.runtime.redo_stack.push(play.fixture.clone());
-                        play.fixture = previous;
-                        return vec![set_document_op(&play)];
-                    }
-                }
-                "redo" => {
-                    if let Some(next) = play.runtime.redo_stack.pop() {
-                        play.runtime.undo_stack.push(play.fixture.clone());
-                        play.fixture = next;
-                        return vec![set_document_op(&play)];
-                    }
-                }
-                "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "canvasWheel" => {}
+                "reorganize" => ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
+                    let _ = host.reorganize(r#"{"orientation":"leftRight"}"#);
+                })),
                 "addGeneration" | "removeGeneration" | "selectGeneration" | "renameGeneration" | "updateGenerationValues" => {
-                    let spec = flow_fixture_to_form_spec(&play.fixture);
-                    if handle_generation_action(action, args, &mut play.generation, &spec, PROCEDURAL2D_PLAY_APP_ID) {
-                        if matches!(action, "addGeneration" | "selectGeneration" | "updateGenerationValues") {
-                            refresh_generation_preview(&mut play);
-                        }
-                        return vec![set_document_op(&play)];
-                    }
+                    self.handle_generation(action, args, doc.projection)
                 }
-                _ => {}
+                _ => ActionEmit::default(),
             }
-            Vec::new()
         }
 
-        fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-            let play = parse_envelope(document_json);
+        fn render(&self, body_key: &str, doc: &DocumentView<'_, Procedural2dDocument>, view_state: &ViewState) -> UiNode {
+            let play = play_view(doc.projection, &self.runtime);
             let labels = procedural2d_labels(view_state);
             match body_key {
                 PROCEDURAL2D_PLAY_BODY_MAIN => render_main_graph(&play),
@@ -1067,7 +1088,7 @@ pub mod app_2d {
                 .keybinding("mod+z", "undo")
                 .keybinding("mod+shift+z", "redo"),
         )
-        .example("default", "Default", serde_json::to_string(&default_envelope()).unwrap())
+        .example("default", "Default", serde_json::to_string(&default_projection()).unwrap())
         .program("procedural2d", "Procedural 2D", "layout")
     }
 
@@ -1076,7 +1097,7 @@ pub mod app_2d {
     }
 
     fn procedural2d_document_from_dwg(_drawing: &semio_framework_core::DwgDrawing) -> Result<Value, String> {
-        serde_json::to_value(default_envelope()).map_err(|err| err.to_string())
+        serde_json::to_value(default_projection()).map_err(|err| err.to_string())
     }
 
     pub fn register_procedural2d_exports() {
@@ -1146,7 +1167,7 @@ pub mod app_2d {
             let ops = app.handle_action_patch_ops("generate", None, &document, &ViewState::default());
             assert_eq!(ops.len(), 1);
             let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-            let next: Procedural2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+            let next: Procedural2dPlayView = serde_json::from_value(payload["document"].clone()).unwrap();
             assert_eq!(next.runtime.show_mode, "generate");
         }
 
@@ -1156,7 +1177,7 @@ pub mod app_2d {
             let document = app.initial_document_json();
             let ops = app.handle_action_patch_ops("setShowMode", Some(&json!({ "value": "wire" })), &document, &ViewState::default());
             let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-            let next: Procedural2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+            let next: Procedural2dPlayView = serde_json::from_value(payload["document"].clone()).unwrap();
             assert_eq!(next.runtime.show_mode, "wire");
         }
 
@@ -1173,7 +1194,7 @@ pub mod app_2d {
             let mut app = Procedural2dPlayApp;
             let document = app.initial_document_json();
             let ops = app.handle_action_patch_ops("addGeneration", None, &document, &ViewState::default());
-            let updated: Procedural2dPlayEnvelope =
+            let updated: Procedural2dPlayView =
                 serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
             assert_eq!(updated.generation.generations.len(), 1);
             assert!(updated.generation.preview_text.as_deref().unwrap_or("").len() > 2);
@@ -1183,7 +1204,7 @@ pub mod app_2d {
         fn document_from_dwg_returns_valid_default_envelope() {
             let drawing = semio_framework_core::DwgDrawing::default();
             let document = procedural2d_document_from_dwg(&drawing).expect("dwg import document");
-            let envelope: Procedural2dPlayEnvelope = serde_json::from_value(document).expect("parseable envelope");
+            let envelope: Procedural2dPlayView = serde_json::from_value(document).expect("parseable envelope");
             assert_eq!(envelope.fixture.schema, "flow.fixture");
         }
 

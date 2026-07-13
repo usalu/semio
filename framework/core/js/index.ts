@@ -2,6 +2,8 @@
 /** @emoji 🧭 `@semio-tech/framework-core` — shared canvas pick helpers, layout factories, and inspector utilities for UI renderers. */
 // #endregion 🧲Header
 
+import { PLAYGROUND_BUILD_TARGETS, type PlaygroundBuildTarget } from "../../plugin/registry/generated/playgrounds.ts";
+
 // #region 🧬GeneratedMirror
 /** 🧬 Types generated from `framework/core/rs/lib.rs` via ts-rs (`bun nx run @semio-tech/framework-core:generate`); re-exported below alongside their hand-written neighbors so this stays the one import surface. */
 import type {
@@ -1496,3 +1498,20 @@ export function pluginHandleForBridge(handle: PluginWasmHandle) {
   };
 }
 //#endregion PluginRuntime
+
+// #region 🎮PlaygroundResolution
+/** @emoji 🎮 Finds the generated playground catalog row for a variant id or one of its aliases. */
+function findPlaygroundVariant(playgroundPluginId: string): PlaygroundBuildTarget | undefined {
+  return PLAYGROUND_BUILD_TARGETS.find((entry) => entry.variant === playgroundPluginId || entry.aliases.includes(playgroundPluginId));
+}
+
+/** @emoji 🎯 Resolves a playground filter/alias (e.g. "3d", "sourcing") to its underlying wasm component registry id. */
+export function resolvePluginRegistryId(playgroundPluginId: string): string {
+  return findPlaygroundVariant(playgroundPluginId)?.pluginId ?? playgroundPluginId;
+}
+
+/** @emoji 🎯 Resolves a playground filter/alias to the app id that should be instantiated by default within its plugin's manifest. */
+export function resolvePlaygroundDefaultAppId(playgroundPluginId: string): string | undefined {
+  return findPlaygroundVariant(playgroundPluginId)?.app;
+}
+// #endregion 🎮PlaygroundResolution
