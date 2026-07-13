@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀 `@semio-tech/framework-core` task router: `bun ./script.ts test|generate|check`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../repo/lib/js/index.ts";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -13,6 +13,7 @@ class TestScript extends BundleScript {
       env: process.env,
     });
     if (result.status !== 0) process.exit(result.status ?? 1);
+    runVitest(this.root, segments, "js/vitest.config.ts");
   }
 }
 

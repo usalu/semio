@@ -32,6 +32,7 @@ export default defineConfig({
       "./compose/client/lib/js/vite.config.ts",
       "./compose/client/lib/sketchpad/js/vitest.config.ts",
       "./compose/dev/algorithm/js/vitest.config.ts",
+      "./framework/core/js/vitest.config.ts",
       "./framework/product/os/core/js/vitest.config.ts",
       "./framework/renderer/react/vitest.config.ts",
       "./framework/renderer/wgpu/vitest.config.ts",

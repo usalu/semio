@@ -2,7 +2,7 @@
 
 use flow_core::{
     dag::{dag_lod_scale_json, DagDrawLod, DagFixture},
-    flow_backed_node_graph_extras, flow_fixture_ops, flow_neuron_kind_infos_json, flow_operator_catalogue_json,
+    flow_backed_node_graph_extras, flow_fixture_ops, flow_operator_catalogue_json,
     FLOW_DOCUMENT_SCHEMA, FLOW_LOD_MODE_AUTOMATIC,
     forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
     CameraJson, FlowFixture, FlowHost, FlowOp, Widget,
@@ -13,7 +13,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     selected_generation, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionEmit, App, ActionDescriptor, DocumentApp,
     DocumentView, GenerationPlayState,
-    NodeGraphScene, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode,
+    NodeGraphScene, TextEditorScene, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID,     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,

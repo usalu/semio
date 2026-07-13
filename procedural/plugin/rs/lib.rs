@@ -676,19 +676,6 @@ pub mod app_2d {
         )
     }
 
-    fn render_main_canvas(play: &Procedural2dPlayView) -> UiNode {
-        build_canvas_2d_scene(
-            PROCEDURAL2D_PLAY_SURFACE_MAIN,
-            PROCEDURAL2D_PLAY_APP_ID,
-            Canvas2dScene {
-                camera_x: play.fixture.camera.x,
-                camera_y: play.fixture.camera.y,
-                zoom: play.fixture.camera.zoom,
-                layers_json: eval_preview_layers(play, false),
-            },
-        )
-    }
-
     fn render_preview_canvas(play: &Procedural2dPlayView) -> UiNode {
         build_canvas_2d_scene(
             PROCEDURAL2D_PLAY_SURFACE_PREVIEW,

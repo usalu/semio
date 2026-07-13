@@ -57,6 +57,8 @@ import {
   type CanvasHoverFocus,
   type CanvasPickRequest,
   type CanvasPickTarget,
+  type DockSkeleton,
+  type DockTabSkeleton,
   pickMostSpecificCanvasTarget,
   sortCanvasPickTargetsGeneralFirst,
 } from "@semio-tech/framework-core";
@@ -3927,31 +3929,23 @@ export function useActionHotkey(
   useHotkeys(finalHotkey, callback, options || {}, deps || []);
 }
 
-/** @emoji ⌨️ Chords for toggling the last active left/right chrome side panels. */
-export const SIDE_PANEL_TOGGLE_LEFT_HOTKEY = "ctrl+b,meta+b";
-export const SIDE_PANEL_TOGGLE_RIGHT_HOTKEY = "ctrl+shift+b,meta+shift+b";
+/** @emoji ⌨️ Chords for toggling each corner panel's fold/unfold state. */
+export const CORNER_PANEL_TOGGLE_HOTKEYS: Record<PanelCorner, string> = {
+  "top-left": "ctrl+b,meta+b",
+  "top-right": "ctrl+shift+b,meta+shift+b",
+  "bottom-left": "ctrl+alt+b,meta+alt+b",
+  "bottom-right": "ctrl+alt+shift+b,meta+alt+shift+b",
+};
 
 /**
- * ⌨️ Binds {@link SIDE_PANEL_TOGGLE_LEFT_HOTKEY} and {@link SIDE_PANEL_TOGGLE_RIGHT_HOTKEY} when handlers are provided.
+ * ⌨️ Binds {@link CORNER_PANEL_TOGGLE_HOTKEYS} for all four corners when a handler is provided.
  **/
-export function useSidePanelChromeHotkeys(options: { readonly onToggleLeft?: () => void; readonly onToggleRight?: () => void }): void {
-  const { onToggleLeft, onToggleRight } = options;
-  useHotkeys(
-    SIDE_PANEL_TOGGLE_LEFT_HOTKEY,
-    () => {
-      onToggleLeft?.();
-    },
-    { preventDefault: true, enabled: onToggleLeft != null },
-    [onToggleLeft],
-  );
-  useHotkeys(
-    SIDE_PANEL_TOGGLE_RIGHT_HOTKEY,
-    () => {
-      onToggleRight?.();
-    },
-    { preventDefault: true, enabled: onToggleRight != null },
-    [onToggleRight],
-  );
+export function useCornerPanelChromeHotkeys(options: { readonly onToggle?: (corner: PanelCorner) => void }): void {
+  const { onToggle } = options;
+  useHotkeys(CORNER_PANEL_TOGGLE_HOTKEYS["top-left"], () => onToggle?.("top-left"), { preventDefault: true, enabled: onToggle != null }, [onToggle]);
+  useHotkeys(CORNER_PANEL_TOGGLE_HOTKEYS["top-right"], () => onToggle?.("top-right"), { preventDefault: true, enabled: onToggle != null }, [onToggle]);
+  useHotkeys(CORNER_PANEL_TOGGLE_HOTKEYS["bottom-left"], () => onToggle?.("bottom-left"), { preventDefault: true, enabled: onToggle != null }, [onToggle]);
+  useHotkeys(CORNER_PANEL_TOGGLE_HOTKEYS["bottom-right"], () => onToggle?.("bottom-right"), { preventDefault: true, enabled: onToggle != null }, [onToggle]);
 }
 
 /**
@@ -4438,14 +4432,14 @@ export const panelTabButtonClass = cn(
   "hover:bg-hover-interactive-fill hover:text-emphasized",
 );
 
-/** @emoji 📑 Side panel tab strip height. */
-export const sidePanelTabBarClass = cn(panelTabBarClass, "h-medium");
+/** @emoji 📑 Corner panel tab strip height. */
+export const cornerPanelTabBarClass = cn(panelTabBarClass, "h-medium");
 
-/** @emoji 📑 Side panel tab button padding. */
-export const sidePanelTabButtonClass = cn(panelTabButtonClass, "px-tiny");
+/** @emoji 📑 Corner panel tab button padding. */
+export const cornerPanelTabButtonClass = cn(panelTabButtonClass, "px-tiny");
 
-/** @emoji 📑 Shared side/mobile panel tab bar variant. */
-export type PanelTabBarVariant = "side" | "mobile";
+/** @emoji 📑 Shared corner/mobile panel tab bar variant. */
+export type PanelTabBarVariant = "corner" | "mobile";
 
 /** @emoji 🧭 Keeps matching path segments against a node tree; falls back to the first sibling and auto-descends while children exist. */
 export function reconcileActivePath<T extends { readonly id: string }>(nodes: readonly T[], path: readonly string[], childrenOf: (node: T) => readonly T[] | undefined): string[] {
@@ -4555,6 +4549,124 @@ export function findPanelTabPath(tabs: readonly PanelTabNode[], id: string): str
   return undefined;
 }
 
+/** @emoji 🗄️ Full arrangement of tabs across all four corners — the pure, draggable dock model. */
+export interface PanelDock {
+  readonly corners: Record<PanelCorner, readonly PanelTabNode[]>;
+}
+
+function panelTabNodeToSkeleton(node: PanelTabNode): DockTabSkeleton {
+  if (node.kind === "branch") return { id: node.id, children: node.children.map(panelTabNodeToSkeleton) };
+  return node.trees.length > 0 ? { id: node.id, trees: node.trees.map((unit) => unit.id) } : { id: node.id };
+}
+
+/** @emoji 🗄️ Reduces a full {@link PanelDock} to the id-only {@link DockSkeleton} persisted across sessions. */
+export function dockSkeletonOf(dock: PanelDock): DockSkeleton {
+  const corners = {} as Record<PanelCorner, readonly DockTabSkeleton[]>;
+  for (const corner of PANEL_CORNERS) corners[corner] = dock.corners[corner].map(panelTabNodeToSkeleton);
+  return { version: 1, corners };
+}
+
+function dockTabSkeletonsEqual(a: DockTabSkeleton, b: DockTabSkeleton): boolean {
+  if (a.id !== b.id) return false;
+  const aChildren = a.children ?? [];
+  const bChildren = b.children ?? [];
+  if (aChildren.length !== bChildren.length || !aChildren.every((child, index) => dockTabSkeletonsEqual(child, bChildren[index]!))) return false;
+  const aTrees = a.trees ?? [];
+  const bTrees = b.trees ?? [];
+  return aTrees.length === bTrees.length && aTrees.every((id, index) => id === bTrees[index]);
+}
+
+/** @emoji 🗄️ Structural equality between two {@link DockSkeleton} values — used to decide whether an arrangement equals its computed default and therefore needs no persistence. */
+export function dockSkeletonsEqual(a: DockSkeleton | null, b: DockSkeleton | null): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return PANEL_CORNERS.every((corner) => {
+    const aTabs = a.corners[corner];
+    const bTabs = b.corners[corner];
+    return aTabs.length === bTabs.length && aTabs.every((tab, index) => dockTabSkeletonsEqual(tab, bTabs[index]!));
+  });
+}
+
+/** @emoji 🗄️ Every node/unit in a default {@link PanelDock}, indexed by id, for identity-preserving reconciliation. */
+function indexPanelDockById(dock: PanelDock): { readonly nodes: Map<string, PanelTabNode>; readonly units: Map<string, PanelTreeUnit> } {
+  const nodes = new Map<string, PanelTabNode>();
+  const units = new Map<string, PanelTreeUnit>();
+  const visit = (node: PanelTabNode) => {
+    nodes.set(node.id, node);
+    if (node.kind === "branch") node.children.forEach(visit);
+    else node.trees.forEach((unit) => units.set(unit.id, unit));
+  };
+  for (const corner of PANEL_CORNERS) dock.corners[corner].forEach(visit);
+  return { nodes, units };
+}
+
+/**
+ * 🗄️ Rearranges (never reconstructs) `defaultDock`'s nodes/units to match a persisted {@link DockSkeleton} diff:
+ * ids the default no longer declares are dropped, a tab whose kind no longer matches its default shape falls back
+ * to the default's own shape, and any default tab/unit the skeleton doesn't mention is appended at its default
+ * location. Subtrees untouched by the skeleton keep their exact default object identity.
+ **/
+/** @emoji 🗄️ Collects every tab id and tree-unit id the skeleton explicitly mentions (across all corners), gated by whether the corresponding default node's own kind agrees — a mismatched entry's `children`/`trees` are never recursed into. */
+function collectDockSkeletonMentions(entries: readonly DockTabSkeleton[], nodes: ReadonlyMap<string, PanelTabNode>, tabIds: Set<string>, unitIds: Set<string>): void {
+  for (const entry of entries) {
+    tabIds.add(entry.id);
+    const defaultNode = nodes.get(entry.id);
+    if (defaultNode?.kind === "branch" && entry.children) collectDockSkeletonMentions(entry.children, nodes, tabIds, unitIds);
+    if (defaultNode?.kind === "leaf" && entry.trees) entry.trees.forEach((id) => unitIds.add(id));
+  }
+}
+
+/** @emoji 🗄️ True if `node` itself, or any node in its default subtree, is explicitly mentioned somewhere in the persisted skeleton — distinguishes "this whole branch was deliberately emptied out by a move" (some descendant reappears elsewhere) from "this branch is simply missing from a stale skeleton" (nothing under it is mentioned anywhere, safe to re-seed from defaults). */
+function defaultSubtreeMentioned(node: PanelTabNode, mentionedTabIds: ReadonlySet<string>): boolean {
+  if (mentionedTabIds.has(node.id)) return true;
+  return node.kind === "branch" && node.children.some((child) => defaultSubtreeMentioned(child, mentionedTabIds));
+}
+
+export function applyDockSkeleton(defaultDock: PanelDock, skeleton: DockSkeleton | null): PanelDock {
+  if (!skeleton) return defaultDock;
+  const { nodes, units } = indexPanelDockById(defaultDock);
+  // Mentions are collected up front across the WHOLE skeleton (not incrementally during resolution) so that which
+  // corner/branch gets processed first never affects which default children/units get auto-appended back — a tab
+  // moved to a corner processed later must not be reclaimed by its old branch's "append missing" pass.
+  const mentionedTabIds = new Set<string>();
+  const mentionedUnitIds = new Set<string>();
+  for (const corner of PANEL_CORNERS) collectDockSkeletonMentions(skeleton.corners[corner] ?? [], nodes, mentionedTabIds, mentionedUnitIds);
+  const resolvedTabIds = new Set<string>(); // guards only against the same id appearing twice in the skeleton
+
+  const resolveNode = (entry: DockTabSkeleton): PanelTabNode | null => {
+    const defaultNode = nodes.get(entry.id);
+    if (!defaultNode || resolvedTabIds.has(entry.id)) return null;
+    resolvedTabIds.add(entry.id);
+    if (defaultNode.kind === "branch") {
+      if (!entry.children) return defaultNode;
+      const explicit = entry.children.map(resolveNode).filter((node): node is PanelTabNode => node !== null);
+      const appended = defaultNode.children.filter((child) => !defaultSubtreeMentioned(child, mentionedTabIds));
+      appended.forEach((child) => resolvedTabIds.add(child.id));
+      const merged = [...explicit, ...appended];
+      const unchanged = merged.length === defaultNode.children.length && merged.every((child, index) => child === defaultNode.children[index]);
+      return unchanged ? defaultNode : { ...defaultNode, children: merged };
+    }
+    if (!entry.trees) return defaultNode;
+    const explicitUnits = entry.trees.map((id) => units.get(id)).filter((unit): unit is PanelTreeUnit => unit !== undefined);
+    const appendedUnits = defaultNode.trees.filter((unit) => !mentionedUnitIds.has(unit.id));
+    const mergedUnits = [...explicitUnits, ...appendedUnits];
+    const unchanged = mergedUnits.length === defaultNode.trees.length && mergedUnits.every((unit, index) => unit === defaultNode.trees[index]);
+    return unchanged ? defaultNode : { ...defaultNode, trees: mergedUnits };
+  };
+
+  const corners = {} as Record<PanelCorner, readonly PanelTabNode[]>;
+  for (const corner of PANEL_CORNERS) {
+    const explicit = (skeleton.corners[corner] ?? []).map(resolveNode).filter((node): node is PanelTabNode => node !== null);
+    const defaultTabs = defaultDock.corners[corner];
+    const appended = defaultTabs.filter((tab) => !defaultSubtreeMentioned(tab, mentionedTabIds));
+    appended.forEach((tab) => resolvedTabIds.add(tab.id));
+    const merged = [...explicit, ...appended];
+    const unchanged = merged.length === defaultTabs.length && merged.every((tab, index) => tab === defaultTabs[index]);
+    corners[corner] = unchanged ? defaultTabs : merged;
+  }
+  return { corners };
+}
+
 /** @emoji 📑 Props for {@link PanelTabRow}. */
 interface PanelTabRowProps {
   readonly variant: PanelTabBarVariant;
@@ -4566,7 +4678,7 @@ interface PanelTabRowProps {
 /** @emoji 📑 One row of sibling tabs; stacked by {@link PanelTabBar} into a {@link Ribbon}. */
 const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, tabs, activeId, onSelect }) => {
   const barRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const tabSlot = variant === "side" ? "side-panel" : "mobile-panel";
+  const tabSlot = variant === "corner" ? "corner-panel" : "mobile-panel";
   const sortedTabs = reactHostPort.useMemo(() => [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [tabs]);
   const resolvedActiveId = activeId ?? sortedTabs[0]?.id;
 
@@ -4580,8 +4692,8 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, tabs, activeId, onSe
 
   if (sortedTabs.length === 0) return null;
 
-  const barClass = variant === "side" ? sidePanelTabBarClass : mobilePanelTabBarClass;
-  const buttonClass = variant === "side" ? sidePanelTabButtonClass : mobilePanelTabButtonClass;
+  const barClass = variant === "corner" ? cornerPanelTabBarClass : mobilePanelTabBarClass;
+  const buttonClass = variant === "corner" ? cornerPanelTabButtonClass : mobilePanelTabButtonClass;
 
   return (
     <div ref={barRef} data-dim data-slot={`${tabSlot}-tabs`} className={barClass}>
@@ -4609,10 +4721,12 @@ export interface PanelTabBarProps {
   readonly tabs: readonly PanelTabNode[];
   readonly activePath: readonly string[];
   readonly onActivePathChange: (path: readonly string[]) => void;
+  /** @emoji 🎀 Stacking direction for nested rows — `"up"` for bottom corner panels (rows grow toward the display center), `"down"` otherwise. */
+  readonly direction?: "up" | "down";
 }
 
-/** @emoji 📑 Panel tab strip shared by {@link SidePanel} and {@link MobilePanel} — one {@link PanelTabRow} per tree level, stacked in a {@link Ribbon}. */
-export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, tabs, activePath, onActivePathChange }) => {
+/** @emoji 📑 Panel tab strip shared by {@link CornerPanel} and {@link MobilePanel} — one {@link PanelTabRow} per tree level, stacked in a {@link Ribbon}. */
+export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, tabs, activePath, onActivePathChange, direction = "down" }) => {
   const rows: RibbonRow[] = [];
   let level = tabs;
   let depth = 0;
@@ -4636,7 +4750,7 @@ export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, tabs, activeP
     depth++;
   }
   if (rows.length === 0) return null;
-  return <Ribbon direction="down" rows={rows} />;
+  return <Ribbon direction={direction} rows={rows} />;
 };
 
 /** @emoji 📑 Mobile panel tab strip height. */
@@ -5257,63 +5371,39 @@ export const ShellFindDialog: React.FC<ShellFindDialogProps> = ({ open, query, o
 // #endregion 🔎ShellFindDialog
 
 // #region 🎮Footer
-// Status bar component at the bottom of the layout.
-// Consumers MUST provide FooterItem entries for each action.
-
-/**
- * Configuration interface for a single footer action item.
- **/
-export interface FooterItem {
-  id: string;
-  icon: ControlIcon;
-  text?: string;
-  order?: number;
-  onClick?: () => void;
-  className?: string;
-  disabled?: boolean;
-}
+// Bottom navigation bar, symmetric to Navbar — normal document flow, border on top.
+// Consumers MUST provide NavbarItem entries.
 
 /**
  * Props interface for the Footer component.
  **/
 export interface FooterProps {
-  items?: FooterItem[];
+  items: NavbarItem[];
   className?: string;
-  isVisible?: boolean;
-  toolbar?: React.ReactNode;
 }
 
-/**
- * Footer holds the data fields for a Footer record.
- **/
-/** @emoji 🪟 Footer floats over the canvas like a side panel — bottom-anchored, glass fill + frame, and grows upward with its own content (its `toolbar`'s ribbon) instead of reserving a fixed-height row. */
-const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible = true, toolbar }) => {
-  const sortedItems = [...items].sort((a, b) => (a.order || 0) - (b.order || 0));
+/** @emoji 🪟 Footer mirrors {@link Navbar} exactly (normal flow, centered-item overlay) but anchored to the bottom edge with the border on top instead of the bottom. */
+const Footer: React.FC<FooterProps> = ({ items, className = "" }) => {
+  const level = useLevel();
+  const bgClass = getLevelBgClass(level);
+  const normalItems = items.filter((item) => !item.centered);
+  const centeredItems = items.filter((item) => item.centered);
   return (
-    <footer
-      id="ui.footer"
-      data-slot="footer"
-      className={cn("absolute min-w-0 overflow-hidden box-border text-foreground transition-transform duration-200", isVisible ? "translate-y-0" : "translate-y-full", className)}
-      style={{ left: "var(--spacing-single)", right: "var(--spacing-single)", bottom: "var(--spacing-single)", maxHeight: "calc(100% - (var(--spacing-single) * 2))", zIndex: 20 }}
-    >
-      <div data-dim aria-hidden className={panelChromeFillLayerClass} />
-      <div data-dim data-slot="panel-chrome-frame" aria-hidden className={panelChromeFrameLayerClass} />
-      <div data-slot="footer-content" className="relative z-10 p-single flex gap-single items-end min-w-0 w-full">
-        {sortedItems.length > 0 ? (
-          <div className="h-medium flex shrink-0 items-center min-w-0">
-            <ActionGroup className="border">
-              {sortedItems.map((item) => (
-                <ActionGroupItem key={item.id} as={item.onClick ? "button" : "div"} id={item.id} icon={item.icon} text={item.text} onClick={item.onClick} disabled={item.disabled} className={item.className} />
-              ))}
-            </ActionGroup>
+    <footer id="ui.footer" data-slot="footer" className={cn(borderNormalTopClass, "relative h-large z-navbar", bgClass, className)}>
+      <UiChromeLabelPolicyProvider policy="always">
+        <div className="p-single flex gap-single items-center min-w-0 h-full">
+          {normalItems.map((item, index) => (
+            <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
+              {item.content}
+            </div>
+          ))}
+        </div>
+        {centeredItems.map((item, index) => (
+          <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>{item.content}</div>
           </div>
-        ) : null}
-        {toolbar ? (
-          <div data-slot="toolbar-anchor" className="shrink-0">
-            {toolbar}
-          </div>
-        ) : null}
-      </div>
+        ))}
+      </UiChromeLabelPolicyProvider>
     </footer>
   );
 };
@@ -5333,15 +5423,15 @@ export interface LayoutProps {
   navbar?: React.ReactNode;
   footer?: React.ReactNode;
   bottomPanel?: BottomPanelProps;
-  leftSidePanel?: SidePanelProps;
-  rightSidePanel?: SidePanelProps;
+  /** @emoji 🧭 Per-corner panel config — panels float over the navbar/footer/canvas, keyed by which corner they grow from. */
+  cornerPanels?: Partial<Record<PanelCorner, Omit<CornerPanelProps, "corner">>>;
   mobilePanel?: MobilePanelProps;
   canvas: React.ReactNode;
   mobile?: boolean;
   className?: string;
 }
 
-const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePanel, rightSidePanel, mobilePanel, canvas, mobile = false, className = "" }) => (
+const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, cornerPanels, mobilePanel, canvas, mobile = false, className = "" }) => (
   <GhostProvider>
     <div className={cn("relative flex flex-col overflow-hidden", mobile ? "h-full w-full" : "h-screen w-screen", className)}>
       {navbar && <div className="flex-shrink-0">{navbar}</div>}
@@ -5360,10 +5450,14 @@ const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePa
           </div>
         </div>
       )}
-      {/* Positioned against the full screen (this root), so left/right panels and the footer float over the navbar/canvas instead of stopping at them or reserving a fixed-height row — same overlay relationship as a window's options rail over its canvas. */}
-      {!mobile && leftSidePanel ? <SidePanel {...leftSidePanel} position="left" /> : null}
-      {!mobile && rightSidePanel ? <SidePanel {...rightSidePanel} position="right" /> : null}
-      {footer}
+      {footer && <div className="flex-shrink-0">{footer}</div>}
+      {/* Positioned against the full screen (this root), so corner panels float over the navbar/footer/canvas instead of stopping at them — same overlay relationship as a window's options rail over its canvas. */}
+      {!mobile
+        ? PANEL_CORNERS.map((corner) => {
+            const cornerPanelProps = cornerPanels?.[corner];
+            return cornerPanelProps ? <CornerPanel key={corner} {...cornerPanelProps} corner={corner} /> : null;
+          })
+        : null}
     </div>
   </GhostProvider>
 );
@@ -14394,8 +14488,8 @@ export { BottomPanel };
 
 // #endregion 🏪BottomPanel
 
-// #region 📌SidePanel
-// Collapsible side panel with tabbed content.
+// #region 🧭CornerPanel
+// Collapsible panel growing from one of the display's four corners, with tabbed content.
 // Consumers MUST provide PanelTabNode entries (see {@link PanelTabNode} in #region 🩻Toolbar Components).
 
 export interface TreePanelConfig {
@@ -14491,13 +14585,27 @@ export function useNativeDragAndDrop<TElement extends HTMLElement = HTMLDivEleme
   );
 }
 
+/** @emoji 🧭 Icon id for a corner's fold/unfold toggle — points away from the display's center. */
+export function cornerToggleIconId(corner: PanelCorner): "square-arrow-up-left" | "square-arrow-up-right" | "square-arrow-down-left" | "square-arrow-down-right" {
+  switch (corner) {
+    case "top-left":
+      return "square-arrow-up-left";
+    case "top-right":
+      return "square-arrow-up-right";
+    case "bottom-left":
+      return "square-arrow-down-left";
+    case "bottom-right":
+      return "square-arrow-down-right";
+  }
+}
+
 /**
- * Props interface for the SidePanel component.
+ * Props interface for the CornerPanel component.
  **/
-export interface SidePanelProps {
-  position: "left" | "right";
+export interface CornerPanelProps {
+  corner: PanelCorner;
   visible?: boolean;
-  /** @emoji 🎛 Drives the panel's own fold/unfold toggle (its chrome, always rendered — see {@link SidePanelChrome}). */
+  /** @emoji 🎛 Drives the panel's own fold/unfold toggle (its chrome, always rendered — see {@link CornerPanelChrome}). */
   onVisibleChange?: (visible: boolean) => void;
   size?: number;
   onSizeChange?: (size: number) => void;
@@ -14510,52 +14618,64 @@ export interface SidePanelProps {
   className?: string;
 }
 
-/** @emoji 🎛 The panel's own fold/unfold toggle — always rendered as the panel's first row, same as a window's options-rail chrome, so it stays visually anchored at the panel's corner (in the navbar's old spot) whether the panel is folded or open. */
-interface SidePanelChromeProps {
-  readonly position: "left" | "right";
+/** @emoji 🎛 The panel's own fold/unfold toggle — always rendered, same as a window's options-rail chrome, so it stays visually anchored at the panel's corner whether the panel is folded or open. */
+interface CornerPanelChromeProps {
+  readonly corner: PanelCorner;
   readonly visible: boolean;
   readonly onToggle: (visible: boolean) => void;
 }
 
-const SidePanelChrome: React.FC<SidePanelChromeProps> = ({ position, visible, onToggle }) => (
-  <div
-    data-slot="side-panel-chrome"
-    data-expanded={visible ? "true" : undefined}
-    className={cn("relative z-10 flex h-medium shrink-0 items-stretch", position === "left" ? "justify-start" : "justify-end", visible && borderNormalBottomClass)}
-  >
-    <Toggle
-      id={position === "left" ? "ui.panelToggle.left" : "ui.panelToggle.right"}
-      icon={<Icon icon={position === "left" ? "panel-left" : "panel-right"} size="small" />}
-      pressed={visible}
-      onPressedChange={onToggle}
-      className="w-fit border-0 bg-transparent"
-    />
-  </div>
-);
-
-/** @emoji 🌲 Side-panel tree body; skipped when only panel visibility toggles. */
-const SidePanelTreePane = reactHostPort.memo(function SidePanelTreePane({ config }: { readonly config: TreePanelConfig }) {
+const CornerPanelChrome: React.FC<CornerPanelChromeProps> = ({ corner, visible, onToggle }) => {
+  const isBottom = cornerVertical(corner) === "bottom";
   return (
-    <TreeStateProvider>
-      <Tree
-        className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden", config.className)}
-        defaultSelectedIds={config.defaultSelectedIds}
-        dragAndDropController={config.dragAndDropController}
-        emptyState={config.emptyState}
-        highlightedIds={config.highlightedIds}
-        indentMultiplier={config.indentMultiplier}
-        onSelectionChange={config.onSelectionChange}
-        sections={config.sections}
-        selectedIds={config.selectedIds}
-        selectionMode={config.selectionMode}
-      />
-    </TreeStateProvider>
+    <div
+      data-slot="corner-panel-chrome"
+      data-expanded={visible ? "true" : undefined}
+      className={cn("relative z-10 flex h-medium shrink-0 items-stretch", cornerHorizontal(corner) === "left" ? "justify-start" : "justify-end", visible && (isBottom ? borderNormalTopClass : borderNormalBottomClass))}
+    >
+      <Toggle id={`ui.panelToggle.${cornerKey(corner)}`} icon={<Icon icon={cornerToggleIconId(corner)} size="small" />} pressed={visible} onPressedChange={onToggle} className="w-fit border-0 bg-transparent" />
+    </div>
+  );
+};
+
+/** @emoji 🌲 Leaf-tab tree body shared by {@link CornerPanel} and {@link MobilePanel} — one section per unit (sorted by order); skipped when the active tab has no units. */
+const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({ units }: { readonly units: readonly PanelTreeUnit[] }) {
+  const sortedUnits = [...units].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  return (
+    <>
+      {sortedUnits.map((unit) => {
+        const config = resolveTreePanelSource(unit.tree);
+        const UnitIcon = unit.icon;
+        return (
+          <TreeStateProvider key={unit.id}>
+            {unit.label ? (
+              <div data-slot="panel-tree-unit-header" className="flex shrink-0 items-center gap-single px-single py-half text-2xs text-muted-foreground">
+                {UnitIcon ? <UnitIcon size={12} /> : null}
+                <span className="min-w-0 truncate">{unit.label}</span>
+              </div>
+            ) : null}
+            <Tree
+              className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden", config.className)}
+              defaultSelectedIds={config.defaultSelectedIds}
+              dragAndDropController={config.dragAndDropController}
+              emptyState={config.emptyState}
+              highlightedIds={config.highlightedIds}
+              indentMultiplier={config.indentMultiplier}
+              onSelectionChange={config.onSelectionChange}
+              sections={config.sections}
+              selectedIds={config.selectedIds}
+              selectionMode={config.selectionMode}
+            />
+          </TreeStateProvider>
+        );
+      })}
+    </>
   );
 });
 
-/** @emoji ↔️ Side-panel resize handle with ghost wiring (inside {@link PanelGhostRoot}). */
-function SidePanelResizeHandle({
-  position,
+/** @emoji ↔️ Corner-panel resize handle with ghost wiring (inside {@link PanelGhostRoot}) — only the inner (canvas-facing) vertical edge is resizable. */
+function CornerPanelResizeHandle({
+  corner,
   minSize,
   maxSize,
   onSizeChange,
@@ -14565,7 +14685,7 @@ function SidePanelResizeHandle({
   setIsResizing,
   setIsResizeHovered,
 }: {
-  position: "left" | "right";
+  corner: PanelCorner;
   minSize: number;
   maxSize: number;
   onSizeChange?: (size: number) => void;
@@ -14576,6 +14696,7 @@ function SidePanelResizeHandle({
   setIsResizeHovered: (value: boolean) => void;
 }) {
   const panelGhost = usePanelGhost();
+  const horizontal = cornerHorizontal(corner);
   const resizeStartRef = reactHostPort.useRef<{ pointerX: number; size: number } | null>(null);
   const resizePointerProps = usePointerDrag<HTMLDivElement>({
     onStart: (event) => {
@@ -14588,7 +14709,7 @@ function SidePanelResizeHandle({
       const start = resizeStartRef.current;
       if (!start) return;
       const delta = event.clientX - start.pointerX;
-      const nextSize = position === "left" ? start.size + delta : start.size - delta;
+      const nextSize = horizontal === "left" ? start.size + delta : start.size - delta;
       if (nextSize >= minSize && nextSize <= maxSize) {
         onSizeChange?.(nextSize);
       }
@@ -14607,7 +14728,7 @@ function SidePanelResizeHandle({
   return <div className={resizeHandleClass} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} {...resizePointerProps} />;
 }
 
-const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, onVisibleChange, size = 300, onSizeChange, tabs, activeTabPath, onActiveTabPathChange, minSize = 200, maxSize = 600, zIndex = 20, className = "" }) => {
+const CornerPanel: React.FC<CornerPanelProps> = ({ corner, visible = true, onVisibleChange, size = 300, onSizeChange, tabs, activeTabPath, onActiveTabPathChange, minSize = 200, maxSize = 600, zIndex = 20, className = "" }) => {
   const [isResizeHovered, setIsResizeHovered] = reactHostPort.useState(false);
   const [isResizing, setIsResizing] = reactHostPort.useState(false);
   const [internalActivePath, setInternalActivePath] = reactHostPort.useState<readonly string[]>(() => reconcileActivePath(tabs, [], panelTabChildren));
@@ -14617,10 +14738,12 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, onVisib
     sizeRef.current = size;
   }, [size]);
 
+  const horizontal = cornerHorizontal(corner);
+  const isBottom = cornerVertical(corner) === "bottom";
   const showTabBar = tabs.length > 0;
   const resolvedPath = reactHostPort.useMemo(() => reconcileActivePath(tabs, activeTabPath ?? internalActivePath, panelTabChildren), [tabs, activeTabPath, internalActivePath]);
   const activeNode = reactHostPort.useMemo(() => findPanelTabNode(tabs, resolvedPath), [tabs, resolvedPath]);
-  const activeTabTree = activeNode?.kind === "leaf" ? resolveTreePanelSource(activeNode.tree) : null;
+  const activeTabTrees = activeNode?.kind === "leaf" ? activeNode.trees : null;
 
   const handlePathChange = (path: readonly string[]) => {
     if (onActiveTabPathChange) {
@@ -14629,45 +14752,49 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, onVisib
       setInternalActivePath(path);
     }
   };
-  const resizeSide = position === "left" ? "right" : "left";
+  const resizeSide = horizontal === "left" ? "right" : "left";
 
   // Positioned against the whole display (Layout's root), not the row between navbar and footer, so it floats over both — spacing is relative to the screen edges only, like a window's options rail over its canvas.
   // Height hugs content up to that same display bound (`maxHeight`, not a fixed `bottom`) — taller content scrolls internally instead of forcing the box to fill the screen. Only the inner edge (the one facing the canvas) is width-resizable; height is never manually resizable.
-  const positionStyle =
-    position === "left"
-      ? { left: "var(--spacing-single)", top: "var(--spacing-single)", maxHeight: "calc(100% - (var(--spacing-single) * 2))", width: visible ? `${size}px` : undefined, zIndex }
-      : { right: "var(--spacing-single)", top: "var(--spacing-single)", maxHeight: "calc(100% - (var(--spacing-single) * 2))", width: visible ? `${size}px` : undefined, zIndex };
+  const positionStyle = {
+    [horizontal]: "var(--spacing-single)",
+    [cornerVertical(corner)]: "var(--spacing-single)",
+    maxHeight: "calc(100% - (var(--spacing-single) * 2))",
+    width: visible ? `${size}px` : undefined,
+    zIndex,
+  };
 
   const resizeHandleClass = `absolute top-0 bottom-0 z-20 ${resizeSide === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize`;
 
   return (
     <LevelProvider level="panel">
       <PanelGhostRoot
-        data-panel={position === "left" ? "leftSidePanel" : "rightSidePanel"}
+        data-slot="corner-panel"
+        data-corner={corner}
         data-panel-visible={visible ? "true" : "false"}
-        className={cn("absolute min-w-0 overflow-hidden flex flex-col box-border text-foreground", !visible && "w-fit", className)}
+        className={cn("absolute min-w-0 overflow-hidden flex box-border text-foreground", isBottom ? "flex-col-reverse" : "flex-col", !visible && "w-fit", className)}
         style={positionStyle}
       >
         <div data-dim aria-hidden className={panelChromeFillLayerClass} />
         <div data-dim data-slot="panel-chrome-frame" aria-hidden className={cn(panelChromeFrameLayerClass, visible && panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered))} />
         <UiChromeLabelPolicyProvider policy="always">
-          <SidePanelChrome position={position} visible={visible} onToggle={(next) => onVisibleChange?.(next)} />
+          <CornerPanelChrome corner={corner} visible={visible} onToggle={(next) => onVisibleChange?.(next)} />
         </UiChromeLabelPolicyProvider>
         {visible ? (
           <>
-            {showTabBar ? <PanelTabBar activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="side" /> : null}
+            {showTabBar ? <PanelTabBar activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="corner" direction={isBottom ? "up" : "down"} /> : null}
             <Scrollable className="relative z-10 flex-1 min-h-0">
-              <div data-slot="side-panel-content" className="flex min-h-0 flex-1 flex-col">
-                {activeTabTree ? <SidePanelTreePane config={activeTabTree} /> : null}
+              <div data-slot="corner-panel-content" className="flex min-h-0 flex-1 flex-col">
+                {activeTabTrees ? <PanelTreeUnitsPane units={activeTabTrees} /> : null}
               </div>
             </Scrollable>
             {onSizeChange ? (
-              <SidePanelResizeHandle
+              <CornerPanelResizeHandle
+                corner={corner}
                 isResizing={isResizing}
                 maxSize={maxSize}
                 minSize={minSize}
                 onSizeChange={onSizeChange}
-                position={position}
                 resizeHandleClass={resizeHandleClass}
                 setIsResizing={setIsResizing}
                 setIsResizeHovered={setIsResizeHovered}
@@ -14680,9 +14807,9 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, onVisib
     </LevelProvider>
   );
 };
-export { SidePanel };
+export { CornerPanel };
 
-// #endregion 📌SidePanel
+// #endregion 🧭CornerPanel
 
 // #region 💧MobilePanel
 // Full-width tabbed panel for mobile layouts. Not resizable. All tabs in one panel.
@@ -14711,7 +14838,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
   const showTabBar = tabs.length > 0;
   const resolvedPath = reconcileActivePath(tabs, activeTabPath ?? internalActivePath, panelTabChildren);
   const activeNode = findPanelTabNode(tabs, resolvedPath);
-  const activeTabTree = activeNode?.kind === "leaf" ? resolveTreePanelSource(activeNode.tree) : null;
+  const activeTabTrees = activeNode?.kind === "leaf" ? activeNode.trees : null;
 
   const handlePathChange = (path: readonly string[]) => {
     if (onActiveTabPathChange) {
@@ -14729,21 +14856,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
         {showTabBar ? <PanelTabBar activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="mobile" /> : null}
         <Scrollable className="relative z-10 flex-1 min-h-0">
           <div data-slot="mobile-panel-content" className="flex min-h-0 flex-1 flex-col">
-            {activeTabTree ? (
-              <TreeStateProvider>
-                <Tree
-                  className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden", activeTabTree.className)}
-                  defaultSelectedIds={activeTabTree.defaultSelectedIds}
-                  dragAndDropController={activeTabTree.dragAndDropController}
-                  emptyState={activeTabTree.emptyState}
-                  indentMultiplier={activeTabTree.indentMultiplier}
-                  onSelectionChange={activeTabTree.onSelectionChange}
-                  sections={activeTabTree.sections}
-                  selectedIds={activeTabTree.selectedIds}
-                  selectionMode={activeTabTree.selectionMode}
-                />
-              </TreeStateProvider>
-            ) : null}
+            {activeTabTrees ? <PanelTreeUnitsPane units={activeTabTrees} /> : null}
           </div>
         </Scrollable>
       </PanelGhostRoot>
@@ -14965,7 +15078,7 @@ function Ribbon({ id, direction, rows, className }: RibbonProps) {
   return (
     <div id={id} data-slot="ribbon" data-direction={direction} className={cn("flex w-fit max-w-full shrink-0 gap-single", direction === "up" ? "flex-col-reverse items-start" : "w-full flex-col items-stretch", className)}>
       {rows.map((row, depth) => (
-        <div key={row.key} data-slot="ribbon-row" data-depth={depth} className={cn("flex min-w-0 gap-single", direction === "up" ? "shrink-0 items-center" : "w-full items-stretch")}>
+        <div key={row.key} data-slot="ribbon-row" data-depth={depth} className="flex min-w-0 w-full items-stretch gap-single">
           {row.content}
         </div>
       ))}
@@ -22322,10 +22435,10 @@ if (import.meta.vitest) {
       const StubIcon = (): null => null;
       const { container } = render(
         <PanelTabBar
-          variant="side"
+          variant="corner"
           tabs={[
-            { kind: "leaf", id: "framework.panel.document", icon: StubIcon, name: "Document", tree: { sections: [] } },
-            { kind: "leaf", id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } },
+            singleTreeLeaf({ id: "framework.panel.document", icon: StubIcon, name: "Document", tree: { sections: [] } }),
+            singleTreeLeaf({ id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } }),
           ]}
           activePath={["framework.panel.document"]}
           onActivePathChange={() => {}}
@@ -22333,7 +22446,7 @@ if (import.meta.vitest) {
       );
       expect(screen.getByText("Document")).toBeTruthy();
       expect(screen.getByText("Catalogue")).toBeTruthy();
-      const tabBar = container.querySelector('[data-slot="side-panel-tabs"]');
+      const tabBar = container.querySelector('[data-slot="corner-panel-tabs"]');
       expect(tabBar?.className).toContain("px-single");
       expect(tabBar?.className).toContain("z-40");
     });
@@ -22347,8 +22460,8 @@ if (import.meta.vitest) {
           icon: StubIcon,
           name: "Workbench",
           children: [
-            { kind: "leaf", id: "framework.panel.document", icon: StubIcon, name: "Document", tree: { sections: [] } },
-            { kind: "leaf", id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } },
+            singleTreeLeaf({ id: "framework.panel.document", icon: StubIcon, name: "Document", tree: { sections: [] } }),
+            singleTreeLeaf({ id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } }),
           ],
         },
         {
@@ -22356,11 +22469,11 @@ if (import.meta.vitest) {
           id: "framework.category.display",
           icon: StubIcon,
           name: "Display",
-          children: [{ kind: "leaf", id: "framework.display.windows", icon: StubIcon, name: "Windows", tree: { sections: [] } }],
+          children: [singleTreeLeaf({ id: "framework.display.windows", icon: StubIcon, name: "Windows", tree: { sections: [] } })],
         },
       ];
       let path: readonly string[] = ["framework.category.workbench", "framework.panel.catalogue"];
-      const { container, rerender } = render(<PanelTabBar variant="side" tabs={tabs} activePath={path} onActivePathChange={(next) => (path = next)} />);
+      const { container, rerender } = render(<PanelTabBar variant="corner" tabs={tabs} activePath={path} onActivePathChange={(next) => (path = next)} />);
       expect(container.querySelectorAll('[data-slot="ribbon-row"]').length).toBe(2);
       expect(screen.getByText("Workbench")).toBeTruthy();
       expect(screen.getByText("Display")).toBeTruthy();
@@ -22370,55 +22483,51 @@ if (import.meta.vitest) {
 
       fireEvent.click(screen.getByText("Display"));
       expect(path).toEqual(["framework.category.display", "framework.display.windows"]);
-      rerender(<PanelTabBar variant="side" tabs={tabs} activePath={path} onActivePathChange={(next) => (path = next)} />);
+      rerender(<PanelTabBar variant="corner" tabs={tabs} activePath={path} onActivePathChange={(next) => (path = next)} />);
       expect(screen.getByText("Windows")).toBeTruthy();
       expect(screen.queryByText("Document")).toBeNull();
     });
 
-    it("SidePanel marks the active tab with hover fill and emphasized icon above the emphasized frame", () => {
+    it("CornerPanel marks the active tab with hover fill and emphasized icon above the emphasized frame", () => {
       const StubIcon = (): null => null;
-      const tabs: PanelTabNode[] = [
-        { kind: "leaf", id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } },
-        { kind: "leaf", id: "tab-b", icon: StubIcon, name: "Tab B", tree: { sections: [] } },
-      ];
-      const { container } = render(<SidePanel position="left" visible tabs={tabs} activeTabPath={["tab-b"]} />);
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: StubIcon, name: "Tab B", tree: { sections: [] } })];
+      const { container } = render(<CornerPanel corner="top-left" visible tabs={tabs} activeTabPath={["tab-b"]} />);
       expect(screen.getByText("Tab A")).toBeTruthy();
       expect(screen.getByText("Tab B")).toBeTruthy();
-      const activeButton = container.querySelector('[data-slot="side-panel-tab-button"][data-active="true"]');
+      const activeButton = container.querySelector('[data-slot="corner-panel-tab-button"][data-active="true"]');
       expect(activeButton?.className).toContain("bg-active-base");
       expect(activeButton?.className).toContain("text-emphasized");
-      expect(container.querySelector('[data-slot="side-panel-tabs"]')?.className).toContain("overflow-x-auto");
-      expect(container.querySelector('[data-slot="side-panel-tabs"]')?.className).toContain("z-40");
-      expect(container.querySelector('[data-slot="side-panel-tabs"]')?.className).toContain("px-single");
+      expect(container.querySelector('[data-slot="corner-panel-tabs"]')?.className).toContain("overflow-x-auto");
+      expect(container.querySelector('[data-slot="corner-panel-tabs"]')?.className).toContain("z-40");
+      expect(container.querySelector('[data-slot="corner-panel-tabs"]')?.className).toContain("px-single");
       expect(container.querySelector('[data-slot="panel-chrome-frame"]')?.className).toContain("z-30");
     });
 
-    it("SidePanel keeps its toggle chrome mounted when folded, but drops tab bar and content — same as a window's options rail", () => {
+    it("CornerPanel keeps its toggle chrome mounted when folded, but drops tab bar and content — same as a window's options rail", () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [
-        {
-          kind: "leaf",
+        singleTreeLeaf({
           id: "tab-a",
           icon: StubIcon,
           name: "Tab A",
           tree: {
             sections: [{ id: "sec", label: "Section", defaultOpen: true, items: [{ id: "leaf", label: "Leaf row" }] }],
           },
-        },
+        }),
       ];
-      const { rerender } = render(<SidePanel position="left" visible tabs={tabs} />);
+      const { rerender } = render(<CornerPanel corner="top-left" visible tabs={tabs} />);
       expect(screen.getByText("Leaf row")).toBeTruthy();
-      rerender(<SidePanel position="left" visible={false} tabs={tabs} />);
+      rerender(<CornerPanel corner="top-left" visible={false} tabs={tabs} />);
       expect(screen.queryByText("Leaf row")).toBeNull();
       expect(document.querySelector('[data-panel-visible="false"]')).toBeTruthy();
-      expect(document.querySelector('[data-slot="side-panel-chrome"]')).toBeTruthy();
-      expect(document.getElementById("ui.panelToggle.left")).toBeTruthy();
+      expect(document.querySelector('[data-slot="corner-panel-chrome"]')).toBeTruthy();
+      expect(document.getElementById("ui.panelToggle.topLeft")).toBeTruthy();
     });
 
-    it("SidePanel's chrome toggle calls onVisibleChange with the flipped visibility", () => {
+    it("CornerPanel's chrome toggle calls onVisibleChange with the flipped visibility", () => {
       const onVisibleChange = vi.fn();
-      const { container } = render(<SidePanel position="right" visible={false} onVisibleChange={onVisibleChange} tabs={[]} />);
-      const toggle = container.querySelector('button[id="ui.panelToggle.right"]') as HTMLElement;
+      const { container } = render(<CornerPanel corner="top-right" visible={false} onVisibleChange={onVisibleChange} tabs={[]} />);
+      const toggle = container.querySelector('button[id="ui.panelToggle.topRight"]') as HTMLElement;
       expect(toggle).toBeTruthy();
       fireEvent.click(toggle);
       expect(onVisibleChange).toHaveBeenCalledWith(true);
@@ -24423,9 +24532,11 @@ if (treeVitest) {
       expect(resolveHotkeyValue({ label: "Search" })).toBeUndefined();
     });
 
-    it("exposes side panel chrome toggle chords", () => {
-      expect(SIDE_PANEL_TOGGLE_LEFT_HOTKEY).toBe("ctrl+b,meta+b");
-      expect(SIDE_PANEL_TOGGLE_RIGHT_HOTKEY).toBe("ctrl+shift+b,meta+shift+b");
+    it("exposes corner panel chrome toggle chords", () => {
+      expect(CORNER_PANEL_TOGGLE_HOTKEYS["top-left"]).toBe("ctrl+b,meta+b");
+      expect(CORNER_PANEL_TOGGLE_HOTKEYS["top-right"]).toBe("ctrl+shift+b,meta+shift+b");
+      expect(CORNER_PANEL_TOGGLE_HOTKEYS["bottom-left"]).toBe("ctrl+alt+b,meta+alt+b");
+      expect(CORNER_PANEL_TOGGLE_HOTKEYS["bottom-right"]).toBe("ctrl+alt+shift+b,meta+alt+shift+b");
     });
 
     it("tree highlight store notifies subscribers only when highlighted ids change", () => {
@@ -26025,9 +26136,8 @@ if (treeVitest) {
       expect(navbarMarkup).toContain(borderNormalBottomClass);
       expect(navbarMarkup).not.toContain("border-emphasized");
       expect(navbarMarkup).not.toContain("border-border");
-      const footerMarkup = renderToStaticMarkup(<Footer items={[{ id: "ui.footer.minimize", icon: "minus" }]} />);
-      expect(footerMarkup).toContain('data-slot="panel-chrome-frame"');
-      expect(footerMarkup).toContain(borderNormalClass);
+      const footerMarkup = renderToStaticMarkup(<Footer items={[{ key: "a", content: "Footer" }]} />);
+      expect(footerMarkup).toContain(borderNormalTopClass);
       expect(footerMarkup).not.toContain("border-emphasized");
       const breadcrumbMarkup = renderToStaticMarkup(<Breadcrumb items={[{ content: "Home" }, { content: "Project" }]} />);
       expect(breadcrumbMarkup).toContain(borderNormalClass);
@@ -26042,17 +26152,17 @@ if (treeVitest) {
       expect(toolbarMarkup).toMatch(/\bborder\b/);
       expect(toolbarMarkup).toContain(borderNormalClass);
       expect(toolbarMarkup).not.toContain("border-emphasized");
-      const panelMarkup = renderToStaticMarkup(<SidePanel position="left" visible tabs={[{ kind: "leaf", id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }]} />);
+      const panelMarkup = renderToStaticMarkup(<CornerPanel corner="top-left" visible tabs={[singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } })]} />);
       expect(panelMarkup).toContain('data-slot="panel-chrome-frame"');
       expect(panelMarkup).toContain("border-normal");
       expect(panelMarkup).not.toContain("border-emphasized");
       expect(panelMarkup).not.toMatch(/panel-chrome-frame[^>]*divide-x/);
       expect(panelMarkup).toContain(borderNormalClass);
       expect(panelMarkup).not.toContain("border-b-current");
-      expect(panelMarkup).not.toMatch(/side-panel-tabs[^>]*border-emphasized/);
-      expect(panelMarkup).toMatch(/side-panel-tabs[^>]*z-40/);
+      expect(panelMarkup).not.toMatch(/corner-panel-tabs[^>]*border-emphasized/);
+      expect(panelMarkup).toMatch(/corner-panel-tabs[^>]*z-40/);
       expect(panelMarkup).toMatch(/panel-chrome-frame[^>]*z-30/);
-      const chromeMatch = panelMarkup.match(/<div data-slot="side-panel-chrome"[^>]*class="([^"]*)"/);
+      const chromeMatch = panelMarkup.match(/<div data-slot="corner-panel-chrome"[^>]*class="([^"]*)"/);
       expect(chromeMatch?.[1]).not.toMatch(/\bp-single\b/);
       const toggleGroupMatch = panelMarkup.match(/data-slot="toggle-group"[^>]*class="([^"]*)"/);
       expect(toggleGroupMatch?.[1]).toMatch(/\bborder-0\b/);
@@ -26124,10 +26234,116 @@ if (treeVitest) {
       expect(reconcileActivePath(tree, ["unknown"], childrenOf)).toEqual(["workbench", "document"]);
     });
 
-    it("resolves the new left/right panel toggle keys in en and de", () => {
+    it("dockSkeletonOf/dockSkeletonsEqual round-trip a PanelDock and detect structural equality", () => {
+      const StubIcon = (): null => null;
+      const dock: PanelDock = {
+        corners: {
+          "top-left": [
+            {
+              kind: "branch",
+              id: "workbench",
+              icon: StubIcon,
+              name: "Workbench",
+              children: [singleTreeLeaf({ id: "document", icon: StubIcon, name: "Document", tree: { sections: [] } })],
+            },
+          ],
+          "top-right": [],
+          "bottom-left": [],
+          "bottom-right": [singleTreeLeaf({ id: "settings", icon: StubIcon, name: "Settings", tree: { sections: [] } })],
+        },
+      };
+      const skeleton = dockSkeletonOf(dock);
+      expect(skeleton).toEqual({
+        version: 1,
+        corners: {
+          "top-left": [{ id: "workbench", children: [{ id: "document", trees: ["document.tree"] }] }],
+          "top-right": [],
+          "bottom-left": [],
+          "bottom-right": [{ id: "settings", trees: ["settings.tree"] }],
+        },
+      });
+      expect(dockSkeletonsEqual(skeleton, dockSkeletonOf(dock))).toBe(true);
+      expect(dockSkeletonsEqual(skeleton, null)).toBe(false);
+      expect(dockSkeletonsEqual(null, null)).toBe(true);
+    });
+
+    it("applyDockSkeleton reuses default object identity, drops unknown ids, appends new defaults, and falls back on kind mismatch", () => {
+      const StubIcon = (): null => null;
+      const documentLeaf = singleTreeLeaf({ id: "document", icon: StubIcon, name: "Document", tree: { sections: [] } });
+      const catalogueLeaf = singleTreeLeaf({ id: "catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } });
+      const workbenchBranch: PanelTabNode = { kind: "branch", id: "workbench", icon: StubIcon, name: "Workbench", children: [documentLeaf, catalogueLeaf] };
+      const settingsLeaf = singleTreeLeaf({ id: "settings", icon: StubIcon, name: "Settings", tree: { sections: [] } });
+      const defaultDock: PanelDock = { corners: { "top-left": [workbenchBranch], "top-right": [], "bottom-left": [], "bottom-right": [settingsLeaf] } };
+
+      // Untouched corner/branch: identical arrangement reuses every object by reference.
+      const untouchedSkeleton = dockSkeletonOf(defaultDock);
+      const untouched = applyDockSkeleton(defaultDock, untouchedSkeleton);
+      expect(untouched.corners["top-left"][0]).toBe(workbenchBranch);
+      expect(untouched.corners["bottom-right"][0]).toBe(settingsLeaf);
+
+      // Moving `catalogue` to bottom-right (ahead of settings): dropped from workbench's children (appended-back
+      // logic doesn't apply since it's explicitly listed elsewhere), workbench still reuses `documentLeaf` by reference.
+      const moved: DockSkeleton = {
+        version: 1,
+        corners: {
+          "top-left": [{ id: "workbench", children: [{ id: "document", trees: ["document.tree"] }] }],
+          "top-right": [],
+          "bottom-left": [],
+          "bottom-right": [{ id: "catalogue", trees: ["catalogue.tree"] }, { id: "settings", trees: ["settings.tree"] }],
+        },
+      };
+      const afterMove = applyDockSkeleton(defaultDock, moved);
+      const movedWorkbench = afterMove.corners["top-left"][0];
+      expect(movedWorkbench?.kind).toBe("branch");
+      expect(movedWorkbench?.kind === "branch" ? movedWorkbench.children : []).toEqual([documentLeaf]);
+      expect(afterMove.corners["bottom-right"].map((tab) => tab.id)).toEqual(["catalogue", "settings"]);
+      expect(afterMove.corners["bottom-right"][0]).toBe(catalogueLeaf);
+
+      // Unknown id in the persisted skeleton is dropped; a default tab the skeleton never mentions is appended.
+      const withUnknown: DockSkeleton = {
+        version: 1,
+        corners: { "top-left": [{ id: "ghost-tab" }], "top-right": [], "bottom-left": [], "bottom-right": [] },
+      };
+      const afterUnknown = applyDockSkeleton(defaultDock, withUnknown);
+      expect(afterUnknown.corners["top-left"].map((tab) => tab.id)).toEqual(["workbench"]);
+      expect(afterUnknown.corners["top-left"][0]).toBe(workbenchBranch);
+      expect(afterUnknown.corners["bottom-right"].map((tab) => tab.id)).toEqual(["settings"]);
+
+      // Kind mismatch: skeleton claims the leaf `settings` has branch `children` — ignored, falls back to the default leaf shape.
+      const kindMismatch: DockSkeleton = {
+        version: 1,
+        corners: { "top-left": [], "top-right": [], "bottom-left": [], "bottom-right": [{ id: "settings", children: [{ id: "document" }] }] },
+      };
+      const afterMismatch = applyDockSkeleton(defaultDock, kindMismatch);
+      expect(afterMismatch.corners["bottom-right"][0]).toBe(settingsLeaf);
+      expect(afterMismatch.corners["top-left"].map((tab) => tab.id)).toEqual(["workbench"]);
+    });
+
+    it("applyDockSkeleton keeps a deliberately-emptied branch empty instead of resurrecting its default children", () => {
+      const StubIcon = (): null => null;
+      const documentLeaf = singleTreeLeaf({ id: "document", icon: StubIcon, name: "Document", tree: { sections: [] } });
+      const workbenchBranch: PanelTabNode = { kind: "branch", id: "workbench", icon: StubIcon, name: "Workbench", children: [documentLeaf] };
+      const defaultDock: PanelDock = { corners: { "top-left": [workbenchBranch], "top-right": [], "bottom-left": [], "bottom-right": [] } };
+      // `document` moved out to bottom-right; `workbench` explicitly persisted with an empty children list.
+      const emptiedWorkbench: DockSkeleton = {
+        version: 1,
+        corners: {
+          "top-left": [{ id: "workbench", children: [] }],
+          "top-right": [],
+          "bottom-left": [],
+          "bottom-right": [{ id: "document", trees: ["document.tree"] }],
+        },
+      };
+      const result = applyDockSkeleton(defaultDock, emptiedWorkbench);
+      const resultWorkbench = result.corners["top-left"][0];
+      expect(resultWorkbench?.kind === "branch" ? resultWorkbench.children : null).toEqual([]);
+      expect(result.corners["bottom-right"][0]).toBe(documentLeaf);
+    });
+
+    it("resolves the four corner panel toggle keys in en and de", () => {
       for (const locale of ["en", "de"] as const) {
         void uiI18n.changeLanguage(locale);
-        for (const key of ["ui.panelToggle.left", "ui.panelToggle.right"] as const) {
+        for (const key of ["ui.panelToggle.topLeft", "ui.panelToggle.topRight", "ui.panelToggle.bottomLeft", "ui.panelToggle.bottomRight"] as const) {
           const label = resolveTranslationLabel(uiI18n.t(key));
           expect(label, `${locale}:${key}`).toBeTruthy();
           expect(label).not.toBe(key);

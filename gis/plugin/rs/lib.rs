@@ -1544,8 +1544,6 @@ pub mod app_3d {
     //#endregion 🔖AppFactory
 }
 
-use std::sync::LazyLock;
-
 //#region 🔖Bundle
 semio_framework_plugin::semio_plugin! {
     id: "gis",

@@ -1,4 +1,5 @@
 // #region 🧲Header
+/// <reference types="vitest/importMeta" />
 /** @emoji 🧭 `@semio-tech/framework-core` — shared canvas pick helpers, layout factories, and inspector utilities for UI renderers. */
 // #endregion 🧲Header
 
@@ -830,6 +831,81 @@ export class NamedLayoutStore extends Store<readonly NamedLayout[]> {
   }
 }
 
+//#region DockLayoutStore
+/** 🐳 One tab (leaf or branch) in a persisted dock panel-arrangement tree; leaves carry `trees`, branches carry `children`. */
+export interface DockTabSkeleton {
+  id: string;
+  children?: readonly DockTabSkeleton[];
+  trees?: readonly string[];
+}
+
+/** 🐳 The full persisted dock arrangement, one tab tree per corner — corner ids mirror `PanelCorner` in `ui/js/react/index.tsx` (kept inline here to stay dependency-free of that package). */
+export interface DockSkeleton {
+  version: 1;
+  corners: Record<"top-left" | "top-right" | "bottom-left" | "bottom-right", readonly DockTabSkeleton[]>;
+}
+
+function dockOsStorageKey(): string {
+  return "semio.os.dock";
+}
+
+function dockAppStorageKey(appId: string): string {
+  return `semio.os.dock.${appId}`;
+}
+
+/** 🧪 Defensive read: corrupt or foreign JSON at `key` resolves to `null` rather than throwing. */
+function readDockSkeleton(storage: StoragePort, key: string): DockSkeleton | null {
+  const raw = storage.get(key);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object" || (parsed as DockSkeleton).version !== 1 || !(parsed as DockSkeleton).corners || typeof (parsed as DockSkeleton).corners !== "object") return null;
+    return parsed as DockSkeleton;
+  } catch {
+    return null;
+  }
+}
+
+/** 🐳 Persists the dock panel arrangement across an "os" layer (global default across all apps) and an optional per-app layer that wins when present — `save(null)`/`saveOs(null)` remove rather than persist a JSON `"null"`. */
+export class DockLayoutStore extends Store<DockSkeleton | null> {
+  constructor(
+    private readonly storage: StoragePort,
+    private readonly appId?: string,
+  ) {
+    super();
+  }
+
+  getSnapshot(): DockSkeleton | null {
+    if (this.appId) {
+      const app = readDockSkeleton(this.storage, dockAppStorageKey(this.appId));
+      if (app) return app;
+    }
+    return readDockSkeleton(this.storage, dockOsStorageKey());
+  }
+
+  save(skeleton: DockSkeleton | null): void {
+    this.writeOrRemove(this.appId ? dockAppStorageKey(this.appId) : dockOsStorageKey(), skeleton);
+    this.notify();
+  }
+
+  saveOs(skeleton: DockSkeleton | null): void {
+    this.writeOrRemove(dockOsStorageKey(), skeleton);
+    this.notify();
+  }
+
+  reset(): void {
+    this.storage.remove(dockOsStorageKey());
+    if (this.appId) this.storage.remove(dockAppStorageKey(this.appId));
+    this.notify();
+  }
+
+  private writeOrRemove(key: string, skeleton: DockSkeleton | null): void {
+    if (skeleton === null) this.storage.remove(key);
+    else this.storage.set(key, JSON.stringify(skeleton));
+  }
+}
+//#endregion DockLayoutStore
+
 export function createBrowserStoragePort(): StoragePort {
   return {
     get: (key) => {
@@ -1515,3 +1591,78 @@ export function resolvePlaygroundDefaultAppId(playgroundPluginId: string): strin
   return findPlaygroundVariant(playgroundPluginId)?.app;
 }
 // #endregion 🎮PlaygroundResolution
+
+//#region 🧪Tests
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+
+  function createMemoryStoragePort(): StoragePort {
+    const map = new Map<string, string>();
+    return {
+      get: (key) => map.get(key) ?? null,
+      set: (key, value) => {
+        map.set(key, value);
+      },
+      remove: (key) => {
+        map.delete(key);
+      },
+    };
+  }
+
+  describe("DockLayoutStore", () => {
+    const emptySkeleton = (): DockSkeleton => ({ version: 1, corners: { "top-left": [], "top-right": [], "bottom-left": [], "bottom-right": [] } });
+
+    it("returns null when nothing persisted", () => {
+      const store = new DockLayoutStore(createMemoryStoragePort());
+      expect(store.getSnapshot()).toBeNull();
+    });
+
+    it("app layer wins over os layer when both are set", () => {
+      const storage = createMemoryStoragePort();
+      const store = new DockLayoutStore(storage, "my-app");
+      const osSkeleton = emptySkeleton();
+      const appSkeleton: DockSkeleton = { ...emptySkeleton(), corners: { ...emptySkeleton().corners, "top-left": [{ id: "a" }] } };
+      store.saveOs(osSkeleton);
+      store.save(appSkeleton);
+      expect(store.getSnapshot()).toEqual(appSkeleton);
+    });
+
+    it("falls back to os layer when app layer absent", () => {
+      const storage = createMemoryStoragePort();
+      const store = new DockLayoutStore(storage, "my-app");
+      const osSkeleton = emptySkeleton();
+      store.saveOs(osSkeleton);
+      expect(store.getSnapshot()).toEqual(osSkeleton);
+    });
+
+    it("save(null) removes the app-layer key", () => {
+      const storage = createMemoryStoragePort();
+      const store = new DockLayoutStore(storage, "my-app");
+      store.save(emptySkeleton());
+      expect(storage.get("semio.os.dock.my-app")).not.toBeNull();
+      store.save(null);
+      expect(storage.get("semio.os.dock.my-app")).toBeNull();
+      expect(store.getSnapshot()).toBeNull();
+    });
+
+    it("reset() clears both layers", () => {
+      const storage = createMemoryStoragePort();
+      const store = new DockLayoutStore(storage, "my-app");
+      store.saveOs(emptySkeleton());
+      store.save(emptySkeleton());
+      store.reset();
+      expect(storage.get("semio.os.dock")).toBeNull();
+      expect(storage.get("semio.os.dock.my-app")).toBeNull();
+      expect(store.getSnapshot()).toBeNull();
+    });
+
+    it("returns null on corrupt JSON rather than throwing", () => {
+      const storage = createMemoryStoragePort();
+      storage.set("semio.os.dock", "{not json");
+      const store = new DockLayoutStore(storage);
+      expect(() => store.getSnapshot()).not.toThrow();
+      expect(store.getSnapshot()).toBeNull();
+    });
+  });
+}
+//#endregion 🧪Tests
