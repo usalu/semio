@@ -323,7 +323,7 @@ impl Operation<RewriteRuleState> for RewriteRuleOp {
 pub type RewriteRuleEnvelope = DocumentVcsEnvelope<RewriteRuleState, RewriteRuleOp>;
 pub type RewriteRuleStore = DocumentVcsStore<RewriteRuleState, RewriteRuleOp>;
 
-const REWRITE_RULE_SCHEMA: &str = "trinity.rewrite.rule";
+pub const REWRITE_RULE_SCHEMA: &str = "trinity.rewrite.rule";
 
 pub fn create_rewrite_rule_envelope(id: &str, state: RewriteRuleState) -> RewriteRuleEnvelope {
     create_document_vcs_envelope(REWRITE_RULE_SCHEMA, id, state, None)

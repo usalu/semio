@@ -160,6 +160,10 @@ const VENDORED_ICON_IDS = [
   "unlink",
   "zoom-in",
   "zoom-out",
+  "square-arrow-up-left",
+  "square-arrow-up-right",
+  "square-arrow-down-left",
+  "square-arrow-down-right",
 ] as const;
 
 type VendoredIconId = (typeof VENDORED_ICON_IDS)[number];

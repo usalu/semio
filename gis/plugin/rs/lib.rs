@@ -1118,7 +1118,6 @@ pub mod app_2d {
                 .view_action("deselect", "Deselect")
                 .view_action("focusFeature", "Focus Feature")
                 .view_action("setLayerStrokeScale", "Set Layer Stroke Scale")
-                .shell_action("setDocument", "Set Document")
                 .shell_action("openSource", "Open Source")
                 .keybinding("mod+z", "undo")
                 .keybinding("mod+shift+z", "redo"),

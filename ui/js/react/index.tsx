@@ -2480,6 +2480,9 @@ export type UiTranslationSchema = {
       readonly parameters: UiLabelValue;
       readonly documentEmpty: UiLabelValue;
       readonly spawnedAppsSuffix: UiLabelValue;
+      readonly sync: UiLabelValue;
+      readonly tools: UiLabelValue;
+      readonly toolsHistory: UiLabelValue;
     };
     readonly find: {
       readonly toggle: UiLabelValue;
@@ -2492,8 +2495,10 @@ export type UiTranslationSchema = {
       readonly toggle: UiLabelValue;
     };
     readonly panelToggle: {
-      readonly left: UiLabelValue;
-      readonly right: UiLabelValue;
+      readonly topLeft: UiLabelValue;
+      readonly topRight: UiLabelValue;
+      readonly bottomLeft: UiLabelValue;
+      readonly bottomRight: UiLabelValue;
       readonly display: UiLabelValue;
       readonly overview: UiLabelValue;
       readonly workbench: UiLabelValue;
@@ -2575,6 +2580,7 @@ export type UiTranslationSchema = {
         };
       };
       readonly unavailable: UiLabelValue;
+      readonly resetDock: UiLabelValue;
     };
     readonly toolbar: {
       readonly group: {
@@ -2826,6 +2832,9 @@ export const uiChromeTranslationBundles = {
           parameters: { label: { normal: "Parameter", beginner: "Parameter" } },
           documentEmpty: { label: { normal: "—", beginner: "—" } },
           spawnedAppsSuffix: { label: { normal: "gestartete App(s)", beginner: "gestartete App(s)" } },
+          sync: { label: { normal: "Synchronisierung", beginner: "Synchronisierung" } },
+          tools: { label: { normal: "Aktionen", beginner: "Aktionen" } },
+          toolsHistory: { label: { normal: "Verlauf", beginner: "Verlauf" } },
         },
         find: {
           toggle: {
@@ -2868,16 +2877,28 @@ export const uiChromeTranslationBundles = {
           },
         },
         panelToggle: {
-          left: {
+          topLeft: {
             label: {
-              normal: "Linkes Panel",
-              beginner: "Linkes Panel",
+              normal: "Oben links",
+              beginner: "Oben links",
             },
           },
-          right: {
+          topRight: {
             label: {
-              normal: "Rechtes Panel",
-              beginner: "Rechtes Panel",
+              normal: "Oben rechts",
+              beginner: "Oben rechts",
+            },
+          },
+          bottomLeft: {
+            label: {
+              normal: "Unten links",
+              beginner: "Unten links",
+            },
+          },
+          bottomRight: {
+            label: {
+              normal: "Unten rechts",
+              beginner: "Unten rechts",
             },
           },
           display: {
@@ -2996,6 +3017,7 @@ export const uiChromeTranslationBundles = {
             },
           },
           unavailable: { label: { normal: "Einstellungen nicht verfuegbar", beginner: "Einstellungen nicht verfuegbar" } },
+          resetDock: { label: { normal: "Panels zuruecksetzen", beginner: "Panels zuruecksetzen" } },
         },
         toolbar: {
           group: {
@@ -3270,6 +3292,9 @@ export const uiChromeTranslationBundles = {
           parameters: { label: { normal: "Parameters", beginner: "Parameters" } },
           documentEmpty: { label: { normal: "—", beginner: "—" } },
           spawnedAppsSuffix: { label: { normal: "spawned app(s)", beginner: "spawned app(s)" } },
+          sync: { label: { normal: "Sync", beginner: "Sync" } },
+          tools: { label: { normal: "Actions", beginner: "Actions" } },
+          toolsHistory: { label: { normal: "History", beginner: "History" } },
         },
         find: {
           toggle: {
@@ -3312,16 +3337,28 @@ export const uiChromeTranslationBundles = {
           },
         },
         panelToggle: {
-          left: {
+          topLeft: {
             label: {
-              normal: "Left Panel",
-              beginner: "Left Panel",
+              normal: "Top Left",
+              beginner: "Top Left",
             },
           },
-          right: {
+          topRight: {
             label: {
-              normal: "Right Panel",
-              beginner: "Right Panel",
+              normal: "Top Right",
+              beginner: "Top Right",
+            },
+          },
+          bottomLeft: {
+            label: {
+              normal: "Bottom Left",
+              beginner: "Bottom Left",
+            },
+          },
+          bottomRight: {
+            label: {
+              normal: "Bottom Right",
+              beginner: "Bottom Right",
             },
           },
           display: {
@@ -3440,6 +3477,7 @@ export const uiChromeTranslationBundles = {
             },
           },
           unavailable: { label: { normal: "Settings unavailable", beginner: "Settings unavailable" } },
+          resetDock: { label: { normal: "Reset panels", beginner: "Reset panels" } },
         },
         toolbar: {
           group: {
@@ -4428,7 +4466,37 @@ export function reconcileActivePath<T extends { readonly id: string }>(nodes: re
   return reconciled;
 }
 
-/** @emoji 🍃 Leaf tab — its `tree` is the panel body shown when active. */
+/** @emoji 🧭 Four corners a panel can grow from, anchored to the display's edges. */
+export const PANEL_CORNERS = ["top-left", "top-right", "bottom-left", "bottom-right"] as const;
+
+/** @emoji 🧭 One of the four corners a panel can grow from. */
+export type PanelCorner = (typeof PANEL_CORNERS)[number];
+
+/** @emoji 🧭 `"top"`/`"bottom"` half of a {@link PanelCorner}. */
+export function cornerVertical(corner: PanelCorner): "top" | "bottom" {
+  return corner.startsWith("top") ? "top" : "bottom";
+}
+
+/** @emoji 🧭 `"left"`/`"right"` half of a {@link PanelCorner}. */
+export function cornerHorizontal(corner: PanelCorner): "left" | "right" {
+  return corner.endsWith("left") ? "left" : "right";
+}
+
+/** @emoji 🧭 Camel-case key for a {@link PanelCorner} — used in toggle ids and i18n keys (`topLeft`, `bottomRight`, ...). */
+export function cornerKey(corner: PanelCorner): "topLeft" | "topRight" | "bottomLeft" | "bottomRight" {
+  return corner.replace(/-([a-z])/, (_, c: string) => c.toUpperCase()) as "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
+}
+
+/** @emoji 🌱 One draggable tree granule inside a leaf tab — dockable between leaf tabs, rendered as its own collapsible section. */
+export interface PanelTreeUnit {
+  readonly id: string;
+  readonly tree: TreePanelSource;
+  readonly label?: string;
+  readonly icon?: React.ComponentType<{ size?: number }>;
+  readonly order?: number;
+}
+
+/** @emoji 🍃 Leaf tab — its `trees` are the panel-body units shown when active, each rendered as its own section. */
 export interface PanelTabLeaf {
   readonly kind: "leaf";
   readonly id: string;
@@ -4436,8 +4504,13 @@ export interface PanelTabLeaf {
   /** @emoji 🏷️ Mandatory tab label shown after the icon. */
   readonly name: string;
   readonly order?: number;
-  /** @emoji 🌲 Tree sections and items for this tab. */
-  readonly tree: TreePanelSource;
+  /** @emoji 🌲 Tree units for this tab — draggable between leaf tabs, rendered as sections. */
+  readonly trees: readonly PanelTreeUnit[];
+}
+
+/** @emoji 🍃 Builds a {@link PanelTabLeaf} with exactly one tree, wrapped as a single {@link PanelTreeUnit} (unit id: `` `${id}.tree` ``). */
+export function singleTreeLeaf(leaf: { readonly id: string; readonly icon: React.ComponentType<{ size?: number }>; readonly name: string; readonly order?: number; readonly tree: TreePanelSource }): PanelTabLeaf {
+  return { kind: "leaf", id: leaf.id, icon: leaf.icon, name: leaf.name, order: leaf.order, trees: [{ id: `${leaf.id}.tree`, tree: leaf.tree }] };
 }
 
 /** @emoji 🌳 Branch tab — its `children` render as the row below this one when active. */
@@ -15433,7 +15506,6 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
           disabled={control.disabled}
           onValueChange={(values) => {
             const next = values[0];
-            console.log("[DEBUG] EngagementControlView slider onValueChange", next, "hasOnChange", !!control.onChange);
             if (next === undefined) return;
             lastNumericRef.current = next;
             control.onChange?.(next);

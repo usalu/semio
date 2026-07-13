@@ -513,8 +513,10 @@ pub enum WindowEngagementControl {
         unit: Option<String>,
         #[cfg_attr(feature = "typegen", ts(optional))]
         disabled: Option<bool>,
+        #[serde(rename = "onChange")]
         #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
         on_change: Option<ActionDescriptor>,
+        #[serde(rename = "onCommit")]
         #[cfg_attr(feature = "typegen", ts(optional, rename = "onCommit"))]
         on_commit: Option<ActionDescriptor>,
     },
@@ -534,8 +536,10 @@ pub enum WindowEngagementControl {
         unit: Option<String>,
         #[cfg_attr(feature = "typegen", ts(optional))]
         disabled: Option<bool>,
+        #[serde(rename = "onChange")]
         #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
         on_change: Option<ActionDescriptor>,
+        #[serde(rename = "onCommit")]
         #[cfg_attr(feature = "typegen", ts(optional, rename = "onCommit"))]
         on_commit: Option<ActionDescriptor>,
     },
@@ -549,6 +553,7 @@ pub enum WindowEngagementControl {
         options: Vec<WindowEngagementRingOption>,
         #[cfg_attr(feature = "typegen", ts(optional))]
         disabled: Option<bool>,
+        #[serde(rename = "onSelect")]
         #[cfg_attr(feature = "typegen", ts(optional, rename = "onSelect"))]
         on_select: Option<ActionDescriptor>,
     },
@@ -562,6 +567,7 @@ pub enum WindowEngagementControl {
         options: Vec<WindowEngagementToggleGroupOption>,
         #[cfg_attr(feature = "typegen", ts(optional))]
         disabled: Option<bool>,
+        #[serde(rename = "onSelect")]
         #[cfg_attr(feature = "typegen", ts(optional, rename = "onSelect"))]
         on_select: Option<ActionDescriptor>,
     },
@@ -577,6 +583,7 @@ pub enum WindowEngagementControl {
         items: Vec<WindowEngagementSelectItem>,
         #[cfg_attr(feature = "typegen", ts(optional))]
         disabled: Option<bool>,
+        #[serde(rename = "onChange")]
         #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
         on_change: Option<ActionDescriptor>,
     },

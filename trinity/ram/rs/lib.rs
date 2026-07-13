@@ -425,12 +425,18 @@ pub struct TrinityGraphDiff {
     pub edges: CollectionDiff<String, PropertyPatch, Edge>,
     pub node_properties: Vec<ItemPatch<String, PropertyPatch>>,
     pub edge_properties: Vec<ItemPatch<String, PropertyPatch>>,
+    /// 📷 Last-write-wins camera replacement (viewport pan/zoom), independent of the node/edge diff.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub camera: Option<Camera>,
+    /// 📦 Whole-fixture replacement (preset load, node-graph drag import) — the base the rest of the diff layers onto.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub set_fixture: Option<GraphFixture>,
     pub recompute_derived: bool,
 }
 
 impl OperationDiff<GraphFixture> for TrinityGraphDiff {
     fn apply(&self, projection: &GraphFixture) -> GraphFixture {
-        let mut next = projection.clone();
+        let mut next = self.set_fixture.clone().unwrap_or_else(|| projection.clone());
         for id in &self.nodes.removed {
             remove_node_from_fixture(&mut next, id);
         }
@@ -486,6 +492,9 @@ impl OperationDiff<GraphFixture> for TrinityGraphDiff {
                 }
             }
         }
+        if let Some(camera) = &self.camera {
+            next.camera = camera.clone();
+        }
         if self.recompute_derived {
             if let Ok(mut graph) = Graph::from_fixture(next.clone()) {
                 graph.recompute_derived();
@@ -496,6 +505,9 @@ impl OperationDiff<GraphFixture> for TrinityGraphDiff {
     }
 
     fn absorb(&mut self, other: Self) {
+        if let Some(fixture) = other.set_fixture {
+            self.set_fixture = Some(fixture);
+        }
         self.nodes.removed.extend(other.nodes.removed);
         self.nodes.modified.extend(other.nodes.modified);
         self.nodes.added.extend(other.nodes.added);
@@ -503,6 +515,9 @@ impl OperationDiff<GraphFixture> for TrinityGraphDiff {
         self.edges.added.extend(other.edges.added);
         self.node_properties.extend(other.node_properties);
         self.edge_properties.extend(other.edge_properties);
+        if other.camera.is_some() {
+            self.camera = other.camera;
+        }
         self.recompute_derived |= other.recompute_derived;
     }
 }
@@ -550,6 +565,14 @@ pub enum TrinityGraphOp {
     ClearDataProperty {
         entity: EntityRef,
         key: String,
+    },
+    /// 📷 Replace the viewport camera (pan/zoom) — coalesced so a drag is a single undo step.
+    SetCamera {
+        camera: Camera,
+    },
+    /// 📦 Replace the whole fixture (preset load, node-graph drag import); the inverse restores the prior fixture.
+    SetFixture {
+        fixture: GraphFixture,
     },
 }
 
@@ -615,6 +638,7 @@ pub fn validate_trinity_graph_op(op: &TrinityGraphOp, fixture: &GraphFixture) ->
         TrinityGraphOp::ClearDataProperty { entity, key } => {
             validate_clear_data_property(fixture, entity, key)?;
         }
+        TrinityGraphOp::SetCamera { .. } | TrinityGraphOp::SetFixture { .. } => {}
     }
     Ok(())
 }
@@ -943,6 +967,15 @@ impl Operation<GraphFixture> for TrinityGraphOp {
                     },
                 }
             }
+            TrinityGraphOp::SetCamera { camera } => TrinityGraphDiff {
+                camera: Some(camera.clone()),
+                ..Default::default()
+            },
+            TrinityGraphOp::SetFixture { fixture } => TrinityGraphDiff {
+                set_fixture: Some(fixture.clone()),
+                recompute_derived: true,
+                ..Default::default()
+            },
         }
     }
 
@@ -1043,6 +1076,8 @@ impl Operation<GraphFixture> for TrinityGraphOp {
                     }]
                 })
                 .unwrap_or_default(),
+            TrinityGraphOp::SetCamera { .. } => vec![TrinityGraphOp::SetCamera { camera: projection.camera.clone() }],
+            TrinityGraphOp::SetFixture { .. } => vec![TrinityGraphOp::SetFixture { fixture: projection.clone() }],
         }
     }
 }

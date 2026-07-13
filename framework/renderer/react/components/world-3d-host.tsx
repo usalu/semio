@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState, Suspense, type ComponentProps } from "react";
-import { Box3, BufferAttribute, BufferGeometry, DoubleSide, Group, LineBasicMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PointsMaterial, Quaternion, TextureLoader, Vector3, type ThreeEvent } from "three";
+import { BackSide, Box3, BufferAttribute, BufferGeometry, Color, DoubleSide, EdgesGeometry, Group, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PointsMaterial, Quaternion, TextureLoader, Vector3, type ThreeEvent } from "three";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import {
   DEFAULT_LOD_GRID_FACTOR,
   DEFAULT_MANUAL_LOD,
   GLB_MESH_FRAME_ROTATION_X,
+  WORLD_MESH_OUTLINE_USER_DATA_KEY,
   WorldCanvas,
   WorldLayerStack,
   WorldLodBridge,
@@ -24,6 +25,7 @@ import {
   ContextMenuController,
   marqueeCoverageFromGesture,
   marqueeModeFromModifiers,
+  sceneHostPort,
   SelectionMarquee,
   sunPositionFromAzimuthElevation,
   type GumballConfig,
@@ -34,9 +36,11 @@ import {
   type SelectionMarqueePoint,
   useCanvasAppearanceSync,
 } from "@semio-tech/ui-react";
-import { resolveSemanticColorHex } from "@semio-tech/ui-styling";
+import { clearColorResolveCache, resolveColorHex, semanticVar, themeColorVar, tokenVar } from "@semio-tech/ui-styling";
 import type { ComponentSceneHostProps } from "@semio-tech/framework-core";
 import { WorldTerrainLayer } from "./world-terrain-layer.tsx";
+
+const Outlines = sceneHostPort.drei.Outlines;
 
 //#region WorldSceneParsing
 type WorldMeshData = {
@@ -77,6 +81,10 @@ type WorldInstanceRecord = {
   readonly z?: number;
   readonly selected?: boolean;
   readonly hovered?: boolean;
+  /** 🎨 Compatible/suggested state (e.g. catalog-kind hover in puzzle) — resolves to the secondary "highlighted" mesh style. */
+  readonly highlighted?: boolean;
+  /** 🎨 Non-interactive/locked state — resolves to the muted "disabled" mesh style at reduced opacity. */
+  readonly disabled?: boolean;
   readonly smoothShading?: boolean;
 };
 
@@ -240,6 +248,65 @@ type WorldEngagementPreviewItem =
   | WorldEngagementPreviewBox
   | WorldEngagementPreviewLinearHandle;
 
+//#region WorldMeshPaint
+/** 🎨 Mesh style kinds, in {@link resolveMeshStyle} priority order (highest first). */
+type MeshStyleKind = "disabled" | "selected" | "highlighted" | "hovered" | "neutral";
+
+type MeshStyleColors = {
+  readonly meshColor: string;
+  readonly lineColor: string;
+  readonly emissiveIntensity: number;
+  readonly opacity: number;
+};
+
+type MeshStylePalette = Readonly<Record<MeshStyleKind, MeshStyleColors>>;
+
+/** 🎨 CSS-expression paint spec per style kind, ported from the premigration puzzle 3d paint table. */
+const MESH_STYLE_PAINT: Readonly<Record<MeshStyleKind, { readonly fill: string; readonly line: string; readonly emissiveIntensity: number; readonly opacity: number }>> = {
+  neutral: { fill: "var(--panel)", line: semanticVar("border-normal-color"), emissiveIntensity: 0, opacity: 1 },
+  hovered: { fill: semanticVar("hover-interactive-fill"), line: semanticVar("border-emphasized-color"), emissiveIntensity: 0.08, opacity: 1 },
+  selected: { fill: "color-mix(in oklab, var(--color-primary) 28%, var(--panel))", line: tokenVar("primary"), emissiveIntensity: 0.35, opacity: 1 },
+  highlighted: { fill: "color-mix(in oklab, var(--color-secondary) 24%, var(--panel))", line: tokenVar("secondary"), emissiveIntensity: 0.2, opacity: 1 },
+  disabled: { fill: "color-mix(in oklab, var(--color-muted-foreground) 55%, var(--panel))", line: themeColorVar("muted-foreground"), emissiveIntensity: 0, opacity: 0.45 },
+};
+
+/** 🎨 Resolves the full {@link MeshStylePalette} from live CSS custom properties (theme/dark-mode aware). */
+function resolveMeshStylePalette(): MeshStylePalette {
+  const resolved = {} as Record<MeshStyleKind, MeshStyleColors>;
+  for (const kind of Object.keys(MESH_STYLE_PAINT) as MeshStyleKind[]) {
+    const spec = MESH_STYLE_PAINT[kind];
+    resolved[kind] = {
+      meshColor: resolveColorHex(spec.fill),
+      lineColor: resolveColorHex(spec.line),
+      emissiveIntensity: spec.emissiveIntensity,
+      opacity: spec.opacity,
+    };
+  }
+  return resolved;
+}
+
+function useMeshStylePalette(): MeshStylePalette {
+  const [palette, setPalette] = useState(resolveMeshStylePalette);
+  useCanvasAppearanceSync(
+    useCallback(() => {
+      // 🎨 resolveColorHex caches by CSS-expression string only (no theme key), so a theme flip must bust it before re-resolving or every kind keeps its stale color.
+      clearColorResolveCache();
+      setPalette(resolveMeshStylePalette());
+    }, []),
+  );
+  return palette;
+}
+
+/** 🎨 Resolves the effective style kind for an instance/component, premigration priority: disabled → selected → highlighted → hovered → neutral. */
+export function resolveMeshStyle(state: { readonly disabled?: boolean; readonly selected?: boolean; readonly highlighted?: boolean; readonly hovered?: boolean }): MeshStyleKind {
+  if (state.disabled) return "disabled";
+  if (state.selected) return "selected";
+  if (state.highlighted) return "highlighted";
+  if (state.hovered) return "hovered";
+  return "neutral";
+}
+
+/** 🎨 Slim alias over {@link MeshStylePalette} for call sites that only need the four legacy semantic colors (face/edge/vertex component overlays, markers). */
 type SemanticColors = {
   readonly mesh: string;
   readonly edge: string;
@@ -247,20 +314,15 @@ type SemanticColors = {
   readonly hover: string;
 };
 
-function useSemanticColors(): SemanticColors {
-  const resolve = useCallback(
-    (): SemanticColors => ({
-      mesh: resolveSemanticColorHex("--panel"),
-      edge: resolveSemanticColorHex("--border-normal-color"),
-      select: resolveSemanticColorHex("--active-base"),
-      hover: resolveSemanticColorHex("--hover-base"),
-    }),
-    [],
-  );
-  const [colors, setColors] = useState(resolve);
-  useCanvasAppearanceSync(useCallback(() => setColors(resolve()), [resolve]));
-  return colors;
+function semanticColorsFromPalette(palette: MeshStylePalette): SemanticColors {
+  return {
+    mesh: palette.neutral.meshColor,
+    edge: palette.neutral.lineColor,
+    select: palette.selected.lineColor,
+    hover: palette.hovered.meshColor,
+  };
 }
+//#endregion WorldMeshPaint
 
 type WorldParsedCameraState = WorldCameraState & { readonly fov: number; readonly explicitProjection: boolean };
 
@@ -661,14 +723,14 @@ function paintTextureUrl(base64: string): string {
 
 function PaintTexturedMesh({
   geometry,
-  color,
+  style,
   textureBase64,
   flatShading,
   children,
   ...meshProps
 }: {
   readonly geometry: BufferGeometry;
-  readonly color: string;
+  readonly style: MeshStyleColors;
   readonly textureBase64?: string;
   readonly flatShading?: boolean;
   readonly children?: React.ReactNode;
@@ -676,31 +738,138 @@ function PaintTexturedMesh({
   const paintMap = textureBase64 ? useLoader(TextureLoader, paintTextureUrl(textureBase64)) : null;
   return (
     <mesh geometry={geometry} {...meshProps}>
-      <meshStandardMaterial color={color} map={paintMap ?? undefined} side={DoubleSide} flatShading={flatShading} />
+      <meshStandardMaterial
+        color={style.meshColor}
+        map={paintMap ?? undefined}
+        side={DoubleSide}
+        flatShading={flatShading}
+        metalness={0}
+        roughness={1}
+        emissive={style.meshColor}
+        emissiveIntensity={style.emissiveIntensity}
+        transparent={style.opacity < 1}
+        opacity={style.opacity}
+      />
       {children}
     </mesh>
   );
 }
 
-function GlbInstanceMesh({ url, color, material, shadowEnabled }: { readonly url: string; readonly color: string; readonly material?: WorldEnvironmentMaterialRecord; readonly shadowEnabled?: boolean }) {
+//#region GlbMeshStyling
+/** 🎨 EdgesGeometry cache keyed by source BufferGeometry — `gltf.scene.clone(true)` shares geometries across every per-instance clone of the same GLB, so this dedupes edge computation across instances. */
+const GLB_EDGE_GEOMETRY_CACHE = new WeakMap<BufferGeometry, EdgesGeometry>();
+
+/** 🎨 Marks the backside-scaled duplicate mesh added by {@link applyGlbMeshSelectionHalo}. */
+const WORLD_MESH_SELECTION_HALO_USER_DATA_KEY = "__worldMeshSelectionHalo";
+
+/** 🎨 Scene-wide cap on selection halos, mirroring the premigration `<Outlines>` cap — keeps large marquee selections cheap. */
+const WORLD_MESH_OUTLINE_SELECTION_CAP = 48;
+
+/** 🎨 Adds a border-color {@link EdgesGeometry} outline to every mesh under `root` (idempotent), using the shared {@link GLB_EDGE_GEOMETRY_CACHE}. */
+function applyGlbMeshEdgeBorders(root: Object3D, borderColor: string): void {
+  // 🧵 Collect targets before mutating: `object.add(...)` during `traverse()` would splice the new
+  // (itself a Mesh) child into the live `children` array traverse is still walking, so it gets visited
+  // and outlined again — and again — recursing until the stack overflows.
+  const targets: Mesh[] = [];
+  root.traverse((object) => {
+    if (!(object instanceof Mesh)) return;
+    const geometry = object.geometry;
+    if (!geometry || object.children.some((child) => child.userData[WORLD_MESH_OUTLINE_USER_DATA_KEY])) return;
+    targets.push(object);
+  });
+  for (const object of targets) {
+    let edges = GLB_EDGE_GEOMETRY_CACHE.get(object.geometry);
+    if (!edges) {
+      edges = new EdgesGeometry(object.geometry);
+      GLB_EDGE_GEOMETRY_CACHE.set(object.geometry, edges);
+    }
+    const outline = new LineSegments(edges, new LineBasicMaterial({ color: new Color(borderColor) }));
+    outline.userData[WORLD_MESH_OUTLINE_USER_DATA_KEY] = true;
+    outline.scale.setScalar(1.001);
+    object.add(outline);
+  }
+}
+
+/** 🎨 Adds a hidden backside-scaled duplicate mesh (toggled visible on selection) to every mesh under `root` (idempotent) — a `<primitive>`-safe equivalent of drei's `<Outlines>` inflate shader, which requires a real `<mesh>` parent that a cloned GLB group can't provide per sub-mesh. */
+function applyGlbMeshSelectionHalo(root: Object3D, haloColor: string): void {
+  // 🧵 Same collect-then-mutate split as applyGlbMeshEdgeBorders — the halo is itself a Mesh, so adding
+  // it mid-traverse would recurse into it and add another halo to that halo, forever.
+  const targets: Mesh[] = [];
+  root.traverse((object) => {
+    if (!(object instanceof Mesh)) return;
+    if (object.children.some((child) => child.userData[WORLD_MESH_SELECTION_HALO_USER_DATA_KEY])) return;
+    targets.push(object);
+  });
+  for (const object of targets) {
+    const halo = new Mesh(object.geometry, new MeshBasicMaterial({ color: new Color(haloColor), side: BackSide }));
+    halo.userData[WORLD_MESH_SELECTION_HALO_USER_DATA_KEY] = true;
+    halo.scale.setScalar(1.03);
+    halo.visible = false;
+    object.add(halo);
+  }
+}
+//#endregion GlbMeshStyling
+
+function GlbInstanceMesh({
+  url,
+  color,
+  emissive,
+  emissiveIntensity,
+  opacity,
+  outlineColor,
+  showSelectionHalo,
+  material,
+  shadowEnabled,
+}: {
+  readonly url: string;
+  readonly color: string;
+  readonly emissive: string;
+  readonly emissiveIntensity: number;
+  readonly opacity: number;
+  readonly outlineColor: string;
+  readonly showSelectionHalo: boolean;
+  readonly material?: WorldEnvironmentMaterialRecord;
+  readonly shadowEnabled?: boolean;
+}) {
   const gltf = useLoader(GLTFLoader, url);
   const scene = useMemo(() => {
     const cloned = gltf.scene.clone(true);
     cloned.traverse((child) => {
-      if ("isMesh" in child && (child as { isMesh?: boolean }).isMesh) {
-        const mesh = child as Mesh;
-        const standard = new MeshStandardMaterial({ color, metalness: material?.metalness ?? 0, roughness: material?.roughness ?? 1 });
-        if (material?.emissive) {
-          standard.emissive.set(material.emissive);
-          standard.emissiveIntensity = material.emissiveIntensity ?? 1;
+      if (!(child instanceof Mesh)) return;
+      child.material = new MeshStandardMaterial({ metalness: material?.metalness ?? 0, roughness: material?.roughness ?? 1 });
+      child.castShadow = shadowEnabled === true;
+      child.receiveShadow = shadowEnabled === true;
+    });
+    applyGlbMeshEdgeBorders(cloned, outlineColor);
+    applyGlbMeshSelectionHalo(cloned, outlineColor);
+    return cloned;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- outlineColor/style intentionally excluded: applied once at clone time, then kept in sync imperatively by the effect below without rebuilding the clone.
+  }, [gltf.scene, material?.metalness, material?.roughness, shadowEnabled]);
+
+  useEffect(() => {
+    scene.traverse((child) => {
+      if (child instanceof Mesh) {
+        if (child.userData[WORLD_MESH_SELECTION_HALO_USER_DATA_KEY]) {
+          child.visible = showSelectionHalo;
+          (child.material as MeshBasicMaterial).color.set(outlineColor);
+          return;
         }
-        mesh.material = standard;
-        mesh.castShadow = shadowEnabled === true;
-        mesh.receiveShadow = shadowEnabled === true;
+        const standard = child.material;
+        if (standard instanceof MeshStandardMaterial) {
+          standard.color.set(color);
+          standard.emissive.set(emissive);
+          standard.emissiveIntensity = emissiveIntensity;
+          standard.transparent = opacity < 1;
+          standard.opacity = opacity;
+        }
+        return;
+      }
+      if (child instanceof LineSegments && child.userData[WORLD_MESH_OUTLINE_USER_DATA_KEY]) {
+        (child.material as LineBasicMaterial).color.set(outlineColor);
       }
     });
-    return cloned;
-  }, [gltf.scene, color, material, shadowEnabled]);
+  }, [scene, color, emissive, emissiveIntensity, opacity, outlineColor, showSelectionHalo]);
+
   return (
     <group rotation={[GLB_MESH_FRAME_ROTATION_X, 0, 0]}>
       <primitive object={scene} />
@@ -814,7 +983,8 @@ function WorldInstanceNode({
   meshRecord,
   meshData,
   geometry,
-  colors,
+  borderGeometry,
+  palette,
   vertexPick,
   edgeGeometry,
   paintTextureBase64,
@@ -842,13 +1012,16 @@ function WorldInstanceNode({
   environmentShadowEnabled,
   faceDragActive,
   onFaceDragStart,
+  outlinesEnabled,
 }: {
   readonly instance: WorldInstanceRecord;
   readonly index: number;
   readonly meshRecord?: WorldMeshRecord;
   readonly meshData?: WorldMeshData;
   readonly geometry?: BufferGeometry;
-  readonly colors: SemanticColors;
+  /** 🎨 Shared per-meshId edge outline geometry (see {@link WorldInstancesLayer}'s `geometries` memo); never rebuilt per instance. */
+  readonly borderGeometry?: EdgesGeometry;
+  readonly palette: MeshStylePalette;
   readonly vertexPick: VertexPickData | null;
   readonly edgeGeometry: BufferGeometry | null;
   readonly paintTextureBase64?: string;
@@ -878,12 +1051,20 @@ function WorldInstanceNode({
   readonly previewInstanceSelected?: boolean;
   readonly environmentMaterial?: WorldEnvironmentMaterialRecord;
   readonly environmentShadowEnabled?: boolean;
+  /** 🎨 Whether the drei selection halo may render for this instance (capped scene-wide by {@link WORLD_MESH_OUTLINE_SELECTION_CAP}). */
+  readonly outlinesEnabled: boolean;
 }) {
   const isActiveObject = instance.id === activeObjectId;
   const effectiveSelected = previewInstanceSelected ?? instance.selected;
   const previewAddedInstance = previewInstanceSelected === true && !instance.selected;
-  const meshTint = previewAddedInstance ? colors.hover : effectiveSelected ? colors.select : instance.hovered ? colors.hover : colors.mesh;
-  const glbTinted = previewAddedInstance || effectiveSelected === true || instance.hovered === true;
+  const colors = semanticColorsFromPalette(palette);
+  const styleKind = previewAddedInstance ? "highlighted" : resolveMeshStyle({ disabled: instance.disabled, selected: effectiveSelected, highlighted: instance.highlighted, hovered: instance.hovered });
+  const style = palette[styleKind];
+  const showSelectionOutline = styleKind === "selected" && outlinesEnabled;
+  const glbUsesEnvironmentColor = styleKind === "neutral" && environmentMaterial?.color != null;
+  const glbColor = glbUsesEnvironmentColor ? environmentMaterial!.color! : style.meshColor;
+  const glbEmissive = glbUsesEnvironmentColor && environmentMaterial?.emissive ? environmentMaterial.emissive : style.meshColor;
+  const glbEmissiveIntensity = glbUsesEnvironmentColor && environmentMaterial?.emissive ? (environmentMaterial.emissiveIntensity ?? 1) : style.emissiveIntensity;
   const hoveredFaceId = hoveredComponent?.mode === "face" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
   const hoveredVertexId = hoveredComponent?.mode === "vertex" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
   const hoveredEdgeId = hoveredComponent?.mode === "edge" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
@@ -909,7 +1090,7 @@ function WorldInstanceNode({
         <>
           <PaintTexturedMesh
             geometry={geometry}
-            color={meshTint}
+            style={style}
             textureBase64={paintTextureBase64}
             flatShading={flatShading}
             onPointerDown={(event) => {
@@ -965,7 +1146,14 @@ function WorldInstanceNode({
               onInstancePointerMove(null);
               onComponentHover(null);
             }}
-          />
+          >
+            {showSelectionOutline ? <Outlines color={style.lineColor} thickness={4} /> : null}
+          </PaintTexturedMesh>
+          {borderGeometry && (showEdges ?? true) ? (
+            <lineSegments geometry={borderGeometry} scale={1.001} raycast={() => null}>
+              <lineBasicMaterial color={style.lineColor} />
+            </lineSegments>
+          ) : null}
           {(targets.edge || (showEdges ?? true) || (selectionMode === "mesh" && selectedComponentIds.size > 0)) && edgeGeometry ? (
             <lineSegments
               geometry={edgeGeometry}
@@ -1073,7 +1261,17 @@ function WorldInstanceNode({
           onPointerOut={() => onInstancePointerMove(null)}
         >
           <Suspense fallback={null}>
-            <GlbInstanceMesh url={meshRecord.url} color={glbTinted ? meshTint : environmentMaterial?.color ?? meshTint} material={environmentMaterial} shadowEnabled={environmentShadowEnabled} />
+            <GlbInstanceMesh
+              url={meshRecord.url}
+              color={glbColor}
+              emissive={glbEmissive}
+              emissiveIntensity={glbEmissiveIntensity}
+              opacity={style.opacity}
+              outlineColor={style.lineColor}
+              showSelectionHalo={showSelectionOutline}
+              material={environmentMaterial}
+              shadowEnabled={environmentShadowEnabled}
+            />
           </Suspense>
         </group>
       ) : (
@@ -1084,7 +1282,15 @@ function WorldInstanceNode({
           }}
         >
           <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color={meshTint} />
+          <meshStandardMaterial
+            color={style.meshColor}
+            metalness={0}
+            roughness={1}
+            emissive={style.meshColor}
+            emissiveIntensity={style.emissiveIntensity}
+            transparent={style.opacity < 1}
+            opacity={style.opacity}
+          />
         </mesh>
       )}
     </group>
@@ -1097,7 +1303,7 @@ function WorldInstancesLayer({
   instances,
   meshes,
   selection,
-  colors,
+  palette,
   onInstancePointerDown,
   onInstancePointerMove,
   onWorldPick,
@@ -1115,7 +1321,7 @@ function WorldInstancesLayer({
   readonly instances: readonly WorldInstanceRecord[];
   readonly meshes: readonly WorldMeshRecord[];
   readonly selection: WorldSelectionRecord;
-  readonly colors: SemanticColors;
+  readonly palette: MeshStylePalette;
   readonly onInstancePointerDown: (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
   readonly onInstancePointerMove: (id: string | null) => void;
   readonly onWorldPick: (args: { granularity: string; id: number; merge: string }) => void;
@@ -1141,6 +1347,12 @@ function WorldInstancesLayer({
     }
     return map;
   }, [meshes]);
+  /** 🎨 Per-meshId border outline geometry, shared by every instance of that mesh — never rebuilt per instance. */
+  const borderGeometries = useMemo(() => {
+    const map = new Map<string, EdgesGeometry>();
+    for (const [meshId, geometry] of geometries) map.set(meshId, new EdgesGeometry(geometry));
+    return map;
+  }, [geometries]);
   const targets = selection.targets ?? { mesh: true, vertex: false, edge: false, face: false };
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
   const currentComponentIds = new Set(selection.componentIds ?? []);
@@ -1150,6 +1362,8 @@ function WorldInstancesLayer({
   const previewComponentIds = mergedComponentIdsSet ? new Set([...mergedComponentIdsSet].filter((id) => !currentComponentIds.has(id))) : new Set<number>();
   const mergedInstanceIdsSet = mergedInstanceIds ? new Set(mergedInstanceIds) : null;
   const pickEnabled = !gumballDragActive && !onPaintAt && !blockPick && !mergedComponentIdsSet && !mergedInstanceIdsSet;
+  const selectedInstanceCount = instances.reduce((count, instance) => count + (instance.selected ? 1 : 0), 0);
+  const outlinesEnabled = selectedInstanceCount <= WORLD_MESH_OUTLINE_SELECTION_CAP;
   const transformTool = selection.transformTool ?? "move";
   const gumballConfig = useMemo(() => gumballConfigForTransformTool(transformTool), [transformTool]);
   const paintMode = selection.interactionMode === "paint";
@@ -1194,7 +1408,8 @@ function WorldInstancesLayer({
               meshRecord={meshRecord}
               meshData={meshData}
               geometry={geometry}
-              colors={colors}
+              borderGeometry={borderGeometries.get(meshId)}
+              palette={palette}
               vertexPick={meshData ? buildVertexPickData(meshData) : null}
               edgeGeometry={meshData ? buildEdgeGeometry(meshData) : null}
               paintTextureBase64={meshData?.paintTextureBase64}
@@ -1221,6 +1436,7 @@ function WorldInstancesLayer({
               onFaceDragStart={onFaceDragStart}
               environmentMaterial={environment?.material}
               environmentShadowEnabled={environment?.shadow?.enabled === true}
+              outlinesEnabled={outlinesEnabled}
             />
           );
         })}
@@ -1375,8 +1591,9 @@ function WorldAttractionLines({ attractions }: { readonly attractions: readonly 
   );
 }
 
-function BrushPreviewGhost({ preview, meshes, colors }: { readonly preview: WorldBrushPreviewRecord; readonly meshes: readonly WorldMeshRecord[]; readonly colors: SemanticColors }) {
+function BrushPreviewGhost({ preview, meshes, palette }: { readonly preview: WorldBrushPreviewRecord; readonly meshes: readonly WorldMeshRecord[]; readonly palette: MeshStylePalette }) {
   if (!preview.origin) return null;
+  const style = palette.highlighted;
   const meshUrl = preview.meshUrl;
   const meshRecord = meshUrl ? meshes.find((mesh) => mesh.url === meshUrl) : undefined;
   const position = preview.origin as [number, number, number];
@@ -1387,12 +1604,20 @@ function BrushPreviewGhost({ preview, meshes, colors }: { readonly preview: Worl
     <group position={position} scale={scale} quaternion={quaternion}>
       {meshRecord?.url ? (
         <Suspense fallback={null}>
-          <GlbInstanceMesh url={meshRecord.url} color={colors.hover} material={{ emissive: colors.hover, emissiveIntensity: 0.6 }} />
+          <GlbInstanceMesh
+            url={meshRecord.url}
+            color={style.meshColor}
+            emissive={style.meshColor}
+            emissiveIntensity={0.6}
+            opacity={1}
+            outlineColor={style.lineColor}
+            showSelectionHalo={false}
+          />
         </Suspense>
       ) : (
         <mesh raycast={() => null}>
           <boxGeometry args={[1, 1, 1]} />
-          <meshBasicMaterial color={colors.hover} transparent opacity={0.42} depthWrite={false} />
+          <meshBasicMaterial color={style.meshColor} transparent opacity={0.42} depthWrite={false} />
         </mesh>
       )}
     </group>
@@ -1788,7 +2013,8 @@ function axisDragParam(clientX: number, clientY: number, hostRect: DOMRect, came
 //#region World3dHost
 export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.world3d;
-  const colors = useSemanticColors();
+  const meshStylePalette = useMeshStylePalette();
+  const colors = useMemo(() => semanticColorsFromPalette(meshStylePalette), [meshStylePalette]);
   const parsedCamera = useMemo(() => parseCameraState(scene?.cameraJson ?? "{}"), [scene?.cameraJson]);
   const instances = useMemo(() => parseInstances(scene?.instancesJson ?? "[]"), [scene?.instancesJson]);
   const cameraState = useMemo(() => {
@@ -2368,20 +2594,21 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
             manualLod={lod.manualLod ?? DEFAULT_MANUAL_LOD}
             gridDatum={[0, 0, 0]}
           >
-            {environment ? (
-              <>
-                <ambientLight color={environment.ambient?.color ?? "#ffffff"} intensity={environment.ambient?.intensity ?? 0.65} />
-                {environment.sun?.enabled === true ? (
-                  <directionalLight
-                    color={environment.sun?.color ?? "#ffffff"}
-                    intensity={environment.sun?.intensity ?? 0.85}
-                    position={sunPositionFromAzimuthElevation(environment.sun?.azimuth ?? 45, environment.sun?.elevation ?? 35)}
-                    castShadow={environment.shadow?.enabled === true}
-                  />
-                ) : null}
-              </>
+            <ambientLight color={environment?.ambient?.color ?? "#ffffff"} intensity={environment?.ambient?.intensity ?? 1.15} />
+            {environment?.sun?.enabled === true ? (
+              <directionalLight
+                color={environment.sun?.color ?? "#ffffff"}
+                intensity={environment.sun?.intensity ?? 0.85}
+                position={sunPositionFromAzimuthElevation(environment.sun?.azimuth ?? 45, environment.sun?.elevation ?? 35)}
+                castShadow={environment.shadow?.enabled === true}
+              />
             ) : (
-              <ambientLight intensity={0.65} />
+              <>
+                <hemisphereLight color="#ffffff" groundColor="#9aa0ab" intensity={1.35} position={[0, 0, 1]} />
+                <directionalLight position={[12, 18, 10]} intensity={2.4} />
+                <directionalLight position={[-14, -10, 6]} intensity={1.2} />
+                <directionalLight position={[0, 0, -16]} intensity={0.75} />
+              </>
             )}
             {fit?.enabled ? <WorldAutoFit groupRef={instancesGroupRef} fitKey={`${fit.revision ?? 0}:${meshes.map((mesh) => mesh.url ?? mesh.id).join(",")}`} padding={fit.padding ?? 1.25} camera={cameraState} onFitted={handleCameraChange} /> : null}
             <CameraRefBridge cameraRef={cameraRef} />
@@ -2397,7 +2624,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
                 instances={instances}
                 meshes={meshes}
                 selection={selection}
-                colors={colors}
+                palette={meshStylePalette}
                 onInstancePointerDown={handleInstancePointerDown}
                 onInstancePointerMove={handleInstancePointerMove}
                 onWorldPick={handleWorldPick}
@@ -2426,7 +2653,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
             />
             {connectDragSource && connectDragHoverPosition ? <WorldConnectRubberBand from={connectDragSource.position} to={connectDragHoverPosition} /> : null}
             <WorldAttractionLines attractions={attractions} />
-            {brushPreview ? <BrushPreviewGhost preview={brushPreview} meshes={meshes} colors={colors} /> : null}
+            {brushPreview ? <BrushPreviewGhost preview={brushPreview} meshes={meshes} palette={meshStylePalette} /> : null}
             {engagementPreview.length > 0 ? <EngagementPreviewLayer items={engagementPreview} color={colors.hover} /> : null}
             <WorldVolumeLayer
               volumes={targetVolumes.map((volume) => ({

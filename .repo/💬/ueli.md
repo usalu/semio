@@ -445,6 +445,14 @@ This MUST NOT happen.
 
 ---
 
+The concept changed. Make the footer symmetrical to the navbar. There are four corner panels that grow from the corner. the footer is again same level as navbar and only the toggles for the the panels remain. Rename and generalize everything from side panel into corner panel.
+tabs in general should be draggable and dockable  between all side panels. also the nesting can change.
+When a tab is dragged then all children tabs are moved with it.
+A tab can either have children tabs or trees. trees appear in sections. trees are also draggable and movable between tabs.
+The new system is has a composable tab and tree system.
+
+---
+
 All content inside all windows must be edgeless.
 In order to not have operlap e.g. if writer starts normally then the first line would overlap with e.g. command button.
 When scrolling make sure that it scrolls through the first line. This way the default has the line cleared but when scrolling up it is filled and everything is edgeless.

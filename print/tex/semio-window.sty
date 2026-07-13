@@ -2419,8 +2419,14 @@
 \newcommand{\semio@chrome@dims@compute}{%
   \begingroup
   \normalfont
-  \xdef\semio@chrome@tmp@row{\the\dimexpr\semio@chrome@font@chip\relax}%
-  \xdef\semio@chrome@tmp@row@footer{\the\dimexpr\semio@chrome@font@chip\relax}%
+  \xdef\semio@chrome@tmp@row{%
+    \the\dimexpr
+      \semio@chrome@font@chip
+      +\semio@chrome@padding+\semio@chrome@padding
+      +\semio@stroke@hairline+\semio@stroke@hairline
+    \relax
+  }%
+  \xdef\semio@chrome@tmp@row@footer{\semio@chrome@tmp@row}%
   \xdef\semio@chrome@tmp@titlebar{%
     \the\dimexpr
       \semio@chrome@font@chip

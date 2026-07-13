@@ -1404,9 +1404,7 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
       },
       windowEngagements: async (instanceId, viewState) => {
         if (!api.windowEngagements) return {};
-        const raw = await api.windowEngagements(instanceId, JSON.stringify(viewState));
-        console.log("[DEBUG] raw windowEngagements " + raw);
-        return JSON.parse(raw) as Record<string, Record<string, unknown>>;
+        return JSON.parse(await api.windowEngagements(instanceId, JSON.stringify(viewState))) as Record<string, Record<string, unknown>>;
       },
       windowMeasures: async (instanceId, viewState) => {
         if (!api.windowMeasures) return {};

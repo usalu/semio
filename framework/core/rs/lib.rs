@@ -3022,10 +3022,12 @@ pub enum PanelGroup {
 }
 
 impl PanelGroup {
-    pub fn side(&self) -> &'static str {
+    pub fn corner(&self) -> &'static str {
         match self {
-            PanelGroup::Workbench | PanelGroup::Display => "left",
-            PanelGroup::Details | PanelGroup::Settings => "right",
+            PanelGroup::Workbench => "top-left",
+            PanelGroup::Details => "top-right",
+            PanelGroup::Display => "bottom-left",
+            PanelGroup::Settings => "bottom-right",
         }
     }
 

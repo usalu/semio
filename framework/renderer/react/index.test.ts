@@ -25,7 +25,7 @@ import { RasterHost } from "./components/raster-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
 import { VcsHistoryHost } from "./components/vcs-history-host.tsx";
 import { TextEditorHost, buildTextEditorContextMenuItems, lineRangeAt, multiSpanReplace } from "./components/text-editor-host.tsx";
-import { World3dHost, brushObjectPlacementArgs, resolveVortexPointerDownIntent, resolveWorldContextMenuTarget, worldInstancePickBlocked } from "./components/world-3d-host.tsx";
+import { World3dHost, brushObjectPlacementArgs, resolveMeshStyle, resolveVortexPointerDownIntent, resolveWorldContextMenuTarget, worldInstancePickBlocked } from "./components/world-3d-host.tsx";
 import { parseWorldTerrainStyle } from "./components/world-terrain-layer.tsx";
 import {
   NoteCanvasHost,
@@ -925,6 +925,15 @@ describe("framework renderer hosts", () => {
   it("resolves vortex pointer-down to select in brush mode and connect-drag otherwise", () => {
     expect(resolveVortexPointerDownIntent(true)).toBe("select");
     expect(resolveVortexPointerDownIntent(false)).toBe("connect-drag");
+  });
+
+  it("resolves mesh style by premigration priority: disabled > selected > highlighted > hovered > neutral", () => {
+    expect(resolveMeshStyle({})).toBe("neutral");
+    expect(resolveMeshStyle({ hovered: true })).toBe("hovered");
+    expect(resolveMeshStyle({ hovered: true, highlighted: true })).toBe("highlighted");
+    expect(resolveMeshStyle({ highlighted: true, selected: true })).toBe("selected");
+    expect(resolveMeshStyle({ selected: true, disabled: true })).toBe("disabled");
+    expect(resolveMeshStyle({ disabled: true, selected: true, highlighted: true, hovered: true })).toBe("disabled");
   });
 
   it("builds addBrushObject args from a parsed brush preview, or null when there is nothing to place", () => {

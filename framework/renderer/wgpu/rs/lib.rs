@@ -14235,15 +14235,20 @@ fn app_icon_id<'a>(app: &'a AppDefinition, icons: &IconAtlas) -> &'a str {
     "component"
 }
 
+/// 🧭 This renderer only has a 2-panel (left/right) layout; fold the framework's 4-corner model back down.
+fn group_side(group: PanelGroup) -> &'static str {
+    if group.corner().ends_with("left") { "left" } else { "right" }
+}
+
 fn panel_toggle_icon_id(kind: &str, session: Option<&ActiveSession>) -> &'static str {
     match kind {
         "display" => "layout-grid",
         "workbench" => session
-            .and_then(|s| s.app.panel_tabs.iter().find(|tab| tab.group.side() == "left"))
+            .and_then(|s| s.app.panel_tabs.iter().find(|tab| group_side(tab.group) == "left"))
             .map(|tab| panel_tab_icon_id(tab))
             .unwrap_or("folder"),
         "details" => session
-            .and_then(|s| s.app.panel_tabs.iter().find(|tab| tab.group.side() == "right"))
+            .and_then(|s| s.app.panel_tabs.iter().find(|tab| group_side(tab.group) == "right"))
             .map(|tab| panel_tab_icon_id(tab))
             .unwrap_or("info"),
         "settings" => "settings-2",
@@ -14398,7 +14403,7 @@ impl ShellState {
                     .app
                     .panel_tabs
                     .iter()
-                    .filter(|tab| tab.group.side() == "left")
+                    .filter(|tab| group_side(tab.group) == "left")
                     .cloned()
                     .collect();
                 let has_document = tabs.iter().any(|t| t.id() == FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
@@ -14432,7 +14437,7 @@ impl ShellState {
                 .app
                 .panel_tabs
                 .iter()
-                .filter(|tab| tab.group.side() == "right")
+                .filter(|tab| group_side(tab.group) == "right")
                 .cloned()
                 .collect(),
         }

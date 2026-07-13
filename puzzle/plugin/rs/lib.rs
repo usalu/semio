@@ -2637,9 +2637,9 @@ pub mod d3 {
                     "rotation": object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
                     "scale": scale,
                     "label": object.label.clone().or_else(|| object.object_kind.clone()).unwrap_or_else(|| object.id.clone()),
-                    "color": if selected { "#f59e0b" } else if hovered || kind_highlighted { "#fbbf24" } else { "#94a3b8" },
                     "selected": selected,
-                    "hovered": hovered || kind_highlighted,
+                    "hovered": hovered,
+                    "highlighted": kind_highlighted,
                 })
             })
             .collect();
@@ -6602,7 +6602,6 @@ pub mod d5 {
                     "rotation": part.part_3d.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
                     "scale": part_scale_json(part),
                     "label": part.part_3d.label.clone().unwrap_or_else(|| part.part_kind.clone()),
-                    "color": if selected { "#f59e0b" } else if hovered { "#fbbf24" } else { "#94a3b8" },
                     "selected": selected,
                     "hovered": hovered,
                 })

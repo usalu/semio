@@ -764,14 +764,18 @@ pub mod app_2d {
 
     impl Procedural2dPlayApp {
         /// 🔀 Runs a host mutation seeded from the projection fixture and diffs the result into ops.
+        /// Diffs against the host-normalized baseline (not the raw projection) so `FlowHost`'s own
+        /// dedupe/dag-rebuild normalization does not leak spurious collection ops — only the actual
+        /// mutation becomes an op, which keeps concurrent disjoint edits mergeable on the backbone.
         fn ops_from_host_mutation(
             &self,
             fixture: &FlowFixture,
             mutate: impl FnOnce(&mut FlowHost),
         ) -> Vec<Procedural2dOp> {
             let mut host = host_from_fixture(fixture);
+            let baseline = host.fixture.clone();
             mutate(&mut host);
-            procedural2d_fixture_ops(fixture, &host.fixture)
+            procedural2d_fixture_ops(&baseline, &host.fixture)
         }
 
         /// 🧬 Emits generation ops for the generate-mode actions, updating ephemeral selection and
@@ -946,9 +950,10 @@ pub mod app_2d {
                     let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                     let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                     let mut host = host_from_fixture(fixture);
+                    let baseline = host.fixture.clone();
                     if let Ok(id) = host.add_widget(&descriptor, x, y) {
                         self.runtime.selected_ids = vec![id];
-                        return ActionEmit::ops(procedural2d_fixture_ops(fixture, &host.fixture));
+                        return ActionEmit::ops(procedural2d_fixture_ops(&baseline, &host.fixture));
                     }
                     ActionEmit::default()
                 }
@@ -2298,10 +2303,14 @@ pub mod app_3d {
     }
 
     impl Procedural3dPlayApp {
-        /// 🔀 Diffs a mutated fixture into ops and refreshes the ephemeral base preview cache.
+        /// 🔀 Diffs a mutated fixture into ops and refreshes the ephemeral base preview cache. Diffs
+        /// against the host-normalized baseline of `before` (not the raw projection) so `FlowHost`'s
+        /// own dedupe/dag-rebuild normalization does not leak spurious collection ops — only the
+        /// actual mutation becomes an op, keeping concurrent disjoint edits mergeable on the backbone.
         fn commit_fixture(&mut self, before: &FlowFixture, target: &FlowFixture) -> Vec<Procedural3dOp> {
+            let baseline = host_from_fixture(before).fixture;
             refresh_preview_cache(&mut self.runtime, target);
-            procedural3d_fixture_ops(before, target)
+            procedural3d_fixture_ops(&baseline, target)
         }
 
         /// 🧬 Emits generation ops for the generate-mode actions, updating ephemeral selection and
@@ -2575,8 +2584,9 @@ pub mod app_3d {
                     let widget_ids: Vec<String> = args.and_then(|value| value.get("widgetIds")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                     let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
                     let raw_value = args.and_then(|value| value.get("value")).and_then(|entry| entry.as_f64());
-                    let mut next = fixture.clone();
-                    for widget in next.widgets.iter_mut() {
+                    let mut host = host_from_fixture(fixture);
+                    let baseline = host.fixture.clone();
+                    for widget in host.fixture.widgets.iter_mut() {
                         if !widget_ids.contains(&widget_id(widget).to_string()) {
                             continue;
                         }
@@ -2586,7 +2596,9 @@ pub mod app_3d {
                             }
                         }
                     }
-                    ActionEmit::ops(self.commit_fixture(fixture, &next))
+                    let ops = procedural3d_fixture_ops(&baseline, &host.fixture);
+                    refresh_preview_cache(&mut self.runtime, &host.fixture);
+                    ActionEmit::ops(ops)
                 }
                 "reorganize" => {
                     let mut host = host_from_fixture(fixture);

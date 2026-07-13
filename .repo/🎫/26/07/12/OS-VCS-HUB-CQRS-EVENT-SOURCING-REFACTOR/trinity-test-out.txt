@@ -1,0 +1,628 @@
+    Blocking waiting for file lock on build directory
+   Compiling mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
+   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/framework/core/rs)
+warning: unused import: `vello::util`
+  --> infinite/cavas/rs/lib.rs:11:17
+   |
+11 |         pub use vello::util;
+   |                 ^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `vello::wgpu`
+  --> infinite/cavas/rs/lib.rs:12:17
+   |
+12 |         pub use vello::wgpu;
+   |                 ^^^^^^^^^^^
+
+warning: method `into_brush` is never used
+   --> infinite/cavas/rs/lib.rs:158:12
+    |
+157 |     impl Paint {
+    |     ---------- method in this implementation
+158 |         fn into_brush(self) -> backend::peniko::Brush {
+    |            ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `infinite_cavas` (lib) generated 3 warnings (run `cargo fix --lib -p infinite_cavas` to apply 2 suggestions)
+   Compiling vcs v0.1.0 (/Users/ueli/Documents/semio/vcs/rs)
+warning: unused variable: `projection`
+   --> vcs/rs/lib.rs:405:27
+    |
+405 | pub fn absorb_diff<P, Op>(projection: &P, existing: &mut Op::Diff, incoming: Op::Diff)
+    |                           ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_projection`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `projection`
+   --> vcs/rs/lib.rs:415:5
+    |
+415 |     projection: &P,
+    |     ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_projection`
+
+warning: `vcs` (lib) generated 2 warnings (run `cargo fix --lib -p vcs` to apply 2 suggestions)
+   Compiling protocol v0.1.0 (/Users/ueli/Documents/semio/protocol/rs)
+warning: unused imports: `DocumentVcsCommand` and `create_document_vcs_envelope`
+ --> protocol/rs/lib.rs:9:5
+  |
+9 |     create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `protocol` (lib) generated 1 warning (run `cargo fix --lib -p protocol` to apply 1 suggestion)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/framework/plugin/rs)
+warning: variable does not need to be mutable
+    --> framework/plugin/rs/lib.rs:1383:35
+     |
+1383 |     pub fn local_backbone_storage(mut self) -> Self {
+     |                                   ----^^^^
+     |                                   |
+     |                                   help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+warning: unused imports: `Deserialize` and `Serialize`
+ --> mathematical/graph/manifest/rs/../generated/note_blocks.rs:3:13
+  |
+3 | use serde::{Deserialize, Serialize};
+  |             ^^^^^^^^^^^  ^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
+warning: `mathematical_graph_manifest` (lib) generated 1 warning (run `cargo fix --lib -p mathematical_graph_manifest` to apply 1 suggestion)
+   Compiling trinity_ram v0.1.0 (/Users/ueli/Documents/semio/trinity/ram/rs)
+   Compiling mathematical_graph_dsl v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/dsl/rs)
+warning: unused import: `std::collections::BTreeMap`
+   --> mathematical/graph/dsl/rs/lib.rs:310:5
+    |
+310 | use std::collections::BTreeMap;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling mathematical_graph_drawing v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/drawing/rs)
+warning: unused variable: `kind`
+    --> trinity/ram/rs/lib.rs:1013:17
+     |
+1013 |                 kind,
+     |                 ^^^^ help: try ignoring the field: `kind: _`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `source`
+    --> trinity/ram/rs/lib.rs:1014:17
+     |
+1014 |                 source,
+     |                 ^^^^^^ help: try ignoring the field: `source: _`
+
+warning: unused variable: `target`
+    --> trinity/ram/rs/lib.rs:1015:17
+     |
+1015 |                 target,
+     |                 ^^^^^^ help: try ignoring the field: `target: _`
+
+warning: unused variable: `properties`
+    --> trinity/ram/rs/lib.rs:1016:17
+     |
+1016 |                 properties,
+     |                 ^^^^^^^^^^ help: try ignoring the field: `properties: _`
+
+warning: unused variable: `name`
+    --> trinity/ram/rs/lib.rs:1032:42
+     |
+1032 |             TrinityGraphOp::Rename { id, name } => projection
+     |                                          ^^^^ help: try ignoring the field: `name: _`
+
+warning: unused variable: `x`
+    --> trinity/ram/rs/lib.rs:1041:46
+     |
+1041 |             TrinityGraphOp::Reposition { id, x, y } => projection
+     |                                              ^ help: try ignoring the field: `x: _`
+
+warning: unused variable: `y`
+    --> trinity/ram/rs/lib.rs:1041:49
+     |
+1041 |             TrinityGraphOp::Reposition { id, x, y } => projection
+     |                                                 ^ help: try ignoring the field: `y: _`
+
+warning: unused variable: `value`
+    --> trinity/ram/rs/lib.rs:1051:60
+     |
+1051 |             TrinityGraphOp::SetDataProperty { entity, key, value } => {
+     |                                                            ^^^^^ help: try ignoring the field: `value: _`
+
+warning: `trinity_ram` (lib) generated 8 warnings (run `cargo fix --lib -p trinity_ram` to apply 8 suggestions)
+warning: `mathematical_graph_dsl` (lib) generated 1 warning (run `cargo fix --lib -p mathematical_graph_dsl` to apply 1 suggestion)
+   Compiling trinity_jack v0.1.0 (/Users/ueli/Documents/semio/trinity/jack/core/rs)
+warning: `trinity_ram` (lib test) generated 8 warnings (8 duplicates)
+warning: unused variable: `node_radius`
+   --> mathematical/graph/drawing/rs/lib.rs:522:97
+    |
+522 | ...de_shape: NodeShape, node_radius: f64, node_width: f64, node_height: f64) -> Option<Vec2> {
+    |                         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_node_radius`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> mathematical/graph/drawing/rs/lib.rs:387:13
+    |
+387 |         let mut default_ancestor = default_ancestor;
+    |             ----^^^^^^^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable `sor` is assigned to, but never used
+   --> mathematical/graph/drawing/rs/lib.rs:397:13
+    |
+397 |         let mut sor = nodes[v].mod_;
+    |             ^^^^^^^
+    |
+    = note: consider using `_sor` instead
+
+warning: variable `sol` is assigned to, but never used
+   --> mathematical/graph/drawing/rs/lib.rs:399:13
+    |
+399 |         let mut sol = nodes[vol].mod_;
+    |             ^^^^^^^
+    |
+    = note: consider using `_sol` instead
+
+warning: value assigned to `sor` is never read
+   --> mathematical/graph/drawing/rs/lib.rs:421:17
+    |
+421 |                 sor += shift;
+    |                 ^^^^^^^^^^^^ this value is reassigned later and never used
+...
+426 |             sor += nodes[vor].mod_;
+    |             ---------------------- `sor` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `sor` is never read
+   --> mathematical/graph/drawing/rs/lib.rs:426:13
+    |
+426 |             sor += nodes[vor].mod_;
+    |             ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: value assigned to `sol` is never read
+   --> mathematical/graph/drawing/rs/lib.rs:425:13
+    |
+425 |             sol += nodes[vol].mod_;
+    |             ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+   Compiling infinite_board v0.1.0 (/Users/ueli/Documents/semio/infinite/board/rs)
+warning: `mathematical_graph_drawing` (lib) generated 7 warnings (run `cargo fix --lib -p mathematical_graph_drawing` to apply 2 suggestions)
+warning: constant `CLAUSE_KEYWORDS` is never used
+   --> trinity/jack/core/rs/lib.rs:477:7
+    |
+477 | const CLAUSE_KEYWORDS: &[&str] = &["MATCH", "WHERE", "RETURN", "CREATE", "DELETE", "SET", "MERGE"];
+    |       ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `LOGIC_KEYWORDS` is never used
+   --> trinity/jack/core/rs/lib.rs:478:7
+    |
+478 | const LOGIC_KEYWORDS: &[&str] = &["AND", "OR"];
+    |       ^^^^^^^^^^^^^^
+
+warning: function `completion_prefix` is never used
+   --> trinity/jack/core/rs/lib.rs:480:4
+    |
+480 | fn completion_prefix(source: &str, cursor: usize) -> String {
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `tokens_before_cursor` is never used
+   --> trinity/jack/core/rs/lib.rs:495:4
+    |
+495 | fn tokens_before_cursor<'a>(tokens: &'a [SpannedToken], cursor: usize) -> &'a [SpannedToken] {
+    |    ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `after_colon_kind_context` is never used
+   --> trinity/jack/core/rs/lib.rs:506:4
+    |
+506 | fn after_colon_kind_context(source: &str, cursor: usize) -> Option<bool> {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `after_dot_property_context` is never used
+   --> trinity/jack/core/rs/lib.rs:525:4
+    |
+525 | fn after_dot_property_context(source: &str, cursor: usize) -> bool {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `open_bracket_kind` is never used
+   --> trinity/jack/core/rs/lib.rs:534:4
+    |
+534 | fn open_bracket_kind(tokens: &[SpannedToken]) -> Option<char> {
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `collect_bound_vars` is never used
+   --> trinity/jack/core/rs/lib.rs:551:4
+    |
+551 | fn collect_bound_vars(tokens: &[SpannedToken]) -> BTreeSet<String> {
+    |    ^^^^^^^^^^^^^^^^^^
+
+warning: function `in_where_clause` is never used
+   --> trinity/jack/core/rs/lib.rs:567:4
+    |
+567 | fn in_where_clause(tokens: &[SpannedToken]) -> bool {
+    |    ^^^^^^^^^^^^^^^
+
+warning: function `graph_node_kinds` is never used
+   --> trinity/jack/core/rs/lib.rs:580:4
+    |
+580 | fn graph_node_kinds(graph: &Graph) -> Vec<String> {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: function `graph_edge_kinds` is never used
+   --> trinity/jack/core/rs/lib.rs:591:4
+    |
+591 | fn graph_edge_kinds(graph: &Graph) -> Vec<String> {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: function `graph_property_names` is never used
+   --> trinity/jack/core/rs/lib.rs:602:4
+    |
+602 | fn graph_property_names(graph: &Graph) -> Vec<String> {
+    |    ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `filter_completions` is never used
+   --> trinity/jack/core/rs/lib.rs:612:4
+    |
+612 | fn filter_completions(candidates: impl IntoIterator<Item = (String, String, Option<String>)>, prefix: &str) -> Vec<Completion> {
+    |    ^^^^^^^^^^^^^^^^^^
+
+warning: function `collect_pattern_vars` is never used
+   --> trinity/jack/core/rs/lib.rs:636:4
+    |
+636 | fn collect_pattern_vars(pattern: &Pattern, out: &mut BTreeSet<String>) {
+    |    ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `collect_clause_bound_vars` is never used
+   --> trinity/jack/core/rs/lib.rs:648:4
+    |
+648 | fn collect_clause_bound_vars(clauses: &[Clause]) -> BTreeSet<String> {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `collect_referenced_vars` is never used
+   --> trinity/jack/core/rs/lib.rs:664:4
+    |
+664 | fn collect_referenced_vars(clauses: &[Clause]) -> Vec<(String, usize, usize)> {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `collect_expr_vars` is never used
+   --> trinity/jack/core/rs/lib.rs:693:4
+    |
+693 | fn collect_expr_vars(expr: &Expr, refs: &mut Vec<(String, usize, usize)>) {
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `semantic_lints` is never used
+   --> trinity/jack/core/rs/lib.rs:703:4
+    |
+703 | fn semantic_lints(graph: &Graph, query: &Query, source: &str) -> Vec<Diagnostic> {
+    |    ^^^^^^^^^^^^^^
+
+warning: function `find_kind_span` is never used
+   --> trinity/jack/core/rs/lib.rs:776:4
+    |
+776 | fn find_kind_span(source: &str, kind: &str) -> Option<(usize, usize)> {
+    |    ^^^^^^^^^^^^^^
+
+warning: function `find_ident_span` is never used
+   --> trinity/jack/core/rs/lib.rs:782:4
+    |
+782 | fn find_ident_span(source: &str, ident: &str) -> Option<(usize, usize)> {
+    |    ^^^^^^^^^^^^^^^
+
+warning: `trinity_jack` (lib) generated 20 warnings
+warning: unreachable pattern
+    --> infinite/board/rs/lib.rs:1019:13
+     |
+1019 |             other => {
+     |             ^^^^^ no value can reach this
+     |
+note: multiple earlier patterns match some of the same values
+    --> infinite/board/rs/lib.rs:1019:13
+     |
+ 911 |             InteractionMode::Pan { start_screen, cam_x, cam_y, zoom } => {
+     |             --------------------------------------------------------- matches some of the same values
+...
+ 917 |             InteractionMode::DragNode { node_id, offset } => {
+     |             --------------------------------------------- matches some of the same values
+...
+ 932 |             InteractionMode::DragNodes { primary_id, offset } => {
+     |             ------------------------------------------------- matches some of the same values
+...
+ 958 |             InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, reconnecting, .. } => {
+     |             --------------------------------------------------------------------------------------------- matches some of the same values
+...
+1019 |             other => {
+     |             ^^^^^ ...and 3 other patterns collectively make this unreachable
+     = note: `#[warn(unreachable_patterns)]` (part of `#[warn(unused)]`) on by default
+
+warning: methods `apply_pick_selection` and `selection_to_string_set` are never used
+    --> infinite/board/rs/lib.rs:1269:8
+     |
+ 526 | impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
+     | ---------------------------------------------------------- methods in this implementation
+...
+1269 |     fn apply_pick_selection(&mut self, hit: HitObject<P::Endpoint>, extend_selection: bool) {
+     |        ^^^^^^^^^^^^^^^^^^^^
+...
+1367 |     fn selection_to_string_set(&self) -> BTreeSet<String> {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling infinite_board_port v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/rs)
+   Compiling infinite_board_normal_undirected v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/undirected/rs)
+warning: `infinite_board` (lib) generated 2 warnings
+   Compiling infinite_board_port_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/rs)
+warning: associated function `color_from_json_rgba8` is never used
+   --> infinite/board/port/directed/rs/lib.rs:460:12
+    |
+414 |     impl CanvasPalette {
+    |     ------------------ associated function in this implementation
+...
+460 |         fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
+    |            ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling infinite_board_port_directed_normal v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/normal/rs)
+warning: `infinite_board_port_directed` (lib) generated 1 warning
+warning: unused import: `RasterImage`
+ --> infinite/board/port/directed/normal/rs/lib.rs:9:72
+  |
+9 | use infinite_cavas::{Affine, Circle, CubicBez, Color, FillRule, Point, RasterImage, Rect, Scene, Stroke, Vec2};
+  |                                                                        ^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `property_bag_to_json`
+  --> infinite/board/port/directed/normal/rs/lib.rs:17:86
+   |
+17 |     normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_json, property_bag_to_json, rectangle_handle_angle_to...
+   |                                                                                      ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Hash`
+  --> infinite/board/port/directed/normal/rs/lib.rs:30:17
+   |
+30 | use std::hash::{Hash, Hasher};
+   |                 ^^^^
+
+warning: unused import: `std::sync::Arc`
+  --> infinite/board/port/directed/normal/rs/lib.rs:31:5
+   |
+31 | use std::sync::Arc;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `Hasher`
+  --> infinite/board/port/directed/normal/rs/lib.rs:30:23
+   |
+30 | use std::hash::{Hash, Hasher};
+   |                       ^^^^^^
+
+warning: unused variable: `stroke_c`
+    --> infinite/board/port/directed/normal/rs/lib.rs:4364:118
+     |
+4364 | ...BoardElementStyleKind, stroke_c: Color, fill: Color, circle_clip: Option<&Circle>, rect_clip: Option<Rect>) {
+     |                           ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_stroke_c`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `fill`
+    --> infinite/board/port/directed/normal/rs/lib.rs:4364:135
+     |
+4364 | ...tyleKind, stroke_c: Color, fill: Color, circle_clip: Option<&Circle>, rect_clip: Option<Rect>) {
+     |                               ^^^^ help: if this is intentional, prefix it with an underscore: `_fill`
+
+warning: unused variable: `fill`
+    --> infinite/board/port/directed/normal/rs/lib.rs:2449:170
+     |
+2449 | ...ght: f64, icon_kind: &str, fill: Color, stroke_c: Color, world_space: bool) {
+     |                               ^^^^ help: if this is intentional, prefix it with an underscore: `_fill`
+
+warning: unused variable: `stroke_c`
+    --> infinite/board/port/directed/normal/rs/lib.rs:2449:183
+     |
+2449 | ...nd: &str, fill: Color, stroke_c: Color, world_space: bool) {
+     |                           ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_stroke_c`
+
+warning: variable does not need to be mutable
+    --> infinite/board/port/directed/normal/rs/lib.rs:1316:13
+     |
+1316 |         let mut source = self.resolve_tip_slot(source_slot);
+     |             ----^^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `WORLD_CLIP_TILE_WORLD` is never used
+  --> infinite/board/port/directed/normal/rs/lib.rs:42:7
+   |
+42 | const WORLD_CLIP_TILE_WORLD: f64 = ui_styling::metrics::board::WORLD_CLIP_TILE_WORLD;
+   |       ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `MAX_WORLD_CLIP_TILES` is never used
+  --> infinite/board/port/directed/normal/rs/lib.rs:43:7
+   |
+43 | const MAX_WORLD_CLIP_TILES: u32 = ui_styling::metrics::board::MAX_WORLD_CLIP_TILES;
+   |       ^^^^^^^^^^^^^^^^^^^^
+
+warning: associated items `brush_candidate_seed`, `visible_world_box`, `world_tile_screen_clip_rect`, `append_nodes_handles_edges`, and `entity_selectable_by_id` are never used
+    --> infinite/board/port/directed/normal/rs/lib.rs:1645:8
+     |
+ 427 | impl BoardHost {
+     | -------------- associated items in this implementation
+...
+1645 |     fn brush_candidate_seed(source_handle_id: &str) -> u64 {
+     |        ^^^^^^^^^^^^^^^^^^^^
+...
+4114 |     fn visible_world_box(&self, pad_world: f64) -> WorldBox {
+     |        ^^^^^^^^^^^^^^^^^
+...
+4125 |     fn world_tile_screen_clip_rect(&self, ix: i32, iy: i32, tile: f64) -> Rect {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+4308 |     fn append_nodes_handles_edges(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, lod: BoardDrawLod, world_space: bool) {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+4997 |     fn entity_selectable_by_id(&self, id: &str) -> bool {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `infinite_board_port_directed_normal` (lib) generated 13 warnings (run `cargo fix --lib -p infinite_board_port_directed_normal` to apply 9 suggestions)
+   Compiling trinity_rewrite v0.1.0 (/Users/ueli/Documents/semio/trinity/rewrite/engine/rs)
+warning: constant `TRINITY_EDGE_STROKE` is never used
+  --> trinity/rewrite/engine/rs/lib.rs:32:7
+   |
+32 | const TRINITY_EDGE_STROKE: f64 = 1.5;
+   |       ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: methods `handles_visible`, `labels_visible`, and `full_labels` are never used
+   --> trinity/rewrite/engine/rs/lib.rs:402:8
+    |
+367 | impl TrinityDrawLod {
+    | ------------------- methods in this implementation
+...
+402 |     fn handles_visible(self) -> bool {
+    |        ^^^^^^^^^^^^^^^
+...
+406 |     fn labels_visible(self) -> bool {
+    |        ^^^^^^^^^^^^^^
+...
+410 |     fn full_labels(self) -> bool {
+    |        ^^^^^^^^^^^
+
+warning: function `trinity_abbreviate_label` is never used
+   --> trinity/rewrite/engine/rs/lib.rs:419:4
+    |
+419 | fn trinity_abbreviate_label(name: &str) -> String {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: method `sync_positions_from_engine` is never used
+   --> trinity/rewrite/engine/rs/lib.rs:903:8
+    |
+618 | impl TrinityHost {
+    | ---------------- method in this implementation
+...
+903 |     fn sync_positions_from_engine(&mut self) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `trinity_rewrite` (lib) generated 4 warnings
+   Compiling trinity-plugin v0.1.0 (/Users/ueli/Documents/semio/trinity/plugin/rs)
+warning: `trinity_rewrite` (lib test) generated 4 warnings (4 duplicates)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 14m 08s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests lib.rs (target/debug/deps/trinity_plugin-44cb3c8f87a2082a)
+
+running 36 tests
+test __semio_plugin_sanity_declared_apps_appear_in_bundle_manifest ... ok
+test app_jack::tests::node_graph_select_updates_selection_and_document_tree ... ok
+test app_jack::tests::nakagin_fixture_has_nodes ... ok
+test app_jack::tests::catalogue_has_eight_example_queries ... ok
+test app_jack::tests::graph_scene_has_lod_json ... ok
+test app_jack::tests::inspector_has_flat_position_fields ... ok
+test app_jack::tests::node_graph_viewport_emits_coalesced_set_camera ... ok
+test app_jack::tests::editor_scene_has_tokens_and_diagnostics ... ok
+test app_jack::tests::renders_jack_editor ... ok
+test app_jack::tests::patch_trinity_nodes_emits_rename_op ... ok
+test app_jack::tests::node_graph_edit_delete_selection_emits_delete_node_ops ... ok
+test app_jack::tests::ingest_operations_is_idempotent ... ok
+test app_jack::tests::renders_node_graph_scene ... ok
+test app_jack::tests::return_graph_example_renders_node_graph_in_results ... ok
+test app_jack::tests::set_lod_mode_persists_per_window ... ok
+test app_jack::tests::run_query_populates_results_and_a_set_query_mutates_projection ... ok
+test app_jack::tests::tools_include_run_jack_query ... ok
+test app_jack::tests::trinity_jack_labels_resolve_native_by_default ... ok
+test app_jack::tests::text_edit_updates_query_without_ops ... ok
+test app_jack::tests::set_active_example_replaces_fixture_via_set_fixture_op ... ok
+test app_rewrite::tests::compiles_jack_query_from_rule ... ok
+test app_rewrite::tests::jack_view_has_occurrences_after_select ... ok
+test app_jack::tests::trinity_jack_labels_translate_panels_in_german ... ok
+test app_jack::tests::undo_redo_round_trip_through_the_wrapper ... ok
+test app_rewrite::tests::graph_scenes_have_lod_json ... ok
+test app_rewrite::tests::commit_checkpoint_records_change_and_stays_undoable ... ok
+test app_rewrite::tests::tools_include_history_and_reorganize ... ok
+test app_rewrite::tests::add_and_delete_rhs_set_clause ... ok
+test app_rewrite::tests::set_lhs_json_undo_redo_round_trip ... ok
+test app_rewrite::tests::set_parameter_emits_one_op_and_is_undoable ... ok
+test app_rewrite::tests::trinity_rewrite_labels_translate_panels_in_german ... ok
+test app_rewrite::tests::trinity_rewrite_labels_resolve_native_by_default ... ok
+test app_rewrite::tests::apply_rewrite_changes_after_fixture ... ok
+test app_jack::tests::two_instances_converge_disjoint_edits_via_backbone ... ok
+test app_rewrite::tests::renders_lhs_rhs_graphs ... ok
+test app_rewrite::tests::renders_before_and_after_graphs ... ok
+
+test result: ok. 36 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running unittests lib.rs (target/debug/deps/trinity_ram-761ae2c9b8745caf)
+
+running 10 tests
+test tests::manifest_nakagin_has_piece_and_connection ... ok
+test tests::remove_node_cascades_edges ... ok
+test tests::derived_flat_position_covers_disconnected_components ... ok
+test tests::derived_flat_position_bfs ... ok
+test tests::graph_op_rejects_unknown_node_kind ... ok
+test tests::graph_op_rejects_derived_property_set ... ok
+test tests::fixture_loads_manifest_id_only ... ok
+test tests::fixture_round_trip ... ok
+test tests::graph_op_create_node_and_undo ... ok
+test tests::graph_op_dispatch_validates_create_edge_batch_incrementally ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests lib.rs (target/debug/deps/trinity_rewrite-598a4b8fffb5f5b5)
+
+running 11 tests
+test tests::nakagin_fixture_loads ... ok
+test tests::nakagin_flat_position_derived ... ok
+test tests::jack_query_on_nakagin ... ok
+test tests::rewrite_rule_labels_core ... ok
+test tests::trinity_host_tokenize_jack_json ... ok
+test tests::rewrite_rule_parameter_substitution ... ok
+test tests::trinity_host_complete_jack_json ... ok
+test tests::rewrite_labeled_fixture_reloads ... ok
+test tests::trinity_host_rebuilds_engine ... ok
+test tests::trinity_host_reorganize_moves_nodes ... ok
+test tests::trinity_host_jack_create_undo ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+   Doc-tests trinity_plugin
+error[E0463]: can't find crate for `semio_framework_plugin`
+ --> trinity/plugin/rs/lib.rs:6:9
+  |
+6 |     use semio_framework_plugin::{SurfaceKind, PanelGroup,
+  |         ^^^^^^^^^^^^^^^^^^^^^^ can't find crate
+
+error[E0463]: can't find crate for `trinity_jack`
+  --> trinity/plugin/rs/lib.rs:21:9
+   |
+21 |     use trinity_jack::{complete, execute, format as jack_format, lint, parse, semantic_tokens, QueryResult, QueryResultKind};
+   |         ^^^^^^^^^^^^ can't find crate
+
+error: aborting due to 2 previous errors
+
+For more information about this error, try `rustc --explain E0463`.
+error: doctest failed, to rerun pass `-p trinity-plugin --doc`
+
+Caused by:
+  process didn't exit successfully: `/Users/ueli/.rustup/toolchains/nightly-aarch64-apple-darwin/bin/rustdoc --edition=2021 --crate-type cdylib --crate-type rlib --color auto --crate-name trinity_plugin --test trinity/plugin/rs/lib.rs --test-run-directory /Users/ueli/Documents/semio/trinity/plugin/rs -L native=/Users/ueli/Documents/semio/target/debug/build/blake3-cd45f09a2eb9920a/out -L native=/Users/ueli/Documents/semio/target/debug/build/libsqlite3-sys-a31fd6e1fd027906/out -L native=/Users/ueli/Documents/semio/target/debug/build/psm-5211642f86d5223a/out --extern mathematical_geometry=/Users/ueli/Documents/semio/target/debug/deps/libmathematical_geometry-be2101c5b1540bff.rlib --extern mathematical_geometry=/Users/ueli/Documents/semio/target/debug/deps/libmathematical_geometry-be2101c5b1540bff.rmeta --extern mathematical_graph_drawing=/Users/ueli/Documents/semio/target/debug/deps/libmathematical_graph_drawing-f8850307ae19f767.rlib --extern mathematical_graph_drawing=/Users/ueli/Documents/semio/target/debug/deps/libmathematical_graph_drawing-f8850307ae19f767.rmeta --extern semio_framework_plugin=/Users/ueli/Documents/semio/target/debug/deps/libsemio_framework_plugin-323e1de5233f0f76.rlib --extern semio_framework_plugin=/Users/ueli/Documents/semio/target/debug/deps/libsemio_framework_plugin-323e1de5233f0f76.rmeta --extern serde=/Users/ueli/Documents/semio/target/debug/deps/libserde-8fe2a1bbc0170af7.rlib --extern serde=/Users/ueli/Documents/semio/target/debug/deps/libserde-8fe2a1bbc0170af7.rmeta --extern serde_json=/Users/ueli/Documents/semio/target/debug/deps/libserde_json-81325f788ae1f77f.rlib --extern serde_json=/Users/ueli/Documents/semio/target/debug/deps/libserde_json-81325f788ae1f77f.rmeta --extern trinity_plugin=/Users/ueli/Documents/semio/target/debug/deps/libtrinity_plugin.rlib --extern trinity_plugin=/Users/ueli/Documents/semio/target/debug/deps/libtrinity_plugin.rmeta --extern trinity_jack=/Users/ueli/Documents/semio/target/debug/deps/libtrinity_jack-4e7d9596a2a6d04f.rlib --extern trinity_jack=/Users/ueli/Documents/semio/target/debug/deps/libtrinity_jack-4e7d9596a2a6d04f.rmeta --extern trinity_ram=/Users/ueli/Documents/semio/target/debug/deps/libtrinity_ram.rlib --extern trinity_ram=/Users/ueli/Documents/semio/target/debug/deps/libtrinity_ram.rmeta --extern trinity_rewrite=/Users/ueli/Documents/semio/target/debug/deps/libtrinity_rewrite.rlib --extern trinity_rewrite=/Users/ueli/Documents/semio/target/debug/deps/libtrinity_rewrite.rmeta --extern vcs=/Users/ueli/Documents/semio/target/debug/deps/libvcs.rlib --extern vcs=/Users/ueli/Documents/semio/target/debug/deps/libvcs.rmeta -L dependency=/Users/ueli/Documents/semio/target/debug/deps -C embed-bitcode=no --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' --error-format human` (exit status: 1)
+note: test exited abnormally; to see the full output pass --no-capture to the harness.
