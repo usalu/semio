@@ -240,6 +240,13 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Make sure that os, vcs and hub work perfectly together and are designed in conjunction.
+In general the app is local first and works with crqs and event sourcing approach. Instead of working with crud, all apps must emmt operations which modify the document. This solves the issue of having to merge documents but can be merged, combined, etc.
+In general there is a in memory graph and then optionally on another thread (due to blocking nature of io) a backbone is used. The ui is hence never blocked by io. the backbone is an actor and not a sink (e.g. when other processes edit the file, other authors edit a document on the server, etc).
+Full scope, full workflow, use parallel agents to align everything. No matter the scope of the refactor.
+
+---
+
 ui, os, playgrounds:
 Every window receives its own toolbar strip on the bottom (same as footer but floating and glassy like window options).
 Tools are now on window level.

@@ -3,7 +3,9 @@
 pub mod d2 {
     //! 🧩 Puzzle 2D plugin — declarative puzzle 2d play app bundled as a hot-swappable WASM component.
 
-    use semio_framework_plugin::component::layout::WindowEngagementToggleGroupOption;
+    // 🧩 `semio_framework_plugin`'s own `pub mod component` (WASM export glue) shadows the
+    // glob-reexported `ui_wgpu::component::layout`, so this one type must come straight from `ui_wgpu`.
+    use ui_wgpu::component::layout::WindowEngagementToggleGroupOption;
     use puzzle_2d::{handle_position_on_circle, handle_position_on_rectangle, puzzle2d_document_delta_ops, puzzle_2d_lod_scale_json, puzzle_board_host, BoardHost, Point, Puzzle2dExtension, Puzzle2dOp, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
     use semio_framework_plugin::{
         build_canvas_2d_scene, build_puzzle2d_board_scene, create_default_layout,
@@ -2094,7 +2096,9 @@ pub mod d2 {
 pub mod d3 {
     //! 🧊 Puzzle 3D plugin — 3D puzzle assembly play app bundled as a hot-swappable WASM component.
 
-    use semio_framework_plugin::component::layout::WindowEngagementToggleGroupOption;
+    // 🧩 `semio_framework_plugin`'s own `pub mod component` (WASM export glue) shadows the
+    // glob-reexported `ui_wgpu::component::layout`, so this one type must come straight from `ui_wgpu`.
+    use ui_wgpu::component::layout::WindowEngagementToggleGroupOption;
     use puzzle_3d::{puzzle3d_document_delta_ops, BrushPlacePayload, Puzzle3dOp, Puzzle3dPrecomputeSession};
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_world_3d_scene, create_default_layout, ActionEmit, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
@@ -5603,7 +5607,9 @@ pub mod d3 {
 pub mod d5 {
     //! 👯 Puzzle 5D plugin — paired 2D board + 3D world puzzle play app bundled as a hot-swappable WASM component.
 
-    use semio_framework_plugin::component::layout::WindowEngagementToggleGroupOption;
+    // 🧩 `semio_framework_plugin`'s own `pub mod component` (WASM export glue) shadows the
+    // glob-reexported `ui_wgpu::component::layout`, so this one type must come straight from `ui_wgpu`.
+    use ui_wgpu::component::layout::WindowEngagementToggleGroupOption;
     use puzzle_5d::{puzzle5d_document_delta_ops, BrushPlacePayload, Puzzle5dOp, Puzzle5dPrecomputeSession};
     use semio_framework_os::{register_mesh_exporter, register_mesh_importer};
     use semio_framework_plugin::{

@@ -21,6 +21,7 @@ export default defineConfig({
     },
   },
   test: {
+    name: "@semio-tech/cad-js-kernel-brepjs",
     mode: "test",
     environment: "node",
     testTimeout: 120_000,

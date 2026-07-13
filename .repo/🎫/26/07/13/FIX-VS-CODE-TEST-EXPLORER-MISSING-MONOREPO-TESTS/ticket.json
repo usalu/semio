@@ -1,0 +1,13 @@
+{
+  "title": "Fix VS Code Test Explorer Missing Monorepo Tests",
+  "emoji": "🧪",
+  "status": "open",
+  "description": "Root vitest.config.ts only registers 2 of ~22 real vitest workspace projects, and one of the 2 (compose/client/lib/react/vite.config.ts) no longer exists on disk. This likely breaks Vitest workspace loading entirely, so the Vitest VS Code extension's Test Explorer shows none/incomplete JS/TS tests. Fix by rebuilding the projects array to reference every real vitest.config.ts across the monorepo (excluding stale .repo ticket artifacts) and removing the dead react reference. Also verify Python (pytest), Rust (rust-analyzer testExplorer), and C# (dotnet solution) test discovery settings already cover all first-party test locations so the full monorepo's tests surface in VS Code's Test Explorer.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1964"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪93c1e430b33a4992b8e9c7be067cd43c"
+  ]
+}

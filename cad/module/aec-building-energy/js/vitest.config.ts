@@ -18,6 +18,7 @@ export default defineConfig({
     },
   },
   test: {
+    name: "@semio-tech/cad-js-module-aec-building-energy",
     mode: "test",
     environment: "node",
     testTimeout: 120_000,

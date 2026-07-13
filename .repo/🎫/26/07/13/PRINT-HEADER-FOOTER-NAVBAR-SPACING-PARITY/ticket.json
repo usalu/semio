@@ -1,0 +1,15 @@
+{
+  "title": "Print Header Footer Navbar Spacing Parity",
+  "emoji": "🖨️",
+  "status": "closed",
+  "description": "In the Zwischenbericht mit Bestand print report, the header (navbar) and footer chrome spacing no longer matches the on-screen app UI's navbar/footer spacing. The header currently has too little vertical spacing (too cramped) and the footer has way too much spacing (too much gap). Need to bring both back into parity with the app UI's navbar/footer padding, likely by adjusting headsep/footskip and/or internal chrome bar padding in print/tex/semio-window.sty (see SemioChromeNavbarHead, SemioChromeFooterHead, headsep=\\semio@spacing@double, semio@chrome@footer@reserve computation around line 2621-2634).",
+  "summary": "Fixed a stale/oversized \\headheight in print/tex/semio-window.sty (hardcoded 38.14006pt magic constant) that no longer matched the actual navbar box height, causing the header chrome to render flush against its bottom rule with almost no breathing room before body text — while the footer's footskip correctly derives from \\semio@chrome@footer@height, leaving it comparatively spacious. Replaced the hardcoded value with `\\dimexpr\\semio@chrome@navbar@height+\\semio@stroke@hairline\\relax`, mirroring the footer's derivation, so both chrome bars now reserve exactly their real content height plus the same \\semio@spacing@double gap (headsep/footskip), matching the on-screen app's symmetric navbar/footer padding (both use `p-single` in ui/js/react/index.tsx).\n\nAlso fixed two pre-existing, unrelated build blockers discovered while verifying (root-caused per repo convention rather than worked around):\n1. print/script.ts referenced `tokens.themes` (three call sites) but ui/styling/tokens.json was renamed to `appearances` by an earlier refactor, so `bun script.ts generate` silently emitted zero semio-chrome-* color definitions, breaking every print document with \"Undefined color `semio-chrome-light-base'\". Updated script.ts to read `tokens.appearances`.\n2. print/tex/semio-window.sty called `\\setkomafont{chapter}{...}` unconditionally in `\\semio_heading_installall`, which fails with \"font of element `chapter' can't be set\" under scrartcl-based templates (paper/zwischenbericht/kompaktbericht have no \\chapter). Guarded it with the same `\\ifcsname chapter\\endcsname` check already used a few lines below for the other chapter-only setup.\n\nVerified by regenerating tex/semio-tokens.sty and building all print templates (report, paper, flyer, forschungsbericht, zwischenbericht, kompaktbericht) via `nx run @semio-tech/print:build`, then rasterizing pages before/after: header content now has a visible gap before the navbar's bottom rule and before body text, symmetric with the footer's gap above the page-number chip, on both scrreprt (\\chapter) and scrartcl templates. Rasterized proof images and the measurement script are kept in this ticket folder.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1963"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪f10fd7d502d9451dbc1fac0e853ff495",
+    "⚪816136e4bcd64ebbbb330f487610041a"
+  ]
+}

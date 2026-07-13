@@ -17,6 +17,7 @@ export default defineConfig({
     },
   },
   test: {
+    name: "@semio-tech/cad-js-module-aec-building",
     mode: "test",
     environment: "node",
     fileParallelism: false,

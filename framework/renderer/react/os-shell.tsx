@@ -144,6 +144,7 @@ import {
   buildContributionsJson,
   expandPluginRegistry,
   nodeGraphActions,
+  panelTabKindId,
   resolveExternalSlots,
   resolveLayoutForMode,
   resolvePlaygroundDefaultAppId,
@@ -1012,12 +1013,13 @@ function panelTabDefinitionToNode(
   order: number,
   appLabelsOverlay: PluginAppLabelsOverlay,
 ): PanelTabNode {
-  const label = resolveAppLabel(appLabelsOverlay, "panelTab", tab.id, tab.label);
+  const tabId = panelTabKindId(tab.kind);
+  const label = resolveAppLabel(appLabelsOverlay, "panelTab", tabId, tab.label);
   if (tab.children && tab.children.length > 0) {
     return {
       kind: "branch",
-      id: tab.id,
-      icon: panelTabIcon(tab.id, group),
+      id: tabId,
+      icon: panelTabIcon(tabId, group),
       name: label,
       order,
       children: tab.children.map((child, childOrder) => panelTabDefinitionToNode(child, group, panelUiByKey, onAction, childOrder, appLabelsOverlay)),
@@ -1025,11 +1027,11 @@ function panelTabDefinitionToNode(
   }
   return {
     kind: "leaf",
-    id: tab.id,
-    icon: panelTabIcon(tab.id, group),
+    id: tabId,
+    icon: panelTabIcon(tabId, group),
     name: label,
     order,
-    tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tab.id] ?? { type: "text", value: shellLabel("ui.common.loading") }, onAction)),
+    tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tabId] ?? { type: "text", value: shellLabel("ui.common.loading") }, onAction)),
   };
 }
 
@@ -2357,7 +2359,11 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onAction, session]);
 
-  const activePanelTabId = panel?.activePanelTab ?? session?.app.panelTabs.find((tab) => panelSideForGroup(tab.group) === "right")?.id ?? session?.app.panelTabs[0]?.id;
+  const activeRightPanelTab = session?.app.panelTabs.find((tab) => panelSideForGroup(tab.group) === "right");
+  const activePanelTabId =
+    panel?.activePanelTab ??
+    (activeRightPanelTab ? panelTabKindId(activeRightPanelTab.kind) : undefined) ??
+    (session?.app.panelTabs[0] ? panelTabKindId(session.app.panelTabs[0].kind) : undefined);
 
   const workbenchLeftTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];

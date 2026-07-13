@@ -13,6 +13,7 @@ export default defineConfig({
     alias: [{ find: "@semio-tech/ui-react", replacement: resolve(root, "index.tsx") }],
   },
   test: {
+    name: "@semio-tech/ui-react",
     environment: "jsdom",
     includeSource: ["index.tsx"],
     passWithNoTests: true,

@@ -15,6 +15,7 @@ export default defineConfig({
   },
   assetsInclude: ["**/*.wasm"],
   test: {
+    name: "@semio-tech/kernel-3d-js",
     mode: "test",
     environment: "node",
     testTimeout: 120_000,

@@ -20,6 +20,7 @@ export default defineConfig({
     },
   },
   test: {
+    name: "@semio-tech/cad-js-runtime",
     mode: "test",
     environment: "node",
     fileParallelism: false,

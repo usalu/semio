@@ -18,6 +18,15 @@ import type {
   WindowEngagementSelectItem as GeneratedWindowEngagementSelectItem,
   WindowEngagementControl as GeneratedWindowEngagementControl,
   WindowEngagement as GeneratedWindowEngagement,
+  WindowEngagementSlot as GeneratedWindowEngagementSlot,
+  WindowOptions as GeneratedWindowOptions,
+  ActionRef as GeneratedActionRef,
+  PanelGroup as GeneratedPanelGroup,
+  PanelTabKind as GeneratedPanelTabKind,
+  PanelTabDefinition as GeneratedPanelTabDefinition,
+  ModeDefinition as GeneratedModeDefinition,
+  WindowKindDefinition as GeneratedWindowKindDefinition,
+  AppDefinition as GeneratedAppDefinition,
 } from "./generated/manifest.ts";
 // #endregion 🧬GeneratedMirror
 
@@ -1025,39 +1034,34 @@ export type WindowEngagementSelectItem = GeneratedWindowEngagementSelectItem;
 export type WindowEngagementControl = GeneratedWindowEngagementControl;
 export type WindowEngagement = GeneratedWindowEngagement;
 
-/** 🌳 Mirrors Rust `PanelTabDefinition` — a leaf carries `bodyKey`, a branch carries `children`; `group` is only meaningful on root entries. */
-export type AppPanelTabDefinition = {
-  readonly id: string;
-  readonly label: string;
-  readonly group: string;
-  readonly bodyKey?: string;
-  readonly children?: readonly AppPanelTabDefinition[];
-};
+/** 🌳 Mirrors Rust `PanelTabKind` — closes the informal `FRAMEWORK_CATEGORY_*`/`*_TAB_ID` string-constant convention: every panel tab is either a framework-predefined kind (exhaustively switchable) or an app-declared custom tab (`{ kind: "app", id }`). */
+export type PanelTabKind = GeneratedPanelTabKind;
+/** 🔤 Flat string key for a `PanelTabKind` — mirrors Rust `PanelTabKind::id_str()`. Use for React `key=` props and legacy string-id matching. */
+export function panelTabKindId(kind: PanelTabKind): string {
+  switch (kind.kind) {
+    case "workbenchCategory": return "framework.category.workbench";
+    case "displayCategory": return "framework.category.display";
+    case "detailsCategory": return "framework.category.details";
+    case "settingsCategory": return "framework.category.settings";
+    case "displayWindows": return "framework.display.windows";
+    case "displayLayout": return "framework.display.layout";
+    case "settingsGeneral": return "framework.settings.general";
+    case "settingsTheme": return "framework.settings.theme";
+    case "app": return kind.id;
+  }
+}
 
-/** 📦 The richly-typed shape of one {@link PluginManifest} `apps` entry — additive superset kept alongside the loosely-typed wire shape so renderers can opt into precise field access. */
-export type AppDefinition = {
-  readonly id: string;
-  readonly label: string;
-  readonly document: readonly string[];
-  readonly iconId?: string;
-  readonly controllerId: string;
-  readonly modes: readonly { readonly id: string; readonly label: string; readonly tools?: readonly ToolNode[] }[];
-  readonly defaultModeId?: string;
-  readonly windowKinds: readonly {
-    readonly id: string;
-    readonly label: string;
-    readonly bodyKey: string;
-    readonly iconId?: string;
-    readonly measures?: readonly WindowMeasure[];
-    readonly engagement?: WindowEngagement;
-  }[];
-  readonly panelTabs: readonly AppPanelTabDefinition[];
-  readonly keybindings: readonly { readonly keys: string; readonly action: ActionDescriptor }[];
-  readonly actions?: readonly ActionDefinition[];
-  readonly namedLayouts?: readonly NamedLayout[];
-  readonly defaultLayout?: WindowLayout;
-  readonly terminologies?: readonly string[];
-};
+/** 🌳 Mirrors Rust `PanelTabDefinition` — a leaf carries `bodyKey`, a branch carries `children`; `group` is only meaningful on root entries. */
+export type AppPanelTabDefinition = GeneratedPanelTabDefinition;
+
+/** 📦 Mirrors Rust `AppDefinition` — generated 1:1 from `framework/core/rs/lib.rs` via ts-rs. */
+export type AppDefinition = GeneratedAppDefinition;
+export type AppModeDefinition = GeneratedModeDefinition;
+export type AppWindowKindDefinition = GeneratedWindowKindDefinition;
+export type AppWindowOptions = GeneratedWindowOptions;
+export type AppWindowEngagementSlot = GeneratedWindowEngagementSlot;
+export type AppActionRef = GeneratedActionRef;
+export type AppPanelGroup = GeneratedPanelGroup;
 
 export type PluginHotSwapEvent = {
   readonly pluginId: string;

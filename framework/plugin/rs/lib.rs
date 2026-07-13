@@ -880,6 +880,38 @@ pub struct ActionMeta {
     pub instance_id: u32,
 }
 
+/// @emoji 🔤 Parses the raw action id crossing the WASM ABI (`DocumentApp::handle_action`'s `action: &str`)
+/// into a closed, per-app enum — the seam where "stringly-typed at the edge" becomes exhaustively
+/// matched one line in. Not yet wired into `DocumentApp` itself (that would break every existing
+/// implementer at once); adopt it per app by matching on the parsed variant instead of the raw string
+/// inside `handle_action`, e.g. `let action = MyAppAction::from_action_id(action)?; match action { ... }`.
+pub trait AppAction: Sized {
+    fn from_action_id(id: &str) -> Result<Self, String>;
+}
+
+/// @emoji 🏭 Generates a closed per-app action enum plus its `AppAction` impl from a list of
+/// `Variant = "actionId"` pairs — the ids should match what's passed to `.operation()/.view_action()/
+/// .shell_action()` on the app's `AppBuilder` so the declared action registry and the dispatch match
+/// can't drift apart silently.
+#[macro_export]
+macro_rules! app_action_enum {
+    ($vis:vis enum $Name:ident { $($Variant:ident = $id:literal),* $(,)? }) => {
+        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        $vis enum $Name {
+            $($Variant),*
+        }
+
+        impl $crate::app::AppAction for $Name {
+            fn from_action_id(id: &str) -> Result<Self, String> {
+                match id {
+                    $($id => Ok(Self::$Variant),)*
+                    other => Err(format!("unknown action id {other}")),
+                }
+            }
+        }
+    };
+}
+
 /// @emoji 🧩 Typed, per-app author surface. An app declares its `Projection` and `Op` (a
 /// `vcs::Operation<Projection>`), mutates nothing directly, and returns an {@link ActionEmit} whose
 /// operations flow through a persistent `DocumentVcsStore` owned by {@link VcsDocumentApp}. Ephemeral

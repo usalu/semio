@@ -2080,7 +2080,9 @@
   \def\semio@heading@color@section{semio-tertiary}%
   \def\semio@heading@color@subsection{semio-secondary}%
   \def\semio@heading@color@subsubsection{semio-primary}%
-  \setkomafont{chapter}{\semio@heading@chip@font}%
+  \ifcsname chapter\endcsname
+    \setkomafont{chapter}{\semio@heading@chip@font}%
+  \fi
   \setkomafont{section}{\semio@heading@chip@font}%
   \setkomafont{subsection}{\semio@heading@chip@font}%
   \setkomafont{subsubsection}{\semio@heading@chip@font}%
@@ -2618,7 +2620,7 @@
   \semio@chrome@dims@compute
 }
 
-\setlength{\headheight}{38.14006pt}
+\setlength{\headheight}{\dimexpr\semio@chrome@navbar@height+\semio@stroke@hairline\relax}
 \setlength{\headsep}{\semio@spacing@double}
 \newlength{\semio@chrome@footer@reserve}
 \setlength{\semio@chrome@footer@reserve}{\dimexpr\semio@spacing@double+\semio@chrome@footer@height+\semio@stroke@hairline\relax}

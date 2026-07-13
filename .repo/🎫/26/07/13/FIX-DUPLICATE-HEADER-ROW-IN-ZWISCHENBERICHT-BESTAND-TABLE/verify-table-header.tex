@@ -1,0 +1,43 @@
+\documentclass{article}
+\usepackage[a4paper]{geometry}
+\usepackage{xcolor}
+\usepackage{polyglossia}
+\setdefaultlanguage{english}
+\setotherlanguage{german}
+\providecolor{semio-chrome-light-base}{HTML}{f7f3e3}
+\providecolor{semio-chrome-dark-base}{HTML}{001117}
+\providecolor{semio-chrome-light-window}{HTML}{f0ecdd}
+\providecolor{semio-chrome-dark-window}{HTML}{07181d}
+\providecolor{semio-chrome-light-canvas}{HTML}{ffffff}
+\providecolor{semio-chrome-dark-canvas}{HTML}{06171c}
+\providecolor{semio-chrome-light-border-normal}{HTML}{334041}
+\providecolor{semio-chrome-dark-border-normal}{HTML}{c4c4b9}
+\providecolor{semio-chrome-light-border-emphasized}{HTML}{112025}
+\providecolor{semio-chrome-dark-border-emphasized}{HTML}{dfddd0}
+\providecolor{semio-chrome-light-active-base}{HTML}{ff344f}
+\providecolor{semio-chrome-dark-active-base}{HTML}{ff344f}
+\providecolor{semio-chrome-light-active-foreground}{HTML}{ffffff}
+\providecolor{semio-chrome-dark-active-foreground}{HTML}{ffffff}
+\providecolor{semio-chrome-light-foreground}{HTML}{001117}
+\providecolor{semio-chrome-dark-foreground}{HTML}{f7f3e3}
+\providecommand{\subtitle}[1]{}
+\usepackage{semio-table}
+\ExplSyntaxOn
+\colorlet{semio-chrome-canvas}{semio-chrome-light-canvas}
+\colorlet{semio-chrome-border-normal}{semio-chrome-light-border-normal}
+\colorlet{semio-chrome-text-normal}{semio-chrome-light-border-normal}
+\ExplSyntaxOff
+\begin{document}
+Text before the table to confirm no top-of-page context.
+
+\makeatletter
+\semio@window@enter
+\SemioTableThree{%
+  \SemioTableHeaderRow{AP & Partner & Schwerpunkt im Berichtszeitraum}
+  \SemioTableRow{AP-Erfahrung & Leibniz Universität Hannover & Recherche, Interviews, User Stories}
+  \SemioTableRow{AP-Plattform & Leibniz Universität Hannover & Generatoren, Bauteileinspeisung}
+}
+\makeatother
+
+Text after the table.
+\end{document}

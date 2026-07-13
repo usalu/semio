@@ -18,6 +18,7 @@ export default defineConfig({
     },
   },
   test: {
+    name: "@semio-tech/cad-js-module-spatial-shape",
     mode: "test",
     environment: "node",
     testTimeout: 120_000,

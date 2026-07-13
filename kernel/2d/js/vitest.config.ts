@@ -14,6 +14,7 @@ export default defineConfig({
     },
   },
   test: {
+    name: "@semio-tech/kernel-2d-js",
     mode: "test",
     environment: "node",
     include: ["index.ts"],

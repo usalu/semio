@@ -15,6 +15,7 @@ export default defineConfig({
     },
   },
   test: {
+    name: "@semio-tech/framework-os-core",
     mode: "test",
     environment: "node",
     fileParallelism: false,

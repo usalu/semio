@@ -2,6 +2,9 @@
 //! catalogue object kinds, user-adjustable filters, and a curated set with per-kind counts.
 
 use serde::{Deserialize, Serialize};
+use vcs::{Operation, OperationDiff};
+
+pub const SOURCING_CURATE_SCHEMA: &str = "sourcing.curate/v1";
 
 //#region 🔖Typology
 /// 🌳 One node in a module's typology tree — object kinds reference a node by its path of segment ids.
@@ -272,6 +275,51 @@ impl CurateDocument {
     }
 }
 //#endregion 🔖Document
+
+//#region 🔖Operations
+/// 🛒 Curate document operation: currently always a wholesale swap — every action recomputes the
+/// full document and this carries it, with a true inverse restoring the exact prior document.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum SourcingOp {
+    SetDocument { document: CurateDocument },
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SourcingDiff {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub document: Option<CurateDocument>,
+}
+
+impl OperationDiff<CurateDocument> for SourcingDiff {
+    fn apply(&self, projection: &CurateDocument) -> CurateDocument {
+        self.document.clone().unwrap_or_else(|| projection.clone())
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.document.is_some() {
+            self.document = other.document;
+        }
+    }
+}
+
+impl Operation<CurateDocument> for SourcingOp {
+    type Diff = SourcingDiff;
+
+    fn diff(&self, _projection: &CurateDocument) -> Self::Diff {
+        match self {
+            SourcingOp::SetDocument { document } => SourcingDiff { document: Some(document.clone()) },
+        }
+    }
+
+    fn backwards(&self, projection: &CurateDocument) -> Vec<Self> {
+        match self {
+            SourcingOp::SetDocument { .. } => vec![SourcingOp::SetDocument { document: projection.clone() }],
+        }
+    }
+}
+//#endregion 🔖Operations
 
 //#region 🔖Modules
 /// 🧩 A sourcing module composes a typology subtree, demo catalogue kinds, and preview meshing for one

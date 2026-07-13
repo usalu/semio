@@ -42,6 +42,7 @@ export default defineConfig({
     ],
   },
   test: {
+    name: "@semio-tech/cad-js-renderer",
     mode: "test",
     environment: "jsdom",
     testTimeout: 120_000,

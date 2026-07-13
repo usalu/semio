@@ -4899,6 +4899,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "ui_wgpu",
  "vcs",
 ]
 
@@ -6052,6 +6053,61 @@ checksum = "52d1cfed4120b4d927bf7c0f86d2087a4a7d6027c906d9f9d525a80573b9be51"
 dependencies = [
  "libc",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "sourcing-module-beams"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "serde_json",
+ "sourcing_curate",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "sourcing-module-slabs"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "serde_json",
+ "sourcing_curate",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "sourcing-module-windows"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "serde_json",
+ "sourcing_curate",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "sourcing-plugin"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "sourcing_curate",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "sourcing_curate"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "vcs",
+ "wasm-bindgen",
 ]
 
 [[package]]

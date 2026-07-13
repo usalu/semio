@@ -24,7 +24,6 @@
   \semio_table_header_row:n {#1}
   \\
   \hline
-  \noalign{\vskip-\topskip}
   \global\semio@table@row@startedfalse
 }
 \cs_new_protected:Npn \semio_table_dot_count_int:n #1 {
@@ -76,8 +75,6 @@
 \newlength{\semio@table@body@height}
 \newif\ifsemio@table@row@started
 \newcount\semio@table@long@mode
-\newif\ifsemio@table@long@first@row
-\semio@table@long@first@rowtrue
 
 \newcommand{\semio@table@setup}{%
   \setlength{\semio@table@header@height}{\dimexpr
@@ -154,7 +151,6 @@
   \semio@table@header@cell{#2} &
   \semio@table@header@cell{#3} \\
   \hline
-  \noalign{\vskip-\topskip}%
   \global\semio@table@row@startedfalse
 }
 
@@ -210,7 +206,6 @@
 
 \newcommand{\semio@table@long@render}[4]{%
   \global\semio@table@long@mode=1\relax
-  \global\semio@table@long@first@rowtrue
   \global\semio@table@row@startedfalse
   \begingroup
   \ifvmode\else\par\fi
@@ -237,7 +232,6 @@
   \end{longtable}%
   \endgroup
   \global\semio@table@long@mode=0\relax
-  \global\semio@table@long@first@rowtrue
   \global\semio@table@row@startedfalse
 }
 

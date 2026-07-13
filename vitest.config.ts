@@ -18,7 +18,29 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    projects: ["./compose/client/lib/js/vite.config.ts", "./compose/client/lib/react/vite.config.ts"],
+    projects: [
+      "./cad/core/js/vitest.config.ts",
+      "./cad/kernel/brepjs/js/vitest.config.ts",
+      "./cad/machine/stately/js/vitest.config.ts",
+      "./cad/module/aec-building/js/vitest.config.ts",
+      "./cad/module/aec-building-energy/js/vitest.config.ts",
+      "./cad/module/aec-building-structure/js/vitest.config.ts",
+      "./cad/module/spatial-shape/js/vitest.config.ts",
+      "./cad/query/js/vitest.config.ts",
+      "./cad/renderer/js/vitest.config.ts",
+      "./cad/runtime/js/vitest.config.ts",
+      "./compose/client/lib/js/vite.config.ts",
+      "./compose/client/lib/sketchpad/js/vitest.config.ts",
+      "./compose/dev/algorithm/js/vitest.config.ts",
+      "./framework/product/os/core/js/vitest.config.ts",
+      "./framework/renderer/react/vitest.config.ts",
+      "./framework/renderer/wgpu/vitest.config.ts",
+      "./infinite/cavas/react-renderer/vitest.config.ts",
+      "./infinite/world/r3f/vitest.config.ts",
+      "./kernel/2d/js/vitest.config.ts",
+      "./kernel/3d/brep/js/vitest.config.ts",
+      "./ui/js/react/vitest.config.ts",
+    ],
   },
 });
 

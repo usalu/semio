@@ -2,8 +2,8 @@
 
 use semio_framework_plugin::{
     build_table_scene, build_world_3d_scene, table_row_json, ui_stack_vertical, ui_text,
-    world3d_default_camera, world3d_scene, world3d_selection_json, ActionDescriptor, App,
-    Contribution, PluginApp, PluginBundle, SurfaceKind, TableCell, TableScene, UiInputNode,
+    world3d_default_camera, world3d_scene, world3d_selection_json, ActionDescriptor, ActionEmit,
+    App, Contribution, DocumentApp, DocumentView, SurfaceKind, TableCell, TableScene, UiInputNode,
     UiNode, UiNumberStepperNode, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemAction,
     ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
     WindowLayoutStackNode, WindowLayoutWindowNode, WorldSunConfig,
@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sourcing_curate::{
     grid_placement, grid_scale, mesh_spec_for, sourcing_modules, typology_flatten, CurateDocument,
-    ObjectKind, SortDirection, TableSort, TypologyNode,
+    ObjectKind, SortDirection, SourcingOp, TableSort, TypologyNode, SOURCING_CURATE_SCHEMA,
 };
 use std::collections::HashSet;
 
@@ -41,20 +41,12 @@ const EMPTY_CURATION_JSON: &str = include_str!("../../curate/example/empty-curat
 //#endregion 🔖Constants
 
 //#region 🔖Document
-fn parse_document(document_json: &str) -> CurateDocument {
-    serde_json::from_str(document_json).unwrap_or_else(|_| default_document())
-}
-
 fn default_document() -> CurateDocument {
     serde_json::from_str(DEMO_STOCK_JSON).unwrap_or_default()
 }
 
 fn empty_document() -> CurateDocument {
     serde_json::from_str(EMPTY_CURATION_JSON).unwrap_or_default()
-}
-
-fn set_document_op(document: &CurateDocument) -> String {
-    json!({ "op": "setDocument", "document": document }).to_string()
 }
 
 fn sourcing_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -394,20 +386,7 @@ pub fn create_sourcing_curate_app() -> App {
             .window_kind(WINDOW_CURATED, "Curated", BODY_CURATED, SurfaceKind::Table)
             .window_kind(WINDOW_PREVIEW, "Preview", BODY_PREVIEW, SurfaceKind::World3d)
             .window_kind(WINDOW_GRID, "Grid", BODY_GRID, SurfaceKind::World3d)
-            .default_layout(sourcing_three_column_layout())
-            .operation("setFilterQuery", "Set Filter Query")
-            .operation("setFilterModule", "Toggle Module Filter")
-            .operation("setFilterTypology", "Set Typology Filter")
-            .operation("setFilterMinAvailability", "Set Min Availability")
-            .operation("stockFromCatalogue", "Populate Stock From Catalogue")
-            .operation("curateAdd", "Add To Curated")
-            .operation("curateSetCount", "Set Curated Count")
-            .operation("curateRemove", "Remove From Curated")
-            .operation("dropOnCurated", "Drop On Curated")
-            .operation("dropOnPool", "Drop On Pool")
-            .view_action("selectRow", "Select Row")
-            .view_action("worldSelect", "World Select")
-            .view_action("sortTable", "Sort Table"),
+            .default_layout(sourcing_three_column_layout()),
     )
     .example(DEMO_STOCK_EXAMPLE_ID, "Demo Stock", DEMO_STOCK_JSON)
     .example(EMPTY_EXAMPLE_ID, "Empty Curation", EMPTY_CURATION_JSON)
@@ -416,27 +395,34 @@ pub fn create_sourcing_curate_app() -> App {
 #[derive(Default)]
 pub struct SourcingCurateApp;
 
-impl PluginApp for SourcingCurateApp {
+impl DocumentApp for SourcingCurateApp {
+    type Projection = CurateDocument;
+    type Op = SourcingOp;
+
     fn app_id(&self) -> &str {
         SOURCING_CURATE_APP_ID
     }
 
-    fn initial_document_json(&self) -> String {
-        serde_json::to_string(&default_document()).expect("sourcing curate document json")
+    fn document_schema(&self) -> &str {
+        SOURCING_CURATE_SCHEMA
     }
 
-    fn handle_action_patch_ops(&mut self, action: &str, args: Option<&Value>, document_json: &str, view_state: &ViewState) -> Vec<String> {
-        let mut document = parse_document(document_json);
+    fn initial_projection(&self) -> CurateDocument {
+        default_document()
+    }
+
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, CurateDocument>, view_state: &ViewState) -> ActionEmit<SourcingOp> {
+        let mut document = doc.projection.clone();
         match action {
             "setDocument" => {
                 if let Some(parsed) = args.and_then(|value| value.get("document")).and_then(|value| serde_json::from_value::<CurateDocument>(value.clone()).ok()) {
-                    return vec![set_document_op(&parsed)];
+                    return ActionEmit::ops(vec![SourcingOp::SetDocument { document: parsed }]);
                 }
             }
             "setActiveExample" => {
                 let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
                 let next = if example_id == EMPTY_EXAMPLE_ID { empty_document() } else { default_document() };
-                return vec![set_document_op(&next)];
+                return ActionEmit::ops(vec![SourcingOp::SetDocument { document: next }]);
             }
             "stockFromCatalogue" => {
                 let existing: HashSet<String> = document.stock.iter().map(|kind| kind.id.clone()).collect();
@@ -447,11 +433,11 @@ impl PluginApp for SourcingCurateApp {
                         }
                     }
                 }
-                return vec![set_document_op(&document)];
+                return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
             }
             "setFilterQuery" => {
                 document.filters.query = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or_default().to_string();
-                return vec![set_document_op(&document)];
+                return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
             }
             "setFilterModule" => {
                 if let (Some(module_id), Some(enabled)) =
@@ -465,12 +451,12 @@ impl PluginApp for SourcingCurateApp {
                         document.filters.module_ids.retain(|id| id != module_id);
                     }
                 }
-                return vec![set_document_op(&document)];
+                return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
             }
             "setFilterTypology" => {
                 let path = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or_default();
                 document.filters.typology_path = if path.is_empty() { Vec::new() } else { path.split('/').map(String::from).collect() };
-                return vec![set_document_op(&document)];
+                return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
             }
             "setFilterMinAvailability" => {
                 let current = document.filters.min_availability as f64;
@@ -481,7 +467,7 @@ impl PluginApp for SourcingCurateApp {
                     .or_else(|| args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()))
                     .unwrap_or(current);
                 document.filters.min_availability = next.max(0.0) as u32;
-                return vec![set_document_op(&document)];
+                return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
             }
             "sortTable" => {
                 if let Some(column_id) = args.and_then(|value| value.get("columnId")).and_then(|value| value.as_str()) {
@@ -489,7 +475,7 @@ impl PluginApp for SourcingCurateApp {
                     document.filters.sort =
                         Some(TableSort { column_id: column_id.to_string(), direction: if direction == "desc" { SortDirection::Desc } else { SortDirection::Asc } });
                 }
-                return vec![set_document_op(&document)];
+                return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
             }
             "curateAdd" | "curateSetCount" => {
                 if let Some(object_id) = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()) {
@@ -500,47 +486,47 @@ impl PluginApp for SourcingCurateApp {
                     } else if action == "curateAdd" {
                         document.curate_delta(object_id, 1);
                     }
-                    return vec![set_document_op(&document)];
+                    return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
                 }
             }
             "curateRemove" | "dropOnPool" => {
                 if let Some(object_id) = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()) {
                     document.curate_set(object_id, 0);
-                    return vec![set_document_op(&document)];
+                    return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
                 }
             }
             "dropOnCurated" => {
                 if let Some(object_id) = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()) {
                     document.curate_delta(object_id, 1);
-                    return vec![set_document_op(&document)];
+                    return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
                 }
             }
             "selectRow" => {
                 document.runtime.selected_object_id = args.and_then(|value| value.get("row")).and_then(|row| row.get("id")).and_then(|value| value.as_str()).map(str::to_string);
-                return vec![set_document_op(&document)];
+                return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
             }
             "worldSelect" => {
                 let last_id = args.and_then(|value| value.get("ids")).and_then(|value| value.as_array()).and_then(|ids| ids.last()).and_then(|value| value.as_str());
                 if let Some(id) = last_id {
                     document.runtime.selected_object_id = Some(id.to_string());
-                    return vec![set_document_op(&document)];
+                    return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
                 }
             }
             _ => {}
         }
-        vec![]
+        ActionEmit::default()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-        let document = parse_document(document_json);
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, CurateDocument>, view_state: &ViewState) -> UiNode {
+        let document = doc.projection;
         match body_key {
             BODY_POOL => {
                 let modules = available_modules(view_state);
-                ui_stack_vertical(vec![build_filter_bar(&document, &modules), build_pool_table(&document)])
+                ui_stack_vertical(vec![build_filter_bar(document, &modules), build_pool_table(document)])
             }
-            BODY_CURATED => build_curated_table(&document),
-            BODY_PREVIEW => render_preview(&document),
-            BODY_GRID => render_grid(&document),
+            BODY_CURATED => build_curated_table(document),
+            BODY_PREVIEW => render_preview(document),
+            BODY_GRID => render_grid(document),
             _ => ui_text(""),
         }
     }
@@ -548,26 +534,37 @@ impl PluginApp for SourcingCurateApp {
 //#endregion 🔖SourcingCurateApp
 
 //#region 🔖Bundle
-fn bundle() -> PluginBundle {
-    PluginBundle::new("sourcing", "Sourcing", "0.1.0").register_app(create_sourcing_curate_app(), || Box::new(SourcingCurateApp::default()))
-}
+fn sourcing_setup() {}
 
-semio_framework_plugin::plugin_exports!(bundle);
+semio_framework_plugin::semio_plugin! {
+    id: "sourcing", label: "Sourcing", version: "0.1.0",
+    setup: sourcing_setup,
+    apps: [ create_sourcing_curate_app => SourcingCurateApp ],
+}
 //#endregion 🔖Bundle
 
 //#region 🔖Tests
 #[cfg(test)]
 mod tests {
     use super::*;
+    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
 
     fn view_state() -> ViewState {
         ViewState::default()
     }
 
+    fn meta() -> ActionMeta {
+        ActionMeta { actor: "local".into(), instance_id: 1 }
+    }
+
+    fn new_app() -> VcsDocumentApp<SourcingCurateApp> {
+        VcsDocumentApp::new(SourcingCurateApp::default())
+    }
+
     #[test]
     fn initial_document_has_populated_demo_stock() {
-        let app = SourcingCurateApp;
-        let document = parse_document(&app.initial_document_json());
+        let app = new_app();
+        let document = app.projection().expect("projection");
         assert!(!document.stock.is_empty());
     }
 
@@ -595,61 +592,42 @@ mod tests {
 
     #[test]
     fn curate_add_and_remove_round_trip_through_patch_ops() {
-        let mut app = SourcingCurateApp;
-        let document = default_document();
+        let mut app = new_app();
+        let document = app.projection().expect("projection");
         // stock[2] isn't part of the fixture's pre-curated set, so a single add lands on count 1.
         let object_id = document.stock[2].id.clone();
-        let document_json = serde_json::to_string(&document).unwrap();
-        let ops = app.handle_action_patch_ops("curateAdd", Some(&json!({ "objectId": object_id })), &document_json, &view_state());
-        assert_eq!(ops.len(), 1);
-        let patched: Value = serde_json::from_str(&ops[0]).unwrap();
-        let after_add: CurateDocument = serde_json::from_value(patched["document"].clone()).unwrap();
-        assert_eq!(after_add.curated_count(&object_id), 1);
+        app.handle_action("curateAdd", Some(&json!({ "objectId": object_id })), &view_state(), &meta()).expect("add");
+        assert_eq!(app.projection().expect("projection").curated_count(&object_id), 1);
 
-        let document_json = serde_json::to_string(&after_add).unwrap();
-        let ops = app.handle_action_patch_ops("curateRemove", Some(&json!({ "objectId": object_id })), &document_json, &view_state());
-        let patched: Value = serde_json::from_str(&ops[0]).unwrap();
-        let after_remove: CurateDocument = serde_json::from_value(patched["document"].clone()).unwrap();
-        assert_eq!(after_remove.curated_count(&object_id), 0);
+        app.handle_action("curateRemove", Some(&json!({ "objectId": object_id })), &view_state(), &meta()).expect("remove");
+        assert_eq!(app.projection().expect("projection").curated_count(&object_id), 0);
     }
 
     #[test]
     fn drop_on_curated_and_drop_on_pool_mirror_add_and_remove() {
-        let mut app = SourcingCurateApp;
-        let document = default_document();
+        let mut app = new_app();
+        let document = app.projection().expect("projection");
         // stock[2] isn't part of the fixture's pre-curated set, so a single drop lands on count 1.
         let object_id = document.stock[2].id.clone();
-        let document_json = serde_json::to_string(&document).unwrap();
-        let ops = app.handle_action_patch_ops("dropOnCurated", Some(&json!({ "objectId": object_id })), &document_json, &view_state());
-        let patched: Value = serde_json::from_str(&ops[0]).unwrap();
-        let after_drop: CurateDocument = serde_json::from_value(patched["document"].clone()).unwrap();
-        assert_eq!(after_drop.curated_count(&object_id), 1);
+        app.handle_action("dropOnCurated", Some(&json!({ "objectId": object_id })), &view_state(), &meta()).expect("drop on curated");
+        assert_eq!(app.projection().expect("projection").curated_count(&object_id), 1);
 
-        let document_json = serde_json::to_string(&after_drop).unwrap();
-        let ops = app.handle_action_patch_ops("dropOnPool", Some(&json!({ "objectId": object_id })), &document_json, &view_state());
-        let patched: Value = serde_json::from_str(&ops[0]).unwrap();
-        let after_pool_drop: CurateDocument = serde_json::from_value(patched["document"].clone()).unwrap();
-        assert_eq!(after_pool_drop.curated_count(&object_id), 0);
+        app.handle_action("dropOnPool", Some(&json!({ "objectId": object_id })), &view_state(), &meta()).expect("drop on pool");
+        assert_eq!(app.projection().expect("projection").curated_count(&object_id), 0);
     }
 
     #[test]
     fn select_row_and_world_select_update_runtime_selection() {
-        let mut app = SourcingCurateApp;
-        let document = default_document();
+        let mut app = new_app();
+        let document = app.projection().expect("projection");
         let object_id = document.stock[0].id.clone();
-        let document_json = serde_json::to_string(&document).unwrap();
-
-        let ops = app.handle_action_patch_ops("selectRow", Some(&json!({ "row": { "id": object_id } })), &document_json, &view_state());
-        let patched: Value = serde_json::from_str(&ops[0]).unwrap();
-        let after_select: CurateDocument = serde_json::from_value(patched["document"].clone()).unwrap();
-        assert_eq!(after_select.runtime.selected_object_id.as_deref(), Some(object_id.as_str()));
-
         let other_id = document.stock[1].id.clone();
-        let document_json = serde_json::to_string(&after_select).unwrap();
-        let ops = app.handle_action_patch_ops("worldSelect", Some(&json!({ "ids": [object_id, other_id] })), &document_json, &view_state());
-        let patched: Value = serde_json::from_str(&ops[0]).unwrap();
-        let after_world_select: CurateDocument = serde_json::from_value(patched["document"].clone()).unwrap();
-        assert_eq!(after_world_select.runtime.selected_object_id.as_deref(), Some(other_id.as_str()));
+
+        app.handle_action("selectRow", Some(&json!({ "row": { "id": object_id } })), &view_state(), &meta()).expect("select");
+        assert_eq!(app.projection().expect("projection").runtime.selected_object_id.as_deref(), Some(object_id.as_str()));
+
+        app.handle_action("worldSelect", Some(&json!({ "ids": [object_id, other_id] })), &view_state(), &meta()).expect("world select");
+        assert_eq!(app.projection().expect("projection").runtime.selected_object_id.as_deref(), Some(other_id.as_str()));
     }
 
     #[test]
@@ -715,32 +693,24 @@ mod tests {
 
     #[test]
     fn stock_from_catalogue_merges_contributed_kinds_without_duplicating() {
-        let mut app = SourcingCurateApp;
-        let document = empty_document();
-        assert!(document.stock.is_empty());
-        let document_json = serde_json::to_string(&document).unwrap();
-        let ops = app.handle_action_patch_ops("stockFromCatalogue", None, &document_json, &view_state());
-        let patched: Value = serde_json::from_str(&ops[0]).unwrap();
-        let populated: CurateDocument = serde_json::from_value(patched["document"].clone()).unwrap();
-        let expected: usize = sourcing_modules().iter().map(|module| module.demo_kinds().len()).sum();
-        assert_eq!(populated.stock.len(), expected);
+        let mut app = VcsDocumentApp::new(SourcingCurateApp::default());
+        // Reset to the empty fixture so stockFromCatalogue starts from a genuinely empty stock.
+        app.load_document(&serde_json::to_string(&empty_document()).unwrap()).expect("load empty document");
+        assert!(app.projection().expect("projection").stock.is_empty());
 
-        let document_json = serde_json::to_string(&populated).unwrap();
-        let ops = app.handle_action_patch_ops("stockFromCatalogue", None, &document_json, &view_state());
-        let patched: Value = serde_json::from_str(&ops[0]).unwrap();
-        let repopulated: CurateDocument = serde_json::from_value(patched["document"].clone()).unwrap();
-        assert_eq!(repopulated.stock.len(), expected);
+        app.handle_action("stockFromCatalogue", None, &view_state(), &meta()).expect("populate");
+        let expected: usize = sourcing_modules().iter().map(|module| module.demo_kinds().len()).sum();
+        assert_eq!(app.projection().expect("projection").stock.len(), expected);
+
+        app.handle_action("stockFromCatalogue", None, &view_state(), &meta()).expect("repopulate");
+        assert_eq!(app.projection().expect("projection").stock.len(), expected);
     }
 
     #[test]
     fn set_filter_min_availability_clamps_to_zero() {
-        let mut app = SourcingCurateApp;
-        let document = default_document();
-        let document_json = serde_json::to_string(&document).unwrap();
-        let ops = app.handle_action_patch_ops("setFilterMinAvailability", Some(&json!({ "delta": -1000.0 })), &document_json, &view_state());
-        let patched: Value = serde_json::from_str(&ops[0]).unwrap();
-        let after: CurateDocument = serde_json::from_value(patched["document"].clone()).unwrap();
-        assert_eq!(after.filters.min_availability, 0);
+        let mut app = new_app();
+        app.handle_action("setFilterMinAvailability", Some(&json!({ "delta": -1000.0 })), &view_state(), &meta()).expect("set min availability");
+        assert_eq!(app.projection().expect("projection").filters.min_availability, 0);
     }
 }
 //#endregion 🔖Tests

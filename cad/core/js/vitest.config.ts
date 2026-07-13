@@ -25,6 +25,7 @@ export default defineConfig({
     },
   },
   test: {
+    name: "@semio-tech/cad-js-core",
     mode: "test",
     environment: "node",
     fileParallelism: false,

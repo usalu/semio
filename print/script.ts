@@ -77,7 +77,7 @@ type Tokens = {
   readonly opacities?: {
     readonly glassPanelAlpha?: number;
   };
-  readonly themes?: Record<string, Record<string, Record<string, PaintRef>>>;
+  readonly appearances?: Record<string, Record<string, Record<string, PaintRef>>>;
   readonly metrics?: {
     readonly chrome?: {
       readonly controlHeightUiSpacing?: number;
@@ -199,8 +199,8 @@ function loadTokens(): Tokens {
 
 function panelGlassTintHex(theme: "light" | "dark"): string {
   const tokens = loadTokens();
-  const paint = tokens.themes?.[theme]?.chrome?.panel;
-  if (!paint) throw new Error(`tokens.themes.${theme}.chrome.panel missing`);
+  const paint = tokens.appearances?.[theme]?.chrome?.panel;
+  if (!paint) throw new Error(`tokens.appearances.${theme}.chrome.panel missing`);
   return resolvePaint(tokens.colors, paint);
 }
 
@@ -365,7 +365,7 @@ export function emitSemioTokensSty(): void {
   }
   lines.push("");
   for (const themeName of ["light", "dark"] as const) {
-    const chrome = tokens.themes?.[themeName]?.chrome;
+    const chrome = tokens.appearances?.[themeName]?.chrome;
     if (!chrome) continue;
     for (const key of CHROME_PAINT_KEYS) {
       const paint = chrome[key];
