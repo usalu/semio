@@ -1,0 +1,13 @@
+{
+  "title": "Print Window Page Break Shell Repeat And Part Suffix",
+  "emoji": "🖨️",
+  "status": "open",
+  "description": "Make sure that elements when broken over multiple pages have the window shell repeated. E.g. when a window spans multiple pages then the complete window frame with chips etc is repeated on each page. Add a suffix \":\" + part number to the hierarchy chip of the part, e.g. \"Tabelle:1.2.3.4.a:1\", \"Tabelle:1.2.3.4.a:2\" for the 2nd page-part of the same window. The parts should not show separately in the register/table list (e.g. Tabellenverzeichnis/listoftables) — the register entry should just show the base hierarchy path \"1.2.3.4.a\" once (no part suffix), not one entry per part.\n\nContext: print/tex/semio-window.sty is the LaTeX \"OS window chrome\" component (tcolorbox-based). Currently `semio_window_tcb_open:n` (~line 850) always forces `breakable=false` for every window, so windows never split across pages today. Hierarchy chip numbering lives in print/tex/semio-core.sty (`\\semio_kind_chip_number:nn`, `\\semio_window_kind_number:n`, `\\semio@hierarchy@path`) and print/tex/semio-window.sty (`\\semio_window_kind_number_set:n`, `\\semio_window_register_write:nn`, `\\semio@heading@pair`). The register/TOC-style list machinery is the `\\semio_window_register_write:nn` / `\\semio_window_toc_append:*` / register-list `\\listof*` pipeline in semio-window.sty.\n\nNeeds: (1) allow windows to become breakable across pages, (2) repeat the full window chrome (border, navbar/footer-style chip row, tab+hierarchy-chip pair) on every page the window's content spans, (3) track a per-window \"part\" counter that increments per page-continuation and append \":\u003cpart\u003e\" to the on-page hierarchy chip only for parts after the first (or design as fits — clarify during implementation) — but the register list entry written via semio_window_register_write:nn must be written once with the bare hierarchy path, no part suffix, and not duplicated per part.\n\nVerify by building one of the real print templates/dist documents with a table/window long enough to span 2+ pages and inspecting the rendered PDF pages for repeated chrome + part-suffixed chips, plus confirming the table register list has a single non-suffixed entry.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1971"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪1a847d7d6fdd4f7c918b11cec83d1342"
+  ]
+}

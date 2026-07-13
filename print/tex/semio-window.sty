@@ -20,8 +20,8 @@
 \providecommand{\semio@window@imagefit}{contain}
 \providecommand{\semio@chrome@navbar@height}{1.8em}
 \providecommand{\semio@chrome@footer@height}{1.8em}
-\providecommand{\semio@chrome@font@chip}{0.6em}
-\providecommand{\semio@chrome@font@body}{0.8em}
+\providecommand{\semio@chrome@font@chip}{7.2pt}
+\providecommand{\semio@chrome@font@body}{9.6pt}
 \providecommand{\semio@chrome@icon@scale}{1}
 \providecommand{\semio@chrome@icon@scale@footer}{1}
 
@@ -2531,9 +2531,9 @@
       \setlength{\fboxsep}{0pt}%
       \colorbox{semio-chrome-base}{%
         \vbox to \semio@chrome@navbar@height{%
-          \vfil
+          \vskip0pt
           \hbox to \headwidth{#1}%
-          \vskip\semio@spacing@single
+          \vskip1cm
         }%
       }%
     }%
@@ -2557,7 +2557,7 @@
         \vbox to \semio@chrome@footer@height{%
           \vskip\semio@spacing@single
           \hbox to \headwidth{#1}%
-          \vfil
+          \vskip\dimexpr\semio@chrome@footer@height-\semio@chrome@row@height@footer-\semio@spacing@single\relax
         }%
       }%
     }%

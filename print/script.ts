@@ -358,10 +358,12 @@ export function emitSemioTokensSty(): void {
   }
   const typography = tokens.metrics?.typography;
   if (typography) {
-    const chipFont = (typography.text2xsPx ?? 9.6) / 16;
-    const bodyFont = (typography.textSmPx ?? 12.8) / 16;
-    lines.push(`\\newcommand{\\semio@chrome@font@chip}{${+chipFont.toFixed(3)}em}`);
-    lines.push(`\\newcommand{\\semio@chrome@font@body}{${+bodyFont.toFixed(3)}em}`);
+    // 🎨 Absolute pt (not em) so chip/body text height is identical regardless of the
+    // ambient font size at the \fontsize call site — only chip width adapts to content.
+    const chipFontPt = (typography.text2xsPx ?? 9.6) * 0.75;
+    const bodyFontPt = (typography.textSmPx ?? 12.8) * 0.75;
+    lines.push(`\\newcommand{\\semio@chrome@font@chip}{${+chipFontPt.toFixed(3)}pt}`);
+    lines.push(`\\newcommand{\\semio@chrome@font@body}{${+bodyFontPt.toFixed(3)}pt}`);
   }
   lines.push("");
   for (const themeName of ["light", "dark"] as const) {

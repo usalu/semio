@@ -1,0 +1,13 @@
+{
+  "title": "Print Abbreviation Mechanism",
+  "emoji": "🔤",
+  "status": "open",
+  "description": "Add a proper abbreviation-list mechanism (Abkürzungsverzeichnis) to the print LaTeX stack, generalizing the existing glossary machinery (GlossaryDefine/Gls/listofglossaries in print/tex/semio-window.sty, semio-table.sty, semio-core.sty) into a shared term-list factory instantiated for both glossary and abbreviations. Remove the dead/colliding `abbreviations` window-kind (box type, never used, squats on \\listofabbreviations name). Wire it into mit-bestand/bericht/zwischenbericht/zwischenbericht.tex (and its -dark sibling) in the appendix directly after \\listofglossaries, with entries for LLM, KI, AP, HID, REST, NGS, KET, BBSR (German, no-technical-background definitions), and \\Abbr{} wired at each term's first occurrence in the body so page references populate.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1974"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪1951e0a0eca4473487467f25111573ce"
+  ]
+}
