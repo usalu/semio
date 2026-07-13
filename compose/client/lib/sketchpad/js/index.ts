@@ -39,7 +39,7 @@ import {
   createDefaultLayout,
   createTabStackLayout,
   registerPlatformComponent,
-  registerSidePanelBody,
+  registerCornerPanelBody,
   registerWindowBody,
   type ComponentKind,
   type PanelModel,
@@ -612,13 +612,13 @@ const composeSketchpadTranslationBundles = {
               }
             }
           },
-          "leftSidePanel": {
+          "topLeft": {
             "label": {
               "normal": "Linkes Panel umschalten",
               "beginner": "Das linke Seitenfeld mit Workbench-Tabs umschalten"
             }
           },
-          "rightSidePanel": {
+          "topRight": {
             "label": {
               "normal": "Rechtes Panel umschalten",
               "beginner": "Das rechte Seitenfeld mit Detail-Tabs umschalten"
@@ -5669,13 +5669,13 @@ const composeSketchpadTranslationBundles = {
               }
             }
           },
-          "leftSidePanel": {
+          "topLeft": {
             "label": {
               "normal": "Toggle Left Panel",
               "beginner": "Toggle the left side panel with workbench tabs"
             }
           },
-          "rightSidePanel": {
+          "topRight": {
             "label": {
               "normal": "Toggle Right Panel",
               "beginner": "Toggle the right side panel with details tabs"
@@ -10723,7 +10723,7 @@ export interface SketchpadHomeUiState {
 /** @emoji 🧭 Shell chrome snapshot (navigation, panels, open kits). */
 export interface SketchpadShellSnapshot {
   readonly navigationPath: string;
-  readonly panelVisibility: { readonly leftSidePanel: boolean; readonly rightSidePanel: boolean };
+  readonly panelVisibility: { readonly topLeft: boolean; readonly topRight: boolean };
   readonly openKitIds: readonly string[];
   readonly routeSelection: SketchpadRouteSelection;
   readonly home: SketchpadHomeUiState;
@@ -14399,7 +14399,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
     super(SKETCHPAD_SHELL_CONTROLLER_ID, actionBus, hostNotify);
     this.shellStore = new ObservableCell<SketchpadShellSnapshot>({
       navigationPath: "/",
-      panelVisibility: { leftSidePanel: false, rightSidePanel: false },
+      panelVisibility: { topLeft: false, topRight: false },
       openKitIds: [],
       routeSelection: sketchpadEmptyRouteSelection(),
       home: sketchpadEmptyHomeUiState(),
@@ -14985,7 +14985,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
         break;
       }
       case "togglePanel": {
-        const panel = (args as { panel: "leftSidePanel" | "rightSidePanel" }).panel;
+        const panel = (args as { panel: "topLeft" | "topRight" }).panel;
         this.shellStore.set({
           ...shell,
           panelVisibility: { ...shell.panelVisibility, [panel]: !shell.panelVisibility[panel] },
@@ -15263,7 +15263,7 @@ function registerSketchpadWindowBodies(): void {
   });
   registerWindowBody(SKETCHPAD_BODY_DOCS, () => buildPanelWindowBody(SKETCHPAD_SURFACE_DOCS_PAGE, SKETCHPAD_SHELL_CONTROLLER_ID));
   registerWindowBody(SKETCHPAD_BODY_FEEDBACK, () => buildPanelWindowBody(SKETCHPAD_SURFACE_FEEDBACK_FORM, SKETCHPAD_SHELL_CONTROLLER_ID));
-  registerSidePanelBody(SKETCHPAD_PANEL_WINDOWS_BODY, (ctx) => {
+  registerCornerPanelBody(SKETCHPAD_PANEL_WINDOWS_BODY, (ctx) => {
     const app = ctx.platform.getActiveApp();
     const windowKinds = app?.windowKinds ?? [];
     const tree: UiTreeNode = {
@@ -15282,9 +15282,9 @@ function registerSketchpadWindowBodies(): void {
     };
     return tree;
   });
-  registerSidePanelBody(SKETCHPAD_PANEL_DOCUMENT_BODY, buildSketchpadDocumentPanelBody);
-  registerSidePanelBody(SKETCHPAD_PANEL_CATALOGUE_BODY, buildSketchpadCataloguePanelBody);
-  registerSidePanelBody(SKETCHPAD_PANEL_INSPECTION_BODY, buildSketchpadInspectionPanelBody);
+  registerCornerPanelBody(SKETCHPAD_PANEL_DOCUMENT_BODY, buildSketchpadDocumentPanelBody);
+  registerCornerPanelBody(SKETCHPAD_PANEL_CATALOGUE_BODY, buildSketchpadCataloguePanelBody);
+  registerCornerPanelBody(SKETCHPAD_PANEL_INSPECTION_BODY, buildSketchpadInspectionPanelBody);
 }
 
 function applySketchpadUri(platform: Platform, uri: string): void {

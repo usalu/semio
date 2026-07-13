@@ -49,7 +49,6 @@ import {
   ToolbarGroup,
   ToolbarItem,
   ToolbarZone,
-  findPanelTabNode,
   findPanelTabPath,
   panelTabChildren,
   reconcileActivePath,

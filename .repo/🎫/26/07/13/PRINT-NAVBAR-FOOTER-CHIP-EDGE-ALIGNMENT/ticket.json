@@ -1,0 +1,13 @@
+{
+  "title": "Print Navbar Footer Chip Edge Alignment",
+  "emoji": "🎨",
+  "status": "open",
+  "description": "Fix navbar/footer chips in print/tex/semio-window.sty rendering with inward horizontal offset instead of flush against the chrome border. Top-left chip (emblem/project) must start exactly where the border starts, top-right chip (heading) must end exactly where the border ends — same for footer (logo chips left, page number right). Remove the extraneous \\hspace{\\semio@spacing@single} padding at both ends of \\semio@chrome@bar@threezone's edge hbox that currently offsets the whole chip row inward from \\headwidth.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1970"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪4da0341dd7ee4e97b9dca2fcf2861d64"
+  ]
+}

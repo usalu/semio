@@ -5,7 +5,8 @@
 
 #navbar,
 #compose\.sketchpad\.navbar,
-[data-slot="navbar"] {
+[data-slot="navbar"],
+[data-slot="footer"] {
   position: relative !important;
   z-index: var(--z-base) !important;
   pointer-events: auto !important;

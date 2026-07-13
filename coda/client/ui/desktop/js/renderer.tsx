@@ -25,7 +25,7 @@ import {
   WindowKindRuntime,
   buildPanelWindowBody,
   createTabStackLayout,
-  registerSidePanelBody,
+  registerCornerPanelBody,
   registerWindowBody,
   uiDeclarativeSectionsToTree,
   type UiPanelHostSurfaceNode,
@@ -2673,9 +2673,9 @@ function registerCodaShellBodies(): void {
   codaBodiesRegistered = true;
   registerUiPanelSurfaceHost(CODA_SURFACE_MAIN, CodaMainSurfaceHost);
   registerWindowBody(CODA_BODY_MAIN, () => buildPanelWindowBody(CODA_SURFACE_MAIN, CODA_CONTROLLER_ID));
-  registerSidePanelBody(CODA_PANEL_DOCUMENT_BODY, buildCodaDocumentPanelBody);
-  registerSidePanelBody(CODA_PANEL_CATALOGUE_BODY, buildCodaCataloguePanelBody);
-  registerSidePanelBody(CODA_PANEL_INSPECTION_BODY, buildCodaInspectionPanelBody);
+  registerCornerPanelBody(CODA_PANEL_DOCUMENT_BODY, buildCodaDocumentPanelBody);
+  registerCornerPanelBody(CODA_PANEL_CATALOGUE_BODY, buildCodaCataloguePanelBody);
+  registerCornerPanelBody(CODA_PANEL_INSPECTION_BODY, buildCodaInspectionPanelBody);
 }
 
 function buildCodaAppRuntime(controller: CodaShellController): AppRuntime {
@@ -2693,7 +2693,7 @@ function buildCodaAppRuntime(controller: CodaShellController): AppRuntime {
 function ensureCodaPlatform(): Platform {
   if (codaPlatformSingleton) return codaPlatformSingleton;
   registerCodaShellBodies();
-  const platform = new Platform({ initialPanelVisibility: { leftSidePanel: false, rightSidePanel: false } });
+  const platform = new Platform({ initialPanelVisibility: { topLeft: false, topRight: false, bottomLeft: false, bottomRight: false } });
   const controller = new CodaShellController(platform.actionBus, () => platform.notify());
   codaShellControllerSingleton = controller;
   platform.addApp(buildCodaAppRuntime(controller));

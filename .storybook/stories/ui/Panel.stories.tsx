@@ -11,7 +11,7 @@
 
 // #endregion 🧲Header
 
-import { BottomPanel, Panel, PanelSection, SidePanel } from "@semio-tech/ui-react";
+import { BottomPanel, CornerPanel, Panel, PanelSection, singleTreeLeaf } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ComponentType } from "react";
@@ -73,19 +73,13 @@ export const BottomPanelStory: Story = {
   ),
 };
 
-const leafTab = (id: string, icon: ComponentType<{ size?: number }>, name: string, order: number, content: string) => ({
-  kind: "leaf" as const,
-  id,
-  icon,
-  name,
-  order,
-  tree: { sections: [{ id: `${id}.section`, label: "", items: [{ id: `${id}.item`, label: "", control: <div className="p-2">{content}</div> }] }] },
-});
+const leafTab = (id: string, icon: ComponentType<{ size?: number }>, name: string, order: number, content: string) =>
+  singleTreeLeaf({ id, icon, name, order, tree: { sections: [{ id: `${id}.section`, label: "", items: [{ id: `${id}.item`, label: "", control: <div className="p-2">{content}</div> }] }] } });
 
 // The toggle is the panel's own chrome (its first row) — same fold/unfold pattern as a window's options
 // rail: the toggle always renders and stays put, while the tab bar and content only mount when open.
-export const SidePanelStory: Story = {
-  name: "Side Panel",
+export const CornerPanelStory: Story = {
+  name: "Corner Panel — Top Left",
   args: {
     visible: true,
     sections: sampleSections,
@@ -96,8 +90,8 @@ export const SidePanelStory: Story = {
     const [visible, setVisible] = useState(true);
     return (
       <div className="relative h-[400px] w-[600px] border bg-base">
-        <SidePanel
-          position="left"
+        <CornerPanel
+          corner="top-left"
           visible={visible}
           onVisibleChange={setVisible}
           size={size}
@@ -109,8 +103,8 @@ export const SidePanelStory: Story = {
   },
 };
 
-export const SidePanelRight: Story = {
-  name: "Side Panel Right",
+export const CornerPanelTopRight: Story = {
+  name: "Corner Panel — Top Right",
   args: {
     visible: true,
     sections: sampleSections,
@@ -121,8 +115,8 @@ export const SidePanelRight: Story = {
     const [visible, setVisible] = useState(true);
     return (
       <div className="relative h-[400px] w-[600px] border bg-base">
-        <SidePanel
-          position="right"
+        <CornerPanel
+          corner="top-right"
           visible={visible}
           onVisibleChange={setVisible}
           size={size}
@@ -134,8 +128,33 @@ export const SidePanelRight: Story = {
   },
 };
 
-export const SidePanelFolded: Story = {
-  name: "Side Panel — Folded (toggle only)",
+export const CornerPanelBottomRight: Story = {
+  name: "Corner Panel — Bottom Right (stacks upward)",
+  args: {
+    visible: true,
+    sections: sampleSections,
+    size: 250,
+  },
+  render: () => {
+    const [size, setSize] = useState(300);
+    const [visible, setVisible] = useState(true);
+    return (
+      <div className="relative h-[400px] w-[600px] border bg-base">
+        <CornerPanel
+          corner="bottom-right"
+          visible={visible}
+          onVisibleChange={setVisible}
+          size={size}
+          onSizeChange={setSize}
+          tabs={[leafTab("actions", Layers, "Actions", 0, "Action tools"), leafTab("history", Info, "History", 1, "History tools")]}
+        />
+      </div>
+    );
+  },
+};
+
+export const CornerPanelFolded: Story = {
+  name: "Corner Panel — Folded (toggle only)",
   args: {
     visible: false,
     sections: sampleSections,
@@ -145,14 +164,14 @@ export const SidePanelFolded: Story = {
     const [visible, setVisible] = useState(false);
     return (
       <div className="relative h-[400px] w-[600px] border bg-base">
-        <SidePanel position="left" visible={visible} onVisibleChange={setVisible} tabs={[leafTab("types", Layers, "Types", 0, "Types panel content")]} />
+        <CornerPanel corner="top-left" visible={visible} onVisibleChange={setVisible} tabs={[leafTab("types", Layers, "Types", 0, "Types panel content")]} />
       </div>
     );
   },
 };
 
-export const SidePanelNestedTabs: Story = {
-  name: "Side Panel — Nested Tabs (Ribbon Levels)",
+export const CornerPanelNestedTabs: Story = {
+  name: "Corner Panel — Nested Tabs (Ribbon Levels)",
   args: {
     visible: true,
     sections: sampleSections,
@@ -164,8 +183,8 @@ export const SidePanelNestedTabs: Story = {
     const [activeTabPath, setActiveTabPath] = useState<readonly string[]>([]);
     return (
       <div className="relative h-[400px] w-[600px] border bg-base">
-        <SidePanel
-          position="left"
+        <CornerPanel
+          corner="top-left"
           visible={visible}
           onVisibleChange={setVisible}
           size={size}

@@ -125,11 +125,22 @@ describe("shell store reducer", () => {
 
   it("toggles the layout slice via an updater function", () => {
     const state = baseState();
-    const opened = shellReducer(state, { type: "SET_LEFT_PANEL_VISIBLE", value: true });
-    const toggled = shellReducer(opened, { type: "SET_LEFT_PANEL_VISIBLE", value: (prev) => !prev });
-    expect(opened.layout.leftPanelVisible).toBe(true);
-    expect(toggled.layout.leftPanelVisible).toBe(false);
+    const opened = shellReducer(state, { type: "SET_CORNER_PANEL_VISIBLE", corner: "top-left", value: true });
+    const toggled = shellReducer(opened, { type: "SET_CORNER_PANEL_VISIBLE", corner: "top-left", value: (prev) => !prev });
+    expect(opened.layout.cornerPanels["top-left"].visible).toBe(true);
+    expect(toggled.layout.cornerPanels["top-left"].visible).toBe(false);
     expect(toggled.overlays).toBe(opened.overlays);
+  });
+
+  it("resets the dock override and every corner's active path via RESET_DOCK, leaving fold/size untouched", () => {
+    const state = baseState();
+    const rearranged = shellReducer(state, { type: "SET_DOCK_OVERRIDE", value: { version: 1, corners: { "top-left": [{ id: "moved" }], "top-right": [], "bottom-left": [], "bottom-right": [] } } });
+    const withPath = shellReducer(rearranged, { type: "SET_CORNER_PANEL_PATH", corner: "top-left", value: ["moved"] });
+    const withVisible = shellReducer(withPath, { type: "SET_CORNER_PANEL_VISIBLE", corner: "top-left", value: true });
+    const reset = shellReducer(withVisible, { type: "RESET_DOCK" });
+    expect(reset.layout.dockOverride).toBeNull();
+    expect(reset.layout.cornerPanels["top-left"].path).toEqual([]);
+    expect(reset.layout.cornerPanels["top-left"].visible).toBe(true);
   });
 
   it("updates the uiPrefs slice and leaves the sync slice referentially unchanged", () => {
