@@ -1110,22 +1110,28 @@ pub mod app_2d {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::PluginApp;
+        use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+        use vcs::MemoryBackbone;
+
+        fn meta(actor: &str) -> ActionMeta {
+            ActionMeta { actor: actor.into(), instance_id: 1 }
+        }
+
+        fn new_app() -> VcsDocumentApp<Procedural2dPlayApp> {
+            VcsDocumentApp::new(Procedural2dPlayApp::default())
+        }
 
         #[test]
         fn renders_main_graph_scene() {
-            let app = Procedural2dPlayApp;
-            let document = app.initial_document_json();
-            let node = app.render(PROCEDURAL2D_PLAY_BODY_MAIN, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("node-graph"));
+            let mut app = new_app();
+            let node = app.render(PROCEDURAL2D_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
+            assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
         }
 
         #[test]
         fn main_graph_scene_exports_flow_backed_node_graph_fields() {
-            let app = Procedural2dPlayApp;
-            let document = app.initial_document_json();
-            let node = app.render(PROCEDURAL2D_PLAY_BODY_MAIN, &document, &ViewState::default());
+            let mut app = new_app();
+            let node = app.render(PROCEDURAL2D_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
             let value: Value = serde_json::from_str(&serde_json::to_string(&node).unwrap()).expect("ui node json");
             let graph = value.get("nodeGraph").expect("nodeGraph");
             assert!(graph.get("fixtureJson").and_then(|v| v.as_str()).is_some_and(|s| s.contains("flow.fixture")));
@@ -1135,84 +1141,115 @@ pub mod app_2d {
 
         #[test]
         fn renders_preview_canvas_scene() {
-            let app = Procedural2dPlayApp;
-            let document = app.initial_document_json();
-            let node = app.render(PROCEDURAL2D_PLAY_BODY_PREVIEW, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("canvas-2d"));
+            let mut app = new_app();
+            let node = app.render(PROCEDURAL2D_PLAY_BODY_PREVIEW, None, &ViewState::default()).expect("render");
+            assert!(serde_json::to_string(&node).unwrap().contains("canvas-2d"));
         }
 
         #[test]
         fn document_lists_widgets() {
-            let app = Procedural2dPlayApp;
-            let document = app.initial_document_json();
-            let node = app.render(PROCEDURAL2D_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("procedural2d-play-document.widget.rect"));
+            let mut app = new_app();
+            let node = app.render(PROCEDURAL2D_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
+            assert!(serde_json::to_string(&node).unwrap().contains("procedural2d-play-document.widget.rect"));
         }
 
         #[test]
         fn catalogue_lists_show_modes() {
-            let app = Procedural2dPlayApp;
-            let document = app.initial_document_json();
-            let node = app.render(PROCEDURAL2D_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
-            let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains("procedural2d-play-catalogue.mode.preview"));
+            let mut app = new_app();
+            let node = app.render(PROCEDURAL2D_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
+            assert!(serde_json::to_string(&node).unwrap().contains("procedural2d-play-catalogue.mode.preview"));
         }
 
         #[test]
-        fn generate_action_sets_eval_outputs() {
-            let mut app = Procedural2dPlayApp;
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("generate", None, &document, &ViewState::default());
-            assert_eq!(ops.len(), 1);
-            let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-            let next: Procedural2dPlayView = serde_json::from_value(payload["document"].clone()).unwrap();
-            assert_eq!(next.runtime.show_mode, "generate");
+        fn add_widget_emits_op_and_grows_document() {
+            let mut app = new_app();
+            let before = app.projection().expect("projection").fixture.widgets.len();
+            app.handle_action("addWidget", Some(&json!({ "kind": "inputNote" })), &ViewState::default(), &meta("local")).expect("add");
+            assert_eq!(app.projection().expect("projection").fixture.widgets.len(), before + 1);
         }
 
         #[test]
-        fn set_show_mode_updates_runtime() {
-            let mut app = Procedural2dPlayApp;
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("setShowMode", Some(&json!({ "value": "wire" })), &document, &ViewState::default());
-            let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-            let next: Procedural2dPlayView = serde_json::from_value(payload["document"].clone()).unwrap();
-            assert_eq!(next.runtime.show_mode, "wire");
+        fn add_widget_undo_redo_round_trip() {
+            let mut app = new_app();
+            let before = app.projection().expect("projection").fixture.widgets.len();
+            app.handle_action("addWidget", Some(&json!({ "kind": "inputNote" })), &ViewState::default(), &meta("local")).expect("add");
+            assert_eq!(app.projection().expect("projection").fixture.widgets.len(), before + 1);
+            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            assert_eq!(app.projection().expect("projection").fixture.widgets.len(), before);
+            app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+            assert_eq!(app.projection().expect("projection").fixture.widgets.len(), before + 1);
+        }
+
+        #[test]
+        fn generate_is_a_view_action_with_no_document_ops() {
+            let mut app = new_app();
+            let before = app.projection().expect("projection");
+            app.handle_action("generate", None, &ViewState::default(), &meta("local")).expect("generate");
+            assert_eq!(app.projection().expect("projection"), before, "generate must not mutate the document");
+        }
+
+        #[test]
+        fn add_generation_records_an_undoable_generation_op() {
+            let mut app = new_app();
+            app.handle_action("addGeneration", None, &ViewState::default(), &meta("local")).expect("add generation");
+            assert_eq!(app.projection().expect("projection").generation.generations.len(), 1);
+            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            assert_eq!(app.projection().expect("projection").generation.generations.len(), 0);
         }
 
         #[test]
         fn generate_mode_renders_surfaces() {
-            let app = Procedural2dPlayApp;
-            let document = app.initial_document_json();
-            let generations = app.render(PROCEDURAL2D_PLAY_BODY_GENERATIONS, &document, &ViewState::default());
+            let mut app = new_app();
+            let generations = app.render(PROCEDURAL2D_PLAY_BODY_GENERATIONS, None, &ViewState::default()).expect("render");
             assert!(serde_json::to_string(&generations).unwrap().contains("addGeneration"));
         }
 
         #[test]
-        fn add_generation_evaluates_preview() {
-            let mut app = Procedural2dPlayApp;
-            let document = app.initial_document_json();
-            let ops = app.handle_action_patch_ops("addGeneration", None, &document, &ViewState::default());
-            let updated: Procedural2dPlayView =
-                serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
-            assert_eq!(updated.generation.generations.len(), 1);
-            assert!(updated.generation.preview_text.as_deref().unwrap_or("").len() > 2);
+        fn document_from_dwg_returns_valid_default_projection() {
+            let drawing = semio_framework_core::DwgDrawing::default();
+            let document = procedural2d_document_from_dwg(&drawing).expect("dwg import document");
+            let projection: Procedural2dDocument = serde_json::from_value(document).expect("parseable projection");
+            assert_eq!(projection.fixture.schema, "flow.fixture");
         }
 
         #[test]
-        fn document_from_dwg_returns_valid_default_envelope() {
-            let drawing = semio_framework_core::DwgDrawing::default();
-            let document = procedural2d_document_from_dwg(&drawing).expect("dwg import document");
-            let envelope: Procedural2dPlayView = serde_json::from_value(document).expect("parseable envelope");
-            assert_eq!(envelope.fixture.schema, "flow.fixture");
+        fn two_instances_converge_disjoint_widget_moves() {
+            let base = new_app();
+            let base_doc = base.document_json().expect("base document");
+            let mut a = new_app();
+            let mut b = new_app();
+            a.load_document(&base_doc).expect("load a");
+            b.load_document(&base_doc).expect("load b");
+            let (backbone_a, backbone_b) =
+                MemoryBackbone::pair("mem://procedural2d-convergence", "mem://procedural2d-convergence");
+            a.attach_backbone(Box::new(backbone_a)).expect("attach a");
+            b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+            let widgets: Vec<String> = a
+                .projection()
+                .expect("projection")
+                .fixture
+                .widgets
+                .iter()
+                .map(|widget| widget_id(widget).to_string())
+                .collect();
+            assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
+            let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
+            a.handle_action("moveMediaNode", Some(&json!({ "nodeId": w0, "x": 111.0, "y": 5.0 })), &ViewState::default(), &meta("actor-a")).expect("a moves w0");
+            b.handle_action("moveMediaNode", Some(&json!({ "nodeId": w1, "x": 222.0, "y": 6.0 })), &ViewState::default(), &meta("actor-b")).expect("b moves w1");
+            a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
+            b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+            let layout_a = a.projection().expect("projection a").fixture.layout;
+            let layout_b = b.projection().expect("projection b").fixture.layout;
+            assert_eq!(layout_a.get(&w0).map(|l| l.x), Some(111.0), "A keeps its own edit");
+            assert_eq!(layout_a.get(&w1).map(|l| l.x), Some(222.0), "A converges on B's edit");
+            assert_eq!(layout_b.get(&w0).map(|l| l.x), Some(111.0), "B converges on A's edit");
+            assert_eq!(layout_b.get(&w1).map(|l| l.x), Some(222.0), "B keeps its own edit");
         }
 
         #[test]
         fn procedural2d_labels_resolve_native_english_by_default() {
-            let app = Procedural2dPlayApp;
-            let document = app.initial_document_json();
-            let node = app.render(PROCEDURAL2D_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+            let mut app = new_app();
+            let node = app.render(PROCEDURAL2D_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
             let json = serde_json::to_string(&node).unwrap();
             assert!(json.contains("\"Sources\""));
             assert!(json.contains("\"Components\""));
@@ -1223,17 +1260,16 @@ pub mod app_2d {
 
         #[test]
         fn procedural2d_labels_translate_catalogue_and_inspector_in_german() {
-            let app = Procedural2dPlayApp;
-            let document = app.initial_document_json();
+            let mut app = new_app();
             let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-            let catalogue = app.render(PROCEDURAL2D_PLAY_BODY_CATALOGUE, &document, &view_state);
+            let catalogue = app.render(PROCEDURAL2D_PLAY_BODY_CATALOGUE, None, &view_state).expect("render");
             let catalogue_json = serde_json::to_string(&catalogue).unwrap();
             assert!(catalogue_json.contains("Quellen"));
             assert!(catalogue_json.contains("Komponenten"));
             assert!(catalogue_json.contains("Senken"));
             assert!(catalogue_json.contains("Anzeigemodus"));
             assert!(!catalogue_json.contains("\"Sources\""));
-            let inspector = app.render(PROCEDURAL2D_PLAY_BODY_INSPECTION, &document, &view_state);
+            let inspector = app.render(PROCEDURAL2D_PLAY_BODY_INSPECTION, None, &view_state).expect("render");
             let inspector_json = serde_json::to_string(&inspector).unwrap();
             assert!(inspector_json.contains("Elemente:"));
         }
@@ -1250,13 +1286,14 @@ pub mod app_3d {
         FlowFixture, FlowHost, Widget,
     };
     use flow_module_brep::tessellate_geometry_json;
+    use procedural_3d::{procedural3d_fixture_ops, Procedural3dDocument, Procedural3dOp, PROCEDURAL_3D_SCHEMA};
     use semio_framework_plugin::{PanelGroup,
-        apply_world3d_sun_action, build_node_graph_scene, build_world_3d_scene, create_default_layout, create_named_layout,
-        handle_generation_action, merge_world_selection_ids,
+        apply_generation_op, apply_world3d_sun_action, build_node_graph_scene, build_world_3d_scene, create_default_layout,
+        create_named_layout, generation_ops, merge_world_selection_ids,
         mesh_from_kind, render_generation_form_body, render_generation_preview_text, render_generations_tree,
-        selected_generation, tool_button, tool_collection, tool_toggle, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
-        ui_stack_vertical, ui_text, App, world3d_scene, world3d_selection_json, world3d_sun_measures,
-        ActionDescriptor, GenerationPlayState, NodeGraphScene, PluginApp, PluginBundle, ToolCategory, ToolNode, UiControlNode,
+        select_generation, selected_generation, tool_button, tool_collection, tool_toggle, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
+        ui_stack_vertical, ui_text, ActionEmit, App, DocumentApp, DocumentView, world3d_scene, world3d_selection_json, world3d_sun_measures,
+        ActionDescriptor, GenerationOp, GenerationPlayState, NodeGraphScene, ToolCategory, ToolNode,
         UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowMeasure, WorldSunConfig,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
         FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -1268,7 +1305,6 @@ pub mod app_3d {
     use std::hash::{Hash, Hasher};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
-    use std::sync::LazyLock;
 
     //#region 🔖Constants
     const PROCEDURAL_3D_PLAY_APP_ID: &str = "procedural3d-play";
@@ -1311,7 +1347,7 @@ pub mod app_3d {
     //#region 🔖EvalCache
     /// 🧠 Process-wide [`flow_core::neural::NeuralCache`] shared across `FlowHost` reconstructions.
     ///
-    /// `Procedural3dEnvelope` is a stateless serde value rebuilt from `document_json` on every
+    /// `Procedural3dPlayView` is a stateless serde value rebuilt from `document_json` on every
     /// plugin dispatch, so a fresh `FlowHost::from_fixture` would otherwise discard per-node
     /// memoization (and the geometry handle stability that lets `flow_module_brep`'s mesh cache
     /// hit) on every single edit. Mirrors `flow_module_brep`'s single-instance `KERNEL`/`MESH_CACHE`
@@ -1443,33 +1479,23 @@ pub mod app_3d {
         45.0
     }
 
+    /// 👁️ Ephemeral per-session view state — never part of the persisted document. Selection, hover,
+    /// preview camera, sun/LOD display options, the derived mesh preview caches, and the active
+    /// generation selection/preview all live here on the app struct, out of the VCS document.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     struct Procedural3dRuntime {
-        #[serde(default)]
         selected_node_ids: Vec<String>,
-        #[serde(default)]
         lod_mode: String,
-        #[serde(default = "default_show_mode")]
         show_mode: String,
-        #[serde(default = "default_selection_method")]
         selection_method: String,
-        #[serde(default)]
         hovered_node_id: Option<String>,
-        #[serde(default)]
         preview_camera: Procedural3dPreviewCamera,
-        /// ⏮️ Flow-graph snapshots for undo, pushed before structural edits (add/remove/connect/gumball).
-        #[serde(default)]
-        undo_fixtures: Vec<FlowFixture>,
-        /// ⏭️ Flow-graph snapshots for redo, cleared whenever a new edit is snapshotted.
-        #[serde(default)]
-        redo_fixtures: Vec<FlowFixture>,
-        #[serde(default)]
         preview_cache: Option<Procedural3dPreviewCache>,
-        #[serde(default)]
         generation_preview_cache: Option<Procedural3dPreviewCache>,
-        #[serde(default)]
         sun: WorldSunConfig,
+        selected_generation_id: Option<String>,
+        generation_preview_text: Option<String>,
     }
 
     impl Default for Procedural3dRuntime {
@@ -1481,18 +1507,13 @@ pub mod app_3d {
                 selection_method: default_selection_method(),
                 hovered_node_id: None,
                 preview_camera: Procedural3dPreviewCamera::default(),
-                undo_fixtures: Vec::new(),
-                redo_fixtures: Vec::new(),
                 preview_cache: None,
                 generation_preview_cache: None,
                 sun: WorldSunConfig::default(),
+                selected_generation_id: None,
+                generation_preview_text: None,
             }
         }
-    }
-
-    fn snapshot_procedural3d(runtime: &mut Procedural3dRuntime, fixture: &FlowFixture) {
-        runtime.undo_fixtures.push(fixture.clone());
-        runtime.redo_fixtures.clear();
     }
 
     fn default_show_mode() -> String {
@@ -1511,42 +1532,50 @@ pub mod app_3d {
         instances_json: String,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct Procedural3dEnvelope {
+    /// 🧾 Transient render/action bundle — the persisted projection (fixture + generations) with the
+    /// ephemeral runtime's selection, caches, and derived preview overlaid, so the pure panel/render
+    /// helpers keep reading a single value. Assembled per call; never serialized as the document.
+    struct Procedural3dPlayView {
         fixture: FlowFixture,
-        #[serde(default)]
         runtime: Procedural3dRuntime,
-        #[serde(default)]
         generation: GenerationPlayState,
     }
 
-    fn default_envelope() -> Procedural3dEnvelope {
-        envelope_from_fixture_json(HEX_COLUMN_EXAMPLE_JSON).unwrap_or_else(|| Procedural3dEnvelope {
-            fixture: FlowFixture::default(),
-            runtime: Procedural3dRuntime::default(),
-            generation: GenerationPlayState::default(),
-        })
+    /// 🧾 Overlays the ephemeral runtime's generation selection and derived preview onto the persisted
+    /// generation state to build a {@link Procedural3dPlayView} for rendering.
+    fn play_view(projection: &Procedural3dDocument, runtime: &Procedural3dRuntime) -> Procedural3dPlayView {
+        let mut generation = projection.generation.clone();
+        generation.selected_generation_id = runtime.selected_generation_id.clone();
+        generation.preview_text = runtime.generation_preview_text.clone();
+        Procedural3dPlayView { fixture: projection.fixture.clone(), runtime: runtime.clone(), generation }
     }
 
-    fn envelope_from_fixture_json(json_text: &str) -> Option<Procedural3dEnvelope> {
-        serde_json::from_str::<FlowFixture>(json_text).ok().map(|fixture| {
-            let mut envelope = Procedural3dEnvelope {
-                fixture,
-                runtime: Procedural3dRuntime::default(),
-                generation: GenerationPlayState::default(),
-            };
-            refresh_preview_cache(&mut envelope.runtime, &envelope.fixture);
-            envelope
-        })
+    fn default_fixture() -> FlowFixture {
+        serde_json::from_str::<FlowFixture>(HEX_COLUMN_EXAMPLE_JSON).unwrap_or_default()
     }
 
-    fn parse_envelope(document_json: &str) -> Procedural3dEnvelope {
-        serde_json::from_str(document_json).unwrap_or_else(|_| default_envelope())
+    fn default_projection() -> Procedural3dDocument {
+        Procedural3dDocument { fixture: default_fixture(), generation: GenerationPlayState::default() }
     }
 
-    fn set_document_op(envelope: &Procedural3dEnvelope) -> String {
-        json!({ "op": "setDocument", "document": envelope }).to_string()
+    /// 🧾 Builds the initial projection for a named example (or the empty/default fixture).
+    fn example_projection(example_id: &str) -> Procedural3dDocument {
+        let fixture_json = match example_id {
+            PROCEDURAL_EXAMPLE_HEX_COLUMN | "demo" => Some(HEX_COLUMN_EXAMPLE_JSON),
+            PROCEDURAL_EXAMPLE_RECT_EXTRUDE => Some(RECT_EXTRUDE_EXAMPLE_JSON),
+            PROCEDURAL_EXAMPLE_SPHERE_TORUS => Some(SPHERE_TORUS_EXAMPLE_JSON),
+            "" | "empty" => None,
+            _ => None,
+        };
+        let fixture = fixture_json
+            .and_then(|json| serde_json::from_str::<FlowFixture>(json).ok())
+            .unwrap_or_default();
+        Procedural3dDocument { fixture, generation: GenerationPlayState::default() }
+    }
+
+    /// 🧾 Serializes an example's bare projection for registration via `App::example`.
+    fn example_document_json(example_id: &str) -> String {
+        serde_json::to_string(&example_projection(example_id)).unwrap_or_default()
     }
 
     fn fixture_signature(fixture: &FlowFixture) -> u64 {
@@ -1572,15 +1601,15 @@ pub mod app_3d {
         hasher.finish()
     }
 
-    fn generation_fixture_for_envelope(envelope: &Procedural3dEnvelope) -> FlowFixture {
-        if let Some(generation) = selected_generation(&envelope.generation) {
+    fn generation_fixture_for(fixture: &FlowFixture, generation: &GenerationPlayState) -> FlowFixture {
+        if let Some(selected) = selected_generation(generation) {
             let patched = apply_generation_values_to_fixture(
-                &serde_json::to_string(&envelope.fixture).unwrap_or_default(),
-                &generation.values,
+                &serde_json::to_string(fixture).unwrap_or_default(),
+                &selected.values,
             );
-            FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| envelope.fixture.clone())
+            FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone())
         } else {
-            envelope.fixture.clone()
+            fixture.clone()
         }
     }
 
@@ -1620,17 +1649,19 @@ pub mod app_3d {
         evaluated_preview_payload(fixture, runtime)
     }
 
-    fn finalize_document_op(envelope: &mut Procedural3dEnvelope) -> String {
-        refresh_preview_cache(&mut envelope.runtime, &envelope.fixture);
-        if selected_generation(&envelope.generation).is_none() {
-            // 🪞 No active generation: `generation_fixture_for_envelope` would just return a clone
-            // of `envelope.fixture`, so the generation preview is identical to the base preview —
-            // reuse the result just computed above instead of evaluating the same fixture twice.
-            let signature = generation_preview_signature(&envelope.fixture, &envelope.generation);
-            let already_cached = envelope.runtime.generation_preview_cache.as_ref().is_some_and(|entry| entry.signature == signature);
+    /// 🗂️ Refreshes the ephemeral base + generation mesh preview caches after a mutation, so the next
+    /// render hits instead of recomputing. `generation` carries the active selection from the runtime.
+    fn refresh_all_caches(runtime: &mut Procedural3dRuntime, fixture: &FlowFixture, generation: &GenerationPlayState) {
+        refresh_preview_cache(runtime, fixture);
+        if selected_generation(generation).is_none() {
+            // 🪞 No active generation: `generation_fixture_for` would just return a clone of `fixture`,
+            // so the generation preview is identical to the base preview — reuse the result just
+            // computed above instead of evaluating the same fixture twice.
+            let signature = generation_preview_signature(fixture, generation);
+            let already_cached = runtime.generation_preview_cache.as_ref().is_some_and(|entry| entry.signature == signature);
             if !already_cached {
-                if let Some(base) = envelope.runtime.preview_cache.clone() {
-                    envelope.runtime.generation_preview_cache = Some(Procedural3dPreviewCache {
+                if let Some(base) = runtime.preview_cache.clone() {
+                    runtime.generation_preview_cache = Some(Procedural3dPreviewCache {
                         signature,
                         meshes_json: base.meshes_json,
                         instances_json: base.instances_json,
@@ -1638,10 +1669,9 @@ pub mod app_3d {
                 }
             }
         } else {
-            let generation_fixture = generation_fixture_for_envelope(envelope);
-            refresh_generation_preview_cache(&mut envelope.runtime, &generation_fixture, &envelope.generation);
+            let generation_fixture = generation_fixture_for(fixture, generation);
+            refresh_generation_preview_cache(runtime, &generation_fixture, generation);
         }
-        set_document_op(envelope)
     }
 
     fn procedural_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -1751,8 +1781,8 @@ pub mod app_3d {
     }
     //#endregion 🔖GumballTransforms
 
-    fn host_from_envelope(envelope: &Procedural3dEnvelope) -> FlowHost {
-        let mut host = FlowHost::from_fixture_with_cache(envelope.fixture.clone(), procedural_neural_cache());
+    fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
+        let mut host = FlowHost::from_fixture_with_cache(fixture.clone(), procedural_neural_cache());
         host.set_neuron_kind_infos_json(&flow_core::flow_neuron_kind_infos_json());
         host
     }
@@ -1968,32 +1998,33 @@ pub mod app_3d {
         )
     }
 
-    fn evaluate_generation_preview(envelope: &Procedural3dEnvelope, values: &serde_json::Map<String, Value>) -> String {
-        let fixture_json = serde_json::to_string(&envelope.fixture).unwrap_or_default();
+    fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::Map<String, Value>) -> String {
+        let fixture_json = serde_json::to_string(fixture).unwrap_or_default();
         let patched = apply_generation_values_to_fixture(&fixture_json, values);
-        let fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| envelope.fixture.clone());
-        let mut host = FlowHost::from_fixture_with_cache(fixture.clone(), procedural_neural_cache());
+        let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());
+        let mut host = FlowHost::from_fixture_with_cache(patched_fixture, procedural_neural_cache());
         host.evaluate().unwrap_or_default()
     }
 
-    fn refresh_generation_preview(envelope: &mut Procedural3dEnvelope) {
-        let Some(generation) = selected_generation(&envelope.generation) else {
-            envelope.generation.preview_text = None;
+    /// 👁️ Recomputes the ephemeral generation preview text for the selected generation and stores it
+    /// on the runtime (never on the persisted document).
+    fn refresh_generation_preview(runtime: &mut Procedural3dRuntime, fixture: &FlowFixture, generation: &GenerationPlayState) {
+        let Some(selected) = selected_generation(generation) else {
+            runtime.generation_preview_text = None;
             return;
         };
-        let preview = evaluate_generation_preview(envelope, &generation.values);
-        envelope.generation.preview_text = Some(preview);
+        runtime.generation_preview_text = Some(evaluate_generation_preview(fixture, &selected.values));
     }
 
-    fn generation_preview_payload(envelope: &Procedural3dEnvelope) -> (String, String) {
-        let fixture = generation_fixture_for_envelope(envelope);
-        let signature = generation_preview_signature(&fixture, &envelope.generation);
-        if let Some(cache) = &envelope.runtime.generation_preview_cache {
+    fn generation_preview_payload(view: &Procedural3dPlayView) -> (String, String) {
+        let fixture = generation_fixture_for(&view.fixture, &view.generation);
+        let signature = generation_preview_signature(&fixture, &view.generation);
+        if let Some(cache) = &view.runtime.generation_preview_cache {
             if cache.signature == signature {
                 return (cache.meshes_json.clone(), cache.instances_json.clone());
             }
         }
-        evaluated_preview_payload(&fixture, &envelope.runtime)
+        evaluated_preview_payload(&fixture, &view.runtime)
     }
 
     fn preview_instances_json_fallback(fixture: &FlowFixture, runtime: &Procedural3dRuntime) -> String {
@@ -2053,8 +2084,9 @@ pub mod app_3d {
         )
     }
 
-    fn export_mesh_from_envelope(envelope: &Procedural3dEnvelope) -> semio_framework_plugin::MeshData {
-        let (meshes_json, _) = preview_payload_cached(&envelope.runtime, &envelope.fixture);
+    fn export_mesh_from_document(projection: &Procedural3dDocument) -> semio_framework_plugin::MeshData {
+        let runtime = Procedural3dRuntime::default();
+        let (meshes_json, _) = evaluated_preview_payload(&projection.fixture, &runtime);
         if let Ok(meshes) = serde_json::from_str::<Vec<Value>>(&meshes_json) {
             if let Some(first) = meshes.first() {
                 if let Ok(data) = serde_json::from_value(first.get("data").cloned().unwrap_or(Value::Null)) {
@@ -2062,7 +2094,7 @@ pub mod app_3d {
                 }
             }
         }
-        let kind = envelope
+        let kind = projection
             .fixture
             .widgets
             .iter()
@@ -2207,7 +2239,7 @@ pub mod app_3d {
     //#endregion 🔖Panels
 
     //#region 🔖GenerateRender
-    fn render_generate_generations(envelope: &Procedural3dEnvelope) -> UiNode {
+    fn render_generate_generations(envelope: &Procedural3dPlayView) -> UiNode {
         render_generations_tree(
             PROCEDURAL_3D_PLAY_APP_ID,
             "procedural3d-play-generate",
@@ -2216,7 +2248,7 @@ pub mod app_3d {
         )
     }
 
-    fn render_generate_form(envelope: &Procedural3dEnvelope, labels: &Procedural3dLabels) -> UiNode {
+    fn render_generate_form(envelope: &Procedural3dPlayView, labels: &Procedural3dLabels) -> UiNode {
         let spec = flow_fixture_to_form_spec(&envelope.fixture);
         let Some(generation) = selected_generation(&envelope.generation) else {
             return ui_text(labels.generate_hint);
@@ -2230,7 +2262,7 @@ pub mod app_3d {
         )
     }
 
-    fn render_generate_preview(envelope: &Procedural3dEnvelope, labels: &Procedural3dLabels) -> UiNode {
+    fn render_generate_preview(envelope: &Procedural3dPlayView, labels: &Procedural3dLabels) -> UiNode {
         let (meshes_json, instances_json) = generation_preview_payload(envelope);
         if meshes_json == "[]" && instances_json == "[]" {
             let text = envelope
@@ -2284,7 +2316,7 @@ pub mod app_3d {
             match action {
                 "setDocument" => {
                     if let Some(document) = args.and_then(|value| value.get("document")) {
-                        if let Ok(mut parsed) = serde_json::from_value::<Procedural3dEnvelope>(document.clone()) {
+                        if let Ok(mut parsed) = serde_json::from_value::<Procedural3dPlayView>(document.clone()) {
                             return vec![finalize_document_op(&mut parsed)];
                         }
                     }
@@ -2295,7 +2327,7 @@ pub mod app_3d {
                         .and_then(|value| value.as_str())
                         .unwrap_or("");
                     envelope = if example_id.is_empty() || example_id == "empty" {
-                        Procedural3dEnvelope {
+                        Procedural3dPlayView {
                             fixture: FlowFixture::default(),
                             runtime: Procedural3dRuntime::default(),
                             generation: GenerationPlayState::default(),
@@ -2897,7 +2929,7 @@ pub mod app_3d {
     }
 
     fn procedural3d_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
-        let envelope: Procedural3dEnvelope = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
+        let envelope: Procedural3dPlayView = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
         Ok(export_mesh_from_envelope(&envelope))
     }
 
@@ -2953,7 +2985,7 @@ pub mod app_3d {
             let mut app = Procedural3dPlayApp;
             let document = app.initial_document_json();
             let ops = app.handle_action_patch_ops("setLodMode", Some(&json!({ "value": "wireframe" })), &document, &ViewState::default());
-            let envelope: Procedural3dEnvelope = apply_ops(&parse_envelope(&document), &ops);
+            let envelope: Procedural3dPlayView = apply_ops(&parse_envelope(&document), &ops);
             assert_eq!(envelope.runtime.lod_mode, "wireframe");
         }
 
@@ -2967,7 +2999,7 @@ pub mod app_3d {
             assert!(measures.contains_key(PROCEDURAL_3D_PLAY_WINDOW_PREVIEW));
             assert!(measures.contains_key(PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW));
             let ops = app.handle_action_patch_ops("toggleSun", None, &document, &ViewState::default());
-            let next: Procedural3dEnvelope = apply_ops(&envelope, &ops);
+            let next: Procedural3dPlayView = apply_ops(&envelope, &ops);
             assert!(next.runtime.sun.enabled);
         }
 
@@ -2981,7 +3013,7 @@ pub mod app_3d {
                 &document,
                 &ViewState::default(),
             );
-            let envelope: Procedural3dEnvelope = apply_ops(&parse_envelope(&document), &ops);
+            let envelope: Procedural3dPlayView = apply_ops(&parse_envelope(&document), &ops);
             assert!(envelope.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { neuronKind, .. } if neuronKind == "brep.prim3d.sphere")));
         }
 
@@ -3013,7 +3045,7 @@ pub mod app_3d {
                 &document,
                 &ViewState::default(),
             );
-            let mut envelope: Procedural3dEnvelope = apply_ops(&parse_envelope(&document), &load_ops);
+            let mut envelope: Procedural3dPlayView = apply_ops(&parse_envelope(&document), &load_ops);
             let cached = envelope.runtime.preview_cache.clone().expect("preview cache");
             let document = serde_json::to_string(&envelope).unwrap();
             let viewport_ops = app.handle_action_patch_ops(
@@ -3022,7 +3054,7 @@ pub mod app_3d {
                 &document,
                 &ViewState::default(),
             );
-            let next: Procedural3dEnvelope = apply_ops(&envelope, &viewport_ops);
+            let next: Procedural3dPlayView = apply_ops(&envelope, &viewport_ops);
             let next_cache = next.runtime.preview_cache.expect("preview cache after viewport");
             assert_eq!(next_cache.signature, cached.signature);
             assert_eq!(next_cache.meshes_json, cached.meshes_json);
@@ -3033,7 +3065,7 @@ pub mod app_3d {
         fn patch_flow_widgets_refreshes_preview_cache() {
             let mut app = Procedural3dPlayApp;
             let document = app.initial_document_json();
-            let before: Procedural3dEnvelope = parse_envelope(&document);
+            let before: Procedural3dPlayView = parse_envelope(&document);
             let cached = before.runtime.preview_cache.clone().expect("preview cache");
             let ops = app.handle_action_patch_ops(
                 "patchFlowWidgets",
@@ -3041,7 +3073,7 @@ pub mod app_3d {
                 &document,
                 &ViewState::default(),
             );
-            let after: Procedural3dEnvelope = apply_ops(&before, &ops);
+            let after: Procedural3dPlayView = apply_ops(&before, &ops);
             let next_cache = after.runtime.preview_cache.expect("preview cache after patch");
             assert_ne!(next_cache.signature, cached.signature);
         }
@@ -3139,7 +3171,7 @@ pub mod app_3d {
             let document = app.initial_document_json();
             let before = parse_envelope(&document).fixture.widgets.len();
             let ops = app.handle_action_patch_ops("addWidget", Some(&json!({ "kind": "inputNote" })), &document, &ViewState::default());
-            let envelope: Procedural3dEnvelope = apply_ops(&parse_envelope(&document), &ops);
+            let envelope: Procedural3dPlayView = apply_ops(&parse_envelope(&document), &ops);
             assert!(envelope.fixture.widgets.len() > before);
         }
 
@@ -3156,7 +3188,7 @@ pub mod app_3d {
             let mut app = Procedural3dPlayApp;
             let document = app.initial_document_json();
             let ops = app.handle_action_patch_ops("addGeneration", None, &document, &ViewState::default());
-            let envelope: Procedural3dEnvelope = apply_ops(&parse_envelope(&document), &ops);
+            let envelope: Procedural3dPlayView = apply_ops(&parse_envelope(&document), &ops);
             assert_eq!(envelope.generation.generations.len(), 1);
             assert!(envelope.generation.preview_text.as_deref().unwrap_or("").len() > 2);
         }
@@ -3273,7 +3305,7 @@ pub mod app_3d {
         fn document_from_mesh_returns_valid_default_envelope() {
             let mesh = semio_framework_plugin::MeshData::default();
             let document = procedural3d_document_from_mesh(&mesh).expect("dwg mesh import document");
-            let envelope: Procedural3dEnvelope = serde_json::from_value(document).expect("parseable envelope");
+            let envelope: Procedural3dPlayView = serde_json::from_value(document).expect("parseable envelope");
             assert_eq!(envelope.fixture.schema, "flow.fixture");
         }
 
@@ -3291,20 +3323,20 @@ pub mod app_3d {
             let obj_bytes = ObjExporter.export(&mesh).expect("obj export");
             let obj_mesh = ObjImporter.import(&obj_bytes).expect("obj import");
             let obj_document = procedural3d_document_from_mesh(&obj_mesh).expect("obj document from mesh");
-            let _: Procedural3dEnvelope = serde_json::from_value(obj_document).expect("parseable obj envelope");
+            let _: Procedural3dPlayView = serde_json::from_value(obj_document).expect("parseable obj envelope");
 
             let glb_bytes = GlbExporter.export(&mesh).expect("glb export");
             let glb_mesh = GlbImporter.import(&glb_bytes).expect("glb import");
             let glb_document = procedural3d_document_from_mesh(&glb_mesh).expect("glb document from mesh");
-            let _: Procedural3dEnvelope = serde_json::from_value(glb_document).expect("parseable glb envelope");
+            let _: Procedural3dPlayView = serde_json::from_value(glb_document).expect("parseable glb envelope");
 
             let stl_bytes = StlExporter.export(&mesh).expect("stl export");
             let stl_mesh = StlImporter.import(&stl_bytes).expect("stl import");
             let stl_document = procedural3d_document_from_mesh(&stl_mesh).expect("stl document from mesh");
-            let _: Procedural3dEnvelope = serde_json::from_value(stl_document).expect("parseable stl envelope");
+            let _: Procedural3dPlayView = serde_json::from_value(stl_document).expect("parseable stl envelope");
         }
 
-        fn apply_ops(envelope: &Procedural3dEnvelope, ops: &[String]) -> Procedural3dEnvelope {
+        fn apply_ops(envelope: &Procedural3dPlayView, ops: &[String]) -> Procedural3dPlayView {
             let mut next = envelope.clone();
             for op_json in ops {
                 if let Ok(op) = serde_json::from_str::<Value>(op_json) {

@@ -3,19 +3,21 @@
 use base64::Engine;
 use layout_rs::{
     build_display_list_for_page, export_document_pdf, export_document_png_cpu, export_document_svg, export_package_zip,
-    parse_layout_document, resolve_page, DisplayList, Frame, LayoutCamera, LayoutDocument, LAYOUT_FIXTURE_SCHEMA, Page,
-    PageColumns, PageMargins,
+    parse_layout_document, resolve_page, DisplayList, Frame, FramePatch, ImageLinkPatch, LayoutCamera, LayoutDocument,
+    LayoutOp, LAYOUT_FIXTURE_SCHEMA, Page, PageColumns, PageMargins, PagePatch, TextStoryPatch,
 };
+use semio_framework_core::kernel::HostEffect;
 use semio_framework_plugin::{SurfaceKind,
     build_canvas_2d_scene, create_default_layout, engagement_token_matches, tool_button, tool_collection, ui_declarative_sections_to_tree,
-    ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
-    Canvas2dScene, ActionDescriptor, PanelGroup, PluginApp, PluginBundle, ToolCategory, ToolNode, UiFieldNode,
+    ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionEmit, App,
+    Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView, PanelGroup, ToolCategory, ToolNode, UiFieldNode,
     UiInputNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode,
-    UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-use semio_framework_plugin::layout::{WindowEngagementPossible, WindowEngagementStatus};
+use vcs::CollectionOp;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -84,18 +86,6 @@ fn default_active_page_id() -> String {
     "page-1".into()
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct LayoutPlayEnvelope {
-    document: LayoutDocument,
-    #[serde(default)]
-    undo_stack: Vec<LayoutDocument>,
-    #[serde(default)]
-    redo_stack: Vec<LayoutDocument>,
-    #[serde(default)]
-    runtime: LayoutPlayRuntime,
-}
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct PreflightIssue {
@@ -113,27 +103,6 @@ struct PreflightIssue {
 //#region 🔖DocumentHelpers
 fn default_document() -> LayoutDocument {
     parse_layout_document(LAYOUT_SAMPLE_JSON).expect("sample layout fixture")
-}
-
-fn default_envelope() -> LayoutPlayEnvelope {
-    LayoutPlayEnvelope {
-        document: default_document(),
-        undo_stack: Vec::new(),
-        redo_stack: Vec::new(),
-        runtime: LayoutPlayRuntime::default(),
-    }
-}
-
-fn parse_envelope(document_json: &str) -> LayoutPlayEnvelope {
-    serde_json::from_str(document_json).unwrap_or_else(|_| default_envelope())
-}
-
-fn set_document_op(envelope: &LayoutPlayEnvelope) -> String {
-    json!({ "op": "setDocument", "document": envelope }).to_string()
-}
-
-fn download_media_export_op(filename: &str, mime_type: &str, data: &str) -> String {
-    json!({ "op": "downloadMediaExport", "filename": filename, "mimeType": mime_type, "data": data }).to_string()
 }
 
 fn layout_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -195,12 +164,20 @@ fn style_row_id(style_id: &str) -> String {
     format!("layout-document.style.{style_id}")
 }
 
-fn push_undo(play: &mut LayoutPlayEnvelope) {
-    play.undo_stack.push(play.document.clone());
-    if play.undo_stack.len() > 32 {
-        play.undo_stack.remove(0);
+/// 🩹 Builds the `PagePatch` for a `patchPage` field write; unknown fields/mistyped values yield `None`.
+fn page_patch_for_field(field: &str, value: &Value) -> Option<PagePatch> {
+    match field {
+        "name" => value.as_str().map(|v| PagePatch { name: Some(v.into()), ..Default::default() }),
+        "width" => value.as_f64().map(|v| PagePatch { width: Some(v), ..Default::default() }),
+        "height" => value.as_f64().map(|v| PagePatch { height: Some(v), ..Default::default() }),
+        "marginTop" => value.as_f64().map(|v| PagePatch { margin_top: Some(v), ..Default::default() }),
+        "marginRight" => value.as_f64().map(|v| PagePatch { margin_right: Some(v), ..Default::default() }),
+        "marginBottom" => value.as_f64().map(|v| PagePatch { margin_bottom: Some(v), ..Default::default() }),
+        "marginLeft" => value.as_f64().map(|v| PagePatch { margin_left: Some(v), ..Default::default() }),
+        "columnsCount" => value.as_f64().map(|v| PagePatch { columns_count: Some(v.max(0.0) as u32), ..Default::default() }),
+        "columnsGutter" => value.as_f64().map(|v| PagePatch { columns_gutter: Some(v), ..Default::default() }),
+        _ => None,
     }
-    play.redo_stack.clear();
 }
 
 fn story_full_content(doc: &LayoutDocument, story_id: &str) -> String {
@@ -372,8 +349,8 @@ fn camera_for_surface<'a>(doc: &'a mut LayoutDocument, blueprint: bool) -> &'a m
     }
 }
 
-fn screen_to_world_for_surface(play: &LayoutPlayEnvelope, blueprint: bool, sx: f64, sy: f64, width: f64, height: f64) -> (f64, f64) {
-    let camera_doc = if blueprint { &play.document.camera } else { &play.document.preview_camera };
+fn screen_to_world_for_surface(doc: &LayoutDocument, blueprint: bool, sx: f64, sy: f64, width: f64, height: f64) -> (f64, f64) {
+    let camera_doc = if blueprint { &doc.camera } else { &doc.preview_camera };
     let camera = layout_rs::cavas::camera::Camera { x: camera_doc.x, y: camera_doc.y, zoom: camera_doc.zoom.max(0.0001) };
     let viewport = layout_rs::cavas::camera::Viewport { width: width.max(1.0) as u32, height: height.max(1.0) as u32, dpr: 1.0 };
     let world = layout_rs::cavas::camera::screen_to_world(&camera, &viewport, layout_rs::cavas::Point::new(sx, sy));
@@ -388,25 +365,23 @@ fn pointer_args(args: Option<&Value>) -> (f64, f64, f64, f64) {
     (x, y, width, height)
 }
 
-fn hit_test_at(play: &LayoutPlayEnvelope, args: Option<&Value>, blueprint: bool) -> Option<String> {
-    let page = active_page(&play.document, &play.runtime)?;
+fn hit_test_at(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, args: Option<&Value>, blueprint: bool) -> Option<String> {
+    let page = active_page(doc, runtime)?;
     let (sx, sy, width, height) = pointer_args(args);
-    let (wx, wy) = screen_to_world_for_surface(play, blueprint, sx, sy, width, height);
-    let list = build_display_list_for_page(&play.document, page, &page.id, &play.runtime.selected_ids, play.runtime.hovered_id.as_deref(), blueprint);
+    let (wx, wy) = screen_to_world_for_surface(doc, blueprint, sx, sy, width, height);
+    let list = build_display_list_for_page(doc, page, &page.id, &runtime.selected_ids, runtime.hovered_id.as_deref(), blueprint);
     list.hit_test(wx as f32, wy as f32)
 }
 //#endregion 🔖PointerCamera
 
-fn patch_frame_bounds(frame: &mut Frame, field: &str, value: f64) {
-    let bounds = match frame {
-        Frame::Rect { bounds, .. } | Frame::Text { bounds, .. } | Frame::Image { bounds, .. } => bounds,
-    };
+/// 🩹 Builds the bounds `FramePatch` for an `x`/`y`/`width`/`height` frame field write.
+fn frame_bounds_patch(field: &str, value: f64) -> FramePatch {
     match field {
-        "x" => bounds.x = value,
-        "y" => bounds.y = value,
-        "width" | "w" => bounds.width = value,
-        "height" | "h" => bounds.height = value,
-        _ => {}
+        "x" => FramePatch { x: Some(value), ..Default::default() },
+        "y" => FramePatch { y: Some(value), ..Default::default() },
+        "width" | "w" => FramePatch { width: Some(value), ..Default::default() },
+        "height" | "h" => FramePatch { height: Some(value), ..Default::default() },
+        _ => FramePatch::default(),
     }
 }
 
@@ -792,8 +767,7 @@ fn tree_item_hoverable(
     item
 }
 
-fn build_document_tree(play: &LayoutPlayEnvelope, labels: &LayoutLabels) -> UiNode {
-    let doc = &play.document;
+fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels: &LayoutLabels) -> UiNode {
 
     let spread_items: Vec<UiTreeItemNode> = doc
         .spreads
@@ -921,8 +895,7 @@ fn build_document_tree(play: &LayoutPlayEnvelope, labels: &LayoutLabels) -> UiNo
         tree_item(style_row_id(&id), name, Some(description), Some("type".into()), None)
     }));
 
-    let highlighted_ids: Vec<String> = play
-        .runtime
+    let highlighted_ids: Vec<String> = runtime
         .hovered_id
         .as_ref()
         .map(|id| vec![page_row_id(id), frame_row_id(id)])
@@ -956,10 +929,10 @@ fn build_document_tree(play: &LayoutPlayEnvelope, labels: &LayoutLabels) -> UiNo
             UiTreeSectionNode { id: "layout-document.styles".into(), label: Some(labels.styles.into()), default_open: Some(false), items: style_items },
         ],
         selected_ids: Some(
-            play.runtime
+            runtime
                 .selected_ids
                 .iter()
-                .flat_map(|id| vec![page_row_id(id), frame_row_id(id), layer_row_id(&play.runtime.active_page_id, id)])
+                .flat_map(|id| vec![page_row_id(id), frame_row_id(id), layer_row_id(&runtime.active_page_id, id)])
                 .collect(),
         ),
         highlighted_ids: if highlighted_ids.is_empty() { None } else { Some(highlighted_ids) },
@@ -996,17 +969,16 @@ fn build_catalogue_tree(labels: &LayoutLabels) -> UiNode {
     })
 }
 
-fn build_inspector_tree(play: &LayoutPlayEnvelope, labels: &LayoutLabels) -> UiNode {
-    let doc = &play.document;
-    if play.runtime.selected_ids.is_empty() {
+fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels: &LayoutLabels) -> UiNode {
+    if runtime.selected_ids.is_empty() {
         return ui_stack_vertical(vec![
             ui_text(format!("{}: {}", labels.schema, LAYOUT_FIXTURE_SCHEMA)),
             ui_text(format!("{}: {}", labels.name, doc.name)),
             ui_text(format!("{}: {}", labels.pages, doc.pages.len())),
-            ui_text(format!("{}: {}", labels.active_page, play.runtime.active_page_id)),
+            ui_text(format!("{}: {}", labels.active_page, runtime.active_page_id)),
         ]);
     }
-    let selected_id = &play.runtime.selected_ids[0];
+    let selected_id = &runtime.selected_ids[0];
     if let Some(page) = doc.pages.iter().find(|page| page.id == *selected_id) {
         let mut fields = vec![
             ui_inspector_readonly_field("layout-play-inspector.page-id", labels.id, page.id.clone()),
@@ -1261,8 +1233,8 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope, labels: &LayoutLabels) -> UiN
     }])
 }
 
-fn build_preflight_tree(play: &LayoutPlayEnvelope, labels: &LayoutLabels) -> UiNode {
-    let issues = run_layout_preflight(&play.document);
+fn build_preflight_tree(doc: &LayoutDocument, labels: &LayoutLabels) -> UiNode {
+    let issues = run_layout_preflight(doc);
     let items: Vec<UiTreeItemNode> = if issues.is_empty() {
         vec![tree_item("layout-preflight.empty", labels.no_issues, None, Some("check-circle".into()), None)]
     } else {
@@ -1301,13 +1273,13 @@ fn build_preflight_tree(play: &LayoutPlayEnvelope, labels: &LayoutLabels) -> UiN
     })
 }
 
-fn layout_window_engagement(play: &LayoutPlayEnvelope, label: &str) -> WindowEngagement {
+fn layout_window_engagement(runtime: &LayoutPlayRuntime, label: &str) -> WindowEngagement {
     WindowEngagement {
         session_active: Some(false),
         options: None,
         input: Some(WindowEngagementInput {
             id: Some(format!("layout-engagement-{label}")),
-            value: Some(play.runtime.engagement_input.clone()),
+            value: Some(runtime.engagement_input.clone()),
             placeholder: Some("undo, redo, export png".into()),
             disabled: None,
             on_change: Some(layout_action("engagementInput", None)),
@@ -1319,7 +1291,7 @@ fn layout_window_engagement(play: &LayoutPlayEnvelope, label: &str) -> WindowEng
         controls: None,
         status: Some(vec![WindowEngagementStatus {
             id: format!("layout-status-{label}"),
-            text: format!("Page {}", play.runtime.active_page_id),
+            text: format!("Page {}", runtime.active_page_id),
         }]),
         possible_engagements: Some(vec![
             WindowEngagementPossible { id: "layout.eng.undo".into(), label: "Undo".into(), detail: None, action: Some(layout_action("undo", None)) },
@@ -1357,8 +1329,8 @@ fn layout_toolbar_tools(labels: &LayoutLabels) -> Vec<ToolNode> {
 //#endregion 🔖Panels
 
 //#region 🔖Render
-fn render_blueprint(play: &LayoutPlayEnvelope) -> UiNode {
-    let camera = &play.document.camera;
+fn render_blueprint(doc: &LayoutDocument, runtime: &LayoutPlayRuntime) -> UiNode {
+    let camera = &doc.camera;
     build_canvas_2d_scene(
         LAYOUT_PLAY_SURFACE_BLUEPRINT,
         LAYOUT_PLAY_APP_ID,
@@ -1366,13 +1338,13 @@ fn render_blueprint(play: &LayoutPlayEnvelope) -> UiNode {
             camera_x: camera.x,
             camera_y: camera.y,
             zoom: camera.zoom,
-            layers_json: canvas_layers(&play.document, &play.runtime, true),
+            layers_json: canvas_layers(doc, runtime, true),
         },
     )
 }
 
-fn render_preview(play: &LayoutPlayEnvelope) -> UiNode {
-    let camera = &play.document.preview_camera;
+fn render_preview(doc: &LayoutDocument, runtime: &LayoutPlayRuntime) -> UiNode {
+    let camera = &doc.preview_camera;
     build_canvas_2d_scene(
         LAYOUT_PLAY_SURFACE_PREVIEW,
         LAYOUT_PLAY_APP_ID,
@@ -1380,7 +1352,7 @@ fn render_preview(play: &LayoutPlayEnvelope) -> UiNode {
             camera_x: camera.x,
             camera_y: camera.y,
             zoom: camera.zoom,
-            layers_json: canvas_layers(&play.document, &play.runtime, false),
+            layers_json: canvas_layers(doc, runtime, false),
         },
     )
 }
@@ -1388,157 +1360,178 @@ fn render_preview(play: &LayoutPlayEnvelope) -> UiNode {
 
 //#region 🔖LayoutPlayApp
 #[derive(Default)]
-struct LayoutPlayApp;
+struct LayoutPlayApp {
+    runtime: LayoutPlayRuntime,
+}
 
-impl PluginApp for LayoutPlayApp {
+impl DocumentApp for LayoutPlayApp {
+    type Projection = LayoutDocument;
+    type Op = LayoutOp;
+
     fn app_id(&self) -> &str {
         LAYOUT_PLAY_APP_ID
     }
 
-    fn initial_document_json(&self) -> String {
-        serde_json::to_string(&default_envelope()).expect("layout envelope json")
+    fn document_schema(&self) -> &str {
+        LAYOUT_FIXTURE_SCHEMA
     }
 
-    fn handle_action_patch_ops(
+    fn initial_projection(&self) -> LayoutDocument {
+        default_document()
+    }
+
+    fn handle_action(
         &mut self,
         action: &str,
         args: Option<&Value>,
-        document_json: &str,
-        _view_state: &ViewState,
-    ) -> Vec<String> {
-        let mut play = parse_envelope(document_json);
+        doc: &DocumentView<'_, LayoutDocument>,
+        view_state: &ViewState,
+    ) -> ActionEmit<LayoutOp> {
+        let document = doc.projection;
         match action {
-            "setDocument" => {
-                if let Some(document) = args.and_then(|value| value.get("document")) {
-                    if let Ok(parsed) = serde_json::from_value::<LayoutPlayEnvelope>(document.clone()) {
-                        return vec![set_document_op(&parsed)];
-                    }
-                }
-            }
+            //#region 👁️View
             "setSelection" => {
-                play.runtime.selected_ids = selection_ids(args);
-                return vec![set_document_op(&play)];
+                self.runtime.selected_ids = selection_ids(args);
+                ActionEmit::default()
             }
             "setActivePage" => {
                 if let Some(page_id) = args.and_then(|value| value.get("pageId")).and_then(|value| value.as_str()) {
-                    play.runtime.active_page_id = page_id.into();
-                    return vec![set_document_op(&play)];
+                    self.runtime.active_page_id = page_id.into();
                 }
+                ActionEmit::default()
             }
             "setHover" => {
-                play.runtime.hovered_id = args
+                self.runtime.hovered_id = args
                     .and_then(|value| value.get("id"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string);
-                return vec![set_document_op(&play)];
+                ActionEmit::default()
             }
             "focusPreflightIssue" => {
                 if let Some(issue) = args.and_then(|value| value.get("issue")) {
                     if let Some(object_id) = issue.get("objectId").and_then(|value| value.as_str()) {
-                        play.runtime.selected_ids = vec![object_id.into()];
+                        self.runtime.selected_ids = vec![object_id.into()];
                     }
                     if let Some(page_id) = issue.get("pageId").and_then(|value| value.as_str()) {
-                        play.runtime.active_page_id = page_id.into();
+                        self.runtime.active_page_id = page_id.into();
                     }
-                    return vec![set_document_op(&play)];
                 }
+                ActionEmit::default()
             }
-            "undo" => {
-                if let Some(previous) = play.undo_stack.pop() {
-                    play.redo_stack.push(play.document.clone());
-                    play.document = previous;
-                    return vec![set_document_op(&play)];
+            "engagementInput" => {
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(Value::as_str) {
+                    self.runtime.engagement_input = value.into();
                 }
+                ActionEmit::default()
             }
-            "redo" => {
-                if let Some(next) = play.redo_stack.pop() {
-                    play.undo_stack.push(play.document.clone());
-                    play.document = next;
-                    return vec![set_document_op(&play)];
+            "canvasPointerDown" => {
+                let blueprint = surface_is_blueprint(args);
+                let button = args.and_then(|value| value.get("button")).and_then(Value::as_i64).unwrap_or(0);
+                if !blueprint || button != 0 {
+                    return ActionEmit::default();
                 }
+                let extend = args.and_then(|value| value.get("extend")).and_then(Value::as_bool).unwrap_or(false);
+                let hit = hit_test_at(document, &self.runtime, args, blueprint);
+                self.runtime.selected_ids = match hit {
+                    Some(id) if extend => {
+                        let mut ids = self.runtime.selected_ids.clone();
+                        if let Some(position) = ids.iter().position(|existing| *existing == id) {
+                            ids.remove(position);
+                        } else {
+                            ids.push(id);
+                        }
+                        ids
+                    }
+                    Some(id) => vec![id],
+                    None => Vec::new(),
+                };
+                ActionEmit::default()
             }
+            "canvasPointerMove" => {
+                let blueprint = surface_is_blueprint(args);
+                if !blueprint {
+                    return ActionEmit::default();
+                }
+                self.runtime.hovered_id = hit_test_at(document, &self.runtime, args, blueprint);
+                ActionEmit::default()
+            }
+            "canvasPointerUp" => ActionEmit::default(),
+            "canvasDragOver" => {
+                let blueprint = surface_is_blueprint(args);
+                if !blueprint {
+                    return ActionEmit::default();
+                }
+                let kind = args
+                    .and_then(|value| value.get("types"))
+                    .and_then(|value| value.as_array())
+                    .and_then(|types| {
+                        types
+                            .iter()
+                            .find_map(|entry| entry.as_str().and_then(|type_value| type_value.strip_prefix(LAYOUT_CATALOGUE_KIND_MIME_PREFIX)).map(str::to_string))
+                    })
+                    .unwrap_or_else(|| "unknown".into());
+                let (sx, sy, width, height) = pointer_args(args);
+                let (wx, wy) = screen_to_world_for_surface(document, blueprint, sx, sy, width, height);
+                self.runtime.drop_preview = Some(LayoutDropPreviewState { kind, x: wx, y: wy });
+                ActionEmit::default()
+            }
+            "canvasDragLeave" => {
+                self.runtime.drop_preview = None;
+                ActionEmit::default()
+            }
+            //#endregion 👁️View
+            //#region 🔧Operations
             "addFrame" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("rect");
                 let drop_x = args.and_then(|value| value.get("x")).and_then(Value::as_f64);
                 let drop_y = args.and_then(|value| value.get("y")).and_then(Value::as_f64);
-                let page_id = play.runtime.active_page_id.clone();
-                let page_index = play.document.pages.iter().position(|page| page.id == page_id);
-                if let Some(page_index) = page_index {
-                    let frame_id = format!("frame-{}", play.document.pages[page_index].frames.len() + 1);
-                    let layer_id = play.document.pages[page_index]
-                        .layer_ids
-                        .first()
-                        .cloned()
-                        .unwrap_or_else(|| "layer-1".into());
-                    push_undo(&mut play);
-                    let page = &mut play.document.pages[page_index];
-                    let frame = match kind {
-                        "text" => Frame::Text {
-                            id: frame_id.clone(),
-                            layer_id,
-                            bounds: layout_rs::LayoutBounds {
-                                x: drop_x.unwrap_or(48.0),
-                                y: drop_y.unwrap_or(120.0),
-                                width: 200.0,
-                                height: 120.0,
-                                rotation: 0.0,
-                            },
-                            locked: None,
-                            visible: None,
-                            story_id: play.document.stories.first().map(|story| story.id.clone()).unwrap_or_else(|| "story-1".into()),
-                            thread_next: None,
-                            columns: 1,
-                            inset: layout_rs::LayoutRect { x: 4.0, y: 4.0, width: 192.0, height: 112.0 },
-                            wrap_mode: "box".into(),
-                        },
-                        "image" => Frame::Image {
-                            id: frame_id.clone(),
-                            layer_id,
-                            bounds: layout_rs::LayoutBounds {
-                                x: drop_x.unwrap_or(48.0),
-                                y: drop_y.unwrap_or(280.0),
-                                width: 160.0,
-                                height: 120.0,
-                                rotation: 0.0,
-                            },
-                            locked: None,
-                            visible: None,
-                            link_id: play.document.links.first().map(|link| link.id.clone()).unwrap_or_else(|| "link-missing".into()),
-                        },
-                        _ => Frame::Rect {
-                            id: frame_id.clone(),
-                            layer_id,
-                            bounds: layout_rs::LayoutBounds {
-                                x: drop_x.unwrap_or(48.0),
-                                y: drop_y.unwrap_or(48.0),
-                                width: 120.0,
-                                height: 64.0,
-                                rotation: 0.0,
-                            },
-                            locked: None,
-                            visible: None,
-                            fill: Some([0.2, 0.24, 0.3, 1.0]),
-                            stroke: None,
-                        },
-                    };
-                    if let Some(layer_id_target) = page.layer_ids.first().cloned() {
-                        if let Some(layer) = page.layers.iter_mut().find(|layer| layer.id == layer_id_target) {
-                            layer.object_ids.push(frame_id.clone());
-                        }
-                    }
-                    page.frames.push(frame);
-                    play.runtime.selected_ids = vec![frame_id];
-                    return vec![set_document_op(&play)];
-                }
+                let page_id = self.runtime.active_page_id.clone();
+                let Some(page) = document.pages.iter().find(|page| page.id == page_id) else {
+                    return ActionEmit::default();
+                };
+                let index = page.frames.len();
+                let frame_id = format!("frame-{}", index + 1);
+                let layer_id = page.layer_ids.first().cloned().unwrap_or_else(|| "layer-1".into());
+                let frame = match kind {
+                    "text" => Frame::Text {
+                        id: frame_id.clone(),
+                        layer_id: layer_id.clone(),
+                        bounds: layout_rs::LayoutBounds { x: drop_x.unwrap_or(48.0), y: drop_y.unwrap_or(120.0), width: 200.0, height: 120.0, rotation: 0.0 },
+                        locked: None,
+                        visible: None,
+                        story_id: document.stories.first().map(|story| story.id.clone()).unwrap_or_else(|| "story-1".into()),
+                        thread_next: None,
+                        columns: 1,
+                        inset: layout_rs::LayoutRect { x: 4.0, y: 4.0, width: 192.0, height: 112.0 },
+                        wrap_mode: "box".into(),
+                    },
+                    "image" => Frame::Image {
+                        id: frame_id.clone(),
+                        layer_id: layer_id.clone(),
+                        bounds: layout_rs::LayoutBounds { x: drop_x.unwrap_or(48.0), y: drop_y.unwrap_or(280.0), width: 160.0, height: 120.0, rotation: 0.0 },
+                        locked: None,
+                        visible: None,
+                        link_id: document.links.first().map(|link| link.id.clone()).unwrap_or_else(|| "link-missing".into()),
+                    },
+                    _ => Frame::Rect {
+                        id: frame_id.clone(),
+                        layer_id: layer_id.clone(),
+                        bounds: layout_rs::LayoutBounds { x: drop_x.unwrap_or(48.0), y: drop_y.unwrap_or(48.0), width: 120.0, height: 64.0, rotation: 0.0 },
+                        locked: None,
+                        visible: None,
+                        fill: Some([0.2, 0.24, 0.3, 1.0]),
+                        stroke: None,
+                    },
+                };
+                self.runtime.selected_ids = vec![frame_id];
+                ActionEmit::ops(vec![LayoutOp::AddFrame { page_id, index, frame, layer_id: Some(layer_id) }])
             }
             "addPage" => {
-                push_undo(&mut play);
-                let template = play
-                    .document
+                let template = document
                     .pages
                     .iter()
-                    .find(|page| page.id == play.runtime.active_page_id)
-                    .or_else(|| play.document.pages.first());
+                    .find(|page| page.id == self.runtime.active_page_id)
+                    .or_else(|| document.pages.first());
                 let (width, height, spread_id, parent_page_id, margins, columns) = template
                     .map(|page| {
                         (
@@ -1555,19 +1548,14 @@ impl PluginApp for LayoutPlayApp {
                         842.0,
                         "spread-1".into(),
                         None,
-                        PageMargins {
-                            top: 48.0,
-                            right: 36.0,
-                            bottom: 48.0,
-                            left: 36.0,
-                        },
+                        PageMargins { top: 48.0, right: 36.0, bottom: 48.0, left: 36.0 },
                         PageColumns { count: 1, gutter: 0.0 },
                     ));
-                let page_id = format!("page-{}", play.document.pages.len() + 1);
+                let page_id = format!("page-{}", document.pages.len() + 1);
                 let layer_id = format!("layer-{page_id}");
-                play.document.pages.push(Page {
+                let page = Page {
                     id: page_id.clone(),
-                    name: format!("Page {}", play.document.pages.len() + 1),
+                    name: format!("Page {}", document.pages.len() + 1),
                     spread_id,
                     parent_page_id,
                     width,
@@ -1576,79 +1564,27 @@ impl PluginApp for LayoutPlayApp {
                     columns,
                     guides: Vec::new(),
                     layer_ids: vec![layer_id.clone()],
-                    layers: vec![layout_rs::Layer {
-                        id: layer_id,
-                        name: "Content".into(),
-                        visible: true,
-                        locked: false,
-                        object_ids: Vec::new(),
-                    }],
+                    layers: vec![layout_rs::Layer { id: layer_id, name: "Content".into(), visible: true, locked: false, object_ids: Vec::new() }],
                     frames: Vec::new(),
                     overrides: Vec::new(),
-                });
-                play.runtime.active_page_id = page_id.clone();
-                play.runtime.selected_ids = vec![page_id];
-                return vec![set_document_op(&play)];
+                };
+                self.runtime.active_page_id = page_id.clone();
+                self.runtime.selected_ids = vec![page_id];
+                ActionEmit::ops(vec![LayoutOp::Pages(CollectionOp::Add { index: document.pages.len(), item: page })])
             }
             "patchPage" => {
                 let page_id = args
                     .and_then(|value| value.get("pageId"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string)
-                    .unwrap_or_else(|| play.runtime.active_page_id.clone());
-                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("").to_string();
+                    .unwrap_or_else(|| self.runtime.active_page_id.clone());
+                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
                 let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
-                push_undo(&mut play);
-                if let Some(page) = play.document.pages.iter_mut().find(|page| page.id == page_id) {
-                    match field.as_str() {
-                        "name" => {
-                            if let Some(name) = value.as_str() {
-                                page.name = name.into();
-                            }
-                        }
-                        "width" => {
-                            if let Some(width) = value.as_f64() {
-                                page.width = width;
-                            }
-                        }
-                        "height" => {
-                            if let Some(height) = value.as_f64() {
-                                page.height = height;
-                            }
-                        }
-                        "marginTop" => {
-                            if let Some(margin) = value.as_f64() {
-                                page.margins.top = margin;
-                            }
-                        }
-                        "marginRight" => {
-                            if let Some(margin) = value.as_f64() {
-                                page.margins.right = margin;
-                            }
-                        }
-                        "marginBottom" => {
-                            if let Some(margin) = value.as_f64() {
-                                page.margins.bottom = margin;
-                            }
-                        }
-                        "marginLeft" => {
-                            if let Some(margin) = value.as_f64() {
-                                page.margins.left = margin;
-                            }
-                        }
-                        "columnsCount" => {
-                            if let Some(count) = value.as_f64() {
-                                page.columns.count = count.max(0.0) as u32;
-                            }
-                        }
-                        "columnsGutter" => {
-                            if let Some(gutter) = value.as_f64() {
-                                page.columns.gutter = gutter;
-                            }
-                        }
-                        _ => {}
+                match page_patch_for_field(field, &value) {
+                    Some(patch) if document.pages.iter().any(|page| page.id == page_id) => {
+                        ActionEmit::ops(vec![LayoutOp::Pages(CollectionOp::Patch { id: page_id, patch })])
                     }
-                    return vec![set_document_op(&play)];
+                    _ => ActionEmit::default(),
                 }
             }
             "patchFrame" => {
@@ -1657,127 +1593,84 @@ impl PluginApp for LayoutPlayApp {
                     .and_then(|value| value.get("pageId"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string)
-                    .unwrap_or_else(|| play.runtime.active_page_id.clone());
+                    .unwrap_or_else(|| self.runtime.active_page_id.clone());
                 let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("").to_string();
                 let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
                 if frame_id.is_empty() {
-                    return Vec::new();
+                    return ActionEmit::default();
                 }
-                let Some(page_index) = play.document.pages.iter().position(|page| page.id == page_id) else {
-                    return Vec::new();
+                let Some(page) = document.pages.iter().find(|page| page.id == page_id) else {
+                    return ActionEmit::default();
                 };
-                let Some(frame_index) = play.document.pages[page_index].frames.iter().position(|frame| frame.id() == frame_id) else {
-                    return Vec::new();
+                let Some(frame) = page.frames.iter().find(|frame| frame.id() == frame_id) else {
+                    return ActionEmit::default();
                 };
-                push_undo(&mut play);
                 match field.as_str() {
-                    "x" | "y" | "width" | "w" | "height" | "h" => {
-                        if let Some(number) = value.as_f64() {
-                            patch_frame_bounds(&mut play.document.pages[page_index].frames[frame_index], &field, number);
-                        }
-                    }
+                    "x" | "y" | "width" | "w" | "height" | "h" => match value.as_f64() {
+                        Some(number) => ActionEmit::ops(vec![LayoutOp::PatchFrame {
+                            page_id,
+                            frame_id,
+                            patch: frame_bounds_patch(&field, number),
+                        }]),
+                        None => ActionEmit::default(),
+                    },
                     "fill" | "stroke" => {
-                        if let Frame::Rect { fill, stroke, .. } = &mut play.document.pages[page_index].frames[frame_index] {
-                            let rgba = text_to_rgba(value.as_str().unwrap_or(""));
-                            if field == "fill" {
-                                *fill = rgba;
-                            } else {
-                                *stroke = rgba;
-                            }
-                        }
+                        let rgba = text_to_rgba(value.as_str().unwrap_or(""));
+                        let patch = if field == "fill" {
+                            FramePatch { fill: Some(rgba), ..Default::default() }
+                        } else {
+                            FramePatch { stroke: Some(rgba), ..Default::default() }
+                        };
+                        ActionEmit::ops(vec![LayoutOp::PatchFrame { page_id, frame_id, patch }])
                     }
-                    "wrapMode" => {
-                        if let (Frame::Text { wrap_mode, .. }, Some(mode)) =
-                            (&mut play.document.pages[page_index].frames[frame_index], value.as_str())
-                        {
-                            *wrap_mode = mode.into();
-                        }
-                    }
-                    "columns" => {
-                        if let (Frame::Text { columns, .. }, Some(count)) =
-                            (&mut play.document.pages[page_index].frames[frame_index], value.as_f64())
-                        {
-                            *columns = count.max(0.0) as u32;
-                        }
-                    }
+                    "wrapMode" => match value.as_str() {
+                        Some(mode) => ActionEmit::ops(vec![LayoutOp::PatchFrame {
+                            page_id,
+                            frame_id,
+                            patch: FramePatch { wrap_mode: Some(mode.into()), ..Default::default() },
+                        }]),
+                        None => ActionEmit::default(),
+                    },
+                    "columns" => match value.as_f64() {
+                        Some(count) => ActionEmit::ops(vec![LayoutOp::PatchFrame {
+                            page_id,
+                            frame_id,
+                            patch: FramePatch { columns: Some(count.max(0.0) as u32), ..Default::default() },
+                        }]),
+                        None => ActionEmit::default(),
+                    },
                     "storyContent" => {
-                        let story_id = match &play.document.pages[page_index].frames[frame_index] {
+                        let story_id = match frame {
                             Frame::Text { story_id, .. } => Some(story_id.clone()),
                             _ => None,
                         };
-                        if let (Some(story_id), Some(content)) = (story_id, value.as_str()) {
-                            if let Some(story) = play.document.stories.iter_mut().find(|story| story.id == story_id) {
-                                story.content = content.into();
+                        match (story_id, value.as_str()) {
+                            (Some(story_id), Some(content)) if document.stories.iter().any(|story| story.id == story_id) => {
+                                ActionEmit::ops(vec![LayoutOp::Stories(CollectionOp::Patch {
+                                    id: story_id,
+                                    patch: TextStoryPatch { content: Some(content.into()) },
+                                })])
                             }
+                            _ => ActionEmit::default(),
                         }
                     }
                     "linkPath" => {
-                        let link_id = match &play.document.pages[page_index].frames[frame_index] {
+                        let link_id = match frame {
                             Frame::Image { link_id, .. } => Some(link_id.clone()),
                             _ => None,
                         };
-                        if let (Some(link_id), Some(path)) = (link_id, value.as_str()) {
-                            if let Some(link) = play.document.links.iter_mut().find(|link| link.id == link_id) {
-                                link.path = path.into();
+                        match (link_id, value.as_str()) {
+                            (Some(link_id), Some(path)) if document.links.iter().any(|link| link.id == link_id) => {
+                                ActionEmit::ops(vec![LayoutOp::Links(CollectionOp::Patch {
+                                    id: link_id,
+                                    patch: ImageLinkPatch { path: Some(path.into()) },
+                                })])
                             }
+                            _ => ActionEmit::default(),
                         }
                     }
-                    _ => {}
+                    _ => ActionEmit::default(),
                 }
-                return vec![set_document_op(&play)];
-            }
-            "exportPng" => {
-                let page_id = args
-                    .and_then(|value| value.get("pageId"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or(play.runtime.active_page_id.as_str())
-                    .to_string();
-                return match export_document_png_cpu(&play.document, &page_id) {
-                    Ok(bytes) => vec![download_media_export_op(
-                        &format!("{page_id}.png"),
-                        "image/png",
-                        &base64::engine::general_purpose::STANDARD.encode(bytes),
-                    )],
-                    Err(_) => Vec::new(),
-                };
-            }
-            "exportSvg" => {
-                let page_id = args
-                    .and_then(|value| value.get("pageId"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or(play.runtime.active_page_id.as_str())
-                    .to_string();
-                return match export_document_svg(&play.document, &page_id) {
-                    Ok(svg) => vec![download_media_export_op(&format!("{page_id}.svg"), "image/svg+xml", &svg)],
-                    Err(_) => Vec::new(),
-                };
-            }
-            "exportPdf" => {
-                let page_id = args
-                    .and_then(|value| value.get("pageId"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or(play.runtime.active_page_id.as_str())
-                    .to_string();
-                return match export_document_pdf(&play.document, &page_id) {
-                    Ok(bytes) => vec![download_media_export_op(
-                        &format!("{page_id}.pdf"),
-                        "application/pdf",
-                        &base64::engine::general_purpose::STANDARD.encode(bytes),
-                    )],
-                    Err(_) => Vec::new(),
-                };
-            }
-            "exportPackage" => {
-                let preflight_json = serde_json::to_string(&run_layout_preflight(&play.document)).unwrap_or_else(|_| "[]".into());
-                let doc_json = serde_json::to_string(&play.document).unwrap_or_default();
-                return match export_package_zip(&doc_json, &preflight_json) {
-                    Ok(bytes) => vec![download_media_export_op(
-                        &format!("{}.layout-package.zip", play.document.name),
-                        "application/zip",
-                        &base64::engine::general_purpose::STANDARD.encode(bytes),
-                    )],
-                    Err(_) => Vec::new(),
-                };
             }
             "setCamera" => {
                 let blueprint = surface_is_blueprint(args);
@@ -1786,123 +1679,105 @@ impl PluginApp for LayoutPlayApp {
                     let y = camera_value.get("y").and_then(Value::as_f64);
                     let zoom = camera_value.get("zoom").and_then(Value::as_f64);
                     if let (Some(x), Some(y), Some(zoom)) = (x, y, zoom) {
-                        let camera = camera_for_surface(&mut play.document, blueprint);
-                        camera.x = x;
-                        camera.y = y;
-                        camera.zoom = zoom;
-                        return vec![set_document_op(&play)];
+                        return ActionEmit {
+                            ops: vec![LayoutOp::SetCamera { blueprint, camera: LayoutCamera { x, y, zoom } }],
+                            coalesce_key: Some(if blueprint { "camera-blueprint".into() } else { "camera-preview".into() }),
+                            ..Default::default()
+                        };
                     }
                 }
-            }
-            "canvasPointerDown" => {
-                let blueprint = surface_is_blueprint(args);
-                let button = args.and_then(|value| value.get("button")).and_then(Value::as_i64).unwrap_or(0);
-                if !blueprint || button != 0 {
-                    return Vec::new();
-                }
-                let extend = args.and_then(|value| value.get("extend")).and_then(Value::as_bool).unwrap_or(false);
-                let hit = hit_test_at(&play, args, blueprint);
-                play.runtime.selected_ids = match hit {
-                    Some(id) if extend => {
-                        let mut ids = play.runtime.selected_ids.clone();
-                        if let Some(position) = ids.iter().position(|existing| *existing == id) {
-                            ids.remove(position);
-                        } else {
-                            ids.push(id);
-                        }
-                        ids
-                    }
-                    Some(id) => vec![id],
-                    None => Vec::new(),
-                };
-                return vec![set_document_op(&play)];
-            }
-            "canvasPointerMove" => {
-                let blueprint = surface_is_blueprint(args);
-                if !blueprint {
-                    return Vec::new();
-                }
-                let hit = hit_test_at(&play, args, blueprint);
-                if hit == play.runtime.hovered_id {
-                    return Vec::new();
-                }
-                play.runtime.hovered_id = hit;
-                return vec![set_document_op(&play)];
-            }
-            "canvasPointerUp" => {
-                return Vec::new();
-            }
-            "canvasDragOver" => {
-                let blueprint = surface_is_blueprint(args);
-                if !blueprint {
-                    return Vec::new();
-                }
-                let kind = args
-                    .and_then(|value| value.get("types"))
-                    .and_then(|value| value.as_array())
-                    .and_then(|types| {
-                        types
-                            .iter()
-                            .find_map(|entry| entry.as_str().and_then(|type_value| type_value.strip_prefix(LAYOUT_CATALOGUE_KIND_MIME_PREFIX)).map(str::to_string))
-                    })
-                    .unwrap_or_else(|| "unknown".into());
-                let (sx, sy, width, height) = pointer_args(args);
-                let (wx, wy) = screen_to_world_for_surface(&play, blueprint, sx, sy, width, height);
-                let unchanged = play
-                    .runtime
-                    .drop_preview
-                    .as_ref()
-                    .is_some_and(|preview| preview.kind == kind && (preview.x - wx).abs() < 1.0 && (preview.y - wy).abs() < 1.0);
-                if unchanged {
-                    return Vec::new();
-                }
-                play.runtime.drop_preview = Some(LayoutDropPreviewState { kind, x: wx, y: wy });
-                return vec![set_document_op(&play)];
-            }
-            "canvasDragLeave" => {
-                if play.runtime.drop_preview.is_none() {
-                    return Vec::new();
-                }
-                play.runtime.drop_preview = None;
-                return vec![set_document_op(&play)];
+                ActionEmit::default()
             }
             "canvasDrop" => {
                 let blueprint = surface_is_blueprint(args);
-                play.runtime.drop_preview = None;
-                let cleared_json = serde_json::to_string(&play).unwrap_or_default();
+                self.runtime.drop_preview = None;
                 if !blueprint {
-                    return vec![set_document_op(&play)];
+                    return ActionEmit::default();
                 }
                 let Some(payload) = args
                     .and_then(|value| value.get("dragData"))
                     .and_then(Value::as_str)
                     .and_then(|raw| serde_json::from_str::<Value>(raw).ok())
                 else {
-                    return vec![set_document_op(&play)];
+                    return ActionEmit::default();
                 };
                 let Some(kind) = payload.get("kind").and_then(Value::as_str).map(str::to_string) else {
-                    return vec![set_document_op(&play)];
+                    return ActionEmit::default();
                 };
                 let (sx, sy, width, height) = pointer_args(args);
-                let (wx, wy) = screen_to_world_for_surface(&play, blueprint, sx, sy, width, height);
+                let (wx, wy) = screen_to_world_for_surface(document, blueprint, sx, sy, width, height);
                 if kind == "page" {
-                    return self.handle_action_patch_ops("addPage", None, &cleared_json, _view_state);
+                    self.handle_action("addPage", None, doc, view_state)
+                } else {
+                    self.handle_action("addFrame", Some(&json!({ "kind": kind, "x": wx, "y": wy })), doc, view_state)
                 }
-                return self.handle_action_patch_ops("addFrame", Some(&json!({ "kind": kind, "x": wx, "y": wy })), &cleared_json, _view_state);
             }
-            "engagementInput" => {
-                if let Some(value) = args.and_then(|value| value.get("value")).and_then(Value::as_str) {
-                    play.runtime.engagement_input = value.into();
-                    return vec![set_document_op(&play)];
+            //#endregion 🔧Operations
+            //#region 🐚Shell
+            "exportPng" => {
+                let page_id = args
+                    .and_then(|value| value.get("pageId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or(self.runtime.active_page_id.as_str())
+                    .to_string();
+                match export_document_png_cpu(document, &page_id) {
+                    Ok(bytes) => ActionEmit::effect(HostEffect::DownloadMediaExport {
+                        filename: format!("{page_id}.png"),
+                        mime_type: "image/png".into(),
+                        data: base64::engine::general_purpose::STANDARD.encode(bytes),
+                        encoding: Some("base64".into()),
+                    }),
+                    Err(_) => ActionEmit::default(),
+                }
+            }
+            "exportSvg" => {
+                let page_id = args
+                    .and_then(|value| value.get("pageId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or(self.runtime.active_page_id.as_str())
+                    .to_string();
+                match export_document_svg(document, &page_id) {
+                    Ok(svg) => ActionEmit::effect(HostEffect::DownloadMediaExport {
+                        filename: format!("{page_id}.svg"),
+                        mime_type: "image/svg+xml".into(),
+                        data: svg,
+                        encoding: None,
+                    }),
+                    Err(_) => ActionEmit::default(),
+                }
+            }
+            "exportPdf" => {
+                let page_id = args
+                    .and_then(|value| value.get("pageId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or(self.runtime.active_page_id.as_str())
+                    .to_string();
+                match export_document_pdf(document, &page_id) {
+                    Ok(bytes) => ActionEmit::effect(HostEffect::DownloadMediaExport {
+                        filename: format!("{page_id}.pdf"),
+                        mime_type: "application/pdf".into(),
+                        data: base64::engine::general_purpose::STANDARD.encode(bytes),
+                        encoding: Some("base64".into()),
+                    }),
+                    Err(_) => ActionEmit::default(),
+                }
+            }
+            "exportPackage" => {
+                let preflight_json = serde_json::to_string(&run_layout_preflight(document)).unwrap_or_else(|_| "[]".into());
+                let doc_json = serde_json::to_string(document).unwrap_or_default();
+                match export_package_zip(&doc_json, &preflight_json) {
+                    Ok(bytes) => ActionEmit::effect(HostEffect::DownloadMediaExport {
+                        filename: format!("{}.layout-package.zip", document.name),
+                        mime_type: "application/zip".into(),
+                        data: base64::engine::general_purpose::STANDARD.encode(bytes),
+                        encoding: Some("base64".into()),
+                    }),
+                    Err(_) => ActionEmit::default(),
                 }
             }
             "engagementSubmit" => {
                 let typed = args.and_then(|value| value.get("value")).and_then(Value::as_str).map(str::trim).unwrap_or_default();
-                let action = if engagement_token_matches(typed, "undo") {
-                    Some("undo")
-                } else if engagement_token_matches(typed, "redo") {
-                    Some("redo")
-                } else if engagement_token_matches(typed, "export png") || engagement_token_matches(typed, "png") {
+                let export = if engagement_token_matches(typed, "export png") || engagement_token_matches(typed, "png") {
                     Some("exportPng")
                 } else if engagement_token_matches(typed, "export svg") || engagement_token_matches(typed, "svg") {
                     Some("exportSvg")
@@ -1913,40 +1788,39 @@ impl PluginApp for LayoutPlayApp {
                 } else {
                     None
                 };
-                if let Some(action) = action {
-                    return self.handle_action_patch_ops(action, None, document_json, _view_state);
+                match export {
+                    Some(export) => self.handle_action(export, None, doc, view_state),
+                    None => ActionEmit::default(),
                 }
-                return Vec::new();
             }
-            _ => {}
+            //#endregion 🐚Shell
+            _ => ActionEmit::default(),
         }
-        Vec::new()
     }
 
-    fn tools(&self, _document_json: &str, view_state: &ViewState) -> Vec<ToolNode> {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, LayoutDocument>, view_state: &ViewState) -> UiNode {
+        let document = doc.projection;
+        let labels = layout_labels(view_state);
+        match body_key {
+            LAYOUT_PLAY_BODY_BLUEPRINT => render_blueprint(document, &self.runtime),
+            LAYOUT_PLAY_BODY_PREVIEW => render_preview(document, &self.runtime),
+            LAYOUT_PLAY_BODY_DOCUMENT => build_document_tree(document, &self.runtime, labels),
+            LAYOUT_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
+            LAYOUT_PLAY_BODY_INSPECTION => build_inspector_tree(document, &self.runtime, labels),
+            LAYOUT_PLAY_BODY_PREFLIGHT => build_preflight_tree(document, labels),
+            _ => ui_text(format!("Unknown body: {body_key}")),
+        }
+    }
+
+    fn tools(&self, _doc: &DocumentView<'_, LayoutDocument>, view_state: &ViewState) -> Vec<ToolNode> {
         layout_toolbar_tools(layout_labels(view_state))
     }
 
-    fn window_engagements(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-        let play = parse_envelope(document_json);
+    fn window_engagements(&self, _doc: &DocumentView<'_, LayoutDocument>, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         HashMap::from([
-            (LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(&play, "blueprint")),
-            (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), layout_window_engagement(&play, "preview")),
+            (LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(&self.runtime, "blueprint")),
+            (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), layout_window_engagement(&self.runtime, "preview")),
         ])
-    }
-
-    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-        let play = parse_envelope(document_json);
-        let labels = layout_labels(view_state);
-        match body_key {
-            LAYOUT_PLAY_BODY_BLUEPRINT => render_blueprint(&play),
-            LAYOUT_PLAY_BODY_PREVIEW => render_preview(&play),
-            LAYOUT_PLAY_BODY_DOCUMENT => build_document_tree(&play, labels),
-            LAYOUT_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
-            LAYOUT_PLAY_BODY_INSPECTION => build_inspector_tree(&play, labels),
-            LAYOUT_PLAY_BODY_PREFLIGHT => build_preflight_tree(&play, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
-        }
     }
 
     fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
@@ -1998,8 +1872,30 @@ fn create_layout_app() -> App {
                 PanelGroup::Details,
                 LAYOUT_PLAY_BODY_INSPECTION,
             )
-            .keybinding("mod+z", "undo")
-            .keybinding("mod+shift+z", "redo"),
+            // 🔧 Document-mutating: dispatched as VCS operations with a true inverse.
+            .operation("addFrame", "Add Frame")
+            .operation("addPage", "Add Page")
+            .operation("patchPage", "Patch Page")
+            .operation("patchFrame", "Patch Frame")
+            .operation("setCamera", "Set Camera")
+            .operation("canvasDrop", "Canvas Drop")
+            // 👁️ Ephemeral view state — selection, hover, active page, drop ghost, engagement draft.
+            .view_action("setSelection", "Set Selection")
+            .view_action("setActivePage", "Set Active Page")
+            .view_action("setHover", "Set Hover")
+            .view_action("focusPreflightIssue", "Focus Preflight Issue")
+            .view_action("engagementInput", "Engagement Input")
+            .view_action("canvasPointerDown", "Canvas Pointer Down")
+            .view_action("canvasPointerMove", "Canvas Pointer Move")
+            .view_action("canvasPointerUp", "Canvas Pointer Up")
+            .view_action("canvasDragOver", "Canvas Drag Over")
+            .view_action("canvasDragLeave", "Canvas Drag Leave")
+            // 🐚 Shell effects — export round-trips through the host.
+            .shell_action("exportPng", "Export Png")
+            .shell_action("exportSvg", "Export Svg")
+            .shell_action("exportPdf", "Export Pdf")
+            .shell_action("exportPackage", "Export Package")
+            .shell_action("engagementSubmit", "Engagement Submit"),
     )
     .example("sample", "Sample", LAYOUT_SAMPLE_JSON)
     .program("layout", "Layout", "layout")
@@ -2099,101 +1995,104 @@ semio_framework_plugin::semio_plugin! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::PluginApp;
+    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+
+    fn meta(actor: &str) -> ActionMeta {
+        ActionMeta { actor: actor.into(), instance_id: 1 }
+    }
+
+    fn new_app() -> VcsDocumentApp<LayoutPlayApp> {
+        VcsDocumentApp::new(LayoutPlayApp::default())
+    }
+
+    fn render_json(app: &mut VcsDocumentApp<LayoutPlayApp>, body: &str) -> String {
+        let node = app.render(body, None, &ViewState::default()).expect("render");
+        serde_json::to_string(&node).unwrap()
+    }
+
+    fn render_json_locale(app: &mut VcsDocumentApp<LayoutPlayApp>, body: &str, locale: &str) -> String {
+        let view_state = ViewState { locale: Some(locale.into()), ..ViewState::default() };
+        let node = app.render(body, None, &view_state).expect("render");
+        serde_json::to_string(&node).unwrap()
+    }
+
+    fn scene_layers_json(node: &UiNode) -> String {
+        let value: Value = serde_json::to_value(node).unwrap();
+        value["canvas2d"]["layersJson"].as_str().expect("layersJson string").to_string()
+    }
+
+    fn test_screen_point(camera_x: f64, camera_y: f64, zoom: f64, width: f64, height: f64, world_x: f64, world_y: f64) -> (f64, f64) {
+        let camera = layout_rs::cavas::camera::Camera { x: camera_x, y: camera_y, zoom };
+        let viewport = layout_rs::cavas::camera::Viewport { width: width as u32, height: height as u32, dpr: 1.0 };
+        let screen = layout_rs::cavas::camera::world_to_screen(&camera, &viewport, layout_rs::cavas::Point::new(world_x, world_y));
+        (screen.x, screen.y)
+    }
 
     #[test]
     fn renders_blueprint_canvas_scene() {
-        let app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("canvas-2d"));
+        let mut app = new_app();
+        assert!(render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("canvas-2d"));
     }
 
     #[test]
     fn renders_preview_canvas_scene() {
-        let app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(LAYOUT_PLAY_BODY_PREVIEW, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("canvas-2d"));
+        let mut app = new_app();
+        assert!(render_json(&mut app, LAYOUT_PLAY_BODY_PREVIEW).contains("canvas-2d"));
     }
 
     #[test]
     fn document_lists_sample_pages() {
-        let app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(LAYOUT_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = new_app();
+        let json = render_json(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
         assert!(json.contains("layout-document.page.page-1"));
         assert!(json.contains("Page 1"));
     }
 
     #[test]
     fn catalogue_lists_frame_kinds() {
-        let app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(LAYOUT_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = new_app();
+        let json = render_json(&mut app, LAYOUT_PLAY_BODY_CATALOGUE);
         assert!(json.contains("layout-catalogue.rect"));
         assert!(json.contains("Text Frame"));
     }
 
     #[test]
     fn layout_labels_resolve_native_english_by_default() {
-        let app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(LAYOUT_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = new_app();
+        let json = render_json(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
         assert!(json.contains("\"Frames\""));
         assert!(json.contains("\"Layers\""));
-        let catalogue = app.render(LAYOUT_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
-        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
-        assert!(catalogue_json.contains("Rectangle"));
+        let catalogue = render_json(&mut app, LAYOUT_PLAY_BODY_CATALOGUE);
+        assert!(catalogue.contains("Rectangle"));
         assert!(!json.contains("Rahmen"));
     }
 
     #[test]
     fn layout_labels_translate_document_tree_in_german() {
-        let app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let node = app.render(LAYOUT_PLAY_BODY_DOCUMENT, &document, &view_state);
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = new_app();
+        let json = render_json_locale(&mut app, LAYOUT_PLAY_BODY_DOCUMENT, "de");
         assert!(json.contains("\"Rahmen\""));
         assert!(json.contains("\"Ebenen\""));
-        let catalogue = app.render(LAYOUT_PLAY_BODY_CATALOGUE, &document, &view_state);
-        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
-        assert!(catalogue_json.contains("Rechteck"));
+        let catalogue = render_json_locale(&mut app, LAYOUT_PLAY_BODY_CATALOGUE, "de");
+        assert!(catalogue.contains("Rechteck"));
         assert!(!json.contains("\"Frames\""));
     }
 
     #[test]
     fn preflight_finds_missing_asset() {
-        let play = default_envelope();
-        let issues = run_layout_preflight(&play.document);
+        let issues = run_layout_preflight(&default_document());
         assert!(issues.iter().any(|issue| issue.code == "asset.missing"));
-        let app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(LAYOUT_PLAY_BODY_PREFLIGHT, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = new_app();
+        let json = render_json(&mut app, LAYOUT_PLAY_BODY_PREFLIGHT);
         assert!(json.contains("asset.missing") || json.contains("Linked asset missing"));
     }
 
     #[test]
-    fn set_selection_updates_runtime() {
-        let mut app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops(
-            "setSelection",
-            Some(&json!({ "ids": ["frame-text-1"] })),
-            &document,
-            &ViewState::default(),
-        );
-        assert_eq!(ops.len(), 1);
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        assert_eq!(next.runtime.selected_ids, vec!["frame-text-1".to_string()]);
+    fn set_selection_reflects_in_inspector() {
+        let mut app = new_app();
+        app.handle_action("setSelection", Some(&json!({ "ids": ["frame-text-1"] })), &ViewState::default(), &meta("local")).expect("select");
+        let json = render_json(&mut app, LAYOUT_PLAY_BODY_INSPECTION);
+        assert!(json.contains("frame-text-1"));
     }
 
     #[test]
@@ -2205,21 +2104,28 @@ mod tests {
 
     #[test]
     fn add_frame_action_appends_rect() {
-        let mut app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let before: LayoutPlayEnvelope = serde_json::from_str(&document).expect("parse envelope");
-        let before_count = before.document.pages[0].frames.len();
-        let ops = app.handle_action_patch_ops("addFrame", Some(&json!({ "kind": "rect" })), &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        assert_eq!(next.document.pages[0].frames.len(), before_count + 1);
+        let mut app = new_app();
+        let before = app.projection().expect("projection").pages[0].frames.len();
+        let result = app.handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewState::default(), &meta("local")).expect("add");
+        assert_eq!(result.operations.len(), 1);
+        assert_eq!(app.projection().expect("projection").pages[0].frames.len(), before + 1);
+    }
+
+    #[test]
+    fn undo_redo_round_trips_add_frame() {
+        let mut app = new_app();
+        let before = app.projection().expect("projection").pages[0].frames.len();
+        app.handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewState::default(), &meta("local")).expect("add");
+        assert_eq!(app.projection().expect("projection").pages[0].frames.len(), before + 1);
+        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        assert_eq!(app.projection().expect("projection").pages[0].frames.len(), before);
+        app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+        assert_eq!(app.projection().expect("projection").pages[0].frames.len(), before + 1);
     }
 
     #[test]
     fn patch_page_supports_margins_and_columns() {
-        let mut app = LayoutPlayApp;
-        let document = app.initial_document_json();
+        let mut app = new_app();
         for (field, value) in [
             ("marginTop", 60.0),
             ("marginRight", 40.0),
@@ -2227,133 +2133,101 @@ mod tests {
             ("marginLeft", 40.0),
             ("columnsGutter", 18.0),
         ] {
-            let ops = app.handle_action_patch_ops(
-                "patchPage",
-                Some(&json!({ "pageId": "page-1", "field": field, "value": value })),
-                &document,
-                &ViewState::default(),
-            );
-            assert_eq!(ops.len(), 1, "field {field} should apply");
+            let result = app
+                .handle_action("patchPage", Some(&json!({ "pageId": "page-1", "field": field, "value": value })), &ViewState::default(), &meta("local"))
+                .expect("patch");
+            assert_eq!(result.operations.len(), 1, "field {field} should apply");
         }
-        let ops = app.handle_action_patch_ops(
-            "patchPage",
-            Some(&json!({ "pageId": "page-1", "field": "columnsCount", "value": 3 })),
-            &document,
-            &ViewState::default(),
-        );
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        let page = next.document.pages.iter().find(|page| page.id == "page-1").unwrap();
+        app.handle_action("patchPage", Some(&json!({ "pageId": "page-1", "field": "columnsCount", "value": 3 })), &ViewState::default(), &meta("local")).expect("cols");
+        let page = app.projection().expect("projection").pages.into_iter().find(|page| page.id == "page-1").unwrap();
         assert_eq!(page.columns.count, 3);
     }
 
     #[test]
     fn patch_frame_supports_rect_fill_and_stroke() {
-        let mut app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops("addFrame", Some(&json!({ "kind": "rect" })), &document, &ViewState::default());
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        let after_add: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        let document = serde_json::to_string(&after_add).unwrap();
-        let frame_id = after_add.runtime.selected_ids[0].clone();
-
-        let ops = app.handle_action_patch_ops(
-            "patchFrame",
-            Some(&json!({ "frameId": frame_id, "pageId": "page-1", "field": "fill", "value": "0.5, 0.4, 0.3, 1" })),
-            &document,
-            &ViewState::default(),
-        );
-        assert_eq!(ops.len(), 1);
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        let frame = next.document.pages[0].frames.iter().find(|frame| frame.id() == frame_id).unwrap();
+        let mut app = new_app();
+        let before = app.projection().expect("projection").pages[0].frames.len();
+        app.handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewState::default(), &meta("local")).expect("add");
+        let frame_id = format!("frame-{}", before + 1);
+        let result = app
+            .handle_action(
+                "patchFrame",
+                Some(&json!({ "frameId": frame_id, "pageId": "page-1", "field": "fill", "value": "0.5, 0.4, 0.3, 1" })),
+                &ViewState::default(),
+                &meta("local"),
+            )
+            .expect("patch");
+        assert_eq!(result.operations.len(), 1);
+        let doc = app.projection().expect("projection");
+        let frame = doc.pages[0].frames.iter().find(|frame| frame.id() == frame_id).unwrap();
         let Frame::Rect { fill, .. } = frame else { panic!("expected rect frame") };
         assert_eq!(fill.unwrap(), [0.5, 0.4, 0.3, 1.0]);
     }
 
     #[test]
     fn patch_frame_supports_text_story_content_and_wrap_mode() {
-        let mut app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops(
+        let mut app = new_app();
+        app.handle_action(
             "patchFrame",
             Some(&json!({ "frameId": "frame-text-1", "pageId": "page-1", "field": "storyContent", "value": "Edited story body." })),
-            &document,
             &ViewState::default(),
-        );
-        assert_eq!(ops.len(), 1);
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        let story = next.document.stories.iter().find(|story| story.id == "story-1").unwrap();
+            &meta("local"),
+        )
+        .expect("story");
+        let story = app.projection().expect("projection").stories.into_iter().find(|story| story.id == "story-1").unwrap();
         assert_eq!(story.content, "Edited story body.");
 
-        let document = serde_json::to_string(&next).unwrap();
-        let ops = app.handle_action_patch_ops(
+        app.handle_action(
             "patchFrame",
             Some(&json!({ "frameId": "frame-text-1", "pageId": "page-1", "field": "wrapMode", "value": "contour" })),
-            &document,
             &ViewState::default(),
-        );
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        let frame = next.document.pages[0].frames.iter().find(|frame| frame.id() == "frame-text-1").unwrap();
+            &meta("local"),
+        )
+        .expect("wrap");
+        let doc = app.projection().expect("projection");
+        let frame = doc.pages[0].frames.iter().find(|frame| frame.id() == "frame-text-1").unwrap();
         let Frame::Text { wrap_mode, .. } = frame else { panic!("expected text frame") };
         assert_eq!(wrap_mode, "contour");
     }
 
     #[test]
     fn patch_frame_supports_image_link_path() {
-        let mut app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops(
+        let mut app = new_app();
+        app.handle_action(
             "patchFrame",
             Some(&json!({ "frameId": "frame-image-1", "pageId": "page-1", "field": "linkPath", "value": "assets/updated.png" })),
-            &document,
             &ViewState::default(),
-        );
-        assert_eq!(ops.len(), 1);
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        let link = next.document.links.iter().find(|link| link.id == "link-missing").unwrap();
+            &meta("local"),
+        )
+        .expect("link");
+        let link = app.projection().expect("projection").links.into_iter().find(|link| link.id == "link-missing").unwrap();
         assert_eq!(link.path, "assets/updated.png");
     }
 
     #[test]
     fn export_actions_wire_to_real_layout_rs_exporters() {
-        let mut app = LayoutPlayApp;
-        let document = app.initial_document_json();
+        let mut app = new_app();
         for (action, mime_type) in [
             ("exportPng", "image/png"),
             ("exportSvg", "image/svg+xml"),
             ("exportPdf", "application/pdf"),
             ("exportPackage", "application/zip"),
         ] {
-            let ops = app.handle_action_patch_ops(action, Some(&json!({ "pageId": "page-1" })), &document, &ViewState::default());
-            assert_eq!(ops.len(), 1, "{action} should emit a download op");
-            let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-            assert_eq!(payload["op"], "downloadMediaExport");
-            assert_eq!(payload["mimeType"], mime_type);
-            assert!(!payload["data"].as_str().unwrap_or("").is_empty());
+            let result = app.handle_action(action, Some(&json!({ "pageId": "page-1" })), &ViewState::default(), &meta("local")).expect("export");
+            match result.requested_effects.first() {
+                Some(HostEffect::DownloadMediaExport { mime_type: mime, data, .. }) => {
+                    assert_eq!(mime, mime_type, "{action}");
+                    assert!(!data.is_empty(), "{action} data");
+                }
+                other => panic!("{action} expected DownloadMediaExport, got {other:?}"),
+            }
         }
-    }
-
-    fn test_screen_point(camera_x: f64, camera_y: f64, zoom: f64, width: f64, height: f64, world_x: f64, world_y: f64) -> (f64, f64) {
-        let camera = layout_rs::cavas::camera::Camera { x: camera_x, y: camera_y, zoom };
-        let viewport = layout_rs::cavas::camera::Viewport { width: width as u32, height: height as u32, dpr: 1.0 };
-        let screen = layout_rs::cavas::camera::world_to_screen(&camera, &viewport, layout_rs::cavas::Point::new(world_x, world_y));
-        (screen.x, screen.y)
-    }
-
-    fn scene_layers_json(node: &UiNode) -> String {
-        let value: Value = serde_json::to_value(node).unwrap();
-        value["canvas2d"]["layersJson"].as_str().expect("layersJson string").to_string()
     }
 
     #[test]
     fn blueprint_scene_has_page_background_and_guides() {
-        let app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, None, &ViewState::default()).expect("render");
         let layers_json = scene_layers_json(&node);
         assert!(layers_json.contains("layout.page-bg"));
         assert!(layers_json.contains("0.97"));
@@ -2366,9 +2240,8 @@ mod tests {
 
     #[test]
     fn preview_scene_has_white_background_and_no_guides() {
-        let app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(LAYOUT_PLAY_BODY_PREVIEW, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(LAYOUT_PLAY_BODY_PREVIEW, None, &ViewState::default()).expect("render");
         let layers_json = scene_layers_json(&node);
         assert!(layers_json.contains("layout.page-bg"));
         assert!(!layers_json.contains("layout.guide."));
@@ -2376,103 +2249,83 @@ mod tests {
 
     #[test]
     fn inherited_frame_gets_dashed_stroke_in_blueprint() {
-        let app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
+        let mut app = new_app();
+        let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, None, &ViewState::default()).expect("render");
         let layers_json = scene_layers_json(&node);
         assert!(layers_json.contains("\"dash\":[4.0,3.0]"));
     }
 
     #[test]
     fn selected_and_hovered_frames_get_chrome_strokes() {
-        let mut app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops("setSelection", Some(&json!({ "ids": ["frame-text-1"] })), &document, &ViewState::default());
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        let selected: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        let document = serde_json::to_string(&selected).unwrap();
-        let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
-        let json_str = serde_json::to_string(&node).unwrap();
-        assert!(json_str.contains("2.5"));
+        let mut app = new_app();
+        app.handle_action("setSelection", Some(&json!({ "ids": ["frame-text-1"] })), &ViewState::default(), &meta("local")).expect("select");
+        assert!(render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("2.5"));
 
-        let ops = app.handle_action_patch_ops("setHover", Some(&json!({ "id": "frame-image-1" })), &document, &ViewState::default());
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        let hovered: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        let document = serde_json::to_string(&hovered).unwrap();
-        let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
-        let json_str = serde_json::to_string(&node).unwrap();
-        assert!(json_str.contains("1.75"));
+        app.handle_action("setHover", Some(&json!({ "id": "frame-image-1" })), &ViewState::default(), &meta("local")).expect("hover");
+        assert!(render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("1.75"));
     }
 
     #[test]
     fn set_camera_updates_surface_camera() {
-        let mut app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops(
-            "setCamera",
-            Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "camera": { "x": 10.0, "y": 20.0, "zoom": 1.5 } })),
-            &document,
-            &ViewState::default(),
-        );
-        assert_eq!(ops.len(), 1);
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        assert_eq!(next.document.camera.x, 10.0);
-        assert_eq!(next.document.camera.y, 20.0);
-        assert_eq!(next.document.camera.zoom, 1.5);
-        assert_eq!(next.document.preview_camera.x, 0.0);
+        let mut app = new_app();
+        let result = app
+            .handle_action(
+                "setCamera",
+                Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "camera": { "x": 10.0, "y": 20.0, "zoom": 1.5 } })),
+                &ViewState::default(),
+                &meta("local"),
+            )
+            .expect("camera");
+        assert_eq!(result.operations.len(), 1);
+        let doc = app.projection().expect("projection");
+        assert_eq!(doc.camera.x, 10.0);
+        assert_eq!(doc.camera.y, 20.0);
+        assert_eq!(doc.camera.zoom, 1.5);
+        assert_eq!(doc.preview_camera.x, 0.0);
     }
 
     #[test]
     fn pointer_down_selects_frame_via_hit_test() {
-        let mut app = LayoutPlayApp;
-        let document = app.initial_document_json();
+        let mut app = new_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 136.0, 435.0);
-        let ops = app.handle_action_patch_ops(
+        app.handle_action(
             "canvasPointerDown",
             Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0, "button": 0 })),
-            &document,
             &ViewState::default(),
-        );
-        assert_eq!(ops.len(), 1);
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        assert_eq!(next.runtime.selected_ids, vec!["frame-image-1".to_string()]);
+            &meta("local"),
+        )
+        .expect("pointer");
+        let json = render_json(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
+        assert!(json.contains("layout-document.frame.frame-image-1"));
     }
 
     #[test]
-    fn pointer_move_hover_is_change_only() {
-        let mut app = LayoutPlayApp;
-        let document = app.initial_document_json();
+    fn pointer_move_updates_hover_highlight() {
+        let mut app = new_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 156.0, 220.0);
         let args = json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0 });
-        let ops = app.handle_action_patch_ops("canvasPointerMove", Some(&args), &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        assert_eq!(next.runtime.hovered_id.as_deref(), Some("frame-text-1"));
-        let document = serde_json::to_string(&next).unwrap();
-        let ops = app.handle_action_patch_ops("canvasPointerMove", Some(&args), &document, &ViewState::default());
-        assert!(ops.is_empty());
+        let result = app.handle_action("canvasPointerMove", Some(&args), &ViewState::default(), &meta("local")).expect("move");
+        assert!(result.operations.is_empty(), "hover is a view action, not an operation");
+        let json = render_json(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
+        assert!(json.contains("layout-document.frame.frame-text-1"));
     }
 
     #[test]
     fn canvas_drop_adds_frame_at_world_coords() {
-        let mut app = LayoutPlayApp;
-        let document = app.initial_document_json();
+        let mut app = new_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 100.0, 200.0);
         let drag_data = json!({ "kind": "rect" }).to_string();
-        let ops = app.handle_action_patch_ops(
-            "canvasDrop",
-            Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0, "dragData": drag_data })),
-            &document,
-            &ViewState::default(),
-        );
-        assert_eq!(ops.len(), 1);
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        let frame_id = next.runtime.selected_ids[0].clone();
-        let frame = next.document.pages[0].frames.iter().find(|frame| frame.id() == frame_id).unwrap();
+        let result = app
+            .handle_action(
+                "canvasDrop",
+                Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0, "dragData": drag_data })),
+                &ViewState::default(),
+                &meta("local"),
+            )
+            .expect("drop");
+        assert_eq!(result.operations.len(), 1);
+        let doc = app.projection().expect("projection");
+        let frame = doc.pages[0].frames.last().unwrap();
         let bounds = frame.bounds();
         assert!((bounds.x - 100.0).abs() < 0.01);
         assert!((bounds.y - 200.0).abs() < 0.01);
@@ -2480,70 +2333,54 @@ mod tests {
 
     #[test]
     fn canvas_drop_page_kind_adds_page() {
-        let mut app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let before: LayoutPlayEnvelope = serde_json::from_str(&document).unwrap();
-        let before_count = before.document.pages.len();
+        let mut app = new_app();
+        let before = app.projection().expect("projection").pages.len();
         let drag_data = json!({ "kind": "page" }).to_string();
-        let ops = app.handle_action_patch_ops(
-            "canvasDrop",
-            Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": 0.0, "y": 0.0, "width": 800.0, "height": 600.0, "dragData": drag_data })),
-            &document,
-            &ViewState::default(),
-        );
-        assert_eq!(ops.len(), 1);
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        assert_eq!(next.document.pages.len(), before_count + 1);
+        let result = app
+            .handle_action(
+                "canvasDrop",
+                Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": 0.0, "y": 0.0, "width": 800.0, "height": 600.0, "dragData": drag_data })),
+                &ViewState::default(),
+                &meta("local"),
+            )
+            .expect("drop");
+        assert_eq!(result.operations.len(), 1);
+        assert_eq!(app.projection().expect("projection").pages.len(), before + 1);
     }
 
     #[test]
     fn drag_over_emits_ghost_and_leave_clears() {
-        let mut app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops(
+        let mut app = new_app();
+        app.handle_action(
             "canvasDragOver",
             Some(&json!({
                 "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT,
                 "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0,
                 "types": [format!("{LAYOUT_CATALOGUE_KIND_MIME_PREFIX}rect")],
             })),
-            &document,
             &ViewState::default(),
-        );
-        assert_eq!(ops.len(), 1);
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        let with_preview: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        assert!(with_preview.runtime.drop_preview.is_some());
-        let document = serde_json::to_string(&with_preview).unwrap();
-        let scene = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
-        let json_str = serde_json::to_string(&scene).unwrap();
-        assert!(json_str.contains("layout.drop-preview"));
+            &meta("local"),
+        )
+        .expect("over");
+        assert!(render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("layout.drop-preview"));
 
-        let ops = app.handle_action_patch_ops("canvasDragLeave", Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT })), &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        let cleared: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        assert!(cleared.runtime.drop_preview.is_none());
+        app.handle_action("canvasDragLeave", Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT })), &ViewState::default(), &meta("local")).expect("leave");
+        assert!(!render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("layout.drop-preview"));
     }
 
     #[test]
     fn catalogue_items_are_draggable() {
-        let app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(LAYOUT_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
-        let json_str = serde_json::to_string(&node).unwrap();
-        assert!(json_str.contains(LAYOUT_CATALOGUE_DRAG_MIME));
-        assert!(json_str.contains("\"draggable\":true"));
-        assert!(json_str.contains("layout-catalogue.page"));
+        let mut app = new_app();
+        let json = render_json(&mut app, LAYOUT_PLAY_BODY_CATALOGUE);
+        assert!(json.contains(LAYOUT_CATALOGUE_DRAG_MIME));
+        assert!(json.contains("\"draggable\":true"));
+        assert!(json.contains("layout-catalogue.page"));
     }
 
     #[test]
     fn document_tree_has_nine_sections() {
-        let app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(LAYOUT_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
-        let json_str = serde_json::to_string(&node).unwrap();
+        let mut app = new_app();
+        let json = render_json(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
         for section_id in [
             "layout-document.document",
             "layout-document.spreads",
@@ -2555,7 +2392,7 @@ mod tests {
             "layout-document.links",
             "layout-document.styles",
         ] {
-            assert!(json_str.contains(section_id), "missing section {section_id}");
+            assert!(json.contains(section_id), "missing section {section_id}");
         }
     }
 
@@ -2628,9 +2465,8 @@ mod tests {
 
     #[test]
     fn window_engagements_cover_both_windows() {
-        let app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let engagements = app.window_engagements(&document, &ViewState::default());
+        let mut app = new_app();
+        let engagements = app.window_engagements(&ViewState::default());
         let blueprint = engagements.get(LAYOUT_PLAY_WINDOW_BLUEPRINT).expect("blueprint engagement");
         let status = blueprint.status.as_ref().and_then(|rows| rows.first()).expect("status");
         assert!(status.text.contains("Page"));
@@ -2641,10 +2477,9 @@ mod tests {
 
     #[test]
     fn tools_expose_undo_redo_and_exports() {
-        let app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let tools = app.tools(&document, &ViewState::default());
-        let json_str = serde_json::to_string(&tools).unwrap();
+        let mut app = new_app();
+        let tools = app.tools(&ViewState::default());
+        let json = serde_json::to_string(&tools).unwrap();
         for needle in [
             "layout-tools-undo",
             "layout-tools-redo",
@@ -2653,32 +2488,24 @@ mod tests {
             "layout-tools-export-pdf",
             "layout-tools-export-package",
         ] {
-            assert!(json_str.contains(needle), "missing tool {needle}");
+            assert!(json.contains(needle), "missing tool {needle}");
         }
     }
 
     #[test]
     fn engagement_submit_triggers_export() {
-        let mut app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "export png" })), &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        assert_eq!(payload["op"], "downloadMediaExport");
-        assert_eq!(payload["mimeType"], "image/png");
+        let mut app = new_app();
+        let result = app.handle_action("engagementSubmit", Some(&json!({ "value": "export png" })), &ViewState::default(), &meta("local")).expect("submit");
+        assert!(matches!(result.requested_effects.first(), Some(HostEffect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
     }
 
     #[test]
     fn engagement_submit_triggers_export_from_normalized_shell_draft() {
         // The React shell PascalCases and strips separators from every draft before submitting it
         // (`normalizeEngagementActionText`), so "export png" arrives as "ExportPng".
-        let mut app = LayoutPlayApp;
-        let document = app.initial_document_json();
-        let ops = app.handle_action_patch_ops("engagementSubmit", Some(&json!({ "value": "ExportPng" })), &document, &ViewState::default());
-        assert_eq!(ops.len(), 1);
-        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
-        assert_eq!(payload["op"], "downloadMediaExport");
-        assert_eq!(payload["mimeType"], "image/png");
+        let mut app = new_app();
+        let result = app.handle_action("engagementSubmit", Some(&json!({ "value": "ExportPng" })), &ViewState::default(), &meta("local")).expect("submit");
+        assert!(matches!(result.requested_effects.first(), Some(HostEffect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
     }
 
     #[test]
