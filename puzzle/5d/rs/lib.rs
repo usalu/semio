@@ -24,6 +24,10 @@ impl Puzzle5dPrecomputeSession {
         self.inner.register_mesh(url, positions, indices);
     }
 
+    pub fn has_mesh(&self, url: &str) -> bool {
+        self.inner.has_mesh(url)
+    }
+
     pub fn precompute_step(&mut self, budget: u32) -> bool {
         self.inner.precompute_step(budget)
     }

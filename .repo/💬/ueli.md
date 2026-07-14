@@ -445,6 +445,11 @@ This MUST NOT happen.
 
 ---
 
+All ui items that load show a spinning with pulsing motion border in clockwise direction. same border color e.g. when not selected just normal gray and when active the normal active color, etc.
+Make sure to implement it for every ui element that is loadable such as tree items, etc
+
+---
+
 The concept changed. Make the footer symmetrical to the navbar. There are four corner panels that grow from the corner. the footer is again same level as navbar and only the toggles for the the panels remain. Rename and generalize everything from side panel into corner panel.
 tabs in general should be draggable and dockable  between all side panels. also the nesting can change.
 When a tab is dragged then all children tabs are moved with it.

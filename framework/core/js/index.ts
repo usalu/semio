@@ -11,6 +11,11 @@ import type {
   ActionDescriptor as GeneratedActionDescriptor,
   ActionKind as GeneratedActionKind,
   ActionDefinition as GeneratedActionDefinition,
+  ActionArgDef as GeneratedActionArgDef,
+  ActionArgControl as GeneratedActionArgControl,
+  ActionArgOption as GeneratedActionArgOption,
+  ToolDefinition as GeneratedToolDefinition,
+  ToolRef as GeneratedToolRef,
   WindowMeasure as GeneratedWindowMeasure,
   WindowEngagementOption as GeneratedWindowEngagementOption,
   WindowEngagementInput as GeneratedWindowEngagementInput,
@@ -114,7 +119,7 @@ export enum Expertise {
   EXPERT = "expert",
 }
 
-export type ToolCategory = "selection" | "tools" | "actions" | "history" | "sync";
+export type ToolCategory = "selection" | "tools" | "history" | "sync";
 
 export type ToolLeaf =
   | { readonly id: string; readonly kind: "separator"; readonly order?: number; readonly disabled?: boolean }
@@ -1014,6 +1019,14 @@ function uiDeclarativeChildToTreeItem(node: UiNode, fallbackId: string): UiTreeI
 /** 🧬 Generated from Rust `ActionKind`/`ActionDefinition` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type ActionKind = GeneratedActionKind;
 export type ActionDefinition = GeneratedActionDefinition;
+export type ActionArgDef = GeneratedActionArgDef;
+export type ActionArgControl = GeneratedActionArgControl;
+export type ActionArgOption = GeneratedActionArgOption;
+export type ToolDefinition = GeneratedToolDefinition;
+export type ToolRef = GeneratedToolRef;
+
+/** 🧰 The framework-owned action id apps dispatch to activate a tool — mirrors `SET_ACTIVE_TOOL_ACTION_ID`. */
+export const SET_ACTIVE_TOOL_ACTION_ID = "setActiveTool";
 
 /** @emoji 🕹️ Mirrors `semio_framework_core::history_action_definitions` — the six framework-owned
  * History actions every app receives, used by the shell to render the same set without a wasm round trip. */
@@ -1029,6 +1042,8 @@ export const HISTORY_ACTION_IDS = [
 export type PluginViewState = {
   readonly activeModeId?: string;
   readonly activeWindowKindId?: string;
+  /** 🧰 Host-owned active tool for the active window kind (never a document field, never a VCS op). */
+  readonly activeToolId?: string;
   readonly selectionJson?: string;
   readonly panelJson?: string;
   readonly contributionsJson?: string;
@@ -1046,10 +1061,10 @@ export type PluginAppLabelsOverlay = {
   readonly modeLabels: Readonly<Record<string, string>>;
 };
 
-const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = { windowKindLabels: {}, panelTabLabels: {}, modeLabels: {} };
+export const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = { windowKindLabels: {}, panelTabLabels: {}, modeLabels: {} };
 
 /** 🗣️ Rust's `skip_serializing_if` omits empty maps entirely, so a parsed overlay may be missing keys — fill them back in. */
-function normalizeAppLabelsOverlay(raw: Partial<PluginAppLabelsOverlay> | null | undefined): PluginAppLabelsOverlay {
+export function normalizeAppLabelsOverlay(raw: Partial<PluginAppLabelsOverlay> | null | undefined): PluginAppLabelsOverlay {
   return {
     appLabel: raw?.appLabel,
     windowKindLabels: raw?.windowKindLabels ?? {},
@@ -1156,6 +1171,32 @@ export type PluginHotSwapEvent = {
 };
 //#endregion AppManifestProtocol
 
+//#region UiRefresh
+/** @emoji 🐢 One requested window/panel section — `bodyKey` only applies to windows/panels; `hash` is the host's known fnv1a-64 hex of that section's last payload, or absent on first fetch. */
+export type PluginUiRefreshSectionRequest = { readonly key: string; readonly bodyKey?: string; readonly hash?: string };
+
+/** @emoji 🐢 One batched, hash-conditional refresh request — one round trip for the window/panel/engagements/measures/labels sections. Toolbars are no longer a plugin section: the renderer derives them from the tool registry via {@link deriveToolNodes}. */
+export type PluginUiRefreshRequest = {
+  readonly viewState: PluginViewState;
+  readonly windows?: readonly PluginUiRefreshSectionRequest[];
+  readonly panels?: readonly PluginUiRefreshSectionRequest[];
+  readonly engagements?: { readonly hash?: string };
+  readonly measures?: { readonly hash?: string };
+  readonly labels?: { readonly hash?: string };
+};
+
+/** @emoji 🐢 `value` is present only when `hash` differs from what the request supplied — an unchanged section costs one hash compare instead of a full re-serialize. */
+export type PluginUiRefreshSectionResponse = { readonly key: string; readonly hash: string; readonly value?: unknown };
+
+export type PluginUiRefreshResponse = {
+  readonly windows?: readonly PluginUiRefreshSectionResponse[];
+  readonly panels?: readonly PluginUiRefreshSectionResponse[];
+  readonly engagements?: PluginUiRefreshSectionResponse;
+  readonly measures?: PluginUiRefreshSectionResponse;
+  readonly labels?: PluginUiRefreshSectionResponse;
+};
+//#endregion UiRefresh
+
 export type PluginWasmHandle = {
   readonly pluginId: string;
   readonly manifest: PluginManifest;
@@ -1169,10 +1210,7 @@ export type PluginWasmHandle = {
   readonly detachBackbone?: (instanceId: number) => Promise<void>;
   readonly render: (instanceId: number, bodyKey: string, viewState: PluginViewState) => Promise<PluginUiNode>;
   readonly renderWithDocument?: (instanceId: number, bodyKey: string, viewState: PluginViewState, documentJson: string) => Promise<PluginUiNode>;
-  readonly tools: (instanceId: number, viewState: PluginViewState) => Promise<readonly Record<string, unknown>[]>;
-  readonly windowEngagements: (instanceId: number, viewState: PluginViewState) => Promise<Readonly<Record<string, Record<string, unknown>>>>;
-  readonly windowMeasures: (instanceId: number, viewState: PluginViewState) => Promise<Readonly<Record<string, readonly Record<string, unknown>[]>>>;
-  readonly appLabels: (instanceId: number, viewState: PluginViewState) => Promise<PluginAppLabelsOverlay>;
+  readonly refreshUi: (instanceId: number, request: PluginUiRefreshRequest) => Promise<PluginUiRefreshResponse>;
   readonly dispose: () => void;
 };
 
@@ -1197,6 +1235,118 @@ export function resolveLayoutForMode(
   }
   return app.defaultLayout;
 }
+
+//#region 🧰ActionArgsAndTools
+/** 🧰 A resolved tool ready for the toolbar — the TS twin of Rust `DerivedToolSpec` in `ui_wgpu`. */
+export type DerivedToolSpec = {
+  readonly id: string;
+  readonly label: string;
+  readonly iconId: string;
+  readonly group?: string;
+  readonly category?: ToolCategory;
+};
+
+/**
+ * 🧰 Hand-written twin of Rust `derive_tool_nodes` (`ui/wgpu/rs/lib.rs`): builds the toolbar node tree
+ * from resolved tools + the host-owned active tool id. Each tool becomes a `toggle` whose `pressed`
+ * reflects `activeToolId === id` and whose `onChange` dispatches `setActiveTool { toolId }`; tools
+ * sharing a `group` collapse into one `collection` placed where the group first appears.
+ */
+export function deriveToolNodes(controllerId: string, tools: readonly DerivedToolSpec[], activeToolId?: string): ToolNode[] {
+  const toggle = (tool: DerivedToolSpec): ToolNode => ({
+    id: tool.id,
+    kind: "toggle",
+    iconId: tool.iconId,
+    label: tool.label,
+    title: tool.label,
+    pressed: activeToolId === tool.id,
+    category: tool.category,
+    onChange: { controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: tool.id } },
+  });
+  const nodes: ToolNode[] = [];
+  const groupIndex = new Map<string, number>();
+  for (const tool of tools) {
+    const node = toggle(tool);
+    if (tool.group === undefined) {
+      nodes.push(node);
+      continue;
+    }
+    const existing = groupIndex.get(tool.group);
+    if (existing !== undefined) {
+      const collection = nodes[existing] as Extract<ToolNode, { kind: "collection" }>;
+      (collection.children as ToolNode[]).push(node);
+    } else {
+      groupIndex.set(tool.group, nodes.length);
+      nodes.push({ id: `group:${tool.group}`, kind: "collection", iconId: tool.iconId, label: tool.group, title: tool.group, category: tool.category, children: [node] });
+    }
+  }
+  return nodes;
+}
+
+/**
+ * 🧮 Hand-written twin of Rust `effective_action_args`: for each declared arg, the staged value if
+ * present, else its declared `default`, else omitted.
+ */
+export function effectiveActionArgs(defs: readonly ActionArgDef[], staged: Readonly<Record<string, unknown>>): Record<string, unknown> {
+  const effective: Record<string, unknown> = {};
+  for (const def of defs) {
+    if (Object.prototype.hasOwnProperty.call(staged, def.id)) {
+      effective[def.id] = staged[def.id];
+    } else if (def.default !== undefined && def.default !== null) {
+      effective[def.id] = def.default;
+    }
+  }
+  return effective;
+}
+
+/**
+ * ❗ Hand-written twin of Rust `missing_required_args`: ids of required args still unset in `effective`
+ * (absent, null, or an empty string).
+ */
+export function missingRequiredArgs(defs: readonly ActionArgDef[], effective: Readonly<Record<string, unknown>>): string[] {
+  return defs
+    .filter((def) => def.required)
+    .filter((def) => {
+      const value = effective[def.id];
+      return value === undefined || value === null || value === "";
+    })
+    .map((def) => def.id);
+}
+
+/**
+ * 📇 Hand-written twin of Rust `resolve_window_actions`: explicit `windowKind.actions` refs resolve in
+ * order, plus any panel-eligible app action referenced by no window kind (an orphan) appears on every
+ * window — the scoping fallback that prevents blank panels mid-migration. History and `setActiveTool`
+ * are never panel-eligible orphans.
+ */
+export function resolveWindowActions(
+  app: { readonly actions?: readonly ActionDefinition[]; readonly windowKinds: readonly { readonly actions?: readonly AppActionRef[] }[] },
+  windowKind: { readonly actions?: readonly AppActionRef[] },
+): ActionDefinition[] {
+  const actions = app.actions ?? [];
+  const referenced = new Set<string>();
+  for (const kind of app.windowKinds) {
+    for (const ref of kind.actions ?? []) referenced.add(ref);
+  }
+  const panelEligible = (action: ActionDefinition) => action.kind !== "history" && action.id !== SET_ACTIVE_TOOL_ACTION_ID;
+  const resolved: ActionDefinition[] = [];
+  const seen = new Set<string>();
+  for (const ref of windowKind.actions ?? []) {
+    const action = actions.find((entry) => entry.id === ref);
+    if (action && !seen.has(action.id)) {
+      seen.add(action.id);
+      resolved.push(action);
+    }
+  }
+  for (const action of actions) {
+    if (panelEligible(action) && !referenced.has(action.id) && !seen.has(action.id)) {
+      seen.add(action.id);
+      resolved.push(action);
+    }
+  }
+  return resolved;
+}
+//#endregion 🧰ActionArgsAndTools
 
 /**
  * 🧩 Expands a plugin registry for a primary plugin: `primaryPluginId` is matched directly
@@ -1324,7 +1474,8 @@ export type HostEffect =
   | { readonly iconRenderExport: { readonly items: readonly { readonly filename: string; readonly request: unknown }[] } }
   | { readonly requestFileOpen: { readonly accept: string; readonly readAs?: string; readonly importAction: string } }
   | { readonly spawnPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string; readonly label?: string; readonly documentJson?: string } }
-  | { readonly openPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string } };
+  | { readonly openPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string } }
+  | { readonly setActiveTool: { readonly windowKindId: string; readonly toolId: string } };
 
 /**
  * @emoji 🐢 Mirrors the Rust `UiDirtyScope` — which rendered UI sections an action actually
@@ -1365,11 +1516,13 @@ export type ActionResponse = {
   readonly uiScope?: UiDirtyScope;
 };
 
+// 🐢 `uiScope` deliberately left unset here (not `{kind: "none"}`) — `resolveUiDirtyScope` treats a
+// missing scope as `full`, the safe default for the rare failure paths that return this constant
+// (unparseable response, stub module missing `handleAction`).
 const EMPTY_ACTION_RESPONSE: ActionResponse = {
   output: null,
   operations: [],
   inverseGroup: { actionId: "", operations: [], inverseOperations: [] },
-  uiScope: { kind: "none" },
 };
 
 /** @emoji 📥 Parses a raw plugin `handle-action` response string into a typed {@link ActionResponse}. */
@@ -1419,10 +1572,7 @@ export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): Plugin
     handleAction: (instanceId, actionJson, viewState) => runSerialized(() => handle.handleAction(instanceId, actionJson, viewState)),
     render: (instanceId, bodyKey, viewState) => runSerialized(() => handle.render(instanceId, bodyKey, viewState)),
     renderWithDocument: handle.renderWithDocument ? (instanceId, bodyKey, viewState, documentJson) => runSerialized(() => handle.renderWithDocument!(instanceId, bodyKey, viewState, documentJson)) : undefined,
-    tools: (instanceId, viewState) => runSerialized(() => handle.tools(instanceId, viewState)),
-    windowEngagements: (instanceId, viewState) => runSerialized(() => handle.windowEngagements(instanceId, viewState)),
-    windowMeasures: (instanceId, viewState) => runSerialized(() => handle.windowMeasures(instanceId, viewState)),
-    appLabels: (instanceId, viewState) => runSerialized(() => handle.appLabels(instanceId, viewState)),
+    refreshUi: (instanceId, request) => runSerialized(() => handle.refreshUi(instanceId, request)),
     applyOperations: handle.applyOperations ? (instanceId, operationsJson) => runSerialized(() => handle.applyOperations!(instanceId, operationsJson)) : undefined,
     readAppDocument: handle.readAppDocument ? (instanceId) => runSerialized(() => handle.readAppDocument!(instanceId)) : undefined,
     loadAppDocument: handle.loadAppDocument ? (instanceId, documentJson) => runSerialized(() => handle.loadAppDocument!(instanceId, documentJson)) : undefined,
@@ -1432,6 +1582,138 @@ export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): Plugin
   };
 }
 //#endregion SerializedPluginWasm
+
+//#region PluginWorkerClient
+/** @emoji 🧵 Message types the generated `plugin-worker.js` dispatches (framework/product/os/dev/script.ts `pluginWorkerSource`). */
+type PluginWorkerMessageType = "init" | "manifest" | "createApp" | "handleAction" | "render" | "destroy" | "refreshUi" | "error";
+
+/** @emoji ⏱️ Logs only, never kills the worker — a plugin action owns in-flight, possibly undo-relevant
+ * state, so abandoning it mid-call (the wgpu renderer's timeout+restart policy) would corrupt it. */
+const PLUGIN_WORKER_UNRESPONSIVE_MS = 10000;
+
+function pluginWorkerUrl(moduleUrl: string): string {
+  return moduleUrl.replace(/\/[^/]+\.js$/, "/plugin-worker.js");
+}
+
+/**
+ * @emoji 🧵 Runs a component-model plugin's WASM inside a Web Worker so `handleAction` — including
+ * long-running precompute — never blocks the UI thread. Mirrors `framework/renderer/wgpu/js/boot.ts`'s
+ * `PluginWorkerClient`, minus its 5s timeout+restart.
+ */
+class PluginWorkerClient {
+  private worker: Worker | null = null;
+  private readonly pending = new Map<string, { resolve: (value: Record<string, unknown>) => void; reject: (error: Error) => void; watchdog: number }>();
+
+  constructor(
+    private readonly pluginId: string,
+    private readonly moduleUrl: string,
+  ) {}
+
+  private clearPending(error: Error): void {
+    for (const [requestId, entry] of this.pending) {
+      window.clearTimeout(entry.watchdog);
+      entry.reject(error);
+      this.pending.delete(requestId);
+    }
+  }
+
+  private attachWorker(worker: Worker): void {
+    worker.onmessage = (event: MessageEvent) => {
+      const message = event.data as { requestId?: string; type?: PluginWorkerMessageType; message?: string; value?: string; instanceId?: number; ok?: boolean };
+      const requestId = message.requestId;
+      if (!requestId) return;
+      const entry = this.pending.get(requestId);
+      if (!entry) return;
+      window.clearTimeout(entry.watchdog);
+      this.pending.delete(requestId);
+      if (message.type === "error") {
+        entry.reject(new Error(message.message ?? `plugin worker ${this.pluginId} error`));
+        return;
+      }
+      entry.resolve(message);
+    };
+    worker.onerror = (error) => {
+      console.error(`[DEBUG] plugin worker ${this.pluginId} crashed`, error);
+      this.worker = null;
+      this.clearPending(new Error(`plugin worker ${this.pluginId} crashed`));
+    };
+  }
+
+  async start(): Promise<void> {
+    const worker = new Worker(pluginWorkerUrl(this.moduleUrl), { type: "module" });
+    this.attachWorker(worker);
+    this.worker = worker;
+    await this.request("init", { moduleUrl: this.moduleUrl });
+  }
+
+  private request(type: PluginWorkerMessageType, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return new Promise((resolve, reject) => {
+      if (!this.worker) {
+        reject(new Error(`plugin worker ${this.pluginId} is not running`));
+        return;
+      }
+      const requestId = crypto.randomUUID();
+      const watchdog = window.setTimeout(() => {
+        console.warn(`[DEBUG] plugin worker ${this.pluginId} unresponsive for ${PLUGIN_WORKER_UNRESPONSIVE_MS}ms: ${type}`);
+      }, PLUGIN_WORKER_UNRESPONSIVE_MS);
+      this.pending.set(requestId, { resolve, reject, watchdog });
+      this.worker.postMessage({ type, requestId, ...payload });
+    });
+  }
+
+  async manifest(): Promise<string> {
+    return String((await this.request("manifest", {})).value ?? "");
+  }
+
+  async createApp(appId: string): Promise<number> {
+    return Number((await this.request("createApp", { appId })).instanceId);
+  }
+
+  async destroyApp(instanceId: number): Promise<void> {
+    await this.request("destroy", { instanceId });
+  }
+
+  async handleAction(instanceId: number, actionJson: string, contextJson: string): Promise<string> {
+    return String((await this.request("handleAction", { instanceId, actionJson, contextJson })).value ?? "{}");
+  }
+
+  async render(instanceId: number, bodyKey: string, viewStateJson: string, documentJson?: string): Promise<string> {
+    return String((await this.request("render", { instanceId, bodyKey, viewStateJson, documentJson })).value ?? "{}");
+  }
+
+  async refreshUi(instanceId: number, requestJson: string): Promise<string> {
+    return String((await this.request("refreshUi", { instanceId, requestJson })).value ?? "{}");
+  }
+
+  dispose(): void {
+    this.clearPending(new Error(`plugin worker ${this.pluginId} disposed`));
+    this.worker?.terminate();
+    this.worker = null;
+  }
+}
+
+/**
+ * @emoji 🧵 Worker-backed `PluginWasmHandle` for component-model plugins (the ABI the generated
+ * `plugin-worker.js` supports). Caller falls back to the direct main-thread import on failure (no
+ * `plugin-worker.js` alongside this module, wasm-bindgen-only plugin, or `Worker` unavailable).
+ */
+async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
+  const client = new PluginWorkerClient(pluginId, moduleUrl);
+  await client.start();
+  const manifest = JSON.parse(await client.manifest()) as PluginManifest;
+  return withSerializedPluginWasmHandle({
+    pluginId,
+    manifest,
+    createApp: (appId) => client.createApp(appId),
+    destroyApp: (instanceId) => client.destroyApp(instanceId),
+    handleAction: async (instanceId, actionJson, viewState) => parseActionResponse(await client.handleAction(instanceId, actionJson, JSON.stringify({ viewState, actor: "local" }))),
+    render: async (instanceId, bodyKey, viewState) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState))) as PluginUiNode,
+    renderWithDocument: async (instanceId, bodyKey, viewState, documentJson) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState), documentJson)) as PluginUiNode,
+    refreshUi: async (instanceId, request) => JSON.parse(await client.refreshUi(instanceId, JSON.stringify(request))) as PluginUiRefreshResponse,
+    dispose: () => client.dispose(),
+  });
+}
+//#endregion PluginWorkerClient
 
 const pluginModuleHandleCache = new Map<string, Promise<PluginWasmHandle>>();
 
@@ -1449,6 +1731,17 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string): Pro
 }
 
 async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
+  // 🧵 Worker-backed by default so a plugin's `handleAction` (e.g. puzzle-3d's collision precompute) can
+  // never block the UI thread. Falls back to the direct main-thread import below when unavailable: no
+  // `Worker` global (vitest/node), no `plugin-worker.js` alongside this module, or a wasm-bindgen-only
+  // plugin (the worker template only supports the `createPluginApi` component-model ABI).
+  if (typeof Worker !== "undefined") {
+    try {
+      return await loadPluginModuleViaWorker(pluginId, moduleUrl);
+    } catch (error) {
+      console.warn(`[DEBUG] plugin ${pluginId} worker-backed load failed, falling back to main thread: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
   const module = (await import(/* @vite-ignore */ moduleUrl)) as {
     default?: () => Promise<void> | void;
     createPluginApi?: () => Promise<{
@@ -1458,10 +1751,7 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
       handleAction: (instanceId: number, actionJson: string, contextJson: string) => Promise<string>;
       render: (instanceId: number, bodyKey: string, viewStateJson: string) => Promise<string>;
       renderWithDocument?: (instanceId: number, bodyKey: string, viewStateJson: string, documentJson: string) => Promise<string>;
-      tools?: (instanceId: number, viewStateJson: string) => Promise<string>;
-      windowEngagements?: (instanceId: number, viewStateJson: string) => Promise<string>;
-      windowMeasures?: (instanceId: number, viewStateJson: string) => Promise<string>;
-      appLabels?: (instanceId: number, viewStateJson: string) => Promise<string>;
+      refreshUi: (instanceId: number, requestJson: string) => Promise<string>;
       applyOperations?: (instanceId: number, operationsJson: string) => Promise<void>;
       readAppDocument?: (instanceId: number) => Promise<string>;
       loadAppDocument?: (instanceId: number, documentJson: string) => Promise<void>;
@@ -1473,10 +1763,7 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
     semio_plugin_destroy_app?: (instanceId: number) => void;
     semio_plugin_handle_action?: (instanceId: number, actionJson: string, viewStateJson: string) => string;
     semio_plugin_render?: (instanceId: number, bodyKey: string, viewStateJson: string) => string;
-    semio_plugin_tools?: (instanceId: number, viewStateJson: string) => string;
-    semio_plugin_window_engagements?: (instanceId: number, viewStateJson: string) => string;
-    semio_plugin_window_measures?: (instanceId: number, viewStateJson: string) => string;
-    semio_plugin_app_labels?: (instanceId: number, viewStateJson: string) => string;
+    semio_plugin_refresh_ui?: (instanceId: number, requestJson: string) => string;
     semio_plugin_apply_operations?: (instanceId: number, operationsJson: string) => void;
     semio_plugin_read_app_document?: (instanceId: number) => string;
     semio_plugin_load_app_document?: (instanceId: number, documentJson: string) => void;
@@ -1500,22 +1787,7 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
       },
       render: async (instanceId, bodyKey, viewState) => JSON.parse(await api.render(instanceId, bodyKey, JSON.stringify(viewState))) as PluginUiNode,
       renderWithDocument: api.renderWithDocument ? async (instanceId, bodyKey, viewState, documentJson) => JSON.parse(await api.renderWithDocument!(instanceId, bodyKey, JSON.stringify(viewState), documentJson)) as PluginUiNode : undefined,
-      tools: async (instanceId, viewState) => {
-        if (!api.tools) return [];
-        return JSON.parse(await api.tools(instanceId, JSON.stringify(viewState))) as Record<string, unknown>[];
-      },
-      windowEngagements: async (instanceId, viewState) => {
-        if (!api.windowEngagements) return {};
-        return JSON.parse(await api.windowEngagements(instanceId, JSON.stringify(viewState))) as Record<string, Record<string, unknown>>;
-      },
-      windowMeasures: async (instanceId, viewState) => {
-        if (!api.windowMeasures) return {};
-        return JSON.parse(await api.windowMeasures(instanceId, JSON.stringify(viewState))) as Record<string, readonly Record<string, unknown>[]>;
-      },
-      appLabels: async (instanceId, viewState) => {
-        if (!api.appLabels) return EMPTY_APP_LABELS_OVERLAY;
-        return normalizeAppLabelsOverlay(JSON.parse(await api.appLabels(instanceId, JSON.stringify(viewState))));
-      },
+      refreshUi: async (instanceId, request) => JSON.parse(await api.refreshUi(instanceId, JSON.stringify(request))) as PluginUiRefreshResponse,
       applyOperations: api.applyOperations ? (instanceId, operationsJson) => api.applyOperations!(instanceId, operationsJson) : undefined,
       readAppDocument: api.readAppDocument ? (instanceId) => api.readAppDocument!(instanceId) : undefined,
       loadAppDocument: api.loadAppDocument ? (instanceId, documentJson) => api.loadAppDocument!(instanceId, documentJson) : undefined,
@@ -1550,25 +1822,10 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
       if (!render) throw new Error(`plugin ${pluginId} missing render`);
       return JSON.parse(render(instanceId, bodyKey, JSON.stringify(viewState))) as PluginUiNode;
     },
-    async tools(instanceId: number, viewState: PluginViewState) {
-      const tools = module.semio_plugin_tools;
-      if (!tools) return [];
-      return JSON.parse(tools(instanceId, JSON.stringify(viewState))) as Record<string, unknown>[];
-    },
-    async windowEngagements(instanceId: number, viewState: PluginViewState) {
-      const engagements = module.semio_plugin_window_engagements;
-      if (!engagements) return {};
-      return JSON.parse(engagements(instanceId, JSON.stringify(viewState))) as Record<string, Record<string, unknown>>;
-    },
-    async windowMeasures(instanceId: number, viewState: PluginViewState) {
-      const measures = module.semio_plugin_window_measures;
-      if (!measures) return {};
-      return JSON.parse(measures(instanceId, JSON.stringify(viewState))) as Record<string, readonly Record<string, unknown>[]>;
-    },
-    async appLabels(instanceId: number, viewState: PluginViewState) {
-      const labels = module.semio_plugin_app_labels;
-      if (!labels) return EMPTY_APP_LABELS_OVERLAY;
-      return normalizeAppLabelsOverlay(JSON.parse(labels(instanceId, JSON.stringify(viewState))));
+    async refreshUi(instanceId: number, request: PluginUiRefreshRequest) {
+      const refreshUi = module.semio_plugin_refresh_ui;
+      if (!refreshUi) return {};
+      return JSON.parse(refreshUi(instanceId, JSON.stringify(request))) as PluginUiRefreshResponse;
     },
     applyOperations: module.semio_plugin_apply_operations ? async (instanceId, operationsJson) => { module.semio_plugin_apply_operations!(instanceId, operationsJson); } : undefined,
     readAppDocument: module.semio_plugin_read_app_document ? async (instanceId) => module.semio_plugin_read_app_document!(instanceId) : undefined,
@@ -1593,10 +1850,7 @@ export function pluginHandleForBridge(handle: PluginWasmHandle) {
     renderWithDocument: handle.renderWithDocument
       ? (instanceId: number, bodyKey: string, viewStateJson: string, documentJson: string) => handle.renderWithDocument!(instanceId, bodyKey, JSON.parse(viewStateJson) as PluginViewState, documentJson).then((node) => JSON.stringify(node))
       : undefined,
-    tools: (instanceId: number, viewStateJson: string) => handle.tools(instanceId, JSON.parse(viewStateJson) as PluginViewState).then((nodes) => JSON.stringify(nodes)),
-    windowEngagements: (instanceId: number, viewStateJson: string) => handle.windowEngagements(instanceId, JSON.parse(viewStateJson) as PluginViewState).then((engagements) => JSON.stringify(engagements)),
-    windowMeasures: (instanceId: number, viewStateJson: string) => handle.windowMeasures(instanceId, JSON.parse(viewStateJson) as PluginViewState).then((measures) => JSON.stringify(measures)),
-    appLabels: (instanceId: number, viewStateJson: string) => handle.appLabels(instanceId, JSON.parse(viewStateJson) as PluginViewState).then((overlay) => JSON.stringify(overlay)),
+    refreshUi: (instanceId: number, requestJson: string) => handle.refreshUi(instanceId, JSON.parse(requestJson) as PluginUiRefreshRequest).then((response) => JSON.stringify(response)),
   };
 }
 //#endregion PluginRuntime

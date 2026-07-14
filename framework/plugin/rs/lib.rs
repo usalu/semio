@@ -130,17 +130,18 @@ pub mod app {
 //! 🧩 Declarative app builder and plugin trait.
 
 use semio_framework_core::{
-    history_action_definitions, kernel::{
+    effective_action_args, history_action_definitions, missing_required_args, kernel::{
         ActorId, AppEvent, CapabilityRequirement, ActionInvocationId, ActionResult, HostEffect, HybridLogicalTimestamp,
         InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OpEnvelope, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
-    ActionRef, AppDefinition, AppLabelsOverlay, ActionDefinition, ActionKind, Contribution, ExampleDefinition, Keybinding,
-    ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition,
-    ViewState, WindowKindDefinition, WindowKinds,
+    set_active_tool_action_definition, ActionArgDef, ActionRef, AppDefinition, AppLabelsOverlay, ActionDefinition,
+    ActionKind, Contribution, ExampleDefinition, Keybinding, ModeDefinition, Modes, PanelGroup, PanelTabDefinition,
+    PanelTabKind, PluginManifest, ProgramDefinition, ToolDefinition, ToolRef, ViewState, WindowKindDefinition,
+    WindowKinds, SET_ACTIVE_TOOL_ACTION_ID,
 };
 use ui_wgpu::{
-    collect_window_kind_ids_from_layout, ActionDescriptor, NamedLayout, ToolNode, UiNode, WindowEngagement,
+    collect_window_kind_ids_from_layout, ActionDescriptor, NamedLayout, UiNode, WindowEngagement,
     WindowEngagementSlot, WindowLayout, WindowMeasure, WindowOptions, SurfaceKind,
 };
 use serde::Serialize;
@@ -155,7 +156,7 @@ use vcs::{
 pub struct ModeSpec {
     pub id: String,
     pub label: String,
-    pub tools: Vec<ToolNode>,
+    pub tools: Vec<ToolRef>,
     pub layout_id: Option<String>,
     pub actions: Vec<ActionRef>,
 }
@@ -169,6 +170,7 @@ pub struct WindowKindSpec {
     pub measures: Vec<WindowMeasure>,
     pub engagement: Option<WindowEngagement>,
     pub actions: Vec<ActionRef>,
+    pub tools: Vec<ToolRef>,
 }
 
 /// 🌳 A leaf carries `body_key` (its rendered panel); a branch carries `children` (the tab row shown below it) — exactly one of the two.
@@ -246,6 +248,7 @@ pub struct AppBuilder {
     panel_tabs: Vec<PanelTabSpec>,
     keybindings: Vec<KeybindingSpec>,
     actions: Vec<ActionDefinition>,
+    tools: Vec<ToolDefinition>,
     named_layouts: Vec<NamedLayout>,
     default_layout: Option<WindowLayout>,
     terminologies: Vec<String>,
@@ -266,6 +269,7 @@ impl AppBuilder {
             panel_tabs: Vec::new(),
             keybindings: Vec::new(),
             actions: Vec::new(),
+            tools: Vec::new(),
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
@@ -320,10 +324,11 @@ impl AppBuilder {
         self
     }
 
-    pub fn mode_tools(mut self, mode_id: impl AsRef<str>, tools: Vec<ToolNode>) -> Self {
+    /// 🧰 Scopes tools to a mode — references ids declared via `.tool()`/`.tool_simple()`.
+    pub fn mode_tools(mut self, mode_id: impl AsRef<str>, tool_ids: Vec<ToolRef>) -> Self {
         let mode_id = mode_id.as_ref();
         if let Some(mode) = self.modes.iter_mut().find(|entry| entry.id == mode_id) {
-            mode.tools = tools;
+            mode.tools = tool_ids;
         }
         self
     }
@@ -349,6 +354,7 @@ impl AppBuilder {
             measures: Vec::new(),
             engagement: None,
             actions: Vec::new(),
+            tools: Vec::new(),
         });
         self
     }
@@ -370,6 +376,7 @@ impl AppBuilder {
             measures: Vec::new(),
             engagement: Some(engagement),
             actions: Vec::new(),
+            tools: Vec::new(),
         });
         self
     }
@@ -388,6 +395,16 @@ impl AppBuilder {
         let window_kind_id = window_kind_id.as_ref();
         if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
             window.actions = action_ids;
+        }
+        self
+    }
+
+    /// 🧰 Scopes tools to a window kind — references ids declared via `.tool()`/`.tool_simple()`. Mirrors
+    /// `window_kind_actions`: the referenced tool ids are validated to resolve in `build_definition`.
+    pub fn window_kind_tools(mut self, window_kind_id: impl AsRef<str>, tool_ids: Vec<ToolRef>) -> Self {
+        let window_kind_id = window_kind_id.as_ref();
+        if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
+            window.tools = tool_ids;
         }
         self
     }
@@ -450,10 +467,32 @@ impl AppBuilder {
         self.action_with(ActionDefinition::new(id, label, ActionKind::Shell))
     }
 
-    /// @emoji 📇 Declares a fully specified action (icon, args schema, keybinding, palette visibility, category).
+    /// @emoji 📇 Declares a fully specified action (icon, args, keybinding, palette visibility, category).
     pub fn action_with(mut self, action: ActionDefinition) -> Self {
         self.actions.push(action);
         self
+    }
+
+    /// @emoji 📝 Attaches typed argument declarations to an already-declared action (post-hoc, mirroring
+    /// `window_kind_actions`). If the id isn't declared yet at call time the args are dropped; the
+    /// mismatch surfaces in `build_definition`, which asserts every declared action's args are consistent.
+    pub fn action_args(mut self, action_id: impl AsRef<str>, args: Vec<ActionArgDef>) -> Self {
+        let action_id = action_id.as_ref();
+        if let Some(action) = self.actions.iter_mut().find(|entry| entry.id == action_id) {
+            action.args = args;
+        }
+        self
+    }
+
+    /// @emoji 🧰 Declares an interactive tool this app exposes (referenced by `window_kind_tools`/`mode_tools`).
+    pub fn tool(mut self, tool: ToolDefinition) -> Self {
+        self.tools.push(tool);
+        self
+    }
+
+    /// @emoji 🧰 Declares a tool with default settings (no group/keys/cursor/category, gates actions while active).
+    pub fn tool_simple(self, id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<String>) -> Self {
+        self.tool(ToolDefinition::new(id, label, icon_id))
     }
 
     /// @emoji 🧷 Keybinding-vs-action-registry consistency is only enforced for apps that declare
@@ -528,6 +567,35 @@ impl AppBuilder {
                 self.id,
                 action.id
             );
+            let mut arg_ids = HashSet::new();
+            for arg in &action.args {
+                assert!(
+                    arg_ids.insert(arg.id.clone()),
+                    "app {} action {} declares duplicate arg id {}",
+                    self.id,
+                    action.id,
+                    arg.id
+                );
+                if let semio_framework_core::ActionArgControl::Select { options } = &arg.control {
+                    assert!(
+                        !options.is_empty(),
+                        "app {} action {} arg {} is a Select with no options",
+                        self.id,
+                        action.id,
+                        arg.id
+                    );
+                }
+            }
+        }
+        let mut declared_tool_ids = HashSet::new();
+        for tool in &self.tools {
+            assert!(!tool.id.trim().is_empty(), "app {} tool id must be non-empty", self.id);
+            assert!(
+                declared_tool_ids.insert(tool.id.clone()),
+                "app {} duplicate tool id {}",
+                self.id,
+                tool.id
+            );
         }
         let app_declared_actions = !self.actions.is_empty();
         let mut actions = self.actions;
@@ -535,6 +603,9 @@ impl AppBuilder {
             if declared_action_ids.insert(history_action.id.clone()) {
                 actions.push(history_action);
             }
+        }
+        if !self.tools.is_empty() && declared_action_ids.insert(SET_ACTIVE_TOOL_ACTION_ID.to_string()) {
+            actions.push(set_active_tool_action_definition());
         }
         let mut bound_keys: HashSet<String> = self.keybindings.iter().map(|binding| binding.keys.clone()).collect();
         let mut keybindings: Vec<Keybinding> = self
@@ -563,6 +634,20 @@ impl AppBuilder {
                 }
             }
         }
+        for tool in &self.tools {
+            if let Some(keys) = &tool.keys {
+                if bound_keys.insert(keys.clone()) {
+                    keybindings.push(Keybinding {
+                        keys: keys.clone(),
+                        action: ActionDescriptor {
+                            controller_id: self.controller_id.clone(),
+                            action: SET_ACTIVE_TOOL_ACTION_ID.to_string(),
+                            args: Some(serde_json::json!({ "toolId": tool.id })),
+                        },
+                    });
+                }
+            }
+        }
         if app_declared_actions {
             for binding in &keybindings {
                 assert!(
@@ -571,6 +656,46 @@ impl AppBuilder {
                     self.id,
                     binding.keys,
                     binding.action.action
+                );
+            }
+        }
+        for window in &self.window_kinds {
+            for action_ref in &window.actions {
+                assert!(
+                    declared_action_ids.contains(action_ref.as_str()),
+                    "app {} window kind {} references undeclared action {}",
+                    self.id,
+                    window.id,
+                    action_ref.as_str()
+                );
+            }
+            for tool_ref in &window.tools {
+                assert!(
+                    declared_tool_ids.contains(tool_ref.as_str()),
+                    "app {} window kind {} references undeclared tool {}",
+                    self.id,
+                    window.id,
+                    tool_ref.as_str()
+                );
+            }
+        }
+        for mode in &self.modes {
+            for action_ref in &mode.actions {
+                assert!(
+                    declared_action_ids.contains(action_ref.as_str()),
+                    "app {} mode {} references undeclared action {}",
+                    self.id,
+                    mode.id,
+                    action_ref.as_str()
+                );
+            }
+            for tool_ref in &mode.tools {
+                assert!(
+                    declared_tool_ids.contains(tool_ref.as_str()),
+                    "app {} mode {} references undeclared tool {}",
+                    self.id,
+                    mode.id,
+                    tool_ref.as_str()
                 );
             }
         }
@@ -608,6 +733,7 @@ impl AppBuilder {
                             engagement: window.engagement.map_or(WindowEngagementSlot::None, WindowEngagementSlot::Some),
                         },
                         actions: window.actions,
+                        tools: window.tools,
                         params_schema: None,
                         document_projection_schema: None,
                         input_event_schema: None,
@@ -620,6 +746,7 @@ impl AppBuilder {
             panel_tabs: self.panel_tabs.into_iter().map(panel_tab_spec_to_definition).collect(),
             keybindings,
             actions,
+            tools: self.tools,
             named_layouts: self.named_layouts,
             default_layout: self.default_layout,
             terminologies: self.terminologies,
@@ -728,6 +855,85 @@ mod app_builder_tests {
         });
         assert!(result.is_err());
     }
+
+    #[test]
+    fn declaring_tools_injects_set_active_tool_action_and_keybinding() {
+        use semio_framework_core::{ActionKind, ToolDefinition, SET_ACTIVE_TOOL_ACTION_ID};
+        let definition = minimal_app("tool-app")
+            .tool(ToolDefinition { keys: Some("b".into()), ..ToolDefinition::new("brush", "Brush", "icon.brush") })
+            .tool_simple("eraser", "Eraser", "icon.eraser")
+            .build_definition();
+        let set_active_tool = definition
+            .actions
+            .iter()
+            .find(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID)
+            .expect("setActiveTool injected");
+        assert_eq!(set_active_tool.kind, ActionKind::View);
+        assert!(!set_active_tool.in_palette);
+        let binding = definition
+            .keybindings
+            .iter()
+            .find(|binding| binding.keys == "b")
+            .expect("tool keybinding auto-injected");
+        assert_eq!(binding.action.action, SET_ACTIVE_TOOL_ACTION_ID);
+        assert_eq!(binding.action.args, Some(serde_json::json!({ "toolId": "brush" })));
+    }
+
+    #[test]
+    fn no_tools_means_no_set_active_tool_action() {
+        use semio_framework_core::SET_ACTIVE_TOOL_ACTION_ID;
+        let definition = minimal_app("no-tool-app").build_definition();
+        assert!(!definition.actions.iter().any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID));
+    }
+
+    #[test]
+    fn action_args_attaches_declared_arguments() {
+        let definition = minimal_app("args-app")
+            .operation("resize", "Resize")
+            .action_args("resize", vec![ActionArgDef::slider("scale", "Scale", 0.0, 4.0).required()])
+            .build_definition();
+        let resize = definition.actions.iter().find(|action| action.id == "resize").expect("declared");
+        assert_eq!(resize.args.len(), 1);
+        assert_eq!(resize.args[0].id, "scale");
+        assert!(resize.args[0].required);
+    }
+
+    #[test]
+    fn build_definition_rejects_window_kind_tool_referencing_undeclared_tool() {
+        let result = std::panic::catch_unwind(|| {
+            minimal_app("bad-tool-ref-app")
+                .tool_simple("brush", "Brush", "icon.brush")
+                .window_kind_tools("main", vec!["missing".into()])
+                .build_definition()
+        });
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn build_definition_rejects_window_kind_action_referencing_undeclared_action() {
+        let result = std::panic::catch_unwind(|| {
+            minimal_app("bad-action-ref-app")
+                .operation("addLayer", "Add Layer")
+                .window_kind_actions("main", vec!["removeLayer".into()])
+                .build_definition()
+        });
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn build_definition_rejects_select_arg_with_no_options() {
+        use semio_framework_core::{ActionArgControl, ActionArgDef};
+        let result = std::panic::catch_unwind(|| {
+            minimal_app("bad-select-app")
+                .operation("pick", "Pick")
+                .action_args("pick", vec![ActionArgDef {
+                    control: ActionArgControl::Select { options: vec![] },
+                    ..ActionArgDef::text("choice", "Choice")
+                }])
+                .build_definition()
+        });
+        assert!(result.is_err());
+    }
 }
 
 pub struct App {
@@ -825,6 +1031,20 @@ impl<Op> ActionEmit<Op> {
         Self { ops, ..Default::default() }
     }
 
+    /// @emoji 🔁 Preview pattern (a): a per-tick coalesced emission. The `coalesce_key` folds every
+    /// tick of one live gesture (drag/scrub) into a single amendable edit, so the whole gesture is one
+    /// undo. Use for cheap per-tick ops (camera/opacity). See the `🔖ToolPreviewContract` doc region.
+    pub fn amend(ops: Vec<Op>, coalesce_key: impl Into<String>) -> Self {
+        Self { ops, coalesce_key: Some(coalesce_key.into()), ..Default::default() }
+    }
+
+    /// @emoji 📌 Preview pattern (b): the gesture-end commit of an app-runtime scratch draft as one
+    /// described edit (`coalesce_key: None`). Use for megabyte-scale content where per-tick amending
+    /// would be O(N²) (draw drafts, lowpoly strokes). See the `🔖ToolPreviewContract` doc region.
+    pub fn commit(ops: Vec<Op>, description: impl Into<String>) -> Self {
+        Self { ops, description: Some(description.into()), ..Default::default() }
+    }
+
     /// @emoji 🐚 A single host effect and no operations (a shell action).
     pub fn effect(effect: HostEffect) -> Self {
         Self { effects: vec![effect], ..Default::default() }
@@ -881,6 +1101,25 @@ macro_rules! app_action_enum {
 /// `vcs::Operation<Projection>`), mutates nothing directly, and returns an {@link ActionEmit} whose
 /// operations flow through a persistent `DocumentVcsStore` owned by {@link VcsDocumentApp}. Ephemeral
 /// view state (selection/camera/active tool) lives in the app struct itself, not in the document.
+///
+/// # 🔖ToolPreviewContract
+/// The formalized actions-vs-tools contract:
+/// - **Actions** are non-interactive: they carry optional declared `ActionArgDef`s, stage in the
+///   renderer, and execute once. `Operation`-kind actions emit ops; `View`/`Shell`-kind actions must
+///   emit **zero** ops ({@link VcsDocumentApp} enforces this — a View/Shell action returning ops is a
+///   hard error).
+/// - **Tools** are interactive live-preview pointer modes. Exactly one tool is active per window kind;
+///   the active tool arrives via `view_state.active_tool_id` and is **never** stored in the document
+///   nor emitted as an op. Switching tools dispatches the framework `setActiveTool` View action; on a
+///   switch the app must clear any in-progress preview scratch.
+/// - **Two blessed preview patterns** (both funnel through {@link ActionEmit}):
+///   1. per-tick coalesced — {@link ActionEmit::amend} folds each tick of a gesture into one amendable
+///      edit (one undo per gesture); use for cheap ops (camera/opacity drags).
+///   2. scratch + commit — hold a draft in app-runtime state, render it as an overlay, and on gesture
+///      end emit {@link ActionEmit::commit} once; use for megabyte-scale content where per-tick
+///      amending is O(N²) (draw drafts, lowpoly strokes).
+/// - The pointer vocabulary (`canvasPointerDown/Move/Up`, `worldPointerDown/Move/Up`,
+///   `paintStrokeBegin/End`) are `View`-kind internal action ids driving the above.
 pub trait DocumentApp: Send + 'static {
     type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send;
     type Op: Operation<Self::Projection> + PartialEq + Send;
@@ -896,9 +1135,6 @@ pub trait DocumentApp: Send + 'static {
         view_state: &ViewState,
     ) -> ActionEmit<Self::Op>;
     fn render(&self, body_key: &str, doc: &DocumentView<'_, Self::Projection>, view_state: &ViewState) -> UiNode;
-    fn tools(&self, _doc: &DocumentView<'_, Self::Projection>, _view_state: &ViewState) -> Vec<ToolNode> {
-        Vec::new()
-    }
     fn window_engagements(
         &self,
         _doc: &DocumentView<'_, Self::Projection>,
@@ -953,9 +1189,6 @@ pub trait PluginApp: Send {
         projection_override_json: Option<&str>,
         view_state: &ViewState,
     ) -> Result<UiNode, String>;
-    fn tools(&mut self, _view_state: &ViewState) -> Vec<ToolNode> {
-        Vec::new()
-    }
     fn window_engagements(&mut self, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         HashMap::new()
     }
@@ -967,16 +1200,40 @@ pub trait PluginApp: Send {
     }
 }
 
+/// @emoji 📇 An app's action declarations indexed by id, built from its {@link AppDefinition}. Threaded
+/// into {@link VcsDocumentApp} at registration time so the wrapper can enforce the actions contract
+/// (default materialization, required-arg validation, kind discipline) without the plugin re-checking.
+/// An empty registry (the test/registry-less construction path) skips all enforcement.
+#[derive(Clone, Default)]
+pub struct AppActionRegistry {
+    actions: HashMap<String, ActionDefinition>,
+}
+
+impl AppActionRegistry {
+    /// @emoji 📇 Indexes an app definition's declared actions (including framework-injected ones) by id.
+    pub fn from_definition(definition: &AppDefinition) -> Self {
+        Self {
+            actions: definition.actions.iter().map(|action| (action.id.clone(), action.clone())).collect(),
+        }
+    }
+
+    fn get(&self, id: &str) -> Option<&ActionDefinition> {
+        self.actions.get(id)
+    }
+}
+
 /// @emoji 🧬 Generic wrapper turning any typed {@link DocumentApp} into the object-safe runtime
 /// {@link PluginApp}. Owns a persistent `DocumentVcsStore<Projection, Op>` — the single source of
 /// truth for the app's document across every call — intercepts the six injected history actions into
 /// `DocumentVcsCommand`s, dispatches `Apply`/`AmendLast` for typed operations, and builds an
 /// `ActionResult` whose inverses come from the just-recorded `Edit.backwards`. A projection cache
-/// keyed on the store's generation counter keeps renders O(1).
+/// keyed on the store's generation counter keeps renders O(1). Holds an {@link AppActionRegistry} to
+/// enforce the actions contract before/after delegating to the app.
 pub struct VcsDocumentApp<A: DocumentApp> {
     app: A,
     store: DocumentVcsStore<A::Projection, A::Op>,
     cache: Option<(u64, A::Projection, HistoryView)>,
+    registry: AppActionRegistry,
 }
 
 const HISTORY_ACTION_IDS: [&str; 6] = [
@@ -989,7 +1246,15 @@ const HISTORY_ACTION_IDS: [&str; 6] = [
 ];
 
 impl<A: DocumentApp> VcsDocumentApp<A> {
+    /// @emoji 🧬 Constructs a wrapper with an empty registry — contract enforcement is skipped. Used by
+    /// tests and any registry-less construction path.
     pub fn new(app: A) -> Self {
+        Self::with_registry(app, AppActionRegistry::default())
+    }
+
+    /// @emoji 🧬 Constructs a wrapper carrying the app's {@link AppActionRegistry} so `handle_action`
+    /// enforces default materialization, required-arg validation, and kind discipline.
+    pub fn with_registry(app: A, registry: AppActionRegistry) -> Self {
         let envelope = create_document_vcs_envelope::<A::Projection, A::Op>(
             app.document_schema(),
             app.app_id(),
@@ -1002,6 +1267,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             app,
             store,
             cache: None,
+            registry,
         }
     }
 
@@ -1188,13 +1454,36 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
             }
         } else {
             self.refresh_cache()?;
+            let definition = self.registry.get(action).cloned();
+            let materialized_args: Option<Value> = definition.as_ref().map(|def| {
+                let staged = args.and_then(Value::as_object).cloned().unwrap_or_default();
+                let effective = effective_action_args(&def.args, &staged);
+                let missing = missing_required_args(&def.args, &effective);
+                if !missing.is_empty() {
+                    return Err(format!("action '{action}' missing required args: {missing:?}"));
+                }
+                let mut merged = staged;
+                for (key, value) in effective {
+                    merged.entry(key).or_insert(value);
+                }
+                Ok(Value::Object(merged))
+            }).transpose()?;
+            let dispatch_args = materialized_args.as_ref().or(args);
             let emit = {
                 let VcsDocumentApp { app, cache, .. } = self;
                 let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
                 let doc = DocumentView { projection, history };
-                app.handle_action(action, args, &doc, view_state)
+                app.handle_action(action, dispatch_args, &doc, view_state)
             };
             let ActionEmit { ops, description, coalesce_key, effects, events, ui_scope } = emit;
+            if let Some(def) = &definition {
+                if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !ops.is_empty() {
+                    return Err(format!(
+                        "{:?}-kind action '{action}' must not emit operations",
+                        def.kind
+                    ));
+                }
+            }
             if ops.is_empty() {
                 return Ok(Self::empty_result(action, meta, effects, events, ui_scope));
             }
@@ -1267,16 +1556,6 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
         let doc = DocumentView { projection, history };
         Ok(app.render(body_key, &doc, view_state))
-    }
-
-    fn tools(&mut self, view_state: &ViewState) -> Vec<ToolNode> {
-        if self.refresh_cache().is_err() {
-            return Vec::new();
-        }
-        let VcsDocumentApp { app, cache, .. } = self;
-        let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
-        let doc = DocumentView { projection, history };
-        app.tools(&doc, view_state)
     }
 
     fn window_engagements(&mut self, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
@@ -1392,7 +1671,10 @@ impl PluginBundle {
     where
         A: DocumentApp,
     {
-        self.register_app(app, move || Box::new(VcsDocumentApp::new(factory())))
+        let registry = AppActionRegistry::from_definition(&app.definition);
+        self.register_app(app, move || {
+            Box::new(VcsDocumentApp::with_registry(factory(), registry.clone()))
+        })
     }
 
     pub fn create_app(&self, app_id: &str) -> Option<Box<dyn PluginApp>> {
@@ -2519,12 +2801,12 @@ fn ui_refresh_section<T: Serialize>(value: &T, known_hash: Option<&str>) -> (Str
     }
 }
 
-/// 🐢 Batched, hash-conditional UI refresh: replaces the ~1+windowCount+panelCount+windowCount+3
-/// individual `render`/`tools`/`windowEngagements`/`windowMeasures`/`appLabels` WASM round trips a
-/// full `refreshUi` used to make with **one** call. `request_json` lists every section the host wants
-/// (windows/panels by `{key, bodyKey, hash}`, tools by `{key, hash}` per window kind, engagements/
-/// measures/labels each `{hash}`); the response includes a payload only for sections whose hash
-/// differs from what the host already holds.
+/// 🐢 Batched, hash-conditional UI refresh: replaces the individual
+/// `render`/`windowEngagements`/`windowMeasures`/`appLabels` WASM round trips a full `refreshUi` used
+/// to make with **one** call. `request_json` lists every section the host wants (windows/panels by
+/// `{key, bodyKey, hash}`, engagements/measures/labels each `{hash}`); the response includes a payload
+/// only for sections whose hash differs from what the host already holds. Toolbars are no longer a
+/// plugin section — the renderer derives them from the tool registry via `derive_tool_nodes`.
 pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String, String> {
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -2550,8 +2832,6 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
         #[serde(default)]
         panels: Vec<SectionRequest>,
         #[serde(default)]
-        tools: Vec<SectionRequest>,
-        #[serde(default)]
         engagements: Option<SingleRequest>,
         #[serde(default)]
         measures: Option<SingleRequest>,
@@ -2573,8 +2853,6 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
         windows: Vec<SectionResponse>,
         #[serde(skip_serializing_if = "Vec::is_empty")]
         panels: Vec<SectionResponse>,
-        #[serde(skip_serializing_if = "Vec::is_empty")]
-        tools: Vec<SectionResponse>,
         #[serde(skip_serializing_if = "Option::is_none")]
         engagements: Option<SectionResponse>,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -2608,13 +2886,6 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
             let node = instance.app.render(&entry.body_key, None, &request.view_state)?;
             let (hash, value) = ui_refresh_section(&node, entry.hash.as_deref());
             response.panels.push(SectionResponse { key: entry.key.clone(), hash, value });
-        }
-        for entry in &request.tools {
-            let mut tools_view_state = request.view_state.clone();
-            tools_view_state.active_window_kind_id = Some(entry.key.clone());
-            let tools = instance.app.tools(&tools_view_state);
-            let (hash, value) = ui_refresh_section(&tools, entry.hash.as_deref());
-            response.tools.push(SectionResponse { key: entry.key.clone(), hash, value });
         }
         if let Some(requested) = &request.engagements {
             let engagements = instance.app.window_engagements(&request.view_state);
@@ -2710,10 +2981,11 @@ mod semio_plugin_macro_tests {
     //! actions that emit no ops, history interception, and remote-op ingest idempotency.
 
     use crate::app::{
-        ActionEmit, ActionMeta, App, DocumentApp, DocumentView, PluginApp, VcsDocumentApp,
+        ActionEmit, ActionMeta, App, AppActionRegistry, DocumentApp, DocumentView, PluginApp, VcsDocumentApp,
     };
     use crate::{ui_text, SurfaceKind, UiNode, ViewState};
-    use semio_framework_core::kernel::HostEffect;
+    use semio_framework_core::kernel::{AppEvent, HostEffect};
+    use semio_framework_core::ActionArgDef;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use vcs::{Backbone, BackboneMessage, MemoryBackbone, Operation, OperationDiff};
@@ -2801,26 +3073,38 @@ mod semio_plugin_macro_tests {
             action: &str,
             args: Option<&Value>,
             doc: &DocumentView<'_, TestProjection>,
-            _view_state: &ViewState,
+            view_state: &ViewState,
         ) -> ActionEmit<TestOp> {
+            let label_arg = || {
+                args.and_then(|value| value.get("value"))
+                    .and_then(Value::as_str)
+                    .unwrap_or_default()
+                    .to_string()
+            };
             match action {
                 "increment" => ActionEmit {
                     ops: vec![TestOp::SetCount { value: doc.projection.count + 1 }],
                     description: Some("increment".into()),
                     ..Default::default()
                 },
-                "setLabel" => {
-                    let value = args
-                        .and_then(|value| value.get("value"))
-                        .and_then(Value::as_str)
-                        .unwrap_or_default()
-                        .to_string();
+                "setLabel" | "setLabelRequired" | "setLabelDefault" => {
                     ActionEmit {
-                        ops: vec![TestOp::SetLabel { value }],
+                        ops: vec![TestOp::SetLabel { value: label_arg() }],
                         coalesce_key: Some("label".into()),
                         ..Default::default()
                     }
                 }
+                "amendLabel" => ActionEmit::amend(vec![TestOp::SetLabel { value: label_arg() }], "label"),
+                "commitLabel" => ActionEmit::commit(vec![TestOp::SetLabel { value: label_arg() }], "commit label"),
+                // 🧪 A deliberately mis-behaving View action: emits ops it must not — the registry-backed
+                // kind-discipline check rejects it.
+                "badView" => ActionEmit::ops(vec![TestOp::SetCount { value: 99 }]),
+                // 🧪 Reads the host-owned active tool from view state (never the document) and echoes it
+                // as an event — proving `setActiveTool` forwards `view_state.active_tool_id` and emits no ops.
+                "setActiveTool" => ActionEmit::event(AppEvent {
+                    kind: "active-tool".into(),
+                    payload: json!({ "toolId": view_state.active_tool_id.clone().unwrap_or_default() }),
+                }),
                 "select" => {
                     self.selected = args
                         .and_then(|value| value.get("id"))
@@ -2849,6 +3133,29 @@ mod semio_plugin_macro_tests {
                 .mode("edit", "Edit")
                 .window_kind("main", "Main", "synthetic.main", SurfaceKind::Canvas2d),
         )
+    }
+
+    /// 🧪 A registry-backed app declaring the contract-enforcement fixtures: an operation with a
+    /// required arg, one with a defaulted optional arg, a mis-behaving View action, and a tool (which
+    /// auto-injects the `setActiveTool` View action).
+    fn contract_registry() -> AppActionRegistry {
+        let app = App::from_builder(
+            App::builder("synthetic-play", "Synthetic")
+                .document(["state"])
+                .mode("edit", "Edit")
+                .window_kind("main", "Main", "synthetic.main", SurfaceKind::Canvas2d)
+                .operation("setLabelRequired", "Set Label")
+                .action_args("setLabelRequired", vec![ActionArgDef::text("value", "Value").required()])
+                .operation("setLabelDefault", "Set Label Default")
+                .action_args("setLabelDefault", vec![ActionArgDef::text("value", "Value").default_value("seed")])
+                .view_action("badView", "Bad View")
+                .tool_simple("brush", "Brush", "icon.brush"),
+        );
+        AppActionRegistry::from_definition(&app.definition)
+    }
+
+    fn contract_app_under_test() -> VcsDocumentApp<TestApp> {
+        VcsDocumentApp::with_registry(TestApp::default(), contract_registry())
     }
 
     fn synthetic_setup() {}
@@ -2983,6 +3290,85 @@ mod semio_plugin_macro_tests {
         receiver.ingest_operations(&operations_json).expect("ingest once");
         receiver.ingest_operations(&operations_json).expect("ingest twice");
         assert_eq!(receiver.test_projection().count, 1, "feeding the same op twice must not double-apply");
+    }
+
+    #[test]
+    fn required_arg_missing_is_rejected() {
+        let mut app = contract_app_under_test();
+        let error = app
+            .handle_action("setLabelRequired", None, &ViewState::default(), &meta())
+            .expect_err("missing required arg must be a hard error");
+        assert!(error.contains("missing required args"), "unexpected error: {error}");
+        assert!(error.contains("value"));
+        assert_eq!(app.test_projection(), TestProjection::default(), "nothing dispatched on rejection");
+    }
+
+    #[test]
+    fn required_arg_present_is_accepted() {
+        let mut app = contract_app_under_test();
+        app.handle_action("setLabelRequired", Some(&json!({ "value": "hi" })), &ViewState::default(), &meta())
+            .expect("required arg provided");
+        assert_eq!(app.test_projection().label, "hi");
+    }
+
+    #[test]
+    fn default_arg_is_materialized_when_absent() {
+        let mut app = contract_app_under_test();
+        app.handle_action("setLabelDefault", None, &ViewState::default(), &meta())
+            .expect("default materialized");
+        assert_eq!(app.test_projection().label, "seed", "declared default fills the missing arg");
+    }
+
+    #[test]
+    fn view_action_emitting_ops_is_rejected() {
+        let mut app = contract_app_under_test();
+        let error = app
+            .handle_action("badView", None, &ViewState::default(), &meta())
+            .expect_err("a View action emitting ops must be rejected");
+        assert!(error.contains("must not emit operations"), "unexpected error: {error}");
+        assert_eq!(app.test_projection(), TestProjection::default());
+    }
+
+    #[test]
+    fn set_active_tool_forwards_view_state_active_tool_and_emits_no_ops() {
+        let mut app = contract_app_under_test();
+        let view_state = ViewState { active_tool_id: Some("brush".into()), ..ViewState::default() };
+        let result = app
+            .handle_action("setActiveTool", Some(&json!({ "toolId": "brush" })), &view_state, &meta())
+            .expect("setActiveTool is a valid View action");
+        assert!(result.operations.is_empty(), "tool switching must not create history");
+        let event = result.events.iter().find(|event| event.kind == "active-tool").expect("echoed active tool");
+        assert_eq!(event.payload, json!({ "toolId": "brush" }));
+    }
+
+    #[test]
+    fn action_emit_amend_coalesces_while_commit_does_not() {
+        let mut app = contract_app_under_test();
+        for value in ["a", "ab", "abc"] {
+            app.handle_action("amendLabel", Some(&json!({ "value": value })), &ViewState::default(), &meta())
+                .expect("amendLabel");
+        }
+        assert_eq!(app.test_projection().label, "abc");
+        // One undo reverts the whole coalesced amend gesture.
+        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo amend");
+        assert_eq!(app.test_projection().label, "");
+
+        for value in ["x", "xy"] {
+            app.handle_action("commitLabel", Some(&json!({ "value": value })), &ViewState::default(), &meta())
+                .expect("commitLabel");
+        }
+        assert_eq!(app.test_projection().label, "xy");
+        // Each commit is its own edit: one undo only reverts the last commit.
+        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo commit");
+        assert_eq!(app.test_projection().label, "x");
+    }
+
+    #[test]
+    fn registry_less_construction_skips_enforcement() {
+        // The empty-registry path (VcsDocumentApp::new) passes actions through unchecked.
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        app.handle_action("badView", None, &ViewState::default(), &meta())
+            .expect("no registry ⇒ kind discipline skipped");
     }
 }
 // #endregion plugin_runtime

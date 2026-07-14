@@ -45,7 +45,9 @@ import {
 import {
   appDocumentLabel,
   appWindowDocumentLabel,
+  applyUiRefreshResponseToCache,
   buildToolbarRibbonSegments,
+  buildUiRefreshRequest,
   dedupeToolNodesById,
   flattenPanelTabLeaves,
   groupToolNodesByCategory,
@@ -60,6 +62,7 @@ import {
   sortToolNodes,
   spawnedWindowChromeForKind,
   ToolTree,
+  type UiRefreshCache,
   UIFind,
   UIFindProvider,
   uiNodeToTreePanelConfig,
@@ -215,6 +218,70 @@ describe("ui identity preservation (puzzle 2d perf)", () => {
   });
 });
 
+// 🐢 Puzzle 2D performance round 3: the batched, hash-conditional `refresh-ui` protocol that replaces
+// ~12 sequential per-section WASM calls with one round trip. `buildUiRefreshRequest` restricts what's
+// asked for by scope and attaches known hashes; `applyUiRefreshResponseToCache` writes back only the
+// sections the plugin actually says changed.
+describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
+  const windowKinds = [
+    { id: "overview", bodyKey: "puzzle2d.play.overview" },
+    { id: "detail", bodyKey: "puzzle2d.play.detail" },
+  ];
+  const panelTabLeaves = [{ kind: { kind: "app" as const, id: "framework.panel.document" }, bodyKey: "puzzle2d.play.layers" }];
+
+  it("buildUiRefreshRequest for a full scope requests every window/panel/tools/engagements/measures/labels section", () => {
+    const request = buildUiRefreshRequest({ kind: "full" }, windowKinds, panelTabLeaves, {}, new Map());
+    expect(request?.windows?.map((w) => w.key)).toEqual(["overview", "detail"]);
+    expect(request?.panels?.map((p) => p.key)).toEqual(["framework.panel.document"]);
+    expect(request?.tools?.map((t) => t.key)).toEqual(["overview", "detail"]);
+    expect(request?.engagements).toBeDefined();
+    expect(request?.measures).toBeDefined();
+    expect(request?.labels).toBeDefined();
+  });
+
+  it("buildUiRefreshRequest for none returns null", () => {
+    expect(buildUiRefreshRequest({ kind: "none" }, windowKinds, panelTabLeaves, {}, new Map())).toBeNull();
+  });
+
+  it("buildUiRefreshRequest for a partial scope requests only the listed window/panel bodies and flags", () => {
+    const scope = { kind: "partial" as const, windowBodies: ["puzzle2d.play.overview"], panelBodies: [], engagements: true };
+    const request = buildUiRefreshRequest(scope, windowKinds, panelTabLeaves, {}, new Map());
+    expect(request?.windows?.map((w) => w.key)).toEqual(["overview"]);
+    expect(request?.panels).toEqual([]);
+    expect(request?.tools).toEqual([]);
+    expect(request?.engagements).toBeDefined();
+    expect(request?.measures).toBeUndefined();
+    expect(request?.labels).toBeUndefined();
+  });
+
+  it("buildUiRefreshRequest returns null for a partial scope that matches nothing in this app", () => {
+    const scope = { kind: "partial" as const, windowBodies: ["some-other-app.body"] };
+    expect(buildUiRefreshRequest(scope, windowKinds, panelTabLeaves, {}, new Map())).toBeNull();
+  });
+
+  it("buildUiRefreshRequest attaches the cached hash for a section that was already fetched once", () => {
+    const cache: UiRefreshCache = new Map([["window:overview", { hash: "abc123", value: { type: "text", value: "x" } }]]);
+    const request = buildUiRefreshRequest({ kind: "full" }, windowKinds, panelTabLeaves, {}, cache);
+    expect(request?.windows?.find((w) => w.key === "overview")?.hash).toBe("abc123");
+    expect(request?.windows?.find((w) => w.key === "detail")?.hash).toBeUndefined();
+  });
+
+  it("applyUiRefreshResponseToCache writes changed sections and ignores hash-only (unchanged) ones", () => {
+    const cache: UiRefreshCache = new Map([["window:detail", { hash: "old-hash", value: { type: "text", value: "stale-should-not-be-touched" } }]]);
+    applyUiRefreshResponseToCache(cache, {
+      windows: [
+        { key: "overview", hash: "new-hash", value: { type: "text", value: "fresh" } },
+        { key: "detail", hash: "old-hash" }, // unchanged: no `value` in the response
+      ],
+      engagements: { key: "engagements", hash: "eng-hash", value: { overview: {} } },
+    });
+    expect(cache.get("window:overview")).toEqual({ hash: "new-hash", value: { type: "text", value: "fresh" } });
+    // Unchanged section: cache entry is untouched (still the old hash/value, not overwritten with nothing).
+    expect(cache.get("window:detail")).toEqual({ hash: "old-hash", value: { type: "text", value: "stale-should-not-be-touched" } });
+    expect(cache.get("engagements")).toEqual({ hash: "eng-hash", value: { overview: {} } });
+  });
+});
+
 describe("framework plugin runtime", () => {
   it("loads plugin modules through framework-core", async () => {
     const { loadPluginModule } = await import("@semio-tech/framework-core");
@@ -259,10 +326,7 @@ describe("framework plugin runtime", () => {
         return { output: null, operations: [], inverseGroup: { actionId: "", operations: [], inverseOperations: [] } };
       },
       render: async () => ({ type: "text", value: "x" }),
-      tools: async () => [],
-      windowEngagements: async () => ({}),
-      windowMeasures: async () => ({}),
-      appLabels: async () => ({ windowKindLabels: {}, panelTabLabels: {}, modeLabels: {} }),
+      refreshUi: async () => ({}),
       dispose: () => {},
     });
     await Promise.all([handle.handleAction(1, "{}", {}), handle.handleAction(1, "{}", {}), handle.handleAction(1, "{}", {})]);
@@ -350,10 +414,7 @@ describe("framework external slots", () => {
         type: "text",
         value: `resolved:${bodyKey}`,
       }),
-      tools: async () => [],
-      windowEngagements: async () => ({}),
-      windowMeasures: async () => ({}),
-      appLabels: async () => ({ windowKindLabels: {}, panelTabLabels: {}, modeLabels: {} }),
+      refreshUi: async () => ({}),
       dispose: () => {},
     };
     const resolved = await resolveExternalSlots(

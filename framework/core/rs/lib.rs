@@ -2729,6 +2729,7 @@ mod tests {
                 icon_id: None,
                 options: ui_wgpu::WindowOptions::default(),
                 actions: Vec::new(),
+                tools: Vec::new(),
                 params_schema: None,
                 document_projection_schema: None,
                 input_event_schema: None,
@@ -2738,6 +2739,7 @@ mod tests {
             panel_tabs: vec![],
             keybindings: vec![],
             actions: vec![],
+            tools: vec![],
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
@@ -2781,6 +2783,142 @@ pub enum ActionKind {
     Shell,
 }
 
+//#region 🔖ActionArgs
+/// @emoji 🔘 One selectable option of a `Select` argument control — the persisted `value` and its
+/// human `label`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ActionArgOption {
+    pub value: String,
+    pub label: String,
+}
+
+impl ActionArgOption {
+    pub fn new(value: impl Into<String>, label: impl Into<String>) -> Self {
+        Self { value: value.into(), label: label.into() }
+    }
+}
+
+/// @emoji 🎚️ Declarative input control for one action argument — a lean manifest-altitude enum,
+/// deliberately NOT `ui_wgpu::UiControlNode` (whose variants embed live values and immediate-dispatch
+/// wiring). Renderers map each variant onto a staged form field. Tagged with `kind` to mirror the
+/// sibling `ToolNode`/`UiControlNode` declarative-tree convention.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum ActionArgControl {
+    Text {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        placeholder: Option<String>,
+    },
+    Number {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        min: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        max: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        step: Option<f64>,
+    },
+    Slider {
+        min: f64,
+        max: f64,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        step: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        unit: Option<String>,
+    },
+    Toggle,
+    Select {
+        options: Vec<ActionArgOption>,
+    },
+    Vec3,
+    IconSelect {
+        classifier_kind: String,
+    },
+}
+
+/// @emoji 📝 Declares one argument of an action: its `id` (the JSON key sent in `ActionDescriptor.args`),
+/// human `label`, input `control`, whether it is `required`, an optional `default` value, and an optional
+/// `description`. An empty `ActionDefinition.args` (the common case) means a no-argument action.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ActionArgDef {
+    pub id: String,
+    pub label: String,
+    pub control: ActionArgControl,
+    #[serde(default)]
+    pub required: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
+    pub default: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub description: Option<String>,
+}
+
+impl ActionArgDef {
+    fn with_control(id: impl Into<String>, label: impl Into<String>, control: ActionArgControl) -> Self {
+        Self { id: id.into(), label: label.into(), control, required: false, default: None, description: None }
+    }
+
+    /// @emoji 🔤 A free-text argument.
+    pub fn text(id: impl Into<String>, label: impl Into<String>) -> Self {
+        Self::with_control(id, label, ActionArgControl::Text { placeholder: None })
+    }
+
+    /// @emoji 🔢 A numeric argument (unbounded stepper by default).
+    pub fn number(id: impl Into<String>, label: impl Into<String>) -> Self {
+        Self::with_control(id, label, ActionArgControl::Number { min: None, max: None, step: None })
+    }
+
+    /// @emoji 🎚️ A bounded slider argument.
+    pub fn slider(id: impl Into<String>, label: impl Into<String>, min: f64, max: f64) -> Self {
+        Self::with_control(id, label, ActionArgControl::Slider { min, max, step: None, unit: None })
+    }
+
+    /// @emoji 🔘 A boolean toggle argument.
+    pub fn toggle(id: impl Into<String>, label: impl Into<String>) -> Self {
+        Self::with_control(id, label, ActionArgControl::Toggle)
+    }
+
+    /// @emoji 🔽 A single-choice select argument.
+    pub fn select(id: impl Into<String>, label: impl Into<String>, options: Vec<ActionArgOption>) -> Self {
+        Self::with_control(id, label, ActionArgControl::Select { options })
+    }
+
+    /// @emoji 🧭 A three-component vector argument.
+    pub fn vec3(id: impl Into<String>, label: impl Into<String>) -> Self {
+        Self::with_control(id, label, ActionArgControl::Vec3)
+    }
+
+    /// @emoji ❗ Marks the argument as required — execution is blocked until it has an effective value.
+    pub fn required(mut self) -> Self {
+        self.required = true;
+        self
+    }
+
+    /// @emoji 🎁 Sets the default effective value used when nothing is staged.
+    pub fn default_value(mut self, value: impl Into<serde_json::Value>) -> Self {
+        self.default = Some(value.into());
+        self
+    }
+
+    /// @emoji 💬 Attaches a description shown alongside the field.
+    pub fn describe(mut self, description: impl Into<String>) -> Self {
+        self.description = Some(description.into());
+        self
+    }
+}
+//#endregion 🔖ActionArgs
+
 /// @emoji 📇 Declares one action an app can receive via `ActionDescriptor.action`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
@@ -2792,9 +2930,10 @@ pub struct ActionDefinition {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub icon_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
-    pub args_schema: Option<serde_json::Value>,
+    /// 📝 Typed argument declarations. Empty (the common case) = a no-argument action; serde-defaults
+    /// to empty so manifests/fixtures without this field still deserialize.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub args: Vec<ActionArgDef>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub keys: Option<String>,
@@ -2812,11 +2951,17 @@ impl ActionDefinition {
             label: label.into(),
             kind,
             icon_id: None,
-            args_schema: None,
+            args: Vec::new(),
             keys: None,
             in_palette: true,
             category: None,
         }
+    }
+
+    /// @emoji 📝 Attaches typed argument declarations to this action.
+    pub fn with_args(mut self, args: impl IntoIterator<Item = ActionArgDef>) -> Self {
+        self.args = args.into_iter().collect();
+        self
     }
 }
 
@@ -2836,6 +2981,24 @@ pub fn history_action_definitions() -> Vec<ActionDefinition> {
         ActionDefinition::new("switchAlternative", "Switch Alternative", ActionKind::History),
         ActionDefinition::new("checkoutCheckpoint", "Checkout Checkpoint", ActionKind::History),
     ]
+}
+
+/// @emoji 🧰 The framework-owned action id apps dispatch to activate a tool — auto-injected as a View
+/// action into any `AppDefinition` that declares tools (mirrors `history_action_definitions`).
+pub const SET_ACTIVE_TOOL_ACTION_ID: &str = "setActiveTool";
+
+/// @emoji 🧰 The framework-injected `setActiveTool` View action (never in the palette): switches the
+/// host-owned active tool of a window kind. `toolId` is required; `windowKindId` is contextual (the
+/// shell fills it from the focused window when absent).
+pub fn set_active_tool_action_definition() -> ActionDefinition {
+    ActionDefinition {
+        in_palette: false,
+        ..ActionDefinition::new(SET_ACTIVE_TOOL_ACTION_ID, "Set Active Tool", ActionKind::View)
+    }
+    .with_args([
+        ActionArgDef::text("toolId", "Tool").required(),
+        ActionArgDef::text("windowKindId", "Window"),
+    ])
 }
 
 /// 📇 A validated reference into an app's `AppDefinition.actions` registry — prevents windows/modes
@@ -2868,17 +3031,93 @@ impl From<String> for ActionRef {
     }
 }
 
+//#region 🔖Tools
+/// @emoji 🧰 Declares one interactive tool (a live-preview pointer mode) an app exposes. Distinct from
+/// an `ActionDefinition`: exactly one tool is active per window kind at a time, and activation is
+/// host-owned session view state (`ViewState.active_tool_id`), never a document field or VCS op.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ToolDefinition {
+    pub id: String,
+    pub label: String,
+    pub icon_id: String,
+    /// 🧺 Visual toolbar collection this tool groups into; `None` = a flat top-level toolbar entry.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub group: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub keys: Option<String>,
+    /// 🖱️ CSS/winit cursor name applied to the window body while this tool is active.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub cursor: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub category: Option<ui_wgpu::ToolCategory>,
+    /// 🚦 Whether window-scoped actions stay enabled while this tool is active. Defaults to `false`
+    /// (matching today's whitelist-based gating where an active tool suppresses the action panel);
+    /// set `true` for passive view tools (e.g. cad `cad.play.view.*`) that should not gate actions.
+    #[serde(default)]
+    pub allows_actions_while_active: bool,
+}
+
+impl ToolDefinition {
+    /// @emoji 🧰 A tool with sensible defaults (no group/keys/cursor/category, gates actions while active).
+    pub fn new(id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<String>) -> Self {
+        Self {
+            id: id.into(),
+            label: label.into(),
+            icon_id: icon_id.into(),
+            group: None,
+            keys: None,
+            cursor: None,
+            category: None,
+            allows_actions_while_active: false,
+        }
+    }
+}
+
+/// @emoji 🧰 A validated reference into an app's `AppDefinition.tools` registry — the tool mirror of
+/// `ActionRef`, scoping tools to window kinds/modes with a typed, resolvable id.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(transparent)]
+pub struct ToolRef(String);
+
+impl ToolRef {
+    pub fn new(id: impl Into<String>) -> Self {
+        Self(id.into())
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl From<&str> for ToolRef {
+    fn from(value: &str) -> Self {
+        Self(value.to_string())
+    }
+}
+
+impl From<String> for ToolRef {
+    fn from(value: String) -> Self {
+        Self(value)
+    }
+}
+//#endregion 🔖Tools
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ModeDefinition {
     pub id: String,
     pub label: String,
-    /// 🚧 `ui_wgpu::ToolNode` is out of scope for this typegen pass (large, separately-owned
-    /// tool-tree union) — mirrored as an opaque array rather than left uncompilable.
+    /// 🧰 Tools available while this mode is active — references `AppDefinition.tools` ids.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "typegen", ts(type = "unknown[]"))]
-    pub tools: Vec<ui_wgpu::ToolNode>,
+    pub tools: Vec<ToolRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub layout_id: Option<String>,
@@ -2995,6 +3234,9 @@ pub struct WindowKindDefinition {
     /// every window" behavior.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actions: Vec<ActionRef>,
+    /// 🧰 Tools this window kind accepts — references `AppDefinition.tools` ids. Empty = no tools.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tools: Vec<ToolRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub params_schema: Option<String>,
@@ -3124,6 +3366,9 @@ pub struct AppDefinition {
     pub keybindings: Vec<Keybinding>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actions: Vec<ActionDefinition>,
+    /// 🧰 The interactive tools this app exposes (referenced by `WindowKindDefinition.tools`/`ModeDefinition.tools`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tools: Vec<ToolDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub named_layouts: Vec<NamedLayout>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -3144,6 +3389,87 @@ pub fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Option<Win
     }
     app.default_layout.clone()
 }
+
+//#region 🔖action-args
+/// @emoji 🧮 Computes the effective argument map for an action: for each declared arg, the staged value
+/// if present, else its declared `default`, else omitted. Renderers stage edits locally and pass them
+/// here; the contract enforcer ({@link VcsDocumentApp}) materializes defaults before dispatch so plugins
+/// never re-implement default-filling.
+pub fn effective_action_args(
+    defs: &[ActionArgDef],
+    staged: &serde_json::Map<String, serde_json::Value>,
+) -> serde_json::Map<String, serde_json::Value> {
+    let mut effective = serde_json::Map::new();
+    for def in defs {
+        if let Some(value) = staged.get(&def.id) {
+            effective.insert(def.id.clone(), value.clone());
+        } else if let Some(default) = &def.default {
+            effective.insert(def.id.clone(), default.clone());
+        }
+    }
+    effective
+}
+
+/// @emoji ❗ Returns the ids of required args that are still unset in `effective`. "Unset" means absent,
+/// JSON `null`, or an empty string (covers a blank Text/Select/IconSelect); `false`, `0`, and `[]` are
+/// valid values for Toggle/Number/Slider/Vec3 and never count as unset.
+pub fn missing_required_args(
+    defs: &[ActionArgDef],
+    effective: &serde_json::Map<String, serde_json::Value>,
+) -> Vec<String> {
+    defs.iter()
+        .filter(|def| def.required)
+        .filter(|def| match effective.get(&def.id) {
+            None | Some(serde_json::Value::Null) => true,
+            Some(serde_json::Value::String(text)) => text.is_empty(),
+            Some(_) => false,
+        })
+        .map(|def| def.id.clone())
+        .collect()
+}
+
+/// @emoji 🚦 Whether an action is eligible to appear in a window's Actions panel — excludes the six
+/// framework History actions (rendered by the History rail) and the injected `setActiveTool` (an
+/// internal View action wired to the toolbar, never the panel).
+fn action_is_panel_eligible(action: &ActionDefinition) -> bool {
+    action.kind != ActionKind::History && action.id != SET_ACTIVE_TOOL_ACTION_ID
+}
+
+/// @emoji 📇 Resolves the actions a window kind presents in its panel. Explicit `window_kind.actions`
+/// refs resolve in declared order; additionally, any panel-eligible app action referenced by *no*
+/// window kind is an "orphan" that appears on every window (the scoping fallback that prevents blank
+/// panels mid-migration — Architecture Decision 8). A window that scopes nothing therefore shows every
+/// orphan; once a plugin scopes an action to some window, it stops being an orphan and appears only
+/// where scoped. Unresolvable refs are skipped (the builder validates them at construction time).
+pub fn resolve_window_actions<'a>(
+    app: &'a AppDefinition,
+    window_kind: &WindowKindDefinition,
+) -> Vec<&'a ActionDefinition> {
+    let referenced: std::collections::HashSet<&str> = app
+        .window_kinds
+        .iter()
+        .flat_map(|window| window.actions.iter().map(ActionRef::as_str))
+        .collect();
+    let mut resolved: Vec<&'a ActionDefinition> = Vec::new();
+    let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
+    for action_ref in &window_kind.actions {
+        if let Some(action) = app.actions.iter().find(|action| action.id == action_ref.as_str()) {
+            if seen.insert(action.id.as_str()) {
+                resolved.push(action);
+            }
+        }
+    }
+    for action in &app.actions {
+        if action_is_panel_eligible(action)
+            && !referenced.contains(action.id.as_str())
+            && seen.insert(action.id.as_str())
+        {
+            resolved.push(action);
+        }
+    }
+    resolved
+}
+//#endregion 🔖action-args
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
@@ -3248,6 +3574,10 @@ pub struct ViewState {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub active_window_kind_id: Option<String>,
+    /// 🧰 The host-owned active tool for the active window kind (never a document field, never a VCS op).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub active_tool_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub selection_json: Option<String>,
@@ -3554,6 +3884,9 @@ pub enum HostEffect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         os_instance_id: Option<String>,
     },
+    /// @emoji 🧰 Programmatically switches the host-owned active tool of a window kind — the effect
+    /// form of `setActiveTool`, letting a plugin change tools without a user click.
+    SetActiveTool { window_kind_id: String, tool_id: String },
 }
 
 /// @emoji 🖼️ One icon-render export request: the destination filename plus the opaque icon-scene
@@ -4054,6 +4387,171 @@ mod app_document_tests {
         );
     }
 
+    //#region 🔖ActionArgsAndToolsTests
+    use crate::ui::{
+        effective_action_args, missing_required_args, resolve_window_actions, ActionArgControl, ActionArgDef,
+        ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, Modes, ToolDefinition, ToolRef,
+        WindowKindDefinition, WindowKinds, SET_ACTIVE_TOOL_ACTION_ID,
+    };
+    use serde_json::json;
+
+    #[test]
+    fn action_arg_def_builder_chain() {
+        let arg = ActionArgDef::slider("scale", "Scale", 0.0, 4.0)
+            .required()
+            .default_value(1.0)
+            .describe("scale factor");
+        assert_eq!(arg.id, "scale");
+        assert!(arg.required);
+        assert_eq!(arg.default, Some(json!(1.0)));
+        assert_eq!(arg.description.as_deref(), Some("scale factor"));
+        assert!(matches!(arg.control, ActionArgControl::Slider { min, max, .. } if min == 0.0 && max == 4.0));
+    }
+
+    #[test]
+    fn effective_args_prefer_staged_then_default() {
+        let defs = vec![
+            ActionArgDef::text("a", "A").default_value("da"),
+            ActionArgDef::text("b", "B").default_value("db"),
+            ActionArgDef::text("c", "C"),
+        ];
+        let mut staged = serde_json::Map::new();
+        staged.insert("a".into(), json!("staged-a"));
+        let effective = effective_action_args(&defs, &staged);
+        assert_eq!(effective.get("a"), Some(&json!("staged-a")), "staged wins");
+        assert_eq!(effective.get("b"), Some(&json!("db")), "default fills in");
+        assert!(!effective.contains_key("c"), "no staged, no default ⇒ omitted");
+    }
+
+    #[test]
+    fn missing_required_args_treats_unset_select_as_missing() {
+        let defs = vec![
+            ActionArgDef::select("mode", "Mode", vec![ActionArgOption::new("x", "X")]).required(),
+            ActionArgDef::toggle("flag", "Flag").required(),
+        ];
+        // Nothing staged, no defaults: both required ids are missing.
+        let empty = serde_json::Map::new();
+        let effective = effective_action_args(&defs, &empty);
+        let missing = missing_required_args(&defs, &effective);
+        assert!(missing.contains(&"mode".to_string()));
+        assert!(missing.contains(&"flag".to_string()));
+
+        // An empty-string select value still counts as unset; `false` for a toggle is a real value.
+        let mut effective = serde_json::Map::new();
+        effective.insert("mode".into(), json!(""));
+        effective.insert("flag".into(), json!(false));
+        let missing = missing_required_args(&defs, &effective);
+        assert_eq!(missing, vec!["mode".to_string()], "empty-string select is unset; false toggle is set");
+    }
+
+    #[test]
+    fn tool_definition_and_tool_ref_construction() {
+        let tool = ToolDefinition::new("brush", "Brush", "icon.brush");
+        assert_eq!(tool.id, "brush");
+        assert!(!tool.allows_actions_while_active, "default gates actions while active");
+        assert_eq!(ToolRef::new("brush").as_str(), "brush");
+        assert_eq!(ToolRef::from("brush").as_str(), "brush");
+    }
+
+    fn app_with(actions: Vec<ActionDefinition>, window_actions: Vec<ActionRef>) -> AppDefinition {
+        AppDefinition {
+            id: "a".into(),
+            label: "A".into(),
+            document: vec!["semio".into(), "a".into()],
+            icon_id: None,
+            controller_id: "a".into(),
+            modes: Modes::one(crate::ui::ModeDefinition {
+                id: "edit".into(),
+                label: "Edit".into(),
+                tools: Vec::new(),
+                layout_id: None,
+                actions: Vec::new(),
+            }),
+            default_mode_id: "edit".into(),
+            window_kinds: WindowKinds::one(WindowKindDefinition {
+                id: "main".into(),
+                label: "Main".into(),
+                body_key: "a.main".into(),
+                surface_kind: ui_wgpu::SurfaceKind::Canvas2d,
+                icon_id: None,
+                options: ui_wgpu::WindowOptions::default(),
+                actions: window_actions,
+                tools: Vec::new(),
+                params_schema: None,
+                document_projection_schema: None,
+                input_event_schema: None,
+                output_schema: None,
+                capabilities: Vec::new(),
+            }),
+            panel_tabs: vec![],
+            keybindings: vec![],
+            actions,
+            tools: vec![],
+            named_layouts: Vec::new(),
+            default_layout: None,
+            terminologies: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn resolve_window_actions_explicit_scoping() {
+        let app = app_with(
+            vec![
+                ActionDefinition::new("add", "Add", ActionKind::Operation),
+                ActionDefinition::new("remove", "Remove", ActionKind::Operation),
+            ],
+            vec![ActionRef::new("add")],
+        );
+        let window = app.window_kinds.first();
+        let resolved: Vec<&str> = resolve_window_actions(&app, window).iter().map(|a| a.id.as_str()).collect();
+        // `add` is explicitly scoped here; `remove` is referenced by no window ⇒ orphan ⇒ also appears.
+        assert_eq!(resolved, vec!["add", "remove"]);
+    }
+
+    #[test]
+    fn resolve_window_actions_excludes_history_and_set_active_tool_orphans() {
+        let app = app_with(
+            vec![
+                ActionDefinition::new("undo", "Undo", ActionKind::History),
+                crate::ui::set_active_tool_action_definition(),
+                ActionDefinition::new("add", "Add", ActionKind::Operation),
+            ],
+            vec![],
+        );
+        let window = app.window_kinds.first();
+        let resolved: Vec<&str> = resolve_window_actions(&app, window).iter().map(|a| a.id.as_str()).collect();
+        assert_eq!(resolved, vec!["add"], "history + setActiveTool are never panel-eligible orphans");
+        assert!(!resolved.contains(&SET_ACTIVE_TOOL_ACTION_ID));
+    }
+
+    #[test]
+    fn action_definition_deserializes_without_args_field() {
+        // Forward-compat: legacy JSON with no `args`/`category` still deserializes with empty defaults.
+        let action: ActionDefinition =
+            serde_json::from_str(r#"{"id":"x","label":"X","kind":"operation","inPalette":true}"#).unwrap();
+        assert!(action.args.is_empty());
+    }
+
+    #[test]
+    fn window_kind_deserializes_without_tools_field() {
+        let window: WindowKindDefinition = serde_json::from_str(
+            r#"{"id":"main","label":"Main","bodyKey":"a.main","surfaceKind":"canvas-2d"}"#,
+        )
+        .unwrap();
+        assert!(window.tools.is_empty());
+        assert!(window.actions.is_empty());
+    }
+
+    #[test]
+    fn action_arg_control_serializes_tagged() {
+        let control = ActionArgControl::Select { options: vec![ActionArgOption::new("x", "X")] };
+        let json = serde_json::to_string(&control).unwrap();
+        assert!(json.contains("\"kind\":\"select\""), "tagged with kind: {json}");
+        let round: ActionArgControl = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, control);
+    }
+    //#endregion 🔖ActionArgsAndToolsTests
+
     #[cfg(feature = "typegen")]
     #[test]
     fn exports_typescript_bindings() {
@@ -4080,10 +4578,16 @@ mod app_document_tests {
         ui_wgpu::WindowEngagementSlot::export().unwrap();
         ui_wgpu::WindowOptions::export().unwrap();
         ui_wgpu::SurfaceKind::export().unwrap();
+        ui_wgpu::ToolCategory::export().unwrap();
         crate::ui::Keybinding::export().unwrap();
         crate::ui::ActionKind::export().unwrap();
+        crate::ui::ActionArgOption::export().unwrap();
+        crate::ui::ActionArgControl::export().unwrap();
+        crate::ui::ActionArgDef::export().unwrap();
         crate::ui::ActionDefinition::export().unwrap();
         crate::ui::ActionRef::export().unwrap();
+        crate::ui::ToolDefinition::export().unwrap();
+        crate::ui::ToolRef::export().unwrap();
         crate::ui::ModeDefinition::export().unwrap();
         crate::ui::WindowKindDefinition::export().unwrap();
         crate::ui::PanelGroup::export().unwrap();

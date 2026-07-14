@@ -1848,6 +1848,7 @@ impl DocumentApp for SStudioApp {
         let mut ops: Vec<OsOp> = Vec::new();
         let mut effects: Vec<HostEffect> = Vec::new();
         let mut coalesce_key: Option<String> = None;
+        let mut ui_scope = semio_framework_core::kernel::UiDirtyScope::Full;
         match action {
             "setActivePanelTab" => {
                 if let Some(tab) = args.and_then(|value| value.get("tabId")).and_then(|value| value.as_str()) {
@@ -2369,6 +2370,9 @@ impl DocumentApp for SStudioApp {
                             .into(),
                     );
                 }
+                // 🐢 A heartbeat only records this client's own identity for the presence broadcast below
+                // — it never changes anything this instance's own UI should re-render.
+                ui_scope = semio_framework_core::kernel::UiDirtyScope::None;
             }
             "setAppInstanceSelection" => {
                 let instance_ids: Vec<String> = args
@@ -2604,6 +2608,7 @@ impl DocumentApp for SStudioApp {
             ops,
             coalesce_key,
             effects,
+            ui_scope,
             ..Default::default()
         }
     }
@@ -3674,6 +3679,17 @@ mod tests {
         assert!(peers.contains(r#""selectionCount":1"#));
         let self_view = presence_peers_json(&app.runtime);
         assert!(!self_view.contains("client-test-a"));
+    }
+
+    /// 🐢 Perf round 3: a heartbeat only records this client's own identity for the presence broadcast
+    /// — it must declare `None` so it never triggers a full-shell `refresh-ui` for the sending client.
+    #[test]
+    fn presence_heartbeat_declares_none_ui_scope() {
+        use semio_framework_core::kernel::UiDirtyScope;
+        let mut app = SStudioApp::new();
+        let projection = demo_studio_projection();
+        let emit = studio_emit(&mut app, &projection, "presenceHeartbeat", json!({ "clientId": "client-test-c", "name": "Cass" }));
+        assert!(matches!(emit.ui_scope, UiDirtyScope::None), "presenceHeartbeat must declare None, got {:?}", emit.ui_scope);
     }
 
     #[test]

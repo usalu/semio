@@ -838,11 +838,11 @@ use super::layout::ActionDescriptor;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum ToolCategory {
     Selection,
     Tools,
-    Actions,
     History,
     Sync,
 }
@@ -916,7 +916,7 @@ impl ToolNode {
     pub fn category(&self) -> ToolCategory {
         match self {
             ToolNode::Separator { .. } => ToolCategory::Tools,
-            ToolNode::Button { category, .. } => category.unwrap_or(ToolCategory::Actions),
+            ToolNode::Button { category, .. } => category.unwrap_or(ToolCategory::Tools),
             ToolNode::Toggle { category, .. } => category.unwrap_or(ToolCategory::Tools),
             ToolNode::Collection { category, .. } => category.unwrap_or(ToolCategory::Tools),
         }
@@ -1003,6 +1003,81 @@ pub fn tool_collection(
     }
 }
 
+//#region 🔖DeriveToolNodes
+/// @emoji 🧰 A resolved tool ready to be laid out into the toolbar. `framework_core` maps its
+/// `ToolDefinition` onto this before calling `derive_tool_nodes` — `ui_wgpu` can't reference
+/// `framework_core::ToolDefinition` directly (that crate depends on `ui_wgpu`, not the reverse).
+#[derive(Clone, Debug, PartialEq)]
+pub struct DerivedToolSpec {
+    pub id: String,
+    pub label: String,
+    pub icon_id: String,
+    pub group: Option<String>,
+    pub category: Option<ToolCategory>,
+}
+
+/// @emoji 🧰 Derives the toolbar `ToolNode` tree from resolved tools and the host-owned active tool id.
+/// Each tool becomes a `Toggle` whose `pressed` reflects `active_tool_id == Some(id)` and whose
+/// `on_change` dispatches `setActiveTool { toolId }` against `controller_id`. Tools sharing a `group`
+/// collapse into one `Collection` (placed where the group first appears, in tool order); ungrouped
+/// tools stay flat siblings. This is the single source of truth for the toolbar — `DocumentApp::tools`
+/// no longer exists.
+pub fn derive_tool_nodes(
+    controller_id: &str,
+    tools: &[DerivedToolSpec],
+    active_tool_id: Option<&str>,
+) -> Vec<ToolNode> {
+    fn tool_toggle_node(controller_id: &str, tool: &DerivedToolSpec, active_tool_id: Option<&str>) -> ToolNode {
+        ToolNode::Toggle {
+            id: tool.id.clone(),
+            icon_id: tool.icon_id.clone(),
+            label: Some(tool.label.clone()),
+            text: None,
+            title: Some(tool.label.clone()),
+            order: None,
+            pressed: Some(active_tool_id == Some(tool.id.as_str())),
+            disabled: None,
+            category: tool.category,
+            on_change: ActionDescriptor {
+                controller_id: controller_id.to_string(),
+                action: "setActiveTool".into(),
+                args: Some(serde_json::json!({ "toolId": tool.id })),
+            },
+        }
+    }
+
+    let mut nodes: Vec<ToolNode> = Vec::new();
+    let mut group_positions: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+    for tool in tools {
+        let node = tool_toggle_node(controller_id, tool, active_tool_id);
+        match &tool.group {
+            None => nodes.push(node),
+            Some(group) => {
+                if let Some(&index) = group_positions.get(group) {
+                    if let ToolNode::Collection { children, .. } = &mut nodes[index] {
+                        children.push(node);
+                    }
+                } else {
+                    group_positions.insert(group.clone(), nodes.len());
+                    nodes.push(ToolNode::Collection {
+                        id: format!("group:{group}"),
+                        icon_id: tool.icon_id.clone(),
+                        label: Some(group.clone()),
+                        text: None,
+                        title: Some(group.clone()),
+                        order: None,
+                        disabled: None,
+                        category: tool.category,
+                        children: vec![node],
+                    });
+                }
+            }
+        }
+    }
+    nodes
+}
+//#endregion 🔖DeriveToolNodes
+
 //#region 🔖WireFormatGoldenTests
 /** 🧊 Golden wire-format tests: freeze exact JSON for ToolNode before it moves into ui_wgpu. */
 #[cfg(test)]
@@ -1036,6 +1111,58 @@ mod tool_node_wire_format_tests {
         assert_eq!(json, GOLDEN_TOOL_NODE_JSON);
         let roundtripped: Vec<ToolNode> = serde_json::from_str(&json).unwrap();
         assert_eq!(roundtripped, nodes);
+    }
+
+    fn spec(id: &str, group: Option<&str>) -> DerivedToolSpec {
+        DerivedToolSpec {
+            id: id.into(),
+            label: id.to_uppercase(),
+            icon_id: format!("icon.{id}"),
+            group: group.map(str::to_string),
+            category: None,
+        }
+    }
+
+    #[test]
+    fn derive_tool_nodes_marks_the_active_tool_pressed() {
+        let nodes = derive_tool_nodes("ctrl", &[spec("select", None), spec("brush", None)], Some("brush"));
+        assert_eq!(nodes.len(), 2);
+        match &nodes[0] {
+            ToolNode::Toggle { id, pressed, on_change, .. } => {
+                assert_eq!(id, "select");
+                assert_eq!(*pressed, Some(false));
+                assert_eq!(on_change.action, "setActiveTool");
+                assert_eq!(on_change.args, Some(serde_json::json!({ "toolId": "select" })));
+            }
+            other => panic!("expected toggle, got {other:?}"),
+        }
+        match &nodes[1] {
+            ToolNode::Toggle { id, pressed, .. } => {
+                assert_eq!(id, "brush");
+                assert_eq!(*pressed, Some(true));
+            }
+            other => panic!("expected toggle, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn derive_tool_nodes_groups_shared_group_into_one_collection() {
+        let nodes = derive_tool_nodes(
+            "ctrl",
+            &[spec("select", None), spec("line", Some("shapes")), spec("rect", Some("shapes"))],
+            None,
+        );
+        assert_eq!(nodes.len(), 2, "one ungrouped toggle + one shapes collection");
+        assert!(matches!(&nodes[0], ToolNode::Toggle { id, .. } if id == "select"));
+        match &nodes[1] {
+            ToolNode::Collection { id, children, .. } => {
+                assert_eq!(id, "group:shapes");
+                assert_eq!(children.len(), 2);
+                assert!(matches!(&children[0], ToolNode::Toggle { id, .. } if id == "line"));
+                assert!(matches!(&children[1], ToolNode::Toggle { id, .. } if id == "rect"));
+            }
+            other => panic!("expected collection, got {other:?}"),
+        }
     }
 }
 //#endregion 🔖WireFormatGoldenTests

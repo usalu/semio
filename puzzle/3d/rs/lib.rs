@@ -1181,6 +1181,10 @@ impl FillBuilder {
 
 struct Puzzle3dEngine {
     scene: Option<SceneConfig>,
+    /// 🧊 Raw JSON of the last `set_scene` call, so a resync with byte-identical config (every action
+    /// re-syncs the session, see `sync_precompute_session`) can skip `rebuild_queue` instead of wiping
+    /// `brush_cache`/`fill`/`queue` and restarting suggestion+fill precompute from zero every time.
+    scene_json: Option<String>,
     meshes: HashMap<String, CollisionBody>,
     brush_cache: HashMap<String, BrushCollisionFreeResult>,
     fill: Option<FillBuilder>,
@@ -1189,7 +1193,7 @@ struct Puzzle3dEngine {
 
 impl Puzzle3dEngine {
     fn new() -> Self {
-        Self { scene: None, meshes: HashMap::new(), brush_cache: HashMap::new(), fill: None, queue: Vec::new() }
+        Self { scene: None, scene_json: None, meshes: HashMap::new(), brush_cache: HashMap::new(), fill: None, queue: Vec::new() }
     }
 
     fn rebuild_queue(&mut self) {
@@ -1210,8 +1214,12 @@ impl Puzzle3dEngine {
     }
 
     fn set_scene(&mut self, json: &str) -> Result<(), String> {
+        if self.scene_json.as_deref() == Some(json) {
+            return Ok(());
+        }
         let scene: SceneConfig = serde_json::from_str(json).map_err(|e| e.to_string())?;
         self.scene = Some(scene);
+        self.scene_json = Some(json.to_string());
         self.rebuild_queue();
         Ok(())
     }
@@ -1219,6 +1227,9 @@ impl Puzzle3dEngine {
     fn register_mesh(&mut self, url: String, positions: Vec<f32>, indices: Vec<u32>) {
         if let Some(body) = collision_body_from_buffers(&positions, &indices) {
             self.meshes.insert(url, body);
+            // 🧊 A newly registered/replaced mesh invalidates any cached brush candidates/fill progress
+            // computed against a different (or fallback-box) body for this url.
+            self.rebuild_queue();
         }
     }
 
@@ -1849,6 +1860,80 @@ mod tests {
             // reset attractions so every iteration re-exercises `apply_brush_placement_to_fixture` fresh.
             fixture.attractions.clear();
         }
+    }
+
+    fn single_object_scene_json() -> String {
+        let scene = SceneConfig {
+            fixture: Fixture {
+                attractions: vec![],
+                target_volumes: vec![],
+                objects: vec![FixtureObject {
+                    id: "host".to_string(),
+                    object_kind: Some("Host".to_string()),
+                    mesh_url: Some("/test/host.glb".to_string()),
+                    origin: [0.0, 0.0, 0.0],
+                    orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                    scale: None,
+                    vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
+                }],
+            },
+            kind_catalogs: Some(KindCatalogBundle {
+                objects: vec![ObjectKind { id: "Host".to_string(), mesh_url: Some("/test/host.glb".to_string()), scale: None, vortices: vec![] }],
+                vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None }],
+                cables: vec![],
+            }),
+            kind_compatibility: vec![],
+            overlap_budget: DEFAULT_OVERLAP_BUDGET,
+            seed: 1,
+            host_rules: BrushHostRules::default(),
+            weights: BrushKindWeights::default(),
+        };
+        serde_json::to_string(&scene).unwrap()
+    }
+
+    /// 🪪 Regression: `set_scene` used to unconditionally `rebuild_queue()`, wiping `brush_cache`/`fill`
+    /// progress on every resync — `sync_precompute_session` (puzzle/plugin/rs/lib.rs) calls `set_scene`
+    /// on *every* action, so this made suggestion/fill precompute restart from zero on every single tick,
+    /// freezing the UI. A resync with byte-identical scene JSON must be a no-op.
+    #[test]
+    fn set_scene_with_identical_json_preserves_precompute_progress() {
+        let mut engine = Puzzle3dEngine::new();
+        let json = single_object_scene_json();
+        engine.set_scene(&json).expect("first set_scene should succeed");
+        let queue_len_before = engine.queue.len();
+        assert!(queue_len_before > 0, "rebuild_queue should have enqueued at least the fill steps");
+        engine.precompute_step(4);
+        let queue_len_after_step = engine.queue.len();
+        assert!(queue_len_after_step < queue_len_before, "precompute_step should have drained some queue items");
+
+        engine.set_scene(&json).expect("resync with identical json should succeed");
+        assert_eq!(engine.queue.len(), queue_len_after_step, "identical scene JSON must not rebuild (wipe) the queue");
+
+        // A genuinely different scene (different object count) must still rebuild.
+        let mut scene: serde_json::Value = serde_json::from_str(&json).unwrap();
+        scene["fixture"]["objects"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({ "id": "extra", "objectKind": "Host", "meshUrl": "/test/host.glb", "origin": [5.0, 0.0, 0.0], "orientation": [0.0, 0.0, 0.0, 1.0], "vortices": [] }));
+        let changed_json = serde_json::to_string(&scene).unwrap();
+        engine.set_scene(&changed_json).expect("set_scene with a genuinely different scene should succeed");
+        assert_ne!(engine.queue.len(), queue_len_after_step, "a changed scene must rebuild the queue");
+    }
+
+    /// 🪪 Regression: registering a mesh must invalidate any cached brush candidates computed against a
+    /// different (e.g. fallback-box) body for the same url, but a no-op re-registration must not matter
+    /// once the cache already reflects the current mesh set (the everyday case: every action re-seeds the
+    /// fallback body, and `sync_precompute_session` already guards that with `has_mesh`).
+    #[test]
+    fn register_mesh_invalidates_cached_precompute_state() {
+        let mut engine = Puzzle3dEngine::new();
+        engine.set_scene(&single_object_scene_json()).expect("set_scene should succeed");
+        let queue_len_before = engine.queue.len();
+        let positions: Vec<f32> = vec![-1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0];
+        let indices: Vec<u32> = vec![0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2];
+        engine.register_mesh("/test/host.glb".to_string(), positions, indices);
+        assert_eq!(engine.queue.len(), queue_len_before, "registering a mesh rebuilds the same scene, so the queue shape is unchanged, but the cache/fill must have been recomputed fresh");
+        assert!(engine.brush_cache.is_empty(), "rebuild_queue clears brush_cache; a stale entry from before the real mesh arrived must not survive");
     }
 }
 

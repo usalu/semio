@@ -163,7 +163,9 @@ import {
   resolveLayoutForMode,
   resolvePlaygroundDefaultAppId,
   resolvePluginRegistryId,
+  resolveUiDirtyScope,
   textEditorActions,
+  normalizeAppLabelsOverlay,
   type ActionDefinition,
   type ActionDescriptor,
   type AppDefinition,
@@ -178,10 +180,15 @@ import {
   type NoteCanvasScene,
   type PluginAppLabelsOverlay,
   type PluginHotSwapEvent,
+  type PanelTabKind,
   type PluginRegistryEntry,
+  type PluginUiRefreshRequest,
+  type PluginUiRefreshResponse,
+  type PluginUiRefreshSectionResponse,
   type PluginViewState,
   type PluginWasmHandle as CorePluginWasmHandle,
   type PresencePeer,
+  type UiDirtyScope,
   type Puzzle2dBoardScene,
   type RasterScene,
   type StyleSpec,
@@ -1273,6 +1280,63 @@ export function mergeRecordPreservingIdentity<V>(prev: Readonly<Record<string, V
   }
   return changed ? next : prev;
 }
+
+//#region UiRefresh
+/** @emoji 🐢 One cached section value keyed by `${section}:${key}` (e.g. `window:2d-overview`, `engagements`) — the hash is what gets sent back to the plugin next time so it can skip re-serializing unchanged content. */
+export type UiRefreshCache = Map<string, { readonly hash: string; readonly value: unknown }>;
+
+function uiRefreshWantsWindow(scope: UiDirtyScope, bodyKey: string): boolean {
+  return scope.kind === "full" || (scope.kind === "partial" && (scope.windowBodies ?? []).includes(bodyKey));
+}
+function uiRefreshWantsPanel(scope: UiDirtyScope, bodyKey: string): boolean {
+  return scope.kind === "full" || (scope.kind === "partial" && (scope.panelBodies ?? []).includes(bodyKey));
+}
+function uiRefreshWantsFlag(scope: UiDirtyScope, flag: "tools" | "engagements" | "measures" | "labels"): boolean {
+  return scope.kind === "full" || (scope.kind === "partial" && scope[flag] === true);
+}
+
+/**
+ * @emoji 🐢 Builds one batched `refresh-ui` request restricted to `scope` — `null` when the scope
+ * resolves to nothing worth fetching (`none`, or a `partial` whose fields all miss this app's actual
+ * bodies/kinds). Every requested entry carries the host's cached hash so the plugin can omit payloads
+ * for sections that didn't change.
+ */
+export function buildUiRefreshRequest(
+  scope: UiDirtyScope,
+  windowKinds: readonly { readonly id: string; readonly bodyKey: string }[],
+  panelTabLeaves: readonly { readonly kind: PanelTabKind; readonly bodyKey?: string }[],
+  viewState: PluginViewState,
+  cache: UiRefreshCache,
+): PluginUiRefreshRequest | null {
+  if (scope.kind === "none") return null;
+  const windows = windowKinds.filter((kind) => uiRefreshWantsWindow(scope, kind.bodyKey)).map((kind) => ({ key: kind.id, bodyKey: kind.bodyKey, hash: cache.get(`window:${kind.id}`)?.hash }));
+  const panels = panelTabLeaves
+    .filter((tab): tab is { readonly kind: string; readonly bodyKey: string } => Boolean(tab.bodyKey) && uiRefreshWantsPanel(scope, tab.bodyKey!))
+    .map((tab) => ({ key: panelTabKindId(tab.kind), bodyKey: tab.bodyKey, hash: cache.get(`panel:${panelTabKindId(tab.kind)}`)?.hash }));
+  const tools = uiRefreshWantsFlag(scope, "tools") ? windowKinds.map((kind) => ({ key: kind.id, hash: cache.get(`tools:${kind.id}`)?.hash })) : [];
+  const engagements = uiRefreshWantsFlag(scope, "engagements") ? { hash: cache.get("engagements")?.hash } : undefined;
+  const measures = uiRefreshWantsFlag(scope, "measures") ? { hash: cache.get("measures")?.hash } : undefined;
+  const labels = uiRefreshWantsFlag(scope, "labels") ? { hash: cache.get("labels")?.hash } : undefined;
+  if (windows.length === 0 && panels.length === 0 && tools.length === 0 && !engagements && !measures && !labels) return null;
+  return { viewState, windows, panels, tools, engagements, measures, labels };
+}
+
+/** @emoji 🐢 Writes every changed section (`value !== undefined`) from a `refresh-ui` response into `cache`; unchanged sections are left as-is since the cached value is still current. */
+function applyUiRefreshSectionsToCache(cache: UiRefreshCache, prefix: string, entries: readonly PluginUiRefreshSectionResponse[] | undefined): void {
+  for (const entry of entries ?? []) {
+    if (entry.value !== undefined) cache.set(`${prefix}:${entry.key}`, { hash: entry.hash, value: entry.value });
+  }
+}
+
+export function applyUiRefreshResponseToCache(cache: UiRefreshCache, response: PluginUiRefreshResponse): void {
+  applyUiRefreshSectionsToCache(cache, "window", response.windows);
+  applyUiRefreshSectionsToCache(cache, "panel", response.panels);
+  applyUiRefreshSectionsToCache(cache, "tools", response.tools);
+  if (response.engagements?.value !== undefined) cache.set("engagements", { hash: response.engagements.hash, value: response.engagements.value });
+  if (response.measures?.value !== undefined) cache.set("measures", { hash: response.measures.hash, value: response.measures.value });
+  if (response.labels?.value !== undefined) cache.set("labels", { hash: response.labels.hash, value: response.labels.value });
+}
+//#endregion UiRefresh
 //#endregion ShellHelpers
 
 //#region Boot
@@ -1327,6 +1391,13 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const layoutSeedKeyRef = useRef<string | null>(null);
   const noExampleResetInstanceIdRef = useRef<number | null>(null);
   const extraWindowCounterRef = useRef(0);
+  // 🐢 Per-instance content-hash cache for the batched `refresh-ui` call, keyed by the same
+  // `pluginId:appId:instanceId` triple as `layoutSeedKeyRef` — cleared on session switch below.
+  const uiRefreshCacheRef = useRef<UiRefreshCache>(new Map());
+  // 🐢 Same idea for the studio-mode spawned-instance view, keyed by spawned instanceId — cleared when
+  // the spawned instance itself changes (tracked via `spawnedLayoutSeedRef`).
+  const spawnedUiRefreshCacheRef = useRef<UiRefreshCache>(new Map());
+  const spawnedLayoutSeedRef = useRef<string | null>(null);
   const openStudioIdRef = useRef<string | null>(null);
   const openInstanceIdRef = useRef<string | null>(null);
   const sessionRef = useRef<ActiveSession | null>(null);
@@ -1493,56 +1564,70 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   );
 
   const refreshUi = useCallback(
-    async (nextSession: ActiveSession) => {
+    async (nextSession: ActiveSession, scopeArg: UiDirtyScope = { kind: "full" }) => {
+      if (scopeArg.kind === "none") return;
       const generation = ++refreshGenerationRef.current;
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId)?.handle;
       if (!plugin) return;
+      const layoutSeedKey = `${nextSession.pluginId}:${nextSession.app.id}:${nextSession.instanceId}`;
+      // 🐢 A session switch invalidates every cached hash from the previous instance — force a full
+      // fetch regardless of what scope this particular call was given.
+      let scope = scopeArg;
+      if (layoutSeedKeyRef.current !== layoutSeedKey) {
+        uiRefreshCacheRef.current = new Map();
+        scope = { kind: "full" };
+      }
+      const cache = uiRefreshCacheRef.current;
       const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
       const viewState: ViewState = { ...nextSession.viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology };
-      const slotContext = {
-        plugins: new Map(loadedPlugins.map((entry) => [entry.handle.pluginId, entry.handle])),
-        contributorInstances: contributorInstancesRef.current,
-        viewState,
-      };
-      const windowCount = nextSession.app.windowKinds.length;
       const panelTabLeaves = flattenPanelTabLeaves(nextSession.app.panelTabs);
-      const [rendered, appLabelsOverlay] = await Promise.all([
-        Promise.all([
-          ...nextSession.app.windowKinds.map((kind) => plugin.render(nextSession.instanceId, kind.bodyKey, viewState)),
-          ...panelTabLeaves.map((tab) => plugin.render(nextSession.instanceId, tab.bodyKey!, viewState)),
-          ...nextSession.app.windowKinds.map((kind) => plugin.tools(nextSession.instanceId, { ...viewState, activeWindowKindId: kind.id })),
-          plugin.windowEngagements(nextSession.instanceId, viewState),
-          plugin.windowMeasures(nextSession.instanceId, viewState),
-        ]),
-        plugin.appLabels(nextSession.instanceId, viewState),
-      ]);
-      if (generation !== refreshGenerationRef.current) return;
-      const windowNodes = await Promise.all(rendered.slice(0, windowCount).map((node) => resolveExternalSlots(node as UiNode, slotContext)));
-      const panelNodes = await Promise.all(rendered.slice(windowCount, windowCount + panelTabLeaves.length).map((node) => resolveExternalSlots(node as UiNode, slotContext)));
-      const toolsStart = windowCount + panelTabLeaves.length;
-      const dynamicToolsByKind = rendered.slice(toolsStart, toolsStart + windowCount) as (readonly ToolNode[])[];
-      const dynamicEngagements = rendered[rendered.length - 2] as Readonly<Record<string, WindowEngagement>>;
-      const dynamicMeasures = rendered[rendered.length - 1] as Readonly<Record<string, readonly WindowMeasure[]>>;
-      // 🐢 Merge-with-identity-preservation: a select/camera/tool action re-renders every body from the
-      // plugin, but most bodies' JSON is byte-identical to last time — reusing unchanged references here
-      // is what lets `InterpretedUiNode`'s `React.memo` (and `modeWindows`'s `useMemo`) actually bail
-      // instead of reconciling the whole shell on every interaction.
+      // 🐢 One batched, hash-conditional round trip replaces the old ~12 sequential
+      // render/tools/windowEngagements/windowMeasures/appLabels calls — the plugin omits payloads for
+      // any section whose hash still matches what `cache` already holds.
+      const request = buildUiRefreshRequest(scope, nextSession.app.windowKinds, panelTabLeaves, viewState, cache);
+      if (request) {
+        const response = await plugin.refreshUi(nextSession.instanceId, request);
+        if (generation !== refreshGenerationRef.current) return;
+        const slotContext = {
+          plugins: new Map(loadedPlugins.map((entry) => [entry.handle.pluginId, entry.handle])),
+          contributorInstances: contributorInstancesRef.current,
+          viewState,
+        };
+        // Resolve external slots on freshly-changed window/panel bodies only, before caching them, so a
+        // later no-op refresh reuses the already-resolved cached value instead of re-resolving.
+        const resolveIfChanged = async (entry: PluginUiRefreshSectionResponse): Promise<PluginUiRefreshSectionResponse> =>
+          entry.value !== undefined ? { ...entry, value: await resolveExternalSlots(entry.value as UiNode, slotContext) } : entry;
+        const [resolvedWindows, resolvedPanels] = await Promise.all([Promise.all((response.windows ?? []).map(resolveIfChanged)), Promise.all((response.panels ?? []).map(resolveIfChanged))]);
+        if (generation !== refreshGenerationRef.current) return;
+        applyUiRefreshResponseToCache(cache, { ...response, windows: resolvedWindows, panels: resolvedPanels });
+      }
+      // 🐢 Merge-with-identity-preservation: unrequested/unchanged sections keep exactly the object
+      // reference already in `cache` (dispatched from a prior refresh), so `mergeRecordPreservingIdentity`
+      // bails on them via reference equality — this is what lets `InterpretedUiNode`'s `React.memo` (and
+      // `modeWindows`'s `useMemo`) skip reconciling the whole shell on every interaction.
       dispatch({
         type: "SET_WINDOW_UI_BY_KIND",
-        value: (current) => mergeRecordPreservingIdentity(current, nextSession.app.windowKinds.map((kind, index) => [kind.id, windowNodes[index]! as UiNode])),
+        value: (current) => mergeRecordPreservingIdentity(current, nextSession.app.windowKinds.map((kind) => [kind.id, (cache.get(`window:${kind.id}`)?.value as UiNode | undefined) ?? current[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.loading")}: ${kind.id}` }] as const)),
       });
+      const dynamicEngagements = (cache.get("engagements")?.value as Readonly<Record<string, WindowEngagement>> | undefined) ?? {};
       dispatch({
         type: "SET_WINDOW_ENGAGEMENTS_BY_KIND",
         value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicEngagements)),
       });
+      const dynamicMeasures = (cache.get("measures")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {};
       dispatch({
         type: "SET_WINDOW_MEASURES_BY_KIND",
         value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicMeasures)),
       });
+      const appLabelsOverlay = normalizeAppLabelsOverlay(cache.get("labels")?.value as Partial<PluginAppLabelsOverlay> | undefined);
       dispatch({ type: "SET_APP_LABELS_OVERLAY", value: (current) => preserveJsonIdentity(current, appLabelsOverlay) });
       dispatch({
         type: "SET_PANEL_UI_BY_KEY",
-        value: (current) => mergeRecordPreservingIdentity(current, panelTabLeaves.map((tab, index) => [panelTabKindId(tab.kind), panelNodes[index]! as UiNode])),
+        value: (current) =>
+          mergeRecordPreservingIdentity(
+            current,
+            panelTabLeaves.filter((tab) => tab.bodyKey).map((tab) => [panelTabKindId(tab.kind), (cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as UiNode | undefined) ?? current[panelTabKindId(tab.kind)] ?? { type: "text", value: shellLabel("ui.common.loading") }] as const),
+          ),
       });
       const activeModeId = viewState.activeModeId ?? nextSession.app.defaultModeId ?? nextSession.app.modes[0]?.id;
       const staticTools = nextSession.app.modes.find((mode) => mode.id === activeModeId)?.tools ?? [];
@@ -1551,14 +1636,13 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         value: (current) =>
           mergeRecordPreservingIdentity(
             current,
-            nextSession.app.windowKinds.map((kind, index) => {
-              const dynamic = dynamicToolsByKind[index] ?? [];
+            nextSession.app.windowKinds.map((kind) => {
+              const dynamic = (cache.get(`tools:${kind.id}`)?.value as readonly ToolNode[] | undefined) ?? [];
               return [kind.id, dynamic.length > 0 ? dynamic : staticTools] as const;
             }),
           ),
       });
       const windowIds = nextSession.app.windowKinds.map((kind) => kind.id);
-      const layoutSeedKey = `${nextSession.pluginId}:${nextSession.app.id}:${nextSession.instanceId}`;
       if (layoutSeedKeyRef.current !== layoutSeedKey) {
         layoutSeedKeyRef.current = layoutSeedKey;
         dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: [] });
@@ -1582,7 +1666,8 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   }, [appLabelsOverlay]);
 
   const refreshSpawnedUi = useCallback(
-    async (spawned: SpawnedAppEntry, viewState: ViewState) => {
+    async (spawned: SpawnedAppEntry, viewState: ViewState, scopeArg: UiDirtyScope = { kind: "full" }) => {
+      if (scopeArg.kind === "none") return;
       const generation = ++spawnedRefreshGenerationRef.current;
       const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId);
       const plugin = pluginEntry?.handle;
@@ -1595,17 +1680,30 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         dispatch({ type: "SET_SPAWNED_TOOL_NODES", value: [] });
         return;
       }
+      const spawnedSeed = `${spawned.pluginId}:${spawned.appId}:${spawned.instanceId}`;
+      if (spawnedLayoutSeedRef.current !== spawnedSeed) {
+        spawnedLayoutSeedRef.current = spawnedSeed;
+        spawnedUiRefreshCacheRef.current = new Map();
+      }
+      const cache = spawnedUiRefreshCacheRef.current;
       const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
       const fullViewState: ViewState = { ...viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology };
       const bodyKey = resolveCanvasBodyKey(app);
-      const [ui, dynamicTools, dynamicEngagements, dynamicMeasures] = await Promise.all([
-        plugin.render(spawned.instanceId, bodyKey, fullViewState),
-        plugin.tools(spawned.instanceId, fullViewState),
-        plugin.windowEngagements(spawned.instanceId, fullViewState),
-        plugin.windowMeasures(spawned.instanceId, fullViewState),
-      ]);
-      if (generation !== spawnedRefreshGenerationRef.current) return;
-      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: ui as UiNode });
+      // 🐢 A spawned instance's view is a single body + tools + engagements + measures (no panels, no
+      // labels) — that's already the minimal grouping, so there is no narrower-than-full "partial" scope
+      // worth expressing here; only `none` (handled above) short-circuits the request.
+      const singleWindowKind = [{ id: bodyKey, bodyKey }];
+      const request = buildUiRefreshRequest({ kind: "full" }, singleWindowKind, [], fullViewState, cache);
+      if (request) {
+        const response = await plugin.refreshUi(spawned.instanceId, request);
+        if (generation !== spawnedRefreshGenerationRef.current) return;
+        applyUiRefreshResponseToCache(cache, response);
+      }
+      const ui = (cache.get(`window:${bodyKey}`)?.value as UiNode | undefined) ?? { type: "text", value: shellLabel("ui.common.loading") };
+      const dynamicTools = (cache.get(`tools:${bodyKey}`)?.value as readonly ToolNode[] | undefined) ?? [];
+      const dynamicEngagements = (cache.get("engagements")?.value as Readonly<Record<string, WindowEngagement>> | undefined) ?? {};
+      const dynamicMeasures = (cache.get("measures")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {};
+      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: (current: UiNode | null) => preserveJsonIdentity(current ?? undefined, ui) });
       dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: dynamicEngagements });
       dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: dynamicMeasures });
       dispatch({ type: "SET_SPAWNED_TOOL_NODES", value: selectSpawnedToolNodes(dynamicTools, app, fullViewState.activeModeId ?? app.defaultModeId ?? app.modes[0]?.id) });
@@ -1756,7 +1854,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
    * `openDocument`/`closeDocument`'s worker-backed `DocumentHost` lifecycle, not a per-op JS mirror.
    */
   const applyHostEffects = useCallback(
-    async (effects: readonly HostEffect[], baseSession: ActiveSession) => {
+    async (effects: readonly HostEffect[], baseSession: ActiveSession, uiScope: UiDirtyScope = { kind: "full" }) => {
       let nextViewState = baseSession.viewState;
       for (const effect of effects) {
         if (effect === "requestSync") continue;
@@ -1799,7 +1897,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
                 }),
                 baseSession.viewState,
               );
-              await applyHostEffects(importResponse.requestedEffects ?? [], baseSession);
+              await applyHostEffects(importResponse.requestedEffects ?? [], baseSession, resolveUiDirtyScope(importResponse.uiScope));
             }
           }
           continue;
@@ -1849,9 +1947,9 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       });
       if (isSpawnedPluginSession) {
         const spawned = parsePanelState(nextViewState)?.spawnedApps.find((entry) => entry.pluginId === baseSession.pluginId && entry.instanceId === baseSession.instanceId);
-        if (spawned) await refreshSpawnedUi(spawned, nextViewState);
+        if (spawned) await refreshSpawnedUi(spawned, nextViewState, uiScope);
       } else if (session?.instanceId === nextSession.instanceId || baseSession.instanceId === nextSession.instanceId) {
-        await refreshUi(nextSession);
+        await refreshUi(nextSession, uiScope);
       }
     },
     [ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, session, studioMode],
@@ -1884,12 +1982,12 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       openInstanceIdRef.current = instanceId ?? null;
       if (instanceId) {
         const response = await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: S_PLAY_CONTROLLER_ID, action: "openInstance", args: { instanceId } }), studioSession.viewState);
-        await applyHostEffects(response.requestedEffects ?? [], studioSession);
+        await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope));
       } else {
         const response = await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: S_PLAY_CONTROLLER_ID, action: "closeFocusedInstance" }), studioSession.viewState);
         const currentPanel = parsePanelState(studioSession.viewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
         updateStudioPanel(buildStudioPanelState(currentPanel.programs, currentPanel.spawnedApps, currentPanel.activePanelTab, undefined));
-        await applyHostEffects(response.requestedEffects ?? [], studioSession);
+        await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope));
       }
     },
     [applyHostEffects, loadedPlugins, refreshUi, studioMode, switchToSApp, updateStudioPanel],
@@ -2108,7 +2206,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       // document; there is no host-side JS mirroring step anymore.
       void plugin
         .handleAction(targetSession.instanceId, JSON.stringify(action), targetSession.viewState)
-        .then((response) => applyHostEffects(response.requestedEffects ?? [], targetSession))
+        .then((response) => applyHostEffects(response.requestedEffects ?? [], targetSession, resolveUiDirtyScope(response.uiScope)))
         .catch((actionError) => {
           console.error("[DEBUG] action failed", actionError);
         });
@@ -3034,14 +3132,6 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     [cornerActivePaths, cornerPanels, dock, onAction, session, studioMode],
   );
 
-  const topRightPanel = cornerPanels["top-right"];
-  const topLeftPanel = cornerPanels["top-left"];
-  const navbarStyle = useMemo((): React.CSSProperties => {
-    const paddingLeft = topLeftPanel.visible ? `${topLeftPanel.size}px` : undefined;
-    const paddingRight = topRightPanel.visible ? `${topRightPanel.size}px` : undefined;
-    return { paddingLeft, paddingRight };
-  }, [topLeftPanel.visible, topLeftPanel.size, topRightPanel.visible, topRightPanel.size]);
-
   return (
     <UIFindProvider>
       <LevelProvider level="window">
@@ -3050,7 +3140,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
             <Layout
               mobile={mobile}
               mobilePanel={mobilePanel}
-              navbar={<Navbar items={navbarItems} showFullscreenToggle style={navbarStyle} />}
+              navbar={<Navbar items={navbarItems} showFullscreenToggle />}
               footer={<Footer items={[]} />}
               cornerPanels={{
                 "top-left": dock.corners["top-left"].length > 0 ? buildCornerPanelProps("top-left") : undefined,

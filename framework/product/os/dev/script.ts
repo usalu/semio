@@ -296,28 +296,9 @@ self.addEventListener("message", async (event) => {
             : await api.render(msg.instanceId, msg.bodyKey, msg.viewStateJson),
         });
         break;
-      case "tools":
-        reply(requestId, "tools", {
-          value: await api.tools ? await api.tools(msg.instanceId, msg.viewStateJson) : "[]",
-        });
-        break;
-      case "windowEngagements":
-        reply(requestId, "windowEngagements", {
-          value: await api.windowEngagements
-            ? await api.windowEngagements(msg.instanceId, msg.viewStateJson)
-            : "{}",
-        });
-        break;
-      case "windowMeasures":
-        reply(requestId, "windowMeasures", {
-          value: await api.windowMeasures
-            ? await api.windowMeasures(msg.instanceId, msg.viewStateJson)
-            : "{}",
-        });
-        break;
-      case "appLabels":
-        reply(requestId, "appLabels", {
-          value: await api.appLabels ? await api.appLabels(msg.instanceId, msg.viewStateJson) : "{}",
+      case "refreshUi":
+        reply(requestId, "refreshUi", {
+          value: await api.refreshUi(msg.instanceId, msg.requestJson),
         });
         break;
       default:
@@ -394,40 +375,9 @@ async function createPluginApiInner() {
       });
       return response.json;
     },
-    async tools(instanceId, viewStateJson) {
+    async refreshUi(instanceId, requestJson) {
       if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const context =
-        viewStateJson && viewStateJson.trim().startsWith("{")
-          ? viewStateJson
-          : JSON.stringify({ viewState: JSON.parse(viewStateJson), actor: "local" });
-      const response = await plugin.listTools(instanceId, { json: context });
-      return response.json;
-    },
-    async windowEngagements(instanceId, viewStateJson) {
-      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const context =
-        viewStateJson && viewStateJson.trim().startsWith("{")
-          ? viewStateJson
-          : JSON.stringify({ viewState: JSON.parse(viewStateJson), actor: "local" });
-      const response = await plugin.windowEngagements(instanceId, { json: context });
-      return response.json;
-    },
-    async windowMeasures(instanceId, viewStateJson) {
-      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const context =
-        viewStateJson && viewStateJson.trim().startsWith("{")
-          ? viewStateJson
-          : JSON.stringify({ viewState: JSON.parse(viewStateJson), actor: "local" });
-      const response = await plugin.windowMeasures(instanceId, { json: context });
-      return response.json;
-    },
-    async appLabels(instanceId, viewStateJson) {
-      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const context =
-        viewStateJson && viewStateJson.trim().startsWith("{")
-          ? viewStateJson
-          : JSON.stringify({ viewState: JSON.parse(viewStateJson), actor: "local" });
-      const response = await plugin.appLabels(instanceId, { json: context });
+      const response = await plugin.refreshUi(instanceId, { json: requestJson });
       return response.json;
     },
   };
@@ -441,12 +391,7 @@ async function createPluginApiInner() {
       runSerialized(() => core.render(instanceId, bodyKey, viewStateJson)),
     renderWithDocument: (instanceId, bodyKey, viewStateJson, documentJson) =>
       runSerialized(() => core.renderWithDocument(instanceId, bodyKey, viewStateJson, documentJson)),
-    tools: (instanceId, viewStateJson) => runSerialized(() => core.tools(instanceId, viewStateJson)),
-    windowEngagements: (instanceId, viewStateJson) =>
-      runSerialized(() => core.windowEngagements(instanceId, viewStateJson)),
-    windowMeasures: (instanceId, viewStateJson) =>
-      runSerialized(() => core.windowMeasures(instanceId, viewStateJson)),
-    appLabels: (instanceId, viewStateJson) => runSerialized(() => core.appLabels(instanceId, viewStateJson)),
+    refreshUi: (instanceId, requestJson) => runSerialized(() => core.refreshUi(instanceId, requestJson)),
   };
 }
 

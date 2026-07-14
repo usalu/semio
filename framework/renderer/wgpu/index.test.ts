@@ -22,10 +22,7 @@ describe("framework renderer wgpu", () => {
       destroyApp: async () => {},
       handleAction: async () => [],
       render: async () => ({ type: "text", value: "hello" }),
-      tools: async () => [],
-      windowEngagements: async () => ({}),
-      windowMeasures: async () => ({}),
-      appLabels: async () => ({ windowKindLabels: {}, panelTabLabels: {}, modeLabels: {} }),
+      refreshUi: async () => ({}),
       dispose: () => {},
     });
     expect(JSON.parse(handle.manifest()).pluginId).toBe("draw");

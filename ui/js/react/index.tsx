@@ -4810,10 +4810,10 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, corner, parentPath =
                 }
                 className={cn(buttonClass, isActive && showActiveColor && panelTabActiveClass, isDragSource && "opacity-40", isChildDropTarget && "ring-2 ring-accent")}
               >
-                <span className={panelTabLabelClass}>{tab.name}</span>
                 <span className={panelTabIconSlotClass}>
                   <Icon size={12} />
                 </span>
+                <span className={panelTabLabelClass}>{tab.name}</span>
               </button>
             </ChromeControlHint>
           </React.Fragment>
@@ -10292,19 +10292,18 @@ export interface NavbarProps {
   items: NavbarItem[];
   className?: string;
   showFullscreenToggle?: boolean;
-  style?: React.CSSProperties;
 }
 
 /**
  * Navbar holds the data fields for a Navbar record.
  **/
-function Navbar({ items, className, showFullscreenToggle = true, style }: NavbarProps) {
+function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
   const normalItems = items.filter((item) => !item.centered);
   const centeredItems = items.filter((item) => item.centered);
   return (
-    <nav id="ui.navbar" data-slot="navbar" className={cn(borderNormalBottomClass, "relative h-large z-navbar", bgClass, className)} style={style}>
+    <nav id="ui.navbar" data-slot="navbar" className={cn(borderNormalBottomClass, "relative h-large z-navbar", bgClass, className)}>
       <UiChromeLabelPolicyProvider policy="always">
         <div className="p-single flex gap-single items-center min-w-0 h-full">
           {normalItems.map((item, index) => (
@@ -10319,7 +10318,7 @@ function Navbar({ items, className, showFullscreenToggle = true, style }: Navbar
           ) : null}
         </div>
         {centeredItems.map((item, index) => (
-          <div key={item.key ?? index} className="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center justify-center" style={{ left: style?.paddingLeft, right: style?.paddingRight }}>
+          <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>{item.content}</div>
           </div>
         ))}
@@ -15342,8 +15341,9 @@ const CornerPanel: React.FC<CornerPanelProps> = ({ corner, visible = true, onVis
           {visible ? (
             <>
               <Scrollable className="relative z-10 flex-1 min-h-0">
-                <div data-slot="corner-panel-content" className="flex min-h-0 flex-1 flex-col">
-                  {activeTabTrees && activeNode ? <PanelTreeUnitsPane corner={corner} tabId={activeNode.id} units={activeTabTrees} /> : null}
+                {/* 🌲 Panel body content never mirrors — trees, labels, and their controls always read left-to-right regardless of which corner hosts them; only the chrome (tab bar, resize handle, panel position) follows the corner's flow. */}
+                <div data-slot="corner-panel-content" dir="ltr" className="flex min-h-0 flex-1 flex-col">
+                  <FlowProvider inline="ltr">{activeTabTrees && activeNode ? <PanelTreeUnitsPane corner={corner} tabId={activeNode.id} units={activeTabTrees} /> : null}</FlowProvider>
                 </div>
               </Scrollable>
               {onSizeChange ? (
@@ -23147,6 +23147,20 @@ if (import.meta.vitest) {
       expect(rightContainer.querySelector('[data-slot="corner-panel"]')?.getAttribute("dir")).toBe("rtl");
     });
 
+    it("CornerPanel content (trees, labels, controls) never mirrors — only the chrome follows the corner's flow", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [
+        singleTreeLeaf({
+          id: "tab-a",
+          icon: StubIcon,
+          name: "Tab A",
+          tree: { sections: [{ id: "sec", label: "Section", defaultOpen: true, items: [{ id: "leaf", label: "Leaf row" }] }] },
+        }),
+      ];
+      const { container } = render(<CornerPanel corner="top-right" visible tabs={tabs} />);
+      expect(container.querySelector('[data-slot="corner-panel-content"]')?.getAttribute("dir")).toBe("ltr");
+    });
+
     it("CornerPanel derives its tab bar's stacking direction from the corner's flow block axis", () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
@@ -23178,7 +23192,7 @@ if (import.meta.vitest) {
       expect(computeTabDockDropZone(75, 10, [rtlRow], new Set())).toEqual({ kind: "insert", corner: "top-right", parentPath: [], index: 0 });
     });
 
-    it("renders the label before the trailing icon for Button, Toggle, and panel tab buttons", () => {
+    it("renders the label before the trailing icon for Button and Toggle", () => {
       const buttonMarkup = renderToStaticMarkup(
         <UiChromeLabelPolicyProvider policy="always">
           <Button id="tooltip.manual" text="Apply" icon="check" />
@@ -23194,11 +23208,14 @@ if (import.meta.vitest) {
       );
       expect(toggleMarkup.indexOf(">Focus<")).toBeGreaterThanOrEqual(0);
       expect(toggleMarkup.indexOf(">Focus<")).toBeLessThan(toggleMarkup.indexOf('data-icon="crosshair"'));
+    });
 
+    it("keeps the panel tab icon leading (at the flow-start edge, so it sits at the corner's own outer edge in every corner)", () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
       const tabMarkup = renderToStaticMarkup(<PanelTabBar variant="corner" tabs={tabs} activePath={["tab-a"]} onActivePathChange={() => undefined} />);
-      expect(tabMarkup.indexOf(">Tab A<")).toBeLessThan(tabMarkup.indexOf(panelTabIconSlotClass));
+      expect(tabMarkup.indexOf(panelTabIconSlotClass)).toBeGreaterThanOrEqual(0);
+      expect(tabMarkup.indexOf(panelTabIconSlotClass)).toBeLessThan(tabMarkup.indexOf(">Tab A<"));
     });
 
     it("mirrors flow-relative alignment onto logical classes (tree label, navbar trailing slot)", () => {

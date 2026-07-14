@@ -561,6 +561,127 @@ pub mod d2 {
         }
     }
 
+    /// 🐢 Classifies a batch of board events into the narrowest `UiDirtyScope` that covers all of them —
+    /// `applyBoardEvents` fires on every select/drag/zoom, so getting this right is most of the
+    /// perf-round-3 win. Unrecognized/empty event batches fall back to `Full` (safe default).
+    fn puzzle2d_board_events_scope(events: &[Value]) -> semio_framework_core::kernel::UiDirtyScope {
+        use semio_framework_core::kernel::UiDirtyScope;
+        if events.is_empty() {
+            return UiDirtyScope::None;
+        }
+        let panes: Vec<String> = PUZZLE2D_PANES.iter().map(|pane| pane.to_string()).collect();
+        let mut window_bodies = false;
+        let mut panel_layers = false;
+        let mut panel_properties = false;
+        let mut engagements = false;
+        let mut measures = false;
+        let mut recognized_all = true;
+        for event in events {
+            let Some(name) = event.get("name").and_then(|value| value.as_str()) else {
+                recognized_all = false;
+                continue;
+            };
+            match name {
+                "camera" => {
+                    window_bodies = true;
+                }
+                "select" => {
+                    window_bodies = true;
+                    panel_layers = true;
+                    panel_properties = true;
+                    engagements = true;
+                }
+                "nodeMove" | "nodeDragEnd" => {
+                    window_bodies = true;
+                    panel_properties = true;
+                }
+                "brushPlace" | "edgeCreate" | "edgeDelete" | "nodeDelete" => {
+                    window_bodies = true;
+                    panel_layers = true;
+                    panel_properties = true;
+                    engagements = true;
+                    measures = true;
+                }
+                "brushCandidates" => {
+                    window_bodies = true;
+                    engagements = true;
+                }
+                _ => recognized_all = false,
+            }
+        }
+        if !recognized_all {
+            return UiDirtyScope::Full;
+        }
+        let mut panel_bodies = Vec::new();
+        if panel_layers {
+            panel_bodies.push(PUZZLE2D_PLAY_BODY_LAYERS.to_string());
+        }
+        if panel_properties {
+            panel_bodies.push(PUZZLE2D_PLAY_BODY_PROPERTIES.to_string());
+        }
+        UiDirtyScope::Partial {
+            window_bodies: if window_bodies { panes } else { Vec::new() },
+            panel_bodies,
+            tools: false,
+            engagements,
+            measures,
+            labels: false,
+        }
+    }
+
+    /// 🐢 Narrow `UiDirtyScope` shared by pure view/selection/camera actions that only touch the 3
+    /// canvas panes (never a panel or engagement/measure/tool refresh).
+    fn puzzle2d_window_only_scope() -> semio_framework_core::kernel::UiDirtyScope {
+        semio_framework_core::kernel::UiDirtyScope::Partial {
+            window_bodies: PUZZLE2D_PANES.iter().map(|pane| pane.to_string()).collect(),
+            panel_bodies: Vec::new(),
+            tools: false,
+            engagements: false,
+            measures: false,
+            labels: false,
+        }
+    }
+
+    /// 🐢 Narrow `UiDirtyScope` for actions that additionally change the engagement bar (active tool,
+    /// brush weights, LOD/grid settings, engagement text input) but never touch document content.
+    fn puzzle2d_window_and_engagements_scope() -> semio_framework_core::kernel::UiDirtyScope {
+        semio_framework_core::kernel::UiDirtyScope::Partial {
+            window_bodies: PUZZLE2D_PANES.iter().map(|pane| pane.to_string()).collect(),
+            panel_bodies: Vec::new(),
+            tools: false,
+            engagements: true,
+            measures: false,
+            labels: false,
+        }
+    }
+
+    /// 🐢 Narrow `UiDirtyScope` for settings surfaced in the measures sidebar (LOD mode, grid, brush
+    /// weights, suggestion offset — see `puzzle2d_window_measures`) but that never touch document
+    /// content or the engagement bar.
+    fn puzzle2d_window_and_measures_scope() -> semio_framework_core::kernel::UiDirtyScope {
+        semio_framework_core::kernel::UiDirtyScope::Partial {
+            window_bodies: PUZZLE2D_PANES.iter().map(|pane| pane.to_string()).collect(),
+            panel_bodies: Vec::new(),
+            tools: false,
+            engagements: false,
+            measures: true,
+            labels: false,
+        }
+    }
+
+    /// 🐢 Narrow `UiDirtyScope` for a runtime-only selection change: the 3 canvas panes plus the
+    /// layers/properties panels (which highlight the selection) and the engagement bar.
+    fn puzzle2d_select_scope() -> semio_framework_core::kernel::UiDirtyScope {
+        semio_framework_core::kernel::UiDirtyScope::Partial {
+            window_bodies: PUZZLE2D_PANES.iter().map(|pane| pane.to_string()).collect(),
+            panel_bodies: vec![PUZZLE2D_PLAY_BODY_LAYERS.to_string(), PUZZLE2D_PLAY_BODY_PROPERTIES.to_string()],
+            tools: false,
+            engagements: true,
+            measures: false,
+            labels: false,
+        }
+    }
+
     /// 🪞 Re-syncs `envelope.runtime.selected_ids` from `self.host` for engine-driven selection changes
     /// (e.g. `delete_selection`, brush commit). Camera is deliberately NOT mirrored here: every action
     /// that moves the camera (`setCamera`, `focusSelection`, the `camera` board event) already writes
@@ -1468,10 +1589,15 @@ pub mod d2 {
             }
             sync_host_runtime_state(&mut self.host, &envelope);
             let mut coalesce_key: Option<String> = None;
+            // 🐢 Default to Full (safe: every unrecognized/rare action re-renders everything, same as
+            // before this ticket); the narrow-tier arms below override it to the smallest scope that
+            // actually covers what they touch.
+            let mut ui_scope = semio_framework_core::kernel::UiDirtyScope::Full;
             match action {
                 "setSelection" | "documentSelect" => {
                     envelope.runtime.selected_ids = selection_ids(args);
                     self.host.set_selection_ids(&envelope.runtime.selected_ids);
+                    ui_scope = puzzle2d_select_scope();
                 }
                 "addNode" => {
                     let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str());
@@ -1517,6 +1643,7 @@ pub mod d2 {
                         }
                         set_fixture_camera(&mut envelope.fixture, camera);
                         coalesce_key = Some("camera".into());
+                        ui_scope = puzzle2d_window_only_scope();
                     }
                 }
                 "setActiveExample" => {
@@ -1537,9 +1664,7 @@ pub mod d2 {
                     if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
                         envelope.runtime.active_tool = tool.into();
                         self.host.set_active_tool(tool);
-                        {}
-                    } else {
-                        {}
+                        ui_scope = puzzle2d_window_and_engagements_scope();
                     }
                 }
                 "engagementPossibleSelect" => {
@@ -1555,16 +1680,14 @@ pub mod d2 {
                     if PUZZLE2D_PANES.contains(&pane) {
                         envelope.runtime.engagement_input_by_pane.insert(pane.to_string(), String::new());
                     }
-                    {}
+                    ui_scope = puzzle2d_window_and_engagements_scope();
                 }
                 "engagementInput" => {
                     let pane = args.and_then(|value| value.get("pane")).and_then(|value| value.as_str()).unwrap_or(PUZZLE2D_PANE_OVERVIEW);
                     let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
                     if PUZZLE2D_PANES.contains(&pane) {
                         envelope.runtime.engagement_input_by_pane.insert(pane.to_string(), value.to_string());
-                        {}
-                    } else {
-                        {}
+                        ui_scope = puzzle2d_window_and_engagements_scope();
                     }
                 }
                 "engagementSubmit" => {
@@ -1642,31 +1765,27 @@ pub mod d2 {
                                 self.host.set_forced_draw_lod_label(mode);
                             }
                         }
-                        {}
-                    } else {
-                        {}
+                        ui_scope = puzzle2d_window_and_measures_scope();
                     }
                 }
                 "setGridSnapEnabled" => {
                     let enabled = args.and_then(|value| value.get("enabled")).and_then(|value| value.as_bool()).unwrap_or(false);
                     envelope.runtime.grid_snap_enabled = enabled;
                     self.host.set_grid_snap_enabled(enabled);
-                    {}
+                    ui_scope = puzzle2d_window_and_measures_scope();
                 }
                 "setGridFactor" => {
                     if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
                         envelope.runtime.grid_factor = value;
                         let _ = self.host.set_grid_factor(value);
-                        {}
-                    } else {
-                        {}
+                        ui_scope = puzzle2d_window_and_measures_scope();
                     }
                 }
                 "setSelectionMethod" => {
                     let method = args.and_then(|value| value.get("method")).and_then(|value| value.as_str()).unwrap_or("rectangle");
                     envelope.runtime.selection_method = method.into();
                     self.host.set_selection_options(method, "replace", true, true, true);
-                    {}
+                    ui_scope = puzzle2d_window_only_scope();
                 }
                 "setBrushKindWeights" => {
                     if let Some(weights) = args.and_then(|value| value.get("weights")) {
@@ -1687,13 +1806,13 @@ pub mod d2 {
                     })) {
                         self.host.set_brush_kind_weights(&weights_json);
                     }
-                    {}
+                    ui_scope = puzzle2d_window_and_measures_scope();
                 }
                 "setBrushNodeSize" => {
                     if let Some(size) = args.and_then(|value| value.get("size")).and_then(|value| value.as_f64()) {
                         self.host.set_brush_node_size(size);
+                        ui_scope = puzzle2d_window_only_scope();
                     }
-                    {}
                 }
                 "setSuggestionOffset" => {
                     let distance = args.and_then(|value| value.get("distance").or_else(|| value.get("value"))).and_then(|value| value.as_f64());
@@ -1701,24 +1820,20 @@ pub mod d2 {
                         let clamped = distance.clamp(PUZZLE2D_SUGGESTION_OFFSET_MIN, PUZZLE2D_SUGGESTION_OFFSET_MAX);
                         envelope.runtime.suggestion_offset = clamped;
                         self.host.set_suggestion_offset(clamped);
-                        {}
-                    } else {
-                        {}
+                        ui_scope = puzzle2d_window_and_measures_scope();
                     }
                 }
                 "brushCycleCandidate" => {
                     let forward = args.and_then(|value| value.get("forward")).and_then(|value| value.as_bool()).unwrap_or(true);
                     self.host.brush_cycle_candidate(forward);
                     envelope.runtime.brush_candidate_index = envelope.runtime.brush_candidate_index.saturating_add(1);
-                    {}
+                    ui_scope = puzzle2d_window_and_engagements_scope();
                 }
                 "brushSetCandidateIndex" => {
                     if let Some(index) = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()) {
                         self.host.brush_set_candidate_index(index as usize);
                         envelope.runtime.brush_candidate_index = index as usize;
-                        {}
-                    } else {
-                        {}
+                        ui_scope = puzzle2d_window_and_engagements_scope();
                     }
                 }
                 "brushOpenSlot" => {
@@ -1802,12 +1917,12 @@ pub mod d2 {
                     let ids: Vec<String> = fixture_nodes(&envelope.fixture).iter().filter_map(|node| node.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect();
                     envelope.runtime.selected_ids = ids.clone();
                     self.host.set_selection_ids(&ids);
-                    {}
+                    ui_scope = puzzle2d_select_scope();
                 }
                 "clearSelection" => {
                     envelope.runtime.selected_ids.clear();
                     self.host.set_selection_ids(&[]);
-                    {}
+                    ui_scope = puzzle2d_select_scope();
                 }
                 "focusSelection" => {
                     if envelope.runtime.selected_ids.is_empty() {
@@ -1850,27 +1965,30 @@ pub mod d2 {
                 }
                 "applyBoardEvents" => {
                     if let Some(events_json) = args.and_then(|value| value.get("eventsJson")).and_then(|value| value.as_str()) {
+                        ui_scope = serde_json::from_str::<Vec<Value>>(events_json).map(|events| puzzle2d_board_events_scope(&events)).unwrap_or(semio_framework_core::kernel::UiDirtyScope::Full);
                         apply_board_events_from_json(events_json, &mut envelope);
                         // 🪞 `apply_host_events` below trusts `host.selection` as the post-action source of
                         // truth and overwrites `envelope.runtime.selected_ids` with it — mirror the new
                         // selection into the host now (as every other selection-setting arm already does)
                         // or the just-applied `select`/`brushCandidates` selection is silently reverted.
                         self.host.set_selection_ids(&envelope.runtime.selected_ids);
-                        {}
-                    } else {
-                        {}
                     }
                 }
                 "lodScaleJson" => {
                     let _ = puzzle_2d_lod_scale_json();
-                    {}
+                    ui_scope = semio_framework_core::kernel::UiDirtyScope::None;
                 }
                 _ => {}
             }
             apply_host_events(&mut self.host, &mut envelope);
             self.runtime = envelope.runtime;
             let ops = puzzle2d_document_delta_ops(&before, &envelope.fixture);
-            ActionEmit { ops, coalesce_key, ..Default::default() }
+            // 🐢 Safety net: a `None` scope claims nothing needs re-rendering — never pair that with an
+            // actual document mutation (would silently desync remote clients' UI from the committed op).
+            if !ops.is_empty() && matches!(ui_scope, semio_framework_core::kernel::UiDirtyScope::None) {
+                ui_scope = semio_framework_core::kernel::UiDirtyScope::Full;
+            }
+            ActionEmit { ops, coalesce_key, ui_scope, ..Default::default() }
         }
 
         fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
@@ -2102,6 +2220,66 @@ pub mod d2 {
             let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
             let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &meta("local")).expect("select");
             assert!(result.operations.is_empty(), "selection must not produce document ops");
+        }
+
+        /// 🐢 Perf round 3: a select event must declare a narrow `Partial` ui_scope (the 3 canvas panes +
+        /// layers/properties panels + engagements) — never `Full`, or the shell's batched `refresh-ui`
+        /// call degrades back to fetching everything on every select.
+        #[test]
+        fn select_action_declares_partial_ui_scope() {
+            use semio_framework_core::kernel::UiDirtyScope;
+            let mut app = concrete_forest_app();
+            let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
+            let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &meta("local")).expect("select");
+            match result.ui_scope {
+                UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, tools, labels } => {
+                    assert_eq!(window_bodies.len(), 3, "select must touch all 3 canvas panes");
+                    assert!(panel_bodies.contains(&PUZZLE2D_PLAY_BODY_LAYERS.to_string()));
+                    assert!(panel_bodies.contains(&PUZZLE2D_PLAY_BODY_PROPERTIES.to_string()));
+                    assert!(engagements, "select must refresh the engagement bar");
+                    assert!(!measures, "select must not force a measures refresh");
+                    assert!(!tools);
+                    assert!(!labels);
+                }
+                other => panic!("expected a Partial ui_scope for select, got {other:?}"),
+            }
+        }
+
+        /// 🐢 Perf round 3: a camera-only board event touches only the 3 canvas panes — no panels,
+        /// engagements, measures, or tools.
+        #[test]
+        fn camera_event_declares_window_only_ui_scope() {
+            use semio_framework_core::kernel::UiDirtyScope;
+            let mut app = new_app();
+            let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 1.0, "y": 2.0, "zoom": 1.0 } }]).to_string() })), &ViewState::default(), &meta("local")).expect("camera event");
+            match result.ui_scope {
+                UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, tools, labels } => {
+                    assert_eq!(window_bodies.len(), 3);
+                    assert!(panel_bodies.is_empty());
+                    assert!(!engagements && !measures && !tools && !labels);
+                }
+                other => panic!("expected a Partial ui_scope for a camera event, got {other:?}"),
+            }
+        }
+
+        /// 🐢 Perf round 3: an empty `applyBoardEvents` batch (no-op) must declare `None` — nothing for
+        /// the shell to re-render at all.
+        #[test]
+        fn empty_board_events_declare_none_ui_scope() {
+            use semio_framework_core::kernel::UiDirtyScope;
+            let mut app = new_app();
+            let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), &ViewState::default(), &meta("local")).expect("no-op");
+            assert!(matches!(result.ui_scope, UiDirtyScope::None), "empty board events must declare None, got {:?}", result.ui_scope);
+        }
+
+        /// 🐢 Perf round 3: cold-tier structural actions (document ops) must keep the safe `Full`
+        /// default — no puzzle2d scope helper narrows them.
+        #[test]
+        fn add_node_action_declares_full_ui_scope() {
+            use semio_framework_core::kernel::UiDirtyScope;
+            let mut app = new_app();
+            let result = app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &meta("local")).expect("add node");
+            assert!(matches!(result.ui_scope, UiDirtyScope::Full), "addNode must stay Full, got {:?}", result.ui_scope);
         }
 
         #[test]
@@ -2983,13 +3161,13 @@ pub mod d3 {
         session.brush_preview_json(&vortex_id, envelope.runtime.brush_candidate_index)
     }
 
+    /// ⏱️ Bounded to one small chunk per call (matches puzzle5d's drive path and the premigration idle
+    /// worker's chunk budget) — `handle_action` runs synchronously on the UI thread, and the host redrives
+    /// this via 120ms `suggestionsTick`/`fillBuildTick` ticks, so a large per-call budget here is exactly
+    /// what froze the UI for minutes: 128×32 Monte-Carlo collision task units, blocking, every single tick.
     fn drive_precompute(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
         sync_precompute_session(session, envelope);
-        for _ in 0..128 {
-            if !session.precompute_step(32) {
-                break;
-            }
-        }
+        session.precompute_step(8);
     }
 
     fn scene_config_json(envelope: &Puzzle3dScene) -> String {
@@ -7340,10 +7518,16 @@ pub mod d5 {
     impl Puzzle5dPlayApp {
         fn drive_precompute(&mut self, envelope: &Puzzle5dScene) {
             let _ = self.precompute.set_scene(&scene_config_json(envelope));
-            let fallback = semio_framework_plugin::mesh_from_kind(PUZZLE5D_FALLBACK_MESH_KIND);
-            self.precompute.register_mesh(PUZZLE5D_FALLBACK_MESH_KIND, &fallback.positions, &fallback.indices);
+            // 🧊 Guarded by `has_mesh` (mirrors the puzzle3d path): `register_mesh` now invalidates the
+            // precompute cache, so re-registering the same fallback body on every drive would wipe
+            // suggestion/fill progress every call and defeat `set_scene`'s idempotence above.
+            if !self.precompute.has_mesh(PUZZLE5D_FALLBACK_MESH_KIND) {
+                let fallback = semio_framework_plugin::mesh_from_kind(PUZZLE5D_FALLBACK_MESH_KIND);
+                self.precompute.register_mesh(PUZZLE5D_FALLBACK_MESH_KIND, &fallback.positions, &fallback.indices);
+            }
             for url in collect_mesh_urls(&envelope.document) {
-                if !self.registered_mesh_urls.contains(&url) {
+                if !self.registered_mesh_urls.contains(&url) && !self.precompute.has_mesh(&url) {
+                    let fallback = semio_framework_plugin::mesh_from_kind(PUZZLE5D_FALLBACK_MESH_KIND);
                     self.precompute.register_mesh(&url, &fallback.positions, &fallback.indices);
                 }
             }
