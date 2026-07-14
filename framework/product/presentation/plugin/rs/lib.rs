@@ -5,7 +5,7 @@ use presentation_deck::{
     populate_tile_drafts_from_grid, FigureTileDraft, FigureTileDraftPatch, FigureTileFrame,
     FigureTileGridSeedSpec, FigureTileSource, PresentationDeck, PresentationOp, PRESENTATION_DOCUMENT_SCHEMA,
 };
-use semio_framework_plugin::{SurfaceKind, PanelGroup,
+use semio_framework_plugin::{SurfaceKind, PanelGroup, ActionArgDef, ActionArgOption, HostEffect,
     build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionEmit, App,
     Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView, UiFieldNode, UiInputNode, UiInspectorFieldGroup,
@@ -34,7 +34,7 @@ static TILE_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖Constants
 
 //#region 🔖Runtime
-/// 🎛️ Ephemeral view state (selection, engagement draft, clipboard prompt) — lives in the app struct,
+/// 🎛️ Ephemeral view state (selection, engagement draft) — lives in the app struct,
 /// not the document, so it never pollutes undo history.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -43,10 +43,18 @@ struct PresentationPlayRuntime {
     selected_ids: Vec<String>,
     #[serde(default)]
     engagement_input: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    clipboard_prompt: Option<String>,
-    #[serde(default)]
-    clipboard_epoch: u64,
+}
+
+/// 📋 Host effect delivering the generated tile-morph prompt to the user as a downloadable markdown
+/// file — the genuine shell side-effect that replaces the retired ephemeral clipboard scratch (the
+/// landed `HostEffect` contract carries no clipboard variant, so the prompt is exported as media).
+fn tile_morph_prompt_effect(deck: &PresentationDeck) -> HostEffect {
+    HostEffect::DownloadMediaExport {
+        filename: "tile-morph-prompt.md".into(),
+        mime_type: "text/markdown".into(),
+        data: build_tile_morph_prompt(&deck.source, &deck.tiles),
+        encoding: None,
+    }
 }
 
 fn presentation_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -714,11 +722,7 @@ impl DocumentApp for PresentationPlayApp {
                 self.runtime.selected_ids.clear();
                 ActionEmit::ops(vec![PresentationOp::SetTiles { tiles: Vec::new() }])
             }
-            "copyPrompt" => {
-                self.runtime.clipboard_prompt = Some(build_tile_morph_prompt(&deck.source, &deck.tiles));
-                self.runtime.clipboard_epoch += 1;
-                ActionEmit::default()
-            }
+            "copyPrompt" => ActionEmit::effect(tile_morph_prompt_effect(deck)),
             "engagementInput" => {
                 if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()) {
                     self.runtime.engagement_input = value.into();
@@ -765,10 +769,8 @@ impl DocumentApp for PresentationPlayApp {
                         ActionEmit::ops(vec![PresentationOp::SetTiles { tiles: Vec::new() }])
                     }
                     "copy" | "copy prompt" => {
-                        self.runtime.clipboard_prompt = Some(build_tile_morph_prompt(&deck.source, &deck.tiles));
-                        self.runtime.clipboard_epoch += 1;
                         self.runtime.engagement_input.clear();
-                        ActionEmit::default()
+                        ActionEmit::effect(tile_morph_prompt_effect(deck))
                     }
                     _ => ActionEmit::default(),
                 }
@@ -848,12 +850,24 @@ fn create_presentation_app() -> App {
             .operation("setActiveExample", "Set Active Example")
             .operation("clearTiles", "Clear Tiles")
             .operation("engagementSubmit", "Engagement Submit")
-            // 👁️ Ephemeral view state — selection, engagement draft, clipboard.
+            // 🐚 Host side-effect — exports the generated tile-morph prompt to the user (no document mutation).
+            .shell_action("copyPrompt", "Copy Prompt")
+            // 👁️ Ephemeral view state — selection, engagement draft.
             .view_action("setSelectedIds", "Set Selected Ids")
-            .view_action("copyPrompt", "Copy Prompt")
             .view_action("engagementInput", "Engagement Input")
             .view_action("canvasPointerDown", "Canvas Pointer Down")
-            .view_action("noop", "No Op"),
+            .view_action("noop", "No Op")
+            // 🎛️ Declared arg schemas for palette-parametric actions (materialized before dispatch).
+            .action_args("seedGrid", vec![
+                ActionArgDef::number("rows", "Rows").required().default_value(2),
+                ActionArgDef::number("columns", "Columns").required().default_value(2),
+            ])
+            .action_args("setSource", vec![ActionArgDef::text("src", "Source").required()])
+            .action_args("setActiveExample", vec![
+                ActionArgDef::select("exampleId", "Example", vec![ActionArgOption::new("demo", "Demo")])
+                    .required()
+                    .default_value("demo"),
+            ]),
     )
     .example("demo", "Demo", serde_json::to_string(&default_presentation_deck()).unwrap())
     .program("presentation", "Presentation", "deck")
@@ -904,7 +918,8 @@ semio_framework_plugin::semio_plugin! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{ActionKind, ActionMeta, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::app::AppActionRegistry;
 
     fn meta(actor: &str) -> ActionMeta {
         ActionMeta { actor: actor.into(), instance_id: 1 }
@@ -912,6 +927,38 @@ mod tests {
 
     fn new_app() -> VcsDocumentApp<PresentationPlayApp> {
         VcsDocumentApp::new(PresentationPlayApp::default())
+    }
+
+    /// 🧬 A wrapper carrying the real registry so kind discipline (Shell/View-emits-ops rejection) and
+    /// declared-arg materialization run exactly as in production.
+    fn new_app_with_registry() -> VcsDocumentApp<PresentationPlayApp> {
+        let definition = create_presentation_app().definition;
+        VcsDocumentApp::with_registry(PresentationPlayApp::default(), AppActionRegistry::from_definition(&definition))
+    }
+
+    #[test]
+    fn copy_prompt_is_shell_effect_not_view_mutation() {
+        let mut app = new_app_with_registry();
+        app.handle_action("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &ViewState::default(), &meta("local"))
+            .expect("seed grid");
+        let result = app.handle_action("copyPrompt", None, &ViewState::default(), &meta("local")).expect("copy prompt");
+        assert!(result.operations.is_empty(), "copyPrompt is a host effect, not a document op");
+        assert!(
+            matches!(result.requested_effects.as_slice(), [HostEffect::DownloadMediaExport { mime_type, .. }] if mime_type == "text/markdown"),
+            "copyPrompt emits exactly one media-export host effect carrying the morph prompt",
+        );
+        let definition = create_presentation_app().definition;
+        assert!(
+            definition.actions.iter().any(|action| action.id == "copyPrompt" && matches!(action.kind, ActionKind::Shell)),
+            "copyPrompt is declared Shell-kind (host side-effect), never View",
+        );
+    }
+
+    #[test]
+    fn seed_grid_materializes_declared_arg_defaults_via_registry() {
+        let mut app = new_app_with_registry();
+        app.handle_action("seedGrid", None, &ViewState::default(), &meta("local")).expect("seed grid with defaults");
+        assert_eq!(app.projection().expect("projection").tiles.len(), 4, "declared rows=2/columns=2 defaults seed a 2x2 grid");
     }
 
     fn seed_2x2(app: &mut VcsDocumentApp<PresentationPlayApp>) {

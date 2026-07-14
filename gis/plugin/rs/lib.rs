@@ -1220,7 +1220,8 @@ pub mod app_2d {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+        use semio_framework_plugin::{ActionKind, ActionMeta, PluginApp, VcsDocumentApp};
+        use semio_framework_plugin::app::AppActionRegistry;
         use vcs::MemoryBackbone;
 
         fn meta(actor: &str) -> ActionMeta {
@@ -1229,6 +1230,12 @@ pub mod app_2d {
 
         fn new_app() -> VcsDocumentApp<Gis2dPlayApp> {
             VcsDocumentApp::new(Gis2dPlayApp::default())
+        }
+
+        /// 🧬 A wrapper carrying the real registry so kind discipline (View/Shell-emits-ops rejection) runs.
+        fn new_app_with_registry() -> VcsDocumentApp<Gis2dPlayApp> {
+            let definition = create_gis2d_app().definition;
+            VcsDocumentApp::with_registry(Gis2dPlayApp::default(), AppActionRegistry::from_definition(&definition))
         }
 
         fn render(app: &mut VcsDocumentApp<Gis2dPlayApp>, body_key: &str, view_state: &ViewState) -> String {
@@ -1339,6 +1346,35 @@ pub mod app_2d {
             assert!(!app.projection().expect("projection").positions.is_empty());
             app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
             assert!(app.projection().expect("projection").positions.is_empty(), "undo returns to the empty document");
+        }
+
+        /// 🧬 `setActiveExample` replaces document content with `SetDocument` ops, so it MUST be declared as
+        /// an Operation. Under the real registry the View/Shell → emits-ops guard rejects a mis-declaration;
+        /// this proves the corrected declaration lets the document-replacing edit flow through without erroring.
+        #[test]
+        fn set_active_example_is_operation_under_registry_kind_discipline() {
+            let definition = create_gis2d_app().definition;
+            let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
+            assert!(matches!(action.kind, ActionKind::Operation), "loading an example emits SetDocument ops, so it is an Operation");
+            assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
+
+            let mut app = new_app_with_registry();
+            let result = app
+                .handle_action("setActiveExample", Some(&json!({ "exampleId": "empty" })), &ViewState::default(), &meta("local"))
+                .expect("operation emits ops without tripping the kind-discipline guard");
+            assert_eq!(result.operations.len(), 1, "loading an example is one document-replacing edit");
+            assert!(app.projection().expect("projection").positions.is_empty(), "the empty example clears every position feature");
+        }
+
+        /// 👁️ A representative View action mutates only runtime view state, so under the real registry it
+        /// emits no ops and never trips the View → emits-ops guard.
+        #[test]
+        fn view_actions_emit_no_ops_under_registry_kind_discipline() {
+            let mut app = new_app_with_registry();
+            let render_mode = app.handle_action("setRenderMode", Some(&json!({ "value": "vector" })), &ViewState::default(), &meta("local")).expect("setRenderMode");
+            assert!(render_mode.operations.is_empty(), "render mode is ephemeral view state");
+            let fit = app.handle_action("fitWorld", None, &ViewState::default(), &meta("local")).expect("fitWorld");
+            assert!(fit.operations.is_empty(), "framing the world only moves the runtime camera");
         }
 
         #[test]

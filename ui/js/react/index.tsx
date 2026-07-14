@@ -1478,6 +1478,20 @@ export const interactiveHoverClass = cn(interactiveHoverFillClass, "hover:text-e
 /** @emoji 📏 Active stroke paired with {@link interactiveActiveFillClass}. */
 export const interactiveActiveBorderClass = "border-active-base";
 
+/** @emoji 🌀 Clockwise spinning + pulsing loading ring in the element's normal border color. */
+export const loadingBorderClass = "border-loading";
+
+/** @emoji 🌀 Loading ring recolored to the active stroke; pair with selected/active elements. */
+export const loadingBorderActiveClass = cn(loadingBorderClass, "border-loading-active");
+
+/** @emoji 🌀 Loading ring in the level-aware element border color. */
+export const loadingBorderElementClass = cn(loadingBorderClass, "border-loading-element");
+
+/** @emoji 🌀 Loading ring matching the element's current state color; empty when not loading. */
+export function loadingBorderStateClass(loading: boolean, active = false): string {
+  return loading ? (active ? loadingBorderActiveClass : loadingBorderClass) : "";
+}
+
 /** @emoji 🎨 Active/on: primary fill + active border + emphasized content (never the transient hover fill). */
 export const interactiveOnClass = cn(
   "data-[state=on]:bg-active-base",
@@ -6891,7 +6905,7 @@ export interface LoadingRowProps {
  **/
 export const LoadingRow: React.FC<LoadingRowProps> = ({ name, icon, className = "" }) => {
   return (
-    <div className={`flex items-center gap-single p-single opacity-50 pointer-events-none ${className}`}>
+    <div className={cn("flex items-center gap-single p-single opacity-50 pointer-events-none", loadingBorderClass, className)}>
       {icon && <span className="shrink-0">{icon}</span>}
       <span className="flex-1 truncate">{name}</span>
     </div>
@@ -7328,7 +7342,7 @@ interface ActionProps extends Omit<React.ComponentProps<"button">, "children"> {
 /**
  * Action holds the data fields for a Action record.
  **/
-function Action({ className, id, icon, text, as = "button", ...props }: ActionProps) {
+function Action({ className, id, icon, text, as = "button", loading = false, ...props }: ActionProps) {
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
   const Comp = as;
@@ -7345,6 +7359,7 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
       tabIndex={Comp === "div" && (props as any).onClick ? 0 : undefined}
       id={id}
       aria-label={ariaLabel}
+      aria-busy={loading || undefined}
       title={accessibleLabel}
       data-level={level}
       className={cn(
@@ -7352,6 +7367,7 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
         hasText && "aspect-auto gap-single",
         getLevelHoverClass(level),
         borderClass,
+        loading && loadingBorderElementClass,
         className,
       )}
       {...(props as any)}
@@ -11239,6 +11255,8 @@ export interface TreeDataItem {
   isSelected?: boolean;
   isDragHandle?: boolean;
   defaultOpen?: boolean;
+  /** @emoji 🌀 Host-declared loading state, ORed with the tree's own async {@link getItems} pending state. */
+  loading?: boolean;
   collapsibleState?: TreeItemCollapsibleState;
   emptyState?: React.ReactNode;
   draggable?: boolean;
@@ -11263,6 +11281,8 @@ export interface TreeDataSection {
   actions?: TreeHeaderAction[];
   className?: string;
   defaultOpen?: boolean;
+  /** @emoji 🌀 Host-declared loading state, ORed with the tree's own async {@link getItems} pending state. */
+  loading?: boolean;
   emptyState?: React.ReactNode;
   onPointerEnter?: () => void;
   onPointerLeave?: () => void;
@@ -11880,19 +11900,20 @@ function treeRowChromeShellClasses(isSelected: boolean, isHighlighted: boolean, 
 }
 
 /** @emoji 🎨 Tree row content fill: backgrounds apply only on the label column, not the guide gutter. */
-function treeRowChromeContentFillClasses(isSelected: boolean, isHighlighted: boolean): string {
+function treeRowChromeContentFillClasses(isSelected: boolean, isHighlighted: boolean, isLoading = false): string {
+  const loadingClass = loadingBorderStateClass(isLoading, isSelected);
   if (isSelected) {
-    return cn(interactiveActiveFillClass, interactiveControlTransitionClass);
+    return cn(interactiveActiveFillClass, interactiveControlTransitionClass, loadingClass);
   }
   if (isHighlighted) {
-    return cn("bg-hover-interactive-fill", interactiveControlTransitionClass);
+    return cn("bg-hover-interactive-fill", interactiveControlTransitionClass, loadingClass);
   }
-  return cn(interactiveControlTransitionClass, "group-hover:bg-hover-interactive-fill");
+  return cn(interactiveControlTransitionClass, "group-hover:bg-hover-interactive-fill", loadingClass);
 }
 
 /** @emoji 🎨 Tree row chrome: element gray at rest; hover highlight; selected primary + emphasized (no hover fill override). */
-function treeRowChromeClasses(isSelected: boolean, isHighlighted: boolean, isHidden = false): string {
-  return cn(treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), treeRowChromeContentFillClasses(isSelected, isHighlighted));
+function treeRowChromeClasses(isSelected: boolean, isHighlighted: boolean, isHidden = false, isLoading = false): string {
+  return cn(treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), treeRowChromeContentFillClasses(isSelected, isHighlighted, isLoading));
 }
 
 const TreeItemRowContextMenu: React.FC<{ readonly items?: readonly ContextMenuItem[]; readonly children: React.ReactNode }> = ({ items, children }) => {
@@ -11957,7 +11978,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   const isHeaderlessSection =
     suppressLocalizedLabel && localizedLabel === undefined && !icon && actions.length === 0 && !loading && !draggable && !onDoubleClick && !onSectionPointerEnter && !onSectionPointerLeave && !onDragStart && !onDragOver && !onDragLeave && !onDrop;
   const rowClassName = cn(treeRowShellClassName, treeRowChromeShellClasses(false, false), isExpandable ? "cursor-foldable" : "cursor-selectable", className);
-  const rowContentFillClassName = treeRowChromeContentFillClasses(false, false);
+  const rowContentFillClassName = treeRowChromeContentFillClasses(false, false, loading);
 
   if (isHeaderlessSection) {
     return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree, indentMultiplier, direction }}>{children}</TreeContext.Provider>;
@@ -11995,7 +12016,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           isLastAtLevel={isLastAtLevel}
           showLines={showLines}
           connectCurrentLevel={level > 0}
-          slot={loading ? <Spinner size="small" className="text-muted-foreground" /> : null}
+          slot={null}
           contentClassName="min-w-0"
           contentChromeClassName={rowContentFillClassName}
         >
@@ -12048,7 +12069,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           showLines={showLines}
           connectCurrentLevel={level > 0}
           extendCurrentLevelToBottom={open && hasChildren}
-          slot={loading ? <Spinner size="small" className="text-muted-foreground" /> : <SectionFoldChevron className={treeSectionChevronClassName} />}
+          slot={<SectionFoldChevron className={treeSectionChevronClassName} />}
           contentClassName="min-w-0"
           contentChromeClassName={rowContentFillClassName}
         >
@@ -12488,7 +12509,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     isDragging ? "opacity-40" : "",
     className,
   );
-  const itemContentFillClassName = treeRowChromeContentFillClasses(isSelected, isHighlighted);
+  const itemContentFillClassName = treeRowChromeContentFillClasses(isSelected, isHighlighted, loading);
   const treeLabelSelectClass = draggable ? "select-none" : "select-text";
 
   if (layoutKind === "property") {
@@ -12541,7 +12562,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                         setOpen(!open);
                       }}
                     >
-                      {loading ? <Spinner size="small" className="text-muted-foreground" /> : <PropertyFoldChevron className="size-small flex-shrink-0" />}
+                      <PropertyFoldChevron className="size-small flex-shrink-0" />
                     </button>
                   ) : undefined
                 }
@@ -12655,7 +12676,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                       setOpen(!open);
                     }}
                   >
-                    {loading ? <Spinner size="small" className="text-muted-foreground" /> : <DefaultFoldChevron className="size-small flex-shrink-0" />}
+                    <DefaultFoldChevron className="size-small flex-shrink-0" />
                   </button>
                 }
                 contentClassName="min-w-0"
@@ -12767,7 +12788,6 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" contentChromeClassName={itemContentFillClassName}>
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
-              {loading && <Spinner size="small" className="text-muted-foreground" />}
               {renderTreeRowIcon(icon, "file-text")}
               <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, draggable ? "cursor-grab" : "cursor-selectable", treeLabelSelectClass)} style={treeItemLabelStyle}>
                 {resolvedLabel as React.ReactNode}
@@ -13213,7 +13233,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
   const clampedBranchIndex = branchCount > 0 ? Math.min(activeBranchIndex, branchCount - 1) : 0;
   const rawChildItems = branchCount > 0 ? (alternatives[clampedBranchIndex] ?? []) : baseChildItems;
   const childItems = direction === "up" ? [...rawChildItems].reverse() : rawChildItems;
-  const isLoading = loadingById[getTreeItemLoadingId(item.id)] ?? false;
+  const isLoading = (loadingById[getTreeItemLoadingId(item.id)] ?? false) || Boolean(item.loading);
   const hasDynamicChildren = Boolean(item.getItems);
   const hasExpandableChildren = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0;
   const isExpandable = item.collapsibleState === TreeItemCollapsibleState.None ? false : hasExpandableChildren;
@@ -13295,7 +13315,7 @@ const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(prop
   const treeOpenState = useTreeOpenState(getTreeSectionStateId(section.id), section.defaultOpen ?? false);
   const rawItems = getTreeSectionItems(section, sectionItemsById);
   const items = direction === "up" ? [...rawItems].reverse() : rawItems;
-  const isLoading = loadingById[getTreeSectionLoadingId(section.id)] ?? false;
+  const isLoading = (loadingById[getTreeSectionLoadingId(section.id)] ?? false) || Boolean(section.loading);
   const hasDynamicChildren = Boolean(section.getItems);
   const isExpandable = items.length > 0 || hasDynamicChildren || Boolean(section.emptyState);
 
@@ -16854,7 +16874,14 @@ const Window: React.FC<WindowProps> = ({
         data-active={active ? "true" : undefined}
         onDoubleClick={onDoubleClick}
         onPointerDownCapture={() => onActivate?.()}
-        className={cn("relative flex w-full min-w-0 flex-col overflow-hidden", fill ? "h-full min-h-0" : "h-auto max-h-full self-start", bgClass, getLevelZClass("window"), className)}
+        className={cn(
+          "relative flex w-full min-w-0 flex-col overflow-hidden",
+          fill ? "h-full min-h-0" : "h-auto max-h-full self-start",
+          bgClass,
+          getLevelZClass("window"),
+          loadingBorderStateClass(loading, active),
+          className,
+        )}
       >
         {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
         <div ref={windowBodyRef} data-slot="window-body" className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}>
@@ -17728,7 +17755,7 @@ export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5,
     [edgeCount, nodeCount],
   );
   return (
-    <div className={`relative w-full h-full ${className}`}>
+    <div className={cn("relative w-full h-full", loadingBorderClass, className)}>
       <HostReactFlow
         nodes={skeletonNodes}
         edges={skeletonEdges}
@@ -19811,7 +19838,7 @@ export const Scene: React.FC<SceneProps> = ({
  *
  **/
 export const SceneSkeleton: React.FC = () => (
-  <div className="h-full w-full bg-background flex items-center justify-center">
+  <div className={cn("h-full w-full bg-background flex items-center justify-center", loadingBorderClass)}>
     <div className="relative w-32 h-32 animate-pulse">
       <div className="absolute inset-0 border-4 border-muted-foreground/20 rounded-lg" />
       <div className="absolute inset-2 border-2 border-muted-foreground/20 rounded-lg" />
@@ -25605,6 +25632,20 @@ if (treeVitest) {
       expect(treeRowChromeClasses(true, false)).not.toContain("bg-hover-interactive-fill");
       expect(treeRowChromeClasses(false, false, true)).toContain("opacity-50");
       expect(treeRowChromeClasses(true, false, true)).toContain("opacity-50");
+    });
+
+    it("loadingBorderStateClass returns the active ring only when both loading and active are true", () => {
+      expect(loadingBorderStateClass(false)).toBe("");
+      expect(loadingBorderStateClass(false, true)).toBe("");
+      expect(loadingBorderStateClass(true, false)).toBe(loadingBorderClass);
+      expect(loadingBorderStateClass(true, true)).toBe(loadingBorderActiveClass);
+    });
+
+    it("treeRowChromeContentFillClasses adds the loading ring in the row's own color", () => {
+      expect(treeRowChromeContentFillClasses(true, false, true)).toContain("border-loading-active");
+      expect(treeRowChromeContentFillClasses(false, false, true)).toContain("border-loading");
+      expect(treeRowChromeContentFillClasses(false, false, true)).not.toContain("border-loading-active");
+      expect(treeRowChromeContentFillClasses(false, false, false)).not.toContain("border-loading");
     });
 
     it("applies tree row fill on tree-row-content so gutter guides stay visible", () => {

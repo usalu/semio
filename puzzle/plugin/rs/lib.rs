@@ -10,9 +10,10 @@ pub mod d2 {
     use semio_framework_plugin::{
         build_canvas_2d_scene, build_puzzle2d_board_scene, create_default_layout,
         MeasureSelectItem, WindowEngagementStatus,
-        ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionEmit, App, ActionDescriptor, DocumentApp, DocumentView, PanelGroup, PluginBundle, Puzzle2dBoardScene, SurfaceKind, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
-        WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+        ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp, DocumentView, PanelGroup, PluginBundle, Puzzle2dBoardScene, SurfaceKind, ToolCategory, ToolDefinition, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
+        WindowEngagementControl, WindowEngagementInput, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID,
     };
+    use semio_framework_plugin::kernel::HostEffect;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
@@ -34,9 +35,10 @@ pub mod d2 {
     const PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID: &str = "nakagin-capsule-tower";
     const CONCRETE_FOREST_EXAMPLE_JSON: &str = include_str!("../../2d/example/concrete-forest.2d.json");
     const NAKAGIN_EXAMPLE_JSON: &str = include_str!("../../2d/example/nakagin-capsule-tower.2d.json");
-    const PUZZLE2D_ENGAGEMENT_TOOL_SELECT: &str = "puzzle2d.tool.select";
-    const PUZZLE2D_ENGAGEMENT_TOOL_BRUSH: &str = "puzzle2d.tool.brush";
-    const PUZZLE2D_ENGAGEMENT_TOOL_FILL: &str = "puzzle2d.tool.fill";
+    /// 🧰 The three canvas tools declared to the framework toolbar (host-owned active tool, never a doc field).
+    const PUZZLE2D_TOOL_SELECT: &str = "select";
+    const PUZZLE2D_TOOL_BRUSH: &str = "brush";
+    const PUZZLE2D_TOOL_FILL: &str = "fill";
     const BOARD_DEFAULT_WIDTH: u32 = 1024;
     const BOARD_DEFAULT_HEIGHT: u32 = 768;
 
@@ -68,10 +70,6 @@ pub mod d2 {
     //#endregion 🔖Constants
 
     //#region 🔖Envelope
-    fn default_active_tool() -> String {
-        "select".into()
-    }
-
     fn default_selection_method() -> String {
         "rectangle".into()
     }
@@ -94,8 +92,6 @@ pub mod d2 {
     struct Puzzle2dPlayRuntime {
         #[serde(default)]
         selected_ids: Vec<String>,
-        #[serde(default = "default_active_tool")]
-        active_tool: String,
         #[serde(default = "default_lod_mode_by_pane")]
         lod_mode_by_pane: BTreeMap<String, String>,
         #[serde(default)]
@@ -127,7 +123,6 @@ pub mod d2 {
         fn default() -> Self {
             Self {
                 selected_ids: Vec::new(),
-                active_tool: default_active_tool(),
                 lod_mode_by_pane: default_lod_mode_by_pane(),
                 engagement_input_by_pane: BTreeMap::new(),
                 brush_candidate_index: 0,
@@ -151,6 +146,9 @@ pub mod d2 {
     struct Puzzle2dScene {
         fixture: Value,
         runtime: Puzzle2dPlayRuntime,
+        /// 🧰 The host-owned active tool for this render/mutation, sourced from `ViewState.active_tool_id`
+        /// (defaulting to `select`) — never persisted in the runtime and never a document field.
+        active_tool: String,
     }
 
     fn default_empty_fixture() -> Value {
@@ -169,6 +167,12 @@ pub mod d2 {
 
     fn puzzle2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
         ActionDescriptor { controller_id: PUZZLE2D_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
+    }
+
+    /// 🧰 The host-owned active tool for this view, read from `ViewState.active_tool_id` (defaulting to
+    /// `select`) — the single source of truth for the canvas tool, never a document field or runtime cache.
+    fn puzzle2d_active_tool(view_state: &ViewState) -> String {
+        view_state.active_tool_id.clone().unwrap_or_else(|| PUZZLE2D_TOOL_SELECT.into())
     }
 
     fn selection_ids(args: Option<&Value>) -> Vec<String> {
@@ -452,7 +456,7 @@ pub mod d2 {
     fn sync_host_runtime_state(host: &mut BoardHost, envelope: &Puzzle2dScene) {
         host.set_size(BOARD_DEFAULT_WIDTH, BOARD_DEFAULT_HEIGHT, 1.0);
         host.set_selection_ids(&envelope.runtime.selected_ids);
-        host.set_active_tool(&envelope.runtime.active_tool);
+        host.set_active_tool(&envelope.active_tool);
         let overview_lod_mode = envelope.runtime.lod_mode_by_pane.get(PUZZLE2D_PANE_OVERVIEW).map(String::as_str).unwrap_or(PUZZLE2D_LOD_MODE_AUTOMATIC);
         if overview_lod_mode == PUZZLE2D_LOD_MODE_AUTOMATIC {
             host.set_automatic_lod(true);
@@ -806,19 +810,19 @@ pub mod d2 {
         let lod = overlay.get("lod").and_then(|value| value.as_str()).unwrap_or(if pane_lod_mode == PUZZLE2D_LOD_MODE_AUTOMATIC { "auto" } else { pane_lod_mode });
         let node_count = fixture_nodes(&envelope.fixture).len();
         let edge_count = fixture_edges(&envelope.fixture).len();
-        let control = match envelope.runtime.active_tool.as_str() {
+        let control = match envelope.active_tool.as_str() {
             "fill" => Some(puzzle2d_fill_count_control(envelope, labels)),
             "brush" => puzzle2d_brush_placement_control(envelope, labels),
             _ => None,
         };
         let input_value = envelope.runtime.engagement_input_by_pane.get(pane).cloned().unwrap_or_default();
-        let placeholder = match envelope.runtime.active_tool.as_str() {
+        let placeholder = match envelope.active_tool.as_str() {
             "fill" => "Fill",
             "brush" => "Brush",
             _ => "select, brush, fill, clear",
         };
         WindowEngagement {
-            session_active: Some(envelope.runtime.active_tool != "select"),
+            session_active: Some(envelope.active_tool != "select"),
             input: Some(WindowEngagementInput {
                 id: Some("puzzle2d-engagement".into()),
                 value: Some(input_value),
@@ -832,32 +836,9 @@ pub mod d2 {
             control,
             controls: None,
             status: Some(vec![WindowEngagementStatus { id: "puzzle2d-board-status".into(), text: format!("{node_count} nodes · {edge_count} edges · LOD {lod}") }]),
-            options: Some(vec![
-                WindowEngagementOption {
-                    id: PUZZLE2D_ENGAGEMENT_TOOL_SELECT.into(),
-                    label: Some(labels.select.into()),
-                    icon_id: Some("cursor".into()),
-                    pressed: Some(envelope.runtime.active_tool == "select"),
-                    disabled: None,
-                    action: Some(puzzle2d_action("engagementPossibleSelect", Some(json!({ "pane": pane, "possibleId": PUZZLE2D_ENGAGEMENT_TOOL_SELECT })))),
-                },
-                WindowEngagementOption {
-                    id: PUZZLE2D_ENGAGEMENT_TOOL_BRUSH.into(),
-                    label: Some(labels.brush.into()),
-                    icon_id: Some("brush".into()),
-                    pressed: Some(envelope.runtime.active_tool == "brush"),
-                    disabled: None,
-                    action: Some(puzzle2d_action("engagementPossibleSelect", Some(json!({ "pane": pane, "possibleId": PUZZLE2D_ENGAGEMENT_TOOL_BRUSH })))),
-                },
-                WindowEngagementOption {
-                    id: PUZZLE2D_ENGAGEMENT_TOOL_FILL.into(),
-                    label: Some(labels.fill.into()),
-                    icon_id: Some("fill".into()),
-                    pressed: Some(envelope.runtime.fill_count > 0 || envelope.runtime.active_tool == "fill"),
-                    disabled: None,
-                    action: Some(puzzle2d_action("engagementPossibleSelect", Some(json!({ "pane": pane, "possibleId": PUZZLE2D_ENGAGEMENT_TOOL_FILL })))),
-                },
-            ]),
+            // 🧰 The select/brush/fill switcher now lives in the framework toolbar (declared via `.tool` +
+            // `.window_kind_tools`), so the engagement no longer duplicates it as toggle options.
+            options: None,
             possible_engagements: None,
         }
     }
@@ -1021,7 +1002,7 @@ pub mod d2 {
             selection_json,
             interactive: pane == PUZZLE2D_PANE_OVERVIEW,
             hovered_id: None,
-            active_tool: Some(envelope.runtime.active_tool.clone()),
+            active_tool: Some(envelope.active_tool.clone()),
             selection_method: envelope.runtime.selection_method.clone(),
             grid_snap_enabled: envelope.runtime.grid_snap_enabled,
             grid_factor: envelope.runtime.grid_factor,
@@ -1576,9 +1557,10 @@ pub mod d2 {
             default_empty_fixture()
         }
 
-        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, _view_state: &ViewState) -> ActionEmit<Puzzle2dOp> {
+        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> ActionEmit<Puzzle2dOp> {
             let before = doc.projection.clone();
-            let mut envelope = Puzzle2dScene { fixture: before.clone(), runtime: self.runtime.clone() };
+            let active_tool = view_state.active_tool_id.as_deref().unwrap_or(PUZZLE2D_TOOL_SELECT).to_string();
+            let mut envelope = Puzzle2dScene { fixture: before.clone(), runtime: self.runtime.clone(), active_tool: active_tool.clone() };
             // 🐢 `sync_host_fixture_content` (`parse_fixture_v1`) does a full `clear_scene()` + rebuild of
             // every node/handle/edge — skip it when the fixture content is byte-identical to what `host`
             // already has (the common case: select/camera/tool/… actions never touch fixture content).
@@ -1595,6 +1577,7 @@ pub mod d2 {
             }
             sync_host_runtime_state(&mut self.host, &envelope);
             let mut coalesce_key: Option<String> = None;
+            let mut effects: Vec<HostEffect> = Vec::new();
             // 🐢 Default to Full (safe: every unrecognized/rare action re-renders everything, same as
             // before this ticket); the narrow-tier arms below override it to the smallest scope that
             // actually covers what they touch.
@@ -1666,27 +1649,21 @@ pub mod d2 {
                     envelope.runtime = Puzzle2dPlayRuntime::default();
                     {}
                 }
-                "setActiveTool" => {
-                    if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
-                        envelope.runtime.active_tool = tool.into();
-                        self.host.set_active_tool(tool);
-                        ui_scope = puzzle2d_window_and_engagements_scope();
+                SET_ACTIVE_TOOL_ACTION_ID => {
+                    // 🧰 Host-owned tool switch (framework-injected View action): the new tool already lives in
+                    // `view_state.active_tool_id`; here we only clear any in-progress brush/fill scratch and
+                    // emit nothing. The host engine was re-pointed at the new tool by `sync_host_runtime_state`.
+                    self.host.brush_fill_session_clear();
+                    self.host.brush_cancel_slot();
+                    let _ = self.host.drain_events_json();
+                    self.runtime.fill_count = 0;
+                    self.runtime.brush_candidates.clear();
+                    self.runtime.brush_candidate_index = 0;
+                    self.runtime.brush_candidate_source_handle_id = String::new();
+                    for pane in PUZZLE2D_PANES {
+                        self.runtime.engagement_input_by_pane.insert(pane.to_string(), String::new());
                     }
-                }
-                "engagementPossibleSelect" => {
-                    let possible_id = args.and_then(|value| value.get("possibleId")).and_then(|value| value.as_str()).unwrap_or("");
-                    let pane = args.and_then(|value| value.get("pane")).and_then(|value| value.as_str()).unwrap_or(PUZZLE2D_PANE_OVERVIEW);
-                    envelope.runtime.active_tool = match possible_id {
-                        PUZZLE2D_ENGAGEMENT_TOOL_BRUSH => "brush",
-                        PUZZLE2D_ENGAGEMENT_TOOL_FILL => "fill",
-                        _ => "select",
-                    }
-                    .into();
-                    self.host.set_active_tool(&envelope.runtime.active_tool);
-                    if PUZZLE2D_PANES.contains(&pane) {
-                        envelope.runtime.engagement_input_by_pane.insert(pane.to_string(), String::new());
-                    }
-                    ui_scope = puzzle2d_window_and_engagements_scope();
+                    return ActionEmit::default();
                 }
                 "engagementInput" => {
                     let pane = args.and_then(|value| value.get("pane")).and_then(|value| value.as_str()).unwrap_or(PUZZLE2D_PANE_OVERVIEW);
@@ -1700,19 +1677,12 @@ pub mod d2 {
                     let pane = args.and_then(|value| value.get("pane")).and_then(|value| value.as_str()).unwrap_or(PUZZLE2D_PANE_OVERVIEW).to_string();
                     let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).map(str::trim).unwrap_or("").to_lowercase();
                     let applied = match value.as_str() {
-                        "select" => {
-                            envelope.runtime.active_tool = "select".into();
-                            self.host.set_active_tool("select");
-                            true
-                        }
-                        "brush" => {
-                            envelope.runtime.active_tool = "brush".into();
-                            self.host.set_active_tool("brush");
-                            true
-                        }
-                        "fill" => {
-                            envelope.runtime.active_tool = "fill".into();
-                            self.host.set_active_tool("fill");
+                        "select" | "brush" | "fill" => {
+                            // 🧰 Reconcile the engagement text-command tool switch through the host-owned
+                            // active tool: point the local engine now and let the framework persist the new
+                            // `view_state.active_tool_id` for the pane via `HostEffect::SetActiveTool`.
+                            self.host.set_active_tool(value.as_str());
+                            effects.push(HostEffect::SetActiveTool { window_kind_id: pane.clone(), tool_id: value.clone() });
                             true
                         }
                         "clear" => {
@@ -1742,9 +1712,9 @@ pub mod d2 {
                     if PUZZLE2D_PANES.contains(&pane) {
                         envelope.runtime.engagement_input_by_pane.insert(pane.to_string(), String::new());
                     }
-                    if envelope.runtime.active_tool != "select" {
-                        envelope.runtime.active_tool = "select".into();
-                        self.host.set_active_tool("select");
+                    if active_tool != PUZZLE2D_TOOL_SELECT {
+                        self.host.set_active_tool(PUZZLE2D_TOOL_SELECT);
+                        effects.push(HostEffect::SetActiveTool { window_kind_id: pane.to_string(), tool_id: PUZZLE2D_TOOL_SELECT.into() });
                     }
                     {}
                 }
@@ -1860,7 +1830,7 @@ pub mod d2 {
                 "setFillCount" => {
                     let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_f64()).map(|value| value.round().max(0.0) as u32).unwrap_or(0).min(PUZZLE2D_FILL_COUNT_MAX);
                     envelope.runtime.fill_count = count;
-                    envelope.runtime.active_tool = "fill".into();
+                    effects.push(HostEffect::SetActiveTool { window_kind_id: PUZZLE2D_PANE_OVERVIEW.into(), tool_id: PUZZLE2D_TOOL_FILL.into() });
                     self.host.set_active_tool("brush");
                     self.host.brush_fill_session_begin(count, 1);
                     let step = self.host.brush_fill_session_step(count.max(1));
@@ -1994,12 +1964,12 @@ pub mod d2 {
             if !ops.is_empty() && matches!(ui_scope, semio_framework_core::kernel::UiDirtyScope::None) {
                 ui_scope = semio_framework_core::kernel::UiDirtyScope::Full;
             }
-            ActionEmit { ops, coalesce_key, ui_scope, ..Default::default() }
+            ActionEmit { ops, coalesce_key, effects, ui_scope, ..Default::default() }
         }
 
         fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
             let document_json = doc.projection.to_string();
-            let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone() };
+            let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone(), active_tool: puzzle2d_active_tool(view_state) };
             let labels = puzzle2d_labels(view_state);
             match body_key {
                 PUZZLE2D_PLAY_BODY_OVERVIEW => render_canvas(&document_json, &envelope, PUZZLE2D_PANE_OVERVIEW),
@@ -2013,13 +1983,13 @@ pub mod d2 {
         }
 
         fn window_engagements(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-            let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone() };
+            let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone(), active_tool: puzzle2d_active_tool(view_state) };
             let labels = puzzle2d_labels(view_state);
             PUZZLE2D_PANES.iter().map(|pane| (pane.to_string(), puzzle2d_engagement(&envelope, &self.host, pane, labels))).collect()
         }
 
         fn window_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-            let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone() };
+            let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone(), active_tool: puzzle2d_active_tool(view_state) };
             let labels = puzzle2d_labels(view_state);
             PUZZLE2D_PANES.iter().map(|pane| (pane.to_string(), puzzle2d_window_measures(pane, &envelope, labels))).collect()
         }
@@ -2041,9 +2011,20 @@ pub mod d2 {
     //#endregion 🔖Puzzle2dPlayApp
 
     //#region 🔖AppFactory
+    /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector/engagement-bound
+    /// vocabulary dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
+    fn puzzle2d_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
+        ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, kind) }
+    }
+
+    /// 🧰 One canvas tool declaration (exclusive `tool` group, host-owned active tool).
+    fn puzzle2d_tool(id: &str, label: &str, icon: &str, category: ToolCategory) -> ToolDefinition {
+        ToolDefinition { group: Some("tool".into()), category: Some(category), ..ToolDefinition::new(id, label, icon) }
+    }
+
     pub fn create_puzzle2d_app() -> App {
         let mut host = puzzle_board_host();
-        let envelope = Puzzle2dScene { fixture: default_empty_fixture(), runtime: Puzzle2dPlayRuntime::default() };
+        let envelope = Puzzle2dScene { fixture: default_empty_fixture(), runtime: Puzzle2dPlayRuntime::default(), active_tool: PUZZLE2D_TOOL_SELECT.into() };
         sync_host_from_envelope(&mut host, &envelope);
         let labels = puzzle2d_labels(&ViewState::default());
         let mut app = App::from_builder(
@@ -2059,6 +2040,65 @@ pub mod d2 {
                 .panel_tab("framework.panel.document", FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE2D_PLAY_BODY_LAYERS)
                 .panel_tab("framework.panel.catalogue", FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE2D_PLAY_BODY_CATALOGUE)
                 .panel_tab("framework.panel.inspection", FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PUZZLE2D_PLAY_BODY_PROPERTIES)
+                // ✏️ Palette-visible content operations.
+                .operation("addNode", "Add Node")
+                .operation("setActiveExample", "Set Active Example")
+                .operation("deleteSelection", "Delete Selection")
+                .operation("duplicateSelection", "Duplicate Selection")
+                .operation("forceLayout", "Force Layout")
+                .operation("focusSelection", "Focus Selection")
+                // 👁️ Palette-visible ephemeral view/selection commands.
+                .view_action("selectAll", "Select All")
+                .view_action("clearSelection", "Clear Selection")
+                .view_action("selectSameKind", "Select Same Kind")
+                // 🔧 Internal content operations — inspector/panel/board/import-bound, not palette commands.
+                .action_with(puzzle2d_internal_action("setSelectionFlag", "Set Selection Flag", ActionKind::Operation))
+                .action_with(puzzle2d_internal_action("setCamera", "Set Camera", ActionKind::Operation))
+                .action_with(puzzle2d_internal_action("patchInspectorNodes", "Patch Inspector Nodes", ActionKind::Operation))
+                .action_with(puzzle2d_internal_action("redrawHandles", "Redraw Handles", ActionKind::Operation))
+                .action_with(puzzle2d_internal_action("reorganize", "Reorganize", ActionKind::Operation))
+                .action_with(puzzle2d_internal_action("applyBoardEvents", "Apply Board Events", ActionKind::Operation))
+                .action_with(puzzle2d_internal_action("setFillCount", "Set Fill Count", ActionKind::Operation))
+                .action_with(puzzle2d_internal_action("brushFillSessionStep", "Brush Fill Session Step", ActionKind::Operation))
+                .action_with(puzzle2d_internal_action("brushCommitSlot", "Brush Commit Slot", ActionKind::Operation))
+                // 🖱️ Internal pointer/gesture/engagement view vocabulary — pure runtime/host state, emit no ops.
+                .action_with(puzzle2d_internal_action("setSelection", "Set Selection", ActionKind::View))
+                .action_with(puzzle2d_internal_action("documentSelect", "Document Select", ActionKind::View))
+                .action_with(puzzle2d_internal_action("engagementInput", "Engagement Input", ActionKind::View))
+                .action_with(puzzle2d_internal_action("engagementSubmit", "Engagement Submit", ActionKind::View))
+                .action_with(puzzle2d_internal_action("engagementAbort", "Engagement Abort", ActionKind::View))
+                .action_with(puzzle2d_internal_action("engagementControlSelect", "Engagement Control Select", ActionKind::View))
+                .action_with(puzzle2d_internal_action("setLodModeForPane", "Set LOD Mode For Pane", ActionKind::View))
+                .action_with(puzzle2d_internal_action("setGridSnapEnabled", "Set Grid Snap Enabled", ActionKind::View))
+                .action_with(puzzle2d_internal_action("setGridFactor", "Set Grid Factor", ActionKind::View))
+                .action_with(puzzle2d_internal_action("setSelectionMethod", "Set Selection Method", ActionKind::View))
+                .action_with(puzzle2d_internal_action("setBrushKindWeights", "Set Brush Kind Weights", ActionKind::View))
+                .action_with(puzzle2d_internal_action("setBrushNodeSize", "Set Brush Node Size", ActionKind::View))
+                .action_with(puzzle2d_internal_action("setSuggestionOffset", "Set Suggestion Offset", ActionKind::View))
+                .action_with(puzzle2d_internal_action("brushCycleCandidate", "Brush Cycle Candidate", ActionKind::View))
+                .action_with(puzzle2d_internal_action("brushSetCandidateIndex", "Brush Set Candidate Index", ActionKind::View))
+                .action_with(puzzle2d_internal_action("brushOpenSlot", "Brush Open Slot", ActionKind::View))
+                .action_with(puzzle2d_internal_action("brushCancelSlot", "Brush Cancel Slot", ActionKind::View))
+                .action_with(puzzle2d_internal_action("brushFillSessionBegin", "Brush Fill Session Begin", ActionKind::View))
+                .action_with(puzzle2d_internal_action("brushFillSessionClear", "Brush Fill Session Clear", ActionKind::View))
+                .action_with(puzzle2d_internal_action("lodScaleJson", "LOD Scale Json", ActionKind::View))
+                // 📝 Staged palette args for the two content commands that need a target.
+                .action_args("addNode", vec![
+                    ActionArgDef::select("kind", "Kind", vec![ActionArgOption::new("node", "Node")]).required().default_value("node"),
+                ])
+                .action_args("setActiveExample", vec![
+                    ActionArgDef::select("exampleId", "Example", vec![
+                        ActionArgOption::new("empty", "Empty"),
+                        ActionArgOption::new(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, "Concrete Forest"),
+                        ActionArgOption::new(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, "Nakagin Capsule Tower"),
+                    ]).required().default_value("empty"),
+                ])
+                // 🧰 Canvas tools — one exclusive set, active tool host-owned (never a document op). The
+                // select/brush/fill switcher is rendered by the framework toolbar for the interactive pane.
+                .tool(puzzle2d_tool(PUZZLE2D_TOOL_SELECT, "Select", "cursor", ToolCategory::Selection))
+                .tool(puzzle2d_tool(PUZZLE2D_TOOL_BRUSH, "Brush", "brush", ToolCategory::Tools))
+                .tool(puzzle2d_tool(PUZZLE2D_TOOL_FILL, "Fill", "fill", ToolCategory::Tools))
+                .window_kind_tools(PUZZLE2D_PANE_OVERVIEW, vec![PUZZLE2D_TOOL_SELECT.into(), PUZZLE2D_TOOL_BRUSH.into(), PUZZLE2D_TOOL_FILL.into()])
                 .default_layout(create_default_layout(&[PUZZLE2D_PANE_OVERVIEW.into(), PUZZLE2D_PANE_DETAIL.into(), PUZZLE2D_PANE_SELECTION.into()], "row", Some(&[50.0, 25.0, 25.0]), Some(&["Overview".into(), "Detail".into(), "Selection".into()]))),
         );
         for pane in PUZZLE2D_PANES {
@@ -2097,6 +2137,7 @@ pub mod d2 {
     mod tests {
         use super::*;
         use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+        use semio_framework_plugin::app::AppActionRegistry;
         use vcs::{Backbone, BackboneMessage, MemoryBackbone};
 
         fn meta(actor: &str) -> ActionMeta {
@@ -2105,6 +2146,16 @@ pub mod d2 {
 
         fn new_app() -> VcsDocumentApp<Puzzle2dPlayApp> {
             VcsDocumentApp::new(Puzzle2dPlayApp::default())
+        }
+
+        /// 🧰 A registry-backed app so kind discipline (View/Shell actions must emit no ops) and the tool
+        /// contract are enforced exactly as in production (`VcsDocumentApp::with_registry`).
+        fn registry_app() -> VcsDocumentApp<Puzzle2dPlayApp> {
+            VcsDocumentApp::with_registry(Puzzle2dPlayApp::default(), AppActionRegistry::from_definition(&create_puzzle2d_app().definition))
+        }
+
+        fn brush_view_state() -> ViewState {
+            ViewState { active_tool_id: Some(PUZZLE2D_TOOL_BRUSH.into()), ..ViewState::default() }
         }
 
         fn concrete_forest_app() -> VcsDocumentApp<Puzzle2dPlayApp> {
@@ -2375,6 +2426,65 @@ pub mod d2 {
             receiver.ingest_operations(&operations_json).expect("ingest twice");
             assert_eq!(fixture_nodes(&receiver.projection().expect("projection")).len(), 1, "feeding the same op twice must not double-apply");
         }
+
+        /// 🧰 The framework-injected `setActiveTool` View action is host-owned: switching tools must emit no
+        /// document ops and add no undo history — the active tool lives in `ViewState.active_tool_id`.
+        #[test]
+        fn tool_switch_emits_no_ops_and_no_history() {
+            let mut app = registry_app();
+            let result = app.handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": PUZZLE2D_TOOL_BRUSH })), &brush_view_state(), &meta("local")).expect("switch tool");
+            assert!(result.operations.is_empty(), "a tool switch must not produce document ops");
+            let can_undo = app.handle_action("undo", None, &ViewState::default(), &meta("local"));
+            assert!(can_undo.map(|r| r.operations.is_empty()).unwrap_or(true), "a tool switch must not have created an undo step");
+        }
+
+        /// 🧰 The app declares exactly the select/brush/fill canvas tools and binds them to the interactive
+        /// overview pane; the retired `fn tools()` trait method is gone.
+        #[test]
+        fn tool_registry_declares_tools() {
+            let definition = create_puzzle2d_app().definition;
+            let ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
+            assert_eq!(ids, vec![PUZZLE2D_TOOL_SELECT, PUZZLE2D_TOOL_BRUSH, PUZZLE2D_TOOL_FILL]);
+            let overview = definition.window_kinds.iter().find(|window| window.id == PUZZLE2D_PANE_OVERVIEW).expect("overview pane");
+            let overview_tools: Vec<&str> = overview.tools.iter().map(|tool| tool.as_str()).collect();
+            assert_eq!(overview_tools, vec![PUZZLE2D_TOOL_SELECT, PUZZLE2D_TOOL_BRUSH, PUZZLE2D_TOOL_FILL]);
+            assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID), "declaring tools must inject the setActiveTool action");
+        }
+
+        /// 🧭 Kind discipline: every View-declared runtime/host action must run through the registry
+        /// without tripping the "must not emit operations" guard (proving each is correctly classified).
+        #[test]
+        fn view_actions_emit_no_ops_through_the_registry() {
+            let mut app = registry_app();
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), &ViewState::default(), &meta("local")).expect("load example");
+            let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
+            let view_dispatches: Vec<(&str, Value)> = vec![
+                ("setSelection", json!({ "ids": [node_id.clone()] })),
+                ("selectAll", Value::Null),
+                ("selectSameKind", Value::Null),
+                ("clearSelection", Value::Null),
+                ("setSelectionMethod", json!({ "method": "lasso" })),
+                ("setGridSnapEnabled", json!({ "enabled": true })),
+                ("setGridFactor", json!({ "value": 2.0 })),
+                ("setLodModeForPane", json!({ "pane": PUZZLE2D_PANE_OVERVIEW, "value": "detail" })),
+                ("setBrushKindWeights", json!({ "kindId": "node", "value": 0.5 })),
+                ("setBrushNodeSize", json!({ "size": 12.0 })),
+                ("setSuggestionOffset", json!({ "value": 40.0 })),
+                ("engagementInput", json!({ "pane": PUZZLE2D_PANE_OVERVIEW, "value": "brush" })),
+                ("engagementSubmit", json!({ "pane": PUZZLE2D_PANE_OVERVIEW, "value": "brush" })),
+                ("engagementAbort", json!({ "pane": PUZZLE2D_PANE_OVERVIEW })),
+                ("brushCycleCandidate", json!({ "forward": true })),
+                ("brushSetCandidateIndex", json!({ "index": 0 })),
+                ("brushFillSessionBegin", json!({ "maxCount": 4, "seed": 1 })),
+                ("brushFillSessionClear", Value::Null),
+                ("lodScaleJson", Value::Null),
+            ];
+            for (action, args) in view_dispatches {
+                let args_ref = (!args.is_null()).then_some(&args);
+                let result = app.handle_action(action, args_ref, &brush_view_state(), &meta("local")).unwrap_or_else(|error| panic!("view action '{action}' must not error: {error}"));
+                assert!(result.operations.is_empty(), "view action '{action}' must not emit document ops");
+            }
+        }
     }
     //#endregion 🧪Tests
 }
@@ -2386,11 +2496,12 @@ pub mod d3 {
     use ui_wgpu::component::layout::WindowEngagementToggleGroupOption;
     use puzzle_3d::{puzzle3d_document_delta_ops, BrushPlacePayload, Puzzle3dOp, Puzzle3dPrecomputeSession};
     use semio_framework_plugin::{
-        apply_world3d_sun_action, build_world_3d_scene, create_default_layout, ActionEmit, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
+        apply_world3d_sun_action, build_world_3d_scene, create_default_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
         ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, PanelGroup,
-        SurfaceKind, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-        FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+        SurfaceKind, ToolCategory, ToolDefinition, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID,
     };
+    use semio_framework_plugin::kernel::HostEffect;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use std::collections::{HashMap, HashSet};
@@ -2415,6 +2526,8 @@ pub mod d3 {
     const PUZZLE3D_ENGAGEMENT_TOOL_BRUSH: &str = "puzzle3d.tool.brush";
     const PUZZLE3D_ENGAGEMENT_TOOL_SELECT: &str = "puzzle3d.tool.select";
     const PUZZLE3D_ENGAGEMENT_TOOL_FILL: &str = "puzzle3d.tool.fill";
+    /// 🧰 Host-owned active tool (`view_state.active_tool_id`) when the host hasn't set one yet — the first declared window tool.
+    const PUZZLE3D_DEFAULT_TOOL: &str = "select";
     const PUZZLE3D_FILL_COUNT_MAX: u32 = 1000;
 
     const CONCRETE_FOREST_EXAMPLE_JSON: &str = include_str!("../../3d/example/concrete-forest.3d.json");
@@ -2619,8 +2732,6 @@ pub mod d3 {
     struct Puzzle3dRuntime {
         #[serde(default)]
         selection: Puzzle3dSelection,
-        #[serde(default)]
-        active_tool: String,
         #[serde(default = "default_selection_method")]
         selection_method: String,
         #[serde(default)]
@@ -2640,8 +2751,6 @@ pub mod d3 {
         object_kind_weights: HashMap<String, f64>,
         #[serde(default)]
         vortex_kind_weights: HashMap<String, f64>,
-        #[serde(default = "default_transform_tool")]
-        transform_tool: String,
         #[serde(default = "default_true")]
         lod_automatic: bool,
         #[serde(default)]
@@ -2684,7 +2793,6 @@ pub mod d3 {
         fn default() -> Self {
             Self {
                 selection: Puzzle3dSelection::default(),
-                active_tool: String::new(),
                 selection_method: default_selection_method(),
                 hovered_object_id: None,
                 hovered_vortex_full_id: None,
@@ -2694,7 +2802,6 @@ pub mod d3 {
                 brush_candidate_index: 0,
                 object_kind_weights: HashMap::new(),
                 vortex_kind_weights: HashMap::new(),
-                transform_tool: default_transform_tool(),
                 lod_automatic: default_true(),
                 lod_depth_variable: false,
                 lod_show_grid: default_true(),
@@ -2718,10 +2825,6 @@ pub mod d3 {
 
     fn default_view_preset() -> String {
         "perspective".into()
-    }
-
-    fn default_transform_tool() -> String {
-        "move".into()
     }
 
     fn default_overlap_budget() -> f64 {
@@ -2764,6 +2867,27 @@ pub mod d3 {
     struct Puzzle3dScene {
         fixture: Puzzle3dFixture,
         runtime: Puzzle3dRuntime,
+        /// 🧰 Host-owned active tool mirrored from `view_state.active_tool_id` — transient, never persisted.
+        active_tool: String,
+    }
+
+    /// 🧭 The select/brush/fill interaction mode the world engine reads, derived from the flat active tool
+    /// (the transform gumball tools `move`/`rotate`/`scale` and `worldRelocate` all present as `select`).
+    fn puzzle3d_scene_mode(active_tool: &str) -> &str {
+        match active_tool {
+            "brush" => "brush",
+            "fill" => "fill",
+            _ => "select",
+        }
+    }
+
+    /// 🎚️ The gumball handle the world engine draws, derived from the flat active tool (non-transform tools fall back to `move`).
+    fn puzzle3d_transform_handle(active_tool: &str) -> &str {
+        match active_tool {
+            "rotate" => "rotate",
+            "scale" => "scale",
+            _ => "move",
+        }
     }
 
     static PUZZLE3D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
@@ -2791,9 +2915,9 @@ pub mod d3 {
 
     /// 🧾 Materializes the transient scene from the persisted projection (bare fixture json) and the
     /// app's current view state; an unparseable projection degrades to an empty board.
-    fn scene_from_projection(projection: &Value, runtime: Puzzle3dRuntime) -> Puzzle3dScene {
+    fn scene_from_projection(projection: &Value, runtime: Puzzle3dRuntime, active_tool: &str) -> Puzzle3dScene {
         let fixture = serde_json::from_value::<Puzzle3dFixture>(projection.clone()).unwrap_or_else(|_| empty_fixture());
-        Puzzle3dScene { fixture, runtime }
+        Puzzle3dScene { fixture, runtime, active_tool: active_tool.to_string() }
     }
 
     fn puzzle3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -3138,7 +3262,7 @@ pub mod d3 {
             "done": fill_build.get("done").cloned().unwrap_or(json!(true)),
         });
         json!({
-            "activeTool": runtime.active_tool,
+            "activeTool": puzzle3d_scene_mode(&envelope.active_tool),
             "brushCandidateIndex": runtime.brush_candidate_index,
             "hoveredVortexFullId": runtime.hovered_vortex_full_id.clone(),
             "fillEditTargetVolumes": runtime.fill_edit_target_volumes,
@@ -3163,7 +3287,7 @@ pub mod d3 {
     }
 
     fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) -> Option<String> {
-        if envelope.runtime.active_tool != "brush" {
+        if envelope.active_tool != "brush" {
             return None;
         }
         let vortex_id = puzzle3d_brush_target_vortex(envelope)?;
@@ -3235,7 +3359,7 @@ pub mod d3 {
                     "face": false,
                 }),
             );
-            object.insert("transformTool".into(), json!(runtime.transform_tool));
+            object.insert("transformTool".into(), json!(puzzle3d_transform_handle(&envelope.active_tool)));
             if let Some(active_id) = runtime.selection.object_ids.first() {
                 object.insert("activeObjectId".into(), json!(active_id));
             }
@@ -3277,7 +3401,7 @@ pub mod d3 {
     fn apply_puzzle3d_fill_count(precompute: &mut Puzzle3dPrecomputeSession, mut envelope: Puzzle3dScene, count: u32) -> Puzzle3dScene {
         envelope.runtime.fill_count = count;
         if count > 0 {
-            envelope.runtime.active_tool = "fill".into();
+            envelope.active_tool = "fill".into();
             if let Ok(fixture_json) = precompute.apply_fill_count_rust(count) {
                 if let Some(next) = fixture_from_engine_json(&envelope, &fixture_json) {
                     envelope = next;
@@ -4576,13 +4700,14 @@ pub mod d3 {
     fn puzzle3d_engagement(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession) -> WindowEngagement {
         let object_count = envelope.fixture.objects.len();
         let attraction_count = envelope.fixture.attractions.len();
-        let voxel_edit_active = envelope.runtime.active_tool == "fill" && envelope.runtime.fill_edit_target_volumes;
-        let control = match envelope.runtime.active_tool.as_str() {
+        let active_tool = envelope.active_tool.as_str();
+        let voxel_edit_active = active_tool == "fill" && envelope.runtime.fill_edit_target_volumes;
+        let control = match active_tool {
             "fill" if !voxel_edit_active => Some(puzzle3d_fill_count_control(envelope, precompute)),
             "brush" => puzzle3d_brush_placement_control(envelope, precompute),
             _ => None,
         };
-        let controls = if envelope.runtime.active_tool == "fill" {
+        let controls = if active_tool == "fill" {
             let mut rows = vec![puzzle3d_voxel_mode_toggle(&envelope.runtime)];
             if voxel_edit_active {
                 rows.extend(puzzle3d_voxel_dim_steppers(&envelope.runtime));
@@ -4592,31 +4717,31 @@ pub mod d3 {
             None
         };
         WindowEngagement {
-            session_active: Some(envelope.runtime.active_tool != "select"),
+            session_active: Some(active_tool != "select"),
             options: Some(vec![
                 WindowEngagementOption {
                     id: PUZZLE3D_ENGAGEMENT_TOOL_SELECT.into(),
                     label: Some("Select".into()),
                     icon_id: Some("cursor".into()),
-                    pressed: Some(envelope.runtime.active_tool == "select"),
+                    pressed: Some(active_tool == "select"),
                     disabled: None,
-                    action: Some(puzzle3d_action("engagementPossibleSelect", Some(json!({ "possibleId": PUZZLE3D_ENGAGEMENT_TOOL_SELECT })))),
+                    action: Some(puzzle3d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "select" })))),
                 },
                 WindowEngagementOption {
                     id: PUZZLE3D_ENGAGEMENT_TOOL_BRUSH.into(),
                     label: Some("Brush".into()),
                     icon_id: Some("brush".into()),
-                    pressed: Some(envelope.runtime.active_tool == "brush"),
+                    pressed: Some(active_tool == "brush"),
                     disabled: None,
-                    action: Some(puzzle3d_action("engagementPossibleSelect", Some(json!({ "possibleId": PUZZLE3D_ENGAGEMENT_TOOL_BRUSH })))),
+                    action: Some(puzzle3d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "brush" })))),
                 },
                 WindowEngagementOption {
                     id: PUZZLE3D_ENGAGEMENT_TOOL_FILL.into(),
                     label: Some("Fill".into()),
                     icon_id: Some("fill".into()),
-                    pressed: Some(envelope.runtime.fill_count > 0 || envelope.runtime.active_tool == "fill"),
+                    pressed: Some(envelope.runtime.fill_count > 0 || active_tool == "fill"),
                     disabled: None,
-                    action: Some(puzzle3d_action("engagementPossibleSelect", Some(json!({ "possibleId": PUZZLE3D_ENGAGEMENT_TOOL_FILL })))),
+                    action: Some(puzzle3d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "fill" })))),
                 },
             ]),
             input: Some(WindowEngagementInput {
@@ -4889,9 +5014,10 @@ pub mod d3 {
             serde_json::to_value(default_fixture()).unwrap_or_else(|_| serde_json::to_value(empty_fixture()).unwrap_or(Value::Null))
         }
 
-        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, _view_state: &ViewState) -> ActionEmit<Puzzle3dOp> {
+        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> ActionEmit<Puzzle3dOp> {
             let before = doc.projection.clone();
-            let mut envelope = scene_from_projection(&before, self.runtime.clone());
+            let active_tool_initial = view_state.active_tool_id.as_deref().unwrap_or(PUZZLE3D_DEFAULT_TOOL).to_string();
+            let mut envelope = scene_from_projection(&before, self.runtime.clone(), &active_tool_initial);
             sync_precompute_session(&mut self.precompute, &envelope);
             match action {
                 "setFixtureJson" => {
@@ -4927,10 +5053,15 @@ pub mod d3 {
                         }
                     }
                 }
-                "setActiveTool" => {
-                    let tool = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()).unwrap_or("select");
-                    envelope.runtime.active_tool = tool.into();
-                    if envelope.runtime.active_tool == "brush" || envelope.runtime.active_tool == "fill" {
+                SET_ACTIVE_TOOL_ACTION_ID => {
+                    // 🧰 Host already applied `view_state.active_tool_id`; clear in-progress scratch and refresh
+                    // the placement engine for the new tool. Emits no ops (View-kind) and no tool-switch effect.
+                    envelope.runtime.hovered_object_id = None;
+                    envelope.runtime.hovered_vortex_full_id = None;
+                    envelope.runtime.suggestion_menu = None;
+                    envelope.runtime.engagement_input = String::new();
+                    envelope.runtime.brush_candidate_index = 0;
+                    if envelope.active_tool == "brush" || envelope.active_tool == "fill" {
                         drive_precompute(&mut self.precompute, &envelope);
                     }
                 }
@@ -5126,14 +5257,9 @@ pub mod d3 {
                         envelope.runtime.selection.object_ids = merge_ids;
                     }
                 }
-                "setTransformTool" => {
-                    if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
-                        envelope.runtime.transform_tool = tool.into();
-                    }
-                }
                 "worldVortexHover" => {
                     envelope.runtime.hovered_vortex_full_id = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()).map(str::to_string);
-                    if envelope.runtime.active_tool == "brush" && envelope.runtime.hovered_vortex_full_id.is_some() {
+                    if envelope.active_tool == "brush" && envelope.runtime.hovered_vortex_full_id.is_some() {
                         drive_precompute(&mut self.precompute, &envelope);
                     }
                 }
@@ -5310,15 +5436,15 @@ pub mod d3 {
                 "engagementSubmit" => {
                     let raw = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("").trim().to_string();
                     if let Some(rest) = strip_engagement_prefix(&raw, "fill") {
-                        envelope.runtime.active_tool = "fill".into();
+                        envelope.active_tool = "fill".into();
                         drive_precompute(&mut self.precompute, &envelope);
                         let count = rest.parse::<u32>().ok().unwrap_or(envelope.runtime.fill_count).min(PUZZLE3D_FILL_COUNT_MAX);
                         envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, count);
                     } else {
                         match raw.to_lowercase().as_str() {
-                            "select" => envelope.runtime.active_tool = "select".into(),
+                            "select" => envelope.active_tool = "select".into(),
                             "brush" => {
-                                envelope.runtime.active_tool = "brush".into();
+                                envelope.active_tool = "brush".into();
                                 drive_precompute(&mut self.precompute, &envelope);
                             }
                             "zoom" => apply_puzzle3d_focus_selection(&mut envelope),
@@ -5331,7 +5457,7 @@ pub mod d3 {
                     envelope.runtime.engagement_input = String::new();
                 }
                 "engagementRepeatLast" => {
-                    if envelope.runtime.active_tool == "fill" {
+                    if envelope.active_tool == "fill" {
                         let count = (envelope.runtime.fill_count + 1).min(PUZZLE3D_FILL_COUNT_MAX);
                         envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, count);
                     }
@@ -5339,9 +5465,7 @@ pub mod d3 {
                 "engagementAbort" => {
                     envelope.runtime.engagement_input = String::new();
                     envelope.runtime.brush_candidate_index = 0;
-                    if envelope.runtime.active_tool != "select" {
-                        envelope.runtime.active_tool = "select".into();
-                    }
+                    envelope.active_tool = "select".into();
                 }
                 "createAttraction" => {
                     let attracting = args.and_then(|value| value.get("attracting")).and_then(|value| value.as_str()).unwrap_or("");
@@ -5423,18 +5547,6 @@ pub mod d3 {
                         }
                     }
                 }
-                "engagementPossibleSelect" => {
-                    let possible_id = args.and_then(|value| value.get("possibleId")).and_then(|value| value.as_str()).unwrap_or("");
-                    envelope.runtime.active_tool = match possible_id {
-                        PUZZLE3D_ENGAGEMENT_TOOL_BRUSH => "brush",
-                        PUZZLE3D_ENGAGEMENT_TOOL_FILL => "fill",
-                        _ => "select",
-                    }
-                    .into();
-                    if envelope.runtime.active_tool == "brush" || envelope.runtime.active_tool == "fill" {
-                        drive_precompute(&mut self.precompute, &envelope);
-                    }
-                }
                 "engagementControlSelect" => {
                     let candidate_id = args.and_then(|value| value.get("id").or_else(|| value.get("value"))).and_then(|value| value.as_str()).unwrap_or("");
                     if let Some(index) = candidate_id.strip_prefix("puzzle3d.brush.candidate.").and_then(|rest| rest.parse::<usize>().ok()) {
@@ -5496,7 +5608,7 @@ pub mod d3 {
                     if let Some(full_id) = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()) {
                         envelope.runtime.selection.vortex_ids = vec![full_id.to_string()];
                         envelope.runtime.selection.object_ids.clear();
-                        envelope.runtime.active_tool = "brush".into();
+                        envelope.active_tool = "brush".into();
                         envelope.runtime.brush_candidate_index = 0;
                         let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                         let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
@@ -5535,7 +5647,7 @@ pub mod d3 {
                     drive_precompute(&mut self.precompute, &envelope);
                     let progress: Value = serde_json::from_str(&self.precompute.fill_progress()).unwrap_or(Value::Null);
                     let done = progress.get("done").and_then(Value::as_bool).unwrap_or(true);
-                    if done && envelope.runtime.active_tool == "fill" && envelope.runtime.fill_count == 0 {
+                    if done && envelope.active_tool == "fill" && envelope.runtime.fill_count == 0 {
                         envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, 1);
                     }
                 }
@@ -5554,14 +5666,30 @@ pub mod d3 {
                 "worldPointerDown" => {}
                 _ => {}
             }
+            let next_active_tool = envelope.active_tool.clone();
             self.runtime = envelope.runtime;
             let after = serde_json::to_value(&envelope.fixture).unwrap_or_else(|_| before.clone());
             let ops = puzzle3d_document_delta_ops(&before, &after);
-            ActionEmit { ops, ..Default::default() }
+            // 🌀 Coalesce each gumball drag tick into one undoable edit (compact per-object records, not full meshes).
+            let coalesce_key = match action {
+                "translateSelection" => Some("gumball-translate".to_string()),
+                "rotateSelection" => Some("gumball-rotate".to_string()),
+                "scaleSelection" => Some("gumball-scale".to_string()),
+                _ => None,
+            };
+            // 🧰 Programmatic tool switches (engagement submit/abort, suggestions, fill) push the active tool
+            // back into the host session; `setActiveTool` itself never re-emits (the host already applied it).
+            let effects = if next_active_tool != active_tool_initial {
+                vec![HostEffect::SetActiveTool { window_kind_id: PUZZLE3D_PLAY_WINDOW_MAIN.into(), tool_id: next_active_tool }]
+            } else {
+                Vec::new()
+            };
+            ActionEmit { ops, coalesce_key, effects, ..Default::default() }
         }
 
         fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
-            let envelope = scene_from_projection(doc.projection, self.runtime.clone());
+            let active_tool = view_state.active_tool_id.as_deref().unwrap_or(PUZZLE3D_DEFAULT_TOOL);
+            let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_tool);
             let labels = puzzle3d_labels(view_state);
             match body_key {
                 PUZZLE3D_PLAY_BODY_COMPOSITE => {
@@ -5597,13 +5725,15 @@ pub mod d3 {
             }
         }
 
-        fn window_engagements(&self, doc: &DocumentView<'_, Value>, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-            let envelope = scene_from_projection(doc.projection, self.runtime.clone());
+        fn window_engagements(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+            let active_tool = view_state.active_tool_id.as_deref().unwrap_or(PUZZLE3D_DEFAULT_TOOL);
+            let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_tool);
             HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.into(), puzzle3d_engagement(&envelope, &self.precompute))])
         }
 
         fn window_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-            let envelope = scene_from_projection(doc.projection, self.runtime.clone());
+            let active_tool = view_state.active_tool_id.as_deref().unwrap_or(PUZZLE3D_DEFAULT_TOOL);
+            let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_tool);
             let labels = puzzle3d_labels(view_state);
             HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.into(), puzzle3d_window_measures(&envelope, labels))])
         }
@@ -5612,7 +5742,7 @@ pub mod d3 {
 
     //#region 🔖Manifest
     pub fn create_puzzle3d_app() -> App {
-        let envelope = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default() };
+        let envelope = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_tool: PUZZLE3D_DEFAULT_TOOL.into() };
         App::from_builder(
             App::builder(PUZZLE3D_PLAY_APP_ID, "Puzzle 3D")
                 .document(["semio", "puzzle", "3d"])
@@ -5634,7 +5764,95 @@ pub mod d3 {
                 .keybinding("mod+d", "duplicateSelection")
                 .keybinding("tab", "cycleBrushCandidate")
                 .keybinding("shift+tab", "cycleBrushCandidateBack")
-                .keybinding("f", "focusSelection"),
+                .keybinding("f", "focusSelection")
+                // 🔧 Document-mutating operations (emit VCS ops through the before/after fixture delta).
+                .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setFixtureJson", "Set Fixture Json", ActionKind::Operation) })
+                .operation("setActiveExample", "Set Active Example")
+                .operation("addObjectKind", "Add Object")
+                .operation("deleteSelection", "Delete Selection")
+                .operation("duplicateSelection", "Duplicate Selection")
+                .operation("setCamera", "Set Camera")
+                .operation("setProjection", "Set Projection")
+                .operation("setCameraViewPreset", "Set Camera View Preset")
+                .operation("translateSelection", "Translate Selection")
+                .operation("rotateSelection", "Rotate Selection")
+                .operation("scaleSelection", "Scale Selection")
+                .operation("worldRelocate", "Relocate Object")
+                .operation("setSelectionFlag", "Set Selection Flag")
+                .operation("patchInspector", "Patch Inspector")
+                .operation("focusSelection", "Focus Selection")
+                .operation("engagementSubmit", "Engagement Submit")
+                .operation("engagementRepeatLast", "Engagement Repeat Last")
+                .operation("createAttraction", "Create Attraction")
+                .operation("deleteAttraction", "Delete Attraction")
+                .operation("addTargetVolume", "Add Target Volume")
+                .operation("deleteTargetVolume", "Delete Target Volume")
+                .operation("setTargetVolumeFlag", "Set Target Volume Flag")
+                .operation("addBrushObject", "Add Brush Object")
+                .operation("setFillCount", "Set Fill Count")
+                .operation("acceptSuggestion", "Accept Suggestion")
+                .operation("fillBuildTick", "Fill Build Tick")
+                // 👁️ Ephemeral view state — selection, hover, camera scratch, tool-parameter runtime.
+                .view_action("setSelection", "Set Selection")
+                .view_action("selectSameKindSelection", "Select Same Kind")
+                .view_action("setJackQuery", "Set Jack Query")
+                .view_action("worldSelect", "World Select")
+                .view_action("worldHover", "World Hover")
+                .view_action("setHover", "Set Hover")
+                .view_action("worldPick", "World Pick")
+                .view_action("worldVortexHover", "World Vortex Hover")
+                .view_action("worldVortexSelect", "World Vortex Select")
+                .view_action("setSelectionMethod", "Set Selection Method")
+                .view_action("toggleSun", "Toggle Sun")
+                .view_action("setSunAzimuth", "Set Sun Azimuth")
+                .view_action("setSunElevation", "Set Sun Elevation")
+                .view_action("setSunIntensity", "Set Sun Intensity")
+                .view_action("setLodAutomatic", "Set Lod Automatic")
+                .view_action("setLodDepthVariable", "Set Lod Depth Variable")
+                .view_action("setLodShowGrid", "Set Lod Show Grid")
+                .view_action("setLodManual", "Set Lod Manual")
+                .view_action("setGridSnapEnabled", "Set Grid Snap Enabled")
+                .view_action("setGridFactor", "Set Grid Factor")
+                .view_action("setSelectionModeDefault", "Set Selection Mode Default")
+                .view_action("setProximityRadius", "Set Proximity Radius")
+                .view_action("setChunkSize", "Set Chunk Size")
+                .view_action("setSelectableKind", "Set Selectable Kind")
+                .view_action("setKindHover", "Set Kind Hover")
+                .view_action("selectAll", "Select All")
+                .view_action("clearSelection", "Clear Selection")
+                .view_action("contextMenuAt", "Context Menu At")
+                .view_action("engagementInput", "Engagement Input")
+                .view_action("engagementAbort", "Engagement Abort")
+                .view_action("engagementControlSelect", "Engagement Control Select")
+                .view_action("setFillEditTargetVolumes", "Set Fill Edit Target Volumes")
+                .view_action("setVoxelDims", "Set Voxel Dims")
+                .view_action("setBrushPlacementOverlapBudget", "Set Brush Placement Overlap Budget")
+                .view_action("setObjectKindWeight", "Set Object Kind Weight")
+                .view_action("setVortexKindWeight", "Set Vortex Kind Weight")
+                .view_action("cycleBrushCandidate", "Cycle Brush Candidate")
+                .view_action("cycleBrushCandidateBack", "Cycle Brush Candidate Back")
+                .view_action("openVortexSuggestions", "Open Vortex Suggestions")
+                .view_action("closeVortexSuggestions", "Close Vortex Suggestions")
+                .view_action("hoverSuggestion", "Hover Suggestion")
+                .view_action("suggestionsTick", "Suggestions Tick")
+                .view_action("registerBrushMesh", "Register Brush Mesh")
+                .view_action("worldPointerDown", "World Pointer Down")
+                // 📝 Staged argument forms for the panel-visible create/query actions (P1).
+                .action_args("addObjectKind", vec![
+                    ActionArgDef::select("objectKind", "Kind", vec![ActionArgOption::new("Object", "Object")]).default_value("Object"),
+                ])
+                .action_args("setJackQuery", vec![
+                    ActionArgDef::text("value", "Query").default_value(default_jack_query()),
+                ])
+                // 🧰 Flat per-window tool set (host-owned `view_state.active_tool_id`); `select` is the default.
+                .tool(ToolDefinition { category: Some(ToolCategory::Selection), ..ToolDefinition::new("select", "Select", "cursor") })
+                .tool(ToolDefinition { group: Some("transform".into()), ..ToolDefinition::new("move", "Move", "move") })
+                .tool(ToolDefinition { group: Some("transform".into()), ..ToolDefinition::new("rotate", "Rotate", "rotate-cw") })
+                .tool(ToolDefinition { group: Some("transform".into()), ..ToolDefinition::new("scale", "Scale", "maximize-2") })
+                .tool(ToolDefinition::new("brush", "Brush", "brush"))
+                .tool(ToolDefinition::new("fill", "Fill", "fill"))
+                .tool(ToolDefinition::new("worldRelocate", "Relocate", "move-3d"))
+                .window_kind_tools(PUZZLE3D_PLAY_WINDOW_MAIN, vec!["select".into(), "move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()]),
         )
         .example("empty", "Empty", &serde_json::to_string(&empty_fixture()).unwrap())
         .example(PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON)
@@ -5712,7 +5930,7 @@ pub mod d3 {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+        use semio_framework_plugin::{ActionMeta, AppActionRegistry, PluginApp, VcsDocumentApp};
 
         fn meta(actor: &str) -> ActionMeta {
             ActionMeta { actor: actor.into(), instance_id: 1 }
@@ -5720,6 +5938,11 @@ pub mod d3 {
 
         fn new_app() -> VcsDocumentApp<Puzzle3dPlayApp> {
             VcsDocumentApp::new(Puzzle3dPlayApp::default())
+        }
+
+        fn new_app_with_registry() -> VcsDocumentApp<Puzzle3dPlayApp> {
+            let definition = create_puzzle3d_app().definition;
+            VcsDocumentApp::with_registry(Puzzle3dPlayApp::default(), AppActionRegistry::from_definition(&definition))
         }
 
         fn object_count(app: &VcsDocumentApp<Puzzle3dPlayApp>) -> usize {
@@ -5829,8 +6052,14 @@ pub mod d3 {
         fn open_vortex_suggestions_opens_the_suggestion_popup() {
             let mut app = new_app();
             let vortex = first_vortex_full_id(&app);
-            app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 12.0, "y": 34.0 })), &ViewState::default(), &meta("local")).expect("openVortexSuggestions");
-            let interaction = interaction_of(&render_composite(&mut app));
+            let result = app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 12.0, "y": 34.0 })), &ViewState::default(), &meta("local")).expect("openVortexSuggestions");
+            assert!(
+                matches!(result.requested_effects.as_slice(), [HostEffect::SetActiveTool { window_kind_id, tool_id }] if window_kind_id == PUZZLE3D_PLAY_WINDOW_MAIN && tool_id == "brush"),
+                "opening suggestions switches the host-owned tool to brush",
+            );
+            let brush_view = ViewState { active_tool_id: Some("brush".into()), ..ViewState::default() };
+            let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &brush_view).expect("render");
+            let interaction = interaction_of(&serde_json::to_value(&node).unwrap());
             assert_eq!(interaction.get("activeTool").and_then(Value::as_str), Some("brush"));
             let menu = interaction.get("suggestionMenu").expect("suggestionMenu present");
             assert_eq!(menu.get("open").and_then(Value::as_bool), Some(true));
@@ -5867,11 +6096,12 @@ pub mod d3 {
             // build converges over several ticks — exactly like the real 120ms `fillBuildTick` loop in
             // `world-3d-host.tsx` — rather than in one call.
             let mut app = new_app();
-            app.handle_action("engagementPossibleSelect", Some(&json!({ "possibleId": PUZZLE3D_ENGAGEMENT_TOOL_FILL })), &ViewState::default(), &meta("local")).expect("select fill tool");
+            let fill_view = ViewState { active_tool_id: Some("fill".into()), ..ViewState::default() };
+            app.handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "fill" })), &fill_view, &meta("local")).expect("select fill tool");
             for _ in 0..500 {
-                app.handle_action("fillBuildTick", None, &ViewState::default(), &meta("local")).expect("fillBuildTick");
+                app.handle_action("fillBuildTick", None, &fill_view, &meta("local")).expect("fillBuildTick");
             }
-            let engagements = app.window_engagements(&ViewState::default());
+            let engagements = app.window_engagements(&fill_view);
             let engagement = engagements.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main window engagement");
             match &engagement.control {
                 Some(WindowEngagementControl::Slider { value, .. }) => assert_eq!(*value, 1.0, "fillBuildTick should auto-start the fill count at 1 once the build is done"),
@@ -5882,7 +6112,7 @@ pub mod d3 {
         #[test]
         fn fill_count_control_shows_building_progress_while_precompute_incomplete() {
             let mut session = Puzzle3dPrecomputeSession::new();
-            let scene = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default() };
+            let scene = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_tool: "fill".into() };
             sync_precompute_session(&mut session, &scene);
             session.precompute_step(1);
             let control = puzzle3d_fill_count_control(&scene, &session);
@@ -5892,6 +6122,56 @@ pub mod d3 {
             }
         }
         //#endregion 🧭 Suggestions, select-then-open context menu, fill build progress (Round 2)
+
+        //#region 🧰 Window Actions & Tools contract
+        #[test]
+        fn add_object_kind_materializes_the_declared_kind_default() {
+            // 📝 P1 arg form: firing addObjectKind with no args must materialize the declared `objectKind`
+            // default and emit the object-add op under registry enforcement.
+            let mut app = new_app_with_registry();
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "empty" })), &ViewState::default(), &meta("local")).expect("empty");
+            let before = object_count(&app);
+            let result = app.handle_action("addObjectKind", None, &ViewState::default(), &meta("local")).expect("addObjectKind");
+            assert!(!result.operations.is_empty(), "addObjectKind is an Operation that emits ops");
+            assert_eq!(object_count(&app), before + 1, "the materialized default kind adds exactly one object");
+            let projection = app.projection().expect("projection");
+            let kind = projection.get("objects").and_then(Value::as_array).and_then(|objects| objects.last()).and_then(|object| object.get("objectKind")).and_then(Value::as_str);
+            assert_eq!(kind, Some("Object"), "the declared objectKind default was materialized host-side");
+        }
+
+        #[test]
+        fn set_active_tool_emits_no_ops_and_no_history_entry() {
+            // 🧰 Switching tools is the framework-injected View action: no document ops, no undo entry, no
+            // re-emitted tool-switch effect (the host already applied `view_state.active_tool_id`).
+            let mut app = new_app_with_registry();
+            let before = app.projection().expect("projection");
+            let brush_view = ViewState { active_tool_id: Some("brush".into()), ..ViewState::default() };
+            let result = app.handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "brush" })), &brush_view, &meta("local")).expect("switch tool");
+            assert!(result.operations.is_empty(), "tool switching never emits document ops");
+            assert!(result.requested_effects.is_empty(), "a user tool switch does not re-emit SetActiveTool");
+            assert_eq!(app.projection().expect("projection"), before, "tool switching does not mutate the document");
+        }
+
+        #[test]
+        fn gumball_translate_drag_coalesces_into_one_edit() {
+            // 🌀 Coalescing regression: three translate ticks with the same key are ONE undoable edit.
+            let mut app = new_app();
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "empty" })), &ViewState::default(), &meta("local")).expect("empty");
+            app.handle_action("addObjectKind", Some(&json!({ "objectKind": "Object" })), &ViewState::default(), &meta("local")).expect("add object");
+            let object_id = app.projection().expect("projection").get("objects").and_then(Value::as_array).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(Value::as_str).expect("object id").to_string();
+            let origin_before = |app: &VcsDocumentApp<Puzzle3dPlayApp>| -> Vec<f64> {
+                app.projection().expect("projection").get("objects").and_then(Value::as_array).and_then(|objects| objects.iter().find(|object| object.get("id").and_then(Value::as_str) == Some(object_id.as_str()))).and_then(|object| object.get("origin")).and_then(Value::as_array).map(|values| values.iter().filter_map(Value::as_f64).collect()).unwrap_or_default()
+            };
+            let start = origin_before(&app);
+            for dx in [1.0, 2.0, 3.0] {
+                app.handle_action("translateSelection", Some(&json!({ "ids": [object_id], "dx": dx, "dy": 0.0, "dz": 0.0 })), &ViewState { active_tool_id: Some("move".into()), ..ViewState::default() }, &meta("local")).expect("drag tick");
+            }
+            let dragged = origin_before(&app);
+            assert!((dragged[0] - start[0] - 6.0).abs() < 1e-9, "three ticks accumulate 1+2+3 on x");
+            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            assert_eq!(origin_before(&app), start, "one undo restores the whole coalesced gumball drag");
+        }
+        //#endregion 🧰 Window Actions & Tools contract
     }
     //#endregion 🧪Tests
 }
@@ -5905,12 +6185,13 @@ pub mod d5 {
     use semio_framework_os::{register_mesh_exporter, register_mesh_importer};
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_puzzle2d_board_scene, build_world_3d_scene, create_default_layout,
-        ActionEmit, DocumentApp, DocumentView, MeasureSelectItem, WindowEngagementStatus,
+        ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, WindowEngagementStatus,
         merge_world_selection_ids, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
-        ActionDescriptor, PanelGroup, Puzzle2dBoardScene, SurfaceKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl,
+        ActionDescriptor, PanelGroup, Puzzle2dBoardScene, SurfaceKind, ToolCategory, ToolDefinition, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl,
         WindowEngagementInput, WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-        FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+        FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID,
     };
+    use semio_framework_plugin::kernel::HostEffect;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use std::collections::{BTreeMap, HashMap, HashSet};
@@ -5938,6 +6219,8 @@ pub mod d5 {
     const PUZZLE5D_ENGAGEMENT_TOOL_BRUSH: &str = "puzzle5d.tool.brush";
     const PUZZLE5D_ENGAGEMENT_TOOL_SELECT: &str = "puzzle5d.tool.select";
     const PUZZLE5D_ENGAGEMENT_TOOL_FILL: &str = "puzzle5d.tool.fill";
+    /// 🧰 Host-owned active tool (`view_state.active_tool_id`) when the host hasn't set one yet — the first declared window tool.
+    const PUZZLE5D_DEFAULT_TOOL: &str = "select";
     const PUZZLE5D_FILL_COUNT_MAX: u32 = 1000;
     const PUZZLE5D_LOD_MODE_AUTOMATIC: &str = "automatic";
     const PUZZLE5D_SUGGESTION_OFFSET_MIN: f64 = 0.0;
@@ -6048,14 +6331,6 @@ pub mod d5 {
 
     fn default_selection_method() -> String {
         "rectangle".into()
-    }
-
-    fn default_active_tool() -> String {
-        "select".into()
-    }
-
-    fn default_transform_tool() -> String {
-        "move".into()
     }
 
     fn default_overlap_budget() -> f64 {
@@ -6240,10 +6515,6 @@ pub mod d5 {
         selection_method: String,
         #[serde(default)]
         hovered_part_id: Option<String>,
-        #[serde(default = "default_active_tool")]
-        active_tool: String,
-        #[serde(default = "default_transform_tool")]
-        transform_tool: String,
         #[serde(default)]
         fill_count: u32,
         #[serde(default)]
@@ -6275,8 +6546,6 @@ pub mod d5 {
                 selection: Puzzle5dSelection::default(),
                 selection_method: default_selection_method(),
                 hovered_part_id: None,
-                active_tool: default_active_tool(),
-                transform_tool: default_transform_tool(),
                 fill_count: 0,
                 brush_candidate_index: 0,
                 overlap_budget: default_overlap_budget(),
@@ -6300,6 +6569,27 @@ pub mod d5 {
     struct Puzzle5dScene {
         document: Puzzle5dDocument,
         runtime: Puzzle5dRuntime,
+        /// 🧰 Host-owned active tool mirrored from `view_state.active_tool_id` — transient, never persisted.
+        active_tool: String,
+    }
+
+    /// 🧭 The select/brush/fill interaction mode the world engine reads, derived from the flat active tool
+    /// (the transform gumball tools `move`/`rotate`/`scale` and `worldRelocate` all present as `select`).
+    fn puzzle5d_scene_mode(active_tool: &str) -> &str {
+        match active_tool {
+            "brush" => "brush",
+            "fill" => "fill",
+            _ => "select",
+        }
+    }
+
+    /// 🎚️ The gumball handle the world engine draws, derived from the flat active tool (non-transform tools fall back to `move`).
+    fn puzzle5d_transform_handle(active_tool: &str) -> &str {
+        match active_tool {
+            "rotate" => "rotate",
+            "scale" => "scale",
+            _ => "move",
+        }
     }
 
     fn empty_document() -> Puzzle5dDocument {
@@ -6327,9 +6617,9 @@ pub mod d5 {
 
     /// 🧾 Materializes the transient scene from the persisted projection (bare document json) and the
     /// app's current view state; an unparseable projection degrades to an empty document.
-    fn scene_from_projection(projection: &Value, runtime: Puzzle5dRuntime) -> Puzzle5dScene {
+    fn scene_from_projection(projection: &Value, runtime: Puzzle5dRuntime, active_tool: &str) -> Puzzle5dScene {
         let document = serde_json::from_value::<Puzzle5dDocument>(projection.clone()).unwrap_or_else(|_| empty_document());
-        Puzzle5dScene { document, runtime }
+        Puzzle5dScene { document, runtime, active_tool: active_tool.to_string() }
     }
 
     fn puzzle5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -6625,7 +6915,7 @@ pub mod d5 {
             selection_json: serde_json::to_string(&selection_flat_ids(&envelope.runtime.selection)).unwrap_or_else(|_| "[]".into()),
             interactive: true,
             hovered_id: envelope.runtime.hovered_part_id.clone(),
-            active_tool: Some(envelope.runtime.active_tool.clone()),
+            active_tool: Some(puzzle5d_scene_mode(&envelope.active_tool).to_string()),
             selection_method: envelope.runtime.selection_method.clone(),
             grid_snap_enabled: envelope.runtime.grid_snap_enabled,
             grid_factor: envelope.runtime.grid_factor,
@@ -6979,7 +7269,7 @@ pub mod d5 {
             object.insert("granularity".into(), json!("mesh"));
             object.insert("selectionMode".into(), json!("mesh"));
             object.insert("targets".into(), json!({ "mesh": true, "vertex": false, "edge": false, "face": false }));
-            object.insert("transformTool".into(), json!(runtime.transform_tool));
+            object.insert("transformTool".into(), json!(puzzle5d_transform_handle(&envelope.active_tool)));
             if let Some(active_id) = runtime.selection.part_ids.first() {
                 object.insert("activeObjectId".into(), json!(active_id));
             }
@@ -6994,9 +7284,9 @@ pub mod d5 {
         value.to_string()
     }
 
-    fn world_interaction_json(runtime: &Puzzle5dRuntime) -> String {
+    fn world_interaction_json(runtime: &Puzzle5dRuntime, active_tool: &str) -> String {
         json!({
-            "activeTool": runtime.active_tool,
+            "activeTool": puzzle5d_scene_mode(active_tool),
             "brushCandidateIndex": runtime.brush_candidate_index,
             "fillCount": runtime.fill_count,
             "hoveredVortexFullId": runtime.selection.grip_ids.first().cloned(),
@@ -7038,7 +7328,7 @@ pub mod d5 {
     }
 
     fn world_brush_preview_json(session: &Puzzle5dPrecomputeSession, envelope: &Puzzle5dScene) -> Option<String> {
-        if envelope.runtime.active_tool != "brush" {
+        if envelope.active_tool != "brush" {
             return None;
         }
         let full_id = puzzle5d_brush_target_grip(envelope)?;
@@ -7090,19 +7380,20 @@ pub mod d5 {
     fn puzzle5d_engagement(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, window: &str, labels: &Puzzle5dLabels) -> WindowEngagement {
         let part_count = envelope.document.parts.len();
         let fastener_count = envelope.document.fasteners.len();
-        let control = match envelope.runtime.active_tool.as_str() {
+        let active_tool = envelope.active_tool.as_str();
+        let control = match active_tool {
             "fill" => Some(puzzle5d_fill_count_control(envelope, labels)),
             "brush" => puzzle5d_brush_placement_control(envelope, precompute, labels),
             _ => None,
         };
         let input_value = envelope.runtime.engagement_input_by_window.get(window).cloned().unwrap_or_default();
-        let placeholder = match envelope.runtime.active_tool.as_str() {
+        let placeholder = match active_tool {
             "fill" => "Fill",
             "brush" => "Brush",
             _ => "select, brush, fill, clear",
         };
         WindowEngagement {
-            session_active: Some(envelope.runtime.active_tool != "select"),
+            session_active: Some(active_tool != "select"),
             input: Some(WindowEngagementInput {
                 id: Some(format!("puzzle5d-engagement-{window}")),
                 value: Some(input_value),
@@ -7115,31 +7406,31 @@ pub mod d5 {
             }),
             control,
             controls: None,
-            status: Some(vec![WindowEngagementStatus { id: format!("puzzle5d-status-{window}"), text: format!("{part_count} parts · {fastener_count} fasteners · tool {}", envelope.runtime.active_tool) }]),
+            status: Some(vec![WindowEngagementStatus { id: format!("puzzle5d-status-{window}"), text: format!("{part_count} parts · {fastener_count} fasteners · tool {}", active_tool) }]),
             options: Some(vec![
                 WindowEngagementOption {
                     id: PUZZLE5D_ENGAGEMENT_TOOL_SELECT.into(),
                     label: Some(labels.select.into()),
                     icon_id: Some("cursor".into()),
-                    pressed: Some(envelope.runtime.active_tool == "select"),
+                    pressed: Some(active_tool == "select"),
                     disabled: None,
-                    action: Some(puzzle5d_action("engagementPossibleSelect", Some(json!({ "window": window, "possibleId": PUZZLE5D_ENGAGEMENT_TOOL_SELECT })))),
+                    action: Some(puzzle5d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "select" })))),
                 },
                 WindowEngagementOption {
                     id: PUZZLE5D_ENGAGEMENT_TOOL_BRUSH.into(),
                     label: Some(labels.brush.into()),
                     icon_id: Some("brush".into()),
-                    pressed: Some(envelope.runtime.active_tool == "brush"),
+                    pressed: Some(active_tool == "brush"),
                     disabled: None,
-                    action: Some(puzzle5d_action("engagementPossibleSelect", Some(json!({ "window": window, "possibleId": PUZZLE5D_ENGAGEMENT_TOOL_BRUSH })))),
+                    action: Some(puzzle5d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "brush" })))),
                 },
                 WindowEngagementOption {
                     id: PUZZLE5D_ENGAGEMENT_TOOL_FILL.into(),
                     label: Some(labels.fill.into()),
                     icon_id: Some("fill".into()),
-                    pressed: Some(envelope.runtime.fill_count > 0 || envelope.runtime.active_tool == "fill"),
+                    pressed: Some(envelope.runtime.fill_count > 0 || active_tool == "fill"),
                     disabled: None,
-                    action: Some(puzzle5d_action("engagementPossibleSelect", Some(json!({ "window": window, "possibleId": PUZZLE5D_ENGAGEMENT_TOOL_FILL })))),
+                    action: Some(puzzle5d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "fill" })))),
                 },
             ]),
             possible_engagements: None,
@@ -7508,7 +7799,7 @@ pub mod d5 {
             ui_text(format!("Schema: {}", envelope.document.schema)),
             ui_text(format!("Parts: {}", envelope.document.parts.len())),
             ui_text(format!("Fasteners: {}", envelope.document.fasteners.len())),
-            ui_text(format!("Tool: {}", envelope.runtime.active_tool)),
+            ui_text(format!("Tool: {}", envelope.active_tool)),
         ])
     }
     //#endregion 🔖Panels
@@ -7683,9 +7974,10 @@ pub mod d5 {
             serde_json::to_value(default_document()).unwrap_or(Value::Null)
         }
 
-        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, _view_state: &ViewState) -> ActionEmit<Puzzle5dOp> {
+        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> ActionEmit<Puzzle5dOp> {
             let before = doc.projection.clone();
-            let mut envelope = scene_from_projection(&before, self.runtime.clone());
+            let active_tool_initial = view_state.active_tool_id.as_deref().unwrap_or(PUZZLE5D_DEFAULT_TOOL).to_string();
+            let mut envelope = scene_from_projection(&before, self.runtime.clone(), &active_tool_initial);
             match action {
                 "setFixtureJson" => {
                     if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
@@ -7802,28 +8094,15 @@ pub mod d5 {
                         envelope.document.camera2d.y = selected_2d.iter().map(|(_, y)| y).sum::<f64>() / selected_2d.len() as f64;
                     }
                 }
-                "setActiveTool" => {
-                    let tool = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()).unwrap_or("select");
-                    envelope.runtime.active_tool = tool.into();
-                    if tool == "brush" || tool == "fill" {
+                SET_ACTIVE_TOOL_ACTION_ID => {
+                    // 🧰 Host already applied `view_state.active_tool_id`; clear per-window engagement scratch and
+                    // refresh the placement engine for the new tool. Emits no ops and no tool-switch effect.
+                    for window in PUZZLE5D_PLAY_WINDOWS {
+                        envelope.runtime.engagement_input_by_window.insert(window.to_string(), String::new());
+                    }
+                    envelope.runtime.brush_candidate_index = 0;
+                    if envelope.active_tool == "brush" || envelope.active_tool == "fill" {
                         self.drive_precompute(&envelope);
-                    }
-                }
-                "engagementPossibleSelect" => {
-                    let possible_id = args.and_then(|value| value.get("possibleId")).and_then(|value| value.as_str()).unwrap_or("");
-                    envelope.runtime.active_tool = match possible_id {
-                        PUZZLE5D_ENGAGEMENT_TOOL_BRUSH => "brush",
-                        PUZZLE5D_ENGAGEMENT_TOOL_FILL => "fill",
-                        _ => "select",
-                    }
-                    .into();
-                    if envelope.runtime.active_tool != "select" {
-                        self.drive_precompute(&envelope);
-                    }
-                    if let Some(window) = args.and_then(|value| value.get("window")).and_then(|value| value.as_str()) {
-                        if PUZZLE5D_PLAY_WINDOWS.contains(&window) {
-                            envelope.runtime.engagement_input_by_window.insert(window.to_string(), String::new());
-                        }
                     }
                 }
                 "engagementInput" => {
@@ -7838,8 +8117,8 @@ pub mod d5 {
                     let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).map(str::trim).unwrap_or("").to_lowercase();
                     match value.as_str() {
                         "select" | "brush" | "fill" => {
-                            envelope.runtime.active_tool = value;
-                            if envelope.runtime.active_tool != "select" {
+                            envelope.active_tool = value;
+                            if envelope.active_tool != "select" {
                                 self.drive_precompute(&envelope);
                             }
                         }
@@ -7857,9 +8136,7 @@ pub mod d5 {
                             envelope.runtime.engagement_input_by_window.insert(window.to_string(), String::new());
                         }
                     }
-                    if envelope.runtime.active_tool != "select" {
-                        envelope.runtime.active_tool = "select".into();
-                    }
+                    envelope.active_tool = "select".into();
                 }
                 "engagementControlSelect" => {
                     let candidate_id = args.and_then(|value| value.get("id").or_else(|| value.get("value"))).and_then(|value| value.as_str()).unwrap_or("");
@@ -7894,7 +8171,7 @@ pub mod d5 {
                     let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_f64()).map(|value| value.round().max(0.0) as u32).unwrap_or(0).min(PUZZLE5D_FILL_COUNT_MAX);
                     envelope.runtime.fill_count = count;
                     if count > 0 {
-                        envelope.runtime.active_tool = "fill".into();
+                        envelope.active_tool = "fill".into();
                         if let Ok(fixture_json) = self.precompute.apply_fill_count_rust(count) {
                             if let Some(next) = merge_engine_fixture(&envelope, &fixture_json) {
                                 envelope = next;
@@ -8133,14 +8410,9 @@ pub mod d5 {
                 "setHover" => {
                     envelope.runtime.hovered_part_id = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()).map(str::to_string);
                 }
-                "setTransformTool" => {
-                    if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
-                        envelope.runtime.transform_tool = tool.into();
-                    }
-                }
                 "worldVortexHover" => {
                     envelope.runtime.selection.grip_ids = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()).map(|full_id| vec![full_id.to_string()]).unwrap_or_default();
-                    if envelope.runtime.active_tool == "brush" && !envelope.runtime.selection.grip_ids.is_empty() {
+                    if envelope.active_tool == "brush" && !envelope.runtime.selection.grip_ids.is_empty() {
                         self.drive_precompute(&envelope);
                     }
                 }
@@ -8212,14 +8484,30 @@ pub mod d5 {
                 "worldPointerDown" | "canvasPointerDown" => return ActionEmit::default(),
                 _ => {}
             }
+            let next_active_tool = envelope.active_tool.clone();
             self.runtime = envelope.runtime;
             let after = serde_json::to_value(&envelope.document).unwrap_or_else(|_| before.clone());
             let ops = puzzle5d_document_delta_ops(&before, &after);
-            ActionEmit { ops, ..Default::default() }
+            // 🌀 Coalesce each gumball drag tick into one undoable edit (compact per-part records, not full meshes).
+            let coalesce_key = match action {
+                "translateSelection" => Some("gumball-translate".to_string()),
+                "rotateSelection" => Some("gumball-rotate".to_string()),
+                "scaleSelection" => Some("gumball-scale".to_string()),
+                _ => None,
+            };
+            // 🧰 Programmatic tool switches (engagement submit/abort, fill) push the active tool back into the
+            // host session for both windows; `setActiveTool` itself never re-emits (the host already applied it).
+            let effects = if next_active_tool != active_tool_initial {
+                PUZZLE5D_PLAY_WINDOWS.iter().map(|window| HostEffect::SetActiveTool { window_kind_id: (*window).into(), tool_id: next_active_tool.clone() }).collect()
+            } else {
+                Vec::new()
+            };
+            ActionEmit { ops, coalesce_key, effects, ..Default::default() }
         }
 
         fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
-            let envelope = scene_from_projection(doc.projection, self.runtime.clone());
+            let active_tool = view_state.active_tool_id.as_deref().unwrap_or(PUZZLE5D_DEFAULT_TOOL);
+            let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_tool);
             let labels = puzzle5d_labels(view_state);
             match body_key {
                 PUZZLE5D_PLAY_BODY_2D => build_puzzle2d_board_scene(PUZZLE5D_PLAY_SURFACE_2D, PUZZLE5D_PLAY_CONTROLLER_ID, puzzle5d_board_scene(&envelope)),
@@ -8238,7 +8526,7 @@ pub mod d5 {
                             None,
                             None,
                             brush_preview,
-                            Some(world_interaction_json(&envelope.runtime)),
+                            Some(world_interaction_json(&envelope.runtime, &envelope.active_tool)),
                             None,
                             None,
                             Some(world3d_chunking_json(256.0, 8000.0)),
@@ -8255,13 +8543,15 @@ pub mod d5 {
         }
 
         fn window_engagements(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-            let envelope = scene_from_projection(doc.projection, self.runtime.clone());
+            let active_tool = view_state.active_tool_id.as_deref().unwrap_or(PUZZLE5D_DEFAULT_TOOL);
+            let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_tool);
             let labels = puzzle5d_labels(view_state);
             PUZZLE5D_PLAY_WINDOWS.iter().map(|window| (window.to_string(), puzzle5d_engagement(&envelope, &self.precompute, window, labels))).collect()
         }
 
         fn window_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-            let envelope = scene_from_projection(doc.projection, self.runtime.clone());
+            let active_tool = view_state.active_tool_id.as_deref().unwrap_or(PUZZLE5D_DEFAULT_TOOL);
+            let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_tool);
             let labels = puzzle5d_labels(view_state);
             PUZZLE5D_PLAY_WINDOWS.iter().map(|window| (window.to_string(), puzzle5d_window_measures(window, &envelope, labels))).collect()
         }
@@ -8283,7 +8573,7 @@ pub mod d5 {
 
     //#region 🔖Manifest
     pub fn create_puzzle5d_app() -> App {
-        let envelope = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default() };
+        let envelope = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_tool: PUZZLE5D_DEFAULT_TOOL.into() };
         let precompute = Puzzle5dPrecomputeSession::new();
         let manifest_labels = puzzle5d_labels(&ViewState::default());
         let mut app = App::from_builder(
@@ -8297,7 +8587,83 @@ pub mod d5 {
                 .default_layout(create_default_layout(&[PUZZLE5D_PLAY_WINDOW_2D.into(), PUZZLE5D_PLAY_WINDOW_3D.into()], "row", Some(&[50.0, 50.0]), Some(&["Puzzle 2D".into(), "Puzzle 3D".into()])))
                 .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_DOCUMENT)
                 .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_KINDS)
-                .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PUZZLE5D_PLAY_BODY_INSPECTOR),
+                .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PUZZLE5D_PLAY_BODY_INSPECTOR)
+                // 🔧 Document-mutating operations (emit VCS ops through the before/after document delta).
+                .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setFixtureJson", "Set Fixture Json", ActionKind::Operation) })
+                .operation("setActiveExample", "Set Active Example")
+                .operation("addNode", "Add Node")
+                .operation("addPartKind", "Add Part")
+                .operation("addBrushPart", "Add Brush Part")
+                .operation("addBrushObject", "Add Brush Object")
+                .operation("deleteSelection", "Delete Selection")
+                .operation("duplicateSelection", "Duplicate Selection")
+                .operation("setSelectionFlag", "Set Selection Flag")
+                .operation("zoomToSelection", "Zoom To Selection")
+                .operation("focusSelection", "Focus Selection")
+                .operation("engagementSubmit", "Engagement Submit")
+                .operation("setFillCount", "Set Fill Count")
+                .operation("patchPart", "Patch Part")
+                .operation("patchGrip", "Patch Grip")
+                .operation("setCamera", "Set Camera")
+                .operation("setCamera2d", "Set Camera 2D")
+                .operation("setCamera3d", "Set Camera 3D")
+                .operation("translateSelection", "Translate Selection")
+                .operation("rotateSelection", "Rotate Selection")
+                .operation("scaleSelection", "Scale Selection")
+                .operation("worldRelocate", "Relocate Part")
+                .operation("applyBoardEvents", "Apply Board Events")
+                // 👁️ Ephemeral view state — selection, hover, tool parameters, brush cycling.
+                .view_action("setSelection", "Set Selection")
+                .view_action("documentSelect", "Document Select")
+                .view_action("clearSelection", "Clear Selection")
+                .view_action("selectAll", "Select All")
+                .view_action("selectSameKindSelection", "Select Same Kind")
+                .view_action("selectSameKind", "Select Same Kind (alias)")
+                .view_action("toggleSun", "Toggle Sun")
+                .view_action("setSunAzimuth", "Set Sun Azimuth")
+                .view_action("setSunElevation", "Set Sun Elevation")
+                .view_action("setSunIntensity", "Set Sun Intensity")
+                .view_action("engagementInput", "Engagement Input")
+                .view_action("engagementAbort", "Engagement Abort")
+                .view_action("engagementControlSelect", "Engagement Control Select")
+                .view_action("cycleBrushCandidate", "Cycle Brush Candidate")
+                .view_action("registerBrushMesh", "Register Brush Mesh")
+                .view_action("setBrushPlacementOverlapBudget", "Set Brush Placement Overlap Budget")
+                .view_action("setObjectKindWeight", "Set Object Kind Weight")
+                .view_action("setVortexKindWeight", "Set Vortex Kind Weight")
+                .view_action("worldSelect", "World Select")
+                .view_action("worldPick", "World Pick")
+                .view_action("worldHover", "World Hover")
+                .view_action("setHover", "Set Hover")
+                .view_action("worldVortexHover", "World Vortex Hover")
+                .view_action("worldVortexSelect", "World Vortex Select")
+                .view_action("setSelectionMethod", "Set Selection Method")
+                .view_action("setLodMode", "Set Lod Mode")
+                .view_action("setSuggestionOffset", "Set Suggestion Offset")
+                .view_action("setGridSnapEnabled", "Set Grid Snap Enabled")
+                .view_action("setGridFactor", "Set Grid Factor")
+                .view_action("worldPointerDown", "World Pointer Down")
+                .view_action("canvasPointerDown", "Canvas Pointer Down")
+                // 📝 Staged argument forms for the brush create actions (P1).
+                .action_args("addPartKind", vec![
+                    ActionArgDef::select("partKind", "Kind", vec![ActionArgOption::new("Part", "Part")]).default_value("Part"),
+                ])
+                .action_args("addBrushPart", vec![
+                    ActionArgDef::select("partKind", "Kind", vec![ActionArgOption::new("Part", "Part")]).default_value("Part"),
+                ])
+                .action_args("addBrushObject", vec![
+                    ActionArgDef::select("partKind", "Kind", vec![ActionArgOption::new("Part", "Part")]).default_value("Part"),
+                ])
+                // 🧰 Flat per-window tool set (host-owned `view_state.active_tool_id`); `select` is the default.
+                .tool(ToolDefinition { category: Some(ToolCategory::Selection), ..ToolDefinition::new("select", "Select", "cursor") })
+                .tool(ToolDefinition { group: Some("transform".into()), ..ToolDefinition::new("move", "Move", "move") })
+                .tool(ToolDefinition { group: Some("transform".into()), ..ToolDefinition::new("rotate", "Rotate", "rotate-cw") })
+                .tool(ToolDefinition { group: Some("transform".into()), ..ToolDefinition::new("scale", "Scale", "maximize-2") })
+                .tool(ToolDefinition::new("brush", "Brush", "brush"))
+                .tool(ToolDefinition::new("fill", "Fill", "fill"))
+                .tool(ToolDefinition::new("worldRelocate", "Relocate", "move-3d"))
+                .window_kind_tools(PUZZLE5D_PLAY_WINDOW_2D, vec!["select".into(), "brush".into(), "fill".into()])
+                .window_kind_tools(PUZZLE5D_PLAY_WINDOW_3D, vec!["select".into(), "move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()]),
         );
         for window in PUZZLE5D_PLAY_WINDOWS {
             if let Some(window_kind) = app.definition.window_kinds.iter_mut().find(|window_kind| window_kind.id == window) {
@@ -8331,7 +8697,7 @@ pub mod d5 {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+        use semio_framework_plugin::{ActionMeta, AppActionRegistry, PluginApp, VcsDocumentApp};
 
         fn meta(actor: &str) -> ActionMeta {
             ActionMeta { actor: actor.into(), instance_id: 1 }
@@ -8339,6 +8705,11 @@ pub mod d5 {
 
         fn new_app() -> VcsDocumentApp<Puzzle5dPlayApp> {
             VcsDocumentApp::new(Puzzle5dPlayApp::default())
+        }
+
+        fn new_app_with_registry() -> VcsDocumentApp<Puzzle5dPlayApp> {
+            let definition = create_puzzle5d_app().definition;
+            VcsDocumentApp::with_registry(Puzzle5dPlayApp::default(), AppActionRegistry::from_definition(&definition))
         }
 
         fn part_count(app: &VcsDocumentApp<Puzzle5dPlayApp>) -> usize {

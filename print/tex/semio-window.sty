@@ -173,6 +173,15 @@
   \makeatother
   \group_end:
 }
+\cs_new_protected:Npn \semio_window_toc_body_gappto:nnn #1#2#3 {
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \gappto\semio@register@table@body{\SemioTableTocRow{#1}{#2}{#3}}
+  \makeatother
+  \group_end:
+}
+\cs_generate_variant:Nn \semio_window_toc_body_gappto:nnn { VVV }
 
 \cs_new_protected:Npn \semio_window_register_body_macro_apply:n #1 {
   \group_begin:
@@ -186,7 +195,9 @@
     \tl_set:Nx \l_tmpc_tl { \seq_item:cn { g_semio_register_ #1 _title_seq } { ##1 } }
     \str_set:Nx \l_tmpd_str { \seq_item:cn { g_semio_register_ #1 _label_seq } { ##1 } }
     \tl_set:Nx \l_tmpe_tl { \str_use:N \l_tmpd_str }
-    \semio_window_register_body_gappto:VVV \l_tmpb_tl \l_tmpc_tl \l_tmpe_tl
+    \str_if_eq:nnTF {#1} {toc}
+      { \semio_window_toc_body_gappto:VVV \l_tmpb_tl \l_tmpc_tl \l_tmpe_tl }
+      { \semio_window_register_body_gappto:VVV \l_tmpb_tl \l_tmpc_tl \l_tmpe_tl }
   }
 }
 
@@ -1973,6 +1984,15 @@
   }%
 }
 
+\newcommand{\semio@window@cap@paint@nofill}[2]{%
+  \vbox to #2{%
+    \vfil
+    \nointerlineskip
+    \hbox to #1{\hfil\usebox{\semio@window@cap@slot}\hfil}%
+    \vfil
+  }%
+}
+
 \newcommand{\semio@window@cap@muted@vbox}[1]{%
   \vbox to \semio@chrome@titlebar@height{%
     \nointerlineskip
@@ -2037,7 +2057,7 @@
       \nointerlineskip
       \hbox{\semio@window@stroke@h{#1}{\semio@window@cap@w}}%
       \nointerlineskip
-      \hbox to \semio@window@cap@w{\hfil\usebox{\semio@window@cap@slot}\hfil}%
+      \semio@window@cap@paint@nofill{\semio@window@cap@w}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}%
       \nointerlineskip
       \hbox{\semio@window@stroke@h{#1}{\semio@window@cap@w}}%
     }%

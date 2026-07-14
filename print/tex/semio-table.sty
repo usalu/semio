@@ -71,6 +71,14 @@
   }%
 }
 
+\newcommand{\SemioTableTocRow}[3]{%
+  \SemioTableRow{%
+    \cellcolor{semio-chrome-canvas}\semio@toc@number{#1} &
+    \cellcolor{semio-chrome-canvas}{\semio@table@register@indent{#1}#2} &
+    \cellcolor{semio-chrome-canvas}\semio@table@register@page{#3}
+  }%
+}
+
 \newlength{\semio@table@header@height}
 \newlength{\semio@table@body@height}
 \newif\ifsemio@table@row@started

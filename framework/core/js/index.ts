@@ -198,6 +198,7 @@ export type UiSectionNode = {
   readonly id: string;
   readonly label?: string;
   readonly defaultOpen?: boolean;
+  readonly loading?: boolean;
   readonly children: readonly UiNode[];
 };
 
@@ -216,6 +217,7 @@ export type UiTreeItemNode = {
   readonly icon?: string;
   readonly iconId?: string;
   readonly selected?: boolean;
+  readonly loading?: boolean;
   readonly defaultOpen?: boolean;
   readonly action?: ActionDescriptor;
   readonly hoverAction?: ActionDescriptor;
@@ -232,12 +234,14 @@ export type UiTreeSectionNode = {
   readonly id: string;
   readonly label?: string;
   readonly defaultOpen?: boolean;
+  readonly loading?: boolean;
   readonly items: readonly UiTreeItemNode[];
 };
 
 export type UiTreeNode = {
   readonly type: "tree";
   readonly sections: readonly UiTreeSectionNode[];
+  readonly loading?: boolean;
   readonly selectedIds?: readonly string[];
   readonly highlightedIds?: readonly string[];
   readonly selectionChange?: ActionDescriptor;
@@ -364,6 +368,7 @@ export type UiButtonNode = {
   readonly action: ActionDescriptor;
   readonly style?: StyleSpec;
   readonly disabled?: boolean;
+  readonly loading?: boolean;
 };
 
 export type UiTextNode = {
@@ -380,6 +385,7 @@ export type UiStackNode = {
   readonly padding?: string;
   readonly id?: string;
   readonly selected?: boolean;
+  readonly loading?: boolean;
   readonly activate?: ActionDescriptor;
   readonly dropAction?: ActionDescriptor;
   readonly children: readonly UiNode[];

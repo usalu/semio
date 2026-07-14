@@ -85,6 +85,7 @@
     --border-emphasized-color: var(--foreground);
     --border-element-color: var(--element-base);
     --border-color: var(--border-normal-color);
+    --loading-border-duration: 1.6s;
     --hover-interactive-fill: var(--border-normal-color);
     --plaster: var(--color-gray);
     --plaster-edge: var(--color-foreground);
@@ -875,6 +876,72 @@
 
 @utility border-active-base {
   border-color: var(--active-base);
+}
+
+@property --loading-border-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes loading-border-spin {
+  to {
+    --loading-border-angle: 360deg;
+  }
+}
+
+@keyframes loading-border-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Clockwise spinning + pulsing loading ring in the element's normal border color; recolor via --loading-border-color. */
+@utility border-loading {
+  position: relative;
+  --loading-border-angle: 0deg;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    border-radius: inherit;
+    padding: var(--stroke-hairline);
+    background:
+      conic-gradient(from var(--loading-border-angle), transparent, var(--loading-border-color, var(--border-normal-color))),
+      conic-gradient(color-mix(in oklab, var(--loading-border-color, var(--border-normal-color)) 20%, transparent) 0 360deg);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    animation:
+      loading-border-spin var(--loading-border-duration) linear infinite,
+      loading-border-pulse var(--loading-border-duration) ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      animation: none;
+    }
+  }
+}
+
+/* Recolor the loading ring to the active stroke (selected/on elements). */
+@utility border-loading-active {
+  --loading-border-color: var(--active-base);
+}
+
+/* Recolor the loading ring to the level-aware element border color. */
+@utility border-loading-element {
+  --loading-border-color: var(--border-element-color);
 }
 
 [data-slot="navbar"] {

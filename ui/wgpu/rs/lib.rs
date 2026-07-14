@@ -1194,6 +1194,8 @@ pub struct UiStackNode {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub selected: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub loading: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub activate: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub drop_action: Option<ActionDescriptor>,
@@ -1222,6 +1224,8 @@ pub struct UiButtonNode {
     pub style: Option<StyleSpec>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub disabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub loading: Option<bool>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1390,6 +1394,8 @@ pub struct UiSectionNode {
     pub label: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_open: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub loading: Option<bool>,
     pub children: Vec<UiNode>,
 }
 
@@ -1415,6 +1421,8 @@ pub struct UiTreeItemNode {
     pub icon_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub selected: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub loading: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "expanded")]
     pub default_open: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1446,6 +1454,7 @@ impl UiTreeItemNode {
             description: None,
             icon_id: None,
             selected: None,
+            loading: None,
             default_open: None,
             action: None,
             hover_action: None,
@@ -1468,6 +1477,8 @@ pub struct UiTreeSectionNode {
     pub label: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_open: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub loading: Option<bool>,
     pub items: Vec<UiTreeItemNode>,
 }
 
@@ -1475,6 +1486,8 @@ pub struct UiTreeSectionNode {
 #[serde(rename_all = "camelCase")]
 pub struct UiTreeNode {
     pub sections: Vec<UiTreeSectionNode>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub loading: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub selected_ids: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1621,6 +1634,7 @@ pub fn ui_inspector_groups_to_tree(groups: &[UiInspectorFieldGroup]) -> UiNode {
             id: group.id.clone(),
             label: Some(group.label.clone()),
             default_open: Some(group.default_open.unwrap_or(true)),
+            loading: None,
             children: group.fields.clone(),
         })
         .collect();
@@ -1656,6 +1670,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
                     description: None,
                     icon_id: None,
                     selected: None,
+                    loading: None,
                     default_open: None,
                     action: None,
                     hover_action: None,
@@ -1692,6 +1707,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             description: None,
             icon_id: None,
             selected: None,
+            loading: None,
             default_open: None,
             action: None,
             hover_action: None,
@@ -1718,6 +1734,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
                 description,
                 icon_id: None,
                 selected: None,
+                loading: None,
                 default_open: None,
                 action: None,
                 hover_action: None,
@@ -1736,6 +1753,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             description: None,
             icon_id: None,
             selected: None,
+            loading: None,
             default_open: None,
             action: None,
             hover_action: None,
@@ -1766,6 +1784,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             description: None,
             icon_id: None,
             selected: None,
+            loading: None,
             default_open: None,
             action: None,
             hover_action: None,
@@ -1783,6 +1802,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             description: None,
             icon_id: None,
             selected: None,
+            loading: None,
             default_open: None,
             action: None,
             hover_action: None,
@@ -1804,6 +1824,7 @@ fn tree_control_item(id: String, control: UiControlNode) -> UiTreeItemNode {
         description: None,
         icon_id: None,
         selected: None,
+        loading: None,
         default_open: None,
         action: None,
         hover_action: None,
@@ -2624,6 +2645,7 @@ pub fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
         padding: None,
         id: None,
         selected: None,
+        loading: None,
         activate: None,
         children,
         drop_action: None,
@@ -11705,6 +11727,7 @@ fn root_stack() -> UiNode {
         padding: None,
         id: Some("shell.root".into()),
         selected: None,
+        loading: None,
         activate: None,
         drop_action: None,
         children: Vec::new(),
@@ -11725,6 +11748,7 @@ fn build_axis(tree: &mut UiTree, parent: NodeId, axis: &WindowLayoutAxisNode, or
         padding: None,
         id: None,
         selected: None,
+        loading: None,
         activate: None,
         drop_action: None,
         children: Vec::new(),
@@ -11748,6 +11772,7 @@ fn build_stack(tree: &mut UiTree, parent: NodeId, stack: &WindowLayoutStackNode,
         padding: None,
         id: None,
         selected: None,
+        loading: None,
         activate: None,
         drop_action: None,
         children: Vec::new(),
@@ -11777,6 +11802,7 @@ fn build_window(tree: &mut UiTree, parent: NodeId, window: &WindowLayoutWindowNo
         action: ActionDescriptor { controller_id: "shell.window".into(), action: "activate".into(), args: None },
         style: None,
         disabled: None,
+        loading: None,
     });
     let id = tree.insert_child(Some(parent), Node::new(NodeKey::Explicit(window_id), WidgetSpec(spec)));
     tree.mark_dirty(id, NodeFlags::DIRTY_LAYOUT);

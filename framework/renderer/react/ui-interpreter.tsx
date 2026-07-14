@@ -24,6 +24,8 @@ import {
   catalogueTreeDragController,
   classifyIconSelectorMode,
   cn,
+  loadingBorderClass,
+  loadingBorderElementClass,
   renderControlIcon,
   type TreeDataItem,
   type TreeDataSection,
@@ -59,7 +61,11 @@ const COMPONENT_SCENE_HOSTS: Record<ComponentKind, LazyExoticComponent<Component
 //#endregion ComponentSceneHostRegistry
 
 function ComponentSceneFallback() {
-  return <p className="text-muted-foreground p-2 text-xs">Loading surface…</p>;
+  return (
+    <p className={cn("text-muted-foreground p-2 text-xs", loadingBorderClass)} role="status">
+      Loading surface…
+    </p>
+  );
 }
 
 function renderComponentSceneHost(node: Extract<UiNode, { type: "componentScene" }>, onAction: (action: ActionDescriptor) => void): ReactNode {
@@ -258,7 +264,17 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
         />
       );
     case "button":
-      return <Button id={control.id} text={control.label} icon={resolveDeclarativeControlIcon(control.iconId)} disabled={control.disabled} onClick={() => onAction(control.action)} />;
+      return (
+        <Button
+          id={control.id}
+          text={control.label}
+          icon={resolveDeclarativeControlIcon(control.iconId)}
+          disabled={control.disabled}
+          onClick={() => onAction(control.action)}
+          className={control.loading ? loadingBorderElementClass : undefined}
+          aria-busy={control.loading || undefined}
+        />
+      );
   }
 }
 //#endregion RenderUiControl
@@ -273,6 +289,7 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], onAction: UiInt
     control: item.control ? renderUiControl(item.control, onAction) : undefined,
     defaultOpen: item.defaultOpen,
     isSelected: item.selected,
+    loading: item.loading,
     isHidden: item.isHidden,
     draggable: item.draggable,
     dragData: item.dragData,
@@ -297,6 +314,7 @@ export function uiTreeNodeToTreePanelConfig(treeNode: UiTreeNode, onAction: UiIn
     id: section.id,
     label: section.label ?? "",
     defaultOpen: section.defaultOpen,
+    loading: section.loading,
     items: uiTreeItemsToTreeData(section.items, onAction),
   }));
   return {

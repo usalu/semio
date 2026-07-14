@@ -480,14 +480,6 @@ fn s_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     }
 }
 
-fn s_home_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: S_HOME_CONTROLLER_ID.into(),
-        action: action.into(),
-        args,
-    }
-}
-
 fn parameter_entity_id(parameter: &OsParameter) -> &str {
     match parameter {
         OsParameter::Numeric { id, .. }

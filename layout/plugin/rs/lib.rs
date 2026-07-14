@@ -736,6 +736,7 @@ fn tree_item(
         items: None,
         control: None,
         is_hidden: None,
+        loading: None,
     }
 }
 
@@ -1216,6 +1217,7 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
         label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
         default_open: Some(true),
         children: vec![ui_text(labels.selection_not_found)],
+        loading: None,
     }])
 }
 

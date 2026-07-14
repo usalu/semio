@@ -65,6 +65,19 @@ describe("styling resolve", () => {
     expect(uiCss).toContain("--element-panel: var(--color-gray-600);");
   });
 
+  it("ui.css defines the spinning + pulsing loading border ring", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const { resolve } = await import("node:path");
+    const uiCss = await readFile(resolve(import.meta.dir, "ui.css"), "utf8");
+    expect(uiCss).toContain("--loading-border-duration: 1.6s;");
+    expect(uiCss).toContain('@property --loading-border-angle {\n  syntax: "<angle>";');
+    expect(uiCss).toContain("@keyframes loading-border-spin");
+    expect(uiCss).toContain("@keyframes loading-border-pulse");
+    expect(uiCss).toContain("@utility border-loading {");
+    expect(uiCss).toContain("@utility border-loading-active {\n  --loading-border-color: var(--active-base);\n}");
+    expect(uiCss).toContain("@utility border-loading-element {\n  --loading-border-color: var(--border-element-color);\n}");
+  });
+
   it("ui.css left-aligns the footer toolbar and grows it through the remaining width", async () => {
     const { readFile } = await import("node:fs/promises");
     const { resolve } = await import("node:path");

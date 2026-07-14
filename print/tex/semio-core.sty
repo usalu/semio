@@ -470,6 +470,14 @@
   \seq_if_empty:NF \l_tmpa_seq { \seq_use:Nn \l_tmpa_seq { . }. }
   { \addfontfeatures { FakeBold = 2 } \tl_use:N \l_tmpa_tl }
 }
+\cs_new_protected:Npn \semio_toc_number:n #1 {
+  \seq_set_split:Nnn \l_tmpa_seq { . } {#1}
+  \seq_pop_right:NN \l_tmpa_seq \l_tmpa_tl
+  \seq_if_empty:NF \l_tmpa_seq {
+    \textcolor { semio-chrome-panel } { \seq_use:Nn \l_tmpa_seq { . }. }
+  }
+  \textcolor { semio-chrome-text-normal } { \tl_use:N \l_tmpa_tl }
+}
 \cs_new_protected:Npn \semio_kind_label_document:n #1 {
   \semio_kind_label:n {#1}
 }
@@ -480,6 +488,7 @@
 \NewDocumentCommand \semio@kind@label@plural { m } { \semio_kind_label_plural_document:n {#1} }
 \NewDocumentCommand \semio@kind@number { m m } { \semio_kind_chip_number:nn {#1} {#2} }
 \NewDocumentCommand \semio@kind@number@bare { m } { \exp_args:Ne \semio_kind_chip_bare:n {#1} }
+\NewDocumentCommand \semio@toc@number { m } { \exp_args:Ne \semio_toc_number:n {#1} }
 \NewDocumentCommand \semio@register@title { m } { \semio_register_title:n {#1} }
 \NewExpandableDocumentCommand \SemioRegisterTitle { m } { \semio_register_title_text:n {#1} }
 \NewExpandableDocumentCommand \SemioTocTitle { } { \semio_toc_title_text: }

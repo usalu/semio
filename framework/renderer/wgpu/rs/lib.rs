@@ -1927,7 +1927,7 @@ mod tests {
 
     //#region WindowActionsAndToolsTests
     use semio_framework_core::{
-        ActionArgControl, ActionArgDef, ActionDefinition, ActionKind, ActionRef, ToolDefinition, ToolRef,
+        ActionArgDef, ActionDefinition, ActionKind, ActionRef, ToolDefinition, ToolRef,
     };
     use ui_wgpu::{KeyAction, PointerModifiers};
 
@@ -11179,7 +11179,7 @@ impl ShellState {
                 .render(session.instance_id, body_key, &view_state)
                 .await?;
             let resolved = self.resolve_external_slots(node, &view_state).await?;
-            self.panel_ui.insert(tab.id().clone(), resolved);
+            self.panel_ui.insert(tab.id().to_string(), resolved);
         }
         // 🧰 The toolbar is derived from the app's declared `AppDefinition.tools` (scoped to the active
         // window kind) via `ui_wgpu::derive_tool_nodes` — the old per-call `plugin.tools()` fetch and the
@@ -14746,9 +14746,9 @@ impl ShellState {
         if resolved.is_empty() {
             return Vec::new();
         }
-        let specs: Vec<ui_wgpu::DerivedToolSpec> = resolved
+        let specs: Vec<ui_wgpu::component::tools::DerivedToolSpec> = resolved
             .iter()
-            .map(|tool| ui_wgpu::DerivedToolSpec {
+            .map(|tool| ui_wgpu::component::tools::DerivedToolSpec {
                 id: tool.id.clone(),
                 label: tool.label.clone(),
                 icon_id: tool.icon_id.clone(),
@@ -14760,7 +14760,7 @@ impl ShellState {
             .active_tool_by_window
             .get(&window_kind.id)
             .map(String::as_str);
-        ui_wgpu::derive_tool_nodes(&session.app.controller_id, &specs, active)
+        ui_wgpu::component::tools::derive_tool_nodes(&session.app.controller_id, &specs, active)
     }
     // #endregion
 
@@ -14790,7 +14790,7 @@ impl ShellState {
 
     /// 🖱️ The cursor the active tool requests while the pointer is over the active window's body — maps
     /// `ToolDefinition.cursor` onto a {@link ui_wgpu::SemioCursor} (P5). `None` when no tool/cursor applies.
-    fn tool_cursor_override(&self, x: f32, y: f32) -> Option<ui_wgpu::SemioCursor> {
+    pub(crate) fn tool_cursor_override(&self, x: f32, y: f32) -> Option<ui_wgpu::SemioCursor> {
         let session = self.session.as_ref()?;
         let window_id = self.active_window_id.as_deref()?;
         let tool_id = self.active_tool_for_window(window_id)?;

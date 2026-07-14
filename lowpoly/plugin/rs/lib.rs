@@ -682,6 +682,7 @@ fn tree_item(
         description,
         icon_id: icon_id.map(str::to_string),
         selected: None,
+        loading: None,
         default_open,
         action,
         hover_action,
@@ -1205,103 +1206,6 @@ fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime) -> Vec<WindowMeasure> {
     ]
 }
 
-fn edit_tools(view: LowpolyView, labels: &LowpolyLabels) -> Vec<ToolNode> {
-    let targets = &view.runtime.selection.targets;
-    let transform = &view.runtime.transform_tool;
-    vec![
-        tool_collection(
-            "lowpoly-tools-selection",
-            "mouse-pointer",
-            labels.selection,
-            vec![
-                tool_toggle("lowpoly-tools-selection-mesh", "box", "Mesh", targets.mesh, lowpoly_action("toggleSelectionKind", Some(json!({ "kind": "mesh" })))),
-                tool_toggle("lowpoly-tools-selection-face", "square", "Face", targets.face, lowpoly_action("toggleSelectionKind", Some(json!({ "kind": "face" })))),
-                tool_toggle("lowpoly-tools-selection-edge", "minus", "Edge", targets.edge, lowpoly_action("toggleSelectionKind", Some(json!({ "kind": "edge" })))),
-                tool_toggle("lowpoly-tools-selection-vertex", "circle", "Vertex", targets.vertex, lowpoly_action("toggleSelectionKind", Some(json!({ "kind": "vertex" })))),
-            ],
-        )
-        .with_category(ToolCategory::Selection),
-        tool_collection(
-            "lowpoly-tools-transform",
-            "move",
-            labels.transform,
-            vec![
-                tool_toggle("lowpoly-tools-transform-move", "move", "Move", transform == "move", lowpoly_action("setTransformTool", Some(json!({ "tool": "move" })))),
-                tool_toggle("lowpoly-tools-transform-rotate", "rotate-cw", "Rotate", transform == "rotate", lowpoly_action("setTransformTool", Some(json!({ "tool": "rotate" })))),
-                tool_toggle("lowpoly-tools-transform-scale", "maximize-2", "Scale", transform == "scale", lowpoly_action("setTransformTool", Some(json!({ "tool": "scale" })))),
-            ],
-        )
-        .with_category(ToolCategory::Tools),
-        tool_collection(
-            "lowpoly-tools-edit",
-            "pen-tool",
-            labels.edit,
-            vec![
-                tool_button("lowpoly-tools-extrude", "box", "Extrude", lowpoly_action("extrude", None)),
-                tool_button("lowpoly-tools-inset", "square", "Inset", lowpoly_action("inset", None)),
-                tool_button("lowpoly-tools-flip", "flip-vertical", "Flip Normals", lowpoly_action("flipFaces", None)),
-                tool_button("lowpoly-tools-bevel", "git-branch", "Bevel", lowpoly_action("bevel", None)),
-                tool_button("lowpoly-tools-loop-cut", "git-commit", "Loop Cut", lowpoly_action("loopCut", None)),
-                tool_button("lowpoly-tools-merge", "git-merge", "Merge", lowpoly_action("merge", None)),
-                tool_button("lowpoly-tools-dissolve", "eraser", "Dissolve", lowpoly_action("dissolve", None)),
-                tool_button("lowpoly-tools-subdivide", "grid-3x3", "Subdivide", lowpoly_action("subdivide", None)),
-                tool_button("lowpoly-tools-triangulate", "triangle", "Triangulate", lowpoly_action("triangulate", None)),
-                tool_button("lowpoly-tools-mirror", "flip-horizontal", "Mirror", lowpoly_action("mirror", None)),
-                tool_button("lowpoly-tools-decimate", "minimize-2", "Decimate", lowpoly_action("decimate", None)),
-            ],
-        )
-        .with_category(ToolCategory::Actions),
-        tool_collection(
-            "lowpoly-tools-history",
-            "undo",
-            labels.history,
-            vec![
-                tool_button("lowpoly-tools-undo", "undo", "Undo", lowpoly_action("undo", None)),
-                tool_button("lowpoly-tools-redo", "redo", "Redo", lowpoly_action("redo", None)),
-            ],
-        )
-        .with_category(ToolCategory::History),
-    ]
-}
-
-fn paint_tools(runtime: &LowpolyPlayRuntime, labels: &LowpolyLabels) -> Vec<ToolNode> {
-    let paint_tool = &runtime.paint_tool;
-    vec![
-        tool_collection(
-            "lowpoly-paint-tools",
-            "paintbrush",
-            labels.paint,
-            vec![
-                tool_toggle("lowpoly-paint-brush", "paintbrush", "Brush", paint_tool == "brush", lowpoly_action("setPaintTool", Some(json!({ "tool": "brush" })))),
-                tool_toggle("lowpoly-paint-eraser", "eraser", "Eraser", paint_tool == "eraser", lowpoly_action("setPaintTool", Some(json!({ "tool": "eraser" })))),
-                tool_toggle("lowpoly-paint-fill", "paint-bucket", "Fill", paint_tool == "fill", lowpoly_action("setPaintTool", Some(json!({ "tool": "fill" })))),
-                tool_toggle("lowpoly-paint-eyedropper", "pipette", "Eyedropper", paint_tool == "eyedropper", lowpoly_action("setPaintTool", Some(json!({ "tool": "eyedropper" })))),
-            ],
-        )
-        .with_category(ToolCategory::Tools),
-        tool_collection(
-            "lowpoly-paint-uv",
-            "grid-3x3",
-            labels.uv,
-            vec![
-                tool_button("lowpoly-paint-unwrap", "grid-3x3", "Unwrap", lowpoly_action("unwrapActive", None)),
-                tool_button("lowpoly-paint-mark-seam", "scissors", "Mark Seam", lowpoly_action("markUvSeam", Some(json!({ "seam": true })))),
-                tool_button("lowpoly-paint-clear-seam", "unlink", "Clear Seam", lowpoly_action("clearSeam", None)),
-            ],
-        )
-        .with_category(ToolCategory::Actions),
-        tool_collection(
-            "lowpoly-paint-history",
-            "undo",
-            labels.history,
-            vec![
-                tool_button("lowpoly-paint-undo", "undo", "Undo", lowpoly_action("undo", None)),
-                tool_button("lowpoly-paint-redo", "redo", "Redo", lowpoly_action("redo", None)),
-            ],
-        )
-        .with_category(ToolCategory::History),
-    ]
-}
 //#endregion 🔖Tools
 
 //#region 🔖LowpolyPlayApp
@@ -1312,6 +1216,17 @@ struct PaintStrokeSession {
     layer_index: usize,
     base: Vec<u8>,
     scratch: Vec<u8>,
+}
+
+/// @emoji 🧲 In-progress gumball transform drag. The mesh-transform op re-serializes the WHOLE
+/// `mesh_json` buffer per apply, so a per-tick `amend` would `combined.extend` N full-mesh patches and
+/// replay them all (O(N) retained megabyte-scale JSON + O(N²) replay). Instead every mid-drag tick
+/// applies its delta to this scratch `LowpolyDocument` emitting ZERO ops, and the whole gesture commits
+/// as ONE `Objects(Patch)` (base → final mesh) on drag end (`ActionEmit::commit`, coalesce-key `None`).
+struct TransformSession {
+    object_id: String,
+    before: LowpolyObject,
+    doc: LowpolyDocument,
 }
 
 /// @emoji 🗃️ Pure render-side cache of composited paint textures (base64 PNG per object), invalidated
@@ -1327,6 +1242,8 @@ struct LowpolyPlayApp {
     stroke: Option<PaintStrokeSession>,
     stroke_drag_active: bool,
     stroke_dirty: u64,
+    transform: Option<TransformSession>,
+    transform_drag_active: bool,
     texture_cache: RefCell<PaintTextureCache>,
 }
 
@@ -1337,6 +1254,8 @@ impl Default for LowpolyPlayApp {
             stroke: None,
             stroke_drag_active: false,
             stroke_dirty: 0,
+            transform: None,
+            transform_drag_active: false,
             texture_cache: RefCell::new(PaintTextureCache::default()),
         }
     }
@@ -1434,6 +1353,8 @@ impl LowpolyPlayApp {
         ActionEmit::ops(vec![LowpolyOp::Objects(CollectionOp::Patch { id: object_id, patch })])
     }
 
+    /// @emoji 📌 Commits the accumulated paint scratch as ONE described `PaintStroke` edit (scratch-commit
+    /// pattern b — the whole drag is one undoable edit; megabyte pixel buffers never coalesce per tick).
     fn commit_stroke(&mut self) -> ActionEmit<LowpolyOp> {
         let Some(session) = self.stroke.take() else {
             return ActionEmit::default();
@@ -1443,79 +1364,152 @@ impl LowpolyPlayApp {
         if runs.is_empty() {
             return ActionEmit::default();
         }
-        ActionEmit::ops(vec![LowpolyOp::PaintStroke {
-            object_id: session.object_id,
-            layer_index: session.layer_index,
-            runs,
-        }])
+        ActionEmit::commit(
+            vec![LowpolyOp::PaintStroke {
+                object_id: session.object_id,
+                layer_index: session.layer_index,
+                runs,
+            }],
+            "Paint stroke",
+        )
     }
 
-    fn paint_at(&mut self, projection: &LowpolyProjection, object_id: String, u: f32, v: f32) -> ActionEmit<LowpolyOp> {
-        let layer_index = self.runtime.active_paint_layer as usize;
+    /// @emoji 🖌️ One mid-drag paint tick: brush/eraser/fill mutate the stroke scratch, eyedropper samples
+    /// the paint color. Emits ZERO ops — the stroke commits only on `paintStrokeEnd` (View-kind safe).
+    fn paint_tick(&mut self, projection: &LowpolyProjection, object_id: String, u: f32, v: f32) -> ActionEmit<LowpolyOp> {
         let tool = self.runtime.paint_tool.clone();
-        let params = self.runtime.tool_params.clone();
+        if tool == "eyedropper" {
+            if let Some(object) = projection.objects.iter().find(|object| object.id == object_id) {
+                let composite = composite_layer_pixels(&object.paint_layers);
+                self.runtime.paint_color = sample_pixel_from(&composite, u, v);
+            }
+            return ActionEmit::default();
+        }
+        let layer_index = self.runtime.active_paint_layer as usize;
+        let need_new = match &self.stroke {
+            Some(session) => session.object_id != object_id || session.layer_index != layer_index,
+            None => true,
+        };
+        if need_new {
+            let base = projection
+                .objects
+                .iter()
+                .find(|object| object.id == object_id)
+                .and_then(|object| object.paint_layers.get(layer_index))
+                .map(|layer| layer.pixels.clone())
+                .unwrap_or_else(empty_paint_pixels);
+            self.stroke = Some(PaintStrokeSession {
+                object_id: object_id.clone(),
+                layer_index,
+                scratch: base.clone(),
+                base,
+            });
+        }
         let color = self.runtime.paint_color;
-        match tool.as_str() {
-            "eyedropper" => {
-                if let Some(object) = projection.objects.iter().find(|object| object.id == object_id) {
-                    let composite = composite_layer_pixels(&object.paint_layers);
-                    self.runtime.paint_color = sample_pixel_from(&composite, u, v);
-                }
-                ActionEmit::default()
-            }
-            "fill" => {
-                let Some(layer) = projection
-                    .objects
-                    .iter()
-                    .find(|object| object.id == object_id)
-                    .and_then(|object| object.paint_layers.get(layer_index))
-                else {
-                    return ActionEmit::default();
-                };
-                let mut scratch = layer.pixels.clone();
-                flood_fill(&mut scratch, u, v, color);
-                let runs = pixel_runs_from_diff(&layer.pixels, &scratch);
-                if runs.is_empty() {
-                    return ActionEmit::default();
-                }
-                self.stroke_dirty += 1;
-                ActionEmit::ops(vec![LowpolyOp::PaintStroke { object_id, layer_index, runs }])
-            }
-            _ => {
+        let params = self.runtime.tool_params.clone();
+        if let Some(session) = self.stroke.as_mut() {
+            if tool == "fill" {
+                flood_fill(&mut session.scratch, u, v, color);
+            } else {
                 let radius = tool_param_f32(&params, "brushSize", 16.0);
                 let opacity = tool_param_f32(&params, "brushOpacity", 1.0);
                 let hardness = tool_param_f32(&params, "brushHardness", 0.5);
-                let eraser = tool == "eraser";
-                let need_new = match &self.stroke {
-                    Some(session) => session.object_id != object_id || session.layer_index != layer_index,
-                    None => true,
-                };
-                if need_new {
-                    let base = projection
-                        .objects
-                        .iter()
-                        .find(|object| object.id == object_id)
-                        .and_then(|object| object.paint_layers.get(layer_index))
-                        .map(|layer| layer.pixels.clone())
-                        .unwrap_or_else(empty_paint_pixels);
-                    self.stroke = Some(PaintStrokeSession {
-                        object_id: object_id.clone(),
-                        layer_index,
-                        scratch: base.clone(),
-                        base,
-                    });
-                }
-                if let Some(session) = self.stroke.as_mut() {
-                    stamp_brush(&mut session.scratch, u, v, radius, color, hardness, opacity, eraser);
-                }
-                self.stroke_dirty += 1;
-                if self.stroke_drag_active {
-                    ActionEmit::default()
-                } else {
-                    self.commit_stroke()
-                }
+                stamp_brush(&mut session.scratch, u, v, radius, color, hardness, opacity, tool == "eraser");
             }
         }
+        self.stroke_dirty += 1;
+        ActionEmit::default()
+    }
+
+    /// @emoji 🪣 A single-shot flood fill emitted as ONE `PaintStroke` edit (the `fillBucket`/`paintFill`
+    /// operation path — not drag-bracketed, so it commits immediately).
+    fn fill_at(&mut self, projection: &LowpolyProjection, object_id: String, u: f32, v: f32) -> ActionEmit<LowpolyOp> {
+        let layer_index = self.runtime.active_paint_layer as usize;
+        let color = self.runtime.paint_color;
+        let Some(layer) = projection
+            .objects
+            .iter()
+            .find(|object| object.id == object_id)
+            .and_then(|object| object.paint_layers.get(layer_index))
+        else {
+            return ActionEmit::default();
+        };
+        let mut scratch = layer.pixels.clone();
+        flood_fill(&mut scratch, u, v, color);
+        let runs = pixel_runs_from_diff(&layer.pixels, &scratch);
+        if runs.is_empty() {
+            return ActionEmit::default();
+        }
+        self.stroke_dirty += 1;
+        ActionEmit::commit(vec![LowpolyOp::PaintStroke { object_id, layer_index, runs }], "Fill")
+    }
+
+    /// @emoji 🧲 Runs one gumball transform delta against a working scratch document. Mid-drag it emits
+    /// nothing; only `transformEnd` (or an unbracketed single dispatch) commits the accumulated diff.
+    fn transform_selection(
+        &mut self,
+        projection: &LowpolyProjection,
+        mode: &str,
+        ids: Vec<u32>,
+        transform: Transform,
+        description: &str,
+    ) -> ActionEmit<LowpolyOp> {
+        if self.transform_drag_active {
+            if self.transform.is_none() {
+                self.begin_transform_session(projection);
+            }
+            if let Some(session) = self.transform.as_mut() {
+                if !ids.is_empty() {
+                    session.doc.apply_selection(mode, ids);
+                }
+                let _ = apply_transform(&mut session.doc, transform);
+            }
+            return ActionEmit::default();
+        }
+        let ops = self.mesh_edit(projection, move |doc| {
+            if !ids.is_empty() {
+                doc.apply_selection(mode, ids);
+            }
+            apply_transform(doc, transform)
+        });
+        if ops.ops.is_empty() {
+            ActionEmit::default()
+        } else {
+            ActionEmit::commit(ops.ops, description)
+        }
+    }
+
+    /// @emoji 🎬 Snapshots the active object as the transform-drag base and builds the working scratch doc.
+    fn begin_transform_session(&mut self, projection: &LowpolyProjection) {
+        let Some(doc) = build_doc(projection, &self.runtime) else {
+            return;
+        };
+        let object_id = doc.active_object_id().to_string();
+        let Some(before) = projection.objects.iter().find(|object| object.id == object_id).cloned() else {
+            return;
+        };
+        self.transform = Some(TransformSession { object_id, before, doc });
+    }
+
+    /// @emoji 📌 Commits the whole gumball drag as ONE `Objects(Patch)` diff (base → final mesh).
+    fn commit_transform(&mut self) -> ActionEmit<LowpolyOp> {
+        let Some(mut session) = self.transform.take() else {
+            return ActionEmit::default();
+        };
+        if session.doc.sync_meshes_to_projection().is_err() {
+            return ActionEmit::default();
+        }
+        let Some(after) = session.doc.projection().objects.iter().find(|object| object.id == session.object_id).cloned() else {
+            return ActionEmit::default();
+        };
+        let patch = object_patch_diff(&session.before, &after);
+        if patch == LowpolyObjectPatch::default() {
+            return ActionEmit::default();
+        }
+        ActionEmit::commit(
+            vec![LowpolyOp::Objects(CollectionOp::Patch { id: session.object_id, patch })],
+            "Transform selection",
+        )
     }
 }
 
@@ -1610,16 +1604,23 @@ impl DocumentApp for LowpolyPlayApp {
                 }
                 ActionEmit::default()
             }
-            "setTransformTool" => {
-                if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
-                    self.runtime.transform_tool = tool.into();
+            SET_ACTIVE_TOOL_ACTION_ID => {
+                self.stroke = None;
+                self.stroke_drag_active = false;
+                self.transform = None;
+                self.transform_drag_active = false;
+                self.runtime.hovered_target = None;
+                self.runtime.hovered_object_id = None;
+                if let Some(tool) = args.and_then(|value| value.get("toolId")).and_then(|value| value.as_str()) {
+                    if matches!(tool, "brush" | "eraser" | "fill" | "eyedropper") {
+                        self.runtime.paint_tool = tool.into();
+                    }
                 }
                 ActionEmit::default()
             }
-            "setPaintTool" => {
-                if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
-                    self.runtime.paint_tool = tool.into();
-                }
+            "transformBegin" => {
+                self.transform_drag_active = true;
+                self.transform = None;
                 ActionEmit::default()
             }
             "setActivePaintLayer" => {
@@ -1736,13 +1737,32 @@ impl DocumentApp for LowpolyPlayApp {
                 self.stroke = None;
                 ActionEmit::default()
             }
-            "paintStrokeEnd" => {
-                self.stroke_drag_active = false;
-                self.commit_stroke()
+            "paintSample" => {
+                let Some((u, v)) = paint_uv(args) else {
+                    return ActionEmit::default();
+                };
+                let object_id = args
+                    .and_then(|value| value.get("objectId"))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string)
+                    .unwrap_or_else(|| resolve_active_object_id(projection, &self.runtime));
+                if let Some(object) = projection.objects.iter().find(|object| object.id == object_id) {
+                    let composite = composite_layer_pixels(&object.paint_layers);
+                    self.runtime.paint_color = sample_pixel_from(&composite, u, v);
+                }
+                ActionEmit::default()
             }
             //#endregion 👁️ View actions
 
             //#region ✏️ Paint operations
+            "paintStrokeEnd" => {
+                self.stroke_drag_active = false;
+                self.commit_stroke()
+            }
+            "transformEnd" => {
+                self.transform_drag_active = false;
+                self.commit_transform()
+            }
             "paintStroke" | "paintAt" | "canvasPointerDown" | "canvasPointerMove" => {
                 if action == "canvasPointerMove" && !self.stroke_drag_active {
                     return ActionEmit::default();
@@ -1755,7 +1775,7 @@ impl DocumentApp for LowpolyPlayApp {
                     .and_then(|value| value.as_str())
                     .map(str::to_string)
                     .unwrap_or_else(|| resolve_active_object_id(projection, &self.runtime));
-                self.paint_at(projection, object_id, u, v)
+                self.paint_tick(projection, object_id, u, v)
             }
             "paintFill" | "fillBucket" => {
                 let Some((u, v)) = paint_uv(args) else {
@@ -1766,20 +1786,7 @@ impl DocumentApp for LowpolyPlayApp {
                     .and_then(|value| value.as_str())
                     .map(str::to_string)
                     .unwrap_or_else(|| resolve_active_object_id(projection, &self.runtime));
-                self.runtime.paint_tool = "fill".into();
-                self.paint_at(projection, object_id, u, v)
-            }
-            "paintSample" => {
-                let Some((u, v)) = paint_uv(args) else {
-                    return ActionEmit::default();
-                };
-                let object_id = args
-                    .and_then(|value| value.get("objectId"))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string)
-                    .unwrap_or_else(|| resolve_active_object_id(projection, &self.runtime));
-                self.runtime.paint_tool = "eyedropper".into();
-                self.paint_at(projection, object_id, u, v)
+                self.fill_at(projection, object_id, u, v)
             }
             "addPaintLayer" => {
                 let object_id = args
@@ -1846,7 +1853,7 @@ impl DocumentApp for LowpolyPlayApp {
                 ActionEmit::ops(vec![LowpolyOp::Objects(CollectionOp::Patch { id: object_id.into(), patch })])
             }
             "extrude" => {
-                let distance = tool_param_f32(&self.runtime.tool_params, "extrudeDistance", 0.25);
+                let distance = arg_f32(args, "extrudeDistance", tool_param_f32(&self.runtime.tool_params, "extrudeDistance", 0.25));
                 self.mesh_edit(projection, move |doc| {
                     let faces = doc.selected_face_ids();
                     if faces.is_empty() {
@@ -1857,7 +1864,7 @@ impl DocumentApp for LowpolyPlayApp {
                 })
             }
             "inset" => {
-                let amount = tool_param_f32(&self.runtime.tool_params, "insetAmount", 0.1);
+                let amount = arg_f32(args, "insetAmount", tool_param_f32(&self.runtime.tool_params, "insetAmount", 0.1));
                 self.mesh_edit(projection, move |doc| {
                     let faces = doc.selected_face_ids();
                     doc.active_mesh_mut()?.inset_faces(&faces, amount).map_err(map_kernel_err)?;
@@ -1865,8 +1872,8 @@ impl DocumentApp for LowpolyPlayApp {
                 })
             }
             "bevel" => {
-                let amount = tool_param_f32(&self.runtime.tool_params, "bevelAmount", 0.05);
-                let segments = tool_param_u32(&self.runtime.tool_params, "bevelSegments", 1);
+                let amount = arg_f32(args, "bevelAmount", tool_param_f32(&self.runtime.tool_params, "bevelAmount", 0.05));
+                let segments = arg_u32(args, "bevelSegments", tool_param_u32(&self.runtime.tool_params, "bevelSegments", 1));
                 self.mesh_edit(projection, move |doc| {
                     let edges = doc.selected_edge_ids();
                     doc.active_mesh_mut()?.bevel_edges(&edges, amount, segments).map_err(map_kernel_err)?;
@@ -1874,7 +1881,7 @@ impl DocumentApp for LowpolyPlayApp {
                 })
             }
             "loopCut" => {
-                let cuts = tool_param_u32(&self.runtime.tool_params, "loopCuts", 1);
+                let cuts = arg_u32(args, "loopCuts", tool_param_u32(&self.runtime.tool_params, "loopCuts", 1));
                 self.mesh_edit(projection, move |doc| {
                     let edges = doc.selected_edge_ids();
                     doc.active_mesh_mut()?.loop_cut(&edges, cuts).map_err(map_kernel_err)?;
@@ -1891,14 +1898,22 @@ impl DocumentApp for LowpolyPlayApp {
                 doc.sync_meshes_to_projection()
             }),
             "mirror" => {
-                let axis = mirror_axis_from_param(&self.runtime.tool_params);
+                let axis = args
+                    .and_then(|value| value.get("axis"))
+                    .and_then(|value| value.as_str())
+                    .map(|value| match value {
+                        "y" => MirrorAxis::Y,
+                        "z" => MirrorAxis::Z,
+                        _ => MirrorAxis::X,
+                    })
+                    .unwrap_or_else(|| mirror_axis_from_param(&self.runtime.tool_params));
                 self.mesh_edit(projection, move |doc| {
                     doc.active_mesh_mut()?.mirror(axis, 0.001).map_err(map_kernel_err)?;
                     doc.sync_meshes_to_projection()
                 })
             }
             "decimate" => {
-                let ratio = tool_param_f32(&self.runtime.tool_params, "decimateRatio", 0.5);
+                let ratio = arg_f32(args, "decimateRatio", tool_param_f32(&self.runtime.tool_params, "decimateRatio", 0.5));
                 self.mesh_edit(projection, move |doc| {
                     doc.active_mesh_mut()?.decimate(ratio).map_err(map_kernel_err)?;
                     doc.sync_meshes_to_projection()
@@ -1972,12 +1987,7 @@ impl DocumentApp for LowpolyPlayApp {
                 let dx = arg_f32(args, "dx", 0.0);
                 let dy = arg_f32(args, "dy", 0.0);
                 let dz = arg_f32(args, "dz", 0.0);
-                self.mesh_edit(projection, move |doc| {
-                    if !ids.is_empty() {
-                        doc.apply_selection(&mode, ids);
-                    }
-                    apply_transform(doc, Transform::Translate(Vec3::new(dx, dy, dz)))
-                })
+                self.transform_selection(projection, &mode, ids, Transform::Translate(Vec3::new(dx, dy, dz)), "Translate selection")
             }
             "rotateSelection" => {
                 let (mode, ids) = selection_args(args);
@@ -1985,24 +1995,14 @@ impl DocumentApp for LowpolyPlayApp {
                 let ay = arg_f32(args, "ay", 0.0);
                 let az = arg_f32(args, "az", 0.0);
                 let angle = arg_f32(args, "angle", 0.0);
-                self.mesh_edit(projection, move |doc| {
-                    if !ids.is_empty() {
-                        doc.apply_selection(&mode, ids);
-                    }
-                    apply_transform(doc, Transform::Rotate { axis: Vec3::new(ax, ay, az), angle })
-                })
+                self.transform_selection(projection, &mode, ids, Transform::Rotate { axis: Vec3::new(ax, ay, az), angle }, "Rotate selection")
             }
             "scaleSelection" => {
                 let (mode, ids) = selection_args(args);
                 let sx = arg_f32(args, "sx", 1.0);
                 let sy = arg_f32(args, "sy", 1.0);
                 let sz = arg_f32(args, "sz", 1.0);
-                self.mesh_edit(projection, move |doc| {
-                    if !ids.is_empty() {
-                        doc.apply_selection(&mode, ids);
-                    }
-                    apply_transform(doc, Transform::Scale(Vec3::new(sx, sy, sz)))
-                })
+                self.transform_selection(projection, &mode, ids, Transform::Scale(Vec3::new(sx, sy, sz)), "Scale selection")
             }
             "setProjectionJson" | "setFixtureJson" => {
                 if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
@@ -2031,6 +2031,7 @@ impl DocumentApp for LowpolyPlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, LowpolyProjection>, view_state: &ViewState) -> UiNode {
         let projection = doc.projection;
         let labels = lowpoly_labels(view_state);
+        let active_tool = view_state.active_tool_id.as_deref().unwrap_or(LOWPOLY_TRANSFORM_TOOL_DEFAULT);
         let view = self.view(projection);
         if matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV) {
             self.refresh_texture_cache(projection);
@@ -2048,7 +2049,7 @@ impl DocumentApp for LowpolyPlayApp {
                         lowpoly_world_camera_json(&self.runtime),
                         world_meshes_json(loaded, &texture_cache),
                         world_instances_json(view),
-                        world_selection_json_for(view, view_state.active_mode_id.as_deref(), Some(loaded)),
+                        world_selection_json_for(view, active_tool, view_state.active_mode_id.as_deref(), Some(loaded)),
                         &self.runtime.sun,
                     ),
                 ),
@@ -2072,23 +2073,15 @@ impl DocumentApp for LowpolyPlayApp {
                 None => ui_text("Failed to load lowpoly document"),
             },
             LOWPOLY_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
-            LOWPOLY_PLAY_BODY_INSPECTION => build_inspector_tree(view, labels),
+            LOWPOLY_PLAY_BODY_INSPECTION => build_inspector_tree(view, active_tool, labels),
             LOWPOLY_PLAY_BODY_LAYERS => build_layers_tree(view, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn tools(&self, doc: &DocumentView<'_, LowpolyProjection>, view_state: &ViewState) -> Vec<ToolNode> {
-        let view = self.view(doc.projection);
-        let labels = lowpoly_labels(view_state);
-        match view_state.active_mode_id.as_deref() {
-            Some("paint") => paint_tools(&self.runtime, labels),
-            _ => edit_tools(view, labels),
-        }
-    }
-
-    fn window_engagements(&self, doc: &DocumentView<'_, LowpolyProjection>, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-        let engagement = lowpoly_window_engagement(self.view(doc.projection));
+    fn window_engagements(&self, doc: &DocumentView<'_, LowpolyProjection>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+        let active_tool = view_state.active_tool_id.as_deref().unwrap_or(LOWPOLY_TRANSFORM_TOOL_DEFAULT);
+        let engagement = lowpoly_window_engagement(self.view(doc.projection), active_tool);
         HashMap::from([
             (LOWPOLY_PLAY_WINDOW_MAIN.into(), engagement.clone()),
             (LOWPOLY_PLAY_WINDOW_UV.into(), engagement),
@@ -2137,6 +2130,10 @@ fn arg_f32(args: Option<&Value>, key: &str, default: f32) -> f32 {
     args.and_then(|value| value.get(key)).and_then(|value| value.as_f64()).unwrap_or(default as f64) as f32
 }
 
+fn arg_u32(args: Option<&Value>, key: &str, default: u32) -> u32 {
+    args.and_then(|value| value.get(key)).and_then(|value| value.as_u64()).unwrap_or(default as u64) as u32
+}
+
 fn apply_transform(doc: &mut LowpolyDocument, transform: Transform) -> Result<(), String> {
     let selection_mode = doc.selection().mode.clone();
     let pivot = doc.selection_transform_pivot()?;
@@ -2175,14 +2172,13 @@ fn apply_transform(doc: &mut LowpolyDocument, transform: Transform) -> Result<()
 //#endregion 🔖LowpolyPlayApp
 
 //#region 🔖Manifest
-fn default_view_tools() -> Vec<ToolNode> {
-    let projection = default_projection();
-    let runtime = LowpolyPlayRuntime::default();
-    edit_tools(LowpolyView { projection: &projection, runtime: &runtime }, lowpoly_labels(&ViewState::default()))
-}
-
-fn default_paint_tools() -> Vec<ToolNode> {
-    paint_tools(&LowpolyPlayRuntime::default(), lowpoly_labels(&ViewState::default()))
+/// 🧰 One transform/paint tool declaration (id/label/icon reused verbatim from the retired `tools()` impl).
+fn lowpoly_tool(id: &str, label: &str, icon: &str, group: &str) -> ToolDefinition {
+    ToolDefinition {
+        group: Some(group.into()),
+        category: Some(ToolCategory::Tools),
+        ..ToolDefinition::new(id, label, icon)
+    }
 }
 
 fn create_lowpoly_app() -> App {
@@ -2190,7 +2186,10 @@ fn create_lowpoly_app() -> App {
     let engagement = {
         let projection = default_projection();
         let runtime = LowpolyPlayRuntime::default();
-        lowpoly_window_engagement(LowpolyView { projection: &projection, runtime: &runtime })
+        lowpoly_window_engagement(
+            LowpolyView { projection: &projection, runtime: &runtime },
+            LOWPOLY_TRANSFORM_TOOL_DEFAULT,
+        )
     };
     App::from_builder(
         App::builder(LOWPOLY_PLAY_APP_ID, "Lowpoly")
@@ -2220,8 +2219,8 @@ fn create_lowpoly_app() -> App {
             .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, LOWPOLY_PLAY_BODY_CATALOGUE)
             .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, LOWPOLY_PLAY_BODY_INSPECTION)
             .panel_tab("framework.panel.layers", "Layers", PanelGroup::Workbench, LOWPOLY_PLAY_BODY_LAYERS)
-            .mode_tools("edit", default_view_tools())
-            .mode_tools("paint", default_paint_tools())
+            .mode_tools("edit", vec!["move".into(), "rotate".into(), "scale".into()])
+            .mode_tools("paint", vec!["brush".into(), "eraser".into(), "fill".into(), "eyedropper".into()])
             // 🔧 Document-mutating operations — dispatched as VCS ops with true inverses.
             .operation("addPrimitive", "Add Primitive")
             .operation("patchObject", "Patch Object")
@@ -2244,24 +2243,20 @@ fn create_lowpoly_app() -> App {
             .operation("translateSelection", "Translate Selection")
             .operation("rotateSelection", "Rotate Selection")
             .operation("scaleSelection", "Scale Selection")
+            .operation("transformEnd", "Transform End")
             .operation("addPaintLayer", "Add Paint Layer")
-            .operation("paintStroke", "Paint Stroke")
-            .operation("paintAt", "Paint At")
-            .operation("canvasPointerDown", "Canvas Pointer Down")
-            .operation("canvasPointerMove", "Canvas Pointer Move")
+            .operation("paintStrokeEnd", "Paint Stroke End")
             .operation("paintFill", "Paint Fill")
             .operation("fillBucket", "Fill Bucket")
-            .operation("paintSample", "Paint Sample")
             .operation("setProjectionJson", "Set Projection Json")
             .operation("setFixtureJson", "Set Fixture Json")
             .operation("engagementSubmit", "Engagement Submit")
-            // 👁️ Ephemeral view state — selection, tools, camera, hover, paint drag.
+            // 👁️ Ephemeral view state — selection, camera, hover, and the gesture drafts that emit no ops
+            // mid-drag (paint ticks, gumball scratch, eyedropper sample).
             .view_action("setActiveObject", "Set Active Object")
             .view_action("setSelection", "Set Selection")
             .view_action("toggleSelectionKind", "Toggle Selection Kind")
             .view_action("toggleSelectionTarget", "Toggle Selection Target")
-            .view_action("setTransformTool", "Set Transform Tool")
-            .view_action("setPaintTool", "Set Paint Tool")
             .view_action("setActivePaintLayer", "Set Active Paint Layer")
             .view_action("setToolParam", "Set Tool Param")
             .view_action("engagementInput", "Engagement Input")
@@ -2277,7 +2272,52 @@ fn create_lowpoly_app() -> App {
             .view_action("setHover", "Set Hover")
             .view_action("worldPick", "World Pick")
             .view_action("paintStrokeBegin", "Paint Stroke Begin")
-            .view_action("paintStrokeEnd", "Paint Stroke End")
+            .view_action("paintStroke", "Paint Stroke")
+            .view_action("paintAt", "Paint At")
+            .view_action("canvasPointerDown", "Canvas Pointer Down")
+            .view_action("canvasPointerMove", "Canvas Pointer Move")
+            .view_action("paintSample", "Paint Sample")
+            .view_action("transformBegin", "Transform Begin")
+            // 📝 Staged argument forms for the P1 actions — the panel form seeds from these defaults and
+            // stages typed overrides read out of `args`; `runtime.tool_params` remains the live backing store.
+            .action_args("extrude", vec![ActionArgDef::slider("extrudeDistance", "Extrude Distance", 0.01, 2.0).default_value(0.25)])
+            .action_args("inset", vec![ActionArgDef::number("insetAmount", "Inset Amount").default_value(0.1)])
+            .action_args("bevel", vec![
+                ActionArgDef::number("bevelAmount", "Bevel Amount").default_value(0.05),
+                ActionArgDef::number("bevelSegments", "Bevel Segments").default_value(1),
+            ])
+            .action_args("loopCut", vec![ActionArgDef::number("loopCuts", "Loop Cuts").default_value(1)])
+            .action_args("decimate", vec![ActionArgDef::slider("decimateRatio", "Decimate Ratio", 0.05, 1.0).default_value(0.5)])
+            .action_args("mirror", vec![ActionArgDef::select("axis", "Axis", vec![
+                ActionArgOption::new("x", "X"),
+                ActionArgOption::new("y", "Y"),
+                ActionArgOption::new("z", "Z"),
+            ]).default_value("x")])
+            .action_args("addPrimitive", vec![ActionArgDef::select("kind", "Kind", vec![
+                ActionArgOption::new("box", "Cube"),
+                ActionArgOption::new("plane", "Plane"),
+                ActionArgOption::new("cylinder", "Cylinder"),
+                ActionArgOption::new("cone", "Cone"),
+                ActionArgOption::new("ico_sphere", "Ico Sphere"),
+            ]).default_value("box")])
+            .action_args("markUvSeam", vec![ActionArgDef::toggle("seam", "Seam").default_value(true)])
+            // 🧰 Transform gumball + paint tools — exclusive per-window active tool is host-owned (never a
+            // document op). Selection granularity is deliberately NOT a tool group (it is a multi-select
+            // window measure); the transform group defaults to "move", paint bridges into `runtime.paint_tool`.
+            .tool(lowpoly_tool("move", "Move", "move", "transform"))
+            .tool(lowpoly_tool("rotate", "Rotate", "rotate-cw", "transform"))
+            .tool(lowpoly_tool("scale", "Scale", "maximize-2", "transform"))
+            .tool(lowpoly_tool("brush", "Brush", "paintbrush", "paint"))
+            .tool(lowpoly_tool("eraser", "Eraser", "eraser", "paint"))
+            .tool(lowpoly_tool("fill", "Fill", "paint-bucket", "paint"))
+            .tool(lowpoly_tool("eyedropper", "Eyedropper", "pipette", "paint"))
+            .window_kind_tools(LOWPOLY_PLAY_WINDOW_MAIN, vec![
+                "move".into(), "rotate".into(), "scale".into(),
+                "brush".into(), "eraser".into(), "fill".into(), "eyedropper".into(),
+            ])
+            .window_kind_tools(LOWPOLY_PLAY_WINDOW_UV, vec![
+                "brush".into(), "eraser".into(), "fill".into(), "eyedropper".into(),
+            ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
@@ -2461,7 +2501,9 @@ mod tests {
     #[test]
     fn eyedropper_updates_paint_color_without_ops() {
         let mut app = new_app();
-        app.handle_action("setPaintTool", Some(&json!({ "tool": "eyedropper" })), &ViewState::default(), &meta("a")).unwrap();
+        // 🧰 The host-owned tool switch bridges into runtime.paint_tool and emits no ops.
+        let switch = app.handle_action("setActiveTool", Some(&json!({ "toolId": "eyedropper" })), &ViewState::default(), &meta("a")).unwrap();
+        assert!(switch.operations.is_empty());
         let result = app.handle_action("paintSample", Some(&json!({ "u": 0.5, "v": 0.5 })), &ViewState::default(), &meta("a")).unwrap();
         assert!(result.operations.is_empty());
     }
@@ -2483,15 +2525,56 @@ mod tests {
     }
 
     #[test]
-    fn paint_tools_include_history_undo() {
+    fn extrude_reads_staged_arg_distance_into_the_op() {
+        // 🧪 Arg-form action: the staged `extrudeDistance` (not the runtime backing store) drives the edit.
+        let mut small = new_app();
+        let mut large = new_app();
+        small.handle_action("worldPick", Some(&face_selection()), &ViewState::default(), &meta("a")).unwrap();
+        large.handle_action("worldPick", Some(&face_selection()), &ViewState::default(), &meta("a")).unwrap();
+        let object_id = projection(&small).objects[0].id.clone();
+        small.handle_action("extrude", Some(&json!({ "extrudeDistance": 0.1 })), &ViewState::default(), &meta("a")).unwrap();
+        large.handle_action("extrude", Some(&json!({ "extrudeDistance": 1.5 })), &ViewState::default(), &meta("a")).unwrap();
+        let small_json = projection(&small).objects.iter().find(|o| o.id == object_id).unwrap().mesh_json.clone();
+        let large_json = projection(&large).objects.iter().find(|o| o.id == object_id).unwrap().mesh_json.clone();
+        assert_ne!(small_json, large_json, "different staged extrude distances must produce different meshes");
+    }
+
+    #[test]
+    fn active_tool_switch_emits_no_ops_and_no_history() {
+        // 🧰 Selecting a host-owned tool must never create an undoable edit.
         let mut app = new_app();
-        let mut view = ViewState::default();
-        view.active_mode_id = Some("paint".into());
-        let tools = app.tools(&view);
-        let json = serde_json::to_string(&tools).unwrap();
-        assert!(json.contains("lowpoly-paint-brush"));
-        assert!(json.contains("lowpoly-paint-history"));
-        assert!(json.contains("\"action\":\"undo\""));
+        let result = app.handle_action("setActiveTool", Some(&json!({ "toolId": "rotate" })), &ViewState::default(), &meta("a")).unwrap();
+        assert!(result.operations.is_empty(), "tool switch must emit no ops");
+        // No history entry — an undo right after is a no-op leaving the projection untouched.
+        let before = projection(&app);
+        app.handle_action("undo", None, &ViewState::default(), &meta("a")).unwrap();
+        assert_eq!(projection(&app), before, "tool switch left nothing to undo");
+    }
+
+    #[test]
+    fn gumball_drag_coalesces_to_one_committed_edit() {
+        // 🧲 THE COALESCING REGRESSION: a multi-tick gumball translate must emit ZERO ops mid-drag and
+        // exactly ONE commit op (base → final mesh) on drag end — never a full-mesh patch per tick.
+        let mut app = new_app();
+        let object_id = projection(&app).objects[0].id.clone();
+        let before_mesh = projection(&app).objects[0].mesh_json.clone();
+        app.handle_action("transformBegin", None, &ViewState::default(), &meta("a")).unwrap();
+        let tick_a = app
+            .handle_action("translateSelection", Some(&json!({ "mode": "mesh", "ids": [], "dx": 0.5, "dy": 0.0, "dz": 0.0 })), &ViewState::default(), &meta("a"))
+            .unwrap();
+        let tick_b = app
+            .handle_action("translateSelection", Some(&json!({ "mode": "mesh", "ids": [], "dx": 0.25, "dy": 0.0, "dz": 0.0 })), &ViewState::default(), &meta("a"))
+            .unwrap();
+        assert!(tick_a.operations.is_empty() && tick_b.operations.is_empty(), "mid-drag transform ticks emit no ops");
+        assert_eq!(projection(&app).objects[0].mesh_json, before_mesh, "no op reached the document mid-drag");
+        let end = app.handle_action("transformEnd", None, &ViewState::default(), &meta("a")).unwrap();
+        assert_eq!(end.operations.len(), 1, "the whole drag commits as exactly one op");
+        // The final diff reflects the accumulated 0.75 translation (both ticks), not just the last tick.
+        let after_mesh = projection(&app).objects[0].mesh_json.clone();
+        assert_ne!(after_mesh, before_mesh, "the drag moved the mesh");
+        // ONE undo reverts the entire coalesced drag.
+        app.handle_action("undo", None, &ViewState::default(), &meta("a")).unwrap();
+        assert_eq!(projection(&app).objects[0].mesh_json, before_mesh, "one undo reverts the whole coalesced gumball drag");
     }
 
     #[test]

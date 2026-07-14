@@ -841,6 +841,18 @@ impl DocumentApp for RasterApp {
 //#endregion 🔖RasterApp
 
 //#region 🔖Manifest
+/// 🛠️ An internal (non-palette) action declaration — the panel/pointer/gesture-bound vocabulary
+/// dispatched by the layer tree, catalogue drops, camera and inspector, never a palette command.
+fn raster_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
+    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, kind) }
+}
+
+/// 🧰 One composite-window tool declaration; ids must stay host-compatible (`paint*` prefix paints,
+/// `paintEraser` erases, `selectMarquee` selects) because the scene's active tool feeds `RasterHost`.
+fn raster_tool(id: &str, label: &str, icon: &str, group: &str, category: ToolCategory) -> ToolDefinition {
+    ToolDefinition { group: Some(group.into()), category: Some(category), ..ToolDefinition::new(id, label, icon) }
+}
+
 fn create_raster_app() -> App {
     App::from_builder(
         App::builder(RASTER_PLAY_APP_ID, "Raster").document(["semio", "raster"])
@@ -874,27 +886,45 @@ fn create_raster_app() -> App {
                 PanelGroup::Details,
                 RASTER_PLAY_BODY_PROPERTIES,
             )
-            // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
-            .operation("setDocument", "Set Document")
-            .operation("setCamera", "Set Camera")
-            .operation("setCameraZoom", "Set Camera Zoom")
-            .operation("setLayerVisible", "Set Layer Visible")
-            .operation("toggleLayerVisible", "Toggle Layer Visible")
+            // ✏️ Palette-visible content operations.
             .operation("addLayer", "Add Layer")
-            .operation("dropLayerKind", "Drop Layer Kind")
-            .operation("deleteLayer", "Delete Layer")
-            .operation("duplicateLayer", "Duplicate Layer")
-            .operation("patchLayer", "Patch Layer")
-            .operation("patchLayers", "Patch Layers")
-            .operation("moveLayer", "Move Layer")
-            // 👁️ Ephemeral view state — selection, hover, tool/brush settings, navigator viewport.
-            .view_action("setSelection", "Set Selection")
-            .view_action("setHover", "Set Hover")
+            .operation("setDocument", "Set Document")
+            // 🔧 Internal content operations — layer-tree / catalogue-drop / camera / inspector bound.
+            .action_with(raster_internal_action("setCamera", "Set Camera", ActionKind::Operation))
+            .action_with(raster_internal_action("setCameraZoom", "Set Camera Zoom", ActionKind::Operation))
+            .action_with(raster_internal_action("setLayerVisible", "Set Layer Visible", ActionKind::Operation))
+            .action_with(raster_internal_action("toggleLayerVisible", "Toggle Layer Visible", ActionKind::Operation))
+            .action_with(raster_internal_action("dropLayerKind", "Drop Layer Kind", ActionKind::Operation))
+            .action_with(raster_internal_action("deleteLayer", "Delete Layer", ActionKind::Operation))
+            .action_with(raster_internal_action("duplicateLayer", "Duplicate Layer", ActionKind::Operation))
+            .action_with(raster_internal_action("patchLayer", "Patch Layer", ActionKind::Operation))
+            .action_with(raster_internal_action("patchLayers", "Patch Layers", ActionKind::Operation))
+            .action_with(raster_internal_action("moveLayer", "Move Layer", ActionKind::Operation))
+            // 👁️ Ephemeral view state — selection, hover, live brush controls, navigator viewport.
             .view_action("selectAll", "Select All")
-            .view_action("setActiveTool", "Set Active Tool")
-            .view_action("setBrushSize", "Set Brush Size")
-            .view_action("setBrushOpacity", "Set Brush Opacity")
-            .view_action("setCompositeViewport", "Set Composite Viewport")
+            .action_with(raster_internal_action("setSelection", "Set Selection", ActionKind::View))
+            .action_with(raster_internal_action("setHover", "Set Hover", ActionKind::View))
+            .action_with(raster_internal_action("setBrushSize", "Set Brush Size", ActionKind::View))
+            .action_with(raster_internal_action("setBrushOpacity", "Set Brush Opacity", ActionKind::View))
+            .action_with(raster_internal_action("setCompositeViewport", "Set Composite Viewport", ActionKind::View))
+            // 📝 Staged palette-form arguments for the two palette operations.
+            .action_args("addLayer", vec![
+                ActionArgDef::select("kind", "Layer Kind", vec![
+                    ActionArgOption::new("pixel", "Pixel"),
+                    ActionArgOption::new("group", "Group"),
+                    ActionArgOption::new("adjustment", "Adjustment"),
+                ]).required().default_value("pixel"),
+            ])
+            .action_args("setDocument", vec![
+                ActionArgDef::text("document", "Document"),
+            ])
+            // 🧰 Composite-window tools — one exclusive set, active tool host-owned (never a document op).
+            .tool(raster_tool("selectMarquee", "Marquee Select", "square-dashed", "Select", ToolCategory::Selection))
+            .tool(raster_tool("paintBrush", "Brush", "brush", "Paint", ToolCategory::Tools))
+            .tool(raster_tool("paintEraser", "Eraser", "eraser", "Paint", ToolCategory::Tools))
+            .window_kind_tools(RASTER_PLAY_WINDOW_COMPOSITE, vec![
+                "selectMarquee".into(), "paintBrush".into(), "paintEraser".into(),
+            ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
@@ -946,6 +976,7 @@ semio_framework_plugin::semio_plugin! {
 mod tests {
     use super::*;
     use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::app::AppActionRegistry;
     use vcs::{Backbone, BackboneMessage, MemoryBackbone};
 
     fn meta(actor: &str) -> ActionMeta {
@@ -954,6 +985,12 @@ mod tests {
 
     fn new_app() -> VcsDocumentApp<RasterApp> {
         VcsDocumentApp::new(RasterApp::default())
+    }
+
+    /// 🧬 A wrapper carrying the real registry so kind discipline (View-emits-ops rejection) runs.
+    fn new_app_with_registry() -> VcsDocumentApp<RasterApp> {
+        let definition = create_raster_app().definition;
+        VcsDocumentApp::with_registry(RasterApp::default(), AppActionRegistry::from_definition(&definition))
     }
 
     fn semio_app() -> VcsDocumentApp<RasterApp> {
@@ -1228,6 +1265,37 @@ mod tests {
         receiver.ingest_operations(&operations_json).expect("ingest once");
         receiver.ingest_operations(&operations_json).expect("ingest twice");
         assert_eq!(receiver.projection().expect("projection").layers.len(), before + 1, "no double-apply");
+    }
+
+    #[test]
+    fn set_active_tool_switch_emits_no_ops_and_reads_from_view_state() {
+        let mut app = new_app_with_registry();
+        let before = app.projection().expect("projection").clone();
+        let view = ViewState { active_tool_id: Some("paintBrush".into()), ..ViewState::default() };
+        // Switching tools is the framework View action: no document ops, nothing to sync/undo.
+        let result = app
+            .handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "paintBrush" })), &view, &meta("local"))
+            .expect("switch tool");
+        assert!(result.operations.is_empty(), "tool switching never emits document ops");
+        assert_eq!(app.projection().expect("projection"), &before, "tool switching does not mutate the document");
+        // The composite scene reads the host-owned active tool from session view state, not the runtime.
+        let json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_COMPOSITE, None, &view).expect("render")).unwrap();
+        assert!(json.contains("\"activeTool\":\"paintBrush\""), "scene reflects host-owned active tool: {json}");
+    }
+
+    #[test]
+    fn tool_registry_declares_tools_scoped_to_the_composite_window() {
+        let definition = create_raster_app().definition;
+        let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
+        assert_eq!(tool_ids, ["selectMarquee", "paintBrush", "paintEraser"]);
+        // The marquee carries the Selection category; the paint tools are Tools.
+        let selects: Vec<&str> = definition.tools.iter().filter(|tool| tool.category == Some(ToolCategory::Selection)).map(|tool| tool.id.as_str()).collect();
+        assert_eq!(selects, ["selectMarquee"]);
+        let composite = definition.window_kinds.iter().find(|window| window.id == RASTER_PLAY_WINDOW_COMPOSITE).expect("composite window");
+        assert_eq!(composite.tools.len(), definition.tools.len(), "every tool is scoped to the composite window kind");
+        // The framework auto-injects the setActiveTool View action once tools are declared; no doc op survives.
+        assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID && matches!(action.kind, ActionKind::View)));
+        assert!(!definition.actions.iter().any(|action| action.id == "setActiveTool" && !matches!(action.kind, ActionKind::View)));
     }
 }
 //#endregion 🧪Tests
