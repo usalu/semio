@@ -37,15 +37,36 @@
 %region PageNumbering
 \cs_new_protected:Npn \semio_frontmatter_begin: {
   \renewcommand{\thepage}{\roman{page}}
+  \use:c { semio@chrome@heading@set } { \SemioFrontmatterTitle }
+}
+
+\cs_new_protected:Npn \semio_clear_to_recto: {
+  \clearpage
+  \legacy_if:nT { @twoside } {
+    \int_if_even:nT { \value{page} } { \null\thispagestyle{empty}\newpage }
+  }
 }
 
 \cs_new_protected:Npn \semio_mainmatter_begin: {
-  \clearpage
+  \semio_clear_to_recto:
   \setcounter{page}{1}
   \renewcommand{\thepage}{\arabic{page}}
+  \use:c { semio@chrome@heading@set } { }
 }
 
 \NewDocumentCommand{\makemainmatter}{}{\semio_mainmatter_begin:}
+
+\newcounter{semio@shippedpages}
+\AddToHook{shipout/before}{\stepcounter{semio@shippedpages}}
+\AddToHook{enddocument}{
+  \clearpage
+  \legacy_if:nT { @twoside } {
+    \bool_while_do:nn { \int_compare_p:nNn { \int_mod:nn { \value{semio@shippedpages} + 1 } { 4 } } > { 0 } } {
+      \null\thispagestyle{empty}\clearpage
+    }
+    \null\thispagestyle{empty}
+  }
+}
 %endregion PageNumbering
 
 \cs_new_protected:Npn \semio_maketitle: {

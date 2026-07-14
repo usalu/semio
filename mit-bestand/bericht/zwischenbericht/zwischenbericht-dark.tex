@@ -110,19 +110,18 @@ Das Vorhaben untersucht, wie wiederverwendete Baukomponenten in frühen Entwurfs
 
 Vier Forschungsfragen leiten die Arbeit:
 
-\begin{SemioNest}
-\paragraph{Systematisierung}
+\subsection{Systematisierung}
 Wie lassen sich heterogene Baukomponenten verallgemeinern/systematisieren, damit sie möglichst flexibel in neuen Entwurfssituationen eingesetzt werden können?
 
-\paragraph{Aufwandsminimierung}
+\subsection{Aufwandsminimierung}
 Wie können Bauteilbörsen mit minimalem Aufwand planungsfähige Daten bereitstellen?
 
-\paragraph{Synchronisierung}
+\subsection{Synchronisierung}
 Wie können gleichzeitig Entwurfs-, LCA- und Tragwerksmodelle erstellt/modifiziert/evaluiert werden?
 
-\paragraph{Assistenz}
+\subsection{Assistenz}
 Wie kann KI, insbesondere \Abbr{LLM}s, während dem Entwurfsprozess unterstützen?
-\end{SemioNest}
+
 
 Der Zwischenbericht folgt dabei der Struktur der Arbeitspakete. AP-Erfahrung leitet aus der Recherche und den Interviews User Stories ab. Die User Stories definieren die fachlichen Anforderungen für die Plattform und für das Tool. AP-Plattform und AP-Tool übersetzen diese Anforderungen in digitale Systemkomponenten. AP-Validierung prüft die entwickelten Ansätze anhand eines Test-Cases.
 
@@ -407,29 +406,25 @@ Validierung aus Sicht der ökologischen Bewertung.
 
 \subsection{AP-Plattform}
 
-\begin{SemioNest}
-\paragraph{Eingabe}
+\subsubsection{Eingabe}
 Der Wizard ist prototypisch umgesetzt. Die KI-Erkennung ist getestet, jedoch nicht in den Wizard integriert. Die Infrastruktur der Generatoren ist aufgebaut, ein Generator für Stützen ist prototypisch implementiert; die Generatoren der übrigen Typologiefamilien sind in Entwicklung. Ausstehend sind zudem die vollständige Befüllung der Repräsentationen und das Mitführen der Nachweiszustände am Bauteilobjekt.
 
-\paragraph{Schnittstelle}
+\subsubsection{Schnittstelle}
 Der prototypische Grundpfad der Datenübernahme ist implementiert. Die Anbindung einzelner Bauteilbörsen ist konzipiert; welche Plattformen angebunden werden, ist offen und hängt von deren Datenbereitstellung ab. Der Funktionsumfang der Schnittstelle wächst mit den Generatoren.
-\end{SemioNest}
 
 \subsection{AP-Tool}
 
-\begin{SemioNest}
-\paragraph{Human Interface Design}
+\subsubsection{Human Interface Design}
 Der Bauteilkatalog ist implementiert, seine Kopplung an die Bauteildaten des Portals steht aus. Der Aggregator ist weit fortgeschritten: 3D-Ansicht, Diagrammansicht und Detailpanel sind verbunden. Für die Anschlussstellen liegt ein regelbasierter Prüfmechanismus vor.
 
-\paragraph{Lebenszyklusanalyse}
+\subsubsection{Lebenszyklusanalyse}
 Als Entwurfsgrammatik konzipiert; die Infrastruktur der Repräsentationen ist angelegt. Der nächste Schritt ist die Bewertung auf Bauteilebene im Bauteilkatalog, anschließend die Prüfung von Entwurfsvarianten im Aggregator.
 
-\paragraph{Tragwerksanalyse}
+\subsubsection{Tragwerksanalyse}
 Als Entwurfsgrammatik konzipiert. Der bestehende Prüfmechanismus für Anschlussstellen wird zur Prüfung der Tragfähigkeit einer Variante ausgebaut.
 
-\paragraph{KI-Assistenz}
+\subsubsection{KI-Assistenz}
 Erste Tests einzelner Funktionen liegen vor. Die nächsten Schritte betreffen die Auswahl der Ansatzpunkte, die tragen, und deren Integration in Bauteilkatalog und Aggregator.
-\end{SemioNest}
 
 \subsection{AP-Validierung}
 
@@ -468,30 +463,23 @@ Die Mittelverwendung ist weitestgehend wie im Antrag vorgesehen. Die Änderungen
 Die drei Personen, welche im Antrag vorgesehen waren, wurden alle eingesetzt. Die tatsächliche Einstufung nach Einstellung erfolgte wie antizipiert.
 
 \subsection{Leibniz Universität Hannover}
-\begin{SemioNest}
-\paragraph{Ueli Saluz}
 
+\subsubsection{Ueli Saluz}
 Der Arbeitsbeginn für Ueli Saluz erfolgte zu Projektbeginn am 01.01.2026.
 
 Die vorgesehene Arbeitszeit in Höhe von 90\% der regulären Arbeitszeit konnte seit Arbeitsbeginn vollständig erbracht werden.
 
-\paragraph{Nikolaus Möllenhof}
-
+\subsubsection{Nikolaus Möllenhof}
 Der Arbeitsbeginn für Nikolaus Möllenhof erfolgte zu Projektbeginn am 01.01.2026.
 
 Die vorgesehene Arbeitszeit in Höhe von 50\% der regulären Arbeitszeit konnte seit Arbeitsbeginn vollständig erbracht werden.
 
-\end{SemioNest}
-
 \subsection{Universität der Künste Berlin}
-\begin{SemioNest}
-\paragraph{Kinan Sarakbi}
 
+\subsubsection{Kinan Sarakbi}
 Der Projektbeginn für Kinan Sarakbi erfolgte leicht verzögert am 22.01.2026, da der Einstellungsprozess erst gestartet werden konnte, nachdem der Weiterleitungsvertrag von beiden Universitäten unterzeichnet wurde und die Mindesteinstellungsdauer von 6 Wochen nur leicht beschleunigt werden konnte.
 
 Die vorgesehene Arbeitszeit in Höhe von 50\% der regulären Arbeitszeit konnte seit Arbeitsbeginn vollständig erbracht werden.
-
-\end{SemioNest}
 
 \section{Material}
 
@@ -504,19 +492,16 @@ Die vorgesehenen Softwarelizenz in Höhe von für Rhino musste nicht angeschafft
 \subsection{Dienstleistungen}
 
 
-\begin{SemioNest}
-\paragraph{Cloud - Infrastructure-as-a-Service}
-\paragraph{Nutzung vortrainierter KI-Modelle}
-
+\subsubsection{Cloud - Infrastructure-as-a-Service}
+\subsubsection{Nutzung vortrainierter KI-Modelle}
 Die Kosten für die Nutzung von LLMs sind gestiegen, 
 
-\paragraph{Externe Softwareentwicklung}
+\subsubsection{Externe Softwareentwicklung}
 \begin{SemioNest}
 \paragraph{Server}
 \paragraph{Fotogrammetrie}
 \paragraph{User-Interface}
 \paragraph{Anbindungen Bauteilbörsen}
-\end{SemioNest}
 \end{SemioNest}
 
 \section{Reisekosten}

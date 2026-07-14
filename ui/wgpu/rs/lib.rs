@@ -10887,7 +10887,9 @@ fn paint_external_slot(node: &UiExternalSlotNode, bounds: Rect, theme: &Theme, a
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::component::layout::ActionDescriptor;
     use crate::component::ui::{UiSeparatorNode, UiStackNode};
+    use crate::draw::KIND_LOADING_BORDER;
     use crate::flex::LayoutEngine;
 
     fn text(value: &str) -> UiNode {

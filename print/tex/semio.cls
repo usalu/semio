@@ -25,22 +25,22 @@
   }
   { paper } {
     \providecommand { \semio@page@margin } { 2.5cm }
-    \RequirePackage[paper=a4paper,margin=2.5cm]{geometry}
+    \RequirePackage[paper=a4paper,margin=2.5cm,twoside,bindingoffset=8mm]{geometry}
   }
   { report } {
     \providecommand { \semio@page@margin } { 2.5cm }
-    \RequirePackage[paper=a4paper,margin=2.5cm]{geometry}
+    \RequirePackage[paper=a4paper,margin=2.5cm,twoside,bindingoffset=8mm]{geometry}
   }
 } {
   \providecommand { \semio@page@margin } { 2.5cm }
-  \RequirePackage[paper=a4paper,margin=2.5cm]{geometry}
+  \RequirePackage[paper=a4paper,margin=2.5cm,twoside,bindingoffset=8mm]{geometry}
 }
 \str_case:VnF \semio@type {
-  { report } { \LoadClass{scrreprt} }
-  { paper } { \LoadClass{scrartcl} }
+  { report } { \LoadClass[twoside=true,open=right,cleardoublepage=empty]{scrreprt} }
+  { paper } { \LoadClass[twoside=true]{scrartcl} }
   { flyer } { \LoadClass{scrartcl} }
 } {
-  \LoadClass{scrreprt}
+  \LoadClass[twoside=true,open=right,cleardoublepage=empty]{scrreprt}
 }
 \ExplSyntaxOff
 

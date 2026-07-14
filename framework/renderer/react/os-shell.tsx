@@ -1420,7 +1420,7 @@ export function renderStagedArgControl(def: ActionArgDef, value: unknown, onChan
 
 /** 🧰 True when an action carries arguments and therefore stages a form instead of firing immediately (P1–P4). */
 export function actionRequiresStagedForm(action: Pick<ActionDefinition, "args">): boolean {
-  return action.args.length > 0;
+  return (action.args?.length ?? 0) > 0;
 }
 
 /** 🧰 The decision a bound hotkey makes for one action (P4). */
@@ -3574,6 +3574,7 @@ export type PluginWasmHandle = {
   readonly handleAction: (instanceId: number, actionJson: string, viewState: ViewState) => Promise<ActionResponse>;
   readonly render: (instanceId: number, bodyKey: string, viewState: ViewState) => Promise<UiNode>;
   readonly renderWithDocument?: (instanceId: number, bodyKey: string, viewState: ViewState, documentJson: string) => Promise<UiNode>;
+  readonly refreshUi: (instanceId: number, request: PluginUiRefreshRequest) => Promise<PluginUiRefreshResponse>;
   /** 🔗 The `DocumentApp` document-sync surface (WS-D) — optional since not every plugin has migrated onto it yet (WS-F). */
   readonly applyOperations?: (instanceId: number, operationsJson: string) => Promise<void>;
   readonly readAppDocument?: (instanceId: number) => Promise<string>;
@@ -3603,6 +3604,7 @@ function adaptPluginHandle(handle: CorePluginWasmHandle): PluginWasmHandle {
     handleAction: (instanceId, actionJson, viewState) => handle.handleAction(instanceId, actionJson, viewState),
     render: async (instanceId, bodyKey, viewState) => (await handle.render(instanceId, bodyKey, viewState)) as unknown as UiNode,
     renderWithDocument: handle.renderWithDocument ? async (instanceId, bodyKey, viewState, documentJson) => (await handle.renderWithDocument!(instanceId, bodyKey, viewState, documentJson)) as unknown as UiNode : undefined,
+    refreshUi: (instanceId, request) => handle.refreshUi(instanceId, request),
     applyOperations: handle.applyOperations ? (instanceId, operationsJson) => handle.applyOperations!(instanceId, operationsJson) : undefined,
     readAppDocument: handle.readAppDocument ? (instanceId) => handle.readAppDocument!(instanceId) : undefined,
     loadAppDocument: handle.loadAppDocument ? (instanceId, documentJson) => handle.loadAppDocument!(instanceId, documentJson) : undefined,

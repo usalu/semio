@@ -119,6 +119,7 @@
   \semio_language_apply:
   \semio_theme_apply:
   \semio@set@main@fonts
+  \use:c { semio@chrome@heading@set } { \SemioFrontmatterTitle }
 }
 
 %region Kinds
@@ -155,6 +156,12 @@
   } {
     List~of~\semio_kind_label_plural:n {#1}
   }
+}
+
+\cs_new:Npn \semio_frontmatter_title_text: {
+  \str_case:VnF \l_semio_language_tl {
+    { de } { Vorspann }
+  } { Frontmatter }
 }
 
 \cs_new:Npn \semio_toc_title_text: {
@@ -458,7 +465,7 @@
     { \use:c { semio@kind@resolve@plural@en@#1 } }
 }
 \cs_new_protected:Npn \semio_kind_chip_number:nn #1 #2 {
-  \semio_kind_label:n {#1}
+  \textcolor { semio-chrome-foreground } { \semio_kind_label:n {#1} }
   \tl_if_blank:nTF {#2} { } { :\space \exp_args:Ne \semio_hierarchy_chip_number:n {#2} }
 }
 \cs_new_protected:Npn \semio_kind_chip_bare:n #1 {
@@ -470,7 +477,7 @@
   \seq_if_empty:NF \l_tmpa_seq {
     \textcolor { semio-chrome-text-normal } { \seq_use:Nn \l_tmpa_seq { . }. }
   }
-  \tl_use:N \l_tmpa_tl
+  \textcolor { semio-chrome-foreground } { \tl_use:N \l_tmpa_tl }
 }
 \cs_new_protected:Npn \semio_toc_number:n #1 {
   \seq_set_split:Nnn \l_tmpa_seq { . } {#1}
@@ -493,6 +500,7 @@
 \NewDocumentCommand \semio@toc@number { m } { \exp_args:Ne \semio_toc_number:n {#1} }
 \NewDocumentCommand \semio@register@title { m } { \semio_register_title:n {#1} }
 \NewExpandableDocumentCommand \SemioRegisterTitle { m } { \semio_register_title_text:n {#1} }
+\NewExpandableDocumentCommand \SemioFrontmatterTitle { } { \semio_frontmatter_title_text: }
 \NewExpandableDocumentCommand \SemioTocTitle { } { \semio_toc_title_text: }
 \NewExpandableDocumentCommand \SemioReferencesTitle { } { \semio_references_title_text: }
 \NewExpandableDocumentCommand \SemioGlossaryTitle { } { \semio_glossary_title_text: }

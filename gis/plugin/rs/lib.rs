@@ -579,6 +579,7 @@ pub mod app_2d {
             label: label.into(),
             description,
             icon_id,
+            loading: None,
             selected: None,
             default_open: None,
             hover_action: None,
@@ -611,6 +612,7 @@ pub mod app_2d {
                 id: "gis2d-play-document.layers".into(),
                 label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
                 default_open: Some(true),
+                loading: None,
                 items: layer_items,
             }],
             selected_ids: Some(
@@ -623,6 +625,7 @@ pub mod app_2d {
             highlighted_ids: None,
             selection_change: Some(gis2d_action("setSelection", None)),
             drop_action: None,
+            loading: None,
         })
     }
 
@@ -645,12 +648,14 @@ pub mod app_2d {
                 id: "gis2d-play-catalogue.layers".into(),
                 label: Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()),
                 default_open: Some(true),
+                loading: None,
                 items,
             }],
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
             drop_action: None,
+            loading: None,
         })
     }
 

@@ -1002,6 +1002,7 @@ fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
         label: block_name(block).into(),
         description: Some(block_kind(block).into()),
         icon_id: Some(block_icon(block_kind(block)).into()),
+        loading: None,
         selected: None,
         default_open: Some(matches!(block, NoteBlockNode::Group { .. })),
         action: Some(play_action(
@@ -1034,6 +1035,7 @@ fn render_document_panel(document: &NoteDocument, selected_ids: &[String], view_
         label: label.into(),
         description: None,
         icon_id: Some(icon.into()),
+        loading: None,
         selected: None,
         default_open: None,
         action: Some(play_action(
@@ -1057,6 +1059,7 @@ fn render_document_panel(document: &NoteDocument, selected_ids: &[String], view_
             label: labels.document_empty.into(),
             description: None,
             icon_id: Some("sticky-note".into()),
+            loading: None,
             selected: None,
             default_open: None,
             action: None,
@@ -1081,6 +1084,7 @@ fn render_document_panel(document: &NoteDocument, selected_ids: &[String], view_
             id: "note-play-blocks".into(),
             label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
             default_open: Some(true),
+            loading: None,
             items: [toolbar, block_items].concat(),
         }],
         selected_ids: Some(selected_ids),
@@ -1091,6 +1095,7 @@ fn render_document_panel(document: &NoteDocument, selected_ids: &[String], view_
             None,
         )),
         drop_action: None,
+        loading: None,
     })
 }
 
@@ -1099,6 +1104,7 @@ fn render_catalogue_panel(labels: &NoteLabels) -> UiNode {
         id: "note-catalogue".into(),
         label: Some(labels.catalogue_title.into()),
         default_open: Some(true),
+        loading: None,
         children: vec![
             ui_text(labels.catalogue_text),
             ui_text(labels.catalogue_image),

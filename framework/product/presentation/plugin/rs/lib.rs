@@ -257,6 +257,7 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         items: None,
         control: None,
         is_hidden: None,
+        loading: None,
     }
 }
 
@@ -283,11 +284,13 @@ fn build_document_tree(deck: &PresentationDeck, selected: &[String], labels: &Pr
             items: None,
             control: None,
             is_hidden: None,
+            loading: None,
         })
         .collect();
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "presentation-tile-play.tiles".into(),
+            loading: None,
             label: Some(labels.tiles_section.into()),
             default_open: Some(true),
             items: if items.is_empty() {
@@ -300,6 +303,7 @@ fn build_document_tree(deck: &PresentationDeck, selected: &[String], labels: &Pr
         highlighted_ids: None,
         selection_change: Some(presentation_action("setSelectedIds", Some(json!({ "ids": [] })))),
         drop_action: None,
+        loading: None,
     })
 }
 
@@ -341,6 +345,7 @@ fn build_details_tree(deck: &PresentationDeck, selected: &[String], labels: &Pre
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "presentation.play.details.empty".into(),
+            loading: None,
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
             children: vec![ui_text(labels.details_select_tile)],
@@ -353,6 +358,7 @@ fn build_details_tree(deck: &PresentationDeck, selected: &[String], labels: &Pre
     if tiles.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "presentation.play.details.not-found".into(),
+            loading: None,
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
             children: vec![ui_text(labels.details_tile_not_found)],
@@ -396,6 +402,7 @@ fn build_details_tree(deck: &PresentationDeck, selected: &[String], labels: &Pre
             action: presentation_action("deleteTile", Some(json!({ "id": tile_ids[0] }))),
             style: None,
             disabled: None,
+            loading: None,
         }));
     }
     identity_fields.push(UiNode::Button(semio_framework_plugin::UiButtonNode {
@@ -405,6 +412,7 @@ fn build_details_tree(deck: &PresentationDeck, selected: &[String], labels: &Pre
         action: presentation_action("deleteSelection", None),
         style: None,
         disabled: None,
+        loading: None,
     }));
     let groups = vec![
         UiInspectorFieldGroup {
@@ -441,6 +449,7 @@ fn catalogue_button(id: &str, label: &str, action: &str, args: Option<Value>) ->
         action: presentation_action(action, args),
         style: None,
         disabled: None,
+        loading: None,
     })
 }
 
@@ -448,6 +457,7 @@ fn build_catalogue_tree(deck: &PresentationDeck, labels: &PresentationLabels) ->
     ui_declarative_sections_to_tree(&[
         UiSectionNode {
             id: "presentation.play.catalogue.templates".into(),
+            loading: None,
             label: Some(labels.catalogue_tile_templates.into()),
             default_open: Some(true),
             children: vec![
@@ -470,6 +480,7 @@ fn build_catalogue_tree(deck: &PresentationDeck, labels: &PresentationLabels) ->
         },
         UiSectionNode {
             id: "presentation.play.catalogue.figure".into(),
+            loading: None,
             label: Some(labels.catalogue_figure_templates.into()),
             default_open: Some(true),
             children: vec![

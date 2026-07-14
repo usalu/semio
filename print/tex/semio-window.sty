@@ -1648,47 +1648,6 @@
 
 \ExplSyntaxOff
 \makeatletter
-\newcommand{\semio@this@pagestyle}{}
-\newcommand{\semio@shipout@this@pagestyle}{}
-\let\semio@saved@thispagestyle\thispagestyle
-\renewcommand{\thispagestyle}[1]{%
-  \def\semio@this@pagestyle{#1}%
-  \semio@saved@thispagestyle{#1}%
-}
-\AddToHook{shipout/before}{%
-  \global\let\semio@shipout@this@pagestyle\semio@this@pagestyle
-  \gdef\semio@this@pagestyle{}%
-}
-\newcommand{\Ifthispagestyle}[3]{%
-  \def\semio@ps@want{#1}%
-  \ifx\semio@ps@want\semio@shipout@this@pagestyle #2\else #3\fi
-}
-\newcommand{\semio@chrome@footer@shipout}{%
-  \Ifthispagestyle{empty}{}{%
-    \AtPageLowerLeft{%
-      \put(0,0){%
-        \makebox(0,0)[bl]{%
-          \makebox[\paperwidth][l]{%
-            \if@twoside
-              \ifodd\value{page}%
-                \hspace{\dimexpr1in+\hoffset+\oddsidemargin\relax}%
-              \else
-                \hspace{\dimexpr1in+\hoffset+\evensidemargin\relax}%
-              \fi
-            \else
-              \hspace{\dimexpr1in+\hoffset+\oddsidemargin\relax}%
-            \fi
-            \makebox[\textwidth][l]{%
-              \setlength{\headwidth}{\textwidth}%
-              \SemioChromeFooterHead
-            }%
-          }%
-        }%
-      }%
-    }%
-  }%
-}
-
 \newcommand{\semio@register@data}[3]{%
   \SemioTableRegisterRow{#1}{#2}{#3}%
 }
@@ -2450,7 +2409,7 @@
 }
 
 \newcommand{\semio@window@header@muted}[2]{%
-  \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{#2}}%
+  \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{\textcolor{semio-chrome-foreground}{#2}}}%
   \edef\semio@window@header@numval{#1}%
   \if\relax\detokenize\expandafter{\semio@window@header@numval}\relax
     \setlength{\semio@window@gap@w}{%
@@ -2643,6 +2602,7 @@
 \tl_new:N \l_semio_navbar_project_tl
 \tl_new:N \l_semio_navbar_center_tl
 \seq_new:N \l_semio_navbar_title_seq
+\bool_new:N \l_semio_footer_logo_first_bool
 \ExplSyntaxOff
 
 \newcommand{\semio@chrome@vcenter}[2]{%
@@ -2715,10 +2675,13 @@
       \semio_logo_height:nn { \semio@chrome@icon@height@footer } {#1}
     }%
   }
-  \hspace{\semio@chrome@padding}
 }
 \cs_new:Npn \semio_footer_logo_chips: {
+  \bool_set_true:N \l_semio_footer_logo_first_bool
   \clist_map_inline:Nn \l_semio_footer_logos_clist {
+    \bool_if:NTF \l_semio_footer_logo_first_bool
+      { \bool_set_false:N \l_semio_footer_logo_first_bool }
+      { \hspace{\semio@chrome@padding} }
     \semio_footer_logo_chip:n {##1}
   }
 }
@@ -2816,14 +2779,18 @@
 \newsavebox{\semio@chrome@bar@edge@box}
 \newsavebox{\semio@chrome@bar@center@box}
 
+%region PageParity
+\newcommand{\Ifsemiochromemirrored}[2]{%
+  \if@twoside\ifodd\value{page}#2\else#1\fi\else#2\fi
+}
+%endregion PageParity
+
 \newcommand{\semio@chrome@bar@threezone}[4]{%
   \sbox\semio@chrome@bar@edge@box{%
     \vbox to #1{%
       \vfil
       \hbox to \headwidth{%
-        #2%
-        \hfil
-        #4%
+        \Ifsemiochromemirrored{#4\hfil#2}{#2\hfil#4}%
       }%
       \vfil
     }%

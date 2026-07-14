@@ -1,0 +1,15 @@
+{
+  "title": "Print Frontmatter Top Right Chip",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "The title page, the toc, etc are all part of the frontmatter part. e.g. in toc on the top right chip where the name of the part appears, make sure that it shows correctly.",
+  "summary": "Defined a localized frontmatter title text and set the initial page heading to it during frontmatter begin, resetting it during mainmatter begin.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪7b99e8eaf04c41ffb9952861f5f29712"
+  ],
+  "files": [
+    "print/tex/semio-core.sty",
+    "print/tex/semio-components.sty"
+  ]
+}

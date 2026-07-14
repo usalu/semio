@@ -55,6 +55,7 @@ import {
   groupToolNodesByCategory,
   initialShellState,
   isFlowGraphScene,
+  loadPluginModule,
   mergeRecordPreservingIdentity,
   parseStudioShellPath,
   preserveJsonIdentity,
@@ -322,6 +323,14 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
 });
 
 describe("framework plugin runtime", () => {
+  it("preserves batched UI refreshes through the React plugin adapter", async () => {
+    const moduleUrl = `data:application/javascript,${encodeURIComponent("export function semio_plugin_manifest(){return JSON.stringify({pluginId:'mock-refresh',label:'Mock Refresh',version:'0',apps:[],programs:[],examples:[]})};export function semio_plugin_refresh_ui(instanceId,requestJson){return JSON.stringify({windows:[{key:'overview',hash:'fresh',value:{instanceId,request:JSON.parse(requestJson)}}]})}")}`;
+    const handle = await loadPluginModule("mock-refresh", moduleUrl);
+    await expect(handle.refreshUi(7, { viewState: {} })).resolves.toEqual({
+      windows: [{ key: "overview", hash: "fresh", value: { instanceId: 7, request: { viewState: {} } } }],
+    });
+  });
+
   it("loads plugin modules through framework-core", async () => {
     const { loadPluginModule } = await import("@semio-tech/framework-core");
     const handle = await loadPluginModule("mock", "data:application/javascript,export function semio_plugin_manifest(){return JSON.stringify({pluginId:'mock',label:'Mock',version:'0',apps:[],programs:[],examples:[]})}");

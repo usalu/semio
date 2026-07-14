@@ -152,6 +152,13 @@
   \noalign{\hrule height\arrayrulewidth}%
 }
 
+\newcommand{\semio@table@header@bottom@rule}{%
+  \noalign{%
+    \color{semio-chrome-border-normal}%
+    \hrule height\arrayrulewidth
+  }%
+}
+
 
 
 \newcommand{\semio@table@long@header@repeat@three}[3]{%
@@ -159,7 +166,7 @@
   \semio@table@header@cell{#1} &
   \semio@table@header@cell{#2} &
   \semio@table@header@cell{#3} \\
-  \hhline{|---|}
+  \semio@table@header@bottom@rule
   \global\semio@table@row@startedfalse
 }
 
