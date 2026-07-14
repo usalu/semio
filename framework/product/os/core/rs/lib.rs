@@ -361,6 +361,7 @@ impl PluginHost {
                 },
                 style: None,
                 disabled: None,
+                loading: None,
             }),
             UiNode::Button(UiButtonNode {
                 id: Some("recovery-disable-plugin".into()),
@@ -373,6 +374,7 @@ impl PluginHost {
                 },
                 style: None,
                 disabled: None,
+                loading: None,
             }),
             UiNode::Button(UiButtonNode {
                 id: Some("recovery-show-diagnostics".into()),
@@ -385,6 +387,7 @@ impl PluginHost {
                 },
                 style: None,
                 disabled: None,
+                loading: None,
             }),
         ])
     }

@@ -1163,6 +1163,7 @@ pub mod d2 {
     //#region 🔖DocumentPanel
     fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
         UiTreeItemNode {
+            loading: None,
             id: id.into(),
             label: label.into(),
             description,
@@ -1225,13 +1226,16 @@ pub mod d2 {
             })
             .collect();
         UiNode::Tree(UiTreeNode {
+            loading: None,
             sections: vec![
                 UiTreeSectionNode {
+                    loading: None,
                     id: "puzzle2d-play-document.nodes".into(),
                     label: Some(labels.nodes.into()),
                     default_open: Some(true),
                     items: if node_items.is_empty() {
                         vec![UiTreeItemNode {
+                            loading: None,
                             id: "puzzle2d-play-document.nodes.empty".into(),
                             label: labels.none.into(),
                             description: None,
@@ -1253,11 +1257,13 @@ pub mod d2 {
                     },
                 },
                 UiTreeSectionNode {
+                    loading: None,
                     id: "puzzle2d-play-document.edges".into(),
                     label: Some(labels.edges.into()),
                     default_open: Some(false),
                     items: if edge_items.is_empty() {
                         vec![UiTreeItemNode {
+                            loading: None,
                             id: "puzzle2d-play-document.edges.empty".into(),
                             label: labels.none.into(),
                             description: None,
@@ -1358,6 +1364,7 @@ pub mod d2 {
                 let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind");
                 let draggable = slice == "nodes";
                 UiTreeItemNode {
+                    loading: None,
                     id: format!("{section_id}.{index}.{kind_id}"),
                     label: catalog_kind_label(entry),
                     description: Some(kind_id.into()),
@@ -1377,11 +1384,13 @@ pub mod d2 {
             })
             .collect();
         UiTreeSectionNode {
+            loading: None,
             id: section_id.into(),
             label: Some(label.into()),
             default_open: Some(true),
             items: if items.is_empty() {
                 vec![UiTreeItemNode {
+                    loading: None,
                     id: format!("{section_id}.empty"),
                     label: labels.none.into(),
                     description: None,
@@ -1412,6 +1421,7 @@ pub mod d2 {
         let handle_entries = kind_catalog_entries(fixture, "handles").unwrap_or(inferred_handles.as_slice());
         let edge_entries = kind_catalog_entries(fixture, "edges").unwrap_or(inferred_edges.as_slice());
         UiNode::Tree(UiTreeNode {
+            loading: None,
             sections: vec![
                 kind_catalog_section("puzzle2d-play-kinds.nodes", "nodes", labels.nodes, &node_entries, labels),
                 kind_catalog_section("puzzle2d-play-kinds.handles", "handles", labels.handles, &handle_entries, labels),
@@ -4000,6 +4010,7 @@ pub mod d3 {
     //#region 🔖Panels
     fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
         UiTreeItemNode {
+            loading: None,
             id: id.into(),
             label: label.into(),
             description: None,
@@ -4049,6 +4060,7 @@ pub mod d3 {
                     move |flag: &str| json!({ "flag": flag, "value": true, "entity": "object", "ids": [id.clone()] })
                 };
                 UiTreeItemNode {
+                    loading: None,
                     id: format!("puzzle3d-object:{}", object.id),
                     label: object.object_kind.clone().unwrap_or_else(|| object.id.clone()),
                     description: None,
@@ -4077,6 +4089,7 @@ pub mod d3 {
                     move |flag: &str| json!({ "flag": flag, "value": true, "entity": "reference", "ids": [id.clone()] })
                 };
                 UiTreeItemNode {
+                    loading: None,
                     id: format!("puzzle3d-reference:{}", reference.id),
                     label: reference.id.clone(),
                     description: Some(reference.source.url.clone()),
@@ -4105,6 +4118,7 @@ pub mod d3 {
                     move |flag: &str| json!({ "flag": flag, "value": true, "entity": "targetVolume", "ids": [id.clone()] })
                 };
                 UiTreeItemNode {
+                    loading: None,
                     id: format!("puzzle3d-target-volume:{}", volume.id),
                     label: volume.id.clone(),
                     description: None,
@@ -4137,11 +4151,12 @@ pub mod d3 {
             })
             .collect();
         UiNode::Tree(UiTreeNode {
+            loading: None,
             sections: vec![
-                UiTreeSectionNode { id: "puzzle3d-play-document.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), items: object_items },
-                UiTreeSectionNode { id: "puzzle3d-play-document.references".into(), label: Some("References".into()), default_open: Some(false), items: reference_items },
-                UiTreeSectionNode { id: "puzzle3d-play-document.target-volumes".into(), label: Some("Target Volumes".into()), default_open: Some(false), items: target_volume_items },
-                UiTreeSectionNode { id: "puzzle3d-play-document.attractions".into(), label: Some("Attractions".into()), default_open: Some(false), items: attraction_items },
+                UiTreeSectionNode { id: "puzzle3d-play-document.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), loading: None, items: object_items },
+                UiTreeSectionNode { id: "puzzle3d-play-document.references".into(), label: Some("References".into()), default_open: Some(false), loading: None, items: reference_items },
+                UiTreeSectionNode { id: "puzzle3d-play-document.target-volumes".into(), label: Some("Target Volumes".into()), default_open: Some(false), loading: None, items: target_volume_items },
+                UiTreeSectionNode { id: "puzzle3d-play-document.attractions".into(), label: Some("Attractions".into()), default_open: Some(false), loading: None, items: attraction_items },
             ],
             selected_ids: None,
             highlighted_ids: None,
@@ -4173,6 +4188,7 @@ pub mod d3 {
                         let vortex_kind = template.get("vortexKind").and_then(|value| value.as_str()).unwrap_or("vortex");
                         let position = template.get("position").cloned().unwrap_or(json!([0.0, 0.0, 0.0]));
                         UiTreeItemNode {
+                            loading: None,
                             id: format!("puzzle3d-kind-vortex.{index}.{vortex_kind}"),
                             label: vortex_kind.into(),
                             description: Some(position.to_string()),
@@ -4199,6 +4215,7 @@ pub mod d3 {
         let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
         let draggable = entry.get("meshUrl").and_then(|value| value.as_str()).map(|url| !url.is_empty()).unwrap_or(false);
         UiTreeItemNode {
+            loading: None,
             id: format!("puzzle3d-kind:{kind_id}"),
             label: puzzle3d_catalog_entry_label(entry),
             description: Some(kind_id.clone()),
@@ -4220,6 +4237,7 @@ pub mod d3 {
     fn puzzle3d_catalog_kind_item(entry: &Value, icon_id: &str) -> UiTreeItemNode {
         let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
         UiTreeItemNode {
+            loading: None,
             id: format!("puzzle3d-kind-entry:{kind_id}"),
             label: puzzle3d_catalog_entry_label(entry),
             description: Some(kind_id),
@@ -4244,11 +4262,12 @@ pub mod d3 {
         let cable_entries = puzzle3d_catalog_entries(&envelope.fixture, "cables");
         let attraction_entries = puzzle3d_catalog_entries(&envelope.fixture, "attractions");
         UiNode::Tree(UiTreeNode {
+            loading: None,
             sections: vec![
-                UiTreeSectionNode { id: "puzzle3d-play-kinds.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), items: object_entries.iter().map(puzzle3d_object_kind_item).collect() },
-                UiTreeSectionNode { id: "puzzle3d-play-kinds.vortices".into(), label: Some(labels.vortices.into()), default_open: Some(false), items: vortex_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "circle-dot")).collect() },
-                UiTreeSectionNode { id: "puzzle3d-play-kinds.cables".into(), label: Some("Cables".into()), default_open: Some(false), items: cable_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "plug")).collect() },
-                UiTreeSectionNode { id: "puzzle3d-play-kinds.attractions".into(), label: Some("Attractions".into()), default_open: Some(false), items: attraction_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "link")).collect() },
+                UiTreeSectionNode { id: "puzzle3d-play-kinds.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), loading: None, items: object_entries.iter().map(puzzle3d_object_kind_item).collect() },
+                UiTreeSectionNode { id: "puzzle3d-play-kinds.vortices".into(), label: Some(labels.vortices.into()), default_open: Some(false), loading: None, items: vortex_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "circle-dot")).collect() },
+                UiTreeSectionNode { id: "puzzle3d-play-kinds.cables".into(), label: Some("Cables".into()), default_open: Some(false), loading: None, items: cable_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "plug")).collect() },
+                UiTreeSectionNode { id: "puzzle3d-play-kinds.attractions".into(), label: Some("Attractions".into()), default_open: Some(false), loading: None, items: attraction_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "link")).collect() },
             ],
             selected_ids: None,
             highlighted_ids: None,
@@ -4318,7 +4337,7 @@ pub mod d3 {
     fn inspector_header_and_delete(count: usize, noun: &str) -> Vec<UiNode> {
         vec![
             ui_text(format!("{count} {noun} selected")),
-            UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some("puzzle3d-play-inspector.delete".into()), icon_id: "trash".into(), label: "Delete".into(), action: puzzle3d_action("deleteSelection", None), style: None, disabled: None }),
+            UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some("puzzle3d-play-inspector.delete".into()), icon_id: "trash".into(), label: "Delete".into(), action: puzzle3d_action("deleteSelection", None), style: None, disabled: None, loading: None }),
         ]
     }
 
@@ -4574,7 +4593,8 @@ pub mod d3 {
             Ok(rows) => {
                 let items: Vec<UiTreeItemNode> = rows.iter().map(|row| tree_item_with_action(format!("puzzle3d-jack-row:{}:{}", row.entity, row.id), row.value.clone(), None, puzzle3d_action("setSelection", Some(jack_row_selection_args(row))))).collect();
                 let results = UiNode::Tree(UiTreeNode {
-                    sections: vec![UiTreeSectionNode { id: "puzzle3d-play-jack.results".into(), label: Some(format!("{} results", items.len())), default_open: Some(true), items }],
+                    loading: None,
+                    sections: vec![UiTreeSectionNode { id: "puzzle3d-play-jack.results".into(), label: Some(format!("{} results", items.len())), default_open: Some(true), loading: None, items }],
                     selected_ids: None,
                     highlighted_ids: None,
                     selection_change: None,
@@ -5930,7 +5950,7 @@ pub mod d3 {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::{ActionMeta, AppActionRegistry, PluginApp, VcsDocumentApp};
+        use semio_framework_plugin::{app::AppActionRegistry, ActionMeta, PluginApp, VcsDocumentApp};
 
         fn meta(actor: &str) -> ActionMeta {
             ActionMeta { actor: actor.into(), instance_id: 1 }
@@ -7618,14 +7638,17 @@ pub mod d5 {
             .map(|fastener| tree_item_with_action(format!("puzzle5d-play-document.fastener.{}", fastener.id), fastener_label(&envelope.document, fastener), Some("link"), puzzle5d_action("setSelection", Some(json!({ "fastenerIds": [fastener.id] })))))
             .collect();
         UiNode::Tree(UiTreeNode {
+            loading: None,
             sections: vec![
                 UiTreeSectionNode {
+                    loading: None,
                     id: "puzzle5d-play-document.parts".into(),
                     label: Some(labels.parts.into()),
                     default_open: Some(true),
                     items: if part_items.is_empty() { vec![tree_info_item("puzzle5d-play-document.parts.empty", "(none)", None)] } else { part_items },
                 },
                 UiTreeSectionNode {
+                    loading: None,
                     id: "puzzle5d-play-document.fasteners".into(),
                     label: Some(labels.fasteners.into()),
                     default_open: Some(false),
@@ -7684,6 +7707,7 @@ pub mod d5 {
             })
             .collect();
         UiTreeSectionNode {
+            loading: None,
             id: section_id.into(),
             label: Some(label.into()),
             default_open: Some(!items.is_empty()),
@@ -7702,6 +7726,7 @@ pub mod d5 {
             part_entries = ids.into_iter().map(|id| json!({ "id": id, "name": id })).collect();
         }
         UiNode::Tree(UiTreeNode {
+            loading: None,
             sections: vec![
                 kind_catalog_section("puzzle5d-play-kinds.parts", labels.parts, &part_entries, Some("addPartKind")),
                 kind_catalog_section("puzzle5d-play-kinds.grips", labels.grips, &slice("grips"), None),
@@ -8697,7 +8722,7 @@ pub mod d5 {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::{ActionMeta, AppActionRegistry, PluginApp, VcsDocumentApp};
+        use semio_framework_plugin::{app::AppActionRegistry, ActionMeta, PluginApp, VcsDocumentApp};
 
         fn meta(actor: &str) -> ActionMeta {
             ActionMeta { actor: actor.into(), instance_id: 1 }
@@ -8766,6 +8791,61 @@ pub mod d5 {
             assert!(engagements.contains_key(PUZZLE5D_PLAY_WINDOW_2D));
             assert!(engagements.contains_key(PUZZLE5D_PLAY_WINDOW_3D));
         }
+
+        //#region 🧰 Window Actions & Tools contract
+        #[test]
+        fn add_part_kind_materializes_the_declared_kind_default() {
+            // 📝 P1 arg form: addPartKind with no args materializes the declared `partKind` default and adds a part.
+            let mut app = new_app_with_registry();
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "empty" })), &ViewState::default(), &meta("local")).expect("empty");
+            let before = part_count(&app);
+            let result = app.handle_action("addPartKind", None, &ViewState::default(), &meta("local")).expect("addPartKind");
+            assert!(!result.operations.is_empty(), "addPartKind is an Operation that emits ops");
+            assert_eq!(part_count(&app), before + 1, "the materialized default kind adds exactly one part");
+            let projection = app.projection().expect("projection");
+            let kind = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.last()).and_then(|part| part.get("partKind")).and_then(Value::as_str);
+            assert_eq!(kind, Some("Part"), "the declared partKind default was materialized host-side");
+        }
+
+        #[test]
+        fn set_active_tool_emits_no_ops_and_no_history_entry() {
+            // 🧰 Switching tools is the framework View action: no document ops, no undo entry, no re-emitted effect.
+            let mut app = new_app_with_registry();
+            let before = app.projection().expect("projection");
+            let brush_view = ViewState { active_tool_id: Some("brush".into()), ..ViewState::default() };
+            let result = app.handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "brush" })), &brush_view, &meta("local")).expect("switch tool");
+            assert!(result.operations.is_empty(), "tool switching never emits document ops");
+            assert!(result.requested_effects.is_empty(), "a user tool switch does not re-emit SetActiveTool");
+            assert_eq!(app.projection().expect("projection"), before, "tool switching does not mutate the document");
+        }
+
+        #[test]
+        fn engagement_submit_switches_tool_via_host_effect_for_both_windows() {
+            // 🧰 Reconciled dual entry point: the engagement token drives the same host-owned tool switch, once per window.
+            let mut app = new_app();
+            let result = app.handle_action("engagementSubmit", Some(&json!({ "window": PUZZLE5D_PLAY_WINDOW_3D, "value": "brush" })), &ViewState::default(), &meta("local")).expect("submit");
+            let windows: Vec<&str> = result.requested_effects.iter().filter_map(|effect| match effect { HostEffect::SetActiveTool { window_kind_id, tool_id } if tool_id == "brush" => Some(window_kind_id.as_str()), _ => None }).collect();
+            assert!(windows.contains(&PUZZLE5D_PLAY_WINDOW_2D) && windows.contains(&PUZZLE5D_PLAY_WINDOW_3D), "brush switch is pushed to both windows, got {windows:?}");
+        }
+
+        #[test]
+        fn gumball_translate_drag_coalesces_into_one_edit() {
+            // 🌀 Coalescing regression: three translate ticks with the same key are ONE undoable edit.
+            let mut app = new_app();
+            let part_id = app.projection().expect("projection").get("parts").and_then(Value::as_array).and_then(|parts| parts.first()).and_then(|part| part.get("id")).and_then(Value::as_str).expect("part id").to_string();
+            let origin_x = |app: &VcsDocumentApp<Puzzle5dPlayApp>| -> f64 {
+                app.projection().expect("projection").get("parts").and_then(Value::as_array).and_then(|parts| parts.iter().find(|part| part.get("id").and_then(Value::as_str) == Some(part_id.as_str()))).and_then(|part| part.pointer("/3d/origin/0")).and_then(Value::as_f64).unwrap_or(0.0)
+            };
+            let start = origin_x(&app);
+            let move_view = ViewState { active_tool_id: Some("move".into()), ..ViewState::default() };
+            for dx in [1.0, 2.0, 3.0] {
+                app.handle_action("translateSelection", Some(&json!({ "ids": [part_id], "dx": dx, "dy": 0.0, "dz": 0.0 })), &move_view, &meta("local")).expect("drag tick");
+            }
+            assert!((origin_x(&app) - start - 6.0).abs() < 1e-9, "three ticks accumulate 1+2+3 on x");
+            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            assert!((origin_x(&app) - start).abs() < 1e-9, "one undo restores the whole coalesced gumball drag");
+        }
+        //#endregion 🧰 Window Actions & Tools contract
     }
     //#endregion 🧪Tests
 }

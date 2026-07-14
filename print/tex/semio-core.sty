@@ -467,8 +467,10 @@
 \cs_new_protected:Npn \semio_hierarchy_chip_number:n #1 {
   \seq_set_split:Nnn \l_tmpa_seq { . } {#1}
   \seq_pop_right:NN \l_tmpa_seq \l_tmpa_tl
-  \seq_if_empty:NF \l_tmpa_seq { \seq_use:Nn \l_tmpa_seq { . }. }
-  { \addfontfeatures { FakeBold = 2 } \tl_use:N \l_tmpa_tl }
+  \seq_if_empty:NF \l_tmpa_seq {
+    \textcolor { semio-chrome-text-normal } { \seq_use:Nn \l_tmpa_seq { . }. }
+  }
+  \tl_use:N \l_tmpa_tl
 }
 \cs_new_protected:Npn \semio_toc_number:n #1 {
   \seq_set_split:Nnn \l_tmpa_seq { . } {#1}

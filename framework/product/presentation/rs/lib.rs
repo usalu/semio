@@ -295,7 +295,7 @@ fn absorb_tile_diff(
 /// 📦 Typed presentation-deck operation. Tile add/remove/patch/move flow through a generic
 /// {@link CollectionOp} for granular convergence; `SetSource`/`SetTiles` are scalar/bulk writes and
 /// `SetDeck` replaces the whole projection (import/reset). Ephemeral view state (selection, engagement
-/// draft, clipboard) lives in the plugin's runtime, never in the document.
+/// draft) lives in the plugin's runtime, never in the document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "camelCase")]
 pub enum PresentationOp {

@@ -2003,6 +2003,7 @@ pub fn render_generations_tree(
                 items: None,
                 control: None,
                 is_hidden: None,
+                loading: None,
             }
         })
         .collect();
@@ -2027,10 +2028,12 @@ pub fn render_generations_tree(
                 items: None,
                 control: None,
                 is_hidden: None,
+                loading: None,
             }]
         } else {
             items
         },
+        loading: None,
     }];
     sections.push(UiTreeSectionNode {
         id: format!("{surface_prefix}.actions"),
@@ -2052,10 +2055,13 @@ pub fn render_generations_tree(
             items: None,
             control: None,
             is_hidden: None,
+            loading: None,
         }],
+        loading: None,
     });
     UiNode::Tree(UiTreeNode {
         sections,
+        loading: None,
         selected_ids: selected_id.map(|id| vec![format!("{surface_prefix}.generation.{id}")]),
         highlighted_ids: None,
         selection_change: Some(generation_action(controller_id, "selectGeneration", None)),

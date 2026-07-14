@@ -5131,6 +5131,7 @@ mod render_plan_validator_tests {
             activate: None,
             drop_action: None,
             children,
+            loading: None,
         })
     }
 
@@ -11275,6 +11276,7 @@ impl ShellState {
             selected: None,
             activate: None,
             drop_action: None,
+            loading: None,
         })
     }
 
@@ -11295,6 +11297,7 @@ impl ShellState {
                     },
                     style: None,
                     disabled: None,
+                    loading: None,
                 })
             })
             .collect();
@@ -11314,6 +11317,7 @@ impl ShellState {
             selected: None,
             activate: None,
             drop_action: None,
+            loading: None,
         })
     }
 
@@ -11415,6 +11419,7 @@ impl ShellState {
             selected: None,
             activate: None,
             drop_action: None,
+            loading: None,
         })
     }
 
@@ -18198,7 +18203,8 @@ impl AppRuntime {
         if self.atlas.take_dirty() {
             self.gpu.upload_font_atlas(&self.atlas);
         }
-        if let Err(err) = self.gpu.render_frame(&self.draw, Some(&self.overlay)) {
+        let time_seconds = (app_now_ms() / 1000.0) as f32;
+        if let Err(err) = self.gpu.render_frame(&self.draw, Some(&self.overlay), time_seconds) {
             log_debug(&format!("[DEBUG] render frame: {err}"));
         }
         let hit = self

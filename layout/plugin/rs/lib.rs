@@ -893,6 +893,7 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
                 id: "layout-document.document".into(),
                 label: Some(labels.document.into()),
                 default_open: Some(true),
+                loading: None,
                 items: vec![tree_item(
                     "layout-document.document.root",
                     doc.name.clone(),
@@ -901,19 +902,20 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
                     None,
                 )],
             },
-            UiTreeSectionNode { id: "layout-document.spreads".into(), label: Some(labels.spreads.into()), default_open: Some(false), items: spread_items },
+            UiTreeSectionNode { id: "layout-document.spreads".into(), label: Some(labels.spreads.into()), default_open: Some(false), loading: None, items:spread_items },
             UiTreeSectionNode {
                 id: "layout-document.pages".into(),
                 label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
                 default_open: Some(true),
+                loading: None,
                 items: page_items,
             },
-            UiTreeSectionNode { id: "layout-document.frames".into(), label: Some(labels.frames.into()), default_open: Some(true), items: frame_items },
-            UiTreeSectionNode { id: "layout-document.parentPages".into(), label: Some(labels.parent_pages.into()), default_open: Some(false), items: parent_page_items },
-            UiTreeSectionNode { id: "layout-document.layers".into(), label: Some(labels.layers.into()), default_open: Some(false), items: layer_items },
-            UiTreeSectionNode { id: "layout-document.stories".into(), label: Some(labels.stories.into()), default_open: Some(false), items: story_items },
-            UiTreeSectionNode { id: "layout-document.links".into(), label: Some(labels.links.into()), default_open: Some(false), items: link_items },
-            UiTreeSectionNode { id: "layout-document.styles".into(), label: Some(labels.styles.into()), default_open: Some(false), items: style_items },
+            UiTreeSectionNode { id: "layout-document.frames".into(), label: Some(labels.frames.into()), default_open: Some(true), loading: None, items: frame_items },
+            UiTreeSectionNode { id: "layout-document.parentPages".into(), label: Some(labels.parent_pages.into()), default_open: Some(false), loading: None, items:parent_page_items },
+            UiTreeSectionNode { id: "layout-document.layers".into(), label: Some(labels.layers.into()), default_open: Some(false), loading: None, items:layer_items },
+            UiTreeSectionNode { id: "layout-document.stories".into(), label: Some(labels.stories.into()), default_open: Some(false), loading: None, items:story_items },
+            UiTreeSectionNode { id: "layout-document.links".into(), label: Some(labels.links.into()), default_open: Some(false), loading: None, items:link_items },
+            UiTreeSectionNode { id: "layout-document.styles".into(), label: Some(labels.styles.into()), default_open: Some(false), loading: None, items:style_items },
         ],
         selected_ids: Some(
             runtime
@@ -925,6 +927,7 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
         highlighted_ids: if highlighted_ids.is_empty() { None } else { Some(highlighted_ids) },
         selection_change: Some(layout_action("setSelection", None)),
         drop_action: None,
+        loading: None,
     })
 }
 
@@ -947,12 +950,14 @@ fn build_catalogue_tree(labels: &LayoutLabels) -> UiNode {
             id: "layout-catalogue.kinds".into(),
             label: Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()),
             default_open: Some(true),
+            loading: None,
             items,
         }],
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
         drop_action: None,
+        loading: None,
     })
 }
 
@@ -1252,12 +1257,14 @@ fn build_preflight_tree(doc: &LayoutDocument, labels: &LayoutLabels) -> UiNode {
             id: "layout-preflight.issues".into(),
             label: Some(labels.preflight.into()),
             default_open: Some(true),
+            loading: None,
             items,
         }],
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
         drop_action: None,
+        loading: None,
     })
 }
 

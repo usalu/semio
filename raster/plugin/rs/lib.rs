@@ -328,6 +328,7 @@ fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
             RasterLayerNode::Adjustment { .. } => "sliders-horizontal",
         }.into()),
         selected: None,
+        loading: None,
         default_open: Some(matches!(layer, RasterLayerNode::Group { .. })),
         action: Some(play_action(
             RASTER_PLAY_CONTROLLER_ID,
@@ -353,6 +354,7 @@ fn render_layers_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, v
             description: None,
             icon_id: Some("image".into()),
             selected: None,
+            loading: None,
             default_open: None,
             action: Some(play_action(
                 RASTER_PLAY_CONTROLLER_ID,
@@ -374,6 +376,7 @@ fn render_layers_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, v
             description: None,
             icon_id: Some("folder-plus".into()),
             selected: None,
+            loading: None,
             default_open: None,
             action: Some(play_action(
                 RASTER_PLAY_CONTROLLER_ID,
@@ -406,8 +409,10 @@ fn render_layers_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, v
             id: "raster-play-layers".into(),
             label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
             default_open: Some(true),
+            loading: None,
             items: [toolbar, layer_items].concat(),
         }],
+        loading: None,
         selected_ids: Some(selected_ids),
         highlighted_ids: Some(highlighted_ids),
         selection_change: Some(play_action(
@@ -432,6 +437,7 @@ fn render_masks_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, vi
                     description: Some("mask".into()),
                     icon_id: Some("scan".into()),
                     selected: None,
+                    loading: None,
                     default_open: None,
                     action: Some(play_action(
                         RASTER_PLAY_CONTROLLER_ID,
@@ -465,6 +471,7 @@ fn render_masks_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, vi
             description: None,
             icon_id: Some("scan".into()),
             selected: None,
+            loading: None,
             default_open: None,
             action: None,
             hover_action: None,
@@ -482,8 +489,10 @@ fn render_masks_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, vi
             id: "raster-play-masks".into(),
             label: Some(labels.masks.into()),
             default_open: Some(true),
+            loading: None,
             items,
         }],
+        loading: None,
         selected_ids: Some(
             selection_from_runtime(runtime, view_state)
                 .iter()
@@ -501,6 +510,7 @@ fn render_catalogue_panel(labels: &RasterLabels) -> UiNode {
         id: "raster-catalogue".into(),
         label: Some(labels.layer_kinds.into()),
         default_open: Some(true),
+        loading: None,
         children: vec![
             ui_text(labels.catalogue_pixel),
             ui_text(labels.catalogue_group),
@@ -1270,14 +1280,14 @@ mod tests {
     #[test]
     fn set_active_tool_switch_emits_no_ops_and_reads_from_view_state() {
         let mut app = new_app_with_registry();
-        let before = app.projection().expect("projection").clone();
+        let before = app.projection().expect("projection");
         let view = ViewState { active_tool_id: Some("paintBrush".into()), ..ViewState::default() };
         // Switching tools is the framework View action: no document ops, nothing to sync/undo.
         let result = app
             .handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "paintBrush" })), &view, &meta("local"))
             .expect("switch tool");
         assert!(result.operations.is_empty(), "tool switching never emits document ops");
-        assert_eq!(app.projection().expect("projection"), &before, "tool switching does not mutate the document");
+        assert_eq!(app.projection().expect("projection"), before, "tool switching does not mutate the document");
         // The composite scene reads the host-owned active tool from session view state, not the runtime.
         let json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_COMPOSITE, None, &view).expect("render")).unwrap();
         assert!(json.contains("\"activeTool\":\"paintBrush\""), "scene reflects host-owned active tool: {json}");

@@ -1648,6 +1648,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
             id: section.id.clone(),
             label: section.label.clone(),
             default_open: Some(section.default_open.unwrap_or(true)),
+            loading: section.loading,
             items: section
                 .children
                 .iter()
@@ -1664,6 +1665,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
                 id: "empty".into(),
                 label: None,
                 default_open: None,
+                loading: None,
                 items: vec![UiTreeItemNode {
                     id: "empty".into(),
                     label: "—".into(),
@@ -1683,6 +1685,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
                     is_hidden: None,
                 }],
             }],
+            loading: None,
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
@@ -1691,6 +1694,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
     } else {
         UiTreeNode {
             sections: tree_sections,
+            loading: None,
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
@@ -3122,6 +3126,7 @@ mod ui_node_wire_format_tests {
             padding: None,
             id: Some("root".into()),
             selected: None,
+            loading: None,
             activate: None,
             drop_action: None,
             children: vec![
@@ -3137,6 +3142,7 @@ mod ui_node_wire_format_tests {
                     action: act("save"),
                     style: None,
                     disabled: Some(false),
+                    loading: None,
                 }),
                 UiNode::Separator(UiSeparatorNode {}),
                 UiNode::Input(UiInputNode {
@@ -3223,6 +3229,7 @@ mod ui_node_wire_format_tests {
                     id: "sec1".into(),
                     label: Some("Section".into()),
                     default_open: Some(true),
+                    loading: None,
                     children: vec![],
                 }),
                 UiNode::Tree(UiTreeNode {
@@ -3230,8 +3237,10 @@ mod ui_node_wire_format_tests {
                         id: "treesec1".into(),
                         label: Some("Items".into()),
                         default_open: Some(true),
+                        loading: None,
                         items: vec![UiTreeItemNode::base("item1", "Item 1")],
                     }],
+                    loading: None,
                     selected_ids: Some(vec!["item1".into()]),
                     highlighted_ids: None,
                     selection_change: None,
@@ -3303,6 +3312,20 @@ mod ui_node_wire_format_tests {
         );
         let roundtripped: UiNode = serde_json::from_str(&json).unwrap();
         assert_eq!(roundtripped, node);
+    }
+
+    /// 🌀 `loading` follows the same `Option<bool>` skip-if-none convention as `selected`: absent when unset, round-trips when set.
+    #[test]
+    fn ui_tree_item_loading_field_skips_when_none_and_roundtrips_when_set() {
+        let idle = UiTreeItemNode::base("idle", "Idle");
+        assert!(!serde_json::to_string(&idle).unwrap().contains("loading"));
+
+        let mut loading = UiTreeItemNode::base("loading1", "Loading");
+        loading.loading = Some(true);
+        let json = serde_json::to_string(&loading).unwrap();
+        assert!(json.contains("\"loading\":true"));
+        let roundtripped: UiTreeItemNode = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, loading);
     }
 
     const GOLDEN_SURFACE_KIND_JSON: &str = "[\"canvas-2d\",\"world-3d\",\"node-graph\",\"text-editor\",\"table\",\"raster\",\"virtualFileSystem\",\"gis2d-map\",\"puzzle2d-board\",\"icon-render\",\"note-canvas\",\"vcs-history\"]";
@@ -4101,6 +4124,7 @@ mod tests {
             action: action(),
             style: None,
             disabled: None,
+            loading: None,
         })
     }
 
@@ -4111,6 +4135,7 @@ mod tests {
             padding: None,
             id: Some(id.into()),
             selected: None,
+            loading: None,
             activate: None,
             drop_action: None,
             children,
@@ -4628,6 +4653,8 @@ pub const KIND_ROUNDED: f32 = 1.0;
 pub const KIND_GLYPH: f32 = 2.0;
 pub const KIND_TEXTURED: f32 = 4.0;
 pub const KIND_RASTER: f32 = 5.0;
+/// 🌀 Clockwise spinning + pulsing loading ring (see `UiInstance::loading_border` and `UI_SHADER`'s `kind == 6` branch).
+pub const KIND_LOADING_BORDER: f32 = 6.0;
 pub const SCENE_MIP_LEVELS: u32 = 5;
 
 #[repr(C)]
@@ -4845,6 +4872,16 @@ impl UiInstance {
         }
     }
 
+    /// 🌀 Clockwise spinning + pulsing loading ring in `color`; the sweep and pulse phase come from `globals._pad.x` (elapsed seconds) in `UI_SHADER`.
+    pub fn loading_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
+        Self {
+            rect,
+            color: [color.r, color.g, color.b, color.a],
+            params: [radius, border, KIND_LOADING_BORDER, 0.0],
+            uv_rect: [0.0, 0.0, 1.0, 1.0],
+        }
+    }
+
     pub fn glyph(rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) -> Self {
         Self {
             rect,
@@ -5029,6 +5066,13 @@ impl DrawList {
         self.active_layer()
             .ui_instances
             .push(UiInstance::rounded(rect, color, radius, 0.0, color));
+    }
+
+    /// 🌀 Clockwise spinning + pulsing loading ring around `rect`, in `color` (gray `theme.border_normal` at rest, `theme.selected` when the node is selected/active).
+    pub fn push_loading_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
+        self.active_layer()
+            .ui_instances
+            .push(UiInstance::loading_border(rect, color, radius, stroke));
     }
 
     pub fn push_glass(&mut self, rect: [f32; 4], radius: f32, tier: GlassTier, theme: &Theme) -> usize {
@@ -7159,13 +7203,13 @@ impl UiPipelines {
         pass.set_scissor_rect(0, 0, width as u32, height as u32);
     }
 
-    pub fn update_globals(&self, queue: &wgpu::Queue, width: f32, height: f32) {
+    pub fn update_globals(&self, queue: &wgpu::Queue, width: f32, height: f32, time_seconds: f32) {
         queue.write_buffer(
             &self.globals_buffer,
             0,
             bytemuck::bytes_of(&UiGlobals {
                 screen_size: [width, height],
-                _pad: [0.0, 0.0],
+                _pad: [time_seconds, 0.0],
             }),
         );
     }
@@ -7219,8 +7263,9 @@ impl UiPipelines {
         frame_buffers: &mut FrameBuffers,
         width: f32,
         height: f32,
+        time_seconds: f32,
     ) {
-        self.update_globals(queue, width, height);
+        self.update_globals(queue, width, height, time_seconds);
         let scene_view = scene.mip_view(0);
         let world_upload = if depth_view.is_some() {
             self.upload_world_passes(
@@ -7747,6 +7792,7 @@ impl UiPipelines {
         frame_buffers: &mut FrameBuffers,
         width: f32,
         height: f32,
+        time_seconds: f32,
     ) {
         self.render_scene_content(
             device,
@@ -7760,6 +7806,7 @@ impl UiPipelines {
             frame_buffers,
             width,
             height,
+            time_seconds,
         );
         self.composite_to_swapchain(
             device,
@@ -8420,7 +8467,7 @@ impl GpuContext {
         self.mesh_store.evict_mesh(key);
     }
 
-    pub fn render_frame(&mut self, draw: &DrawList, overlay: Option<&DrawList>) -> Result<(), String> {
+    pub fn render_frame(&mut self, draw: &DrawList, overlay: Option<&DrawList>, time_seconds: f32) -> Result<(), String> {
         self.ensure_scene_color();
         let scene = self.scene_color.as_ref().expect("scene_color");
         let frame = self
@@ -8447,6 +8494,7 @@ impl GpuContext {
             &mut self.frame_buffers,
             self.width as f32,
             self.height as f32,
+            time_seconds,
         );
         self.queue.submit(Some(scene_encoder.finish()));
         let mut composite_encoder = self
@@ -9267,6 +9315,7 @@ mod tests {
             padding: Some("none".into()),
             id: None,
             selected: None,
+            loading: None,
             activate: None,
             drop_action: None,
             children,
@@ -9428,6 +9477,28 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         let fill_alpha = 1.0 - smoothstep(-1.0, 0.0, dist);
         let border_alpha = 1.0 - smoothstep(border - 1.0, border, abs(dist));
         let alpha = max(fill_alpha * in.color.a, border_alpha * in.params.w);
+        return vec4<f32>(in.color.rgb, alpha);
+    }
+    if (kind == 6) {
+        let half = in.size * 0.5;
+        let p = in.local - half;
+        let radius = in.params.x;
+        let border = in.params.y;
+        let dist = sdf_rounded_rect(p, half, radius);
+        let border_alpha = 1.0 - smoothstep(border - 1.0, border, abs(dist));
+        let two_pi = 6.28318530718;
+        let duration = 1.6;
+        let phase = globals._pad.x / duration;
+        var theta = atan2(p.x, -p.y);
+        theta = theta - floor(theta / two_pi) * two_pi;
+        var spin = phase * two_pi;
+        spin = spin - floor(spin / two_pi) * two_pi;
+        var sweep = theta - spin;
+        sweep = sweep - floor(sweep / two_pi) * two_pi;
+        let comet_alpha = sweep / two_pi;
+        let ring_alpha = max(comet_alpha, 0.2);
+        let pulse = 0.775 - 0.225 * cos(two_pi * phase);
+        let alpha = border_alpha * ring_alpha * pulse * in.color.a;
         return vec4<f32>(in.color.rgb, alpha);
     }
     if (kind == 2) {
@@ -10553,6 +10624,9 @@ fn paint_button(node: &UiButtonNode, bounds: Rect, flags: NodeFlags, theme: &The
     let hovered = flags.contains(NodeFlags::HOVERED);
     let bg = item_bg(theme, false, hovered);
     push_control_border(draw, bounds, theme, theme.border_normal, bg);
+    if node.loading.unwrap_or(false) {
+        draw.push_loading_border([bounds.x, bounds.y, bounds.w, bounds.h], theme.border_normal, theme.border_radius, theme.stroke_hairline);
+    }
     let mut text_x = bounds.x + theme.padding_standard;
     let icon_key = if node.icon_id.is_empty() { node.label.as_str() } else { node.icon_id.as_str() };
     if let Some(icons) = icons {
@@ -10755,6 +10829,10 @@ fn paint_tree_item(
     } else if highlighted {
         draw.push_rounded([row.x, row.y, row.w, row.h], theme.row_hover, theme.border_radius);
     }
+    if item.loading.unwrap_or(false) {
+        let ring_color = if selected { theme.selected } else { theme.border_normal };
+        draw.push_loading_border([row.x, row.y, row.w, row.h], ring_color, theme.border_radius, theme.stroke_hairline);
+    }
     let indent = x + (depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
     let expandable = item.items.as_ref().is_some_and(|items| !items.is_empty());
     if expandable {
@@ -10823,9 +10901,22 @@ mod tests {
             padding: Some("none".into()),
             id: None,
             selected: None,
+            loading: None,
             activate: None,
             drop_action: None,
             children,
+        })
+    }
+
+    fn loading_button(id: &str) -> UiNode {
+        UiNode::Button(UiButtonNode {
+            id: Some(id.into()),
+            icon_id: String::new(),
+            label: id.into(),
+            action: ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None },
+            style: None,
+            disabled: None,
+            loading: Some(true),
         })
     }
 
@@ -10883,6 +10974,21 @@ mod tests {
         paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
         let after_second = tree.node(root).unwrap().flags;
         assert_eq!(after_first, after_second);
+    }
+
+    #[test]
+    fn painting_a_loading_button_emits_a_loading_border_instance() {
+        let (mut tree, root, theme, mut atlas) = setup(&loading_button("save"));
+        let mut draw = DrawList::default();
+
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+
+        let has_loading_border = draw
+            .layers
+            .iter()
+            .flat_map(|layer| layer.ui_instances.iter())
+            .any(|instance| (instance.params[2] - KIND_LOADING_BORDER).abs() < 0.01);
+        assert!(has_loading_border, "loading button should emit a KIND_LOADING_BORDER instance");
     }
 }
 // #endregion paint
@@ -11255,6 +11361,7 @@ mod tests {
             padding: None,
             id: None,
             selected: None,
+            loading: None,
             activate: None,
             drop_action: None,
             children: Vec::new(),
@@ -11270,7 +11377,7 @@ mod tests {
     }
 
     fn button_ui(id: &str) -> UiNode {
-        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: id.into(), action: action(), style: None, disabled: None })
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: id.into(), action: action(), style: None, disabled: None, loading: None })
     }
 
     fn leaf(tree: &mut UiTree, parent: Option<NodeId>, ordinal: u32, node: UiNode, rect: (f32, f32, f32, f32)) -> NodeId {
@@ -11534,6 +11641,7 @@ mod tests {
             padding: Some("standard".into()),
             id: None,
             selected: None,
+            loading: None,
             activate: None,
             drop_action: None,
             children,
