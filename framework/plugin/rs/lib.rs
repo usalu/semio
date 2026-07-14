@@ -2832,6 +2832,8 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
         #[serde(default)]
         panels: Vec<SectionRequest>,
         #[serde(default)]
+        tools: Vec<SectionRequest>,
+        #[serde(default)]
         engagements: Option<SingleRequest>,
         #[serde(default)]
         measures: Option<SingleRequest>,
@@ -2853,6 +2855,8 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
         windows: Vec<SectionResponse>,
         #[serde(skip_serializing_if = "Vec::is_empty")]
         panels: Vec<SectionResponse>,
+        #[serde(skip_serializing_if = "Vec::is_empty")]
+        tools: Vec<SectionResponse>,
         #[serde(skip_serializing_if = "Option::is_none")]
         engagements: Option<SectionResponse>,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -2887,6 +2891,12 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
             let (hash, value) = ui_refresh_section(&node, entry.hash.as_deref());
             response.panels.push(SectionResponse { key: entry.key.clone(), hash, value });
         }
+        // 🚧 `tools` intentionally unhandled here: `PluginApp`/`DocumentApp` currently expose no
+        // object-safe `tools()` accessor (mid-refactor elsewhere toward a declarative `mode_tools(...)`
+        // builder — unrelated to this ticket). No puzzle2d scope ever requests `tools: true` (it uses
+        // static mode-level tools only), so `request.tools` is always empty in practice; wire this up
+        // once the tools API refactor lands.
+        let _ = &request.tools;
         if let Some(requested) = &request.engagements {
             let engagements = instance.app.window_engagements(&request.view_state);
             let (hash, value) = ui_refresh_section(&engagements, requested.hash.as_deref());

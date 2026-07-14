@@ -12,14 +12,14 @@ pub mod app_3d {
     use process_3d::{Pose, Process3dOp, ProcessMeasure, ProcessStep, ProcessStepPatch, SolidSpec, Stock, StepOrigin};
     use semio_framework_core::kernel::HostEffect;
     use semio_framework_plugin::{
-        apply_world3d_sun_action, build_world_3d_scene, create_default_layout, mesh_from_indexed_with_face_groups, mesh_from_kind, tool_button,
-        tool_toggle, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, world3d_camera_json, world3d_mesh_id_from_url, world3d_scene,
-        world3d_sun_measures, world3d_selection_json, ActionDescriptor, ActionEmit, App, DocumentApp, DocumentView, MeshData, MeshExporter,
-        MeshImporter, PanelGroup, SurfaceKind, ToolCategory, ToolNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction,
-        UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
-        WindowEngagementOption, WindowEngagementStatus, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-        FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-        FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+        apply_world3d_sun_action, build_world_3d_scene, create_default_layout, mesh_from_indexed_with_face_groups, mesh_from_kind,
+        ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, world3d_camera_json, world3d_mesh_id_from_url, world3d_scene,
+        world3d_sun_measures, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App,
+        DocumentApp, DocumentView, MeshData, MeshExporter, MeshImporter, PanelGroup, SurfaceKind, ToolCategory, ToolDefinition, UiFieldNode,
+        UiInputNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
+        WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowEngagementStatus, WindowMeasure, WorldSunConfig,
+        SET_ACTIVE_TOOL_ACTION_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+        FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     };
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
@@ -170,12 +170,17 @@ pub mod app_3d {
         "rectangle".into()
     }
 
-    fn default_active_tool() -> String {
-        "select".into()
+    /// 🧰 The tool active when the host has not yet set `view_state.active_tool_id`.
+    const PROCESS3D_DEFAULT_TOOL: &str = "select";
+
+    /// 🧰 Resolves the host-owned active tool from session view state, falling back to the default.
+    fn process3d_active_tool(view_state: &ViewState) -> &str {
+        view_state.active_tool_id.as_deref().unwrap_or(PROCESS3D_DEFAULT_TOOL)
     }
 
-    /// 🎛️ Ephemeral view state (selection, camera, active tool, sun) — lives in the app struct, not
-    /// the document, so it never pollutes undo history.
+    /// 🎛️ Ephemeral view state (selection, camera, engagement scratch, sun) — lives in the app struct,
+    /// not the document, so it never pollutes undo history. The active tool is host-owned
+    /// (`view_state.active_tool_id`), never stored here.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase", default)]
     struct Process3dRuntime {
@@ -184,7 +189,6 @@ pub mod app_3d {
         /// 🖱️ Id of the brep face currently picked in the viewport (drag-to-cut/attach target).
         selected_face_id: Option<u32>,
         selection_method: String,
-        active_tool: String,
         engagement_input: String,
         camera: Process3dCamera,
         sun: WorldSunConfig,
@@ -197,7 +201,6 @@ pub mod app_3d {
                 hovered_id: None,
                 selected_face_id: None,
                 selection_method: default_selection_method(),
-                active_tool: default_active_tool(),
                 engagement_input: String::new(),
                 camera: Process3dCamera::default(),
                 sun: WorldSunConfig::default(),
@@ -217,6 +220,18 @@ pub mod app_3d {
         ActionDescriptor { controller_id: PROCESS_3D_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
     }
 
+    /// 🧰 Host effect that programmatically switches the workpiece window's active tool — the active
+    /// tool is host-owned session state (`view_state.active_tool_id`), never a document op.
+    fn set_active_tool_effect(tool: &str) -> HostEffect {
+        HostEffect::SetActiveTool { window_kind_id: PROCESS_3D_PLAY_WINDOW_MAIN.into(), tool_id: tool.into() }
+    }
+
+    /// 📇 A non-palette action declaration (dispatched by UI wiring/keybindings, never surfaced in the
+    /// command palette) with the given execution kind.
+    fn internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
+        ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, kind) }
+    }
+
     fn value_as_vec3(value: &Value) -> Option<[f64; 3]> {
         let array = value.as_array()?;
         Some([array.first()?.as_f64()?, array.get(1)?.as_f64()?, array.get(2)?.as_f64()?])
@@ -230,15 +245,15 @@ pub mod app_3d {
     /// renderer hit-test individual triangles; `engagementSessionActive` gates the ground-click placement
     /// path used by the cut/drill/attach tools; `faceDragActive` gates the push/pull drag gesture, only
     /// while the select tool is active (so a click-to-place tool doesn't also start a face drag).
-    fn process3d_selection_json(runtime: &Process3dRuntime) -> String {
+    fn process3d_selection_json(runtime: &Process3dRuntime, active_tool: &str) -> String {
         let mut value: Value = serde_json::from_str(&world3d_selection_json(&runtime.selection_method, &selected_ids(runtime), runtime.hovered_id.as_deref()))
             .unwrap_or_else(|_| json!({}));
         if let Some(object) = value.as_object_mut() {
-            object.insert("engagementSessionActive".into(), json!(runtime.active_tool != "select"));
+            object.insert("engagementSessionActive".into(), json!(active_tool != "select"));
             object.insert("selectionMode".into(), json!("face"));
             object.insert("targets".into(), json!({ "mesh": true, "face": true, "vertex": false, "edge": false }));
             object.insert("componentIds".into(), json!(runtime.selected_face_id.map(|id| vec![id]).unwrap_or_default()));
-            object.insert("faceDragActive".into(), json!(runtime.active_tool == "select"));
+            object.insert("faceDragActive".into(), json!(active_tool == "select"));
         }
         value.to_string()
     }
@@ -1249,44 +1264,44 @@ pub mod app_3d {
     //#endregion 🔖Panels
 
     //#region 🔖Engagement
-    fn process3d_engagement(fixture: &process_3d::Process3dDocument, runtime: &Process3dRuntime) -> WindowEngagement {
+    fn process3d_engagement(fixture: &process_3d::Process3dDocument, runtime: &Process3dRuntime, active_tool: &str) -> WindowEngagement {
         let len = fixture.steps.len();
         let cursor = fixture.resolved_up_to.unwrap_or(len);
         let volume = processed_volume(fixture).unwrap_or(0.0);
         WindowEngagement {
-            session_active: Some(runtime.active_tool != "select"),
+            session_active: Some(active_tool != "select"),
             options: Some(vec![
                 WindowEngagementOption {
                     id: PROCESS3D_ENGAGEMENT_TOOL_SELECT.into(),
                     label: Some("Select".into()),
                     icon_id: Some("cursor".into()),
-                    pressed: Some(runtime.active_tool == "select"),
+                    pressed: Some(active_tool == "select"),
                     disabled: None,
-                    action: Some(process3d_action("setActiveTool", Some(json!({ "tool": "select" })))),
+                    action: Some(process3d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "select" })))),
                 },
                 WindowEngagementOption {
                     id: PROCESS3D_ENGAGEMENT_TOOL_CUT.into(),
                     label: Some("Cut".into()),
                     icon_id: Some("scissors".into()),
-                    pressed: Some(runtime.active_tool == "cut"),
+                    pressed: Some(active_tool == "cut"),
                     disabled: None,
-                    action: Some(process3d_action("setActiveTool", Some(json!({ "tool": "cut" })))),
+                    action: Some(process3d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "cut" })))),
                 },
                 WindowEngagementOption {
                     id: PROCESS3D_ENGAGEMENT_TOOL_DRILL.into(),
                     label: Some("Drill".into()),
                     icon_id: Some("circle-dot".into()),
-                    pressed: Some(runtime.active_tool == "drill"),
+                    pressed: Some(active_tool == "drill"),
                     disabled: None,
-                    action: Some(process3d_action("setActiveTool", Some(json!({ "tool": "drill" })))),
+                    action: Some(process3d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "drill" })))),
                 },
                 WindowEngagementOption {
                     id: PROCESS3D_ENGAGEMENT_TOOL_ATTACH.into(),
                     label: Some("Attach".into()),
                     icon_id: Some("plus".into()),
-                    pressed: Some(runtime.active_tool == "attach"),
+                    pressed: Some(active_tool == "attach"),
                     disabled: None,
-                    action: Some(process3d_action("setActiveTool", Some(json!({ "tool": "attach" })))),
+                    action: Some(process3d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "attach" })))),
                 },
             ]),
             input: Some(WindowEngagementInput {
@@ -1505,15 +1520,7 @@ pub mod app_3d {
                     let current = doc.projection.resolved_up_to.unwrap_or(len) as i64;
                     ActionEmit::ops(vec![Process3dOp::SetCursor { resolved_up_to: Some((current + delta).clamp(0, len as i64) as usize) }])
                 }
-                "setActiveTool" => {
-                    let tool = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()).unwrap_or("select");
-                    self.runtime.active_tool = match tool {
-                        "cut" => "cut",
-                        "drill" => "drill",
-                        "attach" => "attach",
-                        _ => "select",
-                    }
-                    .into();
+                SET_ACTIVE_TOOL_ACTION_ID => {
                     self.runtime.selected_face_id = None;
                     ActionEmit::default()
                 }
@@ -1525,8 +1532,7 @@ pub mod app_3d {
                 }
                 "engagementAbort" => {
                     self.runtime.engagement_input = String::new();
-                    self.runtime.active_tool = "select".into();
-                    ActionEmit::default()
+                    ActionEmit::effect(set_active_tool_effect("select"))
                 }
                 "engagementSubmit" => {
                     let command = self.runtime.engagement_input.trim().to_lowercase();
@@ -1534,18 +1540,9 @@ pub mod app_3d {
                     let len = doc.projection.steps.len();
                     let current = doc.projection.resolved_up_to.unwrap_or(len);
                     match command.split_whitespace().next() {
-                        Some("cut") => {
-                            self.runtime.active_tool = "cut".into();
-                            ActionEmit::default()
-                        }
-                        Some("drill") => {
-                            self.runtime.active_tool = "drill".into();
-                            ActionEmit::default()
-                        }
-                        Some("attach") => {
-                            self.runtime.active_tool = "attach".into();
-                            ActionEmit::default()
-                        }
+                        Some("cut") => ActionEmit::effect(set_active_tool_effect("cut")),
+                        Some("drill") => ActionEmit::effect(set_active_tool_effect("drill")),
+                        Some("attach") => ActionEmit::effect(set_active_tool_effect("attach")),
                         Some("back") => ActionEmit::ops(vec![Process3dOp::SetCursor { resolved_up_to: Some(current.saturating_sub(1)) }]),
                         Some("forward") => ActionEmit::ops(vec![Process3dOp::SetCursor { resolved_up_to: Some((current + 1).min(len)) }]),
                         Some("all") => ActionEmit::ops(vec![Process3dOp::SetCursor { resolved_up_to: None }]),
@@ -1553,12 +1550,12 @@ pub mod app_3d {
                     }
                 }
                 "worldPointerDown" => {
-                    let tool = self.runtime.active_tool.clone();
+                    let tool = process3d_active_tool(view_state);
                     if tool == "select" {
                         return ActionEmit::default();
                     }
                     if let Some(point) = args.and_then(|value| value.get("position")).and_then(value_as_vec3) {
-                        let measure_kind = match tool.as_str() {
+                        let measure_kind = match tool {
                             "drill" => MeasureKind::Drill,
                             "attach" => MeasureKind::Attach,
                             _ => MeasureKind::Cut,
@@ -1567,8 +1564,9 @@ pub mod app_3d {
                         let origin = StepOrigin { module_id: GEOMETRY_MODULE.id.to_string(), machine_id: machine.id.to_string(), modification_kind_id: kind.id.to_string() };
                         let step = ProcessStep { id: next_step_id(), label: kind.label.to_string(), enabled: true, origin: Some(origin), measure: measure_for_modification(machine, kind, Some(point)) };
                         self.runtime.selected_id = Some(step.id.clone());
-                        self.runtime.active_tool = "select".into();
-                        return ActionEmit::ops(insert_step_ops(doc.projection, step));
+                        let mut emit = ActionEmit::ops(insert_step_ops(doc.projection, step));
+                        emit.effects.push(set_active_tool_effect("select"));
+                        return emit;
                     }
                     ActionEmit::default()
                 }
@@ -1580,7 +1578,7 @@ pub mod app_3d {
                     ActionEmit::default()
                 }
                 "worldFaceDragEnd" => {
-                    if self.runtime.active_tool != "select" {
+                    if process3d_active_tool(view_state) != "select" {
                         return ActionEmit::default();
                     }
                     let normal = args.and_then(|value| value.get("normal")).and_then(value_as_vec3);
@@ -1648,7 +1646,7 @@ pub mod app_3d {
                             world3d_camera_json(self.runtime.camera.position, self.runtime.camera.target, self.runtime.camera.fov),
                             meshes_json,
                             instances_json,
-                            process3d_selection_json(&self.runtime),
+                            process3d_selection_json(&self.runtime, process3d_active_tool(view_state)),
                             &self.runtime.sun,
                         ),
                     )
@@ -1660,31 +1658,8 @@ pub mod app_3d {
             }
         }
 
-        fn tools(&self, _doc: &DocumentView<'_, process_3d::Process3dDocument>, view_state: &ViewState) -> Vec<ToolNode> {
-            let labels = process3d_labels(view_state);
-            let active_tool = self.runtime.active_tool.as_str();
-            vec![
-                tool_toggle("process3d.tool.select", "cursor", labels.select, active_tool == "select", process3d_action("setActiveTool", Some(json!({ "tool": "select" }))))
-                    .with_category(ToolCategory::Selection),
-                tool_toggle("process3d.tool.cut", "scissors", labels.cut, active_tool == "cut", process3d_action("setActiveTool", Some(json!({ "tool": "cut" }))))
-                    .with_category(ToolCategory::Tools),
-                tool_toggle("process3d.tool.drill", "circle-dot", labels.drill, active_tool == "drill", process3d_action("setActiveTool", Some(json!({ "tool": "drill" }))))
-                    .with_category(ToolCategory::Tools),
-                tool_toggle("process3d.tool.attach", "plus", labels.attach, active_tool == "attach", process3d_action("setActiveTool", Some(json!({ "tool": "attach" }))))
-                    .with_category(ToolCategory::Tools),
-                tool_button("process3d.tool.stepBack", "chevron-left", "Step Back", process3d_action("stepCursorBack", None)).with_category(ToolCategory::History),
-                tool_button("process3d.tool.stepForward", "chevron-right", "Step Forward", process3d_action("stepCursorForward", None)).with_category(ToolCategory::History),
-                tool_button("process3d.tool.applyAll", "fast-forward", "Apply All", process3d_action("setCursor", Some(json!({ "value": null })))).with_category(ToolCategory::History),
-                tool_button("process3d.tool.exportStep", "save", "STEP", process3d_action("exportModel", Some(json!({ "format": "step" })))).with_category(ToolCategory::Actions),
-                tool_button("process3d.tool.exportObj", "save", "OBJ", process3d_action("exportModel", Some(json!({ "format": "obj" })))).with_category(ToolCategory::Actions),
-                tool_button("process3d.tool.exportStl", "save", "STL", process3d_action("exportModel", Some(json!({ "format": "stl" })))).with_category(ToolCategory::Actions),
-                tool_button("process3d.tool.exportGlb", "save", "GLB", process3d_action("exportModel", Some(json!({ "format": "glb" })))).with_category(ToolCategory::Actions),
-                tool_button("process3d.tool.load", "folder-open", "Load", process3d_action("loadModelRequest", None)).with_category(ToolCategory::Actions),
-            ]
-        }
-
-        fn window_engagements(&self, doc: &DocumentView<'_, process_3d::Process3dDocument>, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-            HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.into(), process3d_engagement(doc.projection, &self.runtime))])
+        fn window_engagements(&self, doc: &DocumentView<'_, process_3d::Process3dDocument>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+            HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.into(), process3d_engagement(doc.projection, &self.runtime, process3d_active_tool(view_state)))])
         }
 
         fn window_measures(&self, _doc: &DocumentView<'_, process_3d::Process3dDocument>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
@@ -1706,12 +1681,84 @@ pub mod app_3d {
                     "Workpiece",
                     PROCESS_3D_PLAY_BODY_MAIN,
                     SurfaceKind::World3d,
-                    process3d_engagement(&default_document(), &Process3dRuntime::default()),
+                    process3d_engagement(&default_document(), &Process3dRuntime::default(), PROCESS3D_DEFAULT_TOOL),
                 )
                 .default_layout(create_default_layout(&[PROCESS_3D_PLAY_WINDOW_MAIN.into()], "row", None, Some(&["Workpiece".into()])))
                 .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PROCESS_3D_PLAY_BODY_DOCUMENT)
                 .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PROCESS_3D_PLAY_BODY_CATALOGUE)
                 .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PROCESS_3D_PLAY_BODY_INSPECTION)
+                // 🔧 Palette-visible create/mutate actions (staged arg forms attached below).
+                .operation("addStep", "Add Step")
+                .operation("setStock", "Set Stock")
+                .operation("setActiveExample", "Set Active Example")
+                .operation("removeSelectedStep", "Remove Selected Step")
+                // 🐚 Palette-visible host round-trips.
+                .shell_action("exportModel", "Export Model")
+                .shell_action("loadModelRequest", "Load Model…")
+                // 🔧 Internal document mutations dispatched by panel/viewport wiring (not palette-worthy).
+                .action_with(internal_action("setDocument", "Set Document", ActionKind::Operation))
+                .action_with(internal_action("importModelFile", "Import Model File", ActionKind::Operation))
+                .action_with(internal_action("removeStep", "Remove Step", ActionKind::Operation))
+                .action_with(internal_action("moveStep", "Move Step", ActionKind::Operation))
+                .action_with(internal_action("updateStep", "Update Step", ActionKind::Operation))
+                .action_with(internal_action("setStepEnabled", "Set Step Enabled", ActionKind::Operation))
+                .action_with(internal_action("patchInspector", "Patch Inspector", ActionKind::Operation))
+                .action_with(internal_action("worldPointerDown", "World Pointer Down", ActionKind::Operation))
+                .action_with(internal_action("worldFaceDragEnd", "World Face Drag End", ActionKind::Operation))
+                // ⏱️ Document-cursor navigation ops (NOT framework History — they move the replay cursor).
+                .action_with(internal_action("setCursor", "Set Cursor", ActionKind::Operation))
+                .action_with(internal_action("stepCursor", "Step Cursor", ActionKind::Operation))
+                .action_with(internal_action("stepCursorBack", "Step Cursor Back", ActionKind::Operation))
+                .action_with(internal_action("stepCursorForward", "Step Cursor Forward", ActionKind::Operation))
+                // 🎛️ Engagement session command line (a separate system from tool selection).
+                .action_with(internal_action("engagementSubmit", "Engagement Submit", ActionKind::Operation))
+                .action_with(internal_action("engagementInput", "Engagement Input", ActionKind::View))
+                .action_with(internal_action("engagementAbort", "Engagement Abort", ActionKind::View))
+                // 👁️ Ephemeral view state — selection, hover, camera, face picking, sun.
+                .action_with(internal_action("setSelection", "Set Selection", ActionKind::View))
+                .action_with(internal_action("setHover", "Set Hover", ActionKind::View))
+                .action_with(internal_action("setCamera", "Set Camera", ActionKind::View))
+                .action_with(internal_action("worldPick", "World Pick", ActionKind::View))
+                .action_with(internal_action("toggleSun", "Toggle Sun", ActionKind::View))
+                .action_with(internal_action("setSunAzimuth", "Set Sun Azimuth", ActionKind::View))
+                .action_with(internal_action("setSunElevation", "Set Sun Elevation", ActionKind::View))
+                .action_with(internal_action("setSunIntensity", "Set Sun Intensity", ActionKind::View))
+                // 📝 Staged argument forms for the palette-visible create/export actions.
+                .action_args("addStep", vec![
+                    ActionArgDef::select("measure", "Measure", vec![
+                        ActionArgOption::new("cut", "Cut"),
+                        ActionArgOption::new("drill", "Drill"),
+                        ActionArgOption::new("attach", "Attach"),
+                    ]).default_value("cut"),
+                ])
+                .action_args("setStock", vec![
+                    ActionArgDef::select("kind", "Kind", vec![
+                        ActionArgOption::new("box", "Box"),
+                        ActionArgOption::new("cylinder", "Cylinder"),
+                        ActionArgOption::new("sphere", "Sphere"),
+                    ]).default_value("box"),
+                ])
+                .action_args("setActiveExample", vec![
+                    ActionArgDef::select("exampleId", "Example", vec![
+                        ActionArgOption::new(PROCESS3D_EXAMPLE_TIMBER, "Timber Beam Joinery"),
+                        ActionArgOption::new(PROCESS3D_EXAMPLE_PLATE, "Drilled Plate"),
+                        ActionArgOption::new("empty", "Empty"),
+                    ]).required().default_value(PROCESS3D_EXAMPLE_TIMBER),
+                ])
+                .action_args("exportModel", vec![
+                    ActionArgDef::select("format", "Format", vec![
+                        ActionArgOption::new("step", "STEP"),
+                        ActionArgOption::new("obj", "OBJ"),
+                        ActionArgOption::new("stl", "STL"),
+                        ActionArgOption::new("glb", "GLB"),
+                    ]).required().default_value("step"),
+                ])
+                // 🧰 Exclusive tool group scoped to the workpiece window (active tool is host-owned).
+                .tool(ToolDefinition { group: Some("measure".into()), category: Some(ToolCategory::Selection), ..ToolDefinition::new("select", "Select", "cursor") })
+                .tool(ToolDefinition { group: Some("measure".into()), category: Some(ToolCategory::Tools), ..ToolDefinition::new("cut", "Cut", "scissors") })
+                .tool(ToolDefinition { group: Some("measure".into()), category: Some(ToolCategory::Tools), ..ToolDefinition::new("drill", "Drill", "circle-dot") })
+                .tool(ToolDefinition { group: Some("measure".into()), category: Some(ToolCategory::Tools), ..ToolDefinition::new("attach", "Attach", "plus") })
+                .window_kind_tools(PROCESS_3D_PLAY_WINDOW_MAIN, vec!["select".into(), "cut".into(), "drill".into(), "attach".into()])
                 .keybinding("mod+z", "undo")
                 .keybinding("mod+shift+z", "redo")
                 .keybinding("bracketleft", "stepCursorBack")
@@ -1754,6 +1801,12 @@ pub mod app_3d {
 
         fn new_app() -> VcsDocumentApp<Process3dPlayApp> {
             VcsDocumentApp::new(Process3dPlayApp::default())
+        }
+
+        /// 🧰 A session view state with a specific host-owned active tool (mirrors how the shell threads
+        /// `active_tool_id` after a toolbar switch).
+        fn view_with_tool(tool: &str) -> ViewState {
+            ViewState { active_tool_id: Some(tool.into()), ..ViewState::default() }
         }
 
         #[test]
@@ -1885,14 +1938,36 @@ pub mod app_3d {
         }
 
         #[test]
-        fn set_active_tool_updates_runtime_and_tools_pressed_state() {
+        fn set_active_tool_emits_no_operations() {
             let mut app = new_app();
-            app.handle_action("setActiveTool", Some(&json!({ "tool": "cut" })), &ViewState::default(), &meta("local")).expect("set tool");
-            let tools = app.tools(&ViewState::default());
-            let cut_pressed = tools.iter().any(|tool| matches!(tool, ToolNode::Toggle { id, pressed: Some(true), .. } if id == "process3d.tool.cut"));
-            assert!(cut_pressed, "expected the cut tool toggle to report pressed after setActiveTool");
-            let select_pressed = tools.iter().any(|tool| matches!(tool, ToolNode::Toggle { id, pressed: Some(true), .. } if id == "process3d.tool.select"));
-            assert!(!select_pressed, "select toggle must not report pressed while cut is active");
+            let result = app
+                .handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "cut" })), &view_with_tool("cut"), &meta("local"))
+                .expect("set tool");
+            assert!(result.operations.is_empty(), "tool selection is host-owned view state and must never emit document ops or history");
+        }
+
+        #[test]
+        fn engagement_reflects_host_active_tool_pressed_state() {
+            let app = Process3dPlayApp::default();
+            let doc = process_3d::Process3dDocument::default();
+            let engagement = process3d_engagement(&doc, &app.runtime, "cut");
+            let options = engagement.options.expect("engagement options");
+            let cut = options.iter().find(|option| option.id == PROCESS3D_ENGAGEMENT_TOOL_CUT).expect("cut option");
+            assert_eq!(cut.pressed, Some(true), "cut engagement option must report pressed when the host active tool is cut");
+            let select = options.iter().find(|option| option.id == PROCESS3D_ENGAGEMENT_TOOL_SELECT).expect("select option");
+            assert_eq!(select.pressed, Some(false), "select engagement option must not report pressed while cut is active");
+        }
+
+        #[test]
+        fn arg_form_set_stock_emits_ops_reading_kind_arg() {
+            let mut app = new_app();
+            let result = app
+                .handle_action("setStock", Some(&json!({ "kind": "cylinder" })), &ViewState::default(), &meta("local"))
+                .expect("set stock");
+            assert!(!result.operations.is_empty(), "the setStock arg form must materialize into document ops");
+            let document = app.projection().expect("projection");
+            assert!(matches!(document.stock.solid, SolidSpec::Cylinder { .. }), "setStock kind=cylinder must swap the stock solid");
+            assert!(document.steps.is_empty(), "swapping stock resets the step timeline");
         }
 
         fn step_pose(step: &ProcessStep) -> [f64; 3] {
@@ -1904,8 +1979,7 @@ pub mod app_3d {
         #[test]
         fn world_pointer_down_reads_position_key_not_point() {
             let mut app = new_app();
-            app.handle_action("setActiveTool", Some(&json!({ "tool": "cut" })), &ViewState::default(), &meta("local")).expect("set tool");
-            let result = app.handle_action("worldPointerDown", Some(&json!({ "position": [1.0, 2.0, 3.0] })), &ViewState::default(), &meta("local")).expect("pointer down");
+            let result = app.handle_action("worldPointerDown", Some(&json!({ "position": [1.0, 2.0, 3.0] })), &view_with_tool("cut"), &meta("local")).expect("pointer down");
             assert!(!result.operations.is_empty(), "worldPointerDown must read the `position` key the renderer actually sends");
             let document = app.projection().expect("projection");
             let last = document.steps.last().expect("inserted step");
@@ -1913,12 +1987,20 @@ pub mod app_3d {
         }
 
         #[test]
+        fn world_pointer_down_resets_active_tool_to_select() {
+            let mut app = new_app();
+            let result = app.handle_action("worldPointerDown", Some(&json!({ "position": [1.0, 2.0, 3.0] })), &view_with_tool("cut"), &meta("local")).expect("pointer down");
+            assert!(
+                result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::SetActiveTool { tool_id, .. } if tool_id == "select")),
+                "placing a step must hand the host a SetActiveTool(select) effect so the click-to-place tool disengages",
+            );
+        }
+
+        #[test]
         fn repeated_world_pointer_down_places_steps_at_distinct_positions() {
             let mut app = new_app();
-            app.handle_action("setActiveTool", Some(&json!({ "tool": "cut" })), &ViewState::default(), &meta("local")).expect("tool 1");
-            app.handle_action("worldPointerDown", Some(&json!({ "position": [1.0, 0.0, 0.0] })), &ViewState::default(), &meta("local")).expect("pointer 1");
-            app.handle_action("setActiveTool", Some(&json!({ "tool": "cut" })), &ViewState::default(), &meta("local")).expect("tool 2");
-            app.handle_action("worldPointerDown", Some(&json!({ "position": [2.0, 0.0, 0.0] })), &ViewState::default(), &meta("local")).expect("pointer 2");
+            app.handle_action("worldPointerDown", Some(&json!({ "position": [1.0, 0.0, 0.0] })), &view_with_tool("cut"), &meta("local")).expect("pointer 1");
+            app.handle_action("worldPointerDown", Some(&json!({ "position": [2.0, 0.0, 0.0] })), &view_with_tool("cut"), &meta("local")).expect("pointer 2");
             let document = app.projection().expect("projection");
             let last_two: Vec<&ProcessStep> = document.steps.iter().rev().take(2).collect();
             assert_ne!(step_pose(last_two[0]), step_pose(last_two[1]), "repeated clicks at different points must produce distinct step poses");
@@ -2014,11 +2096,10 @@ pub mod app_3d {
         #[test]
         fn world_face_drag_end_ignored_while_a_placement_tool_is_active() {
             let mut app = new_app();
-            app.handle_action("setActiveTool", Some(&json!({ "tool": "cut" })), &ViewState::default(), &meta("local")).expect("set tool");
             let result = app.handle_action(
                 "worldFaceDragEnd",
                 Some(&json!({ "normal": [0.0, 0.0, 1.0], "startPoint": [0.5, 0.5, 1.0], "distance": -0.5 })),
-                &ViewState::default(),
+                &view_with_tool("cut"),
                 &meta("local"),
             ).expect("face drag");
             assert!(result.operations.is_empty(), "worldFaceDragEnd should be a no-op while a placement tool is active, not the select tool");

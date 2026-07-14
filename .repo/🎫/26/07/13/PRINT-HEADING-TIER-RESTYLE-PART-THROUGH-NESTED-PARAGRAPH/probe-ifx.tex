@@ -1,0 +1,16 @@
+\documentclass{article}
+\begin{document}
+\makeatletter
+\def\semio@heading@style@chapter{outline}
+\newcommand{\semio@heading@style@outline@marker}{outline}
+\def\testkind{chapter}
+\edef\semio@heading@style@resolved{\csname semio@heading@style@\testkind\endcsname}
+\typeout{RESOLVED=[\semio@heading@style@resolved]}
+\typeout{MARKER=[\semio@heading@style@outline@marker]}
+\ifx\semio@heading@style@resolved\semio@heading@style@outline@marker
+  \typeout{MATCH}
+\else
+  \typeout{NOMATCH}
+\fi
+\makeatother
+\end{document}

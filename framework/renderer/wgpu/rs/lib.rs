@@ -1675,6 +1675,7 @@ mod tests {
                         icon_id: None,
                         options: WindowOptions::default(),
                         actions: vec![],
+                        tools: vec![],
                         params_schema: None,
                         document_projection_schema: None,
                         input_event_schema: None,
@@ -1693,6 +1694,7 @@ mod tests {
             }],
             keybindings: vec![],
             actions: vec![],
+            tools: vec![],
             named_layouts: vec![],
             default_layout: layout,
             terminologies: vec![],
@@ -1922,6 +1924,156 @@ mod tests {
         assert_eq!(map_marquee_mode(false, true), "subtractive");
         assert_eq!(map_marquee_mode(true, true), "invertive");
     }
+
+    //#region WindowActionsAndToolsTests
+    use semio_framework_core::{
+        ActionArgControl, ActionArgDef, ActionDefinition, ActionKind, ActionRef, ToolDefinition, ToolRef,
+    };
+    use ui_wgpu::{KeyAction, PointerModifiers};
+
+    fn mods(meta: bool, ctrl: bool, shift: bool, alt: bool) -> PointerModifiers {
+        PointerModifiers { meta, ctrl, shift, alt }
+    }
+
+    /// 🧰 Builds a two-window app: window `main` scopes `tool.a`, window `aux` scopes nothing; `tool.b`
+    /// is an orphan (no window references it). Actions: `zeroArg` (no args) + `withArgs` (required text +
+    /// defaulted toggle) scoped to `main`.
+    fn actions_tools_app() -> AppDefinition {
+        let mut app = sample_app(&["main", "aux"], None);
+        app.controller_id = "ctrl".into();
+        app.tools = vec![
+            ToolDefinition::new("tool.a", "Tool A", "icon.a"),
+            ToolDefinition {
+                allows_actions_while_active: true,
+                ..ToolDefinition::new("tool.b", "Tool B", "icon.b")
+            },
+        ];
+        app.actions = vec![
+            ActionDefinition::new("zeroArg", "Zero Arg", ActionKind::View),
+            ActionDefinition {
+                args: vec![
+                    ActionArgDef::text("name", "Name").required(),
+                    ActionArgDef {
+                        default: Some(serde_json::json!(true)),
+                        ..ActionArgDef::toggle("flag", "Flag")
+                    },
+                ],
+                keys: Some("mod+e".into()),
+                ..ActionDefinition::new("withArgs", "With Args", ActionKind::View)
+            },
+        ];
+        // Scope tool.a + both actions to `main`; leave tool.b an orphan referenced by no window.
+        for kind in app.window_kinds.iter_mut() {
+            if kind.id == "main" {
+                kind.tools = vec![ToolRef::new("tool.a")];
+                kind.actions = vec![ActionRef::new("zeroArg"), ActionRef::new("withArgs")];
+            }
+        }
+        app
+    }
+
+    fn shell() -> ShellState {
+        ShellState::new(vec![], "test".into())
+    }
+
+    #[test]
+    fn resolve_window_tools_scopes_explicit_and_orphans() {
+        let app = actions_tools_app();
+        let main = app.window_kinds.iter().find(|k| k.id == "main").unwrap();
+        let aux = app.window_kinds.iter().find(|k| k.id == "aux").unwrap();
+        let main_ids: Vec<&str> = crate::shell::resolve_window_tools(&app, main)
+            .iter()
+            .map(|t| t.id.as_str())
+            .collect();
+        let aux_ids: Vec<&str> = crate::shell::resolve_window_tools(&app, aux)
+            .iter()
+            .map(|t| t.id.as_str())
+            .collect();
+        // `main` gets its explicit tool.a first, then the orphan tool.b; `aux` only sees the orphan.
+        assert_eq!(main_ids, vec!["tool.a", "tool.b"]);
+        assert_eq!(aux_ids, vec!["tool.b"]);
+    }
+
+    #[test]
+    fn key_event_matches_chord_respects_modifiers() {
+        use crate::shell::key_event_matches_chord;
+        let z = KeyAction::Char("z".into());
+        assert!(key_event_matches_chord(&z, &mods(true, false, false, false), "mod+z"));
+        assert!(key_event_matches_chord(&z, &mods(false, true, false, false), "mod+z"));
+        // shift held but not declared → no match; declared shift required.
+        assert!(!key_event_matches_chord(&z, &mods(true, false, true, false), "mod+z"));
+        assert!(key_event_matches_chord(&z, &mods(true, false, true, false), "mod+shift+z"));
+        // plain key must not fire while the accelerator is held.
+        let k = KeyAction::Char("k".into());
+        assert!(key_event_matches_chord(&k, &mods(false, false, false, false), "k"));
+        assert!(!key_event_matches_chord(&k, &mods(true, false, false, false), "k"));
+        assert!(key_event_matches_chord(&KeyAction::Escape, &mods(false, false, false, false), "escape"));
+    }
+
+    #[test]
+    fn required_arg_gates_execution_and_merges_defaults() {
+        let app = actions_tools_app();
+        let defs = &app.actions.iter().find(|a| a.id == "withArgs").unwrap().args;
+        // Nothing staged → required `name` missing → no executable args (P2 gate).
+        assert!(ShellState::resolved_execute_args(defs, &serde_json::Map::new()).is_none());
+        // Stage the required arg → executes, merging the defaulted `flag`.
+        let mut staged = serde_json::Map::new();
+        staged.insert("name".into(), serde_json::json!("hello"));
+        let merged = ShellState::resolved_execute_args(defs, &staged).expect("executable");
+        assert_eq!(merged.get("name"), Some(&serde_json::json!("hello")));
+        assert_eq!(merged.get("flag"), Some(&serde_json::json!(true)));
+    }
+
+    #[test]
+    fn staging_stage_and_reset_roundtrip() {
+        let mut shell = shell();
+        shell.stage_arg("main", "withArgs", "name", serde_json::json!("x"));
+        shell.stage_arg("main", "withArgs", "flag", serde_json::json!(false));
+        let staged = shell.staged_map_for("main", "withArgs");
+        assert_eq!(staged.get("name"), Some(&serde_json::json!("x")));
+        assert_eq!(staged.get("flag"), Some(&serde_json::json!(false)));
+        shell.reset_staged_args("main", "withArgs");
+        assert!(shell.staged_map_for("main", "withArgs").is_empty());
+    }
+
+    #[test]
+    fn tool_activation_toggles_and_switches() {
+        let mut shell = shell();
+        shell.apply_set_active_tool("main", "tool.a");
+        assert_eq!(shell.active_tool_for_window("main"), Some("tool.a"));
+        // Re-selecting the active tool deactivates it (the same update a re-click / Escape performs).
+        shell.apply_set_active_tool("main", "tool.a");
+        assert_eq!(shell.active_tool_for_window("main"), None);
+        // Switching to a different tool activates it.
+        shell.apply_set_active_tool("main", "tool.a");
+        shell.apply_set_active_tool("main", "tool.b");
+        assert_eq!(shell.active_tool_for_window("main"), Some("tool.b"));
+    }
+
+    #[test]
+    fn active_tool_gates_actions_unless_allowed() {
+        let app = actions_tools_app();
+        let mut shell = shell();
+        // No active tool → actions enabled.
+        assert!(shell.actions_enabled_for_window(&app, "main"));
+        // tool.a defaults to `allows_actions_while_active = false` → actions gated.
+        shell.apply_set_active_tool("main", "tool.a");
+        assert!(!shell.actions_enabled_for_window(&app, "main"));
+        // tool.b sets the flag true → actions stay enabled.
+        shell.apply_set_active_tool("main", "tool.a");
+        shell.apply_set_active_tool("main", "tool.b");
+        assert!(shell.actions_enabled_for_window(&app, "main"));
+    }
+
+    #[test]
+    fn action_host_window_id_finds_scoping_window() {
+        let app = actions_tools_app();
+        assert_eq!(
+            crate::shell::action_host_window_id(&app, "withArgs").as_deref(),
+            Some("main")
+        );
+    }
+    //#endregion WindowActionsAndToolsTests
 }
 //#endregion DockTests
 // #endregion dock
@@ -5205,15 +5357,6 @@ impl PluginBridgeEntry {
         }
     }
 
-    pub async fn tools(&self, instance_id: u32, view_state: &ViewState) -> Result<Vec<ToolNode>, String> {
-        match &self.backend {
-            #[cfg(target_arch = "wasm32")]
-            PluginBridgeBackend::Js(handle) => tools_js(handle, instance_id, view_state).await,
-            #[cfg(not(target_arch = "wasm32"))]
-            PluginBridgeBackend::Wasm(runtime) => runtime.tools(instance_id, view_state),
-        }
-    }
-
     pub async fn window_engagements(
         &self,
         instance_id: u32,
@@ -5394,33 +5537,6 @@ async fn render_with_document_js(
     };
     let json = resolved.as_string().ok_or("render not string")?;
     serde_json::from_str(&json).map_err(|err| format!("render parse: {err}"))
-}
-
-#[cfg(target_arch = "wasm32")]
-async fn tools_js(handle: &Rc<JsValue>, instance_id: u32, view_state: &ViewState) -> Result<Vec<ToolNode>, String> {
-    let tools = Reflect::get(handle.as_ref(), &JsValue::from_str("tools"))
-        .ok()
-        .and_then(|v| v.dyn_into::<Function>().ok());
-    let Some(tools) = tools else {
-        return Ok(Vec::new());
-    };
-    let view_json = serde_json::to_string(view_state).map_err(|err| err.to_string())?;
-    let result = tools
-        .call2(
-            &JsValue::NULL,
-            &JsValue::from_f64(instance_id as f64),
-            &JsValue::from_str(&view_json),
-        )
-        .map_err(|_| "tools failed")?;
-    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
-        JsFuture::from(promise.clone())
-            .await
-            .map_err(|_| "tools promise failed")?
-    } else {
-        result
-    };
-    let json = resolved.as_string().ok_or("tools not string")?;
-    serde_json::from_str(&json).map_err(|err| format!("tools parse: {err}"))
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -10535,7 +10651,16 @@ pub struct ShellState {
     pub measures_resize_window_id: Option<String>,
     pub deferred_actions: Vec<ActionDescriptor>,
     pub active_tools: Vec<ToolNode>,
-    pub active_tool_id: Option<String>,
+    /// @emoji 🧰 Host-owned active tool per window kind (never a document field, never a VCS op).
+    /// Replaces the deleted `active_tool_id`/`find_active_tool_id` "first pressed toggle" heuristic.
+    pub active_tool_by_window: HashMap<String, String>,
+    /// @emoji 📇 Per-window Actions-rail fold state (absent = folded, the default).
+    pub action_panel_folded: HashMap<String, bool>,
+    /// @emoji 📇 Per-window expanded action id (the accordion-open staged arg form).
+    pub action_panel_expanded: HashMap<String, String>,
+    /// @emoji 📝 Staged action argument values keyed `"{window_id}:{action_id}"` — edits buffer here
+    /// and never dispatch until Execute (Architecture Decision 8, P2).
+    pub staged_action_args: HashMap<String, serde_json::Map<String, serde_json::Value>>,
     pub sync_backbone_uri: Option<String>,
     pub sync_card_kind: Option<String>,
     pub sync_card_draft: String,
@@ -10555,6 +10680,9 @@ pub struct ShellState {
     pub window_measures: HashMap<String, Vec<WindowMeasure>>,
     pub tool_collection_expanded: HashMap<String, bool>,
     pub contributor_instances: HashMap<String, u32>,
+    /// 🖱️ Last-rendered window body rects per window id — used to apply the active tool's cursor while
+    /// the pointer is over that window's content (Architecture Decision 8, P5).
+    pub window_content_rects: HashMap<String, Rect>,
 }
 //#endregion ShellTypes
 
@@ -10714,7 +10842,10 @@ impl ShellState {
             measures_resize_window_id: None,
             deferred_actions: Vec::new(),
             active_tools: Vec::new(),
-            active_tool_id: None,
+            active_tool_by_window: HashMap::new(),
+            action_panel_folded: HashMap::new(),
+            action_panel_expanded: HashMap::new(),
+            staged_action_args: HashMap::new(),
             sync_backbone_uri: None,
             sync_card_kind: None,
             sync_card_draft: String::new(),
@@ -10730,6 +10861,7 @@ impl ShellState {
             window_measures: HashMap::new(),
             tool_collection_expanded: HashMap::new(),
             contributor_instances: HashMap::new(),
+            window_content_rects: HashMap::new(),
         }
     }
 
@@ -10800,6 +10932,7 @@ impl ShellState {
             let view_state = ViewState {
                 active_mode_id: Some(s_app.default_mode_id.clone()),
                 active_window_kind_id: Some(s_app.window_kinds.first().id.clone()),
+                active_tool_id: None,
                 selection_json: None,
                 panel_json: Some(Self::panel_json(&panel_state)),
                 contributions_json: None,
@@ -10829,6 +10962,7 @@ impl ShellState {
                 view_state: ViewState {
                     active_mode_id: Some(app.default_mode_id.clone()),
                     active_window_kind_id: self.active_window_id.clone(),
+                    active_tool_id: None,
                     selection_json: None,
                     panel_json: None,
                     contributions_json: None,
@@ -11011,6 +11145,9 @@ impl ShellState {
                 .cloned()
                 .ok_or("session plugin missing")?;
             for kind in &session.app.window_kinds {
+                // 🧰 Inject the host-owned active tool for this window kind so the plugin renders its
+                // live-preview overlay for the right tool (Architecture Decision 4).
+                view_state.active_tool_id = self.active_tool_by_window.get(&kind.id).cloned();
                 let node = plugin
                     .render(session.instance_id, &kind.body_key, &view_state)
                     .await?;
@@ -11044,25 +11181,10 @@ impl ShellState {
             let resolved = self.resolve_external_slots(node, &view_state).await?;
             self.panel_ui.insert(tab.id().clone(), resolved);
         }
-        self.active_tools = plugin
-            .tools(session.instance_id, &view_state)
-            .await
-            .unwrap_or_default();
-        if self.active_tools.is_empty() {
-            let active_mode_id = session
-                .view_state
-                .active_mode_id
-                .clone()
-                .or_else(|| Some(session.app.default_mode_id.clone()));
-            self.active_tools = session
-                .app
-                .modes
-                .iter()
-                .find(|mode| Some(&mode.id) == active_mode_id.as_ref())
-                .map(|mode| mode.tools.clone())
-                .unwrap_or_default();
-        }
-        self.active_tool_id = find_active_tool_id(&self.active_tools);
+        // 🧰 The toolbar is derived from the app's declared `AppDefinition.tools` (scoped to the active
+        // window kind) via `ui_wgpu::derive_tool_nodes` — the old per-call `plugin.tools()` fetch and the
+        // `find_active_tool_id` "first pressed toggle" heuristic are gone (Architecture Decision 5).
+        self.active_tools = self.derive_toolbar_nodes(&session);
         self.active_tools.extend(framework_sync_tools(self.sync_backbone_uri.as_deref()));
         self.window_engagements = plugin
             .window_engagements(session.instance_id, &view_state)
@@ -11090,6 +11212,7 @@ impl ShellState {
                             let view_state = ViewState {
                                 active_mode_id: Some(app.default_mode_id.clone()),
                                 active_window_kind_id: Some(app.window_kinds.first().id.clone()),
+                                active_tool_id: None,
                                 selection_json: None,
                                 panel_json: None,
                                 contributions_json: None,
@@ -11660,6 +11783,30 @@ impl ShellState {
         if action.controller_id == "framework.sync" {
             return self.handle_sync_action(action).await;
         }
+        // 🧰 Intercept the framework `setActiveTool` View action to update the host-owned active-tool
+        // map before forwarding to the plugin (which reacts by clearing its live-preview scratch). The
+        // authoritative state is the shell map + the `ViewState.active_tool_id` it injects on render.
+        if action.action == semio_framework_core::SET_ACTIVE_TOOL_ACTION_ID {
+            if let Some(session) = self.session.clone() {
+                if action.controller_id == session.app.controller_id {
+                    if let Some(tool_id) = action
+                        .args
+                        .as_ref()
+                        .and_then(|args| args.get("toolId"))
+                        .and_then(|value| value.as_str())
+                    {
+                        let window_kind_id = action
+                            .args
+                            .as_ref()
+                            .and_then(|args| args.get("windowKindId"))
+                            .and_then(|value| value.as_str())
+                            .map(String::from)
+                            .unwrap_or_else(|| self.active_toolbar_window_kind(&session).id.clone());
+                        self.apply_set_active_tool(&window_kind_id, tool_id);
+                    }
+                }
+            }
+        }
         let Some(session) = self.session.clone() else {
             return Ok(());
         };
@@ -11678,6 +11825,14 @@ impl ShellState {
         let result = plugin
             .handle_action(session.instance_id, &action_json, &session.view_state)
             .await?;
+        // 🧰 A plugin may programmatically switch the active tool via `HostEffect::SetActiveTool`
+        // (Architecture Decision 4/9) — apply it to the host-owned map just like a user click.
+        for effect in &result.requested_effects {
+            if let semio_framework_core::kernel::HostEffect::SetActiveTool { window_kind_id, tool_id } = effect {
+                self.active_tool_by_window
+                    .insert(window_kind_id.clone(), tool_id.clone());
+            }
+        }
         let ops: Vec<String> = result
             .operations
             .iter()
@@ -11895,6 +12050,7 @@ impl ShellState {
         let next_view_state = view_state.unwrap_or_else(|| ViewState {
             active_mode_id: Some(app.default_mode_id.clone()),
             active_window_kind_id: Some(app.window_kinds.first().id.clone()),
+            active_tool_id: None,
             selection_json: None,
             panel_json: Some(Self::panel_json(&panel_state)),
             contributions_json: None,
@@ -12183,6 +12339,15 @@ impl ShellState {
                     }
                 }
             }
+            // 🧾 Flush an in-progress staged-arg edit before any Actions-rail interaction so Execute
+            // merges it (Architecture Decision 8, P2 — "execute flushes any focused text buffer first").
+            if hit.control_id.as_deref().is_some_and(|id| id.starts_with("shell.action."))
+                && input.focused_id.as_deref().is_some_and(|id| {
+                    id.starts_with("shell.action.arginput::") || id.starts_with("shell.action.argvec3::")
+                })
+            {
+                self.commit_focused_input(input).await?;
+            }
             if self.handle_shell_hit(&hit).await? {
                 return Ok(());
             }
@@ -12300,9 +12465,10 @@ impl ShellState {
                         .widget_maps
                         .input_metas
                         .get(id)
-                        .map(|meta| meta.value.as_str())
-                        .unwrap_or("");
-                    input.focus_input(id, seed);
+                        .map(|meta| meta.value.clone())
+                        .or_else(|| self.staged_input_seed(id))
+                        .unwrap_or_default();
+                    input.focus_input(id, &seed);
                 }
             }
         }
@@ -12708,6 +12874,68 @@ impl ShellState {
                 }
                 return Ok(true);
             }
+            id if id.starts_with("shell.action.fold.") => {
+                let window_id = id.trim_start_matches("shell.action.fold.");
+                let folded = self.action_panel_folded.get(window_id).copied().unwrap_or(true);
+                self.action_panel_folded.insert(window_id.to_string(), !folded);
+                return Ok(true);
+            }
+            id if id.starts_with("shell.action.expand::") => {
+                if let Some((window_id, action_id)) =
+                    id.trim_start_matches("shell.action.expand::").split_once("::")
+                {
+                    let open = self.action_panel_expanded.get(window_id).map(String::as_str) == Some(action_id);
+                    if open {
+                        self.action_panel_expanded.remove(window_id);
+                    } else {
+                        self.action_panel_expanded
+                            .insert(window_id.to_string(), action_id.to_string());
+                    }
+                }
+                return Ok(true);
+            }
+            id if id.starts_with("shell.action.reset::") => {
+                if let Some((window_id, action_id)) =
+                    id.trim_start_matches("shell.action.reset::").split_once("::")
+                {
+                    self.reset_staged_args(window_id, action_id);
+                }
+                return Ok(true);
+            }
+            id if id.starts_with("shell.action.argtoggle::") => {
+                let parts: Vec<&str> = id.trim_start_matches("shell.action.argtoggle::").split("::").collect();
+                if let [window_id, action_id, arg_id] = parts.as_slice() {
+                    let current = self
+                        .staged_map_for(window_id, action_id)
+                        .get(*arg_id)
+                        .and_then(|value| value.as_bool())
+                        .or_else(|| self.arg_default(action_id, arg_id).and_then(|value| value.as_bool()))
+                        .unwrap_or(false);
+                    self.stage_arg(window_id, action_id, arg_id, serde_json::Value::Bool(!current));
+                }
+                return Ok(true);
+            }
+            id if id.starts_with("shell.action.argselect::") => {
+                let parts: Vec<&str> = id.trim_start_matches("shell.action.argselect::").split("::").collect();
+                if let [window_id, action_id, arg_id, value] = parts.as_slice() {
+                    self.stage_arg(
+                        window_id,
+                        action_id,
+                        arg_id,
+                        serde_json::Value::String((*value).to_string()),
+                    );
+                }
+                return Ok(true);
+            }
+            id if id.starts_with("shell.action.exec::") => {
+                if let Some((window_id, action_id)) =
+                    id.trim_start_matches("shell.action.exec::").split_once("::")
+                {
+                    let (window_id, action_id) = (window_id.to_string(), action_id.to_string());
+                    self.execute_staged_action(&window_id, &action_id).await?;
+                }
+                return Ok(true);
+            }
             "ui.search.toggle" => {
                 self.search_open = !self.search_open;
                 self.find_open = false;
@@ -13045,6 +13273,12 @@ impl ShellState {
         let Some(id) = input.focused_id.clone() else {
             return Ok(());
         };
+        // 📝 A staged action-arg input writes into the staging map (parsed per the arg's control kind)
+        // instead of dispatching live — Architecture Decision 8, P2 (item 4).
+        if self.commit_staged_input(&id, &input.text_buffer) {
+            input.blur_input();
+            return Ok(());
+        }
         if let Some((vec3_id, axis)) = id.rsplit_once('.') {
             if let Ok(axis_index) = axis.parse::<usize>() {
                 if axis_index < 3 {
@@ -13306,6 +13540,40 @@ impl ShellState {
                 action: None,
             });
         }
+        // 📇 Declared window-scoped actions (Architecture Decision 8, P3 — wgpu previously listed only
+        // keybindings). Zero-arg actions dispatch directly; arg-carrying actions redirect to the hosting
+        // window's Actions rail so they never fire with `args: None`.
+        for action in &session.app.actions {
+            if !action.in_palette
+                || action.kind == semio_framework_core::ActionKind::History
+                || action.id == semio_framework_core::SET_ACTIVE_TOOL_ACTION_ID
+            {
+                continue;
+            }
+            if action.args.is_empty() {
+                items.push(SearchPaletteItem {
+                    id: format!("action.{}", action.id),
+                    label: action.label.clone(),
+                    group: "Actions".into(),
+                    dispatch_action: Some(ActionDescriptor {
+                        controller_id: session.app.controller_id.clone(),
+                        action: action.id.clone(),
+                        args: None,
+                    }),
+                    action: None,
+                });
+            } else {
+                let window_id = action_host_window_id(&session.app, &action.id)
+                    .unwrap_or_else(|| session.app.window_kinds.first().id.clone());
+                items.push(SearchPaletteItem {
+                    id: format!("action.{}", action.id),
+                    label: format!("{} …", action.label),
+                    group: "Actions".into(),
+                    dispatch_action: None,
+                    action: Some(format!("action-panel:{window_id}:{}", action.id)),
+                });
+            }
+        }
         if self.studio_mode {
             for action in ["undo", "redo", "commitCheckpoint"] {
                 items.push(SearchPaletteItem {
@@ -13369,6 +13637,14 @@ impl ShellState {
         } else if let Some(action) = &item.action {
             if let Some(window_id) = action.strip_prefix("window:") {
                 self.active_window_id = Some(window_id.to_string());
+            } else if let Some(rest) = action.strip_prefix("action-panel:") {
+                // 📇 P3 redirect: focus the hosting window, unfold its Actions rail, expand the form.
+                if let Some((window_id, action_id)) = rest.split_once(':') {
+                    self.active_window_id = Some(window_id.to_string());
+                    self.action_panel_folded.insert(window_id.to_string(), false);
+                    self.action_panel_expanded
+                        .insert(window_id.to_string(), action_id.to_string());
+                }
             }
         }
         self.search_open = false;
@@ -13592,8 +13868,76 @@ impl ShellState {
                 _ => {}
             }
         }
+        let idle = input.focused_id.is_none()
+            && self.overlay_state == OverlayState::None
+            && self.sync_card_kind.is_none()
+            && self.dock_drag.is_none();
+        // 🧰 Escape deactivates the active tool for the focused window (P5).
+        if idle && action == ui_wgpu::KeyAction::Escape {
+            if let Some(window_id) = self.active_window_id.clone() {
+                if self.active_tool_by_window.remove(&window_id).is_some() {
+                    self.refresh_ui().await?;
+                    return Ok(());
+                }
+            }
+        }
+        // ⌨️ App-declared keybinding dispatch (Architecture Decision 8, P4) — NET-NEW for the wgpu
+        // shell, which previously only handled hardcoded shell chords. Reserved shell chords still win.
+        if idle && !is_reserved_shell_chord(&action, modifiers) {
+            if let Some(descriptor) = self.match_app_keybinding(&action, modifiers) {
+                self.dispatch_app_keybinding(descriptor).await?;
+                return Ok(());
+            }
+        }
         self.handle_keyboard(action, modifiers, input);
         Ok(())
+    }
+
+    /// ⌨️ The app keybinding matching the current key event, if any.
+    fn match_app_keybinding(
+        &self,
+        action: &ui_wgpu::KeyAction,
+        modifiers: &ui_wgpu::PointerModifiers,
+    ) -> Option<ActionDescriptor> {
+        let session = self.session.as_ref()?;
+        session
+            .app
+            .keybindings
+            .iter()
+            .find(|binding| key_event_matches_chord(action, modifiers, &binding.keys))
+            .map(|binding| binding.action.clone())
+    }
+
+    /// ⌨️ Applies the P4 keybinding rule: arg-less actions dispatch directly; an arg-carrying action's
+    /// hotkey opens its form, or — if that form is already expanded in the active window — executes it
+    /// with the staged/validated args (never silent-fires defaults from a cold keystroke).
+    async fn dispatch_app_keybinding(&mut self, descriptor: ActionDescriptor) -> Result<(), String> {
+        let Some(session) = self.session.clone() else {
+            return Ok(());
+        };
+        let action_def = session
+            .app
+            .actions
+            .iter()
+            .find(|action| action.id == descriptor.action)
+            .cloned();
+        let has_args = action_def.as_ref().is_some_and(|action| !action.args.is_empty());
+        if !has_args {
+            return self.dispatch_action(descriptor).await;
+        }
+        let action_id = action_def.expect("checked has_args").id;
+        let window_id = action_host_window_id(&session.app, &action_id)
+            .unwrap_or_else(|| self.active_toolbar_window_kind(&session).id.clone());
+        let already_expanded = self.active_window_id.as_deref() == Some(window_id.as_str())
+            && self.action_panel_expanded.get(&window_id).map(String::as_str) == Some(action_id.as_str());
+        if already_expanded {
+            self.execute_staged_action(&window_id, &action_id).await
+        } else {
+            self.active_window_id = Some(window_id.clone());
+            self.action_panel_folded.insert(window_id.clone(), false);
+            self.action_panel_expanded.insert(window_id, action_id);
+            self.refresh_ui().await
+        }
     }
 
     fn push_uri(&mut self, uri: String) {
@@ -13919,38 +14263,6 @@ fn footer_tool_label<'a>(label: &'a Option<String>, text: &'a Option<String>, ti
         .unwrap_or(id)
 }
 
-const TOOL_ID_PREFIXES_ALLOWING_ACTIONS_WHILE_ACTIVE: &[&str] = &["cad.play.view."];
-
-fn tool_allows_actions_while_active(tool_id: &str) -> bool {
-    TOOL_ID_PREFIXES_ALLOWING_ACTIONS_WHILE_ACTIVE
-        .iter()
-        .any(|prefix| tool_id.starts_with(prefix))
-}
-
-fn footer_action_gated(section: ToolCategory, active_tool_id: &Option<String>) -> bool {
-    section == ToolCategory::Actions
-        && active_tool_id
-            .as_ref()
-            .is_some_and(|id| !tool_allows_actions_while_active(id))
-}
-
-fn find_active_tool_id(tools: &[ToolNode]) -> Option<String> {
-    for tool in tools {
-        match tool {
-            ToolNode::Toggle { id, pressed, .. } if tool.category() == ToolCategory::Tools && pressed.unwrap_or(false) => {
-                return Some(id.clone());
-            }
-            ToolNode::Collection { children, .. } => {
-                if let Some(id) = find_active_tool_id(children) {
-                    return Some(id);
-                }
-            }
-            _ => {}
-        }
-    }
-    None
-}
-
 fn backbone_kind_from_uri(uri: &str) -> &'static str {
     if uri.starts_with("file://") {
         "file"
@@ -14018,15 +14330,14 @@ fn framework_sync_tools(active_uri: Option<&str>) -> Vec<ToolNode> {
     ]
 }
 
-fn partition_tools_by_category(tools: &[ToolNode]) -> [Vec<ToolNode>; 5] {
-    let mut buckets: [Vec<ToolNode>; 5] = [vec![], vec![], vec![], vec![], vec![]];
+fn partition_tools_by_category(tools: &[ToolNode]) -> [Vec<ToolNode>; 4] {
+    let mut buckets: [Vec<ToolNode>; 4] = [vec![], vec![], vec![], vec![]];
     for tool in tools {
         let idx = match tool.category() {
             ToolCategory::Selection => 0,
             ToolCategory::Tools => 1,
-            ToolCategory::Actions => 2,
-            ToolCategory::History => 3,
-            ToolCategory::Sync => 4,
+            ToolCategory::History => 2,
+            ToolCategory::Sync => 3,
         };
         buckets[idx].push(tool.clone());
     }
@@ -14052,8 +14363,6 @@ fn render_footer_tool_nodes(
     btn_h: f32,
     tools: &[ToolNode],
     collection_expanded: &HashMap<String, bool>,
-    active_tool_id: &Option<String>,
-    section: ToolCategory,
 ) -> f32 {
     for tool in tools {
         match tool {
@@ -14073,29 +14382,26 @@ fn render_footer_tool_nodes(
                 if disabled.unwrap_or(false) {
                     continue;
                 }
-                let action_gated = footer_action_gated(section, active_tool_id);
                 let label_text = footer_tool_label(label, text, title, id);
                 let item = ChromeGroupItem {
                     control_id: "framework.tool.button",
                     icon_id: Some(icon_id.as_str()),
                     label: Some(label_text),
                     active: false,
-                    disabled: action_gated,
+                    disabled: false,
                     kind: HitKind::Button,
                 };
                 let item_w = measure_chrome_group_item(atlas, theme, &item);
                 let rect = Rect::new(x, btn_y, item_w, btn_h);
-                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], !action_gated);
-                if !action_gated {
-                    input.register_hit(HitTarget {
-                        rect,
-                        event: Some(on_press.clone()),
-                        control_id: Some(format!("framework.tool.button.{id}")),
-                        kind: HitKind::Button,
-                        drag_axis: None,
-                        drag_data: None,
-                    });
-                }
+                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
+                input.register_hit(HitTarget {
+                    rect,
+                    event: Some(on_press.clone()),
+                    control_id: Some(format!("framework.tool.button.{id}")),
+                    kind: HitKind::Button,
+                    drag_axis: None,
+                    drag_data: None,
+                });
                 x += item_w + theme.gap_standard * 0.5;
             }
             ToolNode::Toggle {
@@ -14147,7 +14453,6 @@ fn render_footer_tool_nodes(
                 if disabled.unwrap_or(false) {
                     continue;
                 }
-                let action_gated = footer_action_gated(section, active_tool_id);
                 let expanded = collection_expanded.get(id).copied().unwrap_or(false);
                 let label_text = footer_tool_label(label, text, title, id);
                 let item = ChromeGroupItem {
@@ -14155,24 +14460,22 @@ fn render_footer_tool_nodes(
                     icon_id: Some(icon_id.as_str()),
                     label: Some(label_text),
                     active: expanded,
-                    disabled: action_gated,
+                    disabled: false,
                     kind: HitKind::Button,
                 };
                 let item_w = measure_chrome_group_item(atlas, theme, &item);
                 let rect = Rect::new(x, btn_y, item_w, btn_h);
-                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], !action_gated);
-                if !action_gated {
-                    input.register_hit(HitTarget {
-                        rect,
-                        event: None,
-                        control_id: Some(format!("framework.tool.collection.{id}")),
-                        kind: HitKind::Button,
-                        drag_axis: None,
-                        drag_data: None,
-                    });
-                }
+                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
+                input.register_hit(HitTarget {
+                    rect,
+                    event: None,
+                    control_id: Some(format!("framework.tool.collection.{id}")),
+                    kind: HitKind::Button,
+                    drag_axis: None,
+                    drag_data: None,
+                });
                 x += item_w + theme.gap_standard * 0.5;
-                if expanded && !action_gated {
+                if expanded {
                     let leaves: Vec<ToolNode> = children
                         .iter()
                         .filter(|child| !matches!(child, ToolNode::Collection { .. }))
@@ -14189,8 +14492,6 @@ fn render_footer_tool_nodes(
                         btn_h,
                         &leaves,
                         collection_expanded,
-                        active_tool_id,
-                        section,
                     );
                 }
             }
@@ -14274,6 +14575,430 @@ where
         f(draw, overlay)
     }
 }
+
+//#region ActionPanelAndTools
+/// 🧰 Resolves the tools a window kind presents in the toolbar — the tool mirror of
+/// {@link semio_framework_core::resolve_window_actions}: explicit `window_kind.tools` refs in declared
+/// order, plus any app tool referenced by no window kind (an "orphan" appearing on every window — the
+/// scoping fallback that prevents blank toolbars mid-migration, Architecture Decision 8).
+pub(crate) fn resolve_window_tools<'a>(
+    app: &'a semio_framework_core::AppDefinition,
+    window_kind: &semio_framework_core::WindowKindDefinition,
+) -> Vec<&'a semio_framework_core::ToolDefinition> {
+    use std::collections::HashSet;
+    let referenced: HashSet<&str> = app
+        .window_kinds
+        .iter()
+        .flat_map(|window| window.tools.iter().map(|tool_ref| tool_ref.as_str()))
+        .collect();
+    let mut resolved: Vec<&'a semio_framework_core::ToolDefinition> = Vec::new();
+    let mut seen: HashSet<&str> = HashSet::new();
+    for tool_ref in &window_kind.tools {
+        if let Some(tool) = app.tools.iter().find(|tool| tool.id == tool_ref.as_str()) {
+            if seen.insert(tool.id.as_str()) {
+                resolved.push(tool);
+            }
+        }
+    }
+    for tool in &app.tools {
+        if !referenced.contains(tool.id.as_str()) && seen.insert(tool.id.as_str()) {
+            resolved.push(tool);
+        }
+    }
+    resolved
+}
+
+/// 📇 The first window kind whose resolved actions include `action_id` — the window the palette/keybinding
+/// redirect focuses to open an arg-carrying action's form (Architecture Decision 8, P3/P4).
+pub(crate) fn action_host_window_id(
+    app: &semio_framework_core::AppDefinition,
+    action_id: &str,
+) -> Option<String> {
+    app.window_kinds
+        .iter()
+        .find(|kind| {
+            semio_framework_core::resolve_window_actions(app, kind)
+                .iter()
+                .any(|action| action.id == action_id)
+        })
+        .map(|kind| kind.id.clone())
+}
+
+/// 🔢 Formats a number for a staged input/vec3 field — integers without a trailing `.0`.
+fn fmt_num(value: f64) -> String {
+    if value.is_finite() && value == value.trunc() && value.abs() < 1e15 {
+        format!("{}", value as i64)
+    } else {
+        format!("{value}")
+    }
+}
+
+/// 🖱️ Maps a `ToolDefinition.cursor` CSS/winit cursor name onto the shell's {@link ui_wgpu::SemioCursor}.
+fn semio_cursor_from_name(name: &str) -> ui_wgpu::SemioCursor {
+    use ui_wgpu::SemioCursor;
+    match name.trim().to_ascii_lowercase().as_str() {
+        "pointer" => SemioCursor::Pointer,
+        "text" => SemioCursor::Text,
+        "grab" => SemioCursor::Grab,
+        "grabbing" => SemioCursor::Grabbing,
+        "move" => SemioCursor::Move,
+        "crosshair" | "cross" => SemioCursor::Crosshair,
+        "not-allowed" | "notallowed" | "forbidden" => SemioCursor::NotAllowed,
+        "ew-resize" | "col-resize" | "e-resize" | "w-resize" => SemioCursor::EwResize,
+        "ns-resize" | "row-resize" | "n-resize" | "s-resize" => SemioCursor::NsResize,
+        "nwse-resize" | "nw-resize" | "se-resize" => SemioCursor::NwseResize,
+        "nesw-resize" | "ne-resize" | "sw-resize" => SemioCursor::NeswResize,
+        "cell" | "selectable" => SemioCursor::Selectable,
+        _ => SemioCursor::Default,
+    }
+}
+
+/// ⌨️ Whether a key event is one of the hardcoded shell chords (palette/find/panels/nav) that must win
+/// over app-declared keybindings (P4 — "reserved shell chords still win").
+pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::KeyAction, modifiers: &ui_wgpu::PointerModifiers) -> bool {
+    let accelerator = modifiers.meta || modifiers.ctrl;
+    if !accelerator {
+        return false;
+    }
+    match action {
+        ui_wgpu::KeyAction::Char(c) => matches!(c.to_ascii_lowercase().as_str(), "p" | "f" | "b" | "[" | "]"),
+        ui_wgpu::KeyAction::ArrowUp => true,
+        _ => false,
+    }
+}
+
+/// ⌨️ Whether a key event matches a keybinding chord such as `"mod+shift+z"`, `"ctrl+k"`, or `"escape"`.
+/// `"mod"` is the platform accelerator (meta OR ctrl). Declared modifiers must be present and no
+/// undeclared accelerator/shift/alt may be held, so `mod+z` never fires for `mod+shift+z`.
+pub(crate) fn key_event_matches_chord(
+    action: &ui_wgpu::KeyAction,
+    modifiers: &ui_wgpu::PointerModifiers,
+    chord: &str,
+) -> bool {
+    let mut want_mod = false;
+    let mut want_shift = false;
+    let mut want_alt = false;
+    let mut want_ctrl = false;
+    let mut want_meta = false;
+    let mut key_token = String::new();
+    for token in chord.split('+') {
+        match token.trim().to_ascii_lowercase().as_str() {
+            "" => {}
+            "mod" => want_mod = true,
+            "shift" => want_shift = true,
+            "alt" | "option" => want_alt = true,
+            "ctrl" | "control" => want_ctrl = true,
+            "cmd" | "meta" | "super" | "win" => want_meta = true,
+            other => key_token = other.to_string(),
+        }
+    }
+    if key_token.is_empty() {
+        return false;
+    }
+    if modifiers.shift != want_shift || modifiers.alt != want_alt {
+        return false;
+    }
+    let accelerator = modifiers.meta || modifiers.ctrl;
+    let want_accelerator = want_mod || want_ctrl || want_meta;
+    if want_accelerator != accelerator {
+        return false;
+    }
+    match action {
+        ui_wgpu::KeyAction::Char(c) => c.eq_ignore_ascii_case(&key_token),
+        ui_wgpu::KeyAction::Enter => key_token == "enter" || key_token == "return",
+        ui_wgpu::KeyAction::Escape => key_token == "escape" || key_token == "esc",
+        ui_wgpu::KeyAction::Backspace => key_token == "backspace",
+        ui_wgpu::KeyAction::Delete => key_token == "delete" || key_token == "del",
+        ui_wgpu::KeyAction::Tab => key_token == "tab",
+        ui_wgpu::KeyAction::ArrowLeft => key_token == "arrowleft" || key_token == "left",
+        ui_wgpu::KeyAction::ArrowRight => key_token == "arrowright" || key_token == "right",
+        ui_wgpu::KeyAction::ArrowUp => key_token == "arrowup" || key_token == "up",
+        ui_wgpu::KeyAction::ArrowDown => key_token == "arrowdown" || key_token == "down",
+        ui_wgpu::KeyAction::Space(_) => key_token == "space",
+    }
+}
+
+impl ShellState {
+    // #region tool-derivation
+    /// 🧰 The window kind whose tools/actions the shell chrome currently scopes to (the focused window,
+    /// else the view-state's active kind, else the app's first kind).
+    fn active_toolbar_window_kind<'a>(
+        &self,
+        session: &'a ActiveSession,
+    ) -> &'a semio_framework_core::WindowKindDefinition {
+        let active_id = self
+            .active_window_id
+            .as_deref()
+            .or(session.view_state.active_window_kind_id.as_deref());
+        active_id
+            .and_then(|id| session.app.window_kinds.iter().find(|kind| kind.id == id))
+            .unwrap_or_else(|| session.app.window_kinds.first())
+    }
+
+    /// 🧰 Derives the footer toolbar `ToolNode`s from the app's declared tools scoped to the active
+    /// window kind, marking the host-owned active tool pressed (Architecture Decision 5).
+    fn derive_toolbar_nodes(&self, session: &ActiveSession) -> Vec<ToolNode> {
+        if session.app.tools.is_empty() {
+            return Vec::new();
+        }
+        let window_kind = self.active_toolbar_window_kind(session);
+        let resolved = resolve_window_tools(&session.app, window_kind);
+        if resolved.is_empty() {
+            return Vec::new();
+        }
+        let specs: Vec<ui_wgpu::DerivedToolSpec> = resolved
+            .iter()
+            .map(|tool| ui_wgpu::DerivedToolSpec {
+                id: tool.id.clone(),
+                label: tool.label.clone(),
+                icon_id: tool.icon_id.clone(),
+                group: tool.group.clone(),
+                category: tool.category,
+            })
+            .collect();
+        let active = self
+            .active_tool_by_window
+            .get(&window_kind.id)
+            .map(String::as_str);
+        ui_wgpu::derive_tool_nodes(&session.app.controller_id, &specs, active)
+    }
+    // #endregion
+
+    // #region active-tool
+    /// 🧰 Applies a user-driven `setActiveTool`: re-selecting the active tool deactivates it, otherwise
+    /// it becomes the active tool for that window kind (Architecture Decision 4).
+    pub(crate) fn apply_set_active_tool(&mut self, window_kind_id: &str, tool_id: &str) {
+        let already = self
+            .active_tool_by_window
+            .get(window_kind_id)
+            .map(String::as_str)
+            == Some(tool_id);
+        if already {
+            self.active_tool_by_window.remove(window_kind_id);
+        } else {
+            self.active_tool_by_window
+                .insert(window_kind_id.to_string(), tool_id.to_string());
+        }
+    }
+
+    /// 🧰 The active tool id for a window kind, if any.
+    pub(crate) fn active_tool_for_window(&self, window_kind_id: &str) -> Option<&str> {
+        self.active_tool_by_window
+            .get(window_kind_id)
+            .map(String::as_str)
+    }
+
+    /// 🖱️ The cursor the active tool requests while the pointer is over the active window's body — maps
+    /// `ToolDefinition.cursor` onto a {@link ui_wgpu::SemioCursor} (P5). `None` when no tool/cursor applies.
+    fn tool_cursor_override(&self, x: f32, y: f32) -> Option<ui_wgpu::SemioCursor> {
+        let session = self.session.as_ref()?;
+        let window_id = self.active_window_id.as_deref()?;
+        let tool_id = self.active_tool_for_window(window_id)?;
+        let cursor_name = session
+            .app
+            .tools
+            .iter()
+            .find(|tool| tool.id == tool_id)?
+            .cursor
+            .as_deref()?;
+        let rect = self.window_content_rects.get(window_id)?;
+        rect.contains(x, y).then(|| semio_cursor_from_name(cursor_name))
+    }
+
+    /// 🚦 Whether window-scoped actions stay enabled: `true` when no tool is active or the active tool
+    /// declares `allows_actions_while_active` (P5 — replaces the old `TOOL_ID_PREFIXES` whitelist).
+    pub(crate) fn actions_enabled_for_window(
+        &self,
+        app: &semio_framework_core::AppDefinition,
+        window_kind_id: &str,
+    ) -> bool {
+        match self.active_tool_for_window(window_kind_id) {
+            None => true,
+            Some(tool_id) => app
+                .tools
+                .iter()
+                .find(|tool| tool.id == tool_id)
+                .map(|tool| tool.allows_actions_while_active)
+                .unwrap_or(true),
+        }
+    }
+    // #endregion
+
+    // #region staging
+    fn staged_key(window_id: &str, action_id: &str) -> String {
+        format!("{window_id}:{action_id}")
+    }
+
+    pub(crate) fn stage_arg(
+        &mut self,
+        window_id: &str,
+        action_id: &str,
+        arg_id: &str,
+        value: serde_json::Value,
+    ) {
+        self.staged_action_args
+            .entry(Self::staged_key(window_id, action_id))
+            .or_default()
+            .insert(arg_id.to_string(), value);
+    }
+
+    pub(crate) fn staged_map_for(
+        &self,
+        window_id: &str,
+        action_id: &str,
+    ) -> serde_json::Map<String, serde_json::Value> {
+        self.staged_action_args
+            .get(&Self::staged_key(window_id, action_id))
+            .cloned()
+            .unwrap_or_default()
+    }
+
+    pub(crate) fn reset_staged_args(&mut self, window_id: &str, action_id: &str) {
+        self.staged_action_args
+            .remove(&Self::staged_key(window_id, action_id));
+    }
+
+    /// 📝 Parses a focused staged-arg input's buffer per the arg's control kind and writes it into the
+    /// staging map. Returns `true` when `control_id` belongs to a staged input (so the caller stops).
+    fn commit_staged_input(&mut self, control_id: &str, buffer: &str) -> bool {
+        use semio_framework_core::ActionArgControl;
+        let (is_vec3, rest) = if let Some(rest) = control_id.strip_prefix("shell.action.argvec3::") {
+            (true, rest)
+        } else if let Some(rest) = control_id.strip_prefix("shell.action.arginput::") {
+            (false, rest)
+        } else {
+            return false;
+        };
+        let parts: Vec<&str> = rest.split("::").collect();
+        let (Some(window_id), Some(action_id), Some(arg_id)) =
+            (parts.first().copied(), parts.get(1).copied(), parts.get(2).copied())
+        else {
+            return true;
+        };
+        let (window_id, action_id, arg_id) =
+            (window_id.to_string(), action_id.to_string(), arg_id.to_string());
+        if is_vec3 {
+            let axis: usize = parts.get(3).and_then(|token| token.parse().ok()).unwrap_or(0);
+            let mut current: Vec<serde_json::Value> = self
+                .staged_map_for(&window_id, &action_id)
+                .get(&arg_id)
+                .and_then(|value| value.as_array().cloned())
+                .or_else(|| self.arg_default(&action_id, &arg_id).and_then(|value| value.as_array().cloned()))
+                .unwrap_or_else(|| vec![serde_json::json!(0.0), serde_json::json!(0.0), serde_json::json!(0.0)]);
+            while current.len() < 3 {
+                current.push(serde_json::json!(0.0));
+            }
+            if axis < 3 {
+                current[axis] = serde_json::json!(buffer.trim().parse::<f64>().unwrap_or(0.0));
+            }
+            self.stage_arg(&window_id, &action_id, &arg_id, serde_json::Value::Array(current));
+            return true;
+        }
+        let control = self
+            .session
+            .as_ref()
+            .and_then(|session| session.app.actions.iter().find(|action| action.id == action_id))
+            .and_then(|action| action.args.iter().find(|arg| arg.id == arg_id))
+            .map(|arg| arg.control.clone());
+        let value = match control {
+            Some(ActionArgControl::Number { .. }) | Some(ActionArgControl::Slider { .. }) => {
+                serde_json::json!(buffer.trim().parse::<f64>().unwrap_or(0.0))
+            }
+            _ => serde_json::Value::String(buffer.to_string()),
+        };
+        self.stage_arg(&window_id, &action_id, &arg_id, value);
+        true
+    }
+
+    /// 📝 The seed string used when focusing a staged-arg input — its current effective value.
+    fn staged_input_seed(&self, control_id: &str) -> Option<String> {
+        let (is_vec3, rest) = if let Some(rest) = control_id.strip_prefix("shell.action.argvec3::") {
+            (true, rest)
+        } else if let Some(rest) = control_id.strip_prefix("shell.action.arginput::") {
+            (false, rest)
+        } else {
+            return None;
+        };
+        let parts: Vec<&str> = rest.split("::").collect();
+        let window_id = parts.first().copied()?;
+        let action_id = parts.get(1).copied()?;
+        let arg_id = parts.get(2).copied()?;
+        let session = self.session.as_ref()?;
+        let arg = session
+            .app
+            .actions
+            .iter()
+            .find(|action| action.id == action_id)?
+            .args
+            .iter()
+            .find(|arg| arg.id == arg_id)?;
+        let effective = self.effective_arg_value(window_id, action_id, arg);
+        if is_vec3 {
+            let axis: usize = parts.get(3).and_then(|token| token.parse().ok()).unwrap_or(0);
+            let number = effective
+                .as_ref()
+                .and_then(|value| value.as_array())
+                .and_then(|array| array.get(axis))
+                .and_then(|value| value.as_f64())
+                .unwrap_or(0.0);
+            return Some(fmt_num(number));
+        }
+        Some(match effective {
+            Some(serde_json::Value::String(text)) => text,
+            Some(serde_json::Value::Number(num)) => num.to_string(),
+            Some(serde_json::Value::Bool(flag)) => flag.to_string(),
+            Some(other) => other.to_string(),
+            None => String::new(),
+        })
+    }
+
+    /// 🧮 Validated effective args for execution: `None` when a required arg is still unset — the P2
+    /// gate that keeps arg-carrying actions from firing partially (delegates to the core-side pure
+    /// {@link semio_framework_core::missing_required_args}).
+    pub(crate) fn resolved_execute_args(
+        defs: &[semio_framework_core::ActionArgDef],
+        staged: &serde_json::Map<String, serde_json::Value>,
+    ) -> Option<serde_json::Map<String, serde_json::Value>> {
+        let effective = semio_framework_core::effective_action_args(defs, staged);
+        if semio_framework_core::missing_required_args(defs, &effective).is_empty() {
+            Some(effective)
+        } else {
+            None
+        }
+    }
+
+    /// 🚀 Executes a staged action once (P2): validates required args, dispatches exactly one
+    /// `ActionDescriptor` with the merged effective args, and keeps the staged values for tweak-and-
+    /// repeat. No-ops when the active tool gates actions or a required arg is still unset.
+    async fn execute_staged_action(&mut self, window_id: &str, action_id: &str) -> Result<(), String> {
+        let Some(session) = self.session.clone() else {
+            return Ok(());
+        };
+        if !self.actions_enabled_for_window(&session.app, window_id) {
+            return Ok(());
+        }
+        let Some(action) = session.app.actions.iter().find(|action| action.id == action_id).cloned() else {
+            return Ok(());
+        };
+        let staged = self.staged_map_for(window_id, action_id);
+        let Some(effective) = Self::resolved_execute_args(&action.args, &staged) else {
+            return Ok(());
+        };
+        let args = if effective.is_empty() {
+            None
+        } else {
+            Some(serde_json::Value::Object(effective))
+        };
+        self.dispatch_action(ActionDescriptor {
+            controller_id: session.app.controller_id.clone(),
+            action: action_id.to_string(),
+            args,
+        })
+        .await
+    }
+    // #endregion
+}
+//#endregion ActionPanelAndTools
 
 //#region ShellChrome
 impl ShellState {
@@ -14669,16 +15394,15 @@ impl ShellState {
         rx -= theme.gap_standard;
         if let Some(session) = &self.session {
             if session.app.modes.len() > 1 {
-                let mode_control_ids: Vec<String> = session
-                    .app
-                    .modes
+                // 🚧 `modes` is a `NonEmptyVec`, whose `iter()` yields an opaque non-double-ended
+                // iterator — collect before reversing for the right-to-left navbar order.
+                let modes: Vec<&semio_framework_core::ModeDefinition> = session.app.modes.iter().collect();
+                let mode_control_ids: Vec<String> = modes
                     .iter()
                     .rev()
                     .map(|mode| format!("playground.navbar.modes.{}", mode.id))
                     .collect();
-                let mode_items: Vec<ChromeGroupItem<'_>> = session
-                    .app
-                    .modes
+                let mode_items: Vec<ChromeGroupItem<'_>> = modes
                     .iter()
                     .rev()
                     .zip(mode_control_ids.iter())
@@ -14742,17 +15466,19 @@ impl ShellState {
         }
         let btn_h = theme.control_height;
         let btn_y = y + (theme.footer_height - btn_h) * 0.5;
+        // 🧰 Footer sections: Selection · Tools · History · Sync. The former `ToolCategory::Actions`
+        // section is deleted — window-scoped actions now live in the per-window Actions rail
+        // (Architecture Decision 8/9, P6).
         let partitions = partition_tools_by_category(&self.active_tools);
         let sections = [
-            (ToolCategory::Selection, partitions[0].as_slice()),
-            (ToolCategory::Tools, partitions[1].as_slice()),
-            (ToolCategory::Actions, partitions[2].as_slice()),
-            (ToolCategory::History, partitions[3].as_slice()),
-            (ToolCategory::Sync, partitions[4].as_slice()),
+            partitions[0].as_slice(),
+            partitions[1].as_slice(),
+            partitions[2].as_slice(),
+            partitions[3].as_slice(),
         ];
         let mut tool_x = theme.padding_standard;
         let mut first_section = true;
-        for (section, tools) in sections {
+        for tools in sections {
             if tools.is_empty() {
                 continue;
             }
@@ -14771,8 +15497,6 @@ impl ShellState {
                 btn_h,
                 tools,
                 &self.tool_collection_expanded,
-                &self.active_tool_id,
-                section,
             );
         }
         let _ = tool_x;
@@ -15041,7 +15765,9 @@ impl ShellState {
         }
         let placements = self.dock.stack_body_rects(canvas, theme, &window_labels, atlas);
         let show_fallback = placements.is_empty();
+        self.window_content_rects.clear();
         for (_, content, window_id) in placements {
+            self.window_content_rects.insert(window_id.clone(), content);
             let window_kind = session
                 .app
                 .window_kinds
@@ -15082,6 +15808,20 @@ impl ShellState {
                     &kind,
                     measures_outcome.reserve_width,
                     gpu,
+                ) {
+                    window_chip_hits.push(hit);
+                }
+                if let Some(hit) = self.render_window_actions_rail(
+                    draw,
+                    overlay,
+                    atlas,
+                    icons,
+                    input,
+                    theme,
+                    &content,
+                    &window_id,
+                    &session.app,
+                    &kind,
                 ) {
                     window_chip_hits.push(hit);
                 }
@@ -16370,6 +17110,488 @@ impl ShellState {
         render_widget(&node, bounds, &mut ctx);
     }
 
+    // #region ActionsRail
+    /// 📇 Renders a window's Actions rail (Architecture Decision 8, P1) anchored bottom-right — the free
+    /// corner (measures top-right, engagement top-left, toolbar bottom-left). Folded to a chip by
+    /// default; unfolded it lists window-scoped actions in manifest order: zero-arg rows ARE the execute
+    /// button, arg-carrying rows are accordion disclosures over a staged form. Returns the fold chip hit.
+    fn render_window_actions_rail(
+        &mut self,
+        draw: &mut DrawList,
+        overlay: &mut Option<&mut DrawList>,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        content: &Rect,
+        window_id: &str,
+        app: &semio_framework_core::AppDefinition,
+        kind: &semio_framework_core::WindowKindDefinition,
+    ) -> Option<(Rect, String)> {
+        let actions: Vec<semio_framework_core::ActionDefinition> =
+            semio_framework_core::resolve_window_actions(app, kind)
+                .into_iter()
+                .cloned()
+                .collect();
+        if actions.is_empty() {
+            return None;
+        }
+        let inset = theme.gap_standard;
+        let row_h = theme.control_height;
+        let folded = self.action_panel_folded.get(window_id).copied().unwrap_or(true);
+        let enabled = self.actions_enabled_for_window(app, window_id);
+        let expanded_action = self.action_panel_expanded.get(window_id).cloned();
+        (|chrome: &mut DrawList, select_overlay: &mut Option<&mut DrawList>| {
+            if folded {
+                let item = ChromeGroupItem {
+                    control_id: "",
+                    icon_id: Some("chevron-up"),
+                    label: Some("Actions"),
+                    active: false,
+                    disabled: false,
+                    kind: HitKind::Button,
+                };
+                let chip_w = measure_chrome_group_item(atlas, theme, &item);
+                let chip = Rect::new(
+                    content.x + content.w - chip_w - inset,
+                    content.y + content.h - row_h - inset,
+                    chip_w,
+                    row_h,
+                );
+                render_chrome_group(chrome, atlas, icons, input, theme, chip, &[item], false);
+                return Some((chip, format!("shell.action.fold.{window_id}")));
+            }
+            let width = theme
+                .window_measures_default_width
+                .clamp(theme.panel_min_width, theme.panel_max_width)
+                .min(window_overlay_max_width(content.w, inset));
+            let mut body_h = theme.gap_standard;
+            for action in &actions {
+                body_h += row_h;
+                if expanded_action.as_deref() == Some(action.id.as_str()) {
+                    body_h += self.staged_form_height(theme, action);
+                }
+            }
+            let card_h = (theme.panel_header_height + body_h + theme.gap_standard)
+                .min((content.h - inset * 2.0).max(theme.panel_header_height));
+            let rail = Rect::new(
+                content.x + content.w - width - inset,
+                content.y + content.h - card_h - inset,
+                width,
+                card_h,
+            );
+            let glass = chrome.push_glass(
+                [rail.x, rail.y, rail.w, rail.h],
+                theme.border_radius,
+                GlassTier::WindowOptions,
+                theme,
+            );
+            chrome.begin_glass_content(glass);
+            let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
+            chrome.push_solid([header.x, header.y, header.w, header.h], theme.navbar);
+            let fold_item = ChromeGroupItem {
+                control_id: "shell.action.fold",
+                icon_id: Some("chevron-down"),
+                label: Some("Actions"),
+                active: false,
+                disabled: false,
+                kind: HitKind::Button,
+            };
+            let fold_w = measure_chrome_group_item(atlas, theme, &fold_item);
+            render_chrome_group(
+                chrome,
+                atlas,
+                icons,
+                input,
+                theme,
+                Rect::new(header.x, header.y, fold_w, header.h),
+                &[fold_item],
+                true,
+            );
+            input.register_hit(HitTarget {
+                rect: Rect::new(header.x, header.y, fold_w, header.h),
+                event: None,
+                control_id: Some(format!("shell.action.fold.{window_id}")),
+                kind: HitKind::Button,
+                drag_axis: None,
+                drag_data: None,
+            });
+            let mut y = rail.y + theme.panel_header_height + theme.gap_standard;
+            let body_x = rail.x + theme.gap_standard;
+            let body_w = rail.w - theme.gap_standard * 2.0;
+            for action in &actions {
+                let is_expanded = expanded_action.as_deref() == Some(action.id.as_str());
+                let has_args = !action.args.is_empty();
+                let row = Rect::new(body_x, y, body_w, row_h);
+                let icon = if !has_args {
+                    action.icon_id.as_deref()
+                } else if is_expanded {
+                    Some("chevron-down")
+                } else {
+                    Some("chevron-right")
+                };
+                let item = ChromeGroupItem {
+                    control_id: "",
+                    icon_id: icon,
+                    label: Some(action.label.as_str()),
+                    active: is_expanded,
+                    disabled: !enabled,
+                    kind: HitKind::Button,
+                };
+                render_chrome_group(chrome, atlas, icons, input, theme, row, &[item], false);
+                if enabled {
+                    let control_id = if has_args {
+                        format!("shell.action.expand::{window_id}::{}", action.id)
+                    } else {
+                        format!("shell.action.exec::{window_id}::{}", action.id)
+                    };
+                    input.register_hit(HitTarget {
+                        rect: row,
+                        event: None,
+                        control_id: Some(control_id),
+                        kind: HitKind::Button,
+                        drag_axis: None,
+                        drag_data: None,
+                    });
+                }
+                y += row_h;
+                if is_expanded && has_args {
+                    y += self.render_staged_form(
+                        chrome, select_overlay, atlas, icons, input, theme,
+                        Rect::new(body_x, y, body_w, self.staged_form_height(theme, action)),
+                        window_id, action, enabled,
+                    );
+                }
+            }
+            chrome.end_glass_content();
+            None
+        })(draw, overlay)
+    }
+
+    /// 📝 Total height of one action's staged arg form (per-arg fields + the Execute/Reset row).
+    fn staged_form_height(&self, theme: &Theme, action: &semio_framework_core::ActionDefinition) -> f32 {
+        let mut h = theme.gap_standard;
+        for arg in &action.args {
+            h += self.staged_arg_height(theme, arg);
+        }
+        h + theme.control_height + theme.gap_standard
+    }
+
+    fn staged_arg_height(&self, theme: &Theme, arg: &semio_framework_core::ActionArgDef) -> f32 {
+        match arg.control {
+            semio_framework_core::ActionArgControl::Toggle => theme.control_height + theme.gap_standard,
+            _ => theme.control_height * 2.0 + theme.gap_standard,
+        }
+    }
+
+    /// 📝 The effective value of one arg (staged if present, else the declared default).
+    fn effective_arg_value(
+        &self,
+        window_id: &str,
+        action_id: &str,
+        arg: &semio_framework_core::ActionArgDef,
+    ) -> Option<serde_json::Value> {
+        self.staged_action_args
+            .get(&Self::staged_key(window_id, action_id))
+            .and_then(|map| map.get(&arg.id).cloned())
+            .or_else(|| arg.default.clone())
+    }
+
+    fn arg_default(&self, action_id: &str, arg_id: &str) -> Option<serde_json::Value> {
+        self.session
+            .as_ref()?
+            .app
+            .actions
+            .iter()
+            .find(|action| action.id == action_id)?
+            .args
+            .iter()
+            .find(|arg| arg.id == arg_id)?
+            .default
+            .clone()
+    }
+
+    /// 📝 Renders the staged form for one expanded action and returns its consumed height. Every control
+    /// writes to STAGING via shell-owned hit ids (never a live `on_change` dispatch) — P2.
+    fn render_staged_form(
+        &mut self,
+        draw: &mut DrawList,
+        overlay: &mut Option<&mut DrawList>,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        bounds: Rect,
+        window_id: &str,
+        action: &semio_framework_core::ActionDefinition,
+        enabled: bool,
+    ) -> f32 {
+        let row_h = theme.control_height;
+        let mut y = bounds.y + theme.gap_standard;
+        for arg in &action.args {
+            let arg_h = self.staged_arg_height(theme, arg);
+            self.render_staged_arg(
+                draw, overlay, atlas, icons, input, theme,
+                Rect::new(bounds.x, y, bounds.w, arg_h),
+                window_id, &action.id, arg, enabled,
+            );
+            y += arg_h;
+        }
+        // Execute / Reset row.
+        let staged = self.staged_map_for(window_id, &action.id);
+        let executable = Self::resolved_execute_args(&action.args, &staged).is_some();
+        let exec_item = ChromeGroupItem {
+            control_id: "",
+            icon_id: Some("play"),
+            label: Some("Execute"),
+            active: false,
+            disabled: !(enabled && executable),
+            kind: HitKind::Button,
+        };
+        let exec_w = measure_chrome_group_item(atlas, theme, &exec_item);
+        let exec_rect = Rect::new(bounds.x, y, exec_w, row_h);
+        render_chrome_group(draw, atlas, icons, input, theme, exec_rect, &[exec_item], false);
+        if enabled && executable {
+            input.register_hit(HitTarget {
+                rect: exec_rect,
+                event: None,
+                control_id: Some(format!("shell.action.exec::{window_id}::{}", action.id)),
+                kind: HitKind::Button,
+                drag_axis: None,
+                drag_data: None,
+            });
+        }
+        let reset_item = ChromeGroupItem {
+            control_id: "",
+            icon_id: Some("rotate-ccw"),
+            label: Some("Reset"),
+            active: false,
+            disabled: false,
+            kind: HitKind::Button,
+        };
+        let reset_w = measure_chrome_group_item(atlas, theme, &reset_item);
+        let reset_rect = Rect::new(bounds.x + exec_w + theme.gap_standard, y, reset_w, row_h);
+        render_chrome_group(draw, atlas, icons, input, theme, reset_rect, &[reset_item], false);
+        input.register_hit(HitTarget {
+            rect: reset_rect,
+            event: None,
+            control_id: Some(format!("shell.action.reset::{window_id}::{}", action.id)),
+            kind: HitKind::Button,
+            drag_axis: None,
+            drag_data: None,
+        });
+        self.staged_form_height(theme, action)
+    }
+
+    fn render_staged_arg(
+        &mut self,
+        draw: &mut DrawList,
+        _overlay: &mut Option<&mut DrawList>,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        bounds: Rect,
+        window_id: &str,
+        action_id: &str,
+        arg: &semio_framework_core::ActionArgDef,
+        enabled: bool,
+    ) {
+        use semio_framework_core::ActionArgControl;
+        let row_h = theme.control_height;
+        let effective = self.effective_arg_value(window_id, action_id, arg);
+        match &arg.control {
+            ActionArgControl::Toggle => {
+                let on = effective.as_ref().and_then(|v| v.as_bool()).unwrap_or(false);
+                let label = format!("{} · {}", arg.label, if on { "on" } else { "off" });
+                let item = ChromeGroupItem {
+                    control_id: "",
+                    icon_id: Some(if on { "check-square" } else { "square" }),
+                    label: Some(label.as_str()),
+                    active: on,
+                    disabled: !enabled,
+                    kind: HitKind::Button,
+                };
+                let item_w = measure_chrome_group_item(atlas, theme, &item).min(bounds.w);
+                let rect = Rect::new(bounds.x, bounds.y, item_w, row_h);
+                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], false);
+                if enabled {
+                    input.register_hit(HitTarget {
+                        rect,
+                        event: None,
+                        control_id: Some(format!(
+                            "shell.action.argtoggle::{window_id}::{action_id}::{}",
+                            arg.id
+                        )),
+                        kind: HitKind::Button,
+                        drag_axis: None,
+                        drag_data: None,
+                    });
+                }
+            }
+            ActionArgControl::Select { options } => {
+                chrome_text(draw, atlas, input, theme, &arg.label, bounds.x, bounds.y + 14.0, theme.font_size_small, theme.text_muted);
+                let effective_str = effective.as_ref().and_then(|v| v.as_str()).map(String::from);
+                let mut x = bounds.x;
+                let chip_y = bounds.y + row_h;
+                for option in options {
+                    let active = effective_str.as_deref() == Some(option.value.as_str());
+                    let item = ChromeGroupItem {
+                        control_id: "",
+                        icon_id: None,
+                        label: Some(option.label.as_str()),
+                        active,
+                        disabled: !enabled,
+                        kind: HitKind::Button,
+                    };
+                    let item_w = measure_chrome_group_item(atlas, theme, &item);
+                    let rect = Rect::new(x, chip_y, item_w, row_h);
+                    render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], false);
+                    if enabled {
+                        input.register_hit(HitTarget {
+                            rect,
+                            event: None,
+                            control_id: Some(format!(
+                                "shell.action.argselect::{window_id}::{action_id}::{}::{}",
+                                arg.id, option.value
+                            )),
+                            kind: HitKind::Button,
+                            drag_axis: None,
+                            drag_data: None,
+                        });
+                    }
+                    x += item_w + theme.gap_standard;
+                }
+            }
+            ActionArgControl::IconSelect { .. } => {
+                // Icon classifiers are not enumerable at manifest altitude; fall back to a text field.
+                let value = self.staged_arg_display_string(window_id, action_id, arg, input, None);
+                self.render_staged_text_field(
+                    draw, atlas, icons, input, theme, bounds, window_id, action_id, arg, &value, enabled, None,
+                );
+            }
+            ActionArgControl::Vec3 => {
+                chrome_text(draw, atlas, input, theme, &arg.label, bounds.x, bounds.y + 14.0, theme.font_size_small, theme.text_muted);
+                let arr = effective.as_ref().and_then(|v| v.as_array());
+                let field_w = ((bounds.w - theme.gap_standard * 2.0) / 3.0).max(24.0);
+                for axis in 0..3usize {
+                    let control_id = format!(
+                        "shell.action.argvec3::{window_id}::{action_id}::{}::{axis}",
+                        arg.id
+                    );
+                    let focused = input.focused_id.as_deref() == Some(control_id.as_str());
+                    let display = if focused {
+                        input.text_buffer.clone()
+                    } else {
+                        fmt_num(arr.and_then(|a| a.get(axis)).and_then(|v| v.as_f64()).unwrap_or(0.0))
+                    };
+                    let rect = Rect::new(
+                        bounds.x + axis as f32 * (field_w + theme.gap_standard),
+                        bounds.y + row_h,
+                        field_w,
+                        row_h,
+                    );
+                    self.paint_staged_input_box(draw, atlas, input, theme, rect, &display, focused, enabled, &control_id);
+                }
+            }
+            _ => {
+                // Text / Number / Slider → a single focusable input, staged on commit.
+                let control_id = format!("shell.action.arginput::{window_id}::{action_id}::{}", arg.id);
+                let focused = input.focused_id.as_deref() == Some(control_id.as_str());
+                let display = self.staged_arg_display_string(window_id, action_id, arg, input, Some(&control_id));
+                self.render_staged_text_field(
+                    draw, atlas, icons, input, theme, bounds, window_id, action_id, arg, &display, enabled, Some(focused),
+                );
+            }
+        }
+    }
+
+    /// 📝 The current display string of a scalar arg — the live focus buffer if focused, else the
+    /// effective staged/default value.
+    fn staged_arg_display_string(
+        &self,
+        window_id: &str,
+        action_id: &str,
+        arg: &semio_framework_core::ActionArgDef,
+        input: &InputState<ActionDescriptor>,
+        control_id: Option<&str>,
+    ) -> String {
+        if let Some(control_id) = control_id {
+            if input.focused_id.as_deref() == Some(control_id) {
+                return input.text_buffer.clone();
+            }
+        }
+        match self.effective_arg_value(window_id, action_id, arg) {
+            Some(serde_json::Value::String(text)) => text,
+            Some(serde_json::Value::Number(num)) => num.to_string(),
+            Some(serde_json::Value::Bool(flag)) => flag.to_string(),
+            Some(other) => other.to_string(),
+            None => String::new(),
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn render_staged_text_field(
+        &mut self,
+        draw: &mut DrawList,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        bounds: Rect,
+        window_id: &str,
+        action_id: &str,
+        arg: &semio_framework_core::ActionArgDef,
+        display: &str,
+        enabled: bool,
+        focused_override: Option<bool>,
+    ) {
+        let _ = icons;
+        chrome_text(draw, atlas, input, theme, &arg.label, bounds.x, bounds.y + 14.0, theme.font_size_small, theme.text_muted);
+        let control_id = format!("shell.action.arginput::{window_id}::{action_id}::{}", arg.id);
+        let focused = focused_override.unwrap_or_else(|| input.focused_id.as_deref() == Some(control_id.as_str()));
+        let rect = Rect::new(bounds.x, bounds.y + theme.control_height, bounds.w, theme.control_height);
+        self.paint_staged_input_box(draw, atlas, input, theme, rect, display, focused, enabled, &control_id);
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn paint_staged_input_box(
+        &self,
+        draw: &mut DrawList,
+        atlas: &mut FontAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        rect: Rect,
+        display: &str,
+        focused: bool,
+        enabled: bool,
+        control_id: &str,
+    ) {
+        draw.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.input_bg, theme.border_radius);
+        if focused {
+            let hair = theme.stroke_hairline * 2.0;
+            draw.push_solid([rect.x, rect.y + rect.h - hair, rect.w, hair], theme.accent);
+        }
+        let text_color = if enabled { theme.text } else { theme.text_muted };
+        chrome_text(
+            draw, atlas, input, theme, display,
+            rect.x + theme.padding_standard,
+            rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0,
+            theme.font_size_small, text_color,
+        );
+        if enabled {
+            input.register_hit(HitTarget {
+                rect,
+                event: None,
+                control_id: Some(control_id.to_string()),
+                kind: HitKind::Input,
+                drag_axis: None,
+                drag_data: None,
+            });
+        }
+    }
+    // #endregion
+
     fn render_context_menu(
         &self,
         overlay: &mut DrawList,
@@ -16982,7 +18204,7 @@ impl AppRuntime {
         let hit = self
             .input
             .hit_at(self.last_pointer_x, self.last_pointer_y);
-        let cursor = resolve_semio_cursor(
+        let base_cursor = resolve_semio_cursor(
             hit,
             CursorDragState {
                 tree_drag: self.shell.tree_drag.is_some(),
@@ -16992,6 +18214,19 @@ impl AppRuntime {
                 pointer_drag_kind: self.input.drag.kind,
             },
         );
+        // 🖱️ The active tool's cursor overrides generic body cursors while the pointer is over the
+        // window body (P5), but never a specific control cursor (text inputs, resize handles).
+        let cursor = match self.shell.tool_cursor_override(self.last_pointer_x, self.last_pointer_y) {
+            Some(tool_cursor)
+                if matches!(
+                    base_cursor,
+                    SemioCursor::Default | SemioCursor::Grab | SemioCursor::Selectable | SemioCursor::Pointer
+                ) =>
+            {
+                tool_cursor
+            }
+            _ => base_cursor,
+        };
         apply_window_cursor(
             &self.window,
             cursor,

@@ -6,10 +6,10 @@ use sequence_core::{
     SEQUENCE_FIXTURE_SCHEMA,
 };
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
-    build_node_graph_scene, build_text_editor_scene, create_default_layout, tool_button, tool_collection,
-    tool_toggle, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text,
-    ActionEmit, App, ActionDescriptor, AppLabelsOverlay, DocumentApp, DocumentView, NodeGraphScene, TextEditorScene,
-    ToolCategory, ToolNode, UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiToggleNode,
+    build_node_graph_scene, build_text_editor_scene, create_default_layout,
+    ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text,
+    ActionArgDef, ActionArgOption, ActionEmit, App, ActionDescriptor, AppLabelsOverlay, DocumentApp, DocumentView, NodeGraphScene, TextEditorScene,
+    UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiToggleNode,
     UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -551,60 +551,6 @@ fn render_compiled_dag(fixture: &SequenceFixture) -> UiNode {
 }
 //#endregion 🔖Render
 
-//#region 🔖Tools
-fn orientation_arg(orientation: DagLayoutOrientation) -> Value {
-    match orientation {
-        DagLayoutOrientation::LeftRight => json!({ "orientation": "leftRight" }),
-        DagLayoutOrientation::TopBottom => json!({ "orientation": "topBottom" }),
-    }
-}
-
-fn edit_tools(runtime: &SequencePlayRuntime, labels: &SequenceLabels) -> Vec<ToolNode> {
-    let orientation = runtime.orientation;
-    vec![
-        tool_collection(
-            "sequence-tools-execution",
-            "play",
-            labels.run,
-            vec![
-                tool_button("sequence-tools-run", "play", labels.run, sequence_action("run", None)),
-                tool_button("sequence-tools-stop", "square", labels.stop, sequence_action("stop", None)),
-            ],
-        )
-        .with_category(ToolCategory::Actions),
-        tool_button(
-            "sequence-tools-reorganize",
-            "refresh-cw",
-            labels.reorganize,
-            sequence_action("reorganize", None),
-        )
-        .with_category(ToolCategory::Actions),
-        tool_collection(
-            "sequence-tools-orientation",
-            "layout-grid",
-            labels.layout,
-            vec![
-                tool_toggle(
-                    "sequence-tools-orientation-lr",
-                    "arrow-right",
-                    labels.left_to_right,
-                    orientation == DagLayoutOrientation::LeftRight,
-                    sequence_action("setOrientation", Some(orientation_arg(DagLayoutOrientation::LeftRight))),
-                ),
-                tool_toggle(
-                    "sequence-tools-orientation-tb",
-                    "arrow-down",
-                    labels.top_to_bottom,
-                    orientation == DagLayoutOrientation::TopBottom,
-                    sequence_action("setOrientation", Some(orientation_arg(DagLayoutOrientation::TopBottom))),
-                ),
-            ],
-        )
-        .with_category(ToolCategory::Tools),
-    ]
-}
-//#endregion 🔖Tools
-
 //#region 🔖SequencePlayApp
 #[derive(Default)]
 struct SequencePlayApp {
@@ -684,11 +630,7 @@ impl DocumentApp for SequencePlayApp {
                     .and_then(|value| value.as_str())
                     .and_then(|json| serde_json::from_str(json).ok())
                 {
-                    return ActionEmit {
-                        ops: vec![SequenceOp::SetCamera { camera }],
-                        coalesce_key: Some("camera".into()),
-                        ..Default::default()
-                    };
+                    return ActionEmit::amend(vec![SequenceOp::SetCamera { camera }], "camera");
                 }
                 ActionEmit::default()
             }
@@ -870,10 +812,6 @@ impl DocumentApp for SequencePlayApp {
         }
     }
 
-    fn tools(&self, _doc: &DocumentView<'_, SequenceFixture>, view_state: &ViewState) -> Vec<ToolNode> {
-        edit_tools(&self.runtime, sequence_labels(view_state))
-    }
-
     fn render(&self, body_key: &str, doc: &DocumentView<'_, SequenceFixture>, view_state: &ViewState) -> UiNode {
         let fixture = doc.projection;
         let labels = sequence_labels(view_state);
@@ -959,7 +897,6 @@ fn create_sequence_app() -> App {
                 PanelGroup::Details,
                 SEQUENCE_PLAY_BODY_INSPECTOR,
             )
-            .mode_tools("edit", edit_tools(&SequencePlayRuntime::default(), &SEQUENCE_LABELS_NATIVE_EN))
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
             .operation("addStep", "Add Step")
             .operation("addStepToSlot", "Add Step To Slot")
@@ -983,6 +920,22 @@ fn create_sequence_app() -> App {
             .view_action("setOrientation", "Set Orientation")
             .view_action("run", "Run")
             .view_action("stop", "Stop")
+            // 📝 Staged argument forms for the panel-visible create + layout actions.
+            .action_args("addStep", vec![
+                ActionArgDef::select("kind", "Kind", vec![
+                    ActionArgOption::new("state.set", "Set State"),
+                    ActionArgOption::new("log.print", "Print"),
+                    ActionArgOption::new("control.if", "If"),
+                    ActionArgOption::new("control.while", "While"),
+                    ActionArgOption::new("math.add", "Add"),
+                ]).default_value("log.print"),
+            ])
+            .action_args("setOrientation", vec![
+                ActionArgDef::select("orientation", "Orientation", vec![
+                    ActionArgOption::new("leftRight", "Left to Right"),
+                    ActionArgOption::new("topBottom", "Top to Bottom"),
+                ]).required(),
+            ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )

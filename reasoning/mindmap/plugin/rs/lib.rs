@@ -788,11 +788,10 @@ pub mod app_wires {
                     patch.insert("x".into(), json!(cur_x + dx));
                     patch.insert("y".into(), json!(cur_y + dy));
                     self.runtime.drag = Some(WiresDragState { node_id: drag.node_id.clone(), last_x: x, last_y: y });
-                    ActionEmit {
-                        ops: vec![MindmapWiresOp::PatchNode { node_id: drag.node_id.clone(), patch }],
-                        coalesce_key: Some(format!("drag:{}", drag.node_id)),
-                        ..Default::default()
-                    }
+                    ActionEmit::amend(
+                        vec![MindmapWiresOp::PatchNode { node_id: drag.node_id.clone(), patch }],
+                        format!("drag:{}", drag.node_id),
+                    )
                 }
                 _ => ActionEmit::default(),
             }

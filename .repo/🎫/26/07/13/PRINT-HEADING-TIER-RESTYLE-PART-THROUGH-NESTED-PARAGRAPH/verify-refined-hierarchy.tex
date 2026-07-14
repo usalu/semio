@@ -1,0 +1,23 @@
+\documentclass[type=report,theme=light,language=de]{semio}
+\title{Verify Refined Hierarchy}
+\addbibresource{verify-refined-hierarchy.bib}
+\begin{document}
+\maketitle
+\tableofcontents
+\part{Part Level}
+\chapter{Chapter Level}
+\section{Section Level}
+\subsection{Subsection Level}
+\subsubsection{Subsubsection Level}
+\paragraph{Paragraph Level}
+\subparagraph{Subparagraph Level}
+\begin{SemioNest}
+\paragraph{SubSubparagraph Level}
+\begin{SemioNest}
+\paragraph{SubSubSubparagraph Level}
+\begin{SemioNest}
+\paragraph{Deeper Level Should Freeze}
+\end{SemioNest}
+\end{SemioNest}
+\end{SemioNest}
+\end{document}

@@ -4,11 +4,11 @@ use imperative_core::{default_document, Dictionary, ImperativeDocument, Imperati
 use imperative_engine::Step;
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_table_scene, build_text_editor_scene, create_stack_layout, ui_declarative_sections_to_tree,
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, ActionEmit, App, AppLabelsOverlay,
-    DocumentApp, DocumentView, TableScene, TextEditorScene, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
-    ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDescriptor,
+    ActionEmit, App, AppLabelsOverlay, DocumentApp, DocumentView, TableScene, TextEditorScene, UiNode,
+    UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -540,6 +540,29 @@ fn create_imperative_app() -> App {
                 PanelGroup::Details,
                 IMPERATIVE_PLAY_BODY_INSPECTOR,
             )
+            // 🔧 Document-mutating step edits — dispatched as VCS operations with a true inverse.
+            // The `*At` variants address a nested body via owner/slot args (drag-and-drop into blocks).
+            .operation("addStep", "Add Step")
+            .operation("addStepAt", "Add Step At")
+            .operation("removeStep", "Remove Step")
+            .operation("removeStepAt", "Remove Step At")
+            .operation("moveStep", "Move Step")
+            .operation("moveStepAt", "Move Step At")
+            .operation("setStepParams", "Set Step Params")
+            .operation("setStepParamsAt", "Set Step Params At")
+            // 👁️ Ephemeral view state / runtime effect — selection is scratch, `run` evaluates into runtime.
+            .view_action("setSelection", "Set Selection")
+            .view_action("run", "Run")
+            // 📝 Staged argument form for the panel-visible create action (the step kind is a choice).
+            .action_args("addStep", vec![
+                ActionArgDef::select("kind", "Kind", vec![
+                    ActionArgOption::new("state.set", "Set State"),
+                    ActionArgOption::new("log.print", "Print Log"),
+                    ActionArgOption::new("control.if", "If"),
+                    ActionArgOption::new("control.while", "While"),
+                    ActionArgOption::new("math.add", "Add"),
+                ]).default_value("log.print"),
+            ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
@@ -572,11 +595,31 @@ mod tests {
         VcsDocumentApp::new(ImperativePlayApp::default())
     }
 
+    /// 🧬 A wrapper carrying the real action registry so `addStep`'s `kind` default materializes and the
+    /// View-kind `run` action is held to the no-ops contract.
+    fn new_app_with_registry() -> VcsDocumentApp<ImperativePlayApp> {
+        use semio_framework_plugin::app::AppActionRegistry;
+        let definition = create_imperative_app().definition;
+        VcsDocumentApp::with_registry(ImperativePlayApp::default(), AppActionRegistry::from_definition(&definition))
+    }
+
     #[test]
     fn app_definition_builds_without_panicking() {
         let app = create_imperative_app();
         assert_eq!(app.definition.id, IMPERATIVE_PLAY_APP_ID);
         assert!(app.definition.keybindings.iter().any(|binding| binding.action.action == "undo"));
+    }
+
+    #[test]
+    fn add_step_materializes_kind_default_and_run_emits_no_ops() {
+        let mut app = new_app_with_registry();
+        // addStep fired with no args: the declared `kind` default ("log.print") must be materialized.
+        app.handle_action("addStep", None, &ViewState::default(), &meta("local")).expect("add step");
+        let document = app.projection().expect("materialize projection");
+        assert_eq!(document.path.steps.last().unwrap().kind, "log.print", "kind default materialized from the registry");
+        // `run` is a View-kind action: under registry enforcement it must not emit document operations.
+        let result = app.handle_action("run", None, &ViewState::default(), &meta("local")).expect("run");
+        assert!(result.operations.is_empty(), "run evaluates into runtime, never the document");
     }
 
     #[test]

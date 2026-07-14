@@ -8,7 +8,8 @@ use forms::{
 use semio_framework_plugin::{SurfaceKind,
     create_default_layout,
     ui_external_slot, ui_image, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
-    ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionEmit, App, Contribution,
+    ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption,
+    ActionDefinition, ActionKind, ActionEmit, App, Contribution,
     DocumentApp, DocumentView, HostEffect, PanelGroup, ActionDescriptor, UiButtonNode,
     UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode,
     UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
@@ -1849,11 +1850,7 @@ impl DocumentApp for FormsPlayApp {
                     _ => return ActionEmit::default(),
                 };
                 self.runtime.try_values.clear();
-                ActionEmit {
-                    ops: vec![FormOp::UpdateStep { step }],
-                    coalesce_key: Some(format!("patch-step:{step_id}:{field}")),
-                    ..Default::default()
-                }
+                ActionEmit::amend(vec![FormOp::UpdateStep { step }], format!("patch-step:{step_id}:{field}"))
             }
             "removeStep" => {
                 let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -1881,13 +1878,10 @@ impl DocumentApp for FormsPlayApp {
             }
             "updateForm" | "updateProtocol" => {
                 let title = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
-                ActionEmit {
-                    ops: vec![FormOp::UpdateProtocol {
-                        title: Some(title.to_string()).filter(|title| !title.is_empty()),
-                    }],
-                    coalesce_key: Some("update-protocol".into()),
-                    ..Default::default()
-                }
+                ActionEmit::amend(
+                    vec![FormOp::UpdateProtocol { title: Some(title.to_string()).filter(|title| !title.is_empty()) }],
+                    "update-protocol",
+                )
             }
             "addQuestion" | "addBlock" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("text");
@@ -1953,11 +1947,7 @@ impl DocumentApp for FormsPlayApp {
                 if ops.is_empty() {
                     return ActionEmit::default();
                 }
-                ActionEmit {
-                    ops,
-                    coalesce_key: Some(format!("patch:{field}:{}", question_ids.join(","))),
-                    ..Default::default()
-                }
+                ActionEmit::amend(ops, format!("patch:{field}:{}", question_ids.join(",")))
             }
             "patchQuestionOptions" => {
                 let question_ids: Vec<String> = args
@@ -1979,11 +1969,7 @@ impl DocumentApp for FormsPlayApp {
                 if ops.is_empty() {
                     return ActionEmit::default();
                 }
-                ActionEmit {
-                    ops,
-                    coalesce_key: Some(format!("patch-option:{option_value}:{field}")),
-                    ..Default::default()
-                }
+                ActionEmit::amend(ops, format!("patch-option:{option_value}:{field}"))
             }
             "addQuestionOption" => {
                 let question_id = args.and_then(|value| value.get("questionId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -2017,11 +2003,7 @@ impl DocumentApp for FormsPlayApp {
                     .cloned()
                     .unwrap_or(Value::Null);
                 match patch_vector_field(spec, question_id, field_key, field, &raw_value) {
-                    Some(op) => ActionEmit {
-                        ops: vec![op],
-                        coalesce_key: Some(format!("patch-vector:{question_id}:{field_key}:{field}")),
-                        ..Default::default()
-                    },
+                    Some(op) => ActionEmit::amend(vec![op], format!("patch-vector:{question_id}:{field_key}:{field}")),
                     None => ActionEmit::default(),
                 }
             }
@@ -2184,9 +2166,15 @@ fn create_forms_app() -> App {
             .operation("addVectorField", "Add Vector Field")
             .operation("removeVectorField", "Remove Vector Field")
             .operation("moveQuestion", "Move Question")
+            .operation("moveStep", "Move Step")
+            .operation("removeStep", "Remove Step")
+            .operation("patchStep", "Patch Step")
+            .operation("updateForm", "Update Form")
+            .operation("updateProtocol", "Update Protocol")
             .operation("dropQuestionKind", "Drop Question Kind")
             .operation("setActiveExample", "Set Active Example")
-            .operation("setSpecJson", "Set Spec JSON")
+            // 🛠️ Dev-only whole-spec import — kept out of the command palette, staged JSON form.
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setSpecJson", "Set Spec JSON", ActionKind::Operation) })
             .view_action("setSelection", "Set Selection")
             .view_action("setTryValue", "Set Try Value")
             .view_action("setTryValues", "Set Try Values")
@@ -2197,6 +2185,23 @@ fn create_forms_app() -> App {
             .view_action("editEngagementInput", "Edit Engagement Input")
             .view_action("tryEngagementInput", "Try Engagement Input")
             .shell_action("exportFixture", "Export Fixture")
+            // 📝 Staged argument forms for the panel-visible create/switch actions.
+            .action_args("addQuestion", vec![
+                ActionArgDef::select(
+                    "kind",
+                    "Kind",
+                    FORM_BUILTIN_KINDS.iter().map(|kind| ActionArgOption::new(*kind, *kind)).collect(),
+                )
+                .default_value("text"),
+            ])
+            .action_args("setActiveExample", vec![
+                ActionArgDef::select("exampleId", "Example", vec![
+                    ActionArgOption::new("default", "Default"),
+                    ActionArgOption::new("onboarding", "Onboarding"),
+                    ActionArgOption::new("building-component", "Building Component"),
+                ]).default_value("default"),
+            ])
+            .action_args("setSpecJson", vec![ActionArgDef::text("json", "Spec JSON")])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .default_layout(create_default_layout(
@@ -2238,6 +2243,27 @@ mod tests {
 
     fn new_app() -> VcsDocumentApp<FormsPlayApp> {
         VcsDocumentApp::new(FormsPlayApp::default())
+    }
+
+    /// 🧬 A wrapper carrying the real action registry so `addQuestion`'s declared `kind` default materializes.
+    fn new_app_with_registry() -> VcsDocumentApp<FormsPlayApp> {
+        use semio_framework_plugin::app::AppActionRegistry;
+        let definition = create_forms_app().definition;
+        VcsDocumentApp::with_registry(FormsPlayApp::default(), AppActionRegistry::from_definition(&definition))
+    }
+
+    #[test]
+    fn add_question_materializes_kind_default() {
+        let mut app = new_app_with_registry();
+        let steps_before = app.projection().expect("projection").steps.len();
+        assert!(steps_before > 0, "seeded fixture has at least one step to receive the question");
+        // addQuestion fired with no args: the declared `kind` default ("text") must be materialized host-side.
+        app.handle_action("addQuestion", None, &ViewState::default(), &meta("local")).expect("add question");
+        let spec = app.projection().expect("projection");
+        assert!(
+            flatten_questions(&spec).iter().any(|(_, question)| question.kind == "text"),
+            "kind default materialized from the registry"
+        );
     }
 
     fn seed_example(app: &mut VcsDocumentApp<FormsPlayApp>, example_id: &str) {

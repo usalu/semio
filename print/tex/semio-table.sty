@@ -212,9 +212,9 @@
     {\csname semio@#1@header@pages\endcsname}%
 }
 
-\newcommand{\semio@glossary@table@header}{\semio@termlist@table@header{glossary}}
+\newcommand{\semio@glossary@table@header}{\semio@termlist@table@header@long@repeat{glossary}}
 \newcommand{\semio@glossary@table@header@long@repeat}{\semio@termlist@table@header@long@repeat{glossary}}
-\newcommand{\semio@abbreviations@table@header}{\semio@termlist@table@header{abbreviations}}
+\newcommand{\semio@abbreviations@table@header}{\semio@termlist@table@header@long@repeat{abbreviations}}
 \newcommand{\semio@abbreviations@table@header@long@repeat}{\semio@termlist@table@header@long@repeat{abbreviations}}
 
 \newcommand{\semio@table@long@render}[4]{%
@@ -239,8 +239,7 @@
   \endfirsthead
   #3%
   \endhead
-  \endfoot
-  \endlastfoot
+  \noalign{\vskip-\semio@table@body@height}%
   #4%
   \end{longtable}%
   \endgroup

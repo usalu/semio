@@ -18,11 +18,10 @@ use semio_framework_plugin::{PanelGroup,
     build_node_graph_scene, build_text_editor_scene, build_virtual_file_system_scene,
     create_default_layout, create_tab_stack_layout, host_now_ms,
     component::layout::MeasureSelectItem,
-    component::layout::WindowEngagementStatus, tool_button, tool_collection, ui_declarative_sections_to_tree,
+    component::layout::WindowEngagementStatus, ui_declarative_sections_to_tree,
     ui_inspector_all_equal, ui_text,
-    ActionEmit, DocumentApp, DocumentView, HostEffect,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, HostEffect,
     App, ActionDescriptor, NodeGraphScene, PluginBundle, SurfaceKind, TextEditorScene,
-    ToolCategory,
     UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiSectionNode,
     UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, VirtualFileSystemScene,
@@ -2711,47 +2710,12 @@ fn media_graph_measures(runtime: &StudioRuntimeState, instances: &[OsAppInstance
     }]
 }
 
-fn home_create_tools() -> Vec<semio_framework_plugin::ToolNode> {
-    let mut children = vec![
-        tool_button(
-            "s-home.create.temporary",
-            "zap",
-            "Temporary",
-            s_home_action("createStudio", Some(json!({ "kind": "temporary" }))),
-        ),
-        tool_button(
-            "s-home.create.file",
-            "file-json",
-            "File",
-            s_home_action("createStudio", Some(json!({ "kind": "file" }))),
-        ),
-    ];
-    #[cfg(not(target_arch = "wasm32"))]
-    children.push(tool_button(
-        "s-home.create.folder",
-        "folder",
-        "Folder",
-        s_home_action("createStudio", Some(json!({ "kind": "folder" }))),
-    ));
-    vec![
-        tool_collection("s-home.create", "plus", "Create", children).with_category(ToolCategory::Actions),
-        tool_button(
-            "s-home.import",
-            "upload",
-            "Import Studio",
-            s_home_action("importStudio", None),
-        )
-        .with_category(ToolCategory::Actions),
-    ]
-}
-
 fn create_home_app() -> App {
     let mut app = App::from_builder(
         App::builder(S_HOME_APP_ID, "Home").document(["semio", "s", "home"])
             .icon_id("home")
             .mode("explore", "Explore")
             .default_mode_id("explore")
-            .mode_tools("explore", home_create_tools())
             .window_kind(S_HOME_WINDOW, "Studios", S_HOME_BODY, SurfaceKind::Canvas2d)
             .default_layout(create_tab_stack_layout(
                 &[S_HOME_WINDOW.into()],
@@ -2815,25 +2779,6 @@ fn create_studio_app() -> App {
             S_PLAY_INSPECTOR_BODY_KEY,
         )
         .default_layout(studio_play_layout())
-        .mode_tools(
-            "main",
-            vec![tool_collection(
-                "s-play.history",
-                "history",
-                "History",
-                vec![
-                    tool_button("s-play.undo", "undo-2", "Undo", s_play_action("undo", None)),
-                    tool_button("s-play.redo", "redo-2", "Redo", s_play_action("redo", None)),
-                    tool_button(
-                        "s-play.checkpoint",
-                        "git-commit-horizontal",
-                        "Checkpoint",
-                        s_play_action("commitCheckpoint", None),
-                    ),
-                ],
-            )
-            .with_category(ToolCategory::History)],
-        )
         .operation("setParameter", "Set Parameter")
         .operation("patchParameter", "Patch Parameter")
         .operation("addParameter", "Add Parameter")
@@ -2855,22 +2800,37 @@ fn create_studio_app() -> App {
         .operation("reorganizeMediaGraph", "Reorganize Media Graph")
         .operation("mediaGraphEngagementSubmit", "Media Graph Engagement Submit")
         .operation("compiledDagEngagementSubmit", "Compiled DAG Engagement Submit")
+        .operation("nodeGraphEdit", "Edit Media Graph")
         .view_action("setActivePanelTab", "Set Active Panel Tab")
         .view_action("selectInstance", "Select Instance")
         .view_action("nodeGraphSelect", "Select Graph Node")
         .view_action("setMediaNodeSelection", "Set Media Node Selection")
         .view_action("nodeGraphHover", "Hover Graph Node")
         .view_action("textHover", "Text Hover")
+        .view_action("nodeGraphViewport", "Set Graph Viewport")
+        .view_action("presenceHeartbeat", "Presence Heartbeat")
         .view_action("setAppInstanceSelection", "Set App Instance Selection")
         .view_action("mediaGraphEngagementInput", "Media Graph Engagement Input")
         .view_action("compiledDagEngagementInput", "Compiled DAG Engagement Input")
         .shell_action("setActiveExample", "Set Active Example")
         .shell_action("exportMedia", "Export Media")
+        .shell_action("importMedia", "Import Media")
+        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("importMediaPayload", "Import Media Payload", ActionKind::Shell) })
         .shell_action("openStudio", "Open Studio")
         .shell_action("openInstance", "Open Instance")
         .shell_action("closeFocusedInstance", "Close Focused Instance")
         .shell_action("goHome", "Go Home")
         .shell_action("navigateVirtualFileSystemNode", "Navigate File System Node")
+        // 📝 Staged argument form for parameter creation (spawnApp/exportMedia stay context/registry-driven).
+        .action_args("addParameter", vec![
+            ActionArgDef::text("name", "Name").default_value("Parameter"),
+            ActionArgDef::select("type", "Type", vec![
+                ActionArgOption::new("numeric", "Numeric"),
+                ActionArgOption::new("categorical", "Categorical"),
+                ActionArgOption::new("toggle", "Toggle"),
+                ActionArgOption::new("text", "Text"),
+            ]).default_value("numeric"),
+        ])
         .keybinding("mod+z", "undo")
         .keybinding("mod+shift+z", "redo")
         .keybinding("mod+s", "commitCheckpoint");
@@ -2923,7 +2883,7 @@ mod tests {
         validate_media_graph, OsAppResourceSpec, OsPlatformAppInput, OsPlatformInput,
     };
     use semio_framework_plugin::{
-        ActionMeta, HistoryView, ModeDefinition, PluginApp, ToolNode, UiControlNode, UiNode,
+        ActionMeta, HistoryView, ModeDefinition, PluginApp, UiControlNode, UiNode,
         VcsDocumentApp,
     };
     use vcs::{Backbone, BackboneMessage, MemoryBackbone};
@@ -3312,17 +3272,9 @@ mod tests {
     }
 
     #[test]
-    fn home_explore_tools_include_create_collection() {
+    fn home_declares_create_studio_action() {
         let app = create_home_app();
-        let explore = app
-            .definition
-            .modes
-            .iter()
-            .find(|mode| mode.id == "explore")
-            .expect("explore mode");
-        assert!(explore.tools.iter().any(|tool| {
-            matches!(tool, ToolNode::Collection { id, .. } if id == "s-home.create")
-        }));
+        assert!(app.definition.actions.iter().any(|action| action.id == "createStudio"));
     }
 
     #[test]
@@ -3596,25 +3548,12 @@ mod tests {
     }
 
     #[test]
-    fn studio_and_home_modes_expose_history_tools() {
+    fn studio_and_home_declare_expected_actions() {
         let studio = create_studio_app();
         let home = create_home_app();
-        let studio_tools = studio
-            .definition
-            .modes
-            .iter()
-            .find(|mode| mode.id == "main")
-            .map(|mode| mode.tools.len())
-            .unwrap_or(0);
-        let home_tools = home
-            .definition
-            .modes
-            .iter()
-            .find(|mode| mode.id == "explore")
-            .map(|mode| mode.tools.len())
-            .unwrap_or(0);
-        assert!(studio_tools > 0);
-        assert!(home_tools > 0);
+        assert!(studio.definition.actions.iter().any(|action| action.id == "spawnApp"));
+        assert!(studio.definition.actions.iter().any(|action| action.id == "reorganizeMediaGraph"));
+        assert!(home.definition.actions.iter().any(|action| action.id == "createStudio"));
         assert_eq!(studio.examples.len(), S_STUDIO_EXAMPLES.len());
     }
 

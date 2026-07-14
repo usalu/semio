@@ -1,6 +1,8 @@
-import { createElement, type ReactElement } from "react";
+import { createElement, useState, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { afterEach, describe, expect, it } from "vitest";
+import { cleanup, fireEvent, render } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { deriveToolNodes, resolveWindowActions, type ActionArgDef, type ActionDefinition, type AppDefinition, type AppWindowKindDefinition, type ToolDefinition } from "@semio-tech/framework-core";
 import { Canvas2dHost, worldToScreenLogical } from "./components/canvas-2d-host.tsx";
 import {
   Puzzle2dBoardHost,
@@ -57,7 +59,14 @@ import {
   parseStudioShellPath,
   preserveJsonIdentity,
   reconcileToolPath,
-  selectSpawnedToolNodes,
+  resolveWindowToolNodes,
+  resolveWindowTools,
+  frameworkHistoryToolNodes,
+  actionStageKey,
+  actionRequiresStagedForm,
+  resolveKeybindingIntent,
+  resolveToolActivation,
+  WindowActionPanel,
   shellReducer,
   sortToolNodes,
   spawnedWindowChromeForKind,
@@ -154,6 +163,38 @@ describe("shell store reducer", () => {
     expect(next.uiPrefs.uiCompact).toBe(!state.uiPrefs.uiCompact);
     expect(next.sync).toBe(state.sync);
   });
+
+  it("action-panel slice: fold/expand/stage/reset/active-tool update only their own keys and preserve identity on no-ops", () => {
+    const state = baseState();
+
+    const folded = shellReducer(state, { type: "SET_ACTION_PANEL_FOLDED", windowId: "w1", value: false });
+    expect(folded.actionPanel.foldedByWindowId).toEqual({ w1: false });
+    expect(folded.layout).toBe(state.layout);
+    // no-op fold keeps the whole slice referentially stable
+    expect(shellReducer(folded, { type: "SET_ACTION_PANEL_FOLDED", windowId: "w1", value: false }).actionPanel).toBe(folded.actionPanel);
+
+    const expanded = shellReducer(folded, { type: "SET_ACTION_PANEL_EXPANDED", windowId: "w1", value: "extrude" });
+    expect(expanded.actionPanel.expandedByWindowId).toEqual({ w1: "extrude" });
+    expect(shellReducer(expanded, { type: "SET_ACTION_PANEL_EXPANDED", windowId: "w1", value: "extrude" }).actionPanel).toBe(expanded.actionPanel);
+
+    const staged = shellReducer(expanded, { type: "STAGE_ACTION_ARG", windowId: "w1", actionId: "extrude", argId: "depth", value: 3 });
+    expect(staged.actionPanel.stagedArgsByKey).toEqual({ "w1:extrude": { depth: 3 } });
+    const stagedMore = shellReducer(staged, { type: "STAGE_ACTION_ARG", windowId: "w1", actionId: "extrude", argId: "segments", value: 2 });
+    expect(stagedMore.actionPanel.stagedArgsByKey["w1:extrude"]).toEqual({ depth: 3, segments: 2 });
+    expect(shellReducer(stagedMore, { type: "STAGE_ACTION_ARG", windowId: "w1", actionId: "extrude", argId: "depth", value: 3 }).actionPanel).toBe(stagedMore.actionPanel);
+
+    const reset = shellReducer(stagedMore, { type: "RESET_ACTION_ARGS", windowId: "w1", actionId: "extrude" });
+    expect(reset.actionPanel.stagedArgsByKey["w1:extrude"]).toBeUndefined();
+    // reset keeps the panel expanded
+    expect(reset.actionPanel.expandedByWindowId["w1"]).toBe("extrude");
+    expect(shellReducer(reset, { type: "RESET_ACTION_ARGS", windowId: "w1", actionId: "extrude" }).actionPanel).toBe(reset.actionPanel);
+
+    const activated = shellReducer(reset, { type: "SET_ACTIVE_TOOL", windowId: "w1", toolId: "pen" });
+    expect(activated.actionPanel.activeToolByWindowId).toEqual({ w1: "pen" });
+    expect(shellReducer(activated, { type: "SET_ACTIVE_TOOL", windowId: "w1", toolId: "pen" }).actionPanel).toBe(activated.actionPanel);
+    const deactivated = shellReducer(activated, { type: "SET_ACTIVE_TOOL", windowId: "w1", toolId: null });
+    expect(deactivated.actionPanel.activeToolByWindowId["w1"]).toBeNull();
+  });
 });
 
 // 🐢 Puzzle 2D performance round 2: the per-interaction full-shell refresh cascade was dominated by
@@ -229,11 +270,10 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
   ];
   const panelTabLeaves = [{ kind: { kind: "app" as const, id: "framework.panel.document" }, bodyKey: "puzzle2d.play.layers" }];
 
-  it("buildUiRefreshRequest for a full scope requests every window/panel/tools/engagements/measures/labels section", () => {
+  it("buildUiRefreshRequest for a full scope requests every window/panel/engagements/measures/labels section (toolbars are now registry-derived, not a plugin section)", () => {
     const request = buildUiRefreshRequest({ kind: "full" }, windowKinds, panelTabLeaves, {}, new Map());
     expect(request?.windows?.map((w) => w.key)).toEqual(["overview", "detail"]);
     expect(request?.panels?.map((p) => p.key)).toEqual(["framework.panel.document"]);
-    expect(request?.tools?.map((t) => t.key)).toEqual(["overview", "detail"]);
     expect(request?.engagements).toBeDefined();
     expect(request?.measures).toBeDefined();
     expect(request?.labels).toBeDefined();
@@ -248,7 +288,6 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
     const request = buildUiRefreshRequest(scope, windowKinds, panelTabLeaves, {}, new Map());
     expect(request?.windows?.map((w) => w.key)).toEqual(["overview"]);
     expect(request?.panels).toEqual([]);
-    expect(request?.tools).toEqual([]);
     expect(request?.engagements).toBeDefined();
     expect(request?.measures).toBeUndefined();
     expect(request?.labels).toBeUndefined();
@@ -1600,26 +1639,25 @@ describe("spawned window chrome", () => {
         id: "cad-window-shape",
         label: "Shape",
         bodyKey: "shape",
-        engagement: {
-          input: {
-            id: "engagement-input",
-            placeholder: "Action",
-            onChange: { controllerId: "cad-play", action: "engagementInput" },
+        options: {
+          engagement: {
+            kind: "some" as const,
+            value: {
+              input: {
+                id: "engagement-input",
+                placeholder: "Action",
+                onChange: { controllerId: "cad-play", action: "engagementInput" },
+              },
+              possibleEngagements: [{ id: "box", label: "Box", action: { controllerId: "cad-play", action: "startBox" } }],
+            },
           },
-          possibleEngagements: [{ id: "box", label: "Box", action: { controllerId: "cad-play", action: "startBox" } }],
+          measures: [{ id: "render-mode", kind: "select" as const, label: "Render Mode", value: "shaded", items: [], onChange: { controllerId: "cad-play", action: "setRenderMode" } }],
         },
-        measures: [{ id: "render-mode", kind: "select" as const, label: "Render Mode", value: "shaded", items: [], onChange: { controllerId: "cad-play", action: "setRenderMode" } }],
       },
     ],
     panelTabs: [],
     keybindings: [],
   };
-
-  it("prefers dynamic spawned tools over static mode tools", () => {
-    const dynamic = [{ id: "dynamic-tool", kind: "button" as const, iconId: "box", controllerId: "cad-play", action: "box" }];
-    expect(selectSpawnedToolNodes(dynamic, app, "edit")).toEqual(dynamic);
-    expect(selectSpawnedToolNodes([], app, "edit")).toEqual(app.modes[0]!.tools);
-  });
 
   it("builds spawned engagement and measures chrome from plugin contributions", () => {
     const kind = app.windowKinds[0]!;
@@ -1634,7 +1672,7 @@ describe("spawned window chrome", () => {
         possibleEngagements: [{ id: "box", label: "Box", detail: "b", action: { controllerId: "cad-play", action: "startBox" } }],
       },
     };
-    const measures = { [kind.id]: kind.measures ?? [] };
+    const measures = { [kind.id]: kind.options.measures ?? [] };
     const chrome = spawnedWindowChromeForKind(kind, engagements, measures, noopAction);
     expect(chrome.engagement?.input?.value).toBe("Box");
     expect(chrome.engagement?.possibleEngagements?.[0]?.label).toBe("Box");
@@ -1745,7 +1783,7 @@ describe("toolbar ribbon", () => {
     expect(reconcileToolPath(tree, [])).toEqual([]);
   });
 
-  it("buckets top-level tool nodes into ordered category collections", () => {
+  it("buckets top-level tool nodes into ordered category collections (uncategorized nodes default to tools now that the Actions category is gone)", () => {
     const grouped = groupToolNodesByCategory([
       { id: "sel", kind: "toggle", iconId: "cursor", controllerId: "x", action: "sel", category: "selection" },
       { id: "hist", kind: "button", iconId: "undo", controllerId: "x", action: "undo", category: "history" },
@@ -1753,17 +1791,17 @@ describe("toolbar ribbon", () => {
       { id: "tool", kind: "toggle", iconId: "pen", controllerId: "x", action: "pen" },
       { id: "sync", kind: "toggle", iconId: "cloud", controllerId: "x", action: "sync", category: "sync" },
     ]);
-    expect(grouped.map((node) => node.id)).toEqual(["selection", "tools", "actions", "history", "sync"]);
+    expect(grouped.map((node) => node.id)).toEqual(["selection", "tools", "history", "sync"]);
     expect(grouped.every((node) => node.kind === "collection")).toBe(true);
   });
 
   it("drops separator-only category buckets so an empty group never appears as a picker option", () => {
     const grouped = groupToolNodesByCategory([
-      { id: "a", kind: "button", iconId: "box", controllerId: "x", action: "a", category: "actions" },
+      { id: "a", kind: "button", iconId: "box", controllerId: "x", action: "a", category: "tools" },
       { id: "sep", kind: "separator" },
     ]);
     expect(grouped).toHaveLength(1);
-    expect(grouped[0].id).toBe("actions");
+    expect(grouped[0].id).toBe("tools");
   });
 
   it("reuses a category's single already-meaningful collection instead of re-wrapping it, avoiding a duplicate-looking picker level", () => {
@@ -1784,10 +1822,10 @@ describe("toolbar ribbon", () => {
 
   it("still wraps a category with multiple top-level nodes in a synthetic collection", () => {
     const grouped = groupToolNodesByCategory([
-      { id: "a", kind: "button", iconId: "box", controllerId: "x", action: "a", category: "actions" },
-      { id: "b", kind: "button", iconId: "box", controllerId: "x", action: "b", category: "actions" },
+      { id: "a", kind: "button", iconId: "box", controllerId: "x", action: "a", category: "tools" },
+      { id: "b", kind: "button", iconId: "box", controllerId: "x", action: "b", category: "tools" },
     ]);
-    expect(grouped).toEqual([{ id: "actions", kind: "collection", iconId: "sparkles", text: "actions", order: 0, category: "actions", children: expect.any(Array) }]);
+    expect(grouped).toEqual([{ id: "tools", kind: "collection", iconId: "wrench", text: "tools", order: 0, category: "tools", children: expect.any(Array) }]);
   });
 
   it("scopes grouping to the given categories only", () => {
@@ -1796,7 +1834,7 @@ describe("toolbar ribbon", () => {
       { id: "hist", kind: "button", iconId: "undo", controllerId: "x", action: "undo", category: "history" },
     ];
     expect(groupToolNodesByCategory(nodes, ["selection", "tools"]).map((node) => node.id)).toEqual(["selection"]);
-    expect(groupToolNodesByCategory(nodes, ["actions", "history"]).map((node) => node.id)).toEqual(["history"]);
+    expect(groupToolNodesByCategory(nodes, ["tools", "history"]).map((node) => node.id)).toEqual(["history"]);
   });
 
   it("deduplicates tool nodes by id across window tool lists for a single shared footer entry", () => {
@@ -2038,5 +2076,190 @@ describe("ui search/find (fuse re-export from @semio-tech/ui-react)", () => {
     fireEvent.change(input, { target: { value: "cha" } });
     expect(document.body.textContent).toContain("Chair");
     expect(document.body.textContent).not.toContain("Table");
+  });
+});
+
+// 🧰 Window Actions & Tools Contract (WS-2): staged argument forms (P1/P2), palette redirect (P3),
+// keybinding rule (P4), and registry-derived tool activation (P5).
+describe("window action panel — staging and single dispatch (P1/P2)", () => {
+  afterEach(() => cleanup());
+
+  const numberArg = (id: string, required: boolean, def?: number): ActionArgDef => ({ id, label: id[0]!.toUpperCase() + id.slice(1), control: { kind: "number" }, required, ...(def === undefined ? {} : { default: def }) });
+
+  const twoArgAction: ActionDefinition = { id: "extrude", label: "Extrude", kind: "operation", inPalette: true, args: [numberArg("depth", true), numberArg("segments", true)] };
+  const zeroArgAction: ActionDefinition = { id: "flatten", label: "Flatten", kind: "operation", inPalette: true, args: [] };
+  const defaultedAction: ActionDefinition = { id: "bevel", label: "Bevel", kind: "operation", inPalette: true, args: [numberArg("radius", true, 2)] };
+
+  function Harness({ actions, onExecute, disabled }: { actions: readonly ActionDefinition[]; onExecute: (descriptor: unknown) => void; disabled?: boolean }): ReactElement {
+    const [expanded, setExpanded] = useState<string | null>(null);
+    const [staged, setStaged] = useState<Record<string, Record<string, unknown>>>({});
+    return createElement(WindowActionPanel, {
+      windowId: "w1",
+      controllerId: "c",
+      actions,
+      expandedActionId: expanded,
+      stagedArgsByKey: staged,
+      disabled: Boolean(disabled),
+      onExpandedChange: setExpanded,
+      onStageArg: (actionId, argId, value) => setStaged((prev) => ({ ...prev, [actionStageKey("w1", actionId)]: { ...(prev[actionStageKey("w1", actionId)] ?? {}), [argId]: value } })),
+      onResetArgs: (actionId) =>
+        setStaged((prev) => {
+          const next = { ...prev };
+          delete next[actionStageKey("w1", actionId)];
+          return next;
+        }),
+      onExecute,
+    });
+  }
+
+  const buttonByText = (container: HTMLElement, text: string): HTMLButtonElement => {
+    const match = [...container.querySelectorAll("button")].find((button) => button.textContent?.includes(text));
+    if (!match) throw new Error(`button "${text}" not found`);
+    return match as HTMLButtonElement;
+  };
+
+  it("stages both args locally, dispatches nothing until Execute, then fires exactly one merged descriptor and keeps staged values", () => {
+    const onExecute = vi.fn();
+    const { container } = render(createElement(Harness, { actions: [twoArgAction], onExecute }));
+    fireEvent.click(buttonByText(container, "Extrude…"));
+    const inputs = container.querySelectorAll('input[type="number"]');
+    expect(inputs).toHaveLength(2);
+    fireEvent.change(inputs[0]!, { target: { value: "3" } });
+    fireEvent.change(inputs[1]!, { target: { value: "2" } });
+    expect(onExecute).not.toHaveBeenCalled();
+    fireEvent.click(buttonByText(container, "Execute"));
+    expect(onExecute).toHaveBeenCalledTimes(1);
+    expect(onExecute).toHaveBeenCalledWith({ controllerId: "c", action: "extrude", args: { depth: 3, segments: 2 } });
+    // staged values survive Execute (tweak-and-repeat): the inputs still hold their values
+    expect((container.querySelectorAll('input[type="number"]')[0] as HTMLInputElement).value).toBe("3");
+    fireEvent.click(buttonByText(container, "Execute"));
+    expect(onExecute).toHaveBeenCalledTimes(2);
+  });
+
+  it("gates Execute on required args, but a default-satisfied required arg counts without staging", () => {
+    const onExecute = vi.fn();
+    const required = render(createElement(Harness, { actions: [twoArgAction], onExecute }));
+    fireEvent.click(buttonByText(required.container, "Extrude…"));
+    expect(buttonByText(required.container, "Execute").disabled).toBe(true);
+    const inputs = required.container.querySelectorAll('input[type="number"]');
+    fireEvent.change(inputs[0]!, { target: { value: "3" } });
+    expect(buttonByText(required.container, "Execute").disabled).toBe(true);
+    fireEvent.change(inputs[1]!, { target: { value: "2" } });
+    expect(buttonByText(required.container, "Execute").disabled).toBe(false);
+    cleanup();
+
+    const defaulted = render(createElement(Harness, { actions: [defaultedAction], onExecute }));
+    fireEvent.click(buttonByText(defaulted.container, "Bevel…"));
+    expect(buttonByText(defaulted.container, "Execute").disabled).toBe(false);
+    fireEvent.click(buttonByText(defaulted.container, "Execute"));
+    expect(onExecute).toHaveBeenLastCalledWith({ controllerId: "c", action: "bevel", args: { radius: 2 } });
+  });
+
+  it("Reset restores defaults while keeping the form expanded", () => {
+    const onExecute = vi.fn();
+    const { container } = render(createElement(Harness, { actions: [defaultedAction], onExecute }));
+    fireEvent.click(buttonByText(container, "Bevel…"));
+    const input = () => container.querySelector('input[type="number"]') as HTMLInputElement;
+    expect(input().value).toBe("2");
+    fireEvent.change(input(), { target: { value: "9" } });
+    expect(input().value).toBe("9");
+    fireEvent.click(buttonByText(container, "Reset"));
+    // still expanded (Execute/Reset buttons present) and back to the default effective value
+    expect(input().value).toBe("2");
+    expect([...container.querySelectorAll("button")].some((b) => b.textContent?.includes("Execute"))).toBe(true);
+  });
+
+  it("a zero-arg action row is the execute button and fires immediately with no args object", () => {
+    const onExecute = vi.fn();
+    const { container } = render(createElement(Harness, { actions: [zeroArgAction], onExecute }));
+    fireEvent.click(buttonByText(container, "Flatten"));
+    expect(onExecute).toHaveBeenCalledTimes(1);
+    expect(onExecute).toHaveBeenCalledWith({ controllerId: "c", action: "flatten" });
+  });
+
+  it("renders every row disabled when an active tool gates actions", () => {
+    const onExecute = vi.fn();
+    const { container } = render(createElement(Harness, { actions: [zeroArgAction], onExecute, disabled: true }));
+    fireEvent.click(buttonByText(container, "Flatten"));
+    expect(onExecute).not.toHaveBeenCalled();
+    expect(buttonByText(container, "Flatten").disabled).toBe(true);
+  });
+});
+
+describe("palette redirect and keybinding rule (P3/P4)", () => {
+  const argAction: ActionDefinition = { id: "extrude", label: "Extrude", kind: "operation", inPalette: true, args: [{ id: "depth", label: "Depth", control: { kind: "number" }, required: true }] };
+  const zeroAction: ActionDefinition = { id: "flatten", label: "Flatten", kind: "operation", inPalette: true, args: [] };
+
+  it("only arg-carrying actions redirect to a staged form (P3 decision)", () => {
+    expect(actionRequiresStagedForm(argAction)).toBe(true);
+    expect(actionRequiresStagedForm(zeroAction)).toBe(false);
+  });
+
+  it("keybinding intent: arg-less fires, arg-action opens unless already expanded and valid then executes (P4)", () => {
+    expect(resolveKeybindingIntent(zeroAction, null, {})).toEqual({ kind: "fire" });
+    expect(resolveKeybindingIntent(undefined, null, {})).toEqual({ kind: "fire" });
+    // not expanded → open
+    expect(resolveKeybindingIntent(argAction, null, {})).toEqual({ kind: "open", actionId: "extrude" });
+    expect(resolveKeybindingIntent(argAction, "other", { depth: 3 })).toEqual({ kind: "open", actionId: "extrude" });
+    // expanded but required arg missing → stays open, never silent-fires
+    expect(resolveKeybindingIntent(argAction, "extrude", {})).toEqual({ kind: "open", actionId: "extrude" });
+    // expanded and valid → execute with merged effective args
+    expect(resolveKeybindingIntent(argAction, "extrude", { depth: 4 })).toEqual({ kind: "execute", actionId: "extrude", args: { depth: 4 } });
+  });
+});
+
+describe("registry-derived tools and activation (P5)", () => {
+  const tools: ToolDefinition[] = [
+    { id: "select", label: "Select", iconId: "mouse-pointer", category: "selection", allowsActionsWhileActive: true },
+    { id: "brush", label: "Brush", iconId: "brush", group: "paint", category: "tools", allowsActionsWhileActive: false },
+    { id: "erase", label: "Erase", iconId: "eraser", group: "paint", category: "tools", allowsActionsWhileActive: false },
+  ];
+  const app = { controllerId: "draw", tools } satisfies Pick<AppDefinition, "controllerId" | "tools">;
+
+  it("resolveWindowTools scopes to the window kind's refs, falling back to all app tools when unset", () => {
+    expect(resolveWindowTools(app, { tools: ["brush"] } as Pick<AppWindowKindDefinition, "tools">).map((t) => t.id)).toEqual(["brush"]);
+    expect(resolveWindowTools(app, { tools: [] } as unknown as Pick<AppWindowKindDefinition, "tools">).map((t) => t.id)).toEqual(["select", "brush", "erase"]);
+  });
+
+  it("derives grouped toolbar nodes with the active tool pressed and a setActiveTool onChange tagged by window", () => {
+    const nodes = resolveWindowToolNodes(app, { tools: [] } as unknown as Pick<AppWindowKindDefinition, "tools">, "brush", "w1");
+    const select = nodes.find((node) => node.id === "select");
+    expect(select && select.kind === "toggle" ? select.pressed : undefined).toBe(false);
+    const paint = nodes.find((node) => node.id === "group:paint");
+    expect(paint?.kind).toBe("collection");
+    const brush = paint && paint.kind === "collection" ? paint.children.find((child) => child.id === "brush") : undefined;
+    expect(brush && brush.kind === "toggle" ? brush.pressed : undefined).toBe(true);
+    expect(brush && brush.kind === "toggle" && "onChange" in brush ? brush.onChange : undefined).toEqual({ controllerId: "draw", action: "setActiveTool", args: { toolId: "brush", windowId: "w1" } });
+  });
+
+  it("deriveToolNodes twin marks exactly the active tool pressed", () => {
+    const nodes = deriveToolNodes("draw", [{ id: "a", label: "A", iconId: "x" }, { id: "b", label: "B", iconId: "y" }], "b");
+    expect(nodes.map((node) => (node.kind === "toggle" ? node.pressed : undefined))).toEqual([false, true]);
+  });
+
+  it("resolveToolActivation toggles: click activates, re-click or empty deactivates", () => {
+    expect(resolveToolActivation(null, "brush")).toBe("brush");
+    expect(resolveToolActivation("brush", "erase")).toBe("erase");
+    expect(resolveToolActivation("brush", "brush")).toBeNull();
+    expect(resolveToolActivation("brush", "")).toBeNull();
+    expect(resolveToolActivation(undefined, "")).toBeNull();
+  });
+
+  it("resolveWindowActions surfaces panel-eligible actions and frameworkHistoryToolNodes derives History buttons", () => {
+    const actionsApp = {
+      controllerId: "draw",
+      actions: [
+        { id: "extrude", label: "Extrude", kind: "operation", inPalette: true, args: [] },
+        { id: "undo", label: "Undo", kind: "history", iconId: "undo", inPalette: true, args: [] },
+        { id: "setActiveTool", label: "Set Active Tool", kind: "view", inPalette: false, args: [] },
+      ] as ActionDefinition[],
+      windowKinds: [{ actions: [] as string[] }],
+    };
+    const resolved = resolveWindowActions(actionsApp, { actions: [] as string[] });
+    // orphan operation appears; history + setActiveTool are never panel-eligible orphans
+    expect(resolved.map((action) => action.id)).toEqual(["extrude"]);
+    const history = frameworkHistoryToolNodes({ controllerId: "draw", actions: actionsApp.actions });
+    expect(history).toHaveLength(1);
+    expect(history[0]).toMatchObject({ id: "undo", kind: "button", category: "history", onPress: { controllerId: "draw", action: "undo" } });
   });
 });

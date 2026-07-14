@@ -274,8 +274,6 @@ pub struct DrawDocument {
     pub assets: Option<std::collections::HashMap<String, DrawImageAsset>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub artboard: Option<DrawArtboard>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub active_tool: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -506,7 +504,6 @@ pub fn default_draw_document(id: &str, title: Option<&str>) -> DrawDocument {
         layers: vec![create_draw_path_layer("Layer 1", Vec::new())],
         assets: None,
         artboard: None,
-        active_tool: Some("selectDirect".into()),
     }
 }
 
@@ -1327,7 +1324,6 @@ pub enum DrawOp {
     DuplicateLayer { layer_id: String },
     RemoveLayer { layer_id: String },
     ReorderLayer { layer_id: String, #[serde(skip_serializing_if = "Option::is_none")] parent_id: Option<String>, index: usize },
-    SetActiveTool { tool: String },
     SetCamera { camera: DrawCamera },
     SetDocument { document: DrawDocument },
 }
@@ -1335,7 +1331,6 @@ pub enum DrawOp {
 pub fn apply_draw_edit_op(doc: &DrawDocument, edit: &DrawOp) -> DrawDocument {
     match edit {
         DrawOp::SetDocument { document } => document.clone(),
-        DrawOp::SetActiveTool { tool } => DrawDocument { active_tool: Some(tool.clone()), ..doc.clone() },
         DrawOp::SetCamera { camera } => DrawDocument { camera: camera.clone(), ..doc.clone() },
         DrawOp::SetLayerVisible { layer_id, visible } => mutate_draw_layer(doc, layer_id, |layer| {
             layer_base_mut(layer).visible = *visible;
@@ -1683,7 +1678,6 @@ pub struct DrawLayerTreeAdd {
 #[serde(rename_all = "camelCase")]
 pub struct DrawDiff {
     pub document: Option<DrawDocument>,
-    pub active_tool: Option<Option<String>>,
     pub camera: Option<DrawCamera>,
     pub layer_patches: Vec<DrawLayerTreePatch>,
     pub layers_removed: Vec<String>,
@@ -1694,7 +1688,6 @@ impl Default for DrawDiff {
     fn default() -> Self {
         Self {
             document: None,
-            active_tool: None,
             camera: None,
             layer_patches: Vec::new(),
             layers_removed: Vec::new(),
@@ -1708,9 +1701,6 @@ impl OperationDiff<DrawDocument> for DrawDiff {
         let mut next = projection.clone();
         if let Some(document) = &self.document {
             return document.clone();
-        }
-        if let Some(tool) = &self.active_tool {
-            next.active_tool = tool.clone();
         }
         if let Some(camera) = &self.camera {
             next.camera = camera.clone();
@@ -1750,9 +1740,6 @@ impl OperationDiff<DrawDocument> for DrawDiff {
             *self = other;
             return;
         }
-        if other.active_tool.is_some() {
-            self.active_tool = other.active_tool;
-        }
         if other.camera.is_some() {
             self.camera = other.camera;
         }
@@ -1768,7 +1755,6 @@ impl Operation<DrawDocument> for DrawOp {
     fn diff(&self, _projection: &DrawDocument) -> DrawDiff {
         match self {
             DrawOp::SetDocument { document } => DrawDiff { document: Some(document.clone()), ..Default::default() },
-            DrawOp::SetActiveTool { tool } => DrawDiff { active_tool: Some(Some(tool.clone())), ..Default::default() },
             DrawOp::SetCamera { camera } => DrawDiff { camera: Some(camera.clone()), ..Default::default() },
             DrawOp::SetLayerVisible { layer_id, visible } => DrawDiff {
                 layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { visible: Some(*visible), ..Default::default() } }],

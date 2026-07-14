@@ -9,7 +9,7 @@ use infinite_board_port_directed_dag::{
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_node_graph_scene, build_text_editor_scene, create_default_layout, ui_declarative_sections_to_tree,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field,
-    ui_text, ActionEmit, App, ActionDescriptor, DocumentApp, DocumentView, NodeGraphScene, TextEditorScene,
+    ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, ActionDescriptor, DocumentApp, DocumentView, NodeGraphScene, TextEditorScene,
     UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -972,14 +972,13 @@ impl DocumentApp for DagPlayApp {
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
                 if let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) {
                     if document.nodes.iter().any(|node| node.id == node_id) {
-                        return ActionEmit {
-                            ops: vec![DagOp::Nodes(CollectionOp::Patch {
+                        return ActionEmit::amend(
+                            vec![DagOp::Nodes(CollectionOp::Patch {
                                 id: node_id.into(),
                                 patch: DagNodePatch { x: Some(x), y: Some(y), ..Default::default() },
                             })],
-                            coalesce_key: Some(format!("move-{node_id}")),
-                            ..Default::default()
-                        };
+                            format!("move-{node_id}"),
+                        );
                     }
                 }
                 ActionEmit::default()
@@ -1037,11 +1036,7 @@ impl DocumentApp for DagPlayApp {
                 if ops.is_empty() {
                     ActionEmit::default()
                 } else {
-                    ActionEmit {
-                        ops,
-                        coalesce_key: Some(format!("patch-{field}-{}", node_ids.join(","))),
-                        ..Default::default()
-                    }
+                    ActionEmit::amend(ops, format!("patch-{field}-{}", node_ids.join(",")))
                 }
             }
             _ => ActionEmit::default(),
@@ -1128,7 +1123,19 @@ fn create_dag_app() -> App {
             .view_action("nodeGraphSelect", "Node Graph Select")
             .view_action("nodeGraphHover", "Node Graph Hover")
             .view_action("nodeGraphViewport", "Node Graph Viewport")
-            .view_action("graphPointerDown", "Graph Pointer Down"),
+            .view_action("graphPointerDown", "Graph Pointer Down")
+            // 📝 Staged argument form for the panel-visible create action.
+            .action_args("addNode", vec![
+                ActionArgDef::select("kind", "Kind", vec![
+                    ActionArgOption::new("computation", "Computation"),
+                    ActionArgOption::new("slider", "Slider"),
+                    ActionArgOption::new("select", "Select"),
+                    ActionArgOption::new("screen", "Screen"),
+                    ActionArgOption::new("note", "Note"),
+                    ActionArgOption::new("preview", "Preview"),
+                    ActionArgOption::new("stepper", "Stepper"),
+                ]).default_value("computation"),
+            ]),
     )
     .example("demo", "Demo", serde_json::to_string(&default_dag_document()).unwrap())
     .program("dag", "DAG", "graph")

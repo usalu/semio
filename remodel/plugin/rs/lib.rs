@@ -1,13 +1,14 @@
 //! 🏺 Remodel plugin — photogrammetry play app (video → watertight mesh) bundled as a hot-swappable WASM component.
 
 use remodel_document::{
-    default_active_tool, default_remodel_scene, CameraState, RemodelMesh, RemodelOp, RemodelScene, SelectionState,
-    SourceVideo, MeshSource, REMODEL_DOCUMENT_SCHEMA,
+    default_remodel_scene, CameraState, DenseResolution, ReconstructionParams, RemodelMesh, RemodelOp, RemodelScene,
+    SelectionState, SourceVideo, MeshSource, REMODEL_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{
     build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_camera_json,
-    world3d_scene, world3d_selection_json, ActionEmit, App, DocumentApp, DocumentView, MeshData, PanelGroup, SurfaceKind,
-    UiNode, ViewState, WorldSunConfig, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App,
+    DocumentApp, DocumentView, MeshData, PanelGroup, SurfaceKind, ToolCategory, ToolDefinition, UiNode, ViewState,
+    WorldSunConfig, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, SET_ACTIVE_TOOL_ACTION_ID,
 };
 use serde_json::{json, Value};
 
@@ -18,27 +19,18 @@ const REMODEL_PLAY_BODY_MAIN: &str = "remodel.play.main";
 const REMODEL_PLAY_BODY_DOCUMENT: &str = "remodel.play.document";
 const REMODEL_PLAY_WINDOW_MAIN: &str = "remodel-main";
 const REMODEL_MESH_ID: &str = "remodel-result";
+/// 🧰 The tool active when the host has not yet set `view_state.active_tool_id` (first ToolRef default).
+const REMODEL_DEFAULT_TOOL: &str = "select";
 //#endregion 🔖Constants
 
 //#region 🔖Runtime
-/// 🎛️ Ephemeral viewport state (orbit camera, face/vertex selection, active transform tool) — lives in
-/// the app struct, never in the document, so panning the camera or picking a face never lands in undo
-/// history nor syncs to peers.
-#[derive(Clone, Debug, PartialEq)]
+/// 🎛️ Ephemeral viewport state (orbit camera, face/vertex selection) — lives in the app struct, never
+/// in the document, so panning the camera or picking a face never lands in undo history nor syncs to
+/// peers. The active tool is host-owned session state (`view_state.active_tool_id`), not stored here.
+#[derive(Clone, Debug, Default, PartialEq)]
 struct RemodelPlayRuntime {
     camera: CameraState,
     selection: SelectionState,
-    active_tool: String,
-}
-
-impl Default for RemodelPlayRuntime {
-    fn default() -> Self {
-        Self {
-            camera: CameraState::default(),
-            selection: SelectionState::default(),
-            active_tool: default_active_tool(),
-        }
-    }
 }
 //#endregion 🔖Runtime
 
@@ -69,7 +61,7 @@ fn world_instances_json(scene: &RemodelScene) -> String {
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-fn build_document_panel(scene: &RemodelScene, runtime: &RemodelPlayRuntime) -> UiNode {
+fn build_document_panel(scene: &RemodelScene, runtime: &RemodelPlayRuntime, active_tool: &str) -> UiNode {
     let video_label = scene
         .source_video
         .as_ref()
@@ -98,7 +90,7 @@ fn build_document_panel(scene: &RemodelScene, runtime: &RemodelPlayRuntime) -> U
             )
         })
         .unwrap_or_else(|| "Mesh: none".into());
-    let tool_label = format!("Tool: {} · selection: {} ({})", runtime.active_tool, runtime.selection.mode, runtime.selection.ids.len());
+    let tool_label = format!("Tool: {} · selection: {} ({})", active_tool, runtime.selection.mode, runtime.selection.ids.len());
     ui_stack_vertical(vec![ui_text(video_label), ui_text(job_label), ui_text(mesh_label), ui_text(tool_label)])
 }
 
@@ -140,10 +132,8 @@ impl DocumentApp for RemodelPlayApp {
         _view_state: &ViewState,
     ) -> ActionEmit<RemodelOp> {
         match action {
-            "setActiveTool" => {
-                if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
-                    self.runtime.active_tool = tool.into();
-                }
+            SET_ACTIVE_TOOL_ACTION_ID => {
+                // 🧰 Host-owned tool switch: remodel keeps no in-progress gesture scratch, so emit nothing.
                 ActionEmit::default()
             }
             "setSelection" => {
@@ -173,10 +163,27 @@ impl DocumentApp for RemodelPlayApp {
                 ActionEmit::ops(vec![RemodelOp::SetSourceVideo { video }])
             }
             "setParams" => {
-                match args.and_then(|value| value.get("params")).and_then(|value| serde_json::from_value(value.clone()).ok()) {
-                    Some(params) => ActionEmit::ops(vec![RemodelOp::SetParams { params }]),
-                    None => ActionEmit::default(),
+                // 📝 Staged typed args (defaults materialized host-side) rebuild the whole params register.
+                let mut params = ReconstructionParams::default();
+                if let Some(value) = args.and_then(|value| value.get("frameSampleStride")).and_then(|value| value.as_u64()) {
+                    params.frame_sample_stride = value as u32;
                 }
+                if let Some(value) = args.and_then(|value| value.get("maxFrames")).and_then(|value| value.as_u64()) {
+                    params.max_frames = value as u32;
+                }
+                if let Some(value) = args.and_then(|value| value.get("featureTargetCount")).and_then(|value| value.as_u64()) {
+                    params.feature_target_count = value as u32;
+                }
+                if let Some(resolution) = args
+                    .and_then(|value| value.get("denseMvsResolution"))
+                    .and_then(|value| serde_json::from_value::<DenseResolution>(value.clone()).ok())
+                {
+                    params.dense_mvs_resolution = resolution;
+                }
+                if let Some(value) = args.and_then(|value| value.get("tsdfVoxelSizeMm")).and_then(|value| value.as_f64()) {
+                    params.tsdf_voxel_size_mm = value as f32;
+                }
+                ActionEmit::ops(vec![RemodelOp::SetParams { params }])
             }
             "resetPlaceholderMesh" => ActionEmit::ops(vec![RemodelOp::SetResult { result: Some(placeholder_result()) }]),
             "clearResult" => ActionEmit::ops(vec![RemodelOp::SetResult { result: None }]),
@@ -184,8 +191,9 @@ impl DocumentApp for RemodelPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, RemodelScene>, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, RemodelScene>, view_state: &ViewState) -> UiNode {
         let scene = doc.projection;
+        let active_tool = view_state.active_tool_id.as_deref().unwrap_or(REMODEL_DEFAULT_TOOL);
         match body_key {
             REMODEL_PLAY_BODY_MAIN => build_world_3d_scene(
                 REMODEL_PLAY_SURFACE_MAIN,
@@ -198,7 +206,7 @@ impl DocumentApp for RemodelPlayApp {
                     &WorldSunConfig::default(),
                 ),
             ),
-            REMODEL_PLAY_BODY_DOCUMENT => build_document_panel(scene, &self.runtime),
+            REMODEL_PLAY_BODY_DOCUMENT => build_document_panel(scene, &self.runtime, active_tool),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -227,13 +235,28 @@ fn create_remodel_app() -> App {
                 PanelGroup::Workbench,
                 REMODEL_PLAY_BODY_DOCUMENT,
             )
-            .operation("importVideo", "Import Video")
             .operation("setParams", "Set Params")
             .operation("resetPlaceholderMesh", "Reset Placeholder Mesh")
             .operation("clearResult", "Clear Result")
-            .view_action("setActiveTool", "Set Active Tool")
-            .view_action("setSelection", "Set Selection")
-            .view_action("setCamera", "Set Camera"),
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("importVideo", "Import Video", ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setSelection", "Set Selection", ActionKind::View) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", "Set Camera", ActionKind::View) })
+            // 📝 Staged argument form for the P1 params action — enumerable, stable reconstruction fields.
+            .action_args("setParams", vec![
+                ActionArgDef::number("frameSampleStride", "Frame Sample Stride").default_value(5),
+                ActionArgDef::number("maxFrames", "Max Frames").default_value(200),
+                ActionArgDef::number("featureTargetCount", "Feature Target Count").default_value(4000),
+                ActionArgDef::select("denseMvsResolution", "Dense MVS Resolution", vec![
+                    ActionArgOption::new("low", "Low"),
+                    ActionArgOption::new("medium", "Medium"),
+                    ActionArgOption::new("high", "High"),
+                ]).default_value("medium"),
+                ActionArgDef::slider("tsdfVoxelSizeMm", "TSDF Voxel Size (mm)", 1.0, 20.0).default_value(5.0),
+            ])
+            // 🧰 Mesh-editing tool group — an exclusive per-window set (active tool is host-owned).
+            .tool(ToolDefinition { category: Some(ToolCategory::Selection), ..ToolDefinition::new("select", "Select", "mouse-pointer-2") })
+            .tool(ToolDefinition { category: Some(ToolCategory::Tools), ..ToolDefinition::new("sculpt", "Sculpt", "brush") })
+            .window_kind_tools(REMODEL_PLAY_WINDOW_MAIN, vec!["select".into(), "sculpt".into()]),
     )
     .example("default", "Default", &default_example)
     .program("remodel", "Remodel", "mesh")
@@ -300,17 +323,49 @@ mod tests {
     #[test]
     fn view_actions_mutate_runtime_without_emitting_ops() {
         let mut app = new_app();
-        let result = app
-            .handle_action("setActiveTool", Some(&json!({ "tool": "sculpt" })), &ViewState::default(), &meta("local"))
-            .expect("set tool");
-        assert!(result.operations.is_empty(), "active tool is ephemeral view state");
         app.handle_action("setCamera", Some(&json!({ "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "fov": 60.0 } })), &ViewState::default(), &meta("local")).expect("set camera");
         let node = app.render(REMODEL_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
         let payload: Value = serde_json::to_value(&node).unwrap();
         let camera: Value = serde_json::from_str(payload["world3d"]["cameraJson"].as_str().unwrap()).unwrap();
         assert_eq!(camera["position"], json!([1.0, 2.0, 3.0]));
-        let document = app.render(REMODEL_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render doc");
-        assert!(serde_json::to_string(&document).unwrap().contains("sculpt"));
+    }
+
+    #[test]
+    fn set_active_tool_switches_host_view_state_without_ops_or_history() {
+        let mut app = new_app();
+        let result = app
+            .handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "sculpt" })), &ViewState::default(), &meta("local"))
+            .expect("switch tool");
+        assert!(result.operations.is_empty(), "tool switch is host-owned view state, never a document op");
+        let view_state = ViewState { active_tool_id: Some("sculpt".into()), ..ViewState::default() };
+        let document = app.render(REMODEL_PLAY_BODY_DOCUMENT, None, &view_state).expect("render doc");
+        assert!(serde_json::to_string(&document).unwrap().contains("sculpt"), "active tool comes from view_state.active_tool_id");
+    }
+
+    #[test]
+    fn set_params_arg_form_materializes_typed_args_into_ops() {
+        let mut app = new_app();
+        let result = app
+            .handle_action(
+                "setParams",
+                Some(&json!({
+                    "frameSampleStride": 7,
+                    "maxFrames": 321,
+                    "featureTargetCount": 5000,
+                    "denseMvsResolution": "high",
+                    "tsdfVoxelSizeMm": 3.5,
+                })),
+                &ViewState::default(),
+                &meta("local"),
+            )
+            .expect("set params");
+        assert_eq!(result.operations.len(), 1, "typed args produce one SetParams op");
+        let params = app.projection().expect("materialize projection").params;
+        assert_eq!(params.frame_sample_stride, 7);
+        assert_eq!(params.max_frames, 321);
+        assert_eq!(params.feature_target_count, 5000);
+        assert_eq!(params.dense_mvs_resolution, DenseResolution::High);
+        assert_eq!(params.tsdf_voxel_size_mm, 3.5);
     }
 
     #[test]

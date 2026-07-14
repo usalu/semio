@@ -5447,6 +5447,15 @@ export const windowToolbarOverlayClass = "pointer-events-none absolute bottom-0 
 /** @emoji 📐 Horizontal tool row beside the toolbar chrome toggle: fixed to the chrome's height, never taller. */
 export const windowToolbarBodyClass = "flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto px-single";
 
+/** @emoji 📐 Outer overlay for the floating window Actions rail along the bottom-right edge (the free corner). */
+export const windowActionPanelOverlayClass = "pointer-events-none absolute bottom-0 right-0 z-panel flex max-h-full flex-col items-end p-0";
+
+/** @emoji 📐 Collapsed Actions-rail chrome hugging the bottom-right corner. */
+export const windowActionPanelOverlayFoldedClass = windowMeasuresOverlayFoldedClass;
+
+/** @emoji 📐 Scrollable body for the window Actions rail beside its chrome toggle. */
+export const windowActionPanelBodyClass = "flex min-h-0 min-w-0 max-h-full flex-auto flex-col overflow-y-auto";
+
 /** @emoji 📐 CSS variable for invisible top clearance below floating window chrome. */
 export const windowChromeScrollClearanceVar = "--window-chrome-scroll-clearance";
 
@@ -10817,7 +10826,23 @@ const assertNoNestedTreeSections = (children: React.ReactNode, ownerName: "TreeS
   visitNestedChildren(children);
 };
 
-const TreeContext = reactHostPort.createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean; isTree: boolean; indentMultiplier: number }>({ level: 0, isLastAtLevel: [], showLines: true, isTree: false, indentMultiplier: 1 });
+/** @emoji 🧭 Vertical unfold direction for a tree's foldable groups — `"up"` mirrors the {@link Ribbon} `"up"` pattern: a group's children render above its own header row, in reverse order, so the tree grows toward a fixed anchor (e.g. a bottom corner panel's pinned chrome) instead of away from it. */
+export type TreeDirection = "down" | "up";
+
+const TreeContext = reactHostPort.createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean; isTree: boolean; indentMultiplier: number; direction?: TreeDirection }>({
+  level: 0,
+  isLastAtLevel: [],
+  showLines: true,
+  isTree: false,
+  indentMultiplier: 1,
+  direction: "down",
+});
+
+/** @emoji 🧭 Fold-affordance chevron for a tree group row — points toward where the content actually is: down/right when it unfolds downward, up/left when it unfolds upward. */
+function treeFoldChevronIcon(direction: TreeDirection, open: boolean): React.ComponentType<{ className?: string }> {
+  if (direction === "up") return open ? ChevronUpIcon : ChevronLeftIcon;
+  return open ? ChevronDownIcon : ChevronRightIcon;
+}
 const TreeRowAlignmentContext = reactHostPort.createContext(false);
 // True when children are rendered inside the value column of a Label property row.
 const PropertyValueColumnContext = reactHostPort.createContext(false);
@@ -11623,6 +11648,8 @@ interface TreeRootProps {
   dragAndDropController?: TreeDragAndDropController;
   emptyState?: React.ReactNode;
   indentMultiplier?: number;
+  /** @emoji 🧭 `"up"` makes every foldable group in this tree unfold above its own header (children in reverse order), mirroring the {@link Ribbon} `"up"` pattern — for trees hosted in a panel that grows upward. Defaults to `"down"`. */
+  direction?: TreeDirection;
 }
 
 /** @emoji ✅ Per-tree selection store; rows subscribe via {@link useSyncExternalStore} without invalidating {@link TreeDataRenderingContext}. */
@@ -11908,7 +11935,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   onDrop,
   isLastSection = false,
 }) => {
-  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier, direction = "down" } = reactHostPort.useContext(TreeContext);
   const suppressLocalizedLabel = label == null || label === "";
   const resolvedLabel = suppressLocalizedLabel ? undefined : label;
   const localizedLabel = !suppressLocalizedLabel && resolvedLabel === undefined && id ? useLabel(id) : undefined;
@@ -11933,7 +11960,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   const rowContentFillClassName = treeRowChromeContentFillClasses(false, false);
 
   if (isHeaderlessSection) {
-    return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree, indentMultiplier }}>{children}</TreeContext.Provider>;
+    return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree, indentMultiplier, direction }}>{children}</TreeContext.Provider>;
   }
 
   if (!isExpandable) {
@@ -11986,64 +12013,81 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
     );
   }
 
+  const SectionFoldChevron = treeFoldChevronIcon(direction, open);
+  const sectionTrigger = (
+    <CollapsibleTrigger asChild>
+      <div
+        data-dim
+        data-slot="tree-section-row"
+        data-tree-row-kind="section"
+        id={id}
+        className={rowClassName}
+        role="button"
+        draggable={draggable}
+        onPointerEnter={onSectionPointerEnter}
+        onPointerLeave={(event) => {
+          if (!shouldDispatchTreeRowPointerLeave(event.relatedTarget)) {
+            return;
+          }
+          onSectionPointerLeave?.();
+        }}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+        onDoubleClick={(event) => {
+          if (!onDoubleClick) return;
+          event.preventDefault();
+          event.stopPropagation();
+          onDoubleClick(event);
+        }}
+      >
+        <TreeAlignedRow
+          level={level}
+          isLastAtLevel={isLastAtLevel}
+          showLines={showLines}
+          connectCurrentLevel={level > 0}
+          extendCurrentLevelToBottom={open && hasChildren}
+          slot={loading ? <Spinner size="small" className="text-muted-foreground" /> : <SectionFoldChevron className={treeSectionChevronClassName} />}
+          contentClassName="min-w-0"
+          contentChromeClassName={rowContentFillClassName}
+        >
+          <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
+            <div className={treeHeaderMainClassName}>
+              {renderTreeRowIcon(icon, "folder")}
+              <span data-slot="tree-label" title={controlHint} className={treeSectionLabelSlotClassName} style={treeItemLabelStyle}>
+                {displayLabel}
+              </span>
+            </div>
+            {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
+          </div>
+        </TreeAlignedRow>
+      </div>
+    </CollapsibleTrigger>
+  );
+  const sectionContent = (
+    <CollapsibleContent className="min-w-0">
+      <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastSection], showLines, isTree, indentMultiplier, direction }}>
+        <TreeBranchContent slot="tree-section-content" ownerRowKind="section" ownerExpanded={open && hasChildren} topPaddingPx={treeSectionContentPaddingTopPx}>
+          {children}
+        </TreeBranchContent>
+      </TreeContext.Provider>
+    </CollapsibleContent>
+  );
+
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger asChild>
-        <div
-          data-dim
-          data-slot="tree-section-row"
-          data-tree-row-kind="section"
-          id={id}
-          className={rowClassName}
-          role="button"
-          draggable={draggable}
-          onPointerEnter={onSectionPointerEnter}
-          onPointerLeave={(event) => {
-            if (!shouldDispatchTreeRowPointerLeave(event.relatedTarget)) {
-              return;
-            }
-            onSectionPointerLeave?.();
-          }}
-          onDragStart={onDragStart}
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-          onDoubleClick={(event) => {
-            if (!onDoubleClick) return;
-            event.preventDefault();
-            event.stopPropagation();
-            onDoubleClick(event);
-          }}
-        >
-          <TreeAlignedRow
-            level={level}
-            isLastAtLevel={isLastAtLevel}
-            showLines={showLines}
-            connectCurrentLevel={level > 0}
-            extendCurrentLevelToBottom={open && hasChildren}
-            slot={loading ? <Spinner size="small" className="text-muted-foreground" /> : open ? <ChevronDownIcon className={treeSectionChevronClassName} /> : <ChevronRightIcon className={treeSectionChevronClassName} />}
-            contentClassName="min-w-0"
-            contentChromeClassName={rowContentFillClassName}
-          >
-            <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
-              <div className={treeHeaderMainClassName}>
-                {renderTreeRowIcon(icon, "folder")}
-                <span data-slot="tree-label" title={controlHint} className={treeSectionLabelSlotClassName} style={treeItemLabelStyle}>
-                  {displayLabel}
-                </span>
-              </div>
-              {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-            </div>
-          </TreeAlignedRow>
-        </div>
-      </CollapsibleTrigger>
-      <CollapsibleContent className="min-w-0">
-        <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastSection], showLines, isTree, indentMultiplier }}>
-          <TreeBranchContent slot="tree-section-content" ownerRowKind="section" ownerExpanded={open && hasChildren} topPaddingPx={treeSectionContentPaddingTopPx}>
-            {children}
-          </TreeBranchContent>
-        </TreeContext.Provider>
-      </CollapsibleContent>
+      {direction === "up" ? (
+        <>
+          {sectionContent}
+          {sectionTrigger}
+        </>
+      ) : (
+        <>
+          {sectionTrigger}
+          {sectionContent}
+        </>
+      )}
     </Collapsible>
   );
 };
@@ -12236,7 +12280,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   }
 
   if (!displayLabel) {
-    return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree, indentMultiplier }}>{children}</TreeContext.Provider>;
+    return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree, indentMultiplier, direction }}>{children}</TreeContext.Provider>;
   }
 
   if (layoutKind === "property") {
@@ -12409,7 +12453,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     );
   }
 
-  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier, direction = "down" } = reactHostPort.useContext(TreeContext);
   const itemKey = id ?? resolvedLabel ?? sortableId ?? "tree-item";
   const itemId = getTreeItemStateId(String(itemKey));
   const treeOpenState = useTreeOpenState(itemId, defaultOpen);
@@ -12477,70 +12521,87 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerCancel}
         >
-          <TreeAlignedRow
-            level={level}
-            isLastAtLevel={isLastAtLevel}
-            showLines={showLines}
-            connectCurrentLevel={level > 0}
-            extendCurrentLevelToBottom={isExpandable && open && hasChildren}
-            slot={
-              isExpandable ? (
-                <button
-                  type="button"
-                  className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    setOpen(!open);
-                  }}
-                >
-                  {loading ? <Spinner size="small" className="text-muted-foreground" /> : open ? <ChevronDownIcon className="size-small flex-shrink-0" /> : <ChevronRightIcon className="size-small flex-shrink-0" />}
-                </button>
-              ) : undefined
-            }
-            contentClassName="min-w-0"
-            contentChromeClassName={itemContentFillClassName}
-          >
-            <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
-              <div className={treeHeaderMainClassName}>
-                {renderTreeRowIcon(icon, isExpandable ? "folder" : "file-text")}
-                <span
-                  data-slot="tree-label"
-                  title={controlHint}
-                  className={cn(treeItemLabelSlotClassName, "font-medium transition-colors", isExpandable ? "cursor-foldable" : "cursor-selectable", "select-text")}
-                  style={treeItemLabelStyle}
-                  onClick={(event) => {
-                    if (event.detail > 1) return;
-                    event.preventDefault();
-                    event.stopPropagation();
-                    if (isExpandable) {
-                      setOpen(!open);
-                      return;
-                    }
-                    onClick?.(event);
-                  }}
-                >
-                  {resolvedLabel as React.ReactNode}
-                </span>
-              </div>
-              {!isExpandable && (
-                <div data-slot="tree-item-control" className="ms-auto flex min-w-0 shrink-0 items-center justify-end gap-double">
-                  {children}
+          {(() => {
+            const PropertyFoldChevron = treeFoldChevronIcon(direction, open);
+            const propertyHeader = (
+              <TreeAlignedRow
+                level={level}
+                isLastAtLevel={isLastAtLevel}
+                showLines={showLines}
+                connectCurrentLevel={level > 0}
+                extendCurrentLevelToBottom={isExpandable && open && hasChildren}
+                slot={
+                  isExpandable ? (
+                    <button
+                      type="button"
+                      className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setOpen(!open);
+                      }}
+                    >
+                      {loading ? <Spinner size="small" className="text-muted-foreground" /> : <PropertyFoldChevron className="size-small flex-shrink-0" />}
+                    </button>
+                  ) : undefined
+                }
+                contentClassName="min-w-0"
+                contentChromeClassName={itemContentFillClassName}
+              >
+                <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
+                  <div className={treeHeaderMainClassName}>
+                    {renderTreeRowIcon(icon, isExpandable ? "folder" : "file-text")}
+                    <span
+                      data-slot="tree-label"
+                      title={controlHint}
+                      className={cn(treeItemLabelSlotClassName, "font-medium transition-colors", isExpandable ? "cursor-foldable" : "cursor-selectable", "select-text")}
+                      style={treeItemLabelStyle}
+                      onClick={(event) => {
+                        if (event.detail > 1) return;
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (isExpandable) {
+                          setOpen(!open);
+                          return;
+                        }
+                        onClick?.(event);
+                      }}
+                    >
+                      {resolvedLabel as React.ReactNode}
+                    </span>
+                  </div>
+                  {!isExpandable && (
+                    <div data-slot="tree-item-control" className="ms-auto flex min-w-0 shrink-0 items-center justify-end gap-double">
+                      {children}
+                    </div>
+                  )}
+                  {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
                 </div>
-              )}
-              {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-            </div>
-          </TreeAlignedRow>
-          {isExpandable &&
-            (open ? (
-              <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier }}>
-                <TreeBranchContent slot="tree-property-content" ownerRowKind="group" ownerExpanded={open && hasChildren} className="min-w-0" topPaddingPx={treeItemContentPaddingTopPx}>
-                  {children}
-                </TreeBranchContent>
-              </TreeContext.Provider>
+              </TreeAlignedRow>
+            );
+            const propertyContent = isExpandable ? (
+              open ? (
+                <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier, direction }}>
+                  <TreeBranchContent slot="tree-property-content" ownerRowKind="group" ownerExpanded={open && hasChildren} className="min-w-0" topPaddingPx={treeItemContentPaddingTopPx}>
+                    {children}
+                  </TreeBranchContent>
+                </TreeContext.Provider>
+              ) : (
+                <div data-slot="tree-property-content" className="min-w-0" />
+              )
+            ) : null;
+            return direction === "up" ? (
+              <>
+                {propertyContent}
+                {propertyHeader}
+              </>
             ) : (
-              <div data-slot="tree-property-content" className="min-w-0" />
-            ))}
+              <>
+                {propertyHeader}
+                {propertyContent}
+              </>
+            );
+          })()}
         </div>
       </TreeItemRowContextMenu>
     );
@@ -12549,121 +12610,135 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   if (isExpandable && resolvedLabel) {
     return (
       <TreeItemRowContextMenu items={contextMenu}>
-        <>
-          <div
-            data-dim
-            data-slot="tree-item-row"
-            data-tree-row-kind="group"
-            data-tree-group
-            role="treeitem"
-            id={id}
-            className={itemShellClasses}
-            draggable={draggable}
-            onDragStart={onDragStart}
-            onDragEnd={onDragEnd}
-            onDragOver={onDragOver}
-            onDragLeave={onDragLeave}
-            onDrop={onDrop}
-            onDoubleClick={(event) => {
-              if (!onDoubleClick) return;
-              event.preventDefault();
-              event.stopPropagation();
-              onDoubleClick(event);
-            }}
-            onMouseEnter={handlePointerEnter}
-            onMouseLeave={handlePointerLeave}
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerCancel={onPointerCancel}
-          >
-            <TreeAlignedRow
-              level={level}
-              isLastAtLevel={isLastAtLevel}
-              showLines={showLines}
-              connectCurrentLevel={level > 0}
-              extendCurrentLevelToBottom={open && hasChildren}
-              slot={
-                <button
-                  className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setOpen(!open);
-                  }}
-                >
-                  {loading ? <Spinner size="small" className="text-muted-foreground" /> : open ? <ChevronDownIcon className="size-small flex-shrink-0" /> : <ChevronRightIcon className="size-small flex-shrink-0" />}
-                </button>
-              }
-              contentClassName="min-w-0"
-              contentChromeClassName={itemContentFillClassName}
+        {(() => {
+          const DefaultFoldChevron = treeFoldChevronIcon(direction, open);
+          const defaultHeader = (
+            <div
+              data-dim
+              data-slot="tree-item-row"
+              data-tree-row-kind="group"
+              data-tree-group
+              role="treeitem"
+              id={id}
+              className={itemShellClasses}
+              draggable={draggable}
+              onDragStart={onDragStart}
+              onDragEnd={onDragEnd}
+              onDragOver={onDragOver}
+              onDragLeave={onDragLeave}
+              onDrop={onDrop}
+              onDoubleClick={(event) => {
+                if (!onDoubleClick) return;
+                event.preventDefault();
+                event.stopPropagation();
+                onDoubleClick(event);
+              }}
+              onMouseEnter={handlePointerEnter}
+              onMouseLeave={handlePointerLeave}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerCancel={onPointerCancel}
             >
-              <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
-                <div className={treeHeaderMainClassName}>
-                  {renderTreeRowIcon(icon, "folder")}
-                  <span
-                    data-slot="tree-label"
-                    className={cn(treeItemLabelSlotClassName, "cursor-selectable")}
-                    style={treeItemLabelStyle}
+              <TreeAlignedRow
+                level={level}
+                isLastAtLevel={isLastAtLevel}
+                showLines={showLines}
+                connectCurrentLevel={level > 0}
+                extendCurrentLevelToBottom={open && hasChildren}
+                slot={
+                  <button
+                    className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
                     onClick={(e) => {
-                      if (e.detail > 1) return;
                       e.preventDefault();
                       e.stopPropagation();
-                      onClick?.(e);
+                      setOpen(!open);
                     }}
                   >
-                    {resolvedLabel as React.ReactNode}
-                  </span>
-                </div>
-                {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-                {branchCount > 0 && (
-                  <div data-slot="tree-branch-nav" className="flex items-center gap-single flex-shrink-0">
-                    <button
-                      data-slot="tree-branch-prev"
-                      className="p-0 border-0 bg-transparent cursor-selectable hover:bg-hover-interactive-fill disabled:opacity-30 disabled:cursor-default"
-                      disabled={activeBranchIndex <= 0}
+                    {loading ? <Spinner size="small" className="text-muted-foreground" /> : <DefaultFoldChevron className="size-small flex-shrink-0" />}
+                  </button>
+                }
+                contentClassName="min-w-0"
+                contentChromeClassName={itemContentFillClassName}
+              >
+                <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
+                  <div className={treeHeaderMainClassName}>
+                    {renderTreeRowIcon(icon, "folder")}
+                    <span
+                      data-slot="tree-label"
+                      className={cn(treeItemLabelSlotClassName, "cursor-selectable")}
+                      style={treeItemLabelStyle}
                       onClick={(e) => {
+                        if (e.detail > 1) return;
                         e.preventDefault();
                         e.stopPropagation();
-                        onBranchChange?.(activeBranchIndex - 1);
+                        onClick?.(e);
                       }}
                     >
-                      <ChevronLeftIcon className="size-tiny text-muted-foreground" />
-                    </button>
-                    <span data-slot="tree-branch-indicator" className="text-2xs text-muted-foreground tabular-nums select-none">
-                      {activeBranchIndex + 1}/{branchCount}
+                      {resolvedLabel as React.ReactNode}
                     </span>
-                    <button
-                      data-slot="tree-branch-next"
-                      className="p-0 border-0 bg-transparent cursor-selectable hover:bg-hover-interactive-fill disabled:opacity-30 disabled:cursor-default"
-                      disabled={activeBranchIndex >= branchCount - 1}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        onBranchChange?.(activeBranchIndex + 1);
-                      }}
-                    >
-                      <ChevronRightIcon className="size-tiny text-muted-foreground" />
-                    </button>
                   </div>
-                )}
-              </div>
-            </TreeAlignedRow>
-          </div>
-          {open && (
-            <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier }}>
+                  {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
+                  {branchCount > 0 && (
+                    <div data-slot="tree-branch-nav" className="flex items-center gap-single flex-shrink-0">
+                      <button
+                        data-slot="tree-branch-prev"
+                        className="p-0 border-0 bg-transparent cursor-selectable hover:bg-hover-interactive-fill disabled:opacity-30 disabled:cursor-default"
+                        disabled={activeBranchIndex <= 0}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onBranchChange?.(activeBranchIndex - 1);
+                        }}
+                      >
+                        <ChevronLeftIcon className="size-tiny text-muted-foreground" />
+                      </button>
+                      <span data-slot="tree-branch-indicator" className="text-2xs text-muted-foreground tabular-nums select-none">
+                        {activeBranchIndex + 1}/{branchCount}
+                      </span>
+                      <button
+                        data-slot="tree-branch-next"
+                        className="p-0 border-0 bg-transparent cursor-selectable hover:bg-hover-interactive-fill disabled:opacity-30 disabled:cursor-default"
+                        disabled={activeBranchIndex >= branchCount - 1}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onBranchChange?.(activeBranchIndex + 1);
+                        }}
+                      >
+                        <ChevronRightIcon className="size-tiny text-muted-foreground" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </TreeAlignedRow>
+            </div>
+          );
+          const defaultContent = open && (
+            <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier, direction }}>
               <TreeBranchContent slot="tree-item-content" ownerRowKind="group" ownerExpanded={open && hasChildren} topPaddingPx={treeItemContentPaddingTopPx}>
                 {children}
               </TreeBranchContent>
             </TreeContext.Provider>
-          )}
-        </>
+          );
+          return direction === "up" ? (
+            <>
+              {defaultContent}
+              {defaultHeader}
+            </>
+          ) : (
+            <>
+              {defaultHeader}
+              {defaultContent}
+            </>
+          );
+        })()}
       </TreeItemRowContextMenu>
     );
   }
 
   if (!resolvedLabel) {
-    return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree, indentMultiplier }}>{children}</TreeContext.Provider>;
+    return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree, indentMultiplier, direction }}>{children}</TreeContext.Provider>;
   }
 
   return (
@@ -13125,6 +13200,7 @@ const useTreeSelectionPathSync = (treeRootRef: React.RefObject<HTMLDivElement | 
 /** @emoji 🌿 Hoisted data-tree item row (stable component type across Tree re-renders). */
 const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { readonly item: TreeDataItem; readonly section: TreeDataSection; readonly path: readonly string[]; readonly isLastItem: boolean }): React.ReactElement {
   const { item, section, path, isLastItem } = props;
+  const { direction = "down" } = reactHostPort.useContext(TreeContext);
   const { itemItemsById, loadingById, dragAndDropController, loadItemItems, handleSelectItem, handleDoubleClickItem, handleDragStart, handleDragEnd, handleDragOverItem, handleDropOnItem, buildPalettePointerProps, draggedIds } =
     useTreeDataRendering();
   const isRowSelected = useTreeItemRowSelected(item.id, item.isSelected);
@@ -13135,7 +13211,8 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
   const branchCount = alternatives.length;
   const [activeBranchIndex, setActiveBranchIndex] = reactHostPort.useState(0);
   const clampedBranchIndex = branchCount > 0 ? Math.min(activeBranchIndex, branchCount - 1) : 0;
-  const childItems = branchCount > 0 ? (alternatives[clampedBranchIndex] ?? []) : baseChildItems;
+  const rawChildItems = branchCount > 0 ? (alternatives[clampedBranchIndex] ?? []) : baseChildItems;
+  const childItems = direction === "up" ? [...rawChildItems].reverse() : rawChildItems;
   const isLoading = loadingById[getTreeItemLoadingId(item.id)] ?? false;
   const hasDynamicChildren = Boolean(item.getItems);
   const hasExpandableChildren = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0;
@@ -13213,9 +13290,11 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
 /** @emoji 🌿 Hoisted data-tree section row (stable component type across Tree re-renders). */
 const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(props: { readonly section: TreeDataSection; readonly isLastSection: boolean }): React.ReactElement {
   const { section, isLastSection } = props;
+  const { direction = "down" } = reactHostPort.useContext(TreeContext);
   const { sectionItemsById, loadingById, loadSectionItems, handleDragOver, handleDropOnSection } = useTreeDataRendering();
   const treeOpenState = useTreeOpenState(getTreeSectionStateId(section.id), section.defaultOpen ?? false);
-  const items = getTreeSectionItems(section, sectionItemsById);
+  const rawItems = getTreeSectionItems(section, sectionItemsById);
+  const items = direction === "up" ? [...rawItems].reverse() : rawItems;
   const isLoading = loadingById[getTreeSectionLoadingId(section.id)] ?? false;
   const hasDynamicChildren = Boolean(section.getItems);
   const isExpandable = items.length > 0 || hasDynamicChildren || Boolean(section.emptyState);
@@ -13273,6 +13352,7 @@ export const Tree = (({
   dragAndDropController,
   emptyState,
   indentMultiplier = 1,
+  direction = "down",
   children,
 }: TreeRootProps & { children?: React.ReactNode }) => {
   if (hasNonEmptyChildren(children)) {
@@ -13642,18 +13722,20 @@ export const Tree = (({
   const { treeRootRef, handleTreePointerOver, handleTreePointerLeave, refreshTreeHoverPath } = useTreeHoverPathRootHandlers();
   useTreeSelectionPathSync(treeRootRef, resolvedSelectedIds);
 
+  const orderedSections = direction === "up" ? [...resolvedSections].reverse() : resolvedSections;
+
   return (
     <TreeStateProvider>
-      <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines, isTree: true, indentMultiplier }}>
+      <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines, isTree: true, indentMultiplier, direction }}>
         <TreeReorderDropPreview preview={dropPreview} />
         <div ref={treeRootRef} className={`w-full min-w-0 overflow-hidden ${className}`} onPointerOver={handleTreePointerOver} onPointerLeave={handleTreePointerLeave}>
           <TreeHoverPathRefreshContext.Provider value={refreshTreeHoverPath}>
             <TreeSelectionContext.Provider value={selectionStore}>
               <TreeHighlightContext.Provider value={highlightStore}>
                 <TreeDataRenderingContext.Provider value={treeDataRenderingValue}>
-                  {resolvedSections.map((section, sectionIndex) => (
+                  {orderedSections.map((section, sectionIndex) => (
                     <div key={section.id} data-slot="tree-section-wrapper">
-                      <TreeDataSectionView section={section} isLastSection={sectionIndex === resolvedSections.length - 1} />
+                      <TreeDataSectionView section={section} isLastSection={sectionIndex === orderedSections.length - 1} />
                     </div>
                   ))}
                 </TreeDataRenderingContext.Provider>
@@ -14424,6 +14506,35 @@ const WindowToolbarChrome: React.FC<WindowToolbarChromeProps> = ({ windowId, fol
 
 // #endregion 🪟WindowToolbarChrome
 
+// #region 🪟WindowActionPanelChrome
+
+interface WindowActionPanelChromeProps {
+  windowId: string;
+  folded: boolean;
+  disabled?: boolean;
+  onFold: () => void;
+  onUnfold: () => void;
+}
+
+/** @emoji 🎛 Title bar for the bottom-right window Actions rail: single fold/unfold toggle, mirror of {@link WindowToolbarChrome} but right-anchored (chevrons point toward the free corner). Always rendered so every window with actions carries the rail. */
+const WindowActionPanelChrome: React.FC<WindowActionPanelChromeProps> = ({ windowId, folded, disabled, onFold, onUnfold }) => {
+  if (folded) {
+    return (
+      <div data-slot="window-action-panel-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-start border-b-0")}>
+        <ActionGroupItem id={`${windowId}-window-action-panel-unfold`} icon="chevron-left" text="Actions" className={windowRailChromeLabelActionClass} disabled={disabled} onClick={onUnfold} />
+      </div>
+    );
+  }
+
+  return (
+    <div data-slot="window-action-panel-chrome" data-expanded="true" className={windowRailChromeAsideClass}>
+      <ActionGroupItem id={`${windowId}-window-action-panel-fold`} icon="chevron-right" text="Actions" className={windowRailChromeLabelActionClass} onClick={onFold} />
+    </div>
+  );
+};
+
+// #endregion 🪟WindowActionPanelChrome
+
 // #region ↔️WindowMeasuresResize
 
 /** @emoji ↔️ Mouse resize handle for the unfolded window options rail width (left edge). */
@@ -15151,6 +15262,7 @@ export interface CornerPanelProps {
 /** @emoji 🌲 Leaf-tab tree body shared by {@link CornerPanel} and {@link MobilePanel} — one section per unit (sorted by order); skipped when the active tab has no units. Under a {@link PanelDockProvider}, each unit's header becomes a native-DnD handle draggable to another leaf tab's unit list (see {@link PANEL_TREE_UNIT_MIME}). */
 const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({ corner, tabId, units }: { readonly corner?: PanelCorner; readonly tabId: string; readonly units: readonly PanelTreeUnit[] }) {
   const dock = usePanelDockContext();
+  const flow = useFlow();
   const sortedUnits = [...units].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const draggable = Boolean(dock && corner);
   return (
@@ -15211,6 +15323,7 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({ corn
               sections={config.sections}
               selectedIds={config.selectedIds}
               selectionMode={config.selectionMode}
+              direction={flow.block}
             />
           </TreeStateProvider>
         );
@@ -16543,6 +16656,12 @@ export interface WindowConfig {
   controls?: React.ReactNode;
   measures?: React.ReactNode;
   toolbar?: React.ReactNode;
+  /** @emoji 🎛 Bottom-right (free-corner) Actions rail body; folds to a chip by default. */
+  actionPanel?: React.ReactNode;
+  /** @emoji 🎛 Controlled fold state for the Actions rail (default true); externally settable so the palette/keybinding redirect can force-unfold. */
+  actionsFolded?: boolean;
+  /** @emoji 🎛 Fires when the user or a redirect toggles the Actions rail fold state. */
+  onActionsFoldedChange?: (folded: boolean) => void;
   engagement?: EngagementSpec;
   active?: boolean;
   onActivate?: () => void;
@@ -16624,6 +16743,9 @@ const Window: React.FC<WindowProps> = ({
   controls,
   measures,
   toolbar,
+  actionPanel,
+  actionsFolded: actionsFoldedProp,
+  onActionsFoldedChange,
   engagement,
   active = false,
   onActivate,
@@ -16637,6 +16759,13 @@ const Window: React.FC<WindowProps> = ({
   const [measuresExpanded, setMeasuresExpanded] = reactHostPort.useState(false);
   const [toolbarFolded, setToolbarFolded] = reactHostPort.useState(true);
   const [engagementFolded, setEngagementFolded] = reactHostPort.useState(true);
+  // 🎛 Controlled-with-default fold state for the bottom-right Actions rail (default true).
+  const [actionsFoldedInternal, setActionsFoldedInternal] = reactHostPort.useState(true);
+  const actionsFolded = actionsFoldedProp ?? actionsFoldedInternal;
+  const setActionsFolded = (folded: boolean) => {
+    onActionsFoldedChange?.(folded);
+    if (actionsFoldedProp === undefined) setActionsFoldedInternal(folded);
+  };
   const [measuresWidthPx, setMeasuresWidthPx] = reactHostPort.useState(windowMeasuresDefaultWidthPx);
   const [measuresResizeLeftActive, setMeasuresResizeLeftActive] = reactHostPort.useState(false);
   const measuresReservePx = useWindowMeasuresReservePx(!!engagement, measures, windowBodyRef, measuresOverlayRef);
@@ -16826,6 +16955,20 @@ const Window: React.FC<WindowProps> = ({
                   {!toolbarFolded && toolbar ? (
                     <div data-slot="window-toolbar-body" className={windowToolbarBodyClass}>
                       {toolbar}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </GlassTierProvider>
+          ) : null}
+          {!measuresExpanded && actionPanel ? (
+            <GlassTierProvider tier="windowOptions">
+              <div data-slot="window-action-panel-overlay" data-folded={actionsFolded ? "true" : undefined} className={cn(windowActionPanelOverlayClass, actionsFolded && windowActionPanelOverlayFoldedClass)}>
+                <div data-dim data-slot="window-action-panel" data-folded={actionsFolded ? "true" : undefined} className={cn(windowMeasuresStackClass, actionsFolded ? "flex-row items-end w-fit" : "flex-col items-stretch")}>
+                  <WindowActionPanelChrome windowId={id} folded={actionsFolded} onFold={() => setActionsFolded(true)} onUnfold={() => setActionsFolded(false)} />
+                  {!actionsFolded ? (
+                    <div data-slot="window-action-panel-body" className={windowActionPanelBodyClass}>
+                      {actionPanel}
                     </div>
                   ) : null}
                 </div>
@@ -23114,6 +23257,64 @@ if (import.meta.vitest) {
       expect(flowFromCorner("top-right")).toEqual({ inline: "rtl", block: "down" });
       expect(flowFromCorner("bottom-left")).toEqual({ inline: "ltr", block: "up" });
       expect(flowFromCorner("bottom-right")).toEqual({ inline: "rtl", block: "up" });
+    });
+
+    it("Tree direction=up renders a group's content before its own header row, with reversed sibling order", () => {
+      const sections: TreeDataSection[] = [
+        { id: "sec-a", label: "Section A", defaultOpen: true, items: [{ id: "item-a", label: "Item A" }] },
+        { id: "sec-b", label: "Section B", defaultOpen: true, items: [{ id: "item-b", label: "Item B" }] },
+      ];
+      const downMarkup = renderToStaticMarkup(<Tree sections={sections} />);
+      const upMarkup = renderToStaticMarkup(<Tree sections={sections} direction="up" />);
+
+      // Default (down): sections render in declared order, each header before its content.
+      expect(downMarkup.indexOf("Section A")).toBeLessThan(downMarkup.indexOf("Section B"));
+      expect(downMarkup.indexOf("Section A")).toBeLessThan(downMarkup.indexOf("Item A"));
+
+      // Up: sibling sections reverse (B before A), and within each section the header comes after its own content.
+      expect(upMarkup.indexOf("Section B")).toBeLessThan(upMarkup.indexOf("Section A"));
+      expect(upMarkup.indexOf("Item A")).toBeLessThan(upMarkup.indexOf("Section A"));
+    });
+
+    it("Tree direction=up uses chevron-left (collapsed) / chevron-up (expanded); direction=down keeps chevron-right / chevron-down", () => {
+      const sections: TreeDataSection[] = [{ id: "sec", label: "Section", defaultOpen: true, items: [{ id: "item", label: "Item" }] }];
+      const downMarkup = renderToStaticMarkup(<Tree sections={sections} />);
+      const upMarkup = renderToStaticMarkup(<Tree sections={sections} direction="up" />);
+      expect(downMarkup).toContain('data-icon="chevron-down"');
+      expect(downMarkup).not.toContain('data-icon="chevron-up"');
+      expect(upMarkup).toContain('data-icon="chevron-up"');
+      expect(upMarkup).not.toContain('data-icon="chevron-down"');
+    });
+
+    it("Tree direction=up collapses to chevron-left instead of chevron-right", () => {
+      const sections: TreeDataSection[] = [{ id: "sec", label: "Section", defaultOpen: false, items: [{ id: "item", label: "Item" }] }];
+      const upMarkup = renderToStaticMarkup(<Tree sections={sections} direction="up" />);
+      expect(upMarkup).toContain('data-icon="chevron-left"');
+      expect(upMarkup).not.toContain('data-icon="chevron-right"');
+    });
+
+    it("CornerPanel wires bottom corners' trees to direction=up (content above header) while top corners stay direction=down", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [
+        singleTreeLeaf({
+          id: "tab-a",
+          icon: StubIcon,
+          name: "Tab A",
+          tree: {
+            sections: [
+              { id: "sec-a", label: "Section A", defaultOpen: true, items: [{ id: "item-a", label: "Item A" }] },
+              { id: "sec-b", label: "Section B", defaultOpen: true, items: [{ id: "item-b", label: "Item B" }] },
+            ],
+          },
+        }),
+      ];
+      const { container: topContainer } = render(<CornerPanel corner="top-left" visible tabs={tabs} />);
+      const topMarkup = topContainer.querySelector('[data-slot="corner-panel-content"]')!.innerHTML;
+      expect(topMarkup.indexOf("Section A")).toBeLessThan(topMarkup.indexOf("Section B"));
+
+      const { container: bottomContainer } = render(<CornerPanel corner="bottom-left" visible tabs={tabs} />);
+      const bottomMarkup = bottomContainer.querySelector('[data-slot="corner-panel-content"]')!.innerHTML;
+      expect(bottomMarkup.indexOf("Section B")).toBeLessThan(bottomMarkup.indexOf("Section A"));
     });
 
     it("FlowProvider defaults to ltr/down and lets nested providers override only what they pass", () => {

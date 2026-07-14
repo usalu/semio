@@ -1685,7 +1685,6 @@
 \newcommand{\semio@register@table@body}{}
 
 \newcommand{\semio@register@table@header}{%
-  \hhline{~--}
   \semio@table@long@header@repeat@three
     {\semio@register@header@number}
     {\semio@register@header@title}
@@ -1761,11 +1760,7 @@
 \newcommand{\semio@references@rows}{}
 
 \newcommand{\semio@references@table@header}{%
-  \SemioTableHeaderRow{%
-    \semio@register@header@number &
-    \semio@register@header@reference &
-    \semio@register@header@year
-  }%
+  \semio@references@table@header@long@repeat
 }
 
 \defbibenvironment{semioreferences}
@@ -2142,17 +2137,17 @@
   }%
 }
 
-\newcommand{\semio@heading@pair@panel@num}[2]{%
-  \semio@hierarchy@path@set{#1}%
-  \sbox{\semio@window@tab@box}{\semio@heading@chip{semio-chrome-panel}{semio-chrome-text-normal}{#2}}%
-  \sbox{\semio@window@ctrl@box}{\semio@heading@chip{semio-chrome-panel}{semio-chrome-text-normal}{\semio@kind@number@bare{#1}}}%
+\newcommand{\semio@heading@pair@outline}[5]{%
+  \semio@hierarchy@path@set{\csname the#4\endcsname}%
+  \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill{#5}{#2}{#1}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill{\semio@heading@kind@number{#3}{#4}}{#2}{#1}}%
   \setlength{\semio@window@gap@w}{%
     \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
   }%
   \semio@heading@row@wrap{%
     \hbox to \linewidth{%
       \usebox{\semio@window@tab@box}%
-      \semio@window@header@gap@paint{semio-chrome-panel}%
+      \semio@window@header@gap@paint@nofill{#1}%
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
@@ -2177,6 +2172,12 @@
 \newcommand{\semio@heading@title@end}[3]{%
   \semio@heading@row@wrap{%
     \semio@heading@chip{#1}{#2}{#3}%
+  }%
+}
+
+\newcommand{\semio@heading@title@end@outline}[3]{%
+  \semio@heading@row@wrap{%
+    \semio@heading@cap@nofill{#3}{#2}{#1}%
   }%
 }
 
@@ -2209,6 +2210,8 @@
   \fi
 }
 
+\def\semio@heading@style@outline@marker{outline}%
+
 \newcommand{\semio@koma@heading@lines}[5]{%
   \ifnum\numexpr\semio@toc@level{#1}\relax>\value{tocdepth}\else
     \semio@toc@track@num{#1}{\csname the#1\endcsname}{#3}%
@@ -2216,10 +2219,19 @@
   \semio@chrome@heading@track{#1}{#3}%
   \semio@if@heading@chips
     {%
-      \if\relax\detokenize{#4}\relax
-        \semio@heading@title@end{#2}{#5}{#3}%
+      \edef\semio@heading@style@resolved{\csname semio@heading@style@#1\endcsname}%
+      \ifx\semio@heading@style@resolved\semio@heading@style@outline@marker
+        \if\relax\detokenize{#4}\relax
+          \semio@heading@title@end@outline{#2}{#5}{#3}%
+        \else
+          \semio@heading@pair@outline{#2}{#5}{#1}{#1}{#3}%
+        \fi
       \else
-        \semio@heading@pair{#2}{#5}{#1}{#1}{#3}%
+        \if\relax\detokenize{#4}\relax
+          \semio@heading@title@end{#2}{#5}{#3}%
+        \else
+          \semio@heading@pair{#2}{#5}{#1}{#1}{#3}%
+        \fi
       \fi
     }%
     {#3}%
@@ -2237,18 +2249,25 @@
 }
 
 \newcommand{\semio@heading@installall}{%
+  \def\semio@heading@style@part{solid}%
   \def\semio@heading@color@part{semio-tertiary}%
   \def\semio@heading@textcolor@part{semio-chrome-foreground}%
+  \def\semio@heading@style@chapter{outline}%
   \def\semio@heading@color@chapter{semio-tertiary}%
-  \def\semio@heading@textcolor@chapter{semio-chrome-text-normal}%
+  \def\semio@heading@textcolor@chapter{semio-chrome-foreground}%
+  \def\semio@heading@style@section{solid}%
   \def\semio@heading@color@section{semio-secondary}%
   \def\semio@heading@textcolor@section{semio-chrome-foreground}%
+  \def\semio@heading@style@subsection{outline}%
   \def\semio@heading@color@subsection{semio-secondary}%
-  \def\semio@heading@textcolor@subsection{semio-chrome-text-normal}%
+  \def\semio@heading@textcolor@subsection{semio-chrome-foreground}%
+  \def\semio@heading@style@subsubsection{solid}%
   \def\semio@heading@color@subsubsection{semio-primary}%
   \def\semio@heading@textcolor@subsubsection{semio-chrome-foreground}%
+  \def\semio@heading@style@paragraph{outline}%
   \def\semio@heading@color@paragraph{semio-primary}%
-  \def\semio@heading@textcolor@paragraph{semio-chrome-text-normal}%
+  \def\semio@heading@textcolor@paragraph{semio-chrome-foreground}%
+  \def\semio@heading@style@subparagraph{solid}%
   \def\semio@heading@color@subparagraph{semio-chrome-panel}%
   \def\semio@heading@textcolor@subparagraph{semio-chrome-foreground}%
   \ifcsname chapter\endcsname
@@ -2336,34 +2355,19 @@
   \ifnum\value{semio@nest@depth}>4 .\thesemio@nest@e\fi
 }
 
-% 🎨 Depths 2+ (SubSubSubparagraph and deeper) are "no filling" — only text
-% emphasis and border weight distinguish them, alternating every depth and
-% stepping the border down every 2 depths, frozen from depth 7 (row 14) on.
+% 🎨 SubSubparagraph (depth 1) and deeper are all outline-only chips with
+% emphasized text; only the border weight steps down, frozen from depth 2 on.
 \newcommand{\semio@nest@style@apply}[1]{%
-  \ifcase\numexpr#1-2\relax
-    \def\semio@nest@style@text{semio-chrome-foreground}%
+  \ifcase\numexpr#1-1\relax
     \def\semio@nest@style@border{semio-chrome-border-emphasized}%
   \or
-    \def\semio@nest@style@text{semio-chrome-text-normal}%
-    \def\semio@nest@style@border{semio-chrome-border-emphasized}%
-  \or
-    \def\semio@nest@style@text{semio-chrome-foreground}%
     \def\semio@nest@style@border{semio-chrome-border-normal}%
-  \or
-    \def\semio@nest@style@text{semio-chrome-text-normal}%
-    \def\semio@nest@style@border{semio-chrome-border-normal}%
-  \or
-    \def\semio@nest@style@text{semio-chrome-foreground}%
-    \def\semio@nest@style@border{}%
-  \or
-    \def\semio@nest@style@text{semio-chrome-text-normal}%
-    \def\semio@nest@style@border{}%
   \fi
 }
 
 \newcommand{\semio@nest@style@resolve}{%
-  \ifnum\value{semio@nest@depth}>7
-    \semio@nest@style@apply{7}%
+  \ifnum\value{semio@nest@depth}>2
+    \semio@nest@style@apply{2}%
   \else
     \semio@nest@style@apply{\value{semio@nest@depth}}%
   \fi
@@ -2376,12 +2380,8 @@
   \ifnum\numexpr\semio@toc@level@subparagraph+\value{semio@nest@depth}\relax>\value{tocdepth}\else
     \semio@toc@track@num{paragraph}{\semio@nest@num}{#1}%
   \fi
-  \ifnum\value{semio@nest@depth}=1
-    \semio@heading@pair@panel@num{\semio@nest@num}{#1}%
-  \else
-    \semio@nest@style@resolve
-    \semio@heading@pair@nofill@num{\semio@nest@num}{#1}{\semio@nest@style@text}{\semio@nest@style@border}%
-  \fi
+  \semio@nest@style@resolve
+  \semio@heading@pair@nofill@num{\semio@nest@num}{#1}{semio-chrome-foreground}{\semio@nest@style@border}%
   \semio@heading@block@after
 }
 

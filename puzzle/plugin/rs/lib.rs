@@ -561,6 +561,12 @@ pub mod d2 {
         }
     }
 
+    /// 🐢 `UiDirtyScope.windowBodies`/`.panelBodies` are matched against `AppDefinition.windowKinds[].bodyKey`
+    /// on the shell side (`buildUiRefreshRequest`'s `uiRefreshWantsWindow`), so these must be the body-key
+    /// constants (`puzzle2d.play.overview`, …) — *not* the pane/kind-id constants (`PUZZLE2D_PANES`,
+    /// `2d-overview`, …), which are a different id space used to key tools/engagements/measures.
+    const PUZZLE2D_WINDOW_BODY_KEYS: [&str; 3] = [PUZZLE2D_PLAY_BODY_OVERVIEW, PUZZLE2D_PLAY_BODY_DETAIL, PUZZLE2D_PLAY_BODY_SELECTION];
+
     /// 🐢 Classifies a batch of board events into the narrowest `UiDirtyScope` that covers all of them —
     /// `applyBoardEvents` fires on every select/drag/zoom, so getting this right is most of the
     /// perf-round-3 win. Unrecognized/empty event batches fall back to `Full` (safe default).
@@ -569,7 +575,7 @@ pub mod d2 {
         if events.is_empty() {
             return UiDirtyScope::None;
         }
-        let panes: Vec<String> = PUZZLE2D_PANES.iter().map(|pane| pane.to_string()).collect();
+        let panes: Vec<String> = PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect();
         let mut window_bodies = false;
         let mut panel_layers = false;
         let mut panel_properties = false;
@@ -633,7 +639,7 @@ pub mod d2 {
     /// canvas panes (never a panel or engagement/measure/tool refresh).
     fn puzzle2d_window_only_scope() -> semio_framework_core::kernel::UiDirtyScope {
         semio_framework_core::kernel::UiDirtyScope::Partial {
-            window_bodies: PUZZLE2D_PANES.iter().map(|pane| pane.to_string()).collect(),
+            window_bodies: PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
             panel_bodies: Vec::new(),
             tools: false,
             engagements: false,
@@ -646,7 +652,7 @@ pub mod d2 {
     /// brush weights, LOD/grid settings, engagement text input) but never touch document content.
     fn puzzle2d_window_and_engagements_scope() -> semio_framework_core::kernel::UiDirtyScope {
         semio_framework_core::kernel::UiDirtyScope::Partial {
-            window_bodies: PUZZLE2D_PANES.iter().map(|pane| pane.to_string()).collect(),
+            window_bodies: PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
             panel_bodies: Vec::new(),
             tools: false,
             engagements: true,
@@ -660,7 +666,7 @@ pub mod d2 {
     /// content or the engagement bar.
     fn puzzle2d_window_and_measures_scope() -> semio_framework_core::kernel::UiDirtyScope {
         semio_framework_core::kernel::UiDirtyScope::Partial {
-            window_bodies: PUZZLE2D_PANES.iter().map(|pane| pane.to_string()).collect(),
+            window_bodies: PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
             panel_bodies: Vec::new(),
             tools: false,
             engagements: false,
@@ -673,7 +679,7 @@ pub mod d2 {
     /// layers/properties panels (which highlight the selection) and the engagement bar.
     fn puzzle2d_select_scope() -> semio_framework_core::kernel::UiDirtyScope {
         semio_framework_core::kernel::UiDirtyScope::Partial {
-            window_bodies: PUZZLE2D_PANES.iter().map(|pane| pane.to_string()).collect(),
+            window_bodies: PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
             panel_bodies: vec![PUZZLE2D_PLAY_BODY_LAYERS.to_string(), PUZZLE2D_PLAY_BODY_PROPERTIES.to_string()],
             tools: false,
             engagements: true,
@@ -2233,7 +2239,10 @@ pub mod d2 {
             let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &meta("local")).expect("select");
             match result.ui_scope {
                 UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, tools, labels } => {
-                    assert_eq!(window_bodies.len(), 3, "select must touch all 3 canvas panes");
+                    // 🐢 Regression: `window_bodies` must list the window *body keys* (matched against
+                    // `AppDefinition.windowKinds[].bodyKey` by the shell's `buildUiRefreshRequest`), not
+                    // the pane/kind-id constants (`PUZZLE2D_PANES`) — those are a different id space.
+                    assert_eq!(window_bodies, vec![PUZZLE2D_PLAY_BODY_OVERVIEW, PUZZLE2D_PLAY_BODY_DETAIL, PUZZLE2D_PLAY_BODY_SELECTION], "window_bodies must be body keys, not pane ids");
                     assert!(panel_bodies.contains(&PUZZLE2D_PLAY_BODY_LAYERS.to_string()));
                     assert!(panel_bodies.contains(&PUZZLE2D_PLAY_BODY_PROPERTIES.to_string()));
                     assert!(engagements, "select must refresh the engagement bar");
@@ -5853,9 +5862,15 @@ pub mod d3 {
 
         #[test]
         fn fill_build_tick_auto_starts_fill_when_active_and_done() {
+            // 🐢 `drive_precompute` is now bounded to a small per-call budget (the fix for the UI-freeze
+            // bug: a single action must never grind the whole precompute queue synchronously), so the
+            // build converges over several ticks — exactly like the real 120ms `fillBuildTick` loop in
+            // `world-3d-host.tsx` — rather than in one call.
             let mut app = new_app();
             app.handle_action("engagementPossibleSelect", Some(&json!({ "possibleId": PUZZLE3D_ENGAGEMENT_TOOL_FILL })), &ViewState::default(), &meta("local")).expect("select fill tool");
-            app.handle_action("fillBuildTick", None, &ViewState::default(), &meta("local")).expect("fillBuildTick");
+            for _ in 0..500 {
+                app.handle_action("fillBuildTick", None, &ViewState::default(), &meta("local")).expect("fillBuildTick");
+            }
             let engagements = app.window_engagements(&ViewState::default());
             let engagement = engagements.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main window engagement");
             match &engagement.control {

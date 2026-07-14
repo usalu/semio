@@ -15,16 +15,16 @@ use semio_framework_plugin::{
     apply_world3d_sun_action, build_canvas_2d_scene, build_world_3d_scene, create_default_layout,
     create_named_layout, engagement_token_matches, merge_world_selection_ids, mesh_from_kind,
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
-    world3d_camera_json, world3d_scene, world3d_selection_json, world3d_sun_measures, ActionDescriptor,
-    ActionEmit, App, AppLabelsOverlay, Canvas2dScene, DocumentApp, DocumentView, MeshData, PanelGroup,
-    SurfaceKind, ToolCategory, ToolNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiToggleNode,
-    ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowMeasure,
-    WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-    MeasureSelectItem, WindowEngagementPossible, WindowEngagementStatus,
+    world3d_camera_json, world3d_scene, world3d_selection_json, world3d_sun_measures, ActionArgDef,
+    ActionArgOption, ActionDescriptor, ActionEmit, App, AppLabelsOverlay, Canvas2dScene, DocumentApp,
+    DocumentView, MeshData, PanelGroup, SurfaceKind, ToolCategory, ToolDefinition, UiFieldNode,
+    UiInspectorFieldGroup, UiNode, UiToggleNode, ViewState, WindowEngagement, WindowEngagementInput,
+    WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, MeasureSelectItem, WindowEngagementPossible,
+    WindowEngagementStatus, SET_ACTIVE_TOOL_ACTION_ID,
 };
-use semio_framework_plugin::{tool_button, tool_collection, tool_toggle};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use std::cell::RefCell;
@@ -44,6 +44,8 @@ const LOWPOLY_PLAY_BODY_INSPECTION: &str = "lowpoly.play.inspection";
 const LOWPOLY_PLAY_BODY_LAYERS: &str = "lowpoly.play.layers";
 const LOWPOLY_PLAY_WINDOW_MAIN: &str = "lowpoly-main";
 const LOWPOLY_PLAY_WINDOW_UV: &str = "lowpoly-uv";
+/// 🧰 The transform gumball tool a Model window falls back to when the host hasn't set an active tool.
+const LOWPOLY_TRANSFORM_TOOL_DEFAULT: &str = "move";
 
 const PRIMITIVE_CATALOG: &[(&str, &str, &str)] = &[
     ("box", "Cube", "box"),
@@ -98,7 +100,6 @@ fn lowpoly_world_camera_json(runtime: &LowpolyPlayRuntime) -> String {
 struct LowpolyPlayRuntime {
     active_object_id: String,
     selection: LowpolySelection,
-    transform_tool: String,
     paint_tool: String,
     active_paint_layer: u32,
     selection_method: String,
@@ -118,7 +119,6 @@ impl Default for LowpolyPlayRuntime {
         Self {
             active_object_id: String::new(),
             selection: LowpolySelection::default(),
-            transform_tool: "move".into(),
             paint_tool: "brush".into(),
             active_paint_layer: 0,
             selection_method: "rectangle".into(),
@@ -419,7 +419,7 @@ fn gumball_active(view: LowpolyView) -> bool {
 //#endregion 🔖SelectionHelpers
 
 //#region 🔖Scene
-fn world_selection_json_for(view: LowpolyView, active_mode_id: Option<&str>, doc: Option<&LowpolyDocument>) -> String {
+fn world_selection_json_for(view: LowpolyView, active_tool: &str, active_mode_id: Option<&str>, doc: Option<&LowpolyDocument>) -> String {
     let runtime = view.runtime;
     let active = resolve_active_object_id(view.projection, runtime);
     let mut value: Value = serde_json::from_str(&world3d_selection_json(
@@ -431,7 +431,7 @@ fn world_selection_json_for(view: LowpolyView, active_mode_id: Option<&str>, doc
     if let Some(object) = value.as_object_mut() {
         object.insert("granularity".into(), json!(runtime.selection.mode));
         object.insert("targets".into(), json!(runtime.selection.targets));
-        object.insert("transformTool".into(), json!(runtime.transform_tool));
+        object.insert("transformTool".into(), json!(active_tool));
         object.insert(
             "interactionMode".into(),
             json!(if active_mode_id == Some("paint") { "paint" } else { "model" }),
@@ -893,7 +893,7 @@ fn inspector_tool_param_field(id: &str, label: &str, key: &str, value: &Value) -
     })
 }
 
-fn build_inspector_tree(view: LowpolyView, labels: &LowpolyLabels) -> UiNode {
+fn build_inspector_tree(view: LowpolyView, active_tool: &str, labels: &LowpolyLabels) -> UiNode {
     let Some(object) = active_object(view) else {
         return ui_stack_vertical(vec![
             ui_text(format!("Schema: {LOWPOLY_DOCUMENT_SCHEMA}")),
@@ -963,7 +963,7 @@ fn build_inspector_tree(view: LowpolyView, labels: &LowpolyLabels) -> UiNode {
             fields: vec![ui_inspector_readonly_field(
                 "lowpoly-play-inspector.transform.tool",
                 "Tool",
-                &view.runtime.transform_tool,
+                active_tool,
             )],
         },
         UiInspectorFieldGroup {
@@ -1010,9 +1010,17 @@ fn format_selection_targets_label(targets: &LowpolySelectionTargets) -> String {
     }
 }
 
-fn lowpoly_window_engagement(view: LowpolyView) -> WindowEngagement {
+fn set_active_tool_action(tool_id: &str) -> ActionDescriptor {
+    ActionDescriptor {
+        controller_id: LOWPOLY_PLAY_CONTROLLER_ID.into(),
+        action: SET_ACTIVE_TOOL_ACTION_ID.into(),
+        args: Some(json!({ "toolId": tool_id, "windowKindId": LOWPOLY_PLAY_WINDOW_MAIN })),
+    }
+}
+
+fn lowpoly_window_engagement(view: LowpolyView, active_tool: &str) -> WindowEngagement {
     let runtime = view.runtime;
-    let transform = runtime.transform_tool.clone();
+    let transform = active_tool;
     let selected_count = runtime.selection.ids.len();
     WindowEngagement {
         session_active: Some(true),
@@ -1023,7 +1031,7 @@ fn lowpoly_window_engagement(view: LowpolyView) -> WindowEngagement {
                 icon_id: Some("move".into()),
                 pressed: Some(transform == "move"),
                 disabled: None,
-                action: Some(lowpoly_action("setTransformTool", Some(json!({ "tool": "move" })))),
+                action: Some(set_active_tool_action("move")),
             },
             WindowEngagementOption {
                 id: "lowpoly.opt.rotate".into(),
@@ -1031,7 +1039,7 @@ fn lowpoly_window_engagement(view: LowpolyView) -> WindowEngagement {
                 icon_id: Some("rotate-cw".into()),
                 pressed: Some(transform == "rotate"),
                 disabled: None,
-                action: Some(lowpoly_action("setTransformTool", Some(json!({ "tool": "rotate" })))),
+                action: Some(set_active_tool_action("rotate")),
             },
             WindowEngagementOption {
                 id: "lowpoly.opt.scale".into(),
@@ -1039,7 +1047,7 @@ fn lowpoly_window_engagement(view: LowpolyView) -> WindowEngagement {
                 icon_id: Some("maximize-2".into()),
                 pressed: Some(transform == "scale"),
                 disabled: None,
-                action: Some(lowpoly_action("setTransformTool", Some(json!({ "tool": "scale" })))),
+                action: Some(set_active_tool_action("scale")),
             },
             WindowEngagementOption {
                 id: "lowpoly.opt.snap".into(),
@@ -1128,8 +1136,23 @@ fn lowpoly_tool_param_slider(
     }
 }
 
+/// 🎯 One selection-granularity toggle. Selection kinds are a non-exclusive multi-select (mesh + face +
+/// edge + vertex can all be active at once), so they are a window-measure toggle group — NOT a
+/// single-active tool group.
+fn selection_kind_toggle(id: &str, icon: &str, label: &str, kind: &str, pressed: bool) -> WindowMeasure {
+    WindowMeasure::Toggle {
+        id: format!("lowpoly-measure-selection-{id}"),
+        icon_id: icon.into(),
+        label: Some(label.into()),
+        pressed,
+        text: None,
+        on_change: lowpoly_action("toggleSelectionKind", Some(json!({ "kind": kind }))),
+    }
+}
+
 fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime) -> Vec<WindowMeasure> {
     let params = &runtime.tool_params;
+    let targets = &runtime.selection.targets;
     vec![
         WindowMeasure::Toggle {
             id: "lowpoly-measure-show-edges".into(),
@@ -1138,6 +1161,17 @@ fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime) -> Vec<WindowMeasure> {
             pressed: runtime.show_edges,
             text: None,
             on_change: lowpoly_action("toggleShowEdges", None),
+        },
+        WindowMeasure::Group {
+            id: "lowpoly-measure-selection-kind".into(),
+            label: "Selection Kind".into(),
+            default_open: Some(true),
+            children: vec![
+                selection_kind_toggle("mesh", "box", "Mesh", "mesh", targets.mesh),
+                selection_kind_toggle("face", "square", "Face", "face", targets.face),
+                selection_kind_toggle("edge", "minus", "Edge", "edge", targets.edge),
+                selection_kind_toggle("vertex", "circle", "Vertex", "vertex", targets.vertex),
+            ],
         },
         world3d_sun_measures("lowpoly", &runtime.sun, lowpoly_action),
         WindowMeasure::Select {

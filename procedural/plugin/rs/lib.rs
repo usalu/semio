@@ -10,7 +10,7 @@ pub mod app_2d {
         apply_generation_op, build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout,
         generation_ops, render_generation_form_body, render_generation_preview_text, render_generations_tree,
         select_generation, selected_generation, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
-        ui_stack_vertical, ui_text, ActionEmit, App, Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView,
+        ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView,
         GenerationPlayState, NodeGraphScene, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode,
         UiTreeSectionNode, ViewState,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -1077,6 +1077,42 @@ pub mod app_2d {
                     PanelGroup::Details,
                     PROCEDURAL2D_PLAY_BODY_INSPECTION,
                 )
+                // ✏️ Document-mutating operations — dispatched as VCS ops with a true inverse.
+                .operation("nodeGraphViewport", "Set Viewport")
+                .operation("nodeGraphEdit", "Edit Graph")
+                .operation("moveMediaNode", "Move Node")
+                .operation("addWidget", "Add Widget")
+                .operation("removeWidget", "Remove Widget")
+                .operation("connectMediaPorts", "Connect Ports")
+                .operation("reorganize", "Reorganize")
+                .operation("addGeneration", "Add Generation")
+                .operation("removeGeneration", "Remove Generation")
+                .operation("renameGeneration", "Rename Generation")
+                .operation("updateGenerationValues", "Update Generation Values")
+                // 👁️ Ephemeral view actions — selection, hover, the show-mode display toggle, and evaluation scratch (emit no ops).
+                .view_action("setSelection", "Set Selection")
+                .view_action("selectNode", "Select Node")
+                .view_action("nodeGraphSelect", "Node Graph Select")
+                .view_action("nodeGraphHover", "Node Graph Hover")
+                .view_action("setShowMode", "Set Show Mode")
+                .view_action("generate", "Generate")
+                .view_action("setEvalOutputs", "Set Eval Outputs")
+                .view_action("canvasPointerDown", "Canvas Pointer Down")
+                .view_action("canvasPointerMove", "Canvas Pointer Move")
+                .view_action("canvasPointerUp", "Canvas Pointer Up")
+                .view_action("canvasWheel", "Canvas Wheel")
+                .view_action("selectGeneration", "Select Generation")
+                // 📝 Staged argument form for the palette-visible add-widget action (default materialized host-side).
+                .action_args("addWidget", vec![
+                    ActionArgDef::select("kind", "Kind", vec![
+                        ActionArgOption::new("inputSlider", "Slider"),
+                        ActionArgOption::new("inputStepper", "Stepper"),
+                        ActionArgOption::new("inputNote", "Note"),
+                        ActionArgOption::new("neuron", "Component"),
+                        ActionArgOption::new("outputPreview", "Preview"),
+                        ActionArgOption::new("outputExport", "Export"),
+                    ]).default_value("inputSlider"),
+                ])
                 .keybinding("mod+z", "undo")
                 .keybinding("mod+shift+z", "redo"),
         )
@@ -1103,6 +1139,7 @@ pub mod app_2d {
     mod tests {
         use super::*;
         use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+        use semio_framework_plugin::app::AppActionRegistry;
         use vcs::MemoryBackbone;
 
         fn meta(actor: &str) -> ActionMeta {
@@ -1111,6 +1148,21 @@ pub mod app_2d {
 
         fn new_app() -> VcsDocumentApp<Procedural2dPlayApp> {
             VcsDocumentApp::new(Procedural2dPlayApp::default())
+        }
+
+        /// 🧬 A wrapper carrying the real action registry so default-materialization + kind discipline run.
+        fn new_app_with_registry() -> VcsDocumentApp<Procedural2dPlayApp> {
+            let definition = create_procedural2d_app().definition;
+            VcsDocumentApp::with_registry(Procedural2dPlayApp::default(), AppActionRegistry::from_definition(&definition))
+        }
+
+        #[test]
+        fn add_widget_materializes_declared_kind_default_into_an_op() {
+            let mut app = new_app_with_registry();
+            let before = app.projection().expect("projection").fixture.widgets.len();
+            // addWidget fired with no args: the declared `kind` default must materialize into a real widget op.
+            app.handle_action("addWidget", None, &ViewState::default(), &meta("local")).expect("add widget");
+            assert_eq!(app.projection().expect("projection").fixture.widgets.len(), before + 1, "materialized default kind produced a document op");
         }
 
         #[test]
@@ -1283,10 +1335,11 @@ pub mod app_3d {
         apply_generation_op, apply_world3d_sun_action, build_node_graph_scene, build_world_3d_scene, create_default_layout,
         create_named_layout, generation_ops, merge_world_selection_ids,
         mesh_from_kind, render_generation_form_body, render_generation_preview_text, render_generations_tree,
-        select_generation, selected_generation, tool_button, tool_collection, tool_toggle, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
-        ui_stack_vertical, ui_text, ActionEmit, App, DocumentApp, DocumentView, world3d_scene, world3d_selection_json, world3d_sun_measures,
-        ActionDescriptor, GenerationOp, GenerationPlayState, NodeGraphScene, ToolCategory, ToolNode,
+        select_generation, selected_generation, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
+        ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, DocumentApp, DocumentView, world3d_scene, world3d_selection_json, world3d_sun_measures,
+        ActionDescriptor, GenerationOp, GenerationPlayState, MeasureSelectItem, NodeGraphScene, ToolDefinition,
         UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowMeasure, WorldSunConfig,
+        SET_ACTIVE_TOOL_ACTION_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
         FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
         FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -1334,6 +1387,9 @@ pub mod app_3d {
         ("inputNote", "file-text"),
         ("outputPreview", "eye"),
     ];
+
+    /// 🧰 The gumball tool active when the host has not yet set `view_state.active_tool_id` (first ToolRef).
+    const PROCEDURAL_3D_TRANSFORM_TOOL_DEFAULT: &str = "move";
     //#endregion 🔖Constants
 
     //#region 🔖EvalCache
@@ -2068,12 +2124,36 @@ pub mod app_3d {
         serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
     }
 
-    fn preview_selection_json(runtime: &Procedural3dRuntime) -> String {
-        world3d_selection_json(
+    /// 🧭 World-3d selection payload with the host-owned gumball tool spliced in, so the transform
+    /// handles follow `view_state.active_tool_id` instead of any document/runtime-stored tool.
+    fn preview_selection_json(runtime: &Procedural3dRuntime, active_tool: &str) -> String {
+        let mut value: Value = serde_json::from_str(&world3d_selection_json(
             &runtime.selection_method,
             &runtime.selected_node_ids,
             runtime.hovered_node_id.as_deref(),
-        )
+        ))
+        .unwrap_or_else(|_| json!({}));
+        if let Some(object) = value.as_object_mut() {
+            object.insert("transformTool".into(), json!(active_tool));
+            object.insert("gumballActive".into(), json!(!runtime.selected_node_ids.is_empty()));
+        }
+        value.to_string()
+    }
+
+    /// 🎚️ Level-of-detail display measure for the flow window — the migrated home of the old LOD
+    /// toolbar toggles (a display option, never an interactive tool). Dispatches `setLodMode` (a View action).
+    fn procedural3d_lod_measure(lod_mode: &str) -> WindowMeasure {
+        let current = if lod_mode.is_empty() { "solid" } else { lod_mode };
+        WindowMeasure::Select {
+            id: "procedural3d-measure-lod".into(),
+            label: Some("LOD".into()),
+            value: current.into(),
+            items: vec![
+                MeasureSelectItem { id: "procedural3d-measure-lod-solid".into(), value: "solid".into(), label: "Solid".into() },
+                MeasureSelectItem { id: "procedural3d-measure-lod-wireframe".into(), value: "wireframe".into(), label: "Wireframe".into() },
+            ],
+            on_change: procedural3d_action("setLodMode", None),
+        }
     }
 
     fn export_mesh_from_document(projection: &Procedural3dDocument) -> semio_framework_plugin::MeshData {
@@ -2361,7 +2441,7 @@ pub mod app_3d {
             if changed {
                 let ops = self.commit_fixture(fixture, &host.fixture);
                 self.runtime.selected_node_ids = new_selection;
-                return ActionEmit::ops(ops);
+                return ActionEmit::amend(ops, format!("gumball-{op}"));
             }
             ActionEmit::default()
         }
@@ -2399,6 +2479,11 @@ pub mod app_3d {
                 }
                 "nodeGraphHover" => ActionEmit::default(),
                 "worldPointerDown" | "graphPointerDown" => ActionEmit::default(),
+                // 🧰 Host-owned active-tool switch — clear in-progress hover scratch, never emit ops.
+                SET_ACTIVE_TOOL_ACTION_ID => {
+                    self.runtime.hovered_node_id = None;
+                    ActionEmit::default()
+                }
                 "worldSelect" => {
                     let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
                     let ids: Vec<String> = args
@@ -2635,6 +2720,7 @@ pub mod app_3d {
             let envelope = play_view(doc.projection, &self.runtime);
             let host = host_from_fixture(&envelope.fixture);
             let labels = procedural3d_labels(view_state);
+            let active_tool = view_state.active_tool_id.as_deref().unwrap_or(PROCEDURAL_3D_TRANSFORM_TOOL_DEFAULT);
             match body_key {
                 PROCEDURAL_3D_PLAY_BODY_MAIN => {
                     let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
@@ -2672,7 +2758,7 @@ pub mod app_3d {
                             preview_camera_json(&envelope.runtime),
                             meshes_json,
                             instances_json,
-                            preview_selection_json(&envelope.runtime),
+                            preview_selection_json(&envelope.runtime, active_tool),
                             &envelope.runtime.sun,
                         ),
                     )
@@ -2698,6 +2784,7 @@ pub mod app_3d {
         ) -> std::collections::HashMap<String, Vec<WindowMeasure>> {
             let measures = vec![world3d_sun_measures("procedural3d", &self.runtime.sun, procedural3d_action)];
             std::collections::HashMap::from([
+                (PROCEDURAL_3D_PLAY_WINDOW_MAIN.to_string(), vec![procedural3d_lod_measure(&self.runtime.lod_mode)]),
                 (PROCEDURAL_3D_PLAY_WINDOW_PREVIEW.to_string(), measures.clone()),
                 (PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW.to_string(), measures),
             ])
@@ -2753,43 +2840,6 @@ pub mod app_3d {
         }
     }
 
-    fn procedural3d_edit_tools() -> Vec<ToolNode> {
-        vec![
-            tool_collection(
-                "procedural3d-tools-lod",
-                "layers",
-                "LOD",
-                vec![
-                    tool_toggle(
-                        "procedural3d-tools-lod-solid",
-                        "box",
-                        "Solid",
-                        true,
-                        procedural3d_action("setLodMode", Some(json!({ "value": "solid" }))),
-                    ),
-                    tool_toggle(
-                        "procedural3d-tools-lod-wireframe",
-                        "git-commit-horizontal",
-                        "Wireframe",
-                        false,
-                        procedural3d_action("setLodMode", Some(json!({ "value": "wireframe" }))),
-                    ),
-                ],
-            )
-            .with_category(ToolCategory::Tools),
-        ]
-    }
-
-    fn procedural3d_generate_tools() -> Vec<ToolNode> {
-        vec![tool_button(
-            "procedural3d-tools-add-generation",
-            "plus",
-            "Add Generation",
-            procedural3d_action("addGeneration", None),
-        )
-        .with_category(ToolCategory::Actions)]
-    }
-
     //#region 🔖Manifest
     pub fn create_procedural3d_app() -> App {
         App::from_builder(
@@ -2799,8 +2849,6 @@ pub mod app_3d {
                 .mode("generate", "Generate")
                 .default_mode_id("edit")
                 .mode_layout("generate", "procedural3d-generate")
-                .mode_tools("edit", procedural3d_edit_tools())
-                .mode_tools("generate", procedural3d_generate_tools())
                 .window_kind(
                     PROCEDURAL_3D_PLAY_WINDOW_MAIN,
                     "Flow",
@@ -2872,6 +2920,62 @@ pub mod app_3d {
                     PanelGroup::Details,
                     PROCEDURAL_3D_PLAY_BODY_INSPECTION,
                 )
+                // ✏️ Document-mutating operations — dispatched as VCS ops with a true inverse.
+                .operation("nodeGraphViewport", "Set Viewport")
+                .operation("setActiveExample", "Set Active Example")
+                .operation("nodeGraphEdit", "Edit Graph")
+                .operation("deleteSelection", "Delete Selection")
+                .operation("removeWidget", "Remove Widget")
+                .operation("moveMediaNode", "Move Node")
+                .operation("addWidget", "Add Widget")
+                .operation("patchFlowWidgets", "Patch Flow Widgets")
+                .operation("reorganize", "Reorganize")
+                .operation("translateSelection", "Translate Selection")
+                .operation("rotateSelection", "Rotate Selection")
+                .operation("scaleSelection", "Scale Selection")
+                .operation("addGeneration", "Add Generation")
+                .operation("removeGeneration", "Remove Generation")
+                .operation("renameGeneration", "Rename Generation")
+                .operation("updateGenerationValues", "Update Generation Values")
+                // 👁️ Ephemeral view actions — selection, hover, world picking, sun/LOD/show-mode display toggles, preview camera (emit no ops).
+                .view_action("setSelection", "Set Selection")
+                .view_action("selectNode", "Select Node")
+                .view_action("nodeGraphSelect", "Node Graph Select")
+                .view_action("nodeGraphHover", "Node Graph Hover")
+                .view_action("worldPointerDown", "World Pointer Down")
+                .view_action("graphPointerDown", "Graph Pointer Down")
+                .view_action("worldSelect", "World Select")
+                .view_action("worldHover", "World Hover")
+                .view_action("setSelectionMethod", "Set Selection Method")
+                .view_action("setLodMode", "Set LOD Mode")
+                .view_action("setShowMode", "Set Show Mode")
+                .view_action("toggleSun", "Toggle Sun")
+                .view_action("setSunAzimuth", "Set Sun Azimuth")
+                .view_action("setSunElevation", "Set Sun Elevation")
+                .view_action("setSunIntensity", "Set Sun Intensity")
+                .view_action("setCamera", "Set Camera")
+                .view_action("selectGeneration", "Select Generation")
+                // 📝 Staged argument forms for the palette-visible actions (defaults materialized host-side).
+                .action_args("addWidget", vec![
+                    ActionArgDef::select("kind", "Kind", vec![
+                        ActionArgOption::new("neuron", "Neuron"),
+                        ActionArgOption::new("inputSlider", "Slider"),
+                        ActionArgOption::new("inputNote", "Note"),
+                        ActionArgOption::new("outputPreview", "Preview"),
+                    ]).default_value("inputSlider"),
+                ])
+                .action_args("setActiveExample", vec![
+                    ActionArgDef::select("exampleId", "Example", vec![
+                        ActionArgOption::new(PROCEDURAL_EXAMPLE_HEX_COLUMN, "Hexagonal Mushroom Column"),
+                        ActionArgOption::new(PROCEDURAL_EXAMPLE_RECT_EXTRUDE, "Rectangle Extrude Volume"),
+                        ActionArgOption::new(PROCEDURAL_EXAMPLE_SPHERE_TORUS, "Sphere Cut With Torus"),
+                    ]).required(),
+                ])
+                // 🧰 Transform gumball — an exclusive tool group scoped to the 3D preview window (active tool is host-owned).
+                .tool(ToolDefinition { group: Some("transform".into()), ..ToolDefinition::new("move", "Move", "move") })
+                .tool(ToolDefinition { group: Some("transform".into()), ..ToolDefinition::new("rotate", "Rotate", "rotate-cw") })
+                .tool(ToolDefinition { group: Some("transform".into()), ..ToolDefinition::new("scale", "Scale", "maximize-2") })
+                .window_kind_tools(PROCEDURAL_3D_PLAY_WINDOW_PREVIEW, vec!["move".into(), "rotate".into(), "scale".into()])
                 .keybinding("mod+z", "undo")
                 .keybinding("mod+shift+z", "redo"),
         )
@@ -2909,6 +3013,7 @@ pub mod app_3d {
             aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Mesh3d, Vec3,
         };
         use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+        use semio_framework_plugin::app::AppActionRegistry;
         use vcs::MemoryBackbone;
 
         fn meta(actor: &str) -> ActionMeta {
@@ -2917,6 +3022,64 @@ pub mod app_3d {
 
         fn new_app() -> VcsDocumentApp<Procedural3dPlayApp> {
             VcsDocumentApp::new(Procedural3dPlayApp::default())
+        }
+
+        /// 🧬 A wrapper carrying the real action registry so default-materialization + kind discipline run.
+        fn new_app_with_registry() -> VcsDocumentApp<Procedural3dPlayApp> {
+            let definition = create_procedural3d_app().definition;
+            VcsDocumentApp::with_registry(Procedural3dPlayApp::default(), AppActionRegistry::from_definition(&definition))
+        }
+
+        #[test]
+        fn set_active_example_arg_form_materializes_into_ops() {
+            let mut app = new_app_with_registry();
+            // The required `exampleId` staged arg drives an operation that rewrites the fixture.
+            app.handle_action(
+                "setActiveExample",
+                Some(&json!({ "exampleId": PROCEDURAL_EXAMPLE_SPHERE_TORUS })),
+                &ViewState::default(),
+                &meta("local"),
+            )
+            .expect("set example");
+            let projection = app.projection().expect("projection");
+            assert!(projection.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { neuronKind, .. } if neuronKind == "brep.prim3d.sphere")));
+        }
+
+        #[test]
+        fn set_active_tool_switch_clears_scratch_and_emits_no_ops() {
+            let mut app = new_app_with_registry();
+            app.handle_action("worldHover", Some(&json!({ "id": "extrude" })), &ViewState::default(), &meta("local")).expect("hover");
+            let before = app.projection().expect("projection");
+            // Switching the gumball tool is the framework-injected View action: it clears scratch and emits no ops.
+            let result = app
+                .handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "rotate" })), &ViewState::default(), &meta("local"))
+                .expect("switch tool");
+            assert!(result.operations.is_empty(), "tool switching never emits document ops");
+            assert_eq!(app.projection().expect("projection"), before, "tool switching records no history entry");
+        }
+
+        #[test]
+        fn gumball_drag_coalesces_multi_tick_translate_into_one_edit() {
+            let mut app = new_app();
+            let before_widgets = app.projection().expect("projection").fixture.widgets.len();
+            // A whole gumball drag (three ticks, same coalesce key) folds into ONE undoable edit, not one-op-per-tick.
+            for dx in [1.0, 1.0, 1.0] {
+                app.handle_action(
+                    "translateSelection",
+                    Some(&json!({ "ids": ["extrude"], "dx": dx, "dy": 0.0, "dz": 0.0 })),
+                    &ViewState::default(),
+                    &meta("local"),
+                )
+                .expect("drag tick");
+            }
+            let transform_id = "extrude__gumball_translate";
+            let dragged = app.projection().expect("projection");
+            assert_eq!(gumball_widget_offset(&host_from_fixture(&dragged.fixture), transform_id), [3.0, 0.0, 0.0], "the three ticks accumulate on one transform node");
+            // Undoing the coalesced drag reverts the whole gesture in a single step (splice + all ticks).
+            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            let restored = app.projection().expect("projection");
+            assert_eq!(restored.fixture.widgets.len(), before_widgets, "one undo removes the entire coalesced gumball edit");
+            assert!(!restored.fixture.widgets.iter().any(|widget| widget_id(widget) == transform_id), "the spliced transform node is gone after a single undo");
         }
 
         fn slider_value(projection: &Procedural3dDocument, id: &str) -> Option<f64> {

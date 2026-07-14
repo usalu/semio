@@ -9,8 +9,8 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER, create_default_layout,
-    ToolCategory, ToolNode, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowMeasure,
-    tool_button, tool_separator, tool_toggle,
+    ActionDefinition, ActionKind, ActionArgDef, ActionArgOption, ToolDefinition, ToolCategory, SET_ACTIVE_TOOL_ACTION_ID,
+    WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowMeasure,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -214,8 +214,6 @@ struct NoteDocument {
     #[serde(default)]
     blocks: Vec<NoteBlockNode>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    active_tool: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     grid_visible: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     grid_spacing: Option<f64>,
@@ -255,7 +253,6 @@ fn empty_note_document() -> NoteDocument {
         title: None,
         camera: default_camera(),
         blocks: Vec::new(),
-        active_tool: Some("selectDirect".into()),
         grid_visible: Some(true),
         grid_spacing: Some(32.0),
         grid_subdivisions: Some(4.0),
@@ -536,7 +533,6 @@ fn insert_after(blocks: &mut Vec<NoteBlockNode>, target_id: &str, block: NoteBlo
 #[serde(tag = "op", rename_all = "camelCase")]
 enum NoteOp {
     SetCamera { camera: NoteCamera },
-    SetActiveTool { tool: Option<String> },
     SetGridVisible { visible: Option<bool> },
     SetGridSpacing { spacing: Option<f64> },
     SetGridSubdivisions { value: Option<f64> },
@@ -583,7 +579,6 @@ impl Operation<NoteDocument> for NoteOp {
     fn backwards(&self, projection: &NoteDocument) -> Vec<Self> {
         match self {
             NoteOp::SetCamera { .. } => vec![NoteOp::SetCamera { camera: projection.camera.clone() }],
-            NoteOp::SetActiveTool { .. } => vec![NoteOp::SetActiveTool { tool: projection.active_tool.clone() }],
             NoteOp::SetGridVisible { .. } => vec![NoteOp::SetGridVisible { visible: projection.grid_visible }],
             NoteOp::SetGridSpacing { .. } => vec![NoteOp::SetGridSpacing { spacing: projection.grid_spacing }],
             NoteOp::SetGridSubdivisions { .. } => vec![NoteOp::SetGridSubdivisions { value: projection.grid_subdivisions }],
@@ -603,7 +598,6 @@ fn apply_note_op(projection: &NoteDocument, op: &NoteOp) -> NoteDocument {
     let mut next = projection.clone();
     match op {
         NoteOp::SetCamera { camera } => next.camera = camera.clone(),
-        NoteOp::SetActiveTool { tool } => next.active_tool = tool.clone(),
         NoteOp::SetGridVisible { visible } => next.grid_visible = *visible,
         NoteOp::SetGridSpacing { spacing } => next.grid_spacing = *spacing,
         NoteOp::SetGridSubdivisions { value } => next.grid_subdivisions = *value,
@@ -1188,7 +1182,7 @@ fn render_properties_panel(document: &NoteDocument, selected_ids: &[String], vie
         return ui_stack_vertical(vec![
             ui_text(format!("Schema: {}", document.schema)),
             ui_text(format!("Blocks: {}", flatten_blocks(&document.blocks).len())),
-            ui_text(format!("Tool: {}", document.active_tool.clone().unwrap_or_else(|| "selectDirect".into()))),
+            ui_text(format!("Tool: {}", view_state.active_tool_id.clone().unwrap_or_else(|| "selectDirect".into()))),
             ui_text(format!(
                 "Snap: {}",
                 if document.snap_enabled.unwrap_or(false) {
@@ -1267,6 +1261,7 @@ fn render_canvas_scene(
     document: &NoteDocument,
     selected_ids: &[String],
     hovered_id: Option<&str>,
+    active_tool: &str,
     surface_id: &str,
     view_mode: &str,
 ) -> UiNode {
@@ -1279,7 +1274,7 @@ fn render_canvas_scene(
             document_json,
             selection_json,
             hovered_id: hovered_id.map(str::to_string),
-            active_tool: document.active_tool.clone().unwrap_or_else(|| "selectDirect".into()),
+            active_tool: active_tool.into(),
             view_mode: view_mode.into(),
             interactive: view_mode == "composite",
         },
@@ -1527,7 +1522,7 @@ fn note_canvas_engagement(document: &NoteDocument, selected_ids: &[String], enga
     }
 }
 
-fn note_navigator_engagement(document: &NoteDocument) -> WindowEngagement {
+fn note_navigator_engagement(active_tool: &str) -> WindowEngagement {
     WindowEngagement {
         session_active: Some(false),
         options: None,
@@ -1543,30 +1538,20 @@ fn note_navigator_engagement(document: &NoteDocument) -> WindowEngagement {
         }),
         control: None,
         controls: None,
-        status: Some(vec![WindowEngagementStatus { id: "note-navigator-status.tool".into(), text: format!("tool: {}", document.active_tool.clone().unwrap_or_else(|| "selectDirect".into())) }]),
+        status: Some(vec![WindowEngagementStatus { id: "note-navigator-status.tool".into(), text: format!("tool: {active_tool}") }]),
         possible_engagements: None,
     }
 }
 
-fn note_toolbar(document: &NoteDocument) -> Vec<ToolNode> {
-    let tool = document.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
-    let set_tool = |id: &str| note_action("setActiveTool", Some(json!({ "tool": id })));
-    vec![
-        tool_button("note.play.tools.open", "folder-open", "Import", note_action("loadRequest", None)).with_category(ToolCategory::Actions),
-        tool_button("note.play.tools.save", "save", "Export", note_action("saveDownload", None)).with_category(ToolCategory::Actions),
-        tool_toggle("note.play.tools.selectDirect", "cursor", "Direct", tool == "selectDirect", set_tool("selectDirect")).with_category(ToolCategory::Selection),
-        tool_toggle("note.play.tools.selectMarquee", "selection", "Marquee", tool == "selectMarquee", set_tool("selectMarquee")).with_category(ToolCategory::Selection),
-        tool_toggle("note.play.tools.text", "type", "Text", tool == "text", set_tool("text")),
-        tool_toggle("note.play.tools.image", "image", "Image", tool == "image", set_tool("image")),
-        tool_toggle("note.play.tools.table", "table", "Table", tool == "table", set_tool("table")),
-        tool_toggle("note.play.tools.math", "sigma", "Math", tool == "math", set_tool("math")),
-        tool_separator("note.play.tools.separator.blocks"),
-        tool_toggle("note.play.tools.pencil", "pencil", "Pencil", tool == "pencil", set_tool("pencil")),
-        tool_toggle("note.play.tools.eraserStroke", "eraser", "Stroke Eraser", tool == "eraserStroke", set_tool("eraserStroke")),
-        tool_toggle("note.play.tools.eraserPoint", "eraser", "Point Eraser", tool == "eraserPoint", set_tool("eraserPoint")),
-        tool_separator("note.play.tools.separator.draw"),
-        tool_toggle("note.play.tools.pan", "hand", "Pan", tool == "pan", set_tool("pan")),
-    ]
+/// 🧰 One canvas tool declaration (id/label/icon reused verbatim from the retired `tools()`/toolbar).
+fn note_tool(id: &str, label: &str, icon: &str, group: &str, category: ToolCategory) -> ToolDefinition {
+    ToolDefinition { group: Some(group.into()), category: Some(category), ..ToolDefinition::new(id, label, icon) }
+}
+
+/// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector/keybound vocabulary
+/// dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
+fn note_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
+    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, kind) }
 }
 //#endregion 🔖Shell
 
@@ -1630,10 +1615,12 @@ impl DocumentApp for NoteApp {
                 }
                 ActionEmit::default()
             }
-            "setActiveTool" => match args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
-                Some(tool) => ActionEmit::ops(vec![NoteOp::SetActiveTool { tool: Some(tool.into()) }]),
-                None => ActionEmit::default(),
-            },
+            SET_ACTIVE_TOOL_ACTION_ID => {
+                // 🧰 Host-owned tool switch: the active tool lives in `view_state.active_tool_id`, never
+                // the document. Note keeps no in-progress gesture scratch on the app struct (ink drags
+                // coalesce store-side), so there is nothing to clear and no op to emit.
+                ActionEmit::default()
+            }
             "setGridVisible" | "toggleGrid" => {
                 let visible = args
                     .and_then(|value| value.get("visible"))
@@ -1992,11 +1979,13 @@ impl DocumentApp for NoteApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, NoteDocument>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
         let labels = note_labels(view_state);
+        let active_tool = view_state.active_tool_id.clone().unwrap_or_else(|| "selectDirect".into());
         match body_key {
             NOTE_PLAY_BODY_COMPOSITE => render_canvas_scene(
                 document,
                 &self.selected_ids,
                 self.hovered_id.as_deref(),
+                &active_tool,
                 NOTE_PLAY_SURFACE_COMPOSITE,
                 "composite",
             ),
@@ -2004,6 +1993,7 @@ impl DocumentApp for NoteApp {
                 document,
                 &self.selected_ids,
                 self.hovered_id.as_deref(),
+                &active_tool,
                 NOTE_PLAY_SURFACE_NAVIGATOR,
                 "navigator",
             ),
@@ -2014,14 +2004,11 @@ impl DocumentApp for NoteApp {
         }
     }
 
-    fn tools(&self, doc: &DocumentView<'_, NoteDocument>, _view_state: &ViewState) -> Vec<ToolNode> {
-        note_toolbar(doc.projection)
-    }
-
-    fn window_engagements(&self, doc: &DocumentView<'_, NoteDocument>, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(&self, doc: &DocumentView<'_, NoteDocument>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+        let active_tool = view_state.active_tool_id.clone().unwrap_or_else(|| "selectDirect".into());
         HashMap::from([
             (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_engagement(doc.projection, &self.selected_ids, &self.engagement_input)),
-            (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), note_navigator_engagement(doc.projection)),
+            (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), note_navigator_engagement(&active_tool)),
         ])
     }
 
@@ -2266,7 +2253,7 @@ fn create_note_app() -> App {
             .mode("edit", "Edit")
             .default_mode_id("edit")
             .window_kind_with_engagement(NOTE_PLAY_WINDOW_COMPOSITE, "Canvas", NOTE_PLAY_BODY_COMPOSITE, SurfaceKind::NoteCanvas, note_canvas_engagement(&document, &[], ""))
-            .window_kind_with_engagement(NOTE_PLAY_WINDOW_NAVIGATOR, "Navigator", NOTE_PLAY_BODY_NAVIGATOR, SurfaceKind::NoteCanvas, note_navigator_engagement(&document))
+            .window_kind_with_engagement(NOTE_PLAY_WINDOW_NAVIGATOR, "Navigator", NOTE_PLAY_BODY_NAVIGATOR, SurfaceKind::NoteCanvas, note_navigator_engagement("selectDirect"))
             .default_layout(create_default_layout(
                 &[NOTE_PLAY_WINDOW_COMPOSITE.into(), NOTE_PLAY_WINDOW_NAVIGATOR.into()],
                 "row",
@@ -2291,6 +2278,88 @@ fn create_note_app() -> App {
                 PanelGroup::Details,
                 NOTE_PLAY_BODY_PROPERTIES,
             )
+            // 📇 Palette-visible selection commands (P0) — ephemeral selection is View, block edits are Operations.
+            .view_action("selectAll", "Select All")
+            .view_action("clearSelection", "Clear Selection")
+            .operation("deleteSelection", "Delete Selection")
+            .operation("duplicateSelection", "Duplicate Selection")
+            // ➕ Palette-visible block insertion (P1) with a staged argument form.
+            .operation("addBlock", "Add Block")
+            .operation("setActiveExample", "Set Active Example")
+            // 🐚 Import/export footer actions → panel Shell actions emitting host effects (S).
+            .shell_action("loadRequest", "Import")
+            .shell_action("saveDownload", "Export")
+            // 🔧 Internal content operations — inspector/tree/drag/import-bound, not palette commands.
+            .action_with(note_internal_action("setCamera", "Set Camera", ActionKind::Operation))
+            .action_with(note_internal_action("setCameraZoom", "Set Camera Zoom", ActionKind::Operation))
+            .action_with(note_internal_action("setGridVisible", "Set Grid Visible", ActionKind::Operation))
+            .action_with(note_internal_action("toggleGrid", "Toggle Grid", ActionKind::Operation))
+            .action_with(note_internal_action("setGridSpacing", "Set Grid Spacing", ActionKind::Operation))
+            .action_with(note_internal_action("setGridSubdivisions", "Set Grid Subdivisions", ActionKind::Operation))
+            .action_with(note_internal_action("setGridOpacity", "Set Grid Opacity", ActionKind::Operation))
+            .action_with(note_internal_action("setSnapEnabled", "Set Snap Enabled", ActionKind::Operation))
+            .action_with(note_internal_action("toggleSnap", "Toggle Snap", ActionKind::Operation))
+            .action_with(note_internal_action("setSnapGridSpacing", "Set Snap Grid Spacing", ActionKind::Operation))
+            .action_with(note_internal_action("setPencilWidth", "Set Pencil Width", ActionKind::Operation))
+            .action_with(note_internal_action("setEraserRadius", "Set Eraser Radius", ActionKind::Operation))
+            .action_with(note_internal_action("dropBlockKind", "Drop Block Kind", ActionKind::Operation))
+            .action_with(note_internal_action("moveBlock", "Move Block", ActionKind::Operation))
+            .action_with(note_internal_action("deleteBlock", "Delete Block", ActionKind::Operation))
+            .action_with(note_internal_action("duplicateBlock", "Duplicate Block", ActionKind::Operation))
+            .action_with(note_internal_action("patchBlocks", "Patch Blocks", ActionKind::Operation))
+            .action_with(note_internal_action("engagementSubmit", "Engagement Submit", ActionKind::Operation))
+            .action_with(note_internal_action("setFixtureJson", "Set Fixture Json", ActionKind::Operation))
+            .action_with(note_internal_action("applyNoteEvents", "Apply Note Events", ActionKind::Operation))
+            .action_with(note_internal_action("nudgeSelection", "Nudge Selection", ActionKind::Operation))
+            .action_with(note_internal_action("nudgeSelectionUp", "Nudge Selection Up", ActionKind::Operation))
+            .action_with(note_internal_action("nudgeSelectionDown", "Nudge Selection Down", ActionKind::Operation))
+            .action_with(note_internal_action("nudgeSelectionLeft", "Nudge Selection Left", ActionKind::Operation))
+            .action_with(note_internal_action("nudgeSelectionRight", "Nudge Selection Right", ActionKind::Operation))
+            .action_with(note_internal_action("nudgeSelectionUpFast", "Nudge Selection Up Fast", ActionKind::Operation))
+            .action_with(note_internal_action("nudgeSelectionDownFast", "Nudge Selection Down Fast", ActionKind::Operation))
+            .action_with(note_internal_action("nudgeSelectionLeftFast", "Nudge Selection Left Fast", ActionKind::Operation))
+            .action_with(note_internal_action("nudgeSelectionRightFast", "Nudge Selection Right Fast", ActionKind::Operation))
+            // 👁️ Ephemeral view state — selection/hover/engagement scratch, never a document op.
+            .action_with(note_internal_action("setSelection", "Set Selection", ActionKind::View))
+            .action_with(note_internal_action("setHover", "Set Hover", ActionKind::View))
+            .action_with(note_internal_action("engagementInput", "Engagement Input", ActionKind::View))
+            .action_with(note_internal_action("navigatorEngagementInput", "Navigator Engagement Input", ActionKind::View))
+            // 📝 Staged argument forms for the palette-eligible actions.
+            .action_args("addBlock", vec![
+                ActionArgDef::select("kind", "Kind", vec![
+                    ActionArgOption::new("text", "Text"),
+                    ActionArgOption::new("image", "Image"),
+                    ActionArgOption::new("table", "Table"),
+                    ActionArgOption::new("math", "Math"),
+                    ActionArgOption::new("ink", "Ink"),
+                    ActionArgOption::new("group", "Group"),
+                ]).required().default_value("text"),
+                ActionArgDef::number("x", "X").default_value(0.0),
+                ActionArgDef::number("y", "Y").default_value(0.0),
+            ])
+            .action_args("setActiveExample", vec![
+                ActionArgDef::select("exampleId", "Example", vec![
+                    ActionArgOption::new("empty", "Empty"),
+                    ActionArgOption::new("semio", "Semio"),
+                ]).required().default_value("empty"),
+            ])
+            .action_args("setFixtureJson", vec![ActionArgDef::text("json", "Document JSON").required()])
+            // 🧰 Canvas tools — one exclusive set per window, active tool host-owned (never a document op).
+            .tool(note_tool("selectDirect", "Direct", "cursor", "Select", ToolCategory::Selection))
+            .tool(note_tool("selectMarquee", "Marquee", "selection", "Select", ToolCategory::Selection))
+            .tool(note_tool("text", "Text", "type", "Block", ToolCategory::Tools))
+            .tool(note_tool("image", "Image", "image", "Block", ToolCategory::Tools))
+            .tool(note_tool("table", "Table", "table", "Block", ToolCategory::Tools))
+            .tool(note_tool("math", "Math", "sigma", "Block", ToolCategory::Tools))
+            .tool(note_tool("pencil", "Pencil", "pencil", "Draw", ToolCategory::Tools))
+            .tool(note_tool("eraserStroke", "Stroke Eraser", "eraser", "Draw", ToolCategory::Tools))
+            .tool(note_tool("eraserPoint", "Point Eraser", "eraser", "Draw", ToolCategory::Tools))
+            .tool(note_tool("pan", "Pan", "hand", "View", ToolCategory::Tools))
+            .window_kind_tools(NOTE_PLAY_WINDOW_COMPOSITE, vec![
+                "selectDirect".into(), "selectMarquee".into(),
+                "text".into(), "image".into(), "table".into(), "math".into(),
+                "pencil".into(), "eraserStroke".into(), "eraserPoint".into(), "pan".into(),
+            ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .keybinding("mod+y", "redo")
@@ -2332,6 +2401,7 @@ semio_framework_plugin::semio_plugin! {
 mod tests {
     use super::*;
     use semio_framework_plugin::{ActionMeta, DwgColor, DwgEntity, DwgLayer, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::app::AppActionRegistry;
 
     fn meta() -> ActionMeta {
         ActionMeta { actor: "local".into(), instance_id: 1 }
@@ -2561,19 +2631,47 @@ mod tests {
     }
 
     #[test]
-    fn camera_and_tool_actions_emit_ops() {
+    fn camera_action_emits_op() {
         let mut app = new_app();
         let zoom = app
             .handle_action("setCameraZoom", Some(&json!({ "value": 2.0 })), &ViewState::default(), &meta())
             .expect("zoom");
         assert_eq!(zoom.operations.len(), 1);
         assert_eq!(app.projection().expect("projection").camera.zoom, 2.0);
+    }
 
-        let tool = app
-            .handle_action("setActiveTool", Some(&json!({ "tool": "pencil" })), &ViewState::default(), &meta())
-            .expect("tool");
-        assert_eq!(tool.operations.len(), 1);
-        assert_eq!(app.projection().expect("projection").active_tool.as_deref(), Some("pencil"));
+    /// 🧰 Switching tools is the framework View action: host-owned `active_tool_id`, never a document op —
+    /// the retired `NoteOp::SetActiveTool` no longer pollutes undo history or sync.
+    fn new_app_with_registry() -> VcsDocumentApp<NoteApp> {
+        let definition = create_note_app().definition;
+        VcsDocumentApp::with_registry(NoteApp::default(), AppActionRegistry::from_definition(&definition))
+    }
+
+    #[test]
+    fn set_active_tool_emits_no_ops_and_no_history_entry() {
+        let mut app = new_app_with_registry();
+        let before = app.projection().expect("projection");
+        let view = ViewState { active_tool_id: Some("pencil".into()), ..ViewState::default() };
+        let result = app
+            .handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "pencil" })), &view, &meta())
+            .expect("switch tool");
+        assert!(result.operations.is_empty(), "tool switching never emits document ops");
+        assert_eq!(app.projection().expect("projection"), before, "tool switching does not mutate the document");
+    }
+
+    #[test]
+    fn tool_registry_declares_canvas_tools_scoped_to_composite_window() {
+        let definition = create_note_app().definition;
+        let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
+        assert_eq!(
+            tool_ids,
+            ["selectDirect", "selectMarquee", "text", "image", "table", "math", "pencil", "eraserStroke", "eraserPoint", "pan"],
+        );
+        let selects: Vec<&str> = definition.tools.iter().filter(|tool| tool.category == Some(ToolCategory::Selection)).map(|tool| tool.id.as_str()).collect();
+        assert_eq!(selects, ["selectDirect", "selectMarquee"]);
+        let canvas = definition.window_kinds.iter().find(|window| window.id == NOTE_PLAY_WINDOW_COMPOSITE).expect("canvas window");
+        assert_eq!(canvas.tools.len(), definition.tools.len(), "every tool is scoped to the composite canvas");
+        assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID && matches!(action.kind, ActionKind::View)));
     }
 
     #[test]

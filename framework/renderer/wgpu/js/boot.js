@@ -17,51 +17,263 @@ class Store {
     this.listeners.clear();
   }
 }
-function patchOpsFromActionResponse(raw) {
-  let parsed;
+function dockOsStorageKey() {
+  return "semio.os.dock";
+}
+function dockAppStorageKey(appId) {
+  return `semio.os.dock.${appId}`;
+}
+function readDockSkeleton(storage, key) {
+  const raw = storage.get(key);
+  if (!raw)
+    return null;
   try {
-    parsed = JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || parsed.version !== 1 || !parsed.corners || typeof parsed.corners !== "object")
+      return null;
+    return parsed;
   } catch {
-    return [];
+    return null;
   }
-  if (Array.isArray(parsed)) {
-    return parsed.map((entry) => typeof entry === "string" ? entry : JSON.stringify(entry));
+}
+
+class DockLayoutStore extends Store {
+  storage;
+  appId;
+  constructor(storage, appId) {
+    super();
+    this.storage = storage;
+    this.appId = appId;
   }
-  if (parsed && typeof parsed === "object") {
-    const result = parsed;
-    if (Array.isArray(result.operations)) {
-      return result.operations.map((operation) => operation?.diff?.payload).filter((payload) => payload != null && typeof payload === "object").map((payload) => JSON.stringify(payload));
+  getSnapshot() {
+    if (this.appId) {
+      const app = readDockSkeleton(this.storage, dockAppStorageKey(this.appId));
+      if (app)
+        return app;
+    }
+    return readDockSkeleton(this.storage, dockOsStorageKey());
+  }
+  save(skeleton) {
+    this.writeOrRemove(this.appId ? dockAppStorageKey(this.appId) : dockOsStorageKey(), skeleton);
+    this.notify();
+  }
+  saveOs(skeleton) {
+    this.writeOrRemove(dockOsStorageKey(), skeleton);
+    this.notify();
+  }
+  reset() {
+    this.storage.remove(dockOsStorageKey());
+    if (this.appId)
+      this.storage.remove(dockAppStorageKey(this.appId));
+    this.notify();
+  }
+  writeOrRemove(key, skeleton) {
+    if (skeleton === null)
+      this.storage.remove(key);
+    else
+      this.storage.set(key, JSON.stringify(skeleton));
+  }
+}
+var EMPTY_ACTION_RESPONSE = {
+  output: null,
+  operations: [],
+  inverseGroup: { actionId: "", operations: [], inverseOperations: [] }
+};
+function parseActionResponse(raw) {
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && Array.isArray(parsed.operations)) {
+      return parsed;
+    }
+  } catch {}
+  return EMPTY_ACTION_RESPONSE;
+}
+var PLUGIN_WORKER_UNRESPONSIVE_MS = 1e4;
+function pluginWorkerUrl(moduleUrl) {
+  return moduleUrl.replace(/\/[^/]+\.js$/, "/plugin-worker.js");
+}
+
+class PluginWorkerClient {
+  pluginId;
+  moduleUrl;
+  worker = null;
+  pending = new Map;
+  constructor(pluginId, moduleUrl) {
+    this.pluginId = pluginId;
+    this.moduleUrl = moduleUrl;
+  }
+  clearPending(error) {
+    for (const [requestId, entry] of this.pending) {
+      window.clearTimeout(entry.watchdog);
+      entry.reject(error);
+      this.pending.delete(requestId);
     }
   }
-  return [];
+  attachWorker(worker) {
+    worker.onmessage = (event) => {
+      const message = event.data;
+      const requestId = message.requestId;
+      if (!requestId)
+        return;
+      const entry = this.pending.get(requestId);
+      if (!entry)
+        return;
+      window.clearTimeout(entry.watchdog);
+      this.pending.delete(requestId);
+      if (message.type === "error") {
+        entry.reject(new Error(message.message ?? `plugin worker ${this.pluginId} error`));
+        return;
+      }
+      entry.resolve(message);
+    };
+    worker.onerror = (error) => {
+      console.error(`[DEBUG] plugin worker ${this.pluginId} crashed`, error);
+      this.worker = null;
+      this.clearPending(new Error(`plugin worker ${this.pluginId} crashed`));
+    };
+  }
+  async start() {
+    const worker = new Worker(pluginWorkerUrl(this.moduleUrl), { type: "module" });
+    this.attachWorker(worker);
+    this.worker = worker;
+    await this.request("init", { moduleUrl: this.moduleUrl });
+  }
+  request(type, payload) {
+    return new Promise((resolve, reject) => {
+      if (!this.worker) {
+        reject(new Error(`plugin worker ${this.pluginId} is not running`));
+        return;
+      }
+      const requestId = crypto.randomUUID();
+      const watchdog = window.setTimeout(() => {
+        console.warn(`[DEBUG] plugin worker ${this.pluginId} unresponsive for ${PLUGIN_WORKER_UNRESPONSIVE_MS}ms: ${type}`);
+      }, PLUGIN_WORKER_UNRESPONSIVE_MS);
+      this.pending.set(requestId, { resolve, reject, watchdog });
+      this.worker.postMessage({ type, requestId, ...payload });
+    });
+  }
+  async manifest() {
+    return String((await this.request("manifest", {})).value ?? "");
+  }
+  async createApp(appId) {
+    return Number((await this.request("createApp", { appId })).instanceId);
+  }
+  async destroyApp(instanceId) {
+    await this.request("destroy", { instanceId });
+  }
+  async handleAction(instanceId, actionJson, contextJson) {
+    return String((await this.request("handleAction", { instanceId, actionJson, contextJson })).value ?? "{}");
+  }
+  async render(instanceId, bodyKey, viewStateJson, documentJson) {
+    return String((await this.request("render", { instanceId, bodyKey, viewStateJson, documentJson })).value ?? "{}");
+  }
+  async refreshUi(instanceId, requestJson) {
+    return String((await this.request("refreshUi", { instanceId, requestJson })).value ?? "{}");
+  }
+  dispose() {
+    this.clearPending(new Error(`plugin worker ${this.pluginId} disposed`));
+    this.worker?.terminate();
+    this.worker = null;
+  }
 }
 var pluginModuleHandleCache = new Map;
+if (import.meta.vitest) {
+  let createMemoryStoragePort = function() {
+    const map = new Map;
+    return {
+      get: (key) => map.get(key) ?? null,
+      set: (key, value) => {
+        map.set(key, value);
+      },
+      remove: (key) => {
+        map.delete(key);
+      }
+    };
+  };
+  const { describe, expect, it } = import.meta.vitest;
+  describe("DockLayoutStore", () => {
+    const emptySkeleton = () => ({ version: 1, corners: { "top-left": [], "top-right": [], "bottom-left": [], "bottom-right": [] } });
+    it("returns null when nothing persisted", () => {
+      const store = new DockLayoutStore(createMemoryStoragePort());
+      expect(store.getSnapshot()).toBeNull();
+    });
+    it("app layer wins over os layer when both are set", () => {
+      const storage = createMemoryStoragePort();
+      const store = new DockLayoutStore(storage, "my-app");
+      const osSkeleton = emptySkeleton();
+      const appSkeleton = { ...emptySkeleton(), corners: { ...emptySkeleton().corners, "top-left": [{ id: "a" }] } };
+      store.saveOs(osSkeleton);
+      store.save(appSkeleton);
+      expect(store.getSnapshot()).toEqual(appSkeleton);
+    });
+    it("falls back to os layer when app layer absent", () => {
+      const storage = createMemoryStoragePort();
+      const store = new DockLayoutStore(storage, "my-app");
+      const osSkeleton = emptySkeleton();
+      store.saveOs(osSkeleton);
+      expect(store.getSnapshot()).toEqual(osSkeleton);
+    });
+    it("save(null) removes the app-layer key", () => {
+      const storage = createMemoryStoragePort();
+      const store = new DockLayoutStore(storage, "my-app");
+      store.save(emptySkeleton());
+      expect(storage.get("semio.os.dock.my-app")).not.toBeNull();
+      store.save(null);
+      expect(storage.get("semio.os.dock.my-app")).toBeNull();
+      expect(store.getSnapshot()).toBeNull();
+    });
+    it("reset() clears both layers", () => {
+      const storage = createMemoryStoragePort();
+      const store = new DockLayoutStore(storage, "my-app");
+      store.saveOs(emptySkeleton());
+      store.save(emptySkeleton());
+      store.reset();
+      expect(storage.get("semio.os.dock")).toBeNull();
+      expect(storage.get("semio.os.dock.my-app")).toBeNull();
+      expect(store.getSnapshot()).toBeNull();
+    });
+    it("returns null on corrupt JSON rather than throwing", () => {
+      const storage = createMemoryStoragePort();
+      storage.set("semio.os.dock", "{not json");
+      const store = new DockLayoutStore(storage);
+      expect(() => store.getSnapshot()).not.toThrow();
+      expect(store.getSnapshot()).toBeNull();
+    });
+  });
+}
 
 // ../../plugin/registry/generated/plugins.ts
 var PLUGIN_BUILD_TARGETS = [
-  { pluginId: "cad", cratePath: "cad/plugin/rs", wasmOut: "cad_plugin.wasm" },
-  { pluginId: "dag", cratePath: "mathematical/graph/port/directed/dag/plugin/rs", wasmOut: "dag_plugin.wasm" },
-  { pluginId: "draw", cratePath: "draw/plugin/rs", wasmOut: "draw_plugin.wasm" },
-  { pluginId: "flow", cratePath: "flow/plugin/rs", wasmOut: "flow_plugin.wasm" },
-  { pluginId: "forms", cratePath: "forms/plugin/rs", wasmOut: "forms_plugin.wasm" },
-  { pluginId: "forms-module-procedural", cratePath: "forms/module/procedural/rs", wasmOut: "forms_module_procedural.wasm" },
-  { pluginId: "gis", cratePath: "gis/plugin/rs", wasmOut: "gis_plugin.wasm" },
-  { pluginId: "imperative", cratePath: "imperative/plugin/rs", wasmOut: "imperative_plugin.wasm" },
-  { pluginId: "layout", cratePath: "layout/plugin/rs", wasmOut: "layout_plugin.wasm" },
-  { pluginId: "lowpoly", cratePath: "lowpoly/plugin/rs", wasmOut: "lowpoly_plugin.wasm" },
-  { pluginId: "note", cratePath: "note/plugin/rs", wasmOut: "note_plugin.wasm" },
-  { pluginId: "presentation", cratePath: "framework/product/presentation/plugin/rs", wasmOut: "presentation_plugin.wasm" },
-  { pluginId: "procedural", cratePath: "procedural/plugin/rs", wasmOut: "procedural_plugin.wasm" },
-  { pluginId: "process", cratePath: "process/plugin/rs", wasmOut: "process_plugin.wasm" },
-  { pluginId: "puzzle", cratePath: "puzzle/plugin/rs", wasmOut: "puzzle_plugin.wasm" },
-  { pluginId: "raster", cratePath: "raster/plugin/rs", wasmOut: "raster_plugin.wasm" },
-  { pluginId: "reasoning-mindmap", cratePath: "reasoning/mindmap/plugin/rs", wasmOut: "reasoning_mindmap_plugin.wasm" },
-  { pluginId: "s", cratePath: "s/plugin/rs", wasmOut: "s_plugin.wasm" },
-  { pluginId: "sequence", cratePath: "sequence/plugin/rs", wasmOut: "sequence_plugin.wasm" },
-  { pluginId: "shooting", cratePath: "shooting/plugin/rs", wasmOut: "shooting_plugin.wasm" },
-  { pluginId: "trinity", cratePath: "trinity/plugin/rs", wasmOut: "trinity_plugin.wasm" },
-  { pluginId: "vcs", cratePath: "vcs/plugin/rs", wasmOut: "vcs_plugin.wasm" },
-  { pluginId: "writer", cratePath: "writer/plugin/rs", wasmOut: "writer_plugin.wasm" }
+  { pluginId: "cad", cratePath: "cad/plugin/rs", wasmOut: "cad_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "dag", cratePath: "infinite/board/port/directed/dag/plugin/rs", wasmOut: "dag_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "draw", cratePath: "draw/plugin/rs", wasmOut: "draw_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "flow", cratePath: "flow/plugin/rs", wasmOut: "flow_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "forms", cratePath: "forms/plugin/rs", wasmOut: "forms_plugin.wasm", contributes: [], consumes: ["forms.questionKind"] },
+  { pluginId: "gis", cratePath: "gis/plugin/rs", wasmOut: "gis_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "imperative", cratePath: "imperative/plugin/rs", wasmOut: "imperative_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "layout", cratePath: "layout/plugin/rs", wasmOut: "layout_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "lowpoly", cratePath: "lowpoly/plugin/rs", wasmOut: "lowpoly_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "mathematical", cratePath: "mathematical/plugin/rs", wasmOut: "mathematical_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "note", cratePath: "note/plugin/rs", wasmOut: "note_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "presentation", cratePath: "framework/product/presentation/plugin/rs", wasmOut: "presentation_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "procedural", cratePath: "procedural/plugin/rs", wasmOut: "procedural_plugin.wasm", contributes: [], consumes: ["forms.questionKind"] },
+  { pluginId: "process", cratePath: "process/plugin/rs", wasmOut: "process_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "protocol", cratePath: "protocol/plugin/rs", wasmOut: "protocol_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "protocol-module-procedural", cratePath: "protocol/module/procedural/rs", wasmOut: "protocol_module_procedural.wasm", contributes: ["protocol.blockKind"], consumes: [] },
+  { pluginId: "puzzle", cratePath: "puzzle/plugin/rs", wasmOut: "puzzle_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "raster", cratePath: "raster/plugin/rs", wasmOut: "raster_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "reasoning-mindmap", cratePath: "reasoning/mindmap/plugin/rs", wasmOut: "reasoning_mindmap_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "remodel", cratePath: "remodel/plugin/rs", wasmOut: "remodel_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "s", cratePath: "s/plugin/rs", wasmOut: "s_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "sequence", cratePath: "sequence/plugin/rs", wasmOut: "sequence_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "shooting", cratePath: "shooting/plugin/rs", wasmOut: "shooting_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "sourcing", cratePath: "sourcing/plugin/rs", wasmOut: "sourcing_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "sourcing-module-beams", cratePath: "sourcing/module/beams/rs", wasmOut: "sourcing_module_beams.wasm", contributes: [], consumes: [] },
+  { pluginId: "sourcing-module-slabs", cratePath: "sourcing/module/slabs/rs", wasmOut: "sourcing_module_slabs.wasm", contributes: [], consumes: [] },
+  { pluginId: "sourcing-module-windows", cratePath: "sourcing/module/windows/rs", wasmOut: "sourcing_module_windows.wasm", contributes: [], consumes: [] },
+  { pluginId: "trinity", cratePath: "trinity/plugin/rs", wasmOut: "trinity_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "vcs", cratePath: "vcs/plugin/rs", wasmOut: "vcs_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "writer", cratePath: "writer/plugin/rs", wasmOut: "writer_plugin.wasm", contributes: [], consumes: [] }
 ];
 var PLUGIN_TARGETS = PLUGIN_BUILD_TARGETS.map((target) => ({
   pluginId: target.pluginId,
@@ -80,11 +292,11 @@ var PLUGIN_WORKER_TIMEOUT_MS = 5000;
 async function loadPluginModule(pluginId, moduleUrl) {
   return loadPluginModuleViaWorker(pluginId, moduleUrl);
 }
-function pluginWorkerUrl(moduleUrl) {
+function pluginWorkerUrl2(moduleUrl) {
   return moduleUrl.replace(/\/[^/]+\.js$/, "/plugin-worker.js");
 }
 
-class PluginWorkerClient {
+class PluginWorkerClient2 {
   pluginId;
   moduleUrl;
   worker = null;
@@ -132,7 +344,7 @@ class PluginWorkerClient {
   async spawnWorker() {
     this.terminateWorker();
     this.clearPending(new Error(`plugin worker ${this.pluginId} restarted`));
-    const worker = new Worker(pluginWorkerUrl(this.moduleUrl), { type: "module" });
+    const worker = new Worker(pluginWorkerUrl2(this.moduleUrl), { type: "module" });
     this.attachWorker(worker);
     this.worker = worker;
     await this.request("init", { moduleUrl: this.moduleUrl });
@@ -216,7 +428,7 @@ function validatePluginManifest(pluginId, manifest) {
   }
 }
 async function loadPluginModuleViaWorker(pluginId, moduleUrl) {
-  const client = new PluginWorkerClient(pluginId, moduleUrl);
+  const client = new PluginWorkerClient2(pluginId, moduleUrl);
   await client.start();
   const manifest = JSON.parse(await client.manifest());
   validatePluginManifest(pluginId, manifest);
@@ -225,7 +437,7 @@ async function loadPluginModuleViaWorker(pluginId, moduleUrl) {
     manifest,
     createApp: (appId) => client.createApp(appId),
     destroyApp: (instanceId) => client.destroyApp(instanceId),
-    handleAction: async (instanceId, actionJson, viewState) => patchOpsFromActionResponse(await client.handleAction(instanceId, actionJson, viewState)),
+    handleAction: async (instanceId, actionJson, viewState) => parseActionResponse(await client.handleAction(instanceId, actionJson, viewState)),
     render: async (instanceId, bodyKey, viewState) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState))),
     renderWithDocument: async (instanceId, bodyKey, viewState, documentJson) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState), documentJson)),
     tools: async (instanceId, viewState) => JSON.parse(await client.tools(instanceId, JSON.stringify(viewState))),
@@ -247,7 +459,7 @@ function pluginHandleForBridge(handle) {
   };
 }
 var pluginFromUrl = new URLSearchParams(location.search).get("plugin");
-var pluginFilter = pluginFromUrl ?? "s";
+var pluginFilter = pluginFromUrl ?? "puzzle2d";
 var studioMode = pluginFilter === "s";
 var pluginTargets = studioMode ? PLUGIN_TARGETS : PLUGIN_TARGETS.filter((entry) => entry.pluginId === pluginFilter || entry.pluginId === `${pluginFilter}-module-procedural`);
 async function pluginModuleAvailable(moduleUrl) {

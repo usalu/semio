@@ -7,9 +7,9 @@ use protocol::{
 };
 use semio_framework_plugin::{
     add_block_op, add_step_op, create_default_layout, move_block_op, move_step_op, remove_block_op, remove_step_op,
-    render_protocol_builder, ui_text, update_protocol_title_op, ActionEmit, App, DocumentApp, DocumentView,
-    PluginBundle, ProtocolBuilderConfig, ProtocolPaletteEntry, SurfaceKind, UiNode, ViewState,
-    PROTOCOL_BUILDER_LABELS_EN,
+    render_protocol_builder, ui_text, update_protocol_title_op, ActionArgDef, ActionArgOption, ActionEmit, App,
+    DocumentApp, DocumentView, PluginBundle, ProtocolBuilderConfig, ProtocolPaletteEntry, SurfaceKind, UiNode,
+    ViewState, PROTOCOL_BUILDER_LABELS_EN,
 };
 use serde_json::Value;
 
@@ -172,11 +172,10 @@ impl DocumentApp for ProtocolPlayApp {
             }
             "updateProtocol" => {
                 let title = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
-                ActionEmit {
-                    ops: vec![update_protocol_title_op(Some(title.to_string()).filter(|title| !title.is_empty()))],
-                    coalesce_key: Some("protocol.title".into()),
-                    ..ActionEmit::default()
-                }
+                ActionEmit::amend(
+                    vec![update_protocol_title_op(Some(title.to_string()).filter(|title| !title.is_empty()))],
+                    "protocol.title",
+                )
             }
             _ => ActionEmit::default(),
         }
@@ -205,7 +204,16 @@ fn create_protocol_play_app() -> App {
             .operation("removeBlock", "Remove Block")
             .operation("moveBlock", "Move Block")
             .operation("updateProtocol", "Update Protocol")
-            .view_action("setSelection", "Set Selection"),
+            .view_action("setSelection", "Set Selection")
+            // 📝 Staged argument form for the panel-visible create action (block kind is a choice).
+            .action_args("addBlock", vec![
+                ActionArgDef::select(
+                    "kind",
+                    "Kind",
+                    PROTOCOL_BUILTIN_KINDS.iter().map(|kind| ActionArgOption::new(*kind, *kind)).collect(),
+                )
+                .default_value("text"),
+            ]),
     )
 }
 
@@ -231,6 +239,23 @@ mod tests {
 
     fn new_app() -> VcsDocumentApp<ProtocolPlayApp> {
         VcsDocumentApp::new(ProtocolPlayApp::default())
+    }
+
+    /// 🧬 A wrapper carrying the real action registry so `addBlock`'s declared `kind` default materializes.
+    fn new_app_with_registry() -> VcsDocumentApp<ProtocolPlayApp> {
+        use semio_framework_plugin::app::AppActionRegistry;
+        let definition = create_protocol_play_app().definition;
+        VcsDocumentApp::with_registry(ProtocolPlayApp::default(), AppActionRegistry::from_definition(&definition))
+    }
+
+    #[test]
+    fn add_block_materializes_declared_kind_default() {
+        let mut app = new_app_with_registry();
+        app.handle_action("addStep", None, &ViewState::default(), &meta("local")).expect("add step");
+        // addBlock fired with no args: the declared `kind` default ("text") must be materialized host-side.
+        app.handle_action("addBlock", None, &ViewState::default(), &meta("local")).expect("add block");
+        let projection = app.projection().expect("materialize projection");
+        assert_eq!(projection.steps[0].blocks.last().unwrap().kind, "text", "kind default materialized from the registry");
     }
 
     #[test]

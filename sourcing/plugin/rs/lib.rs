@@ -2,11 +2,11 @@
 
 use semio_framework_plugin::{
     build_table_scene, build_world_3d_scene, table_row_json, ui_stack_vertical, ui_text,
-    world3d_default_camera, world3d_scene, world3d_selection_json, ActionDescriptor, ActionEmit,
-    App, Contribution, DocumentApp, DocumentView, SurfaceKind, TableCell, TableScene, UiInputNode,
-    UiNode, UiNumberStepperNode, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemAction,
-    ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
-    WindowLayoutStackNode, WindowLayoutWindowNode, WorldSunConfig,
+    world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption,
+    ActionDescriptor, ActionEmit, App, Contribution, DocumentApp, DocumentView, SurfaceKind, TableCell,
+    TableScene, UiInputNode, UiNode, UiNumberStepperNode, UiSelectItem, UiSelectNode, UiToggleNode,
+    UiTreeItemAction, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
+    WindowLayoutStackNode, WindowLayoutWindowNode, WorldSunConfig, ActionDefinition, ActionKind,
 };
 use semio_framework_core::mesh_from_indexed;
 use serde::{Deserialize, Serialize};
@@ -386,10 +386,42 @@ pub fn create_sourcing_curate_app() -> App {
             .window_kind(WINDOW_CURATED, "Curated", BODY_CURATED, SurfaceKind::Table)
             .window_kind(WINDOW_PREVIEW, "Preview", BODY_PREVIEW, SurfaceKind::World3d)
             .window_kind(WINDOW_GRID, "Grid", BODY_GRID, SurfaceKind::World3d)
-            .default_layout(sourcing_three_column_layout()),
+            .default_layout(sourcing_three_column_layout())
+            // 🔧 Every curate edit — filters, sort, selection, curation counts — is persisted in the
+            // `CurateDocument` (filters/sort/runtime all live in the document), so each arm emits a
+            // whole-document `SetDocument` op and is declared as an Operation, never a View. The
+            // filter/sort/selection/table/DnD ids are internal (kept out of the command palette).
+            .operation("setActiveExample", "Set Active Example")
+            .operation("stockFromCatalogue", "Stock From Catalogue")
+            .action_with(hidden_op("setDocument", "Set Document"))
+            .action_with(hidden_op("setFilterQuery", "Set Filter Query"))
+            .action_with(hidden_op("setFilterModule", "Set Filter Module"))
+            .action_with(hidden_op("setFilterTypology", "Set Filter Typology"))
+            .action_with(hidden_op("setFilterMinAvailability", "Set Filter Min Availability"))
+            .action_with(hidden_op("sortTable", "Sort Table"))
+            .action_with(hidden_op("curateAdd", "Curate Add"))
+            .action_with(hidden_op("curateSetCount", "Curate Set Count"))
+            .action_with(hidden_op("curateRemove", "Curate Remove"))
+            .action_with(hidden_op("dropOnPool", "Drop On Pool"))
+            .action_with(hidden_op("dropOnCurated", "Drop On Curated"))
+            .action_with(hidden_op("selectRow", "Select Row"))
+            .action_with(hidden_op("worldSelect", "World Select"))
+            // 📝 Staged argument form for the panel-visible example switch.
+            .action_args("setActiveExample", vec![
+                ActionArgDef::select("exampleId", "Example", vec![
+                    ActionArgOption::new(DEMO_STOCK_EXAMPLE_ID, "Demo Stock"),
+                    ActionArgOption::new(EMPTY_EXAMPLE_ID, "Empty Curation"),
+                ]).default_value(DEMO_STOCK_EXAMPLE_ID),
+            ]),
     )
     .example(DEMO_STOCK_EXAMPLE_ID, "Demo Stock", DEMO_STOCK_JSON)
     .example(EMPTY_EXAMPLE_ID, "Empty Curation", EMPTY_CURATION_JSON)
+}
+
+/// 🙈 An internal document operation kept out of the command palette — the filter/sort/selection/DnD
+/// arms that mutate the persisted `CurateDocument` but are only ever dispatched from window chrome.
+fn hidden_op(id: &str, label: &str) -> ActionDefinition {
+    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, ActionKind::Operation) }
 }
 
 #[derive(Default)]
@@ -559,6 +591,28 @@ mod tests {
 
     fn new_app() -> VcsDocumentApp<SourcingCurateApp> {
         VcsDocumentApp::new(SourcingCurateApp::default())
+    }
+
+    /// 🧬 A wrapper carrying the real action registry so `setActiveExample`'s default materializes and the
+    /// document-mutating curate ops pass kind discipline (they are declared Operations, never Views).
+    fn new_app_with_registry() -> VcsDocumentApp<SourcingCurateApp> {
+        use semio_framework_plugin::app::AppActionRegistry;
+        let definition = create_sourcing_curate_app().definition;
+        VcsDocumentApp::with_registry(SourcingCurateApp::default(), AppActionRegistry::from_definition(&definition))
+    }
+
+    #[test]
+    fn curate_and_example_actions_survive_registry_enforcement() {
+        let mut app = new_app_with_registry();
+        // setActiveExample with no args materializes the declared default (demo stock, non-empty).
+        app.handle_action("setActiveExample", None, &view_state(), &meta()).expect("set example");
+        assert!(!app.projection().expect("projection").stock.is_empty(), "demo-stock default materialized from the registry");
+        // curateAdd mutates the persisted document, so as a declared Operation it emits exactly one op
+        // and is NOT rejected by the View/Shell no-ops kind discipline.
+        let object_id = app.projection().expect("projection").stock[0].id.clone();
+        let result = app.handle_action("curateAdd", Some(&json!({ "objectId": object_id })), &view_state(), &meta()).expect("curate");
+        assert_eq!(result.operations.len(), 1, "curateAdd is a document operation");
+        app.handle_action("undo", None, &view_state(), &meta()).expect("undo");
     }
 
     #[test]

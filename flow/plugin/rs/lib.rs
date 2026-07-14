@@ -11,7 +11,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout,
     handle_generation_action, render_generation_form_body, render_generation_preview_text, render_generations_tree,
     selected_generation, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
-    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionEmit, App, ActionDescriptor, DocumentApp,
+    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp,
     DocumentView, GenerationPlayState,
     NodeGraphScene, TextEditorScene, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
@@ -1238,7 +1238,7 @@ impl DocumentApp for FlowPlayApp {
                 if ops.is_empty() {
                     return ActionEmit::default();
                 }
-                ActionEmit { ops, coalesce_key: Some(format!("move-{node_id}")), ..Default::default() }
+                ActionEmit::amend(ops, format!("move-{node_id}"))
             }
             "reorganize" => ActionEmit::ops(host_ops(fixture, &self.runtime, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
             "patchFlowWidgets" => {
@@ -1253,7 +1253,7 @@ impl DocumentApp for FlowPlayApp {
                 if ops.is_empty() {
                     return ActionEmit::default();
                 }
-                ActionEmit { ops, coalesce_key: Some(format!("patch-{field}-{}", widget_ids.join(","))), ..Default::default() }
+                ActionEmit::amend(ops, format!("patch-{field}-{}", widget_ids.join(",")))
             }
             "renameFlowWidget" => {
                 let old_id = args.and_then(|value| value.get("oldId")).and_then(|value| value.as_str());
@@ -1433,6 +1433,45 @@ fn create_flow_app() -> App {
                 PanelGroup::Details,
                 FLOW_PLAY_BODY_INSPECTOR,
             )
+            // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
+            .operation("addWidget", "Add Widget")
+            .operation("removeWidget", "Remove Widget")
+            .operation("deleteSelection", "Delete Selection")
+            .operation("disconnect", "Disconnect")
+            .operation("connectMediaPorts", "Connect Ports")
+            .operation("moveMediaNode", "Move Node")
+            .operation("reorganize", "Reorganize")
+            .operation("patchFlowWidgets", "Patch Widgets")
+            .operation("renameFlowWidget", "Rename Widget")
+            .operation("nodeGraphEdit", "Node Graph Edit")
+            .operation("spotlightCommit", "Spotlight Commit")
+            // 🧩 Dynamic extension-provided action — id resolved at runtime, kept out of the palette.
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("runExtensionAction", "Run Extension Action", ActionKind::Operation) })
+            // 👁️ Ephemeral view/config actions — mutate runtime, emit no ops.
+            .view_action("evaluate", "Evaluate")
+            .view_action("setSelection", "Set Selection")
+            .view_action("selectNode", "Select Node")
+            .view_action("nodeGraphSelect", "Node Graph Select")
+            .view_action("nodeGraphHover", "Node Graph Hover")
+            .view_action("graphPointerDown", "Graph Pointer Down")
+            .view_action("nodeGraphViewport", "Node Graph Viewport")
+            .view_action("setLodMode", "Set LOD Mode")
+            .view_action("setProximityDistance", "Set Proximity Distance")
+            .view_action("setCatalogueSections", "Set Catalogue Sections")
+            .view_action("toggleExtension", "Toggle Extension")
+            .view_action("addGeneration", "Add Generation")
+            .view_action("removeGeneration", "Remove Generation")
+            .view_action("selectGeneration", "Select Generation")
+            .view_action("renameGeneration", "Rename Generation")
+            .view_action("updateGenerationValues", "Update Generation Values")
+            // 📝 Staged argument form for the panel-visible create action (module operators stay catalogue-driven).
+            .action_args("addWidget", vec![
+                ActionArgDef::select("kind", "Kind", vec![
+                    ActionArgOption::new("inputSlider", "Slider"),
+                    ActionArgOption::new("inputStepper", "Stepper"),
+                    ActionArgOption::new("inputNote", "Note"),
+                ]).default_value("inputSlider"),
+            ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )

@@ -3959,8 +3959,13 @@ pub struct UndoGroup {
 /// skip re-rendering/re-fetching sections nothing touched. Absent from JSON (older/unmodified plugins)
 /// deserializes to `Full`, so any plugin that never sets this keeps today's whole-shell-refresh
 /// behavior exactly. `None` means "nothing to re-render at all" (e.g. a pure telemetry/heartbeat action).
+// 🐢 `rename_all = "camelCase"` alone only renames the *variant* names (Full/None/Partial ->
+// full/none/partial via `tag = "kind"`) — it does NOT cascade into a struct variant's own fields, which
+// would otherwise serialize as snake_case (`window_bodies`) and silently desync from the TS
+// `UiDirtyScope` type's camelCase `windowBodies`. `rename_all_fields` is the attribute that renames
+// fields *within* variants; both are needed together.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", tag = "kind")]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum UiDirtyScope {
     #[default]
     Full,
@@ -4378,6 +4383,45 @@ impl DocumentKind {
 #[cfg(test)]
 mod app_document_tests {
     use super::app_document_label;
+
+    //#region 🔖UiDirtyScopeTests
+    /// 🐢 Regression: `rename_all = "camelCase"` on an enum only renames *variant* names via `tag`, not
+    /// the fields inside a struct variant — those need `rename_all_fields` too, or `Partial`'s fields
+    /// silently serialize as snake_case (`window_bodies`) while the TS `UiDirtyScope` type expects
+    /// camelCase (`windowBodies`), desyncing the wire contract without any compile-time signal.
+    #[test]
+    fn ui_dirty_scope_partial_serializes_fields_as_camel_case() {
+        use crate::kernel::UiDirtyScope;
+        let scope = UiDirtyScope::Partial {
+            window_bodies: vec!["a".into()],
+            panel_bodies: vec!["b".into()],
+            tools: true,
+            engagements: true,
+            measures: false,
+            labels: false,
+        };
+        let json = serde_json::to_string(&scope).unwrap();
+        assert!(json.contains("\"windowBodies\""), "{json}");
+        assert!(json.contains("\"panelBodies\""), "{json}");
+        assert!(!json.contains("window_bodies"), "{json}");
+        assert!(!json.contains("panel_bodies"), "{json}");
+    }
+
+    #[test]
+    fn ui_dirty_scope_defaults_to_full() {
+        use crate::kernel::UiDirtyScope;
+        assert_eq!(UiDirtyScope::default(), UiDirtyScope::Full);
+        assert_eq!(serde_json::to_string(&UiDirtyScope::Full).unwrap(), "{\"kind\":\"full\"}");
+        // Absent from JSON (an older plugin that never sets it) must also deserialize to Full.
+        #[derive(serde::Deserialize)]
+        struct Wrapper {
+            #[serde(default)]
+            ui_scope: UiDirtyScope,
+        }
+        let parsed: Wrapper = serde_json::from_str("{}").unwrap();
+        assert_eq!(parsed.ui_scope, UiDirtyScope::Full);
+    }
+    //#endregion UiDirtyScopeTests
 
     #[test]
     fn formats_app_document_for_chrome() {

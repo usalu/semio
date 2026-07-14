@@ -5,10 +5,10 @@ use flow_module_brep::{export_solid_json, import_solid_json, tessellate_geometry
 use protocol::{visible_blocks, ProtocolBlock};
 use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{
-    build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, ActionEmit, App,
-    ActionDescriptor, Contribution, DocumentApp, DocumentView, PluginBundle, SurfaceKind, UiButtonNode,
-    UiFieldNode, UiInputNode, UiNode, UiSliderNode, UiToggleNode, ViewState, world3d_default_camera,
-    world3d_scene, world3d_selection_json, WorldSunConfig,
+    build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, ActionArgDef,
+    ActionArgOption, ActionEmit, App, ActionDescriptor, Contribution, DocumentApp, DocumentView, PluginBundle,
+    SurfaceKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiSliderNode, UiToggleNode, ViewState,
+    world3d_default_camera, world3d_scene, world3d_selection_json, WorldSunConfig,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
@@ -650,8 +650,26 @@ fn create_module_app() -> App {
                 "row",
                 Some(&[50.0, 50.0]),
                 Some(&["Params".into(), "Preview".into()]),
-            )),
+            ))
+            // 🔧 Whole-payload import/export of the block's solid geometry — legitimate coarse-grained
+            // ops for this non-collaborative render slot (not the deleted framework `setDocument`).
+            .operation(ACTION_EXPORT_SOLID, "Export Solid")
+            .operation(ACTION_IMPORT_SOLID, "Import Solid")
+            // 📝 Only the interchange `format` is a user-facing panel choice; the import `data` payload
+            // arrives through the host file-open callback, so it is deliberately not a declared arg.
+            .action_args(ACTION_EXPORT_SOLID, vec![solid_format_arg()])
+            .action_args(ACTION_IMPORT_SOLID, vec![solid_format_arg()]),
     )
+}
+
+/// 🎛 The shared `format` Select over the solid interchange formats, defaulting to OBJ (the handlers' default).
+fn solid_format_arg() -> ActionArgDef {
+    ActionArgDef::select(
+        "format",
+        "Format",
+        SOLID_MEDIA_FORMATS.iter().map(|format| ActionArgOption::new(*format, format.to_uppercase())).collect(),
+    )
+    .default_value("obj")
 }
 
 fn module_bundle() -> PluginBundle {
@@ -791,6 +809,22 @@ mod tests {
         let payload = app.projection().expect("projection");
         let import = payload.params.get("__solidImport").expect("import result present");
         assert!(import.get("error").is_some());
+    }
+
+    #[test]
+    fn export_solid_declares_only_format_arg_and_materializes_default() {
+        use semio_framework_plugin::app::AppActionRegistry;
+        let definition = create_module_app().definition;
+        let import = definition.actions.iter().find(|action| action.id == ACTION_IMPORT_SOLID).expect("import declared");
+        assert!(import.args.iter().all(|arg| arg.id == "format"), "only `format` is a user-facing arg; `data` is file-callback populated");
+        let export = definition.actions.iter().find(|action| action.id == ACTION_EXPORT_SOLID).expect("export declared");
+        assert_eq!(export.args.len(), 1, "export exposes exactly the format choice");
+        let registry = AppActionRegistry::from_definition(&definition);
+        let mut app = VcsDocumentApp::with_registry(ModuleApp::default(), registry);
+        // exportSolid fired with no args: the declared `format` default is materialized before dispatch,
+        // so the whole-payload op still applies and stashes a result.
+        app.handle_action(ACTION_EXPORT_SOLID, None, &ViewState::default(), &meta()).expect("export");
+        assert!(app.projection().expect("projection").params.get("__solidExport").is_some(), "export result stashed under the materialized format");
     }
 
     #[test]

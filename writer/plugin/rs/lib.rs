@@ -107,8 +107,8 @@ use grammar::{tokenize_language, GrammarToken};
 use trinity_jack::{complete, example_graph, format as jack_format, lint, semantic_tokens, Diagnostic};
 use writer::{empty_writer_projection, WriterCamera, WriterOp, WriterProjection};
 use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
-    build_text_editor_scene, engagement_token_matches, strip_engagement_prefix, tool_button, ui_declarative_sections_to_tree, ui_text, App,
-    ActionDescriptor, ActionEmit, DocumentApp, DocumentView, TextEditorScene, ToolCategory, ToolNode, UiNode, UiSectionNode,
+    build_text_editor_scene, engagement_token_matches, strip_engagement_prefix, ui_declarative_sections_to_tree, ui_text, App,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ActionDescriptor, ActionEmit, DocumentApp, DocumentView, TextEditorScene, UiNode, UiSectionNode,
     UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -1495,7 +1495,10 @@ impl DocumentApp for WriterApp {
         match action {
             "textEdit" | "setText" => {
                 if let Some(text) = str_arg("text") {
-                    return ActionEmit::ops(vec![WriterOp::SetText { text: text.into() }]);
+                    // ⌨️ Keystroke-granular edits coalesce under a stable key so a typing burst amends into
+                    // a few undo steps, not one-per-keystroke. Any interrupting action (format, example
+                    // load, engagement submit) applies without this key and breaks the coalescing run.
+                    return ActionEmit::amend(vec![WriterOp::SetText { text: text.into() }], "writer-text-edit");
                 }
                 ActionEmit::default()
             }
@@ -1527,7 +1530,8 @@ impl DocumentApp for WriterApp {
             "setCamera" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let Ok(parsed) = serde_json::from_value::<WriterCamera>(camera.clone()) {
-                        return ActionEmit::ops(vec![WriterOp::SetCamera { camera: parsed }]);
+                        // 🎥 Camera is a doc op by policy; a pan/zoom drag coalesces into one undo step.
+                        return ActionEmit::amend(vec![WriterOp::SetCamera { camera: parsed }], "writer-camera");
                     }
                 }
                 ActionEmit::default()
@@ -1701,14 +1705,6 @@ impl DocumentApp for WriterApp {
         }
     }
 
-    fn tools(&self, _doc: &DocumentView<'_, WriterProjection>, view_state: &ViewState) -> Vec<ToolNode> {
-        let labels = writer_labels(view_state);
-        vec![
-            tool_button("writer-format", "align-left", labels.format, play_action(WRITER_PLAY_CONTROLLER_ID, "formatDocument", None)).with_category(ToolCategory::Actions),
-            tool_button("writer-lint", "alert-circle", labels.lint, play_action(WRITER_PLAY_CONTROLLER_ID, "lintDocument", None)).with_category(ToolCategory::Actions),
-        ]
-    }
-
     fn window_engagements(&self, _doc: &DocumentView<'_, WriterProjection>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let settings = &self.runtime.editor_settings;
         let labels = writer_labels(view_state);
@@ -1790,6 +1786,18 @@ impl DocumentApp for WriterApp {
 //#endregion 🔖WriterApp
 
 //#region 🔖Manifest
+/// 🙈 An internal document operation kept out of the command palette — editor events (text edits,
+/// camera, rename, engagement submit) and dev-only whole-document setters dispatched from chrome.
+fn writer_hidden_op(id: &str, label: &str) -> ActionDefinition {
+    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, ActionKind::Operation) }
+}
+
+/// 🙈 An internal View action kept out of the palette — ephemeral editor/selection/hover/setting events
+/// that mutate only runtime scratch and emit no document operations.
+fn writer_hidden_view(id: &str, label: &str) -> ActionDefinition {
+    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, ActionKind::View) }
+}
+
 fn create_writer_app() -> App {
     App::from_builder(
         App::builder(WRITER_PLAY_APP_ID, "Writer").document(["semio", "writer"])
@@ -1824,6 +1832,43 @@ fn create_writer_app() -> App {
                 PanelGroup::Details,
                 WRITER_PLAY_BODY_INSPECTION,
             )
+            // 🔧 Panel-visible P0 effects: format rewrites the buffer (Operation), lint re-runs
+            // diagnostics into runtime (View — an effect, not a document op).
+            .operation("formatDocument", "Format Document")
+            .view_action("lintDocument", "Lint Document")
+            // 🔧 P1 example switch (whole-document load) with a staged example choice.
+            .operation("setActiveExample", "Set Active Example")
+            // 🙈 Internal document ops — text edits (coalesced), aliases, camera, rename, engagement,
+            // and dev-only whole-document JSON setters.
+            .action_with(writer_hidden_op("textEdit", "Edit Text"))
+            .action_with(writer_hidden_op("setText", "Set Text"))
+            .action_with(writer_hidden_op("setCamera", "Set Camera"))
+            .action_with(writer_hidden_op("commitRename", "Commit Rename"))
+            .action_with(writer_hidden_op("engagementSubmit", "Engagement Submit"))
+            .action_with(writer_hidden_op("setDocument", "Set Document"))
+            .action_with(writer_hidden_op("setDocumentJson", "Set Document JSON"))
+            .action_with(writer_hidden_op("setFixtureJson", "Set Fixture JSON"))
+            // 🙈 Internal View measures — selection, hover, AST navigation, completions, editor settings.
+            .action_with(writer_hidden_view("requestCompletions", "Request Completions"))
+            .action_with(writer_hidden_view("textSelect", "Text Select"))
+            .action_with(writer_hidden_view("setEditorSelection", "Set Editor Selection"))
+            .action_with(writer_hidden_view("selectAstNode", "Select Ast Node"))
+            .action_with(writer_hidden_view("setAstSelection", "Set Ast Selection"))
+            .action_with(writer_hidden_view("setAstHover", "Set Ast Hover"))
+            .action_with(writer_hidden_view("textHover", "Text Hover"))
+            .action_with(writer_hidden_view("toggleLineNumbers", "Toggle Line Numbers"))
+            .action_with(writer_hidden_view("setEditorSetting", "Set Editor Setting"))
+            .action_with(writer_hidden_view("engagementInput", "Engagement Input"))
+            // 📝 Staged argument forms: example choice + the dev JSON setters.
+            .action_args("setActiveExample", vec![
+                ActionArgDef::select("exampleId", "Example", vec![
+                    ActionArgOption::new("jack", "Jack"),
+                    ActionArgOption::new("dag.jack", "Dag Jack"),
+                    ActionArgOption::new("empty", "Empty"),
+                ]).default_value("jack"),
+            ])
+            .action_args("setDocumentJson", vec![ActionArgDef::text("json", "Document JSON")])
+            .action_args("setFixtureJson", vec![ActionArgDef::text("json", "Fixture JSON")])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
@@ -1861,6 +1906,38 @@ mod tests {
         let mut app = new_app();
         app.handle_action("setActiveExample", Some(&json!({ "exampleId": "jack" })), &ViewState::default(), &meta()).expect("load jack");
         app
+    }
+
+    /// 🧬 A wrapper carrying the real action registry so declared defaults materialize and kind discipline
+    /// (View/Shell actions must not emit ops) is enforced.
+    fn new_app_with_registry() -> VcsDocumentApp<WriterApp> {
+        use semio_framework_plugin::app::AppActionRegistry;
+        let definition = create_writer_app().definition;
+        VcsDocumentApp::with_registry(WriterApp::default(), AppActionRegistry::from_definition(&definition))
+    }
+
+    #[test]
+    fn text_edit_burst_coalesces_into_one_undo_step() {
+        let mut app = new_app();
+        for text in ["h", "he", "hel", "hell", "hello"] {
+            app.handle_action("textEdit", Some(&json!({ "text": text })), &ViewState::default(), &meta()).expect("type");
+        }
+        assert_eq!(app.projection().expect("projection").text, "hello");
+        // The whole typing burst shares one coalesce key, so a single undo restores the pre-burst buffer
+        // rather than backing out one keystroke at a time.
+        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        assert_eq!(app.projection().expect("projection").text, "", "coalesced typing collapses to one undo step");
+    }
+
+    #[test]
+    fn lint_is_a_view_action_and_example_default_materializes() {
+        let mut app = new_app_with_registry();
+        // lintDocument is a declared View action: registry kind discipline requires it emit no ops.
+        let result = app.handle_action("lintDocument", None, &ViewState::default(), &meta()).expect("lint");
+        assert!(result.operations.is_empty(), "lint re-runs diagnostics into runtime, never the document");
+        // setActiveExample fired with no args materializes the declared default example ("jack").
+        app.handle_action("setActiveExample", None, &ViewState::default(), &meta()).expect("example");
+        assert!(!app.projection().expect("projection").text.is_empty(), "jack default materialized from the registry");
     }
 
     #[test]

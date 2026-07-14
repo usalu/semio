@@ -1,4 +1,4 @@
-import { Component, createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore, type ReactElement, type ReactNode } from "react";
+import { Component, createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactElement, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import type { GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
 import {
@@ -17,10 +17,12 @@ import {
   CommandList,
   dockSkeletonOf,
   dockSkeletonsEqual,
+  Field,
   findPanelTabInDock,
   Footer,
   Fuse,
   Icon,
+  IconSelector,
   Input,
   Layout,
   LevelProvider,
@@ -166,9 +168,19 @@ import {
   resolveUiDirtyScope,
   textEditorActions,
   normalizeAppLabelsOverlay,
+  deriveToolNodes,
+  resolveWindowActions,
+  effectiveActionArgs,
+  missingRequiredArgs,
+  SET_ACTIVE_TOOL_ACTION_ID,
+  type ActionArgControl,
+  type ActionArgDef,
   type ActionDefinition,
   type ActionDescriptor,
   type AppDefinition,
+  type AppWindowKindDefinition,
+  type DerivedToolSpec,
+  type ToolDefinition,
   type AppPanelTabDefinition,
   type Canvas2dScene,
   type ComponentKind,
@@ -351,7 +363,6 @@ type WindowUiState = {
   readonly windowEngagementsByKind: Readonly<Record<string, WindowEngagement>>;
   readonly windowMeasuresByKind: Readonly<Record<string, readonly WindowMeasure[]>>;
   readonly panelUiByKey: Readonly<Record<string, UiNode>>;
-  readonly toolNodesByKind: Readonly<Record<string, readonly ToolNode[]>>;
   readonly appLabelsOverlay: PluginAppLabelsOverlay;
 };
 
@@ -359,8 +370,24 @@ type SpawnedWindowState = {
   readonly spawnedWindowUi: UiNode | null;
   readonly spawnedWindowEngagements: Readonly<Record<string, WindowEngagement>>;
   readonly spawnedWindowMeasures: Readonly<Record<string, readonly WindowMeasure[]>>;
-  readonly spawnedToolNodes: readonly ToolNode[];
 };
+
+/**
+ * 🧰 Per-window Action rail (P1–P5) state: fold/expand chrome, locally-buffered staged arg values
+ * (keyed `${windowId}:${actionId}`, never dispatched until Execute), and the host-owned active tool per
+ * window (never a document field, never a VCS op). See {@link WindowActionPanel}.
+ */
+type ActionPanelState = {
+  readonly foldedByWindowId: Readonly<Record<string, boolean>>;
+  readonly expandedByWindowId: Readonly<Record<string, string | null>>;
+  readonly stagedArgsByKey: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
+  readonly activeToolByWindowId: Readonly<Record<string, string | null>>;
+};
+
+/** 🧰 Composite key into {@link ActionPanelState.stagedArgsByKey}. */
+export function actionStageKey(windowId: string, actionId: string): string {
+  return `${windowId}:${actionId}`;
+}
 
 type ExtraWindowInstance = { readonly id: string; readonly windowKindId: string; readonly title: string };
 
@@ -411,6 +438,7 @@ export type ShellState = {
   readonly pluginRuntime: PluginRuntimeState;
   readonly windowUi: WindowUiState;
   readonly spawnedWindow: SpawnedWindowState;
+  readonly actionPanel: ActionPanelState;
   readonly layout: ShellLayoutState;
   readonly overlays: OverlayState;
   readonly uiPrefs: UiPrefsState;
@@ -432,12 +460,15 @@ export type ShellAction =
   | { readonly type: "SET_WINDOW_ENGAGEMENTS_BY_KIND"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
   | { readonly type: "SET_WINDOW_MEASURES_BY_KIND"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
   | { readonly type: "SET_PANEL_UI_BY_KEY"; readonly value: Updatable<Readonly<Record<string, UiNode>>> }
-  | { readonly type: "SET_TOOL_NODES_BY_KIND"; readonly value: Updatable<Readonly<Record<string, readonly ToolNode[]>>> }
   | { readonly type: "SET_APP_LABELS_OVERLAY"; readonly value: Updatable<PluginAppLabelsOverlay> }
   | { readonly type: "SET_SPAWNED_WINDOW_UI"; readonly value: Updatable<UiNode | null> }
   | { readonly type: "SET_SPAWNED_WINDOW_ENGAGEMENTS"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
   | { readonly type: "SET_SPAWNED_WINDOW_MEASURES"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
-  | { readonly type: "SET_SPAWNED_TOOL_NODES"; readonly value: Updatable<readonly ToolNode[]> }
+  | { readonly type: "SET_ACTION_PANEL_FOLDED"; readonly windowId: string; readonly value: boolean }
+  | { readonly type: "SET_ACTION_PANEL_EXPANDED"; readonly windowId: string; readonly value: string | null }
+  | { readonly type: "STAGE_ACTION_ARG"; readonly windowId: string; readonly actionId: string; readonly argId: string; readonly value: unknown }
+  | { readonly type: "RESET_ACTION_ARGS"; readonly windowId: string; readonly actionId: string }
+  | { readonly type: "SET_ACTIVE_TOOL"; readonly windowId: string; readonly toolId: string | null }
   | { readonly type: "SET_CORNER_PANEL_VISIBLE"; readonly corner: PanelCorner; readonly value: Updatable<boolean> }
   | { readonly type: "SET_CORNER_PANEL_SIZE"; readonly corner: PanelCorner; readonly value: Updatable<number> }
   | { readonly type: "SET_CORNER_PANEL_PATH"; readonly corner: PanelCorner; readonly value: Updatable<readonly string[]> }
@@ -481,7 +512,6 @@ function windowUiReducer(state: WindowUiState, action: ShellAction): WindowUiSta
     case "SET_WINDOW_ENGAGEMENTS_BY_KIND": return { ...state, windowEngagementsByKind: resolveUpdatable(action.value, state.windowEngagementsByKind) };
     case "SET_WINDOW_MEASURES_BY_KIND": return { ...state, windowMeasuresByKind: resolveUpdatable(action.value, state.windowMeasuresByKind) };
     case "SET_PANEL_UI_BY_KEY": return { ...state, panelUiByKey: resolveUpdatable(action.value, state.panelUiByKey) };
-    case "SET_TOOL_NODES_BY_KIND": return { ...state, toolNodesByKind: resolveUpdatable(action.value, state.toolNodesByKind) };
     case "SET_APP_LABELS_OVERLAY": return { ...state, appLabelsOverlay: resolveUpdatable(action.value, state.appLabelsOverlay) };
     default: return state;
   }
@@ -492,7 +522,38 @@ function spawnedWindowReducer(state: SpawnedWindowState, action: ShellAction): S
     case "SET_SPAWNED_WINDOW_UI": return { ...state, spawnedWindowUi: resolveUpdatable(action.value, state.spawnedWindowUi) };
     case "SET_SPAWNED_WINDOW_ENGAGEMENTS": return { ...state, spawnedWindowEngagements: resolveUpdatable(action.value, state.spawnedWindowEngagements) };
     case "SET_SPAWNED_WINDOW_MEASURES": return { ...state, spawnedWindowMeasures: resolveUpdatable(action.value, state.spawnedWindowMeasures) };
-    case "SET_SPAWNED_TOOL_NODES": return { ...state, spawnedToolNodes: resolveUpdatable(action.value, state.spawnedToolNodes) };
+    default: return state;
+  }
+}
+
+/** 🧰 Reducer for the per-window Action rail slice (P1–P5). Every case preserves referential identity when nothing actually changes so downstream memos can bail. */
+function actionPanelReducer(state: ActionPanelState, action: ShellAction): ActionPanelState {
+  switch (action.type) {
+    case "SET_ACTION_PANEL_FOLDED": {
+      if (state.foldedByWindowId[action.windowId] === action.value) return state;
+      return { ...state, foldedByWindowId: { ...state.foldedByWindowId, [action.windowId]: action.value } };
+    }
+    case "SET_ACTION_PANEL_EXPANDED": {
+      if ((state.expandedByWindowId[action.windowId] ?? null) === action.value) return state;
+      return { ...state, expandedByWindowId: { ...state.expandedByWindowId, [action.windowId]: action.value } };
+    }
+    case "STAGE_ACTION_ARG": {
+      const key = actionStageKey(action.windowId, action.actionId);
+      const current = state.stagedArgsByKey[key] ?? {};
+      if (Object.prototype.hasOwnProperty.call(current, action.argId) && current[action.argId] === action.value) return state;
+      return { ...state, stagedArgsByKey: { ...state.stagedArgsByKey, [key]: { ...current, [action.argId]: action.value } } };
+    }
+    case "RESET_ACTION_ARGS": {
+      const key = actionStageKey(action.windowId, action.actionId);
+      if (!Object.prototype.hasOwnProperty.call(state.stagedArgsByKey, key)) return state;
+      const next = { ...state.stagedArgsByKey };
+      delete next[key];
+      return { ...state, stagedArgsByKey: next };
+    }
+    case "SET_ACTIVE_TOOL": {
+      if ((state.activeToolByWindowId[action.windowId] ?? null) === action.toolId) return state;
+      return { ...state, activeToolByWindowId: { ...state.activeToolByWindowId, [action.windowId]: action.toolId } };
+    }
     default: return state;
   }
 }
@@ -561,6 +622,7 @@ export function shellReducer(state: ShellState, action: ShellAction): ShellState
     pluginRuntime: pluginRuntimeReducer(state.pluginRuntime, action),
     windowUi: windowUiReducer(state.windowUi, action),
     spawnedWindow: spawnedWindowReducer(state.spawnedWindow, action),
+    actionPanel: actionPanelReducer(state.actionPanel, action),
     layout: shellLayoutReducer(state.layout, action),
     overlays: overlayReducer(state.overlays, action),
     uiPrefs: uiPrefsReducer(state.uiPrefs, action),
@@ -576,8 +638,9 @@ export const selectUiDevice = (state: ShellState, mobile: boolean): ElementsSurf
 export function initialShellState(_props: { readonly pluginFilter?: string; readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[] }): ShellState {
   return {
     pluginRuntime: { loadedPlugins: [], session: null, error: null },
-    windowUi: { windowUiByKind: {}, windowEngagementsByKind: {}, windowMeasuresByKind: {}, panelUiByKey: {}, toolNodesByKind: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
-    spawnedWindow: { spawnedWindowUi: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {}, spawnedToolNodes: [] },
+    windowUi: { windowUiByKind: {}, windowEngagementsByKind: {}, windowMeasuresByKind: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
+    spawnedWindow: { spawnedWindowUi: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {} },
+    actionPanel: { foldedByWindowId: {}, expandedByWindowId: {}, stagedArgsByKey: {}, activeToolByWindowId: {} },
     layout: {
       cornerPanels: {
         "top-left": { visible: false, size: DEFAULT_CORNER_PANEL_SIZES["top-left"], path: [] },
@@ -1086,12 +1149,51 @@ function resolveCanvasBodyKey(app: AppDefinition): string {
   return windowKind.bodyKey;
 }
 
-/** @emoji 🎛 Picks dynamic plugin tools when present, otherwise static mode tools for a spawned app. */
-export function selectSpawnedToolNodes(dynamicTools: readonly ToolNode[], app: Pick<AppDefinition, "modes" | "defaultModeId">, activeModeId?: string): readonly ToolNode[] {
-  const modeId = activeModeId ?? app.defaultModeId ?? app.modes[0]?.id;
-  const staticTools = app.modes.find((mode) => mode.id === modeId)?.tools ?? [];
-  return dynamicTools.length > 0 ? dynamicTools : staticTools;
+//#region 🧰WindowToolRegistry
+/**
+ * 🧰 Resolves the `ToolDefinition`s in scope for one window kind against the app's tool registry:
+ * the window kind's own `tools` refs when non-empty, otherwise every tool the app declares (the
+ * scoping fallback, mirroring `resolveWindowActions`' intent for tools). Unresolvable refs are dropped.
+ */
+export function resolveWindowTools(app: Pick<AppDefinition, "tools">, windowKind: Pick<AppWindowKindDefinition, "tools">): ToolDefinition[] {
+  const registry = app.tools ?? [];
+  const refs = windowKind.tools ?? [];
+  if (refs.length === 0) return [...registry];
+  const resolved: ToolDefinition[] = [];
+  for (const ref of refs) {
+    const tool = registry.find((entry) => entry.id === ref);
+    if (tool) resolved.push(tool);
+  }
+  return resolved;
 }
+
+/** 🧰 One `ToolDefinition` → the lean `DerivedToolSpec` consumed by {@link deriveToolNodes}. */
+function toolDefinitionToSpec(tool: ToolDefinition): DerivedToolSpec {
+  return { id: tool.id, label: tool.label, iconId: tool.iconId, group: tool.group ?? undefined, category: tool.category ?? "tools" };
+}
+
+/** 🧰 Stamps the owning `windowId` onto every `setActiveTool` descriptor in a derived toolbar tree so the shell's `onAction` interceptor targets the right window regardless of which window is globally active. */
+function tagSetActiveToolWindow(nodes: readonly ToolNode[], windowId: string): ToolNode[] {
+  return nodes.map((node) => {
+    if (node.kind === "collection") return { ...node, children: tagSetActiveToolWindow(node.children, windowId) };
+    if (node.kind === "toggle" && "onChange" in node && node.onChange.action === SET_ACTIVE_TOOL_ACTION_ID) {
+      return { ...node, onChange: { ...node.onChange, args: { ...(node.onChange.args as object | undefined), windowId } } };
+    }
+    return node;
+  });
+}
+
+/**
+ * 🧰 Builds the window toolbar `ToolNode[]` for one window purely from the static tool registry plus
+ * the host-owned active tool id — the replacement for the deleted plugin `list-tools` sourcing. Each
+ * `setActiveTool` descriptor is tagged with `windowId` so activation is scoped to this exact window.
+ */
+export function resolveWindowToolNodes(app: Pick<AppDefinition, "tools" | "controllerId">, windowKind: Pick<AppWindowKindDefinition, "tools">, activeToolId: string | null | undefined, windowId: string): ToolNode[] {
+  const tools = resolveWindowTools(app, windowKind);
+  if (tools.length === 0) return [];
+  return tagSetActiveToolWindow(deriveToolNodes(app.controllerId, tools.map(toolDefinitionToSpec), activeToolId ?? undefined), windowId);
+}
+//#endregion 🧰WindowToolRegistry
 
 /** @emoji 💬 Builds spawned-window engagement and measures chrome for one window kind. */
 export function spawnedWindowChromeForKind(
@@ -1229,6 +1331,220 @@ function windowToolbarNode(tools: readonly ToolNode[] | undefined, windowId: str
   return <ToolTree id={`ui.toolbar.${windowId}`} tools={grouped} onAction={onAction} direction="up" />;
 }
 
+//#region 🧰WindowActionPanel
+/**
+ * 🎛 Renders one {@link ActionArgControl} into a STAGED form field — the crucial difference from
+ * `renderUiControl` in `ui-interpreter.tsx` is that this dispatches NOTHING globally; `onChange` only
+ * writes to the caller's local staged buffer. `value` is the already-resolved effective value
+ * (staged ?? default ?? unset).
+ */
+export function renderStagedArgControl(def: ActionArgDef, value: unknown, onChange: (value: unknown) => void, disabled?: boolean): ReactElement {
+  const control: ActionArgControl = def.control;
+  switch (control.kind) {
+    case "text":
+      return <Input id={def.id} type="text" className="h-medium w-full min-w-0" value={typeof value === "string" ? value : ""} placeholder={control.placeholder} disabled={disabled} onChange={(event) => onChange(event.target.value)} />;
+    case "number":
+      return (
+        <Input
+          id={def.id}
+          type="number"
+          className="h-medium w-full min-w-0"
+          value={value === undefined || value === null || value === "" ? "" : String(value)}
+          min={control.min}
+          max={control.max}
+          step={control.step}
+          disabled={disabled}
+          onChange={(event) => onChange(event.target.value === "" ? undefined : Number(event.target.value))}
+        />
+      );
+    case "slider": {
+      const numeric = typeof value === "number" && Number.isFinite(value) ? value : control.min;
+      const slider = <Slider id={def.id} className="w-full min-w-0" min={control.min} max={control.max} step={control.step ?? 1} value={[numeric]} disabled={disabled} onValueChange={(values) => onChange(values[0] ?? numeric)} />;
+      if (!control.unit) return slider;
+      return (
+        <div className="flex w-full min-w-0 items-center gap-single">
+          {slider}
+          <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+            {numeric} {control.unit}
+          </span>
+        </div>
+      );
+    }
+    case "toggle":
+      return <Toggle id={def.id} pressed={value === true} text={def.label} disabled={disabled} onPressedChange={(pressed) => onChange(pressed)} />;
+    case "select":
+      return (
+        <Select value={typeof value === "string" && value ? value : undefined} disabled={disabled} onValueChange={(next) => onChange(next)}>
+          <SelectTrigger id={def.id} className="h-medium w-full min-w-0" size="sm">
+            <SelectValue placeholder={def.label} />
+          </SelectTrigger>
+          <SelectContent>
+            {control.options.map((option, index) => (
+              <SelectItem key={`${def.id}:${index}:${option.value}`} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    case "vec3": {
+      const tuple = Array.isArray(value) && value.length >= 3 ? (value as readonly number[]) : null;
+      const axes = ["x", "y", "z"] as const;
+      return (
+        <div className="grid grid-cols-3 gap-single">
+          {axes.map((axis, index) => (
+            <Input
+              key={`${def.id}.${axis}`}
+              id={`${def.id}.${axis}`}
+              type="number"
+              className="h-medium w-full min-w-0"
+              value={tuple ? String(tuple[index] ?? 0) : ""}
+              placeholder={axis}
+              disabled={disabled}
+              onChange={(event) => {
+                const parsed = Number(event.target.value);
+                if (!Number.isFinite(parsed)) return;
+                const next: [number, number, number] = tuple ? [tuple[0] ?? 0, tuple[1] ?? 0, tuple[2] ?? 0] : [0, 0, 0];
+                next[index] = parsed;
+                onChange(next);
+              }}
+            />
+          ))}
+        </div>
+      );
+    }
+    case "iconSelect":
+      return <IconSelector id={def.id} classifyIconSelectorMode={undefined} value={typeof value === "string" ? value : ""} uniform onChange={(next) => onChange(next)} />;
+  }
+}
+
+/** 🧰 True when an action carries arguments and therefore stages a form instead of firing immediately (P1–P4). */
+export function actionRequiresStagedForm(action: Pick<ActionDefinition, "args">): boolean {
+  return action.args.length > 0;
+}
+
+/** 🧰 The decision a bound hotkey makes for one action (P4). */
+export type KeybindingIntent = { readonly kind: "fire" } | { readonly kind: "open"; readonly actionId: string } | { readonly kind: "execute"; readonly actionId: string; readonly args: Record<string, unknown> };
+
+/**
+ * ✍️ Pure P4 decision: an arg-less action fires directly; an arg-carrying action opens its staged form,
+ * unless that form is already the expanded one in the active window AND validation passes, in which case
+ * the hotkey executes with the merged effective args. An already-open-but-invalid form stays open.
+ */
+export function resolveKeybindingIntent(definition: ActionDefinition | undefined, expandedActionId: string | null, stagedArgs: Readonly<Record<string, unknown>>): KeybindingIntent {
+  if (!definition || !actionRequiresStagedForm(definition)) return { kind: "fire" };
+  if (expandedActionId === definition.id) {
+    const effective = effectiveActionArgs(definition.args, stagedArgs);
+    if (missingRequiredArgs(definition.args, effective).length === 0) return { kind: "execute", actionId: definition.id, args: effective };
+  }
+  return { kind: "open", actionId: definition.id };
+}
+
+/** 🧰 Pure P5 activation decision: an empty request, or re-requesting the already-active tool, deactivates (null); otherwise the requested tool becomes active. */
+export function resolveToolActivation(current: string | null | undefined, requested: string): string | null {
+  return requested === "" || (current ?? null) === requested ? null : requested;
+}
+
+/** 🎛 Props for the per-window Action rail body (P1/P2). */
+export type WindowActionPanelProps = {
+  readonly windowId: string;
+  readonly controllerId: string;
+  readonly actions: readonly ActionDefinition[];
+  readonly expandedActionId: string | null;
+  readonly stagedArgsByKey: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
+  readonly disabled: boolean;
+  readonly onExpandedChange: (actionId: string | null) => void;
+  readonly onStageArg: (actionId: string, argId: string, value: unknown) => void;
+  readonly onResetArgs: (actionId: string) => void;
+  readonly onExecute: (descriptor: ActionDescriptor) => void;
+};
+
+/**
+ * 🎛 The per-window Actions rail body (P1/P2). Zero-arg actions ARE the execute button; arg-carrying
+ * actions expand a locally-buffered staged form — nothing dispatches on edit, effective value is
+ * `staged ?? default ?? unset`, Execute is enabled only when every required arg has an effective value,
+ * fires exactly ONE `ActionDescriptor` with the merged args, and keeps the staged values afterward.
+ * When `disabled` (an active tool with `allowsActionsWhileActive === false`), every row renders disabled.
+ */
+export function WindowActionPanel(props: WindowActionPanelProps): ReactElement {
+  const { windowId, controllerId, actions, expandedActionId, stagedArgsByKey, disabled, onExpandedChange, onStageArg, onResetArgs, onExecute } = props;
+  return (
+    <div data-slot="window-action-panel" className="flex min-w-0 flex-col gap-single p-single">
+      {actions.map((action) => {
+        if (!actionRequiresStagedForm(action)) {
+          return <Button key={action.id} id={`${windowId}-action-${action.id}`} text={action.label} icon={action.iconId && action.iconId in ICONS ? (action.iconId as IconName) : "play"} disabled={disabled} onClick={() => onExecute({ controllerId, action: action.id })} />;
+        }
+        const expanded = expandedActionId === action.id;
+        const staged = stagedArgsByKey[actionStageKey(windowId, action.id)] ?? {};
+        const effective = effectiveActionArgs(action.args, staged);
+        const missing = missingRequiredArgs(action.args, effective);
+        return (
+          <div key={action.id} data-slot="window-action-row" className={cn("flex min-w-0 flex-col rounded-md border", borderElementClass)}>
+            <Button
+              id={`${windowId}-action-${action.id}-disclosure`}
+              text={`${action.label}…`}
+              icon={expanded ? "chevron-down" : "chevron-right"}
+              onClick={() => onExpandedChange(expanded ? null : action.id)}
+            />
+            {expanded ? (
+              <div data-slot="window-action-form" className="flex min-w-0 flex-col gap-single p-single">
+                {action.args.map((def) => (
+                  <Field key={def.id} id={`${windowId}-action-${action.id}-arg-${def.id}`} label={def.label} description={def.description} required={def.required}>
+                    {renderStagedArgControl(def, effective[def.id], (value) => onStageArg(action.id, def.id, value), disabled)}
+                  </Field>
+                ))}
+                <div className="flex items-center gap-single">
+                  <Button id={`${windowId}-action-${action.id}-execute`} text="Execute" icon="check" disabled={disabled || missing.length > 0} onClick={() => onExecute({ controllerId, action: action.id, args: effectiveActionArgs(action.args, staged) })} />
+                  <Button id={`${windowId}-action-${action.id}-reset`} text="Reset" icon="undo" onClick={() => onResetArgs(action.id)} />
+                </div>
+              </div>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** 🧰 Slice of the {@link ActionPanelState} the {@link windowActionPanelNode} builder reads. */
+type ActionPanelSlice = Pick<ActionPanelState, "expandedByWindowId" | "stagedArgsByKey" | "activeToolByWindowId">;
+
+/**
+ * 🧰 Sibling of {@link windowToolbarNode}: resolves a window kind's panel-eligible actions and returns a
+ * bound {@link WindowActionPanel}, or `undefined` when the window has no resolved actions (so the rail
+ * chip never renders). Rows render disabled while an active tool gates actions
+ * (`allowsActionsWhileActive === false`).
+ */
+function windowActionPanelNode(
+  app: AppDefinition,
+  windowKind: AppWindowKindDefinition,
+  windowId: string,
+  actionPanel: ActionPanelSlice,
+  onAction: (action: ActionDescriptor) => void,
+  dispatch: (action: ShellAction) => void,
+): ReactNode {
+  const actions = resolveWindowActions(app, windowKind);
+  if (actions.length === 0) return undefined;
+  const activeToolId = actionPanel.activeToolByWindowId[windowId] ?? null;
+  const activeTool = activeToolId ? (app.tools ?? []).find((tool) => tool.id === activeToolId) : undefined;
+  const disabled = Boolean(activeTool && activeTool.allowsActionsWhileActive === false);
+  return (
+    <WindowActionPanel
+      windowId={windowId}
+      controllerId={app.controllerId}
+      actions={actions}
+      expandedActionId={actionPanel.expandedByWindowId[windowId] ?? null}
+      stagedArgsByKey={actionPanel.stagedArgsByKey}
+      disabled={disabled}
+      onExpandedChange={(actionId) => dispatch({ type: "SET_ACTION_PANEL_EXPANDED", windowId, value: actionId })}
+      onStageArg={(actionId, argId, value) => dispatch({ type: "STAGE_ACTION_ARG", windowId, actionId, argId, value })}
+      onResetArgs={(actionId) => dispatch({ type: "RESET_ACTION_ARGS", windowId, actionId })}
+      onExecute={onAction}
+    />
+  );
+}
+//#endregion 🧰WindowActionPanel
+
 /** @emoji 🐢 Structural equality over plain JSON-shaped values (the shape every `UiNode`/`WindowEngagement`/`WindowMeasure` plugin payload takes) — no cycles, no non-JSON types. */
 function uiJsonDeepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
@@ -1291,7 +1607,7 @@ function uiRefreshWantsWindow(scope: UiDirtyScope, bodyKey: string): boolean {
 function uiRefreshWantsPanel(scope: UiDirtyScope, bodyKey: string): boolean {
   return scope.kind === "full" || (scope.kind === "partial" && (scope.panelBodies ?? []).includes(bodyKey));
 }
-function uiRefreshWantsFlag(scope: UiDirtyScope, flag: "tools" | "engagements" | "measures" | "labels"): boolean {
+function uiRefreshWantsFlag(scope: UiDirtyScope, flag: "engagements" | "measures" | "labels"): boolean {
   return scope.kind === "full" || (scope.kind === "partial" && scope[flag] === true);
 }
 
@@ -1313,12 +1629,11 @@ export function buildUiRefreshRequest(
   const panels = panelTabLeaves
     .filter((tab): tab is { readonly kind: string; readonly bodyKey: string } => Boolean(tab.bodyKey) && uiRefreshWantsPanel(scope, tab.bodyKey!))
     .map((tab) => ({ key: panelTabKindId(tab.kind), bodyKey: tab.bodyKey, hash: cache.get(`panel:${panelTabKindId(tab.kind)}`)?.hash }));
-  const tools = uiRefreshWantsFlag(scope, "tools") ? windowKinds.map((kind) => ({ key: kind.id, hash: cache.get(`tools:${kind.id}`)?.hash })) : [];
   const engagements = uiRefreshWantsFlag(scope, "engagements") ? { hash: cache.get("engagements")?.hash } : undefined;
   const measures = uiRefreshWantsFlag(scope, "measures") ? { hash: cache.get("measures")?.hash } : undefined;
   const labels = uiRefreshWantsFlag(scope, "labels") ? { hash: cache.get("labels")?.hash } : undefined;
-  if (windows.length === 0 && panels.length === 0 && tools.length === 0 && !engagements && !measures && !labels) return null;
-  return { viewState, windows, panels, tools, engagements, measures, labels };
+  if (windows.length === 0 && panels.length === 0 && !engagements && !measures && !labels) return null;
+  return { viewState, windows, panels, engagements, measures, labels };
 }
 
 /** @emoji 🐢 Writes every changed section (`value !== undefined`) from a `refresh-ui` response into `cache`; unchanged sections are left as-is since the cached value is still current. */
@@ -1331,7 +1646,6 @@ function applyUiRefreshSectionsToCache(cache: UiRefreshCache, prefix: string, en
 export function applyUiRefreshResponseToCache(cache: UiRefreshCache, response: PluginUiRefreshResponse): void {
   applyUiRefreshSectionsToCache(cache, "window", response.windows);
   applyUiRefreshSectionsToCache(cache, "panel", response.panels);
-  applyUiRefreshSectionsToCache(cache, "tools", response.tools);
   if (response.engagements?.value !== undefined) cache.set("engagements", { hash: response.engagements.hash, value: response.engagements.value });
   if (response.measures?.value !== undefined) cache.set("measures", { hash: response.measures.hash, value: response.measures.value });
   if (response.labels?.value !== undefined) cache.set("labels", { hash: response.labels.hash, value: response.labels.value });
@@ -1378,8 +1692,9 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
   const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins }));
   const { loadedPlugins, session, error } = shellState.pluginRuntime;
-  const { windowUiByKind, windowEngagementsByKind, windowMeasuresByKind, panelUiByKey, toolNodesByKind, appLabelsOverlay } = shellState.windowUi;
-  const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures, spawnedToolNodes } = shellState.spawnedWindow;
+  const { windowUiByKind, windowEngagementsByKind, windowMeasuresByKind, panelUiByKey, appLabelsOverlay } = shellState.windowUi;
+  const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
+  const { foldedByWindowId: actionPanelFoldedByWindowId, expandedByWindowId: actionPanelExpandedByWindowId, stagedArgsByKey: actionPanelStagedArgsByKey, activeToolByWindowId } = shellState.actionPanel;
   const { cornerPanels, dockOverride, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, extraWindowInstances } = shellState.layout;
   const { searchOpen, findOpen } = shellState.overlays;
   const { uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft } = shellState.uiPrefs;
@@ -1465,6 +1780,24 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   useEffect(() => {
     sessionRef.current = session;
   }, [session]);
+
+  // 🧰 Refs so `refreshUi`/`onAction`/`applyHostEffects` can read the current host-owned active tool and
+  // active window without re-creating those callbacks on every tool switch.
+  const activeToolByWindowIdRef = useRef(activeToolByWindowId);
+  activeToolByWindowIdRef.current = activeToolByWindowId;
+  const activeWindowIdRef = useRef(activeWindowId);
+  activeWindowIdRef.current = activeWindowId;
+  const actionPanelExpandedByWindowIdRef = useRef(actionPanelExpandedByWindowId);
+  actionPanelExpandedByWindowIdRef.current = actionPanelExpandedByWindowId;
+  const actionPanelStagedArgsByKeyRef = useRef(actionPanelStagedArgsByKey);
+  actionPanelStagedArgsByKeyRef.current = actionPanelStagedArgsByKey;
+
+  /** 🧰 Overlays the active window's host-owned `activeToolId` onto a view state at plugin-call time. */
+  const injectActiveTool = useCallback((viewState: ViewState, windowId?: string | null): ViewState => {
+    const key = windowId ?? activeWindowIdRef.current;
+    const toolId = key ? (activeToolByWindowIdRef.current[key] ?? undefined) : undefined;
+    return viewState.activeToolId === toolId ? viewState : { ...viewState, activeToolId: toolId };
+  }, []);
 
   useEffect(() => {
     dispatch({ type: "SET_SYNC_BACKBONE_URI", value: null });
@@ -1579,7 +1912,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       }
       const cache = uiRefreshCacheRef.current;
       const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
-      const viewState: ViewState = { ...nextSession.viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology };
+      const viewState: ViewState = injectActiveTool({ ...nextSession.viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology });
       const panelTabLeaves = flattenPanelTabLeaves(nextSession.app.panelTabs);
       // 🐢 One batched, hash-conditional round trip replaces the old ~12 sequential
       // render/tools/windowEngagements/windowMeasures/appLabels calls — the plugin omits payloads for
@@ -1629,19 +1962,6 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
             panelTabLeaves.filter((tab) => tab.bodyKey).map((tab) => [panelTabKindId(tab.kind), (cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as UiNode | undefined) ?? current[panelTabKindId(tab.kind)] ?? { type: "text", value: shellLabel("ui.common.loading") }] as const),
           ),
       });
-      const activeModeId = viewState.activeModeId ?? nextSession.app.defaultModeId ?? nextSession.app.modes[0]?.id;
-      const staticTools = nextSession.app.modes.find((mode) => mode.id === activeModeId)?.tools ?? [];
-      dispatch({
-        type: "SET_TOOL_NODES_BY_KIND",
-        value: (current) =>
-          mergeRecordPreservingIdentity(
-            current,
-            nextSession.app.windowKinds.map((kind) => {
-              const dynamic = (cache.get(`tools:${kind.id}`)?.value as readonly ToolNode[] | undefined) ?? [];
-              return [kind.id, dynamic.length > 0 ? dynamic : staticTools] as const;
-            }),
-          ),
-      });
       const windowIds = nextSession.app.windowKinds.map((kind) => kind.id);
       if (layoutSeedKeyRef.current !== layoutSeedKey) {
         layoutSeedKeyRef.current = layoutSeedKey;
@@ -1653,7 +1973,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         else if (windowIds[0]) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: windowIds[0] });
       }
     },
-    [loadedPlugins, uiLocale, uiTerminology],
+    [injectActiveTool, loadedPlugins, uiLocale, uiTerminology],
   );
 
   /** @emoji 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync with the app-labels overlay on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale. */
@@ -1677,7 +1997,6 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: { type: "text", value: `Plugin unavailable: ${spawned.pluginId}/${spawned.appId}` } as UiNode });
         dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
         dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
-        dispatch({ type: "SET_SPAWNED_TOOL_NODES", value: [] });
         return;
       }
       const spawnedSeed = `${spawned.pluginId}:${spawned.appId}:${spawned.instanceId}`;
@@ -1687,7 +2006,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       }
       const cache = spawnedUiRefreshCacheRef.current;
       const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
-      const fullViewState: ViewState = { ...viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology };
+      const fullViewState: ViewState = injectActiveTool({ ...viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology }, spawned.id);
       const bodyKey = resolveCanvasBodyKey(app);
       // 🐢 A spawned instance's view is a single body + tools + engagements + measures (no panels, no
       // labels) — that's already the minimal grouping, so there is no narrower-than-full "partial" scope
@@ -1700,15 +2019,13 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         applyUiRefreshResponseToCache(cache, response);
       }
       const ui = (cache.get(`window:${bodyKey}`)?.value as UiNode | undefined) ?? { type: "text", value: shellLabel("ui.common.loading") };
-      const dynamicTools = (cache.get(`tools:${bodyKey}`)?.value as readonly ToolNode[] | undefined) ?? [];
       const dynamicEngagements = (cache.get("engagements")?.value as Readonly<Record<string, WindowEngagement>> | undefined) ?? {};
       const dynamicMeasures = (cache.get("measures")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {};
       dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: (current: UiNode | null) => preserveJsonIdentity(current ?? undefined, ui) });
       dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: dynamicEngagements });
       dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: dynamicMeasures });
-      dispatch({ type: "SET_SPAWNED_TOOL_NODES", value: selectSpawnedToolNodes(dynamicTools, app, fullViewState.activeModeId ?? app.defaultModeId ?? app.modes[0]?.id) });
     },
-    [loadedPlugins, uiLocale, uiTerminology],
+    [injectActiveTool, loadedPlugins, uiLocale, uiTerminology],
   );
 
   // 🐢 Keyed on the pluginId/app/instance triple (not `session` object identity) so this only fires on
@@ -1730,7 +2047,6 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: null });
       dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
       dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
-      dispatch({ type: "SET_SPAWNED_TOOL_NODES", value: [] });
       return;
     }
     const activeSpawned = panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
@@ -1738,7 +2054,6 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: null });
       dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
       dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
-      dispatch({ type: "SET_SPAWNED_TOOL_NODES", value: [] });
       return;
     }
     void refreshSpawnedUi(activeSpawned, session.viewState).catch((renderError) => {
@@ -1860,6 +2175,14 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         if (effect === "requestSync") continue;
         if ("setPanel" in effect) {
           nextViewState = { ...nextViewState, panelJson: effect.setPanel.panelJson };
+          continue;
+        }
+        if ("setActiveTool" in effect) {
+          // 🧰 A plugin programmatically switched tool: mirror it into the host-owned store slice and,
+          // when it targets the active window, into the view state fed to the follow-up refresh.
+          const { windowKindId, toolId } = effect.setActiveTool;
+          dispatch({ type: "SET_ACTIVE_TOOL", windowId: windowKindId, toolId: toolId || null });
+          if (windowKindId === activeWindowIdRef.current) nextViewState = { ...nextViewState, activeToolId: toolId || undefined };
           continue;
         }
         if ("navigate" in effect) {
@@ -2122,6 +2445,30 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     (action: ActionDescriptor) => {
       if (!session) return;
 
+      // 🧰 Tool activation (P5): host-owned session state, never a document op. Re-clicking the active
+      // tool (or an empty toolId) deactivates. We resolve the target window from the descriptor's tagged
+      // `windowId` (see `tagSetActiveToolWindow`), falling back to the active window, update the store,
+      // then forward the resolved tool to the plugin so it can clear/prepare scratch.
+      if (action.action === SET_ACTIVE_TOOL_ACTION_ID) {
+        const args = typeof action.args === "object" && action.args != null ? (action.args as { toolId?: unknown; windowId?: unknown }) : {};
+        const windowId = typeof args.windowId === "string" && args.windowId ? args.windowId : (activeWindowIdRef.current ?? "");
+        if (!windowId) return;
+        const requested = typeof args.toolId === "string" ? args.toolId : "";
+        const next = resolveToolActivation(activeToolByWindowIdRef.current[windowId], requested);
+        dispatch({ type: "SET_ACTIVE_TOOL", windowId, toolId: next });
+        const pluginEntry = findPluginForAction(action);
+        const plugin = pluginEntry?.handle;
+        if (plugin) {
+          const viewState: ViewState = { ...session.viewState, activeToolId: next ?? undefined };
+          const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { toolId: next } };
+          void plugin
+            .handleAction(session.instanceId, JSON.stringify(forwarded), viewState)
+            .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope)))
+            .catch((toolError) => console.error("[DEBUG] setActiveTool failed", toolError));
+        }
+        return;
+      }
+
       if (action.controllerId === FRAMEWORK_SYNC_CONTROLLER_ID) {
         if (action.action === "selectFile") {
           dispatch({ type: "SET_SYNC_CARD_KIND", value: "file" });
@@ -2204,14 +2551,15 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       // (`OsAppInstance.document` is now just an `OsDocumentRef` handle). A spawned instance's content
       // sync now goes through its own `openDocument`-opened `DocumentHost` channel, same as any other
       // document; there is no host-side JS mirroring step anymore.
+      const dispatchViewState = injectActiveTool(targetSession.viewState);
       void plugin
-        .handleAction(targetSession.instanceId, JSON.stringify(action), targetSession.viewState)
-        .then((response) => applyHostEffects(response.requestedEffects ?? [], targetSession, resolveUiDirtyScope(response.uiScope)))
+        .handleAction(targetSession.instanceId, JSON.stringify(action), dispatchViewState)
+        .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
         .catch((actionError) => {
           console.error("[DEBUG] action failed", actionError);
         });
     },
-    [applyHostEffects, attachSyncBackbone, detachSyncBackbone, findPluginForAction, loadedPlugins, panel, session, spawnProgram, studioMode, syncBackboneUri, syncDraftPath, updateStudioPanel],
+    [applyHostEffects, attachSyncBackbone, detachSyncBackbone, findPluginForAction, injectActiveTool, loadedPlugins, panel, session, spawnProgram, studioMode, syncBackboneUri, syncDraftPath, updateStudioPanel],
   );
 
   const onActionRef = useRef(onAction);
@@ -2545,7 +2893,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const frameworkSettingsTabs = useMemo(() => createFrameworkSettingsPanelTabs(() => settingsHostRef.current), [settingsHost]);
 
   useEffect(() => {
-    if (!session?.app.keybindings.length) return;
+    if (!session) return;
     const parseKeys = (keys: string) =>
       keys
         .split(",")
@@ -2570,12 +2918,39 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       if (needsAlt !== event.altKey) return false;
       return event.key.toLowerCase() === key;
     };
+    const actionById = new Map(session.app.actions.map((action) => [action.id, action]));
     const onKeyDown = (event: KeyboardEvent) => {
       if (isEditableTarget(event.target)) return;
+      // 🧰 Escape deactivates the active window's active tool (P5) when nothing is being typed.
+      if (event.key === "Escape") {
+        const windowId = activeWindowIdRef.current;
+        if (windowId && activeToolByWindowIdRef.current[windowId]) {
+          event.preventDefault();
+          onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { windowId, toolId: "" } });
+          return;
+        }
+      }
       for (const binding of session.app.keybindings) {
         for (const chord of parseKeys(binding.keys)) {
           if (!matches(event, chord)) continue;
           event.preventDefault();
+          // ✍️ Arg-carrying hotkeys never silent-fire defaults (P4): open the staged form, or — if that
+          // form is already expanded in the active window — treat the hotkey as Execute (with validation).
+          const definition = actionById.get(binding.action.action);
+          if (definition && actionRequiresStagedForm(definition)) {
+            const windowId = activeWindowIdRef.current;
+            if (!windowId) return;
+            const expanded = actionPanelExpandedByWindowIdRef.current[windowId] ?? null;
+            const staged = actionPanelStagedArgsByKeyRef.current[actionStageKey(windowId, definition.id)] ?? {};
+            const intent = resolveKeybindingIntent(definition, expanded, staged);
+            if (intent.kind === "execute") {
+              onAction({ controllerId: session.app.controllerId, action: intent.actionId, args: intent.args });
+            } else if (intent.kind === "open") {
+              dispatch({ type: "SET_ACTION_PANEL_FOLDED", windowId, value: false });
+              dispatch({ type: "SET_ACTION_PANEL_EXPANDED", windowId, value: intent.actionId });
+            }
+            return;
+          }
           onAction(binding.action);
           return;
         }
@@ -2626,23 +3001,12 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
 
   const settingsRightTabs = useMemo((): PanelTabNode[] => frameworkSettingsTabs, [frameworkSettingsTabs]);
 
-  //#region 🧰FooterToolLeaves — bottom-right's tool tabs, replacing the old floating footer tool ribbon.
-  const dedupedModeTools = useMemo(() => dedupeToolNodesById([...Object.values(toolNodesByKind), spawnedToolNodes]), [spawnedToolNodes, toolNodesByKind]);
-
-  const frameworkToolsActionsTab = useMemo((): PanelTabNode | null => {
-    const grouped = groupToolNodesByCategory(dedupedModeTools, ["actions"]);
-    if (!grouped.length) return null;
-    return singleTreeLeaf({
-      id: "framework.tools.actions",
-      icon: shellTabIcon(TOOL_CATEGORY_ICON_ID.actions),
-      name: shellLabel("ui.panel.tools"),
-      order: 0,
-      tree: { sections: [{ id: "framework.tools.actions.root", label: "", items: [{ id: "framework.tools.actions.tree", label: "", control: <ToolTree id="ui.toolbar.footer.actions" tools={grouped} onAction={onAction} direction="up" /> }] }] },
-    });
-  }, [dedupedModeTools, onAction]);
-
+  //#region 🧰FooterToolLeaves — bottom-right's History tab, now sourced from the framework-owned History
+  // actions in the app registry (the plugin `list-tools` surface is gone; the per-window Actions rail
+  // replaces the old footer Actions tab entirely per P6).
   const frameworkToolsHistoryTab = useMemo((): PanelTabNode | null => {
-    const grouped = groupToolNodesByCategory(dedupedModeTools, ["history"]);
+    if (!session) return null;
+    const grouped = groupToolNodesByCategory(frameworkHistoryToolNodes(session.app), ["history"]);
     if (!grouped.length) return null;
     return singleTreeLeaf({
       id: "framework.tools.history",
@@ -2651,7 +3015,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       order: 1,
       tree: { sections: [{ id: "framework.tools.history.root", label: "", items: [{ id: "framework.tools.history.tree", label: "", control: <ToolTree id="ui.toolbar.footer.history" tools={grouped} onAction={onAction} direction="up" /> }] }] },
     });
-  }, [dedupedModeTools, onAction]);
+  }, [onAction, session]);
   //#endregion 🧰FooterToolLeaves
 
   //#region 🔄SyncLeaf — bottom-left's sync tab, replacing the old floating footer SyncAttachCard.
@@ -2712,10 +3076,9 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     const bottomRight: PanelTabNode[] = [
       { kind: "branch", id: FRAMEWORK_CATEGORY_SETTINGS_ID, icon: categoryTabIcon(settingsRightTabs, "settings-2"), name: shellLabel("ui.panelToggle.settings"), order: 0, children: settingsRightTabs },
     ];
-    if (frameworkToolsActionsTab) bottomRight.push(frameworkToolsActionsTab);
     if (frameworkToolsHistoryTab) bottomRight.push(frameworkToolsHistoryTab);
     return { corners: { "top-left": topLeft, "top-right": topRight, "bottom-left": bottomLeft, "bottom-right": bottomRight } };
-  }, [detailsRightTabs, frameworkDisplayTabs, frameworkSyncTab, frameworkToolsActionsTab, frameworkToolsHistoryTab, settingsRightTabs, uiLocale, workbenchLeftTabs]);
+  }, [detailsRightTabs, frameworkDisplayTabs, frameworkSyncTab, frameworkToolsHistoryTab, settingsRightTabs, uiLocale, workbenchLeftTabs]);
 
   useEffect(() => {
     dispatch({ type: "SET_DOCK_OVERRIDE", value: dockLayoutStore.getSnapshot() });
@@ -2912,15 +3275,38 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     }
     const keysByActionId = new Map(session.app.keybindings.map((binding) => [binding.action.action, binding.keys]));
     const declaredActionIds = new Set<string>();
+    // 📇 First window kind whose resolved actions include this id (orphan/global actions fall through to
+    // the active window, then the first window) — the redirect target for arg-carrying palette entries.
+    const hostWindowForAction = (actionId: string): string | undefined => {
+      for (const kind of session.app.windowKinds) {
+        if (resolveWindowActions(session.app, kind).some((entry) => entry.id === actionId)) return kind.id;
+      }
+      return activeWindowId ?? session.app.windowKinds[0]?.id;
+    };
     for (const action of session.app.actions ?? []) {
       if (!action.inPalette) continue;
       declaredActionIds.add(action.id);
+      const argCarrying = actionRequiresStagedForm(action);
       items.push({
         id: `action.${action.id}`,
-        label: action.label,
+        // ✍️ Arg-carrying actions never fire from the palette (P3): the "…" entry activates the hosting
+        // window, unfolds its Actions rail, and expands this action's staged form instead of dispatching.
+        label: argCarrying ? `${action.label}…` : action.label,
         description: action.keys ?? keysByActionId.get(action.id),
         category: action.category ?? (action.kind === "history" ? shellLabel("ui.toolbar.parent.history") : shellLabel("ui.toolbar.parent.actions")),
-        onSelect: () => onAction({ controllerId: session.app.controllerId, action: action.id }),
+        onSelect: () => {
+          if (argCarrying) {
+            const windowId = hostWindowForAction(action.id);
+            if (windowId) {
+              dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: windowId });
+              dispatch({ type: "SET_ACTION_PANEL_FOLDED", windowId, value: false });
+              dispatch({ type: "SET_ACTION_PANEL_EXPANDED", windowId, value: action.id });
+            }
+            dispatch({ type: "SET_SEARCH_OPEN", value: false });
+            return;
+          }
+          onAction({ controllerId: session.app.controllerId, action: action.id });
+        },
       });
     }
     for (const binding of session.app.keybindings) {
@@ -2966,10 +3352,19 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       );
     }
     return items;
-  }, [appLabelsOverlay, onAction, panel, session, studioMode, uiLocale]);
+  }, [activeWindowId, appLabelsOverlay, onAction, panel, session, studioMode, uiLocale]);
 
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
+    const actionPanelSlice: ActionPanelSlice = { expandedByWindowId: actionPanelExpandedByWindowId, stagedArgsByKey: actionPanelStagedArgsByKey, activeToolByWindowId };
+    const actionsFoldedFor = (windowId: string) => actionPanelFoldedByWindowId[windowId] ?? true;
+    const onActionsFoldedFor = (windowId: string) => (folded: boolean) => dispatch({ type: "SET_ACTION_PANEL_FOLDED", windowId, value: folded });
+    // 🖱️ Window-body cursor follows the active tool's declared `cursor` (P5).
+    const cursorFor = (app: AppDefinition, windowId: string): CSSProperties | undefined => {
+      const toolId = activeToolByWindowId[windowId];
+      const cursor = toolId ? (app.tools ?? []).find((tool) => tool.id === toolId)?.cursor : undefined;
+      return cursor ? { cursor } : undefined;
+    };
     if (studioMode && spawnedWindowUi && panel?.activeSpawnedId) {
       const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
       if (spawned) {
@@ -2984,8 +3379,11 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
             showControls: true,
             measures: chrome?.measures,
             engagement: chrome?.engagement,
-            toolbar: windowToolbarNode(spawnedToolNodes, spawned.id, onActionStable),
-            children: <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"><InterpretedUiNode node={spawnedWindowUi} onAction={onActionStable} /></ChromeAwareWindowScrollSurface>,
+            toolbar: spawnedApp && windowKind ? windowToolbarNode(resolveWindowToolNodes(spawnedApp, windowKind, activeToolByWindowId[spawned.id], spawned.id), spawned.id, onActionStable) : undefined,
+            actionPanel: spawnedApp && windowKind ? windowActionPanelNode(spawnedApp, windowKind, spawned.id, actionPanelSlice, onActionStable, dispatch) : undefined,
+            actionsFolded: actionsFoldedFor(spawned.id),
+            onActionsFoldedChange: onActionsFoldedFor(spawned.id),
+            children: <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={spawnedApp ? cursorFor(spawnedApp, spawned.id) : undefined}><InterpretedUiNode node={spawnedWindowUi} onAction={onActionStable} /></ChromeAwareWindowScrollSurface>,
           },
         ];
       }
@@ -2998,9 +3396,12 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       showControls: true,
       measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.options.measures, onActionStable),
       engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
-      toolbar: windowToolbarNode(toolNodesByKind[kind.id], kind.id, onActionStable),
+      toolbar: windowToolbarNode(resolveWindowToolNodes(session.app, kind, activeToolByWindowId[kind.id], kind.id), kind.id, onActionStable),
+      actionPanel: windowActionPanelNode(session.app, kind, kind.id, actionPanelSlice, onActionStable, dispatch),
+      actionsFolded: actionsFoldedFor(kind.id),
+      onActionsFoldedChange: onActionsFoldedFor(kind.id),
       children: (
-        <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id}>
+        <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id} style={cursorFor(session.app, kind.id)}>
           <InterpretedUiNode node={windowUiByKind[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
         </ChromeAwareWindowScrollSurface>
       ),
@@ -3016,9 +3417,12 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           showControls: true,
           measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.options.measures, onActionStable),
           engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
-          toolbar: windowToolbarNode(toolNodesByKind[kind.id], instance.id, onActionStable),
+          toolbar: windowToolbarNode(resolveWindowToolNodes(session.app, kind, activeToolByWindowId[instance.id], instance.id), instance.id, onActionStable),
+          actionPanel: windowActionPanelNode(session.app, kind, instance.id, actionPanelSlice, onActionStable, dispatch),
+          actionsFolded: actionsFoldedFor(instance.id),
+          onActionsFoldedChange: onActionsFoldedFor(instance.id),
           children: (
-            <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id}>
+            <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id} style={cursorFor(session.app, instance.id)}>
               <InterpretedUiNode node={windowUiByKind[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
             </ChromeAwareWindowScrollSurface>
           ),
@@ -3026,7 +3430,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       ];
     });
     return [...baseWindows, ...extraWindows];
-  }, [appLabelsOverlay, extraWindowInstances, loadedPlugins, onActionStable, panel, session, spawnedToolNodes, spawnedWindowEngagements, spawnedWindowMeasures, spawnedWindowUi, studioMode, toolNodesByKind, uiLocale, windowEngagementsByKind, windowMeasuresByKind, windowUiByKind]);
+  }, [actionPanelExpandedByWindowId, actionPanelFoldedByWindowId, actionPanelStagedArgsByKey, activeToolByWindowId, appLabelsOverlay, extraWindowInstances, loadedPlugins, onActionStable, panel, session, spawnedWindowEngagements, spawnedWindowMeasures, spawnedWindowUi, studioMode, uiLocale, windowEngagementsByKind, windowMeasuresByKind, windowUiByKind]);
 
   const effectiveModeLayout = useMemo(
     () =>
@@ -3170,10 +3574,6 @@ export type PluginWasmHandle = {
   readonly handleAction: (instanceId: number, actionJson: string, viewState: ViewState) => Promise<ActionResponse>;
   readonly render: (instanceId: number, bodyKey: string, viewState: ViewState) => Promise<UiNode>;
   readonly renderWithDocument?: (instanceId: number, bodyKey: string, viewState: ViewState, documentJson: string) => Promise<UiNode>;
-  readonly tools: (instanceId: number, viewState: ViewState) => Promise<readonly ToolNode[]>;
-  readonly windowEngagements: (instanceId: number, viewState: ViewState) => Promise<Readonly<Record<string, WindowEngagement>>>;
-  readonly windowMeasures: (instanceId: number, viewState: ViewState) => Promise<Readonly<Record<string, readonly WindowMeasure[]>>>;
-  readonly appLabels: (instanceId: number, viewState: ViewState) => Promise<PluginAppLabelsOverlay>;
   /** 🔗 The `DocumentApp` document-sync surface (WS-D) — optional since not every plugin has migrated onto it yet (WS-F). */
   readonly applyOperations?: (instanceId: number, operationsJson: string) => Promise<void>;
   readonly readAppDocument?: (instanceId: number) => Promise<string>;
@@ -3203,10 +3603,6 @@ function adaptPluginHandle(handle: CorePluginWasmHandle): PluginWasmHandle {
     handleAction: (instanceId, actionJson, viewState) => handle.handleAction(instanceId, actionJson, viewState),
     render: async (instanceId, bodyKey, viewState) => (await handle.render(instanceId, bodyKey, viewState)) as unknown as UiNode,
     renderWithDocument: handle.renderWithDocument ? async (instanceId, bodyKey, viewState, documentJson) => (await handle.renderWithDocument!(instanceId, bodyKey, viewState, documentJson)) as unknown as UiNode : undefined,
-    tools: async (instanceId, viewState) => (await handle.tools(instanceId, viewState)) as unknown as ToolNode[],
-    windowEngagements: async (instanceId, viewState) => (await handle.windowEngagements(instanceId, viewState)) as unknown as Readonly<Record<string, WindowEngagement>>,
-    windowMeasures: async (instanceId, viewState) => (await handle.windowMeasures(instanceId, viewState)) as unknown as Readonly<Record<string, readonly WindowMeasure[]>>,
-    appLabels: (instanceId, viewState) => handle.appLabels(instanceId, viewState),
     applyOperations: handle.applyOperations ? (instanceId, operationsJson) => handle.applyOperations!(instanceId, operationsJson) : undefined,
     readAppDocument: handle.readAppDocument ? (instanceId) => handle.readAppDocument!(instanceId) : undefined,
     loadAppDocument: handle.loadAppDocument ? (instanceId, documentJson) => handle.loadAppDocument!(instanceId, documentJson) : undefined,
@@ -3902,7 +4298,7 @@ export function sortToolNodes(nodes: readonly ToolNode[]): ToolNode[] {
 
 //#region 🗂️ToolCategoryGrouping
 
-const TOOL_CATEGORY_ORDER: readonly ToolCategory[] = ["selection", "tools", "actions", "history", "sync"];
+const TOOL_CATEGORY_ORDER: readonly ToolCategory[] = ["selection", "tools", "history", "sync"];
 
 /** @emoji 🪟 Categories that are scoped to whatever window/pane the user is interacting with — selecting or editing content varies per window, so these live in each window's own bottom-left panel. */
 const WINDOW_TOOL_CATEGORIES: readonly ToolCategory[] = ["selection", "tools"];
@@ -3910,7 +4306,6 @@ const WINDOW_TOOL_CATEGORIES: readonly ToolCategory[] = ["selection", "tools"];
 const TOOL_CATEGORY_ICON_ID: Readonly<Record<ToolCategory, string>> = {
   selection: "mouse-pointer",
   tools: "wrench",
-  actions: "sparkles",
   history: "undo",
   sync: "cloud",
 };
@@ -3918,7 +4313,26 @@ const TOOL_CATEGORY_ICON_ID: Readonly<Record<ToolCategory, string>> = {
 function toolNodeCategory(node: ToolNode): ToolCategory {
   if (node.kind === "separator") return "tools";
   if (node.category) return node.category;
-  return node.kind === "button" ? "actions" : "tools";
+  return "tools";
+}
+
+/**
+ * 🕰️ Framework-owned History tool nodes derived from an app's registry (the six injected History
+ * actions). Sources the bottom-right History footer tab now that the plugin `list-tools` surface is gone.
+ */
+export function frameworkHistoryToolNodes(app: Pick<AppDefinition, "actions" | "controllerId">): ToolNode[] {
+  return (app.actions ?? [])
+    .filter((action) => action.kind === "history")
+    .map((action, order) => ({
+      id: action.id,
+      kind: "button" as const,
+      iconId: action.iconId ?? "undo",
+      label: action.label,
+      text: action.label,
+      order,
+      category: "history" as const,
+      onPress: { controllerId: app.controllerId, action: action.id },
+    }));
 }
 
 /** @emoji 🗂️ Buckets top-level tool nodes into the given categories (default: all) so activating a category expands the panel with another line, matching {@link buildToolbarRibbonSegments}'s one-active-group-per-level picker. A category with a single already-meaningful collection is used as-is instead of being re-wrapped in a synthetic one, avoiding a redundant picker level with a duplicate-looking label (e.g. a lone "Selection" collection nested under a "Selection" category chip). Separators default to `tools` (mirrors Rust `ToolNode::category()`), so dividers between same-category runs survive; dividers that only separated different categories become redundant once those categories are separate picker lines. */

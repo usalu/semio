@@ -3,11 +3,12 @@
 use semio_framework_plugin::{SurfaceKind,
     build_raster_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical,
-    ui_text, ActionEmit, App, ActionDescriptor, AppLabelsOverlay, DocumentApp, DocumentView, PanelGroup, RasterScene,
+    ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor,
+    AppLabelsOverlay, DocumentApp, DocumentView, PanelGroup, RasterScene, ToolCategory, ToolDefinition,
     UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-    create_default_layout,
+    create_default_layout, SET_ACTIVE_TOOL_ACTION_ID,
 };
 use raster::{
     empty_raster_projection, find_layer, flatten_raster_layers, layer_name, layer_node_id, layer_visible,
@@ -35,6 +36,8 @@ const RASTER_PLAY_WINDOW_NAVIGATOR: &str = "raster-navigator";
 const RASTER_PLAY_MASKS_TAB_ID: &str = "raster.panel.masks";
 const RASTER_DOCUMENT_SCHEMA: &str = "raster.document";
 const RASTER_TREE_PREFIX: &str = "raster-play-layers";
+/// 🧰 Fallback tool when the host has not yet asserted a session active tool for the composite window.
+const RASTER_DEFAULT_TOOL: &str = "selectMarquee";
 
 const SEMIO_EXAMPLE_JSON: &str = include_str!("../../example/semio.raster.json");
 
@@ -49,7 +52,6 @@ static RASTER_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 struct RasterPlayRuntime {
     selected_ids: Vec<String>,
     hovered_id: Option<String>,
-    active_tool: String,
     brush_size: f32,
     brush_opacity: f32,
     composite_viewport: Option<RasterViewportSize>,
@@ -60,7 +62,6 @@ impl RasterPlayRuntime {
         Self {
             selected_ids: Vec::new(),
             hovered_id: None,
-            active_tool: "selectMarquee".into(),
             brush_size: 24.0,
             brush_opacity: 1.0,
             composite_viewport: None,
@@ -562,14 +563,14 @@ fn document_sync_json(document: &RasterDocument) -> String {
     value.to_string()
 }
 
-fn raster_scene(document: &RasterDocument, runtime: &RasterPlayRuntime, view_mode: &str) -> RasterScene {
+fn raster_scene(document: &RasterDocument, runtime: &RasterPlayRuntime, active_tool: &str, view_mode: &str) -> RasterScene {
     RasterScene {
         document_sync_json: document_sync_json(document),
         assets_json: serde_json::to_string(&document.assets).unwrap_or_else(|_| "{}".into()),
         camera_json: serde_json::to_string(&document.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into()),
         selection_json: serde_json::to_string(&runtime.selected_ids).unwrap_or_else(|_| "[]".into()),
         hovered_id: runtime.hovered_id.clone(),
-        active_tool: runtime.active_tool.clone(),
+        active_tool: active_tool.into(),
         brush_size: runtime.brush_size as f64,
         brush_opacity: runtime.brush_opacity as f64,
         view_mode: view_mode.into(),
@@ -580,12 +581,12 @@ fn raster_scene(document: &RasterDocument, runtime: &RasterPlayRuntime, view_mod
     }
 }
 
-fn render_composite_scene(document: &RasterDocument, runtime: &RasterPlayRuntime) -> UiNode {
-    build_raster_scene(RASTER_PLAY_SURFACE_COMPOSITE, RASTER_PLAY_CONTROLLER_ID, raster_scene(document, runtime, "composite"))
+fn render_composite_scene(document: &RasterDocument, runtime: &RasterPlayRuntime, active_tool: &str) -> UiNode {
+    build_raster_scene(RASTER_PLAY_SURFACE_COMPOSITE, RASTER_PLAY_CONTROLLER_ID, raster_scene(document, runtime, active_tool, "composite"))
 }
 
-fn render_navigator_scene(document: &RasterDocument, runtime: &RasterPlayRuntime) -> UiNode {
-    build_raster_scene(RASTER_PLAY_SURFACE_NAVIGATOR, RASTER_PLAY_CONTROLLER_ID, raster_scene(document, runtime, "navigator"))
+fn render_navigator_scene(document: &RasterDocument, runtime: &RasterPlayRuntime, active_tool: &str) -> UiNode {
+    build_raster_scene(RASTER_PLAY_SURFACE_NAVIGATOR, RASTER_PLAY_CONTROLLER_ID, raster_scene(document, runtime, active_tool, "navigator"))
 }
 //#endregion 🔖Scenes
 
@@ -653,10 +654,10 @@ impl DocumentApp for RasterApp {
                 }
                 ActionEmit::default()
             }
-            "setActiveTool" => {
-                if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
-                    self.runtime.active_tool = tool.into();
-                }
+            SET_ACTIVE_TOOL_ACTION_ID => {
+                // 🧰 Host-owned tool switch: the active tool lives in session view state (never the
+                // document). There is no plugin-side paint scratch to clear — brush strokes are painted
+                // host-side in the WASM canvas — so this simply acknowledges with no ops or history.
                 ActionEmit::default()
             }
             "setSelection" => {
@@ -812,9 +813,10 @@ impl DocumentApp for RasterApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, RasterDocument>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
         let labels = raster_labels(view_state);
+        let active_tool = view_state.active_tool_id.as_deref().unwrap_or(RASTER_DEFAULT_TOOL);
         match body_key {
-            RASTER_PLAY_BODY_COMPOSITE => render_composite_scene(document, &self.runtime),
-            RASTER_PLAY_BODY_NAVIGATOR => render_navigator_scene(document, &self.runtime),
+            RASTER_PLAY_BODY_COMPOSITE => render_composite_scene(document, &self.runtime, active_tool),
+            RASTER_PLAY_BODY_NAVIGATOR => render_navigator_scene(document, &self.runtime, active_tool),
             RASTER_PLAY_BODY_LAYERS => render_layers_panel(document, &self.runtime, view_state, labels),
             RASTER_PLAY_BODY_MASKS => render_masks_panel(document, &self.runtime, view_state, labels),
             RASTER_PLAY_BODY_CATALOGUE => render_catalogue_panel(labels),

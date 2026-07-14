@@ -5,11 +5,11 @@ pub mod app_jack {
 
     use semio_framework_plugin::{SurfaceKind, PanelGroup,
         build_node_graph_scene, build_table_scene, build_text_editor_scene,
-        text_identifier_occurrences_json, tool_button, tool_collection,
+        text_identifier_occurrences_json,
         ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text,
-        ui_inspector_readonly_field, ui_text, ActionEmit, App, ActionDescriptor, AppLabelsOverlay, DocumentApp,
+        ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, AppLabelsOverlay, DocumentApp,
         DocumentView, MeasureSelectItem, NodeGraphScene,
-        TableScene, TextEditorScene, ToolCategory, ToolNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
+        TableScene, TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
         UiTreeNode, UiTreeSectionNode, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild,
         WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
         FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -868,11 +868,7 @@ pub mod app_jack {
                 "nodeGraphViewport" => {
                     if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
                         if let Ok(camera) = serde_json::from_str::<Camera>(viewport_json) {
-                            return ActionEmit {
-                                ops: vec![TrinityGraphOp::SetCamera { camera }],
-                                coalesce_key: Some("viewport".into()),
-                                ..Default::default()
-                            };
+                            return ActionEmit::amend(vec![TrinityGraphOp::SetCamera { camera }], "viewport");
                         }
                     }
                     ActionEmit::default()
@@ -912,7 +908,7 @@ pub mod app_jack {
                     if emitted.is_empty() {
                         ActionEmit::default()
                     } else if has_set_fixture {
-                        ActionEmit { ops: emitted, coalesce_key: Some("node-graph-edit".into()), ..Default::default() }
+                        ActionEmit::amend(emitted, "node-graph-edit")
                     } else {
                         ActionEmit::ops(emitted)
                     }
@@ -1047,33 +1043,6 @@ pub mod app_jack {
             }
         }
 
-        fn tools(&self, _doc: &DocumentView<'_, GraphFixture>, view_state: &ViewState) -> Vec<ToolNode> {
-            let labels = trinity_jack_labels(view_state);
-            vec![
-                tool_collection(
-                    "trinity-jack-history",
-                    "clock",
-                    labels.history,
-                    vec![
-                        tool_button("trinity-jack-undo", "undo-2", "Undo", jack_action("undo", None)),
-                        tool_button("trinity-jack-redo", "redo-2", "Redo", jack_action("redo", None)),
-                        tool_button("trinity-jack-checkpoint", "git-commit", "Checkpoint", jack_action("commitCheckpoint", None)),
-                    ],
-                )
-                .with_category(ToolCategory::History),
-                tool_collection(
-                    "trinity-jack-query",
-                    "code",
-                    labels.query,
-                    vec![
-                        tool_button("trinity-jack-run", "play", "Run", jack_action("runJackQuery", None)),
-                        tool_button("trinity-jack-reorganize", "rotate-cw", "Reorganize", jack_action("reorganize", None)),
-                    ],
-                )
-                .with_category(ToolCategory::Actions),
-            ]
-        }
-
         fn window_measures(&self, _doc: &DocumentView<'_, GraphFixture>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
             let mode = self
                 .runtime
@@ -1200,6 +1169,25 @@ pub mod app_jack {
                 .view_action("graphEngagementInput", "Graph Engagement Input")
                 .view_action("resultsEngagementInput", "Results Engagement Input")
                 .view_action("graphPointerDown", "Graph Pointer Down")
+                // 📝 Staged argument forms for the panel-visible preset loaders.
+                .action_args("setActiveExample", vec![
+                    ActionArgDef::select("exampleId", "Fixture", vec![
+                        ActionArgOption::new("nakagin", "Nakagin — Table"),
+                        ActionArgOption::new("branch-chain", "Branch — Graph"),
+                    ]).required(),
+                ])
+                .action_args("loadExampleQuery", vec![
+                    ActionArgDef::select("query", "Example", vec![
+                        ActionArgOption::new("MATCH (a:Piece) WHERE a.name = 't_f0_b_c0' OR a.name = 't_f0_b_c1' RETURN a.name", "Where Or"),
+                        ActionArgOption::new("MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' RETURN a, r, b", "Return Graph"),
+                        ActionArgOption::new("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'demo-label'", "Set Label"),
+                        ActionArgOption::new("MATCH (a:Piece) WHERE a.name = 'b' SET a.x = 300, a.y = 120", "Set Position"),
+                        ActionArgOption::new("CREATE (n:Piece)", "Create Node"),
+                        ActionArgOption::new("MATCH (a:Piece), (b:Piece) WHERE a.name = 'b' AND b.name != 'b' CREATE (a)-[:Connection]->(b)", "Create Edge"),
+                        ActionArgOption::new("MATCH (n:Piece) WHERE n.name = 'b' DELETE n", "Delete Leaf"),
+                        ActionArgOption::new("MERGE (x:Piece)-[:Connection]->(y:Piece)", "Merge Edge"),
+                    ]).required(),
+                ])
                 .keybinding("mod+z", "undo")
                 .keybinding("mod+shift+z", "redo")
                 .keybinding("mod+alt+s", "commitCheckpoint"),
@@ -1536,11 +1524,10 @@ pub mod app_rewrite {
 
     use semio_framework_plugin::{SurfaceKind, PanelGroup,
         build_node_graph_scene, build_text_editor_scene, text_identifier_bounds_at,
-        tool_button, tool_collection,
         ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
-        ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionEmit, App, ActionDescriptor, AppLabelsOverlay,
+        ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, AppLabelsOverlay,
         DocumentApp, DocumentView, MeasureSelectItem, NodeGraphScene,
-        TextEditorScene, ToolCategory, ToolNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
+        TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
         UiTreeNode, UiTreeSectionNode, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
         WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
         FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -2823,11 +2810,7 @@ pub mod app_rewrite {
                                     fixture.camera = camera;
                                     if let Ok(json) = Graph::from_fixture(fixture).and_then(|graph| graph.fixture_json()) {
                                         next.before_fixture_json = json;
-                                        return ActionEmit {
-                                            ops: vec![RewriteRuleOp::SetState { state: next }],
-                                            coalesce_key: Some("viewport".into()),
-                                            ..Default::default()
-                                        };
+                                        return ActionEmit::amend(vec![RewriteRuleOp::SetState { state: next }], "viewport");
                                     }
                                 }
                             }
@@ -3003,30 +2986,6 @@ pub mod app_rewrite {
             }
         }
 
-        fn tools(&self, _doc: &DocumentView<'_, RewriteRuleState>, view_state: &ViewState) -> Vec<ToolNode> {
-            let labels = trinity_rewrite_labels(view_state);
-            vec![
-                tool_collection(
-                    "trinity-rewrite-history",
-                    "clock",
-                    labels.history,
-                    vec![
-                        tool_button("trinity-rewrite-undo", "undo-2", "Undo", rewrite_action("undo", None)),
-                        tool_button("trinity-rewrite-redo", "redo-2", "Redo", rewrite_action("redo", None)),
-                        tool_button("trinity-rewrite-checkpoint", "git-commit", "Checkpoint", rewrite_action("commitCheckpoint", None)),
-                    ],
-                )
-                .with_category(ToolCategory::History),
-                tool_collection(
-                    "trinity-rewrite-rule",
-                    "code",
-                    labels.rule,
-                    vec![tool_button("trinity-rewrite-reorganize", "rotate-cw", "Reorganize", rewrite_action("reorganize", None))],
-                )
-                .with_category(ToolCategory::Actions),
-            ]
-        }
-
         fn window_measures(&self, _doc: &DocumentView<'_, RewriteRuleState>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
             let mode_for = |window_id: &str| self.runtime.lod_mode_by_window.get(window_id).map(String::as_str).unwrap_or(TRINITY_LOD_MODE_AUTOMATIC);
             HashMap::from([
@@ -3137,6 +3096,40 @@ pub mod app_rewrite {
                     PanelGroup::Details,
                     TRINITY_REWRITE_PLAY_BODY_INSPECTION,
                 )
+                // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
+                .operation("addRuleClause", "Add Rule Clause")
+                .operation("resetRule", "Reset Rule")
+                .operation("setParameter", "Set Parameter")
+                .operation("patchTrinityNodes", "Patch Nodes")
+                .operation("nodeGraphEdit", "Edit Graph")
+                .operation("nodeGraphViewport", "Set Graph Viewport")
+                // 🛠️ Dev-only raw rule editors — kept out of the command palette.
+                .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setLhsJson", "Set LHS Json", ActionKind::Operation) })
+                .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setRhsJson", "Set RHS Json", ActionKind::Operation) })
+                // 👁️ Ephemeral view state — selection, hover, text cursor, recompute/layout, LOD.
+                .view_action("setSelection", "Set Selection")
+                .view_action("selectNode", "Select Node")
+                .view_action("nodeGraphSelect", "Select Graph Node")
+                .view_action("nodeGraphHover", "Hover Graph Node")
+                .view_action("graphPointerDown", "Graph Pointer Down")
+                .view_action("textSelect", "Select Text")
+                .view_action("textHover", "Hover Text")
+                .view_action("recomputeRewrite", "Recompute Rewrite")
+                .view_action("reorganize", "Reorganize")
+                .view_action("setLodMode", "Set LOD Mode")
+                // 📝 Staged argument forms.
+                .action_args("addRuleClause", vec![
+                    ActionArgDef::select("kind", "Clause", vec![
+                        ActionArgOption::new("where", "Where"),
+                        ActionArgOption::new("create", "Create"),
+                        ActionArgOption::new("merge", "Merge"),
+                        ActionArgOption::new("set", "Set"),
+                        ActionArgOption::new("delete", "Delete"),
+                        ActionArgOption::new("parameter", "Parameter"),
+                    ]).required(),
+                ])
+                .action_args("setLhsJson", vec![ActionArgDef::text("value", "LHS JSON").required()])
+                .action_args("setRhsJson", vec![ActionArgDef::text("value", "RHS JSON").required()])
                 .keybinding("mod+z", "undo")
                 .keybinding("mod+shift+z", "redo")
                 .keybinding("mod+alt+s", "commitCheckpoint"),

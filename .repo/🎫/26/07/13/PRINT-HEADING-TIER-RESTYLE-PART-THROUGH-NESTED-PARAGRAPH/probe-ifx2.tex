@@ -1,0 +1,14 @@
+\documentclass{article}
+\begin{document}
+\makeatletter
+\edef\A{outline}
+\newcommand{\B}{outline}
+\def\C{outline}
+\ifx\A\B \typeout{A=B MATCH}\else\typeout{A=B NOMATCH}\fi
+\ifx\A\C \typeout{A=C MATCH}\else\typeout{A=C NOMATCH}\fi
+\ifx\B\C \typeout{B=C MATCH}\else\typeout{B=C NOMATCH}\fi
+\show\A
+\show\B
+\show\C
+\makeatother
+\end{document}

@@ -8,9 +8,10 @@ use layout_rs::{
 };
 use semio_framework_core::kernel::HostEffect;
 use semio_framework_plugin::{SurfaceKind,
-    build_canvas_2d_scene, create_default_layout, engagement_token_matches, tool_button, tool_collection, ui_declarative_sections_to_tree,
-    ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionEmit, App,
-    Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView, PanelGroup, ToolCategory, ToolNode, UiFieldNode,
+    build_canvas_2d_scene, create_default_layout, engagement_token_matches, ui_declarative_sections_to_tree,
+    ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef,
+    ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App,
+    Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView, PanelGroup, UiFieldNode,
     UiInputNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -590,11 +591,6 @@ struct LayoutLabels {
     selection_not_found: &'static str,
     preflight: &'static str,
     no_issues: &'static str,
-    group_document: &'static str,
-    undo: &'static str,
-    redo: &'static str,
-    group_export: &'static str,
-    export_package: &'static str,
     window_blueprint: &'static str,
     window_preview: &'static str,
 }
@@ -643,11 +639,6 @@ const LAYOUT_LABELS_NATIVE_EN: LayoutLabels = LayoutLabels {
     selection_not_found: "Selection not found in document.",
     preflight: "Preflight",
     no_issues: "No issues",
-    group_document: "Document",
-    undo: "Undo",
-    redo: "Redo",
-    group_export: "Export",
-    export_package: "Package",
     window_blueprint: "Blueprint",
     window_preview: "Preview",
 };
@@ -696,11 +687,6 @@ const LAYOUT_LABELS_NATIVE_DE: LayoutLabels = LayoutLabels {
     selection_not_found: "Auswahl im Dokument nicht gefunden.",
     preflight: "Preflight",
     no_issues: "Keine Probleme",
-    group_document: "Dokument",
-    undo: "Rückgängig",
-    redo: "Wiederholen",
-    group_export: "Export",
-    export_package: "Paket",
     window_blueprint: "Entwurf",
     window_preview: "Vorschau",
 };
@@ -1300,32 +1286,6 @@ fn layout_window_engagement(runtime: &LayoutPlayRuntime, label: &str) -> WindowE
     }
 }
 
-fn layout_toolbar_tools(labels: &LayoutLabels) -> Vec<ToolNode> {
-    vec![
-        tool_collection(
-            "layout-tools-document",
-            "file-text",
-            labels.group_document,
-            vec![
-                tool_button("layout-tools-undo", "rotate-ccw", labels.undo, layout_action("undo", None)),
-                tool_button("layout-tools-redo", "rotate-cw", labels.redo, layout_action("redo", None)),
-            ],
-        )
-        .with_category(ToolCategory::History),
-        tool_collection(
-            "layout-tools-export",
-            "download",
-            labels.group_export,
-            vec![
-                tool_button("layout-tools-export-png", "image", "PNG", layout_action("exportPng", None)),
-                tool_button("layout-tools-export-svg", "file-code", "SVG", layout_action("exportSvg", None)),
-                tool_button("layout-tools-export-pdf", "file-text", "PDF", layout_action("exportPdf", None)),
-                tool_button("layout-tools-export-package", "archive", labels.export_package, layout_action("exportPackage", None)),
-            ],
-        )
-        .with_category(ToolCategory::Actions),
-    ]
-}
 //#endregion 🔖Panels
 
 //#region 🔖Render
@@ -1812,10 +1772,6 @@ impl DocumentApp for LayoutPlayApp {
         }
     }
 
-    fn tools(&self, _doc: &DocumentView<'_, LayoutDocument>, view_state: &ViewState) -> Vec<ToolNode> {
-        layout_toolbar_tools(layout_labels(view_state))
-    }
-
     fn window_engagements(&self, _doc: &DocumentView<'_, LayoutDocument>, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         HashMap::from([
             (LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(&self.runtime, "blueprint")),
@@ -1839,6 +1795,12 @@ impl DocumentApp for LayoutPlayApp {
 //#endregion 🔖LayoutPlayApp
 
 //#region 🔖AppFactory
+/// 🛠️ An internal (non-palette) action declaration — the pointer/inspector/DnD/engagement-bound
+/// vocabulary dispatched by the canvas and panels, never surfaced as a standalone palette command.
+fn layout_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
+    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, kind) }
+}
+
 fn create_layout_app() -> App {
     App::from_builder(
         App::builder(LAYOUT_PLAY_APP_ID, "Layout").document(["semio", "layout"])
@@ -1872,30 +1834,41 @@ fn create_layout_app() -> App {
                 PanelGroup::Details,
                 LAYOUT_PLAY_BODY_INSPECTION,
             )
-            // 🔧 Document-mutating: dispatched as VCS operations with a true inverse.
+            // ✏️ Palette-visible content commands — dispatched as VCS operations with a true inverse.
             .operation("addFrame", "Add Frame")
             .operation("addPage", "Add Page")
-            .operation("patchPage", "Patch Page")
-            .operation("patchFrame", "Patch Frame")
-            .operation("setCamera", "Set Camera")
-            .operation("canvasDrop", "Canvas Drop")
-            // 👁️ Ephemeral view state — selection, hover, active page, drop ghost, engagement draft.
-            .view_action("setSelection", "Set Selection")
-            .view_action("setActivePage", "Set Active Page")
-            .view_action("setHover", "Set Hover")
-            .view_action("focusPreflightIssue", "Focus Preflight Issue")
-            .view_action("engagementInput", "Engagement Input")
-            .view_action("canvasPointerDown", "Canvas Pointer Down")
-            .view_action("canvasPointerMove", "Canvas Pointer Move")
-            .view_action("canvasPointerUp", "Canvas Pointer Up")
-            .view_action("canvasDragOver", "Canvas Drag Over")
-            .view_action("canvasDragLeave", "Canvas Drag Leave")
-            // 🐚 Shell effects — export round-trips through the host.
+            .action_args("addFrame", vec![
+                ActionArgDef::select("kind", "Kind", vec![
+                    ActionArgOption::new("rect", "Rectangle"),
+                    ActionArgOption::new("text", "Text Frame"),
+                    ActionArgOption::new("image", "Image Frame"),
+                ]).default_value("rect"),
+                ActionArgDef::number("x", "X"),
+                ActionArgDef::number("y", "Y"),
+            ])
+            // 🐚 Palette-visible shell exports — round-trip through the host.
             .shell_action("exportPng", "Export Png")
             .shell_action("exportSvg", "Export Svg")
             .shell_action("exportPdf", "Export Pdf")
             .shell_action("exportPackage", "Export Package")
-            .shell_action("engagementSubmit", "Engagement Submit"),
+            // 🔧 Internal document ops — inspector/DnD/camera-bound, not palette commands.
+            .action_with(layout_internal_action("patchPage", "Patch Page", ActionKind::Operation))
+            .action_with(layout_internal_action("patchFrame", "Patch Frame", ActionKind::Operation))
+            .action_with(layout_internal_action("setCamera", "Set Camera", ActionKind::Operation))
+            .action_with(layout_internal_action("canvasDrop", "Canvas Drop", ActionKind::Operation))
+            // 👁️ Ephemeral view state — selection, hover, active page, drop ghost, pointer, engagement draft.
+            .action_with(layout_internal_action("setSelection", "Set Selection", ActionKind::View))
+            .action_with(layout_internal_action("setActivePage", "Set Active Page", ActionKind::View))
+            .action_with(layout_internal_action("setHover", "Set Hover", ActionKind::View))
+            .action_with(layout_internal_action("focusPreflightIssue", "Focus Preflight Issue", ActionKind::View))
+            .action_with(layout_internal_action("engagementInput", "Engagement Input", ActionKind::View))
+            .action_with(layout_internal_action("canvasPointerDown", "Canvas Pointer Down", ActionKind::View))
+            .action_with(layout_internal_action("canvasPointerMove", "Canvas Pointer Move", ActionKind::View))
+            .action_with(layout_internal_action("canvasPointerUp", "Canvas Pointer Up", ActionKind::View))
+            .action_with(layout_internal_action("canvasDragOver", "Canvas Drag Over", ActionKind::View))
+            .action_with(layout_internal_action("canvasDragLeave", "Canvas Drag Leave", ActionKind::View))
+            // 🐚 Engagement submit — routes typed export intents through the host, emits only shell effects.
+            .action_with(layout_internal_action("engagementSubmit", "Engagement Submit", ActionKind::Shell)),
     )
     .example("sample", "Sample", LAYOUT_SAMPLE_JSON)
     .program("layout", "Layout", "layout")
@@ -1996,6 +1969,7 @@ semio_framework_plugin::semio_plugin! {
 mod tests {
     use super::*;
     use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::app::AppActionRegistry;
 
     fn meta(actor: &str) -> ActionMeta {
         ActionMeta { actor: actor.into(), instance_id: 1 }
@@ -2003,6 +1977,12 @@ mod tests {
 
     fn new_app() -> VcsDocumentApp<LayoutPlayApp> {
         VcsDocumentApp::new(LayoutPlayApp::default())
+    }
+
+    /// 🧬 A wrapper carrying the real registry so kind discipline (View/Shell-emits-ops rejection) runs.
+    fn new_app_with_registry() -> VcsDocumentApp<LayoutPlayApp> {
+        let definition = create_layout_app().definition;
+        VcsDocumentApp::with_registry(LayoutPlayApp::default(), AppActionRegistry::from_definition(&definition))
     }
 
     fn render_json(app: &mut VcsDocumentApp<LayoutPlayApp>, body: &str) -> String {
@@ -2476,20 +2456,38 @@ mod tests {
     }
 
     #[test]
-    fn tools_expose_undo_redo_and_exports() {
-        let mut app = new_app();
-        let tools = app.tools(&ViewState::default());
-        let json = serde_json::to_string(&tools).unwrap();
-        for needle in [
-            "layout-tools-undo",
-            "layout-tools-redo",
-            "layout-tools-export-png",
-            "layout-tools-export-svg",
-            "layout-tools-export-pdf",
-            "layout-tools-export-package",
-        ] {
-            assert!(json.contains(needle), "missing tool {needle}");
-        }
+    fn registry_backed_engagement_submit_is_shell_effect_not_operation() {
+        // 🧬 engagementSubmit is declared `Shell`: through the real registry the kind-discipline
+        // check must accept it because its handler only routes an export `HostEffect`, never ops.
+        let mut app = new_app_with_registry();
+        let result = app
+            .handle_action("engagementSubmit", Some(&json!({ "value": "export png" })), &ViewState::default(), &meta("local"))
+            .expect("engagementSubmit passes registry kind discipline");
+        assert!(result.operations.is_empty(), "Shell action must not emit document operations");
+        assert!(matches!(result.requested_effects.first(), Some(HostEffect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
+    }
+
+    #[test]
+    fn registry_backed_add_frame_emits_operation() {
+        // 🧬 addFrame is declared `Operation`: the registry-backed wrapper must let its ops through.
+        let mut app = new_app_with_registry();
+        let result = app
+            .handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewState::default(), &meta("local"))
+            .expect("addFrame passes registry kind discipline");
+        assert_eq!(result.operations.len(), 1);
+    }
+
+    #[test]
+    fn registry_backed_pointer_move_is_view_only() {
+        // 🧬 canvasPointerMove is declared `View`: it mutates only runtime hover state and must
+        // never emit an operation, which the registry kind-discipline check enforces.
+        let mut app = new_app_with_registry();
+        let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 156.0, 220.0);
+        let args = json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0 });
+        let result = app
+            .handle_action("canvasPointerMove", Some(&args), &ViewState::default(), &meta("local"))
+            .expect("canvasPointerMove passes registry kind discipline");
+        assert!(result.operations.is_empty(), "View action must not emit document operations");
     }
 
     #[test]

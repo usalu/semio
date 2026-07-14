@@ -1,7 +1,7 @@
 //! 🧮 Combined mathematical framework playground — graph algorithms and computational geometry as one hot-swappable WASM plugin.
 
 use semio_framework_plugin::{
-    create_default_layout, ui_text, ActionEmit, App, Canvas2dScene, DocumentApp, DocumentView, NodeGraphScene, SurfaceKind, UiComponentSceneNode, UiNode, ViewState,
+    create_default_layout, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, Canvas2dScene, DocumentApp, DocumentView, NodeGraphScene, SurfaceKind, UiComponentSceneNode, UiNode, ViewState,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -357,7 +357,7 @@ impl DocumentApp for MathPlayApp {
                     let mut graph = doc.projection.graph.clone();
                     graph.algorithm = algorithm.to_string();
                     graph.algorithm_seed = args.and_then(|value| value.get("seed")).and_then(Value::as_str).map(str::to_string);
-                    return ActionEmit { ops: vec![MathOp::SetGraph { graph }], description: Some("setAlgorithm".into()), ..ActionEmit::default() };
+                    return ActionEmit::commit(vec![MathOp::SetGraph { graph }], "setAlgorithm");
                 }
             }
             "setDirected" => {
@@ -406,7 +406,7 @@ impl DocumentApp for MathPlayApp {
                     if let Ok(camera) = serde_json::from_str::<MathCamera>(viewport_json) {
                         let mut graph = doc.projection.graph.clone();
                         graph.camera = camera;
-                        return ActionEmit { ops: vec![MathOp::SetGraph { graph }], coalesce_key: Some("viewport".into()), ..ActionEmit::default() };
+                        return ActionEmit::amend(vec![MathOp::SetGraph { graph }], "viewport");
                     }
                 }
             }
@@ -440,7 +440,26 @@ fn create_mathematical_app() -> App {
             .default_mode_id("edit")
             .window_kind(MATH_WINDOW_GRAPH, "Graph", MATH_BODY_GRAPH, SurfaceKind::NodeGraph)
             .window_kind(MATH_WINDOW_GEOMETRY, "Geometry", MATH_BODY_GEOMETRY, SurfaceKind::Canvas2d)
-            .default_layout(create_default_layout(&[MATH_WINDOW_GRAPH.into(), MATH_WINDOW_GEOMETRY.into()], "row", Some(&[60.0, 40.0]), Some(&["Graph".into(), "Geometry".into()]))),
+            .default_layout(create_default_layout(&[MATH_WINDOW_GRAPH.into(), MATH_WINDOW_GEOMETRY.into()], "row", Some(&[60.0, 40.0]), Some(&["Graph".into(), "Geometry".into()])))
+            // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setDocument", "Set Document", ActionKind::Operation) })
+            .operation("setAlgorithm", "Set Algorithm")
+            .operation("setDirected", "Set Directed")
+            .operation("nodeGraphEdit", "Node Graph Edit")
+            .operation("nodeGraphViewport", "Node Graph Viewport")
+            .operation("setPoints", "Set Points")
+            // 📝 Staged argument forms for the graph analysis controls.
+            .action_args("setAlgorithm", vec![
+                ActionArgDef::select("algorithm", "Algorithm", vec![
+                    ActionArgOption::new("topo", "Topological Order"),
+                    ActionArgOption::new("components", "Connected Components"),
+                    ActionArgOption::new("scc", "Strongly Connected Components"),
+                    ActionArgOption::new("bfs", "Breadth-First Distances"),
+                ]).required(),
+            ])
+            .action_args("setDirected", vec![
+                ActionArgDef::toggle("directed", "Directed").default_value(true),
+            ]),
     )
     .example("demo", "Demo", serde_json::to_string(&MathProjection::default()).unwrap())
     .program("mathematical", "Mathematical", "graph")

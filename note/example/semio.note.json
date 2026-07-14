@@ -3,7 +3,6 @@
   "id": "semio",
   "title": "Semio Note",
   "camera": { "x": 0, "y": 0, "zoom": 1 },
-  "activeTool": "selectDirect",
   "gridVisible": true,
   "snapEnabled": false,
   "pencilWidth": 3,

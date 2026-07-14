@@ -11,7 +11,7 @@ pub mod app_2d {
     };
     use semio_framework_plugin::{SurfaceKind, PanelGroup,
         build_gis_map_scene, create_default_layout, MeasureSelectItem, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle,
-        ui_inspector_readonly_field, ui_text, ActionEmit, App, ActionDescriptor, DocumentApp, DocumentView, DwgDrawing, DwgGeometry, GisMapScene,
+        ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, ActionDescriptor, DocumentApp, DocumentView, DwgDrawing, DwgGeometry, GisMapScene,
         UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiSliderNode,
         UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowMeasure,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -1066,6 +1066,23 @@ pub mod app_2d {
     //#endregion 🔖Gis2dPlayApp
 
     //#region 🔖AppFactory
+    /// 🔽 The static LOD-mode choices for the palette arg schema: the automatic mode plus each LOD scale
+    /// tier from the map descriptor, labelled in the app's base locale (localization is applied by overlay).
+    fn lod_arg_options() -> Vec<ActionArgOption> {
+        std::iter::once(ActionArgOption::new(GIS_MAP_LOD_MODE_AUTOMATIC, GIS2D_LABELS_NATIVE_EN.lod_automatic))
+            .chain(
+                serde_json::from_str::<Vec<Value>>(&gis_map_lod_scale_json())
+                    .unwrap_or_default()
+                    .into_iter()
+                    .filter_map(|lod| {
+                        let id = lod.get("id").and_then(|value| value.as_str())?.to_string();
+                        let name = lod.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
+                        Some(ActionArgOption::new(id, name))
+                    }),
+            )
+            .collect()
+    }
+
     pub fn create_gis2d_app() -> App {
         App::from_builder(
             App::builder(GIS2D_PLAY_APP_ID, "GIS 2D").document(["semio", "gis", "2d"])
@@ -1097,13 +1114,16 @@ pub mod app_2d {
                     PanelGroup::Details,
                     GIS2D_PLAY_BODY_INSPECTION,
                 )
-                .operation("setLayers", "Set Layers")
+                // ✏️ Operation actions — flow through the document store with true inverses. `setActiveExample`
+                // replaces document content via `SetDocument` ops, so it is an Operation, not a View action.
+                .operation("setActiveExample", "Set Active Example")
                 .operation("patchPositions", "Patch Positions")
                 .operation("patchRoutes", "Patch Routes")
                 .operation("patchRoute", "Patch Route")
+                // 👁️ View actions — mutate ephemeral runtime view state (selection, camera, render config,
+                // hover, layer visibility, stroke weights), never the document.
                 .view_action("setSelection", "Set Selection")
                 .view_action("toggleLayerVisibility", "Toggle Layer Visibility")
-                .view_action("setActiveExample", "Set Active Example")
                 .view_action("fitWorld", "Fit World")
                 .view_action("setCamera", "Set Camera")
                 .view_action("setRenderMode", "Set Render Mode")
@@ -1118,7 +1138,39 @@ pub mod app_2d {
                 .view_action("deselect", "Deselect")
                 .view_action("focusFeature", "Focus Feature")
                 .view_action("setLayerStrokeScale", "Set Layer Stroke Scale")
+                // 🌐 Shell action — opens the picked feature's source URL through the host.
                 .shell_action("openSource", "Open Source")
+                // 📝 Argument schemas for the discrete-choice actions so the command palette can stage them
+                // and the registry validates the vocabulary. The arg id matches the key each handler reads.
+                .action_args("setActiveExample", vec![
+                    ActionArgDef::select("exampleId", "Example", vec![
+                        ActionArgOption::new("empty", "Empty"),
+                        ActionArgOption::new("reuse-map", "Reuse Map"),
+                    ]).default_value("reuse-map"),
+                ])
+                .action_args("setRenderMode", vec![
+                    ActionArgDef::select("value", "Render Mode", vec![
+                        ActionArgOption::new("image", "Image"),
+                        ActionArgOption::new("vector", "Vector"),
+                        ActionArgOption::new("combined", "Combined"),
+                    ]).default_value("combined"),
+                ])
+                .action_args("setVectorStyle", vec![
+                    ActionArgDef::select("value", "Vector Style", vec![
+                        ActionArgOption::new("colored", "Colored"),
+                        ActionArgOption::new("figureGround", "Figure Ground"),
+                        ActionArgOption::new("invertedFigure", "Inverted Figure"),
+                    ]).default_value("colored"),
+                ])
+                .action_args("setLodMode", vec![
+                    ActionArgDef::select("value", "LOD Mode", lod_arg_options()).default_value(GIS_MAP_LOD_MODE_AUTOMATIC),
+                ])
+                .action_args("setSelectionMethod", vec![
+                    ActionArgDef::select("value", "Selection Method", vec![
+                        ActionArgOption::new("rectangle", "Rectangle"),
+                        ActionArgOption::new("lasso", "Lasso"),
+                    ]).default_value("rectangle"),
+                ])
                 .keybinding("mod+z", "undo")
                 .keybinding("mod+shift+z", "redo"),
         )
@@ -1496,11 +1548,7 @@ pub mod app_3d {
                 }
                 "setExaggeration" => {
                     if let Some(exaggeration) = args.and_then(|value| value.get("exaggeration")).and_then(|value| value.as_f64()) {
-                        return ActionEmit {
-                            ops: vec![Gis3dTerrainOp::SetExaggeration { exaggeration }],
-                            coalesce_key: Some("exaggeration".into()),
-                            ..Default::default()
-                        };
+                        return ActionEmit::amend(vec![Gis3dTerrainOp::SetExaggeration { exaggeration }], "gis3d-exaggeration");
                     }
                     ActionEmit::default()
                 }
@@ -1542,6 +1590,54 @@ pub mod app_3d {
         .program("gis3d", "GIS 3D", "terrain")
     }
     //#endregion 🔖AppFactory
+
+    //#region 🧪Tests
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+
+        fn meta(actor: &str) -> ActionMeta {
+            ActionMeta { actor: actor.into(), instance_id: 1 }
+        }
+
+        fn new_app() -> VcsDocumentApp<Gis3dPlayApp> {
+            VcsDocumentApp::new(Gis3dPlayApp::default())
+        }
+
+        #[test]
+        fn seeds_exaggeration_from_the_terrain_fixture() {
+            let app = new_app();
+            assert_eq!(app.projection().expect("projection").exaggeration, 1.5);
+        }
+
+        #[test]
+        fn camera_and_selection_are_view_state_and_emit_no_ops() {
+            let mut app = new_app();
+            let camera = app
+                .handle_action("setCamera", Some(&json!({ "camera": { "position": [1.0, 1.0, 1.0] } })), &ViewState::default(), &meta("local"))
+                .expect("setCamera");
+            assert!(camera.operations.is_empty(), "camera is ephemeral view state");
+            let selection = app
+                .handle_action("worldSelect", Some(&json!({ "ids": ["p_institut_de_botanique_ulg_liege"] })), &ViewState::default(), &meta("local"))
+                .expect("worldSelect");
+            assert!(selection.operations.is_empty(), "selection is ephemeral view state");
+        }
+
+        /// 🧪 A slider drag is many `setExaggeration` ticks sharing one coalesce key: they fold into ONE
+        /// undoable edit, so a single undo restores the fixture's exaggeration rather than a mid-drag value.
+        #[test]
+        fn exaggeration_drag_coalesces_into_one_undo_step() {
+            let mut app = new_app();
+            for value in [2.0, 2.5, 3.0] {
+                app.handle_action("setExaggeration", Some(&json!({ "exaggeration": value })), &ViewState::default(), &meta("local")).expect("drag tick");
+            }
+            assert_eq!(app.projection().expect("projection").exaggeration, 3.0);
+            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            assert_eq!(app.projection().expect("projection").exaggeration, 1.5, "one coalesced edit: undo restores the fixture exaggeration");
+        }
+    }
+    //#endregion 🧪Tests
 }
 
 //#region 🔖Bundle

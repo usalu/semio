@@ -4,11 +4,12 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_icon_render_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_stack_vertical,
     ui_text, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
-    world3d_selection_json, ActionEmit, ActionMeta, App, ActionDescriptor, AppLabelsOverlay, DocumentApp,
-    DocumentView, IconRenderScene, MeasureSelectItem, ToolCategory, ToolNode, UiFieldNode, UiInspectorFieldGroup,
+    world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind,
+    App, ActionDescriptor, AppLabelsOverlay, DocumentApp,
+    DocumentView, IconRenderScene, MeasureSelectItem, ToolDefinition, UiFieldNode, UiInspectorFieldGroup,
     UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
-    WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure, World3dScene,
-    WorldSunConfig,
+    WindowEngagementPossible, WindowEngagementStatus, WindowMeasure, World3dScene,
+    WorldSunConfig, SET_ACTIVE_TOOL_ACTION_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
@@ -40,6 +41,9 @@ const SHOOTING_PLAY_WINDOW_SCENE: &str = "shooting-scene";
 const SHOOTING_PLAY_WINDOW_ICON: &str = "shooting-icon";
 const SHOOTING_EXAMPLE_DEFAULT_ID: &str = "base-icon";
 
+/// 🧰 The gumball tool active when the host has not yet set `view_state.active_tool_id` (first ToolRef).
+const SHOOTING_TRANSFORM_TOOL_DEFAULT: &str = "move";
+
 const SHOOTING_FALLBACK_MESH_KIND: &str = "box";
 
 const DEFAULT_EXAMPLE_JSON: &str = include_str!("../../example/base-icon.shooting.json");
@@ -48,8 +52,8 @@ static SHOOTING_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖Constants
 
 //#region 🔖Runtime
-/// 🎛️ Ephemeral view state (selection, camera draft, transform tool) — lives in the app struct, not
-/// the document, so it never pollutes undo history.
+/// 🎛️ Ephemeral view state (selection, camera draft) — lives in the app struct, not the document, so
+/// it never pollutes undo history. The active transform tool is host-owned (`view_state.active_tool_id`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 struct ShootingPlayRuntime {
@@ -60,7 +64,6 @@ struct ShootingPlayRuntime {
     center_model: bool,
     fit_revision: u32,
     camera_draft_label: String,
-    transform_tool: String,
 }
 
 impl Default for ShootingPlayRuntime {
@@ -73,7 +76,6 @@ impl Default for ShootingPlayRuntime {
             center_model: true,
             fit_revision: 0,
             camera_draft_label: String::new(),
-            transform_tool: "move".into(),
         }
     }
 }
@@ -192,7 +194,7 @@ fn world_meshes_json(fixture: &ShootingFixture) -> String {
     world3d_meshes_json_from_kinds_and_urls(&[SHOOTING_FALLBACK_MESH_KIND.into()], &collect_mesh_urls(fixture))
 }
 
-fn world_selection_json(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime) -> String {
+fn world_selection_json(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime, active_tool: &str) -> String {
     let mut value: Value = serde_json::from_str(&world3d_selection_json(
         &runtime.selection_method,
         &runtime.selected_asset_ids,
@@ -203,7 +205,7 @@ fn world_selection_json(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime
         object.insert("granularity".into(), json!("mesh"));
         object.insert("selectionMode".into(), json!("mesh"));
         object.insert("targets".into(), json!({ "mesh": true, "vertex": false, "edge": false, "face": false }));
-        object.insert("transformTool".into(), json!(runtime.transform_tool));
+        object.insert("transformTool".into(), json!(active_tool));
         object.insert("activeObjectId".into(), json!(fixture.active_asset_id));
         object.insert("gumballActive".into(), json!(!runtime.selected_asset_ids.is_empty()));
         if let Some(target) = selection_centroid(fixture, &runtime.selected_asset_ids) {
@@ -334,13 +336,6 @@ struct ShootingLabels {
     glb_asset: &'static str,
     shot: &'static str,
     asset: &'static str,
-    open: &'static str,
-    import_title: &'static str,
-    save: &'static str,
-    export_title: &'static str,
-    move_tool: &'static str,
-    rotate_tool: &'static str,
-    scale_tool: &'static str,
     camera_label_placeholder: &'static str,
     load_camera: &'static str,
     shot_label_placeholder: &'static str,
@@ -367,13 +362,6 @@ const SHOOTING_LABELS_NATIVE_EN: ShootingLabels = ShootingLabels {
     glb_asset: "GLB Asset",
     shot: "Shot",
     asset: "Asset",
-    open: "Open",
-    import_title: "Import",
-    save: "Save",
-    export_title: "Export",
-    move_tool: "Move",
-    rotate_tool: "Rotate",
-    scale_tool: "Scale",
     camera_label_placeholder: "Camera label",
     load_camera: "Load camera",
     shot_label_placeholder: "Shot label",
@@ -400,13 +388,6 @@ const SHOOTING_LABELS_NATIVE_DE: ShootingLabels = ShootingLabels {
     glb_asset: "GLB-Objekt",
     shot: "Aufnahme",
     asset: "Objekt",
-    open: "Öffnen",
-    import_title: "Importieren",
-    save: "Speichern",
-    export_title: "Exportieren",
-    move_tool: "Verschieben",
-    rotate_tool: "Drehen",
-    scale_tool: "Skalieren",
     camera_label_placeholder: "Kamera-Bezeichnung",
     load_camera: "Kamera laden",
     shot_label_placeholder: "Aufnahme-Bezeichnung",
@@ -703,7 +684,7 @@ fn asset_inspector_group(asset: &ShootingAsset, labels: &ShootingLabels) -> UiIn
 //#endregion 🔖Panels
 
 //#region 🔖Render
-fn render_model_scene(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime) -> UiNode {
+fn render_model_scene(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime, active_tool: &str) -> UiNode {
     build_world_3d_scene(
         SHOOTING_PLAY_SURFACE_SCENE,
         SHOOTING_PLAY_APP_ID,
@@ -715,7 +696,7 @@ fn render_model_scene(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime) 
                 camera_json(&fixture.camera),
                 world_meshes_json(fixture),
                 world_instances_json(fixture, runtime),
-                world_selection_json(fixture, runtime),
+                world_selection_json(fixture, runtime, active_tool),
                 &WorldSunConfig::default(),
             )
         },
@@ -904,35 +885,9 @@ fn shooting_icon_measures(fixture: &ShootingFixture, labels: &ShootingLabels) ->
 }
 
 fn shooting_model_engagement(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime, labels: &ShootingLabels) -> WindowEngagement {
-    let transform = runtime.transform_tool.clone();
     WindowEngagement {
         session_active: Some(true),
-        options: Some(vec![
-            WindowEngagementOption {
-                id: "shooting.opt.move".into(),
-                label: Some(labels.move_tool.into()),
-                icon_id: Some("move".into()),
-                pressed: Some(transform == "move"),
-                disabled: None,
-                action: Some(shooting_action("setTransformTool", Some(json!({ "tool": "move" })))),
-            },
-            WindowEngagementOption {
-                id: "shooting.opt.rotate".into(),
-                label: Some(labels.rotate_tool.into()),
-                icon_id: Some("rotate-cw".into()),
-                pressed: Some(transform == "rotate"),
-                disabled: None,
-                action: Some(shooting_action("setTransformTool", Some(json!({ "tool": "rotate" })))),
-            },
-            WindowEngagementOption {
-                id: "shooting.opt.scale".into(),
-                label: Some(labels.scale_tool.into()),
-                icon_id: Some("maximize-2".into()),
-                pressed: Some(transform == "scale"),
-                disabled: None,
-                action: Some(shooting_action("setTransformTool", Some(json!({ "tool": "scale" })))),
-            },
-        ]),
+        options: None,
         input: Some(WindowEngagementInput {
             id: Some("shooting.camera-draft".into()),
             value: Some(runtime.camera_draft_label.clone()),
@@ -991,112 +946,6 @@ fn shooting_icon_engagement(fixture: &ShootingFixture, labels: &ShootingLabels) 
     }
 }
 
-fn shooting_tools(fixture: &ShootingFixture, labels: &ShootingLabels) -> Vec<ToolNode> {
-    let has_shot = active_shot(fixture).is_some() && active_asset(fixture).is_some();
-    vec![
-        ToolNode::Collection {
-            id: "shooting.tools.open".into(),
-            icon_id: "folder-open".into(),
-            label: Some(labels.open.into()),
-            text: None,
-            title: Some(labels.import_title.into()),
-            order: Some(1),
-            disabled: None,
-            category: Some(ToolCategory::Actions),
-            children: vec![
-                ToolNode::Button {
-                    id: "shooting.tools.open.fixture".into(),
-                    icon_id: "file-json".into(),
-                    label: Some("Import Shooting".into()),
-                    text: None,
-                    title: None,
-                    order: Some(1),
-                    disabled: None,
-                    category: None,
-                    on_press: shooting_action("loadRequest", None),
-                },
-                ToolNode::Button {
-                    id: "shooting.tools.open.glb".into(),
-                    icon_id: "box".into(),
-                    label: Some("Import Glb".into()),
-                    text: None,
-                    title: None,
-                    order: Some(2),
-                    disabled: None,
-                    category: None,
-                    on_press: shooting_action("importAssetRequest", None),
-                },
-            ],
-        },
-        ToolNode::Collection {
-            id: "shooting.tools.save".into(),
-            icon_id: "save".into(),
-            label: Some(labels.save.into()),
-            text: None,
-            title: Some(labels.export_title.into()),
-            order: Some(2),
-            disabled: None,
-            category: Some(ToolCategory::Actions),
-            children: vec![
-                ToolNode::Button {
-                    id: "shooting.tools.save.fixture".into(),
-                    icon_id: "download".into(),
-                    label: Some("Download Shooting".into()),
-                    text: None,
-                    title: None,
-                    order: Some(1),
-                    disabled: None,
-                    category: None,
-                    on_press: shooting_action("saveDownload", None),
-                },
-                ToolNode::Button {
-                    id: "shooting.tools.save.shot".into(),
-                    icon_id: "image".into(),
-                    label: Some("Export Shot".into()),
-                    text: None,
-                    title: None,
-                    order: Some(2),
-                    disabled: Some(!has_shot),
-                    category: None,
-                    on_press: shooting_action("exportActiveShot", None),
-                },
-                ToolNode::Button {
-                    id: "shooting.tools.save.shots".into(),
-                    icon_id: "images".into(),
-                    label: Some("Export All Shots".into()),
-                    text: None,
-                    title: None,
-                    order: Some(3),
-                    disabled: Some(!has_shot),
-                    category: None,
-                    on_press: shooting_action("exportAllShots", None),
-                },
-                ToolNode::Button {
-                    id: "shooting.tools.save.reset".into(),
-                    icon_id: "rotate-ccw".into(),
-                    label: Some("Reset".into()),
-                    text: None,
-                    title: None,
-                    order: Some(4),
-                    disabled: None,
-                    category: None,
-                    on_press: shooting_action("resetFixture", None),
-                },
-            ],
-        },
-        ToolNode::Button {
-            id: "shooting.tools.save-camera".into(),
-            icon_id: "camera".into(),
-            label: Some("Save Camera".into()),
-            text: None,
-            title: None,
-            order: Some(3),
-            disabled: None,
-            category: Some(ToolCategory::Actions),
-            on_press: shooting_action("saveCamera", None),
-        },
-    ]
-}
 //#endregion 🔖Tools
 
 //#region 🔖ShootingPlayApp
@@ -1257,9 +1106,8 @@ impl DocumentApp for ShootingPlayApp {
                 self.runtime.center_model = next;
                 ActionEmit::default()
             }
-            "setTransformTool" => {
-                let tool = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()).unwrap_or("move");
-                self.runtime.transform_tool = tool.into();
+            SET_ACTIVE_TOOL_ACTION_ID => {
+                self.runtime.hovered_asset_id = None;
                 ActionEmit::default()
             }
             "setSunAzimuth" | "setSunElevation" | "setSunIntensity" | "setAmbientIntensity" | "setMaterialRoughness" => {
@@ -1385,7 +1233,7 @@ impl DocumentApp for ShootingPlayApp {
                 if ids.is_empty() {
                     ActionEmit::default()
                 } else {
-                    ActionEmit::ops(vec![ShootingOp::TranslateAssets { asset_ids: ids, dx, dy, dz }])
+                    ActionEmit::amend(vec![ShootingOp::TranslateAssets { asset_ids: ids, dx, dy, dz }], "gumball-translate")
                 }
             }
             "rotateSelection" => {
@@ -1397,7 +1245,7 @@ impl DocumentApp for ShootingPlayApp {
                 if ids.is_empty() {
                     ActionEmit::default()
                 } else {
-                    ActionEmit::ops(vec![ShootingOp::RotateAssets { asset_ids: ids, ax, ay, az, angle }])
+                    ActionEmit::amend(vec![ShootingOp::RotateAssets { asset_ids: ids, ax, ay, az, angle }], "gumball-rotate")
                 }
             }
             "scaleSelection" => {
@@ -1408,7 +1256,7 @@ impl DocumentApp for ShootingPlayApp {
                 if ids.is_empty() {
                     ActionEmit::default()
                 } else {
-                    ActionEmit::ops(vec![ShootingOp::ScaleAssets { asset_ids: ids, sx, sy, sz }])
+                    ActionEmit::amend(vec![ShootingOp::ScaleAssets { asset_ids: ids, sx, sy, sz }], "gumball-scale")
                 }
             }
             "patchShot" | "patchShots" => {
@@ -1525,13 +1373,10 @@ impl DocumentApp for ShootingPlayApp {
                     .and_then(|index| fixture.assets.get(index as usize))
                     .map(|asset| asset.id.clone())
                     .or_else(|| id_value.and_then(|value| value.as_str()).map(str::to_string));
-                match asset_id {
-                    Some(asset_id) => {
-                        self.runtime.selected_asset_ids = merge_world_selection_ids(&self.runtime.selected_asset_ids, &[asset_id.clone()], merge);
-                        ActionEmit::ops(vec![ShootingOp::SetActiveAsset { asset_id: Some(asset_id) }])
-                    }
-                    None => ActionEmit::default(),
+                if let Some(asset_id) = asset_id {
+                    self.runtime.selected_asset_ids = merge_world_selection_ids(&self.runtime.selected_asset_ids, &[asset_id], merge);
                 }
+                ActionEmit::default()
             }
             "setSelectionMethod" => {
                 self.runtime.selection_method = args
@@ -1548,18 +1393,15 @@ impl DocumentApp for ShootingPlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, ShootingFixture>, view_state: &ViewState) -> UiNode {
         let fixture = doc.projection;
         let labels = shooting_labels(view_state);
+        let active_tool = view_state.active_tool_id.as_deref().unwrap_or(SHOOTING_TRANSFORM_TOOL_DEFAULT);
         match body_key {
-            SHOOTING_PLAY_BODY_SCENE => render_model_scene(fixture, &self.runtime),
+            SHOOTING_PLAY_BODY_SCENE => render_model_scene(fixture, &self.runtime, active_tool),
             SHOOTING_PLAY_BODY_ICON => render_icon_scene(fixture),
             SHOOTING_PLAY_BODY_DOCUMENT => build_document_tree(fixture, labels),
             SHOOTING_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
             SHOOTING_PLAY_BODY_INSPECTION => build_inspector_tree(fixture, &self.runtime, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
-    }
-
-    fn tools(&self, doc: &DocumentView<'_, ShootingFixture>, view_state: &ViewState) -> Vec<ToolNode> {
-        shooting_tools(doc.projection, shooting_labels(view_state))
     }
 
     fn window_engagements(&self, doc: &DocumentView<'_, ShootingFixture>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
@@ -1627,7 +1469,8 @@ fn create_shooting_app() -> App {
                 SHOOTING_PLAY_BODY_INSPECTION,
             )
             // 🔧 Document-mutating: dispatched as VCS operations with a true inverse.
-            .operation("setFixtureJson", "Set Fixture Json")
+            // 🛠️ Dev-only whole-fixture import — kept out of the command palette.
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setFixtureJson", "Set Fixture Json", ActionKind::Operation) })
             .operation("setActiveExample", "Set Active Example")
             .operation("setActiveShot", "Set Active Shot")
             .operation("setActiveAsset", "Set Active Asset")
@@ -1656,15 +1499,14 @@ fn create_shooting_app() -> App {
             .operation("translateSelection", "Translate Selection")
             .operation("rotateSelection", "Rotate Selection")
             .operation("scaleSelection", "Scale Selection")
-            .operation("worldPick", "World Pick")
-            // 👁️ Ephemeral view state — selection, camera draft label, transform tool.
+            // 👁️ Ephemeral view state — selection, camera draft label, world picking.
             .view_action("setSelection", "Set Selection")
             .view_action("setCameraDraftLabel", "Set Camera Draft Label")
             .view_action("setCenterModel", "Set Center Model")
-            .view_action("setTransformTool", "Set Transform Tool")
             .view_action("worldSelect", "World Select")
             .view_action("worldHover", "World Hover")
             .view_action("setHover", "Set Hover")
+            .view_action("worldPick", "World Pick")
             .view_action("setSelectionMethod", "Set Selection Method")
             .view_action("worldPointerDown", "World Pointer Down")
             .view_action("worldPointerMove", "World Pointer Move")
@@ -1673,7 +1515,26 @@ fn create_shooting_app() -> App {
             .shell_action("loadRequest", "Load Request")
             .shell_action("importAssetRequest", "Import Asset Request")
             .shell_action("exportActiveShot", "Export Active Shot")
-            .shell_action("exportAllShots", "Export All Shots"),
+            .shell_action("exportAllShots", "Export All Shots")
+            // 📝 Staged argument forms for the panel-visible create actions (defaults materialized host-side).
+            .action_args("addShot", vec![
+                ActionArgDef::select("format", "Format", vec![ActionArgOption::new("svg", "SVG"), ActionArgOption::new("png", "PNG")]).default_value("png"),
+                ActionArgDef::select("shape", "Shape", vec![ActionArgOption::new("rectangle", "Rectangle"), ActionArgOption::new("ellipse", "Ellipse")]).default_value("rectangle"),
+            ])
+            .action_args("addAsset", vec![
+                ActionArgDef::select("format", "Format", vec![ActionArgOption::new("glb", "GLB")]).default_value("glb"),
+            ])
+            .action_args("setActiveExample", vec![
+                ActionArgDef::select("exampleId", "Example", vec![
+                    ActionArgOption::new(SHOOTING_EXAMPLE_DEFAULT_ID, "Default Base Icon"),
+                    ActionArgOption::new("empty", "Empty"),
+                ]).required(),
+            ])
+            // 🧰 Transform gumball — an exclusive tool group scoped to the scene window (active tool is host-owned).
+            .tool(ToolDefinition { group: Some("transform".into()), ..ToolDefinition::new("move", "Move", "move") })
+            .tool(ToolDefinition { group: Some("transform".into()), ..ToolDefinition::new("rotate", "Rotate", "rotate-cw") })
+            .tool(ToolDefinition { group: Some("transform".into()), ..ToolDefinition::new("scale", "Scale", "maximize-2") })
+            .window_kind_tools(SHOOTING_PLAY_WINDOW_SCENE, vec!["move".into(), "rotate".into(), "scale".into()]),
     )
     .example(
         SHOOTING_EXAMPLE_DEFAULT_ID,
@@ -1734,7 +1595,8 @@ semio_framework_plugin::semio_plugin! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::app::AppActionRegistry;
     use vcs::{Backbone, BackboneMessage, MemoryBackbone};
 
     fn meta(actor: &str) -> ActionMeta {
@@ -1743,6 +1605,12 @@ mod tests {
 
     fn new_app() -> VcsDocumentApp<ShootingPlayApp> {
         VcsDocumentApp::new(ShootingPlayApp::default())
+    }
+
+    /// 🧬 A wrapper carrying the real action registry so default-materialization + kind discipline run.
+    fn new_app_with_registry() -> VcsDocumentApp<ShootingPlayApp> {
+        let definition = create_shooting_app().definition;
+        VcsDocumentApp::with_registry(ShootingPlayApp::default(), AppActionRegistry::from_definition(&definition))
     }
 
     #[test]
@@ -1851,8 +1719,12 @@ mod tests {
     #[test]
     fn world_pick_and_hover_drive_selection_protocol() {
         let mut app = new_app();
-        app.handle_action("worldPick", Some(&json!({ "granularity": "mesh", "id": 0, "merge": "replace" })), &ViewState::default(), &meta("local")).expect("pick");
-        assert_eq!(app.projection().expect("materialize projection").active_asset_id, "base");
+        // worldPick is a View action: it drives runtime selection only, emitting no document ops.
+        let result = app.handle_action("worldPick", Some(&json!({ "granularity": "mesh", "id": 0, "merge": "replace" })), &ViewState::default(), &meta("local")).expect("pick");
+        assert!(result.operations.is_empty(), "worldPick mutates only ephemeral selection, never the document");
+        let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState::default()).expect("render");
+        let selection: Value = serde_json::from_str(serde_json::to_value(&node).unwrap()["world3d"]["selectionJson"].as_str().unwrap()).unwrap();
+        assert_eq!(selection["ids"], json!(["base"]), "the picked asset becomes the runtime selection");
         app.handle_action("setHover", Some(&json!({ "objectId": "base" })), &ViewState::default(), &meta("local")).expect("hover");
         app.handle_action("worldPick", Some(&json!({ "granularity": "mesh", "id": Value::Null, "merge": "replace" })), &ViewState::default(), &meta("local")).expect("clear pick");
         let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState::default()).expect("render");
@@ -1916,19 +1788,23 @@ mod tests {
     }
 
     #[test]
-    fn tools_and_engagements_expose_toolbar_parity() {
-        let mut app = new_app();
-        let tools = app.tools(&ViewState::default());
-        let json = serde_json::to_string(&tools).unwrap();
+    fn tool_registry_scopes_transform_gumball_and_actions_are_declared() {
+        let definition = create_shooting_app().definition;
+        let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
+        assert_eq!(tool_ids, ["move", "rotate", "scale"], "gumball tools declared in registry order");
+        assert!(definition.tools.iter().all(|tool| tool.group.as_deref() == Some("transform")), "one exclusive transform group");
+        let scene = definition.window_kinds.iter().find(|window| window.id == SHOOTING_PLAY_WINDOW_SCENE).expect("scene window");
+        let scoped: Vec<&str> = scene.tools.iter().map(|tool| tool.as_str()).collect();
+        assert_eq!(scoped, ["move", "rotate", "scale"], "tools scoped to the scene window kind");
         for command in ["loadRequest", "importAssetRequest", "saveDownload", "exportActiveShot", "exportAllShots", "resetFixture", "saveCamera"] {
-            assert!(json.contains(command), "toolbar exposes {command}");
+            assert!(definition.actions.iter().any(|action| action.id == command), "registry declares {command}");
         }
+        assert!(!definition.actions.iter().any(|action| action.id == "setTransformTool"), "the custom setTransformTool action is gone");
+        let mut app = new_app();
         let engagements = app.window_engagements(&ViewState::default());
-        let model = &engagements[SHOOTING_PLAY_WINDOW_SCENE];
-        assert!(model.options.as_ref().unwrap().iter().any(|option| option.id.ends_with("move")));
-        assert!(model.status.as_ref().unwrap()[0].text.contains("assets"));
-        let icon = &engagements[SHOOTING_PLAY_WINDOW_ICON];
-        assert!(icon.status.as_ref().unwrap()[0].text.contains("256×256"));
+        assert!(engagements[SHOOTING_PLAY_WINDOW_SCENE].options.is_none(), "the gumball selector moved to the host-derived toolbar");
+        assert!(engagements[SHOOTING_PLAY_WINDOW_SCENE].status.as_ref().unwrap()[0].text.contains("assets"));
+        assert!(engagements[SHOOTING_PLAY_WINDOW_ICON].status.as_ref().unwrap()[0].text.contains("256×256"));
     }
 
     #[test]
@@ -1946,15 +1822,8 @@ mod tests {
         assert!(catalogue_json.contains("GLB Asset"));
         let inspector = app.render(SHOOTING_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
         assert!(serde_json::to_string(&inspector).unwrap().contains("Shot"));
-        let tools = app.tools(&ViewState::default());
-        let tools_json = serde_json::to_string(&tools).unwrap();
-        assert!(tools_json.contains("\"label\":\"Open\""));
-        assert!(tools_json.contains("\"title\":\"Import\""));
-        assert!(tools_json.contains("\"label\":\"Save\""));
-        assert!(tools_json.contains("\"title\":\"Export\""));
         let engagements = app.window_engagements(&ViewState::default());
         let model = &engagements[SHOOTING_PLAY_WINDOW_SCENE];
-        assert!(model.options.as_ref().unwrap().iter().any(|option| option.label.as_deref() == Some("Move")));
         assert_eq!(model.input.as_ref().unwrap().placeholder.as_deref(), Some("Camera label"));
         let icon = &engagements[SHOOTING_PLAY_WINDOW_ICON];
         assert_eq!(icon.input.as_ref().unwrap().placeholder.as_deref(), Some("Shot label"));
@@ -1980,15 +1849,8 @@ mod tests {
         assert!(catalogue_json.contains("GLB-Objekt"));
         let inspector = app.render(SHOOTING_PLAY_BODY_INSPECTION, None, &view_state).expect("render");
         assert!(serde_json::to_string(&inspector).unwrap().contains("Aufnahme"));
-        let tools = app.tools(&view_state);
-        let tools_json = serde_json::to_string(&tools).unwrap();
-        assert!(tools_json.contains("\"label\":\"Öffnen\""));
-        assert!(tools_json.contains("\"title\":\"Importieren\""));
-        assert!(tools_json.contains("\"label\":\"Speichern\""));
-        assert!(tools_json.contains("\"title\":\"Exportieren\""));
         let engagements = app.window_engagements(&view_state);
         let model = &engagements[SHOOTING_PLAY_WINDOW_SCENE];
-        assert!(model.options.as_ref().unwrap().iter().any(|option| option.label.as_deref() == Some("Verschieben")));
         assert_eq!(model.input.as_ref().unwrap().placeholder.as_deref(), Some("Kamera-Bezeichnung"));
         let icon = &engagements[SHOOTING_PLAY_WINDOW_ICON];
         assert_eq!(icon.input.as_ref().unwrap().placeholder.as_deref(), Some("Aufnahme-Bezeichnung"));
@@ -2195,6 +2057,65 @@ mod tests {
         receiver.ingest_operations(&operations_json).expect("ingest once");
         receiver.ingest_operations(&operations_json).expect("ingest twice");
         assert_eq!(active_shot(&receiver.projection().expect("materialize projection")).unwrap().label, "Hero", "feeding the same op twice must not double-apply");
+    }
+
+    #[test]
+    fn set_active_tool_clears_scratch_and_emits_no_history_entry() {
+        let mut app = new_app();
+        app.handle_action("worldHover", Some(&json!({ "id": "base" })), &ViewState::default(), &meta("local")).expect("hover");
+        // Switching tools is the framework-injected View action: it clears in-progress scratch and
+        // must produce no document operations (zero history entries, nothing to sync).
+        let result = app.handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "rotate" })), &ViewState::default(), &meta("local")).expect("switch tool");
+        assert!(result.operations.is_empty(), "tool switching never emits document ops");
+        let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState { active_tool_id: Some("rotate".into()), ..ViewState::default() }).expect("render");
+        let selection: Value = serde_json::from_str(serde_json::to_value(&node).unwrap()["world3d"]["selectionJson"].as_str().unwrap()).unwrap();
+        assert_eq!(selection["transformTool"], json!("rotate"), "the gumball follows the host-owned active tool");
+    }
+
+    #[test]
+    fn gumball_transform_drag_coalesces_into_one_edit() {
+        let mut app = new_app();
+        let asset_id = app.projection().expect("materialize projection").assets[0].id.clone();
+        for dx in [1.0, 2.0, 3.0] {
+            app.handle_action(
+                "translateSelection",
+                Some(&json!({ "ids": [asset_id], "dx": dx, "dy": 0.0, "dz": 0.0 })),
+                &ViewState::default(),
+                &meta("local"),
+            )
+            .expect("drag tick");
+        }
+        // A whole gumball drag (three ticks, same coalesce key) is ONE undo step, not one-op-per-tick.
+        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        let restored = app.projection().expect("materialize projection");
+        let original = default_fixture().assets.iter().find(|asset| asset.id == asset_id).map(|asset| asset.origin).expect("original origin");
+        assert_eq!(restored.assets.iter().find(|asset| asset.id == asset_id).unwrap().origin, original, "undoing the coalesced drag restores the pre-drag origin");
+    }
+
+    #[test]
+    fn world_pick_requires_no_args_and_emits_no_ops() {
+        let definition = create_shooting_app().definition;
+        let world_pick = definition.actions.iter().find(|action| action.id == "worldPick").expect("worldPick declared");
+        assert!(matches!(world_pick.kind, ActionKind::View), "worldPick is a View action");
+        assert!(world_pick.args.is_empty(), "worldPick carries no required args");
+        let mut app = new_app_with_registry();
+        let result = app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &meta("local")).expect("pick");
+        assert!(result.operations.is_empty(), "worldPick (View) emits no ops even under registry enforcement");
+    }
+
+    #[test]
+    fn add_shot_and_add_asset_materialize_declared_defaults() {
+        let mut app = new_app_with_registry();
+        // addShot fired with only a partial arg: the declared `shape` default must be materialized.
+        app.handle_action("addShot", Some(&json!({ "format": "svg" })), &ViewState::default(), &meta("local")).expect("add shot");
+        let projection = app.projection().expect("materialize projection");
+        let shot = projection.shots.last().unwrap();
+        assert_eq!(shot.format, "svg");
+        assert_eq!(shot.shape, "rectangle", "shape default materialized from the registry");
+        // addAsset fired with no args at all: the declared `format` default must be materialized.
+        app.handle_action("addAsset", None, &ViewState::default(), &meta("local")).expect("add asset");
+        let projection = app.projection().expect("materialize projection");
+        assert_eq!(projection.assets.last().unwrap().format, "glb", "format default materialized from the registry");
     }
 }
 //#endregion 🧪Tests
