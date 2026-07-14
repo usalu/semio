@@ -8792,6 +8792,29 @@ pub mod d5 {
         }
 
         #[test]
+        fn window_kind_actions_scope_transform_to_3d_only() {
+            let definition = create_puzzle5d_app().definition;
+            let resolve = |window_id: &str| -> Vec<String> {
+                let window = definition.window_kinds.iter().find(|window| window.id == window_id).unwrap();
+                semio_framework_plugin::resolve_window_actions(&definition, window)
+                    .into_iter()
+                    .map(|action| action.id.clone())
+                    .collect()
+            };
+            let board = resolve(PUZZLE5D_PLAY_WINDOW_2D);
+            let world = resolve(PUZZLE5D_PLAY_WINDOW_3D);
+            for transform_op in ["translateSelection", "rotateSelection", "scaleSelection", "worldRelocate", "setCamera3d"] {
+                assert!(world.contains(&transform_op.to_string()), "3D must expose {transform_op}");
+                assert!(!board.contains(&transform_op.to_string()), "2D must NOT expose {transform_op}");
+            }
+            assert!(board.contains(&"applyBoardEvents".to_string()), "2D must expose applyBoardEvents");
+            assert!(!world.contains(&"applyBoardEvents".to_string()), "3D must NOT expose applyBoardEvents");
+            for shared in ["addBrushPart", "deleteSelection"] {
+                assert!(board.contains(&shared.to_string()) && world.contains(&shared.to_string()), "{shared} stays on both windows");
+            }
+        }
+
+        #[test]
         fn window_engagements_cover_both_windows() {
             let mut app = new_app();
             let engagements = app.window_engagements(&ViewState::default());

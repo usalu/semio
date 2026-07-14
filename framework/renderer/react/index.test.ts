@@ -147,15 +147,21 @@ describe("shell store reducer", () => {
     expect(toggled.overlays).toBe(opened.overlays);
   });
 
-  it("resets the dock override and every corner's active path via RESET_DOCK, leaving fold/size untouched", () => {
+  it("resets the dock override, every corner's active path/visible/size, drill-down memory, and tree expansion via RESET_DOCK", () => {
     const state = baseState();
     const rearranged = shellReducer(state, { type: "SET_DOCK_OVERRIDE", value: { version: 1, corners: { "top-left": [{ id: "moved" }], "top-right": [], "bottom-left": [], "bottom-right": [] } } });
     const withPath = shellReducer(rearranged, { type: "SET_CORNER_PANEL_PATH", corner: "top-left", value: ["moved"] });
     const withVisible = shellReducer(withPath, { type: "SET_CORNER_PANEL_VISIBLE", corner: "top-left", value: true });
-    const reset = shellReducer(withVisible, { type: "RESET_DOCK" });
+    const withSize = shellReducer(withVisible, { type: "SET_CORNER_PANEL_SIZE", corner: "top-left", value: 999 });
+    const withMemory = shellReducer(withSize, { type: "SET_PANEL_PATH_MEMORY", value: { moved: "child" } });
+    const withTreeOpen = shellReducer(withMemory, { type: "SET_TREE_OPEN_STATE", id: "unit:section", open: true });
+    const reset = shellReducer(withTreeOpen, { type: "RESET_DOCK" });
     expect(reset.layout.dockOverride).toBeNull();
     expect(reset.layout.cornerPanels["top-left"].path).toEqual([]);
-    expect(reset.layout.cornerPanels["top-left"].visible).toBe(true);
+    expect(reset.layout.cornerPanels["top-left"].visible).toBe(false);
+    expect(reset.layout.cornerPanels["top-left"].size).toBe(state.layout.cornerPanels["top-left"].size);
+    expect(reset.layout.panelPathMemory).toEqual({});
+    expect(reset.layout.treeOpenStates).toEqual({});
   });
 
   it("updates the uiPrefs slice and leaves the sync slice referentially unchanged", () => {

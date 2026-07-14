@@ -1877,7 +1877,15 @@ fn create_layout_app() -> App {
             .action_with(layout_internal_action("canvasDragOver", "Canvas Drag Over", ActionKind::View))
             .action_with(layout_internal_action("canvasDragLeave", "Canvas Drag Leave", ActionKind::View))
             // 🐚 Engagement submit — routes typed export intents through the host, emits only shell effects.
-            .action_with(layout_internal_action("engagementSubmit", "Engagement Submit", ActionKind::Shell)),
+            .action_with(layout_internal_action("engagementSubmit", "Engagement Submit", ActionKind::Shell))
+            // 📇 Per-window action scoping — the content-authoring operations only make sense on the
+            // interactive Blueprint surface; the read-only Preview surface renders output and never
+            // creates or edits frames/pages. Exports, camera, pointer/drag, selection and hover are
+            // surface-discriminated (via `surfaceId`) or global, so they stay unscoped orphans and
+            // appear on both windows.
+            .window_kind_actions(LAYOUT_PLAY_WINDOW_BLUEPRINT, vec![
+                "addFrame".into(), "addPage".into(), "patchPage".into(), "patchFrame".into(),
+            ]),
     )
     .example("sample", "Sample", LAYOUT_SAMPLE_JSON)
     .program("layout", "Layout", "layout")
@@ -2027,6 +2035,27 @@ mod tests {
     fn renders_preview_canvas_scene() {
         let mut app = new_app();
         assert!(render_json(&mut app, LAYOUT_PLAY_BODY_PREVIEW).contains("canvas-2d"));
+    }
+
+    #[test]
+    fn window_kind_actions_scope_authoring_to_blueprint_only() {
+        let definition = create_layout_app().definition;
+        let resolve = |window_id: &str| -> Vec<String> {
+            let window = definition.window_kinds.iter().find(|window| window.id == window_id).unwrap();
+            semio_framework_plugin::resolve_window_actions(&definition, window)
+                .into_iter()
+                .map(|action| action.id.clone())
+                .collect()
+        };
+        let blueprint = resolve(LAYOUT_PLAY_WINDOW_BLUEPRINT);
+        let preview = resolve(LAYOUT_PLAY_WINDOW_PREVIEW);
+        for authoring in ["addFrame", "addPage", "patchPage", "patchFrame"] {
+            assert!(blueprint.contains(&authoring.to_string()), "Blueprint must expose {authoring}");
+            assert!(!preview.contains(&authoring.to_string()), "Preview must NOT expose {authoring}");
+        }
+        for shared in ["exportPng", "exportPdf", "setCamera"] {
+            assert!(blueprint.contains(&shared.to_string()) && preview.contains(&shared.to_string()), "{shared} stays on both windows");
+        }
     }
 
     #[test]

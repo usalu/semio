@@ -2823,6 +2823,28 @@ fn create_studio_app() -> App {
                 ActionArgOption::new("text", "Text"),
             ]).default_value("numeric"),
         ])
+        // 📇 Per-window action scoping — the Media Graph (NodeGraph) window owns all graph/instance/
+        // parameter editing plus the per-instance media import/export; the Media VFS
+        // (VirtualFileSystem) window only navigates the media file tree; the read-only Compiled DAG
+        // window only drives its own engagement. Navigation, panel-tab, presence, example and generic
+        // node-graph view actions stay unscoped orphans and appear on every window.
+        .window_kind_actions(S_PLAY_WINDOW_MEDIA_GRAPH, vec![
+            "setParameter".into(), "patchParameter".into(), "addParameter".into(), "removeParameter".into(),
+            "spawnApp".into(), "moveMediaNode".into(), "connectMediaPorts".into(), "disconnectMediaEdge".into(),
+            "removeAppInstance".into(), "deleteSelection".into(), "copyAppInstance".into(),
+            "duplicateAppInstance".into(), "pasteAppInstance".into(), "renameAppInstance".into(),
+            "patchMediaNodes".into(), "patchAppInstances".into(), "bindParameterField".into(),
+            "unbindParameterField".into(), "reorganizeMediaGraph".into(), "mediaGraphEngagementSubmit".into(),
+            "mediaGraphEngagementInput".into(), "nodeGraphEdit".into(), "selectInstance".into(),
+            "setMediaNodeSelection".into(), "setAppInstanceSelection".into(), "exportMedia".into(),
+            "importMedia".into(), "importMediaPayload".into(),
+        ])
+        .window_kind_actions(S_PLAY_WINDOW_MEDIA_VFS, vec![
+            "navigateVirtualFileSystemNode".into(),
+        ])
+        .window_kind_actions(S_PLAY_WINDOW_COMPILED_DAG, vec![
+            "compiledDagEngagementSubmit".into(), "compiledDagEngagementInput".into(),
+        ])
         .keybinding("mod+z", "undo")
         .keybinding("mod+shift+z", "redo")
         .keybinding("mod+s", "commitCheckpoint");
@@ -2965,6 +2987,34 @@ mod tests {
         let mut app = VcsDocumentApp::new(SStudioApp::new());
         let node = app.render(S_PLAY_BODY_MEDIA_GRAPH, None, &ViewState::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
+    }
+
+    #[test]
+    fn studio_window_kind_actions_scope_editing_to_media_graph() {
+        let definition = create_studio_app().definition;
+        let resolve = |window_id: &str| -> Vec<String> {
+            let window = definition.window_kinds.iter().find(|window| window.id == window_id).unwrap();
+            semio_framework_plugin::resolve_window_actions(&definition, window)
+                .into_iter()
+                .map(|action| action.id.clone())
+                .collect()
+        };
+        let graph = resolve(S_PLAY_WINDOW_MEDIA_GRAPH);
+        let vfs = resolve(S_PLAY_WINDOW_MEDIA_VFS);
+        let dag = resolve(S_PLAY_WINDOW_COMPILED_DAG);
+        for graph_op in ["spawnApp", "connectMediaPorts", "removeAppInstance", "exportMedia", "addParameter"] {
+            assert!(graph.contains(&graph_op.to_string()), "Media Graph must expose {graph_op}");
+            assert!(!vfs.contains(&graph_op.to_string()), "Media VFS must NOT expose {graph_op}");
+            assert!(!dag.contains(&graph_op.to_string()), "Compiled DAG must NOT expose {graph_op}");
+        }
+        assert!(vfs.contains(&"navigateVirtualFileSystemNode".to_string()));
+        assert!(!graph.contains(&"navigateVirtualFileSystemNode".to_string()));
+        assert!(dag.contains(&"compiledDagEngagementSubmit".to_string()));
+        assert!(!graph.contains(&"compiledDagEngagementSubmit".to_string()));
+        // 🌐 Global navigation/utility actions stay orphans on every window.
+        for shared in ["setActiveExample", "goHome"] {
+            assert!(graph.contains(&shared.to_string()) && vfs.contains(&shared.to_string()) && dag.contains(&shared.to_string()), "{shared} stays global");
+        }
     }
 
     #[test]

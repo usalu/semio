@@ -917,6 +917,83 @@ export class DockLayoutStore extends Store<DockSkeleton | null> {
 }
 //#endregion DockLayoutStore
 
+//#region DockUiStateStore
+/** 🌱 Persisted per-corner panel chrome — only the fields that differ from the shell's computed defaults are ever stored. */
+export interface DockUiCornerState {
+  visible?: boolean;
+  size?: number;
+  path?: readonly string[];
+}
+
+/** 🌱 The full persisted dock UI state: per-corner visibility/size/active-path, per-branch drill-down memory, and tree section/group expansion. Corner ids mirror `PanelCorner` (kept inline here to stay dependency-free of the `ui` package, same convention as {@link DockSkeleton}). */
+export interface DockUiState {
+  version: 1;
+  corners: Partial<Record<"top-left" | "top-right" | "bottom-left" | "bottom-right", DockUiCornerState>>;
+  pathMemory?: Readonly<Record<string, string>>;
+  treeOpen?: Readonly<Record<string, boolean>>;
+}
+
+function dockUiOsStorageKey(): string {
+  return "semio.os.dockUi";
+}
+
+function dockUiAppStorageKey(appId: string): string {
+  return `semio.os.dockUi.${appId}`;
+}
+
+/** 🧪 Defensive read: corrupt or foreign JSON at `key` resolves to `null` rather than throwing. */
+function readDockUiState(storage: StoragePort, key: string): DockUiState | null {
+  const raw = storage.get(key);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object" || (parsed as DockUiState).version !== 1 || !(parsed as DockUiState).corners || typeof (parsed as DockUiState).corners !== "object") return null;
+    return parsed as DockUiState;
+  } catch {
+    return null;
+  }
+}
+
+/** 🌱 Persists corner-panel visibility/size/path, drill-down memory, and tree expansion across an "os" layer (global default) and an optional per-app layer that wins when present — `save(null)`/`saveOs(null)` remove rather than persist a JSON `"null"`. */
+export class DockUiStateStore extends Store<DockUiState | null> {
+  constructor(
+    private readonly storage: StoragePort,
+    private readonly appId?: string,
+  ) {
+    super();
+  }
+
+  getSnapshot(): DockUiState | null {
+    if (this.appId) {
+      const app = readDockUiState(this.storage, dockUiAppStorageKey(this.appId));
+      if (app) return app;
+    }
+    return readDockUiState(this.storage, dockUiOsStorageKey());
+  }
+
+  save(state: DockUiState | null): void {
+    this.writeOrRemove(this.appId ? dockUiAppStorageKey(this.appId) : dockUiOsStorageKey(), state);
+    this.notify();
+  }
+
+  saveOs(state: DockUiState | null): void {
+    this.writeOrRemove(dockUiOsStorageKey(), state);
+    this.notify();
+  }
+
+  reset(): void {
+    this.storage.remove(dockUiOsStorageKey());
+    if (this.appId) this.storage.remove(dockUiAppStorageKey(this.appId));
+    this.notify();
+  }
+
+  private writeOrRemove(key: string, state: DockUiState | null): void {
+    if (state === null) this.storage.remove(key);
+    else this.storage.set(key, JSON.stringify(state));
+  }
+}
+//#endregion DockUiStateStore
+
 export function createBrowserStoragePort(): StoragePort {
   return {
     get: (key) => {
@@ -1948,6 +2025,71 @@ if (import.meta.vitest) {
       const store = new DockLayoutStore(storage);
       expect(() => store.getSnapshot()).not.toThrow();
       expect(store.getSnapshot()).toBeNull();
+    });
+  });
+
+  describe("DockUiStateStore", () => {
+    const emptyUiState = (): DockUiState => ({ version: 1, corners: {} });
+
+    it("returns null when nothing persisted", () => {
+      const store = new DockUiStateStore(createMemoryStoragePort());
+      expect(store.getSnapshot()).toBeNull();
+    });
+
+    it("app layer wins over os layer when both are set", () => {
+      const storage = createMemoryStoragePort();
+      const store = new DockUiStateStore(storage, "my-app");
+      const osState = emptyUiState();
+      const appState: DockUiState = { ...emptyUiState(), corners: { "top-left": { visible: true, size: 320 } } };
+      store.saveOs(osState);
+      store.save(appState);
+      expect(store.getSnapshot()).toEqual(appState);
+    });
+
+    it("falls back to os layer when app layer absent", () => {
+      const storage = createMemoryStoragePort();
+      const store = new DockUiStateStore(storage, "my-app");
+      const osState: DockUiState = { ...emptyUiState(), pathMemory: { "framework.category.workbench": "framework.panel.document" } };
+      store.saveOs(osState);
+      expect(store.getSnapshot()).toEqual(osState);
+    });
+
+    it("save(null) removes the app-layer key", () => {
+      const storage = createMemoryStoragePort();
+      const store = new DockUiStateStore(storage, "my-app");
+      store.save(emptyUiState());
+      expect(storage.get("semio.os.dockUi.my-app")).not.toBeNull();
+      store.save(null);
+      expect(storage.get("semio.os.dockUi.my-app")).toBeNull();
+      expect(store.getSnapshot()).toBeNull();
+    });
+
+    it("reset() clears both layers", () => {
+      const storage = createMemoryStoragePort();
+      const store = new DockUiStateStore(storage, "my-app");
+      store.saveOs(emptyUiState());
+      store.save(emptyUiState());
+      store.reset();
+      expect(storage.get("semio.os.dockUi")).toBeNull();
+      expect(storage.get("semio.os.dockUi.my-app")).toBeNull();
+      expect(store.getSnapshot()).toBeNull();
+    });
+
+    it("returns null on corrupt JSON rather than throwing", () => {
+      const storage = createMemoryStoragePort();
+      storage.set("semio.os.dockUi", "{not json");
+      const store = new DockUiStateStore(storage);
+      expect(() => store.getSnapshot()).not.toThrow();
+      expect(store.getSnapshot()).toBeNull();
+    });
+
+    it("uses a distinct key from DockLayoutStore for an app literally named \"ui\"", () => {
+      const storage = createMemoryStoragePort();
+      new DockLayoutStore(storage, "ui").save({ version: 1, corners: { "top-left": [], "top-right": [], "bottom-left": [], "bottom-right": [] } });
+      new DockUiStateStore(storage).saveOs(emptyUiState());
+      expect(storage.get("semio.os.dock.ui")).not.toBeNull();
+      expect(storage.get("semio.os.dockUi")).not.toBeNull();
+      expect(storage.get("semio.os.dock.ui")).not.toEqual(storage.get("semio.os.dockUi"));
     });
   });
 }

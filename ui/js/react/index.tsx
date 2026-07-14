@@ -15344,6 +15344,9 @@ export interface CornerPanelProps {
   /** @emoji 🌱 Per-branch drill-down memory (see {@link progressPanelTabSelection}) — which child was last active under each branch, so returning to it restores the drill-down. */
   pathMemory?: Readonly<Record<string, string>>;
   onPathMemoryChange?: (memory: Readonly<Record<string, string>>) => void;
+  /** @emoji 🌱 Persisted tree section/group expansion across every leaf tab's units (see {@link PanelTreeUnitsPane}). */
+  treeOpenStates?: Readonly<Record<string, boolean>>;
+  onTreeOpenStateChange?: (id: string, open: boolean) => void;
   minSize?: number;
   maxSize?: number;
   zIndex?: 10 | 20 | 30 | 40;
@@ -15351,7 +15354,20 @@ export interface CornerPanelProps {
 }
 
 /** @emoji 🌲 Leaf-tab tree body shared by {@link CornerPanel} and {@link MobilePanel} — one section per unit (sorted by order); skipped when the active tab has no units. Under a {@link PanelDockProvider}, each unit's header becomes a native-DnD handle draggable to another leaf tab's unit list (see {@link PANEL_TREE_UNIT_MIME}). */
-const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({ corner, tabId, units }: { readonly corner?: PanelCorner; readonly tabId: string; readonly units: readonly PanelTreeUnit[] }) {
+const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
+  corner,
+  tabId,
+  units,
+  treeOpenStates,
+  onTreeOpenStateChange,
+}: {
+  readonly corner?: PanelCorner;
+  readonly tabId: string;
+  readonly units: readonly PanelTreeUnit[];
+  /** @emoji 🌱 Persisted tree expansion, namespaced `${unitId}:${innerId}` across every unit this pane hosts. */
+  readonly treeOpenStates?: Readonly<Record<string, boolean>>;
+  readonly onTreeOpenStateChange?: (id: string, open: boolean) => void;
+}) {
   const dock = usePanelDockContext();
   const flow = useFlow();
   const sortedUnits = [...units].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -15361,8 +15377,13 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({ corn
       {sortedUnits.map((unit, index) => {
         const config = resolveTreePanelSource(unit.tree);
         const UnitIcon = unit.icon;
+        const unitPrefix = `${unit.id}:`;
+        const unitOpenStates = treeOpenStates
+          ? Object.fromEntries(Object.entries(treeOpenStates).filter(([key]) => key.startsWith(unitPrefix)).map(([key, value]) => [key.slice(unitPrefix.length), value]))
+          : undefined;
+        const onUnitOpenStateChange = onTreeOpenStateChange ? (id: string, open: boolean) => onTreeOpenStateChange(`${unitPrefix}${id}`, open) : undefined;
         return (
-          <TreeStateProvider key={unit.id}>
+          <React.Fragment key={unit.id}>
             {unit.label || draggable ? (
               <div
                 data-slot="panel-tree-unit-header"
@@ -15415,8 +15436,10 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({ corn
               selectedIds={config.selectedIds}
               selectionMode={config.selectionMode}
               direction={flow.block}
+              openStates={unitOpenStates}
+              onOpenStateChange={onUnitOpenStateChange}
             />
-          </TreeStateProvider>
+          </React.Fragment>
         );
       })}
     </>
@@ -15478,7 +15501,24 @@ function CornerPanelResizeHandle({
   return <div className={resizeHandleClass} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} {...resizePointerProps} />;
 }
 
-const CornerPanel: React.FC<CornerPanelProps> = ({ corner, visible = true, onVisibleChange, size = 300, onSizeChange, tabs, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, minSize = 200, maxSize = 600, zIndex = 20, className = "" }) => {
+const CornerPanel: React.FC<CornerPanelProps> = ({
+  corner,
+  visible = true,
+  onVisibleChange,
+  size = 300,
+  onSizeChange,
+  tabs,
+  activeTabPath,
+  onActiveTabPathChange,
+  pathMemory,
+  onPathMemoryChange,
+  treeOpenStates,
+  onTreeOpenStateChange,
+  minSize = 200,
+  maxSize = 600,
+  zIndex = 20,
+  className = "",
+}) => {
   const [isResizeHovered, setIsResizeHovered] = reactHostPort.useState(false);
   const [isResizing, setIsResizing] = reactHostPort.useState(false);
   const [internalActivePath, setInternalActivePath] = reactHostPort.useState<readonly string[]>(() => reconcileActivePath(tabs, [], panelTabChildren));
@@ -15557,7 +15597,11 @@ const CornerPanel: React.FC<CornerPanelProps> = ({ corner, visible = true, onVis
               <Scrollable className="relative z-10 flex-1 min-h-0">
                 {/* 🌲 Panel body content never mirrors — trees, labels, and their controls always read left-to-right regardless of which corner hosts them; only the chrome (tab bar, resize handle, panel position) follows the corner's flow. */}
                 <div data-slot="corner-panel-content" dir="ltr" className="flex min-h-0 flex-1 flex-col">
-                  <FlowProvider inline="ltr">{activeTabTrees && activeNode ? <PanelTreeUnitsPane corner={corner} tabId={activeNode.id} units={activeTabTrees} /> : null}</FlowProvider>
+                  <FlowProvider inline="ltr">
+                    {activeTabTrees && activeNode ? (
+                      <PanelTreeUnitsPane corner={corner} tabId={activeNode.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} />
+                    ) : null}
+                  </FlowProvider>
                 </div>
               </Scrollable>
               {onSizeChange ? (
@@ -15598,6 +15642,9 @@ export interface MobilePanelProps {
   /** @emoji 🌱 Per-branch drill-down memory (see {@link progressPanelTabSelection}). */
   pathMemory?: Readonly<Record<string, string>>;
   onPathMemoryChange?: (memory: Readonly<Record<string, string>>) => void;
+  /** @emoji 🌱 Persisted tree section/group expansion across every leaf tab's units (see {@link PanelTreeUnitsPane}). */
+  treeOpenStates?: Readonly<Record<string, boolean>>;
+  onTreeOpenStateChange?: (id: string, open: boolean) => void;
   className?: string;
   height?: number;
 }
@@ -15606,7 +15653,7 @@ export interface MobilePanelProps {
  * MobilePanel is a full-width tabbed panel for mobile layouts.
  * It merges all tabs into a single non-resizable panel.
  **/
-const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, className = "", height = 260 }) => {
+const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, treeOpenStates, onTreeOpenStateChange, className = "", height = 260 }) => {
   const [internalActivePath, setInternalActivePath] = reactHostPort.useState<readonly string[]>(() => reconcileActivePath(tabs, [], panelTabChildren));
   const [internalMemory, setInternalMemory] = reactHostPort.useState<Readonly<Record<string, string>>>({});
   const memory = pathMemory ?? internalMemory;
@@ -15640,7 +15687,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
         {showTabBar ? <PanelTabBar activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="mobile" /> : null}
         <Scrollable className="relative z-10 flex-1 min-h-0">
           <div data-slot="mobile-panel-content" className="flex min-h-0 flex-1 flex-col">
-            {activeTabTrees && activeNode ? <PanelTreeUnitsPane tabId={activeNode.id} units={activeTabTrees} /> : null}
+            {activeTabTrees && activeNode ? <PanelTreeUnitsPane tabId={activeNode.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} /> : null}
           </div>
         </Scrollable>
       </PanelGhostRoot>
@@ -23255,7 +23302,7 @@ if (import.meta.vitest) {
       expect(tabBar?.className).toContain("z-40");
     });
 
-    it("PanelTabBar stacks a second row for a nested branch's children, and clicking a sibling category swaps that row", () => {
+    it("PanelTabBar reveals a second row for a nested branch's children (progressive — no auto-descend), and clicking a sibling category reveals only its own immediate children, unhighlighted", () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [
         {
@@ -23286,10 +23333,11 @@ if (import.meta.vitest) {
       expect(screen.queryByText("Windows")).toBeNull();
 
       fireEvent.click(screen.getByText("Display"));
-      expect(path).toEqual(["framework.category.display", "framework.display.windows"]);
+      expect(path).toEqual(["framework.category.display"]);
       rerender(<PanelTabBar variant="corner" tabs={tabs} activePath={path} onActivePathChange={(next) => (path = next)} />);
       expect(screen.getByText("Windows")).toBeTruthy();
       expect(screen.queryByText("Document")).toBeNull();
+      expect(screen.getByText("Windows").closest('[data-active="true"]')).toBeNull();
     });
 
     it("CornerPanel marks the active tab with hover fill and emphasized icon above the emphasized frame", () => {
@@ -23345,9 +23393,9 @@ if (import.meta.vitest) {
           },
         }),
       ];
-      const { rerender } = render(<CornerPanel corner="top-left" visible tabs={tabs} />);
+      const { rerender } = render(<CornerPanel corner="top-left" visible tabs={tabs} activeTabPath={["tab-a"]} />);
       expect(screen.getByText("Leaf row")).toBeTruthy();
-      rerender(<CornerPanel corner="top-left" visible={false} tabs={tabs} />);
+      rerender(<CornerPanel corner="top-left" visible={false} tabs={tabs} activeTabPath={["tab-a"]} />);
       expect(screen.queryByText("Leaf row")).toBeNull();
       expect(document.querySelector('[data-panel-visible="false"]')).toBeTruthy();
       expect(screen.getByText("Tab A")).toBeTruthy();
@@ -23413,6 +23461,137 @@ if (import.meta.vitest) {
       expect(upMarkup).not.toContain('data-icon="chevron-right"');
     });
 
+    it("progressPanelTabSelection reveals one level per press, records/restores drill-down memory, collapses, and prunes stale memory", () => {
+      const StubIcon = (): null => null;
+      const leaf = (id: string, name: string) => singleTreeLeaf({ id, icon: StubIcon, name, tree: { sections: [] } });
+      const tabs: PanelTabNode[] = [
+        {
+          kind: "branch",
+          id: "root-a",
+          icon: StubIcon,
+          name: "Root A",
+          children: [
+            { kind: "branch", id: "child-a", icon: StubIcon, name: "Child A", children: [leaf("grandchild-a", "Grandchild A")] },
+            leaf("child-b", "Child B"),
+          ],
+        },
+        { kind: "branch", id: "root-b", icon: StubIcon, name: "Root B", children: [leaf("child-c", "Child C")] },
+      ];
+
+      // Fresh branch press reveals only its own row — no auto-descend.
+      const revealed = progressPanelTabSelection(tabs, [], ["root-a"], {});
+      expect(revealed).toEqual({ path: ["root-a"], memory: {}, fold: false });
+
+      // Selecting a leaf records a memory hop for every step of the final path.
+      const leafSelected = progressPanelTabSelection(tabs, ["root-a"], ["root-a", "child-b"], {});
+      expect(leafSelected.path).toEqual(["root-a", "child-b"]);
+      expect(leafSelected.memory).toEqual({ "root-a": "child-b" });
+
+      // Re-visiting a branch with remembered drill-down restores it, chained through nested branches.
+      const withDeepMemory = { "root-a": "child-a", "child-a": "grandchild-a" };
+      const restored = progressPanelTabSelection(tabs, [], ["root-a"], withDeepMemory);
+      expect(restored.path).toEqual(["root-a", "child-a", "grandchild-a"]);
+      expect(restored.memory).toEqual(withDeepMemory);
+
+      // Collapsing a branch (re-pressing it while active) truncates before it and clears its subtree's memory, but keeps the parent's own hop.
+      const collapsed = progressPanelTabSelection(tabs, ["root-a", "child-a", "grandchild-a"], ["root-a", "child-a"], withDeepMemory);
+      expect(collapsed).toEqual({ path: ["root-a"], memory: { "root-a": "child-a" }, fold: false });
+
+      // Root re-press when only its own children are shown folds the hosting panel.
+      const folded = progressPanelTabSelection(tabs, ["root-a"], ["root-a"], { "root-a": "child-b" });
+      expect(folded).toEqual({ path: ["root-a"], memory: { "root-a": "child-b" }, fold: true });
+
+      // Root re-press when deeper resets to immediate children and clears memory under that root.
+      const rootReset = progressPanelTabSelection(tabs, ["root-a", "child-a", "grandchild-a"], ["root-a"], withDeepMemory);
+      expect(rootReset).toEqual({ path: ["root-a"], memory: {}, fold: false });
+
+      // A stale memory entry (no longer a valid child) is pruned rather than followed.
+      const staleMemory = { "root-a": "no-longer-exists" };
+      const pruned = progressPanelTabSelection(tabs, [], ["root-a"], staleMemory);
+      expect(pruned.path).toEqual(["root-a"]);
+      expect(pruned.memory).toEqual({});
+
+      // Selecting a sibling at a deeper row keeps ancestor segments intact.
+      const siblingPick = progressPanelTabSelection(tabs, ["root-a", "child-a"], ["root-a", "child-b"], {});
+      expect(siblingPick.path).toEqual(["root-a", "child-b"]);
+    });
+
+    it("CornerPanel: unfolding restores the stored path, and re-pressing a nested active leaf deselects instead of folding", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [
+        {
+          kind: "branch",
+          id: "root-a",
+          icon: StubIcon,
+          name: "Root A",
+          children: [singleTreeLeaf({ id: "leaf-a", icon: StubIcon, name: "Leaf A", tree: { sections: [{ id: "sec", label: "Section", defaultOpen: true, items: [{ id: "row", label: "Row" }] }] } })],
+        },
+      ];
+      const onVisibleChange = vi.fn();
+      let path: readonly string[] = ["root-a", "leaf-a"];
+      const onActiveTabPathChange = vi.fn((next: readonly string[]) => {
+        path = next;
+      });
+      const { container, rerender } = render(<CornerPanel corner="top-left" visible={false} onVisibleChange={onVisibleChange} tabs={tabs} activeTabPath={path} onActiveTabPathChange={onActiveTabPathChange} />);
+      fireEvent.click(container.querySelector('button[id="root-a"]') as HTMLElement);
+      expect(onVisibleChange).toHaveBeenCalledWith(true);
+      expect(onActiveTabPathChange).not.toHaveBeenCalled();
+
+      onVisibleChange.mockClear();
+      rerender(<CornerPanel corner="top-left" visible onVisibleChange={onVisibleChange} tabs={tabs} activeTabPath={path} onActiveTabPathChange={onActiveTabPathChange} />);
+      expect(screen.getByText("Row")).toBeTruthy();
+      fireEvent.click(container.querySelector('button[id="leaf-a"]') as HTMLElement);
+      expect(path).toEqual(["root-a"]);
+      expect(onVisibleChange).not.toHaveBeenCalled();
+    });
+
+    it("CornerPanel forwards drill-down memory through pathMemory/onPathMemoryChange when controlled", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [
+        { kind: "branch", id: "root-a", icon: StubIcon, name: "Root A", children: [singleTreeLeaf({ id: "leaf-a", icon: StubIcon, name: "Leaf A", tree: { sections: [] } })] },
+      ];
+      let memory: Readonly<Record<string, string>> = {};
+      const onPathMemoryChange = vi.fn((next: Readonly<Record<string, string>>) => {
+        memory = next;
+      });
+      const { container } = render(<CornerPanel corner="top-left" visible tabs={tabs} pathMemory={memory} onPathMemoryChange={onPathMemoryChange} />);
+      fireEvent.click(container.querySelector('button[id="root-a"]') as HTMLElement);
+      fireEvent.click(container.querySelector('button[id="leaf-a"]') as HTMLElement);
+      expect(memory).toEqual({ "root-a": "leaf-a" });
+    });
+
+    it("Tree's controlled openStates/onOpenStateChange survives what would otherwise be a fresh remount", () => {
+      const sections: TreeDataSection[] = [{ id: "sec", label: "Section", defaultOpen: false, items: [{ id: "item", label: "Item" }] }];
+      let openStates: Readonly<Record<string, boolean>> = {};
+      const onOpenStateChange = vi.fn((id: string, open: boolean) => {
+        openStates = { ...openStates, [id]: open };
+      });
+      const { container, unmount } = render(<Tree sections={sections} openStates={openStates} onOpenStateChange={onOpenStateChange} />);
+      fireEvent.click(container.querySelector('[data-slot="tree-section-row"]') as HTMLElement);
+      expect(openStates["tree-section-sec"]).toBe(true);
+      unmount();
+      const { container: remounted } = render(<Tree sections={sections} openStates={openStates} onOpenStateChange={onOpenStateChange} />);
+      expect(remounted.querySelector('[data-slot="tree-section-row"]')?.getAttribute("data-state")).toBe("open");
+    });
+
+    it("PanelTreeUnitsPane namespaces controlled tree open-state per unit so keys never collide across units", () => {
+      const StubIcon = (): null => null;
+      const units: PanelTreeUnit[] = [
+        { id: "unit-a", tree: { sections: [{ id: "sec", label: "Section A", defaultOpen: false, items: [{ id: "item", label: "Item A" }] }] } },
+        { id: "unit-b", tree: { sections: [{ id: "sec", label: "Section B", defaultOpen: false, items: [{ id: "item", label: "Item B" }] }] } },
+      ];
+      const tabs: PanelTabNode[] = [{ kind: "leaf", id: "tab-a", icon: StubIcon, name: "Tab A", trees: units }];
+      let treeOpenStates: Readonly<Record<string, boolean>> = {};
+      const onTreeOpenStateChange = vi.fn((id: string, open: boolean) => {
+        treeOpenStates = { ...treeOpenStates, [id]: open };
+      });
+      const { container } = render(<CornerPanel corner="top-left" visible tabs={tabs} activeTabPath={["tab-a"]} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} />);
+      const rows = container.querySelectorAll('[data-slot="tree-section-row"]');
+      fireEvent.click(rows[0]);
+      expect(treeOpenStates).toEqual({ "unit-a:tree-section-sec": true });
+      expect(treeOpenStates["unit-b:tree-section-sec"]).toBeUndefined();
+    });
+
     it("CornerPanel wires bottom corners' trees to direction=up (content above header) while top corners stay direction=down", () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [
@@ -23428,11 +23607,11 @@ if (import.meta.vitest) {
           },
         }),
       ];
-      const { container: topContainer } = render(<CornerPanel corner="top-left" visible tabs={tabs} />);
+      const { container: topContainer } = render(<CornerPanel corner="top-left" visible tabs={tabs} activeTabPath={["tab-a"]} />);
       const topMarkup = topContainer.querySelector('[data-slot="corner-panel-content"]')!.innerHTML;
       expect(topMarkup.indexOf("Section A")).toBeLessThan(topMarkup.indexOf("Section B"));
 
-      const { container: bottomContainer } = render(<CornerPanel corner="bottom-left" visible tabs={tabs} />);
+      const { container: bottomContainer } = render(<CornerPanel corner="bottom-left" visible tabs={tabs} activeTabPath={["tab-a"]} />);
       const bottomMarkup = bottomContainer.querySelector('[data-slot="corner-panel-content"]')!.innerHTML;
       expect(bottomMarkup.indexOf("Section B")).toBeLessThan(bottomMarkup.indexOf("Section A"));
     });
@@ -27261,17 +27440,18 @@ if (treeVitest) {
       expect(inlineMarkup).not.toContain('data-slot="ribbon-row"');
     });
 
-    it("reconcileActivePath keeps matching segments, falls back to the first sibling, and auto-descends to a leaf", () => {
+    it("reconcileActivePath validates each segment and truncates at the first invalid one — no first-sibling substitution, no auto-descend", () => {
       type Node = { readonly id: string; readonly children?: readonly Node[] };
       const tree: Node[] = [
         { id: "workbench", children: [{ id: "document" }, { id: "catalogue" }] },
         { id: "display", children: [{ id: "windows" }] },
       ];
       const childrenOf = (node: Node) => node.children;
-      expect(reconcileActivePath(tree, [], childrenOf)).toEqual(["workbench", "document"]);
-      expect(reconcileActivePath(tree, ["display"], childrenOf)).toEqual(["display", "windows"]);
+      expect(reconcileActivePath(tree, [], childrenOf)).toEqual([]);
+      expect(reconcileActivePath(tree, ["display"], childrenOf)).toEqual(["display"]);
       expect(reconcileActivePath(tree, ["workbench", "catalogue"], childrenOf)).toEqual(["workbench", "catalogue"]);
-      expect(reconcileActivePath(tree, ["unknown"], childrenOf)).toEqual(["workbench", "document"]);
+      expect(reconcileActivePath(tree, ["unknown"], childrenOf)).toEqual([]);
+      expect(reconcileActivePath(tree, ["workbench", "nope"], childrenOf)).toEqual(["workbench"]);
     });
 
     it("dockSkeletonOf/dockSkeletonsEqual round-trip a PanelDock and detect structural equality", () => {

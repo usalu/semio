@@ -51,6 +51,7 @@ import {
   ToolbarGroup,
   ToolbarItem,
   ToolbarZone,
+  findPanelTabNode,
   findPanelTabPath,
   panelTabChildren,
   reconcileActivePath,
@@ -151,10 +152,13 @@ import {
   FRAMEWORK_PANEL_TAB_PARAMETERS_ID,
   FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
   DockLayoutStore,
+  DockUiStateStore,
   NamedLayoutStore,
   createBrowserStoragePort,
   createNamedLayout,
   type DockSkeleton,
+  type DockUiCornerState,
+  type DockUiState,
   loadPluginModule as loadCorePluginModule,
   loadPluginWasm as loadCorePluginWasm,
   buildContributionsJson,
@@ -402,6 +406,10 @@ type ShellLayoutState = {
   readonly cornerPanels: Record<PanelCorner, CornerPanelState>;
   /** 🗄️ User-rearranged dock diff against `defaultDock`, persisted via `DockLayoutStore`; `null` means "use the computed default arrangement". */
   readonly dockOverride: DockSkeleton | null;
+  /** 🌱 Per-branch drill-down memory across every corner + mobile (see `progressPanelTabSelection`), persisted via `DockUiStateStore`. */
+  readonly panelPathMemory: Readonly<Record<string, string>>;
+  /** 🌱 Persisted tree section/group expansion, namespaced per {@link PanelTreeUnit}, persisted via `DockUiStateStore`. */
+  readonly treeOpenStates: Readonly<Record<string, boolean>>;
   readonly activeWindowId: string | null;
   readonly shellLayout: WindowLayoutNode | null;
   readonly activeExampleId: string;
@@ -473,6 +481,9 @@ export type ShellAction =
   | { readonly type: "SET_CORNER_PANEL_SIZE"; readonly corner: PanelCorner; readonly value: Updatable<number> }
   | { readonly type: "SET_CORNER_PANEL_PATH"; readonly corner: PanelCorner; readonly value: Updatable<readonly string[]> }
   | { readonly type: "SET_DOCK_OVERRIDE"; readonly value: DockSkeleton | null }
+  | { readonly type: "SET_PANEL_PATH_MEMORY"; readonly value: Updatable<Readonly<Record<string, string>>> }
+  | { readonly type: "SET_TREE_OPEN_STATE"; readonly id: string; readonly open: boolean }
+  | { readonly type: "HYDRATE_DOCK_UI"; readonly value: DockUiState | null }
   | { readonly type: "RESET_DOCK" }
   | { readonly type: "SET_ACTIVE_WINDOW_ID"; readonly value: Updatable<string | null> }
   | { readonly type: "SET_SHELL_LAYOUT"; readonly value: Updatable<WindowLayoutNode | null> }
@@ -568,10 +579,28 @@ function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): Shell
       return { ...state, cornerPanels: { ...state.cornerPanels, [action.corner]: { ...state.cornerPanels[action.corner], path: resolveUpdatable(action.value, state.cornerPanels[action.corner].path) } } };
     case "SET_DOCK_OVERRIDE":
       return { ...state, dockOverride: action.value };
+    case "SET_PANEL_PATH_MEMORY":
+      return { ...state, panelPathMemory: resolveUpdatable(action.value, state.panelPathMemory) };
+    case "SET_TREE_OPEN_STATE":
+      return { ...state, treeOpenStates: { ...state.treeOpenStates, [action.id]: action.open } };
+    case "HYDRATE_DOCK_UI": {
+      if (!action.value) return state;
+      const cornerPanels = { ...state.cornerPanels };
+      for (const corner of PANEL_CORNERS) {
+        const saved = action.value.corners[corner];
+        if (!saved) continue;
+        cornerPanels[corner] = {
+          visible: saved.visible ?? cornerPanels[corner].visible,
+          size: saved.size ?? cornerPanels[corner].size,
+          path: saved.path ?? cornerPanels[corner].path,
+        };
+      }
+      return { ...state, cornerPanels, panelPathMemory: action.value.pathMemory ?? state.panelPathMemory, treeOpenStates: action.value.treeOpen ?? state.treeOpenStates };
+    }
     case "RESET_DOCK": {
       const cornerPanels = {} as Record<PanelCorner, CornerPanelState>;
-      for (const corner of PANEL_CORNERS) cornerPanels[corner] = { ...state.cornerPanels[corner], path: [] };
-      return { ...state, dockOverride: null, cornerPanels };
+      for (const corner of PANEL_CORNERS) cornerPanels[corner] = { visible: false, size: DEFAULT_CORNER_PANEL_SIZES[corner], path: [] };
+      return { ...state, dockOverride: null, cornerPanels, panelPathMemory: {}, treeOpenStates: {} };
     }
     case "SET_ACTIVE_WINDOW_ID": return { ...state, activeWindowId: resolveUpdatable(action.value, state.activeWindowId) };
     case "SET_SHELL_LAYOUT": return { ...state, shellLayout: resolveUpdatable(action.value, state.shellLayout) };
@@ -649,6 +678,8 @@ export function initialShellState(_props: { readonly pluginFilter?: string; read
         "bottom-right": { visible: false, size: DEFAULT_CORNER_PANEL_SIZES["bottom-right"], path: [] },
       },
       dockOverride: null,
+      panelPathMemory: {},
+      treeOpenStates: {},
       activeWindowId: null,
       shellLayout: null,
       activeExampleId: "",
@@ -1695,7 +1726,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const { windowUiByKind, windowEngagementsByKind, windowMeasuresByKind, panelUiByKey, appLabelsOverlay } = shellState.windowUi;
   const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
   const { foldedByWindowId: actionPanelFoldedByWindowId, expandedByWindowId: actionPanelExpandedByWindowId, stagedArgsByKey: actionPanelStagedArgsByKey, activeToolByWindowId } = shellState.actionPanel;
-  const { cornerPanels, dockOverride, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, extraWindowInstances } = shellState.layout;
+  const { cornerPanels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, extraWindowInstances } = shellState.layout;
   const { searchOpen, findOpen } = shellState.overlays;
   const { uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft } = shellState.uiPrefs;
   const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
@@ -1764,6 +1795,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
 
   const namedLayoutStore = useMemo(() => new NamedLayoutStore(session?.app.id ?? "framework-os", createBrowserStoragePort()), [session?.app.id]);
   const dockLayoutStore = useMemo(() => new DockLayoutStore(createBrowserStoragePort(), session?.app.id), [session?.app.id]);
+  const dockUiStateStore = useMemo(() => new DockUiStateStore(createBrowserStoragePort(), session?.app.id), [session?.app.id]);
 
   const registry = useMemo(() => {
     const expanded = expandPluginRegistry(plugins, pluginFilter ? resolvePluginRegistryId(pluginFilter) : undefined, studioMode);
@@ -2828,6 +2860,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       onResetDock: () => {
         dispatch({ type: "RESET_DOCK" });
         dockLayoutStore.reset();
+        dockUiStateStore.reset();
       },
       locale: uiLocale,
       setLocale: (value: UiLocale) => dispatch({ type: "SET_UI_LOCALE", value }),
@@ -3098,6 +3131,37 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     dockLayoutStore.save(dockSkeletonsEqual(nextSkeleton, defaultSkeleton) ? null : nextSkeleton);
   }, [dock, defaultDock, dockLayoutStore]);
 
+  useEffect(() => {
+    dispatch({ type: "HYDRATE_DOCK_UI", value: dockUiStateStore.getSnapshot() });
+  }, [dockUiStateStore]);
+
+  /** 🗄️ Same first-commit-skip as the dock skeleton effect above, but also re-arms when the store identity itself changes (app switch) — otherwise the new app's pre-hydration state would be written into its own key on the first post-switch commit. */
+  const dockUiPersistedOnceRef = useRef(false);
+  const dockUiPersistedStoreRef = useRef(dockUiStateStore);
+  useEffect(() => {
+    if (dockUiPersistedStoreRef.current !== dockUiStateStore) {
+      dockUiPersistedStoreRef.current = dockUiStateStore;
+      dockUiPersistedOnceRef.current = false;
+    }
+    if (!dockUiPersistedOnceRef.current) {
+      dockUiPersistedOnceRef.current = true;
+      return;
+    }
+    const corners: Partial<Record<PanelCorner, DockUiCornerState>> = {};
+    for (const corner of PANEL_CORNERS) {
+      const cornerState = cornerPanels[corner];
+      const entry: DockUiCornerState = {};
+      if (cornerState.visible) entry.visible = true;
+      if (cornerState.size !== DEFAULT_CORNER_PANEL_SIZES[corner]) entry.size = cornerState.size;
+      if (cornerState.path.length > 0) entry.path = cornerState.path;
+      if (Object.keys(entry).length > 0) corners[corner] = entry;
+    }
+    const hasPathMemory = Object.keys(panelPathMemory).length > 0;
+    const hasTreeOpen = Object.keys(treeOpenStates).length > 0;
+    const isDefault = Object.keys(corners).length === 0 && !hasPathMemory && !hasTreeOpen;
+    dockUiStateStore.save(isDefault ? null : { version: 1, corners, pathMemory: hasPathMemory ? panelPathMemory : undefined, treeOpen: hasTreeOpen ? treeOpenStates : undefined });
+  }, [cornerPanels, panelPathMemory, treeOpenStates, dockUiStateStore]);
+
   const handleTabDockDrop = useCallback(
     (move: PanelTabDockMove) => {
       const nextDock = moveTabInDock(dock, move);
@@ -3133,23 +3197,46 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const detailsOverrideTabId = panel?.activePanelTab;
   const detailsOverrideCorner = detailsOverrideTabId ? findPanelTabInDock(dock, detailsOverrideTabId)?.corner : undefined;
 
-  /** 🧭 Generalizes the old `leftPanelActivePath`/`rightPanelActivePath` studio/plugin "snap to the active panel tab" overrides across all four corners, resolved against whichever corner the target tab actually lives in right now. */
+  /** 🧭 Progressive reveal means a stored path can legitimately end at a branch (or be empty) — this is now a plain per-corner truncation-validate, no override reassertion (see the write-through effects below). */
   const cornerActivePaths = useMemo((): Record<PanelCorner, readonly string[]> => {
     const result = {} as Record<PanelCorner, readonly string[]>;
-    for (const corner of PANEL_CORNERS) {
-      const tabs = dock.corners[corner];
-      const storedPath = cornerPanels[corner].path;
-      let resolved: readonly string[] | undefined;
-      if (studioOverrideCorner === corner && storedPath[0] !== FRAMEWORK_CATEGORY_DISPLAY_ID) {
-        resolved = findPanelTabPath(tabs, studioOverrideTabId!);
-      }
-      if (!resolved && detailsOverrideCorner === corner && storedPath[0] !== FRAMEWORK_CATEGORY_SETTINGS_ID) {
-        resolved = findPanelTabPath(tabs, detailsOverrideTabId!);
-      }
-      result[corner] = resolved ?? reconcileActivePath(tabs, storedPath, panelTabChildren);
-    }
+    for (const corner of PANEL_CORNERS) result[corner] = reconcileActivePath(dock.corners[corner], cornerPanels[corner].path, panelTabChildren);
     return result;
-  }, [cornerPanels, detailsOverrideCorner, detailsOverrideTabId, dock, studioOverrideCorner, studioOverrideTabId]);
+  }, [cornerPanels, dock]);
+
+  /**
+   * 🧭 Generalizes the old `leftPanelActivePath`/`rightPanelActivePath` studio/plugin "snap to the active panel
+   * tab" overrides across all four corners. Write-through rather than read-time: each override dispatches
+   * `SET_CORNER_PANEL_PATH` only when its target tab id actually changes, so a user's own collapse/navigation
+   * afterward sticks instead of being reasserted on every render (progressive reveal made read-time reassertion
+   * fight the user's own collapses). Studio wins over details when both would touch the same corner.
+   **/
+  const lastStudioOverrideTabIdRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!studioOverrideTabId || !studioOverrideCorner) {
+      lastStudioOverrideTabIdRef.current = undefined;
+      return;
+    }
+    if (lastStudioOverrideTabIdRef.current === studioOverrideTabId) return;
+    lastStudioOverrideTabIdRef.current = studioOverrideTabId;
+    if (cornerPanels[studioOverrideCorner].path[0] === FRAMEWORK_CATEGORY_DISPLAY_ID) return;
+    const resolved = findPanelTabPath(dock.corners[studioOverrideCorner], studioOverrideTabId);
+    if (resolved) dispatch({ type: "SET_CORNER_PANEL_PATH", corner: studioOverrideCorner, value: resolved });
+  }, [studioOverrideTabId, studioOverrideCorner, dock, cornerPanels]);
+
+  const lastDetailsOverrideTabIdRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!detailsOverrideTabId || !detailsOverrideCorner) {
+      lastDetailsOverrideTabIdRef.current = undefined;
+      return;
+    }
+    if (lastDetailsOverrideTabIdRef.current === detailsOverrideTabId) return;
+    lastDetailsOverrideTabIdRef.current = detailsOverrideTabId;
+    if (detailsOverrideCorner === studioOverrideCorner) return;
+    if (cornerPanels[detailsOverrideCorner].path[0] === FRAMEWORK_CATEGORY_SETTINGS_ID) return;
+    const resolved = findPanelTabPath(dock.corners[detailsOverrideCorner], detailsOverrideTabId);
+    if (resolved) dispatch({ type: "SET_CORNER_PANEL_PATH", corner: detailsOverrideCorner, value: resolved });
+  }, [detailsOverrideTabId, detailsOverrideCorner, studioOverrideCorner, dock, cornerPanels]);
   //#endregion 🧭DockAssembly
 
   const mobilePanelTabs = useMemo(
@@ -3166,12 +3253,17 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       onActiveTabPathChange: (path: readonly string[]) => {
         dispatch({ type: "SET_MOBILE_PANEL_PATH", value: path });
         const tabId = path[path.length - 1];
-        if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID) {
+        // 🌱 Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
+        if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID && findPanelTabNode(mobilePanelTabs, path)?.kind === "leaf") {
           onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
         }
       },
+      pathMemory: panelPathMemory,
+      onPathMemoryChange: (value: Readonly<Record<string, string>>) => dispatch({ type: "SET_PANEL_PATH_MEMORY", value }),
+      treeOpenStates,
+      onTreeOpenStateChange: (id: string, open: boolean) => dispatch({ type: "SET_TREE_OPEN_STATE", id, open }),
     };
-  }, [cornerPanels, mobilePanelPath, mobilePanelTabs, onAction, session, studioMode]);
+  }, [cornerPanels, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, studioMode, treeOpenStates]);
 
   const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
   const exampleOptions = useMemo(() => {
@@ -3528,12 +3620,17 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       onActiveTabPathChange: (path: readonly string[]) => {
         dispatch({ type: "SET_CORNER_PANEL_PATH", corner, value: path });
         const tabId = path[path.length - 1];
-        if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID) {
+        // 🌱 Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
+        if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID && findPanelTabNode(dock.corners[corner], path)?.kind === "leaf") {
           onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
         }
       },
+      pathMemory: panelPathMemory,
+      onPathMemoryChange: (value: Readonly<Record<string, string>>) => dispatch({ type: "SET_PANEL_PATH_MEMORY", value }),
+      treeOpenStates,
+      onTreeOpenStateChange: (id: string, open: boolean) => dispatch({ type: "SET_TREE_OPEN_STATE", id, open }),
     }),
-    [cornerActivePaths, cornerPanels, dock, onAction, session, studioMode],
+    [cornerActivePaths, cornerPanels, dock, onAction, panelPathMemory, session, studioMode, treeOpenStates],
   );
 
   return (

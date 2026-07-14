@@ -1723,11 +1723,13 @@ pub mod app_3d {
                         ActionArgOption::new("glb", "GLB"),
                     ]).required().default_value("step"),
                 ])
-                // 🧰 Exclusive tool group scoped to the workpiece window (active tool is host-owned).
-                .tool(ToolDefinition { group: Some("measure".into()), category: Some(ToolCategory::Selection), ..ToolDefinition::new("select", "Select", "cursor") })
-                .tool(ToolDefinition { group: Some("measure".into()), category: Some(ToolCategory::Tools), ..ToolDefinition::new("cut", "Cut", "scissors") })
-                .tool(ToolDefinition { group: Some("measure".into()), category: Some(ToolCategory::Tools), ..ToolDefinition::new("drill", "Drill", "circle-dot") })
-                .tool(ToolDefinition { group: Some("measure".into()), category: Some(ToolCategory::Tools), ..ToolDefinition::new("attach", "Attach", "plus") })
+                // 🧰 Flat top-level exclusive toolbar scoped to the workpiece window (active tool is
+                // host-owned). These four are the window's entire tool set — not a sub-collection — so
+                // each carries `group: None` and renders as its own flat toolbar icon.
+                .tool(ToolDefinition { category: Some(ToolCategory::Selection), ..ToolDefinition::new("select", "Select", "cursor") })
+                .tool(ToolDefinition { category: Some(ToolCategory::Tools), ..ToolDefinition::new("cut", "Cut", "scissors") })
+                .tool(ToolDefinition { category: Some(ToolCategory::Tools), ..ToolDefinition::new("drill", "Drill", "circle-dot") })
+                .tool(ToolDefinition { category: Some(ToolCategory::Tools), ..ToolDefinition::new("attach", "Attach", "plus") })
                 .window_kind_tools(PROCESS_3D_PLAY_WINDOW_MAIN, vec!["select".into(), "cut".into(), "drill".into(), "attach".into()])
                 .keybinding("mod+z", "undo")
                 .keybinding("mod+shift+z", "redo")
@@ -1784,6 +1786,24 @@ pub mod app_3d {
             let document = default_document();
             assert_eq!(document.steps.len(), 4);
             assert!(document.resolved_up_to.is_none());
+        }
+
+        #[test]
+        fn tool_registry_declares_four_flat_tools_scoped_to_workpiece_window() {
+            let definition = create_process3d_app().definition;
+            let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
+            assert_eq!(tool_ids, ["select", "cut", "drill", "attach"], "tools declared in registry order");
+            assert!(
+                definition.tools.iter().all(|tool| tool.group.is_none()),
+                "process's select/cut/drill/attach are the window's entire top-level tool set, so none carry a visual group (a shared group would fold them into one collection button)",
+            );
+            let window = definition
+                .window_kinds
+                .iter()
+                .find(|window| window.id == PROCESS_3D_PLAY_WINDOW_MAIN)
+                .expect("workpiece window");
+            let scoped: Vec<&str> = window.tools.iter().map(|tool| tool.as_str()).collect();
+            assert_eq!(scoped, ["select", "cut", "drill", "attach"], "all four tools scoped to the workpiece window kind");
         }
 
         #[test]
