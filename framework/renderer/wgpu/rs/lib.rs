@@ -5288,6 +5288,7 @@ async fn handle_action_js(
             diagnostics: vec![],
             requested_effects: vec![],
             events: vec![],
+            ui_scope: semio_framework_core::kernel::UiDirtyScope::default(),
         });
     };
     let context_json = serde_json::json!({

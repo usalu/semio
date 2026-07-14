@@ -25,19 +25,11 @@ interface types {
     json: string,
   }
 
-  record plugin-tools-json {
+  record ui-refresh-request-json {
     json: string,
   }
 
-  record plugin-window-engagements-json {
-    json: string,
-  }
-
-  record plugin-window-measures-json {
-    json: string,
-  }
-
-  record app-labels-json {
+  record ui-refresh-response-json {
     json: string,
   }
 
@@ -64,10 +56,8 @@ interface plugin {
     action-response-json,
     window-input-json,
     window-output-json,
-    plugin-tools-json,
-    plugin-window-engagements-json,
-    plugin-window-measures-json,
-    app-labels-json,
+    ui-refresh-request-json,
+    ui-refresh-response-json,
     migrate-document-input,
     migrate-document-output,
     plugin-error,
@@ -84,22 +74,16 @@ interface plugin {
     instance-id: u32,
     input: window-input-json,
   ) -> result<window-output-json, plugin-error>;
-  list-tools: func(
+  /// 🐢 Batched, hash-conditional refresh: one call replaces the old per-section `list-tools` /
+  /// `window-engagements` / `window-measures` / `app-labels` (+ per-window `update-window`) round
+  /// trips. The request lists every window/panel/tools/engagements/measures/labels section the host
+  /// wants, each with the content hash the host already holds (or none, on first fetch); the response
+  /// omits the payload for any section whose hash still matches, so an unchanged window body or panel
+  /// costs one small hash-compare instead of a full re-render + re-serialize + re-parse.
+  refresh-ui: func(
     instance-id: u32,
-    context: action-context-json,
-  ) -> result<plugin-tools-json, plugin-error>;
-  window-engagements: func(
-    instance-id: u32,
-    context: action-context-json,
-  ) -> result<plugin-window-engagements-json, plugin-error>;
-  window-measures: func(
-    instance-id: u32,
-    context: action-context-json,
-  ) -> result<plugin-window-measures-json, plugin-error>;
-  app-labels: func(
-    instance-id: u32,
-    context: action-context-json,
-  ) -> result<app-labels-json, plugin-error>;
+    request: ui-refresh-request-json,
+  ) -> result<ui-refresh-response-json, plugin-error>;
   migrate-document: func(input: migrate-document-input) -> result<migrate-document-output, plugin-error>;
   apply-operations: func(instance-id: u32, operations-json: string) -> result<_, plugin-error>;
   read-app-document: func(instance-id: u32) -> result<string, plugin-error>;

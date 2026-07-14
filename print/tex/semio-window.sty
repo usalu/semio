@@ -664,6 +664,7 @@
   },
   semio~window~table/.style={
     semio~window,
+    toprule=\semio@stroke@hairline,
     top=0pt,
     left=0pt,
     right=0pt,
@@ -2274,7 +2275,12 @@
       \def\semio@part@kind{part}%
       \def\semio@part@kind@got{##1}%
       \ifx\semio@part@kind@got\semio@part@kind
-        \semio@koma@heading@lines{part}{\semio@heading@color@part}{\@currentheadentry}{##2}{\semio@heading@textcolor@part}%
+        \edef\semio@part@title{\@currentheadentry}%
+        \edef\semio@part@invoke{%
+          \noexpand\semio@koma@heading@lines{part}{\semio@heading@color@part}%
+          {\semio@part@title}{\unexpanded{##2}}{\semio@heading@textcolor@part}%
+        }%
+        \semio@part@invoke
       \else
         \semio@orig@partlineswithprefixformat{##1}{##2}{##3}%
       \fi
@@ -2437,7 +2443,7 @@
       }%
     }%
   \else
-    \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted@tab{#1}}%
+    \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted{#1}}%
     \setlength{\semio@window@gap@w}{%
       \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
     }%

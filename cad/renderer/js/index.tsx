@@ -3167,6 +3167,66 @@ function CommittedEdgeOverlay({ data, visible = true, edgeColor }: { readonly da
   );
 }
 
+/** @emoji 🎨 Resolves face material properties (color, emissive, intensity, opacity, transparent) for committed solid meshes, handling selection and hover states. */
+export function resolveCommittedMeshMaterialProps(
+  style: ResolvedTypologyStyle | undefined,
+  defaultColor: string | undefined,
+  solidId: SolidRef | undefined,
+  hoveredTargetKey: string | null | undefined,
+  selectedTargetKey: string | null | undefined,
+  selectedTargetKeys: ReadonlySet<string> | null | undefined,
+): {
+  readonly color: string;
+  readonly emissive: string;
+  readonly emissiveIntensity: number;
+  readonly opacity: number;
+  readonly transparent: boolean;
+} {
+  const targetKey = solidId ? `solid:${solidId}` : null;
+  const hovered = targetKey ? spatialHoverKeysMatch(hoveredTargetKey, targetKey) : false;
+  const selected = targetKey
+    ? selectedTargetKeys
+      ? [...selectedTargetKeys].some((key) => spatialHoverKeysMatch(key, targetKey))
+      : spatialHoverKeysMatch(selectedTargetKey, targetKey)
+    : false;
+
+  const palette = spatialSceneColors();
+  if (selected) {
+    return {
+      color: palette.selected,
+      emissive: palette.selectedEmissive,
+      emissiveIntensity: 0.35,
+      opacity: 0.34,
+      transparent: true,
+    };
+  }
+  if (hovered) {
+    return {
+      color: palette.hovered,
+      emissive: palette.hoveredEmissive,
+      emissiveIntensity: 0.35,
+      opacity: 0.28,
+      transparent: true,
+    };
+  }
+  if (style) {
+    return {
+      color: style.color,
+      emissive: style.color,
+      emissiveIntensity: 0.08,
+      opacity: style.opacity ?? COMMITTED_MESH_FACE_OPACITY,
+      transparent: style.opacity !== undefined && style.opacity < 1,
+    };
+  }
+  return {
+    color: defaultColor ?? palette.committed,
+    emissive: defaultColor ?? palette.committedEmissive,
+    emissiveIntensity: 0.08,
+    opacity: COMMITTED_MESH_FACE_OPACITY,
+    transparent: true,
+  };
+}
+
 export interface TessellatedCommitMeshProps {
   readonly mesh: MeshTransfer;
   readonly style?: ResolvedTypologyStyle;
@@ -3175,12 +3235,36 @@ export interface TessellatedCommitMeshProps {
   readonly showEdges?: boolean;
   readonly onFacePointerMove?: (info: FaceInfo, event: ThreeEvent<PointerEvent>) => void;
   readonly onFacePointerDown?: (info: FaceInfo, event: ThreeEvent<PointerEvent>) => void;
+  readonly solidId?: SolidRef;
+  readonly hoveredTargetKey?: string | null;
+  readonly selectedTargetKey?: string | null;
+  readonly selectedTargetKeys?: ReadonlySet<string> | null;
 }
 
 export const COMMITTED_MESH_FACE_OPACITY = 0.72;
 
 /** @emoji 🧊 Shaded B-Rep mesh + edge overlay; optional face picking via `faceIndex`. */
-export function TessellatedCommitMesh({ mesh: data, style, pickable = false, showFaces = true, showEdges = true, onFacePointerMove, onFacePointerDown }: TessellatedCommitMeshProps): ReactNode {
+export function TessellatedCommitMesh({
+  mesh: data,
+  style,
+  pickable = false,
+  showFaces = true,
+  showEdges = true,
+  onFacePointerMove,
+  onFacePointerDown,
+  solidId,
+  hoveredTargetKey,
+  selectedTargetKey,
+  selectedTargetKeys,
+}: TessellatedCommitMeshProps): ReactNode {
+  const targetKey = solidId ? `solid:${solidId}` : null;
+  const hovered = targetKey ? spatialHoverKeysMatch(hoveredTargetKey, targetKey) : false;
+  const selected = targetKey
+    ? selectedTargetKeys
+      ? [...selectedTargetKeys].some((key) => spatialHoverKeysMatch(key, targetKey))
+      : spatialHoverKeysMatch(selectedTargetKey, targetKey)
+    : false;
+
   const geometryKey = meshTransferContentKey(data);
   const geometry = reactHostPort.useMemo(() => {
     cadMeshGeometryPool.acquire(geometryKey);
@@ -3195,23 +3279,23 @@ export function TessellatedCommitMesh({ mesh: data, style, pickable = false, sho
     [geometry, geometryKey],
   );
   const faceMaterial = reactHostPort.useMemo(() => {
-    if (style) return createTypologyStyledMaterial(style);
-    const palette = spatialSceneColors();
+    const props = resolveCommittedMeshMaterialProps(style, data.color, solidId, hoveredTargetKey, selectedTargetKey, selectedTargetKeys);
+    if (!selected && !hovered && style) return createTypologyStyledMaterial(style);
     return new THREE.MeshStandardMaterial({
-      color: data.color ?? palette.committed,
+      color: props.color,
       metalness: 0,
       roughness: 0.45,
-      emissive: data.color ?? palette.committedEmissive,
-      emissiveIntensity: 0.08,
+      emissive: props.emissive,
+      emissiveIntensity: props.emissiveIntensity,
       side: THREE.DoubleSide,
       polygonOffset: true,
       polygonOffsetFactor: 1,
       polygonOffsetUnits: 1,
-      transparent: true,
-      opacity: COMMITTED_MESH_FACE_OPACITY,
+      transparent: props.transparent,
+      opacity: props.opacity,
       depthWrite: false,
     });
-  }, [style, data.color]);
+  }, [style, data.color, solidId, hoveredTargetKey, selectedTargetKey, selectedTargetKeys, selected, hovered]);
   const edgeColor = style?.edgeColor ?? data.color ?? spatialSceneColors().foreground;
   if (!showFaces && !showEdges) return null;
   const faceInfoById = reactHostPort.useMemo(() => {
@@ -3301,6 +3385,9 @@ export function CommittedMeshLayer({
   showEdges = true,
   onFacePointerMove,
   onFacePointerDown,
+  hoveredTargetKey,
+  selectedTargetKey,
+  selectedTargetKeys,
 }: {
   readonly meshes: readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[];
   readonly modelRevision?: number;
@@ -3310,6 +3397,9 @@ export function CommittedMeshLayer({
   readonly showEdges?: boolean;
   readonly onFacePointerMove?: (info: FaceInfo, event: ThreeEvent<PointerEvent>) => void;
   readonly onFacePointerDown?: (info: FaceInfo, event: ThreeEvent<PointerEvent>) => void;
+  readonly hoveredTargetKey?: string | null;
+  readonly selectedTargetKey?: string | null;
+  readonly selectedTargetKeys?: ReadonlySet<string> | null;
 }): ReactNode {
   if (meshes.length === 0 || (!showFaces && !showEdges)) return null;
   const rev = modelRevision ?? 0;
@@ -3327,6 +3417,10 @@ export function CommittedMeshLayer({
           showEdges={showEdges}
           onFacePointerMove={onFacePointerMove}
           onFacePointerDown={onFacePointerDown}
+          solidId={row.solid}
+          hoveredTargetKey={hoveredTargetKey}
+          selectedTargetKey={selectedTargetKey}
+          selectedTargetKeys={selectedTargetKeys}
         />
       ))}
     </ViewRadiusLayer>
@@ -3855,6 +3949,9 @@ export function InteractionSpatialView({
               showEdges={sceneVisibility.showCommittedEdges}
               onFacePointerDown={onCommittedFacePointerDown}
               onFacePointerMove={onCommittedFacePointerMove}
+              hoveredTargetKey={hoveredTargetKey}
+              selectedTargetKey={selectedTargetKey}
+              selectedTargetKeys={selectedTargetKeys}
             />
             <FactoryFaceSurfaceLayer faces={factoryFaceMeshes} modelRevision={geometry?.revision ?? 0} visible={sceneVisibility.showCommittedFaces} />
           </WorldLayer>
@@ -6953,7 +7050,7 @@ if (import.meta.vitest) {
       const { resolve } = await import("node:path");
       const { ModelSpace } = await import("@semio-tech/cad-js-core");
       const json = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../asset/play/hexagonal-cut-concrete-forest-left.model.json"), "utf8"));
-      const model = ModelSpace.fromJSON(json).models[defaultModelDefinitionId()]!;
+      const model = (ModelSpace.fromJSON(json).models[defaultModelDefinitionId()] ?? ModelSpace.fromJSON(json).models[""])!;
       const mdId = defaultModelDefinitionId();
       expect(Object.keys(model.solids).length).toBeGreaterThan(0);
       let targets = createSpatialPickTargets(model, mdId);
@@ -7141,6 +7238,47 @@ if (import.meta.vitest) {
       };
       expect(canvasHoverKeyForSelectionTarget(model, "aec.building.energy", { kind: "solid", id: String(cell), editable: true })).toBe("object:object-c0");
       expect(canvasHoverKeyForSelectionTarget(model, "aec.building.energy", { kind: "object", id: "object-c0", editable: true })).toBe("object:object-c0");
+    });
+
+    it("resolveCommittedMeshMaterialProps resolves selection, hover, and style fallback materials", () => {
+      const palette = spatialSceneColors();
+      const solidId = solidRef("s0");
+
+      // Test default state
+      const defaultProps = resolveCommittedMeshMaterialProps(undefined, undefined, solidId, null, null, null);
+      expect(defaultProps.color).toBe(palette.committed);
+      expect(defaultProps.emissive).toBe(palette.committedEmissive);
+      expect(defaultProps.opacity).toBe(COMMITTED_MESH_FACE_OPACITY);
+
+      // Test hovered state (via targetKey solid:s0 matching object:s0 / solid:s0)
+      const hoveredPropsObj = resolveCommittedMeshMaterialProps(undefined, undefined, solidId, "object:s0", null, null);
+      expect(hoveredPropsObj.color).toBe(palette.hovered);
+      expect(hoveredPropsObj.emissive).toBe(palette.hoveredEmissive);
+      expect(hoveredPropsObj.opacity).toBe(0.28);
+
+      const hoveredPropsSolid = resolveCommittedMeshMaterialProps(undefined, undefined, solidId, "solid:s0", null, null);
+      expect(hoveredPropsSolid.color).toBe(palette.hovered);
+
+      // Test selected state
+      const selectedProps = resolveCommittedMeshMaterialProps(undefined, undefined, solidId, null, "object:s0", null);
+      expect(selectedProps.color).toBe(palette.selected);
+      expect(selectedProps.emissive).toBe(palette.selectedEmissive);
+      expect(selectedProps.opacity).toBe(0.34);
+
+      // Test selected keys set state
+      const selectedKeysProps = resolveCommittedMeshMaterialProps(undefined, undefined, solidId, null, null, new Set(["solid:s0"]));
+      expect(selectedKeysProps.color).toBe(palette.selected);
+
+      // Test custom style overrides when not selected/hovered
+      const style: ResolvedTypologyStyle = {
+        color: "#ff00ff",
+        edgeColor: "#00ffff",
+        opacity: 0.5,
+        pattern: { kind: "solid" }
+      };
+      const styleProps = resolveCommittedMeshMaterialProps(style, undefined, solidId, null, null, null);
+      expect(styleProps.color).toBe("#ff00ff");
+      expect(styleProps.opacity).toBe(0.5);
     });
 
     it("keeps interaction selection isolated per state", () => {

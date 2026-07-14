@@ -1327,6 +1327,30 @@ export type HostEffect =
   | { readonly openPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string } };
 
 /**
+ * @emoji 🐢 Mirrors the Rust `UiDirtyScope` — which rendered UI sections an action actually
+ * invalidates. Absent (`undefined`) on an `ActionResponse` means the same as the Rust side's missing
+ * field: treat as `{kind: "full"}` (see {@link resolveUiDirtyScope}) — every plugin that doesn't emit
+ * this yet keeps today's whole-shell-refresh behavior.
+ */
+export type UiDirtyScope =
+  | { readonly kind: "full" }
+  | { readonly kind: "none" }
+  | {
+      readonly kind: "partial";
+      readonly windowBodies?: readonly string[];
+      readonly panelBodies?: readonly string[];
+      readonly tools?: boolean;
+      readonly engagements?: boolean;
+      readonly measures?: boolean;
+      readonly labels?: boolean;
+    };
+
+/** @emoji 🐢 Normalizes a possibly-absent `UiDirtyScope` — missing (older plugin, or a response built without one) means `full`. */
+export function resolveUiDirtyScope(scope: UiDirtyScope | undefined): UiDirtyScope {
+  return scope ?? { kind: "full" };
+}
+
+/**
  * @emoji 📤 Typed result of a plugin `handle-action` call — mirrors the Rust `ActionResult`. Replaces
  * the legacy `string[]` JSON-patch shape: operations are now typed `KernelOperation`s with true
  * inverses, and the shell applies `requestedEffects` through `applyHostEffects` (WS-E).
@@ -1338,12 +1362,14 @@ export type ActionResponse = {
   readonly diagnostics?: readonly Diagnostic[];
   readonly requestedEffects?: readonly HostEffect[];
   readonly events?: readonly AppEvent[];
+  readonly uiScope?: UiDirtyScope;
 };
 
 const EMPTY_ACTION_RESPONSE: ActionResponse = {
   output: null,
   operations: [],
   inverseGroup: { actionId: "", operations: [], inverseOperations: [] },
+  uiScope: { kind: "none" },
 };
 
 /** @emoji 📥 Parses a raw plugin `handle-action` response string into a typed {@link ActionResponse}. */

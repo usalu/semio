@@ -3622,6 +3622,32 @@ pub struct UndoGroup {
     pub inverse_operations: Vec<InverseOperation>,
 }
 
+/// @emoji 🐢 What part of the shell's rendered UI an action actually invalidates — lets `refresh-ui`
+/// skip re-rendering/re-fetching sections nothing touched. Absent from JSON (older/unmodified plugins)
+/// deserializes to `Full`, so any plugin that never sets this keeps today's whole-shell-refresh
+/// behavior exactly. `None` means "nothing to re-render at all" (e.g. a pure telemetry/heartbeat action).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "kind")]
+pub enum UiDirtyScope {
+    #[default]
+    Full,
+    None,
+    Partial {
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        window_bodies: Vec<String>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        panel_bodies: Vec<String>,
+        #[serde(default)]
+        tools: bool,
+        #[serde(default)]
+        engagements: bool,
+        #[serde(default)]
+        measures: bool,
+        #[serde(default)]
+        labels: bool,
+    },
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ActionResult {
@@ -3634,6 +3660,8 @@ pub struct ActionResult {
     pub requested_effects: Vec<HostEffect>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub events: Vec<AppEvent>,
+    #[serde(default)]
+    pub ui_scope: UiDirtyScope,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

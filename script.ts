@@ -958,7 +958,6 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("micro-commit", MicroCommitScript)
   .register("commit", CommitScript);
 
-await runWorkspaceScriptMain(router);
 //#endregion 🔖Dispatch
 
 //#region 🔖generate-neo4j-gen
@@ -1179,3 +1178,5 @@ export class Neo4jCypherExport {
   }
 }
 //#endregion 🔖generate-neo4j-gen
+
+await runWorkspaceScriptMain(router);

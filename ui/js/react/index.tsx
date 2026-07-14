@@ -4426,8 +4426,11 @@ export const floatingTagOffClass = "bg-transparent text-muted-foreground";
 /** @emoji 🪟 Canvas viewport surface inside a host root. */
 export const canvasViewportClass = "relative h-full min-h-0 w-full min-w-0 bg-canvas outline-none";
 
-/** @emoji 📑 Panel tab strip — sits above {@link panelChromeFrameLayerClass}; inset padding keeps labels off the frame edge. */
-export const panelTabBarClass = cn("relative z-40 flex min-w-0 items-center shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single px-single", borderNormalBottomClass);
+/** @emoji 📑 Panel tab strip base — sits above {@link panelChromeFrameLayerClass}; tabs sit flush against the panel's edges (no side inset — only tree/content rows carry that). Border side is added by callers ({@link panelTabBarClass}, {@link cornerPanelTabBarClass}). */
+const panelTabBarBaseClass = "relative z-40 flex min-w-0 items-center shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single";
+
+/** @emoji 📑 Panel tab strip with its divider on the content-facing side. */
+export const panelTabBarClass = cn(panelTabBarBaseClass, borderNormalBottomClass);
 
 /** @emoji 📑 Panel tab icon slot — defers dimensions to the tab icon (12px). */
 export const panelTabIconSlotClass = "inline-flex shrink-0 items-center justify-center leading-none";
@@ -4442,8 +4445,10 @@ export const panelTabButtonClass = cn(
   "hover:bg-hover-interactive-fill hover:text-emphasized",
 );
 
-/** @emoji 📑 Corner panel tab strip height. */
-export const cornerPanelTabBarClass = cn(panelTabBarClass, "h-medium");
+/** @emoji 📑 Corner panel tab strip — divider sits on the content-facing side: bottom corners grow "up" (tabs anchor at the screen edge, content above), so their divider flips to the top. */
+export function cornerPanelTabBarClass(direction: "up" | "down"): string {
+  return cn(panelTabBarBaseClass, direction === "up" ? borderNormalTopClass : borderNormalBottomClass, "h-medium");
+}
 
 /** @emoji 📑 Corner panel tab button padding. */
 export const cornerPanelTabButtonClass = cn(panelTabButtonClass, "px-tiny");
@@ -4723,10 +4728,14 @@ interface PanelTabRowProps {
   readonly tabs: readonly PanelTabNode[];
   readonly activeId?: string;
   readonly onSelect: (tabId: string) => void;
+  /** @emoji 🎨 Paints the active tab's fill/border — off for a folded {@link CornerPanel}, whose button group shouldn't claim a tab is "active" while nothing is showing. */
+  readonly showActiveColor?: boolean;
+  /** @emoji 🎀 Stacking direction from {@link PanelTabBar} — flips the row's divider to the content-facing side for `"corner"` variant. */
+  readonly direction?: "up" | "down";
 }
 
 /** @emoji 📑 One row of sibling tabs; stacked by {@link PanelTabBar} into a {@link Ribbon}. */
-const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, corner, parentPath = [], tabs, activeId, onSelect }) => {
+const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, corner, parentPath = [], tabs, activeId, onSelect, showActiveColor = true, direction = "down" }) => {
   const barRef = reactHostPort.useRef<HTMLDivElement>(null);
   const dock = usePanelDockContext();
   const tabSlot = variant === "corner" ? "corner-panel" : "mobile-panel";
@@ -4753,7 +4762,7 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, corner, parentPath =
 
   if (sortedTabs.length === 0) return null;
 
-  const barClass = variant === "corner" ? cornerPanelTabBarClass : mobilePanelTabBarClass;
+  const barClass = variant === "corner" ? cornerPanelTabBarClass(direction) : mobilePanelTabBarClass;
   const buttonClass = variant === "corner" ? cornerPanelTabButtonClass : mobilePanelTabButtonClass;
   const dropTarget = dock?.dropTarget;
   const isDropRow = Boolean(corner && dropTarget?.kind === "insert" && dropTarget.corner === corner && dropTarget.parentPath.length === parentPath.length && dropTarget.parentPath.every((id, index) => id === parentPath[index]));
@@ -4799,7 +4808,7 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, corner, parentPath =
                       }
                     : undefined
                 }
-                className={cn(buttonClass, isActive && panelTabActiveClass, isDragSource && "opacity-40", isChildDropTarget && "ring-2 ring-accent")}
+                className={cn(buttonClass, isActive && showActiveColor && panelTabActiveClass, isDragSource && "opacity-40", isChildDropTarget && "ring-2 ring-accent")}
               >
                 <span className={panelTabLabelClass}>{tab.name}</span>
                 <span className={panelTabIconSlotClass}>
@@ -4827,10 +4836,12 @@ export interface PanelTabBarProps {
   readonly direction?: "up" | "down";
   /** @emoji 🗜️ Renders only the root row — used by a folded {@link CornerPanel}'s button group so nested branch children stay hidden until the panel opens. */
   readonly rootRowOnly?: boolean;
+  /** @emoji 🎨 Paints the active tab's fill/border — off for a folded {@link CornerPanel}, whose button group shouldn't claim a tab is "active" while nothing is showing. */
+  readonly showActiveColor?: boolean;
 }
 
 /** @emoji 📑 Panel tab strip shared by {@link CornerPanel} and {@link MobilePanel} — one {@link PanelTabRow} per tree level, stacked in a {@link Ribbon}. */
-export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, corner, tabs, activePath, onActivePathChange, direction = "down", rootRowOnly = false }) => {
+export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, corner, tabs, activePath, onActivePathChange, direction = "down", rootRowOnly = false, showActiveColor = true }) => {
   const rows: RibbonRow[] = [];
   let level = tabs;
   let depth = 0;
@@ -4849,6 +4860,8 @@ export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, corner, tabs,
           tabs={sorted}
           activeId={activeId}
           onSelect={(tabId) => onActivePathChange(reconcileActivePath(tabs, [...activePath.slice(0, rowDepth), tabId], panelTabChildren))}
+          showActiveColor={showActiveColor}
+          direction={direction}
         />
       ),
     });
@@ -5050,13 +5063,15 @@ function panelDockRowTabButtons(rowElement: HTMLElement, excludedIds: ReadonlySe
 
 /**
  * 🎯 Resolves a tab-drag drop target from registered rows. A row hit lands on a branch button's 30–70% center
- * band as `"child"` (nest into it), elsewhere as a midpoint `"insert"`.
+ * band as `"child"` (nest into it), elsewhere as a midpoint `"insert"` — under a mirrored ({@link cornerHorizontal}
+ * `"right"`) row the buttons render right-to-left, so the physical-fraction-to-model-index mapping inverts.
  **/
 export function computeTabDockDropZone(pointerX: number, pointerY: number, rows: readonly PanelTabRowDropTarget[], excludedIds: ReadonlySet<string>): PanelTabDockTarget | null {
   for (const row of rows) {
     const rect = row.rowElement.getBoundingClientRect();
     if (pointerX < rect.left || pointerX > rect.right || pointerY < rect.top || pointerY > rect.bottom) continue;
     const buttons = panelDockRowTabButtons(row.rowElement, excludedIds);
+    const rtl = cornerHorizontal(row.corner) === "right";
     for (let index = 0; index < buttons.length; index++) {
       const button = buttons[index]!;
       const buttonRect = button.getBoundingClientRect();
@@ -5065,7 +5080,7 @@ export function computeTabDockDropZone(pointerX: number, pointerY: number, rows:
       if (button.dataset.tabKind === "branch" && fraction > 0.3 && fraction < 0.7) {
         return { kind: "child", corner: row.corner, parentId: button.dataset.tabId! };
       }
-      return { kind: "insert", corner: row.corner, parentPath: row.parentPath, index: index + (fraction >= 0.5 ? 1 : 0) };
+      return { kind: "insert", corner: row.corner, parentPath: row.parentPath, index: index + ((fraction >= 0.5) !== rtl ? 1 : 0) };
     }
     return { kind: "insert", corner: row.corner, parentPath: row.parentPath, index: buttons.length };
   }
@@ -6391,7 +6406,7 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
 
   if (labelLayoutKind === "treeGroupHeader") {
     const treeGroupHeaderLabel = (
-      <span data-slot="tree-label" id={labelElementId} title={controlHint} className="flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate h-medium" style={treeItemLabelStyle}>
+      <span data-slot="tree-label" id={labelElementId} title={controlHint} className="flex min-w-0 flex-1 items-center text-xs font-normal text-start truncate h-medium" style={treeItemLabelStyle}>
         {displayLabel}
       </span>
     );
@@ -6425,9 +6440,9 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
   }
 
   const propertyLabelElement = isTree ? (
-    <div ref={propertyLabelRef} data-slot="property-label-tree" className="min-w-0" style={{ paddingLeft: detailPanelIndentLen(level, indentMultiplier) }}>
+    <div ref={propertyLabelRef} data-slot="property-label-tree" className="min-w-0" style={{ paddingInlineStart: detailPanelIndentLen(level, indentMultiplier) }}>
       <div className="inline-flex min-w-0 h-medium">
-        <span data-slot="property-label" id={labelElementId} title={controlHint} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors h-medium pl-single">
+        <span data-slot="property-label" id={labelElementId} title={controlHint} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-start truncate cursor-pointer transition-colors h-medium ps-single">
           {resolvedLabel}
         </span>
       </div>
@@ -6438,7 +6453,7 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
         data-slot="property-label"
         id={labelElementId}
         title={controlHint}
-        className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors text-element hover:bg-hover-interactive-fill hover:text-emphasized h-medium"
+        className="inline-flex items-center text-xs font-medium flex-shrink-0 text-start truncate cursor-pointer transition-colors text-element hover:bg-hover-interactive-fill hover:text-emphasized h-medium"
       >
         {resolvedLabel}
       </span>
@@ -6453,7 +6468,7 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
       data-slot="property-row"
       data-property-layout={propertyRowStacked ? "stacked" : "inline"}
       style={{
-        ...(isTree ? { marginLeft: `calc(-1 * ${detailPanelIndentLen(level, indentMultiplier)})`, width: level > 0 ? `calc(100% + ${detailPanelIndentLen(level, indentMultiplier)})` : "100%" } : {}),
+        ...(isTree ? { marginInlineStart: `calc(-1 * ${detailPanelIndentLen(level, indentMultiplier)})`, width: level > 0 ? `calc(100% + ${detailPanelIndentLen(level, indentMultiplier)})` : "100%" } : {}),
         gridTemplateColumns: propertyRowStacked ? "minmax(0, 1fr)" : `${sizeVar("layoutLabel")} minmax(0, 1fr)`,
         rowGap: propertyRowStacked ? sizeVar("spacingSingle") : "0",
       }}
@@ -7278,7 +7293,7 @@ function ActionDropdown({ className, id, options, value, onValueChange, startTra
               className={cn("flex items-center gap-single p-single text-xs cursor-selectable outline-none", menuListItemClassName, value === option.value && interactiveActiveFillClass)}
             >
               <span className="flex items-center justify-center size-3">{renderControlIcon(option.icon, "tiny")}</span>
-              {option.label && <span className="flex-1 text-left">{option.label}</span>}
+              {option.label && <span className="flex-1 text-start">{option.label}</span>}
               {value === option.value && <CheckIcon className="size-tiny ms-auto" />}
             </button>
           ))}
@@ -8551,7 +8566,7 @@ function Slider({
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleEditKeyDown}
             onBlur={handleEditBlur}
-            className="w-large min-w-large border-0 px-0 text-right text-xs"
+            className="w-large min-w-large border-0 px-0 text-end text-xs"
             min={min}
             max={max}
             autoFocus
@@ -9334,7 +9349,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
                   onClick={() => handleSelect(item.value)}
                   className={cn("flex items-center p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-interactive-fill outline-none focus-visible:bg-hover-interactive-fill")}
                 >
-                  <span className="flex flex-1 items-center gap-single text-left">
+                  <span className="flex flex-1 items-center gap-single text-start">
                     <span className="flex items-center">{renderControlIcon(addIconSize(item.icon))}</span>
                     {dropdownText ? <span className="text-xs">{dropdownText}</span> : null}
                   </span>
@@ -9794,7 +9809,7 @@ function DialogContent({
  * DialogHeader holds the data fields for a DialogHeader record.
  **/
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="dialog-header" className={cn("flex flex-col gap-single text-center sm:text-left", className)} {...props} />;
+  return <div data-slot="dialog-header" className={cn("flex flex-col gap-single text-center sm:text-start", className)} {...props} />;
 }
 
 /**
@@ -10355,7 +10370,7 @@ function PanelToggleGroup({ items }: { readonly items: readonly PanelToggleItem[
   return (
     <div data-slot="app-panel-toggle-group" className={cn("flex min-w-0 items-stretch border h-medium", borderNormalClass)}>
       {items.map((item, index) => (
-        <Toggle key={item.id} id={item.id} text={item.text} pressed={item.pressed} onPressedChange={item.onPressedChange} className={cn("border-0 rounded-none shrink-0", index > 0 && cn("border-l", borderNormalClass))} icon={item.icon} />
+        <Toggle key={item.id} id={item.id} text={item.text} pressed={item.pressed} onPressedChange={item.onPressedChange} className={cn("border-0 rounded-none shrink-0", index > 0 && cn("border-s", borderNormalClass))} icon={item.icon} />
       ))}
     </div>
   );
@@ -10858,7 +10873,7 @@ const treeGutterSlotLeftPx = (level: number, extraLeftPx = 0, multiplier = 1): n
 const treeGutterAnchorTop = (_anchorOffsetPx?: number): string => "calc(var(--size-workbench) / 2)";
 const treeGutterSlotStyle = (level: number, extraLeftPx = 0, multiplier = 1, anchorOffsetPx?: number): React.CSSProperties => ({
   top: treeGutterAnchorTop(anchorOffsetPx),
-  left: extraLeftPx > 0 ? `calc(${detailPanelIndentLen(level, multiplier)} + ${uiSpacingLen(extraLeftPx / (STYLING_COMPACT_ROOT_PX * 0.2))})` : detailPanelIndentLen(level, multiplier),
+  insetInlineStart: extraLeftPx > 0 ? `calc(${detailPanelIndentLen(level, multiplier)} + ${uiSpacingLen(extraLeftPx / (STYLING_COMPACT_ROOT_PX * 0.2))})` : detailPanelIndentLen(level, multiplier),
 });
 const treeGutterWidthLen = (level: number, multiplier = 1): string => `calc(${detailPanelIndentLen(level, multiplier)} + ${uiSpacingLen(STYLING_DOM.treeToggleUiSpacing)})`;
 const treeGutterWidthPx = (level: number, multiplier = 1): number => detailPanelIndentPx(level, multiplier) + treeToggleSlotWidthPx;
@@ -10882,9 +10897,9 @@ const IndentationLines: React.FC<{ level: number; showLines: boolean }> = ({ lev
 
   const guideIndices = treeBranchGuideIndices(level, isLastAtLevel);
   return (
-    <div data-dim data-slot="tree-guide" className="absolute left-0 top-0 bottom-0 pointer-events-none">
+    <div data-dim data-slot="tree-guide" className="absolute start-0 top-0 bottom-0 pointer-events-none">
       {guideIndices.map((guideIndex) => (
-        <div key={guideIndex} className="absolute top-0 bottom-0" style={{ left: `calc(${indentationLineLen(guideIndex, indentMultiplier)} - var(--stroke-hairline) / 2)` }}>
+        <div key={guideIndex} className="absolute top-0 bottom-0" style={{ insetInlineStart: `calc(${indentationLineLen(guideIndex, indentMultiplier)} - var(--stroke-hairline) / 2)` }}>
           <div data-tree-guide-line="" className={cn("w-px h-full", treeGuideLineStrokeClassName)} />
         </div>
       ))}
@@ -10923,14 +10938,14 @@ const TreeDocumentGutter: React.FC<TreeDocumentGutterProps> = ({ level, showLine
         <div
           data-slot="tree-branch-elbow"
           className={cn("pointer-events-none absolute h-px -translate-y-1/2", treeGuideLineStrokeClassName)}
-          style={{ top: treeGutterAnchorTop(anchorOffsetPx), left: indentationLineLen(level - 1, indentMultiplier), width: `calc(${uiSpacingLen(elbowWidthPx / (STYLING_COMPACT_ROOT_PX * 0.2))})` }}
+          style={{ top: treeGutterAnchorTop(anchorOffsetPx), insetInlineStart: indentationLineLen(level - 1, indentMultiplier), width: `calc(${uiSpacingLen(elbowWidthPx / (STYLING_COMPACT_ROOT_PX * 0.2))})` }}
         />
       )}
       {showLines && level > 0 && extendCurrentLevelToBottom && (
         <div
           data-slot="tree-branch-stem"
           className={cn("pointer-events-none absolute w-px", treeGuideLineStrokeClassName)}
-          style={{ top: treeGutterAnchorTop(anchorOffsetPx), left: `calc(${indentationLineLen(level, indentMultiplier)} - var(--stroke-hairline) / 2)`, bottom: 0 }}
+          style={{ top: treeGutterAnchorTop(anchorOffsetPx), insetInlineStart: `calc(${indentationLineLen(level, indentMultiplier)} - var(--stroke-hairline) / 2)`, bottom: 0 }}
         />
       )}
       {positionedSlot}
@@ -12821,7 +12836,7 @@ export const HelperRow: React.FC<{ children: React.ReactNode; className?: string
         <div
           data-dim
           data-slot="property-row"
-          style={{ marginLeft: `calc(-1 * ${detailPanelIndentLen(level, indentMultiplier)})`, width: level > 0 ? `calc(100% + ${detailPanelIndentLen(level, indentMultiplier)})` : "100%" }}
+          style={{ marginInlineStart: `calc(-1 * ${detailPanelIndentLen(level, indentMultiplier)})`, width: level > 0 ? `calc(100% + ${detailPanelIndentLen(level, indentMultiplier)})` : "100%" }}
           className={cn(detailPanelPropertyRowClassName, "grid-cols-[var(--layout-label)_minmax(0,1fr)]")}
         >
           <div />
@@ -15321,7 +15336,7 @@ const CornerPanel: React.FC<CornerPanelProps> = ({ corner, visible = true, onVis
           <div data-dim data-slot="panel-chrome-frame" aria-hidden className={cn(panelChromeFrameLayerClass, visible && panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered))} />
           <UiChromeLabelPolicyProvider policy="always">
             {showTabBar ? (
-              <PanelTabBar corner={corner} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="corner" direction={flow.block} rootRowOnly={!visible} />
+              <PanelTabBar corner={corner} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="corner" direction={flow.block} rootRowOnly={!visible} showActiveColor={visible} />
             ) : null}
           </UiChromeLabelPolicyProvider>
           {visible ? (
@@ -15620,9 +15635,9 @@ function Ribbon({ id, direction, rows, className }: RibbonProps) {
     );
   }
   return (
-    <div id={id} data-slot="ribbon" data-direction={direction} className={cn("flex w-fit max-w-full shrink-0 gap-single", direction === "up" ? "flex-col-reverse items-start" : "w-full flex-col items-stretch", className)}>
+    <div id={id} data-slot="ribbon" data-direction={direction} className={cn("flex w-fit max-w-full shrink-0", direction === "up" ? "flex-col-reverse items-start" : "w-full flex-col items-stretch", className)}>
       {rows.map((row, depth) => (
-        <div key={row.key} data-slot="ribbon-row" data-depth={depth} className="flex min-w-0 w-full items-stretch gap-single">
+        <div key={row.key} data-slot="ribbon-row" data-depth={depth} className="flex min-w-0 w-full items-stretch">
           {row.content}
         </div>
       ))}
@@ -23026,8 +23041,33 @@ if (import.meta.vitest) {
       expect(activeButton?.className).toContain("text-emphasized");
       expect(container.querySelector('[data-slot="corner-panel-tabs"]')?.className).toContain("overflow-x-auto");
       expect(container.querySelector('[data-slot="corner-panel-tabs"]')?.className).toContain("z-40");
-      expect(container.querySelector('[data-slot="corner-panel-tabs"]')?.className).toContain("px-single");
+      expect(container.querySelector('[data-slot="corner-panel-tabs"]')?.className?.split(" ")).not.toContain("px-single");
       expect(container.querySelector('[data-slot="panel-chrome-frame"]')?.className).toContain("z-30");
+    });
+
+    it("CornerPanel only paints the active tab's fill/border while expanded — a folded button group shouldn't claim a tab is active", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: StubIcon, name: "Tab B", tree: { sections: [] } })];
+      const { container, rerender } = render(<CornerPanel corner="top-left" visible={false} tabs={tabs} activeTabPath={["tab-a"]} />);
+      const foldedActiveButton = container.querySelector('[data-slot="corner-panel-tab-button"][data-active="true"]');
+      expect(foldedActiveButton).toBeTruthy();
+      expect(foldedActiveButton?.className).not.toContain("bg-active-base");
+      rerender(<CornerPanel corner="top-left" visible tabs={tabs} activeTabPath={["tab-a"]} />);
+      const visibleActiveButton = container.querySelector('[data-slot="corner-panel-tab-button"][data-active="true"]');
+      expect(visibleActiveButton?.className).toContain("bg-active-base");
+    });
+
+    it("CornerPanel's tab strip divider sits on the content-facing side — bottom border for top corners, top border for bottom corners", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
+      const { container: topContainer } = render(<CornerPanel corner="top-left" visible={false} tabs={tabs} />);
+      const topTabs = topContainer.querySelector('[data-slot="corner-panel-tabs"]');
+      expect(topTabs?.className).toContain("border-b");
+      expect(topTabs?.className).not.toContain("border-t");
+      const { container: bottomContainer } = render(<CornerPanel corner="bottom-left" visible={false} tabs={tabs} />);
+      const bottomTabs = bottomContainer.querySelector('[data-slot="corner-panel-tabs"]');
+      expect(bottomTabs?.className).toContain("border-t");
+      expect(bottomTabs?.className).not.toContain("border-b");
     });
 
     it("CornerPanel keeps its tab button group mounted when folded, but drops content — the tabs are the panel's only chrome", () => {
@@ -23067,6 +23107,109 @@ if (import.meta.vitest) {
       rerender(<CornerPanel corner="top-right" visible onVisibleChange={onVisibleChange} tabs={tabs} activeTabPath={["tab-a"]} />);
       fireEvent.click(container.querySelector('button[id="tab-a"]') as HTMLElement);
       expect(onVisibleChange).toHaveBeenCalledWith(false);
+    });
+
+    it("flowFromCorner mirrors right corners inline and bottom corners in block", () => {
+      expect(flowFromCorner("top-left")).toEqual({ inline: "ltr", block: "down" });
+      expect(flowFromCorner("top-right")).toEqual({ inline: "rtl", block: "down" });
+      expect(flowFromCorner("bottom-left")).toEqual({ inline: "ltr", block: "up" });
+      expect(flowFromCorner("bottom-right")).toEqual({ inline: "rtl", block: "up" });
+    });
+
+    it("FlowProvider defaults to ltr/down and lets nested providers override only what they pass", () => {
+      const Probe: React.FC = () => {
+        const flow = useFlow();
+        return (
+          <span>
+            {flow.inline}/{flow.block}
+          </span>
+        );
+      };
+      expect(renderToStaticMarkup(<Probe />)).toContain("ltr/down");
+      expect(renderToStaticMarkup(<FlowProvider inline="rtl" block="up"><Probe /></FlowProvider>)).toContain("rtl/up");
+      expect(
+        renderToStaticMarkup(
+          <FlowProvider inline="rtl" block="up">
+            <FlowProvider block="down">
+              <Probe />
+            </FlowProvider>
+          </FlowProvider>,
+        ),
+      ).toContain("rtl/down");
+    });
+
+    it("CornerPanel sets dir=rtl only for right corners", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
+      const { container: leftContainer } = render(<CornerPanel corner="top-left" visible tabs={tabs} />);
+      expect(leftContainer.querySelector('[data-slot="corner-panel"]')?.getAttribute("dir")).toBeNull();
+      const { container: rightContainer } = render(<CornerPanel corner="top-right" visible tabs={tabs} />);
+      expect(rightContainer.querySelector('[data-slot="corner-panel"]')?.getAttribute("dir")).toBe("rtl");
+    });
+
+    it("CornerPanel derives its tab bar's stacking direction from the corner's flow block axis", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
+      const topMarkup = renderToStaticMarkup(<CornerPanel corner="top-left" visible tabs={tabs} />);
+      expect(topMarkup).toContain('data-direction="down"');
+      const bottomMarkup = renderToStaticMarkup(<CornerPanel corner="bottom-left" visible tabs={tabs} />);
+      expect(bottomMarkup).toContain('data-direction="up"');
+    });
+
+    it("computeTabDockDropZone inverts the insert-index fraction test for mirrored (right) corners", () => {
+      const makeRow = (corner: PanelCorner, buttonRects: readonly { left: number; right: number }[]): PanelTabRowDropTarget => {
+        const rowElement = document.createElement("div");
+        rowElement.getBoundingClientRect = () => ({ left: 0, right: 200, top: 0, bottom: 20, width: 200, height: 20 }) as DOMRect;
+        buttonRects.forEach((rect, index) => {
+          const button = document.createElement("button");
+          button.dataset.tabId = `tab-${index}`;
+          button.dataset.tabKind = "leaf";
+          button.getBoundingClientRect = () => ({ left: rect.left, right: rect.right, top: 0, bottom: 20, width: rect.right - rect.left, height: 20 }) as DOMRect;
+          rowElement.appendChild(button);
+        });
+        return { corner, parentPath: [], rowElement };
+      };
+      const ltrRow = makeRow("top-left", [{ left: 0, right: 100 }]);
+      expect(computeTabDockDropZone(25, 10, [ltrRow], new Set())).toEqual({ kind: "insert", corner: "top-left", parentPath: [], index: 0 });
+      expect(computeTabDockDropZone(75, 10, [ltrRow], new Set())).toEqual({ kind: "insert", corner: "top-left", parentPath: [], index: 1 });
+
+      const rtlRow = makeRow("top-right", [{ left: 0, right: 100 }]);
+      expect(computeTabDockDropZone(25, 10, [rtlRow], new Set())).toEqual({ kind: "insert", corner: "top-right", parentPath: [], index: 1 });
+      expect(computeTabDockDropZone(75, 10, [rtlRow], new Set())).toEqual({ kind: "insert", corner: "top-right", parentPath: [], index: 0 });
+    });
+
+    it("renders the label before the trailing icon for Button, Toggle, and panel tab buttons", () => {
+      const buttonMarkup = renderToStaticMarkup(
+        <UiChromeLabelPolicyProvider policy="always">
+          <Button id="tooltip.manual" text="Apply" icon="check" />
+        </UiChromeLabelPolicyProvider>,
+      );
+      expect(buttonMarkup.indexOf(">Apply<")).toBeGreaterThanOrEqual(0);
+      expect(buttonMarkup.indexOf(">Apply<")).toBeLessThan(buttonMarkup.indexOf('data-icon="check"'));
+
+      const toggleMarkup = renderToStaticMarkup(
+        <UiChromeLabelPolicyProvider policy="always">
+          <Toggle id="tooltip.manual" text="Focus" icon="crosshair" pressed={false} onPressedChange={() => undefined} />
+        </UiChromeLabelPolicyProvider>,
+      );
+      expect(toggleMarkup.indexOf(">Focus<")).toBeGreaterThanOrEqual(0);
+      expect(toggleMarkup.indexOf(">Focus<")).toBeLessThan(toggleMarkup.indexOf('data-icon="crosshair"'));
+
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
+      const tabMarkup = renderToStaticMarkup(<PanelTabBar variant="corner" tabs={tabs} activePath={["tab-a"]} onActivePathChange={() => undefined} />);
+      expect(tabMarkup.indexOf(">Tab A<")).toBeLessThan(tabMarkup.indexOf(panelTabIconSlotClass));
+    });
+
+    it("mirrors flow-relative alignment onto logical classes (tree label, navbar trailing slot)", () => {
+      const treeMarkup = renderToStaticMarkup(
+        <TreeContext.Provider value={{ level: 0, isLastAtLevel: [true], showLines: false, isTree: false, indentMultiplier: 1 }}>
+          <Label id="tooltip.manual" label="Group" />
+        </TreeContext.Provider>,
+      );
+      expect(treeMarkup).toContain("text-start");
+      const navbarMarkup = renderToStaticMarkup(<Navbar items={[]} showFullscreenToggle />);
+      expect(navbarMarkup).toContain("ms-auto");
     });
 
     it("modeDockChromeGridPlacement keeps tabs left and controls right", () => {
@@ -25354,7 +25497,7 @@ if (treeVitest) {
       expect(markup).toContain("minmax(0, 1fr)");
       expect(markup).toContain('data-slot="property-label-tree" class="min-w-0"');
       expect(markup).toContain('data-slot="property-row"');
-      expect(markup).toContain("margin-left:calc(-1 *");
+      expect(markup).toContain("margin-inline-start:calc(-1 *");
       expect(markup).toContain("var(--layout-label)");
       expect(markup).toContain('data-slot="property-control"');
       expect(markup).toContain("justify-end");
@@ -26755,6 +26898,10 @@ if (treeVitest) {
       const downMarkup = renderToStaticMarkup(<Ribbon direction="down" rows={rows} />);
       expect(downMarkup).toContain('data-direction="down"');
       expect(downMarkup).not.toContain("flex-col-reverse");
+      expect(downMarkup).not.toContain("gap-single");
+      const rowMatches = [...downMarkup.matchAll(/data-slot="ribbon-row"[^>]*class="([^"]*)"/g)];
+      expect(rowMatches.length).toBe(2);
+      for (const match of rowMatches) expect(match[1]).not.toMatch(/\bgap-single\b/);
 
       const inlineMarkup = renderToStaticMarkup(<Ribbon id="ui.toolbar" direction="inline" rows={rows} />);
       expect(inlineMarkup).toContain('role="toolbar"');

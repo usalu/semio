@@ -1089,18 +1089,6 @@
 @utility mr-double {
   margin-right: var(--spacing-double);
 }
-@utility ms-single {
-  margin-inline-start: var(--spacing-single);
-}
-@utility ms-double {
-  margin-inline-start: var(--spacing-double);
-}
-@utility me-single {
-  margin-inline-end: var(--spacing-single);
-}
-@utility me-double {
-  margin-inline-end: var(--spacing-double);
-}
 @utility my-single {
   margin-top: var(--spacing-single);
   margin-bottom: var(--spacing-single);

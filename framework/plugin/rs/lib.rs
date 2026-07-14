@@ -5,10 +5,9 @@ pub mod component {
     //! 🧩 WASI P2 component exports for the plugin world contract.
 
     use crate::plugin_runtime::{
-        ensure_plugin_initialized, plugin_app_labels, plugin_attach_backbone, plugin_create_app,
+        ensure_plugin_initialized, plugin_attach_backbone, plugin_create_app,
         plugin_detach_backbone, plugin_document, plugin_handle_action, plugin_ingest_operations,
-        plugin_load_document, plugin_manifest, plugin_render_with_document, plugin_tools,
-        plugin_window_engagements, plugin_window_measures,
+        plugin_load_document, plugin_manifest, plugin_refresh_ui, plugin_render_with_document,
     };
     use wit_bindgen::generate;
 
@@ -19,9 +18,8 @@ pub mod component {
 
     use exports::semio::framework::plugin::Guest;
     use semio::framework::types::{
-        ActionContextJson, ActionInvocationJson, ActionResponseJson, AppLabelsJson, MigrateDocumentInput,
-        MigrateDocumentOutput, PluginError, PluginManifestJson, PluginToolsJson, PluginWindowEngagementsJson,
-        PluginWindowMeasuresJson, WindowInputJson, WindowOutputJson,
+        ActionContextJson, ActionInvocationJson, ActionResponseJson, MigrateDocumentInput,
+        MigrateDocumentOutput, PluginError, PluginManifestJson, UiRefreshRequestJson, UiRefreshResponseJson, WindowInputJson, WindowOutputJson,
     };
 
     pub struct ComponentGuest;
@@ -64,50 +62,13 @@ pub mod component {
             })
         }
 
-        fn list_tools(
+        fn refresh_ui(
             instance_id: u32,
-            context: ActionContextJson,
-        ) -> Result<PluginToolsJson, PluginError> {
+            request: UiRefreshRequestJson,
+        ) -> Result<UiRefreshResponseJson, PluginError> {
             ensure_plugin_initialized();
-            let tools = plugin_tools(instance_id, &context.json).map_err(PluginError::Message)?;
-            Ok(PluginToolsJson {
-                json: serde_json::to_string(&tools).unwrap_or_else(|_| "[]".into()),
-            })
-        }
-
-        fn window_engagements(
-            instance_id: u32,
-            context: ActionContextJson,
-        ) -> Result<PluginWindowEngagementsJson, PluginError> {
-            ensure_plugin_initialized();
-            let engagements =
-                plugin_window_engagements(instance_id, &context.json).map_err(PluginError::Message)?;
-            Ok(PluginWindowEngagementsJson {
-                json: serde_json::to_string(&engagements).unwrap_or_else(|_| "{}".into()),
-            })
-        }
-
-        fn window_measures(
-            instance_id: u32,
-            context: ActionContextJson,
-        ) -> Result<PluginWindowMeasuresJson, PluginError> {
-            ensure_plugin_initialized();
-            let measures =
-                plugin_window_measures(instance_id, &context.json).map_err(PluginError::Message)?;
-            Ok(PluginWindowMeasuresJson {
-                json: serde_json::to_string(&measures).unwrap_or_else(|_| "{}".into()),
-            })
-        }
-
-        fn app_labels(
-            instance_id: u32,
-            context: ActionContextJson,
-        ) -> Result<AppLabelsJson, PluginError> {
-            ensure_plugin_initialized();
-            let overlay = plugin_app_labels(instance_id, &context.json).map_err(PluginError::Message)?;
-            Ok(AppLabelsJson {
-                json: serde_json::to_string(&overlay).unwrap_or_else(|_| "{}".into()),
-            })
+            let json = plugin_refresh_ui(instance_id, &request.json).map_err(PluginError::Message)?;
+            Ok(UiRefreshResponseJson { json })
         }
 
         fn migrate_document(_input: MigrateDocumentInput) -> Result<MigrateDocumentOutput, PluginError> {
@@ -840,6 +801,9 @@ pub struct ActionEmit<Op> {
     pub coalesce_key: Option<String>,
     pub effects: Vec<HostEffect>,
     pub events: Vec<AppEvent>,
+    /// 🐢 Which rendered UI sections this action actually invalidates — `Full` (the default) preserves
+    /// today's whole-shell-refresh behavior for every app that doesn't opt in to narrower scopes.
+    pub ui_scope: semio_framework_core::kernel::UiDirtyScope,
 }
 
 impl<Op> Default for ActionEmit<Op> {
@@ -850,6 +814,7 @@ impl<Op> Default for ActionEmit<Op> {
             coalesce_key: None,
             effects: Vec::new(),
             events: Vec::new(),
+            ui_scope: semio_framework_core::kernel::UiDirtyScope::default(),
         }
     }
 }
@@ -1096,7 +1061,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
 
     /// @emoji 📇 An empty `ActionResult` carrying only host effects/events (view/shell actions and
     /// history notifications produce no `KernelOperation`s).
-    fn empty_result(action: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>) -> ActionResult {
+    fn empty_result(action: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework_core::kernel::UiDirtyScope) -> ActionResult {
         let invocation_id = ActionInvocationId(format!("{action}:{}", meta.instance_id));
         ActionResult {
             output: Value::Null,
@@ -1109,12 +1074,13 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             diagnostics: Vec::new(),
             requested_effects: effects,
             events,
+            ui_scope,
         }
     }
 
     /// @emoji 🧱 Builds the `ActionResult` for a just-dispatched edit: one `KernelOperation` per
     /// forward operation, each carrying the edit's true `backwards` as its inverse diff.
-    fn result_from_last_edit(&self, action: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>) -> ActionResult {
+    fn result_from_last_edit(&self, action: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework_core::kernel::UiDirtyScope) -> ActionResult {
         let schema = self.app.document_schema().to_string();
         let invocation_id = ActionInvocationId(format!("{action}:{}:{}", meta.instance_id, self.store.generation()));
         let document = DocumentHandle(meta.instance_id as u128);
@@ -1172,6 +1138,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             diagnostics: Vec::new(),
             requested_effects: effects,
             events,
+            ui_scope,
         }
     }
 }
@@ -1207,13 +1174,15 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
             match self.store.dispatch(command) {
                 Ok(()) => {
                     self.cache = None;
-                    Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()]))
+                    // 🐢 History actions (undo/redo/checkpoint/alternative) can touch any part of the
+                    // document — always Full, never opt into a narrower scope.
+                    Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework_core::kernel::UiDirtyScope::Full))
                 }
                 // Benign no-ops (nothing to undo/redo, foreign tail) collapse to an empty result.
                 Err(vcs::VcsError::NothingToUndo)
                 | Err(vcs::VcsError::NothingToRedo)
                 | Err(vcs::VcsError::ForeignEdit(_)) => {
-                    Ok(Self::empty_result(action, meta, Vec::new(), Vec::new()))
+                    Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None))
                 }
                 Err(error) => Err(error.to_string()),
             }
@@ -1225,9 +1194,9 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
                 let doc = DocumentView { projection, history };
                 app.handle_action(action, args, &doc, view_state)
             };
-            let ActionEmit { ops, description, coalesce_key, effects, events } = emit;
+            let ActionEmit { ops, description, coalesce_key, effects, events, ui_scope } = emit;
             if ops.is_empty() {
-                return Ok(Self::empty_result(action, meta, effects, events));
+                return Ok(Self::empty_result(action, meta, effects, events, ui_scope));
             }
             self.store.set_local_actor_id(Some(meta.actor.clone()));
             let command = match coalesce_key {
@@ -1242,7 +1211,7 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
             };
             self.store.dispatch(command).map_err(|error| error.to_string())?;
             self.cache = None;
-            Ok(self.result_from_last_edit(action, meta, effects, events))
+            Ok(self.result_from_last_edit(action, meta, effects, events, ui_scope))
         }
     }
 
@@ -2295,9 +2264,10 @@ pub mod plugin_runtime {
 //! 📤 WASM component export glue for plugin bundles.
 
 use crate::app::{ActionMeta, AppInstance, Plugin, PluginBundle};
-use semio_framework_core::{kernel::ActionResult, AppLabelsOverlay, PluginManifest, ViewState};
+use semio_framework_core::{kernel::ActionResult, PluginManifest, ViewState};
 use ui_wgpu::{framework_panel_tab_label, UiNode};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::cell::{Cell, RefCell};
 use std::sync::atomic::{AtomicU32, Ordering};
 
@@ -2523,62 +2493,154 @@ pub fn plugin_render_with_document(
     })
 }
 
-pub fn plugin_tools(instance_id: u32, view_state_json: &str) -> Result<Vec<ui_wgpu::ToolNode>, String> {
-    let view_state: ViewState =
-        serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
-    with_instances_mut(|list| {
-        let instance = find_instance(list, instance_id)?;
-        Ok(instance.app.tools(&view_state))
-    })
+//#region 🔖RefreshUi
+/// 🐢 A tiny non-cryptographic hash (fnv1a-64) for cheap "did this section's content change" checks —
+/// not a security boundary, just change detection, so speed over collision-resistance is the right
+/// tradeoff (mirrors the identical pattern already used for `cached_fixture_json` in puzzle's plugin).
+fn ui_refresh_fnv1a_hash(bytes: &[u8]) -> String {
+    let mut hash: u64 = 0xcbf29ce484222325;
+    for byte in bytes {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    format!("{hash:016x}")
 }
 
-pub fn plugin_window_engagements(
-    instance_id: u32,
-    view_state_json: &str,
-) -> Result<std::collections::HashMap<String, ui_wgpu::WindowEngagement>, String> {
-    let view_state: ViewState =
-        serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
-    with_instances_mut(|list| {
-        let instance = find_instance(list, instance_id)?;
-        Ok(instance.app.window_engagements(&view_state))
-    })
+/// 🐢 Hashes `value`'s canonical JSON serialization and returns `(hash, Some(value))` when it differs
+/// from `known_hash`, or `(hash, None)` when unchanged — the response omits the payload either way the
+/// caller doesn't need it, keeping the wire payload proportional to what actually changed.
+fn ui_refresh_section<T: Serialize>(value: &T, known_hash: Option<&str>) -> (String, Option<Value>) {
+    let payload = serde_json::to_value(value).unwrap_or(Value::Null);
+    let hash = ui_refresh_fnv1a_hash(serde_json::to_string(&payload).unwrap_or_default().as_bytes());
+    if known_hash == Some(hash.as_str()) {
+        (hash, None)
+    } else {
+        (hash, Some(payload))
+    }
 }
 
-pub fn plugin_window_measures(
-    instance_id: u32,
-    view_state_json: &str,
-) -> Result<std::collections::HashMap<String, Vec<ui_wgpu::WindowMeasure>>, String> {
-    let view_state: ViewState =
-        serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
-    with_instances_mut(|list| {
-        let instance = find_instance(list, instance_id)?;
-        Ok(instance.app.window_measures(&view_state))
-    })
-}
+/// 🐢 Batched, hash-conditional UI refresh: replaces the ~1+windowCount+panelCount+windowCount+3
+/// individual `render`/`tools`/`windowEngagements`/`windowMeasures`/`appLabels` WASM round trips a
+/// full `refreshUi` used to make with **one** call. `request_json` lists every section the host wants
+/// (windows/panels by `{key, bodyKey, hash}`, tools by `{key, hash}` per window kind, engagements/
+/// measures/labels each `{hash}`); the response includes a payload only for sections whose hash
+/// differs from what the host already holds.
+pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String, String> {
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct SectionRequest {
+        key: String,
+        #[serde(default)]
+        body_key: String,
+        #[serde(default)]
+        hash: Option<String>,
+    }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct SingleRequest {
+        #[serde(default)]
+        hash: Option<String>,
+    }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct RefreshRequest {
+        view_state: ViewState,
+        #[serde(default)]
+        windows: Vec<SectionRequest>,
+        #[serde(default)]
+        panels: Vec<SectionRequest>,
+        #[serde(default)]
+        tools: Vec<SectionRequest>,
+        #[serde(default)]
+        engagements: Option<SingleRequest>,
+        #[serde(default)]
+        measures: Option<SingleRequest>,
+        #[serde(default)]
+        labels: Option<SingleRequest>,
+    }
+    #[derive(Serialize)]
+    #[serde(rename_all = "camelCase")]
+    struct SectionResponse {
+        key: String,
+        hash: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        value: Option<Value>,
+    }
+    #[derive(Serialize, Default)]
+    #[serde(rename_all = "camelCase")]
+    struct RefreshResponse {
+        #[serde(skip_serializing_if = "Vec::is_empty")]
+        windows: Vec<SectionResponse>,
+        #[serde(skip_serializing_if = "Vec::is_empty")]
+        panels: Vec<SectionResponse>,
+        #[serde(skip_serializing_if = "Vec::is_empty")]
+        tools: Vec<SectionResponse>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        engagements: Option<SectionResponse>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        measures: Option<SectionResponse>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        labels: Option<SectionResponse>,
+    }
 
-pub fn plugin_app_labels(instance_id: u32, view_state_json: &str) -> Result<AppLabelsOverlay, String> {
-    let view_state: ViewState =
-        serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
-    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    let request: RefreshRequest = serde_json::from_str(request_json).map_err(|error| error.to_string())?;
+    let is_de = request.view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
     let manifest = plugin_manifest();
+
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
         let app_id = instance.app.app_id().to_string();
-        let mut overlay = instance.app.app_labels(&view_state);
         let panel_tab_ids: Vec<String> = manifest
             .apps
             .iter()
             .find(|app| app.id == app_id)
             .map(|app| app.panel_tabs.iter().map(|tab| tab.id().to_string()).collect())
             .unwrap_or_default();
-        for id in panel_tab_ids {
-            if let Some(label) = framework_panel_tab_label(&id, is_de) {
-                overlay.panel_tab_labels.entry(id).or_insert_with(|| label.into());
-            }
+
+        let mut response = RefreshResponse::default();
+
+        for entry in &request.windows {
+            let node = instance.app.render(&entry.body_key, None, &request.view_state)?;
+            let (hash, value) = ui_refresh_section(&node, entry.hash.as_deref());
+            response.windows.push(SectionResponse { key: entry.key.clone(), hash, value });
         }
-        Ok(overlay)
+        for entry in &request.panels {
+            let node = instance.app.render(&entry.body_key, None, &request.view_state)?;
+            let (hash, value) = ui_refresh_section(&node, entry.hash.as_deref());
+            response.panels.push(SectionResponse { key: entry.key.clone(), hash, value });
+        }
+        for entry in &request.tools {
+            let mut tools_view_state = request.view_state.clone();
+            tools_view_state.active_window_kind_id = Some(entry.key.clone());
+            let tools = instance.app.tools(&tools_view_state);
+            let (hash, value) = ui_refresh_section(&tools, entry.hash.as_deref());
+            response.tools.push(SectionResponse { key: entry.key.clone(), hash, value });
+        }
+        if let Some(requested) = &request.engagements {
+            let engagements = instance.app.window_engagements(&request.view_state);
+            let (hash, value) = ui_refresh_section(&engagements, requested.hash.as_deref());
+            response.engagements = Some(SectionResponse { key: "engagements".into(), hash, value });
+        }
+        if let Some(requested) = &request.measures {
+            let measures = instance.app.window_measures(&request.view_state);
+            let (hash, value) = ui_refresh_section(&measures, requested.hash.as_deref());
+            response.measures = Some(SectionResponse { key: "measures".into(), hash, value });
+        }
+        if let Some(requested) = &request.labels {
+            let mut overlay = instance.app.app_labels(&request.view_state);
+            for id in &panel_tab_ids {
+                if let Some(label) = framework_panel_tab_label(id, is_de) {
+                    overlay.panel_tab_labels.entry(id.clone()).or_insert_with(|| label.into());
+                }
+            }
+            let (hash, value) = ui_refresh_section(&overlay, requested.hash.as_deref());
+            response.labels = Some(SectionResponse { key: "labels".into(), hash, value });
+        }
+
+        Ok(serde_json::to_string(&response).unwrap_or_else(|_| "{}".into()))
     })
 }
+//#endregion RefreshUi
 
 #[macro_export]
 macro_rules! plugin_exports {

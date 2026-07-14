@@ -331,6 +331,7 @@ impl PluginHost {
             diagnostics: vec![],
             requested_effects: vec![],
             events: vec![],
+            ui_scope: Default::default(),
         };
         self.commit_action_result(instance_id, &result)?;
         Ok(result)

@@ -49,5 +49,10 @@ export default defineConfig({
     fileParallelism: false,
     maxConcurrency: 1,
     include: ["index.tsx", "play/index.tsx", "play/fixture-slugs.ts"],
+    server: {
+      deps: {
+        inline: [/@semio-tech\/.*/, /cad\/.*/],
+      },
+    },
   },
 });
