@@ -605,6 +605,10 @@
 
 \semio_termlist_new:nnnn { glossary } { GlossaryDefine } { Gls } { listofglossaries }
 \semio_termlist_new:nnnn { abbreviations } { AbbreviationDefine } { Abbr } { listofabbreviations }
+
+\cs_set_protected:Npn \AbbreviationDefine #1#2#3 {
+  \semio_termlist_define:nnn { abbreviations } {#1} { #2~--~#3 }
+}
 %endregion Termlist
 
 \cs_new_protected:Npn \semio_window_listof_cmd_define:nn #1#2 {
@@ -2264,15 +2268,22 @@
       \semio@koma@heading@lines{chapter}{\semio@heading@color@chapter}{##3}{##2}{\semio@heading@textcolor@chapter}%
     }%
   \fi
-  \ifcsname partlinesformat\endcsname
-    \let\semio@orig@partlinesformat\partlinesformat
-    \RenewDocumentCommand\partlinesformat{mmm}{%
-      \semio@koma@heading@lines{part}{\semio@heading@color@part}{##3}{##2}{\semio@heading@textcolor@part}%
+  \ifcsname partlineswithprefixformat\endcsname
+    \let\semio@orig@partlineswithprefixformat\partlineswithprefixformat
+    \RenewDocumentCommand\partlineswithprefixformat{mmm}{%
+      \def\semio@part@kind{part}%
+      \def\semio@part@kind@got{##1}%
+      \ifx\semio@part@kind@got\semio@part@kind
+        \semio@koma@heading@lines{part}{\semio@heading@color@part}{\@currentheadentry}{##2}{\semio@heading@textcolor@part}%
+      \else
+        \semio@orig@partlineswithprefixformat{##1}{##2}{##3}%
+      \fi
     }%
   \fi
   \ifcsname chapter\endcsname
     \semio@heading@install@spacing{chapter}%
   \fi
+  \semio@heading@install@spacing{part}%
   \semio@heading@install@spacing{section}%
   \semio@heading@install@spacing{subsection}%
   \semio@heading@install@spacing{subsubsection}%
@@ -2597,6 +2608,8 @@
 \newsavebox{\semio@chrome@navbar@emblem@box}
 \newlength{\semio@chrome@row@height}
 \newlength{\semio@chrome@row@height@footer}
+\newlength{\semio@chrome@zone@height}
+\newlength{\semio@chrome@zone@height@footer}
 \newlength{\semio@chrome@icon@height}
 \newlength{\semio@chrome@icon@height@footer}
 
@@ -2617,14 +2630,16 @@
 \newcommand{\semio@chrome@dims@compute}{%
   \begingroup
   \normalfont
-  \xdef\semio@chrome@tmp@row{%
+  \xdef\semio@chrome@tmp@row{\the\dimexpr\semio@chrome@font@chip\relax}%
+  \xdef\semio@chrome@tmp@row@footer{\semio@chrome@tmp@row}%
+  \xdef\semio@chrome@tmp@zone{%
     \the\dimexpr
-      \semio@chrome@font@chip
+      \semio@chrome@tmp@row
       +\semio@chrome@padding+\semio@chrome@padding
       +\semio@stroke@hairline+\semio@stroke@hairline
     \relax
   }%
-  \xdef\semio@chrome@tmp@row@footer{\semio@chrome@tmp@row}%
+  \xdef\semio@chrome@tmp@zone@footer{\semio@chrome@tmp@zone}%
   \xdef\semio@chrome@tmp@titlebar{%
     \the\dimexpr
       \semio@chrome@font@chip
@@ -2635,6 +2650,8 @@
   \endgroup
   \setlength{\semio@chrome@row@height}{\semio@chrome@tmp@row}%
   \setlength{\semio@chrome@row@height@footer}{\semio@chrome@tmp@row@footer}%
+  \setlength{\semio@chrome@zone@height}{\semio@chrome@tmp@zone}%
+  \setlength{\semio@chrome@zone@height@footer}{\semio@chrome@tmp@zone@footer}%
   \setlength{\semio@chrome@icon@height}{\semio@chrome@row@height}%
   \setlength{\semio@chrome@icon@height@footer}{\semio@chrome@row@height@footer}%
   \renewcommand{\semio@chrome@titlebar@height}{\semio@chrome@tmp@titlebar}%
@@ -2805,7 +2822,7 @@
 
 \newcommand{\SemioChromeNavbarHead}{%
   \semio@chrome@navbar@bar{%
-    \semio@chrome@bar@threezone{\semio@chrome@row@height}{%
+    \semio@chrome@bar@threezone{\semio@chrome@zone@height}{%
       \semio@chrome@chip{%
         \semio@chrome@vcenter{\semio@chrome@row@height}{\usebox{\semio@chrome@navbar@emblem@box}}%
       }%
@@ -2823,7 +2840,7 @@
 
 \newcommand{\SemioChromeFooterHead}{%
   \semio@chrome@footer@bar{%
-    \semio@chrome@bar@threezone{\semio@chrome@row@height@footer}{%
+    \semio@chrome@bar@threezone{\semio@chrome@zone@height@footer}{%
       \SemioFooterLogoChips
     }{%
       \SemioFooterAuthorChips
@@ -2840,11 +2857,13 @@
 \newcommand{\SemioChromeIconSize}[1]{%
   \setlength{\semio@chrome@row@height}{\dimexpr#1\relax}%
   \setlength{\semio@chrome@icon@height}{\semio@chrome@row@height}%
+  \setlength{\semio@chrome@zone@height}{\dimexpr\semio@chrome@row@height+\semio@chrome@padding+\semio@chrome@padding+\semio@stroke@hairline+\semio@stroke@hairline\relax}%
   \semio@chrome@emblem@rebuild
 }
 \newcommand{\SemioChromeFooterIconSize}[1]{%
   \setlength{\semio@chrome@row@height@footer}{\dimexpr#1\relax}%
   \setlength{\semio@chrome@icon@height@footer}{\semio@chrome@row@height@footer}%
+  \setlength{\semio@chrome@zone@height@footer}{\dimexpr\semio@chrome@row@height@footer+\semio@chrome@padding+\semio@chrome@padding+\semio@stroke@hairline+\semio@stroke@hairline\relax}%
   \semio@chrome@emblem@rebuild
 }
 

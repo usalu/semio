@@ -131,7 +131,7 @@ import {
   type WindowTemplateDropPayload,
 } from "@semio-tech/ui-react";
 import { ICONS, type IconName } from "@semio-tech/ui-asset";
-import { declarativeTreeDragController, interpretUiNode, uiTreeNodeToTreePanelConfig } from "./ui-interpreter.tsx";
+import { declarativeTreeDragController, interpretUiNode, InterpretedUiNode, uiTreeNodeToTreePanelConfig } from "./ui-interpreter.tsx";
 import {
   DEFAULT_PLUGIN_REGISTRY,
   type ActionResponse,
@@ -1221,6 +1221,58 @@ function windowToolbarNode(tools: readonly ToolNode[] | undefined, windowId: str
   if (!grouped.length) return undefined;
   return <ToolTree id={`ui.toolbar.${windowId}`} tools={grouped} onAction={onAction} direction="up" />;
 }
+
+/** @emoji 🐢 Structural equality over plain JSON-shaped values (the shape every `UiNode`/`WindowEngagement`/`WindowMeasure` plugin payload takes) — no cycles, no non-JSON types. */
+function uiJsonDeepEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    for (let index = 0; index < a.length; index += 1) {
+      if (!uiJsonDeepEqual(a[index], b[index])) return false;
+    }
+    return true;
+  }
+  const aRecord = a as Record<string, unknown>;
+  const bRecord = b as Record<string, unknown>;
+  const aKeys = Object.keys(aRecord);
+  const bKeys = Object.keys(bRecord);
+  if (aKeys.length !== bKeys.length) return false;
+  for (const key of aKeys) {
+    if (!Object.prototype.hasOwnProperty.call(bRecord, key)) return false;
+    if (!uiJsonDeepEqual(aRecord[key], bRecord[key])) return false;
+  }
+  return true;
+}
+
+/**
+ * @emoji 🐢 Reuses `previous`'s object identity when it's structurally equal to `next` — every plugin
+ * `render()`/`tools()`/`windowEngagements()`/`windowMeasures()` call re-parses a fresh JSON payload
+ * every time, even when nothing about that body actually changed (e.g. a camera-only or selection-only
+ * action still returns byte-identical panel/tool JSON). Without this, every downstream `React.memo`
+ * (see `InterpretedUiNode`) sees a new prop reference every render and can never bail.
+ */
+export function preserveJsonIdentity<T>(previous: T | undefined, next: T): T {
+  return previous !== undefined && uiJsonDeepEqual(previous, next) ? previous : next;
+}
+
+/**
+ * @emoji 🐢 Builds a `Record<string, V>` from `entries`, reusing `prev`'s per-key value reference where
+ * `preserveJsonIdentity` finds no structural change, and reusing `prev` itself (the whole record) when
+ * no key actually changed — so a no-op action's `dispatch` doesn't hand `windowUiByKind`/etc. a new
+ * object reference and cascade an unmemoizable re-render through every downstream consumer.
+ */
+export function mergeRecordPreservingIdentity<V>(prev: Readonly<Record<string, V>>, entries: readonly (readonly [string, V])[]): Readonly<Record<string, V>> {
+  const next: Record<string, V> = {};
+  let changed = Object.keys(prev).length !== entries.length;
+  for (const [key, value] of entries) {
+    const preserved = preserveJsonIdentity(prev[key], value);
+    next[key] = preserved;
+    if (preserved !== prev[key]) changed = true;
+  }
+  return changed ? next : prev;
+}
 //#endregion ShellHelpers
 
 //#region Boot
@@ -1333,7 +1385,10 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     return pluginFilter ? expanded : plugins;
   }, [pluginFilter, plugins, studioMode]);
 
-  const panel = session ? parsePanelState(session.viewState) : null;
+  // 🐢 Memoized on the raw `panelJson` string (not `session` object identity, which churns every
+  // action) so a `session` refresh that leaves `panelJson` untouched reuses the same parsed `panel`
+  // object — a prerequisite for any downstream `useMemo`/`React.memo` keyed on `panel` to bail.
+  const panel = useMemo(() => (session ? parsePanelState(session.viewState) : null), [session?.viewState.panelJson]);
   const activeAppTitle = appDocumentLabel(panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId)?.document ?? session?.app.document ?? []);
 
   useEffect(() => {
@@ -1468,21 +1523,39 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       const dynamicToolsByKind = rendered.slice(toolsStart, toolsStart + windowCount) as (readonly ToolNode[])[];
       const dynamicEngagements = rendered[rendered.length - 2] as Readonly<Record<string, WindowEngagement>>;
       const dynamicMeasures = rendered[rendered.length - 1] as Readonly<Record<string, readonly WindowMeasure[]>>;
-      dispatch({ type: "SET_WINDOW_UI_BY_KIND", value: Object.fromEntries(nextSession.app.windowKinds.map((kind, index) => [kind.id, windowNodes[index]! as UiNode])) });
-      dispatch({ type: "SET_WINDOW_ENGAGEMENTS_BY_KIND", value: dynamicEngagements });
-      dispatch({ type: "SET_WINDOW_MEASURES_BY_KIND", value: dynamicMeasures });
-      dispatch({ type: "SET_APP_LABELS_OVERLAY", value: appLabelsOverlay });
-      dispatch({ type: "SET_PANEL_UI_BY_KEY", value: Object.fromEntries(panelTabLeaves.map((tab, index) => [panelTabKindId(tab.kind), panelNodes[index]! as UiNode])) });
+      // 🐢 Merge-with-identity-preservation: a select/camera/tool action re-renders every body from the
+      // plugin, but most bodies' JSON is byte-identical to last time — reusing unchanged references here
+      // is what lets `InterpretedUiNode`'s `React.memo` (and `modeWindows`'s `useMemo`) actually bail
+      // instead of reconciling the whole shell on every interaction.
+      dispatch({
+        type: "SET_WINDOW_UI_BY_KIND",
+        value: (current) => mergeRecordPreservingIdentity(current, nextSession.app.windowKinds.map((kind, index) => [kind.id, windowNodes[index]! as UiNode])),
+      });
+      dispatch({
+        type: "SET_WINDOW_ENGAGEMENTS_BY_KIND",
+        value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicEngagements)),
+      });
+      dispatch({
+        type: "SET_WINDOW_MEASURES_BY_KIND",
+        value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicMeasures)),
+      });
+      dispatch({ type: "SET_APP_LABELS_OVERLAY", value: (current) => preserveJsonIdentity(current, appLabelsOverlay) });
+      dispatch({
+        type: "SET_PANEL_UI_BY_KEY",
+        value: (current) => mergeRecordPreservingIdentity(current, panelTabLeaves.map((tab, index) => [panelTabKindId(tab.kind), panelNodes[index]! as UiNode])),
+      });
       const activeModeId = viewState.activeModeId ?? nextSession.app.defaultModeId ?? nextSession.app.modes[0]?.id;
       const staticTools = nextSession.app.modes.find((mode) => mode.id === activeModeId)?.tools ?? [];
       dispatch({
         type: "SET_TOOL_NODES_BY_KIND",
-        value: Object.fromEntries(
-          nextSession.app.windowKinds.map((kind, index) => {
-            const dynamic = dynamicToolsByKind[index] ?? [];
-            return [kind.id, dynamic.length > 0 ? dynamic : staticTools];
-          }),
-        ),
+        value: (current) =>
+          mergeRecordPreservingIdentity(
+            current,
+            nextSession.app.windowKinds.map((kind, index) => {
+              const dynamic = dynamicToolsByKind[index] ?? [];
+              return [kind.id, dynamic.length > 0 ? dynamic : staticTools] as const;
+            }),
+          ),
       });
       const windowIds = nextSession.app.windowKinds.map((kind) => kind.id);
       const layoutSeedKey = `${nextSession.pluginId}:${nextSession.app.id}:${nextSession.instanceId}`;
@@ -1540,13 +1613,19 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     [loadedPlugins, uiLocale, uiTerminology],
   );
 
+  // 🐢 Keyed on the pluginId/app/instance triple (not `session` object identity) so this only fires on
+  // a genuine session switch (app open/spawn/instance change) — every other action already calls
+  // `refreshUi` explicitly via `applyHostEffects`, and re-running it here too on every `session` object
+  // churn was a second, redundant full-shell refresh cascade per interaction.
+  const sessionIdentityKey = session ? `${session.pluginId}:${session.app.id}:${session.instanceId}` : null;
   useEffect(() => {
-    if (!session) return;
-    void refreshUi(session).catch((renderError) => {
+    const current = sessionRef.current;
+    if (!current) return;
+    void refreshUi(current).catch((renderError) => {
       console.error("[DEBUG] render failed", renderError);
       dispatch({ type: "SET_ERROR", value: renderError instanceof Error ? renderError.message : String(renderError) });
     });
-  }, [loadedPlugins, refreshUi, session]);
+  }, [loadedPlugins, refreshUi, sessionIdentityKey]);
 
   useEffect(() => {
     if (!studioMode || !session) {
@@ -1759,9 +1838,13 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         type: "SET_SESSION",
         value: (current) => {
           if (!current) return nextSession;
-          if (isSpawnedPluginSession) return { ...current, viewState: nextViewState };
+          if (isSpawnedPluginSession) return current.viewState === nextViewState ? current : { ...current, viewState: nextViewState };
           if (current.instanceId !== nextSession.instanceId) return current;
-          return { ...current, viewState: nextViewState };
+          // 🐢 Preserve `current`'s identity when the viewState didn't actually change — otherwise every
+          // action mints a new `session` object, which cascades into a new `onAction` identity, which
+          // busts every memo keyed on it (windows, panels, the boot-refresh effect below) even when
+          // nothing about the session changed.
+          return current.viewState === nextViewState ? current : { ...current, viewState: nextViewState };
         },
       });
       if (isSpawnedPluginSession) {
@@ -2037,6 +2120,12 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   useEffect(() => {
     onActionRef.current = onAction;
   }, [onAction]);
+
+  // 🐢 `onAction`'s own identity churns every action (its deps include `session`, `panel`, …). Render
+  // trees built from `UiNode`s only need a *callable* action dispatcher, not a fresh one each time —
+  // route them through this permanently-stable ref indirection so `interpretUiNode`'s `React.memo`
+  // (and any `useMemo` keyed on the dispatcher passed to it) can actually bail.
+  const onActionStable = useCallback((action: Parameters<typeof onAction>[0]) => onActionRef.current(action), []);
 
   const studioSessionActive = studioMode && session?.app.id === S_PLAY_APP_ID;
   useEffect(() => {
@@ -2788,7 +2877,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       if (spawned) {
         const spawnedApp = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
         const windowKind = spawnedApp?.windowKinds[0];
-        const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawnedWindowEngagements, spawnedWindowMeasures, onAction) : undefined;
+        const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawnedWindowEngagements, spawnedWindowMeasures, onActionStable) : undefined;
         return [
           {
             id: spawned.id,
@@ -2797,8 +2886,8 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
             showControls: true,
             measures: chrome?.measures,
             engagement: chrome?.engagement,
-            toolbar: windowToolbarNode(spawnedToolNodes, spawned.id, onAction),
-            children: <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">{interpretUiNode(spawnedWindowUi, { onAction })}</ChromeAwareWindowScrollSurface>,
+            toolbar: windowToolbarNode(spawnedToolNodes, spawned.id, onActionStable),
+            children: <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"><InterpretedUiNode node={spawnedWindowUi} onAction={onActionStable} /></ChromeAwareWindowScrollSurface>,
           },
         ];
       }
@@ -2809,12 +2898,12 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       title: appWindowDocumentLabel(session.app, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label)),
       fill: true,
       showControls: true,
-      measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.options.measures, onAction),
-      engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onAction),
-      toolbar: windowToolbarNode(toolNodesByKind[kind.id], kind.id, onAction),
+      measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.options.measures, onActionStable),
+      engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
+      toolbar: windowToolbarNode(toolNodesByKind[kind.id], kind.id, onActionStable),
       children: (
         <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id}>
-          {interpretUiNode(windowUiByKind[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }, { onAction })}
+          <InterpretedUiNode node={windowUiByKind[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
         </ChromeAwareWindowScrollSurface>
       ),
     }));
@@ -2827,19 +2916,19 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           title: instance.title,
           fill: true,
           showControls: true,
-          measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.options.measures, onAction),
-          engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onAction),
-          toolbar: windowToolbarNode(toolNodesByKind[kind.id], instance.id, onAction),
+          measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.options.measures, onActionStable),
+          engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
+          toolbar: windowToolbarNode(toolNodesByKind[kind.id], instance.id, onActionStable),
           children: (
             <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id}>
-              {interpretUiNode(windowUiByKind[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }, { onAction })}
+              <InterpretedUiNode node={windowUiByKind[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
             </ChromeAwareWindowScrollSurface>
           ),
         },
       ];
     });
     return [...baseWindows, ...extraWindows];
-  }, [appLabelsOverlay, extraWindowInstances, loadedPlugins, onAction, panel, session, spawnedToolNodes, spawnedWindowEngagements, spawnedWindowMeasures, spawnedWindowUi, studioMode, toolNodesByKind, uiLocale, windowEngagementsByKind, windowMeasuresByKind, windowUiByKind]);
+  }, [appLabelsOverlay, extraWindowInstances, loadedPlugins, onActionStable, panel, session, spawnedToolNodes, spawnedWindowEngagements, spawnedWindowMeasures, spawnedWindowUi, studioMode, toolNodesByKind, uiLocale, windowEngagementsByKind, windowMeasuresByKind, windowUiByKind]);
 
   const effectiveModeLayout = useMemo(
     () =>
@@ -2945,6 +3034,14 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     [cornerActivePaths, cornerPanels, dock, onAction, session, studioMode],
   );
 
+  const topRightPanel = cornerPanels["top-right"];
+  const topLeftPanel = cornerPanels["top-left"];
+  const navbarStyle = useMemo((): React.CSSProperties => {
+    const paddingLeft = topLeftPanel.visible ? `${topLeftPanel.size}px` : undefined;
+    const paddingRight = topRightPanel.visible ? `${topRightPanel.size}px` : undefined;
+    return { paddingLeft, paddingRight };
+  }, [topLeftPanel.visible, topLeftPanel.size, topRightPanel.visible, topRightPanel.size]);
+
   return (
     <UIFindProvider>
       <LevelProvider level="window">
@@ -2953,7 +3050,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
             <Layout
               mobile={mobile}
               mobilePanel={mobilePanel}
-              navbar={<Navbar items={navbarItems} showFullscreenToggle />}
+              navbar={<Navbar items={navbarItems} showFullscreenToggle style={navbarStyle} />}
               footer={<Footer items={[]} />}
               cornerPanels={{
                 "top-left": dock.corners["top-left"].length > 0 ? buildCornerPanelProps("top-left") : undefined,

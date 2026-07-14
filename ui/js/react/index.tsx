@@ -1520,7 +1520,7 @@ const contextMenuItemClassName = cn(
   "text-element relative flex items-center gap-single p-single text-sm outline-none whitespace-nowrap cursor-default select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
   menuListItemClassName,
 );
-const contextMenuShortcutClassName = "ml-auto text-xs text-muted-foreground pl-tiny";
+const contextMenuShortcutClassName = "ms-auto text-xs text-muted-foreground ps-tiny";
 
 /**
  * 🧩 Serializable right-click entry for {@link ContextMenu} and puzzle 2d/window surfaces.
@@ -1674,6 +1674,7 @@ export interface ContextMenuProps {
 export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children }) => {
   const [open, setOpen] = reactHostPort.useState(false);
   const [point, setPoint] = reactHostPort.useState<{ x: number; y: number } | null>(null);
+  const flow = useFlow();
   const close = reactHostPort.useCallback(() => setOpen(false), []);
   const hasItems = !!items?.length;
   const host = (
@@ -1703,6 +1704,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children }) => 
           align="start"
           avoidCollisions={false}
           className={contextMenuContentClassName}
+          dir={flow.inline === "rtl" ? "rtl" : undefined}
           onCloseAutoFocus={(event) => event.preventDefault()}
           side="bottom"
           sideOffset={0}
@@ -1733,7 +1735,7 @@ function renderFixedContextMenuItems(items: ContextMenuItem[], onClose: () => vo
         key={item.id}
         aria-checked={item.checked}
         aria-disabled={item.disabled}
-        className={cn(contextMenuItemClassName, "w-full bg-transparent text-left", item.destructive && "text-destructive focus:bg-destructive/10")}
+        className={cn(contextMenuItemClassName, "w-full bg-transparent text-start", item.destructive && "text-destructive focus:bg-destructive/10")}
         data-disabled={item.disabled ? "" : undefined}
         disabled={item.disabled}
         onClick={(event) => {
@@ -1757,6 +1759,7 @@ function renderFixedContextMenuItems(items: ContextMenuItem[], onClose: () => vo
  **/
 export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange }) => {
   const close = reactHostPort.useCallback(() => onOpenChange(false), [onOpenChange]);
+  const flow = useFlow();
   const menuRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   reactHostPort.useEffect(() => {
     if (!open || !items.length || !position) {
@@ -1786,7 +1789,14 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     return null;
   }
   return renderPortalInto(
-    <div className={contextMenuContentClassName} onContextMenu={(event) => event.preventDefault()} ref={menuRef} role="menu" style={{ left: position.x, position: "fixed", top: position.y }}>
+    <div
+      className={contextMenuContentClassName}
+      dir={flow.inline === "rtl" ? "rtl" : undefined}
+      onContextMenu={(event) => event.preventDefault()}
+      ref={menuRef}
+      role="menu"
+      style={{ left: position.x, position: "fixed", top: position.y }}
+    >
       {renderFixedContextMenuItems(items, close)}
     </div>,
     getDocumentBody(),
@@ -4366,7 +4376,7 @@ export const sliderThumbClassName = cn(
 );
 
 /** @emoji 🎚 Slider numeric readout — element gray at rest. */
-export const sliderValueClassName = cn("text-element w-large text-right text-xs leading-none select-none transition-colors", "hover:text-emphasized group-hover:text-emphasized");
+export const sliderValueClassName = cn("text-element w-large text-end text-xs leading-none select-none transition-colors", "hover:text-emphasized group-hover:text-emphasized");
 
 /** @emoji 📏 Active window chrome line when that stack is globally active. */
 export const activeLineClass = "border-active-base";
@@ -4390,7 +4400,7 @@ export const panelGlassFrameClass = cn(panelChromeBorderClass, panelGlassFillCla
 export const floatingMenuSurfaceClass = cn(glassMenuClass, "overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass);
 
 /** @emoji 🪟 Action row inside {@link floatingMenuSurfaceClass}. */
-export const floatingMenuItemClass = cn("relative flex w-full cursor-default items-center gap-single rounded-sm px-single py-half text-left text-xs text-element outline-none select-none", menuListItemClassName);
+export const floatingMenuItemClass = cn("relative flex w-full cursor-default items-center gap-single rounded-sm px-single py-half text-start text-xs text-element outline-none select-none", menuListItemClassName);
 
 /** @emoji 🪟 Frosted editor aside chrome for technology renderers. */
 export const floatingPanelAsideClass = cn("relative flex shrink-0 flex-col gap-single overflow-auto p-double text-element z-[2]", panelGlassFrameClass);
@@ -4476,10 +4486,44 @@ export function cornerHorizontal(corner: PanelCorner): "left" | "right" {
   return corner.endsWith("left") ? "left" : "right";
 }
 
-/** @emoji 🧭 Camel-case key for a {@link PanelCorner} — used in toggle ids and i18n keys (`topLeft`, `bottomRight`, ...). */
-export function cornerKey(corner: PanelCorner): "topLeft" | "topRight" | "bottomLeft" | "bottomRight" {
-  return corner.replace(/-([a-z])/, (_, c: string) => c.toUpperCase()) as "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
+// #region 🧭Flow Context
+/** @emoji 🧭 Horizontal reading direction — `"rtl"` mirrors icon/label order and rides on native CSS `dir`. */
+export type FlowInline = "ltr" | "rtl";
+
+/** @emoji 🧭 Vertical stacking direction — `"up"` grows content toward the display center (see {@link Ribbon}). */
+export type FlowBlock = "down" | "up";
+
+/** @emoji 🧭 The flow descendant chrome mirrors against. */
+export interface Flow {
+  readonly inline: FlowInline;
+  readonly block: FlowBlock;
 }
+
+const DEFAULT_FLOW: Flow = { inline: "ltr", block: "down" };
+
+const FlowContext = reactHostPort.createContext<Flow>(DEFAULT_FLOW);
+
+/** @emoji 🧭 Sets the flow for descendant chrome, merging partial overrides onto the parent flow (nesting overrides). */
+export const FlowProvider: React.FC<{
+  readonly inline?: FlowInline;
+  readonly block?: FlowBlock;
+  readonly children: React.ReactNode;
+}> = ({ inline, block, children }) => {
+  const parent = reactHostPort.useContext(FlowContext);
+  const value = reactHostPort.useMemo((): Flow => ({ inline: inline ?? parent.inline, block: block ?? parent.block }), [inline, block, parent]);
+  return <FlowContext.Provider value={value}>{children}</FlowContext.Provider>;
+};
+
+/** @emoji 🪝 Returns the nearest {@link FlowProvider} flow (defaults to LTR/down). */
+export function useFlow(): Flow {
+  return reactHostPort.useContext(FlowContext);
+}
+
+/** @emoji 🧭 The mirrored {@link Flow} a {@link CornerPanel} grows into — right corners flip inline, bottom corners flip block. */
+export function flowFromCorner(corner: PanelCorner): Flow {
+  return { inline: cornerHorizontal(corner) === "right" ? "rtl" : "ltr", block: cornerVertical(corner) === "bottom" ? "up" : "down" };
+}
+// #endregion 🧭Flow Context
 
 /** @emoji 🌱 One draggable tree granule inside a leaf tab — dockable between leaf tabs, rendered as its own collapsible section. */
 export interface PanelTreeUnit {
@@ -4757,10 +4801,10 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, corner, parentPath =
                 }
                 className={cn(buttonClass, isActive && panelTabActiveClass, isDragSource && "opacity-40", isChildDropTarget && "ring-2 ring-accent")}
               >
+                <span className={panelTabLabelClass}>{tab.name}</span>
                 <span className={panelTabIconSlotClass}>
                   <Icon size={12} />
                 </span>
-                <span className={panelTabLabelClass}>{tab.name}</span>
               </button>
             </ChromeControlHint>
           </React.Fragment>
@@ -4781,10 +4825,12 @@ export interface PanelTabBarProps {
   readonly onActivePathChange: (path: readonly string[]) => void;
   /** @emoji 🎀 Stacking direction for nested rows — `"up"` for bottom corner panels (rows grow toward the display center), `"down"` otherwise. */
   readonly direction?: "up" | "down";
+  /** @emoji 🗜️ Renders only the root row — used by a folded {@link CornerPanel}'s button group so nested branch children stay hidden until the panel opens. */
+  readonly rootRowOnly?: boolean;
 }
 
 /** @emoji 📑 Panel tab strip shared by {@link CornerPanel} and {@link MobilePanel} — one {@link PanelTabRow} per tree level, stacked in a {@link Ribbon}. */
-export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, corner, tabs, activePath, onActivePathChange, direction = "down" }) => {
+export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, corner, tabs, activePath, onActivePathChange, direction = "down", rootRowOnly = false }) => {
   const rows: RibbonRow[] = [];
   let level = tabs;
   let depth = 0;
@@ -4806,6 +4852,7 @@ export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, corner, tabs,
         />
       ),
     });
+    if (rootRowOnly) break;
     const active = sorted.find((tab) => tab.id === activeId);
     level = (active && panelTabChildren(active)) ?? [];
     depth++;
@@ -5002,11 +5049,10 @@ function panelDockRowTabButtons(rowElement: HTMLElement, excludedIds: ReadonlySe
 }
 
 /**
- * 🎯 Resolves a tab-drag drop target from registered rows and corner-chrome rects. A row hit lands on a branch
- * button's 30–70% center band as `"child"` (nest into it), elsewhere as a midpoint `"insert"`; corner chrome
- * (rendered even when folded) always resolves to a root append.
+ * 🎯 Resolves a tab-drag drop target from registered rows. A row hit lands on a branch button's 30–70% center
+ * band as `"child"` (nest into it), elsewhere as a midpoint `"insert"`.
  **/
-export function computeTabDockDropZone(pointerX: number, pointerY: number, rows: readonly PanelTabRowDropTarget[], chromeRects: ReadonlyMap<PanelCorner, DOMRect>, excludedIds: ReadonlySet<string>): PanelTabDockTarget | null {
+export function computeTabDockDropZone(pointerX: number, pointerY: number, rows: readonly PanelTabRowDropTarget[], excludedIds: ReadonlySet<string>): PanelTabDockTarget | null {
   for (const row of rows) {
     const rect = row.rowElement.getBoundingClientRect();
     if (pointerX < rect.left || pointerX > rect.right || pointerY < rect.top || pointerY > rect.bottom) continue;
@@ -5022,11 +5068,6 @@ export function computeTabDockDropZone(pointerX: number, pointerY: number, rows:
       return { kind: "insert", corner: row.corner, parentPath: row.parentPath, index: index + (fraction >= 0.5 ? 1 : 0) };
     }
     return { kind: "insert", corner: row.corner, parentPath: row.parentPath, index: buttons.length };
-  }
-  for (const [corner, rect] of chromeRects) {
-    if (pointerX >= rect.left && pointerX <= rect.right && pointerY >= rect.top && pointerY <= rect.bottom) {
-      return { kind: "insert", corner, parentPath: [], index: Number.MAX_SAFE_INTEGER };
-    }
   }
   return null;
 }
@@ -5109,7 +5150,6 @@ export interface PanelDockContextValue {
   readonly dropTarget: PanelTabDockTarget | null;
   readonly startTabDrag: (corner: PanelCorner, tabId: string, label: string, event: React.PointerEvent<HTMLElement>) => void;
   readonly registerTabRowDropTarget: (corner: PanelCorner, parentPath: readonly string[], element: HTMLElement | null) => void;
-  readonly registerCornerChromeDropTarget: (corner: PanelCorner, element: HTMLElement | null) => void;
   readonly onTreeUnitDockDrop: (move: PanelTreeUnitDockMove) => void;
 }
 
@@ -5136,7 +5176,6 @@ export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTa
   const [dropTarget, setDropTarget] = reactHostPort.useState<PanelTabDockTarget | null>(null);
   const dropTargetRef = reactHostPort.useRef<PanelTabDockTarget | null>(null);
   const rowsRef = reactHostPort.useRef(new Map<string, PanelTabRowDropTarget>());
-  const chromeRef = reactHostPort.useRef(new Map<PanelCorner, HTMLElement>());
   const excludedIdsRef = reactHostPort.useRef<ReadonlySet<string>>(new Set());
   const dockRef = reactHostPort.useRef(dock);
   dockRef.current = dock;
@@ -5150,18 +5189,8 @@ export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTa
     rowsRef.current.set(key, { corner, parentPath, rowElement: element });
   }, []);
 
-  const registerCornerChromeDropTarget = reactHostPort.useCallback((corner: PanelCorner, element: HTMLElement | null) => {
-    if (!element) {
-      chromeRef.current.delete(corner);
-      return;
-    }
-    chromeRef.current.set(corner, element);
-  }, []);
-
   const refreshDropTarget = reactHostPort.useCallback((x: number, y: number) => {
-    const chromeRects = new Map<PanelCorner, DOMRect>();
-    chromeRef.current.forEach((element, corner) => chromeRects.set(corner, element.getBoundingClientRect()));
-    const zone = computeTabDockDropZone(x, y, [...rowsRef.current.values()], chromeRects, excludedIdsRef.current);
+    const zone = computeTabDockDropZone(x, y, [...rowsRef.current.values()], excludedIdsRef.current);
     dropTargetRef.current = zone;
     setDropTarget(zone);
   }, []);
@@ -5229,8 +5258,8 @@ export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTa
   }, [dragState, panelGhost]);
 
   const contextValue = reactHostPort.useMemo<PanelDockContextValue>(
-    () => ({ dragTabId: dragState?.tabId ?? null, dropTarget, startTabDrag, registerTabRowDropTarget, registerCornerChromeDropTarget, onTreeUnitDockDrop }),
-    [dragState, dropTarget, startTabDrag, registerTabRowDropTarget, registerCornerChromeDropTarget, onTreeUnitDockDrop],
+    () => ({ dragTabId: dragState?.tabId ?? null, dropTarget, startTabDrag, registerTabRowDropTarget, onTreeUnitDockDrop }),
+    [dragState, dropTarget, startTabDrag, registerTabRowDropTarget, onTreeUnitDockDrop],
   );
 
   return (
@@ -5767,7 +5796,7 @@ function CommandItem({ className, ...props }: React.ComponentProps<typeof Comman
  * CommandShortcut holds the data fields for a CommandShortcut record.
  **/
 function CommandShortcut({ className, ...props }: React.ComponentProps<"span">) {
-  return <span data-slot="command-shortcut" className={cn("text-muted-foreground ml-auto text-xs tracking-widest", className)} {...props} />;
+  return <span data-slot="command-shortcut" className={cn("text-muted-foreground ms-auto text-xs tracking-widest", className)} {...props} />;
 }
 
 // #endregion 🪆Command
@@ -5982,10 +6011,12 @@ function PopoverTrigger({ className, ...props }: React.ComponentProps<typeof Pop
  **/
 function PopoverContent({ className, align = "center", sideOffset = 4, ...props }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
   const glassClass = getGlassSurfaceClass(useGlassTier());
+  const flow = useFlow();
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         data-slot="popover-content"
+        dir={flow.inline === "rtl" ? "rtl" : undefined}
         align={align}
         sideOffset={sideOffset}
         className={cn(
@@ -6080,10 +6111,12 @@ function TooltipTrigger({ className, asChild, ...props }: React.ComponentProps<t
  * TooltipContent holds the data fields for a TooltipContent record.
  **/
 function TooltipContent({ className, sideOffset = 8, children, ...props }: React.ComponentProps<typeof TooltipPrimitive.Content>) {
+  const flow = useFlow();
   return (
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
+        dir={flow.inline === "rtl" ? "rtl" : undefined}
         sideOffset={sideOffset}
         className={cn(
           "bg-temporary border border-accent-foreground text-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-temporary origin-(--radix-tooltip-content-transform-origin) p-single text-xs text-balance w-max max-w-fit",
@@ -6254,7 +6287,7 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
             </Link>
           )}
           {hotkey && (
-            <kbd onClick={handleHotkeyClick} className="border border-accent-foreground text-muted-foreground p-single text-2xs font-mono ml-auto cursor-pointer">
+            <kbd onClick={handleHotkeyClick} className="border border-accent-foreground text-muted-foreground p-single text-2xs font-mono ms-auto cursor-pointer">
               {hotkey}
             </kbd>
           )}
@@ -6367,7 +6400,7 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
       <div id={rowId} data-slot="tree-group-header-row" className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName, className)}>
         <div className={cn(treeHeaderMainClassName, "min-h-medium items-center")}>
           {treeGroupHeaderLabel}
-          <div data-slot="tree-group-header-control" className="ml-auto flex min-w-0 shrink-0 items-center justify-end">
+          <div data-slot="tree-group-header-control" className="ms-auto flex min-w-0 shrink-0 items-center justify-end">
             {children}
           </div>
         </div>
@@ -7176,9 +7209,9 @@ function ActionGroupItem({
       )}
       {...(props as any)}
     >
-      {renderControlIcon(icon, "tiny")}
       {children}
       {text && <span className="text-tiny whitespace-nowrap">{text}</span>}
+      {renderControlIcon(icon, "tiny")}
     </Component>
   );
 
@@ -7246,7 +7279,7 @@ function ActionDropdown({ className, id, options, value, onValueChange, startTra
             >
               <span className="flex items-center justify-center size-3">{renderControlIcon(option.icon, "tiny")}</span>
               {option.label && <span className="flex-1 text-left">{option.label}</span>}
-              {value === option.value && <CheckIcon className="size-tiny ml-auto" />}
+              {value === option.value && <CheckIcon className="size-tiny ms-auto" />}
             </button>
           ))}
         </div>
@@ -7299,8 +7332,8 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
       )}
       {...(props as any)}
     >
-      {renderControlIcon(icon, "tiny")}
       {inlineText ? <span className="text-tiny whitespace-nowrap">{inlineText}</span> : null}
+      {renderControlIcon(icon, "tiny")}
     </Comp>
   );
 
@@ -7425,9 +7458,9 @@ function ButtonGroupItem({
       )}
       {...(props as any)}
     >
-      {renderControlIcon(icon)}
       {children}
       {inlineText ? <span className="text-xs whitespace-nowrap">{inlineText}</span> : null}
+      {renderControlIcon(icon)}
     </Comp>
   );
 
@@ -8212,10 +8245,12 @@ function SelectTrigger({
  **/
 function SelectContent({ className, children, position = "popper", ...props }: React.ComponentProps<typeof SelectPrimitive.Content>) {
   const glassClass = getGlassSurfaceClass(useGlassTier());
+  const flow = useFlow();
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         data-slot="select-content"
+        dir={flow.inline === "rtl" ? "rtl" : undefined}
         className={cn(
           glassClass,
           "text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-temporary max-h-(--radix-select-content-available-height) min-w-32 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto border",
@@ -9151,15 +9186,15 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
       )}
       {...props}
     >
-      <span className={action ? "flex-1 flex items-center justify-center" : undefined}>{renderControlIcon(icon)}</span>
       {inlineText ? (
         <span data-slot="inline-label" className="text-xs whitespace-nowrap">
           {inlineText}
         </span>
       ) : null}
+      <span className={action ? "flex-1 flex items-center justify-center" : undefined}>{renderControlIcon(icon)}</span>
       {action && (
         <div
-          className={cn("flex items-center justify-center aspect-square h-full flex-shrink-0", getLevelBgClass(level), text && "ml-single")}
+          className={cn("flex items-center justify-center aspect-square h-full flex-shrink-0", getLevelBgClass(level), text && "ms-single")}
           onClick={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
@@ -9725,10 +9760,12 @@ function DialogContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean;
 }) {
+  const flow = useFlow();
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogPrimitive.Content
         data-slot="dialog-content"
+        dir={flow.inline === "rtl" ? "rtl" : undefined}
         className={cn(
           cn(
             glassMenuClass,
@@ -10240,18 +10277,19 @@ export interface NavbarProps {
   items: NavbarItem[];
   className?: string;
   showFullscreenToggle?: boolean;
+  style?: React.CSSProperties;
 }
 
 /**
  * Navbar holds the data fields for a Navbar record.
  **/
-function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) {
+function Navbar({ items, className, showFullscreenToggle = true, style }: NavbarProps) {
   const level = useLevel();
   const bgClass = getLevelBgClass(level);
   const normalItems = items.filter((item) => !item.centered);
   const centeredItems = items.filter((item) => item.centered);
   return (
-    <nav id="ui.navbar" data-slot="navbar" className={cn(borderNormalBottomClass, "relative h-large z-navbar", bgClass, className)}>
+    <nav id="ui.navbar" data-slot="navbar" className={cn(borderNormalBottomClass, "relative h-large z-navbar", bgClass, className)} style={style}>
       <UiChromeLabelPolicyProvider policy="always">
         <div className="p-single flex gap-single items-center min-w-0 h-full">
           {normalItems.map((item, index) => (
@@ -10260,13 +10298,13 @@ function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) 
             </div>
           ))}
           {showFullscreenToggle ? (
-            <div key="fullscreenToggle" data-slot="navbar-fullscreen-toggle" className="h-medium flex shrink-0 items-center min-w-0 ml-auto">
+            <div key="fullscreenToggle" data-slot="navbar-fullscreen-toggle" className="h-medium flex shrink-0 items-center min-w-0 ms-auto">
               <NavbarFullscreenToggle />
             </div>
           ) : null}
         </div>
         {centeredItems.map((item, index) => (
-          <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div key={item.key ?? index} className="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center justify-center" style={{ left: style?.paddingLeft, right: style?.paddingRight }}>
             <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>{item.content}</div>
           </div>
         ))}
@@ -10783,7 +10821,7 @@ const detailPanelPropertyStackedRowGapPx = domSizePx("propertyStackedGapUiSpacin
 const detailPanelPropertyStackedToInlineHysteresisPx = domSizePx("propertyStackedHysteresisUiSpacing");
 const detailPanelPropertyRowClassName = "group grid min-w-0 items-start gap-x-tiny min-h-workbench";
 const detailPanelPropertyControlClassName =
-  "min-w-0 w-full self-start flex items-stretch justify-end [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ml-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
+  "min-w-0 w-full self-start flex items-stretch justify-end [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ms-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
 const treeInspectorInnerRowClassName = "min-w-0 w-full";
 const treeHeaderRowClassName = "flex h-full min-w-0 w-full items-center gap-double";
 const treeHeaderMainClassName = "flex h-full min-w-0 flex-1 items-center gap-double";
@@ -12472,7 +12510,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 </span>
               </div>
               {!isExpandable && (
-                <div data-slot="tree-item-control" className="ml-auto flex min-w-0 shrink-0 items-center justify-end gap-double">
+                <div data-slot="tree-item-control" className="ms-auto flex min-w-0 shrink-0 items-center justify-end gap-double">
                   {children}
                 </div>
               )}
@@ -15077,27 +15115,13 @@ export function useNativeDragAndDrop<TElement extends HTMLElement = HTMLDivEleme
   );
 }
 
-/** @emoji 🧭 Icon id for a corner's fold/unfold toggle — points away from the display's center. */
-export function cornerToggleIconId(corner: PanelCorner): "square-arrow-up-left" | "square-arrow-up-right" | "square-arrow-down-left" | "square-arrow-down-right" {
-  switch (corner) {
-    case "top-left":
-      return "square-arrow-up-left";
-    case "top-right":
-      return "square-arrow-up-right";
-    case "bottom-left":
-      return "square-arrow-down-left";
-    case "bottom-right":
-      return "square-arrow-down-right";
-  }
-}
-
 /**
  * Props interface for the CornerPanel component.
  **/
 export interface CornerPanelProps {
   corner: PanelCorner;
   visible?: boolean;
-  /** @emoji 🎛 Drives the panel's own fold/unfold toggle (its chrome, always rendered — see {@link CornerPanelChrome}). */
+  /** @emoji 🎛 Fired when the panel's own tab button group opens or folds it (see {@link CornerPanel}). */
   onVisibleChange?: (visible: boolean) => void;
   size?: number;
   onSizeChange?: (size: number) => void;
@@ -15109,36 +15133,6 @@ export interface CornerPanelProps {
   zIndex?: 10 | 20 | 30 | 40;
   className?: string;
 }
-
-/** @emoji 🎛 The panel's own fold/unfold toggle — always rendered, same as a window's options-rail chrome, so it stays visually anchored at the panel's corner whether the panel is folded or open. */
-interface CornerPanelChromeProps {
-  readonly corner: PanelCorner;
-  readonly visible: boolean;
-  readonly onToggle: (visible: boolean) => void;
-}
-
-const CornerPanelChrome: React.FC<CornerPanelChromeProps> = ({ corner, visible, onToggle }) => {
-  const isBottom = cornerVertical(corner) === "bottom";
-  const dock = usePanelDockContext();
-  const setChromeRef = reactHostPort.useCallback((element: HTMLDivElement | null) => dock?.registerCornerChromeDropTarget(corner, element), [dock, corner]);
-  const isDropRoot = dock?.dropTarget?.kind === "insert" && dock.dropTarget.corner === corner && dock.dropTarget.index === Number.MAX_SAFE_INTEGER;
-  return (
-    <div
-      ref={setChromeRef}
-      data-slot="corner-panel-chrome"
-      data-expanded={visible ? "true" : undefined}
-      data-drop-root={isDropRoot ? "true" : undefined}
-      className={cn(
-        "relative z-10 flex h-medium shrink-0 items-stretch",
-        cornerHorizontal(corner) === "left" ? "justify-start" : "justify-end",
-        visible && (isBottom ? borderNormalTopClass : borderNormalBottomClass),
-        isDropRoot && "ring-2 ring-accent ring-inset",
-      )}
-    >
-      <Toggle id={`ui.panelToggle.${cornerKey(corner)}`} icon={<Icon icon={cornerToggleIconId(corner)} size="small" />} pressed={visible} onPressedChange={onToggle} className="w-fit border-0 bg-transparent" />
-    </div>
-  );
-};
 
 /** @emoji 🌲 Leaf-tab tree body shared by {@link CornerPanel} and {@link MobilePanel} — one section per unit (sorted by order); skipped when the active tab has no units. Under a {@link PanelDockProvider}, each unit's header becomes a native-DnD handle draggable to another leaf tab's unit list (see {@link PANEL_TREE_UNIT_MIME}). */
 const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({ corner, tabId, units }: { readonly corner?: PanelCorner; readonly tabId: string; readonly units: readonly PanelTreeUnit[] }) {
@@ -15276,14 +15270,22 @@ const CornerPanel: React.FC<CornerPanelProps> = ({ corner, visible = true, onVis
     sizeRef.current = size;
   }, [size]);
 
+  const flow = flowFromCorner(corner);
   const horizontal = cornerHorizontal(corner);
-  const isBottom = cornerVertical(corner) === "bottom";
+  const isBottom = flow.block === "up";
   const showTabBar = tabs.length > 0;
   const resolvedPath = reactHostPort.useMemo(() => reconcileActivePath(tabs, activeTabPath ?? internalActivePath, panelTabChildren), [tabs, activeTabPath, internalActivePath]);
   const activeNode = reactHostPort.useMemo(() => findPanelTabNode(tabs, resolvedPath), [tabs, resolvedPath]);
   const activeTabTrees = activeNode?.kind === "leaf" ? activeNode.trees : null;
 
+  // 🎛 The tab button group doubles as the panel's own fold/unfold control: picking the tab already fully active folds the panel, any other pick opens it.
   const handlePathChange = (path: readonly string[]) => {
+    const samePath = visible && path.length === resolvedPath.length && path.every((id, index) => id === resolvedPath[index]);
+    if (samePath) {
+      onVisibleChange?.(false);
+      return;
+    }
+    if (!visible) onVisibleChange?.(true);
     if (onActiveTabPathChange) {
       onActiveTabPathChange(path);
     } else {
@@ -15310,37 +15312,41 @@ const CornerPanel: React.FC<CornerPanelProps> = ({ corner, visible = true, onVis
         data-slot="corner-panel"
         data-corner={corner}
         data-panel-visible={visible ? "true" : "false"}
+        dir={flow.inline === "rtl" ? "rtl" : undefined}
         className={cn("absolute min-w-0 overflow-hidden flex box-border text-foreground", isBottom ? "flex-col-reverse" : "flex-col", !visible && "w-fit", className)}
         style={positionStyle}
       >
-        <div data-dim aria-hidden className={panelChromeFillLayerClass} />
-        <div data-dim data-slot="panel-chrome-frame" aria-hidden className={cn(panelChromeFrameLayerClass, visible && panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered))} />
-        <UiChromeLabelPolicyProvider policy="always">
-          <CornerPanelChrome corner={corner} visible={visible} onToggle={(next) => onVisibleChange?.(next)} />
-        </UiChromeLabelPolicyProvider>
-        {visible ? (
-          <>
-            {showTabBar ? <PanelTabBar corner={corner} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="corner" direction={isBottom ? "up" : "down"} /> : null}
-            <Scrollable className="relative z-10 flex-1 min-h-0">
-              <div data-slot="corner-panel-content" className="flex min-h-0 flex-1 flex-col">
-                {activeTabTrees && activeNode ? <PanelTreeUnitsPane corner={corner} tabId={activeNode.id} units={activeTabTrees} /> : null}
-              </div>
-            </Scrollable>
-            {onSizeChange ? (
-              <CornerPanelResizeHandle
-                corner={corner}
-                isResizing={isResizing}
-                maxSize={maxSize}
-                minSize={minSize}
-                onSizeChange={onSizeChange}
-                resizeHandleClass={resizeHandleClass}
-                setIsResizing={setIsResizing}
-                setIsResizeHovered={setIsResizeHovered}
-                sizeRef={sizeRef}
-              />
+        <FlowProvider inline={flow.inline} block={flow.block}>
+          <div data-dim aria-hidden className={panelChromeFillLayerClass} />
+          <div data-dim data-slot="panel-chrome-frame" aria-hidden className={cn(panelChromeFrameLayerClass, visible && panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered))} />
+          <UiChromeLabelPolicyProvider policy="always">
+            {showTabBar ? (
+              <PanelTabBar corner={corner} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="corner" direction={flow.block} rootRowOnly={!visible} />
             ) : null}
-          </>
-        ) : null}
+          </UiChromeLabelPolicyProvider>
+          {visible ? (
+            <>
+              <Scrollable className="relative z-10 flex-1 min-h-0">
+                <div data-slot="corner-panel-content" className="flex min-h-0 flex-1 flex-col">
+                  {activeTabTrees && activeNode ? <PanelTreeUnitsPane corner={corner} tabId={activeNode.id} units={activeTabTrees} /> : null}
+                </div>
+              </Scrollable>
+              {onSizeChange ? (
+                <CornerPanelResizeHandle
+                  corner={corner}
+                  isResizing={isResizing}
+                  maxSize={maxSize}
+                  minSize={minSize}
+                  onSizeChange={onSizeChange}
+                  resizeHandleClass={resizeHandleClass}
+                  setIsResizing={setIsResizing}
+                  setIsResizeHovered={setIsResizeHovered}
+                  sizeRef={sizeRef}
+                />
+              ) : null}
+            </>
+          ) : null}
+        </FlowProvider>
       </PanelGhostRoot>
     </LevelProvider>
   );
@@ -23024,7 +23030,7 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="panel-chrome-frame"]')?.className).toContain("z-30");
     });
 
-    it("CornerPanel keeps its toggle chrome mounted when folded, but drops tab bar and content — same as a window's options rail", () => {
+    it("CornerPanel keeps its tab button group mounted when folded, but drops content — the tabs are the panel's only chrome", () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [
         singleTreeLeaf({
@@ -23041,17 +23047,26 @@ if (import.meta.vitest) {
       rerender(<CornerPanel corner="top-left" visible={false} tabs={tabs} />);
       expect(screen.queryByText("Leaf row")).toBeNull();
       expect(document.querySelector('[data-panel-visible="false"]')).toBeTruthy();
-      expect(document.querySelector('[data-slot="corner-panel-chrome"]')).toBeTruthy();
-      expect(document.getElementById("ui.panelToggle.topLeft")).toBeTruthy();
+      expect(screen.getByText("Tab A")).toBeTruthy();
     });
 
-    it("CornerPanel's chrome toggle calls onVisibleChange with the flipped visibility", () => {
+    it("CornerPanel's tabs double as the fold toggle: picking a tab opens a folded panel, picking the active tab folds it", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [
+        singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } }),
+        singleTreeLeaf({ id: "tab-b", icon: StubIcon, name: "Tab B", tree: { sections: [] } }),
+      ];
       const onVisibleChange = vi.fn();
-      const { container } = render(<CornerPanel corner="top-right" visible={false} onVisibleChange={onVisibleChange} tabs={[]} />);
-      const toggle = container.querySelector('button[id="ui.panelToggle.topRight"]') as HTMLElement;
-      expect(toggle).toBeTruthy();
-      fireEvent.click(toggle);
+      const { container, rerender } = render(<CornerPanel corner="top-right" visible={false} onVisibleChange={onVisibleChange} tabs={tabs} activeTabPath={["tab-a"]} />);
+      const tabAButton = container.querySelector('button[id="tab-a"]') as HTMLElement;
+      expect(tabAButton).toBeTruthy();
+      fireEvent.click(tabAButton);
       expect(onVisibleChange).toHaveBeenCalledWith(true);
+
+      onVisibleChange.mockClear();
+      rerender(<CornerPanel corner="top-right" visible onVisibleChange={onVisibleChange} tabs={tabs} activeTabPath={["tab-a"]} />);
+      fireEvent.click(container.querySelector('button[id="tab-a"]') as HTMLElement);
+      expect(onVisibleChange).toHaveBeenCalledWith(false);
     });
 
     it("modeDockChromeGridPlacement keeps tabs left and controls right", () => {
@@ -26692,10 +26707,6 @@ if (treeVitest) {
       expect(panelMarkup).not.toMatch(/corner-panel-tabs[^>]*border-emphasized/);
       expect(panelMarkup).toMatch(/corner-panel-tabs[^>]*z-40/);
       expect(panelMarkup).toMatch(/panel-chrome-frame[^>]*z-30/);
-      const chromeMatch = panelMarkup.match(/<div data-slot="corner-panel-chrome"[^>]*class="([^"]*)"/);
-      expect(chromeMatch?.[1]).not.toMatch(/\bp-single\b/);
-      const toggleGroupMatch = panelMarkup.match(/data-slot="toggle-group"[^>]*class="([^"]*)"/);
-      expect(toggleGroupMatch?.[1]).toMatch(/\bborder-0\b/);
       const measuresMarkup = renderToStaticMarkup(<div data-slot="window-measures-stack" className={windowMeasuresStackClass} />);
       expect(measuresMarkup).toContain("border-element/40");
       expect(measuresMarkup).not.toContain("border-emphasized");
@@ -26959,7 +26970,7 @@ if (treeVitest) {
       expect(crossTabB?.kind === "leaf" ? crossTabB.trees.map((unit) => unit.id) : null).toEqual(["unit-1", "unit-3"]);
     });
 
-    it("computeTabDockDropZone resolves midpoint inserts, a branch's nest band, and corner-chrome root append; misses resolve to null", () => {
+    it("computeTabDockDropZone resolves midpoint inserts and a branch's nest band; misses resolve to null", () => {
       const fabricateRect = (element: HTMLElement, rect: { left: number; right: number; top: number; bottom: number }) => {
         element.getBoundingClientRect = () => ({ ...rect, width: rect.right - rect.left, height: rect.bottom - rect.top, x: rect.left, y: rect.top, toJSON: () => ({}) });
       };
@@ -26979,31 +26990,16 @@ if (treeVitest) {
       const rows: readonly PanelTabRowDropTarget[] = [{ corner: "top-left", parentPath: [], rowElement }];
 
       // Left half of the leaf button: insert-before (index 0).
-      expect(computeTabDockDropZone(20, 10, rows, new Map(), new Set())).toEqual({ kind: "insert", corner: "top-left", parentPath: [], index: 0 });
+      expect(computeTabDockDropZone(20, 10, rows, new Set())).toEqual({ kind: "insert", corner: "top-left", parentPath: [], index: 0 });
       // Right half of the leaf button: insert-after (index 1).
-      expect(computeTabDockDropZone(80, 10, rows, new Map(), new Set())).toEqual({ kind: "insert", corner: "top-left", parentPath: [], index: 1 });
+      expect(computeTabDockDropZone(80, 10, rows, new Set())).toEqual({ kind: "insert", corner: "top-left", parentPath: [], index: 1 });
       // Center 30–70% band of the branch button (100–200 wide -> 130..170): nest as a child.
-      expect(computeTabDockDropZone(150, 10, rows, new Map(), new Set())).toEqual({ kind: "child", corner: "top-left", parentId: "branch-a" });
+      expect(computeTabDockDropZone(150, 10, rows, new Set())).toEqual({ kind: "child", corner: "top-left", parentId: "branch-a" });
       // Excluding the branch button (e.g. it's the dragged subtree) falls through to append-at-end of the row.
-      expect(computeTabDockDropZone(150, 10, rows, new Map(), new Set(["branch-a"]))).toEqual({ kind: "insert", corner: "top-left", parentPath: [], index: 1 });
-
-      const chromeRects = new Map<PanelCorner, DOMRect>([["bottom-right", { left: 300, right: 340, top: 300, bottom: 340, width: 40, height: 40, x: 300, y: 300, toJSON: () => ({}) } as DOMRect]]);
-      expect(computeTabDockDropZone(320, 320, [], chromeRects, new Set())).toEqual({ kind: "insert", corner: "bottom-right", parentPath: [], index: Number.MAX_SAFE_INTEGER });
+      expect(computeTabDockDropZone(150, 10, rows, new Set(["branch-a"]))).toEqual({ kind: "insert", corner: "top-left", parentPath: [], index: 1 });
 
       // Outside every registered surface: no drop.
-      expect(computeTabDockDropZone(9999, 9999, rows, chromeRects, new Set())).toBeNull();
-    });
-
-    it("resolves the four corner panel toggle keys in en and de", () => {
-      for (const locale of ["en", "de"] as const) {
-        void uiI18n.changeLanguage(locale);
-        for (const key of ["ui.panelToggle.topLeft", "ui.panelToggle.topRight", "ui.panelToggle.bottomLeft", "ui.panelToggle.bottomRight"] as const) {
-          const label = resolveTranslationLabel(uiI18n.t(key));
-          expect(label, `${locale}:${key}`).toBeTruthy();
-          expect(label).not.toBe(key);
-        }
-      }
-      void uiI18n.changeLanguage("en");
+      expect(computeTabDockDropZone(9999, 9999, rows, new Set())).toBeNull();
     });
 
     it("navbar keeps inline labels when compact chrome is enabled", () => {

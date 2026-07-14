@@ -51,7 +51,9 @@ import {
   groupToolNodesByCategory,
   initialShellState,
   isFlowGraphScene,
+  mergeRecordPreservingIdentity,
   parseStudioShellPath,
+  preserveJsonIdentity,
   reconcileToolPath,
   selectSpawnedToolNodes,
   shellReducer,
@@ -148,6 +150,68 @@ describe("shell store reducer", () => {
     const next = shellReducer(state, { type: "SET_UI_COMPACT", value: (prev) => !prev });
     expect(next.uiPrefs.uiCompact).toBe(!state.uiPrefs.uiCompact);
     expect(next.sync).toBe(state.sync);
+  });
+});
+
+// 🐢 Puzzle 2D performance round 2: the per-interaction full-shell refresh cascade was dominated by
+// React reconciling freshly-parsed-but-structurally-identical UiNode/engagement/measure trees on every
+// action (select/camera/nodeMove). These helpers let unchanged bodies keep their object identity across
+// a `refreshUi` so `InterpretedUiNode`'s `React.memo` (ui-interpreter.tsx) and `modeWindows`'s
+// `useMemo` (os-shell.tsx) can bail instead of reconciling the whole shell every time.
+describe("ui identity preservation (puzzle 2d perf)", () => {
+  it("preserveJsonIdentity reuses the previous reference for structurally-equal values", () => {
+    const previous = { type: "text", value: "hello" };
+    const next = { type: "text", value: "hello" };
+    expect(preserveJsonIdentity(previous, next)).toBe(previous);
+  });
+
+  it("preserveJsonIdentity returns the new reference when content actually differs", () => {
+    const previous = { type: "text", value: "hello" };
+    const next = { type: "text", value: "goodbye" };
+    expect(preserveJsonIdentity(previous, next)).toBe(next);
+  });
+
+  it("preserveJsonIdentity treats nested arrays/objects structurally, not just top-level fields", () => {
+    const previous = { nodes: [{ id: "a", x: 1 }, { id: "b", x: 2 }] };
+    const next = { nodes: [{ id: "a", x: 1 }, { id: "b", x: 2 }] };
+    expect(preserveJsonIdentity(previous, next)).toBe(previous);
+    const moved = { nodes: [{ id: "a", x: 1 }, { id: "b", x: 3 }] };
+    expect(preserveJsonIdentity(previous, moved)).toBe(moved);
+  });
+
+  it("preserveJsonIdentity treats undefined previous as always-changed", () => {
+    const next = { type: "text", value: "hello" };
+    expect(preserveJsonIdentity(undefined, next)).toBe(next);
+  });
+
+  it("mergeRecordPreservingIdentity reuses the whole previous record when every key is unchanged", () => {
+    const prev = { overview: { type: "text", value: "a" }, detail: { type: "text", value: "b" } };
+    const merged = mergeRecordPreservingIdentity(prev, [
+      ["overview", { type: "text", value: "a" }],
+      ["detail", { type: "text", value: "b" }],
+    ]);
+    expect(merged).toBe(prev);
+  });
+
+  it("mergeRecordPreservingIdentity reuses per-key references, replacing only the changed key", () => {
+    const prev = { overview: { type: "text", value: "a" }, detail: { type: "text", value: "b" } };
+    const merged = mergeRecordPreservingIdentity(prev, [
+      ["overview", { type: "text", value: "a" }],
+      ["detail", { type: "text", value: "changed" }],
+    ]);
+    expect(merged).not.toBe(prev);
+    expect(merged.overview).toBe(prev.overview);
+    expect(merged.detail).not.toBe(prev.detail);
+  });
+
+  it("mergeRecordPreservingIdentity treats a key being added or removed as a change", () => {
+    const prev = { overview: { type: "text", value: "a" } };
+    const withNewKey = mergeRecordPreservingIdentity(prev, [
+      ["overview", { type: "text", value: "a" }],
+      ["detail", { type: "text", value: "b" }],
+    ]);
+    expect(withNewKey).not.toBe(prev);
+    expect(withNewKey.overview).toBe(prev.overview);
   });
 });
 

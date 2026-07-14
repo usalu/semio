@@ -1,0 +1,12 @@
+\documentclass{scrreprt}
+\begin{document}
+\makeatletter
+\ifcsname partlineswithprefixformat\endcsname
+  \typeout{PARTLINESWITHPREFIXFORMAT-EXISTS}
+\else
+  \typeout{PARTLINESWITHPREFIXFORMAT-MISSING}
+\fi
+\makeatother
+\part{Test Part}
+\chapter{Test Chapter}
+\end{document}

@@ -429,9 +429,28 @@ pub mod d2 {
     //#endregion 🔖Envelope
 
     //#region 🔖BoardHost
-    fn sync_host_from_envelope(host: &mut BoardHost, envelope: &Puzzle2dScene) {
-        host.set_size(BOARD_DEFAULT_WIDTH, BOARD_DEFAULT_HEIGHT, 1.0);
+    /// 🧱 The expensive half of syncing `host` from `envelope`: a full `clear_scene()` + rebuild of
+    /// every node/handle/edge plus the kind-catalog/kind-compat re-push. Only needed when
+    /// `envelope.fixture` content actually changed — gated by `last_synced_fixture` in `handle_action`.
+    fn sync_host_fixture_content(host: &mut BoardHost, envelope: &Puzzle2dScene) {
         let _ = host.parse_fixture_v1(&envelope.fixture);
+        if let Some(catalogs) = envelope.fixture.get("meta").and_then(|value| value.get("kindCatalogs")) {
+            if let Ok(json) = serde_json::to_string(catalogs) {
+                let _ = host.set_board_kind_catalogs_from_json(&json);
+            }
+        }
+        if let Some(compat) = envelope.fixture.get("meta").and_then(|value| value.get("kindCompatibility")).or_else(|| envelope.fixture.get("kindCompatibility")) {
+            if let Ok(json) = serde_json::to_string(compat) {
+                let _ = host.set_handle_link_compat_from_json(&json);
+            }
+        }
+    }
+
+    /// 🪶 The cheap half of syncing `host` from `envelope`: plain setters mirroring ephemeral runtime
+    /// view state (selection/tool/grid/LOD/…) — must run on every action regardless of whether the
+    /// fixture content changed, since this state itself changes every action.
+    fn sync_host_runtime_state(host: &mut BoardHost, envelope: &Puzzle2dScene) {
+        host.set_size(BOARD_DEFAULT_WIDTH, BOARD_DEFAULT_HEIGHT, 1.0);
         host.set_selection_ids(&envelope.runtime.selected_ids);
         host.set_active_tool(&envelope.runtime.active_tool);
         let overview_lod_mode = envelope.runtime.lod_mode_by_pane.get(PUZZLE2D_PANE_OVERVIEW).map(String::as_str).unwrap_or(PUZZLE2D_LOD_MODE_AUTOMATIC);
@@ -451,16 +470,11 @@ pub mod d2 {
             host.set_brush_kind_weights(&weights_json);
         }
         host.set_selection_options(&envelope.runtime.selection_method, "replace", true, true, true);
-        if let Some(catalogs) = envelope.fixture.get("meta").and_then(|value| value.get("kindCatalogs")) {
-            if let Ok(json) = serde_json::to_string(catalogs) {
-                let _ = host.set_board_kind_catalogs_from_json(&json);
-            }
-        }
-        if let Some(compat) = envelope.fixture.get("meta").and_then(|value| value.get("kindCompatibility")).or_else(|| envelope.fixture.get("kindCompatibility")) {
-            if let Ok(json) = serde_json::to_string(compat) {
-                let _ = host.set_handle_link_compat_from_json(&json);
-            }
-        }
+    }
+
+    fn sync_host_from_envelope(host: &mut BoardHost, envelope: &Puzzle2dScene) {
+        sync_host_fixture_content(host, envelope);
+        sync_host_runtime_state(host, envelope);
     }
 
     fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dScene) {
@@ -547,14 +561,16 @@ pub mod d2 {
         }
     }
 
+    /// 🪞 Re-syncs `envelope.runtime.selected_ids` from `self.host` for engine-driven selection changes
+    /// (e.g. `delete_selection`, brush commit). Camera is deliberately NOT mirrored here: every action
+    /// that moves the camera (`setCamera`, `focusSelection`, the `camera` board event) already writes
+    /// `envelope.fixture`'s camera directly — re-deriving it from `host.camera` here used to blindly
+    /// overwrite that write with the *pre-action* host camera (since nothing had told `self.host` about
+    /// the new value yet), silently reverting every plain `camera` echo from the client.
     fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dScene) {
         let events_raw = host.drain_events_json();
         apply_board_events_from_json(&events_raw, envelope);
         envelope.runtime.selected_ids = host.selection.iter().cloned().collect();
-        let (camera_x, camera_y, zoom) = fixture_camera(&envelope.fixture);
-        if (host.camera.x - camera_x).abs() > 1e-9 || (host.camera.y - camera_y).abs() > 1e-9 || (host.camera.zoom - zoom).abs() > 1e-9 {
-            set_fixture_camera(&mut envelope.fixture, &json!({ "x": host.camera.x, "y": host.camera.y, "zoom": host.camera.zoom }));
-        }
     }
 
     /// 🎲 Re-mints a node id when it collides with an existing one — client-side brush serials restart every session.
@@ -1405,11 +1421,15 @@ pub mod d2 {
     pub struct Puzzle2dPlayApp {
         host: BoardHost,
         runtime: Puzzle2dPlayRuntime,
+        /// 🗄️ The fixture content last parsed into `host` via `parse_fixture_v1` — lets `handle_action`
+        /// skip that full clear-scene-and-rebuild (and the kind-catalog/kind-compat re-push) on the
+        /// large majority of actions (select/camera/tool/…) that never touch fixture content.
+        last_synced_fixture: Option<Value>,
     }
 
     impl Default for Puzzle2dPlayApp {
         fn default() -> Self {
-            Self { host: puzzle_board_host(), runtime: Puzzle2dPlayRuntime::default() }
+            Self { host: puzzle_board_host(), runtime: Puzzle2dPlayRuntime::default(), last_synced_fixture: None }
         }
     }
 
@@ -1432,15 +1452,21 @@ pub mod d2 {
         fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, _view_state: &ViewState) -> ActionEmit<Puzzle2dOp> {
             let before = doc.projection.clone();
             let mut envelope = Puzzle2dScene { fixture: before.clone(), runtime: self.runtime.clone() };
-            sync_host_from_envelope(&mut self.host, &envelope);
-            // 🧹 `parse_fixture_v1` (inside the sync above) always `clear_scene()`s then rebuilds, so it
-            // unconditionally emits an `edgeCreate` for every edge in the fixture as a side effect of
-            // parsing — not a real structural change. Discard that parse-induced noise now so
-            // `apply_host_events` below only sees events genuinely produced by *this* action's own
-            // engine calls (delete_selection, brush ops, …); otherwise those spurious edgeCreate events
-            // get replayed into `envelope.fixture.edges` on the *next* action, duplicating every edge
-            // once per action forever.
-            let _ = self.host.drain_events_json();
+            // 🐢 `sync_host_fixture_content` (`parse_fixture_v1`) does a full `clear_scene()` + rebuild of
+            // every node/handle/edge — skip it when the fixture content is byte-identical to what `host`
+            // already has (the common case: select/camera/tool/… actions never touch fixture content).
+            if self.last_synced_fixture.as_ref() != Some(&envelope.fixture) {
+                sync_host_fixture_content(&mut self.host, &envelope);
+                // 🧹 `parse_fixture_v1` always `clear_scene()`s then rebuilds, so it unconditionally emits
+                // an `edgeCreate` for every edge as a side effect of parsing — not a real structural
+                // change. Discard that parse-induced noise now so `apply_host_events` below only sees
+                // events genuinely produced by *this* action's own engine calls (delete_selection, brush
+                // ops, …); otherwise those spurious edgeCreate events get replayed into
+                // `envelope.fixture.edges` on the *next* action, duplicating every edge every action.
+                let _ = self.host.drain_events_json();
+                self.last_synced_fixture = Some(envelope.fixture.clone());
+            }
+            sync_host_runtime_state(&mut self.host, &envelope);
             let mut coalesce_key: Option<String> = None;
             match action {
                 "setSelection" | "documentSelect" => {
@@ -2017,6 +2043,65 @@ pub mod d2 {
             assert_eq!(camera_x(&app), 3.0);
             app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
             assert_eq!(camera_x(&app), origin_x, "the coalesced drag is a single undo step back to the loaded camera");
+        }
+
+        /// 🐢 Regression test for a perf-round-2 bug: `sync_host_from_envelope`'s `parse_fixture_v1`
+        /// always `clear_scene()`s then rebuilds, so every edge looked "new" and got re-`push_event`'d
+        /// as `edgeCreate` — which `apply_host_events` then replayed into `envelope.fixture.edges` on
+        /// the *next* action, duplicating every edge once per action forever. Repeated no-op actions
+        /// (here: repeated selects) must leave the edge count untouched.
+        #[test]
+        fn repeated_actions_do_not_duplicate_edges() {
+            let mut app = new_app();
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID })), &ViewState::default(), &meta("local")).expect("load nakagin");
+            let edge_count = |app: &VcsDocumentApp<Puzzle2dPlayApp>| fixture_edges(&app.projection().expect("projection")).len();
+            let before = edge_count(&app);
+            assert!(before > 0, "fixture must have edges for this regression test to be meaningful");
+            let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
+            for _ in 0..5 {
+                app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &meta("local")).expect("select");
+            }
+            assert_eq!(edge_count(&app), before, "selecting repeatedly must not grow the edges array");
+        }
+
+        /// 🪞 Regression test: `applyBoardEvents`'s `select` case only mutated `envelope.runtime`, never
+        /// `self.host`, so `apply_host_events`'s `host.selection`-is-truth re-sync silently reverted the
+        /// selection to whatever `self.host` held before the action (empty, on a fresh sync).
+        #[test]
+        fn apply_board_events_select_persists_across_the_next_action() {
+            let mut app = concrete_forest_app();
+            let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
+            app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &meta("local")).expect("select");
+            let rendered_once = serde_json::to_string(&app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, None, &ViewState::default()).expect("render")).unwrap();
+            assert!(rendered_once.contains(&node_id), "selection must be visible immediately after the select action");
+            // A second, unrelated action used to silently clear the selection via the stale `host.selection` re-sync.
+            app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), &ViewState::default(), &meta("local")).expect("no-op");
+            let rendered_twice = serde_json::to_string(&app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, None, &ViewState::default()).expect("render")).unwrap();
+            assert!(rendered_twice.contains(&node_id), "selection must survive a subsequent unrelated action");
+        }
+
+        /// 🪞 Regression test: `apply_host_events` used to epsilon-compare `host.camera` (still the
+        /// *pre-action* value) against the fixture and blindly overwrite the fixture with it, reverting
+        /// a plain `camera` board event (used for the live wheel-zoom echo) before it ever committed.
+        #[test]
+        fn apply_board_events_camera_event_commits() {
+            let mut app = new_app();
+            app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 5.0, "y": 6.0, "zoom": 1.2 } }]).to_string() })), &ViewState::default(), &meta("local")).expect("camera event");
+            let camera = app.projection().expect("projection").get("camera").cloned().expect("camera field");
+            assert_eq!(camera.get("x").and_then(Value::as_f64), Some(5.0));
+            assert_eq!(camera.get("y").and_then(Value::as_f64), Some(6.0));
+            assert_eq!(camera.get("zoom").and_then(Value::as_f64), Some(1.2));
+        }
+
+        /// 🐢 A pure selection change is runtime state, not document state — it must not produce any
+        /// `KernelOperation`s (previously it fell back to a whole-document `ReplaceDocument` once the
+        /// edge-duplication bug made `before` and `after` genuinely diverge).
+        #[test]
+        fn select_action_emits_no_ops() {
+            let mut app = concrete_forest_app();
+            let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
+            let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &meta("local")).expect("select");
+            assert!(result.operations.is_empty(), "selection must not produce document ops");
         }
 
         #[test]

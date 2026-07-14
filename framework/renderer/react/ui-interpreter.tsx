@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ComponentType, type LazyExoticComponent, type ReactElement, type ReactNode } from "react";
+import { lazy, memo, Suspense, type ComponentType, type LazyExoticComponent, type ReactElement, type ReactNode } from "react";
 import {
   Button,
   ChromeAwareWindowScrollSurface,
@@ -556,4 +556,16 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
       return <p className="text-muted-foreground text-xs">Extension unavailable: {node.pluginId}</p>;
   }
 }
+
+/**
+ * @emoji 🐢 `React.memo`'d entry point into `interpretUiNode` — bails on re-interpreting (and
+ * reconciling) an entire window/panel subtree when both `node` and `onAction` keep the same object
+ * identity as last render. Only pays off when callers pass a stable `onAction` (see `os-shell.tsx`'s
+ * `onActionStable`) and a `node` whose identity is preserved across no-op refreshes (see
+ * `os-shell.tsx`'s `preserveJsonIdentity`/`mergeRecordPreservingIdentity`) — without both, `node`/
+ * `onAction` are fresh every render and this degenerates to the unmemoized call.
+ */
+export const InterpretedUiNode = memo(function InterpretedUiNode({ node, onAction }: { readonly node: UiNode; readonly onAction: UiInterpreterContext["onAction"] }): ReactNode {
+  return interpretUiNode(node, { onAction });
+});
 //#endregion InterpretUiNode

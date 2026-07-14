@@ -1,0 +1,17 @@
+\documentclass{scrreprt}
+\begin{document}
+\makeatletter
+\ifcsname partlinesformat\endcsname
+  \typeout{PARTLINESFORMAT-EXISTS}
+\else
+  \typeout{PARTLINESFORMAT-MISSING}
+\fi
+\ifcsname chapterlinesformat\endcsname
+  \typeout{CHAPTERLINESFORMAT-EXISTS}
+\else
+  \typeout{CHAPTERLINESFORMAT-MISSING}
+\fi
+\makeatother
+\part{Test Part}
+\chapter{Test Chapter}
+\end{document}
