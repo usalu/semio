@@ -1002,45 +1002,15 @@ fn format_selection_targets_label(targets: &LowpolySelectionTargets) -> String {
     }
 }
 
-fn set_active_tool_action(tool_id: &str) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: LOWPOLY_PLAY_CONTROLLER_ID.into(),
-        action: SET_ACTIVE_TOOL_ACTION_ID.into(),
-        args: Some(json!({ "toolId": tool_id, "windowKindId": LOWPOLY_PLAY_WINDOW_MAIN })),
-    }
-}
-
 fn lowpoly_window_engagement(view: LowpolyView, active_tool: &str) -> WindowEngagement {
     let runtime = view.runtime;
     let transform = active_tool;
     let selected_count = runtime.selection.ids.len();
     WindowEngagement {
         session_active: Some(true),
+        // 🧰 The move/rotate/scale transform switcher now lives in the framework toolbar (declared via `.tool` +
+        // `.window_kind_tools`), so the engagement keeps only its non-tool options below.
         options: Some(vec![
-            WindowEngagementOption {
-                id: "lowpoly.opt.move".into(),
-                label: Some("Move".into()),
-                icon_id: Some("move".into()),
-                pressed: Some(transform == "move"),
-                disabled: None,
-                action: Some(set_active_tool_action("move")),
-            },
-            WindowEngagementOption {
-                id: "lowpoly.opt.rotate".into(),
-                label: Some("Rotate".into()),
-                icon_id: Some("rotate-cw".into()),
-                pressed: Some(transform == "rotate"),
-                disabled: None,
-                action: Some(set_active_tool_action("rotate")),
-            },
-            WindowEngagementOption {
-                id: "lowpoly.opt.scale".into(),
-                label: Some("Scale".into()),
-                icon_id: Some("maximize-2".into()),
-                pressed: Some(transform == "scale"),
-                disabled: None,
-                action: Some(set_active_tool_action("scale")),
-            },
             WindowEngagementOption {
                 id: "lowpoly.opt.snap".into(),
                 label: Some("Snap".into()),
@@ -2210,8 +2180,6 @@ fn create_lowpoly_app() -> App {
             .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, LOWPOLY_PLAY_BODY_CATALOGUE)
             .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, LOWPOLY_PLAY_BODY_INSPECTION)
             .panel_tab("framework.panel.layers", "Layers", PanelGroup::Workbench, LOWPOLY_PLAY_BODY_LAYERS)
-            .mode_tools("edit", vec!["move".into(), "rotate".into(), "scale".into()])
-            .mode_tools("paint", vec!["brush".into(), "eraser".into(), "fill".into(), "eyedropper".into()])
             // 🔧 Document-mutating operations — dispatched as VCS ops with true inverses.
             .operation("addPrimitive", "Add Primitive")
             .operation("patchObject", "Patch Object")
@@ -2540,6 +2508,20 @@ mod tests {
         let before = projection(&app);
         app.handle_action("undo", None, &ViewState::default(), &meta("a")).unwrap();
         assert_eq!(projection(&app), before, "tool switch left nothing to undo");
+    }
+
+    #[test]
+    fn engagement_options_contain_no_tool_switcher() {
+        // 🧰 move/rotate/scale switching lives only on the framework toolbar; the engagement keeps its
+        // genuine non-tool options (snap/smooth/show-edges) but must never dispatch setActiveTool.
+        let projection = projection(&new_app());
+        let runtime = LowpolyPlayRuntime::default();
+        let engagement = lowpoly_window_engagement(LowpolyView { projection: &projection, runtime: &runtime }, "move");
+        let options = engagement.options.expect("lowpoly engagement keeps its non-tool options");
+        assert!(
+            options.iter().all(|option| option.action.as_ref().map(|action| action.action != SET_ACTIVE_TOOL_ACTION_ID).unwrap_or(true)),
+            "no engagement option may dispatch the framework setActiveTool action; transform switching lives on the toolbar",
+        );
     }
 
     #[test]

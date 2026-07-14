@@ -25,6 +25,7 @@ import {
   ContextMenuController,
   marqueeCoverageFromGesture,
   marqueeModeFromModifiers,
+  menuListItemClassName,
   sceneHostPort,
   SelectionMarquee,
   sunPositionFromAzimuthElevation,
@@ -175,6 +176,8 @@ type WorldVortexRecord = {
   readonly direction?: readonly [number, number, number];
   readonly radius?: number;
   readonly color?: string;
+  readonly selected?: boolean;
+  readonly hovered?: boolean;
 };
 
 type WorldAttractionRecord = {
@@ -263,8 +266,8 @@ type MeshStylePalette = Readonly<Record<MeshStyleKind, MeshStyleColors>>;
 const MESH_STYLE_PAINT: Readonly<Record<MeshStyleKind, { readonly fill: string; readonly line: string; readonly emissiveIntensity: number; readonly opacity: number }>> = {
   neutral: { fill: "var(--panel)", line: semanticVar("border-normal-color"), emissiveIntensity: 0, opacity: 1 },
   hovered: { fill: semanticVar("hover-interactive-fill"), line: semanticVar("border-emphasized-color"), emissiveIntensity: 0.08, opacity: 1 },
-  selected: { fill: "color-mix(in oklab, var(--color-primary) 28%, var(--panel))", line: tokenVar("primary"), emissiveIntensity: 0.35, opacity: 1 },
-  highlighted: { fill: "color-mix(in oklab, var(--color-secondary) 24%, var(--panel))", line: tokenVar("secondary"), emissiveIntensity: 0.2, opacity: 1 },
+  selected: { fill: tokenVar("primary"), line: tokenVar("primary"), emissiveIntensity: 0.35, opacity: 1 },
+  highlighted: { fill: tokenVar("secondary"), line: tokenVar("secondary"), emissiveIntensity: 0.2, opacity: 1 },
   disabled: { fill: "color-mix(in oklab, var(--color-muted-foreground) 55%, var(--panel))", line: themeColorVar("muted-foreground"), emissiveIntensity: 0, opacity: 0.45 },
 };
 
@@ -1406,6 +1409,7 @@ function WorldInstancesLayer({
 
 function WorldVortexMarkers({
   vortices,
+  palette,
   brushMode,
   connectSourceFullId,
   onHover,
@@ -1416,6 +1420,7 @@ function WorldVortexMarkers({
   onConnectDragDrop,
 }: {
   readonly vortices: readonly WorldVortexRecord[];
+  readonly palette: MeshStylePalette;
   readonly brushMode: boolean;
   readonly connectSourceFullId?: string;
   readonly onHover: (fullId: string | null) => void;
@@ -1431,7 +1436,8 @@ function WorldVortexMarkers({
       {vortices.map((vortex) => {
         const radius = vortex.radius ?? 0.36;
         const isConnectSource = connectSourceFullId === vortex.fullId;
-        const color = isConnectSource ? "#f59e0b" : (vortex.color ?? "#38bdf8");
+        const style = vortex.selected ? palette.selected : vortex.hovered ? palette.hovered : null;
+        const color = isConnectSource ? "#f59e0b" : (style?.meshColor ?? vortex.color ?? "#38bdf8");
         return (
           <mesh
             key={vortex.fullId}
@@ -1464,7 +1470,7 @@ function WorldVortexMarkers({
             }}
           >
             <sphereGeometry args={[radius, 16, 16]} />
-            <meshStandardMaterial color={color} transparent opacity={0.88} />
+            <meshStandardMaterial color={color} emissive={style?.meshColor ?? "#000000"} emissiveIntensity={style?.emissiveIntensity ?? 0} transparent opacity={0.88} />
           </mesh>
         );
       })}
@@ -1649,11 +1655,13 @@ function EngagementPreviewLayer({ items, color }: { readonly items: readonly Wor
 /** @emoji 🧭 Floating per-vortex brush-candidate popup opened by Alt+right-click or the context menu's "Suggest objects" — hovering a row previews it as the brush ghost, clicking places it. */
 function WorldSuggestionMenu({
   menu,
+  activeIndex,
   onHoverCandidate,
   onAcceptCandidate,
   onClose,
 }: {
   readonly menu: WorldSuggestionMenuRecord;
+  readonly activeIndex: number;
   readonly onHoverCandidate: (index: number) => void;
   readonly onAcceptCandidate: (index: number) => void;
   readonly onClose: () => void;
@@ -1698,6 +1706,8 @@ function WorldSuggestionMenu({
         menu.candidates.map((candidate) => (
           <div
             key={candidate.index}
+            className={menuListItemClassName}
+            data-selected={candidate.index === activeIndex}
             style={{ padding: "0.375rem 0.75rem", fontSize: "0.8125rem", cursor: "pointer" }}
             onMouseEnter={() => onHoverCandidate(candidate.index)}
             onClick={() => onAcceptCandidate(candidate.index)}
@@ -2598,6 +2608,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
             </group>
             <WorldVortexMarkers
               vortices={vortices}
+              palette={meshStylePalette}
               brushMode={brushMode}
               connectSourceFullId={connectDragSource?.fullId}
               onHover={handleVortexHover}
@@ -2675,7 +2686,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         }}
       />
       {interaction.suggestionMenu?.open ? (
-        <WorldSuggestionMenu menu={interaction.suggestionMenu} onHoverCandidate={handleSuggestionHover} onAcceptCandidate={handleSuggestionAccept} onClose={handleSuggestionClose} />
+        <WorldSuggestionMenu menu={interaction.suggestionMenu} activeIndex={interaction.brushCandidateIndex ?? 0} onHoverCandidate={handleSuggestionHover} onAcceptCandidate={handleSuggestionAccept} onClose={handleSuggestionClose} />
       ) : null}
     </div>
   );

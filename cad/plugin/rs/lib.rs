@@ -2123,13 +2123,13 @@ use geometry_import::{
 };
 use semio_framework_plugin::{PanelGroup,
     apply_world3d_sun_action, build_world_3d_scene, merge_world_selection_ids, mesh_from_kind,
-    tool_button, tool_collection, tool_separator, tool_toggle, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
+    ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_mixed_vec3, ui_inspector_all_equal, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
-    ActionDescriptor, ActionEmit, AppLabelsOverlay, DocumentApp, DocumentView, MeshData, ToolCategory, ToolNode, UiControlNode, UiFieldNode,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, AppLabelsOverlay, DocumentApp, DocumentView, MeshData, ToolCategory, ToolDefinition, UiControlNode, UiFieldNode,
     UiInspectorFieldGroup, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiTreeItemAction, UiTreeItemNode,
-    UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementOption,
-    WindowEngagementPossible, WindowEngagementStatus,
+    UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
+    WindowEngagementPossible, WindowEngagementStatus, SET_ACTIVE_TOOL_ACTION_ID,
     WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
     WindowLayoutWindowNode, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -2397,8 +2397,6 @@ struct CadPlayRuntime {
     selection_method: String,
     #[serde(default)]
     hovered_object_id: Option<String>,
-    #[serde(default = "default_transform_tool")]
-    transform_tool: String,
     #[serde(default)]
     engagement_input: String,
     #[serde(default)]
@@ -2427,9 +2425,9 @@ fn default_selection_method() -> String {
     "rectangle".into()
 }
 
-fn default_transform_tool() -> String {
-    "move".into()
-}
+/// @emoji 🕹️ The default active transform tool when the host has not yet set one — mirrors the
+/// framework toolbar's first-declared tool (`move`), read from `ViewState::active_tool_id`.
+const CAD_DEFAULT_TOOL_ID: &str = "move";
 
 impl Default for CadPlayRuntime {
     fn default() -> Self {
@@ -2438,7 +2436,6 @@ impl Default for CadPlayRuntime {
             selected_node_ids: Vec::new(),
             selection_method: default_selection_method(),
             hovered_object_id: None,
-            transform_tool: default_transform_tool(),
             engagement_input: String::new(),
             engagement_step: "Idle".into(),
             active_example_id: None,
@@ -2516,7 +2513,6 @@ fn default_document() -> CadScene {
                 kind: "solid".into(),
             },
         ],
-        active_tool: Some("selectDirect".into()),
         building_objects: Vec::new(),
         energy_objects: Vec::new(),
         structure_classic_objects: Vec::new(),
@@ -2559,7 +2555,6 @@ fn forest_play_document(source_json: &str, id: &str) -> CadScene {
             label: "Concrete Forest Left".into(),
             kind: "group".into(),
         }],
-        active_tool: Some("selectDirect".into()),
         building_objects,
         energy_objects,
         structure_classic_objects,
@@ -2633,24 +2628,6 @@ fn cad_pane_suffix(pane: CadPaneId) -> &'static str {
         CadPaneId::Energy => "energy",
         CadPaneId::StructureClassic => "structure-classic",
     }
-}
-
-fn qualified_transformation_id(model_definition_id: &str, transformation_id: &str) -> String {
-    format!("{model_definition_id}.{transformation_id}")
-}
-
-fn transfers_to_for_model_definition(active_model_definition_id: &str) -> Vec<&'static CadTransformationSpec> {
-    CAD_TRANSFORMATION_SPECS
-        .iter()
-        .filter(|spec| spec.source_model_definition_id == active_model_definition_id)
-        .collect()
-}
-
-fn transfers_from_for_model_definition(active_model_definition_id: &str) -> Vec<&'static CadTransformationSpec> {
-    CAD_TRANSFORMATION_SPECS
-        .iter()
-        .filter(|spec| spec.target_model_definition_id == active_model_definition_id)
-        .collect()
 }
 
 fn ensure_object_solid_handle(kernel: &mut dyn BrepKernel, object: &mut CadObject) {
@@ -3132,7 +3109,7 @@ fn world_meshes_json(objects: &[CadObject]) -> String {
     serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
 }
 
-fn world_selection_json(document: &CadScene, runtime: &CadPlayRuntime) -> String {
+fn world_selection_json(document: &CadScene, runtime: &CadPlayRuntime, active_tool: &str) -> String {
     let mut value: Value = serde_json::from_str(&world3d_selection_json(
         &runtime.selection_method,
         &runtime.selected_object_ids,
@@ -3140,7 +3117,7 @@ fn world_selection_json(document: &CadScene, runtime: &CadPlayRuntime) -> String
     ))
     .unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
-        object.insert("transformTool".into(), json!(runtime.transform_tool));
+        object.insert("transformTool".into(), json!(active_tool));
         object.insert("gumballActive".into(), json!(gumball_active(runtime)));
         object.insert(
             "engagementSessionActive".into(),
@@ -3184,7 +3161,7 @@ fn world_references_json(document: &CadScene, pane: CadPaneId) -> Option<String>
     Some(serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()))
 }
 
-fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_id: &str) -> UiNode {
+fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_id: &str, active_tool: &str) -> UiNode {
     let objects = cad_pane_objects(&envelope.document, pane);
     let preview = envelope
         .runtime
@@ -3201,7 +3178,7 @@ fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_i
             camera_json(cad_pane_camera(&envelope.document, pane)),
             world_meshes_json(objects),
             world_instances_json(objects, &envelope.runtime),
-            world_selection_json(&envelope.document, &envelope.runtime),
+            world_selection_json(&envelope.document, &envelope.runtime, active_tool),
             None,
             None,
             None,
@@ -3711,7 +3688,7 @@ fn build_catalogue_tree(labels: &CadLabels) -> UiNode {
     })
 }
 
-fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels) -> UiNode {
+fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_tool: &str) -> UiNode {
     if let (Some(object_id), Some(primitive_id)) = (
         envelope.runtime.selected_object_ids.first(),
         envelope.runtime.selected_primitive_id.as_deref(),
@@ -3776,14 +3753,7 @@ fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels) -> UiNode 
     }
     ui_stack_vertical(vec![
         ui_text(format!("Schema: {}", envelope.document.schema)),
-        ui_text(format!(
-            "Tool: {}",
-            envelope
-                .document
-                .active_tool
-                .clone()
-                .unwrap_or_else(|| "selectDirect".into())
-        )),
+        ui_text(format!("Tool: {active_tool}")),
         ui_text(format!("Objects: {}", envelope.document.objects.len())),
     ])
 }
@@ -4130,7 +4100,6 @@ fn node_inspector_group(node: &CadNode, labels: &CadLabels) -> UiInspectorFieldG
 }
 
 fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId) -> WindowEngagement {
-    let transform = envelope.runtime.transform_tool.clone();
     let selected_count = envelope.runtime.selected_object_ids.len();
     let model_definition_id = pane.model_definition_id();
     let session_active = envelope.runtime.engagement_session.is_some();
@@ -4173,32 +4142,10 @@ fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId) -> WindowEngag
         .unwrap_or_else(|| envelope.runtime.engagement_step.clone());
     WindowEngagement {
         session_active: Some(session_active),
-        options: Some(vec![
-            WindowEngagementOption {
-                id: "cad.opt.move".into(),
-                label: Some("Move".into()),
-                icon_id: Some("move".into()),
-                pressed: Some(transform == "move"),
-                disabled: None,
-                action: Some(cad_action("setTransformTool", Some(json!({ "tool": "move" })))),
-            },
-            WindowEngagementOption {
-                id: "cad.opt.rotate".into(),
-                label: Some("Rotate".into()),
-                icon_id: Some("rotate-cw".into()),
-                pressed: Some(transform == "rotate"),
-                disabled: None,
-                action: Some(cad_action("setTransformTool", Some(json!({ "tool": "rotate" })))),
-            },
-            WindowEngagementOption {
-                id: "cad.opt.scale".into(),
-                label: Some("Scale".into()),
-                icon_id: Some("maximize-2".into()),
-                pressed: Some(transform == "scale"),
-                disabled: None,
-                action: Some(cad_action("setTransformTool", Some(json!({ "tool": "scale" })))),
-            },
-        ]),
+        // 🧰 The move/rotate/scale transform switcher now lives in the framework toolbar (derived
+        // from `ToolDefinition`s + `ViewState::active_tool_id`); the engagement HUD no longer
+        // duplicates it — tools must have exactly one surface.
+        options: None,
         input: Some(WindowEngagementInput {
             id: Some("engagement-input".into()),
             value: Some(envelope.runtime.engagement_input.clone()),
@@ -4246,186 +4193,6 @@ fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId) -> WindowEngag
     }
 }
 
-fn build_cad_play_toolbar(envelope: &CadPlayView, labels: &CadLabels) -> Vec<ToolNode> {
-    let active = envelope.document.active_model_definition_id.as_str();
-    let view_tools: Vec<ToolNode> = CadPaneId::all()
-        .into_iter()
-        .enumerate()
-        .map(|(index, pane)| {
-            tool_toggle(
-                format!("cad.play.view.{}", pane.model_definition_id()),
-                "box",
-                pane.model_definition_id(),
-                active == pane.model_definition_id(),
-                cad_action(
-                    "focusModelDefinition",
-                    Some(json!({ "modelDefinitionId": pane.model_definition_id() })),
-                ),
-            )
-            .with_order(index as u32)
-        })
-        .collect();
-    let save_tools = vec![
-        tool_button(
-            "cad.play.save.selected",
-            "save",
-            "Selected",
-            cad_action("saveSelected", None),
-        )
-        .with_disabled(envelope.runtime.selected_object_ids.is_empty()),
-        tool_button(
-            "cad.play.save.modelspace",
-            "hard-drive",
-            "Model space",
-            cad_action("saveInPlay", None),
-        ),
-        tool_button(
-            "cad.play.save.current",
-            "save",
-            "Current",
-            cad_action("saveCurrent", None),
-        ),
-        tool_button(
-            "cad.play.save.current.obj",
-            "save",
-            "Current (OBJ)",
-            cad_action("saveCurrentObj", None),
-        ),
-        tool_button(
-            "cad.play.save.current.stl",
-            "save",
-            "Current (STL)",
-            cad_action("saveCurrentStl", None),
-        ),
-        tool_button(
-            "cad.play.save.load",
-            "folder-open",
-            "Load",
-            cad_action("loadRawRequest", None),
-        ),
-    ];
-    let transfers_to = transfers_to_for_model_definition(active);
-    let transfers_from = transfers_from_for_model_definition(active);
-    let mut transfer_tools: Vec<ToolNode> = transfers_to
-        .iter()
-        .enumerate()
-        .map(|(index, spec)| {
-            tool_button(
-                format!(
-                    "cad.play.transfer.to.{}",
-                    qualified_transformation_id(spec.source_model_definition_id, spec.id)
-                ),
-                "arrow-right",
-                format!("→ {}", spec.label),
-                cad_action(
-                    "applyTransformation",
-                    Some(json!({
-                        "qid": qualified_transformation_id(spec.source_model_definition_id, spec.id),
-                    })),
-                ),
-            )
-            .with_order(index as u32)
-        })
-        .collect();
-    if !transfers_to.is_empty() && !transfers_from.is_empty() {
-        transfer_tools.push(tool_separator("cad.play.transfer.separator"));
-    }
-    transfer_tools.extend(transfers_from.iter().enumerate().map(|(index, spec)| {
-        tool_button(
-            format!(
-                "cad.play.transfer.from.{}",
-                qualified_transformation_id(spec.source_model_definition_id, spec.id)
-            ),
-            "arrow-left",
-            format!("← {}", spec.label),
-            cad_action(
-                "applyTransformation",
-                Some(json!({
-                    "qid": qualified_transformation_id(spec.source_model_definition_id, spec.id),
-                })),
-            ),
-        )
-        .with_order((transfers_to.len() + index + 1) as u32)
-    }));
-    let mut tools = vec![
-        tool_collection("view", "layout-grid", labels.group_view, view_tools).with_category(ToolCategory::Tools),
-        tool_collection("save", "save", labels.group_save, save_tools).with_category(ToolCategory::Actions),
-    ];
-    if !transfer_tools.is_empty() {
-        tools.push(
-            tool_collection(
-                "transfer",
-                "arrow-right-left",
-                labels.group_transfer,
-                transfer_tools,
-            )
-            .with_category(ToolCategory::Actions),
-        );
-    }
-    let construct_tools: Vec<ToolNode> = list_interactions_for_model_definition(active)
-        .into_iter()
-        .enumerate()
-        .map(|(index, entry)| {
-            tool_button(
-                format!("cad.play.construct.{}", entry.id),
-                "plus",
-                entry.label.clone(),
-                cad_action(
-                    "engagementPossibleSelect",
-                    Some(json!({
-                        "pane": cad_pane_suffix(
-                            cad_pane_from_model_definition_id(active).unwrap_or(CadPaneId::Shape),
-                        ),
-                        "possibleId": entry.id.clone(),
-                    })),
-                ),
-            )
-            .with_order(index as u32)
-        })
-        .collect();
-    if !construct_tools.is_empty() {
-        tools.push(
-            tool_collection("construct", "hammer", labels.group_construct, construct_tools)
-                .with_category(ToolCategory::Tools),
-        );
-    }
-    tools
-}
-
-trait ToolNodeExt {
-    fn with_pressed(self, pressed: bool) -> Self;
-    fn with_order(self, order: u32) -> Self;
-    fn with_disabled(self, disabled: bool) -> Self;
-}
-
-impl ToolNodeExt for ToolNode {
-    fn with_pressed(mut self, pressed: bool) -> Self {
-        if let ToolNode::Toggle { pressed: slot, .. } = &mut self {
-            *slot = Some(pressed);
-        }
-        self
-    }
-
-    fn with_order(mut self, order: u32) -> Self {
-        match &mut self {
-            ToolNode::Button { order: slot, .. }
-            | ToolNode::Toggle { order: slot, .. }
-            | ToolNode::Collection { order: slot, .. }
-            | ToolNode::Separator { order: slot, .. } => *slot = Some(order),
-        }
-        self
-    }
-
-    fn with_disabled(mut self, disabled: bool) -> Self {
-        match &mut self {
-            ToolNode::Button { disabled: slot, .. }
-            | ToolNode::Toggle { disabled: slot, .. }
-            | ToolNode::Collection { disabled: slot, .. }
-            | ToolNode::Separator { disabled: slot, .. } => *slot = Some(disabled),
-        }
-        self
-    }
-}
 //#endregion 🔖Panels
 
 fn object_patch_from_field(field: &str, value: Option<&Value>) -> Option<CadObjectPatch> {
@@ -5250,20 +5017,22 @@ impl DocumentApp for CadApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, CadScene>, view_state: &ViewState) -> UiNode {
         let view = CadPlayView { document: doc.projection.clone(), runtime: self.runtime.clone() };
         let labels = cad_labels(view_state);
+        let active_tool = view_state.active_tool_id.as_deref().unwrap_or(CAD_DEFAULT_TOOL_ID);
         match body_key {
-            CAD_PLAY_BODY_SHAPE => build_world_scene_for_pane(&view, CadPaneId::Shape, CAD_PLAY_SURFACE_SHAPE),
+            CAD_PLAY_BODY_SHAPE => build_world_scene_for_pane(&view, CadPaneId::Shape, CAD_PLAY_SURFACE_SHAPE, active_tool),
             CAD_PLAY_BODY_BUILDING => {
-                build_world_scene_for_pane(&view, CadPaneId::Building, CAD_PLAY_SURFACE_BUILDING)
+                build_world_scene_for_pane(&view, CadPaneId::Building, CAD_PLAY_SURFACE_BUILDING, active_tool)
             }
-            CAD_PLAY_BODY_ENERGY => build_world_scene_for_pane(&view, CadPaneId::Energy, CAD_PLAY_SURFACE_ENERGY),
+            CAD_PLAY_BODY_ENERGY => build_world_scene_for_pane(&view, CadPaneId::Energy, CAD_PLAY_SURFACE_ENERGY, active_tool),
             CAD_PLAY_BODY_STRUCTURE_CLASSIC => build_world_scene_for_pane(
                 &view,
                 CadPaneId::StructureClassic,
                 CAD_PLAY_SURFACE_STRUCTURE_CLASSIC,
+                active_tool,
             ),
             CAD_PLAY_BODY_DOCUMENT => build_document_tree(&view, labels),
             CAD_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
-            CAD_PLAY_BODY_PROPERTIES => build_properties_panel(&view, labels),
+            CAD_PLAY_BODY_PROPERTIES => build_properties_panel(&view, labels, active_tool),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }

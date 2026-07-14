@@ -264,8 +264,6 @@ pub struct CadScene {
     pub energy_geometry: Option<CadGeometry>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub structure_classic_geometry: Option<CadGeometry>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub active_tool: Option<String>,
     #[serde(default = "default_model_definition_id")]
     pub active_model_definition_id: String,
 }
@@ -331,7 +329,6 @@ pub fn empty_cad_projection() -> CadScene {
         building_geometry: None,
         energy_geometry: None,
         structure_classic_geometry: None,
-        active_tool: Some("selectDirect".into()),
         active_model_definition_id: default_model_definition_id(),
     }
 }
@@ -481,9 +478,6 @@ pub enum CadOp {
         model_definition_id: String,
         references: Vec<CadReference>,
     },
-    SetActiveTool {
-        tool: Option<String>,
-    },
     SetActiveModelDefinition {
         model_definition_id: String,
     },
@@ -506,7 +500,6 @@ pub struct CadDiff {
     pub references_by_model_definition_id: Option<HashMap<String, Vec<CadReference>>>,
     pub nodes: Option<CollectionDiff<String, CadNodePatch, CadNode>>,
     pub active_model_definition_id: Option<String>,
-    pub active_tool: Option<Option<String>>,
     pub camera: Option<CadCameraSet>,
     pub scene: Option<Box<CadScene>>,
 }
@@ -657,9 +650,6 @@ impl OperationDiff<CadScene> for CadDiff {
         if let Some(active_model_definition_id) = &self.active_model_definition_id {
             next.active_model_definition_id = active_model_definition_id.clone();
         }
-        if let Some(active_tool) = &self.active_tool {
-            next.active_tool = active_tool.clone();
-        }
         if let Some(set) = &self.camera {
             *cad_pane_camera_mut(&mut next, set.pane) = set.camera.clone();
         }
@@ -690,9 +680,6 @@ impl OperationDiff<CadScene> for CadDiff {
         }
         if other.active_model_definition_id.is_some() {
             self.active_model_definition_id = other.active_model_definition_id;
-        }
-        if other.active_tool.is_some() {
-            self.active_tool = other.active_tool;
         }
         if other.camera.is_some() {
             self.camera = other.camera;
@@ -877,10 +864,6 @@ impl Operation<CadScene> for CadOp {
                 )])),
                 ..Default::default()
             },
-            CadOp::SetActiveTool { tool } => CadDiff {
-                active_tool: Some(tool.clone()),
-                ..Default::default()
-            },
             CadOp::SetActiveModelDefinition { model_definition_id } => CadDiff {
                 active_model_definition_id: Some(model_definition_id.clone()),
                 ..Default::default()
@@ -1032,9 +1015,6 @@ impl Operation<CadScene> for CadOp {
                     references: before,
                 }]
             }
-            CadOp::SetActiveTool { .. } => vec![CadOp::SetActiveTool {
-                tool: projection.active_tool.clone(),
-            }],
             CadOp::SetActiveModelDefinition { .. } => vec![CadOp::SetActiveModelDefinition {
                 model_definition_id: projection.active_model_definition_id.clone(),
             }],
@@ -1890,7 +1870,7 @@ mod tests {
     }
 
     #[test]
-    fn set_camera_and_active_tool_flow_through_ops() {
+    fn set_camera_flows_through_ops() {
         let mut store = CadStore::new(create_document_vcs_envelope(
             CAD_DOCUMENT_SCHEMA,
             "cad",
@@ -1900,21 +1880,16 @@ mod tests {
         let camera = CadCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], zoom: 2.0, fov: 60.0 };
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![
-                    CadOp::SetCamera { pane: CadPaneId::Building, camera: camera.clone() },
-                    CadOp::SetActiveTool { tool: Some("rotate".into()) },
-                ],
+                operations: vec![CadOp::SetCamera { pane: CadPaneId::Building, camera: camera.clone() }],
                 description: None,
             })
             .expect("apply");
         let scene = store.projection().expect("projection");
         assert_eq!(cad_pane_camera(&scene, CadPaneId::Building).zoom, 2.0);
         assert_eq!(cad_pane_camera(&scene, CadPaneId::Shape).zoom, 1.0);
-        assert_eq!(scene.active_tool.as_deref(), Some("rotate"));
         store.dispatch(DocumentVcsCommand::Undo).expect("undo");
         let scene = store.projection().expect("projection");
         assert_eq!(cad_pane_camera(&scene, CadPaneId::Building).zoom, 1.0);
-        assert_eq!(scene.active_tool.as_deref(), Some("selectDirect"));
     }
 
     #[test]

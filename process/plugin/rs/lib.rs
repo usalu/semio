@@ -17,7 +17,7 @@ pub mod app_3d {
         world3d_sun_measures, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App,
         DocumentApp, DocumentView, MeshData, MeshExporter, MeshImporter, PanelGroup, SurfaceKind, ToolCategory, ToolDefinition, UiFieldNode,
         UiInputNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
-        WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowEngagementStatus, WindowMeasure, WorldSunConfig,
+        WindowEngagementControl, WindowEngagementInput, WindowEngagementStatus, WindowMeasure, WorldSunConfig,
         SET_ACTIVE_TOOL_ACTION_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
         FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     };
@@ -39,10 +39,6 @@ pub mod app_3d {
     const PROCESS_3D_PLAY_BODY_CATALOGUE: &str = "process.play.catalogue";
     const PROCESS_3D_PLAY_BODY_INSPECTION: &str = "process.play.inspection";
     const PROCESS_3D_PLAY_WINDOW_MAIN: &str = "process-workpiece";
-    const PROCESS3D_ENGAGEMENT_TOOL_SELECT: &str = "process3d.tool.select";
-    const PROCESS3D_ENGAGEMENT_TOOL_CUT: &str = "process3d.tool.cut";
-    const PROCESS3D_ENGAGEMENT_TOOL_DRILL: &str = "process3d.tool.drill";
-    const PROCESS3D_ENGAGEMENT_TOOL_ATTACH: &str = "process3d.tool.attach";
     const PROCESS3D_TESSELLATION_TOLERANCE: f64 = 0.05;
     const PROCESS3D_FALLBACK_MESH_KIND: &str = "box";
     const PROCESS3D_KERNEL_MEMO_CAP: usize = 128;
@@ -1270,40 +1266,9 @@ pub mod app_3d {
         let volume = processed_volume(fixture).unwrap_or(0.0);
         WindowEngagement {
             session_active: Some(active_tool != "select"),
-            options: Some(vec![
-                WindowEngagementOption {
-                    id: PROCESS3D_ENGAGEMENT_TOOL_SELECT.into(),
-                    label: Some("Select".into()),
-                    icon_id: Some("cursor".into()),
-                    pressed: Some(active_tool == "select"),
-                    disabled: None,
-                    action: Some(process3d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "select" })))),
-                },
-                WindowEngagementOption {
-                    id: PROCESS3D_ENGAGEMENT_TOOL_CUT.into(),
-                    label: Some("Cut".into()),
-                    icon_id: Some("scissors".into()),
-                    pressed: Some(active_tool == "cut"),
-                    disabled: None,
-                    action: Some(process3d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "cut" })))),
-                },
-                WindowEngagementOption {
-                    id: PROCESS3D_ENGAGEMENT_TOOL_DRILL.into(),
-                    label: Some("Drill".into()),
-                    icon_id: Some("circle-dot".into()),
-                    pressed: Some(active_tool == "drill"),
-                    disabled: None,
-                    action: Some(process3d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "drill" })))),
-                },
-                WindowEngagementOption {
-                    id: PROCESS3D_ENGAGEMENT_TOOL_ATTACH.into(),
-                    label: Some("Attach".into()),
-                    icon_id: Some("plus".into()),
-                    pressed: Some(active_tool == "attach"),
-                    disabled: None,
-                    action: Some(process3d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "attach" })))),
-                },
-            ]),
+            // 🧰 The select/cut/drill/attach switcher now lives in the framework toolbar (declared via `.tool` +
+            // `.window_kind_tools`), so the engagement no longer duplicates it as toggle options.
+            options: None,
             input: Some(WindowEngagementInput {
                 id: Some("process3d-engagement".into()),
                 value: Some(runtime.engagement_input.clone()),
@@ -1947,15 +1912,14 @@ pub mod app_3d {
         }
 
         #[test]
-        fn engagement_reflects_host_active_tool_pressed_state() {
+        fn engagement_exposes_no_tool_switch_options() {
             let app = Process3dPlayApp::default();
             let doc = process_3d::Process3dDocument::default();
             let engagement = process3d_engagement(&doc, &app.runtime, "cut");
-            let options = engagement.options.expect("engagement options");
-            let cut = options.iter().find(|option| option.id == PROCESS3D_ENGAGEMENT_TOOL_CUT).expect("cut option");
-            assert_eq!(cut.pressed, Some(true), "cut engagement option must report pressed when the host active tool is cut");
-            let select = options.iter().find(|option| option.id == PROCESS3D_ENGAGEMENT_TOOL_SELECT).expect("select option");
-            assert_eq!(select.pressed, Some(false), "select engagement option must not report pressed while cut is active");
+            assert!(
+                engagement.options.is_none(),
+                "select/cut/drill/attach switching lives only on the framework toolbar; the engagement must not duplicate it as options",
+            );
         }
 
         #[test]

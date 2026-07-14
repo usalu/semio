@@ -327,23 +327,27 @@
 % as plain arguments instead of a fixed three-column shape.
 \ExplSyntaxOn
 
-\cs_new_protected:Npn \semio_table_long_header:n #1 {
-  \seq_set_split:Nnn \l_semio_table_row_seq { & } {#1}
-  \exp_args:Nx \hhline { | \prg_replicate:nn { \seq_count:N \l_semio_table_row_seq } { - } | }
-  \semio_table_header_row:n {#1}
-  \\
-  \semio@table@header@bottom@rule
-  \global\semio@table@row@startedfalse
-}
-
-% 🩹 The colspec is built here, inside the package, from a plain comma list of
-% column-width fractions (e.g. "0.18,0.10,0.29") — never from a hand-written
-% string containing `\semio@...` names. Those names are only valid where `@`
-% is catcode-11 (package files); a report's own content file (\input after
-% \begin{document}) does not have that, so building the real colspec in the
-% caller's source would silently break. Keeping composition inside the
-% package is the fix, not a `\makeatletter` workaround at every call site.
+% 🩹 The colspec and header are built here, inside the package, from plain
+% arguments — never from hand-written strings containing `\semio@...` names.
+% Those names are only valid where `@` is catcode-11 (package files); a
+% report's own content file (\input after \begin{document}) does not have
+% that, so building them in the caller's source would silently break.
+% Keeping composition inside the package is the fix, not a `\makeatletter`
+% workaround at every call site.
+%
+% 🩹 The finished head is copied into a plain (non-expl3) macro and that bare
+% macro *name* — not its pre-expanded value — is what reaches
+% \semio@table@long@render, exactly like \SemioTableRegister passes
+% \semio@register@table@header. longtable re-invokes the head macro itself on
+% every page break; if a body row uses \multicolumn (as band rows do),
+% pre-flattening the head's tokens into the argument list (via \exp_args:NV
+% or similar) desyncs longtable's column bookkeeping and throws a "Misplaced
+% \omit" the next time the header repeats. A colspec has no such issue since
+% array fully expands it while parsing the preamble either way.
 \tl_new:N \l_semio_table_long_colspec_tl
+\tl_new:N \l_semio_table_long_head_tl
+\newcommand{\semio@table@long@head@current}{}
+
 \cs_new_protected:Npn \semio_table_long_colspec_build:n #1 {
   \tl_set:Nn \l_semio_table_long_colspec_tl { | @ { \hspace{\semio@chrome@padding} } @ { } }
   \clist_map_inline:nn {#1} {
@@ -354,33 +358,87 @@
   \tl_put_right:Nn \l_semio_table_long_colspec_tl { @ { \hspace{\semio@chrome@padding} } | }
 }
 
-\NewDocumentCommand \SemioTableLong { m m m m } {
-  % #1 title, #2 "&"-joined column-width fractions (e.g. "0.18,0.10,0.29"),
-  % #3 "&"-joined header cells, #4 body rows
-  \semio_table_long_colspec_build:n {#2}
-  \semio@register@window@open{#1}
-  \exp_args:NV \semio@table@long@render \l_semio_table_long_colspec_tl {\semio_table_long_header:n{#3}}{\semio_table_long_header:n{#3}}{#4}
+\cs_new_protected:Npn \semio_table_long_header_build:n #1 {
+  \seq_set_split:Nnn \l_semio_table_row_seq { & } {#1}
+  \tl_set:Nx \l_semio_table_long_head_tl {
+    \exp_not:N \hhline { | \prg_replicate:nn { \seq_count:N \l_semio_table_row_seq } { - } | }
+  }
+  \int_zero:N \l_tmpa_int
+  \seq_map_inline:Nn \l_semio_table_row_seq {
+    \int_compare:nNnF \l_tmpa_int = \c_zero_int {
+      \tl_put_right:Nn \l_semio_table_long_head_tl { & }
+    }
+    \tl_put_right:Nx \l_semio_table_long_head_tl { \exp_not:N \semio@table@header@cell { ##1 } }
+    \int_incr:N \l_tmpa_int
+  }
+  \tl_put_right:Nn \l_semio_table_long_head_tl {
+    \\
+    \semio@table@header@bottom@rule
+    \global\semio@table@row@startedfalse
+  }
+  % 🩹 Not \tl_gset_eq:NN: that \let-aliases \semio@table@long@head@current to
+  % an expl3 tl variable, which l3 always defines as a non-\long macro. A
+  % \long macro (as \newcommand produces) is what longtable's own head-repeat
+  % machinery expects when a body row uses \multicolumn — anything else
+  % throws "Misplaced \omit" the next time the header repeats. The triple
+  % \expandafter copies the tl's current tokens verbatim (one level, so
+  % \hhline/\semio@table@header@cell inside stay unevaluated) into a fresh
+  % \long macro instead of aliasing the tl var directly.
+  \global\long\expandafter\def\expandafter\semio@table@long@head@current\expandafter{\l_semio_table_long_head_tl}
+}
+
+\newcommand{\semio@table@long@colspec@current}{}
+
+% Named the plain (legacy) way, not \semio_table_long_prepare:nn — this gets
+% called from \SemioTableLong's body below, which is a plain \newcommand
+% written where `_`/`:` are ordinary (non-letter) characters, so an expl3-
+% style name would not tokenize as one control word there.
+\cs_new_protected:Npn \semio@table@long@prepare #1#2 {
+  \semio_table_long_colspec_build:n {#1}
+  \semio_table_long_header_build:n {#2}
+  % Same \long-macro-by-bare-name treatment as the head (see above) — a
+  % colspec flattened straight into the argument list via \exp_args:NV
+  % throws the identical "Misplaced \omit" once a body row uses \multicolumn.
+  \global\long\expandafter\def\expandafter\semio@table@long@colspec@current\expandafter{\l_semio_table_long_colspec_tl}
+}
+\ExplSyntaxOff
+
+% 🩹 \semio@table@long@prepare (above) only fills the two "current" macros;
+% the actual \semio@table@long@render call is plain TeX so the colspec can be
+% expanded into the argument list the same way \SemioTableRegister does it
+% (\expandafter{\semio@table@colspec@register@long}) — passing it as a bare
+% macro reference like the head hits "Illegal pream-token", because array's
+% preamble parser (unlike longtable's head/repeathead slots) never expands
+% macro names on its own.
+\newcommand{\SemioTableLong}[4]{%
+  \semio@table@long@prepare{#2}{#3}%
+  \semio@register@window@open{#1}%
+  \expandafter\semio@table@long@render\expandafter{\semio@table@long@colspec@current}{\semio@table@long@head@current}{\semio@table@long@head@current}{#4}%
   \semio@register@window@close
 }
 
-\cs_new_protected:Npn \semio_table_band_row_emit:n #1 {
-  #1 \\* \hline
+% 🩹 Plain \newcommand, not \NewDocumentCommand/xparse: xparse's argument
+% grabbing — even for all-mandatory arguments — breaks the same "Misplaced
+% \omit" way once this macro's expansion contains \multicolumn (band rows
+% span every column) inside this longtable. Plain TeX argument grabbing
+% doesn't have that problem. For the same reason the image is mandatory
+% (pass {} when a row has none) rather than an optional argument, and its
+% \SemioImage call is unconditional — wrapping it in a conditional (\ifx,
+% \tl_if_blank:nF, anything) reintroduces the same break even when the
+% conditional's branches never touch \multicolumn at all; every project row
+% in practice has an image, so this isn't a real limitation. A nested \\ for
+% the title/meta line break has the same problem — colortbl's redefinition
+% of \\ inside a \multicolumn cell conflicts with the table's own \\; use
+% \newline instead, which stays a plain TeX primitive.
+\newcommand{\SemioTableBandRow}[4]{%
+  % #1 image path #2 colspan #3 title #4 meta
+  \multicolumn{#2}{@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\semio@table@long@inner@w}@{}}{%
+    \cellcolor{semio-chrome-canvas}%
+    \raisebox{-0.15\height}{\SemioImage[fit=cover,width=20mm,height=13mm]{#1}}\hspace{\semio@chrome@padding}%
+    \textbf{#3}\newline#4
+  }%
+  \\*\hline
 }
-
-\NewDocumentCommand \SemioTableBandRow { O{} m m m } {
-  % [#1 image path] #2 colspan #3 title #4 meta — a full-width row band that
-  % never breaks away from the row(s) that follow it (starred line break).
-  \semio_table_band_row_emit:n {
-    \multicolumn{#2}{@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\semio@table@long@inner@w}@{}}{
-      \cellcolor{semio-chrome-canvas}%
-      \tl_if_blank:nF {#1} {
-        \raisebox{-0.15\height}{\SemioImage[fit=cover,width=20mm,height=13mm]{#1}}\hspace{\semio@chrome@padding}%
-      }
-      \textbf{#3}\\#4
-    }
-  }
-}
-\ExplSyntaxOff
 %endregion GenericLongTable
 
 \newcommand{\SemioGlossaryTableRow}[3]{%

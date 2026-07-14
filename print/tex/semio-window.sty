@@ -1191,7 +1191,7 @@
 }
 
 \cs_new_protected:Npn \semio_image_target_h_resolve: {
-  \bool_if:NT \l_semio_image_height_set_bool {
+  \bool_if:NTF \l_semio_image_height_set_bool {
     \dim_set_eq:NN \l_semio_image_target_h_dim \l_semio_image_height_dim
     \bool_gset_true:N \g_semio_image_target_h_set_bool
   } {

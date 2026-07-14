@@ -2508,7 +2508,7 @@ pub mod d3 {
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_world_3d_scene, create_default_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
         ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, PanelGroup,
-        SurfaceKind, ToolCategory, ToolDefinition, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        SurfaceKind, ToolCategory, ToolDefinition, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID,
     };
     use semio_framework_plugin::kernel::HostEffect;
@@ -2533,9 +2533,6 @@ pub mod d3 {
     const PUZZLE3D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
     const PUZZLE3D_EXAMPLE_NAKAGIN: &str = "nakagin-capsule-tower";
     const PUZZLE3D_FALLBACK_MESH_KIND: &str = "box";
-    const PUZZLE3D_ENGAGEMENT_TOOL_BRUSH: &str = "puzzle3d.tool.brush";
-    const PUZZLE3D_ENGAGEMENT_TOOL_SELECT: &str = "puzzle3d.tool.select";
-    const PUZZLE3D_ENGAGEMENT_TOOL_FILL: &str = "puzzle3d.tool.fill";
     /// 🧰 Host-owned active tool (`view_state.active_tool_id`) when the host hasn't set one yet — the first declared window tool.
     const PUZZLE3D_DEFAULT_TOOL: &str = "select";
     const PUZZLE3D_FILL_COUNT_MAX: u32 = 1000;
@@ -3162,20 +3159,25 @@ pub mod d3 {
         })
     }
 
-    fn world_vortices_json(fixture: &Puzzle3dFixture) -> String {
+    fn world_vortices_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) -> String {
         let mut records = Vec::new();
         for object in &fixture.objects {
             for vortex in &object.vortices {
                 let position = world_vortex_position(object, vortex);
                 let direction = world_vortex_direction(object, vortex);
+                let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
+                let selected = runtime.selection.vortex_ids.contains(&full_id);
+                let hovered = runtime.hovered_vortex_full_id.as_deref() == Some(full_id.as_str());
                 records.push(json!({
-                    "fullId": puzzle3d_vortex_full_id(&object.id, &vortex.id),
+                    "fullId": full_id,
                     "objectId": object.id,
                     "vortexKind": vortex.vortex_kind,
                     "position": position,
                     "direction": direction,
                     "radius": vortex.radius.unwrap_or(0.36),
                     "color": vortex_color(&fixture.meta, vortex.vortex_kind.as_deref()),
+                    "selected": selected,
+                    "hovered": hovered,
                 }));
             }
         }
@@ -4738,32 +4740,9 @@ pub mod d3 {
         };
         WindowEngagement {
             session_active: Some(active_tool != "select"),
-            options: Some(vec![
-                WindowEngagementOption {
-                    id: PUZZLE3D_ENGAGEMENT_TOOL_SELECT.into(),
-                    label: Some("Select".into()),
-                    icon_id: Some("cursor".into()),
-                    pressed: Some(active_tool == "select"),
-                    disabled: None,
-                    action: Some(puzzle3d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "select" })))),
-                },
-                WindowEngagementOption {
-                    id: PUZZLE3D_ENGAGEMENT_TOOL_BRUSH.into(),
-                    label: Some("Brush".into()),
-                    icon_id: Some("brush".into()),
-                    pressed: Some(active_tool == "brush"),
-                    disabled: None,
-                    action: Some(puzzle3d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "brush" })))),
-                },
-                WindowEngagementOption {
-                    id: PUZZLE3D_ENGAGEMENT_TOOL_FILL.into(),
-                    label: Some("Fill".into()),
-                    icon_id: Some("fill".into()),
-                    pressed: Some(envelope.runtime.fill_count > 0 || active_tool == "fill"),
-                    disabled: None,
-                    action: Some(puzzle3d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "fill" })))),
-                },
-            ]),
+            // 🧰 The select/brush/fill switcher now lives in the framework toolbar (declared via `.tool` +
+            // `.window_kind_tools`), so the engagement no longer duplicates it as toggle options.
+            options: None,
             input: Some(WindowEngagementInput {
                 id: Some("puzzle3d-engagement".into()),
                 value: Some(envelope.runtime.engagement_input.clone()),
@@ -5722,7 +5701,7 @@ pub mod d3 {
                             world_meshes_json(&envelope.fixture),
                             world_instances_json(&envelope.fixture, &envelope.runtime),
                             world_selection_json(&envelope),
-                            Some(world_vortices_json(&envelope.fixture)),
+                            Some(world_vortices_json(&envelope.fixture, &envelope.runtime)),
                             Some(world_attractions_json(&envelope.fixture)),
                             Some(world_target_volumes_json(&envelope.fixture)),
                             Some(world_references_json(&envelope.fixture)),
@@ -6206,6 +6185,15 @@ pub mod d3 {
         }
 
         #[test]
+        fn engagement_exposes_no_tool_switch_options() {
+            // 🧰 select/brush/fill switching lives only on the framework toolbar (declared via `.tool` +
+            // `.window_kind_tools`); the engagement HUD must not duplicate it as options.
+            let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_tool: PUZZLE3D_DEFAULT_TOOL.into() };
+            let engagement = puzzle3d_engagement(&scene, &Puzzle3dPrecomputeSession::new());
+            assert!(engagement.options.is_none(), "the puzzle3d engagement must not re-expose tool switching as options");
+        }
+
+        #[test]
         fn gumball_translate_drag_coalesces_into_one_edit() {
             // 🌀 Coalescing regression: three translate ticks with the same key are ONE undoable edit.
             let mut app = new_app();
@@ -6241,7 +6229,7 @@ pub mod d5 {
         ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, WindowEngagementStatus,
         merge_world_selection_ids, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
         ActionDescriptor, PanelGroup, Puzzle2dBoardScene, SurfaceKind, ToolCategory, ToolDefinition, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl,
-        WindowEngagementInput, WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+        WindowEngagementInput, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
         FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID,
     };
     use semio_framework_plugin::kernel::HostEffect;
@@ -6269,9 +6257,6 @@ pub mod d5 {
     const PUZZLE5D_EXAMPLE_NAKAGIN: &str = "nakagin-capsule-tower";
 
     const PUZZLE5D_FALLBACK_MESH_KIND: &str = "box";
-    const PUZZLE5D_ENGAGEMENT_TOOL_BRUSH: &str = "puzzle5d.tool.brush";
-    const PUZZLE5D_ENGAGEMENT_TOOL_SELECT: &str = "puzzle5d.tool.select";
-    const PUZZLE5D_ENGAGEMENT_TOOL_FILL: &str = "puzzle5d.tool.fill";
     /// 🧰 Host-owned active tool (`view_state.active_tool_id`) when the host hasn't set one yet — the first declared window tool.
     const PUZZLE5D_DEFAULT_TOOL: &str = "select";
     const PUZZLE5D_FILL_COUNT_MAX: u32 = 1000;
@@ -7460,32 +7445,9 @@ pub mod d5 {
             control,
             controls: None,
             status: Some(vec![WindowEngagementStatus { id: format!("puzzle5d-status-{window}"), text: format!("{part_count} parts · {fastener_count} fasteners · tool {}", active_tool) }]),
-            options: Some(vec![
-                WindowEngagementOption {
-                    id: PUZZLE5D_ENGAGEMENT_TOOL_SELECT.into(),
-                    label: Some(labels.select.into()),
-                    icon_id: Some("cursor".into()),
-                    pressed: Some(active_tool == "select"),
-                    disabled: None,
-                    action: Some(puzzle5d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "select" })))),
-                },
-                WindowEngagementOption {
-                    id: PUZZLE5D_ENGAGEMENT_TOOL_BRUSH.into(),
-                    label: Some(labels.brush.into()),
-                    icon_id: Some("brush".into()),
-                    pressed: Some(active_tool == "brush"),
-                    disabled: None,
-                    action: Some(puzzle5d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "brush" })))),
-                },
-                WindowEngagementOption {
-                    id: PUZZLE5D_ENGAGEMENT_TOOL_FILL.into(),
-                    label: Some(labels.fill.into()),
-                    icon_id: Some("fill".into()),
-                    pressed: Some(envelope.runtime.fill_count > 0 || active_tool == "fill"),
-                    disabled: None,
-                    action: Some(puzzle5d_action(SET_ACTIVE_TOOL_ACTION_ID, Some(json!({ "toolId": "fill" })))),
-                },
-            ]),
+            // 🧰 The select/brush/fill switcher now lives in the framework toolbar (declared via `.tool` +
+            // `.window_kind_tools`), so the engagement no longer duplicates it as toggle options.
+            options: None,
             possible_engagements: None,
         }
     }
@@ -8850,6 +8812,17 @@ pub mod d5 {
             assert!(result.operations.is_empty(), "tool switching never emits document ops");
             assert!(result.requested_effects.is_empty(), "a user tool switch does not re-emit SetActiveTool");
             assert_eq!(app.projection().expect("projection"), before, "tool switching does not mutate the document");
+        }
+
+        #[test]
+        fn engagements_expose_no_tool_switch_options_for_either_window() {
+            // 🧰 select/brush/fill switching lives only on the framework toolbar; neither the 2D nor the 3D
+            // engagement HUD may duplicate it as options.
+            let mut app = new_app();
+            let engagements = app.window_engagements(&ViewState::default());
+            for window in [PUZZLE5D_PLAY_WINDOW_2D, PUZZLE5D_PLAY_WINDOW_3D] {
+                assert!(engagements.get(window).expect("engagement").options.is_none(), "the {window} engagement must not re-expose tool switching as options");
+            }
         }
 
         #[test]
