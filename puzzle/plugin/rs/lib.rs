@@ -1433,6 +1433,14 @@ pub mod d2 {
             let before = doc.projection.clone();
             let mut envelope = Puzzle2dScene { fixture: before.clone(), runtime: self.runtime.clone() };
             sync_host_from_envelope(&mut self.host, &envelope);
+            // 🧹 `parse_fixture_v1` (inside the sync above) always `clear_scene()`s then rebuilds, so it
+            // unconditionally emits an `edgeCreate` for every edge in the fixture as a side effect of
+            // parsing — not a real structural change. Discard that parse-induced noise now so
+            // `apply_host_events` below only sees events genuinely produced by *this* action's own
+            // engine calls (delete_selection, brush ops, …); otherwise those spurious edgeCreate events
+            // get replayed into `envelope.fixture.edges` on the *next* action, duplicating every edge
+            // once per action forever.
+            let _ = self.host.drain_events_json();
             let mut coalesce_key: Option<String> = None;
             match action {
                 "setSelection" | "documentSelect" => {
@@ -1817,6 +1825,11 @@ pub mod d2 {
                 "applyBoardEvents" => {
                     if let Some(events_json) = args.and_then(|value| value.get("eventsJson")).and_then(|value| value.as_str()) {
                         apply_board_events_from_json(events_json, &mut envelope);
+                        // 🪞 `apply_host_events` below trusts `host.selection` as the post-action source of
+                        // truth and overwrites `envelope.runtime.selected_ids` with it — mirror the new
+                        // selection into the host now (as every other selection-setting arm already does)
+                        // or the just-applied `select`/`brushCandidates` selection is silently reverted.
+                        self.host.set_selection_ids(&envelope.runtime.selected_ids);
                         {}
                     } else {
                         {}

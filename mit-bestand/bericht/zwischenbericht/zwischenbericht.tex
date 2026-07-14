@@ -3,6 +3,8 @@
 \documentclass[type=zwischenbericht]{zukunftbau}
 
 \setcounter{secnumdepth}{4}
+\counterwithin{section}{part}
+\renewcommand{\thepart}{\arabic{part}}
 
 \title{Entwerfen mit Bestand}
 \subtitle{Eine offene Plattform für einen KI-unterstützten, performance-optimierten und integrativen Entwurfsprozess mit wiederverwendeten Baukomponenten}
@@ -100,9 +102,9 @@
 
 \makemainmatter
 
-\section{Ergebnisse}
+\part{Ergebnisse}
 
-\subsection{Forschungsfragen und Vorgehen}
+\section{Forschungsfragen und Vorgehen}
 
 Das Vorhaben untersucht, wie wiederverwendete Baukomponenten in frühen Entwurfsphasen skalierbar planungsfähig gemacht werden können. Ausgangspunkt ist die Beobachtung, dass die Zahl der Bauteilbörsen, Rückbauinventare oder Materialbanken (siehe Anlagen) stärker wächst als die Zahl der realisierten Projekte (siehe Anlage Projekte). Die Hürden, welchen es zu überwältigen gilt, um mit wiederverwendeten Baukomponenten zu bauen, ist lang (siehe Anlage Hürden und Handbuch Abbau Aufbau). Unser Beitrag ist es, die effiziente, integrative und KI-gestützte Vorplanung für Entwürfe zu ermöglichen.
 
@@ -124,11 +126,11 @@ Wie kann KI, insbesondere \Abbr{LLM}s, während dem Entwurfsprozess unterstütze
 
 Der Zwischenbericht folgt dabei der Struktur der Arbeitspakete. AP-Erfahrung leitet aus der Recherche und den Interviews User Stories ab. Die User Stories definieren die fachlichen Anforderungen für die Plattform und für das Tool. AP-Plattform und AP-Tool übersetzen diese Anforderungen in digitale Systemkomponenten. AP-Validierung prüft die entwickelten Ansätze anhand eines Test-Cases.
 
-\subsection{Arbeitspakete}
+\section{Arbeitspakete}
 
-\subsubsection{AP-Erfahrung}
+\subsection{AP-Erfahrung}
 
-\paragraph{Recherche}
+\subsubsection{Recherche}
 Die Recherche ergab, dass wiederverwendete Bauteile in bestehenden Quellen zwar auffindbar, aber selten unmittelbar entwurfsfähig sind. Entwurfsfähig meint hier, dass ein Bauteil in frühen Entwurfsentscheidungen gesucht, verglichen, bewertet und einer möglichen Rolle in einer Variante zugeordnet werden kann.
 
 Die zentrale Lücke liegt zwischen Sichtbarkeit und Planbarkeit. Bauteilbörsen, Rückbauinventare und Materialbanken liefern meist Angaben zu Verfügbarkeit, Standort, Zustand oder Maßen. Für frühe Entwurfsentscheidungen fehlen häufig belastbare Angaben zu möglicher Rolle, Nachweisstand, Anschlussfähigkeit, Bewertungsannahmen und Unsicherheiten.
@@ -189,7 +191,7 @@ aus größeren Monolithteilen herausgelöste Teilstücke. Ihre spätere Rolle en
 Die Typologie ist damit ein Ergebnis der Recherche und zugleich ein Arbeitsmittel für die Systementwicklung. Sie legt fest, welche Informationen bei der Erfassung abgefragt werden, welche Filter in der Such- und Vergleichsebene sinnvoll sind, welche digitale Objektbildung benötigt wird und welche Vorprüfungen an eine gewählte Rolle gebunden sind. Die Recherche zeigt insgesamt, dass wiederverwendete Bauteile an mehreren Stellen sichtbar werden: in Bauteilbörsen, Rückbauinventaren, Projektkatalogen und Materialbanken. Für frühe Entwurfsentscheidungen reicht diese Sichtbarkeit nicht aus. Planungsfähig werden die Bauteile erst durch qualifizierte Daten, typologische Einordnung, Nachweiszustände und vorläufige Bewertbarkeit.
 \end{SemioNest}
 
-\paragraph{Interviews}
+\subsubsection{Interviews}
 Zur Vertiefung der Recherche wurde ein neuer Sekundärbefund und drei vertiefende Fachgespräche durchgeführt und ausgewertet.
 
 \begin{SemioNest}
@@ -215,7 +217,7 @@ Das Gespräch mit Raoul Bunschoten zeigt Wiederverwendung als verteilten Abstimm
 \end{SemioNest}
 \end{SemioNest}
 
-\paragraph{User Stories}
+\subsubsection{User Stories}
 Aus den bisherigen Befunden wurden 35 fachlich eindeutige User Stories abgeleitet, konsolidiert aus 36 Anforderungskarten (vgl.\ Anlage User-Stories und Anforderungsmapping). Sie bündeln Anforderungen aus vier Akteursperspektiven: Bauteilbörse (10), Architektur (12), Tragwerksplanung (6) und Energieberatung (7). Im Vordergrund stehen Erfassung, Suche, Vergleich, Bewertung, Statusverfolgung und Dokumentation. Die User Stories bilden damit eine Grundlage für die Zuordnung der Anforderungen zu drei Systemebenen: Datenerfassung und Qualifizierung (Bauteilportal), Suche und Vergleich (Bauteilkatalog) sowie Variantenbildung und Vorbewertung (Aggregator).
 
 \begin{SemioNest}
@@ -234,16 +236,16 @@ Aus Sicht der Energieberatung ist die frühe ökologische und energetische Einsc
 
 Das Anforderungsmapping übersetzt die 35 User Stories in fünfzehn funktionale Anforderungscluster (REQ-01 bis REQ-15) und ordnet sie den drei Systemebenen zu.
 
-\paragraph{Synthese: Anforderungen}
+\subsubsection{Synthese: Anforderungen}
 Aus Recherche, Interviews und User Stories ergeben sich fünf Anforderungen an das System. Die Qualifizierung überführt Angebots- und Bestandsdaten in planungsrelevante Bauteildatensätze mit Herkunft, Zustand, Verfügbarkeit, Nachweisstand und Unsicherheit. Die Standardisierung strukturiert die Beschreibung heterogener Bauteile, sodass sie gesucht, verglichen und bewertet werden können. Die digitale Objektbildung (Generatoren) überführt qualifizierte Datensätze in digitale Bauteilobjekte mit Geometrie, möglicher Entwurfsrolle, Anschlusslogik und Bewertungsannahmen. Die Bewertung unterstützt die frühe ökologische und tragwerkliche Vorbewertung von Bauteilen und Varianten. Die Nachweisführung dokumentiert vorhandene, abgeleitete, angenommene und offene Informationen.
 
 Diese Anforderungen verteilen sich auf die drei Systemebenen Bauteilportal, Bauteilkatalog und Aggregator und bilden den Übergang zum AP-Plattform, das ihre technische Umsetzung beschreibt (Abschnitt~1.2.2).
 
-\subsubsection{AP-Plattform}
+\subsection{AP-Plattform}
 
 Das AP-Plattform entwickelt die technische Grundlage, um Ausgangsdaten zu wiederverwendeten Bauteilen in Bauteilobjekte zu überführen. Dafür werden Bauteile über das Bauteilportal erfasst, einem Parametersatz zugeordnet und durch Generatoren in eine entwurfsfähige Arbeitsgeometrie übersetzt. Das Bauteilobjekt bildet anschließend die gemeinsame Datengrundlage für Auswahl, Kombination, Vorbewertung und Nachweisführung im Entwurfswerkzeug.
 
-\paragraph{Generatoren}
+\subsubsection{Generatoren}
 Die generatorische Objektbildung erzeugt aus den erfassten Angaben zu einem realen Bauteil ein entwurfsfähiges, parametrisches Bauteilobjekt.
 
 Für jede Typologiefamilie steht ein vorprogrammierter Generator mit einem definierten Parametersatz bereit. Die Familie bestimmt den Generator, und der Generator bestimmt, welche Parameter ein Bauteil beschreiben (Abschnitt~1.2.1.1.3). Die Eingaben der Nutzenden werden über den Wizard (Abschnitt~1.2.2.2) auf diese Parameter abgebildet. Gibt eine Nutzerin etwa für eine Stütze eine Länge von drei Metern an, wird dieser Wert auf den Parameter der vordefinierten Stützenlogik des zugehörigen Generators abgebildet, der daraus die parametrische Geometrie erzeugt.
@@ -256,7 +258,7 @@ Im Berichtszeitraum baute die LUH (\Abbr{NGS}) die Infrastruktur der Generatoren
 \textit{[Platzhalter: Generator-Pipeline.]}
 \end{Figure}
 
-\paragraph{Bauteileinspeisung}
+\subsubsection{Bauteileinspeisung}
 Das Bauteilportal nimmt Bauteile über zwei Wege auf: geführt über die Benutzeroberfläche und maschinell über eine Schnittstelle. Beide Wege münden in denselben Parametersatz der Generatoren, sodass unabhängig vom Eingabeweg ein einheitlich beschriebenes Bauteilobjekt entstehen kann. Die Grundpfade beider Eingabewege wurden im Berichtszeitraum prototypisch implementiert. Die KI-gestützte Extraktion aus Dokumenten und die Anbindung konkreter externer Plattformen stehen noch aus.
 
 \begin{SemioNest}
@@ -271,11 +273,11 @@ Welche Felder erscheinen, steuern vorgebaute Constraints. Sie werten die bisheri
 Für die maschinelle Einspeisung stellt das Bauteilportal eine \Abbr{REST}-Schnittstelle bereit. Sie nimmt strukturierte Bauteildaten entgegen, wie sie bei Börsen mit eigener Bestandsführung oder Inventarsystemen vorliegen können, und bildet sie auf dasselbe Datenschema ab wie der Wizard.
 \end{SemioNest}
 
-\subsubsection{AP-Tool}
+\subsection{AP-Tool}
 
 Das AP-Tool entwickelt das Entwurfswerkzeug, in dem die erzeugten Bauteilobjekte sichtbar, auswählbar, kombinierbar und vorläufig bewertbar werden. Es verbindet Bauteilkatalog, Kompositionsumgebung, Lebenszyklusbewertung, tragwerkliche Vorprüfung und KI-Assistenz. Die Entwicklung erfolgt auf Grundlage von semio und wird von beiden Verbundpartnern gemeinsam in die Plattform integriert.
 
-\paragraph{semio und Integration}
+\subsubsection{semio und Integration}
 Das Entwurfswerkzeug baut auf semio auf, einem quelloffenen Toolkit zum Entwerfen modularer Architektur, dessen Weiterentwicklung bei der LUH (NGS) liegt. Für die Wiederverwendung wird semio um zwei Bereiche erweitert: den Bauteilkatalog als Auswahlebene und eine Kompositionsumgebung, in der ausgewählte Bauteile zu Entwurfsvarianten zusammengeführt werden.
 
 Die zuvor funktional als Entwurfs- und Bewertungsumgebung beschriebene dritte Systemebene wird im AP-Tool als Aggregator konkretisiert. Der Aggregator ist die Kompositionsebene, in der ausgewählte Bauteile räumlich und strukturell miteinander in Beziehung gesetzt werden. Auf dieser Grundlage können Varianten dargestellt, verglichen und perspektivisch bewertet werden.
@@ -284,7 +286,7 @@ Bauteile, die über Wizard oder Schnittstelle eingespeist und generatorisch zu p
 
 Im Berichtszeitraum ist der Aggregator als Kompositionsebene vorhanden und mit der Plattform prototypisch verbunden. Die technische Verbindung zwischen Plattform und Aggregator ist hergestellt. Der Bauteilkatalog ist als Oberfläche prototypisch umgesetzt; die Kopplung an die Bauteildaten des Portals steht aus.
 
-\paragraph{Human Interface Design}
+\subsubsection{Human Interface Design}
 Das Human Interface Design umfasst eine Auswahlebene und zwei Kompositionsansichten. Der Bauteilkatalog dient der Auswahl einzelner Bauteile. Die 3D-Ansicht zeigt die generierte Arbeitsgeometrie räumlich. Die Diagrammansicht macht die Verknüpfungen zwischen Bauteilen sichtbar.
 
 \begin{SemioNest}
@@ -304,7 +306,7 @@ Die Diagrammansicht bildet die Verknüpfungen zwischen Bauteilen als Graph ab. D
 \textit{[Platzhalter: Oberflächen des Werkzeugs. Screenshots von Bauteilkatalog, 3D-Ansicht und Diagrammansicht.]}
 \end{Figure}
 
-\paragraph{Lebenszyklusanalyse}
+\subsubsection{Lebenszyklusanalyse}
 Die Lebenszyklusanalyse ist als Entwurfsgrammatik konzipiert. Entwurfsgrammatik meint hier ein regelbasiertes Verfahren, das Bauteildaten, Geometrie und Entwurfsvariante in eine vorläufige Bewertung übersetzt. Die Bearbeitung liegt bei der LUH (NGS).
 
 Grundlage ist die ökobilanzielle Repräsentation des Bauteilobjekts. Sie fasst die für die Bewertung benötigten Größen zusammen: Volumen, Masse und Materialzusammensetzung aus der generierten Arbeitsgeometrie sowie Angaben zu Zustand, Instandsetzungsbedarf und Transport aus der Bauteilerfassung.
@@ -315,7 +317,7 @@ Maßgeblich für das Ergebnis ist die Allokationsregel. Sie legt fest, ob urspr�
 
 Im Berichtszeitraum wurde die Lebenszyklusanalyse als Entwurfsgrammatik konzipiert. Die Repräsentationsstruktur ist angelegt. Die Bewertung auf Bauteilebene ist vorbereitet; ein Rulechecker zur Vorbewertung von Entwurfsvarianten im Aggregator ist noch nicht implementiert.
 
-\paragraph{Tragwerksanalyse}
+\subsubsection{Tragwerksanalyse}
 Die Tragwerksanalyse ist als tragwerkliche Vorprüfung in der Vorplanung angelegt. Sie soll Bauteile und Varianten nicht abschließend nachweisen, sondern tragwerksrelevante Eigenschaften, Rollen, Anschlussbedingungen und offene Prüfungen sichtbar machen. Die Bearbeitung liegt bei der UdK (\Abbr{KET}).
 
 Grundlage ist die tragwerkliche Repräsentation des Bauteilobjekts. Sie enthält aus der Geometrie abgeleitete Querschnitts- und Systemgrößen sowie die bei der Erfassung hinterlegten Material- und Zustandsangaben. Dazu gehören etwa Festigkeiten, Vorschädigungen und die Geometrie möglicher Anschlussstellen.
@@ -326,30 +328,30 @@ Ein regelbasierter Prüfmechanismus liegt bislang für Anschlussstellen vor. Er 
 
 Die Tragwerksanalyse des Werkzeugs wirkt in der Vorplanung. Sie unterstützt die Auswahl und Kombination von Bauteilen und macht offene Nachweise sichtbar. Sie ersetzt weder die statische Berechnung noch die Genehmigungsplanung.
 
-\paragraph{KI-Assistenz}
+\subsubsection{KI-Assistenz}
 Die KI-Assistenz im Entwurf befindet sich in der Konzeptionsphase. Erste Tests einzelner Funktionen liegen vor; eine Integration in das Werkzeug steht aus. Von der KI-Assistenz bei der Bauteilerfassung im Wizard ist sie zu unterscheiden. Die Bearbeitung liegt bei der LUH (NGS) auf Grundlage von Large-Language-Models.
 
 Die Assistenz soll den Entwurfsvorgang begleiten und Hinweise, Rückmeldungen und Warnungen im Interface erzeugen.
 
 Die bisher skizzierten Ansatzpunkte betreffen vier Bereiche: tragwerksbezogene Vorschläge, ökologische Rückmeldungen, Hinweise zu Raster, Spannweiten und Verschnitt sowie Warnungen bei angenommenen oder offenen Angaben. Im Tragwerk könnte die Assistenz auf mögliche Rollen hinweisen, die die ursprüngliche Bauteilfamilie nicht nahelegt. In der Lebenszyklusanalyse könnte sie Rückmeldungen zu Umweltwirkungen einzelner Entscheidungen geben. Im Entwurf könnte sie Hinweise zur Belegung verfügbarer Bauteile geben. Für die Datenlage könnte sie anzeigen, wo eine Entscheidung auf unsicheren Angaben beruht.
 
-\subsubsection{AP-Validierung}
+\subsection{AP-Validierung}
 
 Das AP-Validierung prüft die entwickelte Kette an einem realen Bestand. Die Bearbeitung liegt bei der UdK (KET).
 
-\paragraph{Entwicklung}
+\subsubsection{Entwicklung}
 \begin{Blockquote}
 \textit{[Platzhalter --- Beschreibung des Vorgehens und der Auswahl des Test-Case: warum dieser Bestand gewählt wurde, welche Typologie inhomogener Bauteile er bereitstellt (Deckenbereiche mit Unterzügen und Stützen), Erfassung, Auswahl der Bauteile, geplante Durchläufe. Geschätzter Umfang ca.\ 900 Zeichen.]}
 \end{Blockquote}
 
-\paragraph{Entwurfsgrammatik}
+\subsubsection{Entwurfsgrammatik}
 \begin{Blockquote}
 \textit{[Platzhalter --- Entscheidung für die Typologie inhomogener Bauteile: Deckenbereiche mit Unterzügen und Stützen als zusammenhängendes Zuschnittfragment; Anbindung an die Voruntersuchung (Henschel 2020); Begründung der Eignung für die generatorische Objektbildung. Geschätzter Umfang ca.\ 900 Zeichen.]}
 \end{Blockquote}
 
-\section{Projektstand}
+\part{Projektstand}
 
-\subsection{Soll-Ist-Vergleich}
+\section{Soll-Ist-Vergleich}
 
 Das Vorhaben begann im Januar 2026. Der ursprünglich für November 2025 vorgesehene Beginn verschob sich, weil die Stellen erst zum Jahreswechsel besetzt werden konnten; die Verschiebung wurde dem Zuwendungsgeber angezeigt. Die Bearbeitung an der LUH nahm am 01.01.2026, die an der UdK am 23.01.2026 auf. Alle Monatsangaben der Meilensteine beziehen sich auf den Januar 2026 als ersten Projektmonat.
 
@@ -369,18 +371,18 @@ Das Vorhaben begann im Januar 2026. Der ursprünglich für November 2025 vorgese
 
 Im Berichtszeitraum war allein Meilenstein 1 fällig. Er wurde mit dem Abschluss von Recherche, Interviews, User Stories und Anforderungssynthese erreicht (Abschnitt~1.2.1). Die übrigen Meilensteine liegen außerhalb des Berichtszeitraums. Meilenstein 5 ist der Frist voraus, da die Schnittstelle zur Bauteileinspeisung bereits prototypisch vorliegt (Abschnitt~1.2.2.2.2). Fristüberschreitungen sind nicht eingetreten.
 
-Gegenüber dem Antrag ergeben sich zwei Änderungen. Die erste betrifft den Projektbeginn und damit die Lage aller Meilensteintermine, die sich um zwei Monate verschieben; die Laufzeit und die Reihenfolge der Arbeitspakete bleiben unverändert. Die zweite betrifft die Erfassung von Bauteilgeometrie. Der Antrag sah vor, über Fotogrammetrie ein 3D-Modell zu erstellen. Im Verlauf der Arbeit erwies sich der generatorische Weg als tragfähiger: Die entwurfsfähige Geometrie wird erzeugt, während Fotogrammetrie, Scan und Foto als Eingaben dienen, um den passenden Generator zu wählen und die erzeugte Form an die reale Geometrie heranzuführen (Abschnitt~1.2.2.1). Die Zielsetzung des Vorhabens bleibt davon unberührt. Die Auflage zur Ökobilanzierung ist im Konzept der Lebenszyklusanalyse umgesetzt: Der Umweltvorteil wird über die projektspezifische Substitution eines Primärmaterials bestimmt (Abschnitt~1.2.3.3). Angaben zur Ausgabenplanung enthält Kapitel~3.
+Gegenüber dem Antrag ergeben sich zwei Änderungen. Die erste betrifft den Projektbeginn und damit die Lage aller Meilensteintermine, die sich um zwei Monate verschieben; die Laufzeit und die Reihenfolge der Arbeitspakete bleiben unverändert. Die zweite betrifft die Erfassung von Bauteilgeometrie. Der Antrag sah vor, über Fotogrammetrie ein 3D-Modell zu erstellen. Im Verlauf der Arbeit erwies sich der generatorische Weg als tragfähiger: Die entwurfsfähige Geometrie wird erzeugt, während Fotogrammetrie, Scan und Foto als Eingaben dienen, um den passenden Generator zu wählen und die erzeugte Form an die reale Geometrie heranzuführen (Abschnitt~1.2.2.1). Die Zielsetzung des Vorhabens bleibt davon unberührt. Die Auflage zur Ökobilanzierung ist im Konzept der Lebenszyklusanalyse umgesetzt: Der Umweltvorteil wird über die projektspezifische Substitution eines Primärmaterials bestimmt (Abschnitt~1.2.3.3). Angaben zur Ausgabenplanung enthält Teil~3.
 
-\subsection{Arbeitspakete}
+\section{Arbeitspakete}
 
-\subsubsection{AP-Erfahrung}
+\subsection{AP-Erfahrung}
 
 Das Arbeitspaket ist mit Meilenstein 1 abgeschlossen. Bauteilbörsen-Recherche, Wiederverwendungsprozesse und Bauteiltypologien liegen vor, ebenso die konsolidierten User Stories und die daraus abgeleiteten Anforderungen.
 
-\paragraph{Neuer Sekundärbefund}
+\subsubsection{Neuer Sekundärbefund}
 Im Berichtszeitraum wurde die Studie „ReUse in der Bauindustrie stärken" (Cirkla/BaselCircular 2025) bekannt. Sie beruht auf 18 Fachinterviews und ging als sekundäre Hauptquelle in die Erhebung des Erfahrungswissens ein (Abschnitt~1.2.1.2.1). Für die Planung folgt daraus, dass die eigenen Interviews nicht die Breite der Praxis abdecken müssen, sondern auf die Fachperspektiven zielen, die die Studie nicht vertieft.
 
-\paragraph{Geplante Interviews}
+\subsubsection{Geplante Interviews}
 Über die Laufzeit sind acht eigene Experteninterviews vorgesehen; zwei sind ausgewertet, eines ist angesetzt. Die verbleibenden Gespräche verteilen sich auf zwei Zwecke.
 
 \begin{SemioNest}
@@ -403,7 +405,7 @@ Validierung aus Sicht der Nachweisführung.
 Validierung aus Sicht der ökologischen Bewertung.
 \end{SemioNest}
 
-\subsubsection{AP-Plattform}
+\subsection{AP-Plattform}
 
 \begin{SemioNest}
 \paragraph{Eingabe}
@@ -413,7 +415,7 @@ Der Wizard ist prototypisch umgesetzt. Die KI-Erkennung ist getestet, jedoch nic
 Der prototypische Grundpfad der Datenübernahme ist implementiert. Die Anbindung einzelner Bauteilbörsen ist konzipiert; welche Plattformen angebunden werden, ist offen und hängt von deren Datenbereitstellung ab. Der Funktionsumfang der Schnittstelle wächst mit den Generatoren.
 \end{SemioNest}
 
-\subsubsection{AP-Tool}
+\subsection{AP-Tool}
 
 \begin{SemioNest}
 \paragraph{Human Interface Design}
@@ -429,9 +431,9 @@ Als Entwurfsgrammatik konzipiert. Der bestehende Prüfmechanismus für Anschluss
 Erste Tests einzelner Funktionen liegen vor. Die nächsten Schritte betreffen die Auswahl der Ansatzpunkte, die tragen, und deren Integration in Bauteilkatalog und Aggregator.
 \end{SemioNest}
 
-\subsubsection{AP-Validierung}
+\subsection{AP-Validierung}
 
-\paragraph{Test-Case}
+\subsubsection{Test-Case}
 \begin{SemioNest}
 \paragraph{Entwurfsgrammatik}
 \begin{Blockquote}
@@ -444,7 +446,7 @@ Erste Tests einzelner Funktionen liegen vor. Die nächsten Schritte betreffen di
 \end{Blockquote}
 \end{SemioNest}
 
-\paragraph{Workshop}
+\subsubsection{Workshop}
 \begin{SemioNest}
 \paragraph{Vorbereitung}
 \begin{Blockquote}
@@ -457,15 +459,15 @@ Erste Tests einzelner Funktionen liegen vor. Die nächsten Schritte betreffen di
 \end{Blockquote}
 \end{SemioNest}
 
-\section{Mittelverwendung}
+\part{Mittelverwendung}
 
 Die Mittelverwendung ist weitestgehend wie im Antrag vorgesehen. Die Änderungen im Projektbeginn haben nur eine geringfügige zeitliche Verschiebung zur Konsequenz gehabt.
 
-\subsection{Personalkosten}
+\section{Personalkosten}
 
 Die drei Personen, welche im Antrag vorgesehen waren, wurden alle eingesetzt. Die tatsächliche Einstufung nach Einstellung erfolgte wie antizipiert.
 
-\subsubsection{Leibniz Universität Hannover}
+\subsection{Leibniz Universität Hannover}
 \begin{SemioNest}
 \paragraph{Ueli Saluz}
 
@@ -481,7 +483,7 @@ Die vorgesehene Arbeitszeit in Höhe von 50\% der regulären Arbeitszeit konnte 
 
 \end{SemioNest}
 
-\subsubsection{Universität der Künste Berlin}
+\subsection{Universität der Künste Berlin}
 \begin{SemioNest}
 \paragraph{Kinan Sarakbi}
 
@@ -491,15 +493,15 @@ Die vorgesehene Arbeitszeit in Höhe von 50\% der regulären Arbeitszeit konnte 
 
 \end{SemioNest}
 
-\subsection{Material}
+\section{Material}
 
-\subsection{Leistungen Dritter}
+\section{Leistungen Dritter}
 
-\subsubsection{Softwarelizenzen}
+\subsection{Softwarelizenzen}
 
 Die vorgesehenen Softwarelizenz in Höhe von für Rhino musste nicht angeschafft werden, da die als Student erworbene Lizenzen von Ueli Saluz und Kinan Sarakbi als vollwertige Lizenz ihre Gültigkeit behalten haben und durch Nikolaus Möllenhof bis jetzt keine Arbeit an Rhino erfolgte. Dies wird auch voraussichtlich nicht mehr erfolgen, wodurch die Kosten vermutlich nicht anfallen, insofern keine neue Veröffentlichung durch Rhino 9 erfolgt. Wir planen mit den freigewordenen Kosten die gestiegenen Kosten für die Nutzung von vortrainierten KI-Modellen zu kompensieren.
 
-\subsubsection{Dienstleistungen}
+\subsection{Dienstleistungen}
 
 
 \begin{SemioNest}
@@ -517,32 +519,32 @@ Die Kosten für die Nutzung von LLMs sind gestiegen,
 \end{SemioNest}
 \end{SemioNest}
 
-\subsection{Reisekosten}
+\section{Reisekosten}
 
-\section{Ergebnisverwertung}
+\part{Ergebnisverwertung}
 
-\subsection{Repositorien}
+\section{Repositorien}
 
-\subsubsection{GitHub}
+\subsection{GitHub}
 
-\subsection{Websiten}
+\section{Websiten}
 
-\subsubsection{Tool}
+\subsection{Tool}
 
-\subsubsection{Dokumentation}
+\subsection{Dokumentation}
 
-\subsection{Community}
+\section{Community}
 
-\subsubsection{Discourse}
+\subsection{Discourse}
 
-\subsection{Forschung}
+\section{Forschung}
 
-\subsubsection{Zenodo}
+\subsection{Zenodo}
 
-\subsubsection{Journalpaper}
+\subsection{Journalpaper}
 
 \appendix
-\section{Verzeichnisse}
+\part{Verzeichnisse}
 \listofglossaries
 \listofabbreviations
 

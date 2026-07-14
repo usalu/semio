@@ -1560,8 +1560,15 @@ pub fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlaceP
     next
 }
 
+/// 🔢 Guarantees uniqueness across calls even when `js_sys_time_now()` is frozen (native/test builds
+/// always return `0.0`) or two calls land in the same millisecond (rapid-fire suggestion acceptance) —
+/// without this, brush-placed objects collided on `object_id` and therefore on every derived vortex id,
+/// so hover/suggestion-target lookups (keyed on those ids) silently applied to the wrong object.
+static PUZZLE3D_UUID_COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 fn uuid_simple() -> String {
-    let mut state = (js_sys_time_now() as u64) ^ 0xdead_beef_cafe_babe;
+    let counter = PUZZLE3D_UUID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let mut state = (js_sys_time_now() as u64) ^ 0xdead_beef_cafe_babe ^ counter.wrapping_mul(0x9e37_79b9_7f4a_7c15).wrapping_add(1);
     let mut out = String::with_capacity(36);
     for (i, _) in (0..16).enumerate() {
         state = state.wrapping_mul(6364136223846793005).wrapping_add(1);
@@ -1807,6 +1814,41 @@ mod tests {
         assert!(attraction.attracted.starts_with(&format!("{}:", next.objects[0].id)), "the newly placed object's vortex must be the attracted (non-root) side");
         assert_eq!(attraction.gap, 0.0);
         assert_eq!(attraction.rotation, 0.0);
+    }
+
+    /// 🪪 Regression: `uuid_simple()` used to seed only from the (frozen-in-native-builds) clock, so two
+    /// brush placements in a row minted the *same* object id — colliding vortex ids then made hover and
+    /// suggestion-target lookups (keyed on those ids) silently apply to the wrong object.
+    #[test]
+    fn successive_brush_placements_never_collide_on_object_id() {
+        let catalogs = KindCatalogBundle {
+            objects: vec![ObjectKind {
+                id: "Placed".to_string(),
+                mesh_url: Some("/test/placed.glb".to_string()),
+                scale: None,
+                vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("port-b".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
+            }],
+            vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None }, VortexKindCatalog { id: "port-b".to_string(), default_cable_kind: None }],
+            cables: vec![],
+        };
+        let payload = BrushPlacePayload {
+            target_vortex_full_id: "host:v0".to_string(),
+            object_kind_id: "Placed".to_string(),
+            source_vortex_index: 0,
+            origin: [1.0, 2.0, 3.0],
+            orientation: [0.0, 0.0, 0.0, 1.0],
+            scale: None,
+        };
+        let mut fixture = Fixture { attractions: vec![], objects: vec![], target_volumes: vec![] };
+        let mut ids = std::collections::HashSet::new();
+        for i in 0..8 {
+            fixture = apply_brush_placement_to_fixture(&fixture, &payload, &catalogs);
+            let placed = fixture.objects.last().expect("placement should append an object");
+            assert!(ids.insert(placed.id.clone()), "brush placement #{i} minted a duplicate object id {:?}", placed.id);
+            // Successive placements target the same fixed `host:v0`, so only the first actually attaches;
+            // reset attractions so every iteration re-exercises `apply_brush_placement_to_fixture` fresh.
+            fixture.attractions.clear();
+        }
     }
 }
 
