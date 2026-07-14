@@ -2126,7 +2126,7 @@ use semio_framework_plugin::{PanelGroup,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_mixed_vec3, ui_inspector_all_equal, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, AppLabelsOverlay, DocumentApp, DocumentView, MeshData, ToolCategory, ToolDefinition, UiControlNode, UiFieldNode,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, AppLabelsOverlay, DocumentApp, DocumentView, MeshData, ToolCategory, ToolDefinition, UiFieldNode,
     UiInspectorFieldGroup, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiTreeItemAction, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementPossible, WindowEngagementStatus, SET_ACTIVE_TOOL_ACTION_ID,
@@ -2247,7 +2247,6 @@ const CAD_CONCRETE_FOREST_REFERENCE_URL: &str = "/cad-fixture/concrete-forest-re
 
 struct CadTransformationSpec {
     id: &'static str,
-    label: &'static str,
     source_model_definition_id: &'static str,
     target_model_definition_id: &'static str,
     mode: TransformationMode,
@@ -2263,21 +2262,18 @@ enum TransformationMode {
 const CAD_TRANSFORMATION_SPECS: &[CadTransformationSpec] = &[
     CadTransformationSpec {
         id: "from_geometry",
-        label: "From Geometry",
         source_model_definition_id: CAD_MODEL_DEFINITION_SHAPE,
         target_model_definition_id: CAD_MODEL_DEFINITION_ENERGY,
         mode: TransformationMode::DeriveFromGeometry,
     },
     CadTransformationSpec {
         id: "from_building",
-        label: "From Building",
         source_model_definition_id: CAD_MODEL_DEFINITION_BUILDING,
         target_model_definition_id: CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
         mode: TransformationMode::FromBuilding,
     },
     CadTransformationSpec {
         id: "classic",
-        label: "Classic",
         source_model_definition_id: CAD_MODEL_DEFINITION_BUILDING,
         target_model_definition_id: CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
         mode: TransformationMode::TypologyFallback,
@@ -2353,7 +2349,7 @@ fn cad_document_pane_bundle(source_json: &str, model_index: usize) -> (Vec<CadOb
     let Ok(mut kernel) = cad_brep_kernel().lock() else {
         return (Vec::new(), geometry);
     };
-    let objects = objects_from_fixture_model(&mut kernel, objects_value, &geometry);
+    let objects = objects_from_fixture_model(&mut **kernel, objects_value, &geometry);
     (objects, geometry)
 }
 
@@ -2675,11 +2671,11 @@ fn apply_transformation_ops(document: &CadScene, qid: &str) -> Vec<CadOp> {
         };
         let mut prepared = source_objects;
         for object in &mut prepared {
-            ensure_object_solid_handle(&mut kernel, object);
+            ensure_object_solid_handle(&mut **kernel, object);
         }
         match spec.mode {
             TransformationMode::DeriveFromGeometry => {
-                run_derive_from_geometry(&mut kernel, &prepared, "derived-energy")
+                run_derive_from_geometry(&mut **kernel, &prepared, "derived-energy")
             }
             TransformationMode::FromBuilding => apply_from_building(&prepared, "derived-structure"),
             TransformationMode::TypologyFallback => apply_typology_fallback(
@@ -2758,23 +2754,23 @@ fn export_solid_for_pane(envelope: &CadPlayView, pane: CadPaneId, format: semio_
     let Ok(mut kernel) = cad_brep_kernel().lock() else {
         return None;
     };
-    let solids = collect_pane_solids(&mut kernel, envelope, pane);
+    let solids = collect_pane_solids(&mut **kernel, envelope, pane);
     if solids.is_empty() {
         return None;
     }
     let stem = format!("cad-{}", pane.model_definition_id().replace('.', "-"));
-    export_solids_as(&mut kernel, &solids, format, &stem)
+    export_solids_as(&mut **kernel, &solids, format, &stem)
 }
 
 fn export_solid_modelspace(envelope: &CadPlayView, format: semio_framework_plugin::OsMediaFormat) -> Option<CadSolidExport> {
     let Ok(mut kernel) = cad_brep_kernel().lock() else {
         return None;
     };
-    let solids = collect_modelspace_solids(&mut kernel, envelope);
+    let solids = collect_modelspace_solids(&mut **kernel, envelope);
     if solids.is_empty() {
         return None;
     }
-    export_solids_as(&mut kernel, &solids, format, "cad.modelspace")
+    export_solids_as(&mut **kernel, &solids, format, "cad.modelspace")
 }
 
 /// @emoji ⬇️ Converts a staged native-geometry export into a download host effect emitted directly
@@ -2824,21 +2820,21 @@ fn cad_file_text_from_payload(payload: &Value) -> Option<String> {
 fn import_step_object(text: &str) -> Option<CadObject> {
     let mut kernel = cad_brep_kernel().lock().ok()?;
     let handle = kernel_3d_engine::block_on(kernel.import_step(text)).ok()?.into_iter().next()?;
-    Some(cad_object_from_solid_handle(&mut kernel, next_cad_id("object-step"), "Imported STEP", "spatial.shape.imported", handle))
+    Some(cad_object_from_solid_handle(&mut **kernel, next_cad_id("object-step"), "Imported STEP", "spatial.shape.imported", handle))
 }
 
 /// @emoji 🧊 Imports an OBJ payload into the shared kernel as a new `CadObject`.
 fn import_obj_object(text: &str) -> Option<CadObject> {
     let mut kernel = cad_brep_kernel().lock().ok()?;
     let handle = kernel_3d_engine::block_on(kernel.import_obj(text, 0.01)).ok()?;
-    Some(cad_object_from_solid_handle(&mut kernel, next_cad_id("object-obj"), "Imported OBJ", "spatial.shape.imported", handle))
+    Some(cad_object_from_solid_handle(&mut **kernel, next_cad_id("object-obj"), "Imported OBJ", "spatial.shape.imported", handle))
 }
 
 /// @emoji 🧊 Imports an STL payload into the shared kernel as a new `CadObject`.
 fn import_stl_object(bytes: &[u8]) -> Option<CadObject> {
     let mut kernel = cad_brep_kernel().lock().ok()?;
     let handle = kernel_3d_engine::block_on(kernel.import_stl(bytes, 0.01)).ok()?;
-    Some(cad_object_from_solid_handle(&mut kernel, next_cad_id("object-stl"), "Imported STL", "spatial.shape.imported", handle))
+    Some(cad_object_from_solid_handle(&mut **kernel, next_cad_id("object-stl"), "Imported STL", "spatial.shape.imported", handle))
 }
 
 /// @emoji 🧊 Imports a GLB payload by decoding it to a tessellated mesh (via the shared
@@ -2847,7 +2843,7 @@ fn import_stl_object(bytes: &[u8]) -> Option<CadObject> {
 fn import_glb_object(bytes: &[u8]) -> Option<CadObject> {
     let mesh = semio_framework_plugin::GlbImporter.import(bytes).ok()?;
     let mut kernel = cad_brep_kernel().lock().ok()?;
-    Some(cad_object_from_mesh(&mut kernel, next_cad_id("object-glb"), "Imported GLB", "spatial.shape.imported", &mesh))
+    Some(cad_object_from_mesh(&mut **kernel, next_cad_id("object-glb"), "Imported GLB", "spatial.shape.imported", &mesh))
 }
 
 /// @emoji 🗂️ Routes a `requestFileOpen` payload to the matching native-geometry import by the
@@ -3006,7 +3002,7 @@ fn primary_primitive_kind(object: &CadObject) -> &str {
 fn object_mesh_data(object: &CadObject) -> MeshData {
     if let Some(handle) = object.solid_handle.as_deref() {
         if let Ok(mut kernel) = cad_brep_kernel().lock() {
-            if let Some(mesh) = tessellate_geometry_handle(&mut kernel, handle, primary_primitive_kind(object)) {
+            if let Some(mesh) = tessellate_geometry_handle(&mut **kernel, handle, primary_primitive_kind(object)) {
                 return mesh;
             }
         }
@@ -3241,11 +3237,6 @@ struct CadLabels {
     unlock: &'static str,
     duplicate: &'static str,
     delete: &'static str,
-    // toolbar group names
-    group_view: &'static str,
-    group_save: &'static str,
-    group_transfer: &'static str,
-    group_construct: &'static str,
 }
 
 const CAD_LABELS_NATIVE_EN: CadLabels = CadLabels {
@@ -3273,10 +3264,6 @@ const CAD_LABELS_NATIVE_EN: CadLabels = CadLabels {
     unlock: "Unlock",
     duplicate: "Duplicate",
     delete: "Delete",
-    group_view: "View",
-    group_save: "Save",
-    group_transfer: "Transfer",
-    group_construct: "Construct",
 };
 
 const CAD_LABELS_NATIVE_DE: CadLabels = CadLabels {
@@ -3304,10 +3291,6 @@ const CAD_LABELS_NATIVE_DE: CadLabels = CadLabels {
     unlock: "Entsperren",
     duplicate: "Duplizieren",
     delete: "Löschen",
-    group_view: "Ansicht",
-    group_save: "Speichern",
-    group_transfer: "Transfer",
-    group_construct: "Konstruieren",
 };
 
 const CAD_LABELS_REUSE_EN: CadLabels = CadLabels {
@@ -3495,6 +3478,7 @@ fn tree_item_with_action(
         items: None,
         control: None,
         is_hidden: None,
+        loading: None,
     }
 }
 
@@ -3504,6 +3488,7 @@ fn pane_document_section(label: &str, id_suffix: &str, objects: &[CadObject], la
         label: Some(label.into()),
         default_open: Some(true),
         items: objects.iter().map(|object| object_tree_item(id_suffix, object, labels)).collect(),
+        loading: None,
     }
 }
 
@@ -3525,6 +3510,7 @@ fn references_section(model_definition_id: &str, references: &[CadReference], la
                 .map(|reference| reference_tree_item(model_definition_id, reference, labels))
                 .collect()
         },
+        loading: None,
     }
 }
 
@@ -3650,6 +3636,7 @@ fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> UiNode {
             label: Some(labels.nodes.into()),
             default_open: Some(true),
             items: node_items,
+            loading: None,
         },
     ];
     let _ = &mut sections;
@@ -3659,6 +3646,7 @@ fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> UiNode {
         highlighted_ids: document_tree_highlighted_ids(&envelope.document, &envelope.runtime),
         selection_change: None,
         drop_action: None,
+        loading: None,
     })
 }
 
@@ -3680,11 +3668,13 @@ fn build_catalogue_tree(labels: &CadLabels) -> UiNode {
             label: Some(labels.typologies.into()),
             default_open: Some(true),
             items,
+            loading: None,
         }],
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
         drop_action: None,
+        loading: None,
     })
 }
 
@@ -4334,7 +4324,7 @@ fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId)
         primitives: Vec::new(),
     };
     if let Ok(mut kernel) = cad_brep_kernel().lock() {
-        ensure_object_solid_handle(&mut kernel, &mut object);
+        ensure_object_solid_handle(&mut **kernel, &mut object);
     }
     let _ = pane;
     object
@@ -4353,7 +4343,7 @@ fn try_commit_session_ops(document: &CadScene, runtime: &mut CadPlayRuntime, pan
     let Ok(mut kernel) = cad_brep_kernel().lock() else {
         return Vec::new();
     };
-    let Some(object) = commit_object(&mut kernel, session, label_count, |prefix| next_cad_id(prefix)) else {
+    let Some(object) = commit_object(&mut **kernel, session, label_count, |prefix| next_cad_id(prefix)) else {
         return Vec::new();
     };
     drop(kernel);
@@ -4490,10 +4480,14 @@ impl DocumentApp for CadApp {
                 self.runtime = runtime;
                 ActionEmit::ops(vec![CadOp::SetScene { scene: Box::new(scene) }])
             }
-            "setActiveTool" => {
-                if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
-                    return ActionEmit::ops(vec![CadOp::SetActiveTool { tool: Some(tool.into()) }]);
-                }
+            SET_ACTIVE_TOOL_ACTION_ID => {
+                // 🧰 Switching the host-owned active tool (`ViewState::active_tool_id`) is a pure
+                // View action: it never mutates the document. Clear any in-progress engagement
+                // session / rubber-band scratch so a stale preview cannot leak across a tool switch.
+                self.runtime.engagement_input.clear();
+                self.runtime.engagement_session = None;
+                self.runtime.engagement_step = "Idle".into();
+                self.runtime.hovered_object_id = None;
                 ActionEmit::default()
             }
             "setSelection" => {
@@ -4533,12 +4527,6 @@ impl DocumentApp for CadApp {
                 }
                 ActionEmit::default()
             }
-            "setTransformTool" => {
-                if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
-                    self.runtime.transform_tool = tool.into();
-                }
-                ActionEmit::default()
-            }
             "translateSelection" => {
                 let ids = mesh_selection_ids(args, &self.runtime.selected_object_ids);
                 if ids.is_empty() {
@@ -4547,11 +4535,7 @@ impl DocumentApp for CadApp {
                 let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let dz = args.and_then(|value| value.get("dz")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                ActionEmit {
-                    ops: vec![CadOp::TranslateObjects { object_ids: ids, dx, dy, dz }],
-                    coalesce_key: Some("gumball.translate".into()),
-                    ..Default::default()
-                }
+                ActionEmit::amend(vec![CadOp::TranslateObjects { object_ids: ids, dx, dy, dz }], "gumball.translate")
             }
             "rotateSelection" => {
                 let ids = mesh_selection_ids(args, &self.runtime.selected_object_ids);
@@ -4562,11 +4546,7 @@ impl DocumentApp for CadApp {
                 let ay = args.and_then(|value| value.get("ay")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let az = args.and_then(|value| value.get("az")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let angle = args.and_then(|value| value.get("angle")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                ActionEmit {
-                    ops: vec![CadOp::RotateObjects { object_ids: ids, ax, ay, az, angle }],
-                    coalesce_key: Some("gumball.rotate".into()),
-                    ..Default::default()
-                }
+                ActionEmit::amend(vec![CadOp::RotateObjects { object_ids: ids, ax, ay, az, angle }], "gumball.rotate")
             }
             "scaleSelection" => {
                 let ids = mesh_selection_ids(args, &self.runtime.selected_object_ids);
@@ -4576,11 +4556,7 @@ impl DocumentApp for CadApp {
                 let sx = args.and_then(|value| value.get("sx")).and_then(|value| value.as_f64()).unwrap_or(1.0);
                 let sy = args.and_then(|value| value.get("sy")).and_then(|value| value.as_f64()).unwrap_or(1.0);
                 let sz = args.and_then(|value| value.get("sz")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-                ActionEmit {
-                    ops: vec![CadOp::ScaleObjects { object_ids: ids, sx, sy, sz }],
-                    coalesce_key: Some("gumball.scale".into()),
-                    ..Default::default()
-                }
+                ActionEmit::amend(vec![CadOp::ScaleObjects { object_ids: ids, sx, sy, sz }], "gumball.scale")
             }
             "addObject" => {
                 let typology = args
@@ -4770,10 +4746,10 @@ impl DocumentApp for CadApp {
                 };
                 ActionEmit::effect(effect)
             }
-            "saveCurrent" | "saveCurrentObj" | "saveCurrentStl" => {
-                let format = match action {
-                    "saveCurrentObj" => semio_framework_plugin::OsMediaFormat::Obj,
-                    "saveCurrentStl" => semio_framework_plugin::OsMediaFormat::Stl,
+            "saveCurrent" => {
+                let format = match args.and_then(|value| value.get("format")).and_then(|value| value.as_str()) {
+                    Some("obj") => semio_framework_plugin::OsMediaFormat::Obj,
+                    Some("stl") => semio_framework_plugin::OsMediaFormat::Stl,
                     _ => semio_framework_plugin::OsMediaFormat::Step,
                 };
                 let pane = cad_pane_from_model_definition_id(&document.active_model_definition_id)
@@ -5009,11 +4985,6 @@ impl DocumentApp for CadApp {
         }
     }
 
-    fn tools(&self, doc: &DocumentView<'_, CadScene>, view_state: &ViewState) -> Vec<ToolNode> {
-        let view = CadPlayView { document: doc.projection.clone(), runtime: self.runtime.clone() };
-        build_cad_play_toolbar(&view, cad_labels(view_state))
-    }
-
     fn render(&self, body_key: &str, doc: &DocumentView<'_, CadScene>, view_state: &ViewState) -> UiNode {
         let view = CadPlayView { document: doc.projection.clone(), runtime: self.runtime.clone() };
         let labels = cad_labels(view_state);
@@ -5131,6 +5102,23 @@ fn cad_quad_layout() -> WindowLayout {
     }
 }
 
+/// @emoji 🧰 A cad transform-gumball tool: an exclusive member of the `transform` group rendered in
+/// the framework toolbar (`ToolCategory::Tools`). Switching it is a pure `setActiveTool` View action
+/// (`ViewState::active_tool_id`) — it gates the action panel while active (the default), since a
+/// transform mode is a content-editing mode, not a passive viewing aid.
+fn cad_transform_tool(id: &str, label: &str, icon: &str) -> ToolDefinition {
+    ToolDefinition {
+        group: Some("transform".into()),
+        category: Some(ToolCategory::Tools),
+        ..ToolDefinition::new(id, label, icon)
+    }
+}
+
+/// @emoji 🧰 The transform-tool refs scoping the gumball to every world-3d pane uniformly.
+fn cad_transform_tool_refs() -> Vec<semio_framework_plugin::ToolRef> {
+    vec!["move".into(), "rotate".into(), "scale".into()]
+}
+
 fn create_cad_app() -> App {
     App::from_builder(
         App::builder(CAD_PLAY_APP_ID, "CAD").document(["semio", "cad"])
@@ -5157,13 +5145,11 @@ fn create_cad_app() -> App {
             .operation("importCadFile", "Import CAD File")
             .operation("patchCadPlayReference", "Patch Reference")
             .operation("engagementSubmit", "Engagement Submit")
-            .operation("setActiveTool", "Set Active Tool")
             .operation("setCamera", "Set Camera")
             .operation("focusModelDefinition", "Focus Model Definition")
             .operation("setActiveExample", "Set Active Example")
             .view_action("setSelection", "Set Selection")
             .view_action("setNodeSelection", "Set Node Selection")
-            .view_action("setTransformTool", "Set Transform Tool")
             .view_action("worldSelect", "World Select")
             .view_action("worldHover", "World Hover")
             .view_action("setHover", "Set Hover")
@@ -5179,12 +5165,36 @@ fn create_cad_app() -> App {
             .view_action("worldPointerMove", "World Pointer Move")
             .view_action("engagementPointerDown", "Engagement Pointer Down")
             .view_action("setPrimitiveSelection", "Set Primitive Selection")
+            .view_action("toggleSun", "Toggle Sun")
+            .view_action("setSunAzimuth", "Set Sun Azimuth")
+            .view_action("setSunElevation", "Set Sun Elevation")
+            .view_action("setSunIntensity", "Set Sun Intensity")
             .shell_action("saveSelected", "Save Selected")
             .shell_action("saveInPlay", "Save In Play")
             .shell_action("saveCurrent", "Save Current")
-            .shell_action("saveCurrentObj", "Save Current (OBJ)")
-            .shell_action("saveCurrentStl", "Save Current (STL)")
             .shell_action("loadRawRequest", "Load Raw Request")
+            .action_args("saveCurrent", vec![ActionArgDef::select("format", "Format", vec![
+                ActionArgOption::new("step", "STEP"),
+                ActionArgOption::new("obj", "OBJ"),
+                ActionArgOption::new("stl", "STL"),
+            ]).default_value("step")])
+            .action_args("focusModelDefinition", vec![ActionArgDef::select("modelDefinitionId", "Model Definition", vec![
+                ActionArgOption::new(CAD_MODEL_DEFINITION_SHAPE, "Shape"),
+                ActionArgOption::new(CAD_MODEL_DEFINITION_BUILDING, "Building"),
+                ActionArgOption::new(CAD_MODEL_DEFINITION_ENERGY, "Energy"),
+                ActionArgOption::new(CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC, "Structure Classic"),
+            ]).required()])
+            .action_args("setActiveExample", vec![ActionArgDef::select("exampleId", "Example", vec![
+                ActionArgOption::new("default", "Default"),
+                ActionArgOption::new(CAD_EXAMPLE_FOREST_LEFT, "Hexagonal Cut Concrete Forest Left"),
+            ]).default_value("default")])
+            .tool(cad_transform_tool("move", "Move", "move"))
+            .tool(cad_transform_tool("rotate", "Rotate", "rotate-cw"))
+            .tool(cad_transform_tool("scale", "Scale", "maximize-2"))
+            .window_kind_tools(CAD_PLAY_WINDOW_SHAPE, cad_transform_tool_refs())
+            .window_kind_tools(CAD_PLAY_WINDOW_BUILDING, cad_transform_tool_refs())
+            .window_kind_tools(CAD_PLAY_WINDOW_ENERGY, cad_transform_tool_refs())
+            .window_kind_tools(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC, cad_transform_tool_refs())
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
                 FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -5232,7 +5242,7 @@ fn cad_document_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Result<s
                 return None;
             }
             let mesh = semio_framework_core::dwg_drawing_to_mesh(&layer_drawing);
-            Some(cad_object_from_mesh(&mut kernel, format!("object-{}", layer.name), layer.name.clone(), "spatial.shape.imported", &mesh))
+            Some(cad_object_from_mesh(&mut **kernel, format!("object-{}", layer.name), layer.name.clone(), "spatial.shape.imported", &mesh))
         })
         .collect();
     if !objects.is_empty() {
@@ -5246,7 +5256,7 @@ fn cad_document_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Result<s
 fn cad_document_from_mesh(mesh: &semio_framework_plugin::MeshData) -> Result<serde_json::Value, String> {
     let mut scene = default_document();
     let mut kernel = cad_brep_kernel().lock().map_err(|_| "cad brep kernel lock poisoned".to_string())?;
-    let object = cad_object_from_mesh(&mut kernel, next_cad_id("object-glb"), "Imported GLB", "spatial.shape.imported", mesh);
+    let object = cad_object_from_mesh(&mut **kernel, next_cad_id("object-glb"), "Imported GLB", "spatial.shape.imported", mesh);
     scene.objects = vec![object];
     serde_json::to_value(&scene).map_err(|err| err.to_string())
 }
@@ -5427,12 +5437,24 @@ mod tests {
     }
 
     #[test]
-    fn toolbar_exposes_save_and_transfer_tools() {
-        let mut app = new_app();
-        let tools = app.tools(&ViewState::default());
-        let json = serde_json::to_string(&tools).unwrap();
-        assert!(json.contains("cad.play.save.selected"));
-        assert!(json.contains("cad.play.transfer.to"));
+    fn app_definition_declares_transform_tools_and_no_actions_variant() {
+        let definition = create_cad_app().definition;
+        let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
+        assert!(tool_ids.contains(&"move"));
+        assert!(tool_ids.contains(&"rotate"));
+        assert!(tool_ids.contains(&"scale"));
+        // 🧰 The framework auto-injects `setActiveTool` as a View action once tools are declared —
+        // cad must NOT also declare it as an Operation.
+        let set_active_tool = definition.actions.iter().find(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID).expect("setActiveTool auto-injected");
+        assert_eq!(set_active_tool.kind, semio_framework_plugin::ActionKind::View);
+        // 🚦 Transform tools gate the action panel while active (the default) — cad declares no
+        // passive `allows_actions_while_active` view tools.
+        assert!(definition.tools.iter().all(|tool| !tool.allows_actions_while_active));
+        // 🧭 Every world-3d pane scopes the three transform tools.
+        for window in &definition.window_kinds {
+            let refs: Vec<&str> = window.tools.iter().map(|tool_ref| tool_ref.as_str()).collect();
+            assert_eq!(refs, vec!["move", "rotate", "scale"], "window {} tools", window.id);
+        }
     }
 
     #[test]
@@ -5485,36 +5507,65 @@ mod tests {
         let mut app = CadApp::default();
         let scene = default_document();
         drive(&mut app, &scene, "setSelection", Some(json!({ "objectIds": ["object-box-1"] })));
-        let selection = world_selection_json(&scene, &app.runtime);
-        assert!(selection.contains("\"transformTool\":\"move\""));
+        let selection = world_selection_json(&scene, &app.runtime, "rotate");
+        assert!(selection.contains("\"transformTool\":\"rotate\""), "gumball tool sourced from ViewState::active_tool_id");
         assert!(selection.contains("\"gumballActive\":true"));
         assert!(selection.contains("\"gumballTarget\""));
     }
 
     #[test]
     fn gumball_inactive_without_selection() {
-        let selection = world_selection_json(&default_document(), &CadPlayRuntime::default());
+        let selection = world_selection_json(&default_document(), &CadPlayRuntime::default(), CAD_DEFAULT_TOOL_ID);
         assert!(selection.contains("\"gumballActive\":false"));
         assert!(!selection.contains("\"gumballTarget\""));
     }
 
     #[test]
-    fn set_transform_tool_updates_runtime_and_engagement() {
-        let mut app = CadApp::default();
+    fn active_tool_flows_from_view_state_into_scene() {
+        let app = CadApp::default();
         let scene = default_document();
-        let emit = drive(&mut app, &scene, "setTransformTool", Some(json!({ "tool": "rotate" })));
-        assert!(emit.ops.is_empty(), "transform tool is view-state, not a document op");
-        assert_eq!(app.runtime.transform_tool, "rotate");
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
-        let engagements = app.window_engagements(&doc, &ViewState::default());
-        let shape_engagement = engagements.get(CAD_PLAY_WINDOW_SHAPE).expect("shape engagement");
-        let rotate_option = shape_engagement
-            .options
-            .as_ref()
-            .and_then(|options| options.iter().find(|option| option.id == "cad.opt.rotate"))
-            .expect("rotate option");
-        assert_eq!(rotate_option.pressed, Some(true));
+        let view_state = ViewState { active_tool_id: Some("scale".into()), ..ViewState::default() };
+        let node = app.render(CAD_PLAY_BODY_SHAPE, &doc, &view_state);
+        let json = serde_json::to_string(&node).unwrap();
+        // The world selection blob is embedded as an escaped JSON string inside the scene node.
+        assert!(json.contains(r#"transformTool\":\"scale"#), "render sources gumball tool from ViewState::active_tool_id");
+    }
+
+    #[test]
+    fn engagement_hud_no_longer_carries_tool_switcher_options() {
+        let mut app = new_app();
+        let engagements = app.window_engagements(&ViewState::default());
+        for engagement in engagements.values() {
+            assert!(engagement.options.is_none(), "tool switching now lives in the framework toolbar, not the engagement HUD");
+        }
+    }
+
+    #[test]
+    fn switching_tool_emits_no_operations_and_no_history_entry() {
+        // 🧰 The key regression guard: switching the host-owned active tool must be a pure View
+        // action — zero operations, no projection mutation, and (proven below) no intervening
+        // history entry. If the switch recorded an edit, the single undo would revert the switch
+        // instead of the preceding addObject.
+        let mut app = new_app();
+        let before = app.projection().expect("projection").objects.len();
+        app.handle_action("addObject", Some(&json!({ "typology": "spatial.shape.primitive.box" })), &ViewState::default(), &meta("local"))
+            .expect("add object");
+        let projection_after_add = serde_json::to_string(&app.projection().expect("projection")).unwrap();
+        let view_state = ViewState { active_tool_id: Some("rotate".into()), ..ViewState::default() };
+        let result = app
+            .handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "rotate" })), &view_state, &meta("local"))
+            .expect("set active tool");
+        assert!(result.operations.is_empty(), "tool switch must emit zero operations");
+        let projection_after_switch = serde_json::to_string(&app.projection().expect("projection")).unwrap();
+        assert_eq!(projection_after_add, projection_after_switch, "tool switch must not mutate the projection");
+        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        assert_eq!(
+            app.projection().expect("projection").objects.len(),
+            before,
+            "a single undo reverts the addObject — proving the tool switch created no history entry"
+        );
     }
 
     #[test]
@@ -5586,7 +5637,7 @@ mod tests {
             selected_object_ids: vec!["object-box-1".into(), second_id],
             ..CadPlayRuntime::default()
         };
-        let panel = build_properties_panel(&view(scene, runtime), cad_labels(&ViewState::default()));
+        let panel = build_properties_panel(&view(scene, runtime), cad_labels(&ViewState::default()), CAD_DEFAULT_TOOL_ID);
         let json = serde_json::to_string(&panel).unwrap();
         assert!(json.contains("Mixed"));
         assert!(json.contains("cad-play-inspector.object.orientation"));
@@ -5597,7 +5648,7 @@ mod tests {
             selected_object_ids: vec!["object-box-1".into()],
             ..CadPlayRuntime::default()
         };
-        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(view_state));
+        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(view_state), CAD_DEFAULT_TOOL_ID);
         serde_json::to_string(&panel).unwrap()
     }
 
@@ -5636,7 +5687,7 @@ mod tests {
             ..CadPlayRuntime::default()
         };
         let view_state = ViewState { terminology: Some("reuse".into()), locale: Some("de".into()), ..ViewState::default() };
-        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(&view_state));
+        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(&view_state), CAD_DEFAULT_TOOL_ID);
         assert!(serde_json::to_string(&panel).unwrap().contains("Bauteil"));
     }
 
@@ -5699,14 +5750,6 @@ mod tests {
         app.handle_action("addObject", Some(&json!({ "typology": "spatial.shape.primitive.box" })), &ViewState::default(), &meta("local"))
             .expect("add object");
         assert_eq!(app.projection().expect("projection").objects.len(), before + 1);
-    }
-
-    #[test]
-    fn set_active_tool_emits_document_op() {
-        let mut app = new_app();
-        app.handle_action("setActiveTool", Some(&json!({ "tool": "selectDirect" })), &ViewState::default(), &meta("local"))
-            .expect("set active tool");
-        assert_eq!(app.projection().expect("projection").active_tool.as_deref(), Some("selectDirect"));
     }
 
     #[test]

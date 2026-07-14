@@ -1,0 +1,13 @@
+{
+  "title": "Progressive Panel Tabs and Remembered Fold State",
+  "emoji": "🌱",
+  "status": "open",
+  "description": "Make corner-panel tab trees progressive: pressing a branch tab reveals only its immediate-children row (no auto-descend to first leaf); panel body stays empty until a leaf is picked. Re-pressing an expanded branch collapses that level and clears remembered drill-down below it; re-pressing the root corner tab when only its children are shown folds the panel. Each branch remembers the last child drilled into so returning restores the previous drill-down (validated against the current tree). Persist across reloads: corner panel visible/size/path, per-branch path memory, and tree section/group expansion — via a new layered os/app localStorage store (DockUiStateStore, cloned from DockLayoutStore), diff-only, cleared by the existing Reset panels action. Core changes: reconcileActivePath becomes truncate-only (no first-sibling substitution, no auto-descend); PanelTabBar row reveal becomes path-driven; new progressPanelTabSelection pure helper implements collapse/root-reset/fold/memory-extend semantics; Tree/TreeStateProvider gain controlled openStates (Tree owns its own internal provider that shadows the per-unit one, so control must go through Tree itself, namespaced per PanelTreeUnit); os-shell.tsx reducer gains panelPathMemory/treeOpenStates, studio/details tab overrides move from read-time reassertion to a write-through effect (so user collapse sticks), setActivePanelTab dispatches get a leaf-only guard. Full plan at /Users/ueli/.claude/plans/ui-the-design-language-quirky-sifakis.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1989"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪1142d3e8a8a7480d8959cb99e97121bf"
+  ]
+}

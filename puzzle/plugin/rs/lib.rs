@@ -8683,7 +8683,19 @@ pub mod d5 {
                 .tool(ToolDefinition::new("fill", "Fill", "fill"))
                 .tool(ToolDefinition::new("worldRelocate", "Relocate", "move-3d"))
                 .window_kind_tools(PUZZLE5D_PLAY_WINDOW_2D, vec!["select".into(), "brush".into(), "fill".into()])
-                .window_kind_tools(PUZZLE5D_PLAY_WINDOW_3D, vec!["select".into(), "move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()]),
+                .window_kind_tools(PUZZLE5D_PLAY_WINDOW_3D, vec!["select".into(), "move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()])
+                // 📇 Per-window action scoping — the 3D window (World3d) owns the transform-gumball ops
+                // (move/rotate/scale/relocate tools are 3D-only) plus its own camera; the 2D window
+                // (Puzzle2dBoard) owns board-event dispatch and its own camera. Select/brush/fill create
+                // ops, deletion, engagement, and global example/json actions apply to both surfaces and
+                // stay unscoped orphans, appearing on both windows.
+                .window_kind_actions(PUZZLE5D_PLAY_WINDOW_3D, vec![
+                    "translateSelection".into(), "rotateSelection".into(), "scaleSelection".into(),
+                    "worldRelocate".into(), "setCamera3d".into(),
+                ])
+                .window_kind_actions(PUZZLE5D_PLAY_WINDOW_2D, vec![
+                    "applyBoardEvents".into(), "setCamera2d".into(),
+                ]),
         );
         for window in PUZZLE5D_PLAY_WINDOWS {
             if let Some(window_kind) = app.definition.window_kinds.iter_mut().find(|window_kind| window_kind.id == window) {

@@ -3837,8 +3837,14 @@ pub struct Diagnostic {
     pub message: String,
 }
 
+// 🪪 `rename_all` on an enum only renames variant tags ("setActiveTool"), not the fields *inside* each
+// struct-variant — those need `rename_all_fields` (serde 1.0.126+) or every multi-word field here
+// (window_kind_id, mime_type, program_id, ...) silently serializes as snake_case, breaking any TS side
+// that destructures camelCase (confirmed live: `SetActiveTool` was shipping `window_kind_id`/`tool_id`,
+// so the host-owned tool switch after `openVortexSuggestions` never applied and the brush preview never
+// rendered).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum HostEffect {
     OpenWindow { kind: WindowKindId, params: Value },
     CloseWindow { window: WindowHandle },

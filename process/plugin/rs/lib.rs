@@ -994,6 +994,7 @@ pub mod app_3d {
             items: None,
             control: None,
             is_hidden: None,
+            loading: None,
         }
     }
 
@@ -1061,6 +1062,7 @@ pub mod app_3d {
             items: None,
             control: None,
             is_hidden: None,
+            loading: None,
         };
         let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len());
         let step_items: Vec<UiTreeItemNode> = fixture
@@ -1096,13 +1098,15 @@ pub mod app_3d {
                 items: None,
                 control: None,
                 is_hidden: Some(!step.enabled),
+                loading: None,
             })
             .collect();
         UiNode::Tree(UiTreeNode {
             sections: vec![
-                UiTreeSectionNode { id: "process3d-play-document.stock".into(), label: Some(labels.stock.into()), default_open: Some(true), items: vec![stock_item] },
-                UiTreeSectionNode { id: "process3d-play-document.steps".into(), label: Some(labels.steps.into()), default_open: Some(true), items: step_items },
+                UiTreeSectionNode { id: "process3d-play-document.stock".into(), label: Some(labels.stock.into()), default_open: Some(true), loading: None, items: vec![stock_item] },
+                UiTreeSectionNode { id: "process3d-play-document.steps".into(), label: Some(labels.steps.into()), default_open: Some(true), loading: None, items: step_items },
             ],
+            loading: None,
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
@@ -1149,12 +1153,13 @@ pub mod app_3d {
                                     items: None,
                                     control: None,
                                     is_hidden: None,
+                                    loading: None,
                                 }
                             }
                         })
                     })
                     .collect();
-                UiTreeSectionNode { id: format!("process3d-play-catalogue.{}", module.id), label: Some(module.label.into()), default_open: Some(module.id == "geometry"), items }
+                UiTreeSectionNode { id: format!("process3d-play-catalogue.{}", module.id), label: Some(module.label.into()), default_open: Some(module.id == "geometry"), loading: None, items }
             })
             .collect();
         let stock_items = vec![
@@ -1163,8 +1168,8 @@ pub mod app_3d {
             tree_item_with_action("process3d-catalogue.stock-sphere", "Sphere", Some("circle"), process3d_action("setStock", Some(json!({ "kind": "sphere" })))),
             tree_item_with_action("process3d-catalogue.stock-import", "Import Model…", Some("folder-open"), process3d_action("loadModelRequest", None)),
         ];
-        sections.push(UiTreeSectionNode { id: "process3d-play-catalogue.stock".into(), label: Some(labels.stock.into()), default_open: Some(false), items: stock_items });
-        UiNode::Tree(UiTreeNode { sections, selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None })
+        sections.push(UiTreeSectionNode { id: "process3d-play-catalogue.stock".into(), label: Some(labels.stock.into()), default_open: Some(false), loading: None, items: stock_items });
+        UiNode::Tree(UiTreeNode { sections, loading: None, selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None })
     }
 
     fn build_stock_inspector(stock: &Stock, fixture: &process_3d::Process3dDocument, labels: &Process3dLabels) -> UiNode {

@@ -2277,6 +2277,23 @@ fn create_lowpoly_app() -> App {
             .window_kind_tools(LOWPOLY_PLAY_WINDOW_UV, vec![
                 "brush".into(), "eraser".into(), "fill".into(), "eyedropper".into(),
             ])
+            // 📇 Per-window action scoping — MAIN (World3d) owns every mesh-editing/transform/UV-unwrap
+            // operation (all run `mesh_edit` on the 3D mesh from 3D-view selection); the UV (Canvas2d)
+            // window only paints its texture. Paint operations are listed on BOTH windows because the
+            // paint tools are scoped to both. Ephemeral view actions and global utilities
+            // (selection/camera/sun/engagement/example/json) stay unscoped orphans, appearing on both.
+            .window_kind_actions(LOWPOLY_PLAY_WINDOW_MAIN, vec![
+                "addPrimitive".into(), "patchObject".into(), "extrude".into(), "inset".into(),
+                "bevel".into(), "loopCut".into(), "subdivide".into(), "triangulate".into(),
+                "mirror".into(), "decimate".into(), "flipFaces".into(), "merge".into(),
+                "dissolve".into(), "snap".into(), "toggleSmooth".into(), "unwrapActive".into(),
+                "markUvSeam".into(), "clearSeam".into(), "translateSelection".into(),
+                "rotateSelection".into(), "scaleSelection".into(), "transformEnd".into(),
+                "addPaintLayer".into(), "paintStrokeEnd".into(), "paintFill".into(), "fillBucket".into(),
+            ])
+            .window_kind_actions(LOWPOLY_PLAY_WINDOW_UV, vec![
+                "addPaintLayer".into(), "paintStrokeEnd".into(), "paintFill".into(), "fillBucket".into(),
+            ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
@@ -2380,6 +2397,28 @@ mod tests {
         let mut app = new_app();
         let node = app.render(LOWPOLY_PLAY_BODY_UV, None, &ViewState::default()).unwrap();
         assert!(serde_json::to_string(&node).unwrap().contains("canvas-2d"));
+    }
+
+    #[test]
+    fn window_kind_actions_scope_mesh_ops_to_main_only() {
+        let definition = create_lowpoly_app().definition;
+        let resolve = |window_id: &str| -> Vec<String> {
+            let window = definition.window_kinds.iter().find(|window| window.id == window_id).unwrap();
+            semio_framework_plugin::resolve_window_actions(&definition, window)
+                .into_iter()
+                .map(|action| action.id.clone())
+                .collect()
+        };
+        let main = resolve(LOWPOLY_PLAY_WINDOW_MAIN);
+        let uv = resolve(LOWPOLY_PLAY_WINDOW_UV);
+        for mesh_op in ["extrude", "addPrimitive", "bevel", "loopCut", "mirror", "unwrapActive", "markUvSeam"] {
+            assert!(main.contains(&mesh_op.to_string()), "MAIN must expose mesh op {mesh_op}");
+            assert!(!uv.contains(&mesh_op.to_string()), "UV must NOT expose mesh op {mesh_op}");
+        }
+        for paint_op in ["paintFill", "fillBucket", "addPaintLayer"] {
+            assert!(main.contains(&paint_op.to_string()), "MAIN must expose paint op {paint_op}");
+            assert!(uv.contains(&paint_op.to_string()), "UV must expose paint op {paint_op}");
+        }
     }
 
     #[test]

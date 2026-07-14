@@ -4470,21 +4470,15 @@ export const cornerPanelTabButtonClass = cn(panelTabButtonClass, "px-tiny");
 /** @emoji 📑 Shared corner/mobile panel tab bar variant. */
 export type PanelTabBarVariant = "corner" | "mobile";
 
-/** @emoji 🧭 Keeps matching path segments against a node tree; falls back to the first sibling and auto-descends while children exist. */
+/** @emoji 🧭 Validates a path's segments against a node tree, truncating at the first segment that no longer exists at its level — no first-sibling substitution, no auto-descend (progressive reveal owns how deep a path goes). `[]` is a valid result. */
 export function reconcileActivePath<T extends { readonly id: string }>(nodes: readonly T[], path: readonly string[], childrenOf: (node: T) => readonly T[] | undefined): string[] {
   let current = nodes;
   const reconciled: string[] = [];
-  let index = 0;
-  while (current.length > 0) {
-    let id = path[index];
-    if (!id || !current.some((node) => node.id === id)) id = current[0]?.id;
-    if (!id) break;
+  for (const id of path) {
+    const node = current.find((candidate) => candidate.id === id);
+    if (!node) break;
     reconciled.push(id);
-    const active = current.find((node) => node.id === id);
-    const children = active ? childrenOf(active) : undefined;
-    if (!children || children.length === 0) break;
-    current = children;
-    index++;
+    current = childrenOf(node) ?? [];
   }
   return reconciled;
 }
@@ -4610,6 +4604,63 @@ export function findPanelTabPath(tabs: readonly PanelTabNode[], id: string): str
     }
   }
   return undefined;
+}
+
+/** @emoji 🌱 A node's own id plus every descendant's id — the memory entries a collapsed/reset branch must forget. */
+function panelTabSubtreeIds(node: PanelTabNode): string[] {
+  const children = panelTabChildren(node);
+  return children ? [node.id, ...children.flatMap(panelTabSubtreeIds)] : [node.id];
+}
+
+/** @emoji 🌱 Result of interpreting one raw tab press: the next active path, the next per-branch drill-down memory, and whether the press should fold the hosting panel instead. */
+export interface PanelTabSelectionResult {
+  readonly path: readonly string[];
+  readonly memory: Readonly<Record<string, string>>;
+  readonly fold: boolean;
+}
+
+/**
+ * 🌱 Interprets a raw tab press for progressive reveal (see {@link PanelTabBar}): re-pressing the already-active
+ * segment collapses it (root re-press instead folds the panel, or resets to itself if deeper); a fresh pick adopts
+ * the pressed path and extends it from `memory` — each branch remembers the last child drilled into, pruning stale
+ * entries that no longer match the tree — recording a fresh hop for every step of the resulting path.
+ **/
+export function progressPanelTabSelection(tabs: readonly PanelTabNode[], currentPath: readonly string[], selectedPath: readonly string[], memory: Readonly<Record<string, string>>): PanelTabSelectionResult {
+  const validatedSelected = reconcileActivePath(tabs, selectedPath, panelTabChildren);
+  const d = validatedSelected.length - 1;
+  if (d < 0) return { path: currentPath, memory, fold: false };
+  const pressed = validatedSelected[d];
+
+  const clearSubtreeMemory = (node: PanelTabNode | undefined, fallbackId: string): Readonly<Record<string, string>> => {
+    const clearedIds = new Set(node ? collectPanelTabSubtreeIds(node) : [fallbackId]);
+    return Object.fromEntries(Object.entries(memory).filter(([key]) => !clearedIds.has(key)));
+  };
+
+  if (currentPath[d] === pressed) {
+    if (d === 0) {
+      if (currentPath.length === 1) return { path: currentPath, memory, fold: true };
+      return { path: [pressed], memory: clearSubtreeMemory(findPanelTabNode(tabs, [pressed]), pressed), fold: false };
+    }
+    return { path: currentPath.slice(0, d), memory: clearSubtreeMemory(findPanelTabNode(tabs, validatedSelected), pressed), fold: false };
+  }
+
+  let path: readonly string[] = validatedSelected;
+  let nextMemory: Record<string, string> = { ...memory };
+  let tailNode = findPanelTabNode(tabs, path);
+  while (tailNode && tailNode.kind === "branch") {
+    const remembered = nextMemory[tailNode.id];
+    if (!remembered) break;
+    const child = tailNode.children.find((candidate) => candidate.id === remembered);
+    if (!child) {
+      const { [tailNode.id]: _stale, ...rest } = nextMemory;
+      nextMemory = rest;
+      break;
+    }
+    path = [...path, child.id];
+    tailNode = child;
+  }
+  for (let i = 0; i < path.length - 1; i++) nextMemory[path[i]] = path[i + 1];
+  return { path, memory: nextMemory, fold: false };
 }
 
 /** @emoji 🗄️ Full arrangement of tabs across all four corners — the pure, draggable dock model. */
@@ -4754,7 +4805,7 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, corner, parentPath =
   const dock = usePanelDockContext();
   const tabSlot = variant === "corner" ? "corner-panel" : "mobile-panel";
   const sortedTabs = reactHostPort.useMemo(() => [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [tabs]);
-  const resolvedActiveId = activeId ?? sortedTabs[0]?.id;
+  const resolvedActiveId = activeId;
 
   reactHostPort.useLayoutEffect(() => {
     const bar = barRef.current;
@@ -4861,7 +4912,7 @@ export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, corner, tabs,
   let depth = 0;
   while (level.length > 0) {
     const sorted = [...level].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    const activeId = activePath[depth] && sorted.some((tab) => tab.id === activePath[depth]) ? activePath[depth] : sorted[0]?.id;
+    const activeId = sorted.some((tab) => tab.id === activePath[depth]) ? activePath[depth] : undefined;
     const rowDepth = depth;
     const parentPath = activePath.slice(0, rowDepth);
     rows.push({
@@ -4873,14 +4924,14 @@ export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, corner, tabs,
           parentPath={parentPath}
           tabs={sorted}
           activeId={activeId}
-          onSelect={(tabId) => onActivePathChange(reconcileActivePath(tabs, [...activePath.slice(0, rowDepth), tabId], panelTabChildren))}
+          onSelect={(tabId) => onActivePathChange([...activePath.slice(0, rowDepth), tabId])}
           showActiveColor={showActiveColor}
           direction={direction}
         />
       ),
     });
     if (rootRowOnly) break;
-    const active = sorted.find((tab) => tab.id === activeId);
+    const active = activeId ? sorted.find((tab) => tab.id === activeId) : undefined;
     level = (active && panelTabChildren(active)) ?? [];
     depth++;
   }
@@ -10735,7 +10786,7 @@ export function IconSelector({ id, value, onChange, disabled = false, uniform = 
  * TreeStateContextValue holds the data fields for a TreeStateContextValue record.
  **/
 interface TreeStateContextValue {
-  openStates: Record<string, boolean>;
+  openStates: Readonly<Record<string, boolean>>;
   setOpenState: (id: string, open: boolean) => void;
   getOpenState: (id: string, defaultOpen: boolean) => boolean;
 }
@@ -10746,13 +10797,25 @@ interface TreeStateContextValue {
 const TreeStateContext = reactHostPort.createContext<TreeStateContextValue | null>(null);
 
 /**
- * Context provider managing tree expansion state.
+ * Context provider managing tree expansion state — controlled via `openStates`/`onOpenStateChange` when a host
+ * wants expansion to survive remounts (e.g. persisted across tab switches or reloads); uncontrolled (internal
+ * state) otherwise. The map only ever holds explicit toggles — {@link useTreeOpenState}'s `getOpenState` falls
+ * back to each item's own `defaultOpen` — so it already is the diff-from-default a host would persist.
  **/
-export const TreeStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [openStates, setOpenStates] = reactHostPort.useState<Record<string, boolean>>({});
+export const TreeStateProvider: React.FC<{
+  children: React.ReactNode;
+  openStates?: Readonly<Record<string, boolean>>;
+  onOpenStateChange?: (id: string, open: boolean) => void;
+}> = ({ children, openStates: controlledOpenStates, onOpenStateChange }) => {
+  const [internalOpenStates, setInternalOpenStates] = reactHostPort.useState<Record<string, boolean>>({});
+  const openStates = controlledOpenStates ?? internalOpenStates;
 
   const setOpenState = (id: string, open: boolean) => {
-    setOpenStates((prev) => ({ ...prev, [id]: open }));
+    if (onOpenStateChange) {
+      onOpenStateChange(id, open);
+    } else {
+      setInternalOpenStates((prev) => ({ ...prev, [id]: open }));
+    }
   };
 
   const getOpenState = (id: string, defaultOpen: boolean) => {
@@ -11670,6 +11733,9 @@ interface TreeRootProps {
   indentMultiplier?: number;
   /** @emoji 🧭 `"up"` makes every foldable group in this tree unfold above its own header (children in reverse order), mirroring the {@link Ribbon} `"up"` pattern — for trees hosted in a panel that grows upward. Defaults to `"down"`. */
   direction?: TreeDirection;
+  /** @emoji 🌱 Controlled section/group expansion (see {@link TreeStateProvider}) — lets a host persist which groups are open across remounts. Uncontrolled (per-mount) when omitted. */
+  openStates?: Readonly<Record<string, boolean>>;
+  onOpenStateChange?: (id: string, open: boolean) => void;
 }
 
 /** @emoji ✅ Per-tree selection store; rows subscribe via {@link useSyncExternalStore} without invalidating {@link TreeDataRenderingContext}. */
@@ -13373,6 +13439,8 @@ export const Tree = (({
   emptyState,
   indentMultiplier = 1,
   direction = "down",
+  openStates,
+  onOpenStateChange,
   children,
 }: TreeRootProps & { children?: React.ReactNode }) => {
   if (hasNonEmptyChildren(children)) {
@@ -13745,7 +13813,7 @@ export const Tree = (({
   const orderedSections = direction === "up" ? [...resolvedSections].reverse() : resolvedSections;
 
   return (
-    <TreeStateProvider>
+    <TreeStateProvider openStates={openStates} onOpenStateChange={onOpenStateChange}>
       <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines, isTree: true, indentMultiplier, direction }}>
         <TreeReorderDropPreview preview={dropPreview} />
         <div ref={treeRootRef} className={`w-full min-w-0 overflow-hidden ${className}`} onPointerOver={handleTreePointerOver} onPointerLeave={handleTreePointerLeave}>
@@ -15273,6 +15341,9 @@ export interface CornerPanelProps {
   tabs: readonly PanelTabNode[];
   activeTabPath?: readonly string[];
   onActiveTabPathChange?: (path: readonly string[]) => void;
+  /** @emoji 🌱 Per-branch drill-down memory (see {@link progressPanelTabSelection}) — which child was last active under each branch, so returning to it restores the drill-down. */
+  pathMemory?: Readonly<Record<string, string>>;
+  onPathMemoryChange?: (memory: Readonly<Record<string, string>>) => void;
   minSize?: number;
   maxSize?: number;
   zIndex?: 10 | 20 | 30 | 40;
@@ -15407,10 +15478,12 @@ function CornerPanelResizeHandle({
   return <div className={resizeHandleClass} onMouseEnter={() => setIsResizeHovered(true)} onMouseLeave={() => !isResizing && setIsResizeHovered(false)} {...resizePointerProps} />;
 }
 
-const CornerPanel: React.FC<CornerPanelProps> = ({ corner, visible = true, onVisibleChange, size = 300, onSizeChange, tabs, activeTabPath, onActiveTabPathChange, minSize = 200, maxSize = 600, zIndex = 20, className = "" }) => {
+const CornerPanel: React.FC<CornerPanelProps> = ({ corner, visible = true, onVisibleChange, size = 300, onSizeChange, tabs, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, minSize = 200, maxSize = 600, zIndex = 20, className = "" }) => {
   const [isResizeHovered, setIsResizeHovered] = reactHostPort.useState(false);
   const [isResizing, setIsResizing] = reactHostPort.useState(false);
   const [internalActivePath, setInternalActivePath] = reactHostPort.useState<readonly string[]>(() => reconcileActivePath(tabs, [], panelTabChildren));
+  const [internalMemory, setInternalMemory] = reactHostPort.useState<Readonly<Record<string, string>>>({});
+  const memory = pathMemory ?? internalMemory;
   const sizeRef = reactHostPort.useRef(size);
 
   reactHostPort.useEffect(() => {
@@ -15425,18 +15498,26 @@ const CornerPanel: React.FC<CornerPanelProps> = ({ corner, visible = true, onVis
   const activeNode = reactHostPort.useMemo(() => findPanelTabNode(tabs, resolvedPath), [tabs, resolvedPath]);
   const activeTabTrees = activeNode?.kind === "leaf" ? activeNode.trees : null;
 
-  // 🎛 The tab button group doubles as the panel's own fold/unfold control: picking the tab already fully active folds the panel, any other pick opens it.
-  const handlePathChange = (path: readonly string[]) => {
-    const samePath = visible && path.length === resolvedPath.length && path.every((id, index) => id === resolvedPath[index]);
-    if (samePath) {
+  // 🎛 The tab button group doubles as the panel's own progressive fold/unfold/drill-down control (see {@link progressPanelTabSelection}).
+  const handlePathChange = (raw: readonly string[]) => {
+    if (!visible) {
+      onVisibleChange?.(true);
+      if (raw[raw.length - 1] === resolvedPath[raw.length - 1]) return;
+    }
+    const result = progressPanelTabSelection(tabs, resolvedPath, raw, memory);
+    if (visible && result.fold) {
       onVisibleChange?.(false);
       return;
     }
-    if (!visible) onVisibleChange?.(true);
     if (onActiveTabPathChange) {
-      onActiveTabPathChange(path);
+      onActiveTabPathChange(result.path);
     } else {
-      setInternalActivePath(path);
+      setInternalActivePath(result.path);
+    }
+    if (onPathMemoryChange) {
+      onPathMemoryChange(result.memory);
+    } else {
+      setInternalMemory(result.memory);
     }
   };
   const resizeSide = horizontal === "left" ? "right" : "left";
@@ -15514,6 +15595,9 @@ export interface MobilePanelProps {
   tabs: readonly PanelTabNode[];
   activeTabPath?: readonly string[];
   onActiveTabPathChange?: (path: readonly string[]) => void;
+  /** @emoji 🌱 Per-branch drill-down memory (see {@link progressPanelTabSelection}). */
+  pathMemory?: Readonly<Record<string, string>>;
+  onPathMemoryChange?: (memory: Readonly<Record<string, string>>) => void;
   className?: string;
   height?: number;
 }
@@ -15522,8 +15606,10 @@ export interface MobilePanelProps {
  * MobilePanel is a full-width tabbed panel for mobile layouts.
  * It merges all tabs into a single non-resizable panel.
  **/
-const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeTabPath, onActiveTabPathChange, className = "", height = 260 }) => {
+const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, className = "", height = 260 }) => {
   const [internalActivePath, setInternalActivePath] = reactHostPort.useState<readonly string[]>(() => reconcileActivePath(tabs, [], panelTabChildren));
+  const [internalMemory, setInternalMemory] = reactHostPort.useState<Readonly<Record<string, string>>>({});
+  const memory = pathMemory ?? internalMemory;
 
   if (!visible || tabs.length === 0) return null;
 
@@ -15532,11 +15618,17 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
   const activeNode = findPanelTabNode(tabs, resolvedPath);
   const activeTabTrees = activeNode?.kind === "leaf" ? activeNode.trees : null;
 
-  const handlePathChange = (path: readonly string[]) => {
+  const handlePathChange = (raw: readonly string[]) => {
+    const result = progressPanelTabSelection(tabs, resolvedPath, raw, memory);
     if (onActiveTabPathChange) {
-      onActiveTabPathChange(path);
+      onActiveTabPathChange(result.path);
     } else {
-      setInternalActivePath(path);
+      setInternalActivePath(result.path);
+    }
+    if (onPathMemoryChange) {
+      onPathMemoryChange(result.memory);
+    } else {
+      setInternalMemory(result.memory);
     }
   };
 
