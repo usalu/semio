@@ -4440,8 +4440,8 @@ export const floatingTagOffClass = "bg-transparent text-muted-foreground";
 /** @emoji 🪟 Canvas viewport surface inside a host root. */
 export const canvasViewportClass = "relative h-full min-h-0 w-full min-w-0 bg-canvas outline-none";
 
-/** @emoji 📑 Panel tab strip base — sits above {@link panelChromeFrameLayerClass}; tabs sit flush against the panel's edges (no side inset — only tree/content rows carry that). Border side is added by callers ({@link panelTabBarClass}, {@link cornerPanelTabBarClass}). */
-const panelTabBarBaseClass = "relative z-40 flex min-w-0 items-center shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single";
+/** @emoji 📑 Panel tab strip base — sits above {@link panelChromeFrameLayerClass}; tabs sit flush against the panel's edges (no side inset — only tree/content rows carry that). `w-full` so the strip's divider border spans the whole row, not just the tabs' content width. Border side is added by callers ({@link panelTabBarClass}, {@link cornerPanelTabBarClass}). */
+const panelTabBarBaseClass = "relative z-40 flex w-full min-w-0 items-center shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single";
 
 /** @emoji 📑 Panel tab strip with its divider on the content-facing side. */
 export const panelTabBarClass = cn(panelTabBarBaseClass, borderNormalBottomClass);
@@ -23212,6 +23212,7 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="corner-panel-tabs"]')?.className).toContain("overflow-x-auto");
       expect(container.querySelector('[data-slot="corner-panel-tabs"]')?.className).toContain("z-40");
       expect(container.querySelector('[data-slot="corner-panel-tabs"]')?.className?.split(" ")).not.toContain("px-single");
+      expect(container.querySelector('[data-slot="corner-panel-tabs"]')?.className?.split(" ")).toContain("w-full");
       expect(container.querySelector('[data-slot="panel-chrome-frame"]')?.className).toContain("z-30");
     });
 

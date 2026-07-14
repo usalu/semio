@@ -22,12 +22,12 @@ import {
 } from "@semio-tech/ui-react";
 import { clearColorResolveCache, resolveColorHex, resolveThreeColor, semanticVar, themeColorVar, tokenHex, tokenVar } from "@semio-tech/ui-styling";
 import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactElement } from "react";
+import { OrbitControls as ThreeOrbitControls } from "three/addons/controls/OrbitControls.js";
 import { MeshBVH, type HitPointInfo } from "three-mesh-bvh";
 
 const Canvas = sceneHostPort.fiber.canvas;
 const useFrame = sceneHostPort.fiber.useFrame;
 const useThree = sceneHostPort.fiber.useThree;
-const OrbitControls = sceneHostPort.drei.OrbitControls;
 const GizmoHelper = sceneHostPort.drei.GizmoHelper;
 const OrthographicCamera = sceneHostPort.drei.OrthographicCamera;
 const PerspectiveCamera = sceneHostPort.drei.PerspectiveCamera;
@@ -1926,6 +1926,49 @@ export interface WorldOrbitGatedProps {
   readonly onRightPointerDown?: (event: PointerEvent) => boolean;
 }
 
+/** @emoji 🛰️ Canvas-local Three orbit-control binding that never crosses the optional Drei runtime boundary. */
+function WorldOrbitControlsBridge({ camera, enabled, mouseButtons, controlsKey, onChange, onStart, onEnd }: { readonly camera: Camera; readonly enabled: boolean; readonly mouseButtons: ReturnType<typeof resolveWorldOrbitMouseButtonsIdle>; readonly controlsKey?: string | number; readonly onChange: () => void; readonly onStart: () => void; readonly onEnd: () => void }): null {
+  const { gl } = useThree();
+  const set = useThree((state) => state.set);
+  const get = useThree((state) => state.get);
+  const controlsRef = reactHostPort.useRef<ThreeOrbitControls | null>(null);
+  const callbacksRef = reactHostPort.useRef({ onChange, onStart, onEnd });
+  callbacksRef.current = { onChange, onStart, onEnd };
+  reactHostPort.useEffect(() => {
+    const controls = new ThreeOrbitControls(camera, gl.domElement);
+    controls.enableDamping = false;
+    controls.enablePan = true;
+    controls.enableZoom = true;
+    controls.enabled = enabled;
+    controls.mouseButtons = { ...mouseButtons };
+    const change = () => callbacksRef.current.onChange();
+    const start = () => callbacksRef.current.onStart();
+    const end = () => callbacksRef.current.onEnd();
+    controls.addEventListener("change", change);
+    controls.addEventListener("start", start);
+    controls.addEventListener("end", end);
+    controlsRef.current = controls;
+    set({ controls });
+    controls.update();
+    return () => {
+      controls.removeEventListener("change", change);
+      controls.removeEventListener("start", start);
+      controls.removeEventListener("end", end);
+      controls.dispose();
+      controlsRef.current = null;
+      if (get().controls === controls) set({ controls: null });
+    };
+  }, [camera, controlsKey, get, gl.domElement, set]);
+  reactHostPort.useEffect(() => {
+    const controls = controlsRef.current;
+    if (!controls) return;
+    controls.enabled = enabled;
+    controls.mouseButtons = { ...mouseButtons };
+    controls.update();
+  }, [enabled, mouseButtons]);
+  return null;
+}
+
 /** @emoji 🛰️ Orbit controls with injectable gate (specializations disable during drag/tools). */
 export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | null {
   const { camera: sceneCamera, gl } = useThree();
@@ -1954,14 +1997,11 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
     });
   };
   return (
-    <OrbitControls
-      key={props.controlsKey}
+    <WorldOrbitControlsBridge
       camera={camera}
-      makeDefault
       enabled={!gate && !snapGate}
-      enableDamping={false}
-      enablePan
-      enableZoom
+      mouseButtons={mouseButtonsIdle}
+      controlsKey={props.controlsKey}
       onChange={() => invalidate()}
       onStart={() => {
         invalidate();
@@ -1972,7 +2012,6 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
         props.onCameraNavigate?.(false);
         reportCamera();
       }}
-      mouseButtons={mouseButtonsIdle}
     />
   );
 }

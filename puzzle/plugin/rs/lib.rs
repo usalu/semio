@@ -6042,6 +6042,10 @@ pub mod d3 {
             node.pointer("/world3d/contextMenuJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or(Value::Null)
         }
 
+        fn brush_preview_of(node: &Value) -> Value {
+            node.pointer("/world3d/brushPreviewJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or(Value::Null)
+        }
+
         #[test]
         fn context_menu_at_selects_vortex_and_prepends_suggest_objects() {
             let mut app = new_app();
@@ -6095,6 +6099,35 @@ pub mod d3 {
             app.handle_action("closeVortexSuggestions", None, &ViewState::default(), &meta("local")).expect("closeVortexSuggestions");
             let interaction = interaction_of(&render_composite(&mut app));
             assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
+        }
+
+        /// 🖱️ Hovering a row in the suggestion popup must live-update the 3D brush preview (rendered by
+        /// `world_brush_preview_json`, which reads `runtime.brush_candidate_index`) to the hovered
+        /// candidate, so the UI can highlight it in 3D before the user clicks to accept.
+        #[test]
+        fn hover_suggestion_updates_the_brush_candidate_index_and_live_preview() {
+            // 🧰 `active_tool` (the brush-preview gate in `world_brush_preview_json`) mirrors the
+            // host-owned `view_state.active_tool_id`, not `runtime.active_tool` — the render call must be
+            // given a "brush" view state, exactly like `open_vortex_suggestions_opens_the_suggestion_popup`.
+            let brush_view = ViewState { active_tool_id: Some("brush".into()), ..ViewState::default() };
+            let mut app = new_app();
+            let vortex = first_vortex_full_id(&app);
+            app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex.clone(), "x": 0.0, "y": 0.0 })), &ViewState::default(), &meta("local")).expect("openVortexSuggestions");
+            let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &brush_view).expect("render");
+            let composite = serde_json::to_value(&node).unwrap();
+            let interaction = interaction_of(&composite);
+            assert_eq!(interaction.get("brushCandidateIndex").and_then(Value::as_u64), Some(0), "opening suggestions starts hover at the first candidate");
+            let preview = brush_preview_of(&composite);
+            assert_eq!(preview.get("targetVortexFullId").and_then(Value::as_str), Some(vortex.as_str()), "the live preview must target the vortex the suggestion menu was opened on");
+            assert!(preview.get("objectKindId").and_then(Value::as_str).is_some_and(|id| !id.is_empty()), "the live preview must resolve to a real candidate object kind");
+
+            app.handle_action("hoverSuggestion", Some(&json!({ "index": 1 })), &ViewState::default(), &meta("local")).expect("hoverSuggestion");
+            let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &brush_view).expect("render");
+            let composite = serde_json::to_value(&node).unwrap();
+            let interaction = interaction_of(&composite);
+            assert_eq!(interaction.get("brushCandidateIndex").and_then(Value::as_u64), Some(1), "hovering a different row must move the tracked candidate index");
+            let preview = brush_preview_of(&composite);
+            assert_eq!(preview.get("targetVortexFullId").and_then(Value::as_str), Some(vortex.as_str()), "the preview must keep targeting the same vortex while only the hovered candidate changes");
         }
 
         #[test]

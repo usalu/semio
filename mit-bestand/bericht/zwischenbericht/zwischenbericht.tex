@@ -2,6 +2,8 @@
 % !TEX root = zwischenbericht.tex
 \documentclass[type=zwischenbericht]{zukunftbau}
 
+\usepackage{xurl}
+
 \setcounter{secnumdepth}{4}
 \counterwithin{section}{part}
 \renewcommand{\thepart}{\arabic{part}}
@@ -106,7 +108,7 @@
 
 \section{Forschungsfragen und Vorgehen}
 
-Das Vorhaben untersucht, wie wiederverwendete Baukomponenten in frühen Entwurfsphasen skalierbar planungsfähig gemacht werden können. Ausgangspunkt ist die Beobachtung, dass die Zahl der Bauteilbörsen, Rückbauinventare oder Materialbanken (siehe Anlagen) stärker wächst als die Zahl der realisierten Projekte (siehe Anlage Projekte). Die Hürden, welchen es zu überwältigen gilt, um mit wiederverwendeten Baukomponenten zu bauen, ist lang (siehe Anlage Hürden und Handbuch Abbau Aufbau). Unser Beitrag ist es, die effiziente, integrative und KI-gestützte Vorplanung für Entwürfe zu ermöglichen.
+Das Vorhaben untersucht, wie wiederverwendete Baukomponenten in frühen Entwurfsphasen skalierbar planungsfähig gemacht werden können. Ausgangspunkt ist die Beobachtung, dass die Zahl der Bauteilbörsen, Rückbauinventare oder Materialbanken (vgl.\ Anlage~\ref{anlage:bauteilboersen}) stärker wächst als die Zahl der realisierten Projekte (vgl.\ Anlage~\ref{anlage:projekte}). Die Liste der Hürden, welche es zu überwältigen gilt, um mit wiederverwendeten Baukomponenten zu bauen, ist lang (vgl.\ Anlage~\ref{anlage:huerden} und Handbuch Abbau Aufbau). Unser Beitrag ist es, die effiziente, integrative und KI-gestützte Vorplanung für Entwürfe zu ermöglichen.
 
 Vier Forschungsfragen leiten die Arbeit:
 
@@ -138,7 +140,7 @@ Daraus wurde die Unterscheidung zwischen beschaffungsorientierten Daten (Ebene~A
 
 \begin{SemioNest}
 \paragraph{Bauteilbörsen}
-Die Auswertung von 51 öffentlich zugänglichen Bauteilbörsen und Angebotskanälen zeigt vier wiederkehrende Angebotslogiken: Depot-Shop, Marktplatz, Harvest-Katalog und Vermittlungsplattform (vgl.\ Anlage Bauteilbörsen). Die Auswertung folgt der Außensicht auf die Plattformen und erfasst, was Angebotsseiten, Kataloge und Produktkarten öffentlich preisgeben. Die Typen unterscheiden sich vor allem durch die Qualität, Stabilität und Anschlussfähigkeit ihrer Daten. Für das Vorhaben ist daher nicht die Plattformart selbst entscheidend, sondern ob aus einem Angebot ein planungsfähiger Bauteildatensatz entstehen kann.
+Die Auswertung von 51 öffentlich zugänglichen Bauteilbörsen und Angebotskanälen zeigt vier wiederkehrende Angebotslogiken: Depot-Shop, Marktplatz, Harvest-Katalog und Vermittlungsplattform (vgl.\ Anlage~\ref{anlage:bauteilboersen}). Die Auswertung folgt der Außensicht auf die Plattformen und erfasst, was Angebotsseiten, Kataloge und Produktkarten öffentlich preisgeben. Die Typen unterscheiden sich vor allem durch die Qualität, Stabilität und Anschlussfähigkeit ihrer Daten. Für das Vorhaben ist daher nicht die Plattformart selbst entscheidend, sondern ob aus einem Angebot ein planungsfähiger Bauteildatensatz entstehen kann.
 
 \begin{SemioNest}
 \paragraph{Depot-Shop}
@@ -195,7 +197,7 @@ Zur Vertiefung der Recherche wurde ein neuer Sekundärbefund und drei vertiefend
 
 \begin{SemioNest}
 \paragraph{Sekundärbefund: 18 Interviews}
-Als Sekundärbefund wurde die Studie „ReUse in der Bauindustrie stärken" von BaselCircular und Cirkla ausgewertet (BaselCircular/Cirkla 2025). Sie basiert auf 18 qualitativen Gesprächen mit Branchenakteur:innen und einer anschließenden Umfrage mit 94 Akteur:innen der Baubranche. Sie erfüllt zugleich die für den Zwischenbericht geforderte Stellungnahme zu Ergebnissen Dritter.
+Als Sekundärbefund wurde die Studie „ReUse in der Bauindustrie stärken" von BaselCircular und Cirkla ausgewertet (BaselCircular/Cirkla 2025). Sie basiert auf 18 qualitativen Gesprächen mit Branchenakteur:innen und einer anschließenden Umfrage mit 94 Akteur:innen der Baubranche. Sie erfüllt zugleich die für den Zwischenbericht geforderte Stellungnahme zu Ergebnissen Dritter (vgl.\ Anlage~\ref{anlage:sekundaerbefunde}).
 
 Für das Vorhaben werden vor allem jene Befunde herangezogen, die Informationslücken, Nachweisstände und digitale Anschlussfähigkeit betreffen. Erstens muss Wiederverwendung früh in die Planung integriert werden. Zweitens fehlen häufig belastbare Informationen zu Quellobjekten, etwa zu Verbindungen, Lebensdauer, Materialverfügbarkeit, Tragkraft und Statik. Drittens gewinnen standardisierte Inventare und Schnittstellen an Bedeutung, weil Bauteildaten zwischen Rückbau, Plattform, Planung, Bewertung und Dokumentation übertragbar sein müssen. Der Sekundärbefund stützt damit die zentrale Ausrichtung des Vorhabens: Bauteildaten müssen mit Status, Nachweisstand, Unsicherheit und möglicher Entwurfsrolle in die Planung überführt werden.
 
@@ -204,10 +206,10 @@ Der Sekundärbefund deckt viele Rollen ab, allerdings fehlten teilweise speziali
 
 \begin{SemioNest}
 \paragraph{Digitale Gestaltung}
-Das Gespräch zur digitalen Gestaltung zeigt, dass wiederverwendete Bauteile mit spezifischen materiellen Eigenschaften in den Entwurf eintreten (vgl.\ Anlage Interviewauswertung, digitale Gestaltung). Dazu gehören Spuren, frühere Verbindungen, Maßabweichungen, Oberflächenqualitäten, konstruktive Einschränkungen und mögliche Schäden. Für das Vorhaben ist der Schritt vom vorhandenen Material zum digitalen Materialobjekt relevant. Ein Bauteil muss so beschrieben werden, dass Geometrie, Orientierung, nutzbare Bereiche, riskante Bereiche, frühere Verbindungen, mögliche Anschlusszonen und offene Unsicherheiten im Entwurf lesbar bleiben. Die Auswertung schärft damit den Begriff der Standardisierung: Standardisierung bedeutet hier nicht Vereinheitlichung des Materials, sondern Strukturierung seiner Beschreibung. Abweichungen, Spuren und spezifische Materialqualitäten müssen dokumentierbar bleiben, weil sie die spätere Rolle im Entwurf beeinflussen können.
+Das Gespräch zur digitalen Gestaltung zeigt, dass wiederverwendete Bauteile mit spezifischen materiellen Eigenschaften in den Entwurf eintreten (vgl.\ Anlage~\ref{anlage:interview-svilans}). Dazu gehören Spuren, frühere Verbindungen, Maßabweichungen, Oberflächenqualitäten, konstruktive Einschränkungen und mögliche Schäden. Für das Vorhaben ist der Schritt vom vorhandenen Material zum digitalen Materialobjekt relevant. Ein Bauteil muss so beschrieben werden, dass Geometrie, Orientierung, nutzbare Bereiche, riskante Bereiche, frühere Verbindungen, mögliche Anschlusszonen und offene Unsicherheiten im Entwurf lesbar bleiben. Die Auswertung schärft damit den Begriff der Standardisierung: Standardisierung bedeutet hier nicht Vereinheitlichung des Materials, sondern Strukturierung seiner Beschreibung. Abweichungen, Spuren und spezifische Materialqualitäten müssen dokumentierbar bleiben, weil sie die spätere Rolle im Entwurf beeinflussen können.
 
 \paragraph{Kreislaufwirtschaft}
-Das Gespräch mit Raoul Bunschoten zeigt Wiederverwendung als verteilten Abstimmungsprozess zwischen Materialherkunft, Planung, Prüfung, Regulierung, Nutzung, Rückbau und erneuter Verwendung (vgl.\ Anlage Interviewauswertung Bunschoten). Für das Vorhaben ist daraus vor allem die Kontinuität von Informationen relevant. Bauteildaten müssen zwischen Akteur:innen und Projektphasen weitergeführt werden; dazu gehören Verfügbarkeit, Prüfstand, Annahmen, Risiken und Entscheidungsstände. Ein weiterer Befund betrifft den Umgang mit Szenarien. Wiederverwendung führt selten zu einer einzelnen eindeutigen Lösung. Digitale Entscheidungsunterstützung muss deshalb Varianten vergleichbar machen und zeigen, welche Annahmen, Unsicherheiten und Akteursperspektiven für die nächste Entscheidung relevant sind.
+Das Gespräch mit Raoul Bunschoten zeigt Wiederverwendung als verteilten Abstimmungsprozess zwischen Materialherkunft, Planung, Prüfung, Regulierung, Nutzung, Rückbau und erneuter Verwendung (vgl.\ Anlage~\ref{anlage:interview-bunschoten}; Transkript in Anlage~\ref{anlage:transkript-bunschoten}). Für das Vorhaben ist daraus vor allem die Kontinuität von Informationen relevant. Bauteildaten müssen zwischen Akteur:innen und Projektphasen weitergeführt werden; dazu gehören Verfügbarkeit, Prüfstand, Annahmen, Risiken und Entscheidungsstände. Ein weiterer Befund betrifft den Umgang mit Szenarien. Wiederverwendung führt selten zu einer einzelnen eindeutigen Lösung. Digitale Entscheidungsunterstützung muss deshalb Varianten vergleichbar machen und zeigen, welche Annahmen, Unsicherheiten und Akteursperspektiven für die nächste Entscheidung relevant sind.
 
 \paragraph{Tragwerksplanung}
 \begin{Blockquote}
@@ -217,7 +219,7 @@ Das Gespräch mit Raoul Bunschoten zeigt Wiederverwendung als verteilten Abstimm
 \end{SemioNest}
 
 \subsubsection{User Stories}
-Aus den bisherigen Befunden wurden 35 fachlich eindeutige User Stories abgeleitet, konsolidiert aus 36 Anforderungskarten (vgl.\ Anlage User-Stories und Anforderungsmapping). Sie bündeln Anforderungen aus vier Akteursperspektiven: Bauteilbörse (10), Architektur (12), Tragwerksplanung (6) und Energieberatung (7). Im Vordergrund stehen Erfassung, Suche, Vergleich, Bewertung, Statusverfolgung und Dokumentation. Die User Stories bilden damit eine Grundlage für die Zuordnung der Anforderungen zu drei Systemebenen: Datenerfassung und Qualifizierung (Bauteilportal), Suche und Vergleich (Bauteilkatalog) sowie Variantenbildung und Vorbewertung (Aggregator).
+Aus den bisherigen Befunden wurden 35 fachlich eindeutige User Stories abgeleitet, konsolidiert aus 36 Anforderungskarten (vgl.\ Anlage~\ref{anlage:user-stories}). Sie bündeln Anforderungen aus vier Akteursperspektiven: Bauteilbörse (10), Architektur (12), Tragwerksplanung (6) und Energieberatung (7). Im Vordergrund stehen Erfassung, Suche, Vergleich, Bewertung, Statusverfolgung und Dokumentation. Die User Stories bilden damit eine Grundlage für die Zuordnung der Anforderungen zu drei Systemebenen: Datenerfassung und Qualifizierung (Bauteilportal), Suche und Vergleich (Bauteilkatalog) sowie Variantenbildung und Vorbewertung (Aggregator).
 
 \begin{SemioNest}
 \paragraph{Mitarbeiter:in einer Bauteilbörse}
@@ -233,7 +235,7 @@ Aus Sicht der Tragwerksplanung stehen tragwerksrelevante Eigenschaften und fehle
 Aus Sicht der Energieberatung ist die frühe ökologische und energetische Einschätzung relevant. Dafür müssen Bauteile mit Informationen zu Material, Herkunft, Transport, Instandsetzung und Bewertungsannahmen verknüpft werden. Wichtig ist vor allem der Vergleich von Varianten: Bewertungsergebnisse müssen nachvollziehbar und exportierbar sein, damit sie in weitere Planungs- und Abstimmungsprozesse eingehen können.
 \end{SemioNest}
 
-Das Anforderungsmapping übersetzt die 35 User Stories in fünfzehn funktionale Anforderungscluster (REQ-01 bis REQ-15) und ordnet sie den drei Systemebenen zu.
+Das Anforderungsmapping übersetzt die 35 User Stories in siebzehn funktionale Anforderungscluster (REQ-01 bis REQ-17, vgl.\ Anlage~\ref{anlage:anforderungsmapping}) und ordnet sie den drei Systemebenen zu.
 
 \subsubsection{Synthese: Anforderungen}
 Aus Recherche, Interviews und User Stories ergeben sich fünf Anforderungen an das System. Die Qualifizierung überführt Angebots- und Bestandsdaten in planungsrelevante Bauteildatensätze mit Herkunft, Zustand, Verfügbarkeit, Nachweisstand und Unsicherheit. Die Standardisierung strukturiert die Beschreibung heterogener Bauteile, sodass sie gesucht, verglichen und bewertet werden können. Die digitale Objektbildung (Generatoren) überführt qualifizierte Datensätze in digitale Bauteilobjekte mit Geometrie, möglicher Entwurfsrolle, Anschlusslogik und Bewertungsannahmen. Die Bewertung unterstützt die frühe ökologische und tragwerkliche Vorbewertung von Bauteilen und Varianten. Die Nachweisführung dokumentiert vorhandene, abgeleitete, angenommene und offene Informationen.
@@ -528,8 +530,17 @@ Die Kosten für die Nutzung von LLMs sind gestiegen,
 
 \subsection{Journalpaper}
 
-\appendix
-\part{Verzeichnisse}
+\makeappendices
+\appendixinput[Projekte]{anhang/projekte}
+\appendixinput[Hürden der Wiederverwendung]{anhang/huerden}
+\appendixinput[Bauteilbörsen]{anhang/bauteilboersen}
+\appendixinput[Sekundärbefunde BaselCircular/Cirkla]{anhang/sekundaerbefunde}
+\appendixinput[Interviewauswertung Digitale Gestaltung (Tom Svilans)]{anhang/interview-svilans}
+\appendixinput[Interviewauswertung Kreislaufwirtschaft (Raoul Bunschoten)]{anhang/interview-bunschoten}
+\appendixinput[Interviewtranskript Raoul Bunschoten]{anhang/transkript-bunschoten}
+\appendixinput[User Stories und Anforderungsmapping]{anhang/user-stories}
+\appendixchapter{Verzeichnisse}
+\listofappendices
 \listofglossaries
 \listofabbreviations
 

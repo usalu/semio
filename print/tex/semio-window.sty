@@ -208,7 +208,6 @@
 \seq_new:c { g_semio_register_toc_num_seq }
 \seq_new:c { g_semio_register_toc_title_seq }
 \seq_new:c { g_semio_register_toc_label_seq }
-\cs_gset:cpn { semio@register@body@toc } { }
 \int_new:N \g_semio_toc_label_int
 \cs_generate_variant:Nn \str_replace_all:Nnn { NVn }
 
@@ -626,9 +625,24 @@
   \seq_new:c { g_semio_register_ #1 _num_seq }
   \seq_new:c { g_semio_register_ #1 _title_seq }
   \seq_new:c { g_semio_register_ #1 _label_seq }
-  \cs_gset:cpn { semio@register@body@#1 } { }
   \cs_gset:cpn { listof #2 } { \SemioWindowListOf {#1} }
   \semio@register@hooks@install { listof #2 }
+}
+
+% 📎 Appendix register — tracked like a window kind (num/title/label seqs +
+% \listofappendices), but populated by \appendixchapter (semio-components.sty)
+% instead of a window environment, since an appendix is a heading, not a window.
+\newcounter{semioappendix}
+\tl_const:cn { semio@window@semioappendix@kind } { appendix }
+\semio_window_listof_cmd_define:nn { semioappendix } { appendices }
+
+\cs_new_protected:Npn \semio_appendix_register:nn #1#2 {
+  \stepcounter { semioappendix }
+  \str_set:Nx \l_tmpb_str { semio-register-appendix-#1 }
+  \exp_args:NV \label \l_tmpb_str
+  \seq_gput_right:cx { g_semio_register_semioappendix_num_seq } {#1}
+  \seq_gput_right:cx { g_semio_register_semioappendix_title_seq } {#2}
+  \seq_gput_right:cx { g_semio_register_semioappendix_label_seq } { \str_use:N \l_tmpb_str }
 }
 %endregion Registers
 
@@ -1672,14 +1686,14 @@
 \newcommand{\semio@render@register}[1]{%
   \ifnum\value{#1}>0
     \semio@register@window@open{\SemioRegisterTitle{\csname semio@window@#1@kind\endcsname}}%
-    \SemioTableRegister{\csname semio@register@body@#1\endcsname}%
+    \SemioTableRegister{\semio@register@table@body}%
     \semio@register@window@close
   \fi
 }
 
 \newcommand{\semio@render@toc}{%
   \semio@register@window@open{\SemioTocTitle}%
-  \SemioTableRegister{\csname semio@register@body@toc\endcsname}%
+  \SemioTableRegister{\semio@register@table@body}%
   \semio@register@window@close
   \clearpage
 }

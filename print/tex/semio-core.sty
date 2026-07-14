@@ -27,6 +27,7 @@
 \tl_new:N \l_semio_kooperationspartner_tl
 \tl_new:N \l_semio_doi_tl
 \bool_new:N \l_semio_kompakt_draft_bool
+\tl_new:N \l_semio_appendix_level_tl
 
 \tl_set:Nn \l_semio_type_tl { report }
 \tl_set:Nn \l_semio_theme_tl { light }
@@ -48,6 +49,7 @@
   kooperationspartner .tl_set:N = \l_semio_kooperationspartner_tl,
   doi .tl_set:N = \l_semio_doi_tl,
   kompakt-draft .bool_set:N = \l_semio_kompakt_draft_bool,
+  appendix-level .tl_set:N = \l_semio_appendix_level_tl,
 }
 
 \cs_new_protected:Npn \semio_chrome_apply_aliases: {
@@ -120,6 +122,17 @@
   \semio_theme_apply:
   \semio@set@main@fonts
   \use:c { semio@chrome@heading@set } { \SemioFrontmatterTitle }
+}
+
+% 📎 Appendices default to the structural level matching the document's kind of
+% sectioning (chapter for type=report, section otherwise); zukunftbau's
+% zwischenbericht overrides this to part via \SemioSetup{appendix-level=part}.
+\cs_new_protected:Npn \semio_appendix_level_resolve: {
+  \tl_if_empty:NT \l_semio_appendix_level_tl {
+    \str_if_eq:VnTF \l_semio_type_tl { report }
+      { \tl_set:Nn \l_semio_appendix_level_tl { chapter } }
+      { \tl_set:Nn \l_semio_appendix_level_tl { section } }
+  }
 }
 
 %region Kinds
@@ -372,6 +385,7 @@
 \semio@kind@register@en{blockquote}{Blockquote}
 \semio@kind@register@en{epigraph}{Epigraph}
 \semio@kind@register@en{reference}{Reference}
+\semio@kind@register@en{appendix}{Appendix}
 
 \semio@kind@register@de{part}{Teil}
 \semio@kind@register@de{chapter}{Kapitel}
@@ -392,6 +406,7 @@
 \semio@kind@register@de{blockquote}{Zitat}
 \semio@kind@register@de{epigraph}{Epigraph}
 \semio@kind@register@de{reference}{Referenz}
+\semio@kind@register@de{appendix}{Anhang}
 
 \semio@kind@register@plural@en{image}{Images}
 \semio@kind@register@plural@en{photo}{Photos}
@@ -406,6 +421,7 @@
 \semio@kind@register@plural@en{blockquote}{Blockquotes}
 \semio@kind@register@plural@en{epigraph}{Epigraphs}
 \semio@kind@register@plural@en{reference}{References}
+\semio@kind@register@plural@en{appendix}{Appendices}
 
 \semio@kind@register@plural@de{image}{Bilder}
 \semio@kind@register@plural@de{photo}{Fotos}
@@ -420,6 +436,7 @@
 \semio@kind@register@plural@de{blockquote}{Zitate}
 \semio@kind@register@plural@de{epigraph}{Epigraphen}
 \semio@kind@register@plural@de{reference}{Referenzen}
+\semio@kind@register@plural@de{appendix}{Anhänge}
 
 \newcommand{\semio@kind@resolve@en}[1]{%
   \ifcsname semio@kind@resolve@en@#1\endcsname
@@ -494,6 +511,7 @@
   \semio_kind_label_plural:n {#1}
 }
 \NewDocumentCommand \SemioKindLabel { m } { \semio_kind_label_document:n {#1} }
+\NewDocumentCommand \appendixref { m } { \semio_kind_label_document:n { appendix } \nobreakspace \ref {#1} }
 \NewDocumentCommand \semio@kind@label@plural { m } { \semio_kind_label_plural_document:n {#1} }
 \NewDocumentCommand \semio@kind@number { m m } { \semio_kind_chip_number:nn {#1} {#2} }
 \NewDocumentCommand \semio@kind@number@bare { m } { \exp_args:Ne \semio_kind_chip_bare:n {#1} }

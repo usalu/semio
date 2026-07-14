@@ -14,6 +14,7 @@
 \bool_new:N \l_semio_cover@meta@row_bool
 \bool_new:N \l_semio_cover@institution@row_bool
 \bool_new:N \l_semio_is_zwischenbericht_bool
+\bool_new:N \g_semio_in_appendix_bool
 \seq_new:N \l_semio_title_seq
 \tl_new:N \l_semio_clean_title_tl
 \tl_new:N \l_semio_cover_institution_weight_tl
@@ -274,6 +275,44 @@
   \end{Table}
 }
 
+%region Appendices
+% 📎 An appendix is a document attached to the main report, behaving like a
+% chapter: numbered A, B, C…, labeled Anhang/Appendix, chip-styled, TOC-listed
+% and cross-referenceable via \appendixref (semio-core.sty). Its structural
+% level (chapter/section/part) is resolved once, on the first call, from
+% appendix-level (see \semio_appendix_level_resolve: in semio-core.sty).
+\cs_new_protected:Npn \semio_appendix_matter_begin: {
+  \bool_if:NF \g_semio_in_appendix_bool {
+    \bool_gset_true:N \g_semio_in_appendix_bool
+    \semio_appendix_level_resolve:
+    \str_if_eq:VnTF \l_semio_appendix_level_tl { part } {
+      % KOMA's built-in \appendix does not letter \part, only \chapter/\section.
+      \setcounter{part}{0}
+      \renewcommand{\thepart}{\Alph{part}}
+      \renewcommand{\theHpart}{appendix.\Alph{part}} % keep hyperref destinations distinct from main-matter part 1..n
+    } {
+      \appendix
+    }
+  }
+}
+
+\NewDocumentCommand{\makeappendices}{}{\semio_appendix_matter_begin:}
+
+\NewDocumentCommand{\appendixchapter}{m}{
+  \semio_appendix_matter_begin:
+  \semio_clear_to_recto:
+  \csname \tl_use:N \l_semio_appendix_level_tl \endcsname {#1}
+  \semio_appendix_register:nn
+    { \csname the \tl_use:N \l_semio_appendix_level_tl \endcsname }
+    {#1}
+}
+
+\NewDocumentCommand{\appendixinput}{o m}{
+  \IfValueT{#1}{\appendixchapter{#1}}
+  \input{#2}
+}
+%endregion Appendices
+
 \NewDocumentCommand{\makeregisters}{}{%
   \listofimages
   \listofphotos
@@ -289,6 +328,7 @@
   \listofabbreviations
   \listofblockquotes
   \listofepigraphs
+  \listofappendices
   \SemioReferences
 }
 

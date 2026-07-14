@@ -20,6 +20,7 @@
   }
   { zwischenbericht } {
     \LoadClass[language=de,theme=\zukunftbau@theme,type=paper,citestyle=numeric]{semio}
+    \SemioSetup{appendix-level=part}
   }
   { kompaktbericht } {
     \LoadClass[language=de,theme=\zukunftbau@theme,type=paper,citestyle=authoryear]{semio}

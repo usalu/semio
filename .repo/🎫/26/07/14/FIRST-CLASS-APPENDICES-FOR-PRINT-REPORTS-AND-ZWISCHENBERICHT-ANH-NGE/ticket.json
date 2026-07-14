@@ -1,0 +1,13 @@
+{
+  "title": "First-Class Appendices for Print Reports and Zwischenbericht Anhänge",
+  "emoji": "📎",
+  "status": "open",
+  "description": "Add first-class appendix support to the semio print system (print/tex/): an appendix is a document attached to the main report, behaving like a chapter — numbered A, B, C…, labeled Anhang/Appendix, TOC entry, chip styling, cross-referenceable via \\appendixref, listed via \\listofappendices. Fix a pre-existing bug where window registers (\\listoffigures etc.) render header-only because semio@render@register reads the wrong body macro. Wire the feature into all six print templates (report, paper, flyer n/a, zukunftbau forschungsbericht/zwischenbericht/kompaktbericht). Then apply it to mit-bestand/bericht/zwischenbericht/zwischenbericht.tex: convert 9 Anhang markdown documents from temp/ into 8 LaTeX appendices (A-H), including a 67-project table with per-row avatar images sourced from temp/projekt_bilder/ (downscaled ~600px, copied into zwischenbericht/asset/projekt/). Update body cross-references to use \\appendixref. Full plan at /Users/ueli/.claude/plans/print-reports-should-be-joyful-haven.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1988"
+  },
+  "goal": "🎯r2602🎯updateddocs",
+  "sessions": [
+    "⚪2e8485acca594d6da3104588d4926029"
+  ]
+}
