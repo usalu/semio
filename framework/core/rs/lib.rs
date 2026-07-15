@@ -2743,6 +2743,7 @@ mod tests {
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
+            introduction: None,
         });
         assert_eq!(platform.active_app_id, "draw-play");
     }
@@ -3001,6 +3002,18 @@ pub fn set_active_tool_action_definition() -> ActionDefinition {
     ])
 }
 
+/// @emoji 🎓 The framework-owned action id apps dispatch (or the shell auto-injects into the command
+/// palette) to (re)start an app's introduction — auto-injected as a View action into any
+/// `AppDefinition` that declares one (mirrors `SET_ACTIVE_TOOL_ACTION_ID`).
+pub const START_INTRODUCTION_ACTION_ID: &str = "startIntroduction";
+
+/// @emoji 🎓 The framework-injected `startIntroduction` View action: fully shell-intercepted (never
+/// forwarded to the plugin), it resets playback to the first step of `AppDefinition.introduction`.
+/// Unlike `setActiveTool` this stays `in_palette: true` so replaying an introduction is one command away.
+pub fn start_introduction_action_definition() -> ActionDefinition {
+    ActionDefinition::new(START_INTRODUCTION_ACTION_ID, "Start Introduction", ActionKind::View)
+}
+
 /// 📇 A validated reference into an app's `AppDefinition.actions` registry — prevents windows/modes
 /// from silently inheriting "every app action" by making the scoping explicit and typed. Distinct
 /// from `kernel::ActionId` (a dispatched-invocation identifier); this one names a *declaration*.
@@ -3108,6 +3121,135 @@ impl From<String> for ToolRef {
     }
 }
 //#endregion 🔖Tools
+
+//#region 🔖Introduction
+/// @emoji 🎓 A first-run walkthrough an app declares to introduce its UI, tools, and actions to a
+/// first-time user. Rendered as an ordered sequence of `IntroductionStepDefinition`s over a full-screen
+/// glass veil; the shell owns playback (start/advance/skip) as ephemeral chrome state, never the
+/// document.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct IntroductionDefinition {
+    pub title: String,
+    pub steps: Vec<IntroductionStepDefinition>,
+}
+
+/// @emoji 🪜 One step of an `IntroductionDefinition`: an info box pointing at `anchor`, with an
+/// `emphasis` treatment cut out of the glass veil and an `advance` condition that completes the step.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct IntroductionStepDefinition {
+    pub id: String,
+    pub title: String,
+    pub body: String,
+    pub anchor: IntroductionAnchor,
+    #[serde(default)]
+    pub emphasis: IntroductionEmphasis,
+    #[serde(default)]
+    pub placement: IntroductionPlacement,
+    #[serde(default)]
+    pub advance: IntroductionAdvance,
+}
+
+impl IntroductionStepDefinition {
+    pub fn new(id: impl Into<String>, title: impl Into<String>, body: impl Into<String>, anchor: IntroductionAnchor) -> Self {
+        Self {
+            id: id.into(),
+            title: title.into(),
+            body: body.into(),
+            anchor,
+            emphasis: IntroductionEmphasis::default(),
+            placement: IntroductionPlacement::default(),
+            advance: IntroductionAdvance::default(),
+        }
+    }
+
+    /// @emoji 🔦 Overrides how the anchor is emphasized against the glass veil.
+    pub fn emphasis(mut self, emphasis: IntroductionEmphasis) -> Self {
+        self.emphasis = emphasis;
+        self
+    }
+
+    /// @emoji 📍 Overrides where the info box is placed relative to the anchor.
+    pub fn placement(mut self, placement: IntroductionPlacement) -> Self {
+        self.placement = placement;
+        self
+    }
+
+    /// @emoji 👉 Makes the step complete when the user performs `advance` instead of pressing Next.
+    pub fn advance_on(mut self, advance: IntroductionAdvance) -> Self {
+        self.advance = advance;
+        self
+    }
+}
+
+/// @emoji 🎯 Renderer-agnostic reference to the UI element an `IntroductionStepDefinition` points at —
+/// no CSS/DOM types leak into the contract; each renderer maps a variant onto its own element lookup
+/// (the React shell resolves these to `data-*` selectors).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase", tag = "kind", content = "id")]
+pub enum IntroductionAnchor {
+    /// 🖥️ No specific element — the whole screen (paired with `IntroductionPlacement::Center`).
+    Screen,
+    Navbar,
+    Footer,
+    /// 🪟 References `AppDefinition.windowKinds[].id`.
+    WindowKind(String),
+    /// 🧰 References `AppDefinition.tools`.
+    Tool(ToolRef),
+    /// 📇 References `AppDefinition.actions`.
+    Action(ActionRef),
+    /// 📑 References a declared `PanelTabDefinition.id()`.
+    PanelTab(String),
+    /// 🪝 Escape hatch: a well-known `data-slot` name, unvalidated.
+    Slot(String),
+}
+
+/// @emoji 🔦 How a step's anchor is treated against the full-screen glass veil.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum IntroductionEmphasis {
+    /// 🌫️ No cutout — the anchor stays veiled (used with `IntroductionAnchor::Screen`).
+    None,
+    /// 🕳️ The anchor is cut out of the veil, shown normally and interactive.
+    #[default]
+    Cutout,
+    /// ✨ Cutout plus an animated ring around the anchor.
+    Highlight,
+}
+
+/// @emoji 📍 Where the info box is placed relative to its anchor.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum IntroductionPlacement {
+    #[default]
+    Auto,
+    Top,
+    Bottom,
+    Left,
+    Right,
+    Center,
+}
+
+/// @emoji 👉 What completes an introduction step. `Next` needs the info box's Next button; `Action`/
+/// `Tool` complete as soon as the user dispatches that action or activates that tool, teaching by doing.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase", tag = "kind", content = "id")]
+pub enum IntroductionAdvance {
+    #[default]
+    Next,
+    /// 📇 References `AppDefinition.actions`.
+    Action(ActionRef),
+    /// 🧰 References `AppDefinition.tools`.
+    Tool(ToolRef),
+}
+//#endregion 🔖Introduction
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
@@ -3377,6 +3519,10 @@ pub struct AppDefinition {
     /// 🗣️ Terminology ids this app declares beyond the implicit "native" default.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub terminologies: Vec<String>,
+    /// 🎓 This app's first-run walkthrough, if it declares one — see `IntroductionDefinition`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub introduction: Option<IntroductionDefinition>,
 }
 
 /// 🧭 Resolves the dock layout a mode should present.
@@ -4440,8 +4586,9 @@ mod app_document_tests {
     //#region 🔖ActionArgsAndToolsTests
     use crate::ui::{
         effective_action_args, missing_required_args, resolve_window_actions, ActionArgControl, ActionArgDef,
-        ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, Modes, ToolDefinition, ToolRef,
-        WindowKindDefinition, WindowKinds, SET_ACTIVE_TOOL_ACTION_ID,
+        ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, IntroductionAdvance,
+        IntroductionAnchor, Modes, ToolDefinition, ToolRef, WindowKindDefinition, WindowKinds,
+        SET_ACTIVE_TOOL_ACTION_ID,
     };
     use serde_json::json;
 
@@ -4540,6 +4687,7 @@ mod app_document_tests {
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
+            introduction: None,
         }
     }
 
@@ -4600,6 +4748,38 @@ mod app_document_tests {
         let round: ActionArgControl = serde_json::from_str(&json).unwrap();
         assert_eq!(round, control);
     }
+
+    #[test]
+    fn introduction_anchor_round_trips_tagged() {
+        for anchor in [
+            IntroductionAnchor::Screen,
+            IntroductionAnchor::Navbar,
+            IntroductionAnchor::WindowKind("main".into()),
+            IntroductionAnchor::Tool(ToolRef::new("brush")),
+            IntroductionAnchor::Action(ActionRef::new("add")),
+            IntroductionAnchor::PanelTab("puzzle.catalogue".into()),
+            IntroductionAnchor::Slot("navbar".into()),
+        ] {
+            let json = serde_json::to_string(&anchor).unwrap();
+            assert!(json.contains("\"kind\":"), "tagged with kind: {json}");
+            let round: IntroductionAnchor = serde_json::from_str(&json).unwrap();
+            assert_eq!(round, anchor);
+        }
+    }
+
+    #[test]
+    fn introduction_advance_round_trips_tagged() {
+        for advance in [
+            IntroductionAdvance::Next,
+            IntroductionAdvance::Action(ActionRef::new("add")),
+            IntroductionAdvance::Tool(ToolRef::new("brush")),
+        ] {
+            let json = serde_json::to_string(&advance).unwrap();
+            let round: IntroductionAdvance = serde_json::from_str(&json).unwrap();
+            assert_eq!(round, advance);
+        }
+        assert_eq!(IntroductionAdvance::default(), IntroductionAdvance::Next);
+    }
     //#endregion 🔖ActionArgsAndToolsTests
 
     #[cfg(feature = "typegen")]
@@ -4643,6 +4823,12 @@ mod app_document_tests {
         crate::ui::PanelGroup::export().unwrap();
         crate::ui::PanelTabKind::export().unwrap();
         crate::ui::PanelTabDefinition::export().unwrap();
+        crate::ui::IntroductionDefinition::export().unwrap();
+        crate::ui::IntroductionStepDefinition::export().unwrap();
+        crate::ui::IntroductionAnchor::export().unwrap();
+        crate::ui::IntroductionEmphasis::export().unwrap();
+        crate::ui::IntroductionPlacement::export().unwrap();
+        crate::ui::IntroductionAdvance::export().unwrap();
         crate::ui::AppDefinition::export().unwrap();
         crate::ui::ProgramDefinition::export().unwrap();
         crate::ui::ExampleDefinition::export().unwrap();

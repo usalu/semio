@@ -35,6 +35,12 @@ import type {
   ModeDefinition as GeneratedModeDefinition,
   WindowKindDefinition as GeneratedWindowKindDefinition,
   AppDefinition as GeneratedAppDefinition,
+  IntroductionDefinition as GeneratedIntroductionDefinition,
+  IntroductionStepDefinition as GeneratedIntroductionStepDefinition,
+  IntroductionAnchor as GeneratedIntroductionAnchor,
+  IntroductionEmphasis as GeneratedIntroductionEmphasis,
+  IntroductionPlacement as GeneratedIntroductionPlacement,
+  IntroductionAdvance as GeneratedIntroductionAdvance,
 } from "./generated/manifest.ts";
 // #endregion 🧬GeneratedMirror
 
@@ -1110,6 +1116,18 @@ export type ToolRef = GeneratedToolRef;
 
 /** 🧰 The framework-owned action id apps dispatch to activate a tool — mirrors `SET_ACTIVE_TOOL_ACTION_ID`. */
 export const SET_ACTIVE_TOOL_ACTION_ID = "setActiveTool";
+
+/** 🎓 The framework-owned action id apps dispatch (or the shell auto-injects into the command palette)
+ * to (re)start an app's introduction — mirrors Rust `START_INTRODUCTION_ACTION_ID`. */
+export const START_INTRODUCTION_ACTION_ID = "startIntroduction";
+
+/** 🎓 Generated from Rust `Introduction*` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
+export type IntroductionDefinition = GeneratedIntroductionDefinition;
+export type IntroductionStepDefinition = GeneratedIntroductionStepDefinition;
+export type IntroductionAnchor = GeneratedIntroductionAnchor;
+export type IntroductionEmphasis = GeneratedIntroductionEmphasis;
+export type IntroductionPlacement = GeneratedIntroductionPlacement;
+export type IntroductionAdvance = GeneratedIntroductionAdvance;
 
 /** @emoji 🕹️ Mirrors `semio_framework_core::history_action_definitions` — the six framework-owned
  * History actions every app receives, used by the shell to render the same set without a wasm round trip. */

@@ -344,7 +344,7 @@ pub struct MeasureSelectItem {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum WindowMeasure {
     Select {
         id: String,
@@ -532,7 +532,7 @@ pub struct WindowEngagementSelectItem {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum WindowEngagementControl {
     Slider {
         #[cfg_attr(feature = "typegen", ts(optional))]
@@ -548,10 +548,8 @@ pub enum WindowEngagementControl {
         unit: Option<String>,
         #[cfg_attr(feature = "typegen", ts(optional))]
         disabled: Option<bool>,
-        #[serde(rename = "onChange")]
         #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
         on_change: Option<ActionDescriptor>,
-        #[serde(rename = "onCommit")]
         #[cfg_attr(feature = "typegen", ts(optional, rename = "onCommit"))]
         on_commit: Option<ActionDescriptor>,
     },
@@ -571,10 +569,8 @@ pub enum WindowEngagementControl {
         unit: Option<String>,
         #[cfg_attr(feature = "typegen", ts(optional))]
         disabled: Option<bool>,
-        #[serde(rename = "onChange")]
         #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
         on_change: Option<ActionDescriptor>,
-        #[serde(rename = "onCommit")]
         #[cfg_attr(feature = "typegen", ts(optional, rename = "onCommit"))]
         on_commit: Option<ActionDescriptor>,
     },
@@ -588,7 +584,6 @@ pub enum WindowEngagementControl {
         options: Vec<WindowEngagementRingOption>,
         #[cfg_attr(feature = "typegen", ts(optional))]
         disabled: Option<bool>,
-        #[serde(rename = "onSelect")]
         #[cfg_attr(feature = "typegen", ts(optional, rename = "onSelect"))]
         on_select: Option<ActionDescriptor>,
     },
@@ -602,7 +597,6 @@ pub enum WindowEngagementControl {
         options: Vec<WindowEngagementToggleGroupOption>,
         #[cfg_attr(feature = "typegen", ts(optional))]
         disabled: Option<bool>,
-        #[serde(rename = "onSelect")]
         #[cfg_attr(feature = "typegen", ts(optional, rename = "onSelect"))]
         on_select: Option<ActionDescriptor>,
     },
@@ -618,7 +612,6 @@ pub enum WindowEngagementControl {
         items: Vec<WindowEngagementSelectItem>,
         #[cfg_attr(feature = "typegen", ts(optional))]
         disabled: Option<bool>,
-        #[serde(rename = "onChange")]
         #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
         on_change: Option<ActionDescriptor>,
     },
@@ -768,7 +761,7 @@ mod layout_wire_format_tests {
         assert_eq!(roundtripped, layout);
     }
 
-    const GOLDEN_WINDOW_MEASURE_JSON: &str = "[{\"kind\":\"select\",\"id\":\"m1\",\"label\":\"Mode\",\"value\":\"a\",\"items\":[{\"id\":\"a\",\"value\":\"a\",\"label\":\"A\"}],\"on_change\":{\"controllerId\":\"ctrl\",\"action\":\"measureSelect\"}},{\"kind\":\"slider\",\"id\":\"m2\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":0.5,\"on_change\":{\"controllerId\":\"ctrl\",\"action\":\"measureSlider\"}},{\"kind\":\"toggle\",\"id\":\"m3\",\"icon_id\":\"icon.grid\",\"label\":null,\"pressed\":true,\"text\":null,\"on_change\":{\"controllerId\":\"ctrl\",\"action\":\"measureToggle\"}},{\"kind\":\"group\",\"id\":\"m4\",\"label\":\"Group\",\"default_open\":true,\"children\":[]}]";
+    const GOLDEN_WINDOW_MEASURE_JSON: &str = "[{\"kind\":\"select\",\"id\":\"m1\",\"label\":\"Mode\",\"value\":\"a\",\"items\":[{\"id\":\"a\",\"value\":\"a\",\"label\":\"A\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"measureSelect\"}},{\"kind\":\"slider\",\"id\":\"m2\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":0.5,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"measureSlider\"}},{\"kind\":\"toggle\",\"id\":\"m3\",\"iconId\":\"icon.grid\",\"label\":null,\"pressed\":true,\"text\":null,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"measureToggle\"}},{\"kind\":\"group\",\"id\":\"m4\",\"label\":\"Group\",\"defaultOpen\":true,\"children\":[]}]";
 
     #[test]
     fn window_measure_serializes_to_golden_json() {
@@ -864,7 +857,7 @@ mod layout_wire_format_tests {
         assert!(general.is_empty() && tool_options.is_empty());
     }
 
-    const GOLDEN_WINDOW_ENGAGEMENT_JSON: &str = "{\"sessionActive\":true,\"options\":[{\"id\":\"opt1\",\"label\":\"Option\",\"pressed\":false}],\"input\":{\"id\":\"in1\",\"value\":\"v\"},\"control\":{\"kind\":\"slider\",\"id\":\"sl1\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":null,\"unit\":null,\"disabled\":null,\"on_change\":null,\"on_commit\":null},\"status\":[{\"id\":\"st1\",\"text\":\"Ready\"}],\"possibleEngagements\":[{\"id\":\"pe1\",\"label\":\"Possible\"}]}";
+    const GOLDEN_WINDOW_ENGAGEMENT_JSON: &str = "{\"sessionActive\":true,\"options\":[{\"id\":\"opt1\",\"label\":\"Option\",\"pressed\":false}],\"input\":{\"id\":\"in1\",\"value\":\"v\"},\"control\":{\"kind\":\"slider\",\"id\":\"sl1\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":null,\"unit\":null,\"disabled\":null,\"onChange\":null,\"onCommit\":null},\"status\":[{\"id\":\"st1\",\"text\":\"Ready\"}],\"possibleEngagements\":[{\"id\":\"pe1\",\"label\":\"Possible\"}]}";
 
     #[test]
     fn window_engagement_serializes_to_golden_json() {

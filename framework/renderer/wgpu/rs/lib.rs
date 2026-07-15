@@ -1698,6 +1698,7 @@ mod tests {
             named_layouts: vec![],
             default_layout: layout,
             terminologies: vec![],
+            introduction: None,
         }
     }
 

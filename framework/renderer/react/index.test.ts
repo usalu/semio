@@ -138,6 +138,18 @@ describe("shell store reducer", () => {
     expect(next.uiPrefs).toBe(state.uiPrefs);
   });
 
+  it("starts, advances, and dismisses an introduction via SET_INTRODUCTION_STEP without touching unrelated slices", () => {
+    const state = baseState();
+    expect(state.overlays.introductionStepIndex).toBeNull();
+    const started = shellReducer(state, { type: "SET_INTRODUCTION_STEP", value: 0 });
+    expect(started.overlays.introductionStepIndex).toBe(0);
+    expect(started.layout).toBe(state.layout);
+    const advanced = shellReducer(started, { type: "SET_INTRODUCTION_STEP", value: (prev) => (prev ?? 0) + 1 });
+    expect(advanced.overlays.introductionStepIndex).toBe(1);
+    const dismissed = shellReducer(advanced, { type: "SET_INTRODUCTION_STEP", value: null });
+    expect(dismissed.overlays.introductionStepIndex).toBeNull();
+  });
+
   it("toggles the layout slice via an updater function", () => {
     const state = baseState();
     const opened = shellReducer(state, { type: "SET_CORNER_PANEL_VISIBLE", corner: "top-left", value: true });
@@ -1741,6 +1753,37 @@ describe("partitionWindowMeasures", () => {
     const idleChrome = spawnedWindowChromeForKind(kind, {}, measures, "fill", noopAction);
     expect(idleChrome.toolOptions).toBeUndefined();
     expect(idleChrome.measures).toBeUndefined();
+  });
+
+  it("parses the real ui_wgpu camelCase wire JSON and routes a tool-scoped fill group into toolOptions (snake_case divergence regression guard)", () => {
+    // Verbatim shape of `ui_wgpu::WindowMeasure`'s serde wire after the D-4 `rename_all_fields = "camelCase"`
+    // fix: a fill-tool slider group tagged with `activeToolId`, plus an untagged toggle. This is the exact
+    // class of payload whose snake_case↔camelCase divergence made the puzzle fill slider invisible in React.
+    const wireJson =
+      '[{"kind":"group","id":"fill-params","label":"Fill","activeToolId":"fill","children":[{"kind":"slider","id":"fillCount","label":"Count","value":3,"min":1,"max":9,"step":1,"onChange":{"controllerId":"puzzle","action":"setFillCount"}}]},{"kind":"toggle","id":"grid","iconId":"icon.grid","pressed":true,"onChange":{"controllerId":"puzzle","action":"toggleGrid"}}]';
+    const measures = JSON.parse(wireJson) as WindowMeasure[];
+    const { general, toolOptions } = partitionWindowMeasures(measures, "fill");
+    expect(toolOptions.map((m) => m.id)).toEqual(["fill-params"]);
+    const fillGroup = toolOptions[0];
+    expect(fillGroup.kind).toBe("group");
+    if (fillGroup.kind === "group") {
+      expect(fillGroup.activeToolId).toBe("fill");
+      expect(fillGroup.children[0]).toMatchObject({ kind: "slider", id: "fillCount", onChange: { action: "setFillCount" } });
+    }
+    expect(general.map((m) => m.id)).toEqual(["grid"]);
+    const gridToggle = general[0];
+    expect(gridToggle.kind === "toggle" && gridToggle.iconId).toBe("icon.grid");
+
+    // Regression guard for the fixed bug: the pre-fix snake_case wire leaves `activeToolId` undefined, so the
+    // tagged group silently falls through to `general` and the fill slider never reaches the Tool Options rail.
+    const legacyJson = wireJson
+      .replace(/"activeToolId"/g, '"active_tool_id"')
+      .replace(/"onChange"/g, '"on_change"')
+      .replace(/"iconId"/g, '"icon_id"');
+    const legacy = JSON.parse(legacyJson) as WindowMeasure[];
+    const legacyPartition = partitionWindowMeasures(legacy, "fill");
+    expect(legacyPartition.toolOptions).toEqual([]);
+    expect(legacyPartition.general.map((m) => m.id)).toEqual(["fill-params", "grid"]);
   });
 });
 

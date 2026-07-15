@@ -1,0 +1,13 @@
+{
+  "title": "App Introduction Mechanism",
+  "emoji": "🎓",
+  "status": "open",
+  "description": "Introduce a new \"Introduction\" mechanism: every app can declare a first-run walkthrough for first-time users. When started, a glass layer covers the whole screen; information boxes (less see-through than the glass) are placed per step; individual UI elements can be cut out of the glass (shown normally, interactive) or highlighted. Contract-first: IntroductionDefinition/IntroductionStepDefinition/IntroductionAnchor/IntroductionEmphasis/IntroductionPlacement/IntroductionAdvance in framework/core/rs/lib.rs, mirrored to TS. AppBuilder gets .introduction(...) with validation in build_definition(). Framework auto-injects a startIntroduction View action (replay via command palette) mirroring the setActiveTool precedent. React shell (framework/renderer/react/os-shell.tsx) owns runtime state (OverlayState.introductionStepIndex) and auto-starts on first launch per app (localStorage \"seen\" flag). New UIIntroduction component in ui/js/react/index.tsx renders a glass veil (new ui-glass-veil utility, more transparent than ui-glass-panel) with a live-tracked cutout rect (four bands, not SVG mask, so backdrop-filter glass survives and the hole is genuinely interactive), an optional pulsing highlight ring, and an info box using the panel glass tier. Steps support interactive advance: a step completes when the user activates a referenced tool or dispatches a referenced action, not just Next/Back/Skip buttons. wgpu/native renderer is out of scope (contract is renderer-agnostic, no schema change needed there). Proof-of-concept: give Puzzle 3D (puzzle3d-play app in puzzle/plugin/rs/lib.rs) a real introduction walkthrough covering its viewport, transform tools, and panels.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1990"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪e0d16f351be04c688fb96336701204b7"
+  ]
+}

@@ -789,11 +789,15 @@
   --glass-blur: 1.5rem;
   --glass-panel-blur: 2.5rem;
   --glass-window-options-blur: 0.875rem;
+  --glass-veil-blur: 0.5rem;
   --glass-saturate: 1.45;
   --glass-panel-alpha: 0.58;
   --glass-window-options-alpha: 0.22;
   --glass-toolbar-alpha: 0.3;
   --glass-menu-alpha: 0.36;
+  /* 🎓 Deliberately more transparent than --glass-panel-alpha so an introduction's info box reads as
+     less see-through than the veil it sits on. */
+  --glass-veil-alpha: 0.38;
   --scrollbar-size: var(--spacing-double);
   --color-background: var(--base);
   --color-base: var(--base);
@@ -1503,6 +1507,13 @@
   -webkit-backdrop-filter: blur(var(--glass-panel-blur)) saturate(var(--glass-saturate));
   backdrop-filter: blur(var(--glass-panel-blur)) saturate(var(--glass-saturate));
   background-color: color-mix(in srgb, var(--panel) calc(var(--glass-panel-alpha) * 100%), transparent);
+}
+
+/* 🎓 The introduction glass veil — the bands surrounding a step's cutout rect. */
+@utility ui-glass-veil {
+  -webkit-backdrop-filter: blur(var(--glass-veil-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-veil-blur)) saturate(var(--glass-saturate));
+  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-veil-alpha) * 100%), transparent);
 }
 
 /* Panel frame stroke is on [data-slot="panel-chrome-frame"]; inset scroll hosts so scrollbars stay inside. */

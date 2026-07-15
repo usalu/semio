@@ -434,7 +434,7 @@
   % #1 image path #2 colspan #3 title #4 meta
   \multicolumn{#2}{@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\semio@table@long@inner@w}@{}}{%
     \cellcolor{semio-chrome-canvas}%
-    \raisebox{-0.15\height}{\SemioImage[fit=cover,width=20mm,height=13mm]{#1}}\hspace{\semio@chrome@padding}%
+    \raisebox{-0.15\height}{\includegraphics[height=\dimexpr 2\semio@table@body@height\relax,keepaspectratio]{#1}}\hspace{\semio@chrome@padding}%
     \textbf{#3}\newline#4
   }%
   \\*\hline

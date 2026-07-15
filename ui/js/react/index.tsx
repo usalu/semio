@@ -59,6 +59,12 @@ import {
   type CanvasPickTarget,
   type DockSkeleton,
   type DockTabSkeleton,
+  type IntroductionAdvance,
+  type IntroductionAnchor,
+  type IntroductionDefinition,
+  type IntroductionEmphasis,
+  type IntroductionPlacement,
+  type IntroductionStepDefinition,
   pickMostSpecificCanvasTarget,
   sortCanvasPickTargetsGeneralFirst,
 } from "@semio-tech/framework-core";
@@ -2266,6 +2272,22 @@ export function effectiveComputeWorkerCount(requested = readStoredComputeWorkerC
   return Math.max(1, Math.floor(requested));
 }
 
+/** @emoji 🎓 localStorage key prefix for whether an app's introduction has already been shown on this device. */
+export const UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX = "ui.introduction.seen.";
+
+/** @emoji 🎓 Reads whether `appId`'s introduction has already been shown — auto-start checks this once
+ * per app; replaying stays available via the `startIntroduction` action regardless of this flag. */
+export function readStoredIntroductionSeen(appId: string): boolean {
+  if (typeof localStorage === "undefined") return false;
+  return localStorage.getItem(`${UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}${appId}`) === "true";
+}
+
+/** @emoji 🎓 Marks `appId`'s introduction as shown so it stops auto-starting on future launches. */
+export function writeStoredIntroductionSeen(appId: string): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(`${UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}${appId}`, "true");
+}
+
 const UiChromeCompactContext = reactHostPort.createContext<boolean | null>(null);
 
 /** @emoji 🏷️ When `always`, inline button/toggle captions stay visible even if compact chrome is on. */
@@ -4273,6 +4295,245 @@ function PanelGhostRoot({ children, className, style, ...props }: PanelGhostRoot
 }
 
 // #endregion 🔤Interaction Context
+
+// #region 🎓Introduction
+/** @emoji 🎓 CSS selector for an `IntroductionAnchor` — reuses ids/data-attributes the shell already
+ * stamps on navbar/footer/window/tool/action/panel-tab chrome instead of adding new markup: tool leaf
+ * buttons already carry `id={toolId}`, action rows carry `id="${windowId}-action-${actionId}"` (or the
+ * `-execute` suffix for staged-arg actions), panel tab buttons carry `data-tab-id`, and window bodies
+ * carry `data-window-kind-id`. `null` means "no specific element" (paired with `Screen`/`Center`). */
+export function introductionAnchorSelector(anchor: IntroductionAnchor): string | null {
+  switch (anchor.kind) {
+    case "screen":
+      return null;
+    case "navbar":
+      return '[data-slot="navbar"]';
+    case "footer":
+      return '[data-slot="footer"]';
+    case "windowKind":
+      return `[data-window-kind-id="${anchor.id}"]`;
+    case "tool":
+      return `[id="${anchor.id}"]`;
+    case "action":
+      return `[id$="-action-${anchor.id}"], [id$="-action-${anchor.id}-execute"]`;
+    case "panelTab":
+      return `[data-tab-id="${anchor.id}"]`;
+    case "slot":
+      return `[data-slot="${anchor.id}"]`;
+  }
+}
+
+type IntroductionRect = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
+
+function domRectToIntroductionRect(rect: DOMRect): IntroductionRect {
+  return { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
+}
+
+/** @emoji 🎓 Live-tracks the DOM rect of an introduction step's anchor, re-measuring on element resize
+ * and window resize. Retries briefly if the anchor isn't mounted yet (a folded panel/toolbar) instead
+ * of failing closed; a `null` selector or a never-found anchor both resolve to `null`, which the caller
+ * treats as a `Screen`-style full veil with no cutout. */
+function useIntroductionAnchorRect(selector: string | null): IntroductionRect | null {
+  const [rect, setRect] = reactHostPort.useState<IntroductionRect | null>(null);
+
+  reactHostPort.useEffect(() => {
+    if (!selector) {
+      setRect(null);
+      return;
+    }
+    let element: Element | null = null;
+    let observer: ResizeObserver | null = null;
+    let retryTimer: ReturnType<typeof setInterval> | null = null;
+
+    const measure = () => {
+      if (element) setRect(domRectToIntroductionRect(element.getBoundingClientRect()));
+    };
+    const attach = (): boolean => {
+      element = document.querySelector(selector);
+      if (!element) return false;
+      measure();
+      observer = new ResizeObserver(measure);
+      observer.observe(element);
+      return true;
+    };
+
+    if (!attach()) {
+      retryTimer = setInterval(() => {
+        if (attach() && retryTimer) {
+          clearInterval(retryTimer);
+          retryTimer = null;
+        }
+      }, 200);
+    }
+    window.addEventListener("resize", measure);
+    return () => {
+      observer?.disconnect();
+      if (retryTimer) clearInterval(retryTimer);
+      window.removeEventListener("resize", measure);
+      setRect(null);
+    };
+  }, [selector]);
+
+  return rect;
+}
+
+export type IntroductionVeilBand = IntroductionRect;
+
+/** @emoji 🎓 Splits `viewport` into up to four glass bands tiling the space around `cutout` — real
+ * `backdrop-filter` glass survives this way (an SVG mask over the whole screen can't carry it), and the
+ * hole left in the middle is a genuine DOM gap rather than a clipped overlay, so it stays interactive.
+ * A `null` cutout (a `Screen`/no-emphasis step) returns one full-viewport band. */
+export function introductionVeilBands(viewport: { readonly width: number; readonly height: number }, cutout: IntroductionRect | null): readonly IntroductionVeilBand[] {
+  if (!cutout) return [{ top: 0, left: 0, width: viewport.width, height: viewport.height }];
+  const top = Math.max(0, Math.min(cutout.top, viewport.height));
+  const bottom = Math.max(0, Math.min(cutout.top + cutout.height, viewport.height));
+  const left = Math.max(0, Math.min(cutout.left, viewport.width));
+  const right = Math.max(0, Math.min(cutout.left + cutout.width, viewport.width));
+  return [
+    { top: 0, left: 0, width: viewport.width, height: top },
+    { top: bottom, left: 0, width: viewport.width, height: Math.max(0, viewport.height - bottom) },
+    { top, left: 0, width: left, height: Math.max(0, bottom - top) },
+    { top, left: right, width: Math.max(0, viewport.width - right), height: Math.max(0, bottom - top) },
+  ].filter((band) => band.width > 0 && band.height > 0);
+}
+
+type IntroductionInfoBoxPosition = { readonly top: number; readonly left: number };
+
+const INTRODUCTION_INFO_BOX_GAP_PX = 16;
+
+/** @emoji 🎓 Where the info box sits relative to its anchor. `auto` picks the side with the most free
+ * viewport space; `center` (and any anchor-less step) centers the box in the viewport. */
+export function resolveIntroductionPlacement(
+  placement: IntroductionPlacement,
+  anchorRect: IntroductionRect | null,
+  boxSize: { readonly width: number; readonly height: number },
+  viewport: { readonly width: number; readonly height: number },
+): IntroductionInfoBoxPosition {
+  const centered = { top: (viewport.height - boxSize.height) / 2, left: (viewport.width - boxSize.width) / 2 };
+  if (!anchorRect || placement === "center") return centered;
+
+  const gap = INTRODUCTION_INFO_BOX_GAP_PX;
+  const clampLeft = (left: number) => Math.min(Math.max(left, gap), Math.max(gap, viewport.width - boxSize.width - gap));
+  const clampTop = (top: number) => Math.min(Math.max(top, gap), Math.max(gap, viewport.height - boxSize.height - gap));
+  const space = {
+    top: anchorRect.top,
+    bottom: viewport.height - (anchorRect.top + anchorRect.height),
+    left: anchorRect.left,
+    right: viewport.width - (anchorRect.left + anchorRect.width),
+  } as const;
+  const side = placement === "auto" ? (Object.keys(space) as (keyof typeof space)[]).sort((a, b) => space[b] - space[a])[0] : placement;
+
+  switch (side) {
+    case "top":
+      return { top: clampTop(anchorRect.top - boxSize.height - gap), left: clampLeft(anchorRect.left + anchorRect.width / 2 - boxSize.width / 2) };
+    case "bottom":
+      return { top: clampTop(anchorRect.top + anchorRect.height + gap), left: clampLeft(anchorRect.left + anchorRect.width / 2 - boxSize.width / 2) };
+    case "left":
+      return { top: clampTop(anchorRect.top + anchorRect.height / 2 - boxSize.height / 2), left: clampLeft(anchorRect.left - boxSize.width - gap) };
+    case "right":
+      return { top: clampTop(anchorRect.top + anchorRect.height / 2 - boxSize.height / 2), left: clampLeft(anchorRect.left + anchorRect.width + gap) };
+    default:
+      return centered;
+  }
+}
+
+export type UIIntroductionProps = {
+  readonly introduction: IntroductionDefinition;
+  readonly stepIndex: number;
+  readonly onStepIndexChange: (index: number) => void;
+  readonly onDismiss: (completed: boolean) => void;
+};
+
+/** @emoji 🎓 Full-screen first-run walkthrough: a glass veil covers the screen, the current step's
+ * anchor is cut out of it (optionally with a pulsing highlight ring), and an info box explains it —
+ * renders the declarative `IntroductionDefinition`/`IntroductionStepDefinition` contract. */
+export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, stepIndex, onStepIndexChange, onDismiss }) => {
+  const step: IntroductionStepDefinition | undefined = introduction.steps[stepIndex];
+  const selector = step ? introductionAnchorSelector(step.anchor) : null;
+  const anchorRect = useIntroductionAnchorRect(selector);
+  const [viewport, setViewport] = reactHostPort.useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
+  const [boxSize, setBoxSize] = reactHostPort.useState({ width: 320, height: 160 });
+  const boxRef = reactHostPort.useRef<HTMLDivElement>(null);
+
+  reactHostPort.useEffect(() => {
+    const onResize = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  reactHostPort.useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const measure = () => setBoxSize({ width: el.offsetWidth, height: el.offsetHeight });
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [stepIndex]);
+
+  const isLast = stepIndex >= introduction.steps.length - 1;
+  const skip = reactHostPort.useCallback(() => onDismiss(false), [onDismiss]);
+  const next = reactHostPort.useCallback(() => {
+    if (isLast) onDismiss(true);
+    else onStepIndexChange(stepIndex + 1);
+  }, [isLast, onDismiss, onStepIndexChange, stepIndex]);
+  const back = reactHostPort.useCallback(() => onStepIndexChange(Math.max(0, stepIndex - 1)), [onStepIndexChange, stepIndex]);
+  const advanceByButton = step?.advance.kind === "next";
+
+  useHotkeys("escape", skip, { enableOnFormTags: true }, [skip]);
+  useHotkeys("enter,arrowright", () => advanceByButton && next(), { enableOnFormTags: true }, [advanceByButton, next]);
+  useHotkeys("arrowleft", back, { enableOnFormTags: true }, [back]);
+
+  if (!step) return null;
+
+  const advance: IntroductionAdvance = step.advance;
+  const emphasis: IntroductionEmphasis = anchorRect ? step.emphasis : "none";
+  const cutout = emphasis === "none" ? null : anchorRect;
+  const bands = introductionVeilBands(viewport, cutout);
+  const boxPosition = resolveIntroductionPlacement(step.placement, anchorRect, boxSize, viewport);
+
+  return (
+    <>
+      {bands.map((band, index) => (
+        <div key={index} className="ui-glass-veil z-tutorial pointer-events-auto fixed" style={{ top: band.top, left: band.left, width: band.width, height: band.height }} />
+      ))}
+      {emphasis === "highlight" && cutout && (
+        <div
+          className="pointer-events-none fixed z-tutorial rounded border-2 border-primary animate-pulse"
+          style={{ top: cutout.top - 4, left: cutout.left - 4, width: cutout.width + 8, height: cutout.height + 8 }}
+        />
+      )}
+      <div
+        ref={boxRef}
+        data-slot="introduction-info-box"
+        className={cn(getGlassSurfaceClass("panel"), "pointer-events-auto fixed z-tutorial max-w-sm rounded-lg border p-double shadow-lg")}
+        style={{ top: boxPosition.top, left: boxPosition.left }}
+      >
+        <div className="mb-single flex items-center justify-between gap-double">
+          <h3 className="text-sm font-medium">{step.title}</h3>
+          <span className="text-xs text-muted">
+            {stepIndex + 1} / {introduction.steps.length}
+          </span>
+        </div>
+        <p className="mb-double text-xs text-muted">{step.body}</p>
+        <div className="flex items-center justify-between gap-single">
+          <Button id="ui.introduction.skip" variant="ghost" icon="x" text="Skip" onClick={skip} />
+          <div className="flex items-center gap-single">
+            {stepIndex > 0 && <Button id="ui.introduction.back" variant="ghost" icon="chevron-left" text="Back" onClick={back} />}
+            {advance.kind === "next" ? (
+              <Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? "Done" : "Next"} onClick={next} />
+            ) : (
+              <span className="text-xs text-muted">
+                {advance.kind === "tool" ? `Activate "${advance.id}" to continue` : `Perform "${advance.id}" to continue`}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+// #endregion 🎓Introduction
 
 // #region 🎈Level Context
 /** @emoji 📚 Semantic UI depth layer for background, hover, and z-index tokens. */
@@ -22997,6 +23258,63 @@ export { Ui };
 if (import.meta.vitest) {
   const { describe, expect, it, vi } = import.meta.vitest;
   const { render, screen, fireEvent, waitFor } = await import("@testing-library/react");
+
+  describe("introductionAnchorSelector", () => {
+    it("maps every anchor kind to its reused selector, or null for Screen", () => {
+      expect(introductionAnchorSelector({ kind: "screen" })).toBeNull();
+      expect(introductionAnchorSelector({ kind: "navbar" })).toBe('[data-slot="navbar"]');
+      expect(introductionAnchorSelector({ kind: "footer" })).toBe('[data-slot="footer"]');
+      expect(introductionAnchorSelector({ kind: "windowKind", id: "main" })).toBe('[data-window-kind-id="main"]');
+      expect(introductionAnchorSelector({ kind: "tool", id: "brush" })).toBe('[id="brush"]');
+      expect(introductionAnchorSelector({ kind: "action", id: "addLayer" })).toBe('[id$="-action-addLayer"], [id$="-action-addLayer-execute"]');
+      expect(introductionAnchorSelector({ kind: "panelTab", id: "puzzle.catalogue" })).toBe('[data-tab-id="puzzle.catalogue"]');
+      expect(introductionAnchorSelector({ kind: "slot", id: "window-body" })).toBe('[data-slot="window-body"]');
+    });
+  });
+
+  describe("introductionVeilBands", () => {
+    it("returns one full-viewport band when there is no cutout", () => {
+      const bands = introductionVeilBands({ width: 800, height: 600 }, null);
+      expect(bands).toEqual([{ top: 0, left: 0, width: 800, height: 600 }]);
+    });
+
+    it("tiles the viewport into up to four bands around the cutout, dropping zero-area bands", () => {
+      const bands = introductionVeilBands({ width: 800, height: 600 }, { top: 100, left: 200, width: 100, height: 50 });
+      const coveredArea = bands.reduce((sum, band) => sum + band.width * band.height, 0);
+      expect(coveredArea).toBe(800 * 600 - 100 * 50);
+      for (const band of bands) {
+        expect(band.width).toBeGreaterThan(0);
+        expect(band.height).toBeGreaterThan(0);
+      }
+    });
+  });
+
+  describe("resolveIntroductionPlacement", () => {
+    const viewport = { width: 800, height: 600 };
+    const boxSize = { width: 100, height: 50 };
+
+    it("centers when there is no anchor rect, or placement is center", () => {
+      expect(resolveIntroductionPlacement("auto", null, boxSize, viewport)).toEqual({ top: 275, left: 350 });
+      expect(resolveIntroductionPlacement("center", { top: 10, left: 10, width: 20, height: 20 }, boxSize, viewport)).toEqual({ top: 275, left: 350 });
+    });
+
+    it("auto picks the side with the most free space", () => {
+      // 🎓 Anchor near the top: most free space is below it, so auto should place the box below.
+      const nearTop = { top: 0, left: 350, width: 100, height: 20 };
+      const placedBelow = resolveIntroductionPlacement("auto", nearTop, boxSize, viewport);
+      expect(placedBelow.top).toBeGreaterThan(nearTop.top + nearTop.height);
+    });
+
+    it("explicit placements position relative to the anchor and stay within the viewport", () => {
+      const anchor = { top: 275, left: 350, width: 100, height: 20 };
+      const right = resolveIntroductionPlacement("right", anchor, boxSize, viewport);
+      expect(right.left).toBeGreaterThan(anchor.left + anchor.width);
+      const left = resolveIntroductionPlacement("left", anchor, boxSize, viewport);
+      expect(left.left).toBeLessThan(anchor.left);
+      const nearEdge = resolveIntroductionPlacement("right", { top: 10, left: 780, width: 10, height: 10 }, boxSize, viewport);
+      expect(nearEdge.left).toBeLessThanOrEqual(viewport.width - boxSize.width);
+    });
+  });
 
   describe("formatNumber", () => {
     it("strips IEEE-754 float artifacts for display", () => {

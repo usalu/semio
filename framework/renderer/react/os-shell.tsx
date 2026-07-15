@@ -109,6 +109,9 @@ import {
   setUiLocale,
   uiI18n,
   UI_TERMINOLOGY_NATIVE,
+  UIIntroduction,
+  readStoredIntroductionSeen,
+  writeStoredIntroductionSeen,
   type ElementsSurfaceAppearance,
   type ElementsSurfaceDevice,
   type EngagementControl,
@@ -178,6 +181,7 @@ import {
   effectiveActionArgs,
   missingRequiredArgs,
   SET_ACTIVE_TOOL_ACTION_ID,
+  START_INTRODUCTION_ACTION_ID,
   type ActionArgControl,
   type ActionArgDef,
   type ActionDefinition,
@@ -421,6 +425,8 @@ type ShellLayoutState = {
 type OverlayState = {
   readonly searchOpen: boolean;
   readonly findOpen: boolean;
+  /** 🎓 Current step of the active app's introduction walkthrough, or `null` when none is playing. */
+  readonly introductionStepIndex: number | null;
 };
 
 type UiPrefsState = {
@@ -493,6 +499,7 @@ export type ShellAction =
   | { readonly type: "SET_EXTRA_WINDOW_INSTANCES"; readonly value: Updatable<readonly ExtraWindowInstance[]> }
   | { readonly type: "SET_SEARCH_OPEN"; readonly value: Updatable<boolean> }
   | { readonly type: "SET_FIND_OPEN"; readonly value: Updatable<boolean> }
+  | { readonly type: "SET_INTRODUCTION_STEP"; readonly value: Updatable<number | null> }
   | { readonly type: "SET_UI_APPEARANCE"; readonly value: Updatable<ElementsSurfaceAppearance> }
   | { readonly type: "SET_UI_LAYOUT"; readonly value: Updatable<UiChromeLayout> }
   | { readonly type: "SET_UI_COMPACT"; readonly value: Updatable<boolean> }
@@ -616,6 +623,7 @@ function overlayReducer(state: OverlayState, action: ShellAction): OverlayState 
   switch (action.type) {
     case "SET_SEARCH_OPEN": return { ...state, searchOpen: resolveUpdatable(action.value, state.searchOpen) };
     case "SET_FIND_OPEN": return { ...state, findOpen: resolveUpdatable(action.value, state.findOpen) };
+    case "SET_INTRODUCTION_STEP": return { ...state, introductionStepIndex: resolveUpdatable(action.value, state.introductionStepIndex) };
     default: return state;
   }
 }
@@ -687,7 +695,7 @@ export function initialShellState(_props: { readonly pluginFilter?: string; read
       mobilePanelPath: [],
       extraWindowInstances: [],
     },
-    overlays: { searchOpen: false, findOpen: false },
+    overlays: { searchOpen: false, findOpen: false, introductionStepIndex: null },
     uiPrefs: {
       uiAppearance: readStoredUiChromeAppearance(),
       uiLayout: readStoredUiChromeLayout(),
@@ -1749,7 +1757,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
   const { foldedByWindowId: actionPanelFoldedByWindowId, expandedByWindowId: actionPanelExpandedByWindowId, stagedArgsByKey: actionPanelStagedArgsByKey, activeToolByWindowId } = shellState.actionPanel;
   const { cornerPanels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, extraWindowInstances } = shellState.layout;
-  const { searchOpen, findOpen } = shellState.overlays;
+  const { searchOpen, findOpen, introductionStepIndex } = shellState.overlays;
   const { uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft } = shellState.uiPrefs;
   const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
   const importStudioInputRef = useRef<HTMLInputElement>(null);
@@ -1835,6 +1843,14 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     sessionRef.current = session;
   }, [session]);
 
+  // 🎓 Auto-starts an app's introduction the first time it launches on this device; replaying stays
+  // available afterward via the framework-injected `startIntroduction` palette action.
+  useEffect(() => {
+    if (!session?.app.introduction) return;
+    if (readStoredIntroductionSeen(session.app.id)) return;
+    dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
+  }, [session?.app.id, session?.app.introduction]);
+
   // 🧰 Refs so `refreshUi`/`onAction`/`applyHostEffects` can read the current host-owned active tool and
   // active window without re-creating those callbacks on every tool switch.
   const activeToolByWindowIdRef = useRef(activeToolByWindowId);
@@ -1845,6 +1861,8 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   actionPanelExpandedByWindowIdRef.current = actionPanelExpandedByWindowId;
   const actionPanelStagedArgsByKeyRef = useRef(actionPanelStagedArgsByKey);
   actionPanelStagedArgsByKeyRef.current = actionPanelStagedArgsByKey;
+  const introductionStepIndexRef = useRef(introductionStepIndex);
+  introductionStepIndexRef.current = introductionStepIndex;
 
   /** 🧰 Overlays the active window's host-owned `activeToolId` onto a view state at plugin-call time. */
   const injectActiveTool = useCallback((viewState: ViewState, windowId?: string | null): ViewState => {
@@ -2499,6 +2517,25 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     (action: ActionDescriptor) => {
       if (!session) return;
 
+      // 🎓 First-run walkthrough (mirrors setActiveTool below): fully shell-intercepted, resets
+      // playback to the first step, never forwarded to the plugin.
+      if (action.action === START_INTRODUCTION_ACTION_ID) {
+        dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
+        return;
+      }
+      const introductionStep = introductionStepIndexRef.current != null ? (session.app.introduction?.steps[introductionStepIndexRef.current] ?? null) : null;
+      const advanceIntroductionStep = () => {
+        const stepIndex = introductionStepIndexRef.current;
+        const introduction = session.app.introduction;
+        if (stepIndex == null || !introduction) return;
+        if (stepIndex >= introduction.steps.length - 1) {
+          dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
+          writeStoredIntroductionSeen(session.app.id);
+        } else {
+          dispatch({ type: "SET_INTRODUCTION_STEP", value: stepIndex + 1 });
+        }
+      };
+
       // 🧰 Tool activation (P5): host-owned session state, never a document op. Re-clicking the active
       // tool (or an empty toolId) deactivates. We resolve the target window from the descriptor's tagged
       // `windowId` (see `tagSetActiveToolWindow`), falling back to the active window, update the store,
@@ -2510,6 +2547,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         const requested = typeof args.toolId === "string" ? args.toolId : "";
         const next = resolveToolActivation(activeToolByWindowIdRef.current[windowId], requested);
         dispatch({ type: "SET_ACTIVE_TOOL", windowId, toolId: next });
+        if (introductionStep?.advance.kind === "tool" && next && introductionStep.advance.id === next) advanceIntroductionStep();
         const pluginEntry = findPluginForAction(action);
         const plugin = pluginEntry?.handle;
         if (plugin) {
@@ -2522,6 +2560,8 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         }
         return;
       }
+
+      if (introductionStep?.advance.kind === "action" && introductionStep.advance.id === action.action) advanceIntroductionStep();
 
       if (action.controllerId === FRAMEWORK_SYNC_CONTROLLER_ID) {
         if (action.action === "selectFile") {
@@ -3678,6 +3718,17 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         </div>
         <UISearch items={searchItems} open={searchOpen} onOpenChange={(value) => dispatch({ type: "SET_SEARCH_OPEN", value })} />
         <UIFind open={findOpen} onOpenChange={(value) => dispatch({ type: "SET_FIND_OPEN", value })} />
+        {session?.app.introduction && introductionStepIndex != null && (
+          <UIIntroduction
+            introduction={session.app.introduction}
+            stepIndex={introductionStepIndex}
+            onStepIndexChange={(value) => dispatch({ type: "SET_INTRODUCTION_STEP", value })}
+            onDismiss={() => {
+              dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
+              writeStoredIntroductionSeen(session.app.id);
+            }}
+          />
+        )}
       </LevelProvider>
     </UIFindProvider>
   );

@@ -1669,6 +1669,7 @@ mod tests {
                 named_layouts: Vec::new(),
                 default_layout: None,
                 terminologies: Vec::new(),
+                introduction: None,
             }],
             programs: vec![],
             capabilities: vec![],
@@ -1720,6 +1721,7 @@ mod tests {
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
+            introduction: None,
         };
         let note_app = AppDefinition {
             id: "note-play".into(),
@@ -1755,6 +1757,7 @@ mod tests {
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
+            introduction: None,
         };
         host.load_plugin(LoadedPlugin {
             plugin_id: "draw".into(),
@@ -1834,6 +1837,7 @@ mod tests {
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
+            introduction: None,
         };
         host.load_plugin(LoadedPlugin {
             plugin_id: "draw".into(),
@@ -1965,6 +1969,7 @@ mod tests {
                 named_layouts: Vec::new(),
                 default_layout: None,
                 terminologies: Vec::new(),
+                introduction: None,
             }],
             programs: vec![],
             capabilities: vec![],
@@ -5258,6 +5263,7 @@ pub fn resolve_os_app_definition(
         named_layouts: Vec::new(),
         default_layout: None,
         terminologies: Vec::new(),
+        introduction: None,
     })
 }
 

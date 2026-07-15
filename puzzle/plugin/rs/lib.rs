@@ -2560,6 +2560,7 @@ pub mod d3 {
         ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, PanelGroup,
         SurfaceKind, ToolCategory, ToolDefinition, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID,
+        IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionEmphasis, IntroductionStepDefinition,
     };
     use semio_framework_plugin::kernel::HostEffect;
     use serde::{Deserialize, Serialize};
@@ -5925,7 +5926,48 @@ pub mod d3 {
                 .tool(ToolDefinition::new("brush", "Brush", "brush"))
                 .tool(ToolDefinition::new("fill", "Fill", "fill"))
                 .tool(ToolDefinition::new("worldRelocate", "Relocate", "move-3d"))
-                .window_kind_tools(PUZZLE3D_PLAY_WINDOW_MAIN, vec!["select".into(), "move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()]),
+                .window_kind_tools(PUZZLE3D_PLAY_WINDOW_MAIN, vec!["select".into(), "move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()])
+                // 🎓 Reference introduction (proof of the framework's Introduction mechanism, see
+                // `IntroductionDefinition` in `framework/core/rs/lib.rs`): a short first-run walkthrough
+                // of the viewport, the Move tool, the catalogue panel, and adding an object.
+                .introduction(IntroductionDefinition {
+                    title: "Welcome to Puzzle 3D".into(),
+                    steps: vec![
+                        IntroductionStepDefinition::new(
+                            "welcome",
+                            "Welcome to Puzzle 3D",
+                            "A quick tour of the viewport, tools, and panels before you start composing.",
+                            IntroductionAnchor::Screen,
+                        ),
+                        IntroductionStepDefinition::new(
+                            "viewport",
+                            "The Viewport",
+                            "This is your 3D scene — orbit, pan, and zoom to look around.",
+                            IntroductionAnchor::WindowKind(PUZZLE3D_PLAY_WINDOW_MAIN.into()),
+                        )
+                        .emphasis(IntroductionEmphasis::Highlight),
+                        IntroductionStepDefinition::new(
+                            "move-tool",
+                            "Move Objects",
+                            "Activate the Move tool to reposition objects in the scene.",
+                            IntroductionAnchor::Tool("move".into()),
+                        )
+                        .advance_on(IntroductionAdvance::Tool("move".into())),
+                        IntroductionStepDefinition::new(
+                            "catalogue",
+                            "The Catalogue",
+                            "Browse the object kinds available to place from here.",
+                            IntroductionAnchor::PanelTab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
+                        ),
+                        IntroductionStepDefinition::new(
+                            "add-object",
+                            "Add an Object",
+                            "Add your first object to the scene to get started.",
+                            IntroductionAnchor::Action("addObjectKind".into()),
+                        )
+                        .advance_on(IntroductionAdvance::Action("addObjectKind".into())),
+                    ],
+                }),
         )
         .example("empty", "Empty", &serde_json::to_string(&empty_fixture()).unwrap())
         .example(PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON)
