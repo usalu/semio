@@ -5,7 +5,10 @@ console.log("semioTheme().id =", semioTheme().id);
 console.log("activeUiTheme().id (default) =", activeUiTheme().id);
 
 const themes = builtinUiThemes();
-console.log("builtinUiThemes ids:", themes.map((t) => t.id));
+console.log(
+  "builtinUiThemes ids:",
+  themes.map((t) => t.id),
+);
 
 const beforeLight = JSON.parse(serializeCanvasThemeJson("light"));
 console.log("before switch, rasterClear matches baked:", JSON.stringify(beforeLight.rasterClear) === JSON.stringify(STYLING_BOARD_PALETTES.light.rasterClear));

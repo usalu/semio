@@ -54,9 +54,13 @@ import {
   CANVAS_HOVER_SOURCE_PICK_MENU,
   canvasHoverFocusFromTarget,
   canvasPickTargetKey,
+  effectiveActionArgs,
+  missingRequiredArgs,
+  type ActionArgDef,
   type CanvasHoverFocus,
   type CanvasPickRequest,
   type CanvasPickTarget,
+  type DialogDefinition,
   type DockSkeleton,
   type DockTabSkeleton,
   type IntroductionAdvance,
@@ -1809,14 +1813,7 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     return null;
   }
   return renderPortalInto(
-    <div
-      className={contextMenuContentClassName}
-      dir={flow.inline === "rtl" ? "rtl" : undefined}
-      onContextMenu={(event) => event.preventDefault()}
-      ref={menuRef}
-      role="menu"
-      style={{ left: position.x, position: "fixed", top: position.y }}
-    >
+    <div className={contextMenuContentClassName} dir={flow.inline === "rtl" ? "rtl" : undefined} onContextMenu={(event) => event.preventDefault()} ref={menuRef} role="menu" style={{ left: position.x, position: "fixed", top: position.y }}>
       {renderFixedContextMenuItems(items, close)}
     </div>,
     getDocumentBody(),
@@ -2647,12 +2644,19 @@ export type UiTranslationSchema = {
       readonly missingWindow: UiLabelValue;
       readonly home: UiLabelValue;
       readonly backToMediaGraph: UiLabelValue;
+      readonly execute: UiLabelValue;
+      readonly reset: UiLabelValue;
     };
     readonly docs: {
       readonly navigation: {
         readonly previous: UiLabelValue;
         readonly next: UiLabelValue;
       };
+    };
+    readonly protocolList: {
+      readonly steps: UiLabelValue;
+      readonly addStep: UiLabelValue;
+      readonly empty: UiLabelValue;
     };
     readonly ring: {
       readonly demo: UiLabelValue;
@@ -3094,6 +3098,13 @@ export const uiChromeTranslationBundles = {
           missingWindow: { label: { normal: "Fehlendes Fenster", beginner: "Fehlendes Fenster" } },
           home: { label: { normal: "Startseite", beginner: "Startseite" } },
           backToMediaGraph: { label: { normal: "Zurueck zum Media Graph", beginner: "Zurueck zum Media Graph" } },
+          execute: { label: { normal: "Ausfuehren", beginner: "Ausfuehren" } },
+          reset: { label: { normal: "Zuruecksetzen", beginner: "Zuruecksetzen" } },
+        },
+        protocolList: {
+          steps: { label: { normal: "Schritte", beginner: "Schritte" } },
+          addStep: { label: { normal: "Schritt hinzufuegen", beginner: "Schritt hinzufuegen" } },
+          empty: { label: { normal: "Kein Protokoll-Szenario", beginner: "Kein Protokoll-Szenario" } },
         },
         docs: {
           navigation: {
@@ -3554,6 +3565,13 @@ export const uiChromeTranslationBundles = {
           missingWindow: { label: { normal: "Missing window", beginner: "Missing window" } },
           home: { label: { normal: "Home", beginner: "Home" } },
           backToMediaGraph: { label: { normal: "Back to Media Graph", beginner: "Back to Media Graph" } },
+          execute: { label: { normal: "Execute", beginner: "Execute" } },
+          reset: { label: { normal: "Reset", beginner: "Reset" } },
+        },
+        protocolList: {
+          steps: { label: { normal: "Steps", beginner: "Steps" } },
+          addStep: { label: { normal: "Add Step", beginner: "Add Step" } },
+          empty: { label: { normal: "No protocol scene", beginner: "No protocol scene" } },
         },
         docs: {
           navigation: {
@@ -3748,6 +3766,40 @@ export function registerUiTranslationBundles(bundles: UiTranslationBundlesInput)
     i18next.addResourceBundle(language, "translation", resource.translation, true, true);
   }
 }
+
+//#region 🗣️TsNativeTerminology
+/** @emoji 🗣️ A `(locale) -> label-record` pair for one terminology id, mirroring the Rust `*_LABELS_{ID}_{LOCALE}` const pattern for TS-native products (e.g. compose, coda) that never cross the WASM plugin boundary and so have no `AppDefinition.terminologies`/`AppLabelsOverlay`. */
+export type UiTerminologyLabelSet<Keys extends string> = Readonly<Record<UiLocale, Readonly<Record<Keys, string>>>>;
+
+/** @emoji 🗣️ Builds a `(terminologyId, locale) -> labels` resolver from a set of terminology-keyed label tables, falling back to `native` for unknown/undeclared ids — the TS analog of the Rust `puzzle2d_labels`-style resolver. */
+export function createTerminologyLabelResolver<Keys extends string>(sets: Readonly<Record<string, UiTerminologyLabelSet<Keys>>>): (terminologyId: string, locale: UiLocale) => Readonly<Record<Keys, string>> {
+  return (terminologyId, locale) => (sets[terminologyId] ?? sets[UI_TERMINOLOGY_NATIVE])![locale];
+}
+
+const uiTerminologyChangeListeners = new Set<() => void>();
+
+/** @emoji 🗣️ React hook giving TS-native products (no Rust `AppDefinition`) read/write access to the shared `ui.chrome.terminology` contract — the same localStorage key the shell's Settings terminology dropdown drives — without depending on `os-shell` state or any Rust type. */
+export function useUiTerminology(): { readonly terminology: string; readonly setTerminology: (id: string) => void } {
+  const [terminology, setTerminologyState] = React.useState<string>(() => readStoredUiChromeTerminology());
+  React.useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === UI_CHROME_TERMINOLOGY_STORAGE_KEY) setTerminologyState(readStoredUiChromeTerminology());
+    };
+    const onLocalChange = () => setTerminologyState(readStoredUiChromeTerminology());
+    uiTerminologyChangeListeners.add(onLocalChange);
+    if (typeof window !== "undefined") window.addEventListener("storage", onStorage);
+    return () => {
+      uiTerminologyChangeListeners.delete(onLocalChange);
+      if (typeof window !== "undefined") window.removeEventListener("storage", onStorage);
+    };
+  }, []);
+  const setTerminology = React.useCallback((id: string) => {
+    writeStoredUiChromeTerminology(id);
+    for (const listener of uiTerminologyChangeListeners) listener();
+  }, []);
+  return { terminology, setTerminology };
+}
+//#endregion 🗣️TsNativeTerminology
 
 function normalizeUiLocale(language?: string): UiTranslationLocaleCode {
   return language?.toLowerCase().startsWith("de") ? "de" : "en";
@@ -4297,6 +4349,10 @@ function PanelGhostRoot({ children, className, style, ...props }: PanelGhostRoot
 // #endregion 🔤Interaction Context
 
 // #region 🎓Introduction
+/** 🪟 The glass overlay box recipe shared by the introduction info box and modal dialogs (see
+ * `UIDialog`) — the two mechanisms are styled identically by construction, not by convention. */
+export const GLASS_OVERLAY_BOX_CLASS = cn(getGlassSurfaceClass("panel"), "pointer-events-auto fixed z-tutorial max-w-sm rounded-lg border p-double shadow-lg");
+
 /** @emoji 🎓 CSS selector for an `IntroductionAnchor` — reuses ids/data-attributes the shell already
  * stamps on navbar/footer/window/tool/action/panel-tab chrome instead of adding new markup: tool leaf
  * buttons already carry `id={toolId}`, action rows carry `id="${windowId}-action-${actionId}"` (or the
@@ -4491,24 +4547,20 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   const cutout = emphasis === "none" ? null : anchorRect;
   const bands = introductionVeilBands(viewport, cutout);
   const boxPosition = resolveIntroductionPlacement(step.placement, anchorRect, boxSize, viewport);
+  // 🎓 A targeted anchor that hasn't mounted yet (a folded toolbar/panel) must not trap the user behind
+  // an opaque-to-clicks veil — only `Screen` steps (and steps whose anchor did resolve) block pointer
+  // events; an unresolved targeted anchor lets clicks through so the user can reveal it themselves.
+  const veilBlocksPointer = step.anchor.kind === "screen" || anchorRect != null;
 
   return (
     <>
       {bands.map((band, index) => (
-        <div key={index} className="ui-glass-veil z-tutorial pointer-events-auto fixed" style={{ top: band.top, left: band.left, width: band.width, height: band.height }} />
+        <div key={index} className={cn("ui-glass-veil z-tutorial fixed", veilBlocksPointer ? "pointer-events-auto" : "pointer-events-none")} style={{ top: band.top, left: band.left, width: band.width, height: band.height }} />
       ))}
       {emphasis === "highlight" && cutout && (
-        <div
-          className="pointer-events-none fixed z-tutorial rounded border-2 border-primary animate-pulse"
-          style={{ top: cutout.top - 4, left: cutout.left - 4, width: cutout.width + 8, height: cutout.height + 8 }}
-        />
+        <div className="pointer-events-none fixed z-tutorial rounded border-2 border-primary animate-pulse" style={{ top: cutout.top - 4, left: cutout.left - 4, width: cutout.width + 8, height: cutout.height + 8 }} />
       )}
-      <div
-        ref={boxRef}
-        data-slot="introduction-info-box"
-        className={cn(getGlassSurfaceClass("panel"), "pointer-events-auto fixed z-tutorial max-w-sm rounded-lg border p-double shadow-lg")}
-        style={{ top: boxPosition.top, left: boxPosition.left }}
-      >
+      <div ref={boxRef} data-slot="introduction-info-box" className={GLASS_OVERLAY_BOX_CLASS} style={{ top: boxPosition.top, left: boxPosition.left }}>
         <div className="mb-single flex items-center justify-between gap-double">
           <h3 className="text-sm font-medium">{step.title}</h3>
           <span className="text-xs text-muted">
@@ -4523,9 +4575,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
             {advance.kind === "next" ? (
               <Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? "Done" : "Next"} onClick={next} />
             ) : (
-              <span className="text-xs text-muted">
-                {advance.kind === "tool" ? `Activate "${advance.id}" to continue` : `Perform "${advance.id}" to continue`}
-              </span>
+              <span className="text-xs text-muted">{advance.kind === "tool" ? `Activate "${advance.id}" to continue` : `Perform "${advance.id}" to continue`}</span>
             )}
           </div>
         </div>
@@ -4534,6 +4584,60 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   );
 };
 // #endregion 🎓Introduction
+
+// #region 🗨️Dialog
+export type UIDialogProps = {
+  readonly dialog: DialogDefinition;
+  readonly seedArgs?: Readonly<Record<string, unknown>>;
+  /** 🎛 Injected staged-field renderer so ui-react never imports from framework/renderer. */
+  readonly renderField: (def: ActionArgDef, value: unknown, onChange: (value: unknown) => void) => React.ReactElement;
+  readonly onSubmit: (args: Record<string, unknown>) => void;
+  readonly onCancel: () => void;
+};
+
+/** @emoji 🗨️ Modal form dialog: a full-screen glass veil plus a box styled identically to the
+ * introduction info box (`GLASS_OVERLAY_BOX_CLASS`) presenting `dialog.args` as a staged form —
+ * renders the declarative `DialogDefinition` contract. Submit dispatches the merged effective args;
+ * cancel (Escape, veil click, or the Cancel button) all funnel through `onCancel`. */
+export const UIDialog: React.FC<UIDialogProps> = ({ dialog, seedArgs, renderField, onSubmit, onCancel }) => {
+  const [staged, setStaged] = reactHostPort.useState<Record<string, unknown>>({});
+  const buffer = reactHostPort.useMemo(() => ({ ...seedArgs, ...staged }), [seedArgs, staged]);
+  const effective = reactHostPort.useMemo(() => effectiveActionArgs(dialog.args, buffer), [dialog.args, buffer]);
+  const missing = reactHostPort.useMemo(() => missingRequiredArgs(dialog.args, effective), [dialog.args, effective]);
+  const canSubmit = missing.length === 0;
+
+  const submit = reactHostPort.useCallback(() => {
+    if (canSubmit) onSubmit(effective);
+  }, [canSubmit, effective, onSubmit]);
+
+  useHotkeys("escape", onCancel, { enableOnFormTags: true }, [onCancel]);
+  useHotkeys("enter", submit, { enableOnFormTags: true }, [submit]);
+
+  return (
+    <>
+      <div className="ui-glass-veil z-tutorial fixed inset-0 pointer-events-auto" onClick={onCancel} />
+      <div data-slot="dialog-box" className={cn(GLASS_OVERLAY_BOX_CLASS, "top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]")}>
+        <h3 className="mb-single text-sm font-medium">{dialog.title}</h3>
+        {dialog.body && <p className="mb-double text-xs text-muted">{dialog.body}</p>}
+        {dialog.args.length > 0 && (
+          <div className="mb-double flex flex-col gap-single">
+            {dialog.args.map((def) => (
+              <div key={def.id} className="flex flex-col gap-tiny">
+                <span className="text-xs text-muted">{def.label}</span>
+                {renderField(def, effective[def.id], (value) => setStaged((prev) => ({ ...prev, [def.id]: value })))}
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="flex items-center justify-between gap-single">
+          <Button id="ui.dialog.cancel" variant="ghost" icon="x" text={dialog.cancelLabel ?? "Cancel"} onClick={onCancel} />
+          <Button id="ui.dialog.submit" icon="check" text={dialog.submitLabel} disabled={!canSubmit} onClick={submit} />
+        </div>
+      </div>
+    </>
+  );
+};
+// #endregion 🗨️Dialog
 
 // #region 🎈Level Context
 /** @emoji 📚 Semantic UI depth layer for background, hover, and z-index tokens. */
@@ -5406,7 +5510,7 @@ export function computeTabDockDropZone(pointerX: number, pointerY: number, rows:
       if (button.dataset.tabKind === "branch" && fraction > 0.3 && fraction < 0.7) {
         return { kind: "child", corner: row.corner, parentId: button.dataset.tabId! };
       }
-      return { kind: "insert", corner: row.corner, parentPath: row.parentPath, index: index + ((fraction >= 0.5) !== rtl ? 1 : 0) };
+      return { kind: "insert", corner: row.corner, parentPath: row.parentPath, index: index + (fraction >= 0.5 !== rtl ? 1 : 0) };
     }
     return { kind: "insert", corner: row.corner, parentPath: row.parentPath, index: buttons.length };
   }
@@ -12338,15 +12442,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           onDoubleClick(event);
         }}
       >
-        <TreeAlignedRow
-          level={level}
-          isLastAtLevel={isLastAtLevel}
-          showLines={showLines}
-          connectCurrentLevel={level > 0}
-          slot={null}
-          contentClassName="min-w-0"
-          contentChromeClassName={rowContentFillClassName}
-        >
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slot={null} contentClassName="min-w-0" contentChromeClassName={rowContentFillClassName}>
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {renderTreeRowIcon(icon, "folder")}
@@ -15640,7 +15736,11 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
         const UnitIcon = unit.icon;
         const unitPrefix = `${unit.id}:`;
         const unitOpenStates = treeOpenStates
-          ? Object.fromEntries(Object.entries(treeOpenStates).filter(([key]) => key.startsWith(unitPrefix)).map(([key, value]) => [key.slice(unitPrefix.length), value]))
+          ? Object.fromEntries(
+              Object.entries(treeOpenStates)
+                .filter(([key]) => key.startsWith(unitPrefix))
+                .map(([key, value]) => [key.slice(unitPrefix.length), value]),
+            )
           : undefined;
         const onUnitOpenStateChange = onTreeOpenStateChange ? (id: string, open: boolean) => onTreeOpenStateChange(`${unitPrefix}${id}`, open) : undefined;
         return (
@@ -15849,9 +15949,7 @@ const CornerPanel: React.FC<CornerPanelProps> = ({
           <div data-dim aria-hidden className={panelChromeFillLayerClass} />
           <div data-dim data-slot="panel-chrome-frame" aria-hidden className={cn(panelChromeFrameLayerClass, visible && panelResizeEdgeAccentClass(resizeSide, isResizing || isResizeHovered))} />
           <UiChromeLabelPolicyProvider policy="always">
-            {showTabBar ? (
-              <PanelTabBar corner={corner} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="corner" direction={flow.block} rootRowOnly={!visible} showActiveColor={visible} />
-            ) : null}
+            {showTabBar ? <PanelTabBar corner={corner} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="corner" direction={flow.block} rootRowOnly={!visible} showActiveColor={visible} /> : null}
           </UiChromeLabelPolicyProvider>
           {visible ? (
             <>
@@ -15859,9 +15957,7 @@ const CornerPanel: React.FC<CornerPanelProps> = ({
                 {/* 🌲 Panel body content never mirrors — trees, labels, and their controls always read left-to-right regardless of which corner hosts them; only the chrome (tab bar, resize handle, panel position) follows the corner's flow. */}
                 <div data-slot="corner-panel-content" dir="ltr" className="flex min-h-0 flex-1 flex-col">
                   <FlowProvider inline="ltr">
-                    {activeTabTrees && activeNode ? (
-                      <PanelTreeUnitsPane corner={corner} tabId={activeNode.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} />
-                    ) : null}
+                    {activeTabTrees && activeNode ? <PanelTreeUnitsPane corner={corner} tabId={activeNode.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} /> : null}
                   </FlowProvider>
                 </div>
               </Scrollable>
@@ -17031,16 +17127,7 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
                 const actionLabel = normalizeEngagementActionText(option.label);
                 const optionControlId = isInternalChromeControlId(option.id) ? undefined : option.id;
                 return (
-                  <ButtonGroupItem
-                    key={option.id}
-                    id={optionControlId}
-                    aria-label={actionLabel}
-                    icon={option.icon}
-                    text={actionLabel}
-                    className={cn(option.pressed && interactiveActiveFillClass)}
-                    onClick={option.onPress}
-                    disabled={option.disabled}
-                  />
+                  <ButtonGroupItem key={option.id} id={optionControlId} aria-label={actionLabel} icon={option.icon} text={actionLabel} className={cn(option.pressed && interactiveActiveFillClass)} onClick={option.onPress} disabled={option.disabled} />
                 );
               })}
             </ButtonGroup>
@@ -17277,14 +17364,7 @@ const Window: React.FC<WindowProps> = ({
         data-active={active ? "true" : undefined}
         onDoubleClick={onDoubleClick}
         onPointerDownCapture={() => onActivate?.()}
-        className={cn(
-          "relative flex w-full min-w-0 flex-col overflow-hidden",
-          fill ? "h-full min-h-0" : "h-auto max-h-full self-start",
-          bgClass,
-          getLevelZClass("window"),
-          loadingBorderStateClass(loading, active),
-          className,
-        )}
+        className={cn("relative flex w-full min-w-0 flex-col overflow-hidden", fill ? "h-full min-h-0" : "h-auto max-h-full self-start", bgClass, getLevelZClass("window"), loadingBorderStateClass(loading, active), className)}
       >
         {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
         <div ref={windowBodyRef} data-slot="window-body" className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}>
@@ -20776,15 +20856,7 @@ function historyRowLaneGuides(columns: readonly HistoryColumn[], laneCount: numb
   return guides;
 }
 
-function HistoryGraphSvg({
-  columns,
-  graphWidth,
-  rowHeight,
-}: {
-  readonly columns: readonly HistoryColumn[];
-  readonly graphWidth: number;
-  readonly rowHeight: number;
-}): React.ReactElement {
+function HistoryGraphSvg({ columns, graphWidth, rowHeight }: { readonly columns: readonly HistoryColumn[]; readonly graphWidth: number; readonly rowHeight: number }): React.ReactElement {
   const laneCount = historyLaneCount(columns);
   const rowById = historyRowIndexByCheckpointId(columns);
   const guides = historyRowLaneGuides(columns, laneCount);
@@ -20797,17 +20869,7 @@ function HistoryGraphSvg({
           const x = historyLaneX(lane, laneCount, graphWidth);
           const y0 = rowIndex * rowHeight;
           const y1 = y0 + rowHeight;
-          return (
-            <line
-              key={`guide-${rowIndex}-${lane}`}
-              x1={x}
-              y1={y0}
-              x2={x}
-              y2={y1}
-              stroke={HISTORY_GRAPH_STROKE}
-              strokeWidth={1}
-            />
-          );
+          return <line key={`guide-${rowIndex}-${lane}`} x1={x} y1={y0} x2={x} y2={y1} stroke={HISTORY_GRAPH_STROKE} strokeWidth={1} />;
         }),
       )}
       {columns.map((column, rowIndex) => {
@@ -20818,54 +20880,20 @@ function HistoryGraphSvg({
         const y0 = rowIndex * rowHeight + rowHeight / 2;
         const y1 = parentRow * rowHeight + rowHeight / 2;
         if (x0 === x1) {
-          return (
-            <line
-              key={`${column.checkpointId}-stem`}
-              x1={x0}
-              y1={y0}
-              x2={x1}
-              y2={y1}
-              stroke={HISTORY_GRAPH_STROKE}
-              strokeWidth={1.5}
-            />
-          );
+          return <line key={`${column.checkpointId}-stem`} x1={x0} y1={y0} x2={x1} y2={y1} stroke={HISTORY_GRAPH_STROKE} strokeWidth={1.5} />;
         }
         const elbowY = (rowIndex + 1) * rowHeight;
-        return (
-          <path
-            key={`${column.checkpointId}-stem`}
-            d={`M ${x0} ${y0} L ${x0} ${elbowY} L ${x1} ${elbowY} L ${x1} ${y1}`}
-            fill="none"
-            stroke={HISTORY_GRAPH_STROKE}
-            strokeWidth={1.5}
-          />
-        );
+        return <path key={`${column.checkpointId}-stem`} d={`M ${x0} ${y0} L ${x0} ${elbowY} L ${x1} ${elbowY} L ${x1} ${y1}`} fill="none" stroke={HISTORY_GRAPH_STROKE} strokeWidth={1.5} />;
       })}
       {columns.map((column, rowIndex) => (
-        <circle
-          key={`${column.checkpointId}-node`}
-          cx={historyLaneX(column.lane, laneCount, graphWidth)}
-          cy={rowIndex * rowHeight + rowHeight / 2}
-          r={3}
-          fill="var(--foreground)"
-        />
+        <circle key={`${column.checkpointId}-node`} cx={historyLaneX(column.lane, laneCount, graphWidth)} cy={rowIndex * rowHeight + rowHeight / 2} r={3} fill="var(--foreground)" />
       ))}
     </svg>
   );
 }
 
 function HistoryRowAuthors({ column }: { readonly column: HistoryColumn }): React.ReactElement {
-  return (
-    <div className="flex shrink-0 -space-x-2">
-      {column.authors.length > 0 ? (
-        column.authors.map((author) => (
-          <TableAvatar key={author.id} id={author.id} name={author.name} icon={author.avatar} />
-        ))
-      ) : (
-        <TableAvatar id="unknown" name="?" />
-      )}
-    </div>
-  );
+  return <div className="flex shrink-0 -space-x-2">{column.authors.length > 0 ? column.authors.map((author) => <TableAvatar key={author.id} id={author.id} name={author.name} icon={author.avatar} />) : <TableAvatar id="unknown" name="?" />}</div>;
 }
 
 function HistoryRowLabels({ column }: { readonly column: HistoryColumn }): React.ReactElement {
@@ -20930,20 +20958,13 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ columns, className, 
                     <HistoryRowLabels column={column} />
                   </div>
                   <div className="relative">
-                    <div
-                      className={cn("pointer-events-none absolute top-1/2 h-px -translate-y-1/2", HISTORY_GRAPH_GUIDE_CLASS)}
-                      style={{ left: 0, width: authorLeft }}
-                      aria-hidden
-                    />
+                    <div className={cn("pointer-events-none absolute top-1/2 h-px -translate-y-1/2", HISTORY_GRAPH_GUIDE_CLASS)} style={{ left: 0, width: authorLeft }} aria-hidden />
                     <div className="absolute top-1/2 -translate-y-1/2" style={{ left: authorLeft }}>
                       <HistoryRowAuthors column={column} />
                     </div>
                   </div>
                 </div>
-                <div
-                  className={cn(HISTORY_ROW_SHELL_CLASS, "flex items-center border-b border-[var(--border)] px-single")}
-                  style={{ gridColumn: 3, gridRow: index + 1 }}
-                >
+                <div className={cn(HISTORY_ROW_SHELL_CLASS, "flex items-center border-b border-[var(--border)] px-single")} style={{ gridColumn: 3, gridRow: index + 1 }}>
                   <span className="min-w-0 truncate text-muted-foreground" title={column.description ?? ""}>
                     {column.description ?? ""}
                   </span>
@@ -23020,21 +23041,19 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
 
   const body =
     children ??
-    (mobile
-      ? mobileFlatStack && mobileFlatStack.children.length > 0
-        ? (
-            <ModeDockContext.Provider value={dockContext}>
-              <ModeDockStack stackPath="" node={mobileFlatStack} windowsById={windowsById} activeWindowId={activeWindowId} mobile />
-            </ModeDockContext.Provider>
-          )
-        : null
-      : maximizedStack ? (
-          <ModeDockContext.Provider value={dockContext}>
-            <ModeDockStack stackPath={maximizedStackPath!} node={maximizedStack} windowsById={windowsById} activeWindowId={activeWindowId} />
-          </ModeDockContext.Provider>
-        ) : (
-          <ModeDockContext.Provider value={dockContext}>{renderModeDockNode(dockOutLayout, "", renderContext)}</ModeDockContext.Provider>
-        ));
+    (mobile ? (
+      mobileFlatStack && mobileFlatStack.children.length > 0 ? (
+        <ModeDockContext.Provider value={dockContext}>
+          <ModeDockStack stackPath="" node={mobileFlatStack} windowsById={windowsById} activeWindowId={activeWindowId} mobile />
+        </ModeDockContext.Provider>
+      ) : null
+    ) : maximizedStack ? (
+      <ModeDockContext.Provider value={dockContext}>
+        <ModeDockStack stackPath={maximizedStackPath!} node={maximizedStack} windowsById={windowsById} activeWindowId={activeWindowId} />
+      </ModeDockContext.Provider>
+    ) : (
+      <ModeDockContext.Provider value={dockContext}>{renderModeDockNode(dockOutLayout, "", renderContext)}</ModeDockContext.Provider>
+    ));
 
   return (
     <div data-slot="mode" data-mobile={mobile ? "true" : undefined} data-dragging={previewDragState ? "true" : undefined} data-maximized-path={maximizedStackPath ?? undefined} className={cn("relative flex h-full min-h-0 w-full flex-col", className)}>
@@ -23615,10 +23634,7 @@ if (import.meta.vitest) {
       const { container } = render(
         <PanelTabBar
           variant="corner"
-          tabs={[
-            singleTreeLeaf({ id: "framework.panel.document", icon: StubIcon, name: "Document", tree: { sections: [] } }),
-            singleTreeLeaf({ id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } }),
-          ]}
+          tabs={[singleTreeLeaf({ id: "framework.panel.document", icon: StubIcon, name: "Document", tree: { sections: [] } }), singleTreeLeaf({ id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } })]}
           activePath={["framework.panel.document"]}
           onActivePathChange={() => {}}
         />,
@@ -23638,10 +23654,7 @@ if (import.meta.vitest) {
           id: "framework.category.workbench",
           icon: StubIcon,
           name: "Workbench",
-          children: [
-            singleTreeLeaf({ id: "framework.panel.document", icon: StubIcon, name: "Document", tree: { sections: [] } }),
-            singleTreeLeaf({ id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } }),
-          ],
+          children: [singleTreeLeaf({ id: "framework.panel.document", icon: StubIcon, name: "Document", tree: { sections: [] } }), singleTreeLeaf({ id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } })],
         },
         {
           kind: "branch",
@@ -23731,10 +23744,7 @@ if (import.meta.vitest) {
 
     it("CornerPanel's tabs double as the fold toggle: picking a tab opens a folded panel, picking the active tab folds it", () => {
       const StubIcon = (): null => null;
-      const tabs: PanelTabNode[] = [
-        singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } }),
-        singleTreeLeaf({ id: "tab-b", icon: StubIcon, name: "Tab B", tree: { sections: [] } }),
-      ];
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: StubIcon, name: "Tab B", tree: { sections: [] } })];
       const onVisibleChange = vi.fn();
       const { container, rerender } = render(<CornerPanel corner="top-right" visible={false} onVisibleChange={onVisibleChange} tabs={tabs} activeTabPath={["tab-a"]} />);
       const tabAButton = container.querySelector('button[id="tab-a"]') as HTMLElement;
@@ -23798,10 +23808,7 @@ if (import.meta.vitest) {
           id: "root-a",
           icon: StubIcon,
           name: "Root A",
-          children: [
-            { kind: "branch", id: "child-a", icon: StubIcon, name: "Child A", children: [leaf("grandchild-a", "Grandchild A")] },
-            leaf("child-b", "Child B"),
-          ],
+          children: [{ kind: "branch", id: "child-a", icon: StubIcon, name: "Child A", children: [leaf("grandchild-a", "Grandchild A")] }, leaf("child-b", "Child B")],
         },
         { kind: "branch", id: "root-b", icon: StubIcon, name: "Root B", children: [leaf("child-c", "Child C")] },
       ];
@@ -23875,9 +23882,7 @@ if (import.meta.vitest) {
 
     it("CornerPanel forwards drill-down memory through pathMemory/onPathMemoryChange when controlled", () => {
       const StubIcon = (): null => null;
-      const tabs: PanelTabNode[] = [
-        { kind: "branch", id: "root-a", icon: StubIcon, name: "Root A", children: [singleTreeLeaf({ id: "leaf-a", icon: StubIcon, name: "Leaf A", tree: { sections: [] } })] },
-      ];
+      const tabs: PanelTabNode[] = [{ kind: "branch", id: "root-a", icon: StubIcon, name: "Root A", children: [singleTreeLeaf({ id: "leaf-a", icon: StubIcon, name: "Leaf A", tree: { sections: [] } })] }];
       let memory: Readonly<Record<string, string>> = {};
       const onPathMemoryChange = vi.fn((next: Readonly<Record<string, string>>) => {
         memory = next;
@@ -23954,7 +23959,13 @@ if (import.meta.vitest) {
         );
       };
       expect(renderToStaticMarkup(<Probe />)).toContain("ltr/down");
-      expect(renderToStaticMarkup(<FlowProvider inline="rtl" block="up"><Probe /></FlowProvider>)).toContain("rtl/up");
+      expect(
+        renderToStaticMarkup(
+          <FlowProvider inline="rtl" block="up">
+            <Probe />
+          </FlowProvider>,
+        ),
+      ).toContain("rtl/up");
       expect(
         renderToStaticMarkup(
           <FlowProvider inline="rtl" block="up">
@@ -25898,9 +25909,7 @@ if (import.meta.vitest) {
       const onSaveLayout = vi.fn();
       const onApplyLayout = vi.fn();
       const onCompactChange = vi.fn();
-      const { container } = render(
-        <ShellDisplayPanel layouts={[{ id: "default", label: "Default" }]} activeLayoutId="default" compact={false} onSaveLayout={onSaveLayout} onApplyLayout={onApplyLayout} onCompactChange={onCompactChange} />,
-      );
+      const { container } = render(<ShellDisplayPanel layouts={[{ id: "default", label: "Default" }]} activeLayoutId="default" compact={false} onSaveLayout={onSaveLayout} onApplyLayout={onApplyLayout} onCompactChange={onCompactChange} />);
       fireEvent.click(container.querySelector("#shell-display-panel\\.save")!);
       fireEvent.click(container.querySelector("#shell-display-panel\\.apply")!);
       fireEvent.click(container.querySelector("#shell-display-panel\\.compact")!);
@@ -25913,7 +25922,15 @@ if (import.meta.vitest) {
   describe("ShellSettingsPanel", () => {
     it("renders without crashing given minimal props", () => {
       const markup = renderToStaticMarkup(
-        <ShellSettingsPanel locale="en" locales={[{ id: "en", label: "English" }, { id: "de", label: "Deutsch" }]} theme="system" expertise={Expertise.NORMAL} />,
+        <ShellSettingsPanel
+          locale="en"
+          locales={[
+            { id: "en", label: "English" },
+            { id: "de", label: "Deutsch" },
+          ]}
+          theme="system"
+          expertise={Expertise.NORMAL}
+        />,
       );
       expect(markup).toContain('data-slot="shell-settings-panel"');
       expect(markup).toContain("English");
@@ -27546,7 +27563,27 @@ if (treeVitest) {
     });
 
     it("resolves toolbar collection ids in en and de", () => {
-      const categories: readonly UiToolbarParentCategory[] = ["history", "hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform", "create", "view", "actions", "settings", "methods", "mode", "targets", "export", "tools", "sync"];
+      const categories: readonly UiToolbarParentCategory[] = [
+        "history",
+        "hand",
+        "selection",
+        "lasso",
+        "filter",
+        "open",
+        "save",
+        "transfer",
+        "transform",
+        "create",
+        "view",
+        "actions",
+        "settings",
+        "methods",
+        "mode",
+        "targets",
+        "export",
+        "tools",
+        "sync",
+      ];
       for (const locale of ["en", "de"] as const) {
         void uiI18n.changeLanguage(locale);
         for (const category of categories) {
@@ -27837,7 +27874,10 @@ if (treeVitest) {
           "top-left": [{ id: "workbench", children: [{ id: "document", trees: ["document.tree"] }] }],
           "top-right": [],
           "bottom-left": [],
-          "bottom-right": [{ id: "catalogue", trees: ["catalogue.tree"] }, { id: "settings", trees: ["settings.tree"] }],
+          "bottom-right": [
+            { id: "catalogue", trees: ["catalogue.tree"] },
+            { id: "settings", trees: ["settings.tree"] },
+          ],
         },
       };
       const afterMove = applyDockSkeleton(defaultDock, moved);

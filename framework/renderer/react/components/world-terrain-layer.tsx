@@ -190,15 +190,7 @@ class TerrainTileRenderer {
 //#region WorldTerrainLayer
 /** ⛰️ Renders GIS 3D terrain as chunked DEM-tile meshes inside the shared `World3d` viewport —
  * mounted alongside `WorldInstancesLayer` when `scene.terrainJson` is present. */
-export function WorldTerrainLayer({
-  terrainJson,
-  cameraPosition,
-  cameraTarget,
-}: {
-  readonly terrainJson: string | undefined;
-  readonly cameraPosition: readonly [number, number, number];
-  readonly cameraTarget: readonly [number, number, number];
-}) {
+export function WorldTerrainLayer({ terrainJson, cameraPosition, cameraTarget }: { readonly terrainJson: string | undefined; readonly cameraPosition: readonly [number, number, number]; readonly cameraTarget: readonly [number, number, number] }) {
   const style = useMemo(() => parseWorldTerrainStyle(terrainJson), [terrainJson]);
   const rendererRef = useRef<TerrainTileRenderer | null>(null);
   const [geometries, setGeometries] = useState<Map<string, BufferGeometry>>(new Map());

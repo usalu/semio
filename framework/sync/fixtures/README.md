@@ -11,12 +11,18 @@ by two harnesses to keep the Rust actor and its TypeScript twin (WS-E `backbone-
 
 ```jsonc
 {
-  "name": "basic-remote-ops",
-  "schema": "demo/v1",
-  "documentId": "fixture-basic",
-  "inbound": [ /* FixtureInbound[] — stimuli applied in order */ ],
-  "expectedEvents": [ /* DocumentEvent variant tags, in order */ ],
-  "expectedEditIds": [ /* edit ids expected in the timeline after replay */ ]
+ "name": "basic-remote-ops",
+ "schema": "demo/v1",
+ "documentId": "fixture-basic",
+ "inbound": [
+  /* FixtureInbound[] — stimuli applied in order */
+ ],
+ "expectedEvents": [
+  /* DocumentEvent variant tags, in order */
+ ],
+ "expectedEditIds": [
+  /* edit ids expected in the timeline after replay */
+ ],
 }
 ```
 

@@ -2,24 +2,24 @@
 name: Weighted window layout spacing
 overview: Replace the cover page's mismatched, partly-accidental spacing (hardcoded cm heights, a separate horizontal gutter, and an unrelated vertical skip that sometimes isn't even applied) with one canonical gap plus weight-normalized row/column/stack sizing, so every gap on the page is identical and every row/column height/width is a proportion of the real available space instead of a hand-tuned absolute length.
 todos:
-  - id: gap-token
-    content: Add canonical \semio@window@gap length in semio-window.sty, remove \semio@window@row@gutter
-    status: completed
-  - id: weighted-rows
-    content: Rewrite SemioWindowRowTwo/Three to take per-column weights normalized against linewidth minus gaps; drop the *Fixed variants
-    status: completed
-  - id: window-stack
-    content: Add SemioWindowStackBegin/Item/End weighted vertical stack macros (expl3 seq+fp/dim), emitting explicit \semio@window@gap vspace between items
-    status: completed
-  - id: coverpages-rewrite
-    content: Rewire makecoverpages to set \semio@window@gap once, wrap all rows/windows in a SemioWindowStack against \textheight with weights equal to today's cm literals, and update row calls to the new weighted signature
-    status: completed
-  - id: verify
-    content: Build zwischenbericht light+dark, rasterize cover page, pixel-measure gaps to confirm horizontal == vertical == consistent across rows
-    status: completed
-  - id: ticket
-    content: Open new ticket under goal r2602/updateddocs, store temp verification files there, close with summary of touched files
-    status: completed
+ - id: gap-token
+   content: Add canonical \semio@window@gap length in semio-window.sty, remove \semio@window@row@gutter
+   status: completed
+ - id: weighted-rows
+   content: Rewrite SemioWindowRowTwo/Three to take per-column weights normalized against linewidth minus gaps; drop the *Fixed variants
+   status: completed
+ - id: window-stack
+   content: Add SemioWindowStackBegin/Item/End weighted vertical stack macros (expl3 seq+fp/dim), emitting explicit \semio@window@gap vspace between items
+   status: completed
+ - id: coverpages-rewrite
+   content: Rewire makecoverpages to set \semio@window@gap once, wrap all rows/windows in a SemioWindowStack against \textheight with weights equal to today's cm literals, and update row calls to the new weighted signature
+   status: completed
+ - id: verify
+   content: Build zwischenbericht light+dark, rasterize cover page, pixel-measure gaps to confirm horizontal == vertical == consistent across rows
+   status: completed
+ - id: ticket
+   content: Open new ticket under goal r2602/updateddocs, store temp verification files there, close with summary of touched files
+   status: completed
 isProject: false
 ---
 
@@ -30,8 +30,8 @@ isProject: false
 `\makecoverpages` in [print/tex/semio-components.sty](print/tex/semio-components.sty) (lines 52-172) currently mixes **three different, uncoordinated spacing mechanisms**:
 
 1. **Horizontal gutter between columns in a row** — `\semio@window@row@gutter`, hardcoded to `\semio@spacing@single` (`0.2em`), used via `\hspace` in `[SemioWindowRowTwo/Three(Fixed)](print/tex/semio-window.sty:1932-2041)`.
-2. **Vertical gap between two stacked *standalone* `Window`s** — `\semio_block_sep_after:` ([print/tex/semio-window.sty:256-265](print/tex/semio-window.sty)) emits `\vskip\semio@block@sep@skip`, which `\makecoverpages` overrides to a flat `4pt` (line 57). But this only fires when `\l_semio_window_row_bool` is false.
-3. **Vertical gap between two `SemioWindowRow*Fixed` blocks (or any `Window[..., row]` used standalone)** — because `row` is set, mechanism #2 is *skipped entirely* (`\bool_if:NF \l_semio_window_row_bool`), so the gap between e.g. the "Zukunft Bau/Titel" row and the "Untertitel" window below it is whatever `\parskip`/`\baselineskip` happens to be at that point — an uncontrolled, font-size-dependent value, not a design token at all.
+2. **Vertical gap between two stacked _standalone_ `Window`s** — `\semio_block_sep_after:` ([print/tex/semio-window.sty:256-265](print/tex/semio-window.sty)) emits `\vskip\semio@block@sep@skip`, which `\makecoverpages` overrides to a flat `4pt` (line 57). But this only fires when `\l_semio_window_row_bool` is false.
+3. **Vertical gap between two `SemioWindowRow*Fixed` blocks (or any `Window[..., row]` used standalone)** — because `row` is set, mechanism #2 is _skipped entirely_ (`\bool_if:NF \l_semio_window_row_bool`), so the gap between e.g. the "Zukunft Bau/Titel" row and the "Untertitel" window below it is whatever `\parskip`/`\baselineskip` happens to be at that point — an uncontrolled, font-size-dependent value, not a design token at all.
 
 On top of that, every row height on the cover is a hand-tuned absolute literal (`1.2cm`, `1.15cm`, `10.8cm`, `1.05cm`, `2.75cm`, `5.8cm`, passed to `SemioWindowRow*Fixed`), so nothing is guaranteed to sum to the actual available page height, and columns inside a row are always a forced 50/50 or 33/33/33 split with no way to express intentional asymmetry.
 
@@ -48,7 +48,7 @@ Introduce one canonical gap and a weight-normalization convention, used identica
   - `\SemioWindowStackItem{<weight>}{<content>}` — appends one item (content is typically a `Window` or a `SemioWindowRow*` call).
   - `\SemioWindowStackEnd` — sums the weights, then for each item: computes `h_i = w_i/Σw × (total − (count−1)·\semio@window@gap)`, calls `\semio@window@row@body@h@set{h_i}` (already exists, currently used ad hoc), typesets the stored content, resets, and emits an explicit `\vspace{\semio@window@gap}` between items (never after the last) — a real, exact skip instead of relying on `\par`/`\baselineskip`. This directly fixes mechanism #3 above.
 
-Net effect: every row's height and every column's width become a *proportion* of real, known available space, weights close to today's cm numbers reproduce the same visual proportions, and conditional/optional rows (Beschreibung, DOI, institution row, meta row) simply drop out of the weight sum — remaining rows proportionally fill the freed space instead of leaving dead space or overflowing.
+Net effect: every row's height and every column's width become a _proportion_ of real, known available space, weights close to today's cm numbers reproduce the same visual proportions, and conditional/optional rows (Beschreibung, DOI, institution row, meta row) simply drop out of the weight sum — remaining rows proportionally fill the freed space instead of leaving dead space or overflowing.
 
 ```mermaid
 flowchart TB
@@ -66,8 +66,6 @@ flowchart TB
   Resolve --> Gap
   Row --> Gap
 ```
-
-
 
 ## Changes
 

@@ -30,11 +30,7 @@ async function waitForDev(url) {
 }
 
 function ignorableConsole(text) {
-  return (
-    text.includes("forms-module-procedural must declare at least one window kind") ||
-    text.includes("NoCompatibleDevice") ||
-    text.includes("RUST_BACKTRACE")
-  );
+  return text.includes("forms-module-procedural must declare at least one window kind") || text.includes("NoCompatibleDevice") || text.includes("RUST_BACKTRACE");
 }
 
 async function verifyCase({ renderer, port, plugin }) {
@@ -75,10 +71,16 @@ async function verifyCase({ renderer, port, plugin }) {
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: bootTimeoutMs });
     if (renderer === "wgpu") {
       await page.waitForSelector("#semio-wgpu-canvas", { timeout: bootTimeoutMs });
-      await page.waitForFunction(() => {
-        const logs = [];
-        return true;
-      }, undefined, { timeout: 5000 }).catch(() => {});
+      await page
+        .waitForFunction(
+          () => {
+            const logs = [];
+            return true;
+          },
+          undefined,
+          { timeout: 5000 },
+        )
+        .catch(() => {});
       await page.waitForTimeout(3000);
     } else {
       await page.waitForTimeout(4000);

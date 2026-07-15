@@ -3184,11 +3184,7 @@ export function resolveCommittedMeshMaterialProps(
 } {
   const targetKey = solidId ? `solid:${solidId}` : null;
   const hovered = targetKey ? spatialHoverKeysMatch(hoveredTargetKey, targetKey) : false;
-  const selected = targetKey
-    ? selectedTargetKeys
-      ? [...selectedTargetKeys].some((key) => spatialHoverKeysMatch(key, targetKey))
-      : spatialHoverKeysMatch(selectedTargetKey, targetKey)
-    : false;
+  const selected = targetKey ? (selectedTargetKeys ? [...selectedTargetKeys].some((key) => spatialHoverKeysMatch(key, targetKey)) : spatialHoverKeysMatch(selectedTargetKey, targetKey)) : false;
 
   const palette = spatialSceneColors();
   if (selected) {
@@ -3259,11 +3255,7 @@ export function TessellatedCommitMesh({
 }: TessellatedCommitMeshProps): ReactNode {
   const targetKey = solidId ? `solid:${solidId}` : null;
   const hovered = targetKey ? spatialHoverKeysMatch(hoveredTargetKey, targetKey) : false;
-  const selected = targetKey
-    ? selectedTargetKeys
-      ? [...selectedTargetKeys].some((key) => spatialHoverKeysMatch(key, targetKey))
-      : spatialHoverKeysMatch(selectedTargetKey, targetKey)
-    : false;
+  const selected = targetKey ? (selectedTargetKeys ? [...selectedTargetKeys].some((key) => spatialHoverKeysMatch(key, targetKey)) : spatialHoverKeysMatch(selectedTargetKey, targetKey)) : false;
 
   const geometryKey = meshTransferContentKey(data);
   const geometry = reactHostPort.useMemo(() => {
@@ -7274,7 +7266,7 @@ if (import.meta.vitest) {
         color: "#ff00ff",
         edgeColor: "#00ffff",
         opacity: 0.5,
-        pattern: { kind: "solid" }
+        pattern: { kind: "solid" },
       };
       const styleProps = resolveCommittedMeshMaterialProps(style, undefined, solidId, null, null, null);
       expect(styleProps.color).toBe("#ff00ff");

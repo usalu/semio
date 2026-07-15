@@ -5,6 +5,7 @@
 Root cause: pre-chip `\vspace` inside `\titleformat` `[block]` never reached the vertical list between body text and the chip. The gap was trapped inside the title box.
 
 Solution:
+
 - **Before chip (2× single unit):** `\titlespacing*{#1}{0pt}{\semio@block@sep@before@skip}{...}` for all titlesec headings; `\semio@heading@block@before` uses the same skip for `SemioNest` and window blocks.
 - **After chip (1× single unit):** `\titlespacing` after-sep and `\semio@heading@block@after` for nested paragraphs.
 - Removed `block@sep@done` flag and internal `row@wrap` trailing vskip (single source of truth per edge).

@@ -410,10 +410,10 @@ export async function ensureDrawingWasmLoaded(): Promise<DrawingWasmModule> {
     drawingWasm = mod;
     return mod;
   }
-  const [
-    { default: initFlow, render_drawing_scene, export_drawing_svg, export_drawing_pdf, dispose_drawing, trace_drawing_bitmap, boolean_drawing_segments, export_drawing_dwg, import_drawing_dwg },
-    { default: wasmUrl },
-  ] = await Promise.all([import("../../../flow/core/rs/pkg/flow_core.js"), import("../../../flow/core/rs/pkg/flow_core_bg.wasm?url")]);
+  const [{ default: initFlow, render_drawing_scene, export_drawing_svg, export_drawing_pdf, dispose_drawing, trace_drawing_bitmap, boolean_drawing_segments, export_drawing_dwg, import_drawing_dwg }, { default: wasmUrl }] = await Promise.all([
+    import("../../../flow/core/rs/pkg/flow_core.js"),
+    import("../../../flow/core/rs/pkg/flow_core_bg.wasm?url"),
+  ]);
   if (typeof render_drawing_scene !== "function" || typeof export_drawing_svg !== "function" || typeof export_drawing_pdf !== "function" || typeof dispose_drawing !== "function") {
     throw new Error("flow_core drawing exports missing — rebuild flow/core wasm");
   }

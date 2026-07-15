@@ -1699,6 +1699,7 @@ mod tests {
             default_layout: layout,
             terminologies: vec![],
             introduction: None,
+            dialogs: Vec::new(),
         }
     }
 

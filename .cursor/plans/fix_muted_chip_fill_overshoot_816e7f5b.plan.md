@@ -2,18 +2,18 @@
 name: Fix Muted Chip Fill Overshoot
 overview: The muted (non-colored) window chips render their canvas-colored fill wider and taller than their border because the fill uses the default `\fboxsep` padding instead of `0pt`, causing overshoot to the right and bottom. The colored chips already reset `\fboxsep` to `0pt` before painting, which is why they look correct.
 todos:
-  - id: fix-fboxsep
-    content: Add \setlength{\fboxsep}{0pt} guard around \colorbox in \semio@heading@cap@muted@core in print/tex/semio-window.sty
-    status: completed
-  - id: rebuild
-    content: Rebuild zwischenbericht via bun nx run @semio-tech/mit-bestand-bericht:build
-    status: completed
-  - id: verify
-    content: Re-render and visually verify paragraph chips and window header-row chips no longer overshoot
-    status: completed
-  - id: update-ticket
-    content: Update verify-log.md and ticket with fix summary and new screenshots
-    status: completed
+ - id: fix-fboxsep
+   content: Add \setlength{\fboxsep}{0pt} guard around \colorbox in \semio@heading@cap@muted@core in print/tex/semio-window.sty
+   status: completed
+ - id: rebuild
+   content: Rebuild zwischenbericht via bun nx run @semio-tech/mit-bestand-bericht:build
+   status: completed
+ - id: verify
+   content: Re-render and visually verify paragraph chips and window header-row chips no longer overshoot
+   status: completed
+ - id: update-ticket
+   content: Update verify-log.md and ticket with fix summary and new screenshots
+   status: completed
 isProject: false
 ---
 
@@ -59,6 +59,7 @@ In [print/tex/semio-window.sty](print/tex/semio-window.sty), compare the two chi
 Because the colorbox becomes `\semio@window@cap@w + 2\fboxsep` wide and `\semio@window@cap@body@h + 2\fboxsep` tall, but it's placed inside a rigid `\hbox to \semio@window@cap@w` / `\vbox to \semio@chrome@titlebar@height`, the extra padding cannot shrink away — it overflows past the target box on the right and bottom. The border strokes (`\semio@window@stroke@h`/`\semio@window@stroke@v`, drawn as `\rule`s) are unaffected since they don't go through `\colorbox`, which is why the border looks correct while the fill overshoots.
 
 This single macro (`\semio@heading@cap@muted@core`) is shared by:
+
 - `\semio@heading@cap@muted` and `\semio@heading@cap@muted@tab` — used for muted paragraph chips (`Recherche`, `Bauteilbörsen`) and muted number/title chips in the header row (first line) of kind windows (`Blockquote`, `Image`, etc.) via `\semio@window@header@muted`.
 
 So fixing it in one place fixes both reported symptoms.

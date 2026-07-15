@@ -2,30 +2,30 @@
 name: Composable Window Content Layout
 overview: "Extend the semio print window system (`print/tex/semio-window.sty`) so every window kind (`Window`, `Image`, `Photo`, `Figure`, `Table`, `Theorem`, etc.) accepts fully composable, orthogonal layout keys for content placement: a 9-point `anchor`, a `justify` text-alignment override, a `text-size` (fixed or auto-fit) mode, and a new `\\SemioImage` primitive with an `image-fit` mode (`contain`/`cover`/`fill`/`none`). All keys combine freely on the same environment call."
 todos:
-  - id: ticket
-    content: Open repo ticket (MCP) once project-0-semio-repo is reachable, associate with print goal
-    status: cancelled
-  - id: state
-    content: "Add height/text-size/text-fit/image-fit expl3 state vars; broaden anchor reset into semio_window_content_state_reset: and call it from both kind-path and generic-path begins"
-    status: completed
-  - id: keys
-    content: Extend semio/window/kind keys_define with justify, height, text-size, image-fit
-    status: completed
-  - id: open-helper
-    content: Add semio_window_tcb_open:n helper wiring valign/halign/height/fit into all three non-row tcolorbox opens; add PackageError for text-size=fit without height
-    status: completed
-  - id: textsize-apply
-    content: Emit fontsize selection right after box opens when text-size is an explicit dimension
-    status: completed
-  - id: semioimage
-    content: Implement \SemioImage with contain/cover/fill/none branches, cover via settowidth/settototalheight + trim/clip math
-    status: completed
-  - id: dogfood
-    content: Migrate Arbeitsprobe cover-page image in semio-components.sty to Window[height=...] + \SemioImage
-    status: completed
-  - id: demo-verify
-    content: Extend report.content.tex demo, compile templates, screenshot pages into ticket folder as verification
-    status: completed
+ - id: ticket
+   content: Open repo ticket (MCP) once project-0-semio-repo is reachable, associate with print goal
+   status: cancelled
+ - id: state
+   content: "Add height/text-size/text-fit/image-fit expl3 state vars; broaden anchor reset into semio_window_content_state_reset: and call it from both kind-path and generic-path begins"
+   status: completed
+ - id: keys
+   content: Extend semio/window/kind keys_define with justify, height, text-size, image-fit
+   status: completed
+ - id: open-helper
+   content: Add semio_window_tcb_open:n helper wiring valign/halign/height/fit into all three non-row tcolorbox opens; add PackageError for text-size=fit without height
+   status: completed
+ - id: textsize-apply
+   content: Emit fontsize selection right after box opens when text-size is an explicit dimension
+   status: completed
+ - id: semioimage
+   content: Implement \SemioImage with contain/cover/fill/none branches, cover via settowidth/settototalheight + trim/clip math
+   status: completed
+ - id: dogfood
+   content: Migrate Arbeitsprobe cover-page image in semio-components.sty to Window[height=...] + \SemioImage
+   status: completed
+ - id: demo-verify
+   content: Extend report.content.tex demo, compile templates, screenshot pages into ticket folder as verification
+   status: completed
 isProject: false
 ---
 
@@ -41,11 +41,11 @@ Additionally `\semio_window_kind_begin:nnn` never calls `\semio_window_anchor_re
 
 Keep everything on the single existing key module `semio / window / kind` (already the funnel for every `[...]` option on `Window`/`Image`/`Photo`/`Figure`/... ) so one option list stays the single source of truth, and make the underlying mechanisms fully orthogonal so any combination composes:
 
-- `**anchor**` (existing 9-point choice) → maps to tcolorbox's native `valign` (`top|center|bottom`) + `halign` (`left|center|right`). This is the *block position* of content inside a window whose `height` exceeds its natural content height.
+- `**anchor**` (existing 9-point choice) → maps to tcolorbox's native `valign` (`top|center|bottom`) + `halign` (`left|center|right`). This is the _block position_ of content inside a window whose `height` exceeds its natural content height.
 - `**justify**` (new choice: `left|center|right|justify`) → overrides only the `halign` component. Independent of `anchor`, so `anchor=s, justify=justify` is valid: block pinned to the bottom, paragraph text fully justified rather than following the compass's implied alignment. Because keys are processed in call order, whichever of `anchor`/`justify` appears later in the option list wins for `halign` — standard, predictable l3keys/tcolorbox semantics.
 - `**height**` (new, dim) → forwarded as tcolorbox's own `height=` on the box. Without it, `anchor`'s vertical component and any image `cover`/`fill` sizing have nothing to work against, so this is the key that "gives space" for the others to use.
 - `**text-size**` (new: a dimension, or the literal `fit`) → `text-size=14pt` issues `\fontsize{14pt}{14pt}\selectfont` (matches this file's existing tight chrome-typography convention, e.g. `\semio@panel@font`) right after the box opens. `text-size=fit` instead adds tcolorbox's `fit` key (from the already-loaded `fitting` library, `\tcbuselibrary{skins,breakable,fitting}` at line 17) so the box's font size auto-scales to fill its dimensions — this requires a fixed `height`, so `text-size=fit` without `height=` raises a `\PackageError` (no silent fallback, per repo conventions). `fit` also forces `breakable=false` on that box (the fitting library cannot break boxes).
-- `**image-fit**` (new choice: `contain` default | `cover` | `fill` | `none`) → sets the *default* fit mode that `\SemioImage` (new command) uses inside that window; `\SemioImage` also accepts a local override so a single window/row can mix fit modes across multiple images.
+- `**image-fit**` (new choice: `contain` default | `cover` | `fill` | `none`) → sets the _default_ fit mode that `\SemioImage` (new command) uses inside that window; `\SemioImage` also accepts a local override so a single window/row can mix fit modes across multiple images.
 
 All four new/reworked keys reset to safe no-op defaults (`valign=top`, `halign=justify` — matching current native tcolorbox/LaTeX defaults, **not** `left`, to avoid silently de-justifying every existing window's body text) at the start of every window, in both the kind-path and the generic path.
 
@@ -62,8 +62,6 @@ flowchart TB
   fontsize --> compose
   semioimage --> compose
 ```
-
-
 
 ## Implementation
 

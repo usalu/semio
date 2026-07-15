@@ -152,9 +152,7 @@ function reduceStoryPuzzle2dAction(state: StoryPuzzle2dState, action: string, ar
     }
     case "duplicateSelection": {
       const selected = new Set(runtime.selectedIds);
-      const clones = fixture.nodes
-        .filter((node) => selected.has(node.id))
-        .map((node) => ({ ...node, id: `${node.id}-copy`, x: (node.x as number) + 24, y: (node.y as number) + 24 }));
+      const clones = fixture.nodes.filter((node) => selected.has(node.id)).map((node) => ({ ...node, id: `${node.id}-copy`, x: (node.x as number) + 24, y: (node.y as number) + 24 }));
       if (clones.length === 0) return state;
       return { fixture: { ...fixture, nodes: [...fixture.nodes, ...clones] }, runtime: { ...runtime, selectedIds: clones.map((clone) => clone.id) } };
     }
@@ -229,10 +227,7 @@ function Puzzle2dBoardStoryHost({ initialFixture, initialRuntime, interactive }:
   }, []);
 
   const node = useMemo(() => buildStorySceneNode(state, interactive), [state, interactive]);
-  const debug = useMemo(
-    () => JSON.stringify({ selection: state.runtime.selectedIds, camera: state.fixture.camera, activeTool: state.runtime.activeTool, nodeCount: state.fixture.nodes.length, edgeCount: state.fixture.edges.length }),
-    [state],
-  );
+  const debug = useMemo(() => JSON.stringify({ selection: state.runtime.selectedIds, camera: state.fixture.camera, activeTool: state.runtime.activeTool, nodeCount: state.fixture.nodes.length, edgeCount: state.fixture.edges.length }), [state]);
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>

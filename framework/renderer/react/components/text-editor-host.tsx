@@ -332,12 +332,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { reado
 
   return (
     <div className="relative min-h-0 flex-1">
-      <GraphWasmCanvas
-        className="absolute inset-0"
-        sessionFactory={sessionFactory}
-        onSessionReady={onSessionReady}
-        enablePointer={false}
-      />
+      <GraphWasmCanvas className="absolute inset-0" sessionFactory={sessionFactory} onSessionReady={onSessionReady} enablePointer={false} />
       <div
         className="absolute inset-0"
         onPointerDown={(event) => {
@@ -502,10 +497,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { reado
               const session = sessionRef.current;
               const position = session ? caretScreenPosition(session) : null;
               return (
-                <div
-                  className="pointer-events-auto absolute z-50 max-h-48 min-w-40 overflow-auto rounded border border-border bg-popover p-1 shadow-md"
-                  style={position ? { left: position.x, top: position.y + 18 } : { left: 12, top: 12 }}
-                >
+                <div className="pointer-events-auto absolute z-50 max-h-48 min-w-40 overflow-auto rounded border border-border bg-popover p-1 shadow-md" style={position ? { left: position.x, top: position.y + 18 } : { left: 12, top: 12 }}>
                   {completions.map((item, index) => (
                     <button
                       key={`${item.label}-${index}`}

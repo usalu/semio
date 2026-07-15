@@ -352,7 +352,10 @@ export const RecursiveCategoryGroups: Story = {
   args: { children: null },
   render: () => (
     <div className="flex flex-col items-start gap-double">
-      <span className="text-xs text-muted-foreground">A window's own bottom-left panel: only window-scoped categories (selection, tools). Click a category to expand a line above it; click the active one again to collapse it. Only one group is active per level, and "Tools" recurses into a second picker.</span>
+      <span className="text-xs text-muted-foreground">
+        A window's own bottom-left panel: only window-scoped categories (selection, tools). Click a category to expand a line above it; click the active one again to collapse it. Only one group is active per level, and "Tools" recurses into a second
+        picker.
+      </span>
       <CategoryGroupsDemo tree={WINDOW_CATEGORY_DEMO_TREE} direction="up" />
     </div>
   ),
@@ -363,7 +366,10 @@ export const ModeWideFooterCategories: Story = {
   args: { children: null },
   render: () => (
     <div className="flex flex-col items-start gap-double">
-      <span className="text-xs text-muted-foreground">Categories that apply regardless of which window has focus (actions, history, sync — e.g. File/Folder/Remote grouped under "Sync") render once in the shared footer instead of being duplicated into every window's panel. Same recursive, one-active-per-level picker, laid out horizontally.</span>
+      <span className="text-xs text-muted-foreground">
+        Categories that apply regardless of which window has focus (actions, history, sync — e.g. File/Folder/Remote grouped under "Sync") render once in the shared footer instead of being duplicated into every window's panel. Same recursive,
+        one-active-per-level picker, laid out horizontally.
+      </span>
       <CategoryGroupsDemo tree={FOOTER_CATEGORY_DEMO_TREE} direction="inline" />
     </div>
   ),

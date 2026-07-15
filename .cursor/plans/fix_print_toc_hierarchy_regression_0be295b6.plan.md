@@ -2,21 +2,21 @@
 name: Fix Print TOC Hierarchy Regression
 overview: Restore the full TOC/register hierarchy rendering in the semio print pipeline, which was accidentally regressed to a single hardcoded row and a 5-row cap during the Jul 9 "TOC/register empty-row fix" commit.
 todos:
-  - id: reopen-ticket
-    content: Reopen TOC-SEMIO-WINDOW-TABLES ticket via repo mcp (read repo://goals first if needed)
-    status: completed
-  - id: fix-materialize
-    content: Restore dynamic loop bound in semio_window_register_body_materialize:n (print/tex/semio-window.sty line ~66)
-    status: completed
-  - id: fix-render-toc
-    content: Restore \csname semio@register@body@toc\endcsname in \semio@render@toc (print/tex/semio-window.sty line ~891)
-    status: completed
-  - id: rebuild-verify
-    content: Rebuild zwischenbericht PDF and verify full TOC hierarchy renders on page 2 via pdfjs text extraction
-    status: completed
-  - id: close-ticket
-    content: Close ticket with summary and list of touched files
-    status: completed
+ - id: reopen-ticket
+   content: Reopen TOC-SEMIO-WINDOW-TABLES ticket via repo mcp (read repo://goals first if needed)
+   status: completed
+ - id: fix-materialize
+   content: Restore dynamic loop bound in semio_window_register_body_materialize:n (print/tex/semio-window.sty line ~66)
+   status: completed
+ - id: fix-render-toc
+   content: Restore \csname semio@register@body@toc\endcsname in \semio@render@toc (print/tex/semio-window.sty line ~891)
+   status: completed
+ - id: rebuild-verify
+   content: Rebuild zwischenbericht PDF and verify full TOC hierarchy renders on page 2 via pdfjs text extraction
+   status: completed
+ - id: close-ticket
+   content: Close ticket with summary and list of touched files
+   status: completed
 isProject: false
 ---
 
@@ -24,7 +24,7 @@ isProject: false
 
 The semio print TOC is not LaTeX's native `\tableofcontents` mechanism — it's a custom `.sctoc`-backed register table (Window + `SemioTableRegister`), populated by every tracked heading (section/subsection/subsubsection/paragraph) via `\semio_window_toc_append:nnn` in [print/tex/semio-window.sty](print/tex/semio-window.sty). For `zwischenbericht`, `dist/zwischenbericht.sctoc` correctly contains 110 entries (all sections/subsections/paragraphs), so the data pipeline is intact.
 
-The regression is purely in **rendering**, introduced in commit `96cf4167` ("Print TOC/register empty-row fix", Jul 9 20:03) while debugging the *original* empty-cell bug (ticket `TOC-SEMIO-WINDOW-TABLES`, now closed). Two debug artifacts were left in place instead of being reverted:
+The regression is purely in **rendering**, introduced in commit `96cf4167` ("Print TOC/register empty-row fix", Jul 9 20:03) while debugging the _original_ empty-cell bug (ticket `TOC-SEMIO-WINDOW-TABLES`, now closed). Two debug artifacts were left in place instead of being reverted:
 
 1. **`\semio@render@toc` hardcodes one row** instead of using the materialized body:
 

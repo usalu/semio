@@ -1,6 +1,7 @@
 # Puzzle family migration (WS-F Wave 2a)
 
 ## Domain findings
+
 - Plugin is ONE crate `puzzle-plugin` with 3 modules d2/d3/d5 in `puzzle/plugin/rs/lib.rs` (10.3k lines).
 - Documents:
   - d2: untyped `fixture: serde_json::Value` (keys: schema, camera{x,y,zoom}, nodes[], edges[], wires[], meta.kindCatalogs). Stateful `BoardHost` engine mirror.
@@ -9,6 +10,7 @@
 - All persisted as `{ fixture|document, runtime }` envelope (`Puzzle2dPlayEnvelope` / `Puzzle3dEnvelope` / `Puzzle5dEnvelope`) → snapshot via `setDocument` op. Runtime is view state.
 
 ## Design (uniform)
+
 - Projection = `serde_json::Value` for all three (the bare fixture/document json). Runtime moves into app struct.
 - ONE generic Op per core crate (replaces placeholder SetRevision op):
   - `UpsertItem { collection, item }` (item has string "id")

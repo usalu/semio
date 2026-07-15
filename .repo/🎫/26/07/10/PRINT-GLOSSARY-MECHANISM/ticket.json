@@ -13,10 +13,5 @@
     "id": "ee2d3121",
     "local": "print_glossary_mechanism_ee2d3121.plan.md"
   },
-  "sessions": [
-    "⚪97edf9a40ce045a4a665ac717348c84b",
-    "⚪0a5ed7ba634947ba8c1eb092722a3651",
-    "⚪b114a31a359741a696c0968b9d61d625",
-    "⚪64793f99ae87430089412b920397c99f"
-  ]
+  "sessions": ["⚪97edf9a40ce045a4a665ac717348c84b", "⚪0a5ed7ba634947ba8c1eb092722a3651", "⚪b114a31a359741a696c0968b9d61d625", "⚪64793f99ae87430089412b920397c99f"]
 }

@@ -2,10 +2,10 @@
 
 ## Code fixes
 
-| Fix | File | Result |
-|-----|------|--------|
-| Declare window kinds + default layout on `forms-module-procedural` | `forms/module/procedural/rs/lib.rs` | `windowKinds`: `forms-module-procedural-params`, `forms-module-procedural-preview` |
-| Seed fresh Forms document from Building Component fixture | `forms/plugin/rs/lib.rs` | Fresh `createApp("forms-play")` renders step 1 with `Component Name` / Building Component metadata |
+| Fix                                                                | File                                | Result                                                                                             |
+| ------------------------------------------------------------------ | ----------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Declare window kinds + default layout on `forms-module-procedural` | `forms/module/procedural/rs/lib.rs` | `windowKinds`: `forms-module-procedural-params`, `forms-module-procedural-preview`                 |
+| Seed fresh Forms document from Building Component fixture          | `forms/plugin/rs/lib.rs`            | Fresh `createApp("forms-play")` renders step 1 with `Component Name` / Building Component metadata |
 
 ## Build
 

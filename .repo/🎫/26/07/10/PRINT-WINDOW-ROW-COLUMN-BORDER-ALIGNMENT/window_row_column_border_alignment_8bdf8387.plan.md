@@ -2,33 +2,34 @@
 name: Window Row/Column Border Alignment
 overview: Make `SemioWindowRowTwo/Three` stretch every window in a row to the tallest sibling's height (bottom borders align, top stays flush), add a new symmetric `SemioWindowColumnTwo/Three` that stretches naturally-sized windows to the widest sibling's width (right borders align, left stays flush), and add a shared `anchor` key (`nw`, `n`, `ne`, `w`, `center`, `e`, `sw`, `s`, `se`) so content can be positioned within a stretched box instead of always sticking to the top-left.
 todos:
-  - id: ticket
-    content: Open new ticket under goal r2602/updateddocs
-    status: completed
-  - id: anchor-key
-    content: Add shared anchor choice key (nw/n/ne/w/center/e/sw/s/se) + valign/halign macros to semio-window.sty
-    status: completed
-  - id: stretch-splice
-    content: Add stretch height/width + fit registers and splice extra tcolorbox options into both window-opening call sites
-    status: completed
-  - id: row-rewrite
-    content: Rewrite SemioWindowRowTwo/Three to measure natural heights, stretch all columns to the max, and reset after
-    status: completed
-  - id: column-new
-    content: Add new SemioWindowColumnTwo/Three (fit-content width measurement, stretch to max width, vertical stacking)
-    status: completed
-  - id: cover-anchor
-    content: Add anchor=center to the 3 logo Windows in makecoverpages
-    status: completed
-  - id: verify
-    content: Add bisect tests, build+rasterize zwischenbericht cover, confirm alignment, close ticket
-    status: completed
+ - id: ticket
+   content: Open new ticket under goal r2602/updateddocs
+   status: completed
+ - id: anchor-key
+   content: Add shared anchor choice key (nw/n/ne/w/center/e/sw/s/se) + valign/halign macros to semio-window.sty
+   status: completed
+ - id: stretch-splice
+   content: Add stretch height/width + fit registers and splice extra tcolorbox options into both window-opening call sites
+   status: completed
+ - id: row-rewrite
+   content: Rewrite SemioWindowRowTwo/Three to measure natural heights, stretch all columns to the max, and reset after
+   status: completed
+ - id: column-new
+   content: Add new SemioWindowColumnTwo/Three (fit-content width measurement, stretch to max width, vertical stacking)
+   status: completed
+ - id: cover-anchor
+   content: Add anchor=center to the 3 logo Windows in makecoverpages
+   status: completed
+ - id: verify
+   content: Add bisect tests, build+rasterize zwischenbericht cover, confirm alignment, close ticket
+   status: completed
 isProject: false
 ---
 
 # Window Row/Column Border Alignment
 
 ## Confirmed bug (motivating example)
+
 `\makecoverpages` in [print/tex/semio-components.sty](print/tex/semio-components.sty) (lines 149-161) already renders the exact "zwischenbericht has window rows" case cited by the dev: a `\SemioWindowRowThree` of three logo `Window`s (Zukunft Bau, BBSR, BMWSB). The logos have wildly different aspect ratios:
 
 - `zukunft-bau.png` 669x126 (~5.3:1, short/wide)
@@ -52,6 +53,7 @@ anchor / sw .code:n = { valign=bottom, halign=left },
 anchor / s  .code:n = { valign=bottom, halign=center },
 anchor / se .code:n = { valign=bottom, halign=right },
 ```
+
 (`valign`/`halign` are native tcolorbox keys — confirmed they exist and only matter once `height`/`width` is forced beyond natural size, so this is safe to always emit.)
 
 Store into two classic macros `\semio@window@valign`, `\semio@window@halign` (default `top`/`left`, i.e. today's visual behavior). Reset them to the default at the top of both `\semio_window_kind_begin:nnn` (line 512) and `\semio_window_generic_begin:n` (line 791), before `\keys_set:nn`, exactly like `\l_semio_window_kind_title_tl` is already cleared there.
@@ -71,6 +73,7 @@ Build one extra-options token list consumed by both window-opening call sites:
 ```
 
 Splice it into the four `\begin{tcolorbox}[...]` call sites that currently hard-code the option list:
+
 - `\semio_window_kind_begin:nnn` (lines 539-541, both the `semiotable` and default branch)
 - `\semio_window_generic_begin:n` (lines 800-804, both the `row` and default branch)
 
@@ -82,6 +85,7 @@ In the existing `%region WindowRow` (`print/tex/semio-window.sty:1623-1646`):
 
 - Add `\newsavebox{\semio@window@measure@box}`.
 - Add a measuring helper:
+
 ```latex
 \newcommand{\semio@window@row@measure}[3]{% width, content, \dimen-out
   \setlength{\semio@window@stretch@height}{0pt}%
@@ -89,8 +93,9 @@ In the existing `%region WindowRow` (`print/tex/semio-window.sty:1623-1646`):
   \setlength{#3}{\dimexpr\ht\semio@window@measure@box+\dp\semio@window@measure@box\relax}%
 }
 ```
-- `\SemioWindowRowTwo`/`Three`: before building the real `\hbox to \linewidth{...}`, measure each column at its final column width into scratch lengths, take the max via nested `\ifdim ... \fi`, `\setlength{\semio@window@stretch@height}{<max>}`, then render the row exactly as today (unchanged `\hbox to \linewidth{...}` body — the stretch now takes effect *inside* each `Window`'s tcolorbox because of §2). Reset `\semio@window@stretch@height` to `0pt` immediately after the row so later windows aren't affected.
-- This only works correctly when each row cell's content is exactly one `Window` (today's only usage pattern) — nesting a *registered* kind (`Image`/`Table`/...) would double its counter/TOC entry because the content is typeset twice (once to measure). Document this constraint as a code comment; not a regression since no call site does that.
+
+- `\SemioWindowRowTwo`/`Three`: before building the real `\hbox to \linewidth{...}`, measure each column at its final column width into scratch lengths, take the max via nested `\ifdim ... \fi`, `\setlength{\semio@window@stretch@height}{<max>}`, then render the row exactly as today (unchanged `\hbox to \linewidth{...}` body — the stretch now takes effect _inside_ each `Window`'s tcolorbox because of §2). Reset `\semio@window@stretch@height` to `0pt` immediately after the row so later windows aren't affected.
+- This only works correctly when each row cell's content is exactly one `Window` (today's only usage pattern) — nesting a _registered_ kind (`Image`/`Table`/...) would double its counter/TOC entry because the content is typeset twice (once to measure). Document this constraint as a code comment; not a regression since no call site does that.
 
 ## 4. New `SemioWindowColumnTwo/Three` — width stretch, right-border align
 
@@ -108,6 +113,7 @@ In `\makecoverpages`'s logo `\SemioWindowRowThree` (lines 149-161), add `anchor=
 ```latex
 \begin{Window}[title=Zukunft~Bau, row, anchor=center]
 ```
+
 (same for BBSR / BMWSB). All other `SemioWindowRowTwo/Three` call sites (Titel/Zukunft-Bau header pair, Aktenzeichen/Förderzeitraum/Berichtszeitraum, Antragstellende Institution/Kooperationspartner) need no changes — they automatically get bottom-border alignment while keeping today's default top-left anchor.
 
 ## 6. Verify
@@ -118,6 +124,7 @@ In `\makecoverpages`'s logo `\SemioWindowRowThree` (lines 149-161), add `anchor=
 - Close the ticket with a summary and the full list of touched files.
 
 ## Files touched
+
 - `print/tex/semio-window.sty` (anchor key, stretch registers/splicing, `SemioWindowRowTwo/Three` rewrite, new `SemioWindowColumnTwo/Three`)
 - `print/tex/semio-components.sty` (`anchor=center` on the 3 cover logo windows)
 - new ticket folder under `.repo/🎫/26/07/10/...` (bisect/verify temp files, screenshots, ticket.json)

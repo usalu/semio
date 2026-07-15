@@ -641,15 +641,7 @@ export function Canvas2dHost({ node, onAction }: ComponentSceneHostProps) {
   if (!scene) return <div className="semio-canvas-2d-empty">No canvas scene</div>;
 
   return (
-    <div
-      ref={containerRef}
-      className="semio-canvas-2d-host h-full min-h-[24rem] w-full bg-canvas"
-      data-controller-id={node.controllerId}
-      data-surface-id={node.surfaceId}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
+    <div ref={containerRef} className="semio-canvas-2d-host h-full min-h-[24rem] w-full bg-canvas" data-controller-id={node.controllerId} data-surface-id={node.surfaceId} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
       <GraphWasmCanvas className="h-full w-full" sessionFactory={sessionFactory} />
     </div>
   );

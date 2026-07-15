@@ -1,6 +1,7 @@
 # WS-D — Plugin Contract (framework/plugin)
 
 ## Scope
+
 - framework/plugin/rs/lib.rs: two-layer contract (DocumentApp typed / PluginApp runtime), VcsDocumentApp wrapper, generation-op vocabulary, TestApp.
 - framework/wit/world.wit: new plugin exports + host backbone-status import.
 - framework/plugin/rs component module: wasm WIT glue for new exports.
@@ -9,6 +10,7 @@
 - framework/core/js/index.ts: typed ActionResponse, delete patchOpsFromActionResponse, new handle methods.
 
 ## Verification results (2026-07-12)
+
 - `cargo build -p semio-framework-core` — green (2 pre-existing unrelated warnings).
 - `cargo build -p semio-framework-plugin` — green.
 - `cargo test -p semio-framework-plugin` — 27 passed / 0 failed (8 new contract tests).
@@ -20,6 +22,7 @@
 Codegen tooling IS available; WIT bindings auto-regenerate (wasmtime `bindgen!` native, `wit-bindgen::generate!` wasm). No hand-written bindings.
 
 ## Env blocker
+
 Concurrent mathematical-crates refactor left a dangling path-dep in framework/graph/rs/Cargo.toml
 (-> deleted mathematical/graph/port/directed/dag/rs). Blocks ALL cargo manifest loading.
 Verification via temporary stub of the missing crate, removed afterward.

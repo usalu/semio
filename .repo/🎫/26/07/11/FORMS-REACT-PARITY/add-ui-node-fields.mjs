@@ -13,10 +13,7 @@ const STRUCT_FIELDS = {
   UiStackNode: ["id", "selected", "activate", "drop_command"],
 };
 
-const files = execSync(
-  `grep -rl --include='*.rs' -E 'Ui(Field|Input|Slider|Button|Tree|Stack)Node \\{' '${REPO}' --exclude-dir=node_modules --exclude-dir=target --exclude-dir=.git`,
-  { encoding: "utf8" },
-)
+const files = execSync(`grep -rl --include='*.rs' -E 'Ui(Field|Input|Slider|Button|Tree|Stack)Node \\{' '${REPO}' --exclude-dir=node_modules --exclude-dir=target --exclude-dir=.git`, { encoding: "utf8" })
   .trim()
   .split("\n")
   .filter((f) => f && !f.includes("/.repo/"));

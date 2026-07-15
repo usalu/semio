@@ -12,9 +12,7 @@
     },
     "test": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        "generate"
-      ],
+      "dependsOn": ["generate"],
       "options": {
         "cwd": "mathematical/graph/manifest",
         "command": "bun ./script.ts test"

@@ -1927,7 +1927,23 @@ export interface WorldOrbitGatedProps {
 }
 
 /** @emoji 🛰️ Canvas-local Three orbit-control binding that never crosses the optional Drei runtime boundary. */
-function WorldOrbitControlsBridge({ camera, enabled, mouseButtons, controlsKey, onChange, onStart, onEnd }: { readonly camera: Camera; readonly enabled: boolean; readonly mouseButtons: ReturnType<typeof resolveWorldOrbitMouseButtonsIdle>; readonly controlsKey?: string | number; readonly onChange: () => void; readonly onStart: () => void; readonly onEnd: () => void }): null {
+function WorldOrbitControlsBridge({
+  camera,
+  enabled,
+  mouseButtons,
+  controlsKey,
+  onChange,
+  onStart,
+  onEnd,
+}: {
+  readonly camera: Camera;
+  readonly enabled: boolean;
+  readonly mouseButtons: ReturnType<typeof resolveWorldOrbitMouseButtonsIdle>;
+  readonly controlsKey?: string | number;
+  readonly onChange: () => void;
+  readonly onStart: () => void;
+  readonly onEnd: () => void;
+}): null {
   const { gl } = useThree();
   const set = useThree((state) => state.set);
   const get = useThree((state) => state.get);

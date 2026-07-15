@@ -8,20 +8,21 @@ import {
   Puzzle2dBoardHost,
   puzzle2dBoardCameraActionArgs,
   buildPuzzle2dSelectionMenuItems,
+  beginPuzzle2dPeerGesture,
+  collectPuzzle2dLiveMirrorOps,
   coalescePuzzle2dBoardEvents,
+  endPuzzle2dPeerGesture,
+  notifyPuzzle2dPeersGestureEnded,
   parsePuzzle2dCatalogueDragPayload,
+  puzzle2dBoardPeers,
   puzzle2dFixtureDropPreviewJson,
+  puzzle2dPeerOwnsGesture,
   puzzle2dScreenToWorld,
+  pushPuzzle2dLiveMirrorOps,
+  registerPuzzle2dBoardPeer,
+  unregisterPuzzle2dBoardPeer,
 } from "./components/puzzle-2d-board-host.tsx";
-import {
-  NodeGraphHost,
-  catalogueGhostDescriptorJson,
-  computeDagMarqueeOverlay,
-  nodeGraphViewportActionArgs,
-  parseCatalogueAppDragPayload,
-  parseDagSliderOverlays,
-  resolveFixtureWidgetInstanceId,
-} from "./components/node-graph-host.tsx";
+import { NodeGraphHost, catalogueGhostDescriptorJson, computeDagMarqueeOverlay, nodeGraphViewportActionArgs, parseCatalogueAppDragPayload, parseDagSliderOverlays, resolveFixtureWidgetInstanceId } from "./components/node-graph-host.tsx";
 import { SelectionMarquee } from "@semio-tech/ui-react";
 import { RasterHost } from "./components/raster-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
@@ -102,11 +103,7 @@ describe("framework sync tools", () => {
     const { buildFrameworkSyncTools } = await import("@semio-tech/framework-os-core");
     const tools = buildFrameworkSyncTools("file:///demo");
     expect(tools).toHaveLength(3);
-    expect(tools.map((tool) => tool.id)).toEqual([
-      "framework.sync.file",
-      "framework.sync.folder",
-      "framework.sync.remote",
-    ]);
+    expect(tools.map((tool) => tool.id)).toEqual(["framework.sync.file", "framework.sync.folder", "framework.sync.remote"]);
     expect(tools[0]?.pressed).toBe(true);
   });
 
@@ -148,6 +145,19 @@ describe("shell store reducer", () => {
     expect(advanced.overlays.introductionStepIndex).toBe(1);
     const dismissed = shellReducer(advanced, { type: "SET_INTRODUCTION_STEP", value: null });
     expect(dismissed.overlays.introductionStepIndex).toBeNull();
+  });
+
+  it("opens, replaces, and closes a dialog via SET_DIALOG without touching unrelated slices", () => {
+    const state = baseState();
+    expect(state.overlays.dialog).toBeNull();
+    const opened = shellReducer(state, { type: "SET_DIALOG", value: { dialogId: "addObject", seedArgs: { objectKind: "Object" } } });
+    expect(opened.overlays.dialog).toEqual({ dialogId: "addObject", seedArgs: { objectKind: "Object" } });
+    expect(opened.layout).toBe(state.layout);
+    expect(opened.pluginRuntime).toBe(state.pluginRuntime);
+    const replaced = shellReducer(opened, { type: "SET_DIALOG", value: { dialogId: "confirmDelete" } });
+    expect(replaced.overlays.dialog).toEqual({ dialogId: "confirmDelete" });
+    const closed = shellReducer(replaced, { type: "SET_DIALOG", value: null });
+    expect(closed.overlays.dialog).toBeNull();
   });
 
   it("toggles the layout slice via an updater function", () => {
@@ -235,10 +245,25 @@ describe("ui identity preservation (puzzle 2d perf)", () => {
   });
 
   it("preserveJsonIdentity treats nested arrays/objects structurally, not just top-level fields", () => {
-    const previous = { nodes: [{ id: "a", x: 1 }, { id: "b", x: 2 }] };
-    const next = { nodes: [{ id: "a", x: 1 }, { id: "b", x: 2 }] };
+    const previous = {
+      nodes: [
+        { id: "a", x: 1 },
+        { id: "b", x: 2 },
+      ],
+    };
+    const next = {
+      nodes: [
+        { id: "a", x: 1 },
+        { id: "b", x: 2 },
+      ],
+    };
     expect(preserveJsonIdentity(previous, next)).toBe(previous);
-    const moved = { nodes: [{ id: "a", x: 1 }, { id: "b", x: 3 }] };
+    const moved = {
+      nodes: [
+        { id: "a", x: 1 },
+        { id: "b", x: 3 },
+      ],
+    };
     expect(preserveJsonIdentity(previous, moved)).toBe(moved);
   });
 
@@ -872,13 +897,18 @@ describe("framework renderer hosts", () => {
               {
                 id: "shape-1",
                 transform: [1, 0, 0, 1, 0, 0],
-                segments: [
-                  { kind: "move", to: [0, 0] },
-                  { kind: "line", to: [10, 0] },
-                  { kind: "line", to: [10, 10] },
-                  { kind: "close" },
-                ],
-                fill: { kind: "linearGradient", x1: 0, y1: 0, x2: 10, y2: 10, stops: [{ offset: 0, color: [1, 0, 0, 1] }, { offset: 1, color: [0, 0, 1, 1] }] },
+                segments: [{ kind: "move", to: [0, 0] }, { kind: "line", to: [10, 0] }, { kind: "line", to: [10, 10] }, { kind: "close" }],
+                fill: {
+                  kind: "linearGradient",
+                  x1: 0,
+                  y1: 0,
+                  x2: 10,
+                  y2: 10,
+                  stops: [
+                    { offset: 0, color: [1, 0, 0, 1] },
+                    { offset: 1, color: [0, 0, 1, 1] },
+                  ],
+                },
                 stroke: { color: [0, 0, 0, 1], width: 1, cap: "round", join: "round" },
                 opacity: 1,
                 blendMode: "multiply",
@@ -889,11 +919,7 @@ describe("framework renderer hosts", () => {
                 id: "overlay:sel:shape-1",
                 role: "overlay",
                 transform: [1, 0, 0, 1, 0, 0],
-                segments: [
-                  { kind: "move", to: [0, 0] },
-                  { kind: "line", to: [10, 0] },
-                  { kind: "close" },
-                ],
+                segments: [{ kind: "move", to: [0, 0] }, { kind: "line", to: [10, 0] }, { kind: "close" }],
                 fill: { kind: "solid", color: [0.98, 0.75, 0.14, 0.16] },
                 stroke: { color: [0.98, 0.75, 0.14, 0.95], width: 2 },
                 opacity: 1,
@@ -983,6 +1009,129 @@ describe("framework renderer hosts", () => {
     for (const name of ["select", "preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete"]) {
       expect(coalescePuzzle2dBoardEvents([{ name, payload: {} }]).flushNow).toBe(true);
     }
+  });
+
+  it("collects live mirror ops: coalesces nodeMove to the latest per id, ignores unrelated rows", () => {
+    const ops = collectPuzzle2dLiveMirrorOps([
+      { name: "camera", payload: { x: 1, y: 1, zoom: 1 } },
+      { name: "nodeMove", payload: { id: "alpha", x: 1, y: 1 } },
+      { name: "brushPreview", payload: {} },
+      { name: "nodeMove", payload: { id: "alpha", x: 9, y: 9 } },
+      { name: "nodeMove", payload: { id: "beta", x: 2, y: 2 } },
+    ]);
+    expect(ops.positions).toEqual([
+      { id: "alpha", x: 9, y: 9 },
+      { id: "beta", x: 2, y: 2 },
+    ]);
+    expect(ops.selectionIds).toBeNull();
+    expect(ops.preselect).toBeNull();
+    expect(ops.clearPreselect).toBe(false);
+  });
+
+  it("collects live mirror ops: nodeDragEnd.moves produce final positions", () => {
+    const ops = collectPuzzle2dLiveMirrorOps([
+      { name: "nodeMove", payload: { id: "alpha", x: 1, y: 1 } },
+      {
+        name: "nodeDragEnd",
+        payload: {
+          moves: [
+            { id: "alpha", x: 20, y: 20 },
+            { id: "beta", x: 5, y: 5 },
+          ],
+        },
+      },
+    ]);
+    expect(ops.positions).toEqual([
+      { id: "alpha", x: 20, y: 20 },
+      { id: "beta", x: 5, y: 5 },
+    ]);
+  });
+
+  it("collects live mirror ops: preselect sets the live highlight, select/preselectCancel commit selection and clear it", () => {
+    expect(collectPuzzle2dLiveMirrorOps([{ name: "preselect", payload: { ids: ["a", "b"], removedIds: ["c"] } }])).toMatchObject({
+      preselect: { ids: ["a", "b"], removedIds: ["c"] },
+      clearPreselect: false,
+      selectionIds: null,
+    });
+    expect(collectPuzzle2dLiveMirrorOps([{ name: "select", payload: { ids: ["a"] } }])).toMatchObject({
+      selectionIds: ["a"],
+      preselect: null,
+      clearPreselect: true,
+    });
+    expect(collectPuzzle2dLiveMirrorOps([{ name: "preselectCancel", payload: { ids: ["a", "b"] } }])).toMatchObject({
+      selectionIds: ["a", "b"],
+      preselect: null,
+      clearPreselect: true,
+    });
+  });
+
+  it("peer registry: registers/unregisters, excludes own surfaceId and other controllerIds", () => {
+    const peerA = { session: {} as never, onPeerGestureEnded: () => {} };
+    const peerB = { session: {} as never, onPeerGestureEnded: () => {} };
+    const peerOther = { session: {} as never, onPeerGestureEnded: () => {} };
+    registerPuzzle2dBoardPeer("puzzle2d-play", "pane.a", peerA);
+    registerPuzzle2dBoardPeer("puzzle2d-play", "pane.b", peerB);
+    registerPuzzle2dBoardPeer("other-controller", "pane.a", peerOther);
+
+    expect(puzzle2dBoardPeers("puzzle2d-play", "pane.a")).toEqual([peerB]);
+    expect(puzzle2dBoardPeers("puzzle2d-play", "pane.b")).toEqual([peerA]);
+    expect(puzzle2dBoardPeers("other-controller", "pane.z")).toEqual([peerOther]);
+
+    unregisterPuzzle2dBoardPeer("puzzle2d-play", "pane.b");
+    expect(puzzle2dBoardPeers("puzzle2d-play", "pane.a")).toEqual([]);
+
+    unregisterPuzzle2dBoardPeer("puzzle2d-play", "pane.a");
+    unregisterPuzzle2dBoardPeer("other-controller", "pane.a");
+  });
+
+  it("peer gesture ownership: begin/end tracks the owning surfaceId; a pane never defers against its own gesture", () => {
+    expect(puzzle2dPeerOwnsGesture("puzzle2d-play", "pane.a")).toBe(false);
+    beginPuzzle2dPeerGesture("puzzle2d-play", "pane.a");
+    expect(puzzle2dPeerOwnsGesture("puzzle2d-play", "pane.a")).toBe(false);
+    expect(puzzle2dPeerOwnsGesture("puzzle2d-play", "pane.b")).toBe(true);
+    endPuzzle2dPeerGesture("puzzle2d-play", "pane.a");
+    expect(puzzle2dPeerOwnsGesture("puzzle2d-play", "pane.b")).toBe(false);
+  });
+
+  it("pushes live mirror ops into peer sessions, skipping the source pane", () => {
+    const calls: { pane: string; method: string; arg: string }[] = [];
+    const makePeer = (pane: string) => ({
+      session: {
+        setNodePositionsJson: (json: string) => calls.push({ pane, method: "setNodePositionsJson", arg: json }),
+        setSelectionIdsJsonSilent: (json: string) => calls.push({ pane, method: "setSelectionIdsJsonSilent", arg: json }),
+        setPreselectStateJsonSilent: (json: string) => calls.push({ pane, method: "setPreselectStateJsonSilent", arg: json }),
+      } as never,
+      onPeerGestureEnded: () => {},
+    });
+    registerPuzzle2dBoardPeer("mirror-test", "pane.source", makePeer("pane.source"));
+    registerPuzzle2dBoardPeer("mirror-test", "pane.sibling", makePeer("pane.sibling"));
+
+    pushPuzzle2dLiveMirrorOps("mirror-test", "pane.source", {
+      positions: [{ id: "alpha", x: 1, y: 2 }],
+      selectionIds: ["alpha"],
+      preselect: null,
+      clearPreselect: false,
+    });
+
+    expect(calls).toEqual([
+      { pane: "pane.sibling", method: "setNodePositionsJson", arg: JSON.stringify([{ id: "alpha", x: 1, y: 2 }]) },
+      { pane: "pane.sibling", method: "setSelectionIdsJsonSilent", arg: JSON.stringify(["alpha"]) },
+    ]);
+
+    unregisterPuzzle2dBoardPeer("mirror-test", "pane.source");
+    unregisterPuzzle2dBoardPeer("mirror-test", "pane.sibling");
+  });
+
+  it("notifies peers when a gesture ends, skipping the source pane", () => {
+    const ended: string[] = [];
+    registerPuzzle2dBoardPeer("notify-test", "pane.source", { session: {} as never, onPeerGestureEnded: () => ended.push("pane.source") });
+    registerPuzzle2dBoardPeer("notify-test", "pane.sibling", { session: {} as never, onPeerGestureEnded: () => ended.push("pane.sibling") });
+
+    notifyPuzzle2dPeersGestureEnded("notify-test", "pane.source");
+    expect(ended).toEqual(["pane.sibling"]);
+
+    unregisterPuzzle2dBoardPeer("notify-test", "pane.source");
+    unregisterPuzzle2dBoardPeer("notify-test", "pane.sibling");
   });
 
   it("builds a select-all menu when nothing is selected", () => {
@@ -1266,10 +1415,14 @@ describe("framework renderer hosts", () => {
   });
 
   it("multiSpanReplace renames every occurrence and remaps spans", () => {
-    const result = multiSpanReplace("MATCH (a:Piece) RETURN a.name", [
-      { start: 7, end: 8 },
-      { start: 23, end: 24 },
-    ], "piece");
+    const result = multiSpanReplace(
+      "MATCH (a:Piece) RETURN a.name",
+      [
+        { start: 7, end: 8 },
+        { start: 23, end: 24 },
+      ],
+      "piece",
+    );
     expect(result.text).toBe("MATCH (piece:Piece) RETURN piece.name");
     expect(result.occurrences).toEqual([
       { start: 7, end: 12 },
@@ -1462,13 +1615,20 @@ describe("framework renderer hosts", () => {
 
 describe("dag marquee overlay", () => {
   it("computes a rect overlay with numeric bounds for the rectangle method", () => {
-    const pointsJson = JSON.stringify([{ x: 10, y: 20 }, { x: 30, y: 50 }]);
+    const pointsJson = JSON.stringify([
+      { x: 10, y: 20 },
+      { x: 30, y: 50 },
+    ]);
     const overlay = computeDagMarqueeOverlay(pointsJson, false, "rectangle");
     expect(overlay).toEqual({ kind: "rect", x: 10, y: 20, width: 20, height: 30, coverage: "full" });
   });
 
   it("computes a lasso overlay carrying the raw points for the lasso method", () => {
-    const points = [{ x: 10, y: 20 }, { x: 30, y: 50 }, { x: 15, y: 40 }];
+    const points = [
+      { x: 10, y: 20 },
+      { x: 30, y: 50 },
+      { x: 15, y: 40 },
+    ];
     const overlay = computeDagMarqueeOverlay(JSON.stringify(points), true, "lasso");
     expect(overlay).toEqual({ kind: "lasso", points, coverage: "partial" });
   });
@@ -1482,7 +1642,14 @@ describe("dag marquee overlay", () => {
   // always false and the polygon branch read `props.points` as undefined — crashing on every marquee
   // drag and tripping the shell's render error boundary (visible as an interaction "reset").
   it("renders a rect overlay from a computeDagMarqueeOverlay rect result without crashing", () => {
-    const overlay = computeDagMarqueeOverlay(JSON.stringify([{ x: 0, y: 0 }, { x: 40, y: 25 }]), false, "rectangle");
+    const overlay = computeDagMarqueeOverlay(
+      JSON.stringify([
+        { x: 0, y: 0 },
+        { x: 40, y: 25 },
+      ]),
+      false,
+      "rectangle",
+    );
     if (!overlay || overlay.kind !== "rect") throw new Error("expected rect overlay");
     const markup = renderToStaticMarkup(
       createElement(SelectionMarquee, {
@@ -1495,11 +1662,17 @@ describe("dag marquee overlay", () => {
   });
 
   it("renders a polygon overlay from a computeDagMarqueeOverlay lasso result without crashing", () => {
-    const overlay = computeDagMarqueeOverlay(JSON.stringify([{ x: 0, y: 0 }, { x: 40, y: 25 }, { x: 5, y: 30 }]), false, "lasso");
-    if (!overlay || overlay.kind !== "lasso") throw new Error("expected lasso overlay");
-    const markup = renderToStaticMarkup(
-      createElement(SelectionMarquee, { coverage: overlay.coverage ?? "full", shape: "polygon", points: overlay.points ?? [] }),
+    const overlay = computeDagMarqueeOverlay(
+      JSON.stringify([
+        { x: 0, y: 0 },
+        { x: 40, y: 25 },
+        { x: 5, y: 30 },
+      ]),
+      false,
+      "lasso",
     );
+    if (!overlay || overlay.kind !== "lasso") throw new Error("expected lasso overlay");
+    const markup = renderToStaticMarkup(createElement(SelectionMarquee, { coverage: overlay.coverage ?? "full", shape: "polygon", points: overlay.points ?? [] }));
     expect(markup).toContain("<polygon");
   });
 });
@@ -1606,17 +1779,63 @@ describe("note canvas host", () => {
     const shrunk = noteResizeBounds(fromBounds, "e", -1000, 0);
     expect(shrunk.width).toBe(8);
 
-    const ink: NoteInkBlock = { kind: "ink", id: "ink-1", name: "Ink", x: 0, y: 0, width: 100, height: 100, visible: true, locked: false, points: [[0, 0], [100, 100]], strokeWidth: 2, color: [0, 0, 0, 1] };
+    const ink: NoteInkBlock = {
+      kind: "ink",
+      id: "ink-1",
+      name: "Ink",
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      visible: true,
+      locked: false,
+      points: [
+        [0, 0],
+        [100, 100],
+      ],
+      strokeWidth: 2,
+      color: [0, 0, 0, 1],
+    };
     const scaled = noteScaleBlockWithinGroup(ink, { x: 0, y: 0, width: 100, height: 100 }, { x: 0, y: 0, width: 200, height: 50 });
     expect(scaled.kind).toBe("ink");
-    if (scaled.kind === "ink") expect(scaled.points).toEqual([[0, 0], [200, 50]]);
+    if (scaled.kind === "ink")
+      expect(scaled.points).toEqual([
+        [0, 0],
+        [200, 50],
+      ]);
   });
 
   it("splits an ink stroke into fragments when erasing its middle point", () => {
-    const ink: NoteInkBlock = { kind: "ink", id: "ink-1", name: "Ink", x: 0, y: 0, width: 80, height: 1, visible: true, locked: false, points: [[0, 0], [40, 0], [80, 0]], strokeWidth: 2, color: [0, 0, 0, 1] };
+    const ink: NoteInkBlock = {
+      kind: "ink",
+      id: "ink-1",
+      name: "Ink",
+      x: 0,
+      y: 0,
+      width: 80,
+      height: 1,
+      visible: true,
+      locked: false,
+      points: [
+        [0, 0],
+        [40, 0],
+        [80, 0],
+      ],
+      strokeWidth: 2,
+      color: [0, 0, 0, 1],
+    };
     const fragments = noteEraseInkPointsInBlock(ink, 40, 0, 5);
     expect(fragments).toHaveLength(0);
-    const wideStroke: NoteInkBlock = { ...ink, points: [[0, 0], [10, 0], [40, 0], [70, 0], [80, 0]] };
+    const wideStroke: NoteInkBlock = {
+      ...ink,
+      points: [
+        [0, 0],
+        [10, 0],
+        [40, 0],
+        [70, 0],
+        [80, 0],
+      ],
+    };
     const splitFragments = noteEraseInkPointsInBlock(wideStroke, 40, 0, 5);
     expect(splitFragments).toHaveLength(2);
   });
@@ -1635,7 +1854,23 @@ describe("note canvas host", () => {
   });
 
   it("computes ink block bounds from its local points", () => {
-    const ink: NoteInkBlock = { kind: "ink", id: "ink-1", name: "Ink", x: 10, y: 10, width: 1, height: 1, visible: true, locked: false, points: [[0, 0], [5, 5]], strokeWidth: 2, color: [0, 0, 0, 1] };
+    const ink: NoteInkBlock = {
+      kind: "ink",
+      id: "ink-1",
+      name: "Ink",
+      x: 10,
+      y: 10,
+      width: 1,
+      height: 1,
+      visible: true,
+      locked: false,
+      points: [
+        [0, 0],
+        [5, 5],
+      ],
+      strokeWidth: 2,
+      color: [0, 0, 0, 1],
+    };
     expect(noteBlockBounds(ink)).toEqual({ x: 10, y: 10, width: 5, height: 5 });
   });
 
@@ -1945,11 +2180,7 @@ describe("toolbar ribbon", () => {
 
   it("deduplicates tool nodes by id across window tool lists for a single shared footer entry", () => {
     const history = { id: "s-play.history", kind: "collection" as const, iconId: "clock", category: "history" as const, children: [] };
-    const deduped = dedupeToolNodesById([
-      [history, { id: "leaf-a", kind: "button" as const, iconId: "box", controllerId: "x", action: "a" }],
-      [history],
-      [],
-    ]);
+    const deduped = dedupeToolNodesById([[history, { id: "leaf-a", kind: "button" as const, iconId: "box", controllerId: "x", action: "a" }], [history], []]);
     expect(deduped).toEqual([history, { id: "leaf-a", kind: "button", iconId: "box", controllerId: "x", action: "a" }]);
   });
 
@@ -2063,9 +2294,7 @@ describe("s media graph flow routing", () => {
             nodesJson: "[]",
             edgesJson: "[]",
             viewportJson: '{"x":0,"y":0,"zoom":1}',
-            presencePeersJson: JSON.stringify([
-              { clientId: "client-b", name: "Ada", selectionCount: 2 },
-            ]),
+            presencePeersJson: JSON.stringify([{ clientId: "client-b", name: "Ada", selectionCount: 2 }]),
           },
         },
         onAction: noopAction,
@@ -2112,15 +2341,17 @@ describe("s media graph flow routing", () => {
   });
 
   it("omits the drag-and-drop controller for tree panels without drag data", () => {
-    const config = uiNodeToTreePanelConfig(
-      { type: "tree", sections: [{ id: "catalogue", label: "Catalogue", items: [{ id: "s-play-catalogue.document.draw", label: "Draw" }] }] },
-      noopAction,
-    );
+    const config = uiNodeToTreePanelConfig({ type: "tree", sections: [{ id: "catalogue", label: "Catalogue", items: [{ id: "s-play-catalogue.document.draw", label: "Draw" }] }] }, noopAction);
     expect(config.dragAndDropController).toBeUndefined();
   });
 
   it("resolves a fixture widget id to its media-graph instance id, independent of selection state", () => {
-    const fixtureJson = JSON.stringify({ widgets: [{ id: "widget-1", params: { instanceId: "app-1" } }, { id: "widget-2", params: {} }] });
+    const fixtureJson = JSON.stringify({
+      widgets: [
+        { id: "widget-1", params: { instanceId: "app-1" } },
+        { id: "widget-2", params: {} },
+      ],
+    });
     expect(resolveFixtureWidgetInstanceId(fixtureJson, "widget-1")).toBe("app-1");
     expect(resolveFixtureWidgetInstanceId(fixtureJson, "widget-2")).toBeUndefined();
     expect(resolveFixtureWidgetInstanceId(fixtureJson, "missing-widget")).toBeUndefined();
@@ -2339,7 +2570,14 @@ describe("registry-derived tools and activation (P5)", () => {
   });
 
   it("deriveToolNodes twin marks exactly the active tool pressed", () => {
-    const nodes = deriveToolNodes("draw", [{ id: "a", label: "A", iconId: "x" }, { id: "b", label: "B", iconId: "y" }], "b");
+    const nodes = deriveToolNodes(
+      "draw",
+      [
+        { id: "a", label: "A", iconId: "x" },
+        { id: "b", label: "B", iconId: "y" },
+      ],
+      "b",
+    );
     expect(nodes.map((node) => (node.kind === "toggle" ? node.pressed : undefined))).toEqual([false, true]);
   });
 

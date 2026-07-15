@@ -110,6 +110,7 @@ import {
   uiI18n,
   UI_TERMINOLOGY_NATIVE,
   UIIntroduction,
+  UIDialog,
   readStoredIntroductionSeen,
   writeStoredIntroductionSeen,
   type ElementsSurfaceAppearance,
@@ -427,6 +428,8 @@ type OverlayState = {
   readonly findOpen: boolean;
   /** 🎓 Current step of the active app's introduction walkthrough, or `null` when none is playing. */
   readonly introductionStepIndex: number | null;
+  /** 🗨️ The open declared dialog (id + `HostEffect`-seeded args), or `null` when none is open. */
+  readonly dialog: { readonly dialogId: string; readonly seedArgs?: Readonly<Record<string, unknown>> } | null;
 };
 
 type UiPrefsState = {
@@ -500,6 +503,7 @@ export type ShellAction =
   | { readonly type: "SET_SEARCH_OPEN"; readonly value: Updatable<boolean> }
   | { readonly type: "SET_FIND_OPEN"; readonly value: Updatable<boolean> }
   | { readonly type: "SET_INTRODUCTION_STEP"; readonly value: Updatable<number | null> }
+  | { readonly type: "SET_DIALOG"; readonly value: OverlayState["dialog"] }
   | { readonly type: "SET_UI_APPEARANCE"; readonly value: Updatable<ElementsSurfaceAppearance> }
   | { readonly type: "SET_UI_LAYOUT"; readonly value: Updatable<UiChromeLayout> }
   | { readonly type: "SET_UI_COMPACT"; readonly value: Updatable<boolean> }
@@ -518,30 +522,44 @@ export type ShellAction =
 //#region slice reducers
 function pluginRuntimeReducer(state: PluginRuntimeState, action: ShellAction): PluginRuntimeState {
   switch (action.type) {
-    case "SET_LOADED_PLUGINS": return { ...state, loadedPlugins: resolveUpdatable(action.value, state.loadedPlugins) };
-    case "SET_SESSION": return { ...state, session: resolveUpdatable(action.value, state.session) };
-    case "SET_ERROR": return { ...state, error: resolveUpdatable(action.value, state.error) };
-    default: return state;
+    case "SET_LOADED_PLUGINS":
+      return { ...state, loadedPlugins: resolveUpdatable(action.value, state.loadedPlugins) };
+    case "SET_SESSION":
+      return { ...state, session: resolveUpdatable(action.value, state.session) };
+    case "SET_ERROR":
+      return { ...state, error: resolveUpdatable(action.value, state.error) };
+    default:
+      return state;
   }
 }
 
 function windowUiReducer(state: WindowUiState, action: ShellAction): WindowUiState {
   switch (action.type) {
-    case "SET_WINDOW_UI_BY_KIND": return { ...state, windowUiByKind: resolveUpdatable(action.value, state.windowUiByKind) };
-    case "SET_WINDOW_ENGAGEMENTS_BY_KIND": return { ...state, windowEngagementsByKind: resolveUpdatable(action.value, state.windowEngagementsByKind) };
-    case "SET_WINDOW_MEASURES_BY_KIND": return { ...state, windowMeasuresByKind: resolveUpdatable(action.value, state.windowMeasuresByKind) };
-    case "SET_PANEL_UI_BY_KEY": return { ...state, panelUiByKey: resolveUpdatable(action.value, state.panelUiByKey) };
-    case "SET_APP_LABELS_OVERLAY": return { ...state, appLabelsOverlay: resolveUpdatable(action.value, state.appLabelsOverlay) };
-    default: return state;
+    case "SET_WINDOW_UI_BY_KIND":
+      return { ...state, windowUiByKind: resolveUpdatable(action.value, state.windowUiByKind) };
+    case "SET_WINDOW_ENGAGEMENTS_BY_KIND":
+      return { ...state, windowEngagementsByKind: resolveUpdatable(action.value, state.windowEngagementsByKind) };
+    case "SET_WINDOW_MEASURES_BY_KIND":
+      return { ...state, windowMeasuresByKind: resolveUpdatable(action.value, state.windowMeasuresByKind) };
+    case "SET_PANEL_UI_BY_KEY":
+      return { ...state, panelUiByKey: resolveUpdatable(action.value, state.panelUiByKey) };
+    case "SET_APP_LABELS_OVERLAY":
+      return { ...state, appLabelsOverlay: resolveUpdatable(action.value, state.appLabelsOverlay) };
+    default:
+      return state;
   }
 }
 
 function spawnedWindowReducer(state: SpawnedWindowState, action: ShellAction): SpawnedWindowState {
   switch (action.type) {
-    case "SET_SPAWNED_WINDOW_UI": return { ...state, spawnedWindowUi: resolveUpdatable(action.value, state.spawnedWindowUi) };
-    case "SET_SPAWNED_WINDOW_ENGAGEMENTS": return { ...state, spawnedWindowEngagements: resolveUpdatable(action.value, state.spawnedWindowEngagements) };
-    case "SET_SPAWNED_WINDOW_MEASURES": return { ...state, spawnedWindowMeasures: resolveUpdatable(action.value, state.spawnedWindowMeasures) };
-    default: return state;
+    case "SET_SPAWNED_WINDOW_UI":
+      return { ...state, spawnedWindowUi: resolveUpdatable(action.value, state.spawnedWindowUi) };
+    case "SET_SPAWNED_WINDOW_ENGAGEMENTS":
+      return { ...state, spawnedWindowEngagements: resolveUpdatable(action.value, state.spawnedWindowEngagements) };
+    case "SET_SPAWNED_WINDOW_MEASURES":
+      return { ...state, spawnedWindowMeasures: resolveUpdatable(action.value, state.spawnedWindowMeasures) };
+    default:
+      return state;
   }
 }
 
@@ -573,7 +591,8 @@ function actionPanelReducer(state: ActionPanelState, action: ShellAction): Actio
       if ((state.activeToolByWindowId[action.windowId] ?? null) === action.toolId) return state;
       return { ...state, activeToolByWindowId: { ...state.activeToolByWindowId, [action.windowId]: action.toolId } };
     }
-    default: return state;
+    default:
+      return state;
   }
 }
 
@@ -610,46 +629,73 @@ function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): Shell
       for (const corner of PANEL_CORNERS) cornerPanels[corner] = { visible: false, size: DEFAULT_CORNER_PANEL_SIZES[corner], path: [] };
       return { ...state, dockOverride: null, cornerPanels, panelPathMemory: {}, treeOpenStates: {} };
     }
-    case "SET_ACTIVE_WINDOW_ID": return { ...state, activeWindowId: resolveUpdatable(action.value, state.activeWindowId) };
-    case "SET_SHELL_LAYOUT": return { ...state, shellLayout: resolveUpdatable(action.value, state.shellLayout) };
-    case "SET_ACTIVE_EXAMPLE_ID": return { ...state, activeExampleId: resolveUpdatable(action.value, state.activeExampleId) };
-    case "SET_MOBILE_PANEL_PATH": return { ...state, mobilePanelPath: resolveUpdatable(action.value, state.mobilePanelPath) };
-    case "SET_EXTRA_WINDOW_INSTANCES": return { ...state, extraWindowInstances: resolveUpdatable(action.value, state.extraWindowInstances) };
-    default: return state;
+    case "SET_ACTIVE_WINDOW_ID":
+      return { ...state, activeWindowId: resolveUpdatable(action.value, state.activeWindowId) };
+    case "SET_SHELL_LAYOUT":
+      return { ...state, shellLayout: resolveUpdatable(action.value, state.shellLayout) };
+    case "SET_ACTIVE_EXAMPLE_ID":
+      return { ...state, activeExampleId: resolveUpdatable(action.value, state.activeExampleId) };
+    case "SET_MOBILE_PANEL_PATH":
+      return { ...state, mobilePanelPath: resolveUpdatable(action.value, state.mobilePanelPath) };
+    case "SET_EXTRA_WINDOW_INSTANCES":
+      return { ...state, extraWindowInstances: resolveUpdatable(action.value, state.extraWindowInstances) };
+    default:
+      return state;
   }
 }
 
 function overlayReducer(state: OverlayState, action: ShellAction): OverlayState {
   switch (action.type) {
-    case "SET_SEARCH_OPEN": return { ...state, searchOpen: resolveUpdatable(action.value, state.searchOpen) };
-    case "SET_FIND_OPEN": return { ...state, findOpen: resolveUpdatable(action.value, state.findOpen) };
-    case "SET_INTRODUCTION_STEP": return { ...state, introductionStepIndex: resolveUpdatable(action.value, state.introductionStepIndex) };
-    default: return state;
+    case "SET_SEARCH_OPEN":
+      return { ...state, searchOpen: resolveUpdatable(action.value, state.searchOpen) };
+    case "SET_FIND_OPEN":
+      return { ...state, findOpen: resolveUpdatable(action.value, state.findOpen) };
+    case "SET_INTRODUCTION_STEP":
+      return { ...state, introductionStepIndex: resolveUpdatable(action.value, state.introductionStepIndex) };
+    case "SET_DIALOG":
+      return { ...state, dialog: action.value };
+    default:
+      return state;
   }
 }
 
 function uiPrefsReducer(state: UiPrefsState, action: ShellAction): UiPrefsState {
   switch (action.type) {
-    case "SET_UI_APPEARANCE": return { ...state, uiAppearance: resolveUpdatable(action.value, state.uiAppearance) };
-    case "SET_UI_LAYOUT": return { ...state, uiLayout: resolveUpdatable(action.value, state.uiLayout) };
-    case "SET_UI_COMPACT": return { ...state, uiCompact: resolveUpdatable(action.value, state.uiCompact) };
-    case "SET_UI_EXPERTISE": return { ...state, uiExpertise: resolveUpdatable(action.value, state.uiExpertise) };
-    case "SET_UI_LOCALE": return { ...state, uiLocale: resolveUpdatable(action.value, state.uiLocale) };
-    case "SET_UI_TERMINOLOGY": return { ...state, uiTerminology: resolveUpdatable(action.value, state.uiTerminology) };
-    case "SET_UI_THEME_ID": return { ...state, uiThemeId: resolveUpdatable(action.value, state.uiThemeId) };
-    case "SET_UI_CUSTOM_THEMES": return { ...state, uiCustomThemes: resolveUpdatable(action.value, state.uiCustomThemes) };
-    case "SET_UI_THEME_DRAFT": return { ...state, uiThemeDraft: resolveUpdatable(action.value, state.uiThemeDraft) };
-    default: return state;
+    case "SET_UI_APPEARANCE":
+      return { ...state, uiAppearance: resolveUpdatable(action.value, state.uiAppearance) };
+    case "SET_UI_LAYOUT":
+      return { ...state, uiLayout: resolveUpdatable(action.value, state.uiLayout) };
+    case "SET_UI_COMPACT":
+      return { ...state, uiCompact: resolveUpdatable(action.value, state.uiCompact) };
+    case "SET_UI_EXPERTISE":
+      return { ...state, uiExpertise: resolveUpdatable(action.value, state.uiExpertise) };
+    case "SET_UI_LOCALE":
+      return { ...state, uiLocale: resolveUpdatable(action.value, state.uiLocale) };
+    case "SET_UI_TERMINOLOGY":
+      return { ...state, uiTerminology: resolveUpdatable(action.value, state.uiTerminology) };
+    case "SET_UI_THEME_ID":
+      return { ...state, uiThemeId: resolveUpdatable(action.value, state.uiThemeId) };
+    case "SET_UI_CUSTOM_THEMES":
+      return { ...state, uiCustomThemes: resolveUpdatable(action.value, state.uiCustomThemes) };
+    case "SET_UI_THEME_DRAFT":
+      return { ...state, uiThemeDraft: resolveUpdatable(action.value, state.uiThemeDraft) };
+    default:
+      return state;
   }
 }
 
 function syncReducer(state: SyncState, action: ShellAction): SyncState {
   switch (action.type) {
-    case "SET_SYNC_BACKBONE_URI": return { ...state, syncBackboneUri: resolveUpdatable(action.value, state.syncBackboneUri) };
-    case "SET_SYNC_CARD_KIND": return { ...state, syncCardKind: resolveUpdatable(action.value, state.syncCardKind) };
-    case "SET_SYNC_DRAFT_PATH": return { ...state, syncDraftPath: resolveUpdatable(action.value, state.syncDraftPath) };
-    case "SET_SYNC_STATUS_FOR_DOCUMENT": return { ...state, syncStatusByDocumentId: { ...state.syncStatusByDocumentId, [action.documentId]: action.status } };
-    default: return state;
+    case "SET_SYNC_BACKBONE_URI":
+      return { ...state, syncBackboneUri: resolveUpdatable(action.value, state.syncBackboneUri) };
+    case "SET_SYNC_CARD_KIND":
+      return { ...state, syncCardKind: resolveUpdatable(action.value, state.syncCardKind) };
+    case "SET_SYNC_DRAFT_PATH":
+      return { ...state, syncDraftPath: resolveUpdatable(action.value, state.syncDraftPath) };
+    case "SET_SYNC_STATUS_FOR_DOCUMENT":
+      return { ...state, syncStatusByDocumentId: { ...state.syncStatusByDocumentId, [action.documentId]: action.status } };
+    default:
+      return state;
   }
 }
 //#endregion slice reducers
@@ -695,7 +741,7 @@ export function initialShellState(_props: { readonly pluginFilter?: string; read
       mobilePanelPath: [],
       extraWindowInstances: [],
     },
-    overlays: { searchOpen: false, findOpen: false, introductionStepIndex: null },
+    overlays: { searchOpen: false, findOpen: false, introductionStepIndex: null, dialog: null },
     uiPrefs: {
       uiAppearance: readStoredUiChromeAppearance(),
       uiLayout: readStoredUiChromeLayout(),
@@ -932,10 +978,7 @@ function panelCornerForGroup(group: string): PanelCorner {
   return "top-right";
 }
 
-function convertFrameworkLayoutNodeToModeLayout(
-  node: WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode,
-  appLabelsOverlay: PluginAppLabelsOverlay,
-): WindowLayoutNode {
+function convertFrameworkLayoutNodeToModeLayout(node: WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode, appLabelsOverlay: PluginAppLabelsOverlay): WindowLayoutNode {
   if (node.kind === "window") {
     return { kind: "window", id: node.windowKindId, title: resolveAppLabel(appLabelsOverlay, "windowKind", node.windowKindId, node.title ?? node.windowKindId) };
   }
@@ -965,11 +1008,7 @@ function retitleWindowLayoutNode(node: WindowLayoutNode, appLabelsOverlay: Plugi
   return { ...node, children: node.children.map((child) => retitleWindowLayoutNode(child, appLabelsOverlay)) } as WindowLayoutNode;
 }
 
-function convertFrameworkLayoutToModeLayout(
-  layout: WindowLayout | undefined,
-  windowIds: readonly string[],
-  appLabelsOverlay: PluginAppLabelsOverlay,
-): WindowLayoutNode {
+function convertFrameworkLayoutToModeLayout(layout: WindowLayout | undefined, windowIds: readonly string[], appLabelsOverlay: PluginAppLabelsOverlay): WindowLayoutNode {
   if (!layout?.root) return createEvenWindowLayout(windowIds.length ? windowIds : ["main"]);
   return convertFrameworkLayoutNodeToModeLayout(layout.root, appLabelsOverlay);
 }
@@ -1150,14 +1189,7 @@ export function flattenPanelTabLeaves<T extends { readonly children?: readonly T
 }
 
 /** @emoji 🌳 Converts one plugin-declared {@link AppPanelTabDefinition} (recursively) into a {@link PanelTabNode}. */
-function panelTabDefinitionToNode(
-  tab: AppPanelTabDefinition,
-  group: string,
-  panelUiByKey: Readonly<Record<string, UiNode>>,
-  onAction: (action: ActionDescriptor) => void,
-  order: number,
-  appLabelsOverlay: PluginAppLabelsOverlay,
-): PanelTabNode {
+function panelTabDefinitionToNode(tab: AppPanelTabDefinition, group: string, panelUiByKey: Readonly<Record<string, UiNode>>, onAction: (action: ActionDescriptor) => void, order: number, appLabelsOverlay: PluginAppLabelsOverlay): PanelTabNode {
   const tabId = panelTabKindId(tab.kind);
   const label = resolveAppLabel(appLabelsOverlay, "panelTab", tabId, tab.label);
   if (tab.children && tab.children.length > 0) {
@@ -1373,11 +1405,7 @@ function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, o
  * the toolbar only while its `activeToolId` matches the window's active tool). Both buckets render
  * through the same {@link renderWindowMeasure} control path; each is `undefined` when its bucket is empty.
  */
-function windowMeasuresChrome(
-  measures: readonly WindowMeasure[] | undefined,
-  activeToolId: string | undefined,
-  onAction: (action: ActionDescriptor) => void,
-): { readonly measures: ReactNode | undefined; readonly toolOptions: ReactNode | undefined } {
+function windowMeasuresChrome(measures: readonly WindowMeasure[] | undefined, activeToolId: string | undefined, onAction: (action: ActionDescriptor) => void): { readonly measures: ReactNode | undefined; readonly toolOptions: ReactNode | undefined } {
   const { general, toolOptions } = partitionWindowMeasures(measures ?? [], activeToolId);
   return {
     measures: windowMeasuresOverlay(general, onAction),
@@ -1533,7 +1561,16 @@ export function WindowActionPanel(props: WindowActionPanelProps): ReactElement {
     <div data-slot="window-action-panel" className="flex min-w-0 flex-col gap-single p-single">
       {actions.map((action) => {
         if (!actionRequiresStagedForm(action)) {
-          return <Button key={action.id} id={`${windowId}-action-${action.id}`} text={action.label} icon={action.iconId && action.iconId in ICONS ? (action.iconId as IconName) : "play"} disabled={disabled} onClick={() => onExecute({ controllerId, action: action.id })} />;
+          return (
+            <Button
+              key={action.id}
+              id={`${windowId}-action-${action.id}`}
+              text={action.label}
+              icon={action.iconId && action.iconId in ICONS ? (action.iconId as IconName) : "play"}
+              disabled={disabled}
+              onClick={() => onExecute({ controllerId, action: action.id })}
+            />
+          );
         }
         const expanded = expandedActionId === action.id;
         const staged = stagedArgsByKey[actionStageKey(windowId, action.id)] ?? {};
@@ -1541,12 +1578,7 @@ export function WindowActionPanel(props: WindowActionPanelProps): ReactElement {
         const missing = missingRequiredArgs(action.args, effective);
         return (
           <div key={action.id} data-slot="window-action-row" className={cn("flex min-w-0 flex-col rounded-md border", borderElementClass)}>
-            <Button
-              id={`${windowId}-action-${action.id}-disclosure`}
-              text={`${action.label}…`}
-              icon={expanded ? "chevron-down" : "chevron-right"}
-              onClick={() => onExpandedChange(expanded ? null : action.id)}
-            />
+            <Button id={`${windowId}-action-${action.id}-disclosure`} text={`${action.label}…`} icon={expanded ? "chevron-down" : "chevron-right"} onClick={() => onExpandedChange(expanded ? null : action.id)} />
             {expanded ? (
               <div data-slot="window-action-form" className="flex min-w-0 flex-col gap-single p-single">
                 {action.args.map((def) => (
@@ -1555,8 +1587,14 @@ export function WindowActionPanel(props: WindowActionPanelProps): ReactElement {
                   </Field>
                 ))}
                 <div className="flex items-center gap-single">
-                  <Button id={`${windowId}-action-${action.id}-execute`} text="Execute" icon="check" disabled={disabled || missing.length > 0} onClick={() => onExecute({ controllerId, action: action.id, args: effectiveActionArgs(action.args, staged) })} />
-                  <Button id={`${windowId}-action-${action.id}-reset`} text="Reset" icon="undo" onClick={() => onResetArgs(action.id)} />
+                  <Button
+                    id={`${windowId}-action-${action.id}-execute`}
+                    text={shellLabel("ui.common.execute")}
+                    icon="check"
+                    disabled={disabled || missing.length > 0}
+                    onClick={() => onExecute({ controllerId, action: action.id, args: effectiveActionArgs(action.args, staged) })}
+                  />
+                  <Button id={`${windowId}-action-${action.id}-reset`} text={shellLabel("ui.common.reset")} icon="undo" onClick={() => onResetArgs(action.id)} />
                 </div>
               </div>
             ) : null}
@@ -1576,14 +1614,7 @@ type ActionPanelSlice = Pick<ActionPanelState, "expandedByWindowId" | "stagedArg
  * chip never renders). Rows render disabled while an active tool gates actions
  * (`allowsActionsWhileActive === false`).
  */
-function windowActionPanelNode(
-  app: AppDefinition,
-  windowKind: AppWindowKindDefinition,
-  windowId: string,
-  actionPanel: ActionPanelSlice,
-  onAction: (action: ActionDescriptor) => void,
-  dispatch: (action: ShellAction) => void,
-): ReactNode {
+function windowActionPanelNode(app: AppDefinition, windowKind: AppWindowKindDefinition, windowId: string, actionPanel: ActionPanelSlice, onAction: (action: ActionDescriptor) => void, dispatch: (action: ShellAction) => void): ReactNode {
   const actions = resolveWindowActions(app, windowKind);
   if (actions.length === 0) return undefined;
   const activeToolId = actionPanel.activeToolByWindowId[windowId] ?? null;
@@ -1757,7 +1788,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
   const { foldedByWindowId: actionPanelFoldedByWindowId, expandedByWindowId: actionPanelExpandedByWindowId, stagedArgsByKey: actionPanelStagedArgsByKey, activeToolByWindowId } = shellState.actionPanel;
   const { cornerPanels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, extraWindowInstances } = shellState.layout;
-  const { searchOpen, findOpen, introductionStepIndex } = shellState.overlays;
+  const { searchOpen, findOpen, introductionStepIndex, dialog: overlayDialog } = shellState.overlays;
   const { uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft } = shellState.uiPrefs;
   const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
   const importStudioInputRef = useRef<HTMLInputElement>(null);
@@ -2000,8 +2031,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         };
         // Resolve external slots on freshly-changed window/panel bodies only, before caching them, so a
         // later no-op refresh reuses the already-resolved cached value instead of re-resolving.
-        const resolveIfChanged = async (entry: PluginUiRefreshSectionResponse): Promise<PluginUiRefreshSectionResponse> =>
-          entry.value !== undefined ? { ...entry, value: await resolveExternalSlots(entry.value as UiNode, slotContext) } : entry;
+        const resolveIfChanged = async (entry: PluginUiRefreshSectionResponse): Promise<PluginUiRefreshSectionResponse> => (entry.value !== undefined ? { ...entry, value: await resolveExternalSlots(entry.value as UiNode, slotContext) } : entry);
         const [resolvedWindows, resolvedPanels] = await Promise.all([Promise.all((response.windows ?? []).map(resolveIfChanged)), Promise.all((response.panels ?? []).map(resolveIfChanged))]);
         if (generation !== refreshGenerationRef.current) return;
         applyUiRefreshResponseToCache(cache, { ...response, windows: resolvedWindows, panels: resolvedPanels });
@@ -2012,7 +2042,11 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       // `modeWindows`'s `useMemo`) skip reconciling the whole shell on every interaction.
       dispatch({
         type: "SET_WINDOW_UI_BY_KIND",
-        value: (current) => mergeRecordPreservingIdentity(current, nextSession.app.windowKinds.map((kind) => [kind.id, (cache.get(`window:${kind.id}`)?.value as UiNode | undefined) ?? current[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.loading")}: ${kind.id}` }] as const)),
+        value: (current) =>
+          mergeRecordPreservingIdentity(
+            current,
+            nextSession.app.windowKinds.map((kind) => [kind.id, (cache.get(`window:${kind.id}`)?.value as UiNode | undefined) ?? current[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.loading")}: ${kind.id}` }] as const),
+          ),
       });
       const dynamicEngagements = (cache.get("engagements")?.value as Readonly<Record<string, WindowEngagement>> | undefined) ?? {};
       dispatch({
@@ -2031,7 +2065,9 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         value: (current) =>
           mergeRecordPreservingIdentity(
             current,
-            panelTabLeaves.filter((tab) => tab.bodyKey).map((tab) => [panelTabKindId(tab.kind), (cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as UiNode | undefined) ?? current[panelTabKindId(tab.kind)] ?? { type: "text", value: shellLabel("ui.common.loading") }] as const),
+            panelTabLeaves
+              .filter((tab) => tab.bodyKey)
+              .map((tab) => [panelTabKindId(tab.kind), (cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as UiNode | undefined) ?? current[panelTabKindId(tab.kind)] ?? { type: "text", value: shellLabel("ui.common.loading") }] as const),
           ),
       });
       const windowIds = nextSession.app.windowKinds.map((kind) => kind.id);
@@ -2255,6 +2291,17 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           const { windowKindId, toolId } = effect.setActiveTool;
           dispatch({ type: "SET_ACTIVE_TOOL", windowId: windowKindId, toolId: toolId || null });
           if (windowKindId === activeWindowIdRef.current) nextViewState = { ...nextViewState, activeToolId: toolId || undefined };
+          continue;
+        }
+        if ("openDialog" in effect) {
+          // 🗨️ Renders from the active `baseSession.app` — dialogs opened by spawned plugin
+          // instances are v1-out-of-scope, mirroring the introduction's active-session-only scope.
+          const { dialogId, args } = effect.openDialog;
+          if (baseSession.app.dialogs?.some((entry) => entry.id === dialogId)) {
+            dispatch({ type: "SET_DIALOG", value: { dialogId, seedArgs: args as Record<string, unknown> | undefined } });
+          } else {
+            console.error(`[os-shell] openDialog: app ${baseSession.app.id} declares no dialog "${dialogId}"`);
+          }
           continue;
         }
         if ("navigate" in effect) {
@@ -2742,30 +2789,33 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     [session, appLabelsOverlay],
   );
 
-  const applyModeChange = useCallback((modeId: string) => {
-    dispatch({
-      type: "SET_SESSION",
-      value: (current) => {
-        if (!current) return current;
-        const layout = resolveLayoutForMode(current.app, modeId);
-        if (layout) {
-          dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: [] });
-          extraWindowCounterRef.current = 0;
-          dispatch({
-            type: "SET_SHELL_LAYOUT",
-            value: convertFrameworkLayoutToModeLayout(
-              layout,
-              current.app.windowKinds.map((kind) => kind.id),
-              appLabelsOverlay,
-            ),
-          });
-          const defaultWindowId = findDefaultActiveWindowKindId(layout, current.app.windowKinds);
-          if (defaultWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: defaultWindowId });
-        }
-        return { ...current, viewState: { ...current.viewState, activeModeId: modeId } };
-      },
-    });
-  }, [appLabelsOverlay]);
+  const applyModeChange = useCallback(
+    (modeId: string) => {
+      dispatch({
+        type: "SET_SESSION",
+        value: (current) => {
+          if (!current) return current;
+          const layout = resolveLayoutForMode(current.app, modeId);
+          if (layout) {
+            dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: [] });
+            extraWindowCounterRef.current = 0;
+            dispatch({
+              type: "SET_SHELL_LAYOUT",
+              value: convertFrameworkLayoutToModeLayout(
+                layout,
+                current.app.windowKinds.map((kind) => kind.id),
+                appLabelsOverlay,
+              ),
+            });
+            const defaultWindowId = findDefaultActiveWindowKindId(layout, current.app.windowKinds);
+            if (defaultWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: defaultWindowId });
+          }
+          return { ...current, viewState: { ...current.viewState, activeModeId: modeId } };
+        },
+      });
+    },
+    [appLabelsOverlay],
+  );
 
   const handleTemplateDrop = useCallback(
     (payload: WindowTemplateDropPayload, target: ModeCanvasDropTarget) => {
@@ -2826,12 +2876,48 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     dispatch({ type: "SET_UI_THEME_ID", value: id });
   }, []);
 
-  const setThemeColor = useCallback((key: string, hex: string) => draftThemePatch((next) => { next.colors[key] = hex; }), [draftThemePatch]);
-  const setThemeSpacing = useCallback((key: string, value: string) => draftThemePatch((next) => { next.spacing[key] = value; }), [draftThemePatch]);
-  const setThemeFontStack = useCallback((key: string, value: string) => draftThemePatch((next) => { next.fontStacks[key] = value; }), [draftThemePatch]);
-  const setThemeStroke = useCallback((key: string, value: number | number[]) => draftThemePatch((next) => { next.strokes[key] = value; }), [draftThemePatch]);
-  const setThemeRadius = useCallback((key: string, value: number) => draftThemePatch((next) => { next.radii[key] = value; }), [draftThemePatch]);
-  const setThemeOpacity = useCallback((key: string, value: number) => draftThemePatch((next) => { next.opacities[key] = value; }), [draftThemePatch]);
+  const setThemeColor = useCallback(
+    (key: string, hex: string) =>
+      draftThemePatch((next) => {
+        next.colors[key] = hex;
+      }),
+    [draftThemePatch],
+  );
+  const setThemeSpacing = useCallback(
+    (key: string, value: string) =>
+      draftThemePatch((next) => {
+        next.spacing[key] = value;
+      }),
+    [draftThemePatch],
+  );
+  const setThemeFontStack = useCallback(
+    (key: string, value: string) =>
+      draftThemePatch((next) => {
+        next.fontStacks[key] = value;
+      }),
+    [draftThemePatch],
+  );
+  const setThemeStroke = useCallback(
+    (key: string, value: number | number[]) =>
+      draftThemePatch((next) => {
+        next.strokes[key] = value;
+      }),
+    [draftThemePatch],
+  );
+  const setThemeRadius = useCallback(
+    (key: string, value: number) =>
+      draftThemePatch((next) => {
+        next.radii[key] = value;
+      }),
+    [draftThemePatch],
+  );
+  const setThemeOpacity = useCallback(
+    (key: string, value: number) =>
+      draftThemePatch((next) => {
+        next.opacities[key] = value;
+      }),
+    [draftThemePatch],
+  );
   const setThemeMetric = useCallback(
     (section: string, key: string, value: number | number[]) =>
       draftThemePatch((next) => {
@@ -2870,21 +2956,18 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     [uiThemeBase],
   );
 
-  const deleteTheme = useCallback(
-    (id: string) => {
-      if (!id.startsWith("custom.")) return;
-      dispatch({
-        type: "SET_UI_CUSTOM_THEMES",
-        value: (current) => {
-          const { [id]: _removed, ...rest } = current;
-          return rest;
-        },
-      });
-      dispatch({ type: "SET_UI_THEME_ID", value: (current) => (current === id ? "semio" : current) });
-      dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
-    },
-    [],
-  );
+  const deleteTheme = useCallback((id: string) => {
+    if (!id.startsWith("custom.")) return;
+    dispatch({
+      type: "SET_UI_CUSTOM_THEMES",
+      value: (current) => {
+        const { [id]: _removed, ...rest } = current;
+        return rest;
+      },
+    });
+    dispatch({ type: "SET_UI_THEME_ID", value: (current) => (current === id ? "semio" : current) });
+    dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
+  }, []);
 
   const exportTheme = useCallback(() => {
     downloadMediaExport(`${uiThemeBase.id}.theme.json`, "application/json", serializeUiTheme(uiThemeBase));
@@ -3056,16 +3139,11 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   }, [onAction, session]);
 
   const activeRightPanelTab = session?.app.panelTabs.find((tab) => panelCornerForGroup(tab.group) === "top-right");
-  const activePanelTabId =
-    panel?.activePanelTab ??
-    (activeRightPanelTab ? panelTabKindId(activeRightPanelTab.kind) : undefined) ??
-    (session?.app.panelTabs[0] ? panelTabKindId(session.app.panelTabs[0].kind) : undefined);
+  const activePanelTabId = panel?.activePanelTab ?? (activeRightPanelTab ? panelTabKindId(activeRightPanelTab.kind) : undefined) ?? (session?.app.panelTabs[0] ? panelTabKindId(session.app.panelTabs[0].kind) : undefined);
 
   const workbenchLeftTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
-    const pluginLeftTabs = session.app.panelTabs
-      .filter((tab) => panelCornerForGroup(tab.group) === "top-left")
-      .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay));
+    const pluginLeftTabs = session.app.panelTabs.filter((tab) => panelCornerForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay));
     if (studioMode && session.app.id === S_PLAY_APP_ID && pluginLeftTabs.length > 0) return pluginLeftTabs;
     const hasPluginDocumentTab = pluginLeftTabs.some((tab) => tab.id === FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
     if (hasPluginDocumentTab) return pluginLeftTabs;
@@ -3089,9 +3167,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
 
   const detailsRightTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
-    return session.app.panelTabs
-      .filter((tab) => panelCornerForGroup(tab.group) === "top-right")
-      .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay));
+    return session.app.panelTabs.filter((tab) => panelCornerForGroup(tab.group) === "top-right").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay));
   }, [appLabelsOverlay, onAction, panelUiByKey, session]);
 
   const settingsRightTabs = useMemo((): PanelTabNode[] => frameworkSettingsTabs, [frameworkSettingsTabs]);
@@ -3157,20 +3233,14 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
 
   //#region 🧭DockAssembly — default four-corner arrangement + persisted-override reconciliation + drag-and-drop wiring.
   const defaultDock = useMemo((): PanelDock => {
-    const topLeft: PanelTabNode[] = [
-      { kind: "branch", id: FRAMEWORK_CATEGORY_WORKBENCH_ID, icon: categoryTabIcon(workbenchLeftTabs, "folder"), name: shellLabel("ui.panelToggle.workbench"), order: 0, children: workbenchLeftTabs },
-    ];
+    const topLeft: PanelTabNode[] = [{ kind: "branch", id: FRAMEWORK_CATEGORY_WORKBENCH_ID, icon: categoryTabIcon(workbenchLeftTabs, "folder"), name: shellLabel("ui.panelToggle.workbench"), order: 0, children: workbenchLeftTabs }];
     const bottomLeft: PanelTabNode[] = [];
     if (frameworkDisplayTabs.length > 0) {
       bottomLeft.push({ kind: "branch", id: FRAMEWORK_CATEGORY_DISPLAY_ID, icon: categoryTabIcon(frameworkDisplayTabs, "layout-grid"), name: shellLabel("ui.panelToggle.display"), order: 0, children: frameworkDisplayTabs });
     }
     if (frameworkSyncTab) bottomLeft.push(frameworkSyncTab);
-    const topRight: PanelTabNode[] = [
-      { kind: "branch", id: FRAMEWORK_CATEGORY_DETAILS_ID, icon: categoryTabIcon(detailsRightTabs, "info"), name: shellLabel("ui.panelToggle.details"), order: 0, children: detailsRightTabs },
-    ];
-    const bottomRight: PanelTabNode[] = [
-      { kind: "branch", id: FRAMEWORK_CATEGORY_SETTINGS_ID, icon: categoryTabIcon(settingsRightTabs, "settings-2"), name: shellLabel("ui.panelToggle.settings"), order: 0, children: settingsRightTabs },
-    ];
+    const topRight: PanelTabNode[] = [{ kind: "branch", id: FRAMEWORK_CATEGORY_DETAILS_ID, icon: categoryTabIcon(detailsRightTabs, "info"), name: shellLabel("ui.panelToggle.details"), order: 0, children: detailsRightTabs }];
+    const bottomRight: PanelTabNode[] = [{ kind: "branch", id: FRAMEWORK_CATEGORY_SETTINGS_ID, icon: categoryTabIcon(settingsRightTabs, "settings-2"), name: shellLabel("ui.panelToggle.settings"), order: 0, children: settingsRightTabs }];
     if (frameworkToolsHistoryTab) bottomRight.push(frameworkToolsHistoryTab);
     return { corners: { "top-left": topLeft, "top-right": topRight, "bottom-left": bottomLeft, "bottom-right": bottomRight } };
   }, [detailsRightTabs, frameworkDisplayTabs, frameworkSyncTab, frameworkToolsHistoryTab, settingsRightTabs, uiLocale, workbenchLeftTabs]);
@@ -3301,10 +3371,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   }, [detailsOverrideTabId, detailsOverrideCorner, studioOverrideCorner, dock, cornerPanels]);
   //#endregion 🧭DockAssembly
 
-  const mobilePanelTabs = useMemo(
-    () => [...defaultDock.corners["top-left"], ...defaultDock.corners["top-right"], ...defaultDock.corners["bottom-left"], ...defaultDock.corners["bottom-right"]],
-    [defaultDock],
-  );
+  const mobilePanelTabs = useMemo(() => [...defaultDock.corners["top-left"], ...defaultDock.corners["top-right"], ...defaultDock.corners["bottom-left"], ...defaultDock.corners["bottom-right"]], [defaultDock]);
 
   const mobilePanel = useMemo(() => {
     if (mobilePanelTabs.length === 0) return undefined;
@@ -3538,7 +3605,11 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
             actionPanel: spawnedApp && windowKind ? windowActionPanelNode(spawnedApp, windowKind, spawned.id, actionPanelSlice, onActionStable, dispatch) : undefined,
             actionsFolded: actionsFoldedFor(spawned.id),
             onActionsFoldedChange: onActionsFoldedFor(spawned.id),
-            children: <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={spawnedApp ? cursorFor(spawnedApp, spawned.id) : undefined}><InterpretedUiNode node={spawnedWindowUi} onAction={onActionStable} /></ChromeAwareWindowScrollSurface>,
+            children: (
+              <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={spawnedApp ? cursorFor(spawnedApp, spawned.id) : undefined}>
+                <InterpretedUiNode node={spawnedWindowUi} onAction={onActionStable} />
+              </ChromeAwareWindowScrollSurface>
+            ),
           },
         ];
       }
@@ -3585,12 +3656,37 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       ];
     });
     return [...baseWindows, ...extraWindows];
-  }, [actionPanelExpandedByWindowId, actionPanelFoldedByWindowId, actionPanelStagedArgsByKey, activeToolByWindowId, appLabelsOverlay, extraWindowInstances, loadedPlugins, onActionStable, panel, session, spawnedWindowEngagements, spawnedWindowMeasures, spawnedWindowUi, studioMode, uiLocale, windowEngagementsByKind, windowMeasuresByKind, windowUiByKind]);
+  }, [
+    actionPanelExpandedByWindowId,
+    actionPanelFoldedByWindowId,
+    actionPanelStagedArgsByKey,
+    activeToolByWindowId,
+    appLabelsOverlay,
+    extraWindowInstances,
+    loadedPlugins,
+    onActionStable,
+    panel,
+    session,
+    spawnedWindowEngagements,
+    spawnedWindowMeasures,
+    spawnedWindowUi,
+    studioMode,
+    uiLocale,
+    windowEngagementsByKind,
+    windowMeasuresByKind,
+    windowUiByKind,
+  ]);
 
   const effectiveModeLayout = useMemo(
     () =>
       shellLayout ??
-      (session ? convertFrameworkLayoutToModeLayout(session.app.defaultLayout, modeWindows.map((window) => window.id), appLabelsOverlay) : { kind: "stack" as const, children: [] }),
+      (session
+        ? convertFrameworkLayoutToModeLayout(
+            session.app.defaultLayout,
+            modeWindows.map((window) => window.id),
+            appLabelsOverlay,
+          )
+        : { kind: "stack" as const, children: [] }),
     [appLabelsOverlay, modeWindows, session, shellLayout],
   );
 
@@ -3605,7 +3701,11 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     const modes = session.app.modes.length > 0 ? session.app.modes : [{ id: session.app.id, label: appDocumentLabel(session.app.document) }];
     const studioHomeBar =
       studioMode && session.app.id === S_PLAY_APP_ID && !panel?.activeSpawnedId ? (
-        <button type="button" className={cn(borderNormalBottomClass, "px-single py-single text-left text-sm text-muted-foreground hover:bg-muted/40 hover:text-foreground")} onClick={() => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "goHome" })}>
+        <button
+          type="button"
+          className={cn(borderNormalBottomClass, "px-single py-single text-left text-sm text-muted-foreground hover:bg-muted/40 hover:text-foreground")}
+          onClick={() => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "goHome" })}
+        >
           ← {shellLabel("ui.common.home")}
         </button>
       ) : null;
@@ -3638,7 +3738,12 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           }}
         />
         <div className="min-h-0 flex-1">
-          <App modes={modes.map((mode) => ({ id: mode.id, label: resolveAppLabel(appLabelsOverlay, "mode", mode.id, mode.label), children: null }))} activeModeId={session.viewState.activeModeId ?? modes[0]?.id ?? session.app.id} onActiveModeChange={applyModeChange} chrome={false}>
+          <App
+            modes={modes.map((mode) => ({ id: mode.id, label: resolveAppLabel(appLabelsOverlay, "mode", mode.id, mode.label), children: null }))}
+            activeModeId={session.viewState.activeModeId ?? modes[0]?.id ?? session.app.id}
+            onActiveModeChange={applyModeChange}
+            chrome={false}
+          >
             <Mode
               className="h-full w-full"
               mobile={mobile}
@@ -3729,6 +3834,27 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
             }}
           />
         )}
+        {session &&
+          overlayDialog &&
+          (() => {
+            const dialog = session.app.dialogs?.find((entry) => entry.id === overlayDialog.dialogId);
+            if (!dialog) return null;
+            return (
+              <UIDialog
+                dialog={dialog}
+                seedArgs={overlayDialog.seedArgs}
+                renderField={(def, value, onChange) => renderStagedArgControl(def, value, onChange)}
+                onSubmit={(args) => {
+                  dispatch({ type: "SET_DIALOG", value: null });
+                  onAction({ controllerId: session.app.controllerId, action: dialog.submitAction, args });
+                }}
+                onCancel={() => {
+                  dispatch({ type: "SET_DIALOG", value: null });
+                  if (dialog.cancelAction) onAction({ controllerId: session.app.controllerId, action: dialog.cancelAction });
+                }}
+              />
+            );
+          })()}
       </LevelProvider>
     </UIFindProvider>
   );
@@ -4110,6 +4236,11 @@ export type Puzzle2dBoardWasmSession = {
   clearFixtureDropPreview?(): void;
   defersDescriptorSyncFromJs?(): boolean;
   isDraggingAreaSelect?(): boolean;
+  /** @emoji 🐢 Silent cross-pane mirror setters (WS-live-sync round 4) — move nodes/set preselect/set the marquee outline without emitting board events or a fixture reset, so a peer pane can mirror another pane's live gesture without round-tripping through the plugin. */
+  setNodePositionsJson?(json: string): void;
+  setPreselectStateJsonSilent?(json: string): void;
+  setSelectionScreenPreview?(flatXy: readonly number[]): void;
+  clearSelectionScreenPreview?(): void;
   free(): void;
 };
 
@@ -4288,7 +4419,17 @@ export function useUIFindSafe(): UIFindContextValue | null {
   return useContext(UIFindContext);
 }
 
-export function UIFind({ open, onOpenChange, placeholder = shellLabel("ui.find.placeholder"), emptyMessage = shellLabel("ui.find.empty") }: { readonly open: boolean; readonly onOpenChange: (open: boolean) => void; readonly placeholder?: string; readonly emptyMessage?: string }) {
+export function UIFind({
+  open,
+  onOpenChange,
+  placeholder = shellLabel("ui.find.placeholder"),
+  emptyMessage = shellLabel("ui.find.empty"),
+}: {
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly placeholder?: string;
+  readonly emptyMessage?: string;
+}) {
   const [query, setQuery] = useState("");
   const findContext = useContext(UIFindContext);
   const findItems = findContext?.findItems ?? [];
@@ -4374,13 +4515,7 @@ type SyncAttachCardProps = {
 function syncStatusLabel(status: DocumentSyncStatus | null): string | null {
   if (!status) return null;
   const remote =
-    status.remote.kind === "live"
-      ? `live · ${status.remote.peerCount} peer${status.remote.peerCount === 1 ? "" : "s"}`
-      : status.remote.kind === "connecting"
-        ? "connecting…"
-        : status.remote.kind === "backoff"
-          ? "reconnecting…"
-          : "offline";
+    status.remote.kind === "live" ? `live · ${status.remote.peerCount} peer${status.remote.peerCount === 1 ? "" : "s"}` : status.remote.kind === "connecting" ? "connecting…" : status.remote.kind === "backoff" ? "reconnecting…" : "offline";
   const persisted = status.persisted ? "saved" : "unsaved";
   const pending = status.pendingOps > 0 ? ` · ${status.pendingOps} pending` : "";
   return `${remote} · ${persisted}${pending}`;
@@ -4388,8 +4523,7 @@ function syncStatusLabel(status: DocumentSyncStatus | null): string | null {
 
 function SyncAttachCard({ activeUri, cardKind, draftPath, syncTools, status, onAction, onDraftPathChange, onClose, onAttach, onDetach }: SyncAttachCardProps): ReactElement {
   const open = cardKind != null;
-  const placeholder =
-    cardKind === "remote" ? "127.0.0.1:8787/demo" : cardKind === "folder" ? "/absolute/project/folder" : "/absolute/document.json";
+  const placeholder = cardKind === "remote" ? "127.0.0.1:8787/demo" : cardKind === "folder" ? "/absolute/project/folder" : "/absolute/document.json";
 
   const attachFromDraft = () => {
     if (!cardKind || !draftPath.trim()) return;
@@ -4556,9 +4690,7 @@ function hasInteractiveToolLeaves(items: readonly ToolLeaf[]): boolean {
 
 type ToolCollectionNode = Extract<ToolNode, { readonly kind: "collection" }>;
 
-export type ToolbarRibbonSegment =
-  | { readonly kind: "picker"; readonly collections: readonly ToolCollectionNode[]; readonly depth: number }
-  | { readonly kind: "tools"; readonly items: readonly ToolLeaf[]; readonly depth: number };
+export type ToolbarRibbonSegment = { readonly kind: "picker"; readonly collections: readonly ToolCollectionNode[]; readonly depth: number } | { readonly kind: "tools"; readonly items: readonly ToolLeaf[]; readonly depth: number };
 
 /** @emoji 🎀 Builds drill-down ribbon segments from a toolbar tree and active collection path; `depth` marks how many collections were drilled into to reach a segment. Collections never auto-activate: a level only recurses when `path[depth]` names one of its enabled collections, so at most one group per level is active and an unresolved level simply shows its picker. */
 export function buildToolbarRibbonSegments(nodes: readonly ToolNode[], path: readonly string[], depth = 0): ToolbarRibbonSegment[] {
@@ -4852,14 +4984,7 @@ function buildDisplayLayoutTree(host: DisplayHostApi): TreePanelConfig {
           {
             id: "framework.display.layout.save.label",
             label: shellLabel("ui.common.name"),
-            control: (
-              <Input
-                id="framework.display.save-label"
-                value={host.layoutSaveLabel}
-                onChange={(event) => host.setLayoutSaveLabel(event.target.value)}
-                placeholder={shellLabel("ui.display.saveLayoutPlaceholder")}
-              />
-            ),
+            control: <Input id="framework.display.save-label" value={host.layoutSaveLabel} onChange={(event) => host.setLayoutSaveLabel(event.target.value)} placeholder={shellLabel("ui.display.saveLayoutPlaceholder")} />,
           },
           {
             id: "framework.display.layout.save.action",
@@ -5160,12 +5285,7 @@ function buildThemeAppearanceGroupItems(host: SettingsHostApi, appearance: Theme
         label: paintKey,
         control: (
           <div className="flex w-full items-center gap-single">
-            <input
-              type="color"
-              className={cn(borderElementClass, "h-small w-10 shrink-0 rounded border bg-background")}
-              value={hex}
-              onChange={(event) => host.setThemeAppearancePaint(appearance, group, paintKey, event.target.value, alpha)}
-            />
+            <input type="color" className={cn(borderElementClass, "h-small w-10 shrink-0 rounded border bg-background")} value={hex} onChange={(event) => host.setThemeAppearancePaint(appearance, group, paintKey, event.target.value, alpha)} />
             <Input
               id={`framework.settings.theme.appearances.${appearance}.${group}.${paintKey}.alpha`}
               defaultValue={alpha.toFixed(2)}
@@ -5260,7 +5380,9 @@ function buildSettingsThemeTree(host: SettingsHostApi): TreePanelConfig {
           {
             id: "framework.settings.theme.save.label",
             label: shellLabel("ui.common.name"),
-            control: <Input id="framework.settings.theme.save-label" value={host.themeSaveLabel} onChange={(event) => host.setThemeSaveLabel(event.target.value)} placeholder={shellLabel("ui.settings.theme.savePlaceholder")} className="h-small w-32" />,
+            control: (
+              <Input id="framework.settings.theme.save-label" value={host.themeSaveLabel} onChange={(event) => host.setThemeSaveLabel(event.target.value)} placeholder={shellLabel("ui.settings.theme.savePlaceholder")} className="h-small w-32" />
+            ),
           },
           {
             id: "framework.settings.theme.save.action",

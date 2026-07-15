@@ -13,10 +13,5 @@
     "id": "12c668e5",
     "local": "fix_wgpu_pointer_coordinate_scaling_bug_12c668e5.plan.md"
   },
-  "sessions": [
-    "⚪fc1bc2ebf0c443ea894ca05133679000",
-    "⚪012513bca08a4972891fb1f2df2e3112",
-    "⚪15da272cc6354fd085557a0589c4e904",
-    "⚪601db591fae341bdb68f7875957fe2f1"
-  ]
+  "sessions": ["⚪fc1bc2ebf0c443ea894ca05133679000", "⚪012513bca08a4972891fb1f2df2e3112", "⚪15da272cc6354fd085557a0589c4e904", "⚪601db591fae341bdb68f7875957fe2f1"]
 }

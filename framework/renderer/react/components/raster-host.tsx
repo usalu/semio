@@ -222,19 +222,7 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
       }
     }
     session.renderFrame();
-  }, [
-    isNavigator,
-    scene.documentSyncJson,
-    scene.assetsJson,
-    scene.cameraJson,
-    scene.selectionJson,
-    scene.hoveredId,
-    scene.activeTool,
-    scene.brushSize,
-    scene.brushOpacity,
-    scene.viewMode,
-    scene.compositeViewportJson,
-  ]);
+  }, [isNavigator, scene.documentSyncJson, scene.assetsJson, scene.cameraJson, scene.selectionJson, scene.hoveredId, scene.activeTool, scene.brushSize, scene.brushOpacity, scene.viewMode, scene.compositeViewportJson]);
 
   useEffect(() => {
     syncAll();
@@ -476,16 +464,22 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
   return (
     <div ref={containerRef} className="semio-raster-canvas-surface relative h-full min-h-[24rem] w-full bg-canvas" data-controller-id={node.controllerId} data-surface-id={node.surfaceId} data-view-mode={scene.viewMode}>
       <RasterWasmCanvas sessionFactory={sessionFactory} onSessionReady={onSessionReady} />
-      {attachError ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-canvas text-xs text-muted-foreground">Canvas unavailable: {attachError}</div>
-      ) : null}
+      {attachError ? <div className="absolute inset-0 flex items-center justify-center bg-canvas text-xs text-muted-foreground">Canvas unavailable: {attachError}</div> : null}
       {marqueeOverlay?.shape === "rect" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} /> : null}
       {marqueeOverlay?.shape === "polygon" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} /> : null}
-      {isNavigator && overlayRect ? (
-        <div className="pointer-events-none absolute z-20 border-2 border-accent" style={{ left: overlayRect.x, top: overlayRect.y, width: overlayRect.width, height: overlayRect.height }} />
+      {isNavigator && overlayRect ? <div className="pointer-events-none absolute z-20 border-2 border-accent" style={{ left: overlayRect.x, top: overlayRect.y, width: overlayRect.width, height: overlayRect.height }} /> : null}
+      <div
+        className="absolute inset-0 z-30"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerLeave={() => pickInteraction.onCanvasPointerLeave()}
+        onWheel={onWheel}
+        onContextMenu={(event) => event.preventDefault()}
+      />
+      {!isNavigator ? (
+        <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} />
       ) : null}
-      <div className="absolute inset-0 z-30" onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerLeave={() => pickInteraction.onCanvasPointerLeave()} onWheel={onWheel} onContextMenu={(event) => event.preventDefault()} />
-      {!isNavigator ? <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} /> : null}
     </div>
   );
 }

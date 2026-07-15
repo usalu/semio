@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Button, Icon, closestCenter, DndContext, DndCSS, SortableContext, useSortable, verticalListSortingStrategy, type DragEndEvent } from "@semio-tech/ui-react";
+import { Button, Icon, closestCenter, DndContext, DndCSS, SortableContext, useLabel, useSortable, verticalListSortingStrategy, type DragEndEvent } from "@semio-tech/ui-react";
 import { ICONS, type IconName } from "@semio-tech/ui-asset";
 import type { ActionDescriptor, ComponentSceneHostProps } from "@semio-tech/framework-core";
 
@@ -26,7 +26,11 @@ function dispatchProtocolAction(onAction: (action: ActionDescriptor) => void, co
 function SortableRow({ id, children }: { readonly id: string; readonly children: (dragHandleProps: { readonly ref: (node: HTMLElement | null) => void; readonly style: React.CSSProperties }) => React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style: React.CSSProperties = { transform: DndCSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
-  return <div ref={setNodeRef} style={style} {...attributes} {...listeners}>{children({ ref: setNodeRef, style })}</div>;
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      {children({ ref: setNodeRef, style })}
+    </div>
+  );
 }
 //#endregion SortableRow
 
@@ -154,8 +158,11 @@ export function ProtocolListHost({ node, onAction }: ComponentSceneHostProps) {
     }
   }, [scene]);
   const stepIds = useMemo(() => steps.map((step) => step.id), [steps]);
+  const stepsLabel = useLabel("ui.protocolList.steps");
+  const addStepLabel = useLabel("ui.protocolList.addStep");
+  const emptyLabel = useLabel("ui.protocolList.empty");
 
-  if (!scene) return <div className="semio-protocol-list-empty">No protocol scene</div>;
+  if (!scene) return <div className="semio-protocol-list-empty">{emptyLabel}</div>;
 
   function handleStepDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -169,8 +176,8 @@ export function ProtocolListHost({ node, onAction }: ComponentSceneHostProps) {
     <div className="semio-protocol-list-host flex h-full min-h-0 w-full" data-surface-id={node.surfaceId}>
       <div className="flex min-w-0 flex-1 flex-col gap-2 overflow-auto p-single">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Steps</span>
-          <Button className="h-medium shrink-0 px-2" icon="plus" text="Add Step" type="button" variant="outline" onClick={() => dispatchProtocolAction(onAction, node.controllerId, "addStep", {})} />
+          <span className="text-sm font-medium">{stepsLabel}</span>
+          <Button className="h-medium shrink-0 px-2" icon="plus" text={addStepLabel} type="button" variant="outline" onClick={() => dispatchProtocolAction(onAction, node.controllerId, "addStep", {})} />
         </div>
         <DndContext collisionDetection={closestCenter} onDragEnd={handleStepDragEnd}>
           <SortableContext items={stepIds} strategy={verticalListSortingStrategy}>

@@ -8,10 +8,10 @@
 
 ## Results
 
-| Fixture | Build | Visual |
-|---------|-------|--------|
-| `verify-window-alignment.tex` p2 | OK | Short/Tall bottom borders aligned |
-| `verify-zwischenbericht-cover.tex` p1 | OK | Institution + logo rows share row height; logos centered |
+| Fixture                               | Build | Visual                                                   |
+| ------------------------------------- | ----- | -------------------------------------------------------- |
+| `verify-window-alignment.tex` p2      | OK    | Short/Tall bottom borders aligned                        |
+| `verify-zwischenbericht-cover.tex` p1 | OK    | Institution + logo rows share row height; logos centered |
 
 ## Notes
 

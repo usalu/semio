@@ -3,7 +3,17 @@
 import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, GIS_MAP_WGPU_TILE_PROXY_PORT, SEMIO_GIS_MAP_TILE_BASE_URL_ENV, getWorkspaceRoot, runBundleScriptMain, runVitest, frameworkOsPlaygroundDefaultPort, loadFrameworkOsPlaygroundCatalog } from "../../../repo/lib/js/index.ts";
+import {
+  BundleScript,
+  ScriptRouter,
+  GIS_MAP_WGPU_TILE_PROXY_PORT,
+  SEMIO_GIS_MAP_TILE_BASE_URL_ENV,
+  getWorkspaceRoot,
+  runBundleScriptMain,
+  runVitest,
+  frameworkOsPlaygroundDefaultPort,
+  loadFrameworkOsPlaygroundCatalog,
+} from "../../../repo/lib/js/index.ts";
 import { startGisMapTileProxyServer } from "../../../ui/styling/vite-elements-assets.ts";
 
 const repoRoot = getWorkspaceRoot();

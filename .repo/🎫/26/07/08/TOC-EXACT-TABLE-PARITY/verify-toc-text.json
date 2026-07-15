@@ -1,9 +1,6 @@
 {
   "numPages": 11,
-  "tocPages": [
-    2,
-    3
-  ],
+  "tocPages": [2, 3],
   "page2entries": 67,
   "page3entries": 43,
   "continuationTitle": false,

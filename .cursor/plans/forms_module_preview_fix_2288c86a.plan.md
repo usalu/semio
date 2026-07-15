@@ -2,30 +2,30 @@
 name: Forms Module Preview Fix
 overview: Fix the two concrete regressions that make `forms` look "largely incomplete" (fresh document opens empty instead of the Building Component fixture; the `forms-module-procedural` plugin panics on load because its app declares zero window kinds), then re-verify the rest of the already-implemented premigration-parity work (Edit/Try wizards, Generate mode in flow/procedural-2d/procedural-3d, React+wgpu parity) end-to-end so the "module contributes a question kind with exposed params + live preview" mechanism is proven to work, not just present in code.
 todos:
-  - id: ticket
-    content: Reopen repo ticket 2026/07/08/forms-blueprint-try-module-preview via ticket_reopen before starting work
-    status: completed
-  - id: fix-window-kind
-    content: Add window kinds + default layout to forms-module-procedural's App builder; drop dead imports; extend its test module
-    status: completed
-  - id: fix-default-doc
-    content: Seed FormsPlayApp::initial_document_json() from the Building Component fixture instead of an empty projection; extend forms-plugin tests
-    status: completed
-  - id: build-wasm
-    content: cargo build --target wasm32-wasip2 for forms-plugin, forms-module-procedural, flow-plugin, procedural2d/3d-plugin to confirm no regressions
-    status: completed
-  - id: runtime-verify-react
-    content: Boot React dev host, verify fresh Forms load shows Building Component fixture with working sliders + live 3D preview, and default/onboarding examples still render every kind
-    status: completed
-  - id: runtime-verify-wgpu
-    content: Repeat the same manual verification against the wgpu shell for React/wgpu parity
-    status: completed
-  - id: runtime-verify-generate
-    content: Exercise Generate mode in flow, procedural/2d, procedural/3d (add/rename/remove generation, live preview)
-    status: completed
-  - id: close-ticket
-    content: Update plan todo statuses and close the repo ticket with a full touched-files summary
-    status: completed
+ - id: ticket
+   content: Reopen repo ticket 2026/07/08/forms-blueprint-try-module-preview via ticket_reopen before starting work
+   status: completed
+ - id: fix-window-kind
+   content: Add window kinds + default layout to forms-module-procedural's App builder; drop dead imports; extend its test module
+   status: completed
+ - id: fix-default-doc
+   content: Seed FormsPlayApp::initial_document_json() from the Building Component fixture instead of an empty projection; extend forms-plugin tests
+   status: completed
+ - id: build-wasm
+   content: cargo build --target wasm32-wasip2 for forms-plugin, forms-module-procedural, flow-plugin, procedural2d/3d-plugin to confirm no regressions
+   status: completed
+ - id: runtime-verify-react
+   content: Boot React dev host, verify fresh Forms load shows Building Component fixture with working sliders + live 3D preview, and default/onboarding examples still render every kind
+   status: completed
+ - id: runtime-verify-wgpu
+   content: Repeat the same manual verification against the wgpu shell for React/wgpu parity
+   status: completed
+ - id: runtime-verify-generate
+   content: Exercise Generate mode in flow, procedural/2d, procedural/3d (add/rename/remove generation, live preview)
+   status: completed
+ - id: close-ticket
+   content: Update plan todo statuses and close the repo ticket with a full touched-files summary
+   status: completed
 isProject: false
 ---
 
@@ -39,8 +39,9 @@ fn create_module_app() -> App {
 }
 ```
 
-   `AppBuilder::build_definition` in [framework/plugin/rs/lib.rs:216-220](framework/plugin/rs/lib.rs) asserts `!window_kinds.is_empty()`, so `module_bundle()` panics the moment the plugin's manifest is built, trapping the whole wasm component (`unreachable` abort — matches the pasted console error exactly). This is a real, universally-enforced framework invariant (mirrored in the hot-swap validator at [framework/product/os/core/rs/lib.rs:467-471](framework/product/os/core/rs/lib.rs)), not something to bypass — the app itself needs real window kinds.
-   - Direct render calls (`plugin_render`, used by `ui_external_slot`/`ExternalSlot` resolution in both React's `resolveExternalSlots` and wgpu's `resolve_external_slots_in_tree`) dispatch on `body_key` directly and don't require the key to match a declared window kind, so adding window kinds here is purely to satisfy the app-level invariant (and, as a bonus, makes the module directly launchable/debuggable on its own).
+`AppBuilder::build_definition` in [framework/plugin/rs/lib.rs:216-220](framework/plugin/rs/lib.rs) asserts `!window_kinds.is_empty()`, so `module_bundle()` panics the moment the plugin's manifest is built, trapping the whole wasm component (`unreachable` abort — matches the pasted console error exactly). This is a real, universally-enforced framework invariant (mirrored in the hot-swap validator at [framework/product/os/core/rs/lib.rs:467-471](framework/product/os/core/rs/lib.rs)), not something to bypass — the app itself needs real window kinds.
+
+- Direct render calls (`plugin_render`, used by `ui_external_slot`/`ExternalSlot` resolution in both React's `resolveExternalSlots` and wgpu's `resolve_external_slots_in_tree`) dispatch on `body_key` directly and don't require the key to match a declared window kind, so adding window kinds here is purely to satisfy the app-level invariant (and, as a bonus, makes the module directly launchable/debuggable on its own).
 
 2. **"No questions show" on a fresh document**: premigration's `FormsPlayController` (`git show 4eb2e63927:forms/play/index.ts`) seeded its `spec` field with the **`building-component`** fixture by default, not an empty spec:
 
@@ -51,7 +52,7 @@ private spec: FormSpec = (() => {
 })();
 ```
 
-   Today's [forms/plugin/rs/lib.rs](forms/plugin/rs/lib.rs) `FormsPlayApp::initial_document_json()` calls `default_envelope()` → `empty_forms_projection()`, which is a single step with **zero questions**. Opening Forms fresh therefore shows nothing until a user manually picks an example — this is the "no questions show" regression.
+Today's [forms/plugin/rs/lib.rs](forms/plugin/rs/lib.rs) `FormsPlayApp::initial_document_json()` calls `default_envelope()` → `empty_forms_projection()`, which is a single step with **zero questions**. Opening Forms fresh therefore shows nothing until a user manually picks an example — this is the "no questions show" regression.
 
 ## Fix 1 — `forms/module/procedural/rs/lib.rs`
 
@@ -67,6 +68,7 @@ private spec: FormSpec = (() => {
 ## Re-verify the rest of the premigration-parity plan (full scope, as requested)
 
 The existing [.cursor/plans/forms_premigration_parity_both_renderers_b3d29b3a.plan.md](.cursor/plans/forms_premigration_parity_both_renderers_b3d29b3a.plan.md) marks phases 1–8 "completed" and phase 9 (verify-all) "in_progress" — the two bugs above were found by code audit, not by running anything, so phase 9 clearly never actually ran end-to-end. Spot-checks already done in this planning pass that look correct (no action needed, but will be re-confirmed at runtime):
+
 - wgpu nested `ComponentScene` recursion (`render_ui_node_inner` in [framework/renderer/wgpu/rs/lib.rs](framework/renderer/wgpu/rs/lib.rs) recurses through `Stack`/`Section` before falling back to leaf widgets).
 - wgpu `ExternalSlot` resolution (`resolve_external_slots_in_tree` at [framework/renderer/wgpu/rs/lib.rs:7571](framework/renderer/wgpu/rs/lib.rs), run before the sync widget-conversion fallback at line 4241) and React's `resolveExternalSlots` ([framework/core/js/index.ts:712](framework/core/js/index.ts)) are both implemented.
 - Generate mode is wired (`.mode("generate", "Generate")` + dedicated window kinds) in [flow/plugin/rs/lib.rs:1245-1266](flow/plugin/rs/lib.rs) and [procedural/plugin/rs/app_3d.rs:1406-1450](procedural/plugin/rs/app_3d.rs) (and `app_2d.rs`), backed by `flow_fixture_to_form_spec`/`apply_generation_values_to_fixture` in `flow_core::forms_bridge`.

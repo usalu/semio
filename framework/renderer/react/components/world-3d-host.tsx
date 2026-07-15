@@ -243,11 +243,7 @@ type WorldEngagementPreviewLinearHandle = {
   readonly origin: readonly [number, number, number];
 };
 
-type WorldEngagementPreviewItem =
-  | WorldEngagementPreviewPoint
-  | WorldEngagementPreviewSegment
-  | WorldEngagementPreviewBox
-  | WorldEngagementPreviewLinearHandle;
+type WorldEngagementPreviewItem = WorldEngagementPreviewPoint | WorldEngagementPreviewSegment | WorldEngagementPreviewBox | WorldEngagementPreviewLinearHandle;
 
 //#region WorldMeshPaint
 /** 🎨 Mesh style kinds, in {@link resolveMeshStyle} priority order (highest first). */
@@ -1111,8 +1107,7 @@ function WorldInstanceNode({
               onInstancePointerMove(null);
               onComponentHover(null);
             }}
-          >
-          </PaintTexturedMesh>
+          ></PaintTexturedMesh>
           {borderGeometry && (showEdges ?? true) ? (
             <lineSegments geometry={borderGeometry} scale={1.001} raycast={() => null}>
               <lineBasicMaterial color={palette.neutral.lineColor} />
@@ -1245,15 +1240,7 @@ function WorldInstanceNode({
           }}
         >
           <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial
-            color={style.meshColor}
-            metalness={0}
-            roughness={1}
-            emissive={style.meshColor}
-            emissiveIntensity={style.emissiveIntensity}
-            transparent={style.opacity < 1}
-            opacity={style.opacity}
-          />
+          <meshStandardMaterial color={style.meshColor} metalness={0} roughness={1} emissive={style.meshColor} emissiveIntensity={style.emissiveIntensity} transparent={style.opacity < 1} opacity={style.opacity} />
         </mesh>
       )}
     </group>
@@ -1494,15 +1481,7 @@ function WorldConnectRubberBand({ from, to }: { readonly from: readonly [number,
 }
 
 /** @emoji 🧊 Invisible ground plane (Z-up XY plane, matching this world's up axis) that tracks the grid-snapped cursor while voxel-editing target volumes; Alt+click commits a volume there. */
-function WorldVoxelGroundPlane({
-  gridFactor,
-  onHover,
-  onPlace,
-}: {
-  readonly gridFactor: number;
-  readonly onHover: (origin: readonly [number, number, number] | null) => void;
-  readonly onPlace: (origin: readonly [number, number, number]) => void;
-}) {
+function WorldVoxelGroundPlane({ gridFactor, onHover, onPlace }: { readonly gridFactor: number; readonly onHover: (origin: readonly [number, number, number] | null) => void; readonly onPlace: (origin: readonly [number, number, number]) => void }) {
   const snap = (value: number) => Math.round(value / gridFactor) * gridFactor;
   return (
     <mesh
@@ -1567,14 +1546,7 @@ function BrushPreviewGhost({ preview, meshes, palette }: { readonly preview: Wor
     <group position={position} scale={scale} quaternion={quaternion}>
       {meshRecord?.url ? (
         <Suspense fallback={null}>
-          <GlbInstanceMesh
-            url={meshRecord.url}
-            color={style.meshColor}
-            emissive={style.meshColor}
-            emissiveIntensity={0.6}
-            opacity={1}
-            borderColor={palette.neutral.lineColor}
-          />
+          <GlbInstanceMesh url={meshRecord.url} color={style.meshColor} emissive={style.meshColor} emissiveIntensity={0.6} opacity={1} borderColor={palette.neutral.lineColor} />
         </Suspense>
       ) : (
         <mesh raycast={() => null}>
@@ -1618,11 +1590,7 @@ function EngagementPreviewLayer({ items, color }: { readonly items: readonly Wor
           // from cornerB's z — the interaction specs author cornerA/cornerB as ground-plane points.
           const height = Math.max(Math.abs(item.height ?? 0.05), 0.05);
           return (
-            <mesh
-              key={`preview-box-${index}`}
-              position={[(ax + bx) * 0.5, (ay + by) * 0.5, az + height * 0.5]}
-              raycast={() => null}
-            >
+            <mesh key={`preview-box-${index}`} position={[(ax + bx) * 0.5, (ay + by) * 0.5, az + height * 0.5]} raycast={() => null}>
               <boxGeometry args={[width, depth, height]} />
               <meshBasicMaterial color={color} transparent opacity={0.35} depthWrite={false} wireframe />
             </mesh>
@@ -1635,12 +1603,7 @@ function EngagementPreviewLayer({ items, color }: { readonly items: readonly Wor
           const direction = new Vector3(dx, dy, dz).normalize();
           const quaternion = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), direction);
           return (
-            <mesh
-              key={`preview-handle-${index}`}
-              position={[ox + dx * 0.5, oy + dy * 0.5, oz + dz * 0.5]}
-              quaternion={quaternion}
-              raycast={() => null}
-            >
+            <mesh key={`preview-handle-${index}`} position={[ox + dx * 0.5, oy + dy * 0.5, oz + dz * 0.5]} quaternion={quaternion} raycast={() => null}>
               <cylinderGeometry args={[0.02, 0.02, length, 8]} />
               <meshBasicMaterial color={color} transparent opacity={0.6} depthWrite={false} />
             </mesh>
@@ -2366,10 +2329,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         // Quaternion.w = cos(angle/2); clamp for asin/acos precision at the identity boundary.
         const angle = 2 * Math.acos(Math.min(1, Math.max(-1, delta.w)));
         const sinHalfAngle = Math.sqrt(Math.max(0, 1 - delta.w * delta.w));
-        const axis =
-          sinHalfAngle < 1e-6
-            ? { x: 0, y: 0, z: 1 }
-            : { x: delta.x / sinHalfAngle, y: delta.y / sinHalfAngle, z: delta.z / sinHalfAngle };
+        const axis = sinHalfAngle < 1e-6 ? { x: 0, y: 0, z: 1 } : { x: delta.x / sinHalfAngle, y: delta.y / sinHalfAngle, z: delta.z / sinHalfAngle };
         dispatch("rotateSelection", {
           ...base,
           ax: axis.x,
@@ -2387,12 +2347,9 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     [dispatch, selection.transformTool, selectionArgs],
   );
 
-  const handleFaceDragStart = useCallback(
-    (args: { objectId: string; faceId: number; normal: readonly [number, number, number]; point: readonly [number, number, number]; faceExtent?: readonly [number, number] }) => {
-      setFaceDragSession({ objectId: args.objectId, faceId: args.faceId, normal: args.normal, startPoint: args.point, faceExtent: args.faceExtent });
-    },
-    [],
-  );
+  const handleFaceDragStart = useCallback((args: { objectId: string; faceId: number; normal: readonly [number, number, number]; point: readonly [number, number, number]; faceExtent?: readonly [number, number] }) => {
+    setFaceDragSession({ objectId: args.objectId, faceId: args.faceId, normal: args.normal, startPoint: args.point, faceExtent: args.faceExtent });
+  }, []);
 
   const toLocalPoint = useCallback((event: React.PointerEvent<HTMLDivElement>): SelectionMarqueePoint => {
     const rect = hostRef.current?.getBoundingClientRect();
@@ -2632,12 +2589,8 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
               }))}
               interactive={false}
             />
-            {interaction.fillEditTargetVolumes ? (
-              <WorldVoxelGroundPlane gridFactor={interaction.gridFactor ?? DEFAULT_LOD_GRID_FACTOR} onHover={setVoxelHoverOrigin} onPlace={handleVoxelPlace} />
-            ) : null}
-            {interaction.fillEditTargetVolumes && voxelHoverOrigin ? (
-              <WorldVoxelPreviewBox origin={voxelHoverOrigin} dims={interaction.voxelDims ?? [1, 1, 1]} gridFactor={interaction.gridFactor ?? DEFAULT_LOD_GRID_FACTOR} />
-            ) : null}
+            {interaction.fillEditTargetVolumes ? <WorldVoxelGroundPlane gridFactor={interaction.gridFactor ?? DEFAULT_LOD_GRID_FACTOR} onHover={setVoxelHoverOrigin} onPlace={handleVoxelPlace} /> : null}
+            {interaction.fillEditTargetVolumes && voxelHoverOrigin ? <WorldVoxelPreviewBox origin={voxelHoverOrigin} dims={interaction.voxelDims ?? [1, 1, 1]} gridFactor={interaction.gridFactor ?? DEFAULT_LOD_GRID_FACTOR} /> : null}
             <WorldReferenceLayer
               references={references
                 .filter((reference) => !reference.hidden)

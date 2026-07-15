@@ -1,0 +1,13 @@
+{
+  "title": "Multilingual And Terminology Parity Sweep For Shell, Compose And Coda",
+  "emoji": "🌐",
+  "status": "open",
+  "description": "Close remaining i18n (locale) gaps and add terminology (vocabulary-swap) support across the JS/Rust UI stack outside the already-swept plugin apps. Scope: (1) framework/renderer/react/os-shell.tsx shell chrome — remaining hardcoded English strings, e.g. WindowActionPanel's Execute/Reset buttons; (2) compose/client/lib/sketchpad/js/index.ts — hardcoded labels not routed through its existing registerUiTranslationBundles i18n bundle (Version/Kind/Updated/Created by/Path/Node kind/Getting started/Kit/Folder/File/Design/Type/Family and any others found in a full sweep), plus new terminology (native/reuse) support since compose has none today; (3) coda (coda/client/ui/desktop/js, coda/client/bin/assistant/js) — close remaining locale gaps, add terminology plumbing only where an entity noun with an existing alternate vocabulary is actually rendered. Add a small product-neutral terminology-resolver primitive (UiTerminologyLabelSet/createTerminologyLabelResolver/useUiTerminology) to ui/js/react/index.tsx, reusing the existing UI_CHROME_TERMINOLOGY_STORAGE_KEY/UiChromeTerminologyId contract rather than the Rust-only AppDefinition/ViewState boundary, since compose/coda are TS-native products that never cross the WASM plugin boundary. Explicitly out of scope: print/tex (separate babel locale mechanism), and framework/core/rs/lib.rs, framework/plugin/rs/lib.rs, puzzle/plugin/rs/lib.rs, framework/renderer/react/components/puzzle-2d-board-host.tsx (actively edited by other in-progress tickets).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1993"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪12573abfabcb41bc87de10ff9e426861"
+  ]
+}

@@ -59,14 +59,28 @@ export const Default: Story = {
             ]}
           />
         }
-        footer={<Footer items={[{ content: "Ready", key: "status" }, { content: "Ln 1, Col 1", key: "cursor" }, { content: "UTF-8", key: "selection" }]} />}
+        footer={
+          <Footer
+            items={[
+              { content: "Ready", key: "status" },
+              { content: "Ln 1, Col 1", key: "cursor" },
+              { content: "UTF-8", key: "selection" },
+            ]}
+          />
+        }
         cornerPanels={{
           "top-left": {
             visible: true,
             size: topLeftSize,
             onSizeChange: setTopLeftSize,
             tabs: [
-              singleTreeLeaf({ id: "explorer", icon: Layers, name: "Explorer", order: 0, tree: { sections: [{ id: "explorer.section", label: "", items: [{ id: "explorer.item", label: "", control: <div className="p-double">Explorer content</div> }] }] } }),
+              singleTreeLeaf({
+                id: "explorer",
+                icon: Layers,
+                name: "Explorer",
+                order: 0,
+                tree: { sections: [{ id: "explorer.section", label: "", items: [{ id: "explorer.item", label: "", control: <div className="p-double">Explorer content</div> }] }] },
+              }),
               singleTreeLeaf({ id: "search", icon: Info, name: "Search", order: 1, tree: { sections: [{ id: "search.section", label: "", items: [{ id: "search.item", label: "", control: <div className="p-double">Search content</div> }] }] } }),
             ],
           },
@@ -74,7 +88,15 @@ export const Default: Story = {
             visible: true,
             size: topRightSize,
             onSizeChange: setTopRightSize,
-            tabs: [singleTreeLeaf({ id: "properties", icon: Settings, name: "Properties", order: 0, tree: { sections: [{ id: "properties.section", label: "", items: [{ id: "properties.item", label: "", control: <div className="p-double">Properties content</div> }] }] } })],
+            tabs: [
+              singleTreeLeaf({
+                id: "properties",
+                icon: Settings,
+                name: "Properties",
+                order: 0,
+                tree: { sections: [{ id: "properties.section", label: "", items: [{ id: "properties.item", label: "", control: <div className="p-double">Properties content</div> }] }] },
+              }),
+            ],
           },
         }}
         bottomPanel={{

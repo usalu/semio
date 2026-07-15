@@ -16,11 +16,11 @@ A Blockly-like visual editor for generating code/data: a strict, ordered list of
 
 ## Bundles
 
-| Bundle                          | Role                                                            |
-| -------------------------------- | ---------------------------------------------------------------- |
-| `protocol/rs`                    | Domain crate (`protocol`): spec/ops/diff, VCS wiring, wasm bridge |
-| `protocol/plugin/rs`             | Standalone "Protocol" app/plugin (`semio:protocol` component)    |
-| `protocol/module/procedural/rs`  | Contributes a `ProtocolBlockKind` (e.g. `buildingComponent`)      |
+| Bundle                          | Role                                                              |
+| ------------------------------- | ----------------------------------------------------------------- |
+| `protocol/rs`                   | Domain crate (`protocol`): spec/ops/diff, VCS wiring, wasm bridge |
+| `protocol/plugin/rs`            | Standalone "Protocol" app/plugin (`semio:protocol` component)     |
+| `protocol/module/procedural/rs` | Contributes a `ProtocolBlockKind` (e.g. `buildingComponent`)      |
 
 ## Mechanisms
 

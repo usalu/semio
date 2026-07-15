@@ -646,13 +646,7 @@ function NoteBlockView({
   if (!block.visible) return null;
   const bounds = noteBlockBounds(block);
   const common = {
-    className: cn(
-      "bg-background/90 absolute overflow-hidden rounded border shadow-sm",
-      selected && "ring-primary ring-2",
-      hovered && !selected && "ring-primary/60 ring-1",
-      block.locked && "opacity-70",
-      hidden && "pointer-events-none opacity-0",
-    ),
+    className: cn("bg-background/90 absolute overflow-hidden rounded border shadow-sm", selected && "ring-primary ring-2", hovered && !selected && "ring-primary/60 ring-1", block.locked && "opacity-70", hidden && "pointer-events-none opacity-0"),
     style: {
       left: bounds.x,
       top: bounds.y,
@@ -662,7 +656,12 @@ function NoteBlockView({
     },
     onPointerDown: (event: React.PointerEvent) => onPointerDown(event, block.id),
   };
-  if (block.kind === "text") return <div {...common}><NoteTextContentView block={block} /></div>;
+  if (block.kind === "text")
+    return (
+      <div {...common}>
+        <NoteTextContentView block={block} />
+      </div>
+    );
   if (block.kind === "math") {
     const html = noteMathRenderer.render(block.tex, block.displayMode);
     return (
@@ -805,9 +804,36 @@ function NoteTextEditorOverlay({ block, screenBounds, onCommit, onCancel }: { re
   return (
     <div className="absolute z-30" style={{ left: screenBounds.x, top: screenBounds.y, width: screenBounds.width, height: screenBounds.height }}>
       <div className="bg-background/95 mb-1 flex gap-1 rounded border p-1 shadow-sm">
-        <button type="button" className="hover:bg-muted rounded px-2 py-0.5 text-xs" onMouseDown={(event) => { event.preventDefault(); applyCommand("bold"); }}>B</button>
-        <button type="button" className="hover:bg-muted rounded px-2 py-0.5 text-xs italic" onMouseDown={(event) => { event.preventDefault(); applyCommand("italic"); }}>I</button>
-        <button type="button" className="hover:bg-muted rounded px-2 py-0.5 text-xs underline" onMouseDown={(event) => { event.preventDefault(); applyCommand("underline"); }}>U</button>
+        <button
+          type="button"
+          className="hover:bg-muted rounded px-2 py-0.5 text-xs"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            applyCommand("bold");
+          }}
+        >
+          B
+        </button>
+        <button
+          type="button"
+          className="hover:bg-muted rounded px-2 py-0.5 text-xs italic"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            applyCommand("italic");
+          }}
+        >
+          I
+        </button>
+        <button
+          type="button"
+          className="hover:bg-muted rounded px-2 py-0.5 text-xs underline"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            applyCommand("underline");
+          }}
+        >
+          U
+        </button>
         <button
           type="button"
           className="hover:bg-muted rounded px-2 py-0.5 text-xs"
@@ -1293,7 +1319,13 @@ export function NoteCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       const assetKey = `asset-${createNoteHostId("image")}`;
       const imageBlock = createNoteBlockByKind("image", worldX - 120, worldY - 80);
       if (imageBlock.kind !== "image") return;
-      atomicGesture([{ op: "putAsset", key: assetKey, asset: { mime, data: dataUrl } }, { op: "addBlock", block: { ...imageBlock, imageKey: assetKey } }], [imageBlock.id]);
+      atomicGesture(
+        [
+          { op: "putAsset", key: assetKey, asset: { mime, data: dataUrl } },
+          { op: "addBlock", block: { ...imageBlock, imageKey: assetKey } },
+        ],
+        [imageBlock.id],
+      );
     },
     [atomicGesture],
   );
@@ -1334,14 +1366,23 @@ export function NoteCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       const clipboardBlocks = noteBlocksFromClipboardPayload(text);
       if (clipboardBlocks) {
         const clones = noteCloneBlocksWithOffset(clipboardBlocks, worldX, worldY);
-        atomicGesture(clones.map((block) => ({ op: "addBlock", block }) as const), clones.map((block) => block.id));
+        atomicGesture(
+          clones.map((block) => ({ op: "addBlock", block }) as const),
+          clones.map((block) => block.id),
+        );
         return;
       }
       if (text.trim().startsWith("<svg")) {
         const assetKey = `asset-${createNoteHostId("image")}`;
         const imageBlock = createNoteBlockByKind("image", worldX - 120, worldY - 80);
         if (imageBlock.kind !== "image") return;
-        atomicGesture([{ op: "putAsset", key: assetKey, asset: { mime: "image/svg+xml", data: text.trim() } }, { op: "addBlock", block: { ...imageBlock, imageKey: assetKey } }], [imageBlock.id]);
+        atomicGesture(
+          [
+            { op: "putAsset", key: assetKey, asset: { mime: "image/svg+xml", data: text.trim() } },
+            { op: "addBlock", block: { ...imageBlock, imageKey: assetKey } },
+          ],
+          [imageBlock.id],
+        );
         return;
       }
       if (text.trim()) {
@@ -1390,7 +1431,12 @@ export function NoteCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       {editingTextBlock && textEdit?.blockId === editingTextBlock.id ? (
         <NoteTextEditorOverlay
           block={editingTextBlock}
-          screenBounds={{ x: worldToScreen(camera, editingTextBlock.x, editingTextBlock.y).x, y: worldToScreen(camera, editingTextBlock.x, editingTextBlock.y).y, width: editingTextBlock.width * camera.zoom, height: editingTextBlock.height * camera.zoom }}
+          screenBounds={{
+            x: worldToScreen(camera, editingTextBlock.x, editingTextBlock.y).x,
+            y: worldToScreen(camera, editingTextBlock.x, editingTextBlock.y).y,
+            width: editingTextBlock.width * camera.zoom,
+            height: editingTextBlock.height * camera.zoom,
+          }}
           onCommit={(paragraphs) => commitTextEdit(editingTextBlock.id, paragraphs, textEdit.created)}
           onCancel={() => {
             if (textEdit.created) atomicGesture([{ op: "removeBlock", blockId: editingTextBlock.id }]);

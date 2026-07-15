@@ -14,12 +14,8 @@
     { "id": "c-b", "name": "c-b", "presentation": { "color": "hsl(37 52% 48%)", "defaultWireKind": "cable.link" } },
     { "id": "c-t", "name": "c-t", "presentation": { "color": "hsl(169 52% 48%)", "defaultWireKind": "cable.link" } }
   ],
-  "wireKinds": [
-    { "id": "cable.link", "name": "Link", "presentation": { "defaultEdgeKind": "puzzle3d.attraction.link" } }
-  ],
-  "edgeKinds": [
-    { "id": "puzzle3d.attraction.link", "name": "Link" }
-  ],
+  "wireKinds": [{ "id": "cable.link", "name": "Link", "presentation": { "defaultEdgeKind": "puzzle3d.attraction.link" } }],
+  "edgeKinds": [{ "id": "puzzle3d.attraction.link", "name": "Link" }],
   "nodeKinds": [
     {
       "id": "Hexagonal Cut Concrete Forest Left",

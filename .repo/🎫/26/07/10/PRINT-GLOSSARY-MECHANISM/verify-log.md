@@ -7,14 +7,14 @@
 
 ## Glossary behaviour (`verify-glossary.tex`)
 
-| Check | Result |
-|-------|--------|
-| `\GlossaryDefine` + `\Gls` usage tracking | OK — 6 labels in aux |
-| `\listofglossaries` Term / Definition / Pages table | OK |
-| Alphabetical sort | OK — Entwurfsfähigkeit, Semio, Zwischenbericht |
-| Page dedup by resolved page | OK — Entwurfsfähigkeit shows `2, 3` (not duplicated per label) |
-| Hyperlinked page numbers | OK — `hyperref` + `\pageref` via `\SemioTableGlossaryPages` |
-| German i18n headers | OK — Glossar / Begriff / Definition / Seiten |
+| Check                                               | Result                                                         |
+| --------------------------------------------------- | -------------------------------------------------------------- |
+| `\GlossaryDefine` + `\Gls` usage tracking           | OK — 6 labels in aux                                           |
+| `\listofglossaries` Term / Definition / Pages table | OK                                                             |
+| Alphabetical sort                                   | OK — Entwurfsfähigkeit, Semio, Zwischenbericht                 |
+| Page dedup by resolved page                         | OK — Entwurfsfähigkeit shows `2, 3` (not duplicated per label) |
+| Hyperlinked page numbers                            | OK — `hyperref` + `\pageref` via `\SemioTableGlossaryPages`    |
+| German i18n headers                                 | OK — Glossar / Begriff / Definition / Seiten                   |
 
 ## Screenshots
 

@@ -98,19 +98,7 @@ export type GisMapLodId = GisMapLodEntry["id"];
 export type MapLodModeKind = typeof GIS_MAP_LOD_MODE_AUTOMATIC | GisMapLodId;
 
 /** @emoji 👁️ GIS map layer ids for window toggles and {@link MapLayerVisibility}. */
-export const GIS_MAP_LAYER_IDS = [
-  "raster",
-  "water",
-  "land",
-  "roads",
-  "buildings",
-  "borders",
-  "labels",
-  "positions",
-  "positionLabels",
-  "routes",
-  "regions",
-] as const;
+export const GIS_MAP_LAYER_IDS = ["raster", "water", "land", "roads", "buildings", "borders", "labels", "positions", "positionLabels", "routes", "regions"] as const;
 
 export type GisMapLayerId = (typeof GIS_MAP_LAYER_IDS)[number];
 
@@ -966,9 +954,7 @@ export function MapCanvas({
   const hoverJson = useMemo(() => mapHoverToJson(hoveredFeature), [hoveredFeature]);
   const popupRef = useRef<HTMLDivElement>(null);
   const [marqueeOverlay, setMarqueeOverlay] = useState<
-    | { coverage: SelectionMarqueeCoverage; shape: "rect"; rect: { x: number; y: number; width: number; height: number } }
-    | { coverage: SelectionMarqueeCoverage; shape: "polygon"; points: readonly SelectionMarqueePoint[] }
-    | null
+    { coverage: SelectionMarqueeCoverage; shape: "rect"; rect: { x: number; y: number; width: number; height: number } } | { coverage: SelectionMarqueeCoverage; shape: "polygon"; points: readonly SelectionMarqueePoint[] } | null
   >(null);
   const [contextMenu, setContextMenu] = useState<{ open: boolean; position: { x: number; y: number } | null; items: ContextMenuItem[] }>({
     open: false,
@@ -993,10 +979,7 @@ export function MapCanvas({
     return Math.min(max, Math.max(min, zoom));
   }, []);
 
-  const clampCamera = useCallback(
-    (next: MapCamera): MapCamera => ({ x: next.x, y: next.y, zoom: clampMapZoom(next.zoom) }),
-    [],
-  );
+  const clampCamera = useCallback((next: MapCamera): MapCamera => ({ x: next.x, y: next.y, zoom: clampMapZoom(next.zoom) }), []);
 
   const reportEffectiveLod = useCallback(() => {
     const id = rendererRef.current?.readEffectiveLodId();
@@ -1042,9 +1025,7 @@ export function MapCanvas({
     if (!rect) {
       return { positions: [], routes: [] };
     }
-    return parseMapFeatureHit(
-      session.featuresInRectJson(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height, crossing),
-    );
+    return parseMapFeatureHit(session.featuresInRectJson(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height, crossing));
   }, []);
 
   const queryHitFeature = useCallback((point: SelectionMarqueePoint): MapHoveredFeature | null => {
@@ -1301,9 +1282,7 @@ export function MapCanvas({
         return;
       }
       const rect = canvas.getBoundingClientRect();
-      let deltaY =
-        event.deltaY *
-        (event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? 400 : 1);
+      let deltaY = event.deltaY * (event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? 400 : 1);
       if (event.ctrlKey) {
         deltaY *= 2.5;
       }
@@ -1400,8 +1379,7 @@ export function MapCanvas({
         return;
       }
       const method = selectionMethodRef.current;
-      const points =
-        method === "lasso" ? [...pointer.current.points, point] : [pointer.current.start, point];
+      const points = method === "lasso" ? [...pointer.current.points, point] : [pointer.current.start, point];
       pointer.current.points = points;
       const coverage = marqueeCoverageFromGesture({
         method,
@@ -1410,11 +1388,7 @@ export function MapCanvas({
         path: points,
       });
       const rect = screenRectFromPoints(points);
-      setMarqueeOverlay(
-        method === "lasso"
-          ? { coverage, shape: "polygon", points }
-          : { coverage, shape: "rect", rect: rect ?? { x: 0, y: 0, width: 0, height: 0 } },
-      );
+      setMarqueeOverlay(method === "lasso" ? { coverage, shape: "polygon", points } : { coverage, shape: "rect", rect: rect ?? { x: 0, y: 0, width: 0, height: 0 } });
       queryFeatureHits(points, coverage === "partial");
     };
     const onPointerUp = (event: PointerEvent): void => {
@@ -1482,11 +1456,12 @@ export function MapCanvas({
       event.stopPropagation();
       const point = clientToLocal(event.clientX, event.clientY);
       const feature = queryHitFeature(point);
-      const items = getContextMenuItemsRef.current?.({
-        clientX: event.clientX,
-        clientY: event.clientY,
-        feature,
-      }) ?? [];
+      const items =
+        getContextMenuItemsRef.current?.({
+          clientX: event.clientX,
+          clientY: event.clientY,
+          feature,
+        }) ?? [];
       setContextMenu({ open: items.length > 0, position: { x: event.clientX, y: event.clientY }, items });
     };
     canvas.addEventListener("pointerdown", onPointerDown);
@@ -1504,30 +1479,13 @@ export function MapCanvas({
   }, [clientToLocal, mirrorSessionCameraToReact, queryFeatureHits, queryHitFeature, resetMarquee]);
 
   return (
-    <div
-      ref={containerRef}
-      className={["absolute inset-0 box-border min-h-0 min-w-0 overflow-hidden select-none", className].filter(Boolean).join(" ") || undefined}
-      style={{ touchAction: "none" }}
-    >
+    <div ref={containerRef} className={["absolute inset-0 box-border min-h-0 min-w-0 overflow-hidden select-none", className].filter(Boolean).join(" ") || undefined} style={{ touchAction: "none" }}>
       <canvas ref={canvasRef} className="absolute inset-0 block size-full touch-none outline-none focus:outline-none" />
-      {marqueeOverlay?.shape === "rect" ? (
-        <SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} />
-      ) : null}
-      {marqueeOverlay?.shape === "polygon" ? (
-        <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} />
-      ) : null}
-      <ContextMenuController
-        open={contextMenu.open}
-        position={contextMenu.position}
-        items={contextMenu.items}
-        onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))}
-      />
+      {marqueeOverlay?.shape === "rect" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} /> : null}
+      {marqueeOverlay?.shape === "polygon" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} /> : null}
+      <ContextMenuController open={contextMenu.open} position={contextMenu.position} items={contextMenu.items} onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))} />
       {hoveredFeature?.kind === "position" ? (
-        <div
-          ref={popupRef}
-          className={cn("pointer-events-none absolute z-10 max-w-56 -translate-x-1/2 -translate-y-[calc(100%+12px)] px-2 py-1.5", floatingMenuSurfaceClass)}
-          style={{ left: 0, top: 0 }}
-        >
+        <div ref={popupRef} className={cn("pointer-events-none absolute z-10 max-w-56 -translate-x-1/2 -translate-y-[calc(100%+12px)] px-2 py-1.5", floatingMenuSurfaceClass)} style={{ left: 0, top: 0 }}>
           {(() => {
             const meta = positionMetaById.get(hoveredFeature.id);
             const title = meta?.name ?? meta?.label ?? hoveredFeature.id;
@@ -1536,9 +1494,7 @@ export function MapCanvas({
                 {meta?.icon ? <Icon icon={meta.icon} size="small" className="mt-0.5 shrink-0" /> : null}
                 <div className="min-w-0">
                   <div className="truncate text-sm font-medium">{title}</div>
-                  {meta?.sourceUrl ? (
-                    <span className="text-xs text-secondary underline-offset-2">Source available</span>
-                  ) : null}
+                  {meta?.sourceUrl ? <span className="text-xs text-secondary underline-offset-2">Source available</span> : null}
                 </div>
               </div>
             );
@@ -1591,16 +1547,7 @@ if (import.meta.vitest) {
   describe("getGisMapLodScale", () => {
     it("lists every map LOD band from wasm", () => {
       const scale = getGisMapLodScale();
-      expect(scale.map((row) => row.id)).toEqual([
-        "world",
-        "continent",
-        "country",
-        "region",
-        "city",
-        "district",
-        "street",
-        "building",
-      ]);
+      expect(scale.map((row) => row.id)).toEqual(["world", "continent", "country", "region", "city", "district", "street", "building"]);
     });
   });
 
@@ -1669,7 +1616,6 @@ if (import.meta.vitest) {
       expect(parsed.routes).toEqual(["b"]);
     });
   });
-
 }
 // #endregion 🧪Tests
 
@@ -1679,26 +1625,8 @@ import type { AppRendererContribution, UiGisMapHostSurfaceNode } from "@semio-te
 import { usePlayController, useControllerStore, useShellWindowInstance } from "@semio-tech/framework-playground-renderer-react";
 import { shellWindowScopeId } from "@semio-tech/framework-platform-renderer-react";
 import { reactHostPort } from "@semio-tech/ui-react";
-import {
-  GIS_MAP_PLAY_CONTROLLER_ID,
-  GIS_MAP_PLAY_IDLE_SNAPSHOT,
-  GIS_MAP_PLAY_STORE_ID,
-  GIS_MAP_PLAY_SURFACE_ID,
-  GIS_MAP_PLAY_WINDOW_KIND_ID,
-  type MapPlayController,
-  mapPlayWindowBodies,
-  mapPlaySidePanelBodies,
-} from "@semio-tech/gis-2d-core";
-import {
-  MapCanvas,
-  Position,
-  Route,
-  ensureGisMapWasmLoaded,
-  type GisMapLodId,
-  type MapContextMenuContext,
-  type MapHoveredFeature,
-  type MapSelectPayload,
-} from "@semio-tech/gis-2d-react";
+import { GIS_MAP_PLAY_CONTROLLER_ID, GIS_MAP_PLAY_IDLE_SNAPSHOT, GIS_MAP_PLAY_STORE_ID, GIS_MAP_PLAY_SURFACE_ID, GIS_MAP_PLAY_WINDOW_KIND_ID, type MapPlayController, mapPlayWindowBodies, mapPlaySidePanelBodies } from "@semio-tech/gis-2d-core";
+import { MapCanvas, Position, Route, ensureGisMapWasmLoaded, type GisMapLodId, type MapContextMenuContext, type MapHoveredFeature, type MapSelectPayload } from "@semio-tech/gis-2d-react";
 
 function buildMapPlayContextMenuItems(ctrl: MapPlayController | null | undefined, context: MapContextMenuContext): ContextMenuItem[] {
   if (!ctrl) {
@@ -1706,10 +1634,7 @@ function buildMapPlayContextMenuItems(ctrl: MapPlayController | null | undefined
   }
   const { feature } = context;
   if (feature) {
-    const selected =
-      feature.kind === "position"
-        ? ctrl.getSelectedPositionIds().includes(feature.id)
-        : ctrl.getSelectedRouteIds().includes(feature.id);
+    const selected = feature.kind === "position" ? ctrl.getSelectedPositionIds().includes(feature.id) : ctrl.getSelectedRouteIds().includes(feature.id);
     const items: ContextMenuItem[] = [
       {
         id: "gis-map.ctx.select",
@@ -1802,17 +1727,12 @@ function MapPlayPaneSurfaceHost({ node: _node }: { readonly node: UiGisMapHostSu
     },
     [ctrl],
   );
-  const getContextMenuItems = reactHostPort.useCallback(
-    (context: MapContextMenuContext) => buildMapPlayContextMenuItems(ctrl, context),
-    [ctrl],
-  );
+  const getContextMenuItems = reactHostPort.useCallback((context: MapContextMenuContext) => buildMapPlayContextMenuItems(ctrl, context), [ctrl]);
   reactHostPort.useEffect(() => {
     if (!activeFixture) {
       return;
     }
-    console.log(
-      `[DEBUG] gis map fixture loaded: ${activeFixture.positions.length} positions, ${activeFixture.routes.length} routes`,
-    );
+    console.log(`[DEBUG] gis map fixture loaded: ${activeFixture.positions.length} positions, ${activeFixture.routes.length} routes`);
   }, [activeFixture]);
   return (
     <MapCanvas
@@ -1832,17 +1752,7 @@ function MapPlayPaneSurfaceHost({ node: _node }: { readonly node: UiGisMapHostSu
       fitWorldRevision={fitWorldRevision}
     >
       {activeFixture?.positions.map((position) => (
-        <Position
-          key={position.id}
-          id={position.id}
-          lon={position.lon}
-          lat={position.lat}
-          label={position.label}
-          name={position.name}
-          icon={position.icon}
-          sourceUrl={position.sourceUrl}
-          kind={position.kind}
-        />
+        <Position key={position.id} id={position.id} lon={position.lon} lat={position.lat} label={position.label} name={position.name} icon={position.icon} sourceUrl={position.sourceUrl} kind={position.kind} />
       ))}
       {activeFixture?.routes.map((route) => (
         <Route key={route.id} id={route.id} points={route.points} />

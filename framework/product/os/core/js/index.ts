@@ -94,7 +94,7 @@ export async function writeBackboneEnvelope(uri: string, envelopeJson: string): 
     const remote = parseRemoteBackboneUri(uri);
     if (!remote) throw new Error(`invalid remote backbone uri: ${uri}`);
     const current = await fetch(`http://${remote.hostPort}/documents/${encodeURIComponent(remote.documentId)}/envelope`);
-    const version = current.ok ? Number((await current.json() as { version?: number }).version ?? 0) : 0;
+    const version = current.ok ? Number(((await current.json()) as { version?: number }).version ?? 0) : 0;
     const response = await fetch(`http://${remote.hostPort}/documents/${encodeURIComponent(remote.documentId)}/envelope`, {
       method: "PUT",
       headers: { "content-type": "application/json" },
@@ -137,9 +137,7 @@ export function wrapDocumentEnvelope(document: unknown, documentId: string, uri:
 //#region 🔀ApplyBackboneMessage
 export type BackboneOpEnvelope = { readonly diff?: { readonly payload?: { readonly id?: string } & Record<string, unknown> } };
 
-export type BackboneMessage =
-  | { readonly kind: "snapshot"; readonly envelopeJson: string }
-  | { readonly kind: "ops"; readonly envelopes?: readonly BackboneOpEnvelope[] };
+export type BackboneMessage = { readonly kind: "snapshot"; readonly envelopeJson: string } | { readonly kind: "ops"; readonly envelopes?: readonly BackboneOpEnvelope[] };
 
 /**
  * 🔀 Mirrors `vcs::storage_send` — applies an incoming backbone message on top of a previously
@@ -253,9 +251,7 @@ export type HubServerFrame =
   | { readonly kind: "error"; readonly message: string };
 
 /** 🗃️ A durable place a document synchronizes with — mirrors Rust `PersistenceBinding`. */
-export type PersistenceBinding =
-  | { readonly kind: "folder"; readonly path: string }
-  | { readonly kind: "hub"; readonly baseUrl: string; readonly token?: string };
+export type PersistenceBinding = { readonly kind: "folder"; readonly path: string } | { readonly kind: "hub"; readonly baseUrl: string; readonly token?: string };
 
 /** 🧾 Everything the worker needs to open one document's actor — mirrors `DocumentActorConfig`. */
 export type DocumentActorConfig = {
@@ -275,11 +271,7 @@ export type DocumentActorMsg =
   | { readonly kind: "detach" };
 
 /** 📶 Connection state of a document's remote (hub) transport — mirrors Rust `RemoteState`. */
-export type RemoteState =
-  | { readonly kind: "detached" }
-  | { readonly kind: "connecting" }
-  | { readonly kind: "live"; readonly peerCount: number }
-  | { readonly kind: "backoff"; readonly retryInMs: number };
+export type RemoteState = { readonly kind: "detached" } | { readonly kind: "connecting" } | { readonly kind: "live"; readonly peerCount: number } | { readonly kind: "backoff"; readonly retryInMs: number };
 
 /** 🚦 Sync health snapshot for status badges — mirrors Rust `DocumentSyncStatus`. */
 export type DocumentSyncStatus = {
@@ -301,15 +293,10 @@ export type DocumentEvent =
   | ({ readonly kind: "conflict" } & SyncConflict);
 
 /** 📤 Main thread → `backbone-worker.ts` messages. */
-export type BackboneWorkerRequest =
-  | ({ readonly kind: "open" } & DocumentActorConfig)
-  | { readonly kind: "close"; readonly documentId: string }
-  | { readonly kind: "send"; readonly documentId: string; readonly message: DocumentActorMsg };
+export type BackboneWorkerRequest = ({ readonly kind: "open" } & DocumentActorConfig) | { readonly kind: "close"; readonly documentId: string } | { readonly kind: "send"; readonly documentId: string; readonly message: DocumentActorMsg };
 
 /** 📥 `backbone-worker.ts` → main thread messages. */
-export type BackboneWorkerResponse =
-  | { readonly kind: "event"; readonly documentId: string; readonly event: DocumentEvent }
-  | { readonly kind: "ready" };
+export type BackboneWorkerResponse = { readonly kind: "event"; readonly documentId: string; readonly event: DocumentEvent } | { readonly kind: "ready" };
 //#endregion 🔖SyncProtocol
 
 //#region 🧪Tests

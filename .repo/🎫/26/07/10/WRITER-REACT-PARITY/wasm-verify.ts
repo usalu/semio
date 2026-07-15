@@ -12,8 +12,14 @@ function cmd(command: string, args?: Json) {
 
 async function main() {
   const handle = await loadPluginModule("writer", MODULE_URL);
-  console.log("[DEBUG] manifest apps:", handle.manifest.apps.map((a) => a.id));
-  console.log("[DEBUG] manifest examples:", handle.manifest.examples.map((e) => e.id));
+  console.log(
+    "[DEBUG] manifest apps:",
+    handle.manifest.apps.map((a) => a.id),
+  );
+  console.log(
+    "[DEBUG] manifest examples:",
+    handle.manifest.examples.map((e) => e.id),
+  );
   if (!handle.manifest.examples.some((e) => e.id === "dag.jack")) throw new Error("missing dag.jack example");
   const jackExample = handle.manifest.examples.find((e) => e.id === "jack");
   if (!jackExample) throw new Error("missing jack example");
@@ -83,7 +89,7 @@ async function main() {
 
   const treeNode = (await handle.render(instanceId, "writer.play.document", {})) as Json;
   const sections = treeNode.sections as Json[] | undefined;
-  const rootId = ((sections?.[0]?.items as Json[] | undefined)?.[0]?.id) as string | undefined;
+  const rootId = (sections?.[0]?.items as Json[] | undefined)?.[0]?.id as string | undefined;
   if (!rootId) throw new Error("no root ast id found in document tree");
 
   await handle.handleCommand(instanceId, cmd("setAstHover", { id: rootId }), {});

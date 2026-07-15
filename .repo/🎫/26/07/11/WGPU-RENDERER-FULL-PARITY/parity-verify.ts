@@ -357,10 +357,7 @@ function isWatchdogTimeout(result: { png: Buffer } | { skipped: string }): boole
   return "skipped" in result && result.skipped.startsWith("capturePlugin(") && result.skipped.includes("timed out after");
 }
 
-async function capturePluginWithRetry(
-  browser: Browser,
-  plugin: PluginId,
-): Promise<{ result: { png: Buffer } | { skipped: string }; browserMaybePoisoned: boolean }> {
+async function capturePluginWithRetry(browser: Browser, plugin: PluginId): Promise<{ result: { png: Buffer } | { skipped: string }; browserMaybePoisoned: boolean }> {
   const first = await capturePluginWithWatchdog(browser, plugin);
   if ("png" in first) return { result: first, browserMaybePoisoned: false };
   if (isWatchdogTimeout(first)) {

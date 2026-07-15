@@ -4,12 +4,7 @@
   "name": "Demo Studio",
   "vcs": {
     "initialProjection": {
-      "programs": [
-        "draw",
-        "writer",
-        "raster",
-        "note"
-      ],
+      "programs": ["draw", "writer", "raster", "note"],
       "activeProgramId": null,
       "activeAlternativeId": null,
       "parameters": [
@@ -27,10 +22,7 @@
           "name": "Quality",
           "type": "categorical",
           "value": "High",
-          "options": [
-            "Draft",
-            "High"
-          ]
+          "options": ["Draft", "High"]
         }
       ],
       "parameterBindings": [

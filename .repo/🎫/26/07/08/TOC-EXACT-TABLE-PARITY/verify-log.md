@@ -10,13 +10,13 @@ Result: `zwischenbericht.pdf` and `zwischenbericht-dark.pdf` (12 pages each), no
 
 ## PDF text extraction (pdfjs)
 
-| Check | Result |
-|-------|--------|
-| Total pages | 12 (light + dark) |
-| TOC spans multiple pages | pages 2–3 |
-| TOC entry density | page 2 ~117 hierarchy tokens, page 3 ~77 |
-| Body starts after TOC | `Netzwerk` on page 4 |
-| Glossary register table | page 12 |
+| Check                    | Result                                   |
+| ------------------------ | ---------------------------------------- |
+| Total pages              | 12 (light + dark)                        |
+| TOC spans multiple pages | pages 2–3                                |
+| TOC entry density        | page 2 ~117 hierarchy tokens, page 3 ~77 |
+| Body starts after TOC    | `Netzwerk` on page 4                     |
+| Glossary register table  | page 12                                  |
 
 ## Visual verification
 

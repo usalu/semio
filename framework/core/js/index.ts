@@ -41,6 +41,7 @@ import type {
   IntroductionEmphasis as GeneratedIntroductionEmphasis,
   IntroductionPlacement as GeneratedIntroductionPlacement,
   IntroductionAdvance as GeneratedIntroductionAdvance,
+  DialogDefinition as GeneratedDialogDefinition,
 } from "./generated/manifest.ts";
 // #endregion 🧬GeneratedMirror
 
@@ -1129,16 +1130,12 @@ export type IntroductionEmphasis = GeneratedIntroductionEmphasis;
 export type IntroductionPlacement = GeneratedIntroductionPlacement;
 export type IntroductionAdvance = GeneratedIntroductionAdvance;
 
+/** 🗨️ Generated from Rust `DialogDefinition` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
+export type DialogDefinition = GeneratedDialogDefinition;
+
 /** @emoji 🕹️ Mirrors `semio_framework_core::history_action_definitions` — the six framework-owned
  * History actions every app receives, used by the shell to render the same set without a wasm round trip. */
-export const HISTORY_ACTION_IDS = [
-  "undo",
-  "redo",
-  "commitCheckpoint",
-  "createAlternative",
-  "switchAlternative",
-  "checkoutCheckpoint",
-] as const;
+export const HISTORY_ACTION_IDS = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint"] as const;
 
 export type PluginViewState = {
   readonly activeModeId?: string;
@@ -1233,15 +1230,24 @@ export type PanelTabKind = GeneratedPanelTabKind;
 /** 🔤 Flat string key for a `PanelTabKind` — mirrors Rust `PanelTabKind::id_str()`. Use for React `key=` props and legacy string-id matching. */
 export function panelTabKindId(kind: PanelTabKind): string {
   switch (kind.kind) {
-    case "workbenchCategory": return "framework.category.workbench";
-    case "displayCategory": return "framework.category.display";
-    case "detailsCategory": return "framework.category.details";
-    case "settingsCategory": return "framework.category.settings";
-    case "displayWindows": return "framework.display.windows";
-    case "displayLayout": return "framework.display.layout";
-    case "settingsGeneral": return "framework.settings.general";
-    case "settingsTheme": return "framework.settings.theme";
-    case "app": return kind.id;
+    case "workbenchCategory":
+      return "framework.category.workbench";
+    case "displayCategory":
+      return "framework.category.display";
+    case "detailsCategory":
+      return "framework.category.details";
+    case "settingsCategory":
+      return "framework.category.settings";
+    case "displayWindows":
+      return "framework.display.windows";
+    case "displayLayout":
+      return "framework.display.layout";
+    case "settingsGeneral":
+      return "framework.settings.general";
+    case "settingsTheme":
+      return "framework.settings.theme";
+    case "app":
+      return kind.id;
   }
 }
 
@@ -1391,10 +1397,7 @@ export function deriveToolNodes(controllerId: string, tools: readonly DerivedToo
  * otherwise (irrelevant to whichever tool — or no tool — is active). Untagged groups and non-group
  * top-level measures stay in `general`, unchanged.
  */
-export function partitionWindowMeasures(
-  measures: readonly WindowMeasure[],
-  activeToolId?: string,
-): { readonly general: WindowMeasure[]; readonly toolOptions: WindowMeasure[] } {
+export function partitionWindowMeasures(measures: readonly WindowMeasure[], activeToolId?: string): { readonly general: WindowMeasure[]; readonly toolOptions: WindowMeasure[] } {
   const general: WindowMeasure[] = [];
   const toolOptions: WindowMeasure[] = [];
   for (const measure of measures) {
@@ -1599,7 +1602,8 @@ export type HostEffect =
   | { readonly requestFileOpen: { readonly accept: string; readonly readAs?: string; readonly importAction: string } }
   | { readonly spawnPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string; readonly label?: string; readonly documentJson?: string } }
   | { readonly openPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string } }
-  | { readonly setActiveTool: { readonly windowKindId: string; readonly toolId: string } };
+  | { readonly setActiveTool: { readonly windowKindId: string; readonly toolId: string } }
+  | { readonly openDialog: { readonly dialogId: string; readonly args?: Record<string, unknown> } };
 
 /**
  * @emoji 🐢 Mirrors the Rust `UiDirtyScope` — which rendered UI sections an action actually
@@ -1951,11 +1955,27 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
       if (!refreshUi) return {};
       return JSON.parse(refreshUi(instanceId, JSON.stringify(request))) as PluginUiRefreshResponse;
     },
-    applyOperations: module.semio_plugin_apply_operations ? async (instanceId, operationsJson) => { module.semio_plugin_apply_operations!(instanceId, operationsJson); } : undefined,
+    applyOperations: module.semio_plugin_apply_operations
+      ? async (instanceId, operationsJson) => {
+          module.semio_plugin_apply_operations!(instanceId, operationsJson);
+        }
+      : undefined,
     readAppDocument: module.semio_plugin_read_app_document ? async (instanceId) => module.semio_plugin_read_app_document!(instanceId) : undefined,
-    loadAppDocument: module.semio_plugin_load_app_document ? async (instanceId, documentJson) => { module.semio_plugin_load_app_document!(instanceId, documentJson); } : undefined,
-    attachBackbone: module.semio_plugin_attach_backbone ? async (instanceId, uri) => { module.semio_plugin_attach_backbone!(instanceId, uri); } : undefined,
-    detachBackbone: module.semio_plugin_detach_backbone ? async (instanceId) => { module.semio_plugin_detach_backbone!(instanceId); } : undefined,
+    loadAppDocument: module.semio_plugin_load_app_document
+      ? async (instanceId, documentJson) => {
+          module.semio_plugin_load_app_document!(instanceId, documentJson);
+        }
+      : undefined,
+    attachBackbone: module.semio_plugin_attach_backbone
+      ? async (instanceId, uri) => {
+          module.semio_plugin_attach_backbone!(instanceId, uri);
+        }
+      : undefined,
+    detachBackbone: module.semio_plugin_detach_backbone
+      ? async (instanceId) => {
+          module.semio_plugin_detach_backbone!(instanceId);
+        }
+      : undefined,
     dispose() {},
   });
 }
@@ -2124,7 +2144,7 @@ if (import.meta.vitest) {
       expect(store.getSnapshot()).toBeNull();
     });
 
-    it("uses a distinct key from DockLayoutStore for an app literally named \"ui\"", () => {
+    it('uses a distinct key from DockLayoutStore for an app literally named "ui"', () => {
       const storage = createMemoryStoragePort();
       new DockLayoutStore(storage, "ui").save({ version: 1, corners: { "top-left": [], "top-right": [], "bottom-left": [], "bottom-right": [] } });
       new DockUiStateStore(storage).saveOs(emptyUiState());

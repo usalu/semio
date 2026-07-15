@@ -105,10 +105,12 @@ async function writeBackbonePayload(uri: string, documentId: string | null, sche
     const Database = await backboneDatabaseCtorLazy();
     const db = new Database(dbPath);
     db.run("CREATE TABLE IF NOT EXISTS document (id TEXT PRIMARY KEY, schema TEXT, json TEXT NOT NULL, updated_at INTEGER NOT NULL)");
-    db.run(
-      "INSERT INTO document (id, schema, json, updated_at) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, json = excluded.json, updated_at = excluded.updated_at",
-      [documentId ?? STUDIO_FOLDER_DOCUMENT_ID, schema ?? "", payload, Date.now()],
-    );
+    db.run("INSERT INTO document (id, schema, json, updated_at) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, json = excluded.json, updated_at = excluded.updated_at", [
+      documentId ?? STUDIO_FOLDER_DOCUMENT_ID,
+      schema ?? "",
+      payload,
+      Date.now(),
+    ]);
     return;
   }
   throw new Error(`unsupported backbone uri: ${uri}`);
@@ -447,11 +449,7 @@ function rewriteExistingPluginShimImports(): void {
 }
 
 function transpilePluginComponent(artifact: string, outDir: string, componentBase: string): void {
-  const transpile = spawnSync(
-    "bunx",
-    ["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/host=./host-shim.js"],
-    { cwd: repoRoot, stdio: "inherit" },
-  );
+  const transpile = spawnSync("bunx", ["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/host=./host-shim.js"], { cwd: repoRoot, stdio: "inherit" });
   if (transpile.status !== 0) throw new Error(`jco transpile failed for ${artifact}`);
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`));
 }
@@ -984,7 +982,13 @@ async function runStudioE2eVerify(baseUrl: string, timeoutMs: number): Promise<v
   studioE2eAssert((await page.locator("[cmdk-item]").filter({ hasText: "Undo" }).count()) > 0, "undo should be in command palette");
   await paletteInput.fill("checkpoint");
   await page.waitForTimeout(300);
-  studioE2eAssert((await page.locator("[cmdk-item]").filter({ hasText: /commitCheckpoint/ }).count()) > 0, "checkpoint command should be in command palette");
+  studioE2eAssert(
+    (await page
+      .locator("[cmdk-item]")
+      .filter({ hasText: /commitCheckpoint/ })
+      .count()) > 0,
+    "checkpoint command should be in command palette",
+  );
   console.log("[DEBUG] studio commands in palette");
   await page.keyboard.press("Escape");
 

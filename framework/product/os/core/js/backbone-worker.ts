@@ -24,19 +24,7 @@
  */
 // #endregion Header
 
-import type {
-  BackboneWorkerRequest,
-  BackboneWorkerResponse,
-  DocumentActorConfig,
-  DocumentActorMsg,
-  DocumentEvent,
-  DocumentSyncStatus,
-  HubClientFrame,
-  HubServerFrame,
-  OpEnvelope,
-  PersistenceBinding,
-  RemoteState,
-} from "./index";
+import type { BackboneWorkerRequest, BackboneWorkerResponse, DocumentActorConfig, DocumentActorMsg, DocumentEvent, DocumentSyncStatus, HubClientFrame, HubServerFrame, OpEnvelope, PersistenceBinding, RemoteState } from "./index";
 
 //#region 🔖Constants
 /** 🛰️ Must match `framework/product/os/core/js/index.ts`'s `BACKBONE_ENDPOINT_PATH`. */

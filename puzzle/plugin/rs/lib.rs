@@ -2561,6 +2561,7 @@ pub mod d3 {
         SurfaceKind, ToolCategory, ToolDefinition, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID,
         IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionEmphasis, IntroductionStepDefinition,
+        ActionRef, DialogDefinition,
     };
     use semio_framework_plugin::kernel::HostEffect;
     use serde::{Deserialize, Serialize};
@@ -5089,6 +5090,11 @@ pub mod d3 {
         }
 
         fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> ActionEmit<Puzzle3dOp> {
+            // 🗨️ Shell-only effect (no document interaction, hence no `envelope`/`before`/`after` scaffolding
+            // below): opens the declared "addObject" dialog over a glass veil.
+            if action == "openAddObjectDialog" {
+                return ActionEmit::effect(HostEffect::OpenDialog { dialog_id: "addObject".into(), args: None });
+            }
             let before = doc.projection.clone();
             let active_tool_initial = view_state.active_tool_id.as_deref().unwrap_or(PUZZLE3D_DEFAULT_TOOL).to_string();
             let mut envelope = scene_from_projection(&before, self.runtime.clone(), &active_tool_initial);
@@ -5866,6 +5872,8 @@ pub mod d3 {
                 .operation("setFillCount", "Set Fill Count")
                 .operation("acceptSuggestion", "Accept Suggestion")
                 .operation("fillBuildTick", "Fill Build Tick")
+                // 🗨️ Shell-only effect (no document mutation): opens the "addObject" dialog.
+                .shell_action("openAddObjectDialog", "Add Object…")
                 // 👁️ Ephemeral view state — selection, hover, camera scratch, tool-parameter runtime.
                 .view_action("setSelection", "Set Selection")
                 .view_action("selectSameKindSelection", "Select Same Kind")
@@ -5967,7 +5975,18 @@ pub mod d3 {
                         )
                         .advance_on(IntroductionAdvance::Action("addObjectKind".into())),
                     ],
-                }),
+                })
+                // 🗨️ Reference dialog (proof of the framework's Dialog mechanism, see `DialogDefinition`
+                // in `framework/core/rs/lib.rs`): opened by `openAddObjectDialog`, drives the existing
+                // `addObjectKind` operation's `objectKind` select arg.
+                .dialog(
+                    DialogDefinition::new("addObject", "Add Object", ActionRef::new("addObjectKind"))
+                        .body("Choose the kind of object to add to the scene.")
+                        .args(vec![
+                            ActionArgDef::select("objectKind", "Kind", vec![ActionArgOption::new("Object", "Object")]).default_value("Object").required(),
+                        ])
+                        .submit_label("Add"),
+                ),
         )
         .example("empty", "Empty", &serde_json::to_string(&empty_fixture()).unwrap())
         .example(PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON)
@@ -6079,6 +6098,19 @@ pub mod d3 {
         }
 
         #[test]
+        fn open_add_object_dialog_emits_the_open_dialog_effect_with_no_document_change() {
+            let mut app = new_app();
+            let before = object_count(&app);
+            let result = app.handle_action("openAddObjectDialog", None, &ViewState::default(), &meta("local")).expect("openAddObjectDialog");
+            assert!(
+                matches!(result.requested_effects.as_slice(), [HostEffect::OpenDialog { dialog_id, args }] if dialog_id == "addObject" && args.is_none()),
+                "expected a single OpenDialog effect for the addObject dialog, got {:?}",
+                result.requested_effects,
+            );
+            assert_eq!(object_count(&app), before, "opening the dialog does not mutate the document");
+        }
+
+        #[test]
         fn set_active_example_swaps_the_document_and_undo_restores_it() {
             let mut app = new_app();
             let loaded = object_count(&app);
@@ -6113,6 +6145,14 @@ pub mod d3 {
         fn app_definition_has_the_main_world_window() {
             let app = create_puzzle3d_app();
             assert!(app.definition.window_kinds.iter().any(|window| window.id == PUZZLE3D_PLAY_WINDOW_MAIN));
+        }
+
+        #[test]
+        fn app_definition_declares_the_add_object_dialog() {
+            let app = create_puzzle3d_app();
+            let dialog = app.definition.dialogs.iter().find(|entry| entry.id == "addObject").expect("addObject dialog declared");
+            assert_eq!(dialog.submit_action.as_str(), "addObjectKind");
+            assert_eq!(dialog.args.len(), 1);
         }
 
         //#region 🧭 Suggestions, select-then-open context menu, fill build progress (Round 2)
@@ -6262,6 +6302,7 @@ pub mod d3 {
             // build converges over several ticks — exactly like the real 120ms `fillBuildTick` loop in
             // `world-3d-host.tsx` — rather than in one call.
             let mut app = new_app();
+            let object_count_before = object_count(&app);
             let fill_view = ViewState { active_tool_id: Some("fill".into()), ..ViewState::default() };
             app.handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "fill" })), &fill_view, &meta("local")).expect("select fill tool");
             for _ in 0..500 {
@@ -6273,6 +6314,7 @@ pub mod d3 {
                 Some(value) => assert_eq!(value, 1.0, "fillBuildTick should auto-start the fill count at 1 once the build is done"),
                 None => panic!("expected a fill-count slider in the fill Tool Options"),
             }
+            assert!(object_count(&app) > object_count_before, "starting the fill count must append a generated object to the document");
         }
 
         #[test]

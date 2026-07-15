@@ -16,9 +16,7 @@
     {
       "id": "Base",
       "name": "Base",
-      "ports": [
-        "core rectangular bottom"
-      ],
+      "ports": ["core rectangular bottom"],
       "presentation": {
         "handles": [
           {
@@ -37,9 +35,7 @@
     {
       "id": "Base Blob",
       "name": "Base Blob",
-      "ports": [
-        "core circular bottom"
-      ],
+      "ports": ["core circular bottom"],
       "presentation": {
         "handles": [
           {
@@ -58,10 +54,7 @@
     {
       "id": "Bridge",
       "name": "Bridge",
-      "ports": [
-        "platform right",
-        "platform left"
-      ],
+      "ports": ["platform right", "platform left"],
       "presentation": {
         "handles": [
           {
@@ -80,9 +73,7 @@
     {
       "id": "Capital",
       "name": "Capital",
-      "ports": [
-        "roof rectangular top"
-      ],
+      "ports": ["roof rectangular top"],
       "presentation": {
         "handles": [
           {
@@ -102,9 +93,7 @@
     {
       "id": "Capsule Backslash",
       "name": "Capsule Backslash",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -118,9 +107,7 @@
     {
       "id": "Capsule J",
       "name": "Capsule J",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -134,9 +121,7 @@
     {
       "id": "Capsule L",
       "name": "Capsule L",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -150,9 +135,7 @@
     {
       "id": "Capsule P",
       "name": "Capsule P",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -166,9 +149,7 @@
     {
       "id": "Capsule q",
       "name": "Capsule q",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -182,9 +163,7 @@
     {
       "id": "Capsule S",
       "name": "Capsule S",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -198,9 +177,7 @@
     {
       "id": "Capsule Slash",
       "name": "Capsule Slash",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -214,9 +191,7 @@
     {
       "id": "Capsule With Balcony Backslash",
       "name": "Capsule With Balcony Backslash",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -230,9 +205,7 @@
     {
       "id": "Capsule With Balcony J",
       "name": "Capsule With Balcony J",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -246,9 +219,7 @@
     {
       "id": "Capsule With Balcony L",
       "name": "Capsule With Balcony L",
-      "ports": [
-        "door capsule left"
-      ],
+      "ports": ["door capsule left"],
       "presentation": {
         "handles": [
           {
@@ -262,9 +233,7 @@
     {
       "id": "Capsule With Balcony P",
       "name": "Capsule With Balcony P",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -278,9 +247,7 @@
     {
       "id": "Capsule With Balcony Q",
       "name": "Capsule With Balcony Q",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -294,9 +261,7 @@
     {
       "id": "Capsule With Balcony S",
       "name": "Capsule With Balcony S",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -310,9 +275,7 @@
     {
       "id": "Capsule With Balcony Slash",
       "name": "Capsule With Balcony Slash",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -326,9 +289,7 @@
     {
       "id": "Capsule With Balcony Z",
       "name": "Capsule With Balcony Z",
-      "ports": [
-        "door capsule left"
-      ],
+      "ports": ["door capsule left"],
       "presentation": {
         "handles": [
           {
@@ -342,9 +303,7 @@
     {
       "id": "Capsule Z",
       "name": "Capsule Z",
-      "ports": [
-        "door capsule left"
-      ],
+      "ports": ["door capsule left"],
       "presentation": {
         "handles": [
           {
@@ -358,9 +317,7 @@
     {
       "id": "Cylindric Capital",
       "name": "Cylindric Capital",
-      "ports": [
-        "roof circular top"
-      ],
+      "ports": ["roof circular top"],
       "presentation": {
         "handles": [
           {
@@ -374,12 +331,7 @@
     {
       "id": "Cylindric First Storey Tambour",
       "name": "Cylindric First Storey Tambour",
-      "ports": [
-        "core circular top",
-        "tambour circular top",
-        "door tambour right",
-        "door tambour left"
-      ],
+      "ports": ["core circular top", "tambour circular top", "door tambour right", "door tambour left"],
       "presentation": {
         "handles": [
           {
@@ -438,12 +390,7 @@
     {
       "id": "Cylindric Last Storey Tambour",
       "name": "Cylindric Last Storey Tambour",
-      "ports": [
-        "tambour circular bottom",
-        "roof circular bottom",
-        "door tambour right",
-        "door tambour left"
-      ],
+      "ports": ["tambour circular bottom", "roof circular bottom", "door tambour right", "door tambour left"],
       "presentation": {
         "handles": [
           {
@@ -502,12 +449,7 @@
     {
       "id": "Cylindric Single Storey Tambour",
       "name": "Cylindric Single Storey Tambour",
-      "ports": [
-        "core circular top",
-        "roof circular bottom",
-        "door tambour right",
-        "door tambour left"
-      ],
+      "ports": ["core circular top", "roof circular bottom", "door tambour right", "door tambour left"],
       "presentation": {
         "handles": [
           {
@@ -566,12 +508,7 @@
     {
       "id": "Cylindric Tambour",
       "name": "Cylindric Tambour",
-      "ports": [
-        "tambour circular bottom",
-        "tambour circular top",
-        "door tambour right",
-        "door tambour left"
-      ],
+      "ports": ["tambour circular bottom", "tambour circular top", "door tambour right", "door tambour left"],
       "presentation": {
         "handles": [
           {
@@ -636,12 +573,7 @@
     {
       "id": "First Storey Tambour",
       "name": "First Storey Tambour",
-      "ports": [
-        "core rectangular top",
-        "tambour rectangular top",
-        "door tambour right",
-        "door tambour left"
-      ],
+      "ports": ["core rectangular top", "tambour rectangular top", "door tambour right", "door tambour left"],
       "presentation": {
         "handles": [
           {
@@ -700,12 +632,7 @@
     {
       "id": "Last Storey Tambour",
       "name": "Last Storey Tambour",
-      "ports": [
-        "tambour rectangular bottom",
-        "roof rectangular bottom",
-        "door tambour right",
-        "door tambour left"
-      ],
+      "ports": ["tambour rectangular bottom", "roof rectangular bottom", "door tambour right", "door tambour left"],
       "presentation": {
         "handles": [
           {
@@ -764,12 +691,7 @@
     {
       "id": "Single Storey Tambour",
       "name": "Single Storey Tambour",
-      "ports": [
-        "core circular top",
-        "roof rectangular bottom",
-        "door tambour right",
-        "door tambour left"
-      ],
+      "ports": ["core circular top", "roof rectangular bottom", "door tambour right", "door tambour left"],
       "presentation": {
         "handles": [
           {
@@ -828,12 +750,7 @@
     {
       "id": "Tambour",
       "name": "Tambour",
-      "ports": [
-        "tambour rectangular bottom",
-        "tambour rectangular top",
-        "door tambour right",
-        "door tambour left"
-      ],
+      "ports": ["tambour rectangular bottom", "tambour rectangular top", "door tambour right", "door tambour left"],
       "presentation": {
         "handles": [
           {
@@ -898,9 +815,7 @@
     {
       "id": "Trapezoid Capsule Backslash",
       "name": "Trapezoid Capsule Backslash",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -914,9 +829,7 @@
     {
       "id": "Trapezoid Capsule J",
       "name": "Trapezoid Capsule J",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -930,9 +843,7 @@
     {
       "id": "Trapezoid Capsule L",
       "name": "Trapezoid Capsule L",
-      "ports": [
-        "door capsule left"
-      ],
+      "ports": ["door capsule left"],
       "presentation": {
         "handles": [
           {
@@ -946,9 +857,7 @@
     {
       "id": "Trapezoid Capsule P",
       "name": "Trapezoid Capsule P",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -962,9 +871,7 @@
     {
       "id": "Trapezoid Capsule Q",
       "name": "Trapezoid Capsule Q",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -978,9 +885,7 @@
     {
       "id": "Trapezoid Capsule S",
       "name": "Trapezoid Capsule S",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -994,9 +899,7 @@
     {
       "id": "Trapezoid Capsule Slash",
       "name": "Trapezoid Capsule Slash",
-      "ports": [
-        "door capsule right"
-      ],
+      "ports": ["door capsule right"],
       "presentation": {
         "handles": [
           {
@@ -1010,9 +913,7 @@
     {
       "id": "Trapezoid Capsule Z",
       "name": "Trapezoid Capsule Z",
-      "ports": [
-        "door capsule left"
-      ],
+      "ports": ["door capsule left"],
       "presentation": {
         "handles": [
           {
@@ -1026,9 +927,7 @@
     {
       "id": "Piece",
       "name": "Piece",
-      "ports": [
-        "Connector"
-      ],
+      "ports": ["Connector"],
       "properties": [
         {
           "name": "position",

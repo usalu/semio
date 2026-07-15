@@ -168,7 +168,19 @@ const WINDOW_CATEGORY_DEMO_TREE: readonly CategoryDemoNode[] = [
     label: "Tools",
     icon: Wrench,
     kind: "group",
-    children: [{ id: "transform", label: "Transform", icon: Move, kind: "leaves", leaves: [{ id: "move", icon: Move }, { id: "rotate", icon: RotateCw }, { id: "scale", icon: Maximize2 }] }],
+    children: [
+      {
+        id: "transform",
+        label: "Transform",
+        icon: Move,
+        kind: "leaves",
+        leaves: [
+          { id: "move", icon: Move },
+          { id: "rotate", icon: RotateCw },
+          { id: "scale", icon: Maximize2 },
+        ],
+      },
+    ],
   },
 ];
 

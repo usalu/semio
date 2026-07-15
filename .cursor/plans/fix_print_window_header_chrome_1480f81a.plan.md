@@ -1,25 +1,25 @@
 ---
 name: Fix print window header chrome
-overview: "Fix the broken print \"window\" title-bar chrome in print/tex/semio-window.sty so it matches the OS UI's tab/cap + cutout pattern: visible left title chip and right number chip, a non-continuous top border (only above the chips, gap open in the middle), and no duplicate/stray border lines."
+overview: 'Fix the broken print "window" title-bar chrome in print/tex/semio-window.sty so it matches the OS UI''s tab/cap + cutout pattern: visible left title chip and right number chip, a non-continuous top border (only above the chips, gap open in the middle), and no duplicate/stray border lines.'
 todos:
-  - id: fix-header-store-gdef
-    content: Change \def to \gdef for semio@window@header@number/title in semio_window_header_store_aux:nn
-    status: completed
-  - id: fix-empty-check
-    content: "Fix the ctrl-box empty check in semio@window@header@muted to expand #1 before testing emptiness"
-    status: completed
-  - id: fix-gap-cutout
-    content: Swap semio@window@gap@inbox for semio@window@gap in semio@window@header@muted to restore the cutout
-    status: completed
-  - id: remove-redundant-rule
-    content: Remove the redundant trailing full-width stroke hbox in semio@window@header@muted
-    status: completed
-  - id: rebuild-and-verify
-    content: Rebuild zwischenbericht, rasterize, and visually verify chips/borders/gap match the OS UI reference
-    status: completed
-  - id: update-ticket
-    content: Update verify-log.md and close/reopen ticket PRINT-WINDOW-BORDER-GAP with summary
-    status: completed
+ - id: fix-header-store-gdef
+   content: Change \def to \gdef for semio@window@header@number/title in semio_window_header_store_aux:nn
+   status: completed
+ - id: fix-empty-check
+   content: "Fix the ctrl-box empty check in semio@window@header@muted to expand #1 before testing emptiness"
+   status: completed
+ - id: fix-gap-cutout
+   content: Swap semio@window@gap@inbox for semio@window@gap in semio@window@header@muted to restore the cutout
+   status: completed
+ - id: remove-redundant-rule
+   content: Remove the redundant trailing full-width stroke hbox in semio@window@header@muted
+   status: completed
+ - id: rebuild-and-verify
+   content: Rebuild zwischenbericht, rasterize, and visually verify chips/borders/gap match the OS UI reference
+   status: completed
+ - id: update-ticket
+   content: Update verify-log.md and close/reopen ticket PRINT-WINDOW-BORDER-GAP with summary
+   status: completed
 isProject: false
 ---
 

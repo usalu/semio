@@ -2744,6 +2744,7 @@ mod tests {
             default_layout: None,
             terminologies: Vec::new(),
             introduction: None,
+            dialogs: Vec::new(),
         });
         assert_eq!(platform.active_app_id, "draw-play");
     }
@@ -3251,6 +3252,82 @@ pub enum IntroductionAdvance {
 }
 //#endregion 🔖Introduction
 
+//#region 🔖Dialog
+/// @emoji 🗨️ A declared modal form dialog: a glass veil covers the screen and an info box (styled
+/// identically to the introduction walkthrough box, see `ui_react`'s `GLASS_OVERLAY_BOX_CLASS`)
+/// presents `args` as a staged form. Submit dispatches `submit_action` with the merged effective
+/// args; empty `args` degenerates to a message/confirm dialog. Opened only via
+/// `HostEffect::OpenDialog`; the shell owns open/close as ephemeral chrome state, never the document.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct DialogDefinition {
+    pub id: String,
+    pub title: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub body: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub args: Vec<ActionArgDef>,
+    /// 📇 References `AppDefinition.actions` — dispatched with the merged effective args on submit.
+    pub submit_action: ActionRef,
+    pub submit_label: String,
+    /// 📇 Optional `AppDefinition.actions` reference dispatched on any dismissal (Escape, veil
+    /// click, or the Cancel button).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub cancel_action: Option<ActionRef>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub cancel_label: Option<String>,
+}
+
+impl DialogDefinition {
+    pub fn new(id: impl Into<String>, title: impl Into<String>, submit_action: ActionRef) -> Self {
+        Self {
+            id: id.into(),
+            title: title.into(),
+            body: None,
+            args: Vec::new(),
+            submit_action,
+            submit_label: "OK".into(),
+            cancel_action: None,
+            cancel_label: None,
+        }
+    }
+
+    /// @emoji 📝 Attaches explanatory body text shown below the title.
+    pub fn body(mut self, body: impl Into<String>) -> Self {
+        self.body = Some(body.into());
+        self
+    }
+
+    /// @emoji 🧾 Attaches the staged-form field declarations.
+    pub fn args(mut self, args: Vec<ActionArgDef>) -> Self {
+        self.args = args;
+        self
+    }
+
+    /// @emoji ✅ Overrides the submit button label (default "OK").
+    pub fn submit_label(mut self, label: impl Into<String>) -> Self {
+        self.submit_label = label.into();
+        self
+    }
+
+    /// @emoji ❌ Overrides the cancel button label (default "Cancel", applied by the renderer).
+    pub fn cancel_label(mut self, label: impl Into<String>) -> Self {
+        self.cancel_label = Some(label.into());
+        self
+    }
+
+    /// @emoji 🚪 Declares an action dispatched on any dismissal (Escape, veil click, Cancel button).
+    pub fn on_cancel(mut self, action: ActionRef) -> Self {
+        self.cancel_action = Some(action);
+        self
+    }
+}
+//#endregion 🔖Dialog
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -3523,6 +3600,9 @@ pub struct AppDefinition {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub introduction: Option<IntroductionDefinition>,
+    /// 🗨️ The modal form dialogs this app can open via `HostEffect::OpenDialog`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub dialogs: Vec<DialogDefinition>,
 }
 
 /// 🧭 Resolves the dock layout a mode should present.
@@ -4039,6 +4119,13 @@ pub enum HostEffect {
     /// @emoji 🧰 Programmatically switches the host-owned active tool of a window kind — the effect
     /// form of `setActiveTool`, letting a plugin change tools without a user click.
     SetActiveTool { window_kind_id: String, tool_id: String },
+    /// @emoji 🗨️ Opens a declared `AppDefinition.dialogs` entry; `args` (an object keyed by arg id)
+    /// pre-seeds the staged form. Kernel-altitude — plain `String`/`Value`, no manifest types.
+    OpenDialog {
+        dialog_id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        args: Option<Value>,
+    },
 }
 
 /// @emoji 🖼️ One icon-render export request: the destination filename plus the opaque icon-scene
@@ -4586,10 +4673,11 @@ mod app_document_tests {
     //#region 🔖ActionArgsAndToolsTests
     use crate::ui::{
         effective_action_args, missing_required_args, resolve_window_actions, ActionArgControl, ActionArgDef,
-        ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, IntroductionAdvance,
+        ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, DialogDefinition, IntroductionAdvance,
         IntroductionAnchor, Modes, ToolDefinition, ToolRef, WindowKindDefinition, WindowKinds,
         SET_ACTIVE_TOOL_ACTION_ID,
     };
+    use crate::ui::kernel::HostEffect;
     use serde_json::json;
 
     #[test]
@@ -4688,6 +4776,7 @@ mod app_document_tests {
             default_layout: None,
             terminologies: Vec::new(),
             introduction: None,
+            dialogs: Vec::new(),
         }
     }
 
@@ -4780,6 +4869,41 @@ mod app_document_tests {
         }
         assert_eq!(IntroductionAdvance::default(), IntroductionAdvance::Next);
     }
+
+    #[test]
+    fn dialog_definition_round_trips_camel_case_with_defaults() {
+        let dialog = DialogDefinition::new("confirm-delete", "Delete?", ActionRef::new("deleteSelection"));
+        let json = serde_json::to_string(&dialog).unwrap();
+        assert!(json.contains("\"submitAction\":\"deleteSelection\""), "{json}");
+        assert!(json.contains("\"submitLabel\":\"OK\""), "{json}");
+        assert!(!json.contains("cancelAction"), "omitted when unset: {json}");
+        let round: DialogDefinition = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, dialog);
+    }
+
+    #[test]
+    fn dialog_definition_builder_chain() {
+        let dialog = DialogDefinition::new("addObject", "Add Object", ActionRef::new("addObjectKind"))
+            .body("Choose a kind")
+            .args(vec![ActionArgDef::text("objectKind", "Kind")])
+            .submit_label("Add")
+            .cancel_label("Nevermind")
+            .on_cancel(ActionRef::new("closeDialog"));
+        assert_eq!(dialog.body.as_deref(), Some("Choose a kind"));
+        assert_eq!(dialog.args.len(), 1);
+        assert_eq!(dialog.submit_label, "Add");
+        assert_eq!(dialog.cancel_label.as_deref(), Some("Nevermind"));
+        assert_eq!(dialog.cancel_action, Some(ActionRef::new("closeDialog")));
+    }
+
+    #[test]
+    fn open_dialog_effect_round_trips_camel_case() {
+        let effect = HostEffect::OpenDialog { dialog_id: "addObject".into(), args: None };
+        let json = serde_json::to_string(&effect).unwrap();
+        assert_eq!(json, r#"{"openDialog":{"dialogId":"addObject"}}"#);
+        let round: HostEffect = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, effect);
+    }
     //#endregion 🔖ActionArgsAndToolsTests
 
     #[cfg(feature = "typegen")]
@@ -4829,6 +4953,7 @@ mod app_document_tests {
         crate::ui::IntroductionEmphasis::export().unwrap();
         crate::ui::IntroductionPlacement::export().unwrap();
         crate::ui::IntroductionAdvance::export().unwrap();
+        crate::ui::DialogDefinition::export().unwrap();
         crate::ui::AppDefinition::export().unwrap();
         crate::ui::ProgramDefinition::export().unwrap();
         crate::ui::ExampleDefinition::export().unwrap();

@@ -48,14 +48,62 @@ import {
   type ActionDescriptor,
 } from "@semio-tech/framework-core";
 import { PlatformView, registerUiPanelSurfaceHost } from "@semio-tech/framework-platform-renderer-react";
-import { reactHostPort, setUiLocale, Tree, TreeItem, useActionHotkey } from "@semio-tech/ui-react";
+import { reactHostPort, registerUiTranslationBundles, Tree, TreeItem, useActionHotkey, useLabel, type UiLocale } from "@semio-tech/ui-react";
 // #endregion 🔌Adapters
 
 import "../globals.css";
 
-console.log("[DEBUG] renderer.tsx imports resolved, module body executing");
+//#region 🪁CodaUiI18n
+/** @emoji 🪁 Coda's own i18n bundle namespace, registered on the shared UI i18n instance the same way compose's sketchpad registers `compose.*` keys. Coda has no entity nouns overlapping puzzle/CAD's "reuse" terminology, so this is locale-only — no terminology dimension. */
+type CodaTranslationKey =
+  | `coda.nav.${string}`
+  | "coda.titlebar.subtitle"
+  | "coda.titlebar.sidecarConnected"
+  | "coda.titlebar.sidecarDisconnected"
+  | "coda.titlebar.connected"
+  | "coda.titlebar.offline"
+  | "coda.titlebar.refresh";
 
-void setUiLocale("en");
+const CODA_NAV_LABELS_EN: Readonly<Record<Page, string>> = { dashboard: "Dashboard", config: "Config", runs: "Runs", report: "Report", translations: "Translations", actions: "Actions", events: "Events" };
+const CODA_NAV_LABELS_DE: Readonly<Record<Page, string>> = { dashboard: "Uebersicht", config: "Konfiguration", runs: "Durchlaeufe", report: "Bericht", translations: "Uebersetzungen", actions: "Aktionen", events: "Ereignisse" };
+
+function codaTranslationBundle(nav: Readonly<Record<Page, string>>, titlebar: Readonly<Record<"subtitle" | "sidecarConnected" | "sidecarDisconnected" | "connected" | "offline" | "refresh", string>>): Readonly<Record<CodaTranslationKey, { readonly label: { readonly normal: string; readonly beginner: string } }>> {
+  const entries: Record<string, { readonly label: { readonly normal: string; readonly beginner: string } }> = {};
+  for (const [id, label] of Object.entries(nav)) entries[`coda.nav.${id}`] = { label: { normal: label, beginner: label } };
+  entries["coda.titlebar.subtitle"] = { label: { normal: titlebar.subtitle, beginner: titlebar.subtitle } };
+  entries["coda.titlebar.sidecarConnected"] = { label: { normal: titlebar.sidecarConnected, beginner: titlebar.sidecarConnected } };
+  entries["coda.titlebar.sidecarDisconnected"] = { label: { normal: titlebar.sidecarDisconnected, beginner: titlebar.sidecarDisconnected } };
+  entries["coda.titlebar.connected"] = { label: { normal: titlebar.connected, beginner: titlebar.connected } };
+  entries["coda.titlebar.offline"] = { label: { normal: titlebar.offline, beginner: titlebar.offline } };
+  entries["coda.titlebar.refresh"] = { label: { normal: titlebar.refresh, beginner: titlebar.refresh } };
+  return entries as Readonly<Record<CodaTranslationKey, { readonly label: { readonly normal: string; readonly beginner: string } }>>;
+}
+
+registerUiTranslationBundles({
+  en: {
+    translation: codaTranslationBundle(CODA_NAV_LABELS_EN, {
+      subtitle: "ACC Design Assistant",
+      sidecarConnected: "Sidecar connected",
+      sidecarDisconnected: "Sidecar disconnected (offline mode)",
+      connected: "Connected",
+      offline: "Offline",
+      refresh: "Refresh data",
+    }),
+  },
+  de: {
+    translation: codaTranslationBundle(CODA_NAV_LABELS_DE, {
+      subtitle: "ACC Entwurfsassistent",
+      sidecarConnected: "Sidecar verbunden",
+      sidecarDisconnected: "Sidecar getrennt (Offline-Modus)",
+      connected: "Verbunden",
+      offline: "Offline",
+      refresh: "Daten aktualisieren",
+    }),
+  },
+});
+//#endregion 🪁CodaUiI18n
+
+console.log("[DEBUG] renderer.tsx imports resolved, module body executing");
 
 // #region ⚙️Types
 // TypeScript interfaces for coda domain models used in the renderer.
@@ -2180,6 +2228,7 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
   const [selectedFolder, setSelectedFolder] = reactHostPort.useState<string | null>(null);
   const [error, setError] = reactHostPort.useState<string | null>(null);
   const [loading, setLoading] = reactHostPort.useState(false);
+  const titlebarSubtitle = useLabel("coda.titlebar.subtitle" as CodaTranslationKey);
 
   const handlePickFolder = reactHostPort.useCallback(async () => {
     const folder = await window.dialog.openFolder();
@@ -2236,7 +2285,7 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
       <div className="flex h-9 items-center border-b border-border-window bg-panel px-3 shrink-0" style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
         <div className="flex items-center gap-2 flex-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
           <span className="text-sm font-bold text-active-base">coda</span>
-          <span className="text-xs text-muted-foreground">ACC Design Assistant</span>
+          <span className="text-xs text-muted-foreground">{titlebarSubtitle}</span>
         </div>
         <div className="flex items-center gap-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
           <button onClick={onMinimize} className="rounded p-1.5 text-muted-foreground hover:bg-hover-window hover:text-foreground transition-colors cursor-pointer">
@@ -2256,7 +2305,7 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
         <div className="w-full max-w-2xl space-y-8">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-active-base">coda</h1>
-            <p className="mt-2 text-muted-foreground">ACC Design Assistant</p>
+            <p className="mt-2 text-muted-foreground">{titlebarSubtitle}</p>
           </div>
 
           {mode === "choose" && (
@@ -2403,14 +2452,14 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
  * Navigation item configuration.
  *MUST define all navigable pages with icons and labels.
  **/
-const navItems: Array<{ id: Page; label: string; icon: React.ComponentType<{ className?: string }> }> = [
-  { id: "dashboard", label: "Dashboard", icon: IconDashboard },
-  { id: "config", label: "Config", icon: IconConfig },
-  { id: "runs", label: "Runs", icon: IconRuns },
-  { id: "report", label: "Report", icon: IconReport },
-  { id: "translations", label: "Translations", icon: IconTranslations },
-  { id: "actions", label: "Actions", icon: IconActions },
-  { id: "events", label: "Events", icon: IconEvents },
+const navItems: Array<{ id: Page; icon: React.ComponentType<{ className?: string }> }> = [
+  { id: "dashboard", icon: IconDashboard },
+  { id: "config", icon: IconConfig },
+  { id: "runs", icon: IconRuns },
+  { id: "report", icon: IconReport },
+  { id: "translations", icon: IconTranslations },
+  { id: "actions", icon: IconActions },
+  { id: "events", icon: IconEvents },
 ];
 
 // #region 🪨CodaProductShell
@@ -2718,18 +2767,20 @@ function CodaMainSurfaceHost(_props: { readonly node: UiPanelHostSurfaceNode }):
   );
 }
 
+function CodaNavButton({ item, active, onSelect }: { readonly item: (typeof navItems)[number]; readonly active: boolean; readonly onSelect: () => void }): React.ReactElement {
+  const label = useLabel(`coda.nav.${item.id}` as CodaTranslationKey);
+  return (
+    <button type="button" onClick={onSelect} className={`rounded px-2 py-1 text-xs whitespace-nowrap transition-colors ${active ? "bg-active-base text-active-foreground" : "text-muted-foreground hover:bg-hover-window hover:text-foreground"}`}>
+      {label}
+    </button>
+  );
+}
+
 function CodaPageNavbar({ currentPage, onPageChange }: { readonly currentPage: Page; readonly onPageChange: (page: Page) => void }): React.ReactElement {
   return (
     <div className="flex min-w-0 items-center gap-1 overflow-x-auto">
       {navItems.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          onClick={() => onPageChange(item.id)}
-          className={`rounded px-2 py-1 text-xs whitespace-nowrap transition-colors ${currentPage === item.id ? "bg-active-base text-active-foreground" : "text-muted-foreground hover:bg-hover-window hover:text-foreground"}`}
-        >
-          {item.label}
-        </button>
+        <CodaNavButton key={item.id} item={item} active={currentPage === item.id} onSelect={() => onPageChange(item.id)} />
       ))}
     </div>
   );
@@ -2779,6 +2830,12 @@ function App() {
   const [sidecarConnected, setSidecarConnected] = reactHostPort.useState(false);
   const [events, setEvents] = reactHostPort.useState<CodaEvent[]>([]);
   const platform = reactHostPort.useMemo(() => ensureCodaPlatform(), []);
+  const titlebarSubtitle = useLabel("coda.titlebar.subtitle" as CodaTranslationKey);
+  const sidecarConnectedLabel = useLabel("coda.titlebar.sidecarConnected" as CodaTranslationKey);
+  const sidecarDisconnectedLabel = useLabel("coda.titlebar.sidecarDisconnected" as CodaTranslationKey);
+  const connectedLabel = useLabel("coda.titlebar.connected" as CodaTranslationKey);
+  const offlineLabel = useLabel("coda.titlebar.offline" as CodaTranslationKey);
+  const refreshLabel = useLabel("coda.titlebar.refresh" as CodaTranslationKey);
 
   reactHostPort.useEffect(() => {
     async function init() {
@@ -2861,7 +2918,7 @@ function App() {
       <div className="flex h-9 items-center border-b border-border-window bg-panel px-3 shrink-0" style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
         <div className="flex items-center gap-2 flex-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
           <span className="text-sm font-bold text-active-base">coda</span>
-          <span className="text-xs text-muted-foreground">ACC Design Assistant</span>
+          <span className="text-xs text-muted-foreground">{titlebarSubtitle}</span>
           <span className="text-xs text-muted-foreground ml-1">|</span>
           <span className="text-xs text-muted-foreground ml-1 font-mono" title={projectPath}>
             {projectName}
@@ -2873,13 +2930,13 @@ function App() {
             </>
           )}
           <span className="text-xs text-muted-foreground ml-1">·</span>
-          <span className={`ml-1 inline-flex items-center gap-1 text-xs ${sidecarConnected ? "text-success-foreground" : "text-destructive-foreground"}`} title={sidecarConnected ? "Sidecar connected" : "Sidecar disconnected (offline mode)"}>
+          <span className={`ml-1 inline-flex items-center gap-1 text-xs ${sidecarConnected ? "text-success-foreground" : "text-destructive-foreground"}`} title={sidecarConnected ? sidecarConnectedLabel : sidecarDisconnectedLabel}>
             <span className={`w-1.5 h-1.5 rounded-full ${sidecarConnected ? "bg-success-border" : "bg-destructive-border"}`} />
-            {sidecarConnected ? "Connected" : "Offline"}
+            {sidecarConnected ? connectedLabel : offlineLabel}
           </span>
         </div>
         <div className="flex items-center gap-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
-          <button onClick={handleRefresh} className="rounded p-1.5 text-muted-foreground hover:bg-hover-window hover:text-foreground transition-colors cursor-pointer" title="Refresh data">
+          <button onClick={handleRefresh} className="rounded p-1.5 text-muted-foreground hover:bg-hover-window hover:text-foreground transition-colors cursor-pointer" title={refreshLabel}>
             <IconRefresh className="w-3.5 h-3.5" />
           </button>
           <button onClick={handleMinimize} className="rounded p-1.5 text-muted-foreground hover:bg-hover-window hover:text-foreground transition-colors cursor-pointer">

@@ -34,11 +34,6 @@ class BuildVsixScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir)
-  .register("dev", DevScript)
-  .register("test", TestScript)
-  .register("build", BuildScript)
-  .register("lint", LintScript)
-  .register("build-vsix", BuildVsixScript);
+const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("test", TestScript).register("build", BuildScript).register("lint", LintScript).register("build-vsix", BuildVsixScript);
 
 await runBundleScriptMain(router, import.meta.url);

@@ -2,36 +2,36 @@
 name: VCS Backbones and Sync Tools
 overview: Refactor the vcs technology to four canonical app-agnostic backbones (Temporary, File, Folder, Remote), make them the single persistence path for os and playground documents, and add a shell-injected Sync tool category with attach cards in both React and WGPU renderers.
 todos:
-  - id: ticket
-    content: Read repo://goals and open/reopen ticket via repo MCP
-    status: completed
-  - id: vcs-backbones
-    content: Refactor vcs/rs to BackboneKind + Temporary/File/Folder/Remote backbones with temp/file/folder/remote URI schemes and store auto-sync
-    status: completed
-  - id: os-core-collapse
-    content: Collapse os core and s plugin duplicate backbones onto vcs backbones, fix fixtures and defaults
-    status: completed
-  - id: hub-envelope
-    content: Add hub envelope GET/PUT + ws broadcast, fix stale hub test
-    status: completed
-  - id: dev-io
-    content: Add os/dev vite backbone middleware (fs JSON + bun:sqlite .semio/document.db)
-    status: completed
-  - id: sync-category
-    content: Add ToolCategory::Sync in framework core rs/ts and wgpu 5-bucket partition
-    status: completed
-  - id: react-sync-ui
-    content: Inject Sync tools + anchored attach cards in React os-shell with attach/detach/auto-sync
-    status: completed
-  - id: wgpu-sync-ui
-    content: Inject Sync tools + floating attach cards in WGPU shell with attach/detach/auto-sync
-    status: completed
-  - id: defaults-audit
-    content: Default temp:// backbone for backboneless documents; audit play apps for DocumentVcsStore-typed documents/operations
-    status: completed
-  - id: verify
-    content: Run all touched test suites and confirm runtime attach/persist/remote round-trip with [DEBUG] logs
-    status: completed
+ - id: ticket
+   content: Read repo://goals and open/reopen ticket via repo MCP
+   status: completed
+ - id: vcs-backbones
+   content: Refactor vcs/rs to BackboneKind + Temporary/File/Folder/Remote backbones with temp/file/folder/remote URI schemes and store auto-sync
+   status: completed
+ - id: os-core-collapse
+   content: Collapse os core and s plugin duplicate backbones onto vcs backbones, fix fixtures and defaults
+   status: completed
+ - id: hub-envelope
+   content: Add hub envelope GET/PUT + ws broadcast, fix stale hub test
+   status: completed
+ - id: dev-io
+   content: Add os/dev vite backbone middleware (fs JSON + bun:sqlite .semio/document.db)
+   status: completed
+ - id: sync-category
+   content: Add ToolCategory::Sync in framework core rs/ts and wgpu 5-bucket partition
+   status: completed
+ - id: react-sync-ui
+   content: Inject Sync tools + anchored attach cards in React os-shell with attach/detach/auto-sync
+   status: completed
+ - id: wgpu-sync-ui
+   content: Inject Sync tools + floating attach cards in WGPU shell with attach/detach/auto-sync
+   status: completed
+ - id: defaults-audit
+   content: Default temp:// backbone for backboneless documents; audit play apps for DocumentVcsStore-typed documents/operations
+   status: completed
+ - id: verify
+   content: Run all touched test suites and confirm runtime attach/persist/remote round-trip with [DEBUG] logs
+   status: completed
 isProject: false
 ---
 

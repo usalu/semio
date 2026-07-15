@@ -136,10 +136,10 @@ use semio_framework_core::{
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
     set_active_tool_action_definition, start_introduction_action_definition, ActionArgDef, ActionRef, AppDefinition,
-    AppLabelsOverlay, ActionDefinition, ActionKind, Contribution, ExampleDefinition, IntroductionAdvance,
-    IntroductionAnchor, IntroductionDefinition, Keybinding, ModeDefinition, Modes, PanelGroup, PanelTabDefinition,
-    PanelTabKind, PluginManifest, ProgramDefinition, ToolDefinition, ToolRef, ViewState, WindowKindDefinition,
-    WindowKinds, SET_ACTIVE_TOOL_ACTION_ID, START_INTRODUCTION_ACTION_ID,
+    AppLabelsOverlay, ActionDefinition, ActionKind, Contribution, DialogDefinition, ExampleDefinition,
+    IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, Keybinding, ModeDefinition, Modes, PanelGroup,
+    PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition, ToolDefinition, ToolRef, ViewState,
+    WindowKindDefinition, WindowKinds, SET_ACTIVE_TOOL_ACTION_ID, START_INTRODUCTION_ACTION_ID,
 };
 use ui_wgpu::{
     collect_window_kind_ids_from_layout, ActionDescriptor, NamedLayout, UiNode, WindowEngagement,
@@ -231,6 +231,31 @@ fn panel_tab_spec_to_definition(tab: PanelTabSpec) -> PanelTabDefinition {
     }
 }
 
+/// 📝 Asserts every `ActionArgDef` in `args` (belonging to `owner`, e.g. an action or dialog id) has
+/// a non-empty, unique id and that any `Select` control declares at least one option — shared by
+/// per-action arg validation and dialog arg validation so both stay in lockstep.
+fn validate_arg_defs(app_id: &str, owner: &str, args: &[ActionArgDef]) {
+    let mut arg_ids = HashSet::new();
+    for arg in args {
+        assert!(
+            arg_ids.insert(arg.id.clone()),
+            "app {} {} declares duplicate arg id {}",
+            app_id,
+            owner,
+            arg.id
+        );
+        if let semio_framework_core::ActionArgControl::Select { options } = &arg.control {
+            assert!(
+                !options.is_empty(),
+                "app {} {} arg {} is a Select with no options",
+                app_id,
+                owner,
+                arg.id
+            );
+        }
+    }
+}
+
 pub struct KeybindingSpec {
     pub keys: String,
     pub controller_id: String,
@@ -254,6 +279,7 @@ pub struct AppBuilder {
     default_layout: Option<WindowLayout>,
     terminologies: Vec<String>,
     introduction: Option<IntroductionDefinition>,
+    dialogs: Vec<DialogDefinition>,
 }
 
 impl AppBuilder {
@@ -276,6 +302,7 @@ impl AppBuilder {
             default_layout: None,
             terminologies: Vec::new(),
             introduction: None,
+            dialogs: Vec::new(),
         }
     }
 
@@ -290,6 +317,13 @@ impl AppBuilder {
     /// `build_definition`; declaring one auto-injects the `startIntroduction` action.
     pub fn introduction(mut self, introduction: IntroductionDefinition) -> Self {
         self.introduction = Some(introduction);
+        self
+    }
+
+    /// @emoji 🗨️ Declares a modal form dialog (repeatable). `submit_action`/`cancel_action` and its
+    /// `args` are validated in `build_definition`; opened only via `HostEffect::OpenDialog`.
+    pub fn dialog(mut self, dialog: DialogDefinition) -> Self {
+        self.dialogs.push(dialog);
         self
     }
 
@@ -578,25 +612,7 @@ impl AppBuilder {
                 self.id,
                 action.id
             );
-            let mut arg_ids = HashSet::new();
-            for arg in &action.args {
-                assert!(
-                    arg_ids.insert(arg.id.clone()),
-                    "app {} action {} declares duplicate arg id {}",
-                    self.id,
-                    action.id,
-                    arg.id
-                );
-                if let semio_framework_core::ActionArgControl::Select { options } = &arg.control {
-                    assert!(
-                        !options.is_empty(),
-                        "app {} action {} arg {} is a Select with no options",
-                        self.id,
-                        action.id,
-                        arg.id
-                    );
-                }
-            }
+            validate_arg_defs(&self.id, &format!("action {}", action.id), &action.args);
         }
         let mut declared_tool_ids = HashSet::new();
         for tool in &self.tools {
@@ -778,6 +794,33 @@ impl AppBuilder {
                 }
             }
         }
+        let mut dialog_ids = HashSet::new();
+        for dialog in &self.dialogs {
+            assert!(!dialog.id.trim().is_empty(), "app {} dialog id must be non-empty", self.id);
+            assert!(
+                dialog_ids.insert(dialog.id.clone()),
+                "app {} duplicate dialog id {}",
+                self.id,
+                dialog.id
+            );
+            assert!(
+                declared_action_ids.contains(dialog.submit_action.as_str()),
+                "app {} dialog {} submit_action references undeclared action {}",
+                self.id,
+                dialog.id,
+                dialog.submit_action.as_str()
+            );
+            if let Some(cancel_action) = &dialog.cancel_action {
+                assert!(
+                    declared_action_ids.contains(cancel_action.as_str()),
+                    "app {} dialog {} cancel_action references undeclared action {}",
+                    self.id,
+                    dialog.id,
+                    cancel_action.as_str()
+                );
+            }
+            validate_arg_defs(&self.id, &format!("dialog {}", dialog.id), &dialog.args);
+        }
         AppDefinition {
             id: self.id,
             label: self.label,
@@ -830,6 +873,7 @@ impl AppBuilder {
             default_layout: self.default_layout,
             terminologies: self.terminologies,
             introduction: self.introduction,
+            dialogs: self.dialogs,
         }
     }
 }
@@ -1181,6 +1225,93 @@ mod app_builder_tests {
             .build_definition();
         let introduction = definition.introduction.expect("introduction present");
         assert_eq!(introduction.steps.len(), 4);
+    }
+
+    #[test]
+    fn declaring_dialog_appends_to_definition() {
+        use semio_framework_core::{ActionRef, DialogDefinition};
+        let definition = minimal_app("dialog-app")
+            .operation("addLayer", "Add Layer")
+            .dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer")))
+            .build_definition();
+        assert_eq!(definition.dialogs.len(), 1);
+        assert_eq!(definition.dialogs[0].id, "addLayer");
+        assert_eq!(definition.dialogs[0].submit_label, "OK");
+    }
+
+    #[test]
+    fn build_definition_rejects_duplicate_dialog_ids() {
+        use semio_framework_core::{ActionRef, DialogDefinition};
+        let result = std::panic::catch_unwind(|| {
+            minimal_app("dupe-dialog-app")
+                .operation("addLayer", "Add Layer")
+                .dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer")))
+                .dialog(DialogDefinition::new("addLayer", "Add Layer Again", ActionRef::new("addLayer")))
+                .build_definition()
+        });
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn build_definition_rejects_dialog_submit_action_referencing_undeclared_action() {
+        use semio_framework_core::{ActionRef, DialogDefinition};
+        let result = std::panic::catch_unwind(|| {
+            minimal_app("bad-dialog-submit-app")
+                .dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("missing")))
+                .build_definition()
+        });
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn build_definition_rejects_dialog_cancel_action_referencing_undeclared_action() {
+        use semio_framework_core::{ActionRef, DialogDefinition};
+        let result = std::panic::catch_unwind(|| {
+            minimal_app("bad-dialog-cancel-app")
+                .operation("addLayer", "Add Layer")
+                .dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer")).on_cancel(ActionRef::new("missing")))
+                .build_definition()
+        });
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn dialog_submit_action_may_reference_an_injected_history_action() {
+        use semio_framework_core::{ActionRef, DialogDefinition};
+        let definition = minimal_app("dialog-injected-action-app")
+            .dialog(DialogDefinition::new("confirmUndo", "Undo?", ActionRef::new("undo")))
+            .build_definition();
+        assert_eq!(definition.dialogs[0].submit_action, ActionRef::new("undo"));
+    }
+
+    #[test]
+    fn build_definition_rejects_dialog_duplicate_arg_ids() {
+        use semio_framework_core::{ActionArgDef, ActionRef, DialogDefinition};
+        let result = std::panic::catch_unwind(|| {
+            minimal_app("dupe-dialog-arg-app")
+                .operation("addLayer", "Add Layer")
+                .dialog(
+                    DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer"))
+                        .args(vec![ActionArgDef::text("name", "Name"), ActionArgDef::text("name", "Name Again")]),
+                )
+                .build_definition()
+        });
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn build_definition_rejects_dialog_select_arg_with_no_options() {
+        use semio_framework_core::{ActionArgControl, ActionArgDef, ActionRef, DialogDefinition};
+        let result = std::panic::catch_unwind(|| {
+            minimal_app("bad-dialog-select-app")
+                .operation("addLayer", "Add Layer")
+                .dialog(
+                    DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer"))
+                        .args(vec![ActionArgDef { control: ActionArgControl::Select { options: vec![] }, ..ActionArgDef::text("kind", "Kind") }]),
+                )
+                .build_definition()
+        });
+        assert!(result.is_err());
     }
 }
 

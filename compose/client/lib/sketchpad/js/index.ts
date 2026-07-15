@@ -80,7 +80,21 @@ import { type RelationshipKind, type WiresFixture, wiresFixtureBoard, wiresKitIn
 //#endregion 🔌Adapters
 
 //#region 🪁ComposeUiI18n
-import { decodeIcon, encodeIcon, iconSvgMarkup, registerUiTranslationBundles, setControlLabelIdResolver, type UiLabelValue, type UiLocale, type UiToolbarParentCategory } from "@semio-tech/ui-react";
+import {
+  createTerminologyLabelResolver,
+  decodeIcon,
+  encodeIcon,
+  iconSvgMarkup,
+  readStoredUiChromeLocale,
+  readStoredUiChromeTerminology,
+  registerUiTranslationBundles,
+  setControlLabelIdResolver,
+  useUiTerminology,
+  type UiLabelValue,
+  type UiLocale,
+  type UiTerminologyLabelSet,
+  type UiToolbarParentCategory,
+} from "@semio-tech/ui-react";
 
 /** @emoji 🪁 Sketchpad toolbar parent labels keyed by {@link UiToolbarParentCategory}. */
 type ComposeSketchpadToolbarParentEntries = { readonly [K in UiToolbarParentCategory]: UiLabelValue };
@@ -149,6 +163,73 @@ function applyComposeSketchpadToolbarParentEntries(bundles: Record<UiLocale, { t
   bundles.de.translation.compose.sketchpad.toolbar.parent = composeSketchpadToolbarParentDe;
   bundles.en.translation.compose.sketchpad.toolbar.parent = composeSketchpadToolbarParentEn;
 }
+
+//#region 🗣️VfsTerminology
+/** @emoji 🗣️ File-node/descriptor label keys for the kit virtual file system schema — the compose analog of a Rust plugin's `*Labels` struct. */
+type ComposeVfsLabelKey = "kit" | "folder" | "file" | "design" | "type" | "family" | "typology" | "piece" | "connection" | "representation" | "port" | "connector" | "path" | "nodeKind" | "version" | "kind" | "updated" | "createdBy" | "descriptorText" | "descriptorTime" | "descriptorAvatar";
+
+const composeVfsLabelsNative: UiTerminologyLabelSet<ComposeVfsLabelKey> = {
+  en: {
+    kit: "Kit",
+    folder: "Folder",
+    file: "File",
+    design: "Design",
+    type: "Type",
+    family: "Family",
+    typology: "Typology",
+    piece: "Piece",
+    connection: "Connection",
+    representation: "Representation",
+    port: "Port",
+    connector: "Connector",
+    path: "Path",
+    nodeKind: "Node kind",
+    version: "Version",
+    kind: "Kind",
+    updated: "Updated",
+    createdBy: "Created by",
+    descriptorText: "Text",
+    descriptorTime: "Time",
+    descriptorAvatar: "Avatar",
+  },
+  de: {
+    kit: "Kit",
+    folder: "Ordner",
+    file: "Datei",
+    design: "Entwurf",
+    type: "Typ",
+    family: "Familie",
+    typology: "Typologie",
+    piece: "Teil",
+    connection: "Verbindung",
+    representation: "Repraesentation",
+    port: "Port",
+    connector: "Konnektor",
+    path: "Pfad",
+    nodeKind: "Knotenart",
+    version: "Version",
+    kind: "Art",
+    updated: "Aktualisiert",
+    createdBy: "Erstellt von",
+    descriptorText: "Text",
+    descriptorTime: "Zeit",
+    descriptorAvatar: "Avatar",
+  },
+};
+
+/** @emoji 🗣️ "reuse" terminology overrides the assembly nouns that already have a shipped alternate vocabulary in puzzle/CAD (Piece↔Object, Port↔Handle); everything else falls back to native. */
+const composeVfsLabelsReuse: UiTerminologyLabelSet<ComposeVfsLabelKey> = {
+  en: { ...composeVfsLabelsNative.en, piece: "Building component", port: "Connection point" },
+  de: { ...composeVfsLabelsNative.de, piece: "Baukomponente", port: "Verbindungspunkt" },
+};
+
+const resolveComposeVfsLabels = createTerminologyLabelResolver<ComposeVfsLabelKey>({ native: composeVfsLabelsNative, reuse: composeVfsLabelsReuse });
+
+/** @emoji 🗣️ Current UI locale for TS-native (non-hook) label resolution, mirroring the shell's stored-locale fallback. */
+function composeCurrentUiLocale(): UiLocale {
+  return readStoredUiChromeLocale() ?? "en";
+}
+//#endregion 🗣️VfsTerminology
 
 const composeSketchpadTranslationBundles = {
   de: {
@@ -10844,22 +10925,30 @@ export type SketchpadMdxModule = {
   readonly frontmatter?: Readonly<Record<string, unknown>>;
 };
 
-const SKETCHPAD_DOCS_REGISTRY_FALLBACK: readonly SketchpadDocSection[] = [
-  {
-    id: "getting-started",
-    label: "Getting started",
-    pages: [
-      { path: "getting-started/index", title: "Getting started" },
-      { path: "getting-started/installation", title: "Installation" },
-    ],
-  },
-];
+const SKETCHPAD_DOCS_GETTING_STARTED_LABELS: UiTerminologyLabelSet<"gettingStarted" | "installation"> = {
+  en: { gettingStarted: "Getting started", installation: "Installation" },
+  de: { gettingStarted: "Erste Schritte", installation: "Installation" },
+};
+
+function sketchpadDocsRegistryFallback(): readonly SketchpadDocSection[] {
+  const l = SKETCHPAD_DOCS_GETTING_STARTED_LABELS[composeCurrentUiLocale()];
+  return [
+    {
+      id: "getting-started",
+      label: l.gettingStarted,
+      pages: [
+        { path: "getting-started/index", title: l.gettingStarted },
+        { path: "getting-started/installation", title: l.installation },
+      ],
+    },
+  ];
+}
 
 let sketchpadDocsRegistryCache: readonly SketchpadDocSection[] | null = null;
 
 /** @emoji 📚 Sync docs registry (fallback until {@link sketchpadWarmDocsRegistry} runs). */
 export function sketchpadBuildDocsRegistry(): readonly SketchpadDocSection[] {
-  return sketchpadDocsRegistryCache ?? SKETCHPAD_DOCS_REGISTRY_FALLBACK;
+  return sketchpadDocsRegistryCache ?? sketchpadDocsRegistryFallback();
 }
 
 /** @emoji 📚 Loads the full MDX-backed docs registry when docs routes are used. */
@@ -13038,139 +13127,56 @@ function sketchpadEmptyPuzzle2dFixture(): SketchpadPuzzle2dFixture {
 //#endregion 🔖Topology
 
 //#region 📁SketchpadVfs
-const SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
-  descriptorKinds: {
-    text: { id: "text", name: "Text", presentation: "text" },
-    time: { id: "time", name: "Time", presentation: "time", format: "datetime" },
-    avatar: { id: "avatar", name: "Avatar", presentation: "avatar" },
-  },
-  fileNodeKinds: {
-    kit: {
-      id: "kit",
-      name: "Kit",
-      icon: "layout-grid",
-      description: "Open kit workspace",
-      descriptors: [
-        { id: "version", descriptorKindId: "text", label: "Version" },
-        { id: "kitKind", descriptorKindId: "text", label: "Kind" },
-        { id: "updated", descriptorKindId: "time", label: "Updated" },
-        { id: "createdBy", descriptorKindId: "avatar", label: "Created by" },
-        { id: "path", descriptorKindId: "text", label: "Path" },
-        { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-      ],
+/** @emoji 🗣️ Builds the kit VFS schema model fresh from the active locale + terminology, mirroring a Rust plugin's `*_labels(view_state)` resolver. */
+function sketchpadKitVirtualFileSystemSchemaModel(): VirtualFileSystemSchemaModel {
+  const l = resolveComposeVfsLabels(readStoredUiChromeTerminology(), composeCurrentUiLocale());
+  const pathAndNodeKindDescriptors = [
+    { id: "path", descriptorKindId: "text", label: l.path },
+    { id: "fileNodeKind", descriptorKindId: "text", label: l.nodeKind },
+  ] as const;
+  return {
+    descriptorKinds: {
+      text: { id: "text", name: l.descriptorText, presentation: "text" },
+      time: { id: "time", name: l.descriptorTime, presentation: "time", format: "datetime" },
+      avatar: { id: "avatar", name: l.descriptorAvatar, presentation: "avatar" },
     },
-    folder: {
-      id: "folder",
-      name: "Folder",
-      icon: "folder",
-      descriptors: [
-        { id: "path", descriptorKindId: "text", label: "Path" },
-        { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-      ],
+    fileNodeKinds: {
+      kit: {
+        id: "kit",
+        name: l.kit,
+        icon: "layout-grid",
+        description: "Open kit workspace",
+        descriptors: [
+          { id: "version", descriptorKindId: "text", label: l.version },
+          { id: "kitKind", descriptorKindId: "text", label: l.kind },
+          { id: "updated", descriptorKindId: "time", label: l.updated },
+          { id: "createdBy", descriptorKindId: "avatar", label: l.createdBy },
+          ...pathAndNodeKindDescriptors,
+        ],
+      },
+      folder: { id: "folder", name: l.folder, icon: "folder", descriptors: [...pathAndNodeKindDescriptors] },
+      file: { id: "file", name: l.file, icon: "file", descriptors: [...pathAndNodeKindDescriptors] },
+      design: { id: "design", name: l.design, icon: "layout", descriptors: [...pathAndNodeKindDescriptors] },
+      type: { id: "type", name: l.type, icon: "component", descriptors: [...pathAndNodeKindDescriptors] },
+      family: { id: "family", name: l.family, icon: "users", descriptors: [...pathAndNodeKindDescriptors] },
+      typology: { id: "typology", name: l.typology, icon: "landmark", descriptors: [...pathAndNodeKindDescriptors] },
+      piece: { id: "piece", name: l.piece, icon: "puzzle", descriptors: [...pathAndNodeKindDescriptors] },
+      connection: { id: "connection", name: l.connection, icon: "link", descriptors: [...pathAndNodeKindDescriptors] },
+      representation: { id: "representation", name: l.representation, icon: "box", descriptors: [...pathAndNodeKindDescriptors] },
+      port: { id: "port", name: l.port, icon: "circle-dot", descriptors: [...pathAndNodeKindDescriptors] },
+      connector: { id: "connector", name: l.connector, icon: "plug", descriptors: [...pathAndNodeKindDescriptors] },
     },
-    file: {
-      id: "file",
-      name: "File",
-      icon: "file",
-      descriptors: [
-        { id: "path", descriptorKindId: "text", label: "Path" },
-        { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-      ],
-    },
-    design: {
-      id: "design",
-      name: "Design",
-      icon: "layout",
-      descriptors: [
-        { id: "path", descriptorKindId: "text", label: "Path" },
-        { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-      ],
-    },
-    type: {
-      id: "type",
-      name: "Type",
-      icon: "component",
-      descriptors: [
-        { id: "path", descriptorKindId: "text", label: "Path" },
-        { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-      ],
-    },
-    family: {
-      id: "family",
-      name: "Family",
-      icon: "users",
-      descriptors: [
-        { id: "path", descriptorKindId: "text", label: "Path" },
-        { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-      ],
-    },
-    typology: {
-      id: "typology",
-      name: "Typology",
-      icon: "landmark",
-      descriptors: [
-        { id: "path", descriptorKindId: "text", label: "Path" },
-        { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-      ],
-    },
-    piece: {
-      id: "piece",
-      name: "Piece",
-      icon: "puzzle",
-      descriptors: [
-        { id: "path", descriptorKindId: "text", label: "Path" },
-        { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-      ],
-    },
-    connection: {
-      id: "connection",
-      name: "Connection",
-      icon: "link",
-      descriptors: [
-        { id: "path", descriptorKindId: "text", label: "Path" },
-        { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-      ],
-    },
-    representation: {
-      id: "representation",
-      name: "Representation",
-      icon: "box",
-      descriptors: [
-        { id: "path", descriptorKindId: "text", label: "Path" },
-        { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-      ],
-    },
-    port: {
-      id: "port",
-      name: "Port",
-      icon: "circle-dot",
-      descriptors: [
-        { id: "path", descriptorKindId: "text", label: "Path" },
-        { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-      ],
-    },
-    connector: {
-      id: "connector",
-      name: "Connector",
-      icon: "plug",
-      descriptors: [
-        { id: "path", descriptorKindId: "text", label: "Path" },
-        { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
-      ],
-    },
-  },
-  descriptorColumnIds: [],
-};
+    descriptorColumnIds: [],
+  };
+}
 
-const SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_HOME_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
-  ...SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL,
-  descriptorColumnIds: [],
-};
+function sketchpadKitVirtualFileSystemHomeSchemaModel(): VirtualFileSystemSchemaModel {
+  return { ...sketchpadKitVirtualFileSystemSchemaModel(), descriptorColumnIds: [] };
+}
 
-const SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
-  ...SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL,
-  descriptorColumnIds: [],
-};
+function sketchpadKitVirtualFileSystemTreeSchemaModel(): VirtualFileSystemSchemaModel {
+  return { ...sketchpadKitVirtualFileSystemSchemaModel(), descriptorColumnIds: [] };
+}
 
 function sketchpadKitVirtualFileSystemDescriptorValues(
   fileNodeKindId: string,
@@ -13186,7 +13192,7 @@ function sketchpadKitVirtualFileSystemDescriptorValues(
   const textByDescriptorId: Record<string, string> = {};
   if (options.version !== undefined) textByDescriptorId.version = options.version;
   if (options.kitKind !== undefined) textByDescriptorId.kitKind = options.kitKind;
-  return virtualFileSystemDescriptorValues(SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL, fileNodeKindId, {
+  return virtualFileSystemDescriptorValues(sketchpadKitVirtualFileSystemSchemaModel(), fileNodeKindId, {
     path: options.path,
     updatedIso: options.updatedIso,
     createdBy: options.createdBy,
@@ -14692,7 +14698,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
   }
 
   protected override getSchema(scope: VirtualFileSystemScope): VirtualFileSystemSchemaModel {
-    return SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA_MODEL;
+    return sketchpadKitVirtualFileSystemTreeSchemaModel();
   }
 
   protected override getRoot(scope: VirtualFileSystemScope): VirtualFileSystemNodeRecord {
@@ -15546,15 +15552,15 @@ if (import.meta.vitest) {
     });
 
     it("schema shows name column only (no path or node kind descriptors)", () => {
-      expect(SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL.descriptorColumnIds).toEqual([]);
-      expect(SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_HOME_SCHEMA_MODEL.descriptorColumnIds).toEqual([]);
-      expect(SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA_MODEL.descriptorColumnIds).toEqual([]);
+      expect(sketchpadKitVirtualFileSystemSchemaModel().descriptorColumnIds).toEqual([]);
+      expect(sketchpadKitVirtualFileSystemHomeSchemaModel().descriptorColumnIds).toEqual([]);
+      expect(sketchpadKitVirtualFileSystemTreeSchemaModel().descriptorColumnIds).toEqual([]);
     });
 
     it("schema includes representation port and connector node kinds", () => {
-      expect(SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL.fileNodeKinds.representation?.name).toBe("Representation");
-      expect(SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL.fileNodeKinds.port?.name).toBe("Port");
-      expect(SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_SCHEMA_MODEL.fileNodeKinds.connector?.name).toBe("Connector");
+      expect(sketchpadKitVirtualFileSystemSchemaModel().fileNodeKinds.representation?.name).toBe("Representation");
+      expect(sketchpadKitVirtualFileSystemSchemaModel().fileNodeKinds.port?.name).toBe("Port");
+      expect(sketchpadKitVirtualFileSystemSchemaModel().fileNodeKinds.connector?.name).toBe("Connector");
     });
 
     it("maps rs vfs records from graphql child refs", () => {

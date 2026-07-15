@@ -209,12 +209,7 @@ const config: StorybookConfig = {
 
     config.optimizeDeps = config.optimizeDeps || {};
     config.optimizeDeps.include = [...(config.optimizeDeps.include || []), "golden-layout"];
-    const optimizeExclude = new Set<string>([
-      ...(config.optimizeDeps.exclude || []),
-      "@semio-tech/ui-react",
-      "@semio-tech/infinite-cavas-react-renderer",
-      ...findWorkspacePackages(repoRootPath),
-    ]);
+    const optimizeExclude = new Set<string>([...(config.optimizeDeps.exclude || []), "@semio-tech/ui-react", "@semio-tech/infinite-cavas-react-renderer", ...findWorkspacePackages(repoRootPath)]);
     if (loadComposeStack) {
       optimizeExclude.add("@semio-tech/compose-react");
       optimizeExclude.add("@semio-tech/compose-js");

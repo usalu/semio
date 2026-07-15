@@ -4,9 +4,7 @@ const dom = new JSDOM("<!doctype html><html><body></body></html>");
 (globalThis as any).document = dom.window.document;
 (globalThis as any).window = dom.window;
 
-const { activeUiTheme, applyUiThemeToDocument, parseUiTheme, serializeCanvasThemeJson, serializeUiTheme, setActiveUiTheme, semioTheme } = await import(
-  "../../../../../../ui/styling/js/index.ts"
-);
+const { activeUiTheme, applyUiThemeToDocument, parseUiTheme, serializeCanvasThemeJson, serializeUiTheme, setActiveUiTheme, semioTheme } = await import("../../../../../../ui/styling/js/index.ts");
 const { STYLING_SEMIO_THEME } = await import("../../../../../../ui/styling/js/tokens.generated.ts");
 
 // 1. Baseline: pristine semio applied.

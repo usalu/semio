@@ -16,9 +16,33 @@ const semioDoc = JSON.parse((noteCanvas.documentJson as string) ?? "{}") as { bl
 console.log("[DEBUG] semio example blocks:", semioDoc.blocks?.length);
 if (semioDoc.blocks?.length !== 3) throw new Error(`expected 3 blocks from semio example, got ${semioDoc.blocks?.length}`);
 
-const beginEvents = JSON.stringify([{ op: "addBlock", block: { kind: "ink", id: "verify-ink", name: "Ink", x: 10, y: 10, width: 1, height: 1, visible: true, locked: false, points: [], strokeWidth: 3, color: [0, 0, 0, 1] }, parentId: null, index: null }]);
+const beginEvents = JSON.stringify([
+  { op: "addBlock", block: { kind: "ink", id: "verify-ink", name: "Ink", x: 10, y: 10, width: 1, height: 1, visible: true, locked: false, points: [], strokeWidth: 3, color: [0, 0, 0, 1] }, parentId: null, index: null },
+]);
 await handle.handleCommand(instanceId, JSON.stringify({ controllerId: "note-play", command: "applyNoteEvents", args: { eventsJson: beginEvents, phase: "begin", selectIds: ["verify-ink"] } }), viewState);
-const liveEvents = JSON.stringify([{ op: "updateBlock", blockId: "verify-ink", block: { kind: "ink", id: "verify-ink", name: "Ink", x: 10, y: 10, width: 1, height: 1, visible: true, locked: false, points: [[0, 0], [20, 0]], strokeWidth: 3, color: [0, 0, 0, 1] } }]);
+const liveEvents = JSON.stringify([
+  {
+    op: "updateBlock",
+    blockId: "verify-ink",
+    block: {
+      kind: "ink",
+      id: "verify-ink",
+      name: "Ink",
+      x: 10,
+      y: 10,
+      width: 1,
+      height: 1,
+      visible: true,
+      locked: false,
+      points: [
+        [0, 0],
+        [20, 0],
+      ],
+      strokeWidth: 3,
+      color: [0, 0, 0, 1],
+    },
+  },
+]);
 await handle.handleCommand(instanceId, JSON.stringify({ controllerId: "note-play", command: "applyNoteEvents", args: { eventsJson: liveEvents, phase: "live" } }), viewState);
 await handle.handleCommand(instanceId, JSON.stringify({ controllerId: "note-play", command: "applyNoteEvents", args: { eventsJson: "[]", phase: "commit" } }), viewState);
 const afterGesture = (await handle.render(instanceId, "note.play.composite", viewState)) as { noteCanvas?: Record<string, unknown> };

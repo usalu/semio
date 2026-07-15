@@ -40,23 +40,11 @@ function renderTableCell(cell: TableCellRecord, onAction: (action: ActionDescrip
     case "stepper":
       return (
         <div className="flex min-w-0 items-center gap-1" onClick={(event) => event.stopPropagation()}>
-          <Button
-            className="h-medium shrink-0 px-2"
-            onClick={() => dispatchCellAction(onAction, cell.action, { delta: -cell.step })}
-            disabled={cell.value <= cell.min}
-            type="button"
-            variant="outline"
-          >
+          <Button className="h-medium shrink-0 px-2" onClick={() => dispatchCellAction(onAction, cell.action, { delta: -cell.step })} disabled={cell.value <= cell.min} type="button" variant="outline">
             −
           </Button>
           <Input className="h-medium w-14 min-w-0 text-center font-mono text-xs" readOnly value={String(cell.value)} />
-          <Button
-            className="h-medium shrink-0 px-2"
-            onClick={() => dispatchCellAction(onAction, cell.action, { delta: cell.step })}
-            disabled={cell.value >= cell.max}
-            type="button"
-            variant="outline"
-          >
+          <Button className="h-medium shrink-0 px-2" onClick={() => dispatchCellAction(onAction, cell.action, { delta: cell.step })} disabled={cell.value >= cell.max} type="button" variant="outline">
             +
           </Button>
         </div>

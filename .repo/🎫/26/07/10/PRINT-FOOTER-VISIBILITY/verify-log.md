@@ -11,15 +11,15 @@ Build: `bun ./script.ts build` (all 6 templates, light+dark)
 
 ## Visual checks
 
-| Doc | Page | Raster | Footer visible | Content stops above footer |
-| --- | --- | --- | --- | --- |
-| report | 4 | report-p4.png | yes (page 1) | yes |
-| report | 5 | report-p5.png | yes (page 5) | yes |
-| paper | 2 | paper-p2.png | yes (page 2) | yes |
-| flyer | 1 | flyer-p1.png | yes | yes |
-| zwischenbericht | 2 | zwischenbericht-p2.png | yes (page 2) | yes |
-| forschungsbericht | 5 | forschungsbericht-p5.png | yes (page 5) | yes |
-| kompaktbericht | 2 | kompaktbericht-p2.png | yes | yes |
+| Doc               | Page | Raster                   | Footer visible | Content stops above footer |
+| ----------------- | ---- | ------------------------ | -------------- | -------------------------- |
+| report            | 4    | report-p4.png            | yes (page 1)   | yes                        |
+| report            | 5    | report-p5.png            | yes (page 5)   | yes                        |
+| paper             | 2    | paper-p2.png             | yes (page 2)   | yes                        |
+| flyer             | 1    | flyer-p1.png             | yes            | yes                        |
+| zwischenbericht   | 2    | zwischenbericht-p2.png   | yes (page 2)   | yes                        |
+| forschungsbericht | 5    | forschungsbericht-p5.png | yes (page 5)   | yes                        |
+| kompaktbericht    | 2    | kompaktbericht-p2.png    | yes            | yes                        |
 
 ## Notes
 

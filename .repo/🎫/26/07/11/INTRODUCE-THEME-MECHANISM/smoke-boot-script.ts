@@ -25,7 +25,15 @@ const styleProps: Record<string, string> = {};
 const bodyStyle: Record<string, string> = {};
 (globalThis as any).localStorage = { getItem: (k: string) => store[k] ?? null };
 (globalThis as any).document = {
-  documentElement: { classList: { contains: () => false }, style: { setProperty: (k: string, v: string) => { styleProps[k] = v; } }, dataset: {} as Record<string, string> },
+  documentElement: {
+    classList: { contains: () => false },
+    style: {
+      setProperty: (k: string, v: string) => {
+        styleProps[k] = v;
+      },
+    },
+    dataset: {} as Record<string, string>,
+  },
   body: { style: bodyStyle },
 };
 // eslint-disable-next-line no-eval

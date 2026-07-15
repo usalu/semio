@@ -2,30 +2,30 @@
 name: Print Glossary Mechanism
 overview: Add a term/definition/usage-tracking glossary mechanism to the semio print (LaTeX) stack, replacing the unused generic "Glossary" register stub with a real glossary that collects `\GlossaryDefine`/`\Gls` usage and renders a Term / Definition / Pages table at the document end via `\listofglossaries`.
 todos:
-  - id: open-ticket
-    content: Open ticket under goal r2602/runningsketchpad for the glossary mechanism
-    status: completed
-  - id: remove-old-kind
-    content: Remove obsolete semioglossary register kind from semio-window.sty and unused i18n entries from semio-core.sty
-    status: completed
-  - id: data-model
-    content: "Add Glossary region to semio-window.sty: term/definition/pages data structures, GlossaryDefine, Gls, listofglossaries render"
-    status: completed
-  - id: table-macros
-    content: Add SemioTableGlossary colspec/row/table macros to semio-table.sty
-    status: completed
-  - id: i18n
-    content: Add SemioGlossaryTitle and Term/Definition/Pages header i18n strings to semio-core.sty
-    status: completed
-  - id: verify
-    content: Build ticket-local verify-glossary.tex + verify.ts, compile with Tectonic, screenshot, confirm dedup/hyperlink behavior
-    status: in_progress
-  - id: regression-build
-    content: Rebuild an existing print template to confirm removal of old kind doesn't break other documents
-    status: pending
-  - id: close-ticket
-    content: Close ticket with summary and full list of touched files
-    status: pending
+ - id: open-ticket
+   content: Open ticket under goal r2602/runningsketchpad for the glossary mechanism
+   status: completed
+ - id: remove-old-kind
+   content: Remove obsolete semioglossary register kind from semio-window.sty and unused i18n entries from semio-core.sty
+   status: completed
+ - id: data-model
+   content: "Add Glossary region to semio-window.sty: term/definition/pages data structures, GlossaryDefine, Gls, listofglossaries render"
+   status: completed
+ - id: table-macros
+   content: Add SemioTableGlossary colspec/row/table macros to semio-table.sty
+   status: completed
+ - id: i18n
+   content: Add SemioGlossaryTitle and Term/Definition/Pages header i18n strings to semio-core.sty
+   status: completed
+ - id: verify
+   content: Build ticket-local verify-glossary.tex + verify.ts, compile with Tectonic, screenshot, confirm dedup/hyperlink behavior
+   status: in_progress
+ - id: regression-build
+   content: Rebuild an existing print template to confirm removal of old kind doesn't break other documents
+   status: pending
+ - id: close-ticket
+   content: Close ticket with summary and full list of touched files
+   status: pending
 isProject: false
 ---
 

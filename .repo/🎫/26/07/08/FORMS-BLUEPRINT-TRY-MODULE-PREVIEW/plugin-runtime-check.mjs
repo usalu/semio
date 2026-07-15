@@ -21,10 +21,16 @@ function buildContributionsJson(manifest, pluginId) {
 
 const procedural = await loadPlugin("forms-module-procedural", "forms_module_procedural");
 const proceduralApps = procedural.manifest.apps ?? [];
-console.log("[DEBUG] forms-module-procedural apps", proceduralApps.map((app) => app.id));
+console.log(
+  "[DEBUG] forms-module-procedural apps",
+  proceduralApps.map((app) => app.id),
+);
 if (proceduralApps.length !== 1) throw new Error("expected one forms-module-procedural app");
 if (!proceduralApps[0].windowKinds?.length) throw new Error("forms-module-procedural app must declare window kinds");
-console.log("[DEBUG] forms-module-procedural windowKinds", proceduralApps[0].windowKinds.map((kind) => kind.id));
+console.log(
+  "[DEBUG] forms-module-procedural windowKinds",
+  proceduralApps[0].windowKinds.map((kind) => kind.id),
+);
 
 const contributions = procedural.manifest.contributions ?? [];
 const building = contributions.find((entry) => entry.question_kind === "buildingComponent" || entry.questionKind === "buildingComponent");
@@ -80,9 +86,7 @@ async function verifyGenerate(appId, pluginId, jsName, previewBody) {
   const ctx = JSON.stringify({ viewState: {}, actor: "local" });
   const add = JSON.parse(await loaded.api.handleCommand(fi, JSON.stringify({ command: "addGeneration" }), ctx));
   if (!add.operations?.length) throw new Error(`${appId} addGeneration must emit patch ops`);
-  const rename = JSON.parse(
-    await loaded.api.handleCommand(fi, JSON.stringify({ command: "renameGeneration", args: { name: "Verify Gen" } }), ctx),
-  );
+  const rename = JSON.parse(await loaded.api.handleCommand(fi, JSON.stringify({ command: "renameGeneration", args: { name: "Verify Gen" } }), ctx));
   if (!rename.operations?.length) throw new Error(`${appId} renameGeneration must emit patch ops`);
   const preview = JSON.parse(await loaded.api.render(fi, previewBody, "{}"));
   if (preview.type !== "componentScene" && preview.type !== "stack") {

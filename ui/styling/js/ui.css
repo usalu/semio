@@ -917,8 +917,7 @@
     border-radius: inherit;
     padding: var(--stroke-hairline);
     background:
-      conic-gradient(from var(--loading-border-angle), transparent, var(--loading-border-color, var(--border-normal-color))),
-      conic-gradient(color-mix(in oklab, var(--loading-border-color, var(--border-normal-color)) 20%, transparent) 0 360deg);
+      conic-gradient(from var(--loading-border-angle), transparent, var(--loading-border-color, var(--border-normal-color))), conic-gradient(color-mix(in oklab, var(--loading-border-color, var(--border-normal-color)) 20%, transparent) 0 360deg);
     -webkit-mask:
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);

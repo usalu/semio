@@ -1,6227 +1,6227 @@
 type AddedAttributeToConcept {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributeToConceptConnection {
-	edges: [AddedAttributeToConceptEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributeToConceptEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributeToConceptEdge {
-	cursor: String!
-	node: AddedAttributeToConcept!
+  cursor: String!
+  node: AddedAttributeToConcept!
 }
 
 type AddedAttributeToConceptInput {
-	attribute: Attribute!
+  attribute: Attribute!
 }
 
 type AddedAttributeToConceptInputConnection {
-	edges: [AddedAttributeToConceptInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributeToConceptInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributeToConceptInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type AddedAttributeToDesign {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributeToDesignConnection {
-	edges: [AddedAttributeToDesignEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributeToDesignEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributeToDesignEdge {
-	cursor: String!
-	node: AddedAttributeToDesign!
+  cursor: String!
+  node: AddedAttributeToDesign!
 }
 
 type AddedAttributeToDesignInput {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributeToDesignInputConnection {
-	edges: [AddedAttributeToDesignInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributeToDesignInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributeToDesignInputEdge {
-	cursor: String!
-	node: AddedAttributeToDesignInput!
+  cursor: String!
+  node: AddedAttributeToDesignInput!
 }
 
 type AddedAttributeToPiece {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributeToPieceConnection {
-	edges: [AddedAttributeToPieceEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributeToPieceEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributeToPieceEdge {
-	cursor: String!
-	node: AddedAttributeToPiece!
+  cursor: String!
+  node: AddedAttributeToPiece!
 }
 
 type AddedAttributeToPieceInput {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributeToPieceInputConnection {
-	edges: [AddedAttributeToPieceInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributeToPieceInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributeToPieceInputEdge {
-	cursor: String!
-	node: AddedAttributeToPieceInput!
+  cursor: String!
+  node: AddedAttributeToPieceInput!
 }
 
 type AddedAttributeToPort {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributeToPortConnection {
-	edges: [AddedAttributeToPortEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributeToPortEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributeToPortEdge {
-	cursor: String!
-	node: AddedAttributeToPort!
+  cursor: String!
+  node: AddedAttributeToPort!
 }
 
 type AddedAttributeToPortInput {
-	attribute: Attribute!
+  attribute: Attribute!
 }
 
 type AddedAttributeToPortInputConnection {
-	edges: [AddedAttributeToPortInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributeToPortInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributeToPortInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type AddedAttributeToQuality {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributeToQualityConnection {
-	edges: [AddedAttributeToQualityEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributeToQualityEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributeToQualityEdge {
-	cursor: String!
-	node: AddedAttributeToQuality!
+  cursor: String!
+  node: AddedAttributeToQuality!
 }
 
 type AddedAttributeToQualityInput {
-	attribute: Attribute!
+  attribute: Attribute!
 }
 
 type AddedAttributeToQualityInputConnection {
-	edges: [AddedAttributeToQualityInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributeToQualityInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributeToQualityInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type AddedAttributeToTag {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributeToTagConnection {
-	edges: [AddedAttributeToTagEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributeToTagEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributeToTagEdge {
-	cursor: String!
-	node: AddedAttributeToTag!
+  cursor: String!
+  node: AddedAttributeToTag!
 }
 
 type AddedAttributeToTagInput {
-	attribute: Attribute!
+  attribute: Attribute!
 }
 
 type AddedAttributeToTagInputConnection {
-	edges: [AddedAttributeToTagInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributeToTagInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributeToTagInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type AddedAttributeToType {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributeToTypeConnection {
-	edges: [AddedAttributeToTypeEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributeToTypeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributeToTypeEdge {
-	cursor: String!
-	node: AddedAttributeToType!
+  cursor: String!
+  node: AddedAttributeToType!
 }
 
 type AddedAttributeToTypeInput {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributeToTypeInputConnection {
-	edges: [AddedAttributeToTypeInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributeToTypeInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributeToTypeInputEdge {
-	cursor: String!
-	node: AddedAttributeToTypeInput!
+  cursor: String!
+  node: AddedAttributeToTypeInput!
 }
 
 type AddedAttributesToConcept {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributesToConceptConnection {
-	edges: [AddedAttributesToConceptEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributesToConceptEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributesToConceptEdge {
-	cursor: String!
-	node: AddedAttributesToConcept!
+  cursor: String!
+  node: AddedAttributesToConcept!
 }
 
 type AddedAttributesToConceptInput {
-	attributes: AttributeConnection!
+  attributes: AttributeConnection!
 }
 
 type AddedAttributesToConceptInputConnection {
-	edges: [AddedAttributesToConceptInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributesToConceptInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributesToConceptInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type AddedAttributesToDesign {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributesToDesignConnection {
-	edges: [AddedAttributesToDesignEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributesToDesignEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributesToDesignEdge {
-	cursor: String!
-	node: AddedAttributesToDesign!
+  cursor: String!
+  node: AddedAttributesToDesign!
 }
 
 type AddedAttributesToDesignInput {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributesToDesignInputConnection {
-	edges: [AddedAttributesToDesignInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributesToDesignInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributesToDesignInputEdge {
-	cursor: String!
-	node: AddedAttributesToDesignInput!
+  cursor: String!
+  node: AddedAttributesToDesignInput!
 }
 
 type AddedAttributesToPiece {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributesToPieceConnection {
-	edges: [AddedAttributesToPieceEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributesToPieceEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributesToPieceEdge {
-	cursor: String!
-	node: AddedAttributesToPiece!
+  cursor: String!
+  node: AddedAttributesToPiece!
 }
 
 type AddedAttributesToPieceInput {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributesToPieceInputConnection {
-	edges: [AddedAttributesToPieceInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributesToPieceInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributesToPieceInputEdge {
-	cursor: String!
-	node: AddedAttributesToPieceInput!
+  cursor: String!
+  node: AddedAttributesToPieceInput!
 }
 
 type AddedAttributesToPort {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributesToPortConnection {
-	edges: [AddedAttributesToPortEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributesToPortEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributesToPortEdge {
-	cursor: String!
-	node: AddedAttributesToPort!
+  cursor: String!
+  node: AddedAttributesToPort!
 }
 
 type AddedAttributesToPortInput {
-	attributes: AttributeConnection!
+  attributes: AttributeConnection!
 }
 
 type AddedAttributesToPortInputConnection {
-	edges: [AddedAttributesToPortInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributesToPortInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributesToPortInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type AddedAttributesToQuality {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributesToQualityConnection {
-	edges: [AddedAttributesToQualityEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributesToQualityEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributesToQualityEdge {
-	cursor: String!
-	node: AddedAttributesToQuality!
+  cursor: String!
+  node: AddedAttributesToQuality!
 }
 
 type AddedAttributesToQualityInput {
-	attributes: AttributeConnection!
+  attributes: AttributeConnection!
 }
 
 type AddedAttributesToQualityInputConnection {
-	edges: [AddedAttributesToQualityInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributesToQualityInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributesToQualityInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type AddedAttributesToTag {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributesToTagConnection {
-	edges: [AddedAttributesToTagEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributesToTagEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributesToTagEdge {
-	cursor: String!
-	node: AddedAttributesToTag!
+  cursor: String!
+  node: AddedAttributesToTag!
 }
 
 type AddedAttributesToTagInput {
-	attributes: AttributeConnection!
+  attributes: AttributeConnection!
 }
 
 type AddedAttributesToTagInputConnection {
-	edges: [AddedAttributesToTagInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributesToTagInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributesToTagInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type AddedAttributesToType {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributesToTypeConnection {
-	edges: [AddedAttributesToTypeEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributesToTypeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributesToTypeEdge {
-	cursor: String!
-	node: AddedAttributesToType!
+  cursor: String!
+  node: AddedAttributesToType!
 }
 
 type AddedAttributesToTypeInput {
-	hash: String!
+  hash: String!
 }
 
 type AddedAttributesToTypeInputConnection {
-	edges: [AddedAttributesToTypeInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedAttributesToTypeInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedAttributesToTypeInputEdge {
-	cursor: String!
-	node: AddedAttributesToTypeInput!
+  cursor: String!
+  node: AddedAttributesToTypeInput!
 }
 
 type AddedChildPieceWithParentConnection {
-	hash: String!
+  hash: String!
 }
 
 type AddedChildPieceWithParentConnectionConnection {
-	edges: [AddedChildPieceWithParentConnectionEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedChildPieceWithParentConnectionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedChildPieceWithParentConnectionEdge {
-	cursor: String!
-	node: AddedChildPieceWithParentConnection!
+  cursor: String!
+  node: AddedChildPieceWithParentConnection!
 }
 
 type AddedChildPieceWithParentConnectionInput {
-	hash: String!
+  hash: String!
 }
 
 type AddedChildPieceWithParentConnectionInputConnection {
-	edges: [AddedChildPieceWithParentConnectionInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedChildPieceWithParentConnectionInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedChildPieceWithParentConnectionInputEdge {
-	cursor: String!
-	node: AddedChildPieceWithParentConnectionInput!
+  cursor: String!
+  node: AddedChildPieceWithParentConnectionInput!
 }
 
 type AddedChildPiecesWithParentConnections {
-	hash: String!
+  hash: String!
 }
 
 type AddedChildPiecesWithParentConnectionsConnection {
-	edges: [AddedChildPiecesWithParentConnectionsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedChildPiecesWithParentConnectionsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedChildPiecesWithParentConnectionsEdge {
-	cursor: String!
-	node: AddedChildPiecesWithParentConnections!
+  cursor: String!
+  node: AddedChildPiecesWithParentConnections!
 }
 
 type AddedChildPiecesWithParentConnectionsInput {
-	hash: String!
+  hash: String!
 }
 
 type AddedChildPiecesWithParentConnectionsInputConnection {
-	edges: [AddedChildPiecesWithParentConnectionsInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedChildPiecesWithParentConnectionsInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedChildPiecesWithParentConnectionsInputEdge {
-	cursor: String!
-	node: AddedChildPiecesWithParentConnectionsInput!
+  cursor: String!
+  node: AddedChildPiecesWithParentConnectionsInput!
 }
 
 type AddedConnector {
-	hash: String!
+  hash: String!
 }
 
 type AddedConnectorConnection {
-	edges: [AddedConnectorEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedConnectorEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedConnectorEdge {
-	cursor: String!
-	node: AddedConnector!
+  cursor: String!
+  node: AddedConnector!
 }
 
 type AddedConnectorInput {
-	hash: String!
+  hash: String!
 }
 
 type AddedConnectorInputConnection {
-	edges: [AddedConnectorInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedConnectorInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedConnectorInputEdge {
-	cursor: String!
-	node: AddedConnectorInput!
+  cursor: String!
+  node: AddedConnectorInput!
 }
 
 type AddedConnectors {
-	hash: String!
+  hash: String!
 }
 
 type AddedConnectorsConnection {
-	edges: [AddedConnectorsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedConnectorsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedConnectorsEdge {
-	cursor: String!
-	node: AddedConnectors!
+  cursor: String!
+  node: AddedConnectors!
 }
 
 type AddedConnectorsInput {
-	hash: String!
+  hash: String!
 }
 
 type AddedConnectorsInputConnection {
-	edges: [AddedConnectorsInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedConnectorsInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedConnectorsInputEdge {
-	cursor: String!
-	node: AddedConnectorsInput!
+  cursor: String!
+  node: AddedConnectorsInput!
 }
 
 type AddedHangingChildPieceWithParentConnection {
-	hash: String!
+  hash: String!
 }
 
 type AddedHangingChildPieceWithParentConnectionConnection {
-	edges: [AddedHangingChildPieceWithParentConnectionEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedHangingChildPieceWithParentConnectionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedHangingChildPieceWithParentConnectionEdge {
-	cursor: String!
-	node: AddedHangingChildPieceWithParentConnection!
+  cursor: String!
+  node: AddedHangingChildPieceWithParentConnection!
 }
 
 type AddedHangingChildPieceWithParentConnectionInput {
-	hash: String!
+  hash: String!
 }
 
 type AddedHangingChildPieceWithParentConnectionInputConnection {
-	edges: [AddedHangingChildPieceWithParentConnectionInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedHangingChildPieceWithParentConnectionInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedHangingChildPieceWithParentConnectionInputEdge {
-	cursor: String!
-	node: AddedHangingChildPieceWithParentConnectionInput!
+  cursor: String!
+  node: AddedHangingChildPieceWithParentConnectionInput!
 }
 
 type AddedHangingChildPiecesWithParentConnections {
-	hash: String!
+  hash: String!
 }
 
 type AddedHangingChildPiecesWithParentConnectionsConnection {
-	edges: [AddedHangingChildPiecesWithParentConnectionsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedHangingChildPiecesWithParentConnectionsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedHangingChildPiecesWithParentConnectionsEdge {
-	cursor: String!
-	node: AddedHangingChildPiecesWithParentConnections!
+  cursor: String!
+  node: AddedHangingChildPiecesWithParentConnections!
 }
 
 type AddedHangingChildPiecesWithParentConnectionsInput {
-	hash: String!
+  hash: String!
 }
 
 type AddedHangingChildPiecesWithParentConnectionsInputConnection {
-	edges: [AddedHangingChildPiecesWithParentConnectionsInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AddedHangingChildPiecesWithParentConnectionsInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AddedHangingChildPiecesWithParentConnectionsInputEdge {
-	cursor: String!
-	node: AddedHangingChildPiecesWithParentConnectionsInput!
+  cursor: String!
+  node: AddedHangingChildPiecesWithParentConnectionsInput!
 }
 
 type Alternative implements Workspace & Entity & StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	name: String!
-	start: Checkpoint!
-	checkpoints: [Checkpoint!]!
-	checkpoint: CheckpointConnection!
-	latestWipCheckpointAncestor: Checkpoint
-	savedChanges: ChangeConnection!
-	unsavedChanges: ChangeConnection!
-	kit: Kit!
-	change(id: ID!): Change
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  name: String!
+  start: Checkpoint!
+  checkpoints: [Checkpoint!]!
+  checkpoint: CheckpointConnection!
+  latestWipCheckpointAncestor: Checkpoint
+  savedChanges: ChangeConnection!
+  unsavedChanges: ChangeConnection!
+  kit: Kit!
+  change(id: ID!): Change
 }
 
 type AlternativeCommand {
-	version: Response!
-	integrateIntoTheKit: Response!
+  version: Response!
+  integrateIntoTheKit: Response!
 }
 
 type AlternativeCommandConnection {
-	edges: [AlternativeCommandEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AlternativeCommandEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AlternativeCommandEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type AlternativeConnection {
-	edges: [AlternativeEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AlternativeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AlternativeEdge {
-	cursor: String!
-	node: Alternative!
+  cursor: String!
+  node: Alternative!
 }
 
 """
 @emoji 🌐 SDL `interface Artifact` — authored change graph on rich entities (`EmptyArtifact` minimal variant).
 """
 interface Artifact {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	name: String!
-	description: String!
-	icon: String!
-	createdAt: Timestamp
-	createdBy: Author
-	authoredBy: AuthorConnection!
-	changedIn: CheckpointConnection!
-	lastChangedAt: Timestamp
-	lastChangedBy: Author
-	lastChangedIn: Checkpoint
-	changes: ChangeConnection!
-	edits: EditConnection!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  name: String!
+  description: String!
+  icon: String!
+  createdAt: Timestamp
+  createdBy: Author
+  authoredBy: AuthorConnection!
+  changedIn: CheckpointConnection!
+  lastChangedAt: Timestamp
+  lastChangedBy: Author
+  lastChangedIn: Checkpoint
+  changes: ChangeConnection!
+  edits: EditConnection!
 }
 
 type Attribute {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	key: String!
-	value: String
-	definition: String
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  key: String!
+  value: String
+  definition: String
 }
 
 type AttributeConnection {
-	edges: [AttributeEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AttributeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AttributeDiff {
-	hash: String!
+  hash: String!
 }
 
 type AttributeDiffConnection {
-	edges: [AttributeDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AttributeDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AttributeDiffEdge {
-	cursor: String!
-	node: AttributeDiff!
+  cursor: String!
+  node: AttributeDiff!
 }
 
 type AttributeEdge {
-	cursor: String!
-	node: Attribute!
+  cursor: String!
+  node: Attribute!
 }
 
 type AttributeModification {
-	hash: String!
+  hash: String!
 }
 
 type AttributeModificationConnection {
-	edges: [AttributeModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AttributeModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AttributeModificationEdge {
-	cursor: String!
-	node: AttributeModification!
+  cursor: String!
+  node: AttributeModification!
 }
 
 type AttributeModifications {
-	hash: String!
+  hash: String!
 }
 
 type AttributeModificationsConnection {
-	edges: [AttributeModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AttributeModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AttributeModificationsEdge {
-	cursor: String!
-	node: AttributeModifications!
+  cursor: String!
+  node: AttributeModifications!
 }
 
 type Author {
-	id: ID!
-	name: String!
-	email: String!
-	role: String
-	rank: Int
-	hash: String!
+  id: ID!
+  name: String!
+  email: String!
+  role: String
+  rank: Int
+  hash: String!
 }
 
 type AuthorConnection {
-	edges: [AuthorEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AuthorEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AuthorDiff {
-	hash: String!
+  hash: String!
 }
 
 type AuthorDiffConnection {
-	edges: [AuthorDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AuthorDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AuthorDiffEdge {
-	cursor: String!
-	node: AuthorDiff!
+  cursor: String!
+  node: AuthorDiff!
 }
 
 type AuthorEdge {
-	cursor: String!
-	node: Author!
+  cursor: String!
+  node: Author!
 }
 
 type AuthorModification {
-	hash: String!
+  hash: String!
 }
 
 type AuthorModificationConnection {
-	edges: [AuthorModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AuthorModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AuthorModificationEdge {
-	cursor: String!
-	node: AuthorModification!
+  cursor: String!
+  node: AuthorModification!
 }
 
 type AuthorModifications {
-	hash: String!
+  hash: String!
 }
 
 type AuthorModificationsConnection {
-	edges: [AuthorModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [AuthorModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type AuthorModificationsEdge {
-	cursor: String!
-	node: AuthorModifications!
+  cursor: String!
+  node: AuthorModifications!
 }
 
 """
 @emoji 🧷 Golden `interface Backbone` — concrete [`FileBackbone`] / [`WebsocketBackbone`].
 """
 interface Backbone {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	uri: String!
-	status: BackboneStatus!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  uri: String!
+  status: BackboneStatus!
 }
 
 """
 @emoji 🌐 SDL `interface BackboneCommand` — `detach` / `sync` command handles on backbones.
 """
 interface BackboneCommand {
-	detach: Response!
-	sync: Response!
+  detach: Response!
+  sync: Response!
 }
 
 type BackboneCommandConnection {
-	edges: [BackboneCommandEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [BackboneCommandEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 """
 @emoji 🪢 SDL `BackboneCommandEdge` / `BackboneCommandConnection`.
 """
 type BackboneCommandEdge {
-	cursor: String!
-	node: BackboneCommand!
+  cursor: String!
+  node: BackboneCommand!
 }
 
 type BackboneConnection {
-	edges: [BackboneEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [BackboneEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 """
 @emoji 🪢 Golden `BackboneEdge` / `BackboneConnection` relay shells.
 """
 type BackboneEdge {
-	cursor: String!
-	node: Backbone!
+  cursor: String!
+  node: Backbone!
 }
 
 """
 @emoji 🛜 Golden `BackboneStatus` enum (`OFFLINE` / `RECONNECTING` / `ONLINE`).
 """
 enum BackboneStatus {
-	OFFLINE
-	RECONNECTING
-	ONLINE
+  OFFLINE
+  RECONNECTING
+  ONLINE
 }
 
 type Benchmark {
-	id: ID!
-	name: String!
-	min: Float
-	max: Float
-	minExcluded: Boolean
-	maxExcluded: Boolean
-	hash: String!
+  id: ID!
+  name: String!
+  min: Float
+  max: Float
+  minExcluded: Boolean
+  maxExcluded: Boolean
+  hash: String!
 }
 
 type BenchmarkConnection {
-	edges: [BenchmarkEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [BenchmarkEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type BenchmarkDiff {
-	hash: String!
+  hash: String!
 }
 
 type BenchmarkDiffConnection {
-	edges: [BenchmarkDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [BenchmarkDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type BenchmarkDiffEdge {
-	cursor: String!
-	node: BenchmarkDiff!
+  cursor: String!
+  node: BenchmarkDiff!
 }
 
 type BenchmarkEdge {
-	cursor: String!
-	node: Benchmark!
+  cursor: String!
+  node: Benchmark!
 }
 
 type BenchmarkModification {
-	hash: String!
+  hash: String!
 }
 
 type BenchmarkModificationConnection {
-	edges: [BenchmarkModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [BenchmarkModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type BenchmarkModificationEdge {
-	cursor: String!
-	node: BenchmarkModification!
+  cursor: String!
+  node: BenchmarkModification!
 }
 
 type BenchmarkModifications {
-	hash: String!
+  hash: String!
 }
 
 type BenchmarkModificationsConnection {
-	edges: [BenchmarkModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [BenchmarkModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type BenchmarkModificationsEdge {
-	cursor: String!
-	node: BenchmarkModifications!
+  cursor: String!
+  node: BenchmarkModifications!
 }
 
 union Blueprint = Type | Design
 
 type BlueprintConnection {
-	edges: [BlueprintEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [BlueprintEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type BlueprintEdge {
-	cursor: String!
-	node: Blueprint!
+  cursor: String!
+  node: Blueprint!
 }
 
 type Change implements StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	edits: EditConnection!
-	startedAt: Timestamp!
-	savedAt: Timestamp
-	saved: Boolean!
-	description: String!
-	origin: String!
-	"""
-	@emoji 🔗 Ordered operation record ids constituting the forwards side (bundle `OperationLog` ids) when persisted.
-	"""
-	forwardOperationRecordIds: [ID!]!
-	"""
-	@emoji 🔗 Ordered operation record ids for backwards / inverse application when persisted separately from `OperationKind`.
-	"""
-	backwardOperationRecordIds: [ID!]!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  edits: EditConnection!
+  startedAt: Timestamp!
+  savedAt: Timestamp
+  saved: Boolean!
+  description: String!
+  origin: String!
+  """
+  @emoji 🔗 Ordered operation record ids constituting the forwards side (bundle `OperationLog` ids) when persisted.
+  """
+  forwardOperationRecordIds: [ID!]!
+  """
+  @emoji 🔗 Ordered operation record ids for backwards / inverse application when persisted separately from `OperationKind`.
+  """
+  backwardOperationRecordIds: [ID!]!
 }
 
 type ChangeConnection {
-	edges: [ChangeEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ChangeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ChangeEdge {
-	cursor: String!
-	node: Change!
+  cursor: String!
+  node: Change!
 }
 
 type ChangedDescription implements Operation {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	scope: Entity!
-	input: Input
-	modification: Modification!
-	entity: Kit!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  scope: Entity!
+  input: Input
+  modification: Modification!
+  entity: Kit!
 }
 
 type ChangedDescriptionConnection {
-	edges: [ChangedDescriptionEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ChangedDescriptionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ChangedDescriptionEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type ChangedDescriptionInput {
-	hash: String!
+  hash: String!
 }
 
 type ChangedDescriptionInputConnection {
-	edges: [ChangedDescriptionInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ChangedDescriptionInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ChangedDescriptionInputEdge {
-	cursor: String!
-	node: ChangedDescriptionInput!
+  cursor: String!
+  node: ChangedDescriptionInput!
 }
 
 type ChangedPieceToType {
-	hash: String!
+  hash: String!
 }
 
 type ChangedPieceToTypeConnection {
-	edges: [ChangedPieceToTypeEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ChangedPieceToTypeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ChangedPieceToTypeEdge {
-	cursor: String!
-	node: ChangedPieceToType!
+  cursor: String!
+  node: ChangedPieceToType!
 }
 
 type ChangedPieceToTypeInput {
-	hash: String!
+  hash: String!
 }
 
 type ChangedPieceToTypeInputConnection {
-	edges: [ChangedPieceToTypeInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ChangedPieceToTypeInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ChangedPieceToTypeInputEdge {
-	cursor: String!
-	node: ChangedPieceToTypeInput!
+  cursor: String!
+  node: ChangedPieceToTypeInput!
 }
 
 type ChangedPiecesToType {
-	hash: String!
+  hash: String!
 }
 
 type ChangedPiecesToTypeConnection {
-	edges: [ChangedPiecesToTypeEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ChangedPiecesToTypeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ChangedPiecesToTypeEdge {
-	cursor: String!
-	node: ChangedPiecesToType!
+  cursor: String!
+  node: ChangedPiecesToType!
 }
 
 type ChangedPiecesToTypeInput {
-	hash: String!
+  hash: String!
 }
 
 type ChangedPiecesToTypeInputConnection {
-	edges: [ChangedPiecesToTypeInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ChangedPiecesToTypeInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ChangedPiecesToTypeInputEdge {
-	cursor: String!
-	node: ChangedPiecesToTypeInput!
+  cursor: String!
+  node: ChangedPiecesToTypeInput!
 }
 
 type Checkpoint implements Entity & StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	timestamp: Timestamp
-	authors: AuthorConnection!
-	"""
-	@emoji 🔗 SDL `Checkpoint.parent` — prior checkpoint in the spine (none for the seed checkpoint).
-	"""
-	parent: Checkpoint
-	"""
-	@emoji 🔗 SDL `Checkpoint.ancestors` — ordered walk up `parent` (immediate parent first).
-	"""
-	ancestors: [Checkpoint!]!
-	"""
-	@emoji 🌱 SDL `Checkpoint.initial` — graph-level [`Graph::initial_kit`] baseline (saved once per graph, not duplicated on each checkpoint).
-	"""
-	initial: Kit
-	"""
-	@emoji 📦 SDL `Checkpoint.kit` — materialized kit at this anchor (`TheKit` wip parent tip or alternative spine tip); other checkpoints fall back to `initial` until checkpoint-scoped replay exists.
-	"""
-	kit: Kit
-	changes: ChangeConnection!
-	change(id: ID!): Change
-	edits: EditConnection!
-	edit(id: ID!): Edit
-	message: String!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  timestamp: Timestamp
+  authors: AuthorConnection!
+  """
+  @emoji 🔗 SDL `Checkpoint.parent` — prior checkpoint in the spine (none for the seed checkpoint).
+  """
+  parent: Checkpoint
+  """
+  @emoji 🔗 SDL `Checkpoint.ancestors` — ordered walk up `parent` (immediate parent first).
+  """
+  ancestors: [Checkpoint!]!
+  """
+  @emoji 🌱 SDL `Checkpoint.initial` — graph-level [`Graph::initial_kit`] baseline (saved once per graph, not duplicated on each checkpoint).
+  """
+  initial: Kit
+  """
+  @emoji 📦 SDL `Checkpoint.kit` — materialized kit at this anchor (`TheKit` wip parent tip or alternative spine tip); other checkpoints fall back to `initial` until checkpoint-scoped replay exists.
+  """
+  kit: Kit
+  changes: ChangeConnection!
+  change(id: ID!): Change
+  edits: EditConnection!
+  edit(id: ID!): Edit
+  message: String!
 }
 
 type CheckpointConnection {
-	edges: [CheckpointEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CheckpointEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CheckpointEdge {
-	cursor: String!
-	node: Checkpoint!
+  cursor: String!
+  node: Checkpoint!
 }
 
 type Clump {
-	hash: String!
+  hash: String!
 }
 
 type ClumpConnection {
-	edges: [ClumpEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ClumpEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ClumpEdge {
-	cursor: String!
-	node: Clump!
+  cursor: String!
+  node: Clump!
 }
 
 scalar Color
 
 type CommandResponse implements Response {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	ok: Boolean!
-	errors: Error
-	result: Result
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  ok: Boolean!
+  errors: Error
+  result: Result
 }
 
 type Concept implements Entity & Node & StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	name: String!
-	description: String
-	icon: String
-	order: Int
-	attributes: AttributeConnection!
-	attribute(id: ID!): Attribute
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  name: String!
+  description: String
+  icon: String
+  order: Int
+  attributes: AttributeConnection!
+  attribute(id: ID!): Attribute
 }
 
 type ConceptConnection {
-	edges: [ConceptEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ConceptEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ConceptDiff {
-	hash: String!
+  hash: String!
 }
 
 type ConceptDiffConnection {
-	edges: [ConceptDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ConceptDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ConceptDiffEdge {
-	cursor: String!
-	node: ConceptDiff!
+  cursor: String!
+  node: ConceptDiff!
 }
 
 type ConceptEdge {
-	cursor: String!
-	node: Concept!
+  cursor: String!
+  node: Concept!
 }
 
 type ConceptModification {
-	hash: String!
+  hash: String!
 }
 
 type ConceptModificationConnection {
-	edges: [ConceptModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ConceptModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ConceptModificationEdge {
-	cursor: String!
-	node: ConceptModification!
+  cursor: String!
+  node: ConceptModification!
 }
 
 type ConceptModifications {
-	hash: String!
+  hash: String!
 }
 
 type ConceptModificationsConnection {
-	edges: [ConceptModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ConceptModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ConceptModificationsEdge {
-	cursor: String!
-	node: ConceptModifications!
+  cursor: String!
+  node: ConceptModifications!
 }
 
 type ConceptOperation {
-	hash: String!
+  hash: String!
 }
 
 type ConceptOperationConnection {
-	edges: [ConceptOperationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ConceptOperationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ConceptOperationEdge {
-	cursor: String!
-	node: ConceptOperation!
+  cursor: String!
+  node: ConceptOperation!
 }
 
 type Conflict implements Entity & Node & StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	authoritativeChange: Change
-	wipChange: Change
-	reasons: [String!]!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  authoritativeChange: Change
+  wipChange: Change
+  reasons: [String!]!
 }
 
 type ConflictConnection {
-	edges: [ConflictEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ConflictEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ConflictEdge {
-	cursor: String!
-	node: Conflict!
+  cursor: String!
+  node: Conflict!
 }
 
 type Connection implements Entity & FileSystemNode & StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	name: String!
-	description: String!
-	icon: String!
-	parent: Side!
-	child: Side!
-	gap: Float
-	shift: Float
-	rise: Float
-	rotation: Float
-	turn: Float
-	tilt: Float
-	u: Float
-	v: Float
-	attributes: AttributeConnection!
-	attribute(id: ID!): Attribute
-	"""
-	@emoji ⛓️ Parent and child sides owned by this connection.
-	"""
-	hasSides: [Side!]!
-	"""
-	@emoji 🪢 Pieces referenced by the parent and child sides.
-	"""
-	referencesPieces: PieceConnection!
-	"""
-	@emoji ⚓ Connectors referenced by the parent and child sides.
-	"""
-	referencesConnectors: ConnectorConnection!
-	"""
-	@emoji 🪢 Pieces referenced transitively through nested design blueprints on both sides.
-	"""
-	referencesPiecesTransitive: PieceConnection!
-	"""
-	@emoji ⚓ Connectors referenced transitively on kinds reachable from both sides.
-	"""
-	referencesConnectorsTransitive: ConnectorConnection!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  name: String!
+  description: String!
+  icon: String!
+  parent: Side!
+  child: Side!
+  gap: Float
+  shift: Float
+  rise: Float
+  rotation: Float
+  turn: Float
+  tilt: Float
+  u: Float
+  v: Float
+  attributes: AttributeConnection!
+  attribute(id: ID!): Attribute
+  """
+  @emoji ⛓️ Parent and child sides owned by this connection.
+  """
+  hasSides: [Side!]!
+  """
+  @emoji 🪢 Pieces referenced by the parent and child sides.
+  """
+  referencesPieces: PieceConnection!
+  """
+  @emoji ⚓ Connectors referenced by the parent and child sides.
+  """
+  referencesConnectors: ConnectorConnection!
+  """
+  @emoji 🪢 Pieces referenced transitively through nested design blueprints on both sides.
+  """
+  referencesPiecesTransitive: PieceConnection!
+  """
+  @emoji ⚓ Connectors referenced transitively on kinds reachable from both sides.
+  """
+  referencesConnectorsTransitive: ConnectorConnection!
 }
 
 type ConnectionConnection {
-	edges: [ConnectionEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ConnectionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ConnectionDiff {
-	hash: String!
+  hash: String!
 }
 
 type ConnectionDiffConnection {
-	edges: [ConnectionDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ConnectionDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ConnectionDiffEdge {
-	cursor: String!
-	node: ConnectionDiff!
+  cursor: String!
+  node: ConnectionDiff!
 }
 
 type ConnectionEdge {
-	cursor: String!
-	node: Connection!
+  cursor: String!
+  node: Connection!
 }
 
 type ConnectionModification {
-	hash: String!
+  hash: String!
 }
 
 type ConnectionModificationConnection {
-	edges: [ConnectionModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ConnectionModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ConnectionModificationEdge {
-	cursor: String!
-	node: ConnectionModification!
+  cursor: String!
+  node: ConnectionModification!
 }
 
 type ConnectionModifications {
-	hash: String!
+  hash: String!
 }
 
 type ConnectionModificationsConnection {
-	edges: [ConnectionModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ConnectionModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ConnectionModificationsEdge {
-	cursor: String!
-	node: ConnectionModifications!
+  cursor: String!
+  node: ConnectionModifications!
 }
 
 type Connector implements Entity & FileSystemNode & StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	name: String!
-	code: String!
-	description: String!
-	icon: String!
-	port: Port
-	point: Point!
-	direction: Vector!
-	t: Float
-	mandatory: Boolean
-	qualities: QualityConnection!
-	attributes: AttributeConnection!
-	quality(id: ID!): Quality
-	attribute(id: ID!): Attribute
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  name: String!
+  code: String!
+  description: String!
+  icon: String!
+  port: Port
+  point: Point!
+  direction: Vector!
+  t: Float
+  mandatory: Boolean
+  qualities: QualityConnection!
+  attributes: AttributeConnection!
+  quality(id: ID!): Quality
+  attribute(id: ID!): Attribute
 }
 
 type ConnectorConnection {
-	edges: [ConnectorEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ConnectorEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ConnectorDiff {
-	hash: String!
+  hash: String!
 }
 
 type ConnectorDiffConnection {
-	edges: [ConnectorDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ConnectorDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ConnectorDiffEdge {
-	cursor: String!
-	node: ConnectorDiff!
+  cursor: String!
+  node: ConnectorDiff!
 }
 
 type ConnectorEdge {
-	cursor: String!
-	node: Connector!
+  cursor: String!
+  node: Connector!
 }
 
 type ConnectorModification {
-	hash: String!
+  hash: String!
 }
 
 type ConnectorModificationConnection {
-	edges: [ConnectorModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ConnectorModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ConnectorModificationEdge {
-	cursor: String!
-	node: ConnectorModification!
+  cursor: String!
+  node: ConnectorModification!
 }
 
 type ConnectorModifications {
-	hash: String!
+  hash: String!
 }
 
 type ConnectorModificationsConnection {
-	edges: [ConnectorModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ConnectorModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ConnectorModificationsEdge {
-	cursor: String!
-	node: ConnectorModifications!
+  cursor: String!
+  node: ConnectorModifications!
 }
 
 type ConnectorOperation {
-	hash: String!
+  hash: String!
 }
 
 type ConnectorOperationConnection {
-	edges: [ConnectorOperationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ConnectorOperationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ConnectorOperationEdge {
-	cursor: String!
-	node: ConnectorOperation!
+  cursor: String!
+  node: ConnectorOperation!
 }
 
 """
 @emoji 📍 WeakEntity + entity shell for [`Coordinate`] (SDL `Coordinate`).
 """
 type Coordinate implements Entity & Node & WeakEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	u: Float!
-	v: Float!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  u: Float!
+  v: Float!
 }
 
 type CoordinateConnection {
-	edges: [CoordinateEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CoordinateEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CoordinateDiff implements Diff {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	u: Float
-	v: Float
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  u: Float
+  v: Float
 }
 
 type CoordinateDiffConnection {
-	edges: [CoordinateDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CoordinateDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CoordinateDiffEdge {
-	cursor: String!
-	node: CoordinateDiff!
+  cursor: String!
+  node: CoordinateDiff!
 }
 
 type CoordinateEdge implements EntityEdge {
-	cursor: String!
-	node: Coordinate!
+  cursor: String!
+  node: Coordinate!
 }
 
 input CoordinateInput {
-	u: Float!
-	v: Float!
+  u: Float!
+  v: Float!
 }
 
 type CoordinateModification implements Modification {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	before: Entity!
-	diff: Diff!
-	after: Entity!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  before: Entity!
+  diff: Diff!
+  after: Entity!
 }
 
 type CoordinateModificationConnection {
-	edges: [CoordinateModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CoordinateModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CoordinateModificationEdge {
-	cursor: String!
-	node: CoordinateModification!
+  cursor: String!
+  node: CoordinateModification!
 }
 
 type CoordinateModifications {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	removed: EntityConnection!
-	modifications: CoordinateModificationConnection!
-	added: EntityConnection!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  removed: EntityConnection!
+  modifications: CoordinateModificationConnection!
+  added: EntityConnection!
 }
 
 type CoordinateModificationsConnection {
-	edges: [CoordinateModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CoordinateModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CoordinateModificationsEdge {
-	cursor: String!
-	node: CoordinateModifications!
+  cursor: String!
+  node: CoordinateModifications!
 }
 
 type CreatedConcept {
-	hash: String!
+  hash: String!
 }
 
 type CreatedConceptConnection {
-	edges: [CreatedConceptEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedConceptEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedConceptEdge {
-	cursor: String!
-	node: CreatedConcept!
+  cursor: String!
+  node: CreatedConcept!
 }
 
 type CreatedConceptInput {
-	concept: Concept!
+  concept: Concept!
 }
 
 type CreatedConceptInputConnection {
-	edges: [CreatedConceptInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedConceptInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedConceptInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type CreatedConcepts {
-	hash: String!
+  hash: String!
 }
 
 type CreatedConceptsConnection {
-	edges: [CreatedConceptsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedConceptsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedConceptsEdge {
-	cursor: String!
-	node: CreatedConcepts!
+  cursor: String!
+  node: CreatedConcepts!
 }
 
 type CreatedConceptsInput {
-	concepts: ConceptConnection!
+  concepts: ConceptConnection!
 }
 
 type CreatedConceptsInputConnection {
-	edges: [CreatedConceptsInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedConceptsInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedConceptsInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type CreatedDesign {
-	hash: String!
+  hash: String!
 }
 
 type CreatedDesignConnection {
-	edges: [CreatedDesignEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedDesignEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedDesignEdge {
-	cursor: String!
-	node: CreatedDesign!
+  cursor: String!
+  node: CreatedDesign!
 }
 
 type CreatedDesignInput {
-	hash: String!
+  hash: String!
 }
 
 type CreatedDesignInputConnection {
-	edges: [CreatedDesignInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedDesignInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedDesignInputEdge {
-	cursor: String!
-	node: CreatedDesignInput!
+  cursor: String!
+  node: CreatedDesignInput!
 }
 
 type CreatedDesigns {
-	hash: String!
+  hash: String!
 }
 
 type CreatedDesignsConnection {
-	edges: [CreatedDesignsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedDesignsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedDesignsEdge {
-	cursor: String!
-	node: CreatedDesigns!
+  cursor: String!
+  node: CreatedDesigns!
 }
 
 type CreatedDesignsInput {
-	hash: String!
+  hash: String!
 }
 
 type CreatedDesignsInputConnection {
-	edges: [CreatedDesignsInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedDesignsInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedDesignsInputEdge {
-	cursor: String!
-	node: CreatedDesignsInput!
+  cursor: String!
+  node: CreatedDesignsInput!
 }
 
 type CreatedFixedPiece implements Operation {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	scope: Entity!
-	input: Input
-	modification: Modification!
-	piece: Piece!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  scope: Entity!
+  input: Input
+  modification: Modification!
+  piece: Piece!
 }
 
 type CreatedFixedPieceConnection {
-	edges: [CreatedFixedPieceEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedFixedPieceEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedFixedPieceEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type CreatedFixedPieceInput {
-	hash: String!
+  hash: String!
 }
 
 type CreatedFixedPieceInputConnection {
-	edges: [CreatedFixedPieceInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedFixedPieceInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedFixedPieceInputEdge {
-	cursor: String!
-	node: CreatedFixedPieceInput!
+  cursor: String!
+  node: CreatedFixedPieceInput!
 }
 
 type CreatedFolder {
-	hash: String!
+  hash: String!
 }
 
 type CreatedFolderConnection {
-	edges: [CreatedFolderEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedFolderEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedFolderEdge {
-	cursor: String!
-	node: CreatedFolder!
+  cursor: String!
+  node: CreatedFolder!
 }
 
 type CreatedFolderInput {
-	hash: String!
+  hash: String!
 }
 
 type CreatedFolderInputConnection {
-	edges: [CreatedFolderInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedFolderInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedFolderInputEdge {
-	cursor: String!
-	node: CreatedFolderInput!
+  cursor: String!
+  node: CreatedFolderInput!
 }
 
 type CreatedPort {
-	hash: String!
+  hash: String!
 }
 
 type CreatedPortConnection {
-	edges: [CreatedPortEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedPortEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedPortEdge {
-	cursor: String!
-	node: CreatedPort!
+  cursor: String!
+  node: CreatedPort!
 }
 
 type CreatedPortInput {
-	port: Port!
+  port: Port!
 }
 
 type CreatedPortInputConnection {
-	edges: [CreatedPortInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedPortInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedPortInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type CreatedPorts {
-	hash: String!
+  hash: String!
 }
 
 type CreatedPortsConnection {
-	edges: [CreatedPortsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedPortsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedPortsEdge {
-	cursor: String!
-	node: CreatedPorts!
+  cursor: String!
+  node: CreatedPorts!
 }
 
 type CreatedPortsInput {
-	ports: PortConnection!
+  ports: PortConnection!
 }
 
 type CreatedPortsInputConnection {
-	edges: [CreatedPortsInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedPortsInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedPortsInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type CreatedQualities {
-	hash: String!
+  hash: String!
 }
 
 type CreatedQualitiesConnection {
-	edges: [CreatedQualitiesEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedQualitiesEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedQualitiesEdge {
-	cursor: String!
-	node: CreatedQualities!
+  cursor: String!
+  node: CreatedQualities!
 }
 
 type CreatedQualitiesInput {
-	qualities: QualityConnection!
+  qualities: QualityConnection!
 }
 
 type CreatedQualitiesInputConnection {
-	edges: [CreatedQualitiesInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedQualitiesInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedQualitiesInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type CreatedQuality {
-	hash: String!
+  hash: String!
 }
 
 type CreatedQualityConnection {
-	edges: [CreatedQualityEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedQualityEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedQualityEdge {
-	cursor: String!
-	node: CreatedQuality!
+  cursor: String!
+  node: CreatedQuality!
 }
 
 type CreatedQualityInput {
-	quality: Quality!
+  quality: Quality!
 }
 
 type CreatedQualityInputConnection {
-	edges: [CreatedQualityInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedQualityInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedQualityInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type CreatedTag {
-	hash: String!
+  hash: String!
 }
 
 type CreatedTagConnection {
-	edges: [CreatedTagEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedTagEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedTagEdge {
-	cursor: String!
-	node: CreatedTag!
+  cursor: String!
+  node: CreatedTag!
 }
 
 type CreatedTagInput {
-	tag: Tag!
+  tag: Tag!
 }
 
 type CreatedTagInputConnection {
-	edges: [CreatedTagInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedTagInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedTagInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type CreatedTags {
-	hash: String!
+  hash: String!
 }
 
 type CreatedTagsConnection {
-	edges: [CreatedTagsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedTagsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedTagsEdge {
-	cursor: String!
-	node: CreatedTags!
+  cursor: String!
+  node: CreatedTags!
 }
 
 type CreatedTagsInput {
-	tags: TagConnection!
+  tags: TagConnection!
 }
 
 type CreatedTagsInputConnection {
-	edges: [CreatedTagsInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedTagsInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedTagsInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type CreatedType {
-	hash: String!
+  hash: String!
 }
 
 type CreatedTypeConnection {
-	edges: [CreatedTypeEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedTypeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedTypeEdge {
-	cursor: String!
-	node: CreatedType!
+  cursor: String!
+  node: CreatedType!
 }
 
 type CreatedTypeInput {
-	hash: String!
+  hash: String!
 }
 
 type CreatedTypeInputConnection {
-	edges: [CreatedTypeInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedTypeInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedTypeInputEdge {
-	cursor: String!
-	node: CreatedTypeInput!
+  cursor: String!
+  node: CreatedTypeInput!
 }
 
 type CreatedTypes {
-	hash: String!
+  hash: String!
 }
 
 type CreatedTypesConnection {
-	edges: [CreatedTypesEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedTypesEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedTypesEdge {
-	cursor: String!
-	node: CreatedTypes!
+  cursor: String!
+  node: CreatedTypes!
 }
 
 type CreatedTypesInput {
-	hash: String!
+  hash: String!
 }
 
 type CreatedTypesInputConnection {
-	edges: [CreatedTypesInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [CreatedTypesInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type CreatedTypesInputEdge {
-	cursor: String!
-	node: CreatedTypesInput!
+  cursor: String!
+  node: CreatedTypesInput!
 }
 
 type DeletedConcept {
-	hash: String!
+  hash: String!
 }
 
 type DeletedConceptConnection {
-	edges: [DeletedConceptEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DeletedConceptEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DeletedConceptEdge {
-	cursor: String!
-	node: DeletedConcept!
+  cursor: String!
+  node: DeletedConcept!
 }
 
 type DeletedConcepts {
-	hash: String!
+  hash: String!
 }
 
 type DeletedConceptsConnection {
-	edges: [DeletedConceptsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DeletedConceptsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DeletedConceptsEdge {
-	cursor: String!
-	node: DeletedConcepts!
+  cursor: String!
+  node: DeletedConcepts!
 }
 
 type DeletedDesign {
-	hash: String!
+  hash: String!
 }
 
 type DeletedDesignConnection {
-	edges: [DeletedDesignEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DeletedDesignEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DeletedDesignEdge {
-	cursor: String!
-	node: DeletedDesign!
+  cursor: String!
+  node: DeletedDesign!
 }
 
 type DeletedDesigns {
-	hash: String!
+  hash: String!
 }
 
 type DeletedDesignsConnection {
-	edges: [DeletedDesignsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DeletedDesignsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DeletedDesignsEdge {
-	cursor: String!
-	node: DeletedDesigns!
+  cursor: String!
+  node: DeletedDesigns!
 }
 
 type DeletedPiece {
-	hash: String!
+  hash: String!
 }
 
 type DeletedPieceConnection {
-	edges: [DeletedPieceEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DeletedPieceEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DeletedPieceEdge {
-	cursor: String!
-	node: DeletedPiece!
+  cursor: String!
+  node: DeletedPiece!
 }
 
 type DeletedPieces {
-	hash: String!
+  hash: String!
 }
 
 type DeletedPiecesAndConnections {
-	hash: String!
+  hash: String!
 }
 
 type DeletedPiecesAndConnectionsConnection {
-	edges: [DeletedPiecesAndConnectionsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DeletedPiecesAndConnectionsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DeletedPiecesAndConnectionsEdge {
-	cursor: String!
-	node: DeletedPiecesAndConnections!
+  cursor: String!
+  node: DeletedPiecesAndConnections!
 }
 
 type DeletedPiecesConnection {
-	edges: [DeletedPiecesEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DeletedPiecesEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DeletedPiecesEdge {
-	cursor: String!
-	node: DeletedPieces!
+  cursor: String!
+  node: DeletedPieces!
 }
 
 type DeletedPort {
-	hash: String!
+  hash: String!
 }
 
 type DeletedPortConnection {
-	edges: [DeletedPortEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DeletedPortEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DeletedPortEdge {
-	cursor: String!
-	node: DeletedPort!
+  cursor: String!
+  node: DeletedPort!
 }
 
 type DeletedPorts {
-	hash: String!
+  hash: String!
 }
 
 type DeletedPortsConnection {
-	edges: [DeletedPortsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DeletedPortsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DeletedPortsEdge {
-	cursor: String!
-	node: DeletedPorts!
+  cursor: String!
+  node: DeletedPorts!
 }
 
 type DeletedQualities {
-	hash: String!
+  hash: String!
 }
 
 type DeletedQualitiesConnection {
-	edges: [DeletedQualitiesEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DeletedQualitiesEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DeletedQualitiesEdge {
-	cursor: String!
-	node: DeletedQualities!
+  cursor: String!
+  node: DeletedQualities!
 }
 
 type DeletedQuality {
-	hash: String!
+  hash: String!
 }
 
 type DeletedQualityConnection {
-	edges: [DeletedQualityEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DeletedQualityEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DeletedQualityEdge {
-	cursor: String!
-	node: DeletedQuality!
+  cursor: String!
+  node: DeletedQuality!
 }
 
 type DeletedTag {
-	hash: String!
+  hash: String!
 }
 
 type DeletedTagConnection {
-	edges: [DeletedTagEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DeletedTagEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DeletedTagEdge {
-	cursor: String!
-	node: DeletedTag!
+  cursor: String!
+  node: DeletedTag!
 }
 
 type DeletedTags {
-	hash: String!
+  hash: String!
 }
 
 type DeletedTagsConnection {
-	edges: [DeletedTagsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DeletedTagsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DeletedTagsEdge {
-	cursor: String!
-	node: DeletedTags!
+  cursor: String!
+  node: DeletedTags!
 }
 
 type DeletedType {
-	hash: String!
+  hash: String!
 }
 
 type DeletedTypeConnection {
-	edges: [DeletedTypeEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DeletedTypeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DeletedTypeEdge {
-	cursor: String!
-	node: DeletedType!
+  cursor: String!
+  node: DeletedType!
 }
 
 type DeletedTypes {
-	hash: String!
+  hash: String!
 }
 
 type DeletedTypesConnection {
-	edges: [DeletedTypesEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DeletedTypesEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DeletedTypesEdge {
-	cursor: String!
-	node: DeletedTypes!
+  cursor: String!
+  node: DeletedTypes!
 }
 
 type Design implements Entity & Node & FileSystemNode & StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	name: String!
-	description: String
-	icon: String
-	image: String
-	location: Location
-	unit: String
-	createdAt: Timestamp
-	updatedAt: Timestamp
-	"""
-	@emoji 🪢 Pieces owned directly by this design.
-	"""
-	hasPieces: PieceConnection!
-	piece(id: ID!): Piece
-	"""
-	@emoji 🔗 Connections owned directly by this design.
-	"""
-	hasConnections: ConnectionConnection!
-	connection(id: ID!): Connection
-	"""
-	@emoji 🎨 Layers owned directly by this design.
-	"""
-	hasLayers: LayerConnection!
-	"""
-	@emoji 👥 Groups owned directly by this design.
-	"""
-	hasGroups: GroupConnection!
-	"""
-	@emoji 🪢 Pieces in this design and nested design blueprints (transitive).
-	"""
-	hasPiecesTransitive: PieceConnection!
-	"""
-	@emoji 🔗 Connections in this design and nested design blueprints (transitive).
-	"""
-	hasConnectionsTransitive: ConnectionConnection!
-	authors: AuthorConnection!
-	qualities: QualityConnection!
-	props: PropConnection!
-	attributes: AttributeConnection!
-	stats: StatConnection!
-	qualitySum(qualityId: ID!): Float!
-	"""
-	@emoji 🧰 Kinds referenced by this design's pieces (one hop over blueprints).
-	"""
-	referencesTypes: TypeConnection!
-	"""
-	@emoji 🏘 Designs referenced by this design's pieces (one hop over blueprints).
-	"""
-	referencesDesigns: DesignConnection!
-	"""
-	@emoji 📄 Files referenced via kind blueprints on this design's pieces (one hop).
-	"""
-	referencesFiles: FileConnection!
-	"""
-	@emoji 💾 Representations on kind blueprints referenced by this design's pieces (one hop).
-	"""
-	referencesRepresentations: RepresentationConnection!
-	"""
-	@emoji 💾 Representations on kinds referenced transitively through nested design blueprints.
-	"""
-	referencesRepresentationsTransitive: RepresentationConnection!
-	"""
-	@emoji 🧰 Kinds referenced transitively through nested design blueprints.
-	"""
-	referencesTypesTransitive: TypeConnection!
-	"""
-	@emoji 🏘 Designs referenced transitively through nested design blueprints.
-	"""
-	referencesDesignsTransitive: DesignConnection!
-	"""
-	@emoji 📄 Files referenced transitively through nested design and kind blueprints.
-	"""
-	referencesFilesTransitive: FileConnection!
-	"""
-	@emoji 🪢 Pieces in the owner kit whose blueprint is this design.
-	"""
-	referencedBy: PieceConnection!
-	"""
-	@emoji 🏘 Designs with a direct piece blueprinting this design.
-	"""
-	referencedByDesigns: DesignConnection!
-	"""
-	@emoji 🏘 Designs that reference this design transitively through nested design blueprints.
-	"""
-	referencedByDesignsTransitive: DesignConnection!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  name: String!
+  description: String
+  icon: String
+  image: String
+  location: Location
+  unit: String
+  createdAt: Timestamp
+  updatedAt: Timestamp
+  """
+  @emoji 🪢 Pieces owned directly by this design.
+  """
+  hasPieces: PieceConnection!
+  piece(id: ID!): Piece
+  """
+  @emoji 🔗 Connections owned directly by this design.
+  """
+  hasConnections: ConnectionConnection!
+  connection(id: ID!): Connection
+  """
+  @emoji 🎨 Layers owned directly by this design.
+  """
+  hasLayers: LayerConnection!
+  """
+  @emoji 👥 Groups owned directly by this design.
+  """
+  hasGroups: GroupConnection!
+  """
+  @emoji 🪢 Pieces in this design and nested design blueprints (transitive).
+  """
+  hasPiecesTransitive: PieceConnection!
+  """
+  @emoji 🔗 Connections in this design and nested design blueprints (transitive).
+  """
+  hasConnectionsTransitive: ConnectionConnection!
+  authors: AuthorConnection!
+  qualities: QualityConnection!
+  props: PropConnection!
+  attributes: AttributeConnection!
+  stats: StatConnection!
+  qualitySum(qualityId: ID!): Float!
+  """
+  @emoji 🧰 Kinds referenced by this design's pieces (one hop over blueprints).
+  """
+  referencesTypes: TypeConnection!
+  """
+  @emoji 🏘 Designs referenced by this design's pieces (one hop over blueprints).
+  """
+  referencesDesigns: DesignConnection!
+  """
+  @emoji 📄 Files referenced via kind blueprints on this design's pieces (one hop).
+  """
+  referencesFiles: FileConnection!
+  """
+  @emoji 💾 Representations on kind blueprints referenced by this design's pieces (one hop).
+  """
+  referencesRepresentations: RepresentationConnection!
+  """
+  @emoji 💾 Representations on kinds referenced transitively through nested design blueprints.
+  """
+  referencesRepresentationsTransitive: RepresentationConnection!
+  """
+  @emoji 🧰 Kinds referenced transitively through nested design blueprints.
+  """
+  referencesTypesTransitive: TypeConnection!
+  """
+  @emoji 🏘 Designs referenced transitively through nested design blueprints.
+  """
+  referencesDesignsTransitive: DesignConnection!
+  """
+  @emoji 📄 Files referenced transitively through nested design and kind blueprints.
+  """
+  referencesFilesTransitive: FileConnection!
+  """
+  @emoji 🪢 Pieces in the owner kit whose blueprint is this design.
+  """
+  referencedBy: PieceConnection!
+  """
+  @emoji 🏘 Designs with a direct piece blueprinting this design.
+  """
+  referencedByDesigns: DesignConnection!
+  """
+  @emoji 🏘 Designs that reference this design transitively through nested design blueprints.
+  """
+  referencedByDesignsTransitive: DesignConnection!
 }
 
 type DesignConnection {
-	edges: [DesignEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DesignEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DesignDiff {
-	hash: String!
+  hash: String!
 }
 
 type DesignDiffConnection {
-	edges: [DesignDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DesignDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DesignDiffEdge {
-	cursor: String!
-	node: DesignDiff!
+  cursor: String!
+  node: DesignDiff!
 }
 
 type DesignEdge {
-	cursor: String!
-	node: Design!
+  cursor: String!
+  node: Design!
 }
 
 type DesignModification {
-	hash: String!
+  hash: String!
 }
 
 type DesignModificationConnection {
-	edges: [DesignModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DesignModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DesignModificationEdge {
-	cursor: String!
-	node: DesignModification!
+  cursor: String!
+  node: DesignModification!
 }
 
 type DesignModifications {
-	hash: String!
+  hash: String!
 }
 
 type DesignModificationsConnection {
-	edges: [DesignModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DesignModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DesignModificationsEdge {
-	cursor: String!
-	node: DesignModifications!
+  cursor: String!
+  node: DesignModifications!
 }
 
 type DesignOperation {
-	hash: String!
+  hash: String!
 }
 
 type DesignOperationConnection {
-	edges: [DesignOperationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DesignOperationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DesignOperationEdge {
-	cursor: String!
-	node: DesignOperation!
+  cursor: String!
+  node: DesignOperation!
 }
 
 """
 @emoji 🌐 SDL `interface Diff` — hash-backed diff projection (`EmptyDiff` shell plus future `VectorDiff`, …).
 """
 interface Diff {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
 }
 
 type DiffConnection {
-	edges: [DiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 """
 @emoji 🪢 SDL `DiffEdge` / `DiffConnection` — relay over [`GqlDiffInterface`].
 """
 type DiffEdge {
-	cursor: String!
-	node: Diff!
+  cursor: String!
+  node: Diff!
 }
 
 """
 @emoji 🌐 SDL `interface Document` — preview-capable artifact (`EmptyDocument` minimal variant).
 """
 interface Document {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	name: String!
-	description: String!
-	icon: String!
-	createdAt: Timestamp
-	createdBy: Author
-	authoredBy: AuthorConnection!
-	changedIn: CheckpointConnection!
-	lastChangedAt: Timestamp
-	lastChangedBy: Author
-	lastChangedIn: Checkpoint
-	changes: ChangeConnection!
-	edits: EditConnection!
-	previewImage: File
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  name: String!
+  description: String!
+  icon: String!
+  createdAt: Timestamp
+  createdBy: Author
+  authoredBy: AuthorConnection!
+  changedIn: CheckpointConnection!
+  lastChangedAt: Timestamp
+  lastChangedBy: Author
+  lastChangedIn: Checkpoint
+  changes: ChangeConnection!
+  edits: EditConnection!
+  previewImage: File
 }
 
 type DraggedPiece implements Operation {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	scope: Entity!
-	input: Input
-	modification: Modification!
-	pieces: [Piece!]!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  scope: Entity!
+  input: Input
+  modification: Modification!
+  pieces: [Piece!]!
 }
 
 type DraggedPieceConnection {
-	edges: [DraggedPieceEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DraggedPieceEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DraggedPieceEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type DraggedPieceInput {
-	hash: String!
+  hash: String!
 }
 
 type DraggedPieceInputConnection {
-	edges: [DraggedPieceInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DraggedPieceInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DraggedPieceInputEdge {
-	cursor: String!
-	node: DraggedPieceInput!
+  cursor: String!
+  node: DraggedPieceInput!
 }
 
 type DraggedPieces {
-	hash: String!
+  hash: String!
 }
 
 type DraggedPiecesConnection {
-	edges: [DraggedPiecesEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DraggedPiecesEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DraggedPiecesEdge {
-	cursor: String!
-	node: DraggedPieces!
+  cursor: String!
+  node: DraggedPieces!
 }
 
 type DraggedPiecesInput {
-	hash: String!
+  hash: String!
 }
 
 type DraggedPiecesInputConnection {
-	edges: [DraggedPiecesInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [DraggedPiecesInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type DraggedPiecesInputEdge {
-	cursor: String!
-	node: DraggedPiecesInput!
+  cursor: String!
+  node: DraggedPiecesInput!
 }
 
 type Edit implements Entity & StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	forwards: OperationConnection!
-	backwards: OperationConnection!
-	sequenceNumber: Int!
-	startedAt: Timestamp!
-	finishedAt: Timestamp
-	finished: Boolean
-	description: String!
-	origin: String!
-	changes: [Change!]!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  forwards: OperationConnection!
+  backwards: OperationConnection!
+  sequenceNumber: Int!
+  startedAt: Timestamp!
+  finishedAt: Timestamp
+  finished: Boolean
+  description: String!
+  origin: String!
+  changes: [Change!]!
 }
 
 type EditConnection {
-	edges: [EditEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [EditEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type EditEdge {
-	cursor: String!
-	node: Edit!
+  cursor: String!
+  node: Edit!
 }
 
 """
 @emoji 🌐 SDL `interface Entity` — VCS + conflict shells participating in the global owner graph.
 """
 interface Entity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
 }
 
 """
 @emoji 🌐 SDL `interface EntityConnection` — shared relay tail (`StoreConnection`, golden `PageInfoConnection` for empty owns).
 """
 interface EntityConnection {
-	pageInfo: PageInfo!
-	hash: String!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 interface EntityEdge {
-	cursor: String!
+  cursor: String!
 }
 
 type Error {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	kind: String!
-	message: String!
-	requestId: ID
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  kind: String!
+  message: String!
+  requestId: ID
 }
 
 """
 @emoji 🌐 SDL `interface Event` — timestamped weak entity (`EmptyEvent` minimal variant).
 """
 interface Event {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	timestamp: Timestamp!
-	involves: EntityConnection
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  timestamp: Timestamp!
+  involves: EntityConnection
 }
 
 """
 @emoji 🧷 Kit [`Family`] SDL shell — Artifact [`name`]/[`description`]/[`icon`] are persisted kit fields.
 """
 type Family implements Entity & FileSystemNode {
-	id: ID!
-	name: String!
-	description: String
-	icon: String
-	folderId: ID
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
+  id: ID!
+  name: String!
+  description: String
+  icon: String
+  folderId: ID
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
 }
 
 type FamilyConnection {
-	edges: [FamilyEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [FamilyEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type FamilyDiff {
-	hash: String!
+  hash: String!
 }
 
 type FamilyDiffConnection {
-	edges: [FamilyDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [FamilyDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type FamilyDiffEdge {
-	cursor: String!
-	node: FamilyDiff!
+  cursor: String!
+  node: FamilyDiff!
 }
 
 type FamilyEdge {
-	cursor: String!
-	node: Family!
+  cursor: String!
+  node: Family!
 }
 
 type FamilyModification {
-	hash: String!
+  hash: String!
 }
 
 type FamilyModificationConnection {
-	edges: [FamilyModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [FamilyModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type FamilyModificationEdge {
-	cursor: String!
-	node: FamilyModification!
+  cursor: String!
+  node: FamilyModification!
 }
 
 type FamilyModifications {
-	hash: String!
+  hash: String!
 }
 
 type FamilyModificationsConnection {
-	edges: [FamilyModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [FamilyModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type FamilyModificationsEdge {
-	cursor: String!
-	node: FamilyModifications!
+  cursor: String!
+  node: FamilyModifications!
 }
 
 type File implements Entity & FileSystemNode {
-	id: ID!
-	name: String!
-	url: String!
-	mime: String
-	size: Int
-	description: String
-	icon: String
-	folderId: ID
-	created: Timestamp
-	updated: Timestamp
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	tag(id: ID!): Tag
-	quality(id: ID!): Quality
-	attribute(id: ID!): Attribute
-	"""
-	@emoji 💾 Representations that reference this file.
-	"""
-	hasRepresentations: RepresentationConnection!
-	"""
-	@emoji 🧰 Kinds that own a representation referencing this file.
-	"""
-	referencesTypes: TypeConnection!
-	"""
-	@emoji 🏘 Designs with a direct piece blueprinting a kind that references this file.
-	"""
-	referencesDesigns: DesignConnection!
-	"""
-	@emoji 🧰 Kinds that reference this file (kinds do not nest; same as direct).
-	"""
-	referencesTypesTransitive: TypeConnection!
-	"""
-	@emoji 🏘 Designs that reference this file transitively through kinds and nested designs.
-	"""
-	referencesDesignsTransitive: DesignConnection!
+  id: ID!
+  name: String!
+  url: String!
+  mime: String
+  size: Int
+  description: String
+  icon: String
+  folderId: ID
+  created: Timestamp
+  updated: Timestamp
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  tag(id: ID!): Tag
+  quality(id: ID!): Quality
+  attribute(id: ID!): Attribute
+  """
+  @emoji 💾 Representations that reference this file.
+  """
+  hasRepresentations: RepresentationConnection!
+  """
+  @emoji 🧰 Kinds that own a representation referencing this file.
+  """
+  referencesTypes: TypeConnection!
+  """
+  @emoji 🏘 Designs with a direct piece blueprinting a kind that references this file.
+  """
+  referencesDesigns: DesignConnection!
+  """
+  @emoji 🧰 Kinds that reference this file (kinds do not nest; same as direct).
+  """
+  referencesTypesTransitive: TypeConnection!
+  """
+  @emoji 🏘 Designs that reference this file transitively through kinds and nested designs.
+  """
+  referencesDesignsTransitive: DesignConnection!
 }
 
 type FileBackbone implements Backbone {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	uri: String!
-	status: BackboneStatus!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  uri: String!
+  status: BackboneStatus!
 }
 
 type FileBackboneCommand implements BackboneCommand {
-	detach: Response!
-	sync: Response!
+  detach: Response!
+  sync: Response!
 }
 
 type FileBackboneCommandConnection {
-	edges: [FileBackboneCommandEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [FileBackboneCommandEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type FileBackboneCommandEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type FileBackboneConnection {
-	edges: [FileBackboneEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [FileBackboneEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type FileBackboneEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type FileConnection {
-	edges: [FileEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [FileEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type FileDiff {
-	hash: String!
+  hash: String!
 }
 
 type FileDiffConnection {
-	edges: [FileDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [FileDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type FileDiffEdge {
-	cursor: String!
-	node: FileDiff!
+  cursor: String!
+  node: FileDiff!
 }
 
 type FileEdge {
-	cursor: String!
-	node: File!
+  cursor: String!
+  node: File!
 }
 
 type FileModification {
-	hash: String!
+  hash: String!
 }
 
 type FileModificationConnection {
-	edges: [FileModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [FileModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type FileModificationEdge {
-	cursor: String!
-	node: FileModification!
+  cursor: String!
+  node: FileModification!
 }
 
 type FileModifications {
-	hash: String!
+  hash: String!
 }
 
 type FileModificationsConnection {
-	edges: [FileModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [FileModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type FileModificationsEdge {
-	cursor: String!
-	node: FileModifications!
+  cursor: String!
+  node: FileModifications!
 }
 
 """
 @emoji 📁 SDL `interface FileSystemNode` — constrained kit virtual file system projection.
 """
 interface FileSystemNode {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	fileSystemParent: FileSystemNode
-	fileSystemChildren: FileSystemNodeConnection!
-	fileSystemChild(id: ID!): FileSystemNode
-	fileSystemPath: String!
-	fileSystemName: String!
-	isFileSystemRoot: Boolean!
-	fileSystemKind: FileSystemNodeKind!
-	fileSystemHasChildren: Boolean!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  fileSystemParent: FileSystemNode
+  fileSystemChildren: FileSystemNodeConnection!
+  fileSystemChild(id: ID!): FileSystemNode
+  fileSystemPath: String!
+  fileSystemName: String!
+  isFileSystemRoot: Boolean!
+  fileSystemKind: FileSystemNodeKind!
+  fileSystemHasChildren: Boolean!
 }
 
 type FileSystemNodeConnection {
-	edges: [FileSystemNodeEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [FileSystemNodeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type FileSystemNodeEdge {
-	cursor: String!
-	node: FileSystemNode!
+  cursor: String!
+  node: FileSystemNode!
 }
 
 """
 @emoji 📁 SDL `FileSystemNodeKind` — discriminant for constrained VFS nodes.
 """
 enum FileSystemNodeKind {
-	KIT
-	FOLDER
-	FILE
-	DESIGN
-	TYPE
-	FAMILY
-	TYPOLOGY
-	PIECE
-	CONNECTION
-	REPRESENTATION
-	PORT
-	CONNECTOR
+  KIT
+  FOLDER
+  FILE
+  DESIGN
+  TYPE
+  FAMILY
+  TYPOLOGY
+  PIECE
+  CONNECTION
+  REPRESENTATION
+  PORT
+  CONNECTOR
 }
 
 type FixedPiece implements Operation {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	scope: Entity!
-	input: Input
-	modification: Modification!
-	piece: Piece!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  scope: Entity!
+  input: Input
+  modification: Modification!
+  piece: Piece!
 }
 
 type FixedPieceConnection {
-	edges: [FixedPieceEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [FixedPieceEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type FixedPieceEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type FixedPieces {
-	hash: String!
+  hash: String!
 }
 
 type FixedPiecesConnection {
-	edges: [FixedPiecesEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [FixedPiecesEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type FixedPiecesEdge {
-	cursor: String!
-	node: FixedPieces!
+  cursor: String!
+  node: FixedPieces!
 }
 
 type FlattenedDesign {
-	hash: String!
+  hash: String!
 }
 
 type FlattenedDesignConnection {
-	edges: [FlattenedDesignEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [FlattenedDesignEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type FlattenedDesignEdge {
-	cursor: String!
-	node: FlattenedDesign!
+  cursor: String!
+  node: FlattenedDesign!
 }
 
 type Folder implements Entity & FileSystemNode {
-	id: ID!
-	name: String!
-	path: String!
-	description: String
-	icon: String
-	parentFolderId: ID
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	file(id: ID!): File
-	files: FileConnection!
-	subFolder(id: ID!): Folder
-	subFolders: FolderConnection!
-	family(id: ID!): Family
-	families: FamilyConnection!
-	type(id: ID!): Type
-	"""
-	@emoji 🧰 Kinds in this folder.
-	"""
-	hasTypes: TypeConnection!
-	design(id: ID!): Design
-	"""
-	@emoji 🏘 Designs in this folder.
-	"""
-	hasDesigns: DesignConnection!
+  id: ID!
+  name: String!
+  path: String!
+  description: String
+  icon: String
+  parentFolderId: ID
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  file(id: ID!): File
+  files: FileConnection!
+  subFolder(id: ID!): Folder
+  subFolders: FolderConnection!
+  family(id: ID!): Family
+  families: FamilyConnection!
+  type(id: ID!): Type
+  """
+  @emoji 🧰 Kinds in this folder.
+  """
+  hasTypes: TypeConnection!
+  design(id: ID!): Design
+  """
+  @emoji 🏘 Designs in this folder.
+  """
+  hasDesigns: DesignConnection!
 }
 
 type FolderConnection {
-	edges: [FolderEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [FolderEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type FolderDiff {
-	hash: String!
+  hash: String!
 }
 
 type FolderDiffConnection {
-	edges: [FolderDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [FolderDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type FolderDiffEdge {
-	cursor: String!
-	node: FolderDiff!
+  cursor: String!
+  node: FolderDiff!
 }
 
 type FolderEdge {
-	cursor: String!
-	node: Folder!
+  cursor: String!
+  node: Folder!
 }
 
 type FolderModification {
-	hash: String!
+  hash: String!
 }
 
 type FolderModificationConnection {
-	edges: [FolderModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [FolderModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type FolderModificationEdge {
-	cursor: String!
-	node: FolderModification!
+  cursor: String!
+  node: FolderModification!
 }
 
 type FolderModifications {
-	hash: String!
+  hash: String!
 }
 
 type FolderModificationsConnection {
-	edges: [FolderModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [FolderModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type FolderModificationsEdge {
-	cursor: String!
-	node: FolderModifications!
+  cursor: String!
+  node: FolderModifications!
 }
 
 type Graph implements Entity & Node & StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	theKit: Workspace!
-	initialKit: Kit
-	alternative(id: ID!): Alternative
-	alternatives: AlternativeConnection!
-	checkpoint(id: ID!): Checkpoint
-	checkpoints: CheckpointConnection!
-	release(id: ID!): Checkpoint
-	releases: CheckpointConnection!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  theKit: Workspace!
+  initialKit: Kit
+  alternative(id: ID!): Alternative
+  alternatives: AlternativeConnection!
+  checkpoint(id: ID!): Checkpoint
+  checkpoints: CheckpointConnection!
+  release(id: ID!): Checkpoint
+  releases: CheckpointConnection!
 }
 
 type GraphConnection {
-	edges: [GraphEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [GraphEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type GraphEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type Group {
-	id: ID!
-	name: String!
-	description: String
-	color: String
-	icon: String
-	hash: String!
-	pieces: PieceConnection!
-	piece(id: ID!): Piece
+  id: ID!
+  name: String!
+  description: String
+  color: String
+  icon: String
+  hash: String!
+  pieces: PieceConnection!
+  piece(id: ID!): Piece
 }
 
 type GroupConnection {
-	edges: [GroupEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [GroupEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type GroupDiff {
-	hash: String!
+  hash: String!
 }
 
 type GroupDiffConnection {
-	edges: [GroupDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [GroupDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type GroupDiffEdge {
-	cursor: String!
-	node: GroupDiff!
+  cursor: String!
+  node: GroupDiff!
 }
 
 type GroupEdge {
-	cursor: String!
-	node: Group!
+  cursor: String!
+  node: Group!
 }
 
 type GroupModification {
-	hash: String!
+  hash: String!
 }
 
 type GroupModificationConnection {
-	edges: [GroupModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [GroupModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type GroupModificationEdge {
-	cursor: String!
-	node: GroupModification!
+  cursor: String!
+  node: GroupModification!
 }
 
 type GroupModifications {
-	hash: String!
+  hash: String!
 }
 
 type GroupModificationsConnection {
-	edges: [GroupModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [GroupModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type GroupModificationsEdge {
-	cursor: String!
-	node: GroupModifications!
+  cursor: String!
+  node: GroupModifications!
 }
 
 type IdResult implements Result {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	value: ID!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  value: ID!
 }
 
 """
 @emoji 🌐 SDL `interface Input` — operation-side argument projection (`*Input` types implement this in golden).
 """
 interface Input {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
 }
 
 type InputConnection {
-	edges: [InputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [InputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 """
 @emoji 🪢 SDL `InputEdge` / `InputConnection` — relay over [`PubInputInterface`].
 """
 type InputEdge {
-	cursor: String!
-	node: Input!
+  cursor: String!
+  node: Input!
 }
 
 type Kit implements Entity & Node & FileSystemNode & StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	checkpoint: Checkpoint
-	name: String!
-	description: String
-	icon: String
-	image: String
-	preview: String
-	remote: String
-	homepage: String
-	license: String
-	uri: String
-	createdAt: Timestamp
-	updatedAt: Timestamp
-	version: String
-	design(id: ID!): Design
-	"""
-	@emoji 🏘 Designs contained in this kit.
-	"""
-	hasDesigns: DesignConnection!
-	type(id: ID!): Type
-	"""
-	@emoji 🧰 Kinds contained in this kit.
-	"""
-	hasTypes: TypeConnection!
-	"""
-	@emoji 📄 Kit-root VFS files only (excludes folder-placed and representation backing blobs).
-	"""
-	hasFiles: FileConnection!
-	"""
-	@emoji 📁 Kit-root folders only (no {@code parent_folder_id}).
-	"""
-	hasFolders: FolderConnection!
-	"""
-	@emoji 👪 Kit-root families only (not placed in a folder).
-	"""
-	hasFamilies: FamilyConnection!
-	"""
-	@emoji 🏛️ Kit-root typologies only (not placed in a folder).
-	"""
-	hasTypologies: TypologyConnection!
-	"""
-	@emoji 🪢 All pieces across designs, expanding nested design blueprints.
-	"""
-	hasPiecesTransitive: PieceConnection!
-	"""
-	@emoji 🔗 All connections across designs, expanding nested design blueprints.
-	"""
-	hasConnectionsTransitive: ConnectionConnection!
-	"""
-	@emoji 🧰 All kinds referenced across designs, expanding nested design blueprints.
-	"""
-	hasTypesTransitive: TypeConnection!
-	"""
-	@emoji 🏘 All designs referenced across designs, expanding nested design blueprints.
-	"""
-	hasDesignsTransitive: DesignConnection!
-	typology(id: ID!): Typology
-	authors: AuthorConnection!
-	concepts: ConceptConnection!
-	tags: TagConnection!
-	qualities: QualityConnection!
-	props: PropConnection!
-	attributes: AttributeConnection!
-	stats: StatConnection!
-	file(id: ID!): File
-	folder(id: ID!): Folder
-	family(id: ID!): Family
-	author(id: ID!): Author
-	concept(id: ID!): Concept
-	tag(id: ID!): Tag
-	quality(id: ID!): Quality
-	prop(id: ID!): Prop
-	attribute(id: ID!): Attribute
-	stat(id: ID!): Stat
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  checkpoint: Checkpoint
+  name: String!
+  description: String
+  icon: String
+  image: String
+  preview: String
+  remote: String
+  homepage: String
+  license: String
+  uri: String
+  createdAt: Timestamp
+  updatedAt: Timestamp
+  version: String
+  design(id: ID!): Design
+  """
+  @emoji 🏘 Designs contained in this kit.
+  """
+  hasDesigns: DesignConnection!
+  type(id: ID!): Type
+  """
+  @emoji 🧰 Kinds contained in this kit.
+  """
+  hasTypes: TypeConnection!
+  """
+  @emoji 📄 Kit-root VFS files only (excludes folder-placed and representation backing blobs).
+  """
+  hasFiles: FileConnection!
+  """
+  @emoji 📁 Kit-root folders only (no {@code parent_folder_id}).
+  """
+  hasFolders: FolderConnection!
+  """
+  @emoji 👪 Kit-root families only (not placed in a folder).
+  """
+  hasFamilies: FamilyConnection!
+  """
+  @emoji 🏛️ Kit-root typologies only (not placed in a folder).
+  """
+  hasTypologies: TypologyConnection!
+  """
+  @emoji 🪢 All pieces across designs, expanding nested design blueprints.
+  """
+  hasPiecesTransitive: PieceConnection!
+  """
+  @emoji 🔗 All connections across designs, expanding nested design blueprints.
+  """
+  hasConnectionsTransitive: ConnectionConnection!
+  """
+  @emoji 🧰 All kinds referenced across designs, expanding nested design blueprints.
+  """
+  hasTypesTransitive: TypeConnection!
+  """
+  @emoji 🏘 All designs referenced across designs, expanding nested design blueprints.
+  """
+  hasDesignsTransitive: DesignConnection!
+  typology(id: ID!): Typology
+  authors: AuthorConnection!
+  concepts: ConceptConnection!
+  tags: TagConnection!
+  qualities: QualityConnection!
+  props: PropConnection!
+  attributes: AttributeConnection!
+  stats: StatConnection!
+  file(id: ID!): File
+  folder(id: ID!): Folder
+  family(id: ID!): Family
+  author(id: ID!): Author
+  concept(id: ID!): Concept
+  tag(id: ID!): Tag
+  quality(id: ID!): Quality
+  prop(id: ID!): Prop
+  attribute(id: ID!): Attribute
+  stat(id: ID!): Stat
 }
 
 type KitConnection {
-	edges: [KitEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [KitEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type KitDiff {
-	hash: String!
+  hash: String!
 }
 
 type KitDiffConnection {
-	edges: [KitDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [KitDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type KitDiffEdge {
-	cursor: String!
-	node: KitDiff!
+  cursor: String!
+  node: KitDiff!
 }
 
 type KitEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type KitModification {
-	hash: String!
+  hash: String!
 }
 
 type KitModificationConnection {
-	edges: [KitModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [KitModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type KitModificationEdge {
-	cursor: String!
-	node: KitModification!
+  cursor: String!
+  node: KitModification!
 }
 
 type KitModifications {
-	hash: String!
+  hash: String!
 }
 
 type KitModificationsConnection {
-	edges: [KitModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [KitModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type KitModificationsEdge {
-	cursor: String!
-	node: KitModifications!
+  cursor: String!
+  node: KitModifications!
 }
 
 type KitOperation {
-	hash: String!
+  hash: String!
 }
 
 type KitOperationConnection {
-	edges: [KitOperationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [KitOperationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type KitOperationEdge {
-	cursor: String!
-	node: KitOperation!
+  cursor: String!
+  node: KitOperation!
 }
 
 type Layer {
-	id: ID!
-	name: String!
-	description: String
-	"""
-	@emoji 🏷️ Artifact `icon` on SDL `Layer`.
-	"""
-	icon: String!
-	color: String
-	order: Int
-	visible: Boolean
-	locked: Boolean
-	hash: String!
+  id: ID!
+  name: String!
+  description: String
+  """
+  @emoji 🏷️ Artifact `icon` on SDL `Layer`.
+  """
+  icon: String!
+  color: String
+  order: Int
+  visible: Boolean
+  locked: Boolean
+  hash: String!
 }
 
 type LayerConnection {
-	edges: [LayerEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [LayerEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type LayerDiff {
-	hash: String!
+  hash: String!
 }
 
 type LayerDiffConnection {
-	edges: [LayerDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [LayerDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type LayerDiffEdge {
-	cursor: String!
-	node: LayerDiff!
+  cursor: String!
+  node: LayerDiff!
 }
 
 type LayerEdge {
-	cursor: String!
-	node: Layer!
+  cursor: String!
+  node: Layer!
 }
 
 type LayerModification {
-	hash: String!
+  hash: String!
 }
 
 type LayerModificationConnection {
-	edges: [LayerModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [LayerModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type LayerModificationEdge {
-	cursor: String!
-	node: LayerModification!
+  cursor: String!
+  node: LayerModification!
 }
 
 type LayerModifications {
-	hash: String!
+  hash: String!
 }
 
 type LayerModificationsConnection {
-	edges: [LayerModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [LayerModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type LayerModificationsEdge {
-	cursor: String!
-	node: LayerModifications!
+  cursor: String!
+  node: LayerModifications!
 }
 
 type LocalProvider implements Entity & Node & StrongEntity & Provider {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	backbones: BackboneConnection!
-	backbone(id: ID!): Backbone
-	uri: String!
-	stores: StoreConnection!
-	store(id: ID!): StoreCommand!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  backbones: BackboneConnection!
+  backbone(id: ID!): Backbone
+  uri: String!
+  stores: StoreConnection!
+  store(id: ID!): StoreCommand!
 }
 
 type LocalProviderCommand implements ProviderCommand {
-	createBackbone(uri: String!): Response!
-	attachBackbone(store: ID!): Response!
+  createBackbone(uri: String!): Response!
+  attachBackbone(store: ID!): Response!
 }
 
 type LocalProviderCommandConnection {
-	edges: [LocalProviderCommandEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [LocalProviderCommandEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type LocalProviderCommandEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 """
 @emoji 🌍 WeakEntity shell for [`Location`] (SDL `Location`).
 """
 type Location implements Entity & Node & WeakEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	longitude: Float!
-	latitude: Float!
-	altitude: Float!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  longitude: Float!
+  latitude: Float!
+  altitude: Float!
 }
 
 type LocationConnection {
-	edges: [LocationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [LocationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type LocationDiff implements Diff {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	longitude: Float
-	latitude: Float
-	altitude: Float
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  longitude: Float
+  latitude: Float
+  altitude: Float
 }
 
 type LocationDiffConnection {
-	edges: [LocationDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [LocationDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type LocationDiffEdge {
-	cursor: String!
-	node: LocationDiff!
+  cursor: String!
+  node: LocationDiff!
 }
 
 type LocationEdge implements EntityEdge {
-	cursor: String!
-	node: Location!
+  cursor: String!
+  node: Location!
 }
 
 """
 @emoji 🌍 Wire `LocationInput` (lon/lat/alt) for [`entity::Location`].
 """
 input LocationInput {
-	longitude: Float!
-	latitude: Float!
-	altitude: Float!
+  longitude: Float!
+  latitude: Float!
+  altitude: Float!
 }
 
 type LocationModification implements Modification {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	before: Entity!
-	diff: Diff!
-	after: Entity!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  before: Entity!
+  diff: Diff!
+  after: Entity!
 }
 
 type LocationModificationConnection {
-	edges: [LocationModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [LocationModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type LocationModificationEdge {
-	cursor: String!
-	node: LocationModification!
+  cursor: String!
+  node: LocationModification!
 }
 
 type LocationModifications {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	removed: EntityConnection!
-	modifications: LocationModificationConnection!
-	added: EntityConnection!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  removed: EntityConnection!
+  modifications: LocationModificationConnection!
+  added: EntityConnection!
 }
 
 type LocationModificationsConnection {
-	edges: [LocationModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [LocationModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type LocationModificationsEdge {
-	cursor: String!
-	node: LocationModifications!
+  cursor: String!
+  node: LocationModifications!
 }
 
 """
 @emoji 🌐 SDL `interface Modification` — `before` / `diff` / `after` triple shell.
 """
 interface Modification {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	before: Entity!
-	diff: Diff!
-	after: Entity!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  before: Entity!
+  diff: Diff!
+  after: Entity!
 }
 
 type ModificationConnection {
-	edges: [ModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 """
 @emoji 🪢 SDL `ModificationEdge` / `ModificationConnection` — relay over [`GqlModificationInterface`].
 """
 type ModificationEdge {
-	cursor: String!
-	node: Modification!
+  cursor: String!
+  node: Modification!
 }
 
 type Modifications {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	removed: EntityConnection!
-	modifications: ModificationConnection!
-	added: EntityConnection!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  removed: EntityConnection!
+  modifications: ModificationConnection!
+  added: EntityConnection!
 }
 
 type ModificationsConnection {
-	edges: [ModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ModificationsEdge {
-	cursor: String!
-	node: Modifications!
+  cursor: String!
+  node: Modifications!
 }
 
 type MovedPiece {
-	hash: String!
+  hash: String!
 }
 
 type MovedPieceConnection {
-	edges: [MovedPieceEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [MovedPieceEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type MovedPieceEdge {
-	cursor: String!
-	node: MovedPiece!
+  cursor: String!
+  node: MovedPiece!
 }
 
 type MovedPieceInput {
-	hash: String!
+  hash: String!
 }
 
 type MovedPieceInputConnection {
-	edges: [MovedPieceInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [MovedPieceInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type MovedPieceInputEdge {
-	cursor: String!
-	node: MovedPieceInput!
+  cursor: String!
+  node: MovedPieceInput!
 }
 
 type MovedPieces {
-	hash: String!
+  hash: String!
 }
 
 type MovedPiecesConnection {
-	edges: [MovedPiecesEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [MovedPiecesEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type MovedPiecesEdge {
-	cursor: String!
-	node: MovedPieces!
+  cursor: String!
+  node: MovedPieces!
 }
 
 type MovedPiecesInput {
-	hash: String!
+  hash: String!
 }
 
 type MovedPiecesInputConnection {
-	edges: [MovedPiecesInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [MovedPiecesInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type MovedPiecesInputEdge {
-	cursor: String!
-	node: MovedPiecesInput!
+  cursor: String!
+  node: MovedPiecesInput!
 }
 
 type MovedToFolder {
-	hash: String!
+  hash: String!
 }
 
 type MovedToFolderConnection {
-	edges: [MovedToFolderEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [MovedToFolderEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type MovedToFolderEdge {
-	cursor: String!
-	node: MovedToFolder!
+  cursor: String!
+  node: MovedToFolder!
 }
 
 type MovedToFolderInput {
-	hash: String!
+  hash: String!
 }
 
 type MovedToFolderInputConnection {
-	edges: [MovedToFolderInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [MovedToFolderInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type MovedToFolderInputEdge {
-	cursor: String!
-	node: MovedToFolderInput!
+  cursor: String!
+  node: MovedToFolderInput!
 }
 
 type Mutation {
-	"""
-	@emoji 🎛️ Kit-changing commands — navigate via nested fields per `schema.golden.graphql` Commands block.
-	"""
-	session: SessionCommand!
+  """
+  @emoji 🎛️ Kit-changing commands — navigate via nested fields per `schema.golden.graphql` Commands block.
+  """
+  session: SessionCommand!
 }
 
 interface Node {
-	id: ID!
+  id: ID!
 }
 
 type Offset implements Entity & Node & WeakEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	u: Float!
-	v: Float!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  u: Float!
+  v: Float!
 }
 
 type OffsetConnection {
-	edges: [OffsetEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [OffsetEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type OffsetDiff implements Diff {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	u: Float
-	v: Float
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  u: Float
+  v: Float
 }
 
 type OffsetDiffConnection {
-	edges: [OffsetDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [OffsetDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type OffsetDiffEdge {
-	cursor: String!
-	node: OffsetDiff!
+  cursor: String!
+  node: OffsetDiff!
 }
 
 type OffsetEdge implements EntityEdge {
-	cursor: String!
-	node: Offset!
+  cursor: String!
+  node: Offset!
 }
 
 input OffsetInput {
-	u: Float!
-	v: Float!
+  u: Float!
+  v: Float!
 }
 
 type OffsetModification implements Modification {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	before: Entity!
-	diff: Diff!
-	after: Entity!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  before: Entity!
+  diff: Diff!
+  after: Entity!
 }
 
 type OffsetModificationConnection {
-	edges: [OffsetModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [OffsetModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type OffsetModificationEdge {
-	cursor: String!
-	node: OffsetModification!
+  cursor: String!
+  node: OffsetModification!
 }
 
 type OffsetModifications {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	removed: EntityConnection!
-	modifications: OffsetModificationConnection!
-	added: EntityConnection!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  removed: EntityConnection!
+  modifications: OffsetModificationConnection!
+  added: EntityConnection!
 }
 
 type OffsetModificationsConnection {
-	edges: [OffsetModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [OffsetModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type OffsetModificationsEdge {
-	cursor: String!
-	node: OffsetModifications!
+  cursor: String!
+  node: OffsetModifications!
 }
 
 """
 🪄 GraphQL `interface Operation` (each variant is an Arc-shared operation entity).
 """
 interface Operation implements StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	scope: Entity!
-	input: Input
-	modification: Modification!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  scope: Entity!
+  input: Input
+  modification: Modification!
 }
 
 type OperationConnection {
-	edges: [OperationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [OperationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type OperationEdge {
-	cursor: String!
-	node: Operation!
+  cursor: String!
+  node: Operation!
 }
 
 type PageInfo {
-	hasNextPage: Boolean!
-	hasPreviousPage: Boolean!
-	startCursor: String
-	endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
 }
 
 type PageInfoConnection implements EntityConnection {
-	edges: [PageInfoEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PageInfoEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 """
 @emoji 🪢 Golden `PageInfoEdge` / `PageInfoConnection` (relay shells around [`PageInfo`]).
 """
 type PageInfoEdge {
-	cursor: String!
-	node: PageInfo!
+  cursor: String!
+  node: PageInfo!
 }
 
 type Piece implements Entity & Node & FileSystemNode & StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	blueprint: Entity!
-	"""
-	@emoji 🧰 Kind blueprint when this piece instances a kind.
-	"""
-	isType: Type
-	"""
-	@emoji 🏘 Design blueprint when this piece instances a nested design.
-	"""
-	isDesign: Design
-	"""
-	@emoji 🧰 Kinds reachable transitively through nested design blueprints on this piece.
-	"""
-	isTypesTransitive: TypeConnection!
-	"""
-	@emoji 🏘 Designs reachable transitively through nested design blueprints on this piece.
-	"""
-	isDesignsTransitive: DesignConnection!
-	"""
-	@emoji 🪢 Direct child pieces in the piece tree.
-	"""
-	hasPieces: PieceConnection!
-	"""
-	@emoji 🔗 Direct child connections in the piece tree.
-	"""
-	hasConnections: ConnectionConnection!
-	"""
-	@emoji 🪢 All descendant pieces in the piece tree.
-	"""
-	hasPiecesTransitive: PieceConnection!
-	"""
-	@emoji 🔗 All descendant connections in the piece tree.
-	"""
-	hasConnectionsTransitive: ConnectionConnection!
-	name: String
-	description: String
-	position: Position
-	scale: Float
-	connectionKind: PieceConnectionKind
-	flatPosition: Position!
-	replaceableBlueprints: BlueprintConnection!
-	parentConnection: Connection
-	parentPiece: Piece
-	depth: Int!
-	path: [Piece!]!
-	props: [Prop!]!
-	prop(id: ID!): Prop
-	attributes: [Attribute!]!
-	attribute(id: ID!): Attribute
-	childConnection(id: ID!): Connection
-	childPiece(id: ID!): Piece
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  blueprint: Entity!
+  """
+  @emoji 🧰 Kind blueprint when this piece instances a kind.
+  """
+  isType: Type
+  """
+  @emoji 🏘 Design blueprint when this piece instances a nested design.
+  """
+  isDesign: Design
+  """
+  @emoji 🧰 Kinds reachable transitively through nested design blueprints on this piece.
+  """
+  isTypesTransitive: TypeConnection!
+  """
+  @emoji 🏘 Designs reachable transitively through nested design blueprints on this piece.
+  """
+  isDesignsTransitive: DesignConnection!
+  """
+  @emoji 🪢 Direct child pieces in the piece tree.
+  """
+  hasPieces: PieceConnection!
+  """
+  @emoji 🔗 Direct child connections in the piece tree.
+  """
+  hasConnections: ConnectionConnection!
+  """
+  @emoji 🪢 All descendant pieces in the piece tree.
+  """
+  hasPiecesTransitive: PieceConnection!
+  """
+  @emoji 🔗 All descendant connections in the piece tree.
+  """
+  hasConnectionsTransitive: ConnectionConnection!
+  name: String
+  description: String
+  position: Position
+  scale: Float
+  connectionKind: PieceConnectionKind
+  flatPosition: Position!
+  replaceableBlueprints: BlueprintConnection!
+  parentConnection: Connection
+  parentPiece: Piece
+  depth: Int!
+  path: [Piece!]!
+  props: [Prop!]!
+  prop(id: ID!): Prop
+  attributes: [Attribute!]!
+  attribute(id: ID!): Attribute
+  childConnection(id: ID!): Connection
+  childPiece(id: ID!): Piece
 }
 
 type PieceConnection {
-	edges: [PieceEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PieceEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 enum PieceConnectionKind {
-	FIXED
-	CONNECTED
+  FIXED
+  CONNECTED
 }
 
 type PieceDiff {
-	hash: String!
+  hash: String!
 }
 
 type PieceDiffConnection {
-	edges: [PieceDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PieceDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PieceDiffEdge {
-	cursor: String!
-	node: PieceDiff!
+  cursor: String!
+  node: PieceDiff!
 }
 
 type PieceEdge {
-	cursor: String!
-	node: Piece!
+  cursor: String!
+  node: Piece!
 }
 
 type PieceModification {
-	hash: String!
+  hash: String!
 }
 
 type PieceModificationConnection {
-	edges: [PieceModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PieceModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PieceModificationEdge {
-	cursor: String!
-	node: PieceModification!
+  cursor: String!
+  node: PieceModification!
 }
 
 type PieceModifications {
-	hash: String!
+  hash: String!
 }
 
 type PieceModificationsConnection {
-	edges: [PieceModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PieceModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PieceModificationsEdge {
-	cursor: String!
-	node: PieceModifications!
+  cursor: String!
+  node: PieceModifications!
 }
 
 type PieceOperation {
-	hash: String!
+  hash: String!
 }
 
 type PieceOperationConnection {
-	edges: [PieceOperationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PieceOperationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PieceOperationEdge {
-	cursor: String!
-	node: PieceOperation!
+  cursor: String!
+  node: PieceOperation!
 }
 
 type PiecesOperation {
-	hash: String!
+  hash: String!
 }
 
 type PiecesOperationConnection {
-	edges: [PiecesOperationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PiecesOperationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PiecesOperationEdge {
-	cursor: String!
-	node: PiecesOperation!
+  cursor: String!
+  node: PiecesOperation!
 }
 
 type Place implements StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
 }
 
 type PlaceConnection {
-	edges: [PlaceEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PlaceEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PlaceDiff {
-	hash: String!
+  hash: String!
 }
 
 type PlaceDiffConnection {
-	edges: [PlaceDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PlaceDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PlaceDiffEdge {
-	cursor: String!
-	node: PlaceDiff!
+  cursor: String!
+  node: PlaceDiff!
 }
 
 type PlaceEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type PlaceModification {
-	hash: String!
+  hash: String!
 }
 
 type PlaceModificationConnection {
-	edges: [PlaceModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PlaceModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PlaceModificationEdge {
-	cursor: String!
-	node: PlaceModification!
+  cursor: String!
+  node: PlaceModification!
 }
 
 type PlaceModifications {
-	hash: String!
+  hash: String!
 }
 
 type PlaceModificationsConnection {
-	edges: [PlaceModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PlaceModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PlaceModificationsEdge {
-	cursor: String!
-	node: PlaceModifications!
+  cursor: String!
+  node: PlaceModifications!
 }
 
 type Plane implements Entity & Node & WeakEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	origin: Point!
-	xAxis: Vector!
-	yAxis: Vector!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  origin: Point!
+  xAxis: Vector!
+  yAxis: Vector!
 }
 
 type PlaneConnection {
-	edges: [PlaneEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PlaneEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PlaneDiff implements Diff {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	origin: Point
-	xAxis: Vector
-	yAxis: Vector
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  origin: Point
+  xAxis: Vector
+  yAxis: Vector
 }
 
 type PlaneDiffConnection {
-	edges: [PlaneDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PlaneDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PlaneDiffEdge {
-	cursor: String!
-	node: PlaneDiff!
+  cursor: String!
+  node: PlaneDiff!
 }
 
 type PlaneEdge implements EntityEdge {
-	cursor: String!
-	node: Plane!
+  cursor: String!
+  node: Plane!
 }
 
 input PlaneInput {
-	origin: PointInput!
-	xAxis: VectorInput!
-	yAxis: VectorInput!
+  origin: PointInput!
+  xAxis: VectorInput!
+  yAxis: VectorInput!
 }
 
 type PlaneModification implements Modification {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	before: Entity!
-	diff: Diff!
-	after: Entity!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  before: Entity!
+  diff: Diff!
+  after: Entity!
 }
 
 type PlaneModificationConnection {
-	edges: [PlaneModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PlaneModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PlaneModificationEdge {
-	cursor: String!
-	node: PlaneModification!
+  cursor: String!
+  node: PlaneModification!
 }
 
 type PlaneModifications {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	removed: EntityConnection!
-	modifications: PlaneModificationConnection!
-	added: EntityConnection!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  removed: EntityConnection!
+  modifications: PlaneModificationConnection!
+  added: EntityConnection!
 }
 
 type PlaneModificationsConnection {
-	edges: [PlaneModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PlaneModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PlaneModificationsEdge {
-	cursor: String!
-	node: PlaneModifications!
+  cursor: String!
+  node: PlaneModifications!
 }
 
 type Point implements Entity & Node & WeakEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	x: Float!
-	y: Float!
-	z: Float!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  x: Float!
+  y: Float!
+  z: Float!
 }
 
 type PointConnection {
-	edges: [PointEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PointEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PointDiff implements Diff {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	x: Float
-	y: Float
-	z: Float
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  x: Float
+  y: Float
+  z: Float
 }
 
 type PointDiffConnection {
-	edges: [PointDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PointDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PointDiffEdge {
-	cursor: String!
-	node: PointDiff!
+  cursor: String!
+  node: PointDiff!
 }
 
 type PointEdge implements EntityEdge {
-	cursor: String!
-	node: Point!
+  cursor: String!
+  node: Point!
 }
 
 input PointInput {
-	x: Float!
-	y: Float!
-	z: Float!
+  x: Float!
+  y: Float!
+  z: Float!
 }
 
 type PointModification implements Modification {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	before: Entity!
-	diff: Diff!
-	after: Entity!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  before: Entity!
+  diff: Diff!
+  after: Entity!
 }
 
 type PointModificationConnection {
-	edges: [PointModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PointModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PointModificationEdge {
-	cursor: String!
-	node: PointModification!
+  cursor: String!
+  node: PointModification!
 }
 
 type PointModifications {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	removed: EntityConnection!
-	modifications: PointModificationConnection!
-	added: EntityConnection!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  removed: EntityConnection!
+  modifications: PointModificationConnection!
+  added: EntityConnection!
 }
 
 type PointModificationsConnection {
-	edges: [PointModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PointModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PointModificationsEdge {
-	cursor: String!
-	node: PointModifications!
+  cursor: String!
+  node: PointModifications!
 }
 
 type Port implements Entity & FileSystemNode & StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	code: String
-	label: String
-	order: Int
-	copatibleWith: PortConnection!
-	attribute(id: ID!): Attribute
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  code: String
+  label: String
+  order: Int
+  copatibleWith: PortConnection!
+  attribute(id: ID!): Attribute
 }
 
 type PortConnection {
-	edges: [PortEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PortEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PortDiff {
-	hash: String!
+  hash: String!
 }
 
 type PortDiffConnection {
-	edges: [PortDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PortDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PortDiffEdge {
-	cursor: String!
-	node: PortDiff!
+  cursor: String!
+  node: PortDiff!
 }
 
 type PortEdge {
-	cursor: String!
-	node: Port!
+  cursor: String!
+  node: Port!
 }
 
 type PortModification {
-	hash: String!
+  hash: String!
 }
 
 type PortModificationConnection {
-	edges: [PortModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PortModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PortModificationEdge {
-	cursor: String!
-	node: PortModification!
+  cursor: String!
+  node: PortModification!
 }
 
 type PortModifications {
-	hash: String!
+  hash: String!
 }
 
 type PortModificationsConnection {
-	edges: [PortModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PortModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PortModificationsEdge {
-	cursor: String!
-	node: PortModifications!
+  cursor: String!
+  node: PortModifications!
 }
 
 type PortOperation {
-	hash: String!
+  hash: String!
 }
 
 type PortOperationConnection {
-	edges: [PortOperationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PortOperationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PortOperationEdge {
-	cursor: String!
-	node: PortOperation!
+  cursor: String!
+  node: PortOperation!
 }
 
 type Position implements Entity & Node & WeakEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	center: Coordinate!
-	plane: Plane!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  center: Coordinate!
+  plane: Plane!
 }
 
 type PositionConnection {
-	edges: [PositionEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PositionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PositionDiff implements Diff {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	center: Coordinate
-	plane: Plane
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  center: Coordinate
+  plane: Plane
 }
 
 type PositionDiffConnection {
-	edges: [PositionDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PositionDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PositionDiffEdge {
-	cursor: String!
-	node: PositionDiff!
+  cursor: String!
+  node: PositionDiff!
 }
 
 type PositionEdge implements EntityEdge {
-	cursor: String!
-	node: Position!
+  cursor: String!
+  node: Position!
 }
 
 input PositionInput {
-	center: CoordinateInput!
-	plane: PlaneInput!
+  center: CoordinateInput!
+  plane: PlaneInput!
 }
 
 type PositionModification implements Modification {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	before: Entity!
-	diff: Diff!
-	after: Entity!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  before: Entity!
+  diff: Diff!
+  after: Entity!
 }
 
 type PositionModificationConnection {
-	edges: [PositionModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PositionModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PositionModificationEdge {
-	cursor: String!
-	node: PositionModification!
+  cursor: String!
+  node: PositionModification!
 }
 
 type PositionModifications {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	removed: EntityConnection!
-	modifications: PositionModificationConnection!
-	added: EntityConnection!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  removed: EntityConnection!
+  modifications: PositionModificationConnection!
+  added: EntityConnection!
 }
 
 type PositionModificationsConnection {
-	edges: [PositionModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PositionModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PositionModificationsEdge {
-	cursor: String!
-	node: PositionModifications!
+  cursor: String!
+  node: PositionModifications!
 }
 
 type Prop {
-	id: ID!
-	key: String!
-	value: String!
-	unit: String
-	hash: String!
-	"""
-	@emoji 🔎 SDL `Prop.attribute(id)` — props carry no attribute bag yet; reserved for kit snapshots.
-	"""
-	attribute(id: ID!): Attribute
+  id: ID!
+  key: String!
+  value: String!
+  unit: String
+  hash: String!
+  """
+  @emoji 🔎 SDL `Prop.attribute(id)` — props carry no attribute bag yet; reserved for kit snapshots.
+  """
+  attribute(id: ID!): Attribute
 }
 
 type PropConnection {
-	edges: [PropEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PropEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PropDiff {
-	hash: String!
+  hash: String!
 }
 
 type PropDiffConnection {
-	edges: [PropDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PropDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PropDiffEdge {
-	cursor: String!
-	node: PropDiff!
+  cursor: String!
+  node: PropDiff!
 }
 
 type PropEdge {
-	cursor: String!
-	node: Prop!
+  cursor: String!
+  node: Prop!
 }
 
 type PropModification {
-	hash: String!
+  hash: String!
 }
 
 type PropModificationConnection {
-	edges: [PropModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PropModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PropModificationEdge {
-	cursor: String!
-	node: PropModification!
+  cursor: String!
+  node: PropModification!
 }
 
 type PropModifications {
-	hash: String!
+  hash: String!
 }
 
 type PropModificationsConnection {
-	edges: [PropModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [PropModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PropModificationsEdge {
-	cursor: String!
-	node: PropModifications!
+  cursor: String!
+  node: PropModifications!
 }
 
 """
 @emoji 🛰️ Golden `interface Provider` — concrete [`LocalProvider`] / [`RemoteProvider`].
 """
 interface Provider {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	backbones: BackboneConnection!
-	backbone(id: ID!): Backbone
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  backbones: BackboneConnection!
+  backbone(id: ID!): Backbone
 }
 
 """
 @emoji 🎛️ Golden `interface ProviderCommand` — shared `createBackbone` / `attachBackbone` surface.
 """
 interface ProviderCommand {
-	createBackbone(uri: String!): Response!
-	attachBackbone(store: ID!): Response!
+  createBackbone(uri: String!): Response!
+  attachBackbone(store: ID!): Response!
 }
 
 type ProviderCommandConnection {
-	edges: [ProviderCommandEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ProviderCommandEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 """
 @emoji 🪢 SDL `ProviderCommandEdge` / `ProviderCommandConnection`.
 """
 type ProviderCommandEdge {
-	cursor: String!
-	node: ProviderCommand!
+  cursor: String!
+  node: ProviderCommand!
 }
 
 type ProviderConnection {
-	edges: [ProviderEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [ProviderEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 """
 @emoji 🪢 SDL `ProviderEdge` / `ProviderConnection`.
 """
 type ProviderEdge {
-	cursor: String!
-	node: Provider!
+  cursor: String!
+  node: Provider!
 }
 
 type Quality implements Entity & Node & StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	key: String!
-	value: String
-	unit: String
-	definition: String
-	description: String
-	icon: String
-	benchmarks: BenchmarkConnection!
-	attributes: AttributeConnection!
-	attribute(id: ID!): Attribute
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  key: String!
+  value: String
+  unit: String
+  definition: String
+  description: String
+  icon: String
+  benchmarks: BenchmarkConnection!
+  attributes: AttributeConnection!
+  attribute(id: ID!): Attribute
 }
 
 type QualityConnection {
-	edges: [QualityEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [QualityEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type QualityDiff {
-	hash: String!
+  hash: String!
 }
 
 type QualityDiffConnection {
-	edges: [QualityDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [QualityDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type QualityDiffEdge {
-	cursor: String!
-	node: QualityDiff!
+  cursor: String!
+  node: QualityDiff!
 }
 
 type QualityEdge {
-	cursor: String!
-	node: Quality!
+  cursor: String!
+  node: Quality!
 }
 
 type QualityModification {
-	hash: String!
+  hash: String!
 }
 
 type QualityModificationConnection {
-	edges: [QualityModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [QualityModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type QualityModificationEdge {
-	cursor: String!
-	node: QualityModification!
+  cursor: String!
+  node: QualityModification!
 }
 
 type QualityModifications {
-	hash: String!
+  hash: String!
 }
 
 type QualityModificationsConnection {
-	edges: [QualityModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [QualityModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type QualityModificationsEdge {
-	cursor: String!
-	node: QualityModifications!
+  cursor: String!
+  node: QualityModifications!
 }
 
 type QualityOperation {
-	hash: String!
+  hash: String!
 }
 
 type QualityOperationConnection {
-	edges: [QualityOperationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [QualityOperationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type QualityOperationEdge {
-	cursor: String!
-	node: QualityOperation!
+  cursor: String!
+  node: QualityOperation!
 }
 
 type Query {
-	"""
-	@emoji 🔎 Golden `Query.node(id)` — returns the `Node` interface for resolvable globals on this runtime.
-	"""
-	node(id: ID!): Node
-	"""
-	@emoji 🔎 Golden `Query.entity(hash)` — returns the `Entity` interface for VCS shells resolvable on this runtime.
-	"""
-	entity(hash: ID!): Entity
-	"""
-	@emoji 🧭 First active [`crate::vcs::Session`] on this runtime.
-	"""
-	session: Session!
-	"""
-	@emoji 🏪 Active [`Store`] for bundle tests and relay paths (same surface as `LocalProvider.stores` / `Session.stores`).
-	"""
-	store: Store!
+  """
+  @emoji 🔎 Golden `Query.node(id)` — returns the `Node` interface for resolvable globals on this runtime.
+  """
+  node(id: ID!): Node
+  """
+  @emoji 🔎 Golden `Query.entity(hash)` — returns the `Entity` interface for VCS shells resolvable on this runtime.
+  """
+  entity(hash: ID!): Entity
+  """
+  @emoji 🧭 First active [`crate::vcs::Session`] on this runtime.
+  """
+  session: Session!
+  """
+  @emoji 🏪 Active [`Store`] for bundle tests and relay paths (same surface as `LocalProvider.stores` / `Session.stores`).
+  """
+  store: Store!
 }
 
 type RemoteProvider implements Entity & Node & StrongEntity & Provider {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	uri: String!
-	backbones: BackboneConnection!
-	backbone(id: ID!): Backbone
-	url: String!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  uri: String!
+  backbones: BackboneConnection!
+  backbone(id: ID!): Backbone
+  url: String!
 }
 
 type RemoteProviderCommand implements ProviderCommand {
-	createBackbone(uri: String!): Response!
-	attachBackbone(store: ID!): Response!
-	login(username: String!, passwordHash: String!, hubUrl: String): Response!
-	logout: Response!
+  createBackbone(uri: String!): Response!
+  attachBackbone(store: ID!): Response!
+  login(username: String!, passwordHash: String!, hubUrl: String): Response!
+  logout: Response!
 }
 
 type RemoteProviderCommandConnection {
-	edges: [RemoteProviderCommandEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RemoteProviderCommandEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RemoteProviderCommandEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type RemoteProviderConnection {
-	edges: [RemoteProviderEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RemoteProviderEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RemoteProviderEdge {
-	cursor: String!
-	node: RemoteProvider!
+  cursor: String!
+  node: RemoteProvider!
 }
 
 type RemovedAttributeFromConcept {
-	hash: String!
+  hash: String!
 }
 
 type RemovedAttributeFromConceptConnection {
-	edges: [RemovedAttributeFromConceptEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RemovedAttributeFromConceptEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RemovedAttributeFromConceptEdge {
-	cursor: String!
-	node: RemovedAttributeFromConcept!
+  cursor: String!
+  node: RemovedAttributeFromConcept!
 }
 
 type RemovedAttributeFromDesign {
-	hash: String!
+  hash: String!
 }
 
 type RemovedAttributeFromDesignConnection {
-	edges: [RemovedAttributeFromDesignEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RemovedAttributeFromDesignEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RemovedAttributeFromDesignEdge {
-	cursor: String!
-	node: RemovedAttributeFromDesign!
+  cursor: String!
+  node: RemovedAttributeFromDesign!
 }
 
 type RemovedAttributeFromPiece {
-	hash: String!
+  hash: String!
 }
 
 type RemovedAttributeFromPieceConnection {
-	edges: [RemovedAttributeFromPieceEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RemovedAttributeFromPieceEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RemovedAttributeFromPieceEdge {
-	cursor: String!
-	node: RemovedAttributeFromPiece!
+  cursor: String!
+  node: RemovedAttributeFromPiece!
 }
 
 type RemovedAttributeFromPort {
-	hash: String!
+  hash: String!
 }
 
 type RemovedAttributeFromPortConnection {
-	edges: [RemovedAttributeFromPortEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RemovedAttributeFromPortEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RemovedAttributeFromPortEdge {
-	cursor: String!
-	node: RemovedAttributeFromPort!
+  cursor: String!
+  node: RemovedAttributeFromPort!
 }
 
 type RemovedAttributeFromQuality {
-	hash: String!
+  hash: String!
 }
 
 type RemovedAttributeFromQualityConnection {
-	edges: [RemovedAttributeFromQualityEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RemovedAttributeFromQualityEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RemovedAttributeFromQualityEdge {
-	cursor: String!
-	node: RemovedAttributeFromQuality!
+  cursor: String!
+  node: RemovedAttributeFromQuality!
 }
 
 type RemovedAttributeFromTag {
-	hash: String!
+  hash: String!
 }
 
 type RemovedAttributeFromTagConnection {
-	edges: [RemovedAttributeFromTagEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RemovedAttributeFromTagEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RemovedAttributeFromTagEdge {
-	cursor: String!
-	node: RemovedAttributeFromTag!
+  cursor: String!
+  node: RemovedAttributeFromTag!
 }
 
 type RemovedAttributeFromType {
-	hash: String!
+  hash: String!
 }
 
 type RemovedAttributeFromTypeConnection {
-	edges: [RemovedAttributeFromTypeEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RemovedAttributeFromTypeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RemovedAttributeFromTypeEdge {
-	cursor: String!
-	node: RemovedAttributeFromType!
+  cursor: String!
+  node: RemovedAttributeFromType!
 }
 
 type RemovedAttributesFromConcept {
-	hash: String!
+  hash: String!
 }
 
 type RemovedAttributesFromConceptConnection {
-	edges: [RemovedAttributesFromConceptEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RemovedAttributesFromConceptEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RemovedAttributesFromConceptEdge {
-	cursor: String!
-	node: RemovedAttributesFromConcept!
+  cursor: String!
+  node: RemovedAttributesFromConcept!
 }
 
 type RemovedAttributesFromDesign {
-	hash: String!
+  hash: String!
 }
 
 type RemovedAttributesFromDesignConnection {
-	edges: [RemovedAttributesFromDesignEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RemovedAttributesFromDesignEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RemovedAttributesFromDesignEdge {
-	cursor: String!
-	node: RemovedAttributesFromDesign!
+  cursor: String!
+  node: RemovedAttributesFromDesign!
 }
 
 type RemovedAttributesFromPiece {
-	hash: String!
+  hash: String!
 }
 
 type RemovedAttributesFromPieceConnection {
-	edges: [RemovedAttributesFromPieceEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RemovedAttributesFromPieceEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RemovedAttributesFromPieceEdge {
-	cursor: String!
-	node: RemovedAttributesFromPiece!
+  cursor: String!
+  node: RemovedAttributesFromPiece!
 }
 
 type RemovedAttributesFromPort {
-	hash: String!
+  hash: String!
 }
 
 type RemovedAttributesFromPortConnection {
-	edges: [RemovedAttributesFromPortEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RemovedAttributesFromPortEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RemovedAttributesFromPortEdge {
-	cursor: String!
-	node: RemovedAttributesFromPort!
+  cursor: String!
+  node: RemovedAttributesFromPort!
 }
 
 type RemovedAttributesFromQuality {
-	hash: String!
+  hash: String!
 }
 
 type RemovedAttributesFromQualityConnection {
-	edges: [RemovedAttributesFromQualityEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RemovedAttributesFromQualityEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RemovedAttributesFromQualityEdge {
-	cursor: String!
-	node: RemovedAttributesFromQuality!
+  cursor: String!
+  node: RemovedAttributesFromQuality!
 }
 
 type RemovedAttributesFromTag {
-	hash: String!
+  hash: String!
 }
 
 type RemovedAttributesFromTagConnection {
-	edges: [RemovedAttributesFromTagEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RemovedAttributesFromTagEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RemovedAttributesFromTagEdge {
-	cursor: String!
-	node: RemovedAttributesFromTag!
+  cursor: String!
+  node: RemovedAttributesFromTag!
 }
 
 type RemovedAttributesFromType {
-	hash: String!
+  hash: String!
 }
 
 type RemovedAttributesFromTypeConnection {
-	edges: [RemovedAttributesFromTypeEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RemovedAttributesFromTypeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RemovedAttributesFromTypeEdge {
-	cursor: String!
-	node: RemovedAttributesFromType!
+  cursor: String!
+  node: RemovedAttributesFromType!
 }
 
 type RemovedConnector {
-	hash: String!
+  hash: String!
 }
 
 type RemovedConnectorConnection {
-	edges: [RemovedConnectorEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RemovedConnectorEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RemovedConnectorEdge {
-	cursor: String!
-	node: RemovedConnector!
+  cursor: String!
+  node: RemovedConnector!
 }
 
 type RemovedConnectors {
-	hash: String!
+  hash: String!
 }
 
 type RemovedConnectorsConnection {
-	edges: [RemovedConnectorsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RemovedConnectorsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RemovedConnectorsEdge {
-	cursor: String!
-	node: RemovedConnectors!
+  cursor: String!
+  node: RemovedConnectors!
 }
 
 type RenamedConcept {
-	hash: String!
+  hash: String!
 }
 
 type RenamedConceptConnection {
-	edges: [RenamedConceptEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RenamedConceptEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RenamedConceptEdge {
-	cursor: String!
-	node: RenamedConcept!
+  cursor: String!
+  node: RenamedConcept!
 }
 
 type RenamedConceptInput {
-	name: String!
+  name: String!
 }
 
 type RenamedConceptInputConnection {
-	edges: [RenamedConceptInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RenamedConceptInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RenamedConceptInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type RenamedConnector {
-	hash: String!
+  hash: String!
 }
 
 type RenamedConnectorConnection {
-	edges: [RenamedConnectorEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RenamedConnectorEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RenamedConnectorEdge {
-	cursor: String!
-	node: RenamedConnector!
+  cursor: String!
+  node: RenamedConnector!
 }
 
 type RenamedConnectorInput {
-	hash: String!
+  hash: String!
 }
 
 type RenamedConnectorInputConnection {
-	edges: [RenamedConnectorInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RenamedConnectorInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RenamedConnectorInputEdge {
-	cursor: String!
-	node: RenamedConnectorInput!
+  cursor: String!
+  node: RenamedConnectorInput!
 }
 
 type RenamedKit implements Operation {
-	id: ID!
-	requestId: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	scope: Entity!
-	input: Input
-	modification: Modification!
-	kit: Kit!
+  id: ID!
+  requestId: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  scope: Entity!
+  input: Input
+  modification: Modification!
+  kit: Kit!
 }
 
 type RenamedKitConnection {
-	edges: [RenamedKitEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RenamedKitEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RenamedKitEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type RenamedKitInput {
-	hash: String!
+  hash: String!
 }
 
 type RenamedKitInputConnection {
-	edges: [RenamedKitInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RenamedKitInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RenamedKitInputEdge {
-	cursor: String!
-	node: RenamedKitInput!
+  cursor: String!
+  node: RenamedKitInput!
 }
 
 type RenamedPiece {
-	hash: String!
+  hash: String!
 }
 
 type RenamedPieceConnection {
-	edges: [RenamedPieceEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RenamedPieceEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RenamedPieceEdge {
-	cursor: String!
-	node: RenamedPiece!
+  cursor: String!
+  node: RenamedPiece!
 }
 
 type RenamedPieceInput {
-	hash: String!
+  hash: String!
 }
 
 type RenamedPieceInputConnection {
-	edges: [RenamedPieceInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RenamedPieceInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RenamedPieceInputEdge {
-	cursor: String!
-	node: RenamedPieceInput!
+  cursor: String!
+  node: RenamedPieceInput!
 }
 
 type RenamedPort {
-	hash: String!
+  hash: String!
 }
 
 type RenamedPortConnection {
-	edges: [RenamedPortEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RenamedPortEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RenamedPortEdge {
-	cursor: String!
-	node: RenamedPort!
+  cursor: String!
+  node: RenamedPort!
 }
 
 type RenamedPortInput {
-	code: String!
-	label: String!
+  code: String!
+  label: String!
 }
 
 type RenamedPortInputConnection {
-	edges: [RenamedPortInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RenamedPortInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RenamedPortInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type RenamedQuality {
-	hash: String!
+  hash: String!
 }
 
 type RenamedQualityConnection {
-	edges: [RenamedQualityEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RenamedQualityEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RenamedQualityEdge {
-	cursor: String!
-	node: RenamedQuality!
+  cursor: String!
+  node: RenamedQuality!
 }
 
 type RenamedQualityInput {
-	key: String!
+  key: String!
 }
 
 type RenamedQualityInputConnection {
-	edges: [RenamedQualityInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RenamedQualityInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RenamedQualityInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type RenamedTag {
-	hash: String!
+  hash: String!
 }
 
 type RenamedTagConnection {
-	edges: [RenamedTagEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RenamedTagEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RenamedTagEdge {
-	cursor: String!
-	node: RenamedTag!
+  cursor: String!
+  node: RenamedTag!
 }
 
 type RenamedTagInput {
-	name: String!
+  name: String!
 }
 
 type RenamedTagInputConnection {
-	edges: [RenamedTagInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RenamedTagInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RenamedTagInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type RenamedType {
-	hash: String!
+  hash: String!
 }
 
 type RenamedTypeConnection {
-	edges: [RenamedTypeEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RenamedTypeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RenamedTypeEdge {
-	cursor: String!
-	node: RenamedType!
+  cursor: String!
+  node: RenamedType!
 }
 
 type RenamedTypeInput {
-	hash: String!
+  hash: String!
 }
 
 type RenamedTypeInputConnection {
-	edges: [RenamedTypeInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RenamedTypeInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RenamedTypeInputEdge {
-	cursor: String!
-	node: RenamedTypeInput!
+  cursor: String!
+  node: RenamedTypeInput!
 }
 
 type Representation implements Entity & FileSystemNode & StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	name: String!
-	url: String!
-	description: String!
-	icon: String!
-	file: File
-	tags: TagConnection!
-	qualities: QualityConnection!
-	attributes: AttributeConnection!
-	tag(id: ID!): Tag
-	quality(id: ID!): Quality
-	attribute(id: ID!): Attribute
-	"""
-	@emoji 🪢 Pieces whose blueprint is this representation's owner kind.
-	"""
-	referencedBy: PieceConnection!
-	"""
-	@emoji 🧰 Owner kind of this representation.
-	"""
-	hasTypes: TypeConnection!
-	"""
-	@emoji 📄 File linked from this representation.
-	"""
-	referencesFiles: FileConnection!
-	"""
-	@emoji 🏘 Designs with a direct piece blueprinting this representation's owner kind.
-	"""
-	referencedByDesigns: DesignConnection!
-	"""
-	@emoji 🏘 Designs that reference this representation's owner kind transitively.
-	"""
-	referencedByDesignsTransitive: DesignConnection!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  name: String!
+  url: String!
+  description: String!
+  icon: String!
+  file: File
+  tags: TagConnection!
+  qualities: QualityConnection!
+  attributes: AttributeConnection!
+  tag(id: ID!): Tag
+  quality(id: ID!): Quality
+  attribute(id: ID!): Attribute
+  """
+  @emoji 🪢 Pieces whose blueprint is this representation's owner kind.
+  """
+  referencedBy: PieceConnection!
+  """
+  @emoji 🧰 Owner kind of this representation.
+  """
+  hasTypes: TypeConnection!
+  """
+  @emoji 📄 File linked from this representation.
+  """
+  referencesFiles: FileConnection!
+  """
+  @emoji 🏘 Designs with a direct piece blueprinting this representation's owner kind.
+  """
+  referencedByDesigns: DesignConnection!
+  """
+  @emoji 🏘 Designs that reference this representation's owner kind transitively.
+  """
+  referencedByDesignsTransitive: DesignConnection!
 }
 
 type RepresentationConnection {
-	edges: [RepresentationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RepresentationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RepresentationDiff {
-	hash: String!
+  hash: String!
 }
 
 type RepresentationDiffConnection {
-	edges: [RepresentationDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RepresentationDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RepresentationDiffEdge {
-	cursor: String!
-	node: RepresentationDiff!
+  cursor: String!
+  node: RepresentationDiff!
 }
 
 type RepresentationEdge {
-	cursor: String!
-	node: Representation!
+  cursor: String!
+  node: Representation!
 }
 
 type RepresentationModification {
-	hash: String!
+  hash: String!
 }
 
 type RepresentationModificationConnection {
-	edges: [RepresentationModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RepresentationModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RepresentationModificationEdge {
-	cursor: String!
-	node: RepresentationModification!
+  cursor: String!
+  node: RepresentationModification!
 }
 
 type RepresentationModifications {
-	hash: String!
+  hash: String!
 }
 
 type RepresentationModificationsConnection {
-	edges: [RepresentationModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [RepresentationModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type RepresentationModificationsEdge {
-	cursor: String!
-	node: RepresentationModifications!
+  cursor: String!
+  node: RepresentationModifications!
 }
 
 """
 @emoji 📬 GraphQL `interface Response` — mutation return surface (`CommandResponse` today; operations later).
 """
 interface Response {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	ok: Boolean!
-	errors: Error
-	result: Result
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  ok: Boolean!
+  errors: Error
+  result: Result
 }
 
 """
 @emoji 📦 GraphQL `interface Result` — success payloads for `Response.result`.
 """
 interface Result {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
 }
 
 """
 @emoji 🌐 SDL `interface RichStrongEntity` — titled uuid entities (`EmptyRichStrong` minimal variant plus future concrete kinds).
 """
 interface RichStrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	name: String!
-	description: String!
-	icon: String!
-	createdAt: Timestamp
-	createdBy: Author
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  name: String!
+  description: String!
+  icon: String!
+  createdAt: Timestamp
+  createdBy: Author
 }
 
 type Session implements Entity & Node & StrongEntity {
-	id: ID!
-	hash: String!
-	startedAt: Timestamp
-	owner: Entity
-	owns: EntityConnection
-	"""
-	@emoji 🌐 Same navigation as WIP [`Graph`] — resolved via [`crate::worker::ParentStore::wip_graph`] for the active runtime.
-	"""
-	alternatives: AlternativeConnection!
-	alternative(id: ID!): Alternative
-	theKit: Workspace!
-	stores: StoreConnection!
-	localProvider: LocalProvider!
-	remoteProviders: RemoteProviderConnection!
+  id: ID!
+  hash: String!
+  startedAt: Timestamp
+  owner: Entity
+  owns: EntityConnection
+  """
+  @emoji 🌐 Same navigation as WIP [`Graph`] — resolved via [`crate::worker::ParentStore::wip_graph`] for the active runtime.
+  """
+  alternatives: AlternativeConnection!
+  alternative(id: ID!): Alternative
+  theKit: Workspace!
+  stores: StoreConnection!
+  localProvider: LocalProvider!
+  remoteProviders: RemoteProviderConnection!
 }
 
 type SessionCommand {
-	start: Response!
-	end: Response!
-	store(id: ID!): StoreCommand!
-	localProvider: LocalProviderCommand!
-	remoteProvider(url: String!): RemoteProviderCommand!
+  start: Response!
+  end: Response!
+  store(id: ID!): StoreCommand!
+  localProvider: LocalProviderCommand!
+  remoteProvider(url: String!): RemoteProviderCommand!
 }
 
 type SessionCommandConnection {
-	edges: [SessionCommandEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [SessionCommandEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type SessionCommandEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type SessionConnection {
-	edges: [SessionEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [SessionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type SessionEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type Side implements StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	"""
-	@emoji 🪢 Piece referenced by this connection end.
-	"""
-	referencesPiece: Piece!
-	"""
-	@emoji 🔘 Port referenced by this connection end.
-	"""
-	referencesPort: Port
-	"""
-	@emoji 🪢 Nested design piece referenced by this connection end.
-	"""
-	referencesDesignPiece: Piece
-	"""
-	@emoji ⚓ Connector referenced by this connection end.
-	"""
-	referencesConnector: Connector
-	"""
-	@emoji 🧰 Kinds reachable over the referenced piece, expanding nested design blueprints.
-	"""
-	referencesTypesTransitive: TypeConnection!
-	"""
-	@emoji ⚓ Connectors on kinds reachable over the referenced piece (transitive).
-	"""
-	referencesConnectorsTransitive: ConnectorConnection!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  """
+  @emoji 🪢 Piece referenced by this connection end.
+  """
+  referencesPiece: Piece!
+  """
+  @emoji 🔘 Port referenced by this connection end.
+  """
+  referencesPort: Port
+  """
+  @emoji 🪢 Nested design piece referenced by this connection end.
+  """
+  referencesDesignPiece: Piece
+  """
+  @emoji ⚓ Connector referenced by this connection end.
+  """
+  referencesConnector: Connector
+  """
+  @emoji 🧰 Kinds reachable over the referenced piece, expanding nested design blueprints.
+  """
+  referencesTypesTransitive: TypeConnection!
+  """
+  @emoji ⚓ Connectors on kinds reachable over the referenced piece (transitive).
+  """
+  referencesConnectorsTransitive: ConnectorConnection!
 }
 
 type SideConnection {
-	edges: [SideEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [SideEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type SideDiff {
-	hash: String!
+  hash: String!
 }
 
 type SideDiffConnection {
-	edges: [SideDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [SideDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type SideDiffEdge {
-	cursor: String!
-	node: SideDiff!
+  cursor: String!
+  node: SideDiff!
 }
 
 type SideEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type SideModification {
-	hash: String!
+  hash: String!
 }
 
 type SideModificationConnection {
-	edges: [SideModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [SideModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type SideModificationEdge {
-	cursor: String!
-	node: SideModification!
+  cursor: String!
+  node: SideModification!
 }
 
 type SideModifications {
-	hash: String!
+  hash: String!
 }
 
 type SideModificationsConnection {
-	edges: [SideModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [SideModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type SideModificationsEdge {
-	cursor: String!
-	node: SideModifications!
+  cursor: String!
+  node: SideModifications!
 }
 
 type Stat {
-	id: ID!
-	key: String!
-	value: String!
-	unit: String
-	description: String
-	hash: String!
-	"""
-	@emoji 🔎 SDL `Stat.attribute(id)` — stats carry no attribute bag yet; reserved for kit snapshots.
-	"""
-	attribute(id: ID!): Attribute
+  id: ID!
+  key: String!
+  value: String!
+  unit: String
+  description: String
+  hash: String!
+  """
+  @emoji 🔎 SDL `Stat.attribute(id)` — stats carry no attribute bag yet; reserved for kit snapshots.
+  """
+  attribute(id: ID!): Attribute
 }
 
 type StatConnection {
-	edges: [StatEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [StatEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type StatDiff {
-	hash: String!
+  hash: String!
 }
 
 type StatDiffConnection {
-	edges: [StatDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [StatDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type StatDiffEdge {
-	cursor: String!
-	node: StatDiff!
+  cursor: String!
+  node: StatDiff!
 }
 
 type StatEdge {
-	cursor: String!
-	node: Stat!
+  cursor: String!
+  node: Stat!
 }
 
 type StatModification {
-	hash: String!
+  hash: String!
 }
 
 type StatModificationConnection {
-	edges: [StatModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [StatModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type StatModificationEdge {
-	cursor: String!
-	node: StatModification!
+  cursor: String!
+  node: StatModification!
 }
 
 type StatModifications {
-	hash: String!
+  hash: String!
 }
 
 type StatModificationsConnection {
-	edges: [StatModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [StatModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type StatModificationsEdge {
-	cursor: String!
-	node: StatModifications!
+  cursor: String!
+  node: StatModifications!
 }
 
 type Store {
-	"""
-	@emoji 🌐 Writable in-progress graph head.
-	"""
-	wip: Graph!
-	"""
-	@emoji 🧾 Authoritative graph head when available.
-	"""
-	authoritative: Graph
-	"""
-	@emoji ⚔️ Current conflict registry as a relay connection.
-	"""
-	conflicts: ConflictConnection!
+  """
+  @emoji 🌐 Writable in-progress graph head.
+  """
+  wip: Graph!
+  """
+  @emoji 🧾 Authoritative graph head when available.
+  """
+  authoritative: Graph
+  """
+  @emoji ⚔️ Current conflict registry as a relay connection.
+  """
+  conflicts: ConflictConnection!
 }
 
 type StoreCommand {
-	backbone: BackboneCommand!
-	theKit: VersionCommand
-	alternative(id: ID!): AlternativeCommand!
-	startAlternative(name: String): Response!
-	installProjection(json: String!): Response!
+  backbone: BackboneCommand!
+  theKit: VersionCommand
+  alternative(id: ID!): AlternativeCommand!
+  startAlternative(name: String): Response!
+  installProjection(json: String!): Response!
 }
 
 type StoreCommandConnection {
-	edges: [StoreCommandEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [StoreCommandEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type StoreCommandEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type StoreConnection implements EntityConnection {
-	edges: [StoreEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [StoreEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type StoreEdge {
-	cursor: String!
-	node: Store!
+  cursor: String!
+  node: Store!
 }
 
 """
 @emoji 🌐 SDL `interface StrongEntity` — uuidv7-backed [`Entity`] projection (mirrors golden implementors reachable today).
 """
 interface StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
 }
 
 type Subscription {
-	"""
-	@emoji 📡 Golden `Subscription.session` — live mirror of [`Query::session`].
-	"""
-	session: Session!
-	"""
-	@emoji 📡 Golden `Subscription.operation` — emits the latest WIP [`OperationInterface`] (tracks `op_history` tail until finer-grained cursor wiring lands).
-	"""
-	operation: Operation!
+  """
+  @emoji 📡 Golden `Subscription.session` — live mirror of [`Query::session`].
+  """
+  session: Session!
+  """
+  @emoji 📡 Golden `Subscription.operation` — emits the latest WIP [`OperationInterface`] (tracks `op_history` tail until finer-grained cursor wiring lands).
+  """
+  operation: Operation!
 }
 
 type Tag implements Entity & Node & StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	name: String!
-	description: String
-	icon: String
-	order: Int
-	attributes: AttributeConnection!
-	attribute(id: ID!): Attribute
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  name: String!
+  description: String
+  icon: String
+  order: Int
+  attributes: AttributeConnection!
+  attribute(id: ID!): Attribute
 }
 
 type TagConnection {
-	edges: [TagEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [TagEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type TagDiff {
-	hash: String!
+  hash: String!
 }
 
 type TagDiffConnection {
-	edges: [TagDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [TagDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type TagDiffEdge {
-	cursor: String!
-	node: TagDiff!
+  cursor: String!
+  node: TagDiff!
 }
 
 type TagEdge {
-	cursor: String!
-	node: Tag!
+  cursor: String!
+  node: Tag!
 }
 
 type TagModification {
-	hash: String!
+  hash: String!
 }
 
 type TagModificationConnection {
-	edges: [TagModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [TagModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type TagModificationEdge {
-	cursor: String!
-	node: TagModification!
+  cursor: String!
+  node: TagModification!
 }
 
 type TagModifications {
-	hash: String!
+  hash: String!
 }
 
 type TagModificationsConnection {
-	edges: [TagModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [TagModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type TagModificationsEdge {
-	cursor: String!
-	node: TagModifications!
+  cursor: String!
+  node: TagModifications!
 }
 
 type TagOperation {
-	hash: String!
+  hash: String!
 }
 
 type TagOperationConnection {
-	edges: [TagOperationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [TagOperationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type TagOperationEdge {
-	cursor: String!
-	node: TagOperation!
+  cursor: String!
+  node: TagOperation!
 }
 
 type TheKit implements Workspace & StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	checkpoint: CheckpointConnection!
-	latestWipCheckpointAncestor: Checkpoint
-	savedChanges: ChangeConnection!
-	unsavedChanges: ChangeConnection!
-	kit: Kit!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  checkpoint: CheckpointConnection!
+  latestWipCheckpointAncestor: Checkpoint
+  savedChanges: ChangeConnection!
+  unsavedChanges: ChangeConnection!
+  kit: Kit!
 }
 
 type TheKitConnection {
-	edges: [TheKitEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [TheKitEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type TheKitEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 scalar Timestamp
 
 type Type implements Entity & FileSystemNode & StrongEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	name: String!
-	description: String!
-	icon: String!
-	image: String!
-	unit: String!
-	created: Timestamp
-	updated: Timestamp
-	"""
-	@emoji ⚓ Connectors owned directly by this kind.
-	"""
-	hasConnectors: ConnectorConnection!
-	"""
-	@emoji 🔘 Ports owned directly by this kind.
-	"""
-	hasPorts: PortConnection!
-	port(id: ID!): Port
-	connector(id: ID!): Connector
-	"""
-	@emoji 💾 Representations owned directly by this kind.
-	"""
-	hasRepresentations: RepresentationConnection!
-	representation(id: ID!): Representation
-	bestRepresentation(tagIds: [ID!]!): Representation
-	"""
-	@emoji 📄 Files referenced indirectly via representations on this kind.
-	"""
-	referencesFiles: FileConnection!
-	"""
-	@emoji 🪢 Pieces in the owner kit whose blueprint is this kind.
-	"""
-	referencedBy: PieceConnection!
-	"""
-	@emoji 🏘 Designs with a direct piece blueprinting this kind.
-	"""
-	referencedByDesigns: DesignConnection!
-	"""
-	@emoji 🏘 Designs that reference this kind transitively through nested design blueprints.
-	"""
-	referencedByDesignsTransitive: DesignConnection!
-	authors: AuthorConnection!
-	concepts: ConceptConnection!
-	tags: TagConnection!
-	qualities: QualityConnection!
-	props: PropConnection!
-	attributes: AttributeConnection!
-	stats: StatConnection!
-	author(id: ID!): Author
-	concept(id: ID!): Concept
-	tag(id: ID!): Tag
-	quality(id: ID!): Quality
-	prop(id: ID!): Prop
-	attribute(id: ID!): Attribute
-	stat(id: ID!): Stat
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  name: String!
+  description: String!
+  icon: String!
+  image: String!
+  unit: String!
+  created: Timestamp
+  updated: Timestamp
+  """
+  @emoji ⚓ Connectors owned directly by this kind.
+  """
+  hasConnectors: ConnectorConnection!
+  """
+  @emoji 🔘 Ports owned directly by this kind.
+  """
+  hasPorts: PortConnection!
+  port(id: ID!): Port
+  connector(id: ID!): Connector
+  """
+  @emoji 💾 Representations owned directly by this kind.
+  """
+  hasRepresentations: RepresentationConnection!
+  representation(id: ID!): Representation
+  bestRepresentation(tagIds: [ID!]!): Representation
+  """
+  @emoji 📄 Files referenced indirectly via representations on this kind.
+  """
+  referencesFiles: FileConnection!
+  """
+  @emoji 🪢 Pieces in the owner kit whose blueprint is this kind.
+  """
+  referencedBy: PieceConnection!
+  """
+  @emoji 🏘 Designs with a direct piece blueprinting this kind.
+  """
+  referencedByDesigns: DesignConnection!
+  """
+  @emoji 🏘 Designs that reference this kind transitively through nested design blueprints.
+  """
+  referencedByDesignsTransitive: DesignConnection!
+  authors: AuthorConnection!
+  concepts: ConceptConnection!
+  tags: TagConnection!
+  qualities: QualityConnection!
+  props: PropConnection!
+  attributes: AttributeConnection!
+  stats: StatConnection!
+  author(id: ID!): Author
+  concept(id: ID!): Concept
+  tag(id: ID!): Tag
+  quality(id: ID!): Quality
+  prop(id: ID!): Prop
+  attribute(id: ID!): Attribute
+  stat(id: ID!): Stat
 }
 
 type TypeConnection {
-	edges: [TypeEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [TypeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type TypeDiff {
-	hash: String!
+  hash: String!
 }
 
 type TypeDiffConnection {
-	edges: [TypeDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [TypeDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type TypeDiffEdge {
-	cursor: String!
-	node: TypeDiff!
+  cursor: String!
+  node: TypeDiff!
 }
 
 type TypeEdge {
-	cursor: String!
-	node: Type!
+  cursor: String!
+  node: Type!
 }
 
 type TypeModification {
-	hash: String!
+  hash: String!
 }
 
 type TypeModificationConnection {
-	edges: [TypeModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [TypeModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type TypeModificationEdge {
-	cursor: String!
-	node: TypeModification!
+  cursor: String!
+  node: TypeModification!
 }
 
 type TypeModifications {
-	hash: String!
+  hash: String!
 }
 
 type TypeModificationsConnection {
-	edges: [TypeModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [TypeModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type TypeModificationsEdge {
-	cursor: String!
-	node: TypeModifications!
+  cursor: String!
+  node: TypeModifications!
 }
 
 type TypeOperation {
-	hash: String!
+  hash: String!
 }
 
 type TypeOperationConnection {
-	edges: [TypeOperationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [TypeOperationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type TypeOperationEdge {
-	cursor: String!
-	node: TypeOperation!
+  cursor: String!
+  node: TypeOperation!
 }
 
 type Typology implements Entity & FileSystemNode {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	name: String!
-	description: String
-	icon: String
-	folderId: ID
-	"""
-	@emoji 🧰 Kinds owned by this typology.
-	"""
-	hasTypes: TypeConnection!
-	"""
-	@emoji 🏘 Designs owned by this typology.
-	"""
-	hasDesigns: DesignConnection!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  name: String!
+  description: String
+  icon: String
+  folderId: ID
+  """
+  @emoji 🧰 Kinds owned by this typology.
+  """
+  hasTypes: TypeConnection!
+  """
+  @emoji 🏘 Designs owned by this typology.
+  """
+  hasDesigns: DesignConnection!
 }
 
 type TypologyConnection {
-	edges: [TypologyEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [TypologyEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type TypologyEdge {
-	cursor: String!
-	node: Typology!
+  cursor: String!
+  node: Typology!
 }
 
 type UnsavedChangeCommand {
-	kit: OperationInput!
-	save: Response!
+  kit: OperationInput!
+  save: Response!
 }
 
 type UnsavedChangeCommandConnection {
-	edges: [UnsavedChangeCommandEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UnsavedChangeCommandEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UnsavedChangeCommandEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type UpdatedConceptDescription {
-	hash: String!
+  hash: String!
 }
 
 type UpdatedConceptDescriptionConnection {
-	edges: [UpdatedConceptDescriptionEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedConceptDescriptionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedConceptDescriptionEdge {
-	cursor: String!
-	node: UpdatedConceptDescription!
+  cursor: String!
+  node: UpdatedConceptDescription!
 }
 
 type UpdatedConceptDescriptionInput {
-	description: String!
+  description: String!
 }
 
 type UpdatedConceptDescriptionInputConnection {
-	edges: [UpdatedConceptDescriptionInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedConceptDescriptionInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedConceptDescriptionInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type UpdatedConceptIcon {
-	hash: String!
+  hash: String!
 }
 
 type UpdatedConceptIconConnection {
-	edges: [UpdatedConceptIconEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedConceptIconEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedConceptIconEdge {
-	cursor: String!
-	node: UpdatedConceptIcon!
+  cursor: String!
+  node: UpdatedConceptIcon!
 }
 
 type UpdatedConceptIconInput {
-	icon: String!
+  icon: String!
 }
 
 type UpdatedConceptIconInputConnection {
-	edges: [UpdatedConceptIconInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedConceptIconInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedConceptIconInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type UpdatedConnectorDescription {
-	hash: String!
+  hash: String!
 }
 
 type UpdatedConnectorDescriptionConnection {
-	edges: [UpdatedConnectorDescriptionEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedConnectorDescriptionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedConnectorDescriptionEdge {
-	cursor: String!
-	node: UpdatedConnectorDescription!
+  cursor: String!
+  node: UpdatedConnectorDescription!
 }
 
 type UpdatedConnectorDescriptionInput {
-	hash: String!
+  hash: String!
 }
 
 type UpdatedConnectorDescriptionInputConnection {
-	edges: [UpdatedConnectorDescriptionInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedConnectorDescriptionInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedConnectorDescriptionInputEdge {
-	cursor: String!
-	node: UpdatedConnectorDescriptionInput!
+  cursor: String!
+  node: UpdatedConnectorDescriptionInput!
 }
 
 type UpdatedConnectorIcon {
-	hash: String!
+  hash: String!
 }
 
 type UpdatedConnectorIconConnection {
-	edges: [UpdatedConnectorIconEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedConnectorIconEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedConnectorIconEdge {
-	cursor: String!
-	node: UpdatedConnectorIcon!
+  cursor: String!
+  node: UpdatedConnectorIcon!
 }
 
 type UpdatedConnectorIconInput {
-	hash: String!
+  hash: String!
 }
 
 type UpdatedConnectorIconInputConnection {
-	edges: [UpdatedConnectorIconInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedConnectorIconInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedConnectorIconInputEdge {
-	cursor: String!
-	node: UpdatedConnectorIconInput!
+  cursor: String!
+  node: UpdatedConnectorIconInput!
 }
 
 type UpdatedPieceDescription {
-	hash: String!
+  hash: String!
 }
 
 type UpdatedPieceDescriptionConnection {
-	edges: [UpdatedPieceDescriptionEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedPieceDescriptionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedPieceDescriptionEdge {
-	cursor: String!
-	node: UpdatedPieceDescription!
+  cursor: String!
+  node: UpdatedPieceDescription!
 }
 
 type UpdatedPieceDescriptionInput {
-	hash: String!
+  hash: String!
 }
 
 type UpdatedPieceDescriptionInputConnection {
-	edges: [UpdatedPieceDescriptionInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedPieceDescriptionInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedPieceDescriptionInputEdge {
-	cursor: String!
-	node: UpdatedPieceDescriptionInput!
+  cursor: String!
+  node: UpdatedPieceDescriptionInput!
 }
 
 type UpdatedPortDescription {
-	hash: String!
+  hash: String!
 }
 
 type UpdatedPortDescriptionConnection {
-	edges: [UpdatedPortDescriptionEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedPortDescriptionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedPortDescriptionEdge {
-	cursor: String!
-	node: UpdatedPortDescription!
+  cursor: String!
+  node: UpdatedPortDescription!
 }
 
 type UpdatedPortDescriptionInput {
-	description: String!
+  description: String!
 }
 
 type UpdatedPortDescriptionInputConnection {
-	edges: [UpdatedPortDescriptionInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedPortDescriptionInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedPortDescriptionInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type UpdatedPortIcon {
-	hash: String!
+  hash: String!
 }
 
 type UpdatedPortIconConnection {
-	edges: [UpdatedPortIconEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedPortIconEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedPortIconEdge {
-	cursor: String!
-	node: UpdatedPortIcon!
+  cursor: String!
+  node: UpdatedPortIcon!
 }
 
 type UpdatedPortIconInput {
-	icon: String!
+  icon: String!
 }
 
 type UpdatedPortIconInputConnection {
-	edges: [UpdatedPortIconInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedPortIconInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedPortIconInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type UpdatedQualityDescription {
-	hash: String!
+  hash: String!
 }
 
 type UpdatedQualityDescriptionConnection {
-	edges: [UpdatedQualityDescriptionEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedQualityDescriptionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedQualityDescriptionEdge {
-	cursor: String!
-	node: UpdatedQualityDescription!
+  cursor: String!
+  node: UpdatedQualityDescription!
 }
 
 type UpdatedQualityDescriptionInput {
-	description: String!
+  description: String!
 }
 
 type UpdatedQualityDescriptionInputConnection {
-	edges: [UpdatedQualityDescriptionInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedQualityDescriptionInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedQualityDescriptionInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type UpdatedQualityIcon {
-	hash: String!
+  hash: String!
 }
 
 type UpdatedQualityIconConnection {
-	edges: [UpdatedQualityIconEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedQualityIconEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedQualityIconEdge {
-	cursor: String!
-	node: UpdatedQualityIcon!
+  cursor: String!
+  node: UpdatedQualityIcon!
 }
 
 type UpdatedQualityIconInput {
-	icon: String!
+  icon: String!
 }
 
 type UpdatedQualityIconInputConnection {
-	edges: [UpdatedQualityIconInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedQualityIconInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedQualityIconInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type UpdatedTagDescription {
-	hash: String!
+  hash: String!
 }
 
 type UpdatedTagDescriptionConnection {
-	edges: [UpdatedTagDescriptionEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedTagDescriptionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedTagDescriptionEdge {
-	cursor: String!
-	node: UpdatedTagDescription!
+  cursor: String!
+  node: UpdatedTagDescription!
 }
 
 type UpdatedTagDescriptionInput {
-	description: String!
+  description: String!
 }
 
 type UpdatedTagDescriptionInputConnection {
-	edges: [UpdatedTagDescriptionInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedTagDescriptionInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedTagDescriptionInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type UpdatedTagIcon {
-	hash: String!
+  hash: String!
 }
 
 type UpdatedTagIconConnection {
-	edges: [UpdatedTagIconEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedTagIconEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedTagIconEdge {
-	cursor: String!
-	node: UpdatedTagIcon!
+  cursor: String!
+  node: UpdatedTagIcon!
 }
 
 type UpdatedTagIconInput {
-	icon: String!
+  icon: String!
 }
 
 type UpdatedTagIconInputConnection {
-	edges: [UpdatedTagIconInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedTagIconInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedTagIconInputEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type UpdatedTypeDescription {
-	hash: String!
+  hash: String!
 }
 
 type UpdatedTypeDescriptionConnection {
-	edges: [UpdatedTypeDescriptionEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedTypeDescriptionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedTypeDescriptionEdge {
-	cursor: String!
-	node: UpdatedTypeDescription!
+  cursor: String!
+  node: UpdatedTypeDescription!
 }
 
 type UpdatedTypeDescriptionInput {
-	hash: String!
+  hash: String!
 }
 
 type UpdatedTypeDescriptionInputConnection {
-	edges: [UpdatedTypeDescriptionInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedTypeDescriptionInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedTypeDescriptionInputEdge {
-	cursor: String!
-	node: UpdatedTypeDescriptionInput!
+  cursor: String!
+  node: UpdatedTypeDescriptionInput!
 }
 
 type UpdatedTypeIcon {
-	hash: String!
+  hash: String!
 }
 
 type UpdatedTypeIconConnection {
-	edges: [UpdatedTypeIconEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedTypeIconEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedTypeIconEdge {
-	cursor: String!
-	node: UpdatedTypeIcon!
+  cursor: String!
+  node: UpdatedTypeIcon!
 }
 
 type UpdatedTypeIconInput {
-	hash: String!
+  hash: String!
 }
 
 type UpdatedTypeIconInputConnection {
-	edges: [UpdatedTypeIconInputEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [UpdatedTypeIconInputEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type UpdatedTypeIconInputEdge {
-	cursor: String!
-	node: UpdatedTypeIconInput!
+  cursor: String!
+  node: UpdatedTypeIconInput!
 }
 
 type Vector implements Entity & Node & WeakEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	x: Float!
-	y: Float!
-	z: Float!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  x: Float!
+  y: Float!
+  z: Float!
 }
 
 type VectorConnection {
-	edges: [VectorEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [VectorEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type VectorDiff implements Diff {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	x: Float
-	y: Float
-	z: Float
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  x: Float
+  y: Float
+  z: Float
 }
 
 type VectorDiffConnection {
-	edges: [VectorDiffEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [VectorDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type VectorDiffEdge {
-	cursor: String!
-	node: VectorDiff!
+  cursor: String!
+  node: VectorDiff!
 }
 
 type VectorEdge implements EntityEdge {
-	cursor: String!
-	node: Vector!
+  cursor: String!
+  node: Vector!
 }
 
 input VectorInput {
-	x: Float!
-	y: Float!
-	z: Float!
+  x: Float!
+  y: Float!
+  z: Float!
 }
 
 type VectorModification implements Modification {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	before: Entity!
-	diff: Diff!
-	after: Entity!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  before: Entity!
+  diff: Diff!
+  after: Entity!
 }
 
 type VectorModificationConnection {
-	edges: [VectorModificationEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [VectorModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type VectorModificationEdge {
-	cursor: String!
-	node: VectorModification!
+  cursor: String!
+  node: VectorModification!
 }
 
 type VectorModifications {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	removed: EntityConnection!
-	modifications: VectorModificationConnection!
-	added: EntityConnection!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  removed: EntityConnection!
+  modifications: VectorModificationConnection!
+  added: EntityConnection!
 }
 
 type VectorModificationsConnection {
-	edges: [VectorModificationsEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [VectorModificationsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type VectorModificationsEdge {
-	cursor: String!
-	node: VectorModifications!
+  cursor: String!
+  node: VectorModifications!
 }
 
 type Version {
-	hash: String!
+  hash: String!
 }
 
 type VersionCommand {
-	startNewChange: Response!
-	unsavedChange(id: ID!): UnsavedChangeCommand!
-	save: Response!
-	createCheckpoint(message: String!): Response!
+  startNewChange: Response!
+  unsavedChange(id: ID!): UnsavedChangeCommand!
+  save: Response!
+  createCheckpoint(message: String!): Response!
 }
 
 type VersionCommandConnection {
-	edges: [VersionCommandEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [VersionCommandEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type VersionCommandEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type VersionConnection {
-	edges: [VersionEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [VersionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type VersionEdge {
-	cursor: String!
-	node: Version!
+  cursor: String!
+  node: Version!
 }
 
 """
 @emoji 🏷️ SDL `VersionKind` (`INITIAL_KIT` | `MATERIALIZED`) on golden `Version`.
 """
 enum VersionKind {
-	INITIAL_KIT
-	MATERIALIZED
+  INITIAL_KIT
+  MATERIALIZED
 }
 
 """
 @emoji 🌐 SDL `interface WeakEntity` — hash-backed graph nodes sharing the golden `Entity` tail (`id`, `hash`, `owner`, `owns`).
 """
 interface WeakEntity {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
 }
 
 type WebsocketBackbone implements Backbone {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	uri: String!
-	status: BackboneStatus!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  uri: String!
+  status: BackboneStatus!
 }
 
 type WebsocketBackboneCommand implements BackboneCommand {
-	detach: Response!
-	sync: Response!
+  detach: Response!
+  sync: Response!
 }
 
 type WebsocketBackboneCommandConnection {
-	edges: [WebsocketBackboneCommandEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [WebsocketBackboneCommandEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type WebsocketBackboneCommandEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 type WebsocketBackboneConnection {
-	edges: [WebsocketBackboneEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
+  edges: [WebsocketBackboneEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type WebsocketBackboneEdge {
-	cursor: String!
-	hash: String!
+  cursor: String!
+  hash: String!
 }
 
 interface Workspace {
-	id: ID!
-	hash: String!
-	owner: Entity
-	owns: EntityConnection
-	checkpoint: CheckpointConnection!
-	latestWipCheckpointAncestor: Checkpoint
-	savedChanges: ChangeConnection!
-	unsavedChanges: ChangeConnection!
-	kit: Kit!
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+  checkpoint: CheckpointConnection!
+  latestWipCheckpointAncestor: Checkpoint
+  savedChanges: ChangeConnection!
+  unsavedChanges: ChangeConnection!
+  kit: Kit!
 }
 
 """
@@ -6233,7 +6233,7 @@ Directs the executor to skip this field or fragment when the `if` argument is tr
 """
 directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
 schema {
-	query: Query
-	mutation: Mutation
-	subscription: Subscription
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
 }

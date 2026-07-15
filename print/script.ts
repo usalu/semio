@@ -48,14 +48,9 @@ const TEMPLATES: readonly { readonly id: string; readonly tex: string }[] = [
 
 function deriveDarkTexSource(lightSource: string): string {
   if (/\btheme=dark\b/.test(lightSource)) throw new Error("source already has theme=dark; use the light source as canonical");
-  const withDarkTheme = /\btheme=light\b/.test(lightSource)
-    ? lightSource.replace(/\btheme=light\b/, "theme=dark")
-    : lightSource.replace(/(\\documentclass\[[^\]]*)\]/, "$1,theme=dark]");
+  const withDarkTheme = /\btheme=light\b/.test(lightSource) ? lightSource.replace(/\btheme=light\b/, "theme=dark") : lightSource.replace(/(\\documentclass\[[^\]]*)\]/, "$1,theme=dark]");
   if (withDarkTheme === lightSource) throw new Error("cannot derive dark variant: \\documentclass has no options to append theme=dark");
-  return withDarkTheme.replace(
-    /(asset\/logo\/[^,\s}\]]+?)(?<!-dark)(\.(?:png|jpe?g|webp|pdf))(?=[,\s}\]])/gi,
-    "$1-dark$2",
-  );
+  return withDarkTheme.replace(/(asset\/logo\/[^,\s}\]]+?)(?<!-dark)(\.(?:png|jpe?g|webp|pdf))(?=[,\s}\]])/gi, "$1-dark$2");
 }
 
 function templatePdfNames(texRel: string): { readonly light: string; readonly dark: string } {

@@ -457,11 +457,7 @@ function WasmGraphSurface({
         marquee.kind === "lasso" ? (
           <SelectionMarquee coverage={marquee.coverage ?? "full"} shape="polygon" points={marquee.points ?? []} />
         ) : (
-          <SelectionMarquee
-            coverage={marquee.coverage ?? "full"}
-            shape="rect"
-            rect={{ x: marquee.x ?? 0, y: marquee.y ?? 0, width: marquee.width ?? 0, height: marquee.height ?? 0 }}
-          />
+          <SelectionMarquee coverage={marquee.coverage ?? "full"} shape="rect" rect={{ x: marquee.x ?? 0, y: marquee.y ?? 0, width: marquee.width ?? 0, height: marquee.height ?? 0 }} />
         )
       ) : null}
       <div
@@ -1832,11 +1828,7 @@ export function FlowGraphCanvasHost({
         marquee.kind === "lasso" ? (
           <SelectionMarquee coverage={marquee.coverage ?? "full"} shape="polygon" points={marquee.points ?? []} />
         ) : (
-          <SelectionMarquee
-            coverage={marquee.coverage ?? "full"}
-            shape="rect"
-            rect={{ x: marquee.x ?? 0, y: marquee.y ?? 0, width: marquee.width ?? 0, height: marquee.height ?? 0 }}
-          />
+          <SelectionMarquee coverage={marquee.coverage ?? "full"} shape="rect" rect={{ x: marquee.x ?? 0, y: marquee.y ?? 0, width: marquee.width ?? 0, height: marquee.height ?? 0 }} />
         )
       ) : null}
       <div
@@ -1896,13 +1888,7 @@ export function FlowGraphCanvasHost({
         items={contextMenuItems.map((item) => ({
           id: item.id,
           label: item.label,
-          onSelect: () =>
-            dispatch(
-              item.action,
-              item.action === "openInstance"
-                ? { ...item.args, instanceId: resolveFixtureWidgetInstanceId(scene.fixtureJson, contextMenu?.widgetId) }
-                : item.args,
-            ),
+          onSelect: () => dispatch(item.action, item.action === "openInstance" ? { ...item.args, instanceId: resolveFixtureWidgetInstanceId(scene.fixtureJson, contextMenu?.widgetId) } : item.args),
         }))}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);

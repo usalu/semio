@@ -1,16 +1,14 @@
 // ../../core/js/index.ts
 class Store {
-  listeners = new Set;
+  listeners = new Set();
   disposed = false;
   subscribe(listener) {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
   notify() {
-    if (this.disposed)
-      return;
-    for (const listener of this.listeners)
-      listener();
+    if (this.disposed) return;
+    for (const listener of this.listeners) listener();
   }
   dispose() {
     this.disposed = true;
@@ -25,12 +23,10 @@ function dockAppStorageKey(appId) {
 }
 function readDockSkeleton(storage, key) {
   const raw = storage.get(key);
-  if (!raw)
-    return null;
+  if (!raw) return null;
   try {
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object" || parsed.version !== 1 || !parsed.corners || typeof parsed.corners !== "object")
-      return null;
+    if (!parsed || typeof parsed !== "object" || parsed.version !== 1 || !parsed.corners || typeof parsed.corners !== "object") return null;
     return parsed;
   } catch {
     return null;
@@ -48,8 +44,7 @@ class DockLayoutStore extends Store {
   getSnapshot() {
     if (this.appId) {
       const app = readDockSkeleton(this.storage, dockAppStorageKey(this.appId));
-      if (app)
-        return app;
+      if (app) return app;
     }
     return readDockSkeleton(this.storage, dockOsStorageKey());
   }
@@ -63,21 +58,18 @@ class DockLayoutStore extends Store {
   }
   reset() {
     this.storage.remove(dockOsStorageKey());
-    if (this.appId)
-      this.storage.remove(dockAppStorageKey(this.appId));
+    if (this.appId) this.storage.remove(dockAppStorageKey(this.appId));
     this.notify();
   }
   writeOrRemove(key, skeleton) {
-    if (skeleton === null)
-      this.storage.remove(key);
-    else
-      this.storage.set(key, JSON.stringify(skeleton));
+    if (skeleton === null) this.storage.remove(key);
+    else this.storage.set(key, JSON.stringify(skeleton));
   }
 }
 var EMPTY_ACTION_RESPONSE = {
   output: null,
   operations: [],
-  inverseGroup: { actionId: "", operations: [], inverseOperations: [] }
+  inverseGroup: { actionId: "", operations: [], inverseOperations: [] },
 };
 function parseActionResponse(raw) {
   try {
@@ -97,7 +89,7 @@ class PluginWorkerClient {
   pluginId;
   moduleUrl;
   worker = null;
-  pending = new Map;
+  pending = new Map();
   constructor(pluginId, moduleUrl) {
     this.pluginId = pluginId;
     this.moduleUrl = moduleUrl;
@@ -113,11 +105,9 @@ class PluginWorkerClient {
     worker.onmessage = (event) => {
       const message = event.data;
       const requestId = message.requestId;
-      if (!requestId)
-        return;
+      if (!requestId) return;
       const entry = this.pending.get(requestId);
-      if (!entry)
-        return;
+      if (!entry) return;
       window.clearTimeout(entry.watchdog);
       this.pending.delete(requestId);
       if (message.type === "error") {
@@ -176,10 +166,10 @@ class PluginWorkerClient {
     this.worker = null;
   }
 }
-var pluginModuleHandleCache = new Map;
+var pluginModuleHandleCache = new Map();
 if (import.meta.vitest) {
-  let createMemoryStoragePort = function() {
-    const map = new Map;
+  let createMemoryStoragePort = function () {
+    const map = new Map();
     return {
       get: (key) => map.get(key) ?? null,
       set: (key, value) => {
@@ -187,7 +177,7 @@ if (import.meta.vitest) {
       },
       remove: (key) => {
         map.delete(key);
-      }
+      },
     };
   };
   const { describe, expect, it } = import.meta.vitest;
@@ -273,11 +263,11 @@ var PLUGIN_BUILD_TARGETS = [
   { pluginId: "sourcing-module-windows", cratePath: "sourcing/module/windows/rs", wasmOut: "sourcing_module_windows.wasm", contributes: [], consumes: [] },
   { pluginId: "trinity", cratePath: "trinity/plugin/rs", wasmOut: "trinity_plugin.wasm", contributes: [], consumes: [] },
   { pluginId: "vcs", cratePath: "vcs/plugin/rs", wasmOut: "vcs_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "writer", cratePath: "writer/plugin/rs", wasmOut: "writer_plugin.wasm", contributes: [], consumes: [] }
+  { pluginId: "writer", cratePath: "writer/plugin/rs", wasmOut: "writer_plugin.wasm", contributes: [], consumes: [] },
 ];
 var PLUGIN_TARGETS = PLUGIN_BUILD_TARGETS.map((target) => ({
   pluginId: target.pluginId,
-  moduleUrl: `/plugin-modules/${target.pluginId}/${target.wasmOut.replace(/\.wasm$/, ".js")}`
+  moduleUrl: `/plugin-modules/${target.pluginId}/${target.wasmOut.replace(/\.wasm$/, ".js")}`,
 }));
 
 // js/boot.ts
@@ -300,7 +290,7 @@ class PluginWorkerClient2 {
   pluginId;
   moduleUrl;
   worker = null;
-  pending = new Map;
+  pending = new Map();
   constructor(pluginId, moduleUrl) {
     this.pluginId = pluginId;
     this.moduleUrl = moduleUrl;
@@ -313,8 +303,7 @@ class PluginWorkerClient2 {
     }
   }
   terminateWorker() {
-    if (!this.worker)
-      return;
+    if (!this.worker) return;
     this.worker.terminate();
     this.worker = null;
   }
@@ -322,11 +311,9 @@ class PluginWorkerClient2 {
     worker.onmessage = (event) => {
       const message = event.data;
       const requestId = message.requestId;
-      if (!requestId)
-        return;
+      if (!requestId) return;
       const entry = this.pending.get(requestId);
-      if (!entry)
-        return;
+      if (!entry) return;
       window.clearTimeout(entry.timer);
       this.pending.delete(requestId);
       if (message.type === "error") {
@@ -418,8 +405,7 @@ function validatePluginManifest(pluginId, manifest) {
   }
   for (const app of apps) {
     const windowKinds = app.windowKinds;
-    if (!Array.isArray(windowKinds) || windowKinds.length === 0)
-      continue;
+    if (!Array.isArray(windowKinds) || windowKinds.length === 0) continue;
     for (const kind of windowKinds) {
       if (!kind.surfaceKind) {
         throw new Error(`[DEBUG] plugin ${pluginId} manifest window kind missing surfaceKind`);
@@ -442,7 +428,7 @@ async function loadPluginModuleViaWorker(pluginId, moduleUrl) {
     renderWithDocument: async (instanceId, bodyKey, viewState, documentJson) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState), documentJson)),
     tools: async (instanceId, viewState) => JSON.parse(await client.tools(instanceId, JSON.stringify(viewState))),
     windowEngagements: async (instanceId, viewState) => JSON.parse(await client.windowEngagements(instanceId, JSON.stringify(viewState))),
-    windowMeasures: async (instanceId, viewState) => JSON.parse(await client.windowMeasures(instanceId, JSON.stringify(viewState)))
+    windowMeasures: async (instanceId, viewState) => JSON.parse(await client.windowMeasures(instanceId, JSON.stringify(viewState))),
   };
 }
 function pluginHandleForBridge(handle) {
@@ -455,7 +441,7 @@ function pluginHandleForBridge(handle) {
     renderWithDocument: handle.renderWithDocument ? (instanceId, bodyKey, viewStateJson, documentJson) => handle.renderWithDocument(instanceId, bodyKey, JSON.parse(viewStateJson), documentJson).then((node) => JSON.stringify(node)) : undefined,
     tools: (instanceId, viewStateJson) => handle.tools(instanceId, JSON.parse(viewStateJson)).then((nodes) => JSON.stringify(nodes)),
     windowEngagements: (instanceId, viewStateJson) => handle.windowEngagements(instanceId, JSON.parse(viewStateJson)).then((engagements) => JSON.stringify(engagements)),
-    windowMeasures: (instanceId, viewStateJson) => handle.windowMeasures(instanceId, JSON.parse(viewStateJson)).then((measures) => JSON.stringify(measures))
+    windowMeasures: (instanceId, viewStateJson) => handle.windowMeasures(instanceId, JSON.parse(viewStateJson)).then((measures) => JSON.stringify(measures)),
   };
 }
 var pluginFromUrl = new URLSearchParams(location.search).get("plugin");
@@ -473,8 +459,7 @@ async function pluginModuleAvailable(moduleUrl) {
 function renderBootErrorBanner(message) {
   console.error(`[DEBUG] wgpu boot failed: ${message}`);
   const root = document.getElementById("root");
-  if (!root)
-    return;
+  if (!root) return;
   const banner = document.createElement("div");
   banner.style.cssText = "position:fixed;inset:0;padding:24px;background:#2a0a0a;color:#ffb4b4;font-family:monospace;font-size:14px;white-space:pre-wrap;overflow:auto;z-index:9999;";
   banner.textContent = `wgpu renderer boot failed:
@@ -492,10 +477,12 @@ try {
   if (availableTargets.length === 0) {
     throw new Error(`[DEBUG] no wasm plugin modules found for filter ${pluginFilter}`);
   }
-  const handles = await Promise.all(availableTargets.map(async (entry) => ({
-    pluginId: entry.pluginId,
-    handle: pluginHandleForBridge(await loadPluginModule(entry.pluginId, entry.moduleUrl))
-  })));
+  const handles = await Promise.all(
+    availableTargets.map(async (entry) => ({
+      pluginId: entry.pluginId,
+      handle: pluginHandleForBridge(await loadPluginModule(entry.pluginId, entry.moduleUrl)),
+    })),
+  );
   const bindings = await new Promise((resolve, reject) => {
     const host = window;
     const finish = () => {
@@ -517,12 +504,10 @@ try {
     };
     window.addEventListener("TrunkApplicationStarted", done, { once: true });
     const poll = window.setInterval(() => {
-      if (host.wasmBindings)
-        done();
+      if (host.wasmBindings) done();
     }, 50);
   });
-  if (!bindings.semioRendererBoot)
-    throw new Error("[DEBUG] missing semioRendererBoot");
+  if (!bindings.semioRendererBoot) throw new Error("[DEBUG] missing semioRendererBoot");
   await bindings.semioRendererBoot(handles, pluginFilter);
 } catch (error) {
   renderBootErrorBanner(error instanceof Error ? error.message : String(error));

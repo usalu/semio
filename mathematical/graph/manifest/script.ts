@@ -65,14 +65,20 @@ function findManifestFiles(root: string): string[] {
 }
 
 function pascalCase(id: string): string {
-  const parts = id.replace(/[^a-zA-Z0-9]+/g, " ").trim().split(/\s+/).filter(Boolean);
+  const parts = id
+    .replace(/[^a-zA-Z0-9]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
   if (parts.length === 0) return "Unknown";
   const result = parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join("");
   return /^[0-9]/.test(result) ? `R${result}` : result;
 }
 
 function snakeUpper(id: string): string {
-  return pascalCase(id).replace(/([a-z0-9])([A-Z])/g, "$1_$2").toUpperCase();
+  return pascalCase(id)
+    .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+    .toUpperCase();
 }
 
 function rustModName(id: string): string {
@@ -280,12 +286,8 @@ class GenerateScript extends BundleScript {
       `\n        _ => None,\n    }\n}\n`;
     writeFileSync(join(outDir, "registry.rs"), registryRs);
     writeFileSync(join(outDir, "manifest.schema.json"), emitJsonSchema());
-    const manifestByIdCases = docs
-      .map((d) => `    case ${tsStringLiteral(d.id)}: return ${pascalCase(d.id).toUpperCase()}_MANIFEST_DOCUMENT;`)
-      .join("\n");
-    const manifestByIdImports = docs
-      .map((d) => `import { ${pascalCase(d.id).toUpperCase()}_MANIFEST_DOCUMENT } from "./${d.id}.js";`)
-      .join("\n");
+    const manifestByIdCases = docs.map((d) => `    case ${tsStringLiteral(d.id)}: return ${pascalCase(d.id).toUpperCase()}_MANIFEST_DOCUMENT;`).join("\n");
+    const manifestByIdImports = docs.map((d) => `import { ${pascalCase(d.id).toUpperCase()}_MANIFEST_DOCUMENT } from "./${d.id}.js";`).join("\n");
     const tsTypes = `/** Generated graph manifest shared types */\n\nexport interface GraphManifestPropertyDef {\n  readonly name: string;\n  readonly kind: "data" | "derived";\n  readonly valueType?: unknown;\n  readonly expr?: string;\n}\n\nexport interface GraphManifestKindRow {\n  readonly id: string;\n  readonly name?: string;\n  readonly properties?: readonly GraphManifestPropertyDef[];\n  readonly ports?: readonly string[];\n  readonly presentation?: Readonly<Record<string, unknown>>;\n}\n\nexport interface GraphManifestDocument {\n  readonly schema: "manifest";\n  readonly id: string;\n  readonly name?: string;\n  readonly axes?: { readonly portModel?: "normal" | "ported"; readonly directedness?: "directed" | "undirected" };\n  readonly nodeKinds?: readonly GraphManifestKindRow[];\n  readonly edgeKinds?: readonly GraphManifestKindRow[];\n  readonly portKinds?: readonly GraphManifestKindRow[];\n  readonly wireKinds?: readonly GraphManifestKindRow[];\n  readonly layerKinds?: readonly GraphManifestKindRow[];\n  readonly languageKinds?: readonly GraphManifestKindRow[];\n  readonly surfaceKinds?: readonly GraphManifestKindRow[];\n  readonly windowKinds?: readonly GraphManifestKindRow[];\n  readonly fileNodeKinds?: readonly GraphManifestKindRow[];\n  readonly descriptorKinds?: readonly GraphManifestKindRow[];\n  readonly edgeTips?: readonly Record<string, unknown>[];\n  readonly kindCompatibility?: readonly Record<string, unknown>[];\n}\n\nexport interface HandleKind {\n  readonly color: string;\n  readonly defaultWireKind?: string;\n  readonly id: string;\n  readonly name: string;\n}\n\nexport interface WireKind {\n  readonly defaultEdgeKind?: string;\n  readonly id: string;\n  readonly name: string;\n}\n\nexport interface NodeKindHandleTemplate {\n  readonly handleKind: string;\n  readonly angle: number;\n  readonly radius?: number;\n}\n\nexport interface NodeKind {\n  readonly color?: string;\n  readonly defaultHandleKind?: string;\n  readonly icon?: string;\n  readonly id: string;\n  readonly name: string;\n  readonly stroke?: string;\n  readonly handles?: readonly NodeKindHandleTemplate[];\n}\n\nexport interface EdgeTip {\n  readonly filled?: boolean;\n  readonly geometry?: "arrow" | "fine-arrow" | "diamond" | "circle" | "bar";\n  readonly id: string;\n  readonly scale?: number;\n}\n\nexport interface EdgeKind {\n  readonly color?: string;\n  readonly directed?: boolean;\n  readonly id: string;\n  readonly name: string;\n  readonly pattern?: string;\n  readonly shape?: "bezier" | "line";\n  readonly sourceTip?: string;\n  readonly stroke?: string;\n  readonly targetTip?: string;\n}\n\nexport interface KindCatalogBundle {\n  readonly edgeTips?: readonly EdgeTip[];\n  readonly edges?: readonly EdgeKind[];\n  readonly handles?: readonly HandleKind[];\n  readonly nodes?: readonly NodeKind[];\n  readonly wires?: readonly WireKind[];\n}\n\nexport const MANIFEST_IDS = [${docs.map((d) => tsStringLiteral(d.id)).join(", ")}] as const;\nexport type ManifestId = (typeof MANIFEST_IDS)[number];\n\nexport function mergeManifestCatalogBundles(...bundles: readonly KindCatalogBundle[]): KindCatalogBundle {\n  function mergedSlice<T extends { id: string }>(slices: readonly (readonly T[] | undefined)[]): readonly T[] | undefined {\n    const byId = new Map<string, T>();\n    let any = false;\n    for (const slice of slices) {\n      if (!slice) continue;\n      any = true;\n      for (const row of slice) {\n        byId.set(row.id, row);\n      }\n    }\n    if (!any) return undefined;\n    return [...byId.values()].sort((left, right) => left.id.localeCompare(right.id));\n  }\n  return {\n    edgeTips: mergedSlice(bundles.map((bundle) => bundle.edgeTips)),\n    edges: mergedSlice(bundles.map((bundle) => bundle.edges)),\n    handles: mergedSlice(bundles.map((bundle) => bundle.handles)),\n    nodes: mergedSlice(bundles.map((bundle) => bundle.nodes)),\n    wires: mergedSlice(bundles.map((bundle) => bundle.wires)),\n  };\n}\n`;
     writeFileSync(join(outDir, "types.ts"), tsTypes);
     writeFileSync(
@@ -302,9 +304,9 @@ class GenerateScript extends BundleScript {
 }
 
 class TestScript extends BundleScript {
-	run(segments: string[]): void {
-		runCargo(["test", "-p", "mathematical_graph_manifest", ...segments], this.repoRoot);
-	}
+  run(segments: string[]): void {
+    runCargo(["test", "-p", "mathematical_graph_manifest", ...segments], this.repoRoot);
+  }
 }
 
 const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("test", TestScript);

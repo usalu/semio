@@ -1160,7 +1160,7 @@ impl FillBuilder {
                 }
             }
         }
-        Self { fixture: base, sequence: Vec::new(), appended_objects: Vec::new(), appended_attractions: Vec::new(), placed, candidate_cache: HashMap::new(), seed_object_ids, rng_state: seed, stalled: false, max_count: FILL_COUNT_MAX }
+        Self { fixture: base, sequence: Vec::new(), appended_objects: Vec::new(), appended_attractions: Vec::new(), placed, candidate_cache: HashMap::new(), seed_object_ids, rng_state: seed, stalled: false, max_count: 0 }
     }
 
     fn rng(&mut self) -> f64 {
