@@ -281,6 +281,93 @@
 % and cross-referenceable via \appendixref (semio-core.sty). Its structural
 % level (chapter/section/part) is resolved once, on the first call, from
 % appendix-level (see \semio_appendix_level_resolve: in semio-core.sty).
+%
+% 🏷️ Every appendix — and every chapter within one, via \appendixsection —
+% may declare its own semantic prefix instead of the automatic A, B, C…
+% (e.g. Interviews -> I, with a chapter inside it prefixed DG -> I-DG). The
+% prefix is stored per counter *value*, not in one mutable holder, so a
+% plain heading right after a prefixed one can never inherit the wrong
+% prefix: \gdef\semio@appendix@prefix@<n>{<prefix>} keyed by the appendix
+% count n, \gdef\semio@appendix@subprefix@<n>.<m>{<prefix>} keyed by
+% (appendix n, chapter m). Every consumer of the appendix identifier —
+% \refstepcounter's label edef, the hierarchy-path \xdef, the TOC aux write,
+% the appendix register, heading chips — re-expands \the<level> at heading
+% time, so one *expandable* indirection installed into \the<level>/
+% \the<child level> covers all of them with zero changes to that plumbing.
+% \theH<level> forms stay purely counter-based (never prefix-based) so
+% hyperref destinations remain unique regardless of what a prefix says.
+\prop_new:N \g_semio_appendix_ids_prop
+\int_new:N \l_semio_appendix_num_int
+\int_new:N \l_semio_appendix_child_num_int
+
+\msg_new:nnn { semio-components } { duplicate-appendix-identifier }
+  { Appendix~identifier~'#1'~already~used~by~'#2'~(now:~'#3').~Give~one~of~them~a~different~[prefix]. }
+\msg_new:nnn { semio-components } { appendix-section-outside-appendix }
+  { \string\appendixsection\ used~before~\string\makeappendices\ or~\string\appendixchapter. }
+\msg_new:nnn { semio-components } { bad-appendix-prefix }
+  { Appendix~prefix~'#1'~must~not~contain~'.'~(it~separates~hierarchy~levels~in~chip~numbers). }
+
+\cs_new_protected:Npn \semio_appendix_prefix_validate:n #1 {
+  \str_if_in:nnT {#1} { . } {
+    \msg_error:nnn { semio-components } { bad-appendix-prefix } {#1}
+  }
+}
+
+\cs_new_protected:Npn \semio_appendix_identifier_claim:nn #1#2 {
+  % 🩹 \msg_error's args are grabbed literally (n-type) — a deferred macro
+  % reference like \tl_use:N\l_tmpb_tl prints as its own *name*, not its
+  % content (msg_error stringifies rather than executes). \msg_error itself
+  % is a protected function, so \exp_args:Nx\use:n{...} safely fully-expands
+  % everything around it (including the prop lookup) without \msg_error
+  % being touched by that expansion pass, landing plain resolved text in
+  % every argument by the time it actually runs.
+  \prop_get:NnNTF \g_semio_appendix_ids_prop {#1} \l_tmpb_tl
+    {
+      \exp_args:Nx \use:n {
+        \msg_error:nnnnn { semio-components } { duplicate-appendix-identifier } {#1} { \tl_use:N \l_tmpb_tl } {#2}
+      }
+    }
+    { \prop_gput:Nnn \g_semio_appendix_ids_prop {#1} {#2} }
+}
+
+% Expandable — safe inside \protected@edef/\xdef/\iow_now:Nx/\exp_args:Ne.
+\cs_new:Npn \semio_appendix_id:n #1 {
+  \ifcsname semio@appendix@prefix@#1\endcsname
+    \csname semio@appendix@prefix@#1\endcsname
+  \else
+    \int_to_Alph:n {#1}
+  \fi
+}
+\cs_new:Npn \semio_appendix_child_id:nn #1#2 {
+  \ifcsname semio@appendix@subprefix@#1.#2\endcsname
+    \semio_appendix_id:n {#1} - \csname semio@appendix@subprefix@#1.#2\endcsname
+  \else
+    \semio_appendix_id:n {#1} . #2
+  \fi
+}
+
+% Installs \the<level>/\the<child level> (and prefix-independent \theH forms)
+% once, at matter begin — not per heading, since the lookups above re-read
+% the live counter value themselves.
+\cs_new_protected:Npn \semio_appendix_the_install: {
+  \counterwithin*{\tl_use:N \l_semio_appendix_child_level_tl}{\tl_use:N \l_semio_appendix_level_tl}
+  \cs_gset:cpx { the \tl_use:N \l_semio_appendix_level_tl } {
+    \exp_not:N \semio_appendix_id:n { \exp_not:N \arabic { \tl_use:N \l_semio_appendix_level_tl } }
+  }
+  \cs_gset:cpx { theH \tl_use:N \l_semio_appendix_level_tl } {
+    appendix. \exp_not:N \arabic { \tl_use:N \l_semio_appendix_level_tl }
+  }
+  \cs_gset:cpx { the \tl_use:N \l_semio_appendix_child_level_tl } {
+    \exp_not:N \semio_appendix_child_id:nn
+      { \exp_not:N \arabic { \tl_use:N \l_semio_appendix_level_tl } }
+      { \exp_not:N \arabic { \tl_use:N \l_semio_appendix_child_level_tl } }
+  }
+  \cs_gset:cpx { theH \tl_use:N \l_semio_appendix_child_level_tl } {
+    appendix. \exp_not:N \arabic { \tl_use:N \l_semio_appendix_level_tl }
+      . \exp_not:N \arabic { \tl_use:N \l_semio_appendix_child_level_tl }
+  }
+}
+
 \cs_new_protected:Npn \semio_appendix_matter_begin: {
   \bool_if:NF \g_semio_in_appendix_bool {
     \bool_gset_true:N \g_semio_in_appendix_bool
@@ -288,28 +375,53 @@
     \str_if_eq:VnTF \l_semio_appendix_level_tl { part } {
       % KOMA's built-in \appendix does not letter \part, only \chapter/\section.
       \setcounter{part}{0}
-      \renewcommand{\thepart}{\Alph{part}}
-      \renewcommand{\theHpart}{appendix.\Alph{part}} % keep hyperref destinations distinct from main-matter part 1..n
     } {
       \appendix
     }
+    \semio_appendix_the_install:
   }
 }
 
 \NewDocumentCommand{\makeappendices}{}{\semio_appendix_matter_begin:}
 
-\NewDocumentCommand{\appendixchapter}{m}{
+\NewDocumentCommand{\appendixchapter}{O{} m}{
   \semio_appendix_matter_begin:
   \semio_clear_to_recto:
-  \csname \tl_use:N \l_semio_appendix_level_tl \endcsname {#1}
+  \int_set:Nn \l_semio_appendix_num_int { \value{ \tl_use:N \l_semio_appendix_level_tl } + 1 }
+  \tl_if_blank:nF {#1} {
+    \semio_appendix_prefix_validate:n {#1}
+    \exp_args:Nc \gdef { semio@appendix@prefix@ \int_use:N \l_semio_appendix_num_int } {#1}
+  }
+  \tl_set:Nx \l_tmpa_tl { \semio_appendix_id:n { \int_use:N \l_semio_appendix_num_int } }
+  \exp_args:NV \semio_appendix_identifier_claim:nn \l_tmpa_tl {#2}
+  \use:c { \tl_use:N \l_semio_appendix_level_tl } {#2}
   \semio_appendix_register:nn
     { \csname the \tl_use:N \l_semio_appendix_level_tl \endcsname }
-    {#1}
+    {#2}
 }
 
-\NewDocumentCommand{\appendixinput}{o m}{
-  \IfValueT{#1}{\appendixchapter{#1}}
-  \input{#2}
+\NewDocumentCommand{\appendixsection}{O{} m}{
+  \bool_if:NF \g_semio_in_appendix_bool {
+    \msg_error:nn { semio-components } { appendix-section-outside-appendix }
+  }
+  \int_set:Nn \l_semio_appendix_num_int { \value{ \tl_use:N \l_semio_appendix_level_tl } }
+  \int_set:Nn \l_semio_appendix_child_num_int { \value{ \tl_use:N \l_semio_appendix_child_level_tl } + 1 }
+  \tl_if_blank:nF {#1} {
+    \semio_appendix_prefix_validate:n {#1}
+    \exp_args:Nc \gdef
+      { semio@appendix@subprefix@ \int_use:N \l_semio_appendix_num_int . \int_use:N \l_semio_appendix_child_num_int }
+      {#1}
+    \tl_set:Nx \l_tmpa_tl {
+      \semio_appendix_child_id:nn { \int_use:N \l_semio_appendix_num_int } { \int_use:N \l_semio_appendix_child_num_int }
+    }
+    \exp_args:NV \semio_appendix_identifier_claim:nn \l_tmpa_tl {#2}
+  }
+  \use:c { \tl_use:N \l_semio_appendix_child_level_tl } {#2}
+}
+
+\NewDocumentCommand{\appendixinput}{O{} m m}{
+  \appendixchapter[#1]{#2}
+  \input{#3}
 }
 %endregion Appendices
 

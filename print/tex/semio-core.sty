@@ -28,6 +28,7 @@
 \tl_new:N \l_semio_doi_tl
 \bool_new:N \l_semio_kompakt_draft_bool
 \tl_new:N \l_semio_appendix_level_tl
+\tl_new:N \l_semio_appendix_child_level_tl
 
 \tl_set:Nn \l_semio_type_tl { report }
 \tl_set:Nn \l_semio_theme_tl { light }
@@ -127,11 +128,20 @@
 % 📎 Appendices default to the structural level matching the document's kind of
 % sectioning (chapter for type=report, section otherwise); zukunftbau's
 % zwischenbericht overrides this to part via \SemioSetup{appendix-level=part}.
+% Chapters *within* an appendix (\appendixsection) sit one level below —
+% derived here alongside the appendix level itself, never configured directly.
 \cs_new_protected:Npn \semio_appendix_level_resolve: {
   \tl_if_empty:NT \l_semio_appendix_level_tl {
     \str_if_eq:VnTF \l_semio_type_tl { report }
       { \tl_set:Nn \l_semio_appendix_level_tl { chapter } }
       { \tl_set:Nn \l_semio_appendix_level_tl { section } }
+  }
+  \tl_if_empty:NT \l_semio_appendix_child_level_tl {
+    \str_case:VnF \l_semio_appendix_level_tl {
+      { part } { \tl_set:Nn \l_semio_appendix_child_level_tl { section } }
+      { chapter } { \tl_set:Nn \l_semio_appendix_child_level_tl { section } }
+      { section } { \tl_set:Nn \l_semio_appendix_child_level_tl { subsection } }
+    } { \tl_set:Nn \l_semio_appendix_child_level_tl { subsection } }
   }
 }
 

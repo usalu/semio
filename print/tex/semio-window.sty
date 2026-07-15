@@ -455,10 +455,7 @@
 
 \cs_new_protected:Npn \semio_register_list_reset: {
   \bool_set_false:N \l_semio_register_list_bool
-  \group_begin:
-  \ExplSyntaxOff
-  \semio@register@listfalse
-  \group_end:
+  \use:c { semio@register@listfalse }
 }
 
 \cs_new_protected:Npn \SemioRegisterListBegin #1 { \semio_register_list_begin:n {#1} }
@@ -2117,6 +2114,7 @@
 \newcommand{\semio@heading@pair}[5]{%
   \semio@hierarchy@path@set{\csname the#4\endcsname}%
   \sbox{\semio@window@tab@box}{\semio@heading@chip{#1}{#2}{#5}}%
+
   \sbox{\semio@window@ctrl@box}{\semio@heading@chip{#1}{#2}{\semio@heading@kind@number{#3}{#4}}}%
   \setlength{\semio@window@gap@w}{%
     \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
