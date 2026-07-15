@@ -1139,6 +1139,7 @@ fn brush_preview_from_candidate(
 struct FillBuilder {
     base: Fixture,
     fixture: Fixture,
+    applied_count: usize,
     sequence: Vec<BrushPlacePayload>,
     appended_objects: Vec<FixtureObject>,
     appended_attractions: Vec<AttractionProps>,
@@ -1161,7 +1162,7 @@ impl FillBuilder {
                 }
             }
         }
-        Self { base: base.clone(), fixture: base, sequence: Vec::new(), appended_objects: Vec::new(), appended_attractions: Vec::new(), placed, candidate_cache: HashMap::new(), seed_object_ids, rng_state: seed, stalled: false, max_count: FILL_COUNT_MAX }
+        Self { base: base.clone(), fixture: base, applied_count: 0, sequence: Vec::new(), appended_objects: Vec::new(), appended_attractions: Vec::new(), placed, candidate_cache: HashMap::new(), seed_object_ids, rng_state: seed, stalled: false, max_count: FILL_COUNT_MAX }
     }
 
     fn rng(&mut self) -> f64 {
@@ -1509,9 +1510,24 @@ impl Puzzle3dEngine {
     }
 
     fn apply_fill_count(&mut self, count: usize) -> Option<Fixture> {
-        let fill = self.fill.as_ref()?;
+        let count = count.min(self.fill.as_ref()?.sequence.len());
+        if count < self.fill.as_ref()?.applied_count {
+            let fill = self.fill.as_mut()?;
+            fill.sequence.truncate(count);
+            fill.appended_objects.truncate(count);
+            fill.appended_attractions.truncate(count);
+            fill.fixture = fill.base.clone();
+            fill.fixture.objects.extend(fill.appended_objects.iter().cloned());
+            fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
+            let retained_ids: std::collections::HashSet<_> = fill.fixture.objects.iter().map(|object| object.id.as_str()).collect();
+            fill.placed.retain(|entry| retained_ids.contains(entry.object_id.as_str()));
+            fill.stalled = false;
+            self.queue.retain(|task| !matches!(task, PrecomputeTask::FillStep));
+            self.queue.extend((count..fill.max_count).map(|_| PrecomputeTask::FillStep));
+        }
+        let fill = self.fill.as_mut()?;
+        fill.applied_count = count;
         let mut fixture = fill.base.clone();
-        let count = count.min(fill.sequence.len());
         fixture.objects.extend(fill.appended_objects.iter().take(count).cloned());
         fixture.attractions.extend(fill.appended_attractions.iter().take(count).cloned());
         Some(fixture)
@@ -1907,6 +1923,46 @@ mod tests {
         let changed_json = serde_json::to_string(&scene).unwrap();
         engine.set_scene(&changed_json).expect("set_scene with a genuinely different scene should succeed");
         assert_ne!(engine.queue.len(), queue_len_after_step, "a changed scene must rebuild the queue");
+    }
+
+    #[test]
+    fn decreasing_fill_count_preserves_prefix_and_replans_tail() {
+        let object = |id: &str| FixtureObject {
+            id: id.to_string(),
+            object_kind: Some("Placed".to_string()),
+            mesh_url: Some("/test/placed.glb".to_string()),
+            origin: [0.0, 0.0, 0.0],
+            orientation: Some([0.0, 0.0, 0.0, 1.0]),
+            scale: None,
+            vortices: vec![],
+        };
+        let attraction = |index: usize| AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 };
+        let payload = |index: usize| BrushPlacePayload { target_vortex_full_id: format!("p{index}:v0"), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [index as f64, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
+        let base = Fixture { objects: vec![object("base")], attractions: vec![], target_volumes: vec![] };
+        let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
+        let mut fill = FillBuilder::new(base.clone(), 7, &HashMap::new(), &catalogs);
+        fill.applied_count = 3;
+        fill.sequence = (0..3).map(payload).collect();
+        fill.appended_objects = (0..3).map(|index| object(&format!("p{index}"))).collect();
+        fill.appended_attractions = (0..3).map(attraction).collect();
+        fill.fixture.objects.extend(fill.appended_objects.iter().cloned());
+        fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
+        fill.stalled = true;
+        let rng_state = fill.rng_state;
+        let mut engine = Puzzle3dEngine::new();
+        engine.fill = Some(fill);
+
+        let fixture = engine.apply_fill_count(1).expect("fill session");
+        assert_eq!(fixture.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base", "p0"]);
+        let fill = engine.fill.as_ref().expect("fill builder");
+        assert_eq!(fill.appended_objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["p0"], "objects below the slider count must retain their identity");
+        assert_eq!(fill.sequence.len(), 1, "the hidden generated tail must be discarded");
+        assert!(!fill.stalled, "decreasing the slider must resume random planning from the retained prefix");
+        assert_eq!(fill.rng_state, rng_state, "replanning must continue the random stream instead of recreating the discarded tail");
+        assert_eq!(engine.queue.iter().filter(|task| matches!(task, PrecomputeTask::FillStep)).count(), FILL_COUNT_MAX - 1);
+
+        let fixture = engine.apply_fill_count(0).expect("zero fill count");
+        assert_eq!(fixture.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base"], "zero must remove every generated object");
     }
 
     /// 🪪 Regression: registering a mesh must invalidate any cached brush candidates computed against a

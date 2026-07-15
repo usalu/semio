@@ -2646,6 +2646,9 @@ export type UiTranslationSchema = {
       readonly backToMediaGraph: UiLabelValue;
       readonly execute: UiLabelValue;
       readonly reset: UiLabelValue;
+      readonly windowOptions: UiLabelValue;
+      readonly focus: UiLabelValue;
+      readonly unfocus: UiLabelValue;
     };
     readonly docs: {
       readonly navigation: {
@@ -3100,6 +3103,9 @@ export const uiChromeTranslationBundles = {
           backToMediaGraph: { label: { normal: "Zurueck zum Media Graph", beginner: "Zurueck zum Media Graph" } },
           execute: { label: { normal: "Ausfuehren", beginner: "Ausfuehren" } },
           reset: { label: { normal: "Zuruecksetzen", beginner: "Zuruecksetzen" } },
+          windowOptions: { label: { normal: "Fensteroptionen", beginner: "Fensteroptionen" } },
+          focus: { label: { normal: "Fokussieren", beginner: "Fokussieren" } },
+          unfocus: { label: { normal: "Fokus aufheben", beginner: "Fokus aufheben" } },
         },
         protocolList: {
           steps: { label: { normal: "Schritte", beginner: "Schritte" } },
@@ -3567,6 +3573,9 @@ export const uiChromeTranslationBundles = {
           backToMediaGraph: { label: { normal: "Back to Media Graph", beginner: "Back to Media Graph" } },
           execute: { label: { normal: "Execute", beginner: "Execute" } },
           reset: { label: { normal: "Reset", beginner: "Reset" } },
+          windowOptions: { label: { normal: "Window Options", beginner: "Window Options" } },
+          focus: { label: { normal: "Focus", beginner: "Focus" } },
+          unfocus: { label: { normal: "Unfocus", beginner: "Unfocus" } },
         },
         protocolList: {
           steps: { label: { normal: "Steps", beginner: "Steps" } },
@@ -4372,7 +4381,7 @@ export function introductionAnchorSelector(anchor: IntroductionAnchor): string |
       return '[data-slot="footer"]';
     case "windowKind":
       return `[data-window-kind-id="${anchor.id}"]`;
-    case "tool":
+    case "utility":
       return `[id="${anchor.id}"]`;
     case "action":
       return `[id$="-action-${anchor.id}"], [id$="-action-${anchor.id}-execute"]`;
@@ -4579,7 +4588,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
             {advance.kind === "next" ? (
               <Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? "Done" : "Next"} onClick={next} />
             ) : (
-              <span className="text-xs text-muted">{advance.kind === "tool" ? `Activate "${advance.id}" to continue` : `Perform "${advance.id}" to continue`}</span>
+              <span className="text-xs text-muted">{advance.kind === "utility" ? `Activate "${advance.id}" to continue` : `Perform "${advance.id}" to continue`}</span>
             )}
           </div>
         </div>
@@ -4835,6 +4844,36 @@ export function panelAnchorTabBarClass(direction: "up" | "down"): string {
 
 /** @emoji 📑 Panel tab button padding. */
 export const panelAnchorTabButtonClass = cn(panelTabButtonClass, "px-tiny");
+
+//#region 🫳DragAffordance
+
+/** @emoji 🫳 Universal grip that starts a drag — pass `onPointerDown` for pointer-capture drags, spread dnd-kit `attributes`/`listeners`, or use as a pure affordance on whole-surface draggables. */
+export const DragHandle: React.FC<{
+  readonly onPointerDown?: React.PointerEventHandler<HTMLSpanElement>;
+  readonly attributes?: object;
+  readonly listeners?: Record<string, unknown>;
+  readonly onClick?: React.MouseEventHandler<HTMLSpanElement>;
+  readonly className?: string;
+}> = ({ onPointerDown, attributes, listeners, onClick, className }) => (
+  <span
+    data-slot="drag-handle"
+    className={cn(
+      "inline-flex shrink-0 cursor-grab touch-none items-center justify-center text-muted-foreground transition-colors hover:text-emphasized active:cursor-grabbing",
+      className,
+    )}
+    onPointerDown={onPointerDown}
+    onClick={onClick}
+    {...(attributes as React.ComponentProps<"span">)}
+    {...(listeners as React.ComponentProps<"span">)}
+  >
+    <GripVerticalIcon size={12} />
+  </span>
+);
+
+/** @emoji 🎯 Passive highlight for every valid drop zone while a compatible drag is in flight — the hovered zone keeps its stronger accent indicator on top of this. */
+export const dropZoneReadyClass = "outline-1 -outline-offset-1 outline-dashed outline-accent/40 bg-accent/10";
+
+//#endregion 🫳DragAffordance
 
 /** @emoji 📑 Shared panel/mobile panel tab bar variant. */
 export type PanelTabBarVariant = "panel" | "mobile";
@@ -5202,14 +5241,18 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
   const dropTarget = dock?.dropTarget;
   const isDropRow = Boolean(anchor && dropTarget?.kind === "insert" && dropTarget.anchor === anchor && dropTarget.parentPath.length === parentPath.length && dropTarget.parentPath.every((id, index) => id === parentPath[index]));
   const dropInsertIndex = isDropRow && dropTarget?.kind === "insert" ? dropTarget.index : null;
+  const tabDragActive = Boolean(dock?.dragTabId);
+  const rowDropReady = tabDragActive && Boolean(anchor) && !parentPath.some((id) => dock?.draggedSubtreeIds?.has(id));
+  const unitDragActive = usePanelTreeUnitDragActive();
 
   return (
-    <div ref={setRowRef} data-dim data-slot={`${tabSlot}-tabs`} className={barClass}>
+    <div ref={setRowRef} data-dim data-slot={`${tabSlot}-tabs`} className={cn(barClass, rowDropReady && dropZoneReadyClass)}>
       {sortedTabs.map((tab, index) => {
         const Icon = tab.icon;
         const isActive = tab.id === resolvedActiveId;
         const isDragSource = Boolean(anchor && dock?.dragTabId === tab.id);
         const isChildDropTarget = Boolean(anchor && dropTarget?.kind === "child" && dropTarget.anchor === anchor && dropTarget.parentId === tab.id);
+        const isUnitDropReady = unitDragActive && Boolean(anchor) && tab.kind === "leaf";
         return (
           <React.Fragment key={tab.id}>
             {dropInsertIndex === index ? <div data-slot="panel-tab-insert-preview" aria-hidden className={panelTabInsertPreviewClass} /> : null}
@@ -5223,7 +5266,6 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
                 id={tab.id}
                 data-active={isActive ? "true" : undefined}
                 onClick={() => onSelect(tab.id)}
-                onPointerDown={anchor && dock ? (event) => dock.startTabDrag(anchor, tab.id, tab.name, event) : undefined}
                 onDragOver={
                   anchor && dock && tab.kind === "leaf"
                     ? (event) => {
@@ -5243,12 +5285,15 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
                       }
                     : undefined
                 }
-                className={cn(buttonClass, isActive && showActiveColor && panelTabActiveClass, isDragSource && "opacity-40", isChildDropTarget && "ring-2 ring-accent")}
+                className={cn(buttonClass, isActive && showActiveColor && panelTabActiveClass, isDragSource && "opacity-40", isChildDropTarget && "ring-2 ring-accent", isUnitDropReady && dropZoneReadyClass)}
               >
                 <span className={panelTabIconSlotClass}>
                   <Icon size={12} />
                 </span>
                 <span className={panelTabLabelClass}>{tab.name}</span>
+                {anchor && dock ? (
+                  <DragHandle onPointerDown={(event) => dock.startTabDrag(anchor, tab.id, tab.name, event)} onClick={(event) => event.stopPropagation()} />
+                ) : null}
               </button>
             </ChromeControlHint>
           </React.Fragment>
@@ -5555,22 +5600,37 @@ export interface PanelTreeUnitDragSession {
 }
 
 let activePanelTreeUnitDragSession: PanelTreeUnitDragSession | null = null;
+const panelTreeUnitDragListeners = new Set<() => void>();
 
 /** @emoji 🌱 Records the active tree-unit drag until drop or dragend. */
 export function beginPanelTreeUnitDrag(session: PanelTreeUnitDragSession): void {
   activePanelTreeUnitDragSession = session;
   panelGhostSessionBridge?.begin(null);
+  panelTreeUnitDragListeners.forEach((listener) => listener());
 }
 
 /** @emoji 🌱 Clears the active tree-unit drag session. */
 export function endPanelTreeUnitDrag(): void {
   activePanelTreeUnitDragSession = null;
   panelGhostSessionBridge?.end();
+  panelTreeUnitDragListeners.forEach((listener) => listener());
 }
 
 /** @emoji 🌱 Returns the in-flight tree-unit drag, if any. */
 export function readActivePanelTreeUnitDrag(): PanelTreeUnitDragSession | null {
   return activePanelTreeUnitDragSession;
+}
+
+/** @emoji 🌱 True while a tree-unit drag is in flight — re-renders drop-zone consumers. */
+export function usePanelTreeUnitDragActive(): boolean {
+  return reactHostPort.useSyncExternalStore(
+    (listener) => {
+      panelTreeUnitDragListeners.add(listener);
+      return () => panelTreeUnitDragListeners.delete(listener);
+    },
+    () => activePanelTreeUnitDragSession !== null,
+    () => false,
+  );
 }
 
 //#endregion 🌱TreeUnitDrag
@@ -5598,6 +5658,7 @@ interface PanelDockPendingDrag {
 /** @emoji 🎛️ Business-free ui↔shell contract shared by every {@link Panel} under one {@link PanelDockProvider}. */
 export interface PanelDockContextValue {
   readonly dragTabId: string | null;
+  readonly draggedSubtreeIds: ReadonlySet<string> | null;
   readonly dropTarget: PanelTabDockTarget | null;
   readonly startTabDrag: (anchor: PanelAnchor, tabId: string, label: string, event: React.PointerEvent<HTMLElement>) => void;
   readonly registerTabRowDropTarget: (anchor: PanelAnchor, parentPath: readonly string[], element: HTMLElement | null) => void;
@@ -5709,7 +5770,7 @@ export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTa
   }, [dragState, panelGhost]);
 
   const contextValue = reactHostPort.useMemo<PanelDockContextValue>(
-    () => ({ dragTabId: dragState?.tabId ?? null, dropTarget, startTabDrag, registerTabRowDropTarget, onTreeUnitDockDrop }),
+    () => ({ dragTabId: dragState?.tabId ?? null, draggedSubtreeIds: dragState ? excludedIdsRef.current : null, dropTarget, startTabDrag, registerTabRowDropTarget, onTreeUnitDockDrop }),
     [dragState, dropTarget, startTabDrag, registerTabRowDropTarget, onTreeUnitDockDrop],
   );
 
@@ -11641,23 +11702,6 @@ const renderTreeHeaderActions = (actions: TreeHeaderAction[]) => (
   </div>
 );
 
-const TreeDragHandle: React.FC<{
-  attributes?: Record<string, unknown> | object;
-  listeners?: Record<string, unknown>;
-  onClick?: React.MouseEventHandler<HTMLButtonElement>;
-}> = ({ attributes, listeners, onClick }) => (
-  <button
-    type="button"
-    data-slot="tree-drag-handle"
-    className="text-muted-foreground inline-flex h-medium min-w-tiny flex-shrink-0 cursor-grab items-center justify-center border-0 bg-transparent p-0 outline-none active:cursor-grabbing"
-    onClick={onClick}
-    {...(attributes as React.ComponentProps<"button">)}
-    {...(listeners as React.ComponentProps<"button">)}
-  >
-    <GripVerticalIcon size={12} className="text-muted-foreground" />
-  </button>
-);
-
 export enum TreeItemCollapsibleState {
   None = 0,
   Collapsed = 1,
@@ -12000,6 +12044,8 @@ interface TreeSectionProps {
   onDragLeave?: React.DragEventHandler<HTMLDivElement>;
   onDrop?: React.DragEventHandler<HTMLDivElement>;
   isLastSection?: boolean;
+  /** @emoji 🎯 Passive drop-zone highlight while a compatible tree drag is in flight. */
+  isDropReady?: boolean;
 }
 
 /**
@@ -12074,6 +12120,10 @@ interface TreeItemProps {
   layoutKind?: "default" | "property";
   isHidden?: boolean;
   contextMenu?: ContextMenuItem[];
+  /** @emoji 🫳 `"handle"` restricts native drag start to the trailing grip (arms `draggable` only while the grip is pressed); `"surface"` (default) keeps the whole row draggable. */
+  dragInitiation?: "handle" | "surface";
+  /** @emoji 🎯 Passive drop-zone highlight while a compatible tree drag is in flight. */
+  isDropReady?: boolean;
 }
 
 /**
@@ -12392,6 +12442,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   onDragLeave,
   onDrop,
   isLastSection = false,
+  isDropReady = false,
 }) => {
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier, direction = "down" } = reactHostPort.useContext(TreeContext);
   const suppressLocalizedLabel = label == null || label === "";
@@ -12414,7 +12465,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   const isExpandable = expandable ?? hasChildren;
   const isHeaderlessSection =
     suppressLocalizedLabel && localizedLabel === undefined && !icon && actions.length === 0 && !loading && !draggable && !onDoubleClick && !onSectionPointerEnter && !onSectionPointerLeave && !onDragStart && !onDragOver && !onDragLeave && !onDrop;
-  const rowClassName = cn(treeRowShellClassName, treeRowChromeShellClasses(false, false), isExpandable ? "cursor-foldable" : "cursor-selectable", className);
+  const rowClassName = cn(treeRowShellClassName, treeRowChromeShellClasses(false, false), isExpandable ? "cursor-foldable" : "cursor-selectable", isDropReady && dropZoneReadyClass, className);
   const rowContentFillClassName = treeRowChromeContentFillClasses(false, false, loading);
 
   if (isHeaderlessSection) {
@@ -12571,14 +12622,21 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   const itemId = `item-${id}-${itemKey}`;
   const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
   const hasChildren = hasNonEmptyChildren(children);
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isSorting } = useSortable({ id });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const itemShellClasses = cn(treeRowShellClassName, treeRowChromeShellClasses(isSelected, isHighlighted), "w-full", hasChildren ? "cursor-foldable" : "cursor-selectable", className);
+  const itemShellClasses = cn(
+    treeRowShellClassName,
+    treeRowChromeShellClasses(isSelected, isHighlighted),
+    "w-full",
+    hasChildren ? "cursor-foldable" : "cursor-selectable",
+    isSorting && !isDragging && dropZoneReadyClass,
+    className,
+  );
   const itemContentFillClassName = treeRowChromeContentFillClasses(isSelected, isHighlighted);
 
   if (hasChildren && displayLabel) {
@@ -12625,7 +12683,6 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             >
               <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
                 <div className={treeHeaderMainClassName}>
-                  {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} />}
                   {renderTreeRowIcon(icon, "folder")}
                   <span
                     data-slot="tree-label"
@@ -12642,6 +12699,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
                   </span>
                 </div>
                 {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
+                {isDragHandle && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} />}
               </div>
             </TreeAlignedRow>
           </div>
@@ -12698,7 +12756,6 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           >
             <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
               <div className={treeHeaderMainClassName}>
-                {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} />}
                 {renderTreeRowIcon(icon, "folder")}
                 <span
                   data-slot="tree-label"
@@ -12715,6 +12772,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
                 </span>
               </div>
               {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
+              {isDragHandle && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} />}
             </div>
           </TreeAlignedRow>
         </div>
@@ -12758,13 +12816,13 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" contentChromeClassName={itemContentFillClassName}>
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
-              {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} />}
               {renderTreeRowIcon(icon, "file-text")}
               <span data-slot="tree-label" className={treeItemLabelSlotClassName} style={treeItemLabelStyle}>
                 {displayLabel as React.ReactNode}
               </span>
             </div>
             {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
+            {isDragHandle && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} />}
           </div>
         </TreeAlignedRow>
       </div>
@@ -12795,13 +12853,13 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
       <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" contentChromeClassName={itemContentFillClassName}>
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
           <div className={treeHeaderMainClassName}>
-            {isDragHandle && <TreeDragHandle attributes={attributes} listeners={listeners} />}
             {renderTreeRowIcon(icon, "file-text")}
             <span data-slot="tree-label" className={treeItemLabelSlotClassName} style={treeItemLabelStyle}>
               {displayLabel as React.ReactNode}
             </span>
           </div>
           {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
+          {isDragHandle && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} />}
         </div>
       </TreeAlignedRow>
     </div>
@@ -12876,6 +12934,8 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   isHidden = false,
   contextMenu,
   isDragging = false,
+  dragInitiation = "surface",
+  isDropReady = false,
 }) => {
   const localizedLabel = id ? useLabel(id) : undefined;
   const resolvedLabel = label !== undefined ? label : localizedLabel;
@@ -12929,17 +12989,31 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   );
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
+  const [dragArmed, setDragArmed] = reactHostPort.useState(false);
+  const armDrag = reactHostPort.useCallback(() => {
+    setDragArmed(true);
+    window.addEventListener("pointerup", () => setDragArmed(false), { once: true });
+  }, []);
+  const effectiveDraggable = draggable && (dragInitiation === "surface" || dragArmed);
+  const handleDragEnd = reactHostPort.useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      setDragArmed(false);
+      onDragEnd?.(event);
+    },
+    [onDragEnd],
+  );
   const itemShellClasses = cn(
     treeRowShellClassName,
     treeRowChromeShellClasses(isSelected, isHighlighted, isHidden),
     "w-full",
     isExpandable ? "cursor-foldable" : "cursor-selectable",
-    draggable ? "cursor-grab active:cursor-grabbing" : "",
+    draggable && dragInitiation === "surface" ? "cursor-grab active:cursor-grabbing" : "",
     isDragging ? "opacity-40" : "",
+    isDropReady && dropZoneReadyClass,
     className,
   );
   const itemContentFillClassName = treeRowChromeContentFillClasses(isSelected, isHighlighted, loading);
-  const treeLabelSelectClass = draggable ? "select-none" : "select-text";
+  const treeLabelSelectClass = draggable && dragInitiation === "surface" ? "select-none" : "select-text";
 
   if (layoutKind === "property") {
     return (
@@ -12951,10 +13025,10 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           role="treeitem"
           id={id}
           data-state={open ? "open" : "closed"}
-          className={cn("min-w-0 w-full", treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), className)}
-          draggable={draggable}
+          className={cn("min-w-0 w-full", treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), isDropReady && dropZoneReadyClass, className)}
+          draggable={effectiveDraggable}
           onDragStart={onDragStart}
-          onDragEnd={onDragEnd}
+          onDragEnd={handleDragEnd}
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
           onDrop={onDrop}
@@ -13026,6 +13100,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                     </div>
                   )}
                   {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
+                  {draggable && <DragHandle onPointerDown={dragInitiation === "handle" ? armDrag : undefined} />}
                 </div>
               </TreeAlignedRow>
             );
@@ -13071,9 +13146,9 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               role="treeitem"
               id={id}
               className={itemShellClasses}
-              draggable={draggable}
+              draggable={effectiveDraggable}
               onDragStart={onDragStart}
-              onDragEnd={onDragEnd}
+              onDragEnd={handleDragEnd}
               onDragOver={onDragOver}
               onDragLeave={onDragLeave}
               onDrop={onDrop}
@@ -13160,6 +13235,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                       </button>
                     </div>
                   )}
+                  {draggable && <DragHandle onPointerDown={dragInitiation === "handle" ? armDrag : undefined} />}
                 </div>
               </TreeAlignedRow>
             </div>
@@ -13200,9 +13276,9 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         role="treeitem"
         id={id}
         className={itemShellClasses}
-        draggable={draggable}
+        draggable={effectiveDraggable}
         onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
+        onDragEnd={handleDragEnd}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
@@ -13218,7 +13294,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {renderTreeRowIcon(icon, "file-text")}
-              <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, draggable ? "cursor-grab" : "cursor-selectable", treeLabelSelectClass)} style={treeItemLabelStyle}>
+              <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, draggable && dragInitiation === "surface" ? "cursor-grab" : "cursor-selectable", treeLabelSelectClass)} style={treeItemLabelStyle}>
                 {resolvedLabel as React.ReactNode}
               </span>
             </div>
@@ -13254,6 +13330,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 </button>
               </div>
             )}
+            {draggable && <DragHandle onPointerDown={dragInitiation === "handle" ? armDrag : undefined} />}
           </div>
         </TreeAlignedRow>
       </div>
@@ -13702,6 +13779,8 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       actions={item.actions}
       contextMenu={item.contextMenu}
       draggable={Boolean(item.draggable) || Boolean(item.dragData)}
+      dragInitiation={item.dragData || dragAndDropController?.pointerPaletteDrag ? "surface" : "handle"}
+      isDropReady={draggedIds.length > 0 && !isDragging && Boolean(dragAndDropController?.handleDrop)}
       layoutKind={propertyLayout ? "property" : undefined}
       onClick={(event) => handleSelectItem(event, item, section, [...path])}
       onDoubleClick={(event) => handleDoubleClickItem(event, item, section, [...path])}
@@ -13740,7 +13819,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
 const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(props: { readonly section: TreeDataSection; readonly isLastSection: boolean }): React.ReactElement {
   const { section, isLastSection } = props;
   const { direction = "down" } = reactHostPort.useContext(TreeContext);
-  const { sectionItemsById, loadingById, loadSectionItems, handleDragOver, handleDropOnSection } = useTreeDataRendering();
+  const { sectionItemsById, loadingById, loadSectionItems, handleDragOver, handleDropOnSection, dragAndDropController, draggedIds } = useTreeDataRendering();
   const treeOpenState = useTreeOpenState(getTreeSectionStateId(section.id), section.defaultOpen ?? false);
   const rawItems = getTreeSectionItems(section, sectionItemsById);
   const items = direction === "up" ? [...rawItems].reverse() : rawItems;
@@ -13772,6 +13851,7 @@ const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(prop
       onDragOver={handleDragOver}
       onDrop={(event) => handleDropOnSection(event, section)}
       isLastSection={isLastSection}
+      isDropReady={draggedIds.length > 0 && Boolean(dragAndDropController?.handleDrop)}
     >
       {items.map((item, index) => (
         <TreeDataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={index === items.length - 1} />
@@ -14877,10 +14957,13 @@ interface WindowMeasuresChromeProps {
 
 /** @emoji 🪟 Title bar for the window options rail (span left corner, label center, fold right corner). */
 const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, folded, expanded, onFold, onUnfold, onExpand, onCollapseExpand }) => {
+  const windowOptionsLabel = useLabel("ui.common.windowOptions");
+  const focusLabel = useLabel("ui.common.focus");
+  const unfocusLabel = useLabel("ui.common.unfocus");
   if (folded) {
     return (
       <div data-slot="window-measures-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
-        <ActionGroupItem id={`${windowId}-window-measures-unfold`} icon="chevron-left" text="Window Options" className={windowRailChromeLabelActionClass} onClick={onUnfold} />
+        <ActionGroupItem id={`${windowId}-window-measures-unfold`} icon="chevron-left" text={windowOptionsLabel} className={windowRailChromeLabelActionClass} onClick={onUnfold} />
       </div>
     );
   }
@@ -14890,11 +14973,11 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
       <ActionGroupItem
         id={`${windowId}-window-measures-span`}
         icon={expanded ? "minimize-2" : "maximize-2"}
-        text={expanded ? "Unfocus" : "Focus"}
+        text={expanded ? unfocusLabel : focusLabel}
         className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerLeftClass)}
         onClick={expanded ? onCollapseExpand : onExpand}
       />
-      <ActionGroupItem id={`${windowId}-window-measures-fold`} icon="chevron-right" text="Window Options" className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerRightClass)} onClick={onFold} />
+      <ActionGroupItem id={`${windowId}-window-measures-fold`} icon="chevron-right" text={windowOptionsLabel} className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerRightClass)} onClick={onFold} />
     </div>
   );
 };
@@ -15438,6 +15521,7 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
   const flow = useFlow();
   const sortedUnits = [...units].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const draggable = Boolean(dock && anchor);
+  const unitDragActive = usePanelTreeUnitDragActive();
   return (
     <>
       {sortedUnits.map((unit, index) => {
@@ -15487,11 +15571,15 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
                       }
                     : undefined
                 }
-                className={cn("flex shrink-0 items-center gap-single px-single py-half text-2xs text-muted-foreground", draggable && "cursor-grab active:cursor-grabbing")}
+                className={cn(
+                  "flex shrink-0 items-center gap-single px-single py-half text-2xs text-muted-foreground",
+                  draggable && "cursor-grab active:cursor-grabbing",
+                  unitDragActive && dropZoneReadyClass,
+                )}
               >
-                {draggable ? <Icon icon="grip-vertical" size="small" /> : null}
                 {UnitIcon ? <UnitIcon size={12} /> : null}
                 {unit.label ? <span className="min-w-0 truncate">{unit.label}</span> : null}
+                {draggable ? <DragHandle className="ms-auto" /> : null}
               </div>
             ) : null}
             <Tree
@@ -23047,7 +23135,7 @@ if (import.meta.vitest) {
       expect(introductionAnchorSelector({ kind: "navbar" })).toBe('[data-slot="navbar"]');
       expect(introductionAnchorSelector({ kind: "footer" })).toBe('[data-slot="footer"]');
       expect(introductionAnchorSelector({ kind: "windowKind", id: "main" })).toBe('[data-window-kind-id="main"]');
-      expect(introductionAnchorSelector({ kind: "tool", id: "brush" })).toBe('[id="brush"]');
+      expect(introductionAnchorSelector({ kind: "utility", id: "brush" })).toBe('[id="brush"]');
       expect(introductionAnchorSelector({ kind: "action", id: "addLayer" })).toBe('[id$="-action-addLayer"], [id$="-action-addLayer-execute"]');
       expect(introductionAnchorSelector({ kind: "panelTab", id: "puzzle.catalogue" })).toBe('[data-tab-id="puzzle.catalogue"]');
       expect(introductionAnchorSelector({ kind: "slot", id: "window-body" })).toBe('[data-slot="window-body"]');

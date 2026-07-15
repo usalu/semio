@@ -10902,28 +10902,6 @@ function sketchpadHomeUriFilters(home: SketchpadHomeUiState): string {
   return serialized.length > 0 ? `?${serialized}` : "";
 }
 
-function sketchpadTitleFromDocPath(relativePath: string): string {
-  const segment =
-    relativePath
-      .replace(/\/index$/, "")
-      .split("/")
-      .pop() ?? relativePath;
-  return segment
-    .split(/[-_]/)
-    .filter((part) => part.length > 0)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-type SketchpadDocPage = { readonly path: string; readonly title: string };
-type SketchpadDocSection = { readonly id: string; readonly label: string; readonly pages: readonly SketchpadDocPage[] };
-
-/** @emoji 📄 Lazy-loaded MDX module shape from the sketchpad pages bundle. */
-export type SketchpadMdxModule = {
-  readonly default: unknown;
-  readonly frontmatter?: Readonly<Record<string, unknown>>;
-};
-
 const SKETCHPAD_DOCS_GETTING_STARTED_LABELS: UiTerminologyLabelSet<"gettingStarted" | "installation"> = {
   en: { gettingStarted: "Getting started", installation: "Installation" },
   de: { gettingStarted: "Erste Schritte", installation: "Installation" },
@@ -10954,21 +10932,6 @@ export function sketchpadBuildDocsRegistry(): readonly SketchpadDocSection[] {
 export async function sketchpadWarmDocsRegistry(): Promise<void> {
   if (sketchpadDocsRegistryCache) return;
   sketchpadDocsRegistryCache = sketchpadBuildDocsRegistryFromGlob();
-}
-
-/** @emoji 🔍 Resolves a docs route path to a Vite MDX module key. */
-export async function sketchpadResolveMdxModuleKey(docsPath: string): Promise<string | null> {
-  return sketchpadResolveMdxModuleKey(docsPath);
-}
-
-/** @emoji 📥 Loads an MDX page module for a docs route (`getting-started/index`, …). */
-export async function sketchpadLoadMdxModule(docsPath: string): Promise<SketchpadMdxModule | null> {
-  return sketchpadLoadMdxModule(docsPath);
-}
-
-/** @emoji 🏷️ Reads a display title from MDX frontmatter or route path. */
-export async function sketchpadMdxTitle(module: SketchpadMdxModule | null, docsPath: string): Promise<string> {
-  return sketchpadMdxTitle(module, docsPath);
 }
 
 /** @emoji 🔌 Backend contract for {@link ComposeKitStore} (memory, WASM worker, HTTP, …). */

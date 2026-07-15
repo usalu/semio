@@ -504,21 +504,15 @@
 \cs_new_protected:Npn \semio_kind_chip_bare:n #1 {
   \tl_if_blank:nTF {#1} { } { \semio_hierarchy_chip_number:n {#1} }
 }
-% 🪆 Composed identifiers nest two separators — "-" between an appendix and
-% its chapter (BB-M), "." between a heading and its window slot (H.a) or a
-% chapter and its subsection (SB-B.1) — and every level but the last must
-% render muted, whichever separator introduced it. \l_tmpa_int is set to the
-% character count of everything up to & including the *last* "-" or "."
-% (0 if neither appears), found by normalizing a throwaway copy (\l_tmpb_tl)
-% to "." only, so a single dot-split locates the split point; the muted head
-% and bright tail are then sliced back out of the *original* (unnormalized)
-% \l_tmpa_tl, keeping whichever separator character was actually used.
-\cs_generate_variant:Nn \seq_set_split:Nnn { Nnx }
+% 🪆 Composed identifiers nest one separator only — "." between every level,
+% whether appendix→chapter (BB.M), heading→window slot (H.a), or
+% chapter→subsection (SB.B.1) — and every level but the last renders muted.
+% \l_tmpa_int is set to the character count of everything up to & including
+% the *last* "." (0 if there is none); the muted head and bright tail are
+% then sliced out of \l_tmpa_tl by that offset.
 \cs_new_protected:Npn \semio_identifier_split_point:n #1 {
   \tl_set:Nn \l_tmpa_tl {#1}
-  \tl_set:Nn \l_tmpb_tl {#1}
-  \str_replace_all:Nnn \l_tmpb_tl { - } { . }
-  \seq_set_split:Nnx \l_tmpb_seq { . } { \l_tmpb_tl }
+  \seq_set_split:Nnn \l_tmpb_seq { . } {#1}
   \seq_pop_right:NN \l_tmpb_seq \l_tmpb_tl
   \int_set:Nn \l_tmpa_int { \tl_count:N \l_tmpa_tl - \tl_count:N \l_tmpb_tl }
 }

@@ -305,11 +305,13 @@
 \msg_new:nnn { semio-components } { appendix-section-outside-appendix }
   { \string\appendixsection\ used~before~\string\makeappendices\ or~\string\appendixchapter. }
 \msg_new:nnn { semio-components } { bad-appendix-prefix }
-  { Appendix~prefix~'#1'~must~not~contain~'.'~(it~separates~hierarchy~levels~in~chip~numbers). }
+  { Appendix~prefix~'#1'~must~not~contain~'.'~or~'-'~(only~'.'~separates~hierarchy~levels~in~chip~numbers). }
 
 \cs_new_protected:Npn \semio_appendix_prefix_validate:n #1 {
-  \str_if_in:nnT {#1} { . } {
-    \msg_error:nnn { semio-components } { bad-appendix-prefix } {#1}
+  \str_if_in:nnTF {#1} { . } { \msg_error:nnn { semio-components } { bad-appendix-prefix } {#1} } {
+    \str_if_in:nnT {#1} { - } {
+      \msg_error:nnn { semio-components } { bad-appendix-prefix } {#1}
+    }
   }
 }
 
@@ -340,7 +342,7 @@
 }
 \cs_new:Npn \semio_appendix_child_id:nn #1#2 {
   \ifcsname semio@appendix@subprefix@#1.#2\endcsname
-    \semio_appendix_id:n {#1} - \csname semio@appendix@subprefix@#1.#2\endcsname
+    \semio_appendix_id:n {#1} . \csname semio@appendix@subprefix@#1.#2\endcsname
   \else
     \semio_appendix_id:n {#1} . #2
   \fi

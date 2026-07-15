@@ -3291,7 +3291,7 @@ pub enum IntroductionAnchor {
     /// 🪟 References `AppDefinition.windowKinds[].id`.
     WindowKind(String),
     /// 🧰 References `AppDefinition.utilities`.
-    Tool(UtilityRef),
+    Utility(UtilityRef),
     /// 📇 References `AppDefinition.actions`.
     Action(ActionRef),
     /// 📑 References a declared `PanelTabDefinition.id()`.
@@ -3329,7 +3329,7 @@ pub enum IntroductionPlacement {
 }
 
 /// @emoji 👉 What completes an introduction step. `Next` needs the info box's Next button; `Action`/
-/// `Tool` complete as soon as the user dispatches that action or activates that tool, teaching by doing.
+/// `Utility` complete as soon as the user dispatches that action or activates that utility, teaching by doing.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", tag = "kind", content = "id")]
@@ -3339,7 +3339,7 @@ pub enum IntroductionAdvance {
     /// 📇 References `AppDefinition.actions`.
     Action(ActionRef),
     /// 🧰 References `AppDefinition.utilities`.
-    Tool(UtilityRef),
+    Utility(UtilityRef),
 }
 //#endregion 🔖Introduction
 
@@ -4976,7 +4976,7 @@ mod app_document_tests {
             IntroductionAnchor::Screen,
             IntroductionAnchor::Navbar,
             IntroductionAnchor::WindowKind("main".into()),
-            IntroductionAnchor::Tool(UtilityRef::new("brush")),
+            IntroductionAnchor::Utility(UtilityRef::new("brush")),
             IntroductionAnchor::Action(ActionRef::new("add")),
             IntroductionAnchor::PanelTab("puzzle.catalogue".into()),
             IntroductionAnchor::Slot("navbar".into()),
@@ -4993,7 +4993,7 @@ mod app_document_tests {
         for advance in [
             IntroductionAdvance::Next,
             IntroductionAdvance::Action(ActionRef::new("add")),
-            IntroductionAdvance::Tool(UtilityRef::new("brush")),
+            IntroductionAdvance::Utility(UtilityRef::new("brush")),
         ] {
             let json = serde_json::to_string(&advance).unwrap();
             let round: IntroductionAdvance = serde_json::from_str(&json).unwrap();

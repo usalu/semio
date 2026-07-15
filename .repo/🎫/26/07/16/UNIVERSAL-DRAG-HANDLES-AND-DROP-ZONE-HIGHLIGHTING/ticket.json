@@ -1,0 +1,11 @@
+{
+  "title": "Universal Drag Handles and Drop Zone Highlighting",
+  "emoji": "🫳",
+  "status": "open",
+  "description": "Add a consistent drag-handle affordance (grip-vertical icon) to every draggable UI element in ui/js/react/index.tsx, and highlight all valid drop zones (passively) while a compatible drag is in flight, keeping the existing stronger indicator on the currently hovered target. Handle-only drag initiation on select-first elements (panel tabs, mode/window tabs, reorderable tree rows); whole-surface drag retained on drag-first elements (tree-unit headers, catalogue/palette items, mode tab-gap stack drag, DraggableAvatar). Handles always visible (muted, brighten on hover). Plan approved at /Users/ueli/.claude/plans/ui-everything-that-is-silly-wolf.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2001"
+  },
+  "goal": "🎯r2602",
+  "sessions": ["⚪641fb24591a44ea79de251026f633ff6"]
+}

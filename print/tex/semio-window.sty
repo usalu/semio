@@ -679,8 +679,8 @@
     % rendered into into so the *next* compile pass can show the ":<N>"
     % suffix on page 1 too (see \semio@window@break@record and the
     % `.window-breaks` aux file loaded by \semio_window_break_aux_load:).
-    overlay~unbroken={\semio@window@break@record{1}},
-    overlay~first={},
+    overlay~unbroken={\semio@window@break@record{1}\semio@window@header@invoke@overlay},
+    overlay~first={\semio@window@header@invoke@overlay},
     overlay~middle={\semio@window@header@repeat},
     overlay~last={\semio@window@header@repeat\semio@window@break@record{\arabic{tcbbreakpart}}},
   },
@@ -1894,6 +1894,24 @@
   \edef\semio@window@header@part@num{\arabic{tcbbreakpart}}%
   \node[anchor=south, inner sep=0pt, yshift=\semio@stroke@hairline] at (frame.north) {%
     \semio@window@header@muted{\semio@window@header@number:\semio@window@header@part@num}{\semio@window@header@title}%
+  };%
+}
+
+% 🩹 Page 1 (and the first part of a genuinely broken window) still typesets
+% its header inline, before the tcolorbox opens, so \semio_window_vskip_
+% stroke_hairline: can pull the box up by one hairline and reclaim that
+% row's height from the WindowColumn overhead budget. But the box's own
+% colback fill is painted later in the PDF content stream than that inline
+% header row, so it silently overpaints the header-gap's closing baseline
+% stroke (see "Header gap" region above) wherever the fill sits underneath
+% it — i.e. exactly in the transparent gap between the title and hierarchy
+% chips. Redrawing the identical header row as an `overlay` (same
+% `frame.north`-anchored technique as \semio@window@header@repeat, which
+% never has this problem since it has no inline counterpart to be covered)
+% repaints it on top of the fill, so the border is never hidden.
+\newcommand{\semio@window@header@invoke@overlay}{%
+  \node[anchor=south, inner sep=0pt, yshift=\semio@stroke@hairline] at (frame.north) {%
+    \semio@window@header@muted{\semio@window@header@number@page1}{\semio@window@header@title}%
   };%
 }
 \ExplSyntaxOff

@@ -1380,7 +1380,47 @@ function shellTerminologyLabel(id: string): string {
   return isChromeKnown ? shellLabel(`ui.settings.terminology.${id as UiChromeTerminologyId}`) : id;
 }
 
-function renderWindowMeasure(measure: WindowMeasure, onAction: (action: ActionDescriptor) => void): ReactNode {
+/** @emoji 🎚️ Serializes async updates while retaining only the newest value requested during an in-flight update. */
+export function createLatestAsyncDispatcher<T>(dispatchValue: (value: T) => unknown): (value: T) => void {
+  let running = false;
+  let queued: T | undefined;
+  let hasQueued = false;
+  const dispatchLatest = (value: T) => {
+    if (running) {
+      queued = value;
+      hasQueued = true;
+      return;
+    }
+    running = true;
+    void Promise.resolve(dispatchValue(value)).finally(() => {
+      running = false;
+      if (!hasQueued) return;
+      const next = queued as T;
+      queued = undefined;
+      hasQueued = false;
+      dispatchLatest(next);
+    });
+  };
+  return dispatchLatest;
+}
+
+/** @emoji 🎚️ Keeps a measure slider live without accumulating stale document actions behind the pointer. */
+function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<WindowMeasure, { kind: "slider" }>; readonly onAction: (action: ActionDescriptor) => unknown }) {
+  const dispatchLatest = useMemo(() => createLatestAsyncDispatcher(onAction), [onAction]);
+
+  return (
+    <Slider
+      id={measure.id}
+      value={[measure.value]}
+      min={measure.min}
+      max={measure.max}
+      step={measure.step}
+      onValueChange={(values) => dispatchLatest({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value: values[0] ?? measure.value } })}
+    />
+  );
+}
+
+function renderWindowMeasure(measure: WindowMeasure, onAction: (action: ActionDescriptor) => unknown): ReactNode {
   if (measure.kind === "group") {
     return (
       <WindowMeasureTreeGroup key={measure.id} id={measure.id} label={measure.label} defaultOpen={measure.defaultOpen}>
@@ -1409,14 +1449,7 @@ function renderWindowMeasure(measure: WindowMeasure, onAction: (action: ActionDe
   if (measure.kind === "slider") {
     return (
       <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
-        <Slider
-          id={measure.id}
-          value={[measure.value]}
-          min={measure.min}
-          max={measure.max}
-          step={measure.step}
-          onValueChange={(values) => onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value: values[0] ?? measure.value } })}
-        />
+        <WindowMeasureSlider measure={measure} onAction={onAction} />
       </WindowMeasureTreeLeaf>
     );
   }
@@ -1436,7 +1469,7 @@ function renderWindowMeasure(measure: WindowMeasure, onAction: (action: ActionDe
   return null;
 }
 
-function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, onAction: (action: ActionDescriptor) => void): ReactNode | undefined {
+function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, onAction: (action: ActionDescriptor) => unknown): ReactNode | undefined {
   if (!measures || measures.length === 0) return undefined;
   return <WindowMeasuresTree>{measures.map((measure) => renderWindowMeasure(measure, onAction))}</WindowMeasuresTree>;
 }
@@ -1447,7 +1480,7 @@ function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, o
  * the toolbar only while its `activeUtilityId` matches the window's active tool). Both buckets render
  * through the same {@link renderWindowMeasure} control path; each is `undefined` when its bucket is empty.
  */
-function windowMeasuresChrome(measures: readonly WindowMeasure[] | undefined, activeUtilityId: string | undefined, onAction: (action: ActionDescriptor) => void): { readonly measures: ReactNode | undefined; readonly toolOptions: ReactNode | undefined } {
+function windowMeasuresChrome(measures: readonly WindowMeasure[] | undefined, activeUtilityId: string | undefined, onAction: (action: ActionDescriptor) => unknown): { readonly measures: ReactNode | undefined; readonly toolOptions: ReactNode | undefined } {
   const { general, toolOptions } = partitionWindowMeasures(measures ?? [], activeUtilityId);
   return {
     measures: windowMeasuresOverlay(general, onAction),
@@ -1457,8 +1490,16 @@ function windowMeasuresChrome(measures: readonly WindowMeasure[] | undefined, ac
 
 function windowUtilityBarNode(utilities: readonly UtilityNode[] | undefined, windowId: string, onAction: (action: ActionDescriptor) => void): ReactNode {
   if (!utilities?.length) return undefined;
-  const grouped = groupUtilityNodesByCategory(utilities, WINDOW_UTILITY_CATEGORIES);
-  if (!grouped.length) return undefined;
+  const categories = groupUtilityNodesByCategory(utilities, WINDOW_UTILITY_CATEGORIES);
+  if (!categories.length) return undefined;
+  const grouped: UtilityNode[] = [];
+  for (const node of categories) {
+    if (node.kind === "collection" && node.category === "tools") {
+      grouped.push(...node.children);
+    } else {
+      grouped.push(node);
+    }
+  }
   return <UtilityTree id={`ui.toolbar.${windowId}`} utilities={grouped} onAction={onAction} direction="up" />;
 }
 
@@ -2960,7 +3001,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         const requested = typeof args.utilityId === "string" ? args.utilityId : "";
         const next = resolveUtilityActivation(activeUtilityByWindowIdRef.current[windowId], requested);
         dispatch({ type: "SET_ACTIVE_UTILITY", windowId, utilityId: next });
-        if (introductionStep?.advance.kind === "tool" && next && introductionStep.advance.id === next) advanceIntroductionStep();
+        if (introductionStep?.advance.kind === "utility" && next && introductionStep.advance.id === next) advanceIntroductionStep();
         const pluginEntry = findPluginForAction(action);
         const plugin = pluginEntry?.handle;
         if (plugin) {
@@ -3059,7 +3100,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       // sync now goes through its own `openDocument`-opened `DocumentHost` channel, same as any other
       // document; there is no host-side JS mirroring step anymore.
       const dispatchViewState = injectActiveUtility(targetSession.viewState);
-      void plugin
+      return plugin
         .handleAction(targetSession.instanceId, JSON.stringify(action), dispatchViewState)
         .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
         .catch((actionError) => {

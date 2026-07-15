@@ -73,6 +73,7 @@ import {
   commandCategories,
   buildCommandCategoryTree,
   buildCommandCategoryTabs,
+  createLatestAsyncDispatcher,
   type ResolvedCommand,
   shellReducer,
   sortUtilityNodes,
@@ -125,6 +126,26 @@ describe("framework sync utilities", () => {
     expect(grouped).toHaveLength(1);
     expect(grouped[0]).toMatchObject({ id: "sync", kind: "collection" });
     expect(grouped[0].kind === "collection" ? grouped[0].children.map((child) => child.id) : []).toEqual(["framework.sync.file", "framework.sync.folder", "framework.sync.remote"]);
+  });
+});
+
+describe("live measure dispatch", () => {
+  it("serializes document updates and skips stale slider values", async () => {
+    const values: number[] = [];
+    let finishFirst = () => {};
+    const dispatch = createLatestAsyncDispatcher((value: number) => {
+      values.push(value);
+      if (value === 1) return new Promise<void>((resolve) => (finishFirst = resolve));
+    });
+
+    dispatch(1);
+    dispatch(2);
+    dispatch(19);
+    dispatch(24);
+    expect(values).toEqual([1]);
+
+    finishFirst();
+    await vi.waitFor(() => expect(values).toEqual([1, 24]));
   });
 });
 

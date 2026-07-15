@@ -1,0 +1,11 @@
+{
+  "title": "Remove Panel Tree Drag Icons",
+  "emoji": "🎨",
+  "status": "open",
+  "description": "Remove the drag icon in the panels top left where the trees are, and just show the trees",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2000"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
+  "sessions": ["⚪8b7dcd60535545198e85154361fefeef"]
+}

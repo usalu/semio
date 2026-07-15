@@ -88,7 +88,15 @@ export const Default: Story = {
             visible: true,
             size: topMiddleSize,
             onSizeChange: setTopMiddleSize,
-            tabs: [singleTreeLeaf({ id: "console", icon: Info, name: "Console", order: 0, tree: { sections: [{ id: "console.section", label: "", items: [{ id: "console.item", label: "", control: <div className="p-double font-mono text-xs">Console output...</div> }] }] } })],
+            tabs: [
+              singleTreeLeaf({
+                id: "console",
+                icon: Info,
+                name: "Console",
+                order: 0,
+                tree: { sections: [{ id: "console.section", label: "", items: [{ id: "console.item", label: "", control: <div className="p-double font-mono text-xs">Console output...</div> }] }] },
+              }),
+            ],
           },
           "top-right": {
             visible: true,

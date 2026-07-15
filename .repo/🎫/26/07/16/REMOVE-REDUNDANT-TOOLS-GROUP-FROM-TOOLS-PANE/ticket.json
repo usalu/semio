@@ -1,0 +1,11 @@
+{
+  "title": "Remove Redundant Tools Group from Tools Pane",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Remove the redundant tools group/node called tools in the tools window pane when unfolded. There should just be the tools directly.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2002"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
+  "sessions": ["⚪271b3858b3024c6c8e81d97a617bff93"]
+}

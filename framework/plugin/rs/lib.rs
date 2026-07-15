@@ -828,7 +828,7 @@ impl AppBuilder {
                         step.id,
                         id
                     ),
-                    IntroductionAnchor::Tool(tool_ref) => assert!(
+                    IntroductionAnchor::Utility(tool_ref) => assert!(
                         declared_tool_ids.contains(tool_ref.as_str()),
                         "app {} introduction step {} anchors undeclared tool {}",
                         self.id,
@@ -859,7 +859,7 @@ impl AppBuilder {
                         step.id,
                         action_ref.as_str()
                     ),
-                    IntroductionAdvance::Tool(tool_ref) => assert!(
+                    IntroductionAdvance::Utility(tool_ref) => assert!(
                         declared_tool_ids.contains(tool_ref.as_str()),
                         "app {} introduction step {} advance references undeclared tool {}",
                         self.id,
@@ -1218,7 +1218,7 @@ mod app_builder_tests {
                         "step",
                         "A",
                         "a",
-                        IntroductionAnchor::Tool("missing".into()),
+                        IntroductionAnchor::Utility("missing".into()),
                     )],
                 })
                 .build_definition()
@@ -1272,7 +1272,7 @@ mod app_builder_tests {
                 .introduction(IntroductionDefinition {
                     title: "Welcome".into(),
                     steps: vec![IntroductionStepDefinition::new("step", "A", "a", IntroductionAnchor::Screen)
-                        .advance_on(IntroductionAdvance::Tool("missing".into()))],
+                        .advance_on(IntroductionAdvance::Utility("missing".into()))],
                 })
                 .build_definition()
         });
@@ -1292,8 +1292,8 @@ mod app_builder_tests {
                 steps: vec![
                     IntroductionStepDefinition::new("welcome", "Welcome", "Hi", IntroductionAnchor::Screen),
                     IntroductionStepDefinition::new("main-window", "Main Window", "…", IntroductionAnchor::WindowKind("main".into())),
-                    IntroductionStepDefinition::new("brush-tool", "Brush", "…", IntroductionAnchor::Tool("brush".into()))
-                        .advance_on(IntroductionAdvance::Tool("brush".into())),
+                    IntroductionStepDefinition::new("brush-tool", "Brush", "…", IntroductionAnchor::Utility("brush".into()))
+                        .advance_on(IntroductionAdvance::Utility("brush".into())),
                     IntroductionStepDefinition::new("add-layer", "Add Layer", "…", IntroductionAnchor::Action("addLayer".into()))
                         .advance_on(IntroductionAdvance::Action("addLayer".into())),
                 ],
