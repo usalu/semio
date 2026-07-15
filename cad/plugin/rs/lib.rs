@@ -5115,7 +5115,7 @@ fn cad_transform_utility(id: &str, label: &str, icon: &str) -> UtilityDefinition
 }
 
 /// @emoji 🧰 The transform-tool refs scoping the gumball to every world-3d pane uniformly.
-fn cad_transform_tool_refs() -> Vec<semio_framework_plugin::UtilityRef> {
+fn cad_transform_utility_refs() -> Vec<semio_framework_plugin::UtilityRef> {
     vec!["move".into(), "rotate".into(), "scale".into()]
 }
 
@@ -5188,13 +5188,13 @@ fn create_cad_app() -> App {
                 ActionArgOption::new("default", "Default"),
                 ActionArgOption::new(CAD_EXAMPLE_FOREST_LEFT, "Hexagonal Cut Concrete Forest Left"),
             ]).default_value("default")])
-            .tool(cad_transform_utility("move", "Move", "move"))
-            .tool(cad_transform_utility("rotate", "Rotate", "rotate-cw"))
-            .tool(cad_transform_utility("scale", "Scale", "maximize-2"))
-            .window_kind_tools(CAD_PLAY_WINDOW_SHAPE, cad_transform_tool_refs())
-            .window_kind_tools(CAD_PLAY_WINDOW_BUILDING, cad_transform_tool_refs())
-            .window_kind_tools(CAD_PLAY_WINDOW_ENERGY, cad_transform_tool_refs())
-            .window_kind_tools(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC, cad_transform_tool_refs())
+            .utility(cad_transform_utility("move", "Move", "move"))
+            .utility(cad_transform_utility("rotate", "Rotate", "rotate-cw"))
+            .utility(cad_transform_utility("scale", "Scale", "maximize-2"))
+            .window_kind_utilities(CAD_PLAY_WINDOW_SHAPE, cad_transform_utility_refs())
+            .window_kind_utilities(CAD_PLAY_WINDOW_BUILDING, cad_transform_utility_refs())
+            .window_kind_utilities(CAD_PLAY_WINDOW_ENERGY, cad_transform_utility_refs())
+            .window_kind_utilities(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC, cad_transform_utility_refs())
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
                 FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,

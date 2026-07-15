@@ -88,7 +88,7 @@ interface plugin {
   ) -> result<window-output-json, plugin-error>;
   /// 🐢 Batched, hash-conditional refresh: one call replaces the old per-section `list-tools` /
   /// `window-engagements` / `window-measures` / `app-labels` (+ per-window `update-window`) round
-  /// trips. The request lists every window/panel/tools/engagements/measures/labels section the host
+  /// trips. The request lists every window/panel/utilities/engagements/measures/labels section the host
   /// wants, each with the content hash the host already holds (or none, on first fetch); the response
   /// omits the payload for any section whose hash still matches, so an unchanged window body or panel
   /// costs one small hash-compare instead of a full re-render + re-serialize + re-parse.

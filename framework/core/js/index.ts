@@ -14,8 +14,8 @@ import type {
   ActionArgDef as GeneratedActionArgDef,
   ActionArgControl as GeneratedActionArgControl,
   ActionArgOption as GeneratedActionArgOption,
-  ToolDefinition as GeneratedToolDefinition,
-  ToolRef as GeneratedToolRef,
+  UtilityDefinition as GeneratedToolDefinition,
+  UtilityRef as GeneratedUtilityRef,
   CommandScope as GeneratedCommandScope,
   CommandDefinition as GeneratedCommandDefinition,
   CommandRef as GeneratedCommandRef,
@@ -129,9 +129,9 @@ export enum Expertise {
   EXPERT = "expert",
 }
 
-export type ToolCategory = "selection" | "tools" | "history" | "sync";
+export type UtilityCategory = "selection" | "tools" | "history" | "sync";
 
-export type ToolLeaf =
+export type UtilityLeaf =
   | { readonly id: string; readonly kind: "separator"; readonly order?: number; readonly disabled?: boolean }
   | {
       readonly id: string;
@@ -142,7 +142,7 @@ export type ToolLeaf =
       readonly title?: string;
       readonly order?: number;
       readonly disabled?: boolean;
-      readonly category?: ToolCategory;
+      readonly category?: UtilityCategory;
       readonly controllerId?: string;
       readonly action?: string;
       readonly args?: unknown;
@@ -157,14 +157,14 @@ export type ToolLeaf =
       readonly order?: number;
       readonly pressed?: boolean;
       readonly disabled?: boolean;
-      readonly category?: ToolCategory;
+      readonly category?: UtilityCategory;
       readonly controllerId?: string;
       readonly action?: string;
       readonly args?: unknown;
     };
 
-export type ToolNode =
-  | ToolLeaf
+export type UtilityNode =
+  | UtilityLeaf
   | {
       readonly id: string;
       readonly kind: "collection";
@@ -174,8 +174,8 @@ export type ToolNode =
       readonly title?: string;
       readonly order?: number;
       readonly disabled?: boolean;
-      readonly category?: ToolCategory;
-      readonly children: readonly ToolNode[];
+      readonly category?: UtilityCategory;
+      readonly children: readonly UtilityNode[];
     }
   | {
       readonly id: string;
@@ -186,7 +186,7 @@ export type ToolNode =
       readonly title?: string;
       readonly order?: number;
       readonly disabled?: boolean;
-      readonly category?: ToolCategory;
+      readonly category?: UtilityCategory;
       readonly onPress: ActionDescriptor;
     }
   | {
@@ -199,7 +199,7 @@ export type ToolNode =
       readonly order?: number;
       readonly pressed?: boolean;
       readonly disabled?: boolean;
-      readonly category?: ToolCategory;
+      readonly category?: UtilityCategory;
       readonly onChange: ActionDescriptor;
     };
 
@@ -1115,16 +1115,16 @@ export type ActionDefinition = GeneratedActionDefinition;
 export type ActionArgDef = GeneratedActionArgDef;
 export type ActionArgControl = GeneratedActionArgControl;
 export type ActionArgOption = GeneratedActionArgOption;
-export type ToolDefinition = GeneratedToolDefinition;
-export type ToolRef = GeneratedToolRef;
+export type UtilityDefinition = GeneratedToolDefinition;
+export type UtilityRef = GeneratedUtilityRef;
 
 /** 🎛️ Generated from Rust `CommandScope`/`CommandDefinition`/`CommandRef` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type CommandScope = GeneratedCommandScope;
 export type CommandDefinition = GeneratedCommandDefinition;
 export type CommandRef = GeneratedCommandRef;
 
-/** 🧰 The framework-owned action id apps dispatch to activate a tool — mirrors `SET_ACTIVE_TOOL_ACTION_ID`. */
-export const SET_ACTIVE_TOOL_ACTION_ID = "setActiveTool";
+/** 🧰 The framework-owned action id apps dispatch to activate a tool — mirrors `SET_ACTIVE_UTILITY_ACTION_ID`. */
+export const SET_ACTIVE_UTILITY_ACTION_ID = "setActiveUtility";
 
 /** 🎓 The framework-owned action id apps dispatch (or the shell auto-injects into the command palette)
  * to (re)start an app's introduction — mirrors Rust `START_INTRODUCTION_ACTION_ID`. */
@@ -1149,7 +1149,7 @@ export type PluginViewState = {
   readonly activeModeId?: string;
   readonly activeWindowKindId?: string;
   /** 🧰 Host-owned active tool for the active window kind (never a document field, never a VCS op). */
-  readonly activeToolId?: string;
+  readonly activeUtilityId?: string;
   readonly selectionJson?: string;
   readonly panelJson?: string;
   readonly contributionsJson?: string;
@@ -1292,7 +1292,7 @@ export type PluginHotSwapEvent = {
 /** @emoji 🐢 One requested window/panel section — `bodyKey` only applies to windows/panels; `hash` is the host's known fnv1a-64 hex of that section's last payload, or absent on first fetch. */
 export type PluginUiRefreshSectionRequest = { readonly key: string; readonly bodyKey?: string; readonly hash?: string };
 
-/** @emoji 🐢 One batched, hash-conditional refresh request — one round trip for the window/panel/engagements/measures/labels sections. Toolbars are no longer a plugin section: the renderer derives them from the tool registry via {@link deriveToolNodes}. */
+/** @emoji 🐢 One batched, hash-conditional refresh request — one round trip for the window/panel/engagements/measures/labels sections. Toolbars are no longer a plugin section: the renderer derives them from the tool registry via {@link deriveUtilityNodes}. */
 export type PluginUiRefreshRequest = {
   readonly viewState: PluginViewState;
   readonly windows?: readonly PluginUiRefreshSectionRequest[];
@@ -1355,33 +1355,33 @@ export function resolveLayoutForMode(
 }
 
 //#region 🧰ActionArgsAndTools
-/** 🧰 A resolved tool ready for the toolbar — the TS twin of Rust `DerivedToolSpec` in `ui_wgpu`. */
-export type DerivedToolSpec = {
+/** 🧰 A resolved tool ready for the toolbar — the TS twin of Rust `DerivedUtilitySpec` in `ui_wgpu`. */
+export type DerivedUtilitySpec = {
   readonly id: string;
   readonly label: string;
   readonly iconId: string;
   readonly group?: string;
-  readonly category?: ToolCategory;
+  readonly category?: UtilityCategory;
 };
 
 /**
  * 🧰 Hand-written twin of Rust `derive_tool_nodes` (`ui/wgpu/rs/lib.rs`): builds the toolbar node tree
  * from resolved tools + the host-owned active tool id. Each tool becomes a `toggle` whose `pressed`
- * reflects `activeToolId === id` and whose `onChange` dispatches `setActiveTool { toolId }`; tools
+ * reflects `activeUtilityId === id` and whose `onChange` dispatches `setActiveUtility { utilityId }`; tools
  * sharing a `group` collapse into one `collection` placed where the group first appears.
  */
-export function deriveToolNodes(controllerId: string, tools: readonly DerivedToolSpec[], activeToolId?: string): ToolNode[] {
-  const toggle = (tool: DerivedToolSpec): ToolNode => ({
+export function deriveUtilityNodes(controllerId: string, tools: readonly DerivedUtilitySpec[], activeUtilityId?: string): UtilityNode[] {
+  const toggle = (tool: DerivedUtilitySpec): UtilityNode => ({
     id: tool.id,
     kind: "toggle",
     iconId: tool.iconId,
     label: tool.label,
     title: tool.label,
-    pressed: activeToolId === tool.id,
+    pressed: activeUtilityId === tool.id,
     category: tool.category,
-    onChange: { controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: tool.id } },
+    onChange: { controllerId, action: SET_ACTIVE_UTILITY_ACTION_ID, args: { utilityId: tool.id } },
   });
-  const nodes: ToolNode[] = [];
+  const nodes: UtilityNode[] = [];
   const groupIndex = new Map<string, number>();
   for (const tool of tools) {
     const node = toggle(tool);
@@ -1391,8 +1391,8 @@ export function deriveToolNodes(controllerId: string, tools: readonly DerivedToo
     }
     const existing = groupIndex.get(tool.group);
     if (existing !== undefined) {
-      const collection = nodes[existing] as Extract<ToolNode, { kind: "collection" }>;
-      (collection.children as ToolNode[]).push(node);
+      const collection = nodes[existing] as Extract<UtilityNode, { kind: "collection" }>;
+      (collection.children as UtilityNode[]).push(node);
     } else {
       groupIndex.set(tool.group, nodes.length);
       nodes.push({ id: `group:${tool.group}`, kind: "collection", iconId: tool.iconId, label: tool.group, title: tool.group, category: tool.category, children: [node] });
@@ -1403,17 +1403,17 @@ export function deriveToolNodes(controllerId: string, tools: readonly DerivedToo
 
 /**
  * 🎯 Hand-written twin of Rust `partition_window_measures` (`ui/wgpu/rs/lib.rs`): splits a window's
- * top-level measures into `general` and `toolOptions`. A top-level `group` tagged with `activeToolId`
+ * top-level measures into `general` and `toolOptions`. A top-level `group` tagged with `activeUtilityId`
  * lands in `toolOptions` only when it equals the window's active tool, and is dropped from both buckets
  * otherwise (irrelevant to whichever tool — or no tool — is active). Untagged groups and non-group
  * top-level measures stay in `general`, unchanged.
  */
-export function partitionWindowMeasures(measures: readonly WindowMeasure[], activeToolId?: string): { readonly general: WindowMeasure[]; readonly toolOptions: WindowMeasure[] } {
+export function partitionWindowMeasures(measures: readonly WindowMeasure[], activeUtilityId?: string): { readonly general: WindowMeasure[]; readonly toolOptions: WindowMeasure[] } {
   const general: WindowMeasure[] = [];
   const toolOptions: WindowMeasure[] = [];
   for (const measure of measures) {
-    if (measure.kind === "group" && measure.activeToolId !== undefined) {
-      if (measure.activeToolId === activeToolId) toolOptions.push(measure);
+    if (measure.kind === "group" && measure.activeUtilityId !== undefined) {
+      if (measure.activeUtilityId === activeUtilityId) toolOptions.push(measure);
       continue;
     }
     general.push(measure);
@@ -1454,7 +1454,7 @@ export function missingRequiredArgs(defs: readonly ActionArgDef[], effective: Re
 /**
  * 📇 Hand-written twin of Rust `resolve_window_actions`: explicit `windowKind.actions` refs resolve in
  * order, plus any panel-eligible app action referenced by no window kind (an orphan) appears on every
- * window — the scoping fallback that prevents blank panels mid-migration. History and `setActiveTool`
+ * window — the scoping fallback that prevents blank panels mid-migration. History and `setActiveUtility`
  * are never panel-eligible orphans.
  */
 export function resolveWindowActions(
@@ -1466,7 +1466,7 @@ export function resolveWindowActions(
   for (const kind of app.windowKinds) {
     for (const ref of kind.actions ?? []) referenced.add(ref);
   }
-  const panelEligible = (action: ActionDefinition) => action.kind !== "history" && action.id !== SET_ACTIVE_TOOL_ACTION_ID;
+  const panelEligible = (action: ActionDefinition) => action.kind !== "history" && action.id !== SET_ACTIVE_UTILITY_ACTION_ID;
   const resolved: ActionDefinition[] = [];
   const seen = new Set<string>();
   for (const ref of windowKind.actions ?? []) {
@@ -1613,7 +1613,7 @@ export type HostEffect =
   | { readonly requestFileOpen: { readonly accept: string; readonly readAs?: string; readonly importAction: string } }
   | { readonly spawnPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string; readonly label?: string; readonly documentJson?: string } }
   | { readonly openPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string } }
-  | { readonly setActiveTool: { readonly windowKindId: string; readonly toolId: string } }
+  | { readonly setActiveUtility: { readonly windowKindId: string; readonly utilityId: string } }
   | { readonly openDialog: { readonly dialogId: string; readonly args?: Record<string, unknown> } };
 
 /**
@@ -1629,7 +1629,7 @@ export type UiDirtyScope =
       readonly kind: "partial";
       readonly windowBodies?: readonly string[];
       readonly panelBodies?: readonly string[];
-      readonly tools?: boolean;
+      readonly utilities?: boolean;
       readonly engagements?: boolean;
       readonly measures?: boolean;
       readonly labels?: boolean;

@@ -1009,7 +1009,7 @@ fn lowpoly_window_engagement(view: LowpolyView, active_utility: &str) -> WindowE
     WindowEngagement {
         session_active: Some(true),
         // 🧰 The move/rotate/scale transform switcher now lives in the framework toolbar (declared via `.tool` +
-        // `.window_kind_tools`), so the engagement keeps only its non-tool options below.
+        // `.window_kind_utilities`), so the engagement keeps only its non-tool options below.
         options: Some(vec![
             WindowEngagementOption {
                 id: "lowpoly.opt.snap".into(),
@@ -2284,18 +2284,18 @@ fn create_lowpoly_app() -> App {
             // 🧰 Transform gumball + paint utilities — exclusive per-window active tool is host-owned (never a
             // document op). Selection granularity is deliberately NOT a tool group (it is a multi-select
             // window measure); the transform group defaults to "move", paint bridges into `runtime.paint_tool`.
-            .tool(lowpoly_utility("move", "Move", "move", "transform"))
-            .tool(lowpoly_utility("rotate", "Rotate", "rotate-cw", "transform"))
-            .tool(lowpoly_utility("scale", "Scale", "maximize-2", "transform"))
-            .tool(lowpoly_utility("brush", "Brush", "paintbrush", "paint"))
-            .tool(lowpoly_utility("eraser", "Eraser", "eraser", "paint"))
-            .tool(lowpoly_utility("fill", "Fill", "paint-bucket", "paint"))
-            .tool(lowpoly_utility("eyedropper", "Eyedropper", "pipette", "paint"))
-            .window_kind_tools(LOWPOLY_PLAY_WINDOW_MAIN, vec![
+            .utility(lowpoly_utility("move", "Move", "move", "transform"))
+            .utility(lowpoly_utility("rotate", "Rotate", "rotate-cw", "transform"))
+            .utility(lowpoly_utility("scale", "Scale", "maximize-2", "transform"))
+            .utility(lowpoly_utility("brush", "Brush", "paintbrush", "paint"))
+            .utility(lowpoly_utility("eraser", "Eraser", "eraser", "paint"))
+            .utility(lowpoly_utility("fill", "Fill", "paint-bucket", "paint"))
+            .utility(lowpoly_utility("eyedropper", "Eyedropper", "pipette", "paint"))
+            .window_kind_utilities(LOWPOLY_PLAY_WINDOW_MAIN, vec![
                 "move".into(), "rotate".into(), "scale".into(),
                 "brush".into(), "eraser".into(), "fill".into(), "eyedropper".into(),
             ])
-            .window_kind_tools(LOWPOLY_PLAY_WINDOW_UV, vec![
+            .window_kind_utilities(LOWPOLY_PLAY_WINDOW_UV, vec![
                 "brush".into(), "eraser".into(), "fill".into(), "eyedropper".into(),
             ])
             // 📇 Per-window action scoping — MAIN (World3d) owns every mesh-editing/transform/UV-unwrap

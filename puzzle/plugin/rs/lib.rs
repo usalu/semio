@@ -842,7 +842,7 @@ pub mod d2 {
             controls: None,
             status: Some(vec![WindowEngagementStatus { id: "puzzle2d-board-status".into(), text: format!("{node_count} nodes · {edge_count} edges · LOD {lod}") }]),
             // 🧰 The select/brush/fill switcher now lives in the framework toolbar (declared via `.tool` +
-            // `.window_kind_tools`), so the engagement no longer duplicates it as toggle options.
+            // `.window_kind_utilities`), so the engagement no longer duplicates it as toggle options.
             options: None,
             possible_engagements: None,
         }
@@ -2123,10 +2123,10 @@ pub mod d2 {
                 ])
                 // 🧰 Canvas utilities — one exclusive set, active tool host-owned (never a document op). The
                 // select/brush/fill switcher is rendered by the framework toolbar for the interactive pane.
-                .tool(puzzle2d_utility(PUZZLE2D_TOOL_SELECT, "Select", "cursor", UtilityCategory::Selection))
-                .tool(puzzle2d_utility(PUZZLE2D_TOOL_BRUSH, "Brush", "brush", UtilityCategory::Tools))
-                .tool(puzzle2d_utility(PUZZLE2D_TOOL_FILL, "Fill", "fill", UtilityCategory::Tools))
-                .window_kind_tools(PUZZLE2D_PANE_OVERVIEW, vec![PUZZLE2D_TOOL_SELECT.into(), PUZZLE2D_TOOL_BRUSH.into(), PUZZLE2D_TOOL_FILL.into()])
+                .utility(puzzle2d_utility(PUZZLE2D_TOOL_SELECT, "Select", "cursor", UtilityCategory::Selection))
+                .utility(puzzle2d_utility(PUZZLE2D_TOOL_BRUSH, "Brush", "brush", UtilityCategory::Tools))
+                .utility(puzzle2d_utility(PUZZLE2D_TOOL_FILL, "Fill", "fill", UtilityCategory::Tools))
+                .window_kind_utilities(PUZZLE2D_PANE_OVERVIEW, vec![PUZZLE2D_TOOL_SELECT.into(), PUZZLE2D_TOOL_BRUSH.into(), PUZZLE2D_TOOL_FILL.into()])
                 .default_layout(create_default_layout(&[PUZZLE2D_PANE_OVERVIEW.into(), PUZZLE2D_PANE_DETAIL.into(), PUZZLE2D_PANE_SELECTION.into()], "row", Some(&[50.0, 25.0, 25.0]), Some(&["Overview".into(), "Detail".into(), "Selection".into()]))),
         );
         for pane in PUZZLE2D_PANES {
@@ -2469,13 +2469,13 @@ pub mod d2 {
         /// 🧰 The app declares exactly the select/brush/fill canvas utilities and binds them to the interactive
         /// overview pane; the retired `fn utilities()` trait method is gone.
         #[test]
-        fn tool_registry_declares_tools() {
+        fn utility_registry_declares_utilities() {
             let definition = create_puzzle2d_app().definition;
             let ids: Vec<&str> = definition.utilities.iter().map(|tool| tool.id.as_str()).collect();
             assert_eq!(ids, vec![PUZZLE2D_TOOL_SELECT, PUZZLE2D_TOOL_BRUSH, PUZZLE2D_TOOL_FILL]);
             let overview = definition.window_kinds.iter().find(|window| window.id == PUZZLE2D_PANE_OVERVIEW).expect("overview pane");
-            let overview_tools: Vec<&str> = overview.utilities.iter().map(|tool| tool.as_str()).collect();
-            assert_eq!(overview_tools, vec![PUZZLE2D_TOOL_SELECT, PUZZLE2D_TOOL_BRUSH, PUZZLE2D_TOOL_FILL]);
+            let overview_utilities: Vec<&str> = overview.utilities.iter().map(|tool| tool.as_str()).collect();
+            assert_eq!(overview_utilities, vec![PUZZLE2D_TOOL_SELECT, PUZZLE2D_TOOL_BRUSH, PUZZLE2D_TOOL_FILL]);
             assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID), "declaring utilities must inject the setActiveTool action");
             // 🧰 D-1: select/brush/fill are this window's whole exclusive tool set, NOT a sub-collection, so
             // each carries `group: None` and renders as a flat toolbar icon (never one collapsed dropdown).
@@ -4688,7 +4688,7 @@ pub mod d3 {
     }
 
     /// 🧰 The select/brush/fill switcher lives in the framework toolbar (declared via `.tool` +
-    /// `.window_kind_tools`); the fill-count slider, voxel edit-mode picker, voxel-dimension steppers and
+    /// `.window_kind_utilities`); the fill-count slider, voxel edit-mode picker, voxel-dimension steppers and
     /// brush placement picker now live as tagged [`WindowMeasure::Group`]s in [`puzzle3d_window_measures`]
     /// (surfaced by [`partition_window_measures`] in the dedicated "Tool Options" rail only while their
     /// tool is active), so the engagement HUD is a bare command input plus a status line.
@@ -5928,14 +5928,14 @@ pub mod d3 {
                     ActionArgDef::text("value", "Query").default_value(default_jack_query()),
                 ])
                 // 🧰 Flat per-window tool set (host-owned `view_state.active_utility_id`); `select` is the default.
-                .tool(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "cursor") })
-                .tool(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
-                .tool(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
-                .tool(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })
-                .tool(UtilityDefinition::new("brush", "Brush", "brush"))
-                .tool(UtilityDefinition::new("fill", "Fill", "fill"))
-                .tool(UtilityDefinition::new("worldRelocate", "Relocate", "move-3d"))
-                .window_kind_tools(PUZZLE3D_PLAY_WINDOW_MAIN, vec!["select".into(), "move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()])
+                .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "cursor") })
+                .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
+                .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
+                .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })
+                .utility(UtilityDefinition::new("brush", "Brush", "brush"))
+                .utility(UtilityDefinition::new("fill", "Fill", "fill"))
+                .utility(UtilityDefinition::new("worldRelocate", "Relocate", "move-3d"))
+                .window_kind_utilities(PUZZLE3D_PLAY_WINDOW_MAIN, vec!["select".into(), "move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()])
                 // 🎓 Reference introduction (proof of the framework's Introduction mechanism, see
                 // `IntroductionDefinition` in `framework/core/rs/lib.rs`): a short first-run walkthrough
                 // of the viewport, the Move tool, the catalogue panel, and adding an object.
@@ -6416,7 +6416,7 @@ pub mod d3 {
         #[test]
         fn engagement_exposes_no_tool_switch_options() {
             // 🧰 select/brush/fill switching lives only on the framework toolbar (declared via `.tool` +
-            // `.window_kind_tools`); the engagement HUD must not duplicate it as options.
+            // `.window_kind_utilities`); the engagement HUD must not duplicate it as options.
             let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_TOOL.into() };
             let engagement = puzzle3d_engagement(&scene);
             assert!(engagement.options.is_none(), "the puzzle3d engagement must not re-expose tool switching as options");
@@ -7602,7 +7602,7 @@ pub mod d5 {
 
     //#region 🔖Engagement
     /// 🧰 The select/brush/fill switcher lives in the framework toolbar (declared via `.tool` +
-    /// `.window_kind_tools`); the fill-count slider and brush placement picker now live as tagged
+    /// `.window_kind_utilities`); the fill-count slider and brush placement picker now live as tagged
     /// [`WindowMeasure::Group`]s in [`puzzle5d_window_measures`] (surfaced by [`partition_window_measures`]
     /// in the dedicated "Tool Options" rail only while their tool is active), so the engagement HUD is a
     /// bare command input plus a status line.
@@ -8928,15 +8928,15 @@ pub mod d5 {
                     ActionArgDef::select("partKind", "Kind", vec![ActionArgOption::new("Part", "Part")]).default_value("Part"),
                 ])
                 // 🧰 Flat per-window tool set (host-owned `view_state.active_utility_id`); `select` is the default.
-                .tool(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "cursor") })
-                .tool(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
-                .tool(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
-                .tool(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })
-                .tool(UtilityDefinition::new("brush", "Brush", "brush"))
-                .tool(UtilityDefinition::new("fill", "Fill", "fill"))
-                .tool(UtilityDefinition::new("worldRelocate", "Relocate", "move-3d"))
-                .window_kind_tools(PUZZLE5D_PLAY_WINDOW_2D, vec!["select".into(), "brush".into(), "fill".into()])
-                .window_kind_tools(PUZZLE5D_PLAY_WINDOW_3D, vec!["select".into(), "move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()])
+                .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "cursor") })
+                .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
+                .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
+                .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })
+                .utility(UtilityDefinition::new("brush", "Brush", "brush"))
+                .utility(UtilityDefinition::new("fill", "Fill", "fill"))
+                .utility(UtilityDefinition::new("worldRelocate", "Relocate", "move-3d"))
+                .window_kind_utilities(PUZZLE5D_PLAY_WINDOW_2D, vec!["select".into(), "brush".into(), "fill".into()])
+                .window_kind_utilities(PUZZLE5D_PLAY_WINDOW_3D, vec!["select".into(), "move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()])
                 // 📇 Per-window action scoping — the 3D window (World3d) owns the transform-gumball ops
                 // (move/rotate/scale/relocate utilities are 3D-only) plus its own camera; the 2D window
                 // (Puzzle2dBoard) owns board-event dispatch and its own camera. Select/brush/fill create

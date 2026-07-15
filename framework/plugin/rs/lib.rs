@@ -149,7 +149,7 @@ use semio_framework_core::{
         InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OpEnvelope, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
-    set_active_tool_action_definition, start_introduction_action_definition, ActionArgDef, ActionRef, AppDefinition,
+    set_active_utility_action_definition, start_introduction_action_definition, ActionArgDef, ActionRef, AppDefinition,
     AppLabelsOverlay, ActionDefinition, ActionKind, CommandDefinition, CommandRef, CommandScope, Contribution, DialogDefinition, ExampleDefinition,
     IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, Keybinding, ModeDefinition, Modes, PanelGroup,
     PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition, UtilityDefinition, UtilityRef, ViewState,
@@ -386,8 +386,8 @@ impl AppBuilder {
         self
     }
 
-    /// 🧰 Scopes utilities to a mode — references ids declared via `.tool()`/`.tool_simple()`.
-    pub fn mode_tools(mut self, mode_id: impl AsRef<str>, tool_ids: Vec<UtilityRef>) -> Self {
+    /// 🧰 Scopes utilities to a mode — references ids declared via `.utility()`/`.utility_simple()`.
+    pub fn mode_utilities(mut self, mode_id: impl AsRef<str>, tool_ids: Vec<UtilityRef>) -> Self {
         let mode_id = mode_id.as_ref();
         if let Some(mode) = self.modes.iter_mut().find(|entry| entry.id == mode_id) {
             mode.utilities = tool_ids;
@@ -461,9 +461,9 @@ impl AppBuilder {
         self
     }
 
-    /// 🧰 Scopes utilities to a window kind — references ids declared via `.tool()`/`.tool_simple()`. Mirrors
+    /// 🧰 Scopes utilities to a window kind — references ids declared via `.utility()`/`.utility_simple()`. Mirrors
     /// `window_kind_actions`: the referenced tool ids are validated to resolve in `build_definition`.
-    pub fn window_kind_tools(mut self, window_kind_id: impl AsRef<str>, tool_ids: Vec<UtilityRef>) -> Self {
+    pub fn window_kind_utilities(mut self, window_kind_id: impl AsRef<str>, tool_ids: Vec<UtilityRef>) -> Self {
         let window_kind_id = window_kind_id.as_ref();
         if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
             window.utilities = tool_ids;
@@ -575,15 +575,15 @@ impl AppBuilder {
         self
     }
 
-    /// @emoji 🧰 Declares an interactive tool this app exposes (referenced by `window_kind_tools`/`mode_tools`).
-    pub fn tool(mut self, tool: UtilityDefinition) -> Self {
+    /// @emoji 🧰 Declares an interactive utility this app exposes (referenced by `window_kind_utilities`/`mode_utilities`).
+    pub fn utility(mut self, tool: UtilityDefinition) -> Self {
         self.utilities.push(tool);
         self
     }
 
-    /// @emoji 🧰 Declares a tool with default settings (no group/keys/cursor/category, gates actions while active).
-    pub fn tool_simple(self, id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<String>) -> Self {
-        self.tool(UtilityDefinition::new(id, label, icon_id))
+    /// @emoji 🧰 Declares a utility with default settings (no group/keys/cursor/category, gates actions while active).
+    pub fn utility_simple(self, id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<String>) -> Self {
+        self.utility(UtilityDefinition::new(id, label, icon_id))
     }
 
     /// @emoji 🧷 Keybinding-vs-action-registry consistency is only enforced for apps that declare
@@ -694,7 +694,7 @@ impl AppBuilder {
             }
         }
         if !self.utilities.is_empty() && declared_action_ids.insert(SET_ACTIVE_UTILITY_ACTION_ID.to_string()) {
-            actions.push(set_active_tool_action_definition());
+            actions.push(set_active_utility_action_definition());
         }
         if self.introduction.is_some() && declared_action_ids.insert(START_INTRODUCTION_ACTION_ID.to_string()) {
             actions.push(start_introduction_action_definition());
@@ -965,7 +965,7 @@ mod app_builder_tests {
             App::builder("bad-app", "Bad")
                 .document(["semio", "bad"])
                 .mode("edit", "Edit")
-                .mode_tools("edit", vec![])
+                .mode_utilities("edit", vec![])
                 .window_kind("main", "Main", "bad.main", SurfaceKind::Canvas2d)
                 .default_layout(create_default_layout(&["missing".into()], "row", None, None))
                 .build_definition();
@@ -978,7 +978,7 @@ mod app_builder_tests {
         let definition = App::builder("good-app", "Good")
             .document(["semio", "good"])
             .mode("edit", "Edit")
-            .mode_tools("edit", vec![])
+            .mode_utilities("edit", vec![])
             .window_kind("main", "Main", "good.main", SurfaceKind::Canvas2d)
             .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, "good.document")
             .default_layout(create_default_layout(&["main".into()], "row", None, None))
@@ -1060,8 +1060,8 @@ mod app_builder_tests {
     fn declaring_tools_injects_set_active_tool_action_and_keybinding() {
         use semio_framework_core::{ActionKind, UtilityDefinition, SET_ACTIVE_UTILITY_ACTION_ID};
         let definition = minimal_app("tool-app")
-            .tool(UtilityDefinition { keys: Some("b".into()), ..UtilityDefinition::new("brush", "Brush", "icon.brush") })
-            .tool_simple("eraser", "Eraser", "icon.eraser")
+            .utility(UtilityDefinition { keys: Some("b".into()), ..UtilityDefinition::new("brush", "Brush", "icon.brush") })
+            .utility_simple("eraser", "Eraser", "icon.eraser")
             .build_definition();
         let set_active_tool = definition
             .actions
@@ -1102,8 +1102,8 @@ mod app_builder_tests {
     fn build_definition_rejects_window_kind_tool_referencing_undeclared_tool() {
         let result = std::panic::catch_unwind(|| {
             minimal_app("bad-tool-ref-app")
-                .tool_simple("brush", "Brush", "icon.brush")
-                .window_kind_tools("main", vec!["missing".into()])
+                .utility_simple("brush", "Brush", "icon.brush")
+                .window_kind_utilities("main", vec!["missing".into()])
                 .build_definition()
         });
         assert!(result.is_err());
@@ -1284,8 +1284,8 @@ mod app_builder_tests {
         use semio_framework_core::{IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition};
         let definition = minimal_app("good-intro-app")
             .operation("addLayer", "Add Layer")
-            .tool_simple("brush", "Brush", "icon.brush")
-            .window_kind_tools("main", vec!["brush".into()])
+            .utility_simple("brush", "Brush", "icon.brush")
+            .window_kind_utilities("main", vec!["brush".into()])
             .window_kind_actions("main", vec!["addLayer".into()])
             .introduction(IntroductionDefinition {
                 title: "Welcome".into(),
@@ -3521,7 +3521,7 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
             response.panels.push(SectionResponse { key: entry.key.clone(), hash, value });
         }
         // 🚧 `utilities` intentionally unhandled here: `PluginApp`/`DocumentApp` currently expose no
-        // object-safe `utilities()` accessor (mid-refactor elsewhere toward a declarative `mode_tools(...)`
+        // object-safe `utilities()` accessor (mid-refactor elsewhere toward a declarative `mode_utilities(...)`
         // builder — unrelated to this ticket). No puzzle2d scope ever requests `utilities: true` (it uses
         // static mode-level utilities only), so `request.utilities` is always empty in practice; wire this up
         // once the utilities API refactor lands.
@@ -3809,7 +3809,7 @@ mod semio_plugin_macro_tests {
                 .operation("setLabelDefault", "Set Label Default")
                 .action_args("setLabelDefault", vec![ActionArgDef::text("value", "Value").default_value("seed")])
                 .view_action("badView", "Bad View")
-                .tool_simple("brush", "Brush", "icon.brush")
+                .utility_simple("brush", "Brush", "icon.brush")
                 .app_command("incrementViaCommand", "Increment", "counter")
                 .app_command("setLabelViaCommand", "Set Label", "counter")
                 .command_args("setLabelViaCommand", vec![ActionArgDef::text("value", "Value").required()]),

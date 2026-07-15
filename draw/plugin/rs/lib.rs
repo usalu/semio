@@ -1893,18 +1893,18 @@ fn create_draw_app() -> App {
             .action_with(draw_internal_action("setHover", "Set Hover", ActionKind::View))
             .action_with(draw_internal_action("engagementInput", "Engagement Input", ActionKind::View))
             // 🧰 Canvas utilities — one exclusive set per window, active tool host-owned (never a document op).
-            .tool(draw_utility("selectMarquee", "Marquee Select", "square-dashed", "Select", UtilityCategory::Selection))
-            .tool(draw_utility("selectLasso", "Lasso Select", "lasso", "Select", UtilityCategory::Selection))
-            .tool(draw_utility("selectDirect", "Direct Select", "mouse-pointer-2", "Select", UtilityCategory::Selection))
-            .tool(draw_utility("pen", "Pen", "pen-tool", "Draw", UtilityCategory::Tools))
-            .tool(draw_utility("shapeRect", "Rectangle", "square", "Draw", UtilityCategory::Tools))
-            .tool(draw_utility("shapeEllipse", "Ellipse", "circle", "Draw", UtilityCategory::Tools))
-            .tool(draw_utility("shapeLine", "Line", "minus", "Draw", UtilityCategory::Tools))
-            .tool(draw_utility("shapePolygon", "Polygon", "pentagon", "Draw", UtilityCategory::Tools))
-            .tool(draw_utility("booleanCombine", "Boolean", "combine", "Combine", UtilityCategory::Tools))
-            .tool(draw_utility("trace", "Trace", "scan-line", "Combine", UtilityCategory::Tools))
-            .tool(draw_utility("transformMove", "Pan", "move", "View", UtilityCategory::Tools))
-            .window_kind_tools(DRAW_PLAY_WINDOW_CANVAS, vec![
+            .utility(draw_utility("selectMarquee", "Marquee Select", "square-dashed", "Select", UtilityCategory::Selection))
+            .utility(draw_utility("selectLasso", "Lasso Select", "lasso", "Select", UtilityCategory::Selection))
+            .utility(draw_utility("selectDirect", "Direct Select", "mouse-pointer-2", "Select", UtilityCategory::Selection))
+            .utility(draw_utility("pen", "Pen", "pen-tool", "Draw", UtilityCategory::Tools))
+            .utility(draw_utility("shapeRect", "Rectangle", "square", "Draw", UtilityCategory::Tools))
+            .utility(draw_utility("shapeEllipse", "Ellipse", "circle", "Draw", UtilityCategory::Tools))
+            .utility(draw_utility("shapeLine", "Line", "minus", "Draw", UtilityCategory::Tools))
+            .utility(draw_utility("shapePolygon", "Polygon", "pentagon", "Draw", UtilityCategory::Tools))
+            .utility(draw_utility("booleanCombine", "Boolean", "combine", "Combine", UtilityCategory::Tools))
+            .utility(draw_utility("trace", "Trace", "scan-line", "Combine", UtilityCategory::Tools))
+            .utility(draw_utility("transformMove", "Pan", "move", "View", UtilityCategory::Tools))
+            .window_kind_utilities(DRAW_PLAY_WINDOW_CANVAS, vec![
                 "selectMarquee".into(), "selectLasso".into(), "selectDirect".into(),
                 "pen".into(), "shapeRect".into(), "shapeEllipse".into(), "shapeLine".into(), "shapePolygon".into(),
                 "booleanCombine".into(), "trace".into(), "transformMove".into(),

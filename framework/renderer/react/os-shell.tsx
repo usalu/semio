@@ -177,12 +177,12 @@ import {
   resolveUiDirtyScope,
   textEditorActions,
   normalizeAppLabelsOverlay,
-  deriveToolNodes,
+  deriveUtilityNodes,
   resolveWindowActions,
   partitionWindowMeasures,
   effectiveActionArgs,
   missingRequiredArgs,
-  SET_ACTIVE_TOOL_ACTION_ID,
+  SET_ACTIVE_UTILITY_ACTION_ID,
   START_INTRODUCTION_ACTION_ID,
   type ActionArgControl,
   type ActionArgDef,
@@ -192,8 +192,8 @@ import {
   type AppModeDefinition,
   type AppWindowKindDefinition,
   type CommandDefinition,
-  type DerivedToolSpec,
-  type ToolDefinition,
+  type DerivedUtilitySpec,
+  type UtilityDefinition,
   type AppPanelTabDefinition,
   type Canvas2dScene,
   type ComponentKind,
@@ -219,9 +219,9 @@ import {
   type StyleSpec,
   type TableScene,
   type TextEditorScene,
-  type ToolCategory,
-  type ToolLeaf,
-  type ToolNode,
+  type UtilityCategory,
+  type UtilityLeaf,
+  type UtilityNode,
   type UiButtonNode,
   type UiComponentSceneNode,
   type UiControlNode,
@@ -271,13 +271,13 @@ import {
   FRAMEWORK_SYNC_CONTROLLER_ID,
   buildFileBackboneUri,
   buildFolderBackboneUri,
-  buildFrameworkSyncTools,
+  buildFrameworkSyncUtilities,
   buildRemoteBackboneUri,
   type BackboneWorkerRequest,
   type BackboneWorkerResponse,
   type DocumentActorMsg,
   type DocumentSyncStatus,
-  type FrameworkSyncToolLeaf,
+  type FrameworkSyncUtilityLeaf,
   type PersistenceBinding,
 } from "@semio-tech/framework-os-core";
 
@@ -396,7 +396,7 @@ type ActionPaneState = {
   readonly foldedByWindowId: Readonly<Record<string, boolean>>;
   readonly expandedByWindowId: Readonly<Record<string, string | null>>;
   readonly stagedArgsByKey: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
-  readonly activeToolByWindowId: Readonly<Record<string, string | null>>;
+  readonly activeUtilityByWindowId: Readonly<Record<string, string | null>>;
 };
 
 /** 🧰 Composite key into {@link ActionPaneState.stagedArgsByKey}. */
@@ -503,7 +503,7 @@ export type ShellAction =
   | { readonly type: "SET_ACTION_PANE_EXPANDED"; readonly windowId: string; readonly value: string | null }
   | { readonly type: "STAGE_ACTION_ARG"; readonly windowId: string; readonly actionId: string; readonly argId: string; readonly value: unknown }
   | { readonly type: "RESET_ACTION_ARGS"; readonly windowId: string; readonly actionId: string }
-  | { readonly type: "SET_ACTIVE_TOOL"; readonly windowId: string; readonly toolId: string | null }
+  | { readonly type: "SET_ACTIVE_UTILITY"; readonly windowId: string; readonly utilityId: string | null }
   | { readonly type: "SET_COMMAND_EXPANDED"; readonly value: string | null }
   | { readonly type: "STAGE_COMMAND_ARG"; readonly commandId: string; readonly argId: string; readonly value: unknown }
   | { readonly type: "RESET_COMMAND_ARGS"; readonly commandId: string }
@@ -607,9 +607,9 @@ function actionPaneReducer(state: ActionPaneState, action: ShellAction): ActionP
       delete next[key];
       return { ...state, stagedArgsByKey: next };
     }
-    case "SET_ACTIVE_TOOL": {
-      if ((state.activeToolByWindowId[action.windowId] ?? null) === action.toolId) return state;
-      return { ...state, activeToolByWindowId: { ...state.activeToolByWindowId, [action.windowId]: action.toolId } };
+    case "SET_ACTIVE_UTILITY": {
+      if ((state.activeUtilityByWindowId[action.windowId] ?? null) === action.utilityId) return state;
+      return { ...state, activeUtilityByWindowId: { ...state.activeUtilityByWindowId, [action.windowId]: action.utilityId } };
     }
     default:
       return state;
@@ -768,7 +768,7 @@ export function initialShellState(_props: { readonly pluginFilter?: string; read
     pluginRuntime: { loadedPlugins: [], session: null, error: null },
     windowUi: { windowUiByKind: {}, windowEngagementsByKind: {}, windowMeasuresByKind: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
     spawnedWindow: { spawnedWindowUi: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {} },
-    actionPane: { foldedByWindowId: {}, expandedByWindowId: {}, stagedArgsByKey: {}, activeToolByWindowId: {} },
+    actionPane: { foldedByWindowId: {}, expandedByWindowId: {}, stagedArgsByKey: {}, activeUtilityByWindowId: {} },
     commandPanel: { expandedCommandId: null, stagedArgsByCommandId: {} },
     layout: {
       panels: Object.fromEntries(PANEL_ANCHORS.map((anchor) => [anchor, { visible: false, size: DEFAULT_PANEL_SIZES[anchor], path: [] }])) as Record<PanelAnchor, PanelState>,
@@ -1263,17 +1263,17 @@ function resolveCanvasBodyKey(app: AppDefinition): string {
   return windowKind.bodyKey;
 }
 
-//#region 🧰WindowToolRegistry
+//#region 🧰WindowUtilityRegistry
 /**
- * 🧰 Resolves the `ToolDefinition`s in scope for one window kind against the app's tool registry:
+ * 🧰 Resolves the `UtilityDefinition`s in scope for one window kind against the app's tool registry:
  * the window kind's own `tools` refs when non-empty, otherwise every tool the app declares (the
  * scoping fallback, mirroring `resolveWindowActions`' intent for tools). Unresolvable refs are dropped.
  */
-export function resolveWindowTools(app: Pick<AppDefinition, "tools">, windowKind: Pick<AppWindowKindDefinition, "tools">): ToolDefinition[] {
-  const registry = app.tools ?? [];
-  const refs = windowKind.tools ?? [];
+export function resolveWindowUtilities(app: Pick<AppDefinition, "utilities">, windowKind: Pick<AppWindowKindDefinition, "utilities">): UtilityDefinition[] {
+  const registry = app.utilities ?? [];
+  const refs = windowKind.utilities ?? [];
   if (refs.length === 0) return [...registry];
-  const resolved: ToolDefinition[] = [];
+  const resolved: UtilityDefinition[] = [];
   for (const ref of refs) {
     const tool = registry.find((entry) => entry.id === ref);
     if (tool) resolved.push(tool);
@@ -1281,16 +1281,16 @@ export function resolveWindowTools(app: Pick<AppDefinition, "tools">, windowKind
   return resolved;
 }
 
-/** 🧰 One `ToolDefinition` → the lean `DerivedToolSpec` consumed by {@link deriveToolNodes}. */
-function toolDefinitionToSpec(tool: ToolDefinition): DerivedToolSpec {
+/** 🧰 One `UtilityDefinition` → the lean `DerivedUtilitySpec` consumed by {@link deriveUtilityNodes}. */
+function utilityDefinitionToSpec(tool: UtilityDefinition): DerivedUtilitySpec {
   return { id: tool.id, label: tool.label, iconId: tool.iconId, group: tool.group ?? undefined, category: tool.category ?? "tools" };
 }
 
-/** 🧰 Stamps the owning `windowId` onto every `setActiveTool` descriptor in a derived toolbar tree so the shell's `onAction` interceptor targets the right window regardless of which window is globally active. */
-function tagSetActiveToolWindow(nodes: readonly ToolNode[], windowId: string): ToolNode[] {
+/** 🧰 Stamps the owning `windowId` onto every `setActiveUtility` descriptor in a derived toolbar tree so the shell's `onAction` interceptor targets the right window regardless of which window is globally active. */
+function tagSetActiveUtilityWindow(nodes: readonly UtilityNode[], windowId: string): UtilityNode[] {
   return nodes.map((node) => {
-    if (node.kind === "collection") return { ...node, children: tagSetActiveToolWindow(node.children, windowId) };
-    if (node.kind === "toggle" && "onChange" in node && node.onChange.action === SET_ACTIVE_TOOL_ACTION_ID) {
+    if (node.kind === "collection") return { ...node, children: tagSetActiveUtilityWindow(node.children, windowId) };
+    if (node.kind === "toggle" && "onChange" in node && node.onChange.action === SET_ACTIVE_UTILITY_ACTION_ID) {
       return { ...node, onChange: { ...node.onChange, args: { ...(node.onChange.args as object | undefined), windowId } } };
     }
     return node;
@@ -1298,26 +1298,26 @@ function tagSetActiveToolWindow(nodes: readonly ToolNode[], windowId: string): T
 }
 
 /**
- * 🧰 Builds the window toolbar `ToolNode[]` for one window purely from the static tool registry plus
+ * 🧰 Builds the window toolbar `UtilityNode[]` for one window purely from the static tool registry plus
  * the host-owned active tool id — the replacement for the deleted plugin `list-tools` sourcing. Each
- * `setActiveTool` descriptor is tagged with `windowId` so activation is scoped to this exact window.
+ * `setActiveUtility` descriptor is tagged with `windowId` so activation is scoped to this exact window.
  */
-export function resolveWindowToolNodes(app: Pick<AppDefinition, "tools" | "controllerId">, windowKind: Pick<AppWindowKindDefinition, "tools">, activeToolId: string | null | undefined, windowId: string): ToolNode[] {
-  const tools = resolveWindowTools(app, windowKind);
-  if (tools.length === 0) return [];
-  return tagSetActiveToolWindow(deriveToolNodes(app.controllerId, tools.map(toolDefinitionToSpec), activeToolId ?? undefined), windowId);
+export function resolveWindowUtilityNodes(app: Pick<AppDefinition, "utilities" | "controllerId">, windowKind: Pick<AppWindowKindDefinition, "utilities">, activeUtilityId: string | null | undefined, windowId: string): UtilityNode[] {
+  const utilities = resolveWindowUtilities(app, windowKind);
+  if (utilities.length === 0) return [];
+  return tagSetActiveUtilityWindow(deriveUtilityNodes(app.controllerId, utilities.map(utilityDefinitionToSpec), activeUtilityId ?? undefined), windowId);
 }
-//#endregion 🧰WindowToolRegistry
+//#endregion 🧰WindowUtilityRegistry
 
 /** @emoji 💬 Builds spawned-window engagement, measures, and tool-options chrome for one window kind. */
 export function spawnedWindowChromeForKind(
   kind: AppDefinition["windowKinds"][number],
   engagementsByKind: Readonly<Record<string, WindowEngagement>>,
   measuresByKind: Readonly<Record<string, readonly WindowMeasure[]>>,
-  activeToolId: string | undefined,
+  activeUtilityId: string | undefined,
   onAction: (action: ActionDescriptor) => void,
 ): { readonly engagement?: EngagementSpec; readonly measures: ReactNode; readonly toolOptions: ReactNode } {
-  const { measures, toolOptions } = windowMeasuresChrome(measuresByKind[kind.id] ?? kind.options.measures, activeToolId, onAction);
+  const { measures, toolOptions } = windowMeasuresChrome(measuresByKind[kind.id] ?? kind.options.measures, activeUtilityId, onAction);
   return {
     engagement: windowEngagementToSpec(resolveWindowEngagement(kind, engagementsByKind), onAction),
     measures,
@@ -1444,22 +1444,22 @@ function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, o
 /**
  * @emoji 🎯 Splits a window's measures via {@link partitionWindowMeasures} into the always-on Measures
  * overlay node (`measures`) and the tool-scoped Tool Options overlay node (`toolOptions`, shown beside
- * the toolbar only while its `activeToolId` matches the window's active tool). Both buckets render
+ * the toolbar only while its `activeUtilityId` matches the window's active tool). Both buckets render
  * through the same {@link renderWindowMeasure} control path; each is `undefined` when its bucket is empty.
  */
-function windowMeasuresChrome(measures: readonly WindowMeasure[] | undefined, activeToolId: string | undefined, onAction: (action: ActionDescriptor) => void): { readonly measures: ReactNode | undefined; readonly toolOptions: ReactNode | undefined } {
-  const { general, toolOptions } = partitionWindowMeasures(measures ?? [], activeToolId);
+function windowMeasuresChrome(measures: readonly WindowMeasure[] | undefined, activeUtilityId: string | undefined, onAction: (action: ActionDescriptor) => void): { readonly measures: ReactNode | undefined; readonly toolOptions: ReactNode | undefined } {
+  const { general, toolOptions } = partitionWindowMeasures(measures ?? [], activeUtilityId);
   return {
     measures: windowMeasuresOverlay(general, onAction),
     toolOptions: windowMeasuresOverlay(toolOptions, onAction),
   };
 }
 
-function windowToolbarNode(tools: readonly ToolNode[] | undefined, windowId: string, onAction: (action: ActionDescriptor) => void): ReactNode {
-  if (!tools?.length) return undefined;
-  const grouped = groupToolNodesByCategory(tools, WINDOW_TOOL_CATEGORIES);
+function windowUtilityBarNode(utilities: readonly UtilityNode[] | undefined, windowId: string, onAction: (action: ActionDescriptor) => void): ReactNode {
+  if (!utilities?.length) return undefined;
+  const grouped = groupUtilityNodesByCategory(utilities, WINDOW_UTILITY_CATEGORIES);
   if (!grouped.length) return undefined;
-  return <ToolTree id={`ui.toolbar.${windowId}`} tools={grouped} onAction={onAction} direction="up" />;
+  return <UtilityTree id={`ui.toolbar.${windowId}`} utilities={grouped} onAction={onAction} direction="up" />;
 }
 
 //#region 🧰WindowActionPane
@@ -1603,7 +1603,7 @@ export function resolveKeybindingIntent(definition: ActionDefinition | undefined
 }
 
 /** 🧰 Pure P5 activation decision: an empty request, or re-requesting the already-active tool, deactivates (null); otherwise the requested tool becomes active. */
-export function resolveToolActivation(current: string | null | undefined, requested: string): string | null {
+export function resolveUtilityActivation(current: string | null | undefined, requested: string): string | null {
   return requested === "" || (current ?? null) === requested ? null : requested;
 }
 
@@ -1679,10 +1679,10 @@ export function WindowActionPane(props: WindowActionPaneProps): ReactElement {
 }
 
 /** 🧰 Slice of the {@link ActionPaneState} the {@link windowActionPaneNode} builder reads. */
-type ActionPaneSlice = Pick<ActionPaneState, "expandedByWindowId" | "stagedArgsByKey" | "activeToolByWindowId">;
+type ActionPaneSlice = Pick<ActionPaneState, "expandedByWindowId" | "stagedArgsByKey" | "activeUtilityByWindowId">;
 
 /**
- * 🧰 Sibling of {@link windowToolbarNode}: resolves a window kind's panel-eligible actions and returns a
+ * 🧰 Sibling of {@link windowUtilityBarNode}: resolves a window kind's panel-eligible actions and returns a
  * bound {@link WindowActionPane}, or `undefined` when the window has no resolved actions (so the rail
  * chip never renders). Rows render disabled while an active tool gates actions
  * (`allowsActionsWhileActive === false`).
@@ -1690,8 +1690,8 @@ type ActionPaneSlice = Pick<ActionPaneState, "expandedByWindowId" | "stagedArgsB
 function windowActionPaneNode(app: AppDefinition, windowKind: AppWindowKindDefinition, windowId: string, actionPane: ActionPaneSlice, onAction: (action: ActionDescriptor) => void, dispatch: (action: ShellAction) => void): ReactNode {
   const actions = resolveWindowActions(app, windowKind);
   if (actions.length === 0) return undefined;
-  const activeToolId = actionPane.activeToolByWindowId[windowId] ?? null;
-  const activeTool = activeToolId ? (app.tools ?? []).find((tool) => tool.id === activeToolId) : undefined;
+  const activeUtilityId = actionPane.activeUtilityByWindowId[windowId] ?? null;
+  const activeTool = activeUtilityId ? (app.utilities ?? []).find((tool) => tool.id === activeUtilityId) : undefined;
   const disabled = Boolean(activeTool && activeTool.allowsActionsWhileActive === false);
   return (
     <WindowActionPane
@@ -1721,7 +1721,7 @@ export type ResolvedCommand = {
  * 🎛 Aggregates every command visible for the current session: os built-ins, the active session's
  * plugin-scope commands, the app's App-scope commands, and Mode-scope commands referenced by the
  * active mode's `commands` refs. There are no window-level commands (see `CommandScope`) — unlike
- * `resolveWindowActions`/`resolveWindowTools`, this never takes a window kind.
+ * `resolveWindowActions`/`resolveWindowUtilities`, this never takes a window kind.
  */
 export function resolveCommands(
   osCommands: readonly CommandDefinition[],
@@ -1899,7 +1899,7 @@ const COMMAND_CATEGORY_ICON = shellTabIcon("wrench");
  * `Tree` reverses top-level `sections` for `direction="up"` (bottom anchors), threaded here via `flowFromAnchor`/
  * `FlowProvider`/`useFlow` down from the hosting `Panel`, not any manual reversal in this function.
  */
-function buildCommandCategoryTree(
+export function buildCommandCategoryTree(
   commands: readonly ResolvedCommand[],
   expandedCommandId: string | null,
   stagedArgsByCommandId: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
@@ -1963,7 +1963,7 @@ function buildCommandCategoryTree(
  * memo — never depends on `expandedCommandId`/`stagedArgsByCommandId`, which change on every keystroke while
  * staging a command argument; `resolveTree` reads those fresh off refs at render time instead.
  */
-function buildCommandCategoryTabs(
+export function buildCommandCategoryTabs(
   resolvedCommands: readonly ResolvedCommand[],
   categories: readonly { readonly id: string; readonly label: string }[],
   expandedCommandIdRef: React.RefObject<string | null>,
@@ -2143,7 +2143,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const { loadedPlugins, session, error } = shellState.pluginRuntime;
   const { windowUiByKind, windowEngagementsByKind, windowMeasuresByKind, panelUiByKey, appLabelsOverlay } = shellState.windowUi;
   const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
-  const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeToolByWindowId } = shellState.actionPane;
+  const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId } = shellState.actionPane;
   const { expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
   const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, extraWindowInstances } = shellState.layout;
   const { searchOpen, findOpen, introductionStepIndex, dialog: overlayDialog } = shellState.overlays;
@@ -2242,8 +2242,8 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
 
   // 🧰 Refs so `refreshUi`/`onAction`/`applyHostEffects` can read the current host-owned active tool and
   // active window without re-creating those callbacks on every tool switch.
-  const activeToolByWindowIdRef = useRef(activeToolByWindowId);
-  activeToolByWindowIdRef.current = activeToolByWindowId;
+  const activeUtilityByWindowIdRef = useRef(activeUtilityByWindowId);
+  activeUtilityByWindowIdRef.current = activeUtilityByWindowId;
   const activeWindowIdRef = useRef(activeWindowId);
   activeWindowIdRef.current = activeWindowId;
   const actionPaneExpandedByWindowIdRef = useRef(actionPaneExpandedByWindowId);
@@ -2261,11 +2261,11 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const commandStagedArgsByCommandIdRef = useRef(commandStagedArgsByCommandId);
   commandStagedArgsByCommandIdRef.current = commandStagedArgsByCommandId;
 
-  /** 🧰 Overlays the active window's host-owned `activeToolId` onto a view state at plugin-call time. */
-  const injectActiveTool = useCallback((viewState: ViewState, windowId?: string | null): ViewState => {
+  /** 🧰 Overlays the active window's host-owned `activeUtilityId` onto a view state at plugin-call time. */
+  const injectActiveUtility = useCallback((viewState: ViewState, windowId?: string | null): ViewState => {
     const key = windowId ?? activeWindowIdRef.current;
-    const toolId = key ? (activeToolByWindowIdRef.current[key] ?? undefined) : undefined;
-    return viewState.activeToolId === toolId ? viewState : { ...viewState, activeToolId: toolId };
+    const utilityId = key ? (activeUtilityByWindowIdRef.current[key] ?? undefined) : undefined;
+    return viewState.activeUtilityId === utilityId ? viewState : { ...viewState, activeUtilityId: utilityId };
   }, []);
 
   useEffect(() => {
@@ -2381,7 +2381,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       }
       const cache = uiRefreshCacheRef.current;
       const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
-      const viewState: ViewState = injectActiveTool({ ...nextSession.viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology });
+      const viewState: ViewState = injectActiveUtility({ ...nextSession.viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology });
       const panelTabLeaves = flattenPanelTabLeaves(nextSession.app.panelTabs);
       // 🐢 One batched, hash-conditional round trip replaces the old ~12 sequential
       // render/tools/windowEngagements/windowMeasures/appLabels calls — the plugin omits payloads for
@@ -2447,7 +2447,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         else if (windowIds[0]) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: windowIds[0] });
       }
     },
-    [injectActiveTool, loadedPlugins, uiLocale, uiTerminology],
+    [injectActiveUtility, loadedPlugins, uiLocale, uiTerminology],
   );
 
   /** @emoji 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync with the app-labels overlay on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale. */
@@ -2480,7 +2480,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       }
       const cache = spawnedUiRefreshCacheRef.current;
       const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
-      const fullViewState: ViewState = injectActiveTool({ ...viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology }, spawned.id);
+      const fullViewState: ViewState = injectActiveUtility({ ...viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology }, spawned.id);
       const bodyKey = resolveCanvasBodyKey(app);
       // 🐢 A spawned instance's view is a single body + tools + engagements + measures (no panels, no
       // labels) — that's already the minimal grouping, so there is no narrower-than-full "partial" scope
@@ -2499,7 +2499,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: dynamicEngagements });
       dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: dynamicMeasures });
     },
-    [injectActiveTool, loadedPlugins, uiLocale, uiTerminology],
+    [injectActiveUtility, loadedPlugins, uiLocale, uiTerminology],
   );
 
   // 🐢 Keyed on the pluginId/app/instance triple (not `session` object identity) so this only fires on
@@ -2651,12 +2651,12 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           nextViewState = { ...nextViewState, panelJson: effect.setPanel.panelJson };
           continue;
         }
-        if ("setActiveTool" in effect) {
+        if ("setActiveUtility" in effect) {
           // 🧰 A plugin programmatically switched tool: mirror it into the host-owned store slice and,
           // when it targets the active window, into the view state fed to the follow-up refresh.
-          const { windowKindId, toolId } = effect.setActiveTool;
-          dispatch({ type: "SET_ACTIVE_TOOL", windowId: windowKindId, toolId: toolId || null });
-          if (windowKindId === activeWindowIdRef.current) nextViewState = { ...nextViewState, activeToolId: toolId || undefined };
+          const { windowKindId, utilityId } = effect.setActiveUtility;
+          dispatch({ type: "SET_ACTIVE_UTILITY", windowId: windowKindId, utilityId: utilityId || null });
+          if (windowKindId === activeWindowIdRef.current) nextViewState = { ...nextViewState, activeUtilityId: utilityId || undefined };
           continue;
         }
         if ("openDialog" in effect) {
@@ -2930,7 +2930,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     (action: ActionDescriptor) => {
       if (!session) return;
 
-      // 🎓 First-run walkthrough (mirrors setActiveTool below): fully shell-intercepted, resets
+      // 🎓 First-run walkthrough (mirrors setActiveUtility below): fully shell-intercepted, resets
       // playback to the first step, never forwarded to the plugin.
       if (action.action === START_INTRODUCTION_ACTION_ID) {
         dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
@@ -2950,26 +2950,26 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       };
 
       // 🧰 Tool activation (P5): host-owned session state, never a document op. Re-clicking the active
-      // tool (or an empty toolId) deactivates. We resolve the target window from the descriptor's tagged
-      // `windowId` (see `tagSetActiveToolWindow`), falling back to the active window, update the store,
+      // tool (or an empty utilityId) deactivates. We resolve the target window from the descriptor's tagged
+      // `windowId` (see `tagSetActiveUtilityWindow`), falling back to the active window, update the store,
       // then forward the resolved tool to the plugin so it can clear/prepare scratch.
-      if (action.action === SET_ACTIVE_TOOL_ACTION_ID) {
-        const args = typeof action.args === "object" && action.args != null ? (action.args as { toolId?: unknown; windowId?: unknown }) : {};
+      if (action.action === SET_ACTIVE_UTILITY_ACTION_ID) {
+        const args = typeof action.args === "object" && action.args != null ? (action.args as { utilityId?: unknown; windowId?: unknown }) : {};
         const windowId = typeof args.windowId === "string" && args.windowId ? args.windowId : (activeWindowIdRef.current ?? "");
         if (!windowId) return;
-        const requested = typeof args.toolId === "string" ? args.toolId : "";
-        const next = resolveToolActivation(activeToolByWindowIdRef.current[windowId], requested);
-        dispatch({ type: "SET_ACTIVE_TOOL", windowId, toolId: next });
+        const requested = typeof args.utilityId === "string" ? args.utilityId : "";
+        const next = resolveUtilityActivation(activeUtilityByWindowIdRef.current[windowId], requested);
+        dispatch({ type: "SET_ACTIVE_UTILITY", windowId, utilityId: next });
         if (introductionStep?.advance.kind === "tool" && next && introductionStep.advance.id === next) advanceIntroductionStep();
         const pluginEntry = findPluginForAction(action);
         const plugin = pluginEntry?.handle;
         if (plugin) {
-          const viewState: ViewState = { ...session.viewState, activeToolId: next ?? undefined };
-          const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { toolId: next } };
+          const viewState: ViewState = { ...session.viewState, activeUtilityId: next ?? undefined };
+          const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { utilityId: next } };
           void plugin
             .handleAction(session.instanceId, JSON.stringify(forwarded), viewState)
             .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope)))
-            .catch((toolError) => console.error("[DEBUG] setActiveTool failed", toolError));
+            .catch((toolError) => console.error("[DEBUG] setActiveUtility failed", toolError));
         }
         return;
       }
@@ -3058,7 +3058,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       // (`OsAppInstance.document` is now just an `OsDocumentRef` handle). A spawned instance's content
       // sync now goes through its own `openDocument`-opened `DocumentHost` channel, same as any other
       // document; there is no host-side JS mirroring step anymore.
-      const dispatchViewState = injectActiveTool(targetSession.viewState);
+      const dispatchViewState = injectActiveUtility(targetSession.viewState);
       void plugin
         .handleAction(targetSession.instanceId, JSON.stringify(action), dispatchViewState)
         .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
@@ -3066,7 +3066,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           console.error("[DEBUG] action failed", actionError);
         });
     },
-    [applyHostEffects, attachSyncBackbone, detachSyncBackbone, findPluginForAction, injectActiveTool, loadedPlugins, panel, session, spawnProgram, studioMode, syncBackboneUri, syncDraftPath, updateStudioPanel],
+    [applyHostEffects, attachSyncBackbone, detachSyncBackbone, findPluginForAction, injectActiveUtility, loadedPlugins, panel, session, spawnProgram, studioMode, syncBackboneUri, syncDraftPath, updateStudioPanel],
   );
 
   const onActionRef = useRef(onAction);
@@ -3472,9 +3472,9 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       // 🧰 Escape deactivates the active window's active tool (P5) when nothing is being typed.
       if (event.key === "Escape") {
         const windowId = activeWindowIdRef.current;
-        if (windowId && activeToolByWindowIdRef.current[windowId]) {
+        if (windowId && activeUtilityByWindowIdRef.current[windowId]) {
           event.preventDefault();
-          onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { windowId, toolId: "" } });
+          onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_UTILITY_ACTION_ID, args: { windowId, utilityId: "" } });
           return;
         }
       }
@@ -3545,28 +3545,28 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   //#region 🧰FooterToolLeaves — bottom-right's History tab, now sourced from the framework-owned History
   // actions in the app registry (the plugin `list-tools` surface is gone; the per-window Actions rail
   // replaces the old footer Actions tab entirely per P6).
-  const frameworkToolsHistoryTab = useMemo((): PanelTabNode | null => {
+  const frameworkUtilitiesHistoryTab = useMemo((): PanelTabNode | null => {
     if (!session) return null;
-    const grouped = groupToolNodesByCategory(frameworkHistoryToolNodes(session.app), ["history"]);
+    const grouped = groupUtilityNodesByCategory(frameworkHistoryUtilityNodes(session.app), ["history"]);
     if (!grouped.length) return null;
     return singleTreeLeaf({
-      id: "framework.tools.history",
-      icon: shellTabIcon(TOOL_CATEGORY_ICON_ID.history),
+      id: "framework.utilities.history",
+      icon: shellTabIcon(UTILITY_CATEGORY_ICON_ID.history),
       name: shellLabel("ui.panel.toolsHistory"),
       order: 1,
-      tree: { sections: [{ id: "framework.tools.history.root", label: "", items: [{ id: "framework.tools.history.tree", label: "", control: <ToolTree id="ui.toolbar.footer.history" tools={grouped} onAction={onAction} direction="up" /> }] }] },
+      tree: { sections: [{ id: "framework.utilities.history.root", label: "", items: [{ id: "framework.utilities.history.tree", label: "", control: <UtilityTree id="ui.toolbar.footer.history" utilities={grouped} onAction={onAction} direction="up" /> }] }] },
     });
   }, [onAction, session]);
   //#endregion 🧰FooterToolLeaves
 
   //#region 🔄SyncLeaf — bottom-left's sync tab, replacing the old floating footer SyncAttachCard.
   const frameworkSyncTab = useMemo((): PanelTabNode | null => {
-    const syncTools = buildFrameworkSyncTools(syncBackboneUri) as readonly ToolNode[];
-    if (!syncTools.length) return null;
+    const syncUtilities = buildFrameworkSyncUtilities(syncBackboneUri) as readonly UtilityNode[];
+    if (!syncUtilities.length) return null;
     const syncStatus = syncBackboneUri ? (syncStatusByDocumentId[syncBackboneUri.replace(/^actor:\/\//, "")] ?? null) : null;
     return singleTreeLeaf({
       id: "framework.sync",
-      icon: shellTabIcon(TOOL_CATEGORY_ICON_ID.sync),
+      icon: shellTabIcon(UTILITY_CATEGORY_ICON_ID.sync),
       name: shellLabel("ui.panel.sync"),
       order: 0,
       tree: {
@@ -3583,7 +3583,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
                     activeUri={syncBackboneUri}
                     cardKind={syncCardKind}
                     draftPath={syncDraftPath}
-                    syncTools={syncTools}
+                    syncUtilities={syncUtilities}
                     status={syncStatus}
                     onAction={onAction}
                     onDraftPathChange={(value) => dispatch({ type: "SET_SYNC_DRAFT_PATH", value })}
@@ -3626,7 +3626,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       if (!session) return;
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
       if (!plugin?.handleCommand) return;
-      const dispatchViewState = injectActiveTool(session.viewState);
+      const dispatchViewState = injectActiveUtility(session.viewState);
       void plugin
         .handleCommand(session.instanceId, JSON.stringify({ command: commandId, args }), dispatchViewState)
         .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
@@ -3634,7 +3634,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           console.error("[DEBUG] command failed", commandError);
         });
     },
-    [applyHostEffects, dockLayoutStore, dockUiStateStore, injectActiveTool, loadedPlugins, session],
+    [applyHostEffects, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session],
   );
 
   const commandCategoryTabs = useMemo(
@@ -3652,9 +3652,9 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     if (frameworkSyncTab) bottomLeft.push(frameworkSyncTab);
     const topRight: PanelTabNode[] = [{ kind: "branch", id: FRAMEWORK_CATEGORY_DETAILS_ID, icon: categoryTabIcon(detailsRightTabs, "info"), name: shellLabel("ui.panelToggle.details"), order: 0, children: detailsRightTabs }];
     const bottomRight: PanelTabNode[] = [{ kind: "branch", id: FRAMEWORK_CATEGORY_SETTINGS_ID, icon: categoryTabIcon(settingsRightTabs, "settings-2"), name: shellLabel("ui.panelToggle.settings"), order: 0, children: settingsRightTabs }];
-    if (frameworkToolsHistoryTab) bottomRight.push(frameworkToolsHistoryTab);
+    if (frameworkUtilitiesHistoryTab) bottomRight.push(frameworkUtilitiesHistoryTab);
     return { anchors: { "top-left": topLeft, "top-middle": [], "top-right": topRight, "bottom-left": bottomLeft, "bottom-middle": commandCategoryTabs, "bottom-right": bottomRight } };
-  }, [commandCategoryTabs, detailsRightTabs, frameworkDisplayTabs, frameworkSyncTab, frameworkToolsHistoryTab, settingsRightTabs, uiLocale, workbenchLeftTabs]);
+  }, [commandCategoryTabs, detailsRightTabs, frameworkDisplayTabs, frameworkSyncTab, frameworkUtilitiesHistoryTab, settingsRightTabs, uiLocale, workbenchLeftTabs]);
 
   useEffect(() => {
     dispatch({ type: "SET_DOCK_OVERRIDE", value: dockLayoutStore.getSnapshot() });
@@ -3808,7 +3808,6 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     };
   }, [panels, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, studioMode, treeOpenStates]);
 
-  const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
   const exampleOptions = useMemo(() => {
     const appId = session?.app.id ?? "";
     if (!appId) return [];
@@ -3834,46 +3833,6 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     noExampleResetInstanceIdRef.current = session.instanceId;
     onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: "" } });
   }, [activeExampleId, exampleOptions, onAction, session]);
-
-  const activeModeId = session?.viewState.activeModeId ?? session?.app.modes[0]?.id ?? session?.app.id ?? "";
-
-  const resolvedCommands = useMemo(
-    () => resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId),
-    [osCommands, activePluginManifest, session?.app, activeModeId],
-  );
-
-  const commandCategoryList = useMemo(() => commandCategories(resolvedCommands), [resolvedCommands]);
-
-  /**
-   * 🎛 Dispatches a resolved command: os-scope commands are handled locally (no plugin round trip);
-   * plugin/app/mode-scope commands route through the active session's plugin `handleCommand`, mirroring
-   * `onAction`'s tail. Plugin commands are only resolvable/dispatchable for the active session's plugin
-   * instance (no headless-instance routing for non-focused plugins yet).
-   */
-  const onCommand = useCallback(
-    (source: ResolvedCommand["source"], commandId: string, args?: Record<string, unknown>) => {
-      if (source.kind === "os") {
-        dispatchOsCommand(commandId, args, dispatch, dockLayoutStore, dockUiStateStore);
-        return;
-      }
-      if (!session) return;
-      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
-      if (!plugin?.handleCommand) return;
-      const dispatchViewState = injectActiveTool(session.viewState);
-      void plugin
-        .handleCommand(session.instanceId, JSON.stringify({ command: commandId, args }), dispatchViewState)
-        .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
-        .catch((commandError) => {
-          console.error("[DEBUG] command failed", commandError);
-        });
-    },
-    [applyHostEffects, dockLayoutStore, dockUiStateStore, injectActiveTool, loadedPlugins, session],
-  );
-
-  const footerItems = useMemo((): NavbarItem[] => {
-    const panel = commandPanelNode(resolvedCommands, commandCategoryList, shellState.commandPanel, onCommand, dispatch);
-    return panel ? [{ key: "commands", centered: true, content: panel }] : [];
-  }, [resolvedCommands, commandCategoryList, shellState.commandPanel, onCommand]);
 
   const navbarItems = useMemo((): NavbarItem[] => {
     if (!session) return [];
@@ -3993,8 +3952,8 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       });
     }
     // 🎛️ Commands (os/plugin/app/mode) — the footer twin of the window-rail P3 redirect above: an
-    // arg-carrying command never fires from the palette, it opens the footer panel at its category and
-    // expands its form instead.
+    // arg-carrying command never fires from the palette, it opens the bottom-middle command panel at its
+    // category and expands its form instead.
     for (const { definition, source } of resolvedCommands) {
       if (!definition.inPalette) continue;
       const argCarrying = (definition.args?.length ?? 0) > 0;
@@ -4005,7 +3964,8 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         category: titleizeCommandCategory(definition.category),
         onSelect: () => {
           if (argCarrying) {
-            dispatch({ type: "SET_COMMAND_CATEGORY", value: definition.category });
+            dispatch({ type: "SET_PANEL_VISIBLE", anchor: "bottom-middle", value: true });
+            dispatch({ type: "SET_PANEL_PATH", anchor: "bottom-middle", value: [`command.category.${definition.category}`] });
             dispatch({ type: "SET_COMMAND_EXPANDED", value: definition.id });
             dispatch({ type: "SET_SEARCH_OPEN", value: false });
             return;
@@ -4051,13 +4011,13 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
 
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
-    const actionPaneSlice: ActionPaneSlice = { expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeToolByWindowId };
+    const actionPaneSlice: ActionPaneSlice = { expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId };
     const actionsFoldedFor = (windowId: string) => actionPaneFoldedByWindowId[windowId] ?? true;
     const onActionsFoldedFor = (windowId: string) => (folded: boolean) => dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId, value: folded });
     // 🖱️ Window-body cursor follows the active tool's declared `cursor` (P5).
     const cursorFor = (app: AppDefinition, windowId: string): CSSProperties | undefined => {
-      const toolId = activeToolByWindowId[windowId];
-      const cursor = toolId ? (app.tools ?? []).find((tool) => tool.id === toolId)?.cursor : undefined;
+      const utilityId = activeUtilityByWindowId[windowId];
+      const cursor = utilityId ? (app.utilities ?? []).find((tool) => tool.id === utilityId)?.cursor : undefined;
       return cursor ? { cursor } : undefined;
     };
     if (studioMode && spawnedWindowUi && panel?.activeSpawnedId) {
@@ -4065,7 +4025,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       if (spawned) {
         const spawnedApp = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
         const windowKind = spawnedApp?.windowKinds[0];
-        const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawnedWindowEngagements, spawnedWindowMeasures, activeToolByWindowId[spawned.id], onActionStable) : undefined;
+        const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawnedWindowEngagements, spawnedWindowMeasures, activeUtilityByWindowId[spawned.id], onActionStable) : undefined;
         return [
           {
             id: spawned.id,
@@ -4075,7 +4035,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
             measures: chrome?.measures,
             toolOptions: chrome?.toolOptions,
             engagement: chrome?.engagement,
-            toolbar: spawnedApp && windowKind ? windowToolbarNode(resolveWindowToolNodes(spawnedApp, windowKind, activeToolByWindowId[spawned.id], spawned.id), spawned.id, onActionStable) : undefined,
+            toolbar: spawnedApp && windowKind ? windowUtilityBarNode(resolveWindowUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[spawned.id], spawned.id), spawned.id, onActionStable) : undefined,
             actionPane: spawnedApp && windowKind ? windowActionPaneNode(spawnedApp, windowKind, spawned.id, actionPaneSlice, onActionStable, dispatch) : undefined,
             actionsFolded: actionsFoldedFor(spawned.id),
             onActionsFoldedChange: onActionsFoldedFor(spawned.id),
@@ -4094,9 +4054,9 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       title: appWindowDocumentLabel(session.app, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label)),
       fill: true,
       showControls: true,
-      ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeToolByWindowId[kind.id], onActionStable),
+      ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id], onActionStable),
       engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
-      toolbar: windowToolbarNode(resolveWindowToolNodes(session.app, kind, activeToolByWindowId[kind.id], kind.id), kind.id, onActionStable),
+      toolbar: windowUtilityBarNode(resolveWindowUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id), kind.id, onActionStable),
       actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch),
       actionsFolded: actionsFoldedFor(kind.id),
       onActionsFoldedChange: onActionsFoldedFor(kind.id),
@@ -4115,9 +4075,9 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           title: instance.title,
           fill: true,
           showControls: true,
-          ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeToolByWindowId[instance.id], onActionStable),
+          ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id], onActionStable),
           engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
-          toolbar: windowToolbarNode(resolveWindowToolNodes(session.app, kind, activeToolByWindowId[instance.id], instance.id), instance.id, onActionStable),
+          toolbar: windowUtilityBarNode(resolveWindowUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id), instance.id, onActionStable),
           actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch),
           actionsFolded: actionsFoldedFor(instance.id),
           onActionsFoldedChange: onActionsFoldedFor(instance.id),
@@ -4134,7 +4094,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     actionPaneExpandedByWindowId,
     actionPaneFoldedByWindowId,
     actionPaneStagedArgsByKey,
-    activeToolByWindowId,
+    activeUtilityByWindowId,
     appLabelsOverlay,
     extraWindowInstances,
     loadedPlugins,
@@ -4261,6 +4221,13 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       activeTabPath: panelActivePaths[anchor],
       onActiveTabPathChange: (path: readonly string[]) => {
         dispatch({ type: "SET_PANEL_PATH", anchor, value: path });
+        // 🎛️ Command palette only: switching category leaves always collapses any expanded arg form — the
+        // next hierarchy level up only makes sense under its own category's command list (mirrors the old
+        // dedicated `SET_COMMAND_CATEGORY` reducer case, now expressed at the generic path-change call site
+        // since category-active state itself is just this anchor's `activeTabPath`).
+        if (anchor === "bottom-middle" && panels[anchor].path[0] !== path[0]) {
+          dispatch({ type: "SET_COMMAND_EXPANDED", value: null });
+        }
         const tabId = path[path.length - 1];
         // 🌱 Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
         if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
@@ -4284,7 +4251,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
               mobile={mobile}
               mobilePanel={mobilePanel}
               navbar={<Navbar items={navbarItems} showFullscreenToggle />}
-              footer={<Footer items={footerItems} />}
+              footer={<Footer items={[]} />}
               panels={{
                 "top-left": buildPanelProps("top-left"),
                 "top-middle": buildPanelProps("top-middle"),
@@ -4980,7 +4947,7 @@ type SyncAttachCardProps = {
   readonly activeUri: string | null;
   readonly cardKind: SyncCardKind | null;
   readonly draftPath: string;
-  readonly syncTools: readonly FrameworkSyncToolLeaf[];
+  readonly syncUtilities: readonly FrameworkSyncUtilityLeaf[];
   readonly status: DocumentSyncStatus | null;
   readonly onAction: (action: ActionDescriptor) => void;
   readonly onDraftPathChange: (value: string) => void;
@@ -5000,7 +4967,7 @@ function syncStatusLabel(status: DocumentSyncStatus | null): string | null {
   return `${remote} · ${persisted}${pending}`;
 }
 
-function SyncAttachCard({ activeUri, cardKind, draftPath, syncTools, status, onAction, onDraftPathChange, onClose, onAttach, onDetach }: SyncAttachCardProps): ReactElement {
+function SyncAttachCard({ activeUri, cardKind, draftPath, syncUtilities, status, onAction, onDraftPathChange, onClose, onAttach, onDetach }: SyncAttachCardProps): ReactElement {
   const open = cardKind != null;
   const placeholder = cardKind === "remote" ? "127.0.0.1:8787/demo" : cardKind === "folder" ? "/absolute/project/folder" : "/absolute/document.json";
 
@@ -5025,7 +4992,7 @@ function SyncAttachCard({ activeUri, cardKind, draftPath, syncTools, status, onA
     >
       <PopoverAnchor asChild>
         <div>
-          <ToolTree tools={groupToolNodesByCategory(syncTools as readonly ToolNode[], ["sync"])} onAction={onAction} />
+          <UtilityTree utilities={groupUtilityNodesByCategory(syncUtilities as readonly UtilityNode[], ["sync"])} onAction={onAction} />
         </div>
       </PopoverAnchor>
       {open ? (
@@ -5055,15 +5022,15 @@ function SyncAttachCard({ activeUri, cardKind, draftPath, syncTools, status, onA
 
 //#region 🔖tool-tree
 
-type ToolTreeProps = {
-  readonly tools: readonly ToolNode[];
+type UtilityTreeProps = {
+  readonly utilities: readonly UtilityNode[];
   readonly onAction: (action: ActionDescriptor) => void;
   readonly id?: string;
   /** @emoji 🎀 `up` stacks a new ribbon line above the base row per pressed collection (window toolbar); `inline` keeps the horizontal drill-down (footer). */
   readonly direction?: RibbonDirection;
 };
 
-function resolveLeafAction(node: ToolLeaf | Extract<ToolNode, { readonly kind: "button" | "toggle" }>): ActionDescriptor | null {
+function resolveLeafAction(node: UtilityLeaf | Extract<UtilityNode, { readonly kind: "button" | "toggle" }>): ActionDescriptor | null {
   if ("onPress" in node && node.onPress) return node.onPress;
   if ("onChange" in node && node.onChange) return node.onChange;
   if (node.kind === "button" || node.kind === "toggle") {
@@ -5078,25 +5045,25 @@ function toolIcon(iconId: string): IconName {
 }
 
 /** @emoji 🔢 Sorts toolbar nodes by `order`. */
-export function sortToolNodes(nodes: readonly ToolNode[]): ToolNode[] {
+export function sortUtilityNodes(nodes: readonly UtilityNode[]): UtilityNode[] {
   return [...nodes].sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
 }
 
-//#region 🗂️ToolCategoryGrouping
+//#region 🗂️UtilityCategoryGrouping
 
-const TOOL_CATEGORY_ORDER: readonly ToolCategory[] = ["selection", "tools", "history", "sync"];
+const UTILITY_CATEGORY_ORDER: readonly UtilityCategory[] = ["selection", "tools", "history", "sync"];
 
 /** @emoji 🪟 Categories that are scoped to whatever window/pane the user is interacting with — selecting or editing content varies per window, so these live in each window's own bottom-left panel. */
-const WINDOW_TOOL_CATEGORIES: readonly ToolCategory[] = ["selection", "tools"];
+const WINDOW_UTILITY_CATEGORIES: readonly UtilityCategory[] = ["selection", "tools"];
 
-const TOOL_CATEGORY_ICON_ID: Readonly<Record<ToolCategory, string>> = {
+const UTILITY_CATEGORY_ICON_ID: Readonly<Record<UtilityCategory, string>> = {
   selection: "mouse-pointer",
   tools: "wrench",
   history: "undo",
   sync: "cloud",
 };
 
-function toolNodeCategory(node: ToolNode): ToolCategory {
+function utilityNodeCategory(node: UtilityNode): UtilityCategory {
   if (node.kind === "separator") return "tools";
   if (node.category) return node.category;
   return "tools";
@@ -5106,7 +5073,7 @@ function toolNodeCategory(node: ToolNode): ToolCategory {
  * 🕰️ Framework-owned History tool nodes derived from an app's registry (the six injected History
  * actions). Sources the bottom-right History footer tab now that the plugin `list-tools` surface is gone.
  */
-export function frameworkHistoryToolNodes(app: Pick<AppDefinition, "actions" | "controllerId">): ToolNode[] {
+export function frameworkHistoryUtilityNodes(app: Pick<AppDefinition, "actions" | "controllerId">): UtilityNode[] {
   return (app.actions ?? [])
     .filter((action) => action.kind === "history")
     .map((action, order) => ({
@@ -5121,28 +5088,28 @@ export function frameworkHistoryToolNodes(app: Pick<AppDefinition, "actions" | "
     }));
 }
 
-/** @emoji 🗂️ Buckets top-level tool nodes into the given categories (default: all) so activating a category expands the panel with another line, matching {@link buildToolbarRibbonSegments}'s one-active-group-per-level picker. A category with a single already-meaningful collection is used as-is instead of being re-wrapped in a synthetic one, avoiding a redundant picker level with a duplicate-looking label (e.g. a lone "Selection" collection nested under a "Selection" category chip). Separators default to `tools` (mirrors Rust `ToolNode::category()`), so dividers between same-category runs survive; dividers that only separated different categories become redundant once those categories are separate picker lines. */
-export function groupToolNodesByCategory(nodes: readonly ToolNode[], categories: readonly ToolCategory[] = TOOL_CATEGORY_ORDER): ToolNode[] {
-  const buckets = new Map<ToolCategory, ToolNode[]>();
+/** @emoji 🗂️ Buckets top-level tool nodes into the given categories (default: all) so activating a category expands the panel with another line, matching {@link buildToolbarRibbonSegments}'s one-active-group-per-level picker. A category with a single already-meaningful collection is used as-is instead of being re-wrapped in a synthetic one, avoiding a redundant picker level with a duplicate-looking label (e.g. a lone "Selection" collection nested under a "Selection" category chip). Separators default to `tools` (mirrors Rust `UtilityNode::category()`), so dividers between same-category runs survive; dividers that only separated different categories become redundant once those categories are separate picker lines. */
+export function groupUtilityNodesByCategory(nodes: readonly UtilityNode[], categories: readonly UtilityCategory[] = UTILITY_CATEGORY_ORDER): UtilityNode[] {
+  const buckets = new Map<UtilityCategory, UtilityNode[]>();
   for (const node of nodes) {
-    const category = toolNodeCategory(node);
+    const category = utilityNodeCategory(node);
     if (!categories.includes(category)) continue;
     const bucket = buckets.get(category) ?? [];
     bucket.push(node);
     buckets.set(category, bucket);
   }
   return categories
-    .filter((category) => hasInteractiveToolNodes(buckets.get(category)))
+    .filter((category) => hasInteractiveUtilityNodes(buckets.get(category)))
     .map((category, order) => {
       const bucket = buckets.get(category)!;
       if (bucket.length === 1 && bucket[0].kind === "collection") return { ...bucket[0], order };
-      return { id: category, kind: "collection" as const, iconId: TOOL_CATEGORY_ICON_ID[category], text: category, order, category, children: bucket };
+      return { id: category, kind: "collection" as const, iconId: UTILITY_CATEGORY_ICON_ID[category], text: category, order, category, children: bucket };
     });
 }
 
 /** @emoji 🦶 Deduplicates tool nodes by id across every window's tool set (mode-wide tools are attached identically to each window kind when a plugin doesn't differentiate per window), for a single shared footer entry per tool. */
-export function dedupeToolNodesById(nodeLists: readonly (readonly ToolNode[])[]): ToolNode[] {
-  const seen = new Map<string, ToolNode>();
+export function dedupeUtilityNodesById(nodeLists: readonly (readonly UtilityNode[])[]): UtilityNode[] {
+  const seen = new Map<string, UtilityNode>();
   for (const nodes of nodeLists) {
     for (const node of nodes) {
       if (!seen.has(node.id)) seen.set(node.id, node);
@@ -5151,35 +5118,35 @@ export function dedupeToolNodesById(nodeLists: readonly (readonly ToolNode[])[])
   return [...seen.values()];
 }
 
-//#endregion 🗂️ToolCategoryGrouping
+//#endregion 🗂️UtilityCategoryGrouping
 
-function isInteractiveToolNode(node: ToolNode): boolean {
+function isInteractiveUtilityNode(node: UtilityNode): boolean {
   if (node.kind === "separator") return false;
-  if (node.kind === "collection") return hasInteractiveToolNodes(node.children);
+  if (node.kind === "collection") return hasInteractiveUtilityNodes(node.children);
   return true;
 }
 
-function hasInteractiveToolNodes(nodes?: readonly ToolNode[]): boolean {
-  return Boolean(nodes?.some((node) => isInteractiveToolNode(node)));
+function hasInteractiveUtilityNodes(nodes?: readonly UtilityNode[]): boolean {
+  return Boolean(nodes?.some((node) => isInteractiveUtilityNode(node)));
 }
 
-function hasInteractiveToolLeaves(items: readonly ToolLeaf[]): boolean {
+function hasInteractiveUtilityLeaves(items: readonly UtilityLeaf[]): boolean {
   return items.some((node) => node.kind !== "separator");
 }
 
-type ToolCollectionNode = Extract<ToolNode, { readonly kind: "collection" }>;
+type UtilityCollectionNode = Extract<UtilityNode, { readonly kind: "collection" }>;
 
-export type ToolbarRibbonSegment = { readonly kind: "picker"; readonly collections: readonly ToolCollectionNode[]; readonly depth: number } | { readonly kind: "tools"; readonly items: readonly ToolLeaf[]; readonly depth: number };
+export type ToolbarRibbonSegment = { readonly kind: "picker"; readonly collections: readonly UtilityCollectionNode[]; readonly depth: number } | { readonly kind: "tools"; readonly items: readonly UtilityLeaf[]; readonly depth: number };
 
 /** @emoji 🎀 Builds drill-down ribbon segments from a toolbar tree and active collection path; `depth` marks how many collections were drilled into to reach a segment. Collections never auto-activate: a level only recurses when `path[depth]` names one of its enabled collections, so at most one group per level is active and an unresolved level simply shows its picker. */
-export function buildToolbarRibbonSegments(nodes: readonly ToolNode[], path: readonly string[], depth = 0): ToolbarRibbonSegment[] {
-  const sorted = sortToolNodes(nodes);
-  const collections = sorted.filter((node): node is ToolCollectionNode => node.kind === "collection" && !node.disabled);
-  const looseLeaves = sorted.filter((node): node is ToolLeaf => node.kind !== "collection");
+export function buildToolbarRibbonSegments(nodes: readonly UtilityNode[], path: readonly string[], depth = 0): ToolbarRibbonSegment[] {
+  const sorted = sortUtilityNodes(nodes);
+  const collections = sorted.filter((node): node is UtilityCollectionNode => node.kind === "collection" && !node.disabled);
+  const looseLeaves = sorted.filter((node): node is UtilityLeaf => node.kind !== "collection");
   const segments: ToolbarRibbonSegment[] = [];
 
   if (collections.length > 0) segments.push({ kind: "picker", collections, depth });
-  if (hasInteractiveToolLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves, depth });
+  if (hasInteractiveUtilityLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves, depth });
   if (collections.length === 0) return segments;
 
   const activeId = path[depth];
@@ -5189,12 +5156,12 @@ export function buildToolbarRibbonSegments(nodes: readonly ToolNode[], path: rea
 }
 
 /** @emoji 🎀 Validates an active-group path against the current tool tree: keeps each entry only while it still names an enabled collection at that level, truncating at the first miss rather than substituting a default. */
-export function reconcileToolPath(nodes: readonly ToolNode[], path: readonly string[]): readonly string[] {
+export function reconcileUtilityPath(nodes: readonly UtilityNode[], path: readonly string[]): readonly string[] {
   let current = nodes;
   const reconciled: string[] = [];
 
   for (const collectionId of path) {
-    const collections = sortToolNodes(current).filter((node): node is ToolCollectionNode => node.kind === "collection" && !node.disabled);
+    const collections = sortUtilityNodes(current).filter((node): node is UtilityCollectionNode => node.kind === "collection" && !node.disabled);
     const active = collections.find((node) => node.id === collectionId);
     if (!active) break;
     reconciled.push(collectionId);
@@ -5204,12 +5171,12 @@ export function reconcileToolPath(nodes: readonly ToolNode[], path: readonly str
   return reconciled;
 }
 
-function ToolToolbarItems({ items, onAction }: { readonly items: readonly ToolLeaf[]; readonly onAction: (action: ActionDescriptor) => void }): ReactElement {
-  const sorted = useMemo(() => sortToolNodes(items) as ToolLeaf[], [items]);
+function UtilityToolbarItems({ items, onAction }: { readonly items: readonly UtilityLeaf[]; readonly onAction: (action: ActionDescriptor) => void }): ReactElement {
+  const sorted = useMemo(() => sortUtilityNodes(items) as UtilityLeaf[], [items]);
   const nodes = useMemo(() => {
     const rendered: ReactElement[] = [];
-    let buttonRun: ToolLeaf[] = [];
-    let toggleRun: ToolLeaf[] = [];
+    let buttonRun: UtilityLeaf[] = [];
+    let toggleRun: UtilityLeaf[] = [];
 
     const flushButtons = () => {
       if (buttonRun.length === 0) return;
@@ -5297,16 +5264,16 @@ function toolbarRibbonSegmentKey(segment: ToolbarRibbonSegment, index: number): 
   return segment.kind === "picker" ? `picker-${segment.depth}-${segment.collections.map((entry) => entry.id).join("-")}` : `tools-${index}-${segment.items.map((entry) => entry.id).join("-")}`;
 }
 
-export function ToolTree({ tools, onAction, id = "ui.toolbar", direction = "inline" }: ToolTreeProps): ReactElement | null {
+export function UtilityTree({ utilities, onAction, id = "ui.toolbar", direction = "inline" }: UtilityTreeProps): ReactElement | null {
   const [activePath, setActivePath] = useState<readonly string[]>([]);
 
   useEffect(() => {
-    setActivePath((previousPath) => reconcileToolPath(tools, previousPath));
-  }, [tools]);
+    setActivePath((previousPath) => reconcileUtilityPath(utilities, previousPath));
+  }, [utilities]);
 
-  const segments = useMemo(() => buildToolbarRibbonSegments(tools, activePath), [tools, activePath]);
+  const segments = useMemo(() => buildToolbarRibbonSegments(utilities, activePath), [utilities, activePath]);
 
-  if (!hasInteractiveToolNodes(tools)) return null;
+  if (!hasInteractiveUtilityNodes(utilities)) return null;
 
   const renderSegment = (segment: ToolbarRibbonSegment): ReactNode =>
     segment.kind === "picker" ? (
@@ -5315,7 +5282,7 @@ export function ToolTree({ tools, onAction, id = "ui.toolbar", direction = "inli
           kind="single"
           value={activePath[segment.depth] ?? ""}
           onValueChange={(value) => {
-            setActivePath(value ? reconcileToolPath(tools, [...activePath.slice(0, segment.depth), value]) : activePath.slice(0, segment.depth));
+            setActivePath(value ? reconcileUtilityPath(utilities, [...activePath.slice(0, segment.depth), value]) : activePath.slice(0, segment.depth));
           }}
           items={segment.collections.map((entry) => ({
             value: entry.id,
@@ -5326,7 +5293,7 @@ export function ToolTree({ tools, onAction, id = "ui.toolbar", direction = "inli
         />
       </ToolbarItem>
     ) : (
-      <ToolToolbarItems items={segment.items} onAction={onAction} />
+      <UtilityToolbarItems items={segment.items} onAction={onAction} />
     );
 
   const rows: RibbonRow[] =

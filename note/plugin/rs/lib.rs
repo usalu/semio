@@ -2355,17 +2355,17 @@ fn create_note_app() -> App {
             ])
             .action_args("setFixtureJson", vec![ActionArgDef::text("json", "Document JSON").required()])
             // 🧰 Canvas utilities — one exclusive set per window, active tool host-owned (never a document op).
-            .tool(note_utility("selectDirect", "Direct", "cursor", "Select", UtilityCategory::Selection))
-            .tool(note_utility("selectMarquee", "Marquee", "selection", "Select", UtilityCategory::Selection))
-            .tool(note_utility("text", "Text", "type", "Block", UtilityCategory::Tools))
-            .tool(note_utility("image", "Image", "image", "Block", UtilityCategory::Tools))
-            .tool(note_utility("table", "Table", "table", "Block", UtilityCategory::Tools))
-            .tool(note_utility("math", "Math", "sigma", "Block", UtilityCategory::Tools))
-            .tool(note_utility("pencil", "Pencil", "pencil", "Draw", UtilityCategory::Tools))
-            .tool(note_utility("eraserStroke", "Stroke Eraser", "eraser", "Draw", UtilityCategory::Tools))
-            .tool(note_utility("eraserPoint", "Point Eraser", "eraser", "Draw", UtilityCategory::Tools))
-            .tool(note_utility("pan", "Pan", "hand", "View", UtilityCategory::Tools))
-            .window_kind_tools(NOTE_PLAY_WINDOW_COMPOSITE, vec![
+            .utility(note_utility("selectDirect", "Direct", "cursor", "Select", UtilityCategory::Selection))
+            .utility(note_utility("selectMarquee", "Marquee", "selection", "Select", UtilityCategory::Selection))
+            .utility(note_utility("text", "Text", "type", "Block", UtilityCategory::Tools))
+            .utility(note_utility("image", "Image", "image", "Block", UtilityCategory::Tools))
+            .utility(note_utility("table", "Table", "table", "Block", UtilityCategory::Tools))
+            .utility(note_utility("math", "Math", "sigma", "Block", UtilityCategory::Tools))
+            .utility(note_utility("pencil", "Pencil", "pencil", "Draw", UtilityCategory::Tools))
+            .utility(note_utility("eraserStroke", "Stroke Eraser", "eraser", "Draw", UtilityCategory::Tools))
+            .utility(note_utility("eraserPoint", "Point Eraser", "eraser", "Draw", UtilityCategory::Tools))
+            .utility(note_utility("pan", "Pan", "hand", "View", UtilityCategory::Tools))
+            .window_kind_utilities(NOTE_PLAY_WINDOW_COMPOSITE, vec![
                 "selectDirect".into(), "selectMarquee".into(),
                 "text".into(), "image".into(), "table".into(), "math".into(),
                 "pencil".into(), "eraserStroke".into(), "eraserPoint".into(), "pan".into(),

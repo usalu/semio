@@ -170,7 +170,7 @@ export function applyBackboneMessage(storedEnvelopeJson: string | null, messageJ
 }
 //#endregion 🔀ApplyBackboneMessage
 
-export type FrameworkSyncToolLeaf = {
+export type FrameworkSyncUtilityLeaf = {
   readonly id: string;
   readonly kind: "toggle";
   readonly iconId: string;
@@ -185,7 +185,7 @@ export type FrameworkSyncToolLeaf = {
   readonly args?: unknown;
 };
 
-export function buildFrameworkSyncTools(activeUri: string | null): readonly FrameworkSyncToolLeaf[] {
+export function buildFrameworkSyncUtilities(activeUri: string | null): readonly FrameworkSyncUtilityLeaf[] {
   const activeKind = activeUri ? backboneKindFromUri(activeUri) : null;
   const pressed = (kind: BackboneKind) => activeKind === kind;
   return [
@@ -385,7 +385,7 @@ if (import.meta.vitest) {
     });
 
     it("builds sync tools reflecting the active backbone kind", () => {
-      const tools = buildFrameworkSyncTools("folder:///tmp");
+      const tools = buildFrameworkSyncUtilities("folder:///tmp");
       expect(tools.map((tool) => tool.id)).toEqual(["framework.sync.file", "framework.sync.folder", "framework.sync.remote"]);
       expect(tools.find((tool) => tool.id === "framework.sync.folder")?.pressed).toBe(true);
       expect(tools.find((tool) => tool.id === "framework.sync.file")?.pressed).toBe(false);

@@ -2990,16 +2990,16 @@ pub fn history_action_definitions() -> Vec<ActionDefinition> {
 /// action into any `AppDefinition` that declares utilities (mirrors `history_action_definitions`).
 pub const SET_ACTIVE_UTILITY_ACTION_ID: &str = "setActiveUtility";
 
-/// @emoji 🧰 The framework-injected `setActiveTool` View action (never in the palette): switches the
-/// host-owned active tool of a window kind. `toolId` is required; `windowKindId` is contextual (the
+/// @emoji 🧰 The framework-injected `setActiveUtility` View action (never in the palette): switches the
+/// host-owned active utility of a window kind. `utilityId` is required; `windowKindId` is contextual (the
 /// shell fills it from the focused window when absent).
-pub fn set_active_tool_action_definition() -> ActionDefinition {
+pub fn set_active_utility_action_definition() -> ActionDefinition {
     ActionDefinition {
         in_palette: false,
-        ..ActionDefinition::new(SET_ACTIVE_UTILITY_ACTION_ID, "Set Active Tool", ActionKind::View)
+        ..ActionDefinition::new(SET_ACTIVE_UTILITY_ACTION_ID, "Set Active Utility", ActionKind::View)
     }
     .with_args([
-        ActionArgDef::text("utilityId", "Tool").required(),
+        ActionArgDef::text("utilityId", "Utility").required(),
         ActionArgDef::text("windowKindId", "Window"),
     ])
 }
@@ -4932,7 +4932,7 @@ mod app_document_tests {
         let app = app_with(
             vec![
                 ActionDefinition::new("undo", "Undo", ActionKind::History),
-                crate::ui::set_active_tool_action_definition(),
+                crate::ui::set_active_utility_action_definition(),
                 ActionDefinition::new("add", "Add", ActionKind::Operation),
             ],
             vec![],

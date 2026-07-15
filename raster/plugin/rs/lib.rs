@@ -929,10 +929,10 @@ fn create_raster_app() -> App {
                 ActionArgDef::text("document", "Document"),
             ])
             // 🧰 Composite-window utilities — one exclusive set, active tool host-owned (never a document op).
-            .tool(raster_utility("selectMarquee", "Marquee Select", "square-dashed", "Select", UtilityCategory::Selection))
-            .tool(raster_utility("paintBrush", "Brush", "brush", "Paint", UtilityCategory::Tools))
-            .tool(raster_utility("paintEraser", "Eraser", "eraser", "Paint", UtilityCategory::Tools))
-            .window_kind_tools(RASTER_PLAY_WINDOW_COMPOSITE, vec![
+            .utility(raster_utility("selectMarquee", "Marquee Select", "square-dashed", "Select", UtilityCategory::Selection))
+            .utility(raster_utility("paintBrush", "Brush", "brush", "Paint", UtilityCategory::Tools))
+            .utility(raster_utility("paintEraser", "Eraser", "eraser", "Paint", UtilityCategory::Tools))
+            .window_kind_utilities(RASTER_PLAY_WINDOW_COMPOSITE, vec![
                 "selectMarquee".into(), "paintBrush".into(), "paintEraser".into(),
             ])
             .keybinding("mod+z", "undo")
@@ -1294,7 +1294,7 @@ mod tests {
     }
 
     #[test]
-    fn tool_registry_declares_tools_scoped_to_the_composite_window() {
+    fn utility_registry_declares_utilities_scoped_to_the_composite_window() {
         let definition = create_raster_app().definition;
         let tool_ids: Vec<&str> = definition.utilities.iter().map(|tool| tool.id.as_str()).collect();
         assert_eq!(tool_ids, ["selectMarquee", "paintBrush", "paintEraser"]);

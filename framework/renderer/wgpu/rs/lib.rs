@@ -10697,7 +10697,7 @@ pub struct ShellState {
     pub split_resize_secondary_origin: Vec<f32>,
     pub measures_resize_window_id: Option<String>,
     pub deferred_actions: Vec<ActionDescriptor>,
-    pub active_tools: Vec<UtilityNode>,
+    pub active_utilities: Vec<UtilityNode>,
     /// @emoji 🧰 Host-owned active tool per window kind (never a document field, never a VCS op).
     /// Replaces the deleted `active_utility_id`/`find_active_tool_id` "first pressed toggle" heuristic.
     pub active_utility_by_window: HashMap<String, String>,
@@ -10888,7 +10888,7 @@ impl ShellState {
             split_resize_secondary_origin: Vec::new(),
             measures_resize_window_id: None,
             deferred_actions: Vec::new(),
-            active_tools: Vec::new(),
+            active_utilities: Vec::new(),
             active_utility_by_window: HashMap::new(),
             action_panel_folded: HashMap::new(),
             action_panel_expanded: HashMap::new(),
@@ -11231,8 +11231,8 @@ impl ShellState {
         // 🧰 The toolbar is derived from the app's declared `AppDefinition.utilities` (scoped to the active
         // window kind) via `ui_wgpu::derive_utility_nodes` — the old per-call `plugin.utilities()` fetch and the
         // `find_active_tool_id` "first pressed toggle" heuristic are gone (Architecture Decision 5).
-        self.active_tools = self.derive_toolbar_nodes(&session);
-        self.active_tools.extend(framework_sync_tools(self.sync_backbone_uri.as_deref()));
+        self.active_utilities = self.derive_toolbar_nodes(&session);
+        self.active_utilities.extend(framework_sync_utilities(self.sync_backbone_uri.as_deref()));
         self.window_engagements = plugin
             .window_engagements(session.instance_id, &view_state)
             .await
@@ -14326,7 +14326,7 @@ fn backbone_kind_from_uri(uri: &str) -> &'static str {
     }
 }
 
-fn framework_sync_tools(active_uri: Option<&str>) -> Vec<UtilityNode> {
+fn framework_sync_utilities(active_uri: Option<&str>) -> Vec<UtilityNode> {
     let active_kind = active_uri.map(backbone_kind_from_uri);
     let pressed = |kind: &str| active_kind == Some(kind);
     vec![
@@ -15522,7 +15522,7 @@ impl ShellState {
         // 🧰 Footer sections: Selection · Tools · History · Sync. The former `UtilityCategory::Actions`
         // section is deleted — window-scoped actions now live in the per-window Actions rail
         // (Architecture Decision 8/9, P6).
-        let partitions = partition_utilities_by_category(&self.active_tools);
+        let partitions = partition_utilities_by_category(&self.active_utilities);
         let sections = [
             partitions[0].as_slice(),
             partitions[1].as_slice(),

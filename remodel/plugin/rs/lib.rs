@@ -254,9 +254,9 @@ fn create_remodel_app() -> App {
                 ActionArgDef::slider("tsdfVoxelSizeMm", "TSDF Voxel Size (mm)", 1.0, 20.0).default_value(5.0),
             ])
             // 🧰 Mesh-editing tool group — an exclusive per-window set (active tool is host-owned).
-            .tool(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "mouse-pointer-2") })
-            .tool(UtilityDefinition { category: Some(UtilityCategory::Tools), ..UtilityDefinition::new("sculpt", "Sculpt", "brush") })
-            .window_kind_tools(REMODEL_PLAY_WINDOW_MAIN, vec!["select".into(), "sculpt".into()]),
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "mouse-pointer-2") })
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Tools), ..UtilityDefinition::new("sculpt", "Sculpt", "brush") })
+            .window_kind_utilities(REMODEL_PLAY_WINDOW_MAIN, vec!["select".into(), "sculpt".into()]),
     )
     .example("default", "Default", &default_example)
     .program("remodel", "Remodel", "mesh")

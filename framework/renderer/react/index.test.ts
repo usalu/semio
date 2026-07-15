@@ -2,7 +2,7 @@ import { createElement, useState, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { deriveToolNodes, resolveWindowActions, partitionWindowMeasures, type ActionArgDef, type ActionDefinition, type AppDefinition, type AppModeDefinition, type AppWindowKindDefinition, type CommandDefinition, type ToolDefinition, type WindowMeasure } from "@semio-tech/framework-core";
+import { deriveUtilityNodes, resolveWindowActions, partitionWindowMeasures, type ActionArgDef, type ActionDefinition, type AppDefinition, type AppModeDefinition, type AppWindowKindDefinition, type CommandDefinition, type UtilityDefinition, type WindowMeasure } from "@semio-tech/framework-core";
 import { Canvas2dHost, worldToScreenLogical } from "./components/canvas-2d-host.tsx";
 import {
   Puzzle2dBoardHost,
@@ -51,30 +51,33 @@ import {
   applyUiRefreshResponseToCache,
   buildToolbarRibbonSegments,
   buildUiRefreshRequest,
-  dedupeToolNodesById,
+  dedupeUtilityNodesById,
   flattenPanelTabLeaves,
-  groupToolNodesByCategory,
+  groupUtilityNodesByCategory,
   initialShellState,
   isFlowGraphScene,
   loadPluginModule,
   mergeRecordPreservingIdentity,
   parseStudioShellPath,
   preserveJsonIdentity,
-  reconcileToolPath,
-  resolveWindowToolNodes,
-  resolveWindowTools,
-  frameworkHistoryToolNodes,
+  reconcileUtilityPath,
+  resolveWindowUtilityNodes,
+  resolveWindowUtilities,
+  frameworkHistoryUtilityNodes,
   actionStageKey,
   actionRequiresStagedForm,
   resolveKeybindingIntent,
-  resolveToolActivation,
+  resolveUtilityActivation,
   WindowActionPane,
   resolveCommands,
   commandCategories,
+  buildCommandCategoryTree,
+  buildCommandCategoryTabs,
+  type ResolvedCommand,
   shellReducer,
-  sortToolNodes,
+  sortUtilityNodes,
   spawnedWindowChromeForKind,
-  ToolTree,
+  UtilityTree,
   type UiRefreshCache,
   UIFind,
   UIFindProvider,
@@ -84,7 +87,7 @@ import {
   useUIFind,
 } from "./os-shell.tsx";
 import { interpretUiNode } from "./ui-interpreter.tsx";
-import type { ToolNode, UiNode } from "@semio-tech/framework-core";
+import type { UtilityNode, UiNode } from "@semio-tech/framework-core";
 
 //#region 🔌jsdom polyfills
 // cmdk (used by UISearch/UIFind's CommandDialog) calls ResizeObserver on mount; jsdom does not implement it.
@@ -100,25 +103,25 @@ if (!Element.prototype.scrollIntoView) Element.prototype.scrollIntoView = () => 
 
 const noopAction = () => {};
 
-describe("framework sync tools", () => {
+describe("framework sync utilities", () => {
   it("builds three sync backbone toggles", async () => {
-    const { buildFrameworkSyncTools } = await import("@semio-tech/framework-os-core");
-    const tools = buildFrameworkSyncTools("file:///demo");
-    expect(tools).toHaveLength(3);
-    expect(tools.map((tool) => tool.id)).toEqual(["framework.sync.file", "framework.sync.folder", "framework.sync.remote"]);
-    expect(tools[0]?.pressed).toBe(true);
+    const { buildFrameworkSyncUtilities } = await import("@semio-tech/framework-os-core");
+    const utilities = buildFrameworkSyncUtilities("file:///demo");
+    expect(utilities).toHaveLength(3);
+    expect(utilities.map((tool) => tool.id)).toEqual(["framework.sync.file", "framework.sync.folder", "framework.sync.remote"]);
+    expect(utilities[0]?.pressed).toBe(true);
   });
 
   it("has no active toggle when detached", async () => {
-    const { buildFrameworkSyncTools } = await import("@semio-tech/framework-os-core");
-    const tools = buildFrameworkSyncTools(null);
-    expect(tools.every((tool) => !tool.pressed)).toBe(true);
+    const { buildFrameworkSyncUtilities } = await import("@semio-tech/framework-os-core");
+    const utilities = buildFrameworkSyncUtilities(null);
+    expect(utilities.every((tool) => !tool.pressed)).toBe(true);
   });
 
   it("groups File, Folder, and Remote under a single Sync category collection", async () => {
-    const { buildFrameworkSyncTools } = await import("@semio-tech/framework-os-core");
-    const tools = buildFrameworkSyncTools("file:///demo");
-    const grouped = groupToolNodesByCategory(tools as unknown as ToolNode[], ["sync"]);
+    const { buildFrameworkSyncUtilities } = await import("@semio-tech/framework-os-core");
+    const utilities = buildFrameworkSyncUtilities("file:///demo");
+    const grouped = groupUtilityNodesByCategory(utilities as unknown as UtilityNode[], ["sync"]);
     expect(grouped).toHaveLength(1);
     expect(grouped[0]).toMatchObject({ id: "sync", kind: "collection" });
     expect(grouped[0].kind === "collection" ? grouped[0].children.map((child) => child.id) : []).toEqual(["framework.sync.file", "framework.sync.folder", "framework.sync.remote"]);
@@ -238,37 +241,42 @@ describe("shell store reducer", () => {
     expect(reset.actionPane.expandedByWindowId["w1"]).toBe("extrude");
     expect(shellReducer(reset, { type: "RESET_ACTION_ARGS", windowId: "w1", actionId: "extrude" }).actionPane).toBe(reset.actionPane);
 
-    const activated = shellReducer(reset, { type: "SET_ACTIVE_TOOL", windowId: "w1", toolId: "pen" });
-    expect(activated.actionPane.activeToolByWindowId).toEqual({ w1: "pen" });
-    expect(shellReducer(activated, { type: "SET_ACTIVE_TOOL", windowId: "w1", toolId: "pen" }).actionPane).toBe(activated.actionPane);
-    const deactivated = shellReducer(activated, { type: "SET_ACTIVE_TOOL", windowId: "w1", toolId: null });
-    expect(deactivated.actionPane.activeToolByWindowId["w1"]).toBeNull();
+    const activated = shellReducer(reset, { type: "SET_ACTIVE_UTILITY", windowId: "w1", utilityId: "pen" });
+    expect(activated.actionPane.activeUtilityByWindowId).toEqual({ w1: "pen" });
+    expect(shellReducer(activated, { type: "SET_ACTIVE_UTILITY", windowId: "w1", utilityId: "pen" }).actionPane).toBe(activated.actionPane);
+    const deactivated = shellReducer(activated, { type: "SET_ACTIVE_UTILITY", windowId: "w1", utilityId: null });
+    expect(deactivated.actionPane.activeUtilityByWindowId["w1"]).toBeNull();
   });
 
-  it("command-panel slice: category switch collapses expansion; stage/reset update only their own keys and preserve identity on no-ops", () => {
+  it("commandPanel slice: expand/collapse and stage/reset update only their own keys and preserve identity on no-ops (category active/fold state now lives in layout.panels['bottom-middle'], not this slice)", () => {
     const state = baseState();
 
-    const opened = shellReducer(state, { type: "SET_COMMAND_CATEGORY", value: "appearance" });
-    expect(opened.commandPanel.activeCategoryId).toBe("appearance");
-    expect(opened.layout).toBe(state.layout);
-
-    const expanded = shellReducer(opened, { type: "SET_COMMAND_EXPANDED", value: "os.setThemeId" });
+    const expanded = shellReducer(state, { type: "SET_COMMAND_EXPANDED", value: "os.setThemeId" });
     expect(expanded.commandPanel.expandedCommandId).toBe("os.setThemeId");
+    expect(expanded.layout).toBe(state.layout);
     expect(shellReducer(expanded, { type: "SET_COMMAND_EXPANDED", value: "os.setThemeId" }).commandPanel).toBe(expanded.commandPanel);
 
-    // Switching category collapses any expanded arg form — the next hierarchy level up only makes
-    // sense under its own category's command list.
-    const switched = shellReducer(expanded, { type: "SET_COMMAND_CATEGORY", value: "layout" });
-    expect(switched.commandPanel.activeCategoryId).toBe("layout");
-    expect(switched.commandPanel.expandedCommandId).toBeNull();
-
-    const staged = shellReducer(switched, { type: "STAGE_COMMAND_ARG", commandId: "os.setThemeId", argId: "themeId", value: "semio" });
+    const staged = shellReducer(expanded, { type: "STAGE_COMMAND_ARG", commandId: "os.setThemeId", argId: "themeId", value: "semio" });
     expect(staged.commandPanel.stagedArgsByCommandId).toEqual({ "os.setThemeId": { themeId: "semio" } });
     expect(shellReducer(staged, { type: "STAGE_COMMAND_ARG", commandId: "os.setThemeId", argId: "themeId", value: "semio" }).commandPanel).toBe(staged.commandPanel);
 
     const reset = shellReducer(staged, { type: "RESET_COMMAND_ARGS", commandId: "os.setThemeId" });
     expect(reset.commandPanel.stagedArgsByCommandId["os.setThemeId"]).toBeUndefined();
     expect(shellReducer(reset, { type: "RESET_COMMAND_ARGS", commandId: "os.setThemeId" }).commandPanel).toBe(reset.commandPanel);
+  });
+
+  it("command palette category is the bottom-middle anchor's own SET_PANEL_PATH; the UI's category-switch handler additionally dispatches SET_COMMAND_EXPANDED:null (reproducing the old single-action collapse-on-switch behavior across two actions)", () => {
+    const state = baseState();
+    const onCategory = shellReducer(state, { type: "SET_PANEL_PATH", anchor: "bottom-middle", value: ["command.category.appearance"] });
+    expect(onCategory.layout.panels["bottom-middle"].path).toEqual(["command.category.appearance"]);
+
+    const expanded = shellReducer(onCategory, { type: "SET_COMMAND_EXPANDED", value: "os.setThemeId" });
+    expect(expanded.commandPanel.expandedCommandId).toBe("os.setThemeId");
+
+    const switchedPath = shellReducer(expanded, { type: "SET_PANEL_PATH", anchor: "bottom-middle", value: ["command.category.layout"] });
+    const switched = shellReducer(switchedPath, { type: "SET_COMMAND_EXPANDED", value: null });
+    expect(switched.layout.panels["bottom-middle"].path).toEqual(["command.category.layout"]);
+    expect(switched.commandPanel.expandedCommandId).toBeNull();
   });
 });
 
@@ -1939,7 +1947,7 @@ describe("spawned window chrome", () => {
       {
         id: "edit",
         label: "Edit",
-        tools: [{ id: "static-tool", kind: "button" as const, iconId: "save", controllerId: "cad-play", action: "save" }],
+        utilities: [{ id: "static-tool", kind: "button" as const, iconId: "save", controllerId: "cad-play", action: "save" }],
       },
     ],
     windowKinds: [
@@ -1990,7 +1998,7 @@ describe("spawned window chrome", () => {
 });
 
 describe("partitionWindowMeasures", () => {
-  const toolGroup = (id: string, activeToolId?: string): WindowMeasure => ({ kind: "group", id, label: id, activeToolId, children: [] });
+  const toolGroup = (id: string, activeUtilityId?: string): WindowMeasure => ({ kind: "group", id, label: id, activeUtilityId, children: [] });
   const slider = (id: string): WindowMeasure => ({ kind: "slider", id, value: 1, min: 0, max: 2, onChange: { controllerId: "c", action: "a" } });
 
   it("routes a tagged group to toolOptions only when its tool is active", () => {
@@ -2024,7 +2032,7 @@ describe("partitionWindowMeasures", () => {
       id: "brush-params",
       label: "Brush",
       defaultOpen: true,
-      activeToolId: "brush",
+      activeUtilityId: "brush",
       children: [{ kind: "slider", id: "size", label: "Brush size", value: 4, min: 1, max: 10, onChange: { controllerId: "c", action: "setSize" } }],
     };
     const measures = { [kind.id]: [brushGroup] };
@@ -2038,27 +2046,27 @@ describe("partitionWindowMeasures", () => {
 
   it("parses the real ui_wgpu camelCase wire JSON and routes a tool-scoped fill group into toolOptions (snake_case divergence regression guard)", () => {
     // Verbatim shape of `ui_wgpu::WindowMeasure`'s serde wire after the D-4 `rename_all_fields = "camelCase"`
-    // fix: a fill-tool slider group tagged with `activeToolId`, plus an untagged toggle. This is the exact
+    // fix: a fill-tool slider group tagged with `activeUtilityId`, plus an untagged toggle. This is the exact
     // class of payload whose snake_case↔camelCase divergence made the puzzle fill slider invisible in React.
     const wireJson =
-      '[{"kind":"group","id":"fill-params","label":"Fill","activeToolId":"fill","children":[{"kind":"slider","id":"fillCount","label":"Count","value":3,"min":1,"max":9,"step":1,"onChange":{"controllerId":"puzzle","action":"setFillCount"}}]},{"kind":"toggle","id":"grid","iconId":"icon.grid","pressed":true,"onChange":{"controllerId":"puzzle","action":"toggleGrid"}}]';
+      '[{"kind":"group","id":"fill-params","label":"Fill","activeUtilityId":"fill","children":[{"kind":"slider","id":"fillCount","label":"Count","value":3,"min":1,"max":9,"step":1,"onChange":{"controllerId":"puzzle","action":"setFillCount"}}]},{"kind":"toggle","id":"grid","iconId":"icon.grid","pressed":true,"onChange":{"controllerId":"puzzle","action":"toggleGrid"}}]';
     const measures = JSON.parse(wireJson) as WindowMeasure[];
     const { general, toolOptions } = partitionWindowMeasures(measures, "fill");
     expect(toolOptions.map((m) => m.id)).toEqual(["fill-params"]);
     const fillGroup = toolOptions[0];
     expect(fillGroup.kind).toBe("group");
     if (fillGroup.kind === "group") {
-      expect(fillGroup.activeToolId).toBe("fill");
+      expect(fillGroup.activeUtilityId).toBe("fill");
       expect(fillGroup.children[0]).toMatchObject({ kind: "slider", id: "fillCount", onChange: { action: "setFillCount" } });
     }
     expect(general.map((m) => m.id)).toEqual(["grid"]);
     const gridToggle = general[0];
     expect(gridToggle.kind === "toggle" && gridToggle.iconId).toBe("icon.grid");
 
-    // Regression guard for the fixed bug: the pre-fix snake_case wire leaves `activeToolId` undefined, so the
+    // Regression guard for the fixed bug: the pre-fix snake_case wire leaves `activeUtilityId` undefined, so the
     // tagged group silently falls through to `general` and the fill slider never reaches the Tool Options rail.
     const legacyJson = wireJson
-      .replace(/"activeToolId"/g, '"active_tool_id"')
+      .replace(/"activeUtilityId"/g, '"active_tool_id"')
       .replace(/"onChange"/g, '"on_change"')
       .replace(/"iconId"/g, '"icon_id"');
     const legacy = JSON.parse(legacyJson) as WindowMeasure[];
@@ -2070,7 +2078,7 @@ describe("partitionWindowMeasures", () => {
 
 describe("toolbar ribbon", () => {
   it("sorts tool nodes by order", () => {
-    const sorted = sortToolNodes([
+    const sorted = sortUtilityNodes([
       { id: "b", kind: "button", iconId: "box", order: 2, controllerId: "x", action: "b" },
       { id: "a", kind: "button", iconId: "box", order: 1, controllerId: "x", action: "a" },
     ]);
@@ -2164,14 +2172,14 @@ describe("toolbar ribbon", () => {
       },
       { id: "b", kind: "collection", iconId: "box", children: [] },
     ];
-    expect(reconcileToolPath(tree, ["a", "x"])).toEqual(["a", "x"]);
-    expect(reconcileToolPath(tree, ["a", "gone"])).toEqual(["a"]);
-    expect(reconcileToolPath(tree, ["gone"])).toEqual([]);
-    expect(reconcileToolPath(tree, [])).toEqual([]);
+    expect(reconcileUtilityPath(tree, ["a", "x"])).toEqual(["a", "x"]);
+    expect(reconcileUtilityPath(tree, ["a", "gone"])).toEqual(["a"]);
+    expect(reconcileUtilityPath(tree, ["gone"])).toEqual([]);
+    expect(reconcileUtilityPath(tree, [])).toEqual([]);
   });
 
   it("buckets top-level tool nodes into ordered category collections (uncategorized nodes default to tools now that the Actions category is gone)", () => {
-    const grouped = groupToolNodesByCategory([
+    const grouped = groupUtilityNodesByCategory([
       { id: "sel", kind: "toggle", iconId: "cursor", controllerId: "x", action: "sel", category: "selection" },
       { id: "hist", kind: "button", iconId: "undo", controllerId: "x", action: "undo", category: "history" },
       { id: "act", kind: "button", iconId: "wand", controllerId: "x", action: "run" },
@@ -2183,7 +2191,7 @@ describe("toolbar ribbon", () => {
   });
 
   it("drops separator-only category buckets so an empty group never appears as a picker option", () => {
-    const grouped = groupToolNodesByCategory([
+    const grouped = groupUtilityNodesByCategory([
       { id: "a", kind: "button", iconId: "box", controllerId: "x", action: "a", category: "tools" },
       { id: "sep", kind: "separator" },
     ]);
@@ -2200,7 +2208,7 @@ describe("toolbar ribbon", () => {
       category: "selection" as const,
       children: [{ id: "mesh", kind: "toggle" as const, iconId: "box", controllerId: "x", action: "mesh" }],
     };
-    const grouped = groupToolNodesByCategory([selectionCollection]);
+    const grouped = groupUtilityNodesByCategory([selectionCollection]);
     expect(grouped).toEqual([{ ...selectionCollection, order: 0 }]);
     const segments = buildToolbarRibbonSegments(grouped, ["lowpoly-tools-selection"]);
     const toolsSegment = segments.find((segment) => segment.kind === "tools" && segment.items.some((item) => item.id === "mesh"));
@@ -2208,7 +2216,7 @@ describe("toolbar ribbon", () => {
   });
 
   it("still wraps a category with multiple top-level nodes in a synthetic collection", () => {
-    const grouped = groupToolNodesByCategory([
+    const grouped = groupUtilityNodesByCategory([
       { id: "a", kind: "button", iconId: "box", controllerId: "x", action: "a", category: "tools" },
       { id: "b", kind: "button", iconId: "box", controllerId: "x", action: "b", category: "tools" },
     ]);
@@ -2220,20 +2228,20 @@ describe("toolbar ribbon", () => {
       { id: "sel", kind: "toggle", iconId: "cursor", controllerId: "x", action: "sel", category: "selection" },
       { id: "hist", kind: "button", iconId: "undo", controllerId: "x", action: "undo", category: "history" },
     ];
-    expect(groupToolNodesByCategory(nodes, ["selection", "tools"]).map((node) => node.id)).toEqual(["selection"]);
-    expect(groupToolNodesByCategory(nodes, ["tools", "history"]).map((node) => node.id)).toEqual(["history"]);
+    expect(groupUtilityNodesByCategory(nodes, ["selection", "tools"]).map((node) => node.id)).toEqual(["selection"]);
+    expect(groupUtilityNodesByCategory(nodes, ["tools", "history"]).map((node) => node.id)).toEqual(["history"]);
   });
 
   it("deduplicates tool nodes by id across window tool lists for a single shared footer entry", () => {
     const history = { id: "s-play.history", kind: "collection" as const, iconId: "clock", category: "history" as const, children: [] };
-    const deduped = dedupeToolNodesById([[history, { id: "leaf-a", kind: "button" as const, iconId: "box", controllerId: "x", action: "a" }], [history], []]);
+    const deduped = dedupeUtilityNodesById([[history, { id: "leaf-a", kind: "button" as const, iconId: "box", controllerId: "x", action: "a" }], [history], []]);
     expect(deduped).toEqual([history, { id: "leaf-a", kind: "button", iconId: "box", controllerId: "x", action: "a" }]);
   });
 
   it("renders ribbon toolbar with picker and batched toggles", () => {
     const markup = renderToStaticMarkup(
-      createElement(ToolTree, {
-        tools: [
+      createElement(UtilityTree, {
+        utilities: [
           {
             id: "view",
             kind: "collection",
@@ -2273,9 +2281,9 @@ describe("toolbar ribbon", () => {
 
   it("stacks the window toolbar ribbon upward, showing only the base picker row until a group is activated", () => {
     const markup = renderToStaticMarkup(
-      createElement(ToolTree, {
+      createElement(UtilityTree, {
         direction: "up",
-        tools: [
+        utilities: [
           {
             id: "view",
             kind: "collection",
@@ -2308,11 +2316,11 @@ describe("toolbar ribbon", () => {
     expect(markup).not.toContain('id="zoom-in"');
   });
 
-  it("renders ToolTree with a custom id for per-window namespacing", () => {
+  it("renders UtilityTree with a custom id for per-window namespacing", () => {
     const markup = renderToStaticMarkup(
-      createElement(ToolTree, {
+      createElement(UtilityTree, {
         id: "ui.toolbar.model",
-        tools: [{ id: "box", kind: "button", iconId: "box", controllerId: "x", action: "box" }],
+        utilities: [{ id: "box", kind: "button", iconId: "box", controllerId: "x", action: "box" }],
         onAction: noopAction,
       }),
     );
@@ -2591,32 +2599,32 @@ describe("palette redirect and keybinding rule (P3/P4)", () => {
   });
 });
 
-describe("registry-derived tools and activation (P5)", () => {
-  const tools: ToolDefinition[] = [
+describe("registry-derived utilities and activation (P5)", () => {
+  const utilities: UtilityDefinition[] = [
     { id: "select", label: "Select", iconId: "mouse-pointer", category: "selection", allowsActionsWhileActive: true },
     { id: "brush", label: "Brush", iconId: "brush", group: "paint", category: "tools", allowsActionsWhileActive: false },
     { id: "erase", label: "Erase", iconId: "eraser", group: "paint", category: "tools", allowsActionsWhileActive: false },
   ];
-  const app = { controllerId: "draw", tools } satisfies Pick<AppDefinition, "controllerId" | "tools">;
+  const app = { controllerId: "draw", utilities } satisfies Pick<AppDefinition, "controllerId" | "utilities">;
 
-  it("resolveWindowTools scopes to the window kind's refs, falling back to all app tools when unset", () => {
-    expect(resolveWindowTools(app, { tools: ["brush"] } as Pick<AppWindowKindDefinition, "tools">).map((t) => t.id)).toEqual(["brush"]);
-    expect(resolveWindowTools(app, { tools: [] } as unknown as Pick<AppWindowKindDefinition, "tools">).map((t) => t.id)).toEqual(["select", "brush", "erase"]);
+  it("resolveWindowUtilities scopes to the window kind's refs, falling back to all app utilities when unset", () => {
+    expect(resolveWindowUtilities(app, { utilities: ["brush"] } as Pick<AppWindowKindDefinition, "utilities">).map((t) => t.id)).toEqual(["brush"]);
+    expect(resolveWindowUtilities(app, { utilities: [] } as unknown as Pick<AppWindowKindDefinition, "utilities">).map((t) => t.id)).toEqual(["select", "brush", "erase"]);
   });
 
   it("derives grouped toolbar nodes with the active tool pressed and a setActiveTool onChange tagged by window", () => {
-    const nodes = resolveWindowToolNodes(app, { tools: [] } as unknown as Pick<AppWindowKindDefinition, "tools">, "brush", "w1");
+    const nodes = resolveWindowUtilityNodes(app, { utilities: [] } as unknown as Pick<AppWindowKindDefinition, "utilities">, "brush", "w1");
     const select = nodes.find((node) => node.id === "select");
     expect(select && select.kind === "toggle" ? select.pressed : undefined).toBe(false);
     const paint = nodes.find((node) => node.id === "group:paint");
     expect(paint?.kind).toBe("collection");
     const brush = paint && paint.kind === "collection" ? paint.children.find((child) => child.id === "brush") : undefined;
     expect(brush && brush.kind === "toggle" ? brush.pressed : undefined).toBe(true);
-    expect(brush && brush.kind === "toggle" && "onChange" in brush ? brush.onChange : undefined).toEqual({ controllerId: "draw", action: "setActiveTool", args: { toolId: "brush", windowId: "w1" } });
+    expect(brush && brush.kind === "toggle" && "onChange" in brush ? brush.onChange : undefined).toEqual({ controllerId: "draw", action: "setActiveUtility", args: { utilityId: "brush", windowId: "w1" } });
   });
 
-  it("deriveToolNodes twin marks exactly the active tool pressed", () => {
-    const nodes = deriveToolNodes(
+  it("deriveUtilityNodes twin marks exactly the active tool pressed", () => {
+    const nodes = deriveUtilityNodes(
       "draw",
       [
         { id: "a", label: "A", iconId: "x" },
@@ -2627,28 +2635,28 @@ describe("registry-derived tools and activation (P5)", () => {
     expect(nodes.map((node) => (node.kind === "toggle" ? node.pressed : undefined))).toEqual([false, true]);
   });
 
-  it("resolveToolActivation toggles: click activates, re-click or empty deactivates", () => {
-    expect(resolveToolActivation(null, "brush")).toBe("brush");
-    expect(resolveToolActivation("brush", "erase")).toBe("erase");
-    expect(resolveToolActivation("brush", "brush")).toBeNull();
-    expect(resolveToolActivation("brush", "")).toBeNull();
-    expect(resolveToolActivation(undefined, "")).toBeNull();
+  it("resolveUtilityActivation toggles: click activates, re-click or empty deactivates", () => {
+    expect(resolveUtilityActivation(null, "brush")).toBe("brush");
+    expect(resolveUtilityActivation("brush", "erase")).toBe("erase");
+    expect(resolveUtilityActivation("brush", "brush")).toBeNull();
+    expect(resolveUtilityActivation("brush", "")).toBeNull();
+    expect(resolveUtilityActivation(undefined, "")).toBeNull();
   });
 
-  it("resolveWindowActions surfaces panel-eligible actions and frameworkHistoryToolNodes derives History buttons", () => {
+  it("resolveWindowActions surfaces panel-eligible actions and frameworkHistoryUtilityNodes derives History buttons", () => {
     const actionsApp = {
       controllerId: "draw",
       actions: [
         { id: "extrude", label: "Extrude", kind: "operation", inPalette: true, args: [] },
         { id: "undo", label: "Undo", kind: "history", iconId: "undo", inPalette: true, args: [] },
-        { id: "setActiveTool", label: "Set Active Tool", kind: "view", inPalette: false, args: [] },
+        { id: "setActiveUtility", label: "Set Active Utility", kind: "view", inPalette: false, args: [] },
       ] as ActionDefinition[],
       windowKinds: [{ actions: [] as string[] }],
     };
     const resolved = resolveWindowActions(actionsApp, { actions: [] as string[] });
     // orphan operation appears; history + setActiveTool are never panel-eligible orphans
     expect(resolved.map((action) => action.id)).toEqual(["extrude"]);
-    const history = frameworkHistoryToolNodes({ controllerId: "draw", actions: actionsApp.actions });
+    const history = frameworkHistoryUtilityNodes({ controllerId: "draw", actions: actionsApp.actions });
     expect(history).toHaveLength(1);
     expect(history[0]).toMatchObject({ id: "undo", kind: "button", category: "history", onPress: { controllerId: "draw", action: "undo" } });
   });
@@ -2694,5 +2702,84 @@ describe("resolveCommands / commandCategories (footer command panel registry)", 
       { id: "document", label: "Document" },
       { id: "view", label: "View" },
     ]);
+  });
+});
+
+describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette as a real bottom-middle Panel)", () => {
+  const zeroArgCommand: ResolvedCommand = { definition: { id: "os.resetDock", label: "Reset Dock", scope: "os", category: "layout", inPalette: true, args: [] }, source: { kind: "os" } };
+  const argCommand: ResolvedCommand = {
+    definition: { id: "os.setThemeId", label: "Set Theme", scope: "os", category: "appearance", inPalette: true, args: [{ id: "themeId", label: "Theme", control: { kind: "text" }, required: true }] },
+    source: { kind: "os" },
+  };
+
+  it("a zero-arg command row fires onExecute directly on click; only one command-list section is present when nothing is expanded", () => {
+    const onExecute = vi.fn();
+    const tree = buildCommandCategoryTree([zeroArgCommand], null, {}, onExecute, vi.fn(), vi.fn(), vi.fn());
+    expect(tree.sections).toHaveLength(1);
+    const row = tree.sections[0]!.items!.find((item) => item.id === "command.os.resetDock")!;
+    expect(row.label).toBe("Reset Dock");
+    row.onClick?.({} as never, {} as never);
+    expect(onExecute).toHaveBeenCalledWith(zeroArgCommand);
+  });
+
+  it("an arg-carrying command row toggles expansion instead of executing, and a synthetic arg-form section only appears while expanded", () => {
+    const onToggleExpanded = vi.fn();
+    const collapsedTree = buildCommandCategoryTree([argCommand], null, {}, vi.fn(), onToggleExpanded, vi.fn(), vi.fn());
+    expect(collapsedTree.sections).toHaveLength(1);
+    const collapsedRow = collapsedTree.sections[0]!.items!.find((item) => item.id === "command.os.setThemeId")!;
+    expect(collapsedRow.label).toBe("Set Theme…");
+    collapsedRow.onClick?.({} as never, {} as never);
+    expect(onToggleExpanded).toHaveBeenCalledWith("os.setThemeId");
+
+    const expandedTree = buildCommandCategoryTree([argCommand], "os.setThemeId", {}, vi.fn(), vi.fn(), vi.fn(), vi.fn());
+    expect(expandedTree.sections).toHaveLength(2);
+    const formItems = expandedTree.sections[0]!.items!;
+    expect(formItems.find((item) => item.id === "command.os.setThemeId.arg.themeId")?.label).toBe("Theme");
+    const actionsRow = formItems.find((item) => item.id === "command.os.setThemeId.actions")!;
+    expect(actionsRow.control).toBeTruthy();
+  });
+
+  it("Execute is disabled until the required arg is staged, and calling it passes the effective (staged) args; Reset dispatches onResetArgs", () => {
+    const onExecute = vi.fn();
+    const onStageArg = vi.fn();
+    const onResetArgs = vi.fn();
+
+    const missingTree = buildCommandCategoryTree([argCommand], "os.setThemeId", {}, onExecute, vi.fn(), onStageArg, onResetArgs);
+    const missingActionsRow = missingTree.sections[0]!.items!.find((item) => item.id === "command.os.setThemeId.actions")!;
+    const missingButtons = (missingActionsRow.control as ReactElement).props.children as ReactElement[];
+    expect(missingButtons[0]!.props.disabled).toBe(true);
+
+    const stagedTree = buildCommandCategoryTree([argCommand], "os.setThemeId", { "os.setThemeId": { themeId: "semio" } }, onExecute, vi.fn(), onStageArg, onResetArgs);
+    const stagedActionsRow = stagedTree.sections[0]!.items!.find((item) => item.id === "command.os.setThemeId.actions")!;
+    const stagedButtons = (stagedActionsRow.control as ReactElement).props.children as ReactElement[];
+    expect(stagedButtons[0]!.props.disabled).toBe(false);
+    stagedButtons[0]!.props.onClick();
+    expect(onExecute).toHaveBeenCalledWith(argCommand, { themeId: "semio" });
+    stagedButtons[1]!.props.onClick();
+    expect(onResetArgs).toHaveBeenCalledWith("os.setThemeId");
+  });
+
+  it("buildCommandCategoryTabs builds one namespaced PanelTabLeaf per category, whose lazily-resolved tree only contains that category's commands", () => {
+    const categories = [
+      { id: "layout", label: "Layout" },
+      { id: "appearance", label: "Appearance" },
+    ];
+    const expandedRef = { current: null as string | null };
+    const stagedRef = { current: {} as Readonly<Record<string, Readonly<Record<string, unknown>>>> };
+    const onCommand = vi.fn();
+    const dispatch = vi.fn();
+    const tabs = buildCommandCategoryTabs([zeroArgCommand, argCommand], categories, expandedRef, stagedRef, onCommand, dispatch);
+    expect(tabs.map((tab) => tab.id)).toEqual(["command.category.layout", "command.category.appearance"]);
+    expect(tabs.every((tab) => tab.kind === "leaf")).toBe(true);
+
+    const layoutLeaf = tabs[0]!;
+    expect(layoutLeaf.kind).toBe("leaf");
+    const resolved = layoutLeaf.kind === "leaf" ? (layoutLeaf.trees[0]!.tree as { resolveTree: () => { sections: { items?: { id: string }[] }[] } }).resolveTree() : { sections: [] };
+    expect(resolved.sections[0]!.items?.map((item) => item.id)).toEqual(["command.os.resetDock"]);
+
+    // Executing routes through the injected onCommand with the command's own source.
+    const executeRow = resolved.sections[0]!.items!.find((item: { id: string }) => item.id === "command.os.resetDock") as unknown as { onClick: (event: never, context: never) => void };
+    executeRow.onClick({} as never, {} as never);
+    expect(onCommand).toHaveBeenCalledWith({ kind: "os" }, "os.resetDock", undefined);
   });
 });

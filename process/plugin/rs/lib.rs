@@ -1272,7 +1272,7 @@ pub mod app_3d {
         WindowEngagement {
             session_active: Some(active_utility != "select"),
             // 🧰 The select/cut/drill/attach switcher now lives in the framework toolbar (declared via `.tool` +
-            // `.window_kind_tools`), so the engagement no longer duplicates it as toggle options.
+            // `.window_kind_utilities`), so the engagement no longer duplicates it as toggle options.
             options: None,
             input: Some(WindowEngagementInput {
                 id: Some("process3d-engagement".into()),
@@ -1726,11 +1726,11 @@ pub mod app_3d {
                 // 🧰 Flat top-level exclusive toolbar scoped to the workpiece window (active tool is
                 // host-owned). These four are the window's entire tool set — not a sub-collection — so
                 // each carries `group: None` and renders as its own flat toolbar icon.
-                .tool(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "cursor") })
-                .tool(UtilityDefinition { category: Some(UtilityCategory::Tools), ..UtilityDefinition::new("cut", "Cut", "scissors") })
-                .tool(UtilityDefinition { category: Some(UtilityCategory::Tools), ..UtilityDefinition::new("drill", "Drill", "circle-dot") })
-                .tool(UtilityDefinition { category: Some(UtilityCategory::Tools), ..UtilityDefinition::new("attach", "Attach", "plus") })
-                .window_kind_tools(PROCESS_3D_PLAY_WINDOW_MAIN, vec!["select".into(), "cut".into(), "drill".into(), "attach".into()])
+                .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "cursor") })
+                .utility(UtilityDefinition { category: Some(UtilityCategory::Tools), ..UtilityDefinition::new("cut", "Cut", "scissors") })
+                .utility(UtilityDefinition { category: Some(UtilityCategory::Tools), ..UtilityDefinition::new("drill", "Drill", "circle-dot") })
+                .utility(UtilityDefinition { category: Some(UtilityCategory::Tools), ..UtilityDefinition::new("attach", "Attach", "plus") })
+                .window_kind_utilities(PROCESS_3D_PLAY_WINDOW_MAIN, vec!["select".into(), "cut".into(), "drill".into(), "attach".into()])
                 .keybinding("mod+z", "undo")
                 .keybinding("mod+shift+z", "redo")
                 .keybinding("bracketleft", "stepCursorBack")
