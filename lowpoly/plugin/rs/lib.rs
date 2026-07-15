@@ -1128,6 +1128,7 @@ fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime) -> Vec<WindowMeasure> {
             id: "lowpoly-measure-selection-kind".into(),
             label: "Selection Kind".into(),
             default_open: Some(true),
+            active_tool_id: None,
             children: vec![
                 selection_kind_toggle("mesh", "box", "Mesh", "mesh", targets.mesh),
                 selection_kind_toggle("face", "square", "Face", "face", targets.face),
@@ -1147,24 +1148,44 @@ fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime) -> Vec<WindowMeasure> {
             on_change: lowpoly_action("setSelectionMethod", None),
         },
         WindowMeasure::Group {
-            id: "lowpoly-measure-tool-params".into(),
-            label: "Tool Params".into(),
-            default_open: Some(true),
+            id: "lowpoly-measure-snap".into(),
+            label: "Snap".into(),
+            default_open: Some(false),
+            active_tool_id: None,
             children: vec![
-                lowpoly_tool_param_slider("extrude", "Extrude Distance", "extrudeDistance", params, 0.25, 0.01, 2.0, 0.01),
-                lowpoly_tool_param_slider("inset", "Inset Amount", "insetAmount", params, 0.1, 0.01, 1.0, 0.01),
-                lowpoly_tool_param_slider("bevel", "Bevel Amount", "bevelAmount", params, 0.05, 0.01, 0.5, 0.01),
-                lowpoly_tool_param_slider("bevel-segments", "Bevel Segments", "bevelSegments", params, 1.0, 1.0, 8.0, 1.0),
-                lowpoly_tool_param_slider("loop-cuts", "Loop Cuts", "loopCuts", params, 1.0, 1.0, 16.0, 1.0),
-                lowpoly_tool_param_slider("decimate", "Decimate Ratio", "decimateRatio", params, 0.5, 0.05, 1.0, 0.05),
                 lowpoly_tool_param_slider("snap", "Snap Grid", "snapGrid", params, 0.25, 0.05, 2.0, 0.05),
-                lowpoly_tool_param_slider("mirror", "Mirror Axis", "mirrorAxis", params, 0.0, 0.0, 2.0, 1.0),
-                lowpoly_tool_param_slider("brush-size", "Brush Size", "brushSize", params, 16.0, 1.0, 128.0, 1.0),
-                lowpoly_tool_param_slider("brush-opacity", "Brush Opacity", "brushOpacity", params, 1.0, 0.0, 1.0, 0.05),
-                lowpoly_tool_param_slider("brush-hardness", "Brush Hardness", "brushHardness", params, 0.5, 0.0, 1.0, 0.05),
             ],
         },
+        lowpoly_paint_params_group("brush", params),
+        lowpoly_paint_params_group("eraser", params),
     ]
+}
+
+/// 🖌️ Tool Options for a stamping paint tool (`brush`/`eraser`) — the live brush size/opacity/hardness
+/// sliders, tagged `active_tool_id: Some(tool)` so [`partition_window_measures`] surfaces them in the
+/// Tool Options rail only while that exact tool is active. Both tools stamp through the same
+/// `stamp_brush` path (radius/hardness/opacity + eraser flag), so they share an identical param set.
+fn lowpoly_paint_params_group(tool: &str, params: &Value) -> WindowMeasure {
+    let slider = |suffix: &str, label: &str, key: &str, default: f64, min: f64, max: f64, step: f64| WindowMeasure::Slider {
+        id: format!("lowpoly-measure-{tool}-{suffix}"),
+        label: Some(label.into()),
+        value: tool_param_f64(params, key, default),
+        min,
+        max,
+        step: Some(step),
+        on_change: lowpoly_action("setToolParam", Some(json!({ "key": key }))),
+    };
+    WindowMeasure::Group {
+        id: format!("lowpoly-measure-paint-params-{tool}"),
+        label: "Brush".into(),
+        default_open: Some(true),
+        active_tool_id: Some(tool.into()),
+        children: vec![
+            slider("size", "Brush Size", "brushSize", 16.0, 1.0, 128.0, 1.0),
+            slider("opacity", "Brush Opacity", "brushOpacity", 1.0, 0.0, 1.0, 0.05),
+            slider("hardness", "Brush Hardness", "brushHardness", 0.5, 0.0, 1.0, 0.05),
+        ],
+    }
 }
 
 //#endregion 🔖Tools
@@ -2418,6 +2439,28 @@ mod tests {
         for paint_op in ["paintFill", "fillBucket", "addPaintLayer"] {
             assert!(main.contains(&paint_op.to_string()), "MAIN must expose paint op {paint_op}");
             assert!(uv.contains(&paint_op.to_string()), "UV must expose paint op {paint_op}");
+        }
+    }
+
+    #[test]
+    fn paint_tool_params_are_tool_tagged_and_mesh_op_measures_removed() {
+        let measures = lowpoly_window_measures(&LowpolyPlayRuntime::default());
+        let group_tag = |id: &str| {
+            measures.iter().find_map(|measure| match measure {
+                WindowMeasure::Group { id: gid, active_tool_id, .. } if gid == id => Some(active_tool_id.clone()),
+                _ => None,
+            })
+        };
+        // 🖌️ Live paint params are now tool-scoped Tool Options — one tagged group per stamping tool, so
+        // `partition_window_measures` surfaces each only while that exact tool is the active tool.
+        assert_eq!(group_tag("lowpoly-measure-paint-params-brush"), Some(Some("brush".into())));
+        assert_eq!(group_tag("lowpoly-measure-paint-params-eraser"), Some(Some("eraser".into())));
+        // 🧹 Snap grid stays a general (untagged) measure — it is not a single-tool parameter.
+        assert_eq!(group_tag("lowpoly-measure-snap"), Some(None));
+        // 🗑️ The mesh-op param sliders now live ONLY in the Action Panel's staged `action_args`, never a measure.
+        let json = serde_json::to_string(&measures).unwrap();
+        for removed in ["lowpoly-measure-extrude", "lowpoly-measure-inset", "lowpoly-measure-bevel", "lowpoly-measure-bevel-segments", "lowpoly-measure-loop-cuts", "lowpoly-measure-decimate", "lowpoly-measure-mirror"] {
+            assert!(!json.contains(removed), "mesh-op measure {removed} must be gone (covered by action_args)");
         }
     }
 

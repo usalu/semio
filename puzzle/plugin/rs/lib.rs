@@ -3,15 +3,12 @@
 pub mod d2 {
     //! 🧩 Puzzle 2D plugin — declarative puzzle 2d play app bundled as a hot-swappable WASM component.
 
-    // 🧩 `semio_framework_plugin`'s own `pub mod component` (WASM export glue) shadows the
-    // glob-reexported `ui_wgpu::component::layout`, so this one type must come straight from `ui_wgpu`.
-    use ui_wgpu::component::layout::WindowEngagementToggleGroupOption;
     use puzzle_2d::{handle_position_on_circle, handle_position_on_rectangle, puzzle2d_document_delta_ops, puzzle_2d_lod_scale_json, puzzle_board_host, BoardHost, Point, Puzzle2dExtension, Puzzle2dOp, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
     use semio_framework_plugin::{
         build_canvas_2d_scene, build_puzzle2d_board_scene, create_default_layout,
         MeasureSelectItem, WindowEngagementStatus,
         ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp, DocumentView, PanelGroup, PluginBundle, Puzzle2dBoardScene, SurfaceKind, ToolCategory, ToolDefinition, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
-        WindowEngagementControl, WindowEngagementInput, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID,
+        WindowEngagementInput, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID,
     };
     use semio_framework_plugin::kernel::HostEffect;
     use serde::{Deserialize, Serialize};
@@ -762,45 +759,58 @@ pub mod d2 {
         }
     }
 
-    /// 🖌️ Brush candidate rows (`{nodeKind, targetHandleIndex}`) drained from the host into a placement toggle-group control.
-    fn puzzle2d_brush_placement_control(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Option<WindowEngagementControl> {
+    /// 🖌️ Tool Options group for the brush tool — the brush candidate picker (`{nodeKind, targetHandleIndex}`
+    /// rows drained from the host), tagged `active_tool_id: Some("brush")` so [`partition_window_measures`]
+    /// surfaces it in the Tool Options rail only while the brush tool is active. `None` when the host has no
+    /// candidates yet (nothing to place), so the rail stays empty just like the old gated engagement control.
+    fn puzzle2d_brush_tool_options(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Option<WindowMeasure> {
         if envelope.runtime.brush_candidates.is_empty() {
             return None;
         }
-        let options: Vec<WindowEngagementToggleGroupOption> = envelope
+        let items: Vec<MeasureSelectItem> = envelope
             .runtime
             .brush_candidates
             .iter()
             .enumerate()
             .map(|(index, candidate)| {
                 let node_kind = candidate.get("nodeKind").and_then(|value| value.as_str()).or_else(|| candidate.as_str()).unwrap_or("kind");
-                WindowEngagementToggleGroupOption { id: format!("puzzle2d.brush.candidate.{index}"), label: node_kind.into(), disabled: None }
+                let id = format!("puzzle2d.brush.candidate.{index}");
+                MeasureSelectItem { id: id.clone(), value: id, label: node_kind.into() }
             })
             .collect();
-        let selected_index = envelope.runtime.brush_candidate_index.min(options.len().saturating_sub(1));
-        Some(WindowEngagementControl::ToggleGroup {
-            id: Some("puzzle2d-brush-placement".into()),
-            label: Some(labels.placement.into()),
-            value: Some(format!("puzzle2d.brush.candidate.{selected_index}")),
-            options,
-            disabled: None,
-            on_select: Some(puzzle2d_action("engagementControlSelect", None)),
+        let selected_index = envelope.runtime.brush_candidate_index.min(items.len().saturating_sub(1));
+        Some(WindowMeasure::Group {
+            id: "puzzle2d-tool-options-brush".into(),
+            label: labels.placement.into(),
+            default_open: Some(true),
+            active_tool_id: Some(PUZZLE2D_TOOL_BRUSH.into()),
+            children: vec![WindowMeasure::Select {
+                id: "puzzle2d-brush-placement".into(),
+                label: Some(labels.placement.into()),
+                value: format!("puzzle2d.brush.candidate.{selected_index}"),
+                items,
+                on_change: puzzle2d_action("engagementControlSelect", None),
+            }],
         })
     }
 
-    /// 🪣 Fill-count slider control shown while the fill tool builds a brush-fill session.
-    fn puzzle2d_fill_count_control(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowEngagementControl {
-        WindowEngagementControl::Slider {
-            id: Some("puzzle2d-fill-count".into()),
-            label: Some(format!("{} {}", labels.fill, envelope.runtime.fill_count)),
-            value: envelope.runtime.fill_count as f64,
-            min: 0.0,
-            max: PUZZLE2D_FILL_COUNT_MAX as f64,
-            step: Some(1.0),
-            unit: None,
-            disabled: None,
-            on_change: Some(puzzle2d_action("setFillCount", None)),
-            on_commit: None,
+    /// 🪣 Tool Options group for the fill tool — the fill-count slider, tagged `active_tool_id: Some("fill")`
+    /// so it surfaces in the Tool Options rail only while the fill tool is active.
+    fn puzzle2d_fill_tool_options(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasure {
+        WindowMeasure::Group {
+            id: "puzzle2d-tool-options-fill".into(),
+            label: labels.fill.into(),
+            default_open: Some(true),
+            active_tool_id: Some(PUZZLE2D_TOOL_FILL.into()),
+            children: vec![WindowMeasure::Slider {
+                id: "puzzle2d-fill-count".into(),
+                label: Some(format!("{} {}", labels.fill, envelope.runtime.fill_count)),
+                value: envelope.runtime.fill_count as f64,
+                min: 0.0,
+                max: PUZZLE2D_FILL_COUNT_MAX as f64,
+                step: Some(1.0),
+                on_change: puzzle2d_action("setFillCount", None),
+            }],
         }
     }
 
@@ -810,11 +820,6 @@ pub mod d2 {
         let lod = overlay.get("lod").and_then(|value| value.as_str()).unwrap_or(if pane_lod_mode == PUZZLE2D_LOD_MODE_AUTOMATIC { "auto" } else { pane_lod_mode });
         let node_count = fixture_nodes(&envelope.fixture).len();
         let edge_count = fixture_edges(&envelope.fixture).len();
-        let control = match envelope.active_tool.as_str() {
-            "fill" => Some(puzzle2d_fill_count_control(envelope, labels)),
-            "brush" => puzzle2d_brush_placement_control(envelope, labels),
-            _ => None,
-        };
         let input_value = envelope.runtime.engagement_input_by_pane.get(pane).cloned().unwrap_or_default();
         let placeholder = match envelope.active_tool.as_str() {
             "fill" => "Fill",
@@ -833,7 +838,7 @@ pub mod d2 {
                 on_repeat_last: None,
                 on_abort: Some(puzzle2d_action("engagementAbort", Some(json!({ "pane": pane })))),
             }),
-            control,
+            control: None,
             controls: None,
             status: Some(vec![WindowEngagementStatus { id: "puzzle2d-board-status".into(), text: format!("{node_count} nodes · {edge_count} edges · LOD {lod}") }]),
             // 🧰 The select/brush/fill switcher now lives in the framework toolbar (declared via `.tool` +
@@ -1499,6 +1504,7 @@ pub mod d2 {
             id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion"),
             label: labels.suggestion.into(),
             default_open: Some(false),
+            active_tool_id: None,
             children: vec![
                 WindowMeasure::Slider {
                     id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-offset"),
@@ -1513,12 +1519,14 @@ pub mod d2 {
                     id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-distribution-nodes"),
                     label: labels.node_weights.into(),
                     default_open: Some(false),
+                    active_tool_id: None,
                     children: puzzle2d_kind_weight_measures("node-kind", &node_ids, &envelope.runtime.node_kind_weights, "nodes"),
                 },
                 WindowMeasure::Group {
                     id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-distribution-handles"),
                     label: labels.handle_weights.into(),
                     default_open: Some(false),
+                    active_tool_id: None,
                     children: puzzle2d_kind_weight_measures("handle-kind", &handle_ids, &envelope.runtime.handle_kind_weights, "handles"),
                 },
             ],
@@ -1527,7 +1535,15 @@ pub mod d2 {
 
     fn puzzle2d_window_measures(pane: &str, envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Vec<WindowMeasure> {
         let mode = envelope.runtime.lod_mode_by_pane.get(pane).map(String::as_str).unwrap_or(PUZZLE2D_LOD_MODE_AUTOMATIC);
-        vec![puzzle2d_lod_measure(pane, mode, labels), puzzle2d_suggestion_measures_group(envelope, labels)]
+        let mut measures = vec![
+            puzzle2d_lod_measure(pane, mode, labels),
+            puzzle2d_suggestion_measures_group(envelope, labels),
+            puzzle2d_fill_tool_options(envelope, labels),
+        ];
+        if let Some(brush) = puzzle2d_brush_tool_options(envelope, labels) {
+            measures.push(brush);
+        }
+        measures
     }
     //#endregion 🔖Measures
 
@@ -2027,9 +2043,11 @@ pub mod d2 {
         ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, kind) }
     }
 
-    /// 🧰 One canvas tool declaration (exclusive `tool` group, host-owned active tool).
+    /// 🧰 One canvas tool declaration (host-owned active tool). Select/brush/fill are this window's entire
+    /// top-level exclusive tool set — not a sub-collection — so each carries `group: None` and renders as
+    /// its own flat toolbar icon (matching the `process` toolbar), never a collapsed dropdown.
     fn puzzle2d_tool(id: &str, label: &str, icon: &str, category: ToolCategory) -> ToolDefinition {
-        ToolDefinition { group: Some("tool".into()), category: Some(category), ..ToolDefinition::new(id, label, icon) }
+        ToolDefinition { category: Some(category), ..ToolDefinition::new(id, label, icon) }
     }
 
     pub fn create_puzzle2d_app() -> App {
@@ -2459,6 +2477,41 @@ pub mod d2 {
             let overview_tools: Vec<&str> = overview.tools.iter().map(|tool| tool.as_str()).collect();
             assert_eq!(overview_tools, vec![PUZZLE2D_TOOL_SELECT, PUZZLE2D_TOOL_BRUSH, PUZZLE2D_TOOL_FILL]);
             assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID), "declaring tools must inject the setActiveTool action");
+            // 🧰 D-1: select/brush/fill are this window's whole exclusive tool set, NOT a sub-collection, so
+            // each carries `group: None` and renders as a flat toolbar icon (never one collapsed dropdown).
+            for tool in &definition.tools {
+                assert_eq!(tool.group, None, "tool {} must render flat (no shared group)", tool.id);
+            }
+        }
+
+        #[test]
+        fn fill_and_brush_params_are_tagged_tool_options_not_engagement_controls() {
+            let labels = puzzle2d_labels(&ViewState::default());
+            let host = puzzle_board_host();
+            let group_tag = |measures: &[WindowMeasure], id: &str| {
+                measures.iter().find_map(|measure| match measure {
+                    WindowMeasure::Group { id: gid, active_tool_id, .. } if gid == id => Some(active_tool_id.clone()),
+                    _ => None,
+                })
+            };
+            // 🪣 Fill-count slider now lives in a general measure tagged for the fill tool (surfaced by
+            // partition_window_measures only while "fill" is active), NOT the engagement command HUD.
+            let mut fill_runtime = Puzzle2dPlayRuntime::default();
+            fill_runtime.fill_count = 3;
+            let fill_scene = Puzzle2dScene { fixture: default_empty_fixture(), runtime: fill_runtime, active_tool: PUZZLE2D_TOOL_FILL.into() };
+            let fill_measures = puzzle2d_window_measures(PUZZLE2D_PANE_OVERVIEW, &fill_scene, labels);
+            assert_eq!(group_tag(&fill_measures, "puzzle2d-tool-options-fill"), Some(Some(PUZZLE2D_TOOL_FILL.into())));
+            assert!(puzzle2d_engagement(&fill_scene, &host, PUZZLE2D_PANE_OVERVIEW, labels).control.is_none(), "fill engagement HUD must no longer carry the relocated control");
+            // 🖌️ Brush candidate picker becomes a fill-tool-sibling tagged group, present only once the host
+            // has candidates to place (empty ⇒ absent, matching the old gated-control behaviour).
+            let empty_brush = Puzzle2dScene { fixture: default_empty_fixture(), runtime: Puzzle2dPlayRuntime::default(), active_tool: PUZZLE2D_TOOL_BRUSH.into() };
+            assert_eq!(group_tag(&puzzle2d_window_measures(PUZZLE2D_PANE_OVERVIEW, &empty_brush, labels), "puzzle2d-tool-options-brush"), None);
+            let mut brush_runtime = Puzzle2dPlayRuntime::default();
+            brush_runtime.brush_candidates = vec![json!({ "nodeKind": "node" })];
+            let brush_scene = Puzzle2dScene { fixture: default_empty_fixture(), runtime: brush_runtime, active_tool: PUZZLE2D_TOOL_BRUSH.into() };
+            let brush_measures = puzzle2d_window_measures(PUZZLE2D_PANE_OVERVIEW, &brush_scene, labels);
+            assert_eq!(group_tag(&brush_measures, "puzzle2d-tool-options-brush"), Some(Some(PUZZLE2D_TOOL_BRUSH.into())));
+            assert!(puzzle2d_engagement(&brush_scene, &host, PUZZLE2D_PANE_OVERVIEW, labels).control.is_none(), "brush engagement HUD must no longer carry the relocated control");
         }
 
         /// 🧭 Kind discipline: every View-declared runtime/host action must run through the registry
@@ -2501,14 +2554,11 @@ pub mod d2 {
 pub mod d3 {
     //! 🧊 Puzzle 3D plugin — 3D puzzle assembly play app bundled as a hot-swappable WASM component.
 
-    // 🧩 `semio_framework_plugin`'s own `pub mod component` (WASM export glue) shadows the
-    // glob-reexported `ui_wgpu::component::layout`, so this one type must come straight from `ui_wgpu`.
-    use ui_wgpu::component::layout::WindowEngagementToggleGroupOption;
     use puzzle_3d::{puzzle3d_document_delta_ops, BrushPlacePayload, Puzzle3dOp, Puzzle3dPrecomputeSession};
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_world_3d_scene, create_default_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
         ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, PanelGroup,
-        SurfaceKind, ToolCategory, ToolDefinition, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        SurfaceKind, ToolCategory, ToolDefinition, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID,
     };
     use semio_framework_plugin::kernel::HostEffect;
@@ -4635,113 +4685,17 @@ pub mod d3 {
             })
     }
 
-    fn puzzle3d_brush_placement_control(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession) -> Option<WindowEngagementControl> {
-        let target = puzzle3d_brush_target_vortex(envelope)?;
-        let raw = precompute.brush_candidates(&target);
-        let candidates = parse_brush_candidates_free(&raw);
-        if candidates.is_empty() {
-            return None;
-        }
-        let options: Vec<WindowEngagementToggleGroupOption> = candidates
-            .iter()
-            .enumerate()
-            .map(|(index, candidate)| {
-                let label = candidate.get("objectKind").and_then(|value| value.as_str()).or_else(|| candidate.get("objectKindId").and_then(|value| value.as_str())).unwrap_or("kind");
-                WindowEngagementToggleGroupOption { id: format!("puzzle3d.brush.candidate.{index}"), label: label.into(), disabled: None }
-            })
-            .collect();
-        let selected_index = envelope.runtime.brush_candidate_index.min(options.len().saturating_sub(1));
-        Some(WindowEngagementControl::ToggleGroup {
-            id: Some("puzzle3d-brush-placement".into()),
-            label: Some("Placement".into()),
-            value: Some(format!("puzzle3d.brush.candidate.{selected_index}")),
-            options,
-            disabled: None,
-            on_select: Some(puzzle3d_action("engagementControlSelect", None)),
-        })
-    }
-
-    fn puzzle3d_fill_count_control(envelope: &Puzzle3dScene, session: &Puzzle3dPrecomputeSession) -> WindowEngagementControl {
-        let progress: Value = serde_json::from_str(&session.fill_progress()).unwrap_or(Value::Null);
-        let done = progress.get("done").and_then(Value::as_bool).unwrap_or(true);
-        let built_count = progress.get("count").and_then(Value::as_u64).unwrap_or(0) as u32;
-        let label = if done {
-            format!("Fill {}", envelope.runtime.fill_count)
-        } else {
-            let max_count = progress.get("maxCount").and_then(Value::as_u64).unwrap_or(PUZZLE3D_FILL_COUNT_MAX as u64);
-            format!("Fill {} (building {built_count}/{max_count})", envelope.runtime.fill_count)
-        };
-        let max = if done { PUZZLE3D_FILL_COUNT_MAX as f64 } else { (built_count.max(envelope.runtime.fill_count)) as f64 };
-        WindowEngagementControl::Slider {
-            id: Some("puzzle3d-fill-count".into()),
-            label: Some(label),
-            value: envelope.runtime.fill_count as f64,
-            min: 0.0,
-            max,
-            step: Some(1.0),
-            unit: None,
-            disabled: None,
-            on_change: Some(puzzle3d_action("setFillCount", None)),
-            on_commit: None,
-        }
-    }
-
-    /// 🧊 Always visible while the Fill tool is active — the only path to flip `fill_edit_target_volumes`, so it must render
-    /// regardless of which mode is currently selected (the voxel dim steppers, by contrast, only make sense once in edit mode).
-    fn puzzle3d_voxel_mode_toggle(runtime: &Puzzle3dRuntime) -> WindowEngagementControl {
-        WindowEngagementControl::ToggleGroup {
-            id: Some("puzzle3d-voxel-edit-mode".into()),
-            label: Some("Mode".into()),
-            value: Some(if runtime.fill_edit_target_volumes { "edit-volumes".into() } else { "fill".into() }),
-            options: vec![
-                WindowEngagementToggleGroupOption { id: "fill".into(), label: "Fill".into(), disabled: None },
-                WindowEngagementToggleGroupOption { id: "edit-volumes".into(), label: "Edit Volumes".into(), disabled: None },
-            ],
-            disabled: None,
-            on_select: Some(puzzle3d_action("setFillEditTargetVolumes", None)),
-        }
-    }
-
-    fn puzzle3d_voxel_dim_steppers(runtime: &Puzzle3dRuntime) -> Vec<WindowEngagementControl> {
-        let [w, d, h] = runtime.voxel_dims;
-        let axis_stepper = |axis: &str, label: &str, value: u32| WindowEngagementControl::Stepper {
-            id: Some(format!("puzzle3d-voxel-{axis}")),
-            label: Some(label.into()),
-            value: value as f64,
-            min: Some(1.0),
-            max: Some(64.0),
-            step: Some(1.0),
-            unit: None,
-            disabled: None,
-            on_change: Some(puzzle3d_action("setVoxelDims", Some(json!({ "axis": axis })))),
-            on_commit: None,
-        };
-        vec![axis_stepper("w", "Width", w), axis_stepper("d", "Depth", d), axis_stepper("h", "Height", h)]
-    }
-
-    fn puzzle3d_engagement(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession) -> WindowEngagement {
+    /// 🧰 The select/brush/fill switcher lives in the framework toolbar (declared via `.tool` +
+    /// `.window_kind_tools`); the fill-count slider, voxel edit-mode picker, voxel-dimension steppers and
+    /// brush placement picker now live as tagged [`WindowMeasure::Group`]s in [`puzzle3d_window_measures`]
+    /// (surfaced by [`partition_window_measures`] in the dedicated "Tool Options" rail only while their
+    /// tool is active), so the engagement HUD is a bare command input plus a status line.
+    fn puzzle3d_engagement(envelope: &Puzzle3dScene) -> WindowEngagement {
         let object_count = envelope.fixture.objects.len();
         let attraction_count = envelope.fixture.attractions.len();
         let active_tool = envelope.active_tool.as_str();
-        let voxel_edit_active = active_tool == "fill" && envelope.runtime.fill_edit_target_volumes;
-        let control = match active_tool {
-            "fill" if !voxel_edit_active => Some(puzzle3d_fill_count_control(envelope, precompute)),
-            "brush" => puzzle3d_brush_placement_control(envelope, precompute),
-            _ => None,
-        };
-        let controls = if active_tool == "fill" {
-            let mut rows = vec![puzzle3d_voxel_mode_toggle(&envelope.runtime)];
-            if voxel_edit_active {
-                rows.extend(puzzle3d_voxel_dim_steppers(&envelope.runtime));
-            }
-            Some(rows)
-        } else {
-            None
-        };
         WindowEngagement {
             session_active: Some(active_tool != "select"),
-            // 🧰 The select/brush/fill switcher now lives in the framework toolbar (declared via `.tool` +
-            // `.window_kind_tools`), so the engagement no longer duplicates it as toggle options.
             options: None,
             input: Some(WindowEngagementInput {
                 id: Some("puzzle3d-engagement".into()),
@@ -4753,8 +4707,8 @@ pub mod d3 {
                 on_repeat_last: Some(puzzle3d_action("engagementRepeatLast", None)),
                 on_abort: Some(puzzle3d_action("engagementAbort", None)),
             }),
-            control,
-            controls,
+            control: None,
+            controls: None,
             status: Some(vec![semio_framework_plugin::WindowEngagementStatus { id: "puzzle3d-world-status".into(), text: format!("{object_count} objects · {attraction_count} attractions") }]),
             possible_engagements: None,
         }
@@ -4872,6 +4826,7 @@ pub mod d3 {
             id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod"),
             label: "LOD".into(),
             default_open: Some(true),
+            active_tool_id: None,
             children: vec![
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-auto"), icon_id: "zoom-in".into(), label: Some("Auto zoom".into()), pressed: runtime.lod_automatic, text: None, on_change: puzzle3d_action("setLodAutomatic", None) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-depth-variable"), icon_id: "layers".into(), label: Some("Depth-variable".into()), pressed: runtime.lod_depth_variable, text: None, on_change: puzzle3d_action("setLodDepthVariable", None) },
@@ -4886,6 +4841,7 @@ pub mod d3 {
             id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select"),
             label: "Select".into(),
             default_open: Some(true),
+            active_tool_id: None,
             children: vec![
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-rectangle"), icon_id: "square".into(), label: Some("Rectangle".into()), pressed: runtime.selection_method == "rectangle", text: None, on_change: puzzle3d_action("setSelectionMethod", Some(json!({ "method": "rectangle" }))) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-lasso"), icon_id: "lasso".into(), label: Some("Lasso".into()), pressed: runtime.selection_method == "lasso", text: None, on_change: puzzle3d_action("setSelectionMethod", Some(json!({ "method": "lasso" }))) },
@@ -4921,6 +4877,7 @@ pub mod d3 {
             id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush"),
             label: "Brush".into(),
             default_open: Some(false),
+            active_tool_id: None,
             children: vec![
                 WindowMeasure::Slider {
                     id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-overlap-budget"),
@@ -4935,17 +4892,20 @@ pub mod d3 {
                     id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-distribution"),
                     label: "Distribution".into(),
                     default_open: Some(false),
+                    active_tool_id: None,
                     children: vec![
                         WindowMeasure::Group {
                             id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-distribution-objects"),
                             label: labels.objects.into(),
                             default_open: Some(false),
+                            active_tool_id: None,
                             children: puzzle3d_kind_weight_measures("object-kind", &object_ids, &envelope.runtime.object_kind_weights, "setObjectKindWeight"),
                         },
                         WindowMeasure::Group {
                             id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-distribution-vortices"),
                             label: labels.vortices.into(),
                             default_open: Some(false),
+                            active_tool_id: None,
                             children: puzzle3d_kind_weight_measures("vortex-kind", &vortex_ids, &envelope.runtime.vortex_kind_weights, "setVortexKindWeight"),
                         },
                     ],
@@ -4969,14 +4929,128 @@ pub mod d3 {
         }
     }
 
-    fn puzzle3d_window_measures(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
-        vec![
+    /// 🪣 Fill-count slider measure — the fill-tool's core parameter, mirrors the retired
+    /// `puzzle3d_fill_count_control` (`setFillCount` reads `count`-or-`value`, so a slider's `{value}` payload
+    /// preserves the action semantics). Live build progress is folded into the label exactly as before.
+    fn puzzle3d_fill_count_measure(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession) -> WindowMeasure {
+        let progress: Value = serde_json::from_str(&precompute.fill_progress()).unwrap_or(Value::Null);
+        let done = progress.get("done").and_then(Value::as_bool).unwrap_or(true);
+        let built_count = progress.get("count").and_then(Value::as_u64).unwrap_or(0) as u32;
+        let label = if done {
+            format!("Fill {}", envelope.runtime.fill_count)
+        } else {
+            let max_count = progress.get("maxCount").and_then(Value::as_u64).unwrap_or(PUZZLE3D_FILL_COUNT_MAX as u64);
+            format!("Fill {} (building {built_count}/{max_count})", envelope.runtime.fill_count)
+        };
+        let max = if done { PUZZLE3D_FILL_COUNT_MAX as f64 } else { (built_count.max(envelope.runtime.fill_count)) as f64 };
+        WindowMeasure::Slider { id: "puzzle3d-fill-count".into(), label: Some(label), value: envelope.runtime.fill_count as f64, min: 0.0, max, step: Some(1.0), on_change: puzzle3d_action("setFillCount", None) }
+    }
+
+    /// 🧊 Fill/edit-volumes mode picker measure — replaces the retired `puzzle3d_voxel_mode_toggle`. A
+    /// [`WindowMeasure::Select`] dispatches its item `value` under the `value` key, so `setFillEditTargetVolumes`
+    /// now reads `id`-or-`value` (see its handler) to keep the `fill`/`edit-volumes` semantics identical.
+    fn puzzle3d_voxel_mode_measure(runtime: &Puzzle3dRuntime) -> WindowMeasure {
+        WindowMeasure::Select {
+            id: "puzzle3d-voxel-edit-mode".into(),
+            label: Some("Mode".into()),
+            value: if runtime.fill_edit_target_volumes { "edit-volumes".into() } else { "fill".into() },
+            items: vec![
+                MeasureSelectItem { id: "fill".into(), value: "fill".into(), label: "Fill".into() },
+                MeasureSelectItem { id: "edit-volumes".into(), value: "edit-volumes".into(), label: "Edit Volumes".into() },
+            ],
+            on_change: puzzle3d_action("setFillEditTargetVolumes", None),
+        }
+    }
+
+    /// 🧊 Voxel width/depth/height measures — the retired `puzzle3d_voxel_dim_steppers` re-expressed as
+    /// sliders (`WindowMeasure` has no stepper variant; both carry `value`/`min`/`max`/`step` + `on_change`).
+    /// `setVoxelDims` reads `axis` (baked into `on_change.args`) plus the dispatched `value`, unchanged.
+    fn puzzle3d_voxel_dim_measures(runtime: &Puzzle3dRuntime) -> Vec<WindowMeasure> {
+        let [w, d, h] = runtime.voxel_dims;
+        let axis_slider = |axis: &str, label: &str, value: u32| WindowMeasure::Slider {
+            id: format!("puzzle3d-voxel-{axis}"),
+            label: Some(format!("{label} {value}")),
+            value: value as f64,
+            min: 1.0,
+            max: 64.0,
+            step: Some(1.0),
+            on_change: puzzle3d_action("setVoxelDims", Some(json!({ "axis": axis }))),
+        };
+        vec![axis_slider("w", "Width", w), axis_slider("d", "Depth", d), axis_slider("h", "Height", h)]
+    }
+
+    /// 🪣 Tool Options group for the Fill tool — the fill-count slider (hidden while editing target volumes,
+    /// matching the retired engagement gate) plus the fill/edit-volumes mode picker. Tagged `Some("fill")` so
+    /// [`partition_window_measures`] surfaces it in the Tool Options rail only while the Fill tool is active.
+    fn puzzle3d_fill_tool_options(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession) -> WindowMeasure {
+        let mut children = vec![puzzle3d_voxel_mode_measure(&envelope.runtime)];
+        if !envelope.runtime.fill_edit_target_volumes {
+            children.insert(0, puzzle3d_fill_count_measure(envelope, precompute));
+        }
+        WindowMeasure::Group { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-tool-options-fill"), label: "Fill".into(), default_open: Some(true), active_tool_id: Some("fill".into()), children }
+    }
+
+    /// 🧊 Tool Options group for the Fill tool's voxel-edit mode — the width/depth/height dimension sliders,
+    /// tagged `Some("fill")` and emitted only while `fill_edit_target_volumes` is on (mirrors the old
+    /// `voxel_edit_active` gate). `None` otherwise so the rail carries no stray dimension controls.
+    fn puzzle3d_voxel_tool_options(runtime: &Puzzle3dRuntime) -> Option<WindowMeasure> {
+        if !runtime.fill_edit_target_volumes {
+            return None;
+        }
+        Some(WindowMeasure::Group { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-tool-options-voxel"), label: "Voxel".into(), default_open: Some(true), active_tool_id: Some("fill".into()), children: puzzle3d_voxel_dim_measures(runtime) })
+    }
+
+    /// 🖌️ Tool Options group for the Brush tool — the placement candidate picker (`ToggleGroup`→`Select`,
+    /// both "pick one of several string values"; `engagementControlSelect` reads `id`-or-`value` so semantics
+    /// hold). Tagged `Some("brush")`; `None` when there are no candidates to place, matching the old gate.
+    fn puzzle3d_brush_tool_options(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession) -> Option<WindowMeasure> {
+        let target = puzzle3d_brush_target_vortex(envelope)?;
+        let raw = precompute.brush_candidates(&target);
+        let candidates = parse_brush_candidates_free(&raw);
+        if candidates.is_empty() {
+            return None;
+        }
+        let items: Vec<MeasureSelectItem> = candidates
+            .iter()
+            .enumerate()
+            .map(|(index, candidate)| {
+                let label = candidate.get("objectKind").and_then(|value| value.as_str()).or_else(|| candidate.get("objectKindId").and_then(|value| value.as_str())).unwrap_or("kind");
+                let id = format!("puzzle3d.brush.candidate.{index}");
+                MeasureSelectItem { id: id.clone(), value: id, label: label.into() }
+            })
+            .collect();
+        let selected_index = envelope.runtime.brush_candidate_index.min(items.len().saturating_sub(1));
+        Some(WindowMeasure::Group {
+            id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-tool-options-brush"),
+            label: "Placement".into(),
+            default_open: Some(true),
+            active_tool_id: Some("brush".into()),
+            children: vec![WindowMeasure::Select {
+                id: "puzzle3d-brush-placement".into(),
+                label: Some("Placement".into()),
+                value: format!("puzzle3d.brush.candidate.{selected_index}"),
+                items,
+                on_change: puzzle3d_action("engagementControlSelect", None),
+            }],
+        })
+    }
+
+    fn puzzle3d_window_measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
+        let mut measures = vec![
             puzzle3d_view_measure(&envelope.runtime),
             puzzle3d_lod_measures_group(&envelope.runtime),
             puzzle3d_select_measures_group(&envelope.runtime, labels),
             puzzle3d_brush_measures_group(envelope, labels),
             world3d_sun_measures("puzzle3d", &envelope.runtime.sun, puzzle3d_action),
-        ]
+            puzzle3d_fill_tool_options(envelope, precompute),
+        ];
+        if let Some(voxel) = puzzle3d_voxel_tool_options(&envelope.runtime) {
+            measures.push(voxel);
+        }
+        if let Some(brush) = puzzle3d_brush_tool_options(envelope, precompute) {
+            measures.push(brush);
+        }
+        measures
     }
     //#endregion 🔖Measures
 
@@ -5500,7 +5574,7 @@ pub mod d3 {
                     }
                 }
                 "setFillEditTargetVolumes" => {
-                    let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
+                    let id = args.and_then(|value| value.get("id").or_else(|| value.get("value"))).and_then(|value| value.as_str());
                     envelope.runtime.fill_edit_target_volumes = match id {
                         Some("edit-volumes") => true,
                         Some("fill") => false,
@@ -5727,14 +5801,14 @@ pub mod d3 {
         fn window_engagements(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
             let active_tool = view_state.active_tool_id.as_deref().unwrap_or(PUZZLE3D_DEFAULT_TOOL);
             let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_tool);
-            HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.into(), puzzle3d_engagement(&envelope, &self.precompute))])
+            HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.into(), puzzle3d_engagement(&envelope))])
         }
 
         fn window_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
             let active_tool = view_state.active_tool_id.as_deref().unwrap_or(PUZZLE3D_DEFAULT_TOOL);
             let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_tool);
             let labels = puzzle3d_labels(view_state);
-            HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.into(), puzzle3d_window_measures(&envelope, labels))])
+            HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.into(), puzzle3d_window_measures(&envelope, &self.precompute, labels))])
         }
     }
     //#endregion 🔖Puzzle3dPlayApp
@@ -5749,7 +5823,7 @@ pub mod d3 {
                 .terminology("reuse")
                 .mode("edit", "Edit")
                 .default_mode_id("edit")
-                .window_kind_with_engagement(PUZZLE3D_PLAY_WINDOW_MAIN, "Puzzle 3D", PUZZLE3D_PLAY_BODY_COMPOSITE, SurfaceKind::World3d, puzzle3d_engagement(&envelope, &Puzzle3dPrecomputeSession::new()))
+                .window_kind_with_engagement(PUZZLE3D_PLAY_WINDOW_MAIN, "Puzzle 3D", PUZZLE3D_PLAY_BODY_COMPOSITE, SurfaceKind::World3d, puzzle3d_engagement(&envelope))
                 .default_layout(create_default_layout(&[PUZZLE3D_PLAY_WINDOW_MAIN.into()], "row", Some(&[100.0]), Some(&["Puzzle 3D".into()])))
                 .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE3D_PLAY_BODY_DOCUMENT)
                 .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE3D_PLAY_BODY_KINDS)
@@ -6017,6 +6091,24 @@ pub mod d3 {
             node.pointer("/world3d/interactionJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or(Value::Null)
         }
 
+        /// 🔍 Depth-first search for a [`WindowMeasure::Slider`]'s value by id, descending into groups (the
+        /// fill-count slider now nests inside the fill Tool Options group rather than sitting on the engagement).
+        fn find_measure_slider(measures: &[WindowMeasure], slider_id: &str) -> Option<f64> {
+            measures.iter().find_map(|measure| match measure {
+                WindowMeasure::Slider { id, value, .. } if id == slider_id => Some(*value),
+                WindowMeasure::Group { children, .. } => find_measure_slider(children, slider_id),
+                _ => None,
+            })
+        }
+
+        /// 🎯 Top-level tool tag of a [`WindowMeasure::Group`] by id, or `None` when the group is absent.
+        fn measure_group_tag(measures: &[WindowMeasure], group_id: &str) -> Option<Option<String>> {
+            measures.iter().find_map(|measure| match measure {
+                WindowMeasure::Group { id, active_tool_id, .. } if id == group_id => Some(active_tool_id.clone()),
+                _ => None,
+            })
+        }
+
         fn context_menu_of(node: &Value) -> Value {
             node.pointer("/world3d/contextMenuJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or(Value::Null)
         }
@@ -6133,25 +6225,65 @@ pub mod d3 {
             for _ in 0..500 {
                 app.handle_action("fillBuildTick", None, &fill_view, &meta("local")).expect("fillBuildTick");
             }
-            let engagements = app.window_engagements(&fill_view);
-            let engagement = engagements.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main window engagement");
-            match &engagement.control {
-                Some(WindowEngagementControl::Slider { value, .. }) => assert_eq!(*value, 1.0, "fillBuildTick should auto-start the fill count at 1 once the build is done"),
-                other => panic!("expected a fill slider control, got {other:?}"),
+            let measures = app.window_measures(&fill_view);
+            let window_measures = measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main window measures");
+            match find_measure_slider(window_measures, "puzzle3d-fill-count") {
+                Some(value) => assert_eq!(value, 1.0, "fillBuildTick should auto-start the fill count at 1 once the build is done"),
+                None => panic!("expected a fill-count slider in the fill Tool Options"),
             }
         }
 
         #[test]
-        fn fill_count_control_shows_building_progress_while_precompute_incomplete() {
+        fn fill_count_measure_shows_building_progress_while_precompute_incomplete() {
             let mut session = Puzzle3dPrecomputeSession::new();
             let scene = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_tool: "fill".into() };
             sync_precompute_session(&mut session, &scene);
             session.precompute_step(1);
-            let control = puzzle3d_fill_count_control(&scene, &session);
-            match control {
-                WindowEngagementControl::Slider { label: Some(label), .. } => assert!(label.contains("building"), "expected a building-progress label, got {label:?}"),
-                other => panic!("expected a slider control, got {other:?}"),
+            match puzzle3d_fill_count_measure(&scene, &session) {
+                WindowMeasure::Slider { label: Some(label), .. } => assert!(label.contains("building"), "expected a building-progress label, got {label:?}"),
+                other => panic!("expected a slider measure, got {other:?}"),
             }
+        }
+
+        /// 🎯 D-3 follow-up: the fill-count slider, fill/edit-volumes mode picker, voxel-dimension steppers and
+        /// brush placement picker are tagged `WindowMeasure::Group`s in [`puzzle3d_window_measures`] (surfaced by
+        /// `partition_window_measures` only for their active tool), never [`WindowEngagementControl`]s on the HUD.
+        #[test]
+        fn fill_and_brush_params_are_tagged_tool_options_not_engagement_controls() {
+            let labels = puzzle3d_labels(&ViewState::default());
+            let session = Puzzle3dPrecomputeSession::new();
+            // 🪣 Fill tool: the fill Tool Options group is tagged for "fill"; the voxel-dimension group only
+            // materialises once the edit-volumes mode is on (mirroring the retired `voxel_edit_active` gate).
+            let fill_scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_tool: "fill".into() };
+            let fill_measures = puzzle3d_window_measures(&fill_scene, &session, labels);
+            assert_eq!(measure_group_tag(&fill_measures, "puzzle3d-play-tool-options-fill"), Some(Some("fill".into())));
+            assert_eq!(measure_group_tag(&fill_measures, "puzzle3d-play-tool-options-voxel"), None, "voxel-dimension group is absent until edit-volumes mode is on");
+            assert!(find_measure_slider(&fill_measures, "puzzle3d-fill-count").is_some(), "fill-count slider lives in the fill Tool Options while not editing volumes");
+            let mut edit_runtime = Puzzle3dRuntime::default();
+            edit_runtime.fill_edit_target_volumes = true;
+            let edit_scene = Puzzle3dScene { fixture: default_fixture(), runtime: edit_runtime, active_tool: "fill".into() };
+            let edit_measures = puzzle3d_window_measures(&edit_scene, &session, labels);
+            assert_eq!(measure_group_tag(&edit_measures, "puzzle3d-play-tool-options-voxel"), Some(Some("fill".into())), "voxel-dimension steppers surface (tagged for fill) in edit-volumes mode");
+            assert!(find_measure_slider(&edit_measures, "puzzle3d-fill-count").is_none(), "the fill-count slider is hidden while editing target volumes, exactly like the old engagement gate");
+            assert!(find_measure_slider(&edit_measures, "puzzle3d-voxel-w").is_some(), "voxel width slider is present in edit-volumes mode");
+            // 🧰 The fill engagement HUD no longer carries any relocated control/controls.
+            let fill_engagement = puzzle3d_engagement(&fill_scene);
+            assert!(fill_engagement.control.is_none() && fill_engagement.controls.is_none(), "fill engagement HUD must no longer carry the relocated controls");
+            // 🖌️ Brush tool: with no candidates to place the tagged group is absent (matching the old gate); the
+            // engagement HUD is likewise bare. The positive candidate case is exercised through the app below.
+            let brush_scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_tool: "brush".into() };
+            assert_eq!(measure_group_tag(&puzzle3d_window_measures(&brush_scene, &session, labels), "puzzle3d-play-tool-options-brush"), None);
+            let brush_engagement = puzzle3d_engagement(&brush_scene);
+            assert!(brush_engagement.control.is_none() && brush_engagement.controls.is_none(), "brush engagement HUD must no longer carry the relocated control");
+            // 🖌️ Positive case: opening a vortex's suggestions selects it and drives the precompute so real
+            // candidates exist — the brush Tool Options group must then surface, tagged for "brush".
+            let brush_view = ViewState { active_tool_id: Some("brush".into()), ..ViewState::default() };
+            let mut app = new_app();
+            let vortex = first_vortex_full_id(&app);
+            app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), &brush_view, &meta("local")).expect("openVortexSuggestions");
+            let brush_app_measures = app.window_measures(&brush_view);
+            let window_measures = brush_app_measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main window measures");
+            assert_eq!(measure_group_tag(window_measures, "puzzle3d-play-tool-options-brush"), Some(Some("brush".into())), "the brush Tool Options group surfaces once there are candidates to place");
         }
         //#endregion 🧭 Suggestions, select-then-open context menu, fill build progress (Round 2)
 
@@ -6189,7 +6321,7 @@ pub mod d3 {
             // 🧰 select/brush/fill switching lives only on the framework toolbar (declared via `.tool` +
             // `.window_kind_tools`); the engagement HUD must not duplicate it as options.
             let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_tool: PUZZLE3D_DEFAULT_TOOL.into() };
-            let engagement = puzzle3d_engagement(&scene, &Puzzle3dPrecomputeSession::new());
+            let engagement = puzzle3d_engagement(&scene);
             assert!(engagement.options.is_none(), "the puzzle3d engagement must not re-expose tool switching as options");
         }
 
@@ -6219,16 +6351,13 @@ pub mod d3 {
 pub mod d5 {
     //! 👯 Puzzle 5D plugin — paired 2D board + 3D world puzzle play app bundled as a hot-swappable WASM component.
 
-    // 🧩 `semio_framework_plugin`'s own `pub mod component` (WASM export glue) shadows the
-    // glob-reexported `ui_wgpu::component::layout`, so this one type must come straight from `ui_wgpu`.
-    use ui_wgpu::component::layout::WindowEngagementToggleGroupOption;
     use puzzle_5d::{puzzle5d_document_delta_ops, BrushPlacePayload, Puzzle5dOp, Puzzle5dPrecomputeSession};
     use semio_framework_os::{register_mesh_exporter, register_mesh_importer};
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_puzzle2d_board_scene, build_world_3d_scene, create_default_layout,
         ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, WindowEngagementStatus,
         merge_world_selection_ids, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
-        ActionDescriptor, PanelGroup, Puzzle2dBoardScene, SurfaceKind, ToolCategory, ToolDefinition, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementControl,
+        ActionDescriptor, PanelGroup, Puzzle2dBoardScene, SurfaceKind, ToolCategory, ToolDefinition, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
         WindowEngagementInput, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
         FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID,
     };
@@ -7375,55 +7504,15 @@ pub mod d5 {
     //#endregion 🔖Brush
 
     //#region 🔖Engagement
-    fn puzzle5d_brush_placement_control(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> Option<WindowEngagementControl> {
-        let target = puzzle5d_brush_target_grip(envelope)?;
-        let candidates = parse_brush_candidates_free(&precompute.brush_candidates(&target));
-        if candidates.is_empty() {
-            return None;
-        }
-        let options: Vec<WindowEngagementToggleGroupOption> = candidates
-            .iter()
-            .enumerate()
-            .map(|(index, candidate)| {
-                let label = candidate.get("objectKind").and_then(|value| value.as_str()).or_else(|| candidate.get("objectKindId").and_then(|value| value.as_str())).unwrap_or("kind");
-                WindowEngagementToggleGroupOption { id: format!("puzzle5d.brush.candidate.{index}"), label: label.into(), disabled: None }
-            })
-            .collect();
-        let selected_index = envelope.runtime.brush_candidate_index.min(options.len().saturating_sub(1));
-        Some(WindowEngagementControl::ToggleGroup {
-            id: Some("puzzle5d-brush-placement".into()),
-            label: Some(labels.placement.into()),
-            value: Some(format!("puzzle5d.brush.candidate.{selected_index}")),
-            options,
-            disabled: None,
-            on_select: Some(puzzle5d_action("engagementControlSelect", None)),
-        })
-    }
-
-    fn puzzle5d_fill_count_control(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowEngagementControl {
-        WindowEngagementControl::Slider {
-            id: Some("puzzle5d-fill-count".into()),
-            label: Some(format!("{} {}", labels.fill, envelope.runtime.fill_count)),
-            value: envelope.runtime.fill_count as f64,
-            min: 0.0,
-            max: PUZZLE5D_FILL_COUNT_MAX as f64,
-            step: Some(1.0),
-            unit: None,
-            disabled: None,
-            on_change: Some(puzzle5d_action("setFillCount", None)),
-            on_commit: None,
-        }
-    }
-
-    fn puzzle5d_engagement(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, window: &str, labels: &Puzzle5dLabels) -> WindowEngagement {
+    /// 🧰 The select/brush/fill switcher lives in the framework toolbar (declared via `.tool` +
+    /// `.window_kind_tools`); the fill-count slider and brush placement picker now live as tagged
+    /// [`WindowMeasure::Group`]s in [`puzzle5d_window_measures`] (surfaced by [`partition_window_measures`]
+    /// in the dedicated "Tool Options" rail only while their tool is active), so the engagement HUD is a
+    /// bare command input plus a status line.
+    fn puzzle5d_engagement(envelope: &Puzzle5dScene, window: &str) -> WindowEngagement {
         let part_count = envelope.document.parts.len();
         let fastener_count = envelope.document.fasteners.len();
         let active_tool = envelope.active_tool.as_str();
-        let control = match active_tool {
-            "fill" => Some(puzzle5d_fill_count_control(envelope, labels)),
-            "brush" => puzzle5d_brush_placement_control(envelope, precompute, labels),
-            _ => None,
-        };
         let input_value = envelope.runtime.engagement_input_by_window.get(window).cloned().unwrap_or_default();
         let placeholder = match active_tool {
             "fill" => "Fill",
@@ -7442,11 +7531,9 @@ pub mod d5 {
                 on_repeat_last: None,
                 on_abort: Some(puzzle5d_action("engagementAbort", Some(json!({ "window": window })))),
             }),
-            control,
+            control: None,
             controls: None,
             status: Some(vec![WindowEngagementStatus { id: format!("puzzle5d-status-{window}"), text: format!("{part_count} parts · {fastener_count} fasteners · tool {}", active_tool) }]),
-            // 🧰 The select/brush/fill switcher now lives in the framework toolbar (declared via `.tool` +
-            // `.window_kind_tools`), so the engagement no longer duplicates it as toggle options.
             options: None,
             possible_engagements: None,
         }
@@ -7511,6 +7598,7 @@ pub mod d5 {
             id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion"),
             label: labels.suggestion.into(),
             default_open: Some(false),
+            active_tool_id: None,
             children: vec![
                 WindowMeasure::Slider {
                     id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion-offset"),
@@ -7525,12 +7613,14 @@ pub mod d5 {
                     id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion-parts"),
                     label: labels.part_weights.into(),
                     default_open: Some(false),
+                    active_tool_id: None,
                     children: puzzle5d_kind_weight_measures("part-kind", "setObjectKindWeight", &part_ids, &envelope.runtime.object_kind_weights),
                 },
                 WindowMeasure::Group {
                     id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion-grips"),
                     label: labels.grip_weights.into(),
                     default_open: Some(false),
+                    active_tool_id: None,
                     children: puzzle5d_kind_weight_measures("grip-kind", "setVortexKindWeight", &grip_ids, &envelope.runtime.vortex_kind_weights),
                 },
             ],
@@ -7542,6 +7632,7 @@ pub mod d5 {
             id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-brush"),
             label: labels.brush.into(),
             default_open: Some(false),
+            active_tool_id: None,
             children: vec![WindowMeasure::Slider {
                 id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-brush-overlap"),
                 label: Some(labels.overlap.into()),
@@ -7554,8 +7645,69 @@ pub mod d5 {
         }
     }
 
-    fn puzzle5d_window_measures(window: &str, envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
-        if window == PUZZLE5D_PLAY_WINDOW_2D {
+    /// 🪣 Fill-count slider measure — the fill-tool's core parameter, mirrors the retired
+    /// `puzzle5d_fill_count_control` (`setFillCount` reads `count`-or-`value`, so the slider's `{value}`
+    /// payload preserves the action semantics).
+    fn puzzle5d_fill_count_measure(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowMeasure {
+        WindowMeasure::Slider {
+            id: "puzzle5d-fill-count".into(),
+            label: Some(format!("{} {}", labels.fill, envelope.runtime.fill_count)),
+            value: envelope.runtime.fill_count as f64,
+            min: 0.0,
+            max: PUZZLE5D_FILL_COUNT_MAX as f64,
+            step: Some(1.0),
+            on_change: puzzle5d_action("setFillCount", None),
+        }
+    }
+
+    /// 🪣 Tool Options group for the Fill tool — the fill-count slider, tagged `Some("fill")` so
+    /// [`partition_window_measures`] surfaces it in the Tool Options rail only while the Fill tool is active.
+    fn puzzle5d_fill_tool_options(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowMeasure {
+        WindowMeasure::Group {
+            id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-tool-options-fill"),
+            label: labels.fill.into(),
+            default_open: Some(true),
+            active_tool_id: Some("fill".into()),
+            children: vec![puzzle5d_fill_count_measure(envelope, labels)],
+        }
+    }
+
+    /// 🖌️ Tool Options group for the Brush tool — the placement candidate picker (`ToggleGroup`→`Select`,
+    /// both "pick one of several string values"; `engagementControlSelect` reads `id`-or-`value` so semantics
+    /// hold). Tagged `Some("brush")`; `None` when there are no candidates to place, matching the old gate.
+    fn puzzle5d_brush_tool_options(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> Option<WindowMeasure> {
+        let target = puzzle5d_brush_target_grip(envelope)?;
+        let candidates = parse_brush_candidates_free(&precompute.brush_candidates(&target));
+        if candidates.is_empty() {
+            return None;
+        }
+        let items: Vec<MeasureSelectItem> = candidates
+            .iter()
+            .enumerate()
+            .map(|(index, candidate)| {
+                let label = candidate.get("objectKind").and_then(|value| value.as_str()).or_else(|| candidate.get("objectKindId").and_then(|value| value.as_str())).unwrap_or("kind");
+                let id = format!("puzzle5d.brush.candidate.{index}");
+                MeasureSelectItem { id: id.clone(), value: id, label: label.into() }
+            })
+            .collect();
+        let selected_index = envelope.runtime.brush_candidate_index.min(items.len().saturating_sub(1));
+        Some(WindowMeasure::Group {
+            id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-tool-options-brush"),
+            label: labels.placement.into(),
+            default_open: Some(true),
+            active_tool_id: Some("brush".into()),
+            children: vec![WindowMeasure::Select {
+                id: "puzzle5d-brush-placement".into(),
+                label: Some(labels.placement.into()),
+                value: format!("puzzle5d.brush.candidate.{selected_index}"),
+                items,
+                on_change: puzzle5d_action("engagementControlSelect", None),
+            }],
+        })
+    }
+
+    fn puzzle5d_window_measures(window: &str, envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
+        let mut measures = if window == PUZZLE5D_PLAY_WINDOW_2D {
             vec![puzzle5d_lod_measure(&envelope.runtime, labels), puzzle5d_suggestion_measures_group(envelope, labels), puzzle5d_brush_measures_group(envelope, labels)]
         } else {
             vec![
@@ -7563,7 +7715,12 @@ pub mod d5 {
                 puzzle5d_brush_measures_group(envelope, labels),
                 world3d_sun_measures("puzzle5d", &envelope.runtime.sun, puzzle5d_action),
             ]
+        };
+        measures.push(puzzle5d_fill_tool_options(envelope, labels));
+        if let Some(brush) = puzzle5d_brush_tool_options(envelope, precompute, labels) {
+            measures.push(brush);
         }
+        measures
     }
     //#endregion 🔖Measures
 
@@ -8565,15 +8722,14 @@ pub mod d5 {
         fn window_engagements(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
             let active_tool = view_state.active_tool_id.as_deref().unwrap_or(PUZZLE5D_DEFAULT_TOOL);
             let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_tool);
-            let labels = puzzle5d_labels(view_state);
-            PUZZLE5D_PLAY_WINDOWS.iter().map(|window| (window.to_string(), puzzle5d_engagement(&envelope, &self.precompute, window, labels))).collect()
+            PUZZLE5D_PLAY_WINDOWS.iter().map(|window| (window.to_string(), puzzle5d_engagement(&envelope, window))).collect()
         }
 
         fn window_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
             let active_tool = view_state.active_tool_id.as_deref().unwrap_or(PUZZLE5D_DEFAULT_TOOL);
             let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_tool);
             let labels = puzzle5d_labels(view_state);
-            PUZZLE5D_PLAY_WINDOWS.iter().map(|window| (window.to_string(), puzzle5d_window_measures(window, &envelope, labels))).collect()
+            PUZZLE5D_PLAY_WINDOWS.iter().map(|window| (window.to_string(), puzzle5d_window_measures(window, &envelope, &self.precompute, labels))).collect()
         }
 
         fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
@@ -8602,8 +8758,8 @@ pub mod d5 {
                 .icon_id("puzzle")
                 .mode("edit", "Edit")
                 .default_mode_id("edit")
-                .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_2D, "Puzzle 2D", PUZZLE5D_PLAY_BODY_2D, SurfaceKind::Puzzle2dBoard, puzzle5d_engagement(&envelope, &precompute, PUZZLE5D_PLAY_WINDOW_2D, manifest_labels))
-                .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_3D, "Puzzle 3D", PUZZLE5D_PLAY_BODY_3D, SurfaceKind::World3d, puzzle5d_engagement(&envelope, &precompute, PUZZLE5D_PLAY_WINDOW_3D, manifest_labels))
+                .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_2D, "Puzzle 2D", PUZZLE5D_PLAY_BODY_2D, SurfaceKind::Puzzle2dBoard, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_2D))
+                .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_3D, "Puzzle 3D", PUZZLE5D_PLAY_BODY_3D, SurfaceKind::World3d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_3D))
                 .default_layout(create_default_layout(&[PUZZLE5D_PLAY_WINDOW_2D.into(), PUZZLE5D_PLAY_WINDOW_3D.into()], "row", Some(&[50.0, 50.0]), Some(&["Puzzle 2D".into(), "Puzzle 3D".into()])))
                 .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_DOCUMENT)
                 .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_KINDS)
@@ -8699,7 +8855,7 @@ pub mod d5 {
         );
         for window in PUZZLE5D_PLAY_WINDOWS {
             if let Some(window_kind) = app.definition.window_kinds.iter_mut().find(|window_kind| window_kind.id == window) {
-                window_kind.options.measures = puzzle5d_window_measures(window, &envelope, manifest_labels);
+                window_kind.options.measures = puzzle5d_window_measures(window, &envelope, &precompute, manifest_labels);
             }
         }
         app.example("empty", "Empty", serde_json::to_string(&empty_document()).unwrap())
@@ -8858,6 +9014,47 @@ pub mod d5 {
             for window in [PUZZLE5D_PLAY_WINDOW_2D, PUZZLE5D_PLAY_WINDOW_3D] {
                 assert!(engagements.get(window).expect("engagement").options.is_none(), "the {window} engagement must not re-expose tool switching as options");
             }
+        }
+
+        /// 🎯 D-3 follow-up: the fill-count slider and brush placement picker are tagged `WindowMeasure::Group`s
+        /// in [`puzzle5d_window_measures`] (surfaced by `partition_window_measures` only for their active tool),
+        /// never `WindowEngagementControl`s on the HUD — for both the 2D and 3D windows.
+        #[test]
+        fn fill_and_brush_params_are_tagged_tool_options_not_engagement_controls() {
+            let labels = puzzle5d_labels(&ViewState::default());
+            let session = Puzzle5dPrecomputeSession::new();
+            let group_tag = |measures: &[WindowMeasure], id: &str| {
+                measures.iter().find_map(|measure| match measure {
+                    WindowMeasure::Group { id: gid, active_tool_id, .. } if gid == id => Some(active_tool_id.clone()),
+                    _ => None,
+                })
+            };
+            let fill_slider_in_group = |measures: &[WindowMeasure], group_id: &str| {
+                measures.iter().any(|measure| matches!(measure, WindowMeasure::Group { id, children, .. } if id == group_id && children.iter().any(|child| matches!(child, WindowMeasure::Slider { id, .. } if id == "puzzle5d-fill-count"))))
+            };
+            // 🪣 Fill tool: the fill-count slider now lives in a "fill"-tagged Tool Options group (per window),
+            // NOT the engagement HUD.
+            let mut fill_runtime = Puzzle5dRuntime::default();
+            fill_runtime.fill_count = 3;
+            let fill_scene = Puzzle5dScene { document: default_document(), runtime: fill_runtime, active_tool: "fill".into() };
+            for window in [PUZZLE5D_PLAY_WINDOW_2D, PUZZLE5D_PLAY_WINDOW_3D] {
+                let measures = puzzle5d_window_measures(window, &fill_scene, &session, labels);
+                assert_eq!(group_tag(&measures, "puzzle5d-play-tool-options-fill"), Some(Some("fill".into())), "{window} fill Tool Options must be tagged for the fill tool");
+                assert!(fill_slider_in_group(&measures, "puzzle5d-play-tool-options-fill"), "{window} fill Tool Options must carry the fill-count slider");
+                let fill_hud = puzzle5d_engagement(&fill_scene, window);
+                assert!(fill_hud.control.is_none() && fill_hud.controls.is_none(), "{window} fill engagement HUD must no longer carry the relocated control");
+            }
+            // 🖌️ Brush tool: with no candidates to place, the "brush"-tagged group is absent (matching the old
+            // gate), and the engagement HUD is likewise bare.
+            let brush_scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_tool: "brush".into() };
+            for window in [PUZZLE5D_PLAY_WINDOW_2D, PUZZLE5D_PLAY_WINDOW_3D] {
+                assert_eq!(group_tag(&puzzle5d_window_measures(window, &brush_scene, &session, labels), "puzzle5d-play-tool-options-brush"), None, "{window} brush Tool Options is absent without candidates");
+                let brush_hud = puzzle5d_engagement(&brush_scene, window);
+                assert!(brush_hud.control.is_none() && brush_hud.controls.is_none(), "{window} brush engagement HUD must no longer carry the relocated control");
+            }
+            // 🖌️ The positive brush-candidate surfacing (group present ⇒ tagged "brush") is proven by
+            // construction: `puzzle5d_brush_tool_options` returns the same tagged `Select` group shape as the
+            // d3 helper, whose end-to-end positive path is covered by the sibling d3 test.
         }
 
         #[test]

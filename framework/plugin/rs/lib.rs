@@ -3428,6 +3428,7 @@ pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl 
         id: format!("{id_prefix}-measure-sun"),
         label: "Sun".into(),
         default_open: Some(false),
+        active_tool_id: None,
         children: vec![
             WindowMeasure::Toggle {
                 id: format!("{id_prefix}-measure-sun-enabled"),

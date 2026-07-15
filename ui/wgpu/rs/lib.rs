@@ -384,10 +384,45 @@ pub enum WindowMeasure {
         label: String,
         #[cfg_attr(feature = "typegen", ts(optional, rename = "defaultOpen"))]
         default_open: Option<bool>,
+        /// 🎯 When `Some(tool_id)`, this group is *tool-scoped chrome*: the shell surfaces it only while
+        /// `ViewState.active_tool_id == tool_id`, and renders it in the dedicated "Tool Options" rail
+        /// beside the toolbar — never in the always-on Measures overlay. When absent, the group is a
+        /// general measure and stays in the Measures overlay exactly as before. See [`partition_window_measures`].
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "activeToolId"))]
+        active_tool_id: Option<String>,
         children: Vec<WindowMeasure>,
     },
 }
 //#endregion 🔖WindowMeasure
+
+//#region 🔖PartitionWindowMeasures
+/// @emoji 🎯 Splits a window's top-level measures into `(general, tool_options)`.
+///
+/// A top-level [`WindowMeasure::Group`] tagged with `active_tool_id: Some(id)` is *tool-scoped chrome*:
+/// it lands in `tool_options` **only** when `id == active_tool_id`, and is dropped from both buckets
+/// otherwise (it is irrelevant to whichever tool — or no tool — is currently active). Every untagged
+/// group and every non-group top-level measure stays in `general`, unchanged. Tagging is a top-level
+/// concept only: a matched group's `children` are carried along verbatim inside their group.
+pub fn partition_window_measures(
+    measures: &[WindowMeasure],
+    active_tool_id: Option<&str>,
+) -> (Vec<WindowMeasure>, Vec<WindowMeasure>) {
+    let mut general = Vec::new();
+    let mut tool_options = Vec::new();
+    for measure in measures {
+        match measure {
+            WindowMeasure::Group { active_tool_id: Some(scoped), .. } => {
+                if active_tool_id == Some(scoped.as_str()) {
+                    tool_options.push(measure.clone());
+                }
+            }
+            _ => general.push(measure.clone()),
+        }
+    }
+    (general, tool_options)
+}
+//#endregion 🔖PartitionWindowMeasures
 
 //#region 🔖WindowEngagement
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -766,6 +801,7 @@ mod layout_wire_format_tests {
                 id: "m4".into(),
                 label: "Group".into(),
                 default_open: Some(true),
+                active_tool_id: None,
                 children: vec![],
             },
         ];
@@ -773,6 +809,59 @@ mod layout_wire_format_tests {
         assert_eq!(json, GOLDEN_WINDOW_MEASURE_JSON);
         let roundtripped: Vec<WindowMeasure> = serde_json::from_str(&json).unwrap();
         assert_eq!(roundtripped, measures);
+    }
+
+    fn tool_scoped_group(id: &str, tool: Option<&str>) -> WindowMeasure {
+        WindowMeasure::Group {
+            id: id.into(),
+            label: id.to_uppercase(),
+            default_open: None,
+            active_tool_id: tool.map(str::to_string),
+            children: vec![],
+        }
+    }
+
+    #[test]
+    fn partition_window_measures_routes_matching_tool_group_to_tool_options() {
+        let measures = vec![tool_scoped_group("brush-params", Some("brush"))];
+        let (general, tool_options) = partition_window_measures(&measures, Some("brush"));
+        assert!(general.is_empty());
+        assert_eq!(tool_options.len(), 1);
+        assert!(matches!(&tool_options[0], WindowMeasure::Group { id, .. } if id == "brush-params"));
+    }
+
+    #[test]
+    fn partition_window_measures_drops_non_matching_tool_group_from_both_buckets() {
+        let measures = vec![tool_scoped_group("brush-params", Some("brush"))];
+        let (general_other, tool_options_other) = partition_window_measures(&measures, Some("fill"));
+        assert!(general_other.is_empty() && tool_options_other.is_empty(), "wrong active tool drops the group entirely");
+        let (general_none, tool_options_none) = partition_window_measures(&measures, None);
+        assert!(general_none.is_empty() && tool_options_none.is_empty(), "no active tool drops the group entirely");
+    }
+
+    #[test]
+    fn partition_window_measures_keeps_untagged_group_and_non_group_in_general() {
+        let measures = vec![
+            tool_scoped_group("grid", None),
+            WindowMeasure::Slider {
+                id: "zoom".into(),
+                label: None,
+                value: 1.0,
+                min: 0.0,
+                max: 2.0,
+                step: None,
+                on_change: ActionDescriptor { controller_id: "c".into(), action: "z".into(), args: None },
+            },
+        ];
+        let (general, tool_options) = partition_window_measures(&measures, Some("brush"));
+        assert_eq!(general.len(), 2, "untagged group and slider both stay general");
+        assert!(tool_options.is_empty());
+    }
+
+    #[test]
+    fn partition_window_measures_empty_input_roundtrips_to_empty() {
+        let (general, tool_options) = partition_window_measures(&[], Some("brush"));
+        assert!(general.is_empty() && tool_options.is_empty());
     }
 
     const GOLDEN_WINDOW_ENGAGEMENT_JSON: &str = "{\"sessionActive\":true,\"options\":[{\"id\":\"opt1\",\"label\":\"Option\",\"pressed\":false}],\"input\":{\"id\":\"in1\",\"value\":\"v\"},\"control\":{\"kind\":\"slider\",\"id\":\"sl1\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":null,\"unit\":null,\"disabled\":null,\"on_change\":null,\"on_commit\":null},\"status\":[{\"id\":\"st1\",\"text\":\"Ready\"}],\"possibleEngagements\":[{\"id\":\"pe1\",\"label\":\"Possible\"}]}";
@@ -13761,7 +13850,7 @@ pub use component::layout::{
     MeasureSelectItem, NamedLayout, StyleSpec, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
     WindowEngagementOption, WindowEngagementPossible, WindowEngagementSlot, WindowEngagementStatus, WindowLayout,
     WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
-    WindowMeasure, WindowOptions,
+    WindowMeasure, WindowOptions, partition_window_measures,
     default_viewport_engagement, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,

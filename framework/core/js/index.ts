@@ -1367,6 +1367,29 @@ export function deriveToolNodes(controllerId: string, tools: readonly DerivedToo
 }
 
 /**
+ * 🎯 Hand-written twin of Rust `partition_window_measures` (`ui/wgpu/rs/lib.rs`): splits a window's
+ * top-level measures into `general` and `toolOptions`. A top-level `group` tagged with `activeToolId`
+ * lands in `toolOptions` only when it equals the window's active tool, and is dropped from both buckets
+ * otherwise (irrelevant to whichever tool — or no tool — is active). Untagged groups and non-group
+ * top-level measures stay in `general`, unchanged.
+ */
+export function partitionWindowMeasures(
+  measures: readonly WindowMeasure[],
+  activeToolId?: string,
+): { readonly general: WindowMeasure[]; readonly toolOptions: WindowMeasure[] } {
+  const general: WindowMeasure[] = [];
+  const toolOptions: WindowMeasure[] = [];
+  for (const measure of measures) {
+    if (measure.kind === "group" && measure.activeToolId !== undefined) {
+      if (measure.activeToolId === activeToolId) toolOptions.push(measure);
+      continue;
+    }
+    general.push(measure);
+  }
+  return { general, toolOptions };
+}
+
+/**
  * 🧮 Hand-written twin of Rust `effective_action_args`: for each declared arg, the staged value if
  * present, else its declared `default`, else omitted.
  */

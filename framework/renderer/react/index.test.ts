@@ -2,7 +2,7 @@ import { createElement, useState, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { deriveToolNodes, resolveWindowActions, type ActionArgDef, type ActionDefinition, type AppDefinition, type AppWindowKindDefinition, type ToolDefinition } from "@semio-tech/framework-core";
+import { deriveToolNodes, resolveWindowActions, partitionWindowMeasures, type ActionArgDef, type ActionDefinition, type AppDefinition, type AppWindowKindDefinition, type ToolDefinition, type WindowMeasure } from "@semio-tech/framework-core";
 import { Canvas2dHost, worldToScreenLogical } from "./components/canvas-2d-host.tsx";
 import {
   Puzzle2dBoardHost,
@@ -1688,11 +1688,59 @@ describe("spawned window chrome", () => {
       },
     };
     const measures = { [kind.id]: kind.options.measures ?? [] };
-    const chrome = spawnedWindowChromeForKind(kind, engagements, measures, noopAction);
+    const chrome = spawnedWindowChromeForKind(kind, engagements, measures, undefined, noopAction);
     expect(chrome.engagement?.input?.value).toBe("Box");
     expect(chrome.engagement?.possibleEngagements?.[0]?.label).toBe("Box");
     const measuresMarkup = renderToStaticMarkup(chrome.measures as ReactElement);
     expect(measuresMarkup).toContain("Render Mode");
+  });
+});
+
+describe("partitionWindowMeasures", () => {
+  const toolGroup = (id: string, activeToolId?: string): WindowMeasure => ({ kind: "group", id, label: id, activeToolId, children: [] });
+  const slider = (id: string): WindowMeasure => ({ kind: "slider", id, value: 1, min: 0, max: 2, onChange: { controllerId: "c", action: "a" } });
+
+  it("routes a tagged group to toolOptions only when its tool is active", () => {
+    const measures = [toolGroup("brush-params", "brush"), slider("zoom")];
+    const active = partitionWindowMeasures(measures, "brush");
+    expect(active.toolOptions.map((m) => m.id)).toEqual(["brush-params"]);
+    expect(active.general.map((m) => m.id)).toEqual(["zoom"]);
+  });
+
+  it("drops a tagged group from both buckets when a different or no tool is active", () => {
+    const measures = [toolGroup("brush-params", "brush"), slider("zoom")];
+    const other = partitionWindowMeasures(measures, "fill");
+    expect(other.toolOptions).toEqual([]);
+    expect(other.general.map((m) => m.id)).toEqual(["zoom"]);
+    const none = partitionWindowMeasures(measures, undefined);
+    expect(none.toolOptions).toEqual([]);
+    expect(none.general.map((m) => m.id)).toEqual(["zoom"]);
+  });
+
+  it("keeps untagged groups and non-group measures in general, unaffected by the active tool", () => {
+    const measures = [toolGroup("grid"), slider("zoom")];
+    const { general, toolOptions } = partitionWindowMeasures(measures, "brush");
+    expect(general.map((m) => m.id)).toEqual(["grid", "zoom"]);
+    expect(toolOptions).toEqual([]);
+  });
+
+  it("wires a tool-scoped group into spawnedWindowChromeForKind's toolOptions slot only when its tool is active", () => {
+    const kind = { id: "w", label: "W", bodyKey: "b", surfaceKind: "raster", options: { engagement: { kind: "none" as const }, measures: [] } } as unknown as AppWindowKindDefinition;
+    const brushGroup: WindowMeasure = {
+      kind: "group",
+      id: "brush-params",
+      label: "Brush",
+      defaultOpen: true,
+      activeToolId: "brush",
+      children: [{ kind: "slider", id: "size", label: "Brush size", value: 4, min: 1, max: 10, onChange: { controllerId: "c", action: "setSize" } }],
+    };
+    const measures = { [kind.id]: [brushGroup] };
+    const activeChrome = spawnedWindowChromeForKind(kind, {}, measures, "brush", noopAction);
+    expect(renderToStaticMarkup(activeChrome.toolOptions as ReactElement)).toContain("Brush size");
+    expect(activeChrome.measures).toBeUndefined();
+    const idleChrome = spawnedWindowChromeForKind(kind, {}, measures, "fill", noopAction);
+    expect(idleChrome.toolOptions).toBeUndefined();
+    expect(idleChrome.measures).toBeUndefined();
   });
 });
 

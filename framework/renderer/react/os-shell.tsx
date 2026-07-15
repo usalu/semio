@@ -174,6 +174,7 @@ import {
   normalizeAppLabelsOverlay,
   deriveToolNodes,
   resolveWindowActions,
+  partitionWindowMeasures,
   effectiveActionArgs,
   missingRequiredArgs,
   SET_ACTIVE_TOOL_ACTION_ID,
@@ -1226,16 +1227,19 @@ export function resolveWindowToolNodes(app: Pick<AppDefinition, "tools" | "contr
 }
 //#endregion 🧰WindowToolRegistry
 
-/** @emoji 💬 Builds spawned-window engagement and measures chrome for one window kind. */
+/** @emoji 💬 Builds spawned-window engagement, measures, and tool-options chrome for one window kind. */
 export function spawnedWindowChromeForKind(
   kind: AppDefinition["windowKinds"][number],
   engagementsByKind: Readonly<Record<string, WindowEngagement>>,
   measuresByKind: Readonly<Record<string, readonly WindowMeasure[]>>,
+  activeToolId: string | undefined,
   onAction: (action: ActionDescriptor) => void,
-): { readonly engagement?: EngagementSpec; readonly measures: ReactNode } {
+): { readonly engagement?: EngagementSpec; readonly measures: ReactNode; readonly toolOptions: ReactNode } {
+  const { measures, toolOptions } = windowMeasuresChrome(measuresByKind[kind.id] ?? kind.options.measures, activeToolId, onAction);
   return {
     engagement: windowEngagementToSpec(resolveWindowEngagement(kind, engagementsByKind), onAction),
-    measures: windowMeasuresOverlay(measuresByKind[kind.id] ?? kind.options.measures, onAction),
+    measures,
+    toolOptions,
   };
 }
 
@@ -1353,6 +1357,24 @@ function renderWindowMeasure(measure: WindowMeasure, onAction: (action: ActionDe
 function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, onAction: (action: ActionDescriptor) => void): ReactNode | undefined {
   if (!measures || measures.length === 0) return undefined;
   return <WindowMeasuresTree>{measures.map((measure) => renderWindowMeasure(measure, onAction))}</WindowMeasuresTree>;
+}
+
+/**
+ * @emoji 🎯 Splits a window's measures via {@link partitionWindowMeasures} into the always-on Measures
+ * overlay node (`measures`) and the tool-scoped Tool Options overlay node (`toolOptions`, shown beside
+ * the toolbar only while its `activeToolId` matches the window's active tool). Both buckets render
+ * through the same {@link renderWindowMeasure} control path; each is `undefined` when its bucket is empty.
+ */
+function windowMeasuresChrome(
+  measures: readonly WindowMeasure[] | undefined,
+  activeToolId: string | undefined,
+  onAction: (action: ActionDescriptor) => void,
+): { readonly measures: ReactNode | undefined; readonly toolOptions: ReactNode | undefined } {
+  const { general, toolOptions } = partitionWindowMeasures(measures ?? [], activeToolId);
+  return {
+    measures: windowMeasuresOverlay(general, onAction),
+    toolOptions: windowMeasuresOverlay(toolOptions, onAction),
+  };
 }
 
 function windowToolbarNode(tools: readonly ToolNode[] | undefined, windowId: string, onAction: (action: ActionDescriptor) => void): ReactNode {
@@ -3462,7 +3484,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       if (spawned) {
         const spawnedApp = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
         const windowKind = spawnedApp?.windowKinds[0];
-        const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawnedWindowEngagements, spawnedWindowMeasures, onActionStable) : undefined;
+        const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawnedWindowEngagements, spawnedWindowMeasures, activeToolByWindowId[spawned.id], onActionStable) : undefined;
         return [
           {
             id: spawned.id,
@@ -3470,6 +3492,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
             fill: true,
             showControls: true,
             measures: chrome?.measures,
+            toolOptions: chrome?.toolOptions,
             engagement: chrome?.engagement,
             toolbar: spawnedApp && windowKind ? windowToolbarNode(resolveWindowToolNodes(spawnedApp, windowKind, activeToolByWindowId[spawned.id], spawned.id), spawned.id, onActionStable) : undefined,
             actionPanel: spawnedApp && windowKind ? windowActionPanelNode(spawnedApp, windowKind, spawned.id, actionPanelSlice, onActionStable, dispatch) : undefined,
@@ -3486,7 +3509,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       title: appWindowDocumentLabel(session.app, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label)),
       fill: true,
       showControls: true,
-      measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.options.measures, onActionStable),
+      ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeToolByWindowId[kind.id], onActionStable),
       engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
       toolbar: windowToolbarNode(resolveWindowToolNodes(session.app, kind, activeToolByWindowId[kind.id], kind.id), kind.id, onActionStable),
       actionPanel: windowActionPanelNode(session.app, kind, kind.id, actionPanelSlice, onActionStable, dispatch),
@@ -3507,7 +3530,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           title: instance.title,
           fill: true,
           showControls: true,
-          measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.options.measures, onActionStable),
+          ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeToolByWindowId[instance.id], onActionStable),
           engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
           toolbar: windowToolbarNode(resolveWindowToolNodes(session.app, kind, activeToolByWindowId[instance.id], instance.id), instance.id, onActionStable),
           actionPanel: windowActionPanelNode(session.app, kind, instance.id, actionPanelSlice, onActionStable, dispatch),

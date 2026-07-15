@@ -2073,6 +2073,49 @@ mod tests {
             Some("main")
         );
     }
+
+    /// 🎯 The Tool Options rail (`render_window_tool_options_rail`) resolves its content through
+    /// `partition_window_measures`: a tagged group surfaces only for its matching active tool, and is
+    /// absent from BOTH buckets otherwise — untagged groups always stay in the general Measures rail.
+    #[test]
+    fn tool_options_partition_gates_tagged_group_by_active_tool() {
+        use ui_wgpu::{partition_window_measures, ActionDescriptor, WindowMeasure};
+        let measures = vec![
+            WindowMeasure::Group {
+                id: "brush-params".into(),
+                label: "Brush".into(),
+                default_open: Some(true),
+                active_tool_id: Some("tool.a".into()),
+                children: vec![WindowMeasure::Slider {
+                    id: "size".into(),
+                    label: Some("Size".into()),
+                    value: 4.0,
+                    min: 1.0,
+                    max: 10.0,
+                    step: Some(1.0),
+                    on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "setSize".into(), args: None },
+                }],
+            },
+            WindowMeasure::Group {
+                id: "grid".into(),
+                label: "Grid".into(),
+                default_open: Some(true),
+                active_tool_id: None,
+                children: vec![],
+            },
+        ];
+        let (general, tool_options) = partition_window_measures(&measures, Some("tool.a"));
+        assert_eq!(tool_options.len(), 1, "matching tool surfaces the tagged group in tool options");
+        assert!(matches!(&tool_options[0], WindowMeasure::Group { id, .. } if id == "brush-params"));
+        assert_eq!(general.len(), 1, "untagged group stays in the general measures rail");
+        assert!(matches!(&general[0], WindowMeasure::Group { id, .. } if id == "grid"));
+        let (general_other, tool_options_other) = partition_window_measures(&measures, Some("tool.b"));
+        assert!(tool_options_other.is_empty(), "wrong active tool drops the tagged group");
+        assert_eq!(general_other.len(), 1, "untagged group unaffected by active tool");
+        let (general_none, tool_options_none) = partition_window_measures(&measures, None);
+        assert!(tool_options_none.is_empty(), "no active tool drops the tagged group");
+        assert_eq!(general_none.len(), 1);
+    }
     //#endregion WindowActionsAndToolsTests
 }
 //#endregion DockTests
@@ -15830,6 +15873,18 @@ impl ShellState {
                 ) {
                     window_chip_hits.push(hit);
                 }
+                self.render_window_tool_options_rail(
+                    draw,
+                    overlay,
+                    atlas,
+                    icons,
+                    input,
+                    theme,
+                    &content,
+                    &window_id,
+                    &kind,
+                    gpu,
+                );
             }
             for (rect, control_id) in window_chip_hits {
                 input.register_hit(HitTarget {
@@ -16488,7 +16543,9 @@ impl ShellState {
         gpu: &mut ui_wgpu::GpuContext,
     ) -> WindowMeasuresRailOutcome {
         let inset = theme.gap_standard;
-        let measures = self.measures_for_kind(kind);
+        let active_tool = self.active_tool_by_window.get(window_id).cloned();
+        let (measures, _tool_options) =
+            ui_wgpu::partition_window_measures(&self.measures_for_kind(kind), active_tool.as_deref());
         if measures.is_empty() {
             return WindowMeasuresRailOutcome {
                 chip_hit: None,
@@ -16654,6 +16711,92 @@ impl ShellState {
         })(draw, overlay)
     }
 
+    /// 🎯 Bottom-left "Tool Options" rail: the tool-scoped bucket of `partition_window_measures`,
+    /// visually associated with the tool footer below it. Renders (no fold chip, no reserved space)
+    /// only while the window's active tool has tagged measure groups; silent otherwise. Reuses
+    /// [`Self::render_window_measure`] so Select/Slider/Toggle controls behave exactly as in the
+    /// general Measures rail.
+    fn render_window_tool_options_rail(
+        &mut self,
+        draw: &mut DrawList,
+        overlay: &mut Option<&mut DrawList>,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        content: &Rect,
+        window_id: &str,
+        kind: &semio_framework_core::WindowKindDefinition,
+        gpu: &mut ui_wgpu::GpuContext,
+    ) {
+        let inset = theme.gap_standard;
+        let active_tool = self.active_tool_by_window.get(window_id).cloned();
+        let (_general, tool_options) =
+            ui_wgpu::partition_window_measures(&self.measures_for_kind(kind), active_tool.as_deref());
+        if tool_options.is_empty() {
+            return;
+        }
+        (|chrome: &mut DrawList, select_overlay: &mut Option<&mut DrawList>| {
+            let width = theme
+                .window_measures_default_width
+                .clamp(theme.panel_min_width, theme.panel_max_width)
+                .min(window_overlay_max_width(content.w, inset));
+            let body_content_h =
+                measure_window_measures_body_height(theme, &self.collapsed_sections, &tool_options);
+            let card_h = (theme.panel_header_height + theme.gap_standard * 2.0 + body_content_h)
+                .min((content.h - inset * 2.0).max(theme.panel_header_height));
+            let rail = Rect::new(
+                content.x + inset,
+                content.y + content.h - card_h - inset,
+                width,
+                card_h,
+            );
+            let glass = chrome.push_glass(
+                [rail.x, rail.y, rail.w, rail.h],
+                theme.border_radius,
+                GlassTier::WindowOptions,
+                theme,
+            );
+            chrome.begin_glass_content(glass);
+            let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
+            chrome.push_solid([header.x, header.y, header.w, header.h], theme.navbar);
+            chrome_text(
+                chrome,
+                atlas,
+                input,
+                theme,
+                "Tool Options",
+                header.x + theme.gap_standard,
+                header.y + theme.panel_header_height * 0.5 + theme.font_size_small * 0.5,
+                theme.font_size_small,
+                theme.text_muted,
+            );
+            let body = Rect::new(
+                rail.x + theme.gap_standard,
+                rail.y + theme.panel_header_height + theme.gap_standard,
+                rail.w - theme.gap_standard * 2.0,
+                rail.h - theme.panel_header_height - theme.gap_standard * 2.0,
+            );
+            let mut y = body.y;
+            for measure in &tool_options {
+                let h = measure_window_measure_height(theme, &self.collapsed_sections, measure);
+                self.render_window_measure(
+                    chrome,
+                    select_overlay,
+                    atlas,
+                    icons,
+                    input,
+                    theme,
+                    Rect::new(body.x, y, body.w, h),
+                    measure,
+                    gpu,
+                );
+                y += h;
+            }
+            chrome.end_glass_content();
+        })(draw, overlay)
+    }
+
     fn render_window_measure(
         &mut self,
         draw: &mut DrawList,
@@ -16676,6 +16819,7 @@ impl ShellState {
                 label,
                 default_open,
                 children,
+                ..
             } => {
                 let open = !self.collapsed_sections.get(id).copied().unwrap_or(!default_open.unwrap_or(false));
                 chrome_text(

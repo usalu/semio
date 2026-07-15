@@ -1365,6 +1365,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
             id: "note-measures.camera".into(),
             label: "Camera".into(),
             default_open: Some(true),
+            active_tool_id: None,
             children: vec![WindowMeasure::Slider {
                 id: "note-measures.zoom".into(),
                 label: Some("Zoom".into()),
@@ -1379,6 +1380,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
             id: "note-measures.grid".into(),
             label: "Grid".into(),
             default_open: Some(true),
+            active_tool_id: None,
             children: vec![
                 WindowMeasure::Toggle {
                     id: "note-measures.grid-visible".into(),
@@ -1421,6 +1423,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
             id: "note-measures.snap".into(),
             label: "Snap".into(),
             default_open: Some(false),
+            active_tool_id: None,
             children: vec![
                 WindowMeasure::Toggle {
                     id: "note-measures.snap-enabled".into(),
@@ -1445,6 +1448,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
             id: "note-measures.drawing".into(),
             label: "Drawing".into(),
             default_open: Some(false),
+            active_tool_id: None,
             children: vec![
                 WindowMeasure::Slider {
                     id: "note-measures.pencil-width".into(),

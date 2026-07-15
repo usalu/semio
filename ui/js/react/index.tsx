@@ -4632,7 +4632,7 @@ export function progressPanelTabSelection(tabs: readonly PanelTabNode[], current
   const pressed = validatedSelected[d];
 
   const clearSubtreeMemory = (node: PanelTabNode | undefined, fallbackId: string): Readonly<Record<string, string>> => {
-    const clearedIds = new Set(node ? collectPanelTabSubtreeIds(node) : [fallbackId]);
+    const clearedIds = new Set(node ? panelTabSubtreeIds(node) : [fallbackId]);
     return Object.fromEntries(Object.entries(memory).filter(([key]) => !clearedIds.has(key)));
   };
 
@@ -16815,6 +16815,8 @@ export interface WindowConfig {
   controls?: React.ReactNode;
   measures?: React.ReactNode;
   toolbar?: React.ReactNode;
+  /** @emoji 🎯 Tool Options rail body — tool-scoped measure controls, stacked directly above the toolbar (bottom-left) since they belong to the active tool. Rendered only when non-empty; reserves no space when absent. */
+  toolOptions?: React.ReactNode;
   /** @emoji 🎛 Bottom-right (free-corner) Actions rail body; folds to a chip by default. */
   actionPanel?: React.ReactNode;
   /** @emoji 🎛 Controlled fold state for the Actions rail (default true); externally settable so the palette/keybinding redirect can force-unfold. */
@@ -16902,6 +16904,7 @@ const Window: React.FC<WindowProps> = ({
   controls,
   measures,
   toolbar,
+  toolOptions,
   actionPanel,
   actionsFolded: actionsFoldedProp,
   onActionsFoldedChange,
@@ -17116,6 +17119,13 @@ const Window: React.FC<WindowProps> = ({
           {!measuresExpanded ? (
             <GlassTierProvider tier="windowOptions">
               <div data-slot="window-toolbar-overlay" data-folded={toolbarFolded ? "true" : undefined} className={windowToolbarOverlayClass}>
+                {toolOptions ? (
+                  <div data-dim data-slot="window-tool-options" className={cn(windowMeasuresStackClass, windowMeasuresStackFoldedClass, "mb-single")}>
+                    <div data-slot="window-tool-options-body" className={windowMeasuresBodyClass}>
+                      {toolOptions}
+                    </div>
+                  </div>
+                ) : null}
                 <div data-dim data-slot="window-toolbar" data-folded={toolbarFolded ? "true" : undefined} className={cn(windowMeasuresStackClass, "flex-row items-end w-fit")}>
                   <WindowToolbarChrome windowId={id} folded={toolbarFolded} disabled={!toolbar} onFold={() => setToolbarFolded(true)} onUnfold={() => setToolbarFolded(false)} />
                   {!toolbarFolded && toolbar ? (
