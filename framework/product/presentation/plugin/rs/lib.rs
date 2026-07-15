@@ -800,6 +800,35 @@ impl DocumentApp for PresentationPlayApp {
         }
     }
 
+    /// 🎛️ App-scope command reference implementation (see `CommandScope`) — distinct from `seedGrid`
+    /// (an action wired to real catalogue buttons via `ActionDescriptor`; moving it here would silently
+    /// break those buttons, since `UiButtonNode` only carries actions). "Reset to Default Grid" has no
+    /// existing UI wiring: it's reachable only from the footer command panel / palette, demonstrating a
+    /// command that emits a real VCS-tracked operation.
+    fn handle_command(
+        &mut self,
+        command: &str,
+        _args: Option<&Value>,
+        doc: &DocumentView<'_, PresentationDeck>,
+        _view_state: &ViewState,
+    ) -> ActionEmit<PresentationOp> {
+        let deck = doc.projection;
+        match command {
+            "presentation.resetGrid" => {
+                let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec {
+                    source: &deck.source,
+                    rows: 3,
+                    columns: 5,
+                    gap: 0.0,
+                    key_prefix: "tile",
+                });
+                self.runtime.selected_ids = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
+                ActionEmit::ops(vec![PresentationOp::SetTiles { tiles }])
+            }
+            _ => ActionEmit::default(),
+        }
+    }
+
     fn render(&self, body_key: &str, doc: &DocumentView<'_, PresentationDeck>, view_state: &ViewState) -> UiNode {
         let deck = doc.projection;
         let selected = &self.runtime.selected_ids;
@@ -878,7 +907,9 @@ fn create_presentation_app() -> App {
                 ActionArgDef::select("exampleId", "Example", vec![ActionArgOption::new("demo", "Demo")])
                     .required()
                     .default_value("demo"),
-            ]),
+            ])
+            // 🎛️ App-scope command — see `handle_command` for why this isn't `seedGrid`/`clearTiles`.
+            .app_command("presentation.resetGrid", "Reset to Default Grid", "document"),
     )
     .example("demo", "Demo", serde_json::to_string(&default_presentation_deck()).unwrap())
     .program("presentation", "Presentation", "deck")

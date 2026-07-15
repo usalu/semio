@@ -1661,7 +1661,7 @@ mod tests {
                 label: "Default".into(),
                 tools: vec![],
                 layout_id: None,
-                actions: vec![],
+                commands: vec![],
             }),
             default_mode_id: "default".into(),
             window_kinds: semio_framework_core::WindowKinds::try_from(
@@ -1695,6 +1695,7 @@ mod tests {
             keybindings: vec![],
             actions: vec![],
             tools: vec![],
+            commands: vec![],
             named_layouts: vec![],
             default_layout: layout,
             terminologies: vec![],
@@ -5365,7 +5366,7 @@ impl PluginBridgeEntry {
         instance_id: u32,
         action_json: &str,
         view_state: &ViewState,
-    ) -> Result<semio_framework_core::kernel::ActionResult, String> {
+    ) -> Result<semio_framework_core::kernel::InvocationResult, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             PluginBridgeBackend::Js(handle) => handle_action_js(handle, instance_id, action_json, view_state).await,
@@ -5461,16 +5462,16 @@ async fn handle_action_js(
     instance_id: u32,
     action_json: &str,
     view_state: &ViewState,
-) -> Result<semio_framework_core::kernel::ActionResult, String> {
+) -> Result<semio_framework_core::kernel::InvocationResult, String> {
     let action = Reflect::get(handle.as_ref(), &JsValue::from_str("handleAction"))
         .ok()
         .and_then(|v| v.dyn_into::<Function>().ok());
     let Some(action) = action else {
-        return Ok(semio_framework_core::kernel::ActionResult {
+        return Ok(semio_framework_core::kernel::InvocationResult {
             output: serde_json::Value::Null,
             operations: vec![],
             inverse_group: semio_framework_core::kernel::UndoGroup {
-                action_id: semio_framework_core::kernel::ActionInvocationId(String::new()),
+                invocation_id: semio_framework_core::kernel::InvocationId(String::new()),
                 operations: vec![],
                 inverse_operations: vec![],
             },
@@ -5501,7 +5502,7 @@ async fn handle_action_js(
         result
     };
     if let Some(text) = resolved.as_string() {
-        if let Ok(parsed) = serde_json::from_str::<semio_framework_core::kernel::ActionResult>(&text) {
+        if let Ok(parsed) = serde_json::from_str::<semio_framework_core::kernel::InvocationResult>(&text) {
             return Ok(parsed);
         }
         if let Ok(ops) = serde_json::from_str::<Vec<String>>(&text) {
@@ -11483,7 +11484,7 @@ impl ShellState {
 //#endregion ShellLifecycle
 
 //#region ShellActions
-fn patch_ops_from_action_result(result: &semio_framework_core::kernel::ActionResult) -> Vec<String> {
+fn patch_ops_from_action_result(result: &semio_framework_core::kernel::InvocationResult) -> Vec<String> {
     result
         .operations
         .iter()
@@ -14587,9 +14588,11 @@ fn app_icon_id<'a>(app: &'a AppDefinition, icons: &IconAtlas) -> &'a str {
     "component"
 }
 
-/// 🧭 This renderer only has a 2-panel (left/right) layout; fold the framework's 4-corner model back down.
+/// 🧭 This renderer only has a 2-panel (left/right) layout; fold the framework's 6-anchor model back down to
+/// left/right. A middle anchor would fold right (the details/overflow side) but never occurs here — `PanelGroup`
+/// only ever maps to the four corner anchors.
 fn group_side(group: PanelGroup) -> &'static str {
-    if group.corner().ends_with("left") { "left" } else { "right" }
+    if group.anchor().ends_with("left") { "left" } else { "right" }
 }
 
 fn panel_toggle_icon_id(kind: &str, session: Option<&ActiveSession>) -> &'static str {

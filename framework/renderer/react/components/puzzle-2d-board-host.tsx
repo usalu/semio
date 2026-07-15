@@ -284,7 +284,8 @@ function applyFixtureToSession(session: Puzzle2dBoardWasmSession, scene: Puzzle2
 /** @emoji 🐢 One triptych pane, registered so siblings can mirror its live gesture state without a plugin round trip. */
 type Puzzle2dBoardPeer = {
   readonly session: Puzzle2dBoardWasmSession;
-  readonly onPeerGestureEnded: () => void;
+  /** @emoji 🫧 `flushed` is true when the gesture that just ended pushed a commit to the plugin — in that case a fresh scene is already in flight and any stashed pending echo should be dropped rather than applied, or it would flash the stale in-between state for one frame before the fresh one supersedes it. */
+  readonly onPeerGestureEnded: (flushed: boolean) => void;
 };
 
 /** @emoji 🗺️ controllerId -> surfaceId -> peer. Assumes one puzzle2d-play triptych on screen at a time (matches the existing controllerId/surfaceId scoping used for action routing). */
@@ -349,10 +350,10 @@ export function pushPuzzle2dLiveMirrorOps(controllerId: string, surfaceId: strin
   }
 }
 
-export function notifyPuzzle2dPeersGestureEnded(controllerId: string, surfaceId: string): void {
+export function notifyPuzzle2dPeersGestureEnded(controllerId: string, surfaceId: string, flushed: boolean): void {
   for (const peer of puzzle2dBoardPeers(controllerId, surfaceId)) {
     try {
-      peer.onPeerGestureEnded();
+      peer.onPeerGestureEnded(flushed);
     } catch {
       /* peer session not ready */
     }
@@ -470,12 +471,41 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
     [node.controllerId, node.surfaceId],
   );
 
-  onPeerGestureEndedRef.current = (): void => {
+  onPeerGestureEndedRef.current = (flushed: boolean): void => {
     const session = sessionRef.current;
     if (!session) return;
+    if (flushed) {
+      pendingFixtureSceneRef.current = null;
+      pendingSelectionJsonRef.current = null;
+      return;
+    }
     applyPendingFixtureIfReady(session);
     applyPendingSelectionIfReady(session);
   };
+
+  /**
+   * @emoji 🫧 Call when a gesture on this pane ends, right before flushing. Drains first so we know
+   * whether a commit is about to go out; if so, drops any pending fixture/selection stashed mid-gesture
+   * instead of applying it — that stashed snapshot is stale (typically from an early mid-gesture flush,
+   * e.g. the `select` event a node-drag's pointerdown pushes) and the flush response due back in a moment
+   * will supersede it anyway, so applying it here would flicker: correct live state -> stale snapshot ->
+   * correct committed state. Returns whether a flush is pending, so the caller can pass it on to peers.
+   */
+  const settleGestureEnd = useCallback(
+    (session: Puzzle2dBoardWasmSession): boolean => {
+      drainIntoBuffer();
+      const flushed = pendingEventRowsRef.current.length > 0;
+      if (flushed) {
+        pendingFixtureSceneRef.current = null;
+        pendingSelectionJsonRef.current = null;
+      } else {
+        applyPendingFixtureIfReady(session);
+        applyPendingSelectionIfReady(session);
+      }
+      return flushed;
+    },
+    [applyPendingFixtureIfReady, applyPendingSelectionIfReady, drainIntoBuffer],
+  );
 
   /** @emoji 🐁 Marks a wheel-zoom gesture in flight so scene-driven camera echoes (which lag several ticks behind during a fast scroll) don't fight the live local zoom — mirrors `defersDescriptorSyncFromJs` for pan/drag, which the engine doesn't track for wheel. */
   const beginCameraInteraction = useCallback((): void => {
@@ -730,10 +760,10 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
       session.pointerUpScreen(point.x, point.y, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
       if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
       endPuzzle2dPeerGesture(node.controllerId, node.surfaceId);
-      applyPendingFixtureIfReady(session);
+      const flushed = settleGestureEnd(session);
       scheduleRender();
-      flushBoardEvents();
-      notifyPuzzle2dPeersGestureEnded(node.controllerId, node.surfaceId);
+      dispatchBufferedEvents();
+      notifyPuzzle2dPeersGestureEnded(node.controllerId, node.surfaceId, flushed);
     };
 
     const onPointerEnter = (): void => {
@@ -746,10 +776,10 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
       if (!session) return;
       session.pointerLeaveScreen?.(event.altKey);
       endPuzzle2dPeerGesture(node.controllerId, node.surfaceId);
-      applyPendingFixtureIfReady(session);
+      const flushed = settleGestureEnd(session);
       scheduleRender();
-      flushBoardEvents();
-      notifyPuzzle2dPeersGestureEnded(node.controllerId, node.surfaceId);
+      dispatchBufferedEvents();
+      notifyPuzzle2dPeersGestureEnded(node.controllerId, node.surfaceId, flushed);
     };
 
     /** @emoji 🐁 Wheel-zoom stays instant locally (WASM renders every tick via `scheduleRender`); only the React-visible camera echo and event flush are deferred until the gesture settles via `beginCameraInteraction`'s timeout. */
@@ -782,7 +812,7 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
       window.removeEventListener("pointerup", onPointerUp);
       container.removeEventListener("wheel", onWheel);
     };
-  }, [applyPendingFixtureIfReady, beginCameraInteraction, drainAndMaybeFlush, drainIntoBuffer, flushBoardEvents, node.controllerId, node.surfaceId, scheduleRender, scene?.interactive]);
+  }, [beginCameraInteraction, dispatchBufferedEvents, drainAndMaybeFlush, drainIntoBuffer, node.controllerId, node.surfaceId, scheduleRender, scene?.interactive, settleGestureEnd]);
   //#endregion Pointer
 
   //#region Keyboard
@@ -800,13 +830,14 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
         if (session.cancelAreaSelect?.()) {
           event.preventDefault();
           endPuzzle2dPeerGesture(node.controllerId, node.surfaceId);
+          const flushed = settleGestureEnd(session);
           try {
             session.renderFrame();
           } catch {
             /* gpu not ready */
           }
-          flushBoardEvents();
-          notifyPuzzle2dPeersGestureEnded(node.controllerId, node.surfaceId);
+          dispatchBufferedEvents();
+          notifyPuzzle2dPeersGestureEnded(node.controllerId, node.surfaceId, flushed);
         }
         return;
       }
@@ -840,7 +871,7 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [dispatch, flushBoardEvents, node.controllerId, node.surfaceId, scene?.activeTool, scene?.interactive, scene?.selectionJson]);
+  }, [dispatch, dispatchBufferedEvents, flushBoardEvents, node.controllerId, node.surfaceId, scene?.activeTool, scene?.interactive, scene?.selectionJson, settleGestureEnd]);
   //#endregion Keyboard
 
   //#region ContextMenu

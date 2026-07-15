@@ -2,7 +2,7 @@
 
 use semio_framework_core::{
     kernel::{CapabilityRequirement, ResourceKind, Rights, Scope},
-    ActionResult, PluginManifest, ViewState,
+    InvocationResult, PluginManifest, ViewState,
 };
 use ui_wgpu::{ToolNode, UiNode, WindowEngagement, WindowMeasure};
 use std::collections::HashMap;
@@ -342,7 +342,7 @@ impl WasmPluginRuntime {
         instance_id: u32,
         action_json: &str,
         view_state: &ViewState,
-    ) -> Result<ActionResult, String> {
+    ) -> Result<InvocationResult, String> {
         let context_json = serde_json::json!({
             "viewState": view_state,
             "actor": "local",
@@ -359,7 +359,41 @@ impl WasmPluginRuntime {
                 &semio::framework::types::ActionInvocationJson {
                     json: action_json.to_string(),
                 },
-                &semio::framework::types::ActionContextJson {
+                &semio::framework::types::InvocationContextJson {
+                    json: context_json,
+                },
+            )
+            .map_err(|error| error.to_string())?
+            .map_err(|error| match error {
+                semio::framework::types::PluginError::Message(message) => message,
+            })?;
+        serde_json::from_str(&response.json).map_err(|error| error.to_string())
+    }
+
+    /// @emoji 🎛️ Dispatches a scoped command (os/plugin/app/mode) — the command mirror of `handle_action`.
+    pub fn handle_command(
+        &self,
+        instance_id: u32,
+        command_json: &str,
+        view_state: &ViewState,
+    ) -> Result<InvocationResult, String> {
+        let context_json = serde_json::json!({
+            "viewState": view_state,
+            "actor": "local",
+        })
+        .to_string();
+        let mut store = self.store.lock().map_err(|_| "plugin store lock poisoned")?;
+        let bindings = self.bindings.lock().map_err(|_| "plugin bindings lock poisoned")?;
+        Self::prepare_call(&mut store);
+        let response = bindings
+            .semio_framework_plugin()
+            .call_handle_command(
+                &mut *store,
+                instance_id,
+                &semio::framework::types::CommandInvocationJson {
+                    json: command_json.to_string(),
+                },
+                &semio::framework::types::InvocationContextJson {
                     json: context_json,
                 },
             )

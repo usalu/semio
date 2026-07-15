@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Canvas, CornerPanel, Footer, HorizontalWindows, Layout, Navbar, Page, singleTreeLeaf, Window } from "@semio-tech/ui-react";
+import { Canvas, Panel, Footer, HorizontalWindows, Layout, Navbar, Page, singleTreeLeaf, Window } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ComponentType } from "react";
@@ -43,8 +43,8 @@ export const Default: Story = {
   args: { canvas: null },
   render: () => {
     const [topLeftSize, setTopLeftSize] = useState(250);
+    const [topMiddleSize, setTopMiddleSize] = useState(360);
     const [topRightSize, setTopRightSize] = useState(300);
-    const [bottomSize, setBottomSize] = useState(200);
 
     return (
       <Layout
@@ -68,7 +68,7 @@ export const Default: Story = {
             ]}
           />
         }
-        cornerPanels={{
+        panels={{
           "top-left": {
             visible: true,
             size: topLeftSize,
@@ -84,6 +84,12 @@ export const Default: Story = {
               singleTreeLeaf({ id: "search", icon: Info, name: "Search", order: 1, tree: { sections: [{ id: "search.section", label: "", items: [{ id: "search.item", label: "", control: <div className="p-double">Search content</div> }] }] } }),
             ],
           },
+          "top-middle": {
+            visible: true,
+            size: topMiddleSize,
+            onSizeChange: setTopMiddleSize,
+            tabs: [singleTreeLeaf({ id: "console", icon: Info, name: "Console", order: 0, tree: { sections: [{ id: "console.section", label: "", items: [{ id: "console.item", label: "", control: <div className="p-double font-mono text-xs">Console output...</div> }] }] } })],
+          },
           "top-right": {
             visible: true,
             size: topRightSize,
@@ -98,19 +104,6 @@ export const Default: Story = {
               }),
             ],
           },
-        }}
-        bottomPanel={{
-          visible: true,
-          size: bottomSize,
-          onSizeChange: setBottomSize,
-          sections: [
-            {
-              id: "console",
-              content: <div className="p-double font-mono text-xs">Console output...</div>,
-              defaultOpen: true,
-              order: 0,
-            },
-          ],
         }}
         canvas={
           <Canvas>
@@ -147,28 +140,24 @@ export const PageDefault: Story = {
 };
 // #endregion 🌈Page
 
-// 💻#region 🧭CornerPanel
-const layoutCornerPanelLeafTab = (id: string, icon: ComponentType<{ size?: number }>, name: string, order: number, content: string) =>
+// 💻#region 🧭Panel
+const layoutPanelLeafTab = (id: string, icon: ComponentType<{ size?: number }>, name: string, order: number, content: string) =>
   singleTreeLeaf({ id, icon, name, order, tree: { sections: [{ id: `${id}.section`, label: "", items: [{ id: `${id}.item`, label: "", control: <div className="p-2">{content}</div> }] }] } });
 
-export const CornerPanelDefault: Story = {
+export const PanelDefault: Story = {
   args: { canvas: null },
   render: () => {
     const [size, setSize] = useState(300);
     return (
       <div className="relative h-[400px] w-[600px] border bg-base">
-        <CornerPanel
-          corner="top-left"
+        <Panel
+          anchor="top-left"
           size={size}
           onSizeChange={setSize}
-          tabs={[
-            layoutCornerPanelLeafTab("types", Layers, "Types", 0, "Types panel content"),
-            layoutCornerPanelLeafTab("settings", Settings, "Settings", 1, "Settings panel content"),
-            layoutCornerPanelLeafTab("info", Info, "Info", 2, "Info panel content"),
-          ]}
+          tabs={[layoutPanelLeafTab("types", Layers, "Types", 0, "Types panel content"), layoutPanelLeafTab("settings", Settings, "Settings", 1, "Settings panel content"), layoutPanelLeafTab("info", Info, "Info", 2, "Info panel content")]}
         />
       </div>
     );
   },
 };
-// #endregion 🧭CornerPanel
+// #endregion 🧭Panel

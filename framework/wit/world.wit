@@ -9,11 +9,15 @@ interface types {
     json: string,
   }
 
-  record action-context-json {
+  record command-invocation-json {
     json: string,
   }
 
-  record action-response-json {
+  record invocation-context-json {
+    json: string,
+  }
+
+  record invocation-response-json {
     json: string,
   }
 
@@ -52,8 +56,9 @@ interface plugin {
   use types.{
     plugin-manifest-json,
     action-invocation-json,
-    action-context-json,
-    action-response-json,
+    command-invocation-json,
+    invocation-context-json,
+    invocation-response-json,
     window-input-json,
     window-output-json,
     ui-refresh-request-json,
@@ -68,8 +73,15 @@ interface plugin {
   handle-action: func(
     instance-id: u32,
     action: action-invocation-json,
-    context: action-context-json,
-  ) -> result<action-response-json, plugin-error>;
+    context: invocation-context-json,
+  ) -> result<invocation-response-json, plugin-error>;
+  /// 🎛️ Dispatches a scoped command (os/plugin/app/mode — never window-level; see `ActionDescriptor`
+  /// for window-level verbs) through the same op-emitting pipeline as `handle-action`.
+  handle-command: func(
+    instance-id: u32,
+    command: command-invocation-json,
+    context: invocation-context-json,
+  ) -> result<invocation-response-json, plugin-error>;
   update-window: func(
     instance-id: u32,
     input: window-input-json,

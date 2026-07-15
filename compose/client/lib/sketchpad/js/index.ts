@@ -89,7 +89,6 @@ import {
   readStoredUiChromeTerminology,
   registerUiTranslationBundles,
   setControlLabelIdResolver,
-  useUiTerminology,
   type UiLabelValue,
   type UiLocale,
   type UiTerminologyLabelSet,

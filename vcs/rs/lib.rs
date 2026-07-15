@@ -820,7 +820,7 @@ where
     }
 
     /// @emoji 🔧 The most recently created/amended edit's `(forwards, backwards, per-operation meta)`.
-    /// Used right after `dispatch(Apply{..})`/`AmendLast` to build a `KernelOperation`/`ActionResult`
+    /// Used right after `dispatch(Apply{..})`/`AmendLast` to build a `KernelOperation`/`InvocationResult`
     /// with a true inverse from the just-recorded `Edit.backwards`.
     pub fn edit_operations(&self) -> Option<(&[Op], &[Op], &[OperationMeta])> {
         self.envelope.vcs.edits.last().map(|edit| {

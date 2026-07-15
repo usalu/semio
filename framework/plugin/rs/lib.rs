@@ -6,8 +6,9 @@ pub mod component {
 
     use crate::plugin_runtime::{
         ensure_plugin_initialized, plugin_attach_backbone, plugin_create_app,
-        plugin_detach_backbone, plugin_document, plugin_handle_action, plugin_ingest_operations,
-        plugin_load_document, plugin_manifest, plugin_refresh_ui, plugin_render_with_document,
+        plugin_detach_backbone, plugin_document, plugin_handle_action, plugin_handle_command,
+        plugin_ingest_operations, plugin_load_document, plugin_manifest, plugin_refresh_ui,
+        plugin_render_with_document,
     };
     use wit_bindgen::generate;
 
@@ -18,7 +19,7 @@ pub mod component {
 
     use exports::semio::framework::plugin::Guest;
     use semio::framework::types::{
-        ActionContextJson, ActionInvocationJson, ActionResponseJson, MigrateDocumentInput,
+        ActionInvocationJson, CommandInvocationJson, InvocationContextJson, InvocationResponseJson, MigrateDocumentInput,
         MigrateDocumentOutput, PluginError, PluginManifestJson, UiRefreshRequestJson, UiRefreshResponseJson, WindowInputJson, WindowOutputJson,
     };
 
@@ -40,12 +41,25 @@ pub mod component {
         fn handle_action(
             instance_id: u32,
             action: ActionInvocationJson,
-            context: ActionContextJson,
-        ) -> Result<ActionResponseJson, PluginError> {
+            context: InvocationContextJson,
+        ) -> Result<InvocationResponseJson, PluginError> {
             ensure_plugin_initialized();
             let result = plugin_handle_action(instance_id, &action.json, &context.json)
                 .map_err(PluginError::Message)?;
-            Ok(ActionResponseJson {
+            Ok(InvocationResponseJson {
+                json: serde_json::to_string(&result).unwrap_or_else(|_| "{}".into()),
+            })
+        }
+
+        fn handle_command(
+            instance_id: u32,
+            command: CommandInvocationJson,
+            context: InvocationContextJson,
+        ) -> Result<InvocationResponseJson, PluginError> {
+            ensure_plugin_initialized();
+            let result = plugin_handle_command(instance_id, &command.json, &context.json)
+                .map_err(PluginError::Message)?;
+            Ok(InvocationResponseJson {
                 json: serde_json::to_string(&result).unwrap_or_else(|_| "{}".into()),
             })
         }
@@ -131,12 +145,12 @@ pub mod app {
 
 use semio_framework_core::{
     effective_action_args, history_action_definitions, missing_required_args, kernel::{
-        ActorId, AppEvent, CapabilityRequirement, ActionInvocationId, ActionResult, HostEffect, HybridLogicalTimestamp,
+        ActorId, AppEvent, CapabilityRequirement, InvocationId, InvocationResult, HostEffect, HybridLogicalTimestamp,
         InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OpEnvelope, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
     set_active_tool_action_definition, start_introduction_action_definition, ActionArgDef, ActionRef, AppDefinition,
-    AppLabelsOverlay, ActionDefinition, ActionKind, Contribution, DialogDefinition, ExampleDefinition,
+    AppLabelsOverlay, ActionDefinition, ActionKind, CommandDefinition, CommandRef, CommandScope, Contribution, DialogDefinition, ExampleDefinition,
     IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, Keybinding, ModeDefinition, Modes, PanelGroup,
     PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition, ToolDefinition, ToolRef, ViewState,
     WindowKindDefinition, WindowKinds, SET_ACTIVE_TOOL_ACTION_ID, START_INTRODUCTION_ACTION_ID,
@@ -159,7 +173,7 @@ pub struct ModeSpec {
     pub label: String,
     pub tools: Vec<ToolRef>,
     pub layout_id: Option<String>,
-    pub actions: Vec<ActionRef>,
+    pub commands: Vec<CommandRef>,
 }
 
 pub struct WindowKindSpec {
@@ -275,6 +289,7 @@ pub struct AppBuilder {
     keybindings: Vec<KeybindingSpec>,
     actions: Vec<ActionDefinition>,
     tools: Vec<ToolDefinition>,
+    commands: Vec<CommandDefinition>,
     named_layouts: Vec<NamedLayout>,
     default_layout: Option<WindowLayout>,
     terminologies: Vec<String>,
@@ -298,6 +313,7 @@ impl AppBuilder {
             keybindings: Vec::new(),
             actions: Vec::new(),
             tools: Vec::new(),
+            commands: Vec::new(),
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
@@ -347,16 +363,17 @@ impl AppBuilder {
             label: label.into(),
             tools: Vec::new(),
             layout_id: None,
-            actions: Vec::new(),
+            commands: Vec::new(),
         });
         self
     }
 
-    /// 📇 Scopes actions to a mode — references ids declared via `.operation()/.view_action()/.shell_action()`.
-    pub fn mode_actions(mut self, mode_id: impl AsRef<str>, action_ids: Vec<ActionRef>) -> Self {
+    /// 🎛️ Scopes commands to a mode — references ids declared via `.mode_command()`/`.command()`
+    /// (each of which must be `CommandScope::Mode`).
+    pub fn mode_commands(mut self, mode_id: impl AsRef<str>, command_ids: Vec<CommandRef>) -> Self {
         let mode_id = mode_id.as_ref();
         if let Some(mode) = self.modes.iter_mut().find(|entry| entry.id == mode_id) {
-            mode.actions = action_ids;
+            mode.commands = command_ids;
         }
         self
     }
@@ -529,6 +546,35 @@ impl AppBuilder {
         self
     }
 
+    /// @emoji 🎛️ Declares a fully specified command. There are no window-level commands — only
+    /// `CommandScope::App`/`CommandScope::Mode` may be declared here (`Os`/`Plugin` are rejected in
+    /// `build_definition`); `Mode`-scope commands must additionally be referenced via `.mode_commands()`.
+    pub fn command(mut self, command: CommandDefinition) -> Self {
+        self.commands.push(command);
+        self
+    }
+
+    /// @emoji 🎛️ Declares an app-scope command (applies whenever this app is focused, in any mode).
+    pub fn app_command(self, id: impl Into<String>, label: impl Into<String>, category: impl Into<String>) -> Self {
+        self.command(CommandDefinition::new(id, label, CommandScope::App, category))
+    }
+
+    /// @emoji 🎛️ Declares a mode-scope command definition — still requires `.mode_commands(mode_id, ..)`
+    /// to actually scope it to the mode(s) it applies to.
+    pub fn mode_command(self, id: impl Into<String>, label: impl Into<String>, category: impl Into<String>) -> Self {
+        self.command(CommandDefinition::new(id, label, CommandScope::Mode, category))
+    }
+
+    /// @emoji 📝 Attaches typed argument declarations to an already-declared command (post-hoc,
+    /// mirroring `action_args`).
+    pub fn command_args(mut self, command_id: impl AsRef<str>, args: Vec<ActionArgDef>) -> Self {
+        let command_id = command_id.as_ref();
+        if let Some(command) = self.commands.iter_mut().find(|entry| entry.id == command_id) {
+            command.args = args;
+        }
+        self
+    }
+
     /// @emoji 🧰 Declares an interactive tool this app exposes (referenced by `window_kind_tools`/`mode_tools`).
     pub fn tool(mut self, tool: ToolDefinition) -> Self {
         self.tools.push(tool);
@@ -624,6 +670,22 @@ impl AppBuilder {
                 tool.id
             );
         }
+        let mut declared_command_scopes: HashMap<String, CommandScope> = HashMap::new();
+        for command in &self.commands {
+            assert!(
+                matches!(command.scope, CommandScope::App | CommandScope::Mode),
+                "app {} command {} must be declared CommandScope::App or CommandScope::Mode (Os/Plugin commands are not declared via AppBuilder)",
+                self.id,
+                command.id
+            );
+            assert!(
+                declared_command_scopes.insert(command.id.clone(), command.scope).is_none(),
+                "app {} duplicate command id {}",
+                self.id,
+                command.id
+            );
+            validate_arg_defs(&self.id, &format!("command {}", command.id), &command.args);
+        }
         let app_declared_actions = !self.actions.is_empty();
         let mut actions = self.actions;
         for history_action in history_action_definitions() {
@@ -710,13 +772,13 @@ impl AppBuilder {
             }
         }
         for mode in &self.modes {
-            for action_ref in &mode.actions {
+            for command_ref in &mode.commands {
                 assert!(
-                    declared_action_ids.contains(action_ref.as_str()),
-                    "app {} mode {} references undeclared action {}",
+                    declared_command_scopes.get(command_ref.as_str()).copied() == Some(CommandScope::Mode),
+                    "app {} mode {} references undeclared or non-Mode-scope command {}",
                     self.id,
                     mode.id,
-                    action_ref.as_str()
+                    command_ref.as_str()
                 );
             }
             for tool_ref in &mode.tools {
@@ -728,6 +790,19 @@ impl AppBuilder {
                     tool_ref.as_str()
                 );
             }
+        }
+        let mode_referenced_commands: HashSet<&str> = self
+            .modes
+            .iter()
+            .flat_map(|mode| mode.commands.iter().map(|command_ref| command_ref.as_str()))
+            .collect();
+        for (id, scope) in &declared_command_scopes {
+            assert!(
+                *scope != CommandScope::Mode || mode_referenced_commands.contains(id.as_str()),
+                "app {} mode-scope command {} is not referenced by any mode",
+                self.id,
+                id
+            );
         }
         if let Some(introduction) = &self.introduction {
             assert!(
@@ -835,7 +910,7 @@ impl AppBuilder {
                         label: mode.label,
                         tools: mode.tools,
                         layout_id: mode.layout_id,
-                        actions: mode.actions,
+                        commands: mode.commands,
                     })
                     .collect::<Vec<_>>(),
             )
@@ -869,6 +944,7 @@ impl AppBuilder {
             keybindings,
             actions,
             tools: self.tools,
+            commands: self.commands,
             named_layouts: self.named_layouts,
             default_layout: self.default_layout,
             terminologies: self.terminologies,
@@ -1313,6 +1389,70 @@ mod app_builder_tests {
         });
         assert!(result.is_err());
     }
+
+    #[test]
+    fn build_definition_accepts_app_and_mode_scope_commands() {
+        use semio_framework_core::{CommandDefinition, CommandRef, CommandScope};
+        let definition = minimal_app("command-app")
+            .app_command("app.export", "Export", "document")
+            .command(CommandDefinition::new("mode.focus", "Focus", CommandScope::Mode, "view"))
+            .mode_commands("edit", vec![CommandRef::new("mode.focus")])
+            .build_definition();
+        assert_eq!(definition.commands.len(), 2);
+        assert_eq!(definition.modes[0].commands, vec![CommandRef::new("mode.focus")]);
+    }
+
+    #[test]
+    fn build_definition_rejects_duplicate_command_ids() {
+        let result = std::panic::catch_unwind(|| {
+            minimal_app("dupe-command-app")
+                .app_command("app.export", "Export", "document")
+                .app_command("app.export", "Export Again", "document")
+                .build_definition()
+        });
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn build_definition_rejects_os_or_plugin_scope_command() {
+        use semio_framework_core::{CommandDefinition, CommandScope};
+        let result = std::panic::catch_unwind(|| {
+            minimal_app("os-scope-command-app")
+                .command(CommandDefinition::new("os.theme", "Theme", CommandScope::Os, "appearance"))
+                .build_definition()
+        });
+        assert!(result.is_err(), "AppBuilder must reject Os/Plugin-scope commands — those are declared by the shell/PluginBundle, not an app");
+    }
+
+    #[test]
+    fn build_definition_rejects_mode_command_ref_to_undeclared_or_wrong_scope_command() {
+        use semio_framework_core::CommandRef;
+        let undeclared = std::panic::catch_unwind(|| {
+            minimal_app("undeclared-mode-command-app")
+                .mode_commands("edit", vec![CommandRef::new("nope")])
+                .build_definition()
+        });
+        assert!(undeclared.is_err());
+
+        let wrong_scope = std::panic::catch_unwind(|| {
+            minimal_app("wrong-scope-mode-command-app")
+                .app_command("app.export", "Export", "document")
+                .mode_commands("edit", vec![CommandRef::new("app.export")])
+                .build_definition()
+        });
+        assert!(wrong_scope.is_err(), "an App-scope command must not be referenceable from a mode's commands list");
+    }
+
+    #[test]
+    fn build_definition_rejects_mode_scope_command_referenced_by_no_mode() {
+        use semio_framework_core::{CommandDefinition, CommandScope};
+        let result = std::panic::catch_unwind(|| {
+            minimal_app("orphan-mode-command-app")
+                .command(CommandDefinition::new("mode.focus", "Focus", CommandScope::Mode, "view"))
+                .build_definition()
+        });
+        assert!(result.is_err());
+    }
 }
 
 pub struct App {
@@ -1513,6 +1653,17 @@ pub trait DocumentApp: Send + 'static {
         doc: &DocumentView<'_, Self::Projection>,
         view_state: &ViewState,
     ) -> ActionEmit<Self::Op>;
+    /// 🎛️ Handles a dispatched `CommandDefinition` (os/plugin/app/mode-scoped — never window-level).
+    /// Default no-op: apps that declare no `AppDefinition.commands` never need to override this.
+    fn handle_command(
+        &mut self,
+        _command: &str,
+        _args: Option<&Value>,
+        _doc: &DocumentView<'_, Self::Projection>,
+        _view_state: &ViewState,
+    ) -> ActionEmit<Self::Op> {
+        ActionEmit::default()
+    }
     fn render(&self, body_key: &str, doc: &DocumentView<'_, Self::Projection>, view_state: &ViewState) -> UiNode;
     fn window_engagements(
         &self,
@@ -1556,7 +1707,14 @@ pub trait PluginApp: Send {
         args: Option<&Value>,
         view_state: &ViewState,
         meta: &ActionMeta,
-    ) -> Result<ActionResult, String>;
+    ) -> Result<InvocationResult, String>;
+    fn handle_command(
+        &mut self,
+        command: &str,
+        args: Option<&Value>,
+        view_state: &ViewState,
+        meta: &ActionMeta,
+    ) -> Result<InvocationResult, String>;
     fn ingest_operations(&mut self, operations_json: &str) -> Result<(), String>;
     fn document_json(&self) -> Result<String, String>;
     fn load_document(&mut self, document_json: &str) -> Result<(), String>;
@@ -1586,18 +1744,25 @@ pub trait PluginApp: Send {
 #[derive(Clone, Default)]
 pub struct AppActionRegistry {
     actions: HashMap<String, ActionDefinition>,
+    commands: HashMap<String, CommandDefinition>,
 }
 
 impl AppActionRegistry {
-    /// @emoji 📇 Indexes an app definition's declared actions (including framework-injected ones) by id.
+    /// @emoji 📇 Indexes an app definition's declared actions and commands (including
+    /// framework-injected ones) by id.
     pub fn from_definition(definition: &AppDefinition) -> Self {
         Self {
             actions: definition.actions.iter().map(|action| (action.id.clone(), action.clone())).collect(),
+            commands: definition.commands.iter().map(|command| (command.id.clone(), command.clone())).collect(),
         }
     }
 
     fn get(&self, id: &str) -> Option<&ActionDefinition> {
         self.actions.get(id)
+    }
+
+    fn get_command(&self, id: &str) -> Option<&CommandDefinition> {
+        self.commands.get(id)
     }
 }
 
@@ -1605,7 +1770,7 @@ impl AppActionRegistry {
 /// {@link PluginApp}. Owns a persistent `DocumentVcsStore<Projection, Op>` — the single source of
 /// truth for the app's document across every call — intercepts the six injected history actions into
 /// `DocumentVcsCommand`s, dispatches `Apply`/`AmendLast` for typed operations, and builds an
-/// `ActionResult` whose inverses come from the just-recorded `Edit.backwards`. A projection cache
+/// `InvocationResult` whose inverses come from the just-recorded `Edit.backwards`. A projection cache
 /// keyed on the store's generation counter keeps renders O(1). Holds an {@link AppActionRegistry} to
 /// enforce the actions contract before/after delegating to the app.
 pub struct VcsDocumentApp<A: DocumentApp> {
@@ -1704,15 +1869,15 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         }
     }
 
-    /// @emoji 📇 An empty `ActionResult` carrying only host effects/events (view/shell actions and
-    /// history notifications produce no `KernelOperation`s).
-    fn empty_result(action: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework_core::kernel::UiDirtyScope) -> ActionResult {
-        let invocation_id = ActionInvocationId(format!("{action}:{}", meta.instance_id));
-        ActionResult {
+    /// @emoji 📇 An empty `InvocationResult` carrying only host effects/events (view/shell actions,
+    /// no-op commands, and history notifications produce no `KernelOperation`s).
+    fn empty_result(verb: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework_core::kernel::UiDirtyScope) -> InvocationResult {
+        let invocation_id = InvocationId(format!("{verb}:{}", meta.instance_id));
+        InvocationResult {
             output: Value::Null,
             operations: Vec::new(),
             inverse_group: UndoGroup {
-                action_id: invocation_id,
+                invocation_id,
                 operations: Vec::new(),
                 inverse_operations: Vec::new(),
             },
@@ -1723,11 +1888,11 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         }
     }
 
-    /// @emoji 🧱 Builds the `ActionResult` for a just-dispatched edit: one `KernelOperation` per
+    /// @emoji 🧱 Builds the `InvocationResult` for a just-dispatched edit: one `KernelOperation` per
     /// forward operation, each carrying the edit's true `backwards` as its inverse diff.
-    fn result_from_last_edit(&self, action: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework_core::kernel::UiDirtyScope) -> ActionResult {
+    fn result_from_last_edit(&self, verb: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework_core::kernel::UiDirtyScope) -> InvocationResult {
         let schema = self.app.document_schema().to_string();
-        let invocation_id = ActionInvocationId(format!("{action}:{}:{}", meta.instance_id, self.store.generation()));
+        let invocation_id = InvocationId(format!("{verb}:{}:{}", meta.instance_id, self.store.generation()));
         let document = DocumentHandle(meta.instance_id as u128);
         let mut operations: Vec<KernelOperation> = Vec::new();
         if let Some((forwards, backwards, operation_meta)) = self.store.edit_operations() {
@@ -1749,7 +1914,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                     id: operation_id.clone(),
                     document,
                     base_version,
-                    action_id: invocation_id.clone(),
+                    invocation_id: invocation_id.clone(),
                     diff: DocumentDiff {
                         schema_id: SchemaId(format!("{schema}.op")),
                         payload: serde_json::to_value(forward).unwrap_or(Value::Null),
@@ -1772,11 +1937,11 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         }
         let operation_ids: Vec<OperationId> = operations.iter().map(|op| op.id.clone()).collect();
         let inverse_operations: Vec<InverseOperation> = operations.iter().map(|op| op.inverse.clone()).collect();
-        ActionResult {
+        InvocationResult {
             output: Value::Null,
             operations,
             inverse_group: UndoGroup {
-                action_id: invocation_id,
+                invocation_id,
                 operations: operation_ids,
                 inverse_operations,
             },
@@ -1785,6 +1950,47 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             events,
             ui_scope,
         }
+    }
+
+    /// @emoji 🧮 Shared arg materialization for `handle_action`/`handle_command`: fills declared
+    /// defaults over the staged args and rejects if any required arg is still missing.
+    fn materialize_args(label: &str, defs: &[ActionArgDef], args: Option<&Value>) -> Result<Value, String> {
+        let staged = args.and_then(Value::as_object).cloned().unwrap_or_default();
+        let effective = effective_action_args(defs, &staged);
+        let missing = missing_required_args(defs, &effective);
+        if !missing.is_empty() {
+            return Err(format!("{label} missing required args: {missing:?}"));
+        }
+        let mut merged = staged;
+        for (key, value) in effective {
+            merged.entry(key).or_insert(value);
+        }
+        Ok(Value::Object(merged))
+    }
+
+    /// @emoji 🧬 Shared dispatch tail for `handle_action`/`handle_command`: given the app's `ActionEmit`,
+    /// either returns an empty result (no ops) or commits `Apply`/`AmendLast` and builds the
+    /// `InvocationResult` from the just-recorded edit. `verb` is the action/command id, used only to
+    /// synthesize the `InvocationId`.
+    fn dispatch_emit(&mut self, verb: &str, emit: ActionEmit<A::Op>, meta: &ActionMeta) -> Result<InvocationResult, String> {
+        let ActionEmit { ops, description, coalesce_key, effects, events, ui_scope } = emit;
+        if ops.is_empty() {
+            return Ok(Self::empty_result(verb, meta, effects, events, ui_scope));
+        }
+        self.store.set_local_actor_id(Some(meta.actor.clone()));
+        let vcs_command = match coalesce_key {
+            Some(key) => DocumentVcsCommand::AmendLast {
+                operations: ops,
+                coalesce_key: Some(key),
+            },
+            None => DocumentVcsCommand::Apply {
+                operations: ops,
+                description,
+            },
+        };
+        self.store.dispatch(vcs_command).map_err(|error| error.to_string())?;
+        self.cache = None;
+        Ok(self.result_from_last_edit(verb, meta, effects, events, ui_scope))
     }
 }
 
@@ -1812,7 +2018,7 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         args: Option<&Value>,
         view_state: &ViewState,
         meta: &ActionMeta,
-    ) -> Result<ActionResult, String> {
+    ) -> Result<InvocationResult, String> {
         if HISTORY_ACTION_IDS.contains(&action) {
             let command = Self::history_command(action, args)
                 .ok_or_else(|| format!("history action {action} missing required argument"))?;
@@ -1834,19 +2040,9 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         } else {
             self.refresh_cache()?;
             let definition = self.registry.get(action).cloned();
-            let materialized_args: Option<Value> = definition.as_ref().map(|def| {
-                let staged = args.and_then(Value::as_object).cloned().unwrap_or_default();
-                let effective = effective_action_args(&def.args, &staged);
-                let missing = missing_required_args(&def.args, &effective);
-                if !missing.is_empty() {
-                    return Err(format!("action '{action}' missing required args: {missing:?}"));
-                }
-                let mut merged = staged;
-                for (key, value) in effective {
-                    merged.entry(key).or_insert(value);
-                }
-                Ok(Value::Object(merged))
-            }).transpose()?;
+            let materialized_args: Option<Value> = definition.as_ref()
+                .map(|def| Self::materialize_args(&format!("action '{action}'"), &def.args, args))
+                .transpose()?;
             let dispatch_args = materialized_args.as_ref().or(args);
             let emit = {
                 let VcsDocumentApp { app, cache, .. } = self;
@@ -1854,33 +2050,36 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
                 let doc = DocumentView { projection, history };
                 app.handle_action(action, dispatch_args, &doc, view_state)
             };
-            let ActionEmit { ops, description, coalesce_key, effects, events, ui_scope } = emit;
             if let Some(def) = &definition {
-                if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !ops.is_empty() {
+                if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !emit.ops.is_empty() {
                     return Err(format!(
                         "{:?}-kind action '{action}' must not emit operations",
                         def.kind
                     ));
                 }
             }
-            if ops.is_empty() {
-                return Ok(Self::empty_result(action, meta, effects, events, ui_scope));
-            }
-            self.store.set_local_actor_id(Some(meta.actor.clone()));
-            let command = match coalesce_key {
-                Some(key) => DocumentVcsCommand::AmendLast {
-                    operations: ops,
-                    coalesce_key: Some(key),
-                },
-                None => DocumentVcsCommand::Apply {
-                    operations: ops,
-                    description,
-                },
-            };
-            self.store.dispatch(command).map_err(|error| error.to_string())?;
-            self.cache = None;
-            Ok(self.result_from_last_edit(action, meta, effects, events, ui_scope))
+            self.dispatch_emit(action, emit, meta)
         }
+    }
+
+    fn handle_command(
+        &mut self,
+        command: &str,
+        args: Option<&Value>,
+        view_state: &ViewState,
+        meta: &ActionMeta,
+    ) -> Result<InvocationResult, String> {
+        self.refresh_cache()?;
+        let definition = self.registry.get_command(command).cloned()
+            .ok_or_else(|| format!("unknown command '{command}'"))?;
+        let materialized_args = Self::materialize_args(&format!("command '{command}'"), &definition.args, args)?;
+        let emit = {
+            let VcsDocumentApp { app, cache, .. } = self;
+            let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
+            let doc = DocumentView { projection, history };
+            app.handle_command(command, Some(&materialized_args), &doc, view_state)
+        };
+        self.dispatch_emit(command, emit, meta)
     }
 
     fn ingest_operations(&mut self, operations_json: &str) -> Result<(), String> {
@@ -1990,9 +2189,23 @@ impl PluginBundle {
                 examples: Vec::new(),
                 capabilities: Vec::new(),
                 contributions: Vec::new(),
+                commands: Vec::new(),
             },
             apps: HashMap::new(),
         }
+    }
+
+    /// @emoji 🎛️ Declares a plugin-scope command (applies whenever any of this plugin's apps is
+    /// focused). Panics if `command.scope != CommandScope::Plugin`.
+    pub fn plugin_command(mut self, command: CommandDefinition) -> Self {
+        assert!(
+            command.scope == CommandScope::Plugin,
+            "plugin {} command {} must be declared CommandScope::Plugin",
+            self.manifest.plugin_id,
+            command.id
+        );
+        self.manifest.commands.push(command);
+        self
     }
 
     pub fn capability(mut self, capability: CapabilityRequirement) -> Self {
@@ -2931,7 +3144,7 @@ pub mod plugin_runtime {
 //! 📤 WASM component export glue for plugin bundles.
 
 use crate::app::{ActionMeta, AppInstance, Plugin, PluginBundle};
-use semio_framework_core::{kernel::ActionResult, PluginManifest, ViewState};
+use semio_framework_core::{kernel::InvocationResult, PluginManifest, ViewState};
 use ui_wgpu::{framework_panel_tab_label, UiNode};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -3008,6 +3221,7 @@ pub fn plugin_manifest() -> PluginManifest {
                 examples: vec![],
                 capabilities: vec![],
                 contributions: vec![],
+                commands: vec![],
             })
     })
 }
@@ -3049,7 +3263,7 @@ pub fn plugin_handle_action(
     instance_id: u32,
     action_json: &str,
     context_json: &str,
-) -> Result<ActionResult, String> {
+) -> Result<InvocationResult, String> {
     let action: serde_json::Value =
         serde_json::from_str(action_json).map_err(|error| error.to_string())?;
     let context: serde_json::Value =
@@ -3070,6 +3284,36 @@ pub fn plugin_handle_action(
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
         instance.app.handle_action(action_name, args.as_ref(), &view_state, &meta)
+    })
+}
+
+/// @emoji 🎛️ Dispatches a scoped command (os/plugin/app/mode) through the same instance/context
+/// parsing as `plugin_handle_action` — mirrors its shape exactly.
+pub fn plugin_handle_command(
+    instance_id: u32,
+    command_json: &str,
+    context_json: &str,
+) -> Result<InvocationResult, String> {
+    let command: serde_json::Value =
+        serde_json::from_str(command_json).map_err(|error| error.to_string())?;
+    let context: serde_json::Value =
+        serde_json::from_str(context_json).map_err(|error| error.to_string())?;
+    let view_state: ViewState = context
+        .get("viewState")
+        .cloned()
+        .map(|value| serde_json::from_value(value).unwrap_or_default())
+        .unwrap_or_default();
+    let command_name = command.get("command").and_then(|value| value.as_str()).unwrap_or("");
+    let args = command.get("args").cloned();
+    let actor = context
+        .get("actor")
+        .and_then(|value| value.as_str())
+        .unwrap_or("local")
+        .to_string();
+    let meta = ActionMeta { actor, instance_id };
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        instance.app.handle_command(command_name, args.as_ref(), &view_state, &meta)
     })
 }
 
@@ -3512,6 +3756,27 @@ mod semio_plugin_macro_tests {
             }
         }
 
+        fn handle_command(
+            &mut self,
+            command: &str,
+            args: Option<&Value>,
+            doc: &DocumentView<'_, TestProjection>,
+            _view_state: &ViewState,
+        ) -> ActionEmit<TestOp> {
+            match command {
+                "incrementViaCommand" => ActionEmit {
+                    ops: vec![TestOp::SetCount { value: doc.projection.count + 1 }],
+                    description: Some("increment via command".into()),
+                    ..Default::default()
+                },
+                "setLabelViaCommand" => {
+                    let value = args.and_then(|value| value.get("value")).and_then(Value::as_str).unwrap_or_default().to_string();
+                    ActionEmit::ops(vec![TestOp::SetLabel { value }])
+                }
+                _ => ActionEmit::default(),
+            }
+        }
+
         fn render(&self, _body_key: &str, doc: &DocumentView<'_, TestProjection>, _view_state: &ViewState) -> UiNode {
             ui_text(format!("count={}", doc.projection.count))
         }
@@ -3544,7 +3809,10 @@ mod semio_plugin_macro_tests {
                 .operation("setLabelDefault", "Set Label Default")
                 .action_args("setLabelDefault", vec![ActionArgDef::text("value", "Value").default_value("seed")])
                 .view_action("badView", "Bad View")
-                .tool_simple("brush", "Brush", "icon.brush"),
+                .tool_simple("brush", "Brush", "icon.brush")
+                .app_command("incrementViaCommand", "Increment", "counter")
+                .app_command("setLabelViaCommand", "Set Label", "counter")
+                .command_args("setLabelViaCommand", vec![ActionArgDef::text("value", "Value").required()]),
         );
         AppActionRegistry::from_definition(&app.definition)
     }
@@ -3756,6 +4024,53 @@ mod semio_plugin_macro_tests {
         // Each commit is its own edit: one undo only reverts the last commit.
         app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo commit");
         assert_eq!(app.test_projection().label, "x");
+    }
+
+    #[test]
+    fn operation_command_emits_kernel_op_with_true_inverse() {
+        let mut app = contract_app_under_test();
+        let result = app
+            .handle_command("incrementViaCommand", None, &ViewState::default(), &meta())
+            .expect("incrementViaCommand");
+        assert_eq!(result.operations.len(), 1);
+        assert_eq!(result.operations[0].diff.payload, json!({ "op": "setCount", "value": 1 }));
+        assert_eq!(
+            result.operations[0].inverse.inverse_diff.payload,
+            json!({ "backwards": [{ "op": "setCount", "value": 0 }] })
+        );
+        assert_eq!(app.test_projection().count, 1);
+    }
+
+    #[test]
+    fn unknown_command_is_a_hard_error() {
+        let mut app = contract_app_under_test();
+        let error = app
+            .handle_command("nope", None, &ViewState::default(), &meta())
+            .expect_err("an undeclared command id must be rejected");
+        assert!(error.contains("unknown command"), "unexpected error: {error}");
+    }
+
+    #[test]
+    fn command_required_arg_is_enforced_and_materialized_like_an_action() {
+        let mut app = contract_app_under_test();
+        let error = app
+            .handle_command("setLabelViaCommand", None, &ViewState::default(), &meta())
+            .expect_err("missing required arg must be a hard error");
+        assert!(error.contains("missing required args"), "unexpected error: {error}");
+
+        app.handle_command("setLabelViaCommand", Some(&json!({ "value": "hi" })), &ViewState::default(), &meta())
+            .expect("required arg provided");
+        assert_eq!(app.test_projection().label, "hi");
+    }
+
+    #[test]
+    fn command_op_records_history_exactly_like_an_operation_action() {
+        let mut app = contract_app_under_test();
+        app.handle_command("incrementViaCommand", None, &ViewState::default(), &meta()).expect("inc");
+        app.handle_command("incrementViaCommand", None, &ViewState::default(), &meta()).expect("inc");
+        assert_eq!(app.test_projection().count, 2);
+        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        assert_eq!(app.test_projection().count, 1);
     }
 
     #[test]

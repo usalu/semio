@@ -2718,7 +2718,7 @@ mod tests {
                 label: "Edit".into(),
                 tools: Vec::new(),
                 layout_id: None,
-                actions: Vec::new(),
+                commands: Vec::new(),
             }),
             default_mode_id: "edit".into(),
             window_kinds: crate::ui::WindowKinds::one(WindowKindDefinition {
@@ -2740,6 +2740,7 @@ mod tests {
             keybindings: vec![],
             actions: vec![],
             tools: vec![],
+            commands: vec![],
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
@@ -3123,6 +3124,96 @@ impl From<String> for ToolRef {
 }
 //#endregion 🔖Tools
 
+//#region 🔖Commands
+/// @emoji 🗂️ Where a command is offered. There are no window-level commands — window-scoped verbs
+/// stay `ActionDefinition`/`ToolDefinition`; a command is scoped to the os shell, a plugin, an app, or
+/// one of an app's modes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum CommandScope {
+    Os,
+    Plugin,
+    App,
+    Mode,
+}
+
+/// @emoji 🎛️ Declares one command: a scoped, categorized verb offered in the footer command panel.
+/// Handling a command may emit VCS-tracked operations exactly like an operation-kind action — see
+/// `DocumentApp::handle_command`/`ActionEmit`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CommandDefinition {
+    pub id: String,
+    pub label: String,
+    pub scope: CommandScope,
+    /// 🗂️ Footer category tab this command groups under (an open id, e.g. "document", "appearance").
+    pub category: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub icon_id: Option<String>,
+    /// 📝 Reuses `ActionArgDef` — one staged-form contract shared by actions, dialogs, and commands.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub args: Vec<ActionArgDef>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub keys: Option<String>,
+    #[serde(default)]
+    pub in_palette: bool,
+}
+
+impl CommandDefinition {
+    pub fn new(id: impl Into<String>, label: impl Into<String>, scope: CommandScope, category: impl Into<String>) -> Self {
+        Self {
+            id: id.into(),
+            label: label.into(),
+            scope,
+            category: category.into(),
+            icon_id: None,
+            args: Vec::new(),
+            keys: None,
+            in_palette: true,
+        }
+    }
+
+    /// @emoji 📝 Attaches typed argument declarations to this command.
+    pub fn with_args(mut self, args: impl IntoIterator<Item = ActionArgDef>) -> Self {
+        self.args = args.into_iter().collect();
+        self
+    }
+}
+
+/// 🎛️ A validated reference into an app's `AppDefinition.commands` registry — the command mirror of
+/// `ActionRef`/`ToolRef`. Only ever names a `Mode`-scope command (see `ModeDefinition.commands`).
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(transparent)]
+pub struct CommandRef(String);
+
+impl CommandRef {
+    pub fn new(id: impl Into<String>) -> Self {
+        Self(id.into())
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl From<&str> for CommandRef {
+    fn from(value: &str) -> Self {
+        Self(value.to_string())
+    }
+}
+
+impl From<String> for CommandRef {
+    fn from(value: String) -> Self {
+        Self(value)
+    }
+}
+//#endregion 🔖Commands
+
 //#region 🔖Introduction
 /// @emoji 🎓 A first-run walkthrough an app declares to introduce its UI, tools, and actions to a
 /// first-time user. Rendered as an ordered sequence of `IntroductionStepDefinition`s over a full-screen
@@ -3340,9 +3431,10 @@ pub struct ModeDefinition {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub layout_id: Option<String>,
-    /// 📇 Actions available while this mode is active — references `AppDefinition.actions` ids.
+    /// 🎛️ Mode-scope commands active while this mode is active — references `AppDefinition.commands`
+    /// ids (each of which must declare `scope: CommandScope::Mode`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub actions: Vec<ActionRef>,
+    pub commands: Vec<CommandRef>,
 }
 
 /// 🚫 A non-empty, order-preserving list — construction-time enforcement replaces what used to be a
@@ -3483,7 +3575,10 @@ pub enum PanelGroup {
 }
 
 impl PanelGroup {
-    pub fn corner(&self) -> &'static str {
+    /// 🧭 The dock anchor this group defaults to. Groups only ever map to the four corner anchors —
+    /// the two middle anchors (`top-middle`/`bottom-middle`) start empty and are user-populated via
+    /// drag-and-drop or a dock skeleton override, never via a `PanelGroup`.
+    pub fn anchor(&self) -> &'static str {
         match self {
             PanelGroup::Workbench => "top-left",
             PanelGroup::Details => "top-right",
@@ -3588,6 +3683,10 @@ pub struct AppDefinition {
     /// 🧰 The interactive tools this app exposes (referenced by `WindowKindDefinition.tools`/`ModeDefinition.tools`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tools: Vec<ToolDefinition>,
+    /// 🎛️ App- and mode-scope commands this app exposes (referenced by `ModeDefinition.commands` for
+    /// `Mode`-scope entries; `App`-scope entries apply whenever the app is focused).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub commands: Vec<CommandDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub named_layouts: Vec<NamedLayout>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -3788,6 +3887,9 @@ pub struct PluginManifest {
     pub capabilities: Vec<kernel::CapabilityRequirement>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub contributions: Vec<Contribution>,
+    /// 🎛️ Plugin-scope commands this plugin exposes — apply whenever any of its apps is focused.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub commands: Vec<CommandDefinition>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -3892,13 +3994,19 @@ pub struct ResourceId(pub String);
 #[serde(transparent)]
 pub struct OperationId(pub String);
 
+/// 🪪 Identifies one dispatched invocation — of an action *or* a command; both route through the same
+/// `KernelOperation`/`UndoGroup` history bookkeeping.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct ActionInvocationId(pub String);
+pub struct InvocationId(pub String);
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct ActionId(pub String);
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct CommandId(pub String);
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -4031,7 +4139,7 @@ pub struct CapabilityGrant {
 }
 //#endregion 🔖Capability
 
-//#region 🔖Action
+//#region 🔖Invocation
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ActionDef {
@@ -4047,13 +4155,25 @@ pub struct ActionDef {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ActionInvocation {
-    pub id: ActionInvocationId,
+    pub id: InvocationId,
     pub app: AppInstanceId,
     pub action: ActionId,
     pub input: Value,
     pub actor: ActorId,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub causal_context: Vec<OperationId>,
+}
+
+/// @emoji 🎛️ A dispatched invocation of a `CommandDefinition` — the command mirror of `ActionInvocation`.
+/// No `causal_context`: commands are not chained off a prior op the way an action's follow-up can be.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommandInvocation {
+    pub id: InvocationId,
+    pub app: AppInstanceId,
+    pub command: CommandId,
+    pub input: Value,
+    pub actor: ActorId,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -4177,7 +4297,7 @@ pub struct KernelOperation {
     pub id: OperationId,
     pub document: DocumentHandle,
     pub base_version: DocumentVersion,
-    pub action_id: ActionInvocationId,
+    pub invocation_id: InvocationId,
     pub diff: DocumentDiff,
     pub inverse: InverseOperation,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -4189,7 +4309,7 @@ pub struct KernelOperation {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UndoGroup {
-    pub action_id: ActionInvocationId,
+    pub invocation_id: InvocationId,
     pub operations: Vec<OperationId>,
     pub inverse_operations: Vec<InverseOperation>,
 }
@@ -4227,7 +4347,7 @@ pub enum UiDirtyScope {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ActionResult {
+pub struct InvocationResult {
     pub output: Value,
     pub operations: Vec<KernelOperation>,
     pub inverse_group: UndoGroup,
@@ -4250,7 +4370,17 @@ pub struct ActionContext {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub granted_capabilities: Vec<CapabilityGrant>,
 }
-//#endregion 🔖Action
+
+/// @emoji 🎛️ Context for a dispatched `CommandInvocation` — the command mirror of `ActionContext`.
+/// No `document_projection`/`granted_capabilities`: `VcsDocumentApp` owns the store directly and
+/// commands don't yet carry a capability grant model (mirrors actions' current state).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommandContext {
+    pub invocation: CommandInvocation,
+    pub view_state: super::ViewState,
+}
+//#endregion 🔖Invocation
 
 //#region 🔖Sync
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -4750,7 +4880,7 @@ mod app_document_tests {
                 label: "Edit".into(),
                 tools: Vec::new(),
                 layout_id: None,
-                actions: Vec::new(),
+                commands: Vec::new(),
             }),
             default_mode_id: "edit".into(),
             window_kinds: WindowKinds::one(WindowKindDefinition {
@@ -4772,6 +4902,7 @@ mod app_document_tests {
             keybindings: vec![],
             actions,
             tools: vec![],
+            commands: vec![],
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
@@ -4897,6 +5028,36 @@ mod app_document_tests {
     }
 
     #[test]
+    fn command_definition_round_trips_camel_case_with_defaults() {
+        let command = CommandDefinition::new("os.setThemeId", "Set Theme", CommandScope::Os, "appearance")
+            .with_args(vec![ActionArgDef::text("themeId", "Theme").required()]);
+        let json = serde_json::to_string(&command).unwrap();
+        assert!(json.contains("\"scope\":\"os\""), "{json}");
+        assert!(json.contains("\"category\":\"appearance\""), "{json}");
+        assert!(json.contains("\"inPalette\":true"), "{json}");
+        assert!(!json.contains("iconId"), "omitted when unset: {json}");
+        assert!(!json.contains("keys"), "omitted when unset: {json}");
+        let round: CommandDefinition = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, command);
+    }
+
+    #[test]
+    fn command_ref_only_resolves_mode_scope_commands() {
+        // 🎛️ CommandScope has no Ord/discriminant helper beyond PartialEq — this pins the four
+        // variants' camelCase wire tags so a future variant addition can't silently reorder them.
+        for (scope, tag) in [
+            (CommandScope::Os, "\"os\""),
+            (CommandScope::Plugin, "\"plugin\""),
+            (CommandScope::App, "\"app\""),
+            (CommandScope::Mode, "\"mode\""),
+        ] {
+            assert_eq!(serde_json::to_string(&scope).unwrap(), tag);
+        }
+        assert_eq!(CommandRef::new("mode.focus").as_str(), "mode.focus");
+        assert_eq!(CommandRef::from("mode.focus").as_str(), "mode.focus");
+    }
+
+    #[test]
     fn open_dialog_effect_round_trips_camel_case() {
         let effect = HostEffect::OpenDialog { dialog_id: "addObject".into(), args: None };
         let json = serde_json::to_string(&effect).unwrap();
@@ -4942,6 +5103,9 @@ mod app_document_tests {
         crate::ui::ActionRef::export().unwrap();
         crate::ui::ToolDefinition::export().unwrap();
         crate::ui::ToolRef::export().unwrap();
+        crate::ui::CommandScope::export().unwrap();
+        crate::ui::CommandDefinition::export().unwrap();
+        crate::ui::CommandRef::export().unwrap();
         crate::ui::ModeDefinition::export().unwrap();
         crate::ui::WindowKindDefinition::export().unwrap();
         crate::ui::PanelGroup::export().unwrap();
@@ -4988,8 +5152,8 @@ pub use platform::{PanelVisibility, Platform, PlatformSpec};
 pub use ui::*;
 pub use ui::kernel::{
     ActorId, AppEvent, AppInstanceId, AssetHandle, Capability, CapabilityGrant, CapabilityRequirement,
-    CapabilityToken, ActionContext, ActionDef, ActionId, ActionInvocation, ActionInvocationId,
-    ActionRequest, ActionResult, Diagnostic, HostEffect, HubClientFrame, HubServerFrame, HybridLogicalTimestamp, IconRenderExportItem, InverseOperation,
+    CapabilityToken, ActionContext, ActionDef, ActionId, ActionInvocation, CommandContext, CommandId, CommandInvocation,
+    ActionRequest, InvocationId, InvocationResult, Diagnostic, HostEffect, HubClientFrame, HubServerFrame, HybridLogicalTimestamp, IconRenderExportItem, InverseOperation,
     InsertResult, KernelOperation, MergeStrategyKind, DocumentDiff, DocumentHandle, DocumentId, DocumentKind,
     DocumentVersion, OpDag, OpDagError, OpEnvelope, OperationId, PayloadHash, PhysicalSize, PluginInstanceId, PresencePeer,
     ResourceId, ResourceKind, Appearance, Rights, SchemaId, SchemaVersion, Scope, UndoGroup, UndoPolicy,

@@ -1,0 +1,14 @@
+{
+  "title": "Generalize Corner Panels To Panels With Middle Anchors",
+  "emoji": "🧩",
+  "status": "closed",
+  "description": "Generalize the four corner panels (top-left, top-right, bottom-left, bottom-right) into a six-anchor panel system that also supports top-middle and bottom-middle panels docked in the navbar/footer center. Middle panels grow both left and right (centered, translateX(-50%)) and are resizable from both edges, unlike corner panels which grow in one horizontal direction and resize from a single inner edge. All panels still grow in exactly one vertical direction. Refactor PanelCorner/PANEL_CORNERS/CornerPanel/PanelDock/flowFromCorner and all shell state, persistence (bump DockSkeleton/DockUiState to version 2), DnD hit-testing, hotkeys, Rust PanelGroup.corner()/wgpu fold, tests, and Storybook stories accordingly. Delete the unused legacy Panel/LeftPanel/RightPanel/MiddlePanel/BottomPanel family in ui/js/react/index.tsx (only consumed by stories) so CornerPanel can be renamed to Panel. No migration code — stale v1 localStorage blobs must self-discard via the version gate.",
+  "summary": "Generalized the four corner panels into a six-anchor panel system (top-left/top-middle/top-right/bottom-left/bottom-middle/bottom-right). Middle panels center via translateX(-50%), grow both horizontal directions, and resize from two independent edges (2x pointer-delta each) vs. a corner panel's single inner-edge 1x handle; all panels still grow in exactly one vertical direction. Renamed PanelCorner-\u003ePanelAnchor, CornerPanel-\u003ePanel throughout ui/js/react, os-shell state/reducer/persistence, and the Rust PanelGroup contract (.corner()-\u003e.anchor()); bumped DockSkeleton/DockUiState to version 2 so stale v1 localStorage self-discards (no migration code). Added an empty-anchor drag-and-drop placeholder (PanelEmptyDockZone) so a user can drop a tab into a previously-empty middle anchor. Deleted the unused legacy Panel/LeftPanel/RightPanel/MiddlePanel/BottomPanel component family (only consumed by Storybook) to free the Panel name. Updated Storybook stories and added a jsdom PointerEvent + pointer-capture polyfill needed to test drag-based resize. Verified: ui-react tests 257/271 passing (14 pre-existing unrelated failures confirmed via git stash against baseline), framework-core JS+Rust tests all passing, framework-renderer-react 149/149 passing, no new TypeScript errors, and cargo check for framework-core + framework-renderer-wgpu crates completes clean in 41m42s with zero errors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1995"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪1898f1cb9f3d4ad6a506e9b20436c5c7"
+  ]
+}

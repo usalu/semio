@@ -4937,15 +4937,13 @@ pub mod d3 {
     fn puzzle3d_fill_count_measure(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession) -> WindowMeasure {
         let progress: Value = serde_json::from_str(&precompute.fill_progress()).unwrap_or(Value::Null);
         let done = progress.get("done").and_then(Value::as_bool).unwrap_or(true);
-        let built_count = progress.get("count").and_then(Value::as_u64).unwrap_or(0) as u32;
+        let available_count = progress.get("count").and_then(Value::as_u64).unwrap_or(0) as u32;
         let label = if done {
-            format!("Fill {}", envelope.runtime.fill_count)
+            format!("Fill {} of {}", envelope.runtime.fill_count.min(available_count), available_count)
         } else {
-            let max_count = progress.get("maxCount").and_then(Value::as_u64).unwrap_or(PUZZLE3D_FILL_COUNT_MAX as u64);
-            format!("Fill {} (building {built_count}/{max_count})", envelope.runtime.fill_count)
+            format!("Fill {} of {} (planning)", envelope.runtime.fill_count.min(available_count), available_count)
         };
-        let max = if done { PUZZLE3D_FILL_COUNT_MAX as f64 } else { (built_count.max(envelope.runtime.fill_count)) as f64 };
-        WindowMeasure::Slider { id: "puzzle3d-fill-count".into(), label: Some(label), value: envelope.runtime.fill_count as f64, min: 0.0, max, step: Some(1.0), on_change: puzzle3d_action("setFillCount", None) }
+        WindowMeasure::Slider { id: "puzzle3d-fill-count".into(), label: Some(label), value: envelope.runtime.fill_count.min(available_count) as f64, min: 0.0, max: available_count as f64, step: Some(1.0), on_change: puzzle3d_action("setFillCount", None) }
     }
 
     /// 🧊 Fill/edit-volumes mode picker measure — replaces the retired `puzzle3d_voxel_mode_toggle`. A
@@ -5098,7 +5096,10 @@ pub mod d3 {
             let before = doc.projection.clone();
             let active_tool_initial = view_state.active_tool_id.as_deref().unwrap_or(PUZZLE3D_DEFAULT_TOOL).to_string();
             let mut envelope = scene_from_projection(&before, self.runtime.clone(), &active_tool_initial);
-            sync_precompute_session(&mut self.precompute, &envelope);
+            let preserve_fill_plan = matches!(action, "setFillCount" | "fillBuildTick") && envelope.active_tool == "fill";
+            if !preserve_fill_plan {
+                sync_precompute_session(&mut self.precompute, &envelope);
+            }
             match action {
                 "setFixtureJson" => {
                     if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
@@ -5648,8 +5649,9 @@ pub mod d3 {
                     }
                 }
                 "setFillCount" => {
-                    drive_precompute(&mut self.precompute, &envelope);
-                    let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_f64()).map(|value| value.round().max(0.0) as u32).unwrap_or(0).min(PUZZLE3D_FILL_COUNT_MAX);
+                    self.precompute.precompute_step(8);
+                    let available_count = serde_json::from_str::<Value>(&self.precompute.fill_progress()).ok().and_then(|progress| progress.get("count").and_then(Value::as_u64)).unwrap_or(0) as u32;
+                    let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_f64()).map(|value| value.round().max(0.0) as u32).unwrap_or(0).min(available_count);
                     envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, count);
                 }
                 "setBrushPlacementOverlapBudget" => {
@@ -5724,7 +5726,7 @@ pub mod d3 {
                     drive_precompute(&mut self.precompute, &envelope);
                 }
                 "fillBuildTick" => {
-                    drive_precompute(&mut self.precompute, &envelope);
+                    self.precompute.precompute_step(8);
                     let progress: Value = serde_json::from_str(&self.precompute.fill_progress()).unwrap_or(Value::Null);
                     let done = progress.get("done").and_then(Value::as_bool).unwrap_or(true);
                     if done && envelope.active_tool == "fill" && envelope.runtime.fill_count == 0 {
@@ -6183,6 +6185,14 @@ pub mod d3 {
             })
         }
 
+        fn find_measure_slider_max(measures: &[WindowMeasure], slider_id: &str) -> Option<f64> {
+            measures.iter().find_map(|measure| match measure {
+                WindowMeasure::Slider { id, max, .. } if id == slider_id => Some(*max),
+                WindowMeasure::Group { children, .. } => find_measure_slider_max(children, slider_id),
+                _ => None,
+            })
+        }
+
         /// 🎯 Top-level tool tag of a [`WindowMeasure::Group`] by id, or `None` when the group is absent.
         fn measure_group_tag(measures: &[WindowMeasure], group_id: &str) -> Option<Option<String>> {
             measures.iter().find_map(|measure| match measure {
@@ -6315,6 +6325,10 @@ pub mod d3 {
                 None => panic!("expected a fill-count slider in the fill Tool Options"),
             }
             assert!(object_count(&app) > object_count_before, "starting the fill count must append a generated object to the document");
+            let available_count = find_measure_slider_max(window_measures, "puzzle3d-fill-count").expect("expected a fill-count slider range") as usize;
+            assert!(available_count > 0, "the fill slider range must expose collision-free compatible placements");
+            app.handle_action("setFillCount", Some(&json!({ "value": available_count })), &fill_view, &meta("local")).expect("setFillCount");
+            assert_eq!(object_count(&app), object_count_before + available_count, "the fill slider must materialize exactly its available placement count");
         }
 
         #[test]

@@ -16,7 +16,7 @@ import {
   floatingFieldSurfaceClass,
   floatingMenuItemClass,
   floatingMenuSurfaceClass,
-  floatingPanelAsideClass,
+  floatingPaneAsideClass,
   floatingTagClass,
   floatingTagOffClass,
   floatingTagOnClass,
@@ -4537,7 +4537,7 @@ export interface InteractionReplProps extends InteractionReplHostValues, Interac
   readonly onReferenceRelocate?: (payload: WorldReferenceRelocatePayload) => void;
 }
 
-/** @emoji 💬 One interaction a window can start from the floating panel while idle. */
+/** @emoji 💬 One interaction a window can start from the floating pane while idle. */
 export interface InteractionReplEngagementInteraction {
   readonly id: string;
   readonly key: string;
@@ -4600,7 +4600,7 @@ export function buildEngagementControlFromResolved(
   };
 }
 
-/** @emoji 💬 Inputs for {@link buildInteractionReplEngagement} (interaction state + callbacks for the floating panel). */
+/** @emoji 💬 Inputs for {@link buildInteractionReplEngagement} (interaction state + callbacks for the floating pane). */
 export interface InteractionReplEngagementInputs {
   readonly showEngagement: boolean;
   readonly boundInteractionSession: boolean;
@@ -6000,7 +6000,7 @@ export function InteractionRepl({
         ) : null}
       </div>
       {showAside ? (
-        <aside className={cn(floatingPanelAsideClass, fillHost ? "max-h-[45%] w-full shrink-0 border-l-0 border-t" : "w-layout-cad-menu-lg shrink-0")} style={asideStyle}>
+        <aside className={cn(floatingPaneAsideClass, fillHost ? "max-h-[45%] w-full shrink-0 border-l-0 border-t" : "w-layout-cad-menu-lg shrink-0")} style={asideStyle}>
           <strong className="text-sm font-semibold">Editor</strong>
           <div className="flex flex-wrap gap-half">
             {transitionRows.map((row) => (
@@ -6068,7 +6068,7 @@ export function InteractionRepl({
           </div>
           {asideExtra}
           {onDocumentModelChange ? (
-            <SelectionAttributesPanel
+            <SelectionAttributesPane
               model={documentModel.model}
               activeModelDefinitionId={activeModelDefinitionId ?? defaultModelDefinitionId()}
               selection={displayedSelectionTargets}
@@ -6331,7 +6331,7 @@ export function InteractionReplViewport(props: InteractionReplProps): ReactNode 
   return <InteractionRepl {...props} showAside={false} fillHost />;
 }
 
-export interface SelectionAttributesPanelProps {
+export interface SelectionAttributesPaneProps {
   readonly model: Model;
   readonly activeModelDefinitionId: string;
   readonly selection: readonly SelectionTarget[];
@@ -6340,7 +6340,7 @@ export interface SelectionAttributesPanelProps {
 }
 
 /** @emoji 🏷️ Edits {@link Model.metadata} fields for the primary selection using active model-definition attribute assets. */
-export function SelectionAttributesPanel({ model, activeModelDefinitionId, selection, selectionCount, onModelChange }: SelectionAttributesPanelProps): ReactNode {
+export function SelectionAttributesPane({ model, activeModelDefinitionId, selection, selectionCount, onModelChange }: SelectionAttributesPaneProps): ReactNode {
   const target = reactHostPort.useMemo(() => primaryAttributeSelectionTarget(selection), [selection]);
   const definitions = reactHostPort.useMemo(() => (target ? listAttributeDefinitionsForModelDefinitionEntity(activeModelDefinitionId, target.kind) : []), [activeModelDefinitionId, target]);
   if (!target) {
@@ -6461,7 +6461,7 @@ export function SelectionAttributesPanel({ model, activeModelDefinitionId, selec
   );
 }
 
-export interface SelectionPropertiesPanelProps {
+export interface SelectionPropertiesPaneProps {
   readonly model: Model;
   readonly kernel: SpatialKernel;
   readonly activeModelDefinitionId: string;
@@ -6470,7 +6470,7 @@ export interface SelectionPropertiesPanelProps {
 }
 
 /** @emoji 📐 Displays derived property values for the primary object selection using scoped property definitions. */
-export interface ModelStatsPanelProps {
+export interface ModelStatsPaneProps {
   readonly model: Model;
   readonly kernel: SpatialKernel;
   readonly activeModelDefinitionId: string;
@@ -6479,7 +6479,7 @@ export interface ModelStatsPanelProps {
 }
 
 /** @emoji 📊 Displays live model-definition stats for whole-model and selection scopes. */
-export function ModelStatsPanel({ model, kernel, activeModelDefinitionId, selection, selectionCount }: ModelStatsPanelProps): ReactNode {
+export function ModelStatsPane({ model, kernel, activeModelDefinitionId, selection, selectionCount }: ModelStatsPaneProps): ReactNode {
   const definitions = reactHostPort.useMemo(() => listStatDefinitionsForModelDefinition(activeModelDefinitionId), [activeModelDefinitionId]);
   const selectionObjects = reactHostPort.useMemo(() => {
     const objectTargets = selection.filter((row) => row.kind === "object");
@@ -6556,7 +6556,7 @@ export function ModelStatsPanel({ model, kernel, activeModelDefinitionId, select
   );
 }
 
-export function SelectionPropertiesPanel({ model, kernel, activeModelDefinitionId, selection, selectionCount }: SelectionPropertiesPanelProps): ReactNode {
+export function SelectionPropertiesPane({ model, kernel, activeModelDefinitionId, selection, selectionCount }: SelectionPropertiesPaneProps): ReactNode {
   const objectRow = reactHostPort.useMemo(() => {
     const objectTarget = selection.find((row) => row.kind === "object");
     return objectTarget ? (model.objects[objectTarget.id] ?? null) : null;
@@ -7512,7 +7512,7 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("ModelStatsPanel", () => {
+  describe("ModelStatsPane", () => {
     it("resolves shape stat labels for the active model definition", () => {
       const definitions = listStatDefinitionsForModelDefinition(defaultModelDefinitionId());
       const geometry = definitions.find((row) => row.id === "spatial.shape.geometry");

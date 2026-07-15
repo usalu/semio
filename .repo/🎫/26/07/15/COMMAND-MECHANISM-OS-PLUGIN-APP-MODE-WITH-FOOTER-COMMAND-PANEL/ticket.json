@@ -1,0 +1,13 @@
+{
+  "title": "Command Mechanism (Os/Plugin/App/Mode) With Footer Command Panel",
+  "emoji": "🎛️",
+  "status": "open",
+  "description": "Introduce a command mechanism in ui, framework, etc. A command is scoped at os, plugin, app, or mode level (no window-level commands — tools and actions remain window-scoped). Commands may emit operations (VCS-tracked document changes). Introduce a command panel in the footer that shows all commands, categorized with categories expanding like tabs; when a command needs input, show the input form inside the command panel on the next hierarchy level above the command.\n\nPlan approved and on disk at /Users/ueli/.claude/plans/introduce-a-command-mechanism-refactored-harp.md. Key points: rename ActionResult-\u003eInvocationResult as a mechanical prerequisite; add CommandDefinition/CommandScope/CommandRef to framework/core/rs; add handle_command to the plugin trait/ABI (WIT + guest + host + TS bridge); remove ModeDefinition.actions in favor of ModeDefinition.commands; add a commandPanel slice + resolveCommands registry + os built-in commands + footer wiring in framework/renderer/react/os-shell.tsx; add a CommandPanel region to ui/js/react/index.tsx; migrate one app to real commands as reference (presentation app-scope, lowpoly mode-scope); extend existing test files only.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1996"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪2e2b7f1ab3e947129e46095a2b2be00c"
+  ]
+}

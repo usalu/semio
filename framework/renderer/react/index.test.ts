@@ -2,7 +2,7 @@ import { createElement, useState, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { deriveToolNodes, resolveWindowActions, partitionWindowMeasures, type ActionArgDef, type ActionDefinition, type AppDefinition, type AppWindowKindDefinition, type ToolDefinition, type WindowMeasure } from "@semio-tech/framework-core";
+import { deriveToolNodes, resolveWindowActions, partitionWindowMeasures, type ActionArgDef, type ActionDefinition, type AppDefinition, type AppModeDefinition, type AppWindowKindDefinition, type CommandDefinition, type ToolDefinition, type WindowMeasure } from "@semio-tech/framework-core";
 import { Canvas2dHost, worldToScreenLogical } from "./components/canvas-2d-host.tsx";
 import {
   Puzzle2dBoardHost,
@@ -68,7 +68,9 @@ import {
   actionRequiresStagedForm,
   resolveKeybindingIntent,
   resolveToolActivation,
-  WindowActionPanel,
+  WindowActionPane,
+  resolveCommands,
+  commandCategories,
   shellReducer,
   sortToolNodes,
   spawnedWindowChromeForKind,
@@ -162,28 +164,46 @@ describe("shell store reducer", () => {
 
   it("toggles the layout slice via an updater function", () => {
     const state = baseState();
-    const opened = shellReducer(state, { type: "SET_CORNER_PANEL_VISIBLE", corner: "top-left", value: true });
-    const toggled = shellReducer(opened, { type: "SET_CORNER_PANEL_VISIBLE", corner: "top-left", value: (prev) => !prev });
-    expect(opened.layout.cornerPanels["top-left"].visible).toBe(true);
-    expect(toggled.layout.cornerPanels["top-left"].visible).toBe(false);
+    const opened = shellReducer(state, { type: "SET_PANEL_VISIBLE", anchor: "top-left", value: true });
+    const toggled = shellReducer(opened, { type: "SET_PANEL_VISIBLE", anchor: "top-left", value: (prev) => !prev });
+    expect(opened.layout.panels["top-left"].visible).toBe(true);
+    expect(toggled.layout.panels["top-left"].visible).toBe(false);
     expect(toggled.overlays).toBe(opened.overlays);
   });
 
-  it("resets the dock override, every corner's active path/visible/size, drill-down memory, and tree expansion via RESET_DOCK", () => {
+  it("toggles a middle anchor via SET_PANEL_VISIBLE the same way as a corner", () => {
     const state = baseState();
-    const rearranged = shellReducer(state, { type: "SET_DOCK_OVERRIDE", value: { version: 1, corners: { "top-left": [{ id: "moved" }], "top-right": [], "bottom-left": [], "bottom-right": [] } } });
-    const withPath = shellReducer(rearranged, { type: "SET_CORNER_PANEL_PATH", corner: "top-left", value: ["moved"] });
-    const withVisible = shellReducer(withPath, { type: "SET_CORNER_PANEL_VISIBLE", corner: "top-left", value: true });
-    const withSize = shellReducer(withVisible, { type: "SET_CORNER_PANEL_SIZE", corner: "top-left", value: 999 });
+    const opened = shellReducer(state, { type: "SET_PANEL_VISIBLE", anchor: "top-middle", value: true });
+    expect(opened.layout.panels["top-middle"].visible).toBe(true);
+    expect(opened.layout.panels["top-left"].visible).toBe(state.layout.panels["top-left"].visible);
+  });
+
+  it("resets the dock override, every anchor's active path/visible/size, drill-down memory, and tree expansion via RESET_DOCK", () => {
+    const state = baseState();
+    const rearranged = shellReducer(state, {
+      type: "SET_DOCK_OVERRIDE",
+      value: { version: 2, anchors: { "top-left": [{ id: "moved" }], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [] } },
+    });
+    const withPath = shellReducer(rearranged, { type: "SET_PANEL_PATH", anchor: "top-left", value: ["moved"] });
+    const withVisible = shellReducer(withPath, { type: "SET_PANEL_VISIBLE", anchor: "top-left", value: true });
+    const withSize = shellReducer(withVisible, { type: "SET_PANEL_SIZE", anchor: "top-left", value: 999 });
     const withMemory = shellReducer(withSize, { type: "SET_PANEL_PATH_MEMORY", value: { moved: "child" } });
     const withTreeOpen = shellReducer(withMemory, { type: "SET_TREE_OPEN_STATE", id: "unit:section", open: true });
     const reset = shellReducer(withTreeOpen, { type: "RESET_DOCK" });
     expect(reset.layout.dockOverride).toBeNull();
-    expect(reset.layout.cornerPanels["top-left"].path).toEqual([]);
-    expect(reset.layout.cornerPanels["top-left"].visible).toBe(false);
-    expect(reset.layout.cornerPanels["top-left"].size).toBe(state.layout.cornerPanels["top-left"].size);
+    expect(reset.layout.panels["top-left"].path).toEqual([]);
+    expect(reset.layout.panels["top-left"].visible).toBe(false);
+    expect(reset.layout.panels["top-left"].size).toBe(state.layout.panels["top-left"].size);
     expect(reset.layout.panelPathMemory).toEqual({});
     expect(reset.layout.treeOpenStates).toEqual({});
+  });
+
+  it("HYDRATE_DOCK_UI restores a persisted size for the top-middle anchor", () => {
+    const state = baseState();
+    const hydrated = shellReducer(state, { type: "HYDRATE_DOCK_UI", value: { version: 2, anchors: { "top-middle": { visible: true, size: 420 } } } });
+    expect(hydrated.layout.panels["top-middle"].visible).toBe(true);
+    expect(hydrated.layout.panels["top-middle"].size).toBe(420);
+    expect(hydrated.layout.panels["top-left"]).toEqual(state.layout.panels["top-left"]);
   });
 
   it("updates the uiPrefs slice and leaves the sync slice referentially unchanged", () => {
@@ -196,33 +216,59 @@ describe("shell store reducer", () => {
   it("action-panel slice: fold/expand/stage/reset/active-tool update only their own keys and preserve identity on no-ops", () => {
     const state = baseState();
 
-    const folded = shellReducer(state, { type: "SET_ACTION_PANEL_FOLDED", windowId: "w1", value: false });
-    expect(folded.actionPanel.foldedByWindowId).toEqual({ w1: false });
+    const folded = shellReducer(state, { type: "SET_ACTION_PANE_FOLDED", windowId: "w1", value: false });
+    expect(folded.actionPane.foldedByWindowId).toEqual({ w1: false });
     expect(folded.layout).toBe(state.layout);
     // no-op fold keeps the whole slice referentially stable
-    expect(shellReducer(folded, { type: "SET_ACTION_PANEL_FOLDED", windowId: "w1", value: false }).actionPanel).toBe(folded.actionPanel);
+    expect(shellReducer(folded, { type: "SET_ACTION_PANE_FOLDED", windowId: "w1", value: false }).actionPane).toBe(folded.actionPane);
 
-    const expanded = shellReducer(folded, { type: "SET_ACTION_PANEL_EXPANDED", windowId: "w1", value: "extrude" });
-    expect(expanded.actionPanel.expandedByWindowId).toEqual({ w1: "extrude" });
-    expect(shellReducer(expanded, { type: "SET_ACTION_PANEL_EXPANDED", windowId: "w1", value: "extrude" }).actionPanel).toBe(expanded.actionPanel);
+    const expanded = shellReducer(folded, { type: "SET_ACTION_PANE_EXPANDED", windowId: "w1", value: "extrude" });
+    expect(expanded.actionPane.expandedByWindowId).toEqual({ w1: "extrude" });
+    expect(shellReducer(expanded, { type: "SET_ACTION_PANE_EXPANDED", windowId: "w1", value: "extrude" }).actionPane).toBe(expanded.actionPane);
 
     const staged = shellReducer(expanded, { type: "STAGE_ACTION_ARG", windowId: "w1", actionId: "extrude", argId: "depth", value: 3 });
-    expect(staged.actionPanel.stagedArgsByKey).toEqual({ "w1:extrude": { depth: 3 } });
+    expect(staged.actionPane.stagedArgsByKey).toEqual({ "w1:extrude": { depth: 3 } });
     const stagedMore = shellReducer(staged, { type: "STAGE_ACTION_ARG", windowId: "w1", actionId: "extrude", argId: "segments", value: 2 });
-    expect(stagedMore.actionPanel.stagedArgsByKey["w1:extrude"]).toEqual({ depth: 3, segments: 2 });
-    expect(shellReducer(stagedMore, { type: "STAGE_ACTION_ARG", windowId: "w1", actionId: "extrude", argId: "depth", value: 3 }).actionPanel).toBe(stagedMore.actionPanel);
+    expect(stagedMore.actionPane.stagedArgsByKey["w1:extrude"]).toEqual({ depth: 3, segments: 2 });
+    expect(shellReducer(stagedMore, { type: "STAGE_ACTION_ARG", windowId: "w1", actionId: "extrude", argId: "depth", value: 3 }).actionPane).toBe(stagedMore.actionPane);
 
     const reset = shellReducer(stagedMore, { type: "RESET_ACTION_ARGS", windowId: "w1", actionId: "extrude" });
-    expect(reset.actionPanel.stagedArgsByKey["w1:extrude"]).toBeUndefined();
+    expect(reset.actionPane.stagedArgsByKey["w1:extrude"]).toBeUndefined();
     // reset keeps the panel expanded
-    expect(reset.actionPanel.expandedByWindowId["w1"]).toBe("extrude");
-    expect(shellReducer(reset, { type: "RESET_ACTION_ARGS", windowId: "w1", actionId: "extrude" }).actionPanel).toBe(reset.actionPanel);
+    expect(reset.actionPane.expandedByWindowId["w1"]).toBe("extrude");
+    expect(shellReducer(reset, { type: "RESET_ACTION_ARGS", windowId: "w1", actionId: "extrude" }).actionPane).toBe(reset.actionPane);
 
     const activated = shellReducer(reset, { type: "SET_ACTIVE_TOOL", windowId: "w1", toolId: "pen" });
-    expect(activated.actionPanel.activeToolByWindowId).toEqual({ w1: "pen" });
-    expect(shellReducer(activated, { type: "SET_ACTIVE_TOOL", windowId: "w1", toolId: "pen" }).actionPanel).toBe(activated.actionPanel);
+    expect(activated.actionPane.activeToolByWindowId).toEqual({ w1: "pen" });
+    expect(shellReducer(activated, { type: "SET_ACTIVE_TOOL", windowId: "w1", toolId: "pen" }).actionPane).toBe(activated.actionPane);
     const deactivated = shellReducer(activated, { type: "SET_ACTIVE_TOOL", windowId: "w1", toolId: null });
-    expect(deactivated.actionPanel.activeToolByWindowId["w1"]).toBeNull();
+    expect(deactivated.actionPane.activeToolByWindowId["w1"]).toBeNull();
+  });
+
+  it("command-panel slice: category switch collapses expansion; stage/reset update only their own keys and preserve identity on no-ops", () => {
+    const state = baseState();
+
+    const opened = shellReducer(state, { type: "SET_COMMAND_CATEGORY", value: "appearance" });
+    expect(opened.commandPanel.activeCategoryId).toBe("appearance");
+    expect(opened.layout).toBe(state.layout);
+
+    const expanded = shellReducer(opened, { type: "SET_COMMAND_EXPANDED", value: "os.setThemeId" });
+    expect(expanded.commandPanel.expandedCommandId).toBe("os.setThemeId");
+    expect(shellReducer(expanded, { type: "SET_COMMAND_EXPANDED", value: "os.setThemeId" }).commandPanel).toBe(expanded.commandPanel);
+
+    // Switching category collapses any expanded arg form — the next hierarchy level up only makes
+    // sense under its own category's command list.
+    const switched = shellReducer(expanded, { type: "SET_COMMAND_CATEGORY", value: "layout" });
+    expect(switched.commandPanel.activeCategoryId).toBe("layout");
+    expect(switched.commandPanel.expandedCommandId).toBeNull();
+
+    const staged = shellReducer(switched, { type: "STAGE_COMMAND_ARG", commandId: "os.setThemeId", argId: "themeId", value: "semio" });
+    expect(staged.commandPanel.stagedArgsByCommandId).toEqual({ "os.setThemeId": { themeId: "semio" } });
+    expect(shellReducer(staged, { type: "STAGE_COMMAND_ARG", commandId: "os.setThemeId", argId: "themeId", value: "semio" }).commandPanel).toBe(staged.commandPanel);
+
+    const reset = shellReducer(staged, { type: "RESET_COMMAND_ARGS", commandId: "os.setThemeId" });
+    expect(reset.commandPanel.stagedArgsByCommandId["os.setThemeId"]).toBeUndefined();
+    expect(shellReducer(reset, { type: "RESET_COMMAND_ARGS", commandId: "os.setThemeId" }).commandPanel).toBe(reset.commandPanel);
   });
 });
 
@@ -380,13 +426,13 @@ describe("framework plugin runtime", () => {
     expect(handle.manifest.pluginId).toBe("mock");
   });
 
-  it("parses a typed ActionResponse, including requestedEffects, from a plugin handle-action response", async () => {
-    const { parseActionResponse } = await import("@semio-tech/framework-core");
-    const response = parseActionResponse(
+  it("parses a typed InvocationResponse, including requestedEffects, from a plugin handle-action response", async () => {
+    const { parseInvocationResponse } = await import("@semio-tech/framework-core");
+    const response = parseInvocationResponse(
       JSON.stringify({
         output: null,
         operations: [{ diff: { payload: { schemaId: "draw.op", document: { id: "forest" } } } }],
-        inverseGroup: { actionId: "setActiveExample:1:0", operations: [], inverseOperations: [] },
+        inverseGroup: { invocationId: "setActiveExample:1:0", operations: [], inverseOperations: [] },
         requestedEffects: [{ navigate: { uri: "/studios/forest" } }],
       }),
     );
@@ -394,10 +440,10 @@ describe("framework plugin runtime", () => {
     expect(response.requestedEffects).toEqual([{ navigate: { uri: "/studios/forest" } }]);
   });
 
-  it("falls back to an empty ActionResponse for malformed handle-action JSON", async () => {
-    const { parseActionResponse } = await import("@semio-tech/framework-core");
-    expect(parseActionResponse("not json")).toEqual({ output: null, operations: [], inverseGroup: { actionId: "", operations: [], inverseOperations: [] } });
-    expect(parseActionResponse(JSON.stringify({ output: null }))).toEqual({ output: null, operations: [], inverseGroup: { actionId: "", operations: [], inverseOperations: [] } });
+  it("falls back to an empty InvocationResponse for malformed handle-action JSON", async () => {
+    const { parseInvocationResponse } = await import("@semio-tech/framework-core");
+    expect(parseInvocationResponse("not json")).toEqual({ output: null, operations: [], inverseGroup: { invocationId: "", operations: [], inverseOperations: [] } });
+    expect(parseInvocationResponse(JSON.stringify({ output: null }))).toEqual({ output: null, operations: [], inverseGroup: { invocationId: "", operations: [], inverseOperations: [] } });
   });
 
   it("serializes concurrent plugin wasm handle calls", async () => {
@@ -414,7 +460,7 @@ describe("framework plugin runtime", () => {
         maxInFlight = Math.max(maxInFlight, inFlight);
         await new Promise((resolve) => setTimeout(resolve, 5));
         inFlight -= 1;
-        return { output: null, operations: [], inverseGroup: { actionId: "", operations: [], inverseOperations: [] } };
+        return { output: null, operations: [], inverseGroup: { invocationId: "", operations: [], inverseOperations: [] } };
       },
       render: async () => ({ type: "text", value: "x" }),
       refreshUi: async () => ({}),
@@ -1122,13 +1168,13 @@ describe("framework renderer hosts", () => {
     unregisterPuzzle2dBoardPeer("mirror-test", "pane.sibling");
   });
 
-  it("notifies peers when a gesture ends, skipping the source pane", () => {
-    const ended: string[] = [];
-    registerPuzzle2dBoardPeer("notify-test", "pane.source", { session: {} as never, onPeerGestureEnded: () => ended.push("pane.source") });
-    registerPuzzle2dBoardPeer("notify-test", "pane.sibling", { session: {} as never, onPeerGestureEnded: () => ended.push("pane.sibling") });
+  it("notifies peers when a gesture ends, skipping the source pane, passing whether it flushed", () => {
+    const ended: { pane: string; flushed: boolean }[] = [];
+    registerPuzzle2dBoardPeer("notify-test", "pane.source", { session: {} as never, onPeerGestureEnded: (flushed) => ended.push({ pane: "pane.source", flushed }) });
+    registerPuzzle2dBoardPeer("notify-test", "pane.sibling", { session: {} as never, onPeerGestureEnded: (flushed) => ended.push({ pane: "pane.sibling", flushed }) });
 
-    notifyPuzzle2dPeersGestureEnded("notify-test", "pane.source");
-    expect(ended).toEqual(["pane.sibling"]);
+    notifyPuzzle2dPeersGestureEnded("notify-test", "pane.source", true);
+    expect(ended).toEqual([{ pane: "pane.sibling", flushed: true }]);
 
     unregisterPuzzle2dBoardPeer("notify-test", "pane.source");
     unregisterPuzzle2dBoardPeer("notify-test", "pane.sibling");
@@ -2430,7 +2476,7 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
   function Harness({ actions, onExecute, disabled }: { actions: readonly ActionDefinition[]; onExecute: (descriptor: unknown) => void; disabled?: boolean }): ReactElement {
     const [expanded, setExpanded] = useState<string | null>(null);
     const [staged, setStaged] = useState<Record<string, Record<string, unknown>>>({});
-    return createElement(WindowActionPanel, {
+    return createElement(WindowActionPane, {
       windowId: "w1",
       controllerId: "c",
       actions,
@@ -2605,5 +2651,48 @@ describe("registry-derived tools and activation (P5)", () => {
     const history = frameworkHistoryToolNodes({ controllerId: "draw", actions: actionsApp.actions });
     expect(history).toHaveLength(1);
     expect(history[0]).toMatchObject({ id: "undo", kind: "button", category: "history", onPress: { controllerId: "draw", action: "undo" } });
+  });
+});
+
+describe("resolveCommands / commandCategories (footer command panel registry)", () => {
+  const osCommands: CommandDefinition[] = [{ id: "os.setThemeId", label: "Set Theme", scope: "os", category: "appearance", inPalette: true, args: [] }];
+  const pluginManifest = { commands: [{ id: "plugin.export", label: "Export", scope: "plugin", category: "document", inPalette: true, args: [] }] as CommandDefinition[] };
+  const app = {
+    commands: [
+      { id: "app.resetGrid", label: "Reset Grid", scope: "app", category: "document", inPalette: true, args: [] },
+      { id: "mode.focus", label: "Focus", scope: "mode", category: "view", inPalette: true, args: [] },
+      { id: "mode.paintOnly", label: "Paint Only", scope: "mode", category: "view", inPalette: true, args: [] },
+    ] as CommandDefinition[],
+    modes: [
+      { id: "edit", label: "Edit", commands: ["mode.focus"] },
+      { id: "paint", label: "Paint", commands: ["mode.paintOnly"] },
+    ] as AppModeDefinition[],
+  };
+
+  it("aggregates os + plugin + app-scope + active-mode's mode-scope commands, excluding other modes' mode-scope commands", () => {
+    const resolved = resolveCommands(osCommands, pluginManifest, app, "edit");
+    expect(resolved.map((entry) => entry.definition.id)).toEqual(["os.setThemeId", "plugin.export", "app.resetGrid", "mode.focus"]);
+    expect(resolved.find((entry) => entry.definition.id === "os.setThemeId")?.source).toEqual({ kind: "os" });
+    expect(resolved.find((entry) => entry.definition.id === "app.resetGrid")?.source).toEqual({ kind: "app" });
+    expect(resolved.find((entry) => entry.definition.id === "mode.focus")?.source).toEqual({ kind: "mode", modeId: "edit" });
+  });
+
+  it("switching the active mode swaps which mode-scope commands resolve", () => {
+    const resolved = resolveCommands(osCommands, pluginManifest, app, "paint");
+    expect(resolved.map((entry) => entry.definition.id)).toEqual(["os.setThemeId", "plugin.export", "app.resetGrid", "mode.paintOnly"]);
+  });
+
+  it("resolves only os commands with no session (null plugin manifest / app)", () => {
+    const resolved = resolveCommands(osCommands, null, null, "");
+    expect(resolved.map((entry) => entry.definition.id)).toEqual(["os.setThemeId"]);
+  });
+
+  it("commandCategories orders and dedupes categories by first appearance", () => {
+    const resolved = resolveCommands(osCommands, pluginManifest, app, "edit");
+    expect(commandCategories(resolved)).toEqual([
+      { id: "appearance", label: "Appearance" },
+      { id: "document", label: "Document" },
+      { id: "view", label: "View" },
+    ]);
   });
 });

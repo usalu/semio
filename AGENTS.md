@@ -14,7 +14,6 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - You MUST register all executable commands there by following the existing order, grouping and naming.
 - You MUST work simultaneously with others on the same files.
   - You MUST NOT use any modifying git command such as `git commit`, `git stash`, `git stash pop`, `git checkout`, … because others will lose their work.
-  - You MUST NOT use `kill $(lsof -t -i:<port>)` because it kills the ide aswell.
   - You MUST edit the existing files.
   - You MUST NOT create new files for broken files.
 - You are working on a greenfield repo.

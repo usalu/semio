@@ -9,6 +9,7 @@ import {
   ButtonGroupItem,
   ChromeAwareWindowScrollSurface,
   COMPOSE_WINDOW_TEMPLATE_MIME,
+  CommandPanel,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -31,7 +32,7 @@ import {
   moveTreeUnitInDock,
   Navbar,
   NavbarExampleSelect,
-  PANEL_CORNERS,
+  PANEL_ANCHORS,
   PanelDockProvider,
   Popover,
   PopoverAnchor,
@@ -71,7 +72,7 @@ import {
   staticTreePanelDefinition,
   UiChromeLabelPolicyProvider,
   UI_MOBILE_MEDIA_QUERY,
-  useCornerPanelChromeHotkeys,
+  usePanelChromeHotkeys,
   useElementsSurfaceChrome,
   useMediaQuery,
   useActionHotkey,
@@ -120,7 +121,7 @@ import {
   type FuseResult,
   type ModeWindowDescriptor,
   type NavbarItem,
-  type PanelCorner,
+  type PanelAnchor,
   type PanelDock,
   type PanelTabDockMove,
   type PanelTabNode,
@@ -141,7 +142,7 @@ import { ICONS, type IconName } from "@semio-tech/ui-asset";
 import { declarativeTreeDragController, interpretUiNode, InterpretedUiNode, uiTreeNodeToTreePanelConfig } from "./ui-interpreter.tsx";
 import {
   DEFAULT_PLUGIN_REGISTRY,
-  type ActionResponse,
+  type InvocationResponse,
   type HostEffect,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -161,7 +162,7 @@ import {
   createBrowserStoragePort,
   createNamedLayout,
   type DockSkeleton,
-  type DockUiCornerState,
+  type DockUiPanelState,
   type DockUiState,
   loadPluginModule as loadCorePluginModule,
   loadPluginWasm as loadCorePluginWasm,
@@ -188,7 +189,9 @@ import {
   type ActionDefinition,
   type ActionDescriptor,
   type AppDefinition,
+  type AppModeDefinition,
   type AppWindowKindDefinition,
+  type CommandDefinition,
   type DerivedToolSpec,
   type ToolDefinition,
   type AppPanelTabDefinition,
@@ -306,6 +309,8 @@ export type PluginManifest = {
     readonly paramsBodyKey: string;
     readonly previewBodyKey: string;
   }[];
+  /** 🎛️ Plugin-scope commands this plugin exposes — apply whenever any of its apps is focused. */
+  readonly commands?: readonly CommandDefinition[];
 };
 
 type LoadedPluginState = {
@@ -385,34 +390,34 @@ type SpawnedWindowState = {
 /**
  * 🧰 Per-window Action rail (P1–P5) state: fold/expand chrome, locally-buffered staged arg values
  * (keyed `${windowId}:${actionId}`, never dispatched until Execute), and the host-owned active tool per
- * window (never a document field, never a VCS op). See {@link WindowActionPanel}.
+ * window (never a document field, never a VCS op). See {@link WindowActionPane}.
  */
-type ActionPanelState = {
+type ActionPaneState = {
   readonly foldedByWindowId: Readonly<Record<string, boolean>>;
   readonly expandedByWindowId: Readonly<Record<string, string | null>>;
   readonly stagedArgsByKey: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
   readonly activeToolByWindowId: Readonly<Record<string, string | null>>;
 };
 
-/** 🧰 Composite key into {@link ActionPanelState.stagedArgsByKey}. */
+/** 🧰 Composite key into {@link ActionPaneState.stagedArgsByKey}. */
 export function actionStageKey(windowId: string, actionId: string): string {
   return `${windowId}:${actionId}`;
 }
 
 type ExtraWindowInstance = { readonly id: string; readonly windowKindId: string; readonly title: string };
 
-/** 🧭 Per-corner fold/size/active-tab-path state for one of the four {@link CornerPanel}s. */
-type CornerPanelState = {
+/** 🧭 Per-anchor fold/size/active-tab-path state for one of the six {@link Panel}s. */
+type PanelState = {
   readonly visible: boolean;
   readonly size: number;
   readonly path: readonly string[];
 };
 
 type ShellLayoutState = {
-  readonly cornerPanels: Record<PanelCorner, CornerPanelState>;
+  readonly panels: Record<PanelAnchor, PanelState>;
   /** 🗄️ User-rearranged dock diff against `defaultDock`, persisted via `DockLayoutStore`; `null` means "use the computed default arrangement". */
   readonly dockOverride: DockSkeleton | null;
-  /** 🌱 Per-branch drill-down memory across every corner + mobile (see `progressPanelTabSelection`), persisted via `DockUiStateStore`. */
+  /** 🌱 Per-branch drill-down memory across every anchor + mobile (see `progressPanelTabSelection`), persisted via `DockUiStateStore`. */
   readonly panelPathMemory: Readonly<Record<string, string>>;
   /** 🌱 Persisted tree section/group expansion, namespaced per {@link PanelTreeUnit}, persisted via `DockUiStateStore`. */
   readonly treeOpenStates: Readonly<Record<string, boolean>>;
@@ -452,11 +457,23 @@ type SyncState = {
   readonly syncStatusByDocumentId: Readonly<Record<string, DocumentSyncStatus>>;
 };
 
+/**
+ * 🎛️ Footer command panel state: the active category tab (`null` = collapsed to the tab row), the
+ * command whose arg form is expanded one level above the command list, and locally-buffered staged
+ * arg values (never dispatched until Execute). See {@link CommandPanel}.
+ */
+export type CommandPanelState = {
+  readonly activeCategoryId: string | null;
+  readonly expandedCommandId: string | null;
+  readonly stagedArgsByCommandId: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
+};
+
 export type ShellState = {
   readonly pluginRuntime: PluginRuntimeState;
   readonly windowUi: WindowUiState;
   readonly spawnedWindow: SpawnedWindowState;
-  readonly actionPanel: ActionPanelState;
+  readonly actionPane: ActionPaneState;
+  readonly commandPanel: CommandPanelState;
   readonly layout: ShellLayoutState;
   readonly overlays: OverlayState;
   readonly uiPrefs: UiPrefsState;
@@ -482,14 +499,18 @@ export type ShellAction =
   | { readonly type: "SET_SPAWNED_WINDOW_UI"; readonly value: Updatable<UiNode | null> }
   | { readonly type: "SET_SPAWNED_WINDOW_ENGAGEMENTS"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
   | { readonly type: "SET_SPAWNED_WINDOW_MEASURES"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
-  | { readonly type: "SET_ACTION_PANEL_FOLDED"; readonly windowId: string; readonly value: boolean }
-  | { readonly type: "SET_ACTION_PANEL_EXPANDED"; readonly windowId: string; readonly value: string | null }
+  | { readonly type: "SET_ACTION_PANE_FOLDED"; readonly windowId: string; readonly value: boolean }
+  | { readonly type: "SET_ACTION_PANE_EXPANDED"; readonly windowId: string; readonly value: string | null }
   | { readonly type: "STAGE_ACTION_ARG"; readonly windowId: string; readonly actionId: string; readonly argId: string; readonly value: unknown }
   | { readonly type: "RESET_ACTION_ARGS"; readonly windowId: string; readonly actionId: string }
   | { readonly type: "SET_ACTIVE_TOOL"; readonly windowId: string; readonly toolId: string | null }
-  | { readonly type: "SET_CORNER_PANEL_VISIBLE"; readonly corner: PanelCorner; readonly value: Updatable<boolean> }
-  | { readonly type: "SET_CORNER_PANEL_SIZE"; readonly corner: PanelCorner; readonly value: Updatable<number> }
-  | { readonly type: "SET_CORNER_PANEL_PATH"; readonly corner: PanelCorner; readonly value: Updatable<readonly string[]> }
+  | { readonly type: "SET_COMMAND_CATEGORY"; readonly value: string | null }
+  | { readonly type: "SET_COMMAND_EXPANDED"; readonly value: string | null }
+  | { readonly type: "STAGE_COMMAND_ARG"; readonly commandId: string; readonly argId: string; readonly value: unknown }
+  | { readonly type: "RESET_COMMAND_ARGS"; readonly commandId: string }
+  | { readonly type: "SET_PANEL_VISIBLE"; readonly anchor: PanelAnchor; readonly value: Updatable<boolean> }
+  | { readonly type: "SET_PANEL_SIZE"; readonly anchor: PanelAnchor; readonly value: Updatable<number> }
+  | { readonly type: "SET_PANEL_PATH"; readonly anchor: PanelAnchor; readonly value: Updatable<readonly string[]> }
   | { readonly type: "SET_DOCK_OVERRIDE"; readonly value: DockSkeleton | null }
   | { readonly type: "SET_PANEL_PATH_MEMORY"; readonly value: Updatable<Readonly<Record<string, string>>> }
   | { readonly type: "SET_TREE_OPEN_STATE"; readonly id: string; readonly open: boolean }
@@ -564,13 +585,13 @@ function spawnedWindowReducer(state: SpawnedWindowState, action: ShellAction): S
 }
 
 /** 🧰 Reducer for the per-window Action rail slice (P1–P5). Every case preserves referential identity when nothing actually changes so downstream memos can bail. */
-function actionPanelReducer(state: ActionPanelState, action: ShellAction): ActionPanelState {
+function actionPaneReducer(state: ActionPaneState, action: ShellAction): ActionPaneState {
   switch (action.type) {
-    case "SET_ACTION_PANEL_FOLDED": {
+    case "SET_ACTION_PANE_FOLDED": {
       if (state.foldedByWindowId[action.windowId] === action.value) return state;
       return { ...state, foldedByWindowId: { ...state.foldedByWindowId, [action.windowId]: action.value } };
     }
-    case "SET_ACTION_PANEL_EXPANDED": {
+    case "SET_ACTION_PANE_EXPANDED": {
       if ((state.expandedByWindowId[action.windowId] ?? null) === action.value) return state;
       return { ...state, expandedByWindowId: { ...state.expandedByWindowId, [action.windowId]: action.value } };
     }
@@ -596,14 +617,41 @@ function actionPanelReducer(state: ActionPanelState, action: ShellAction): Actio
   }
 }
 
+/** 🎛️ Reducer for the footer command panel slice. Switching category always collapses any expanded arg form (the next hierarchy level up only makes sense under its own category's command list). */
+function commandPanelReducer(state: CommandPanelState, action: ShellAction): CommandPanelState {
+  switch (action.type) {
+    case "SET_COMMAND_CATEGORY": {
+      if (state.activeCategoryId === action.value && state.expandedCommandId === null) return state;
+      return { ...state, activeCategoryId: action.value, expandedCommandId: null };
+    }
+    case "SET_COMMAND_EXPANDED": {
+      if (state.expandedCommandId === action.value) return state;
+      return { ...state, expandedCommandId: action.value };
+    }
+    case "STAGE_COMMAND_ARG": {
+      const current = state.stagedArgsByCommandId[action.commandId] ?? {};
+      if (Object.prototype.hasOwnProperty.call(current, action.argId) && current[action.argId] === action.value) return state;
+      return { ...state, stagedArgsByCommandId: { ...state.stagedArgsByCommandId, [action.commandId]: { ...current, [action.argId]: action.value } } };
+    }
+    case "RESET_COMMAND_ARGS": {
+      if (!Object.prototype.hasOwnProperty.call(state.stagedArgsByCommandId, action.commandId)) return state;
+      const next = { ...state.stagedArgsByCommandId };
+      delete next[action.commandId];
+      return { ...state, stagedArgsByCommandId: next };
+    }
+    default:
+      return state;
+  }
+}
+
 function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): ShellLayoutState {
   switch (action.type) {
-    case "SET_CORNER_PANEL_VISIBLE":
-      return { ...state, cornerPanels: { ...state.cornerPanels, [action.corner]: { ...state.cornerPanels[action.corner], visible: resolveUpdatable(action.value, state.cornerPanels[action.corner].visible) } } };
-    case "SET_CORNER_PANEL_SIZE":
-      return { ...state, cornerPanels: { ...state.cornerPanels, [action.corner]: { ...state.cornerPanels[action.corner], size: resolveUpdatable(action.value, state.cornerPanels[action.corner].size) } } };
-    case "SET_CORNER_PANEL_PATH":
-      return { ...state, cornerPanels: { ...state.cornerPanels, [action.corner]: { ...state.cornerPanels[action.corner], path: resolveUpdatable(action.value, state.cornerPanels[action.corner].path) } } };
+    case "SET_PANEL_VISIBLE":
+      return { ...state, panels: { ...state.panels, [action.anchor]: { ...state.panels[action.anchor], visible: resolveUpdatable(action.value, state.panels[action.anchor].visible) } } };
+    case "SET_PANEL_SIZE":
+      return { ...state, panels: { ...state.panels, [action.anchor]: { ...state.panels[action.anchor], size: resolveUpdatable(action.value, state.panels[action.anchor].size) } } };
+    case "SET_PANEL_PATH":
+      return { ...state, panels: { ...state.panels, [action.anchor]: { ...state.panels[action.anchor], path: resolveUpdatable(action.value, state.panels[action.anchor].path) } } };
     case "SET_DOCK_OVERRIDE":
       return { ...state, dockOverride: action.value };
     case "SET_PANEL_PATH_MEMORY":
@@ -612,22 +660,22 @@ function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): Shell
       return { ...state, treeOpenStates: { ...state.treeOpenStates, [action.id]: action.open } };
     case "HYDRATE_DOCK_UI": {
       if (!action.value) return state;
-      const cornerPanels = { ...state.cornerPanels };
-      for (const corner of PANEL_CORNERS) {
-        const saved = action.value.corners[corner];
+      const panels = { ...state.panels };
+      for (const anchor of PANEL_ANCHORS) {
+        const saved = action.value.anchors[anchor];
         if (!saved) continue;
-        cornerPanels[corner] = {
-          visible: saved.visible ?? cornerPanels[corner].visible,
-          size: saved.size ?? cornerPanels[corner].size,
-          path: saved.path ?? cornerPanels[corner].path,
+        panels[anchor] = {
+          visible: saved.visible ?? panels[anchor].visible,
+          size: saved.size ?? panels[anchor].size,
+          path: saved.path ?? panels[anchor].path,
         };
       }
-      return { ...state, cornerPanels, panelPathMemory: action.value.pathMemory ?? state.panelPathMemory, treeOpenStates: action.value.treeOpen ?? state.treeOpenStates };
+      return { ...state, panels, panelPathMemory: action.value.pathMemory ?? state.panelPathMemory, treeOpenStates: action.value.treeOpen ?? state.treeOpenStates };
     }
     case "RESET_DOCK": {
-      const cornerPanels = {} as Record<PanelCorner, CornerPanelState>;
-      for (const corner of PANEL_CORNERS) cornerPanels[corner] = { visible: false, size: DEFAULT_CORNER_PANEL_SIZES[corner], path: [] };
-      return { ...state, dockOverride: null, cornerPanels, panelPathMemory: {}, treeOpenStates: {} };
+      const panels = {} as Record<PanelAnchor, PanelState>;
+      for (const anchor of PANEL_ANCHORS) panels[anchor] = { visible: false, size: DEFAULT_PANEL_SIZES[anchor], path: [] };
+      return { ...state, dockOverride: null, panels, panelPathMemory: {}, treeOpenStates: {} };
     }
     case "SET_ACTIVE_WINDOW_ID":
       return { ...state, activeWindowId: resolveUpdatable(action.value, state.activeWindowId) };
@@ -706,7 +754,8 @@ export function shellReducer(state: ShellState, action: ShellAction): ShellState
     pluginRuntime: pluginRuntimeReducer(state.pluginRuntime, action),
     windowUi: windowUiReducer(state.windowUi, action),
     spawnedWindow: spawnedWindowReducer(state.spawnedWindow, action),
-    actionPanel: actionPanelReducer(state.actionPanel, action),
+    actionPane: actionPaneReducer(state.actionPane, action),
+    commandPanel: commandPanelReducer(state.commandPanel, action),
     layout: shellLayoutReducer(state.layout, action),
     overlays: overlayReducer(state.overlays, action),
     uiPrefs: uiPrefsReducer(state.uiPrefs, action),
@@ -724,14 +773,10 @@ export function initialShellState(_props: { readonly pluginFilter?: string; read
     pluginRuntime: { loadedPlugins: [], session: null, error: null },
     windowUi: { windowUiByKind: {}, windowEngagementsByKind: {}, windowMeasuresByKind: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
     spawnedWindow: { spawnedWindowUi: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {} },
-    actionPanel: { foldedByWindowId: {}, expandedByWindowId: {}, stagedArgsByKey: {}, activeToolByWindowId: {} },
+    actionPane: { foldedByWindowId: {}, expandedByWindowId: {}, stagedArgsByKey: {}, activeToolByWindowId: {} },
+    commandPanel: { activeCategoryId: null, expandedCommandId: null, stagedArgsByCommandId: {} },
     layout: {
-      cornerPanels: {
-        "top-left": { visible: false, size: DEFAULT_CORNER_PANEL_SIZES["top-left"], path: [] },
-        "top-right": { visible: false, size: DEFAULT_CORNER_PANEL_SIZES["top-right"], path: [] },
-        "bottom-left": { visible: false, size: DEFAULT_CORNER_PANEL_SIZES["bottom-left"], path: [] },
-        "bottom-right": { visible: false, size: DEFAULT_CORNER_PANEL_SIZES["bottom-right"], path: [] },
-      },
+      panels: Object.fromEntries(PANEL_ANCHORS.map((anchor) => [anchor, { visible: false, size: DEFAULT_PANEL_SIZES[anchor], path: [] }])) as Record<PanelAnchor, PanelState>,
       dockOverride: null,
       panelPathMemory: {},
       treeOpenStates: {},
@@ -772,15 +817,17 @@ const S_HOME_CONTROLLER_ID = "s-home";
 const S_PLAY_APP_ID = "studio";
 const S_PLAY_CONTROLLER_ID = "s-play";
 const S_PLAY_CATALOGUE_TAB_ID = "s-play-catalogue";
-/** @emoji 🧭 Starting width/height for each corner panel — `top-left`/`top-right` mirror the old left/right side-panel defaults; `bottom-left`/`bottom-right` host the sync card and a compact tool tree, so a narrower default suits them. */
-const DEFAULT_CORNER_PANEL_SIZES: Record<PanelCorner, number> = {
+/** @emoji 🧭 Starting width for each panel anchor — `top-left`/`top-right` mirror the old left/right side-panel defaults; `bottom-left`/`bottom-right` host the sync card and a compact tool tree, so a narrower default suits them; the middle anchors start empty but default wider since they grow both ways and tend to host transient centered content (e.g. search). */
+const DEFAULT_PANEL_SIZES: Record<PanelAnchor, number> = {
   "top-left": 280,
+  "top-middle": 360,
   "top-right": 320,
   "bottom-left": 240,
+  "bottom-middle": 360,
   "bottom-right": 240,
 };
 
-/** @emoji 🌳 Root category ids for the nested dock tab tree — the top row of {@link defaultDock}'s per-corner tabs. */
+/** @emoji 🌳 Root category ids for the nested dock tab tree — the top row of {@link defaultDock}'s per-anchor tabs. */
 const FRAMEWORK_CATEGORY_WORKBENCH_ID = "framework.category.workbench";
 const FRAMEWORK_CATEGORY_DISPLAY_ID = "framework.category.display";
 const FRAMEWORK_CATEGORY_DETAILS_ID = "framework.category.details";
@@ -969,8 +1016,8 @@ function parsePanelState(viewState: ViewState): StudioPanelState | null {
   }
 }
 
-/** @emoji 🧭 Default corner a plugin-declared panel-tab `group` docks into. */
-function panelCornerForGroup(group: string): PanelCorner {
+/** @emoji 🧭 Default anchor a plugin-declared panel-tab `group` docks into — groups only ever map to the four corners; the two middle anchors start empty and are user-populated via drag-and-drop or a dock skeleton override. */
+function panelAnchorForGroup(group: string): PanelAnchor {
   if (group === "workbench" || group === "document") return "top-left";
   if (group === "details") return "top-right";
   if (group === "display") return "bottom-left";
@@ -1420,7 +1467,7 @@ function windowToolbarNode(tools: readonly ToolNode[] | undefined, windowId: str
   return <ToolTree id={`ui.toolbar.${windowId}`} tools={grouped} onAction={onAction} direction="up" />;
 }
 
-//#region 🧰WindowActionPanel
+//#region 🧰WindowActionPane
 /**
  * 🎛 Renders one {@link ActionArgControl} into a STAGED form field — the crucial difference from
  * `renderUiControl` in `ui-interpreter.tsx` is that this dispatches NOTHING globally; `onChange` only
@@ -1513,6 +1560,37 @@ export function actionRequiresStagedForm(action: Pick<ActionDefinition, "args">)
 }
 
 /** 🧰 The decision a bound hotkey makes for one action (P4). */
+/** ⌨️ Splits a declared `keys` binding (comma-separated chord alternatives, e.g. `"mod+z,ctrl+z"`) into individual chords. Shared by the action and command keydown listeners. */
+export function parseKeybindingChords(keys: string): string[] {
+  return keys
+    .split(",")
+    .map((key) => key.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+/** ⌨️ True when a keydown's target is a text-editing surface (input/textarea/select/contenteditable) — hotkeys never fire while the user is typing. */
+export function isEditableEventTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  const tag = target.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+  if (target.isContentEditable) return true;
+  return target.closest("[contenteditable='true'], [role='textbox']") != null;
+}
+
+/** ⌨️ True when a keydown event matches one `+`-joined chord (e.g. `"mod+shift+z"`), where `mod` accepts either ctrl or meta. */
+export function keyboardEventMatchesChord(event: KeyboardEvent, chord: string): boolean {
+  const parts = chord.split("+").map((part) => part.trim());
+  const key = parts[parts.length - 1] ?? "";
+  const needsCtrl = parts.includes("ctrl") || parts.includes("meta") || parts.includes("mod");
+  const needsShift = parts.includes("shift");
+  const needsAlt = parts.includes("alt");
+  const hasCtrl = event.ctrlKey || event.metaKey;
+  if (needsCtrl !== hasCtrl) return false;
+  if (needsShift !== event.shiftKey) return false;
+  if (needsAlt !== event.altKey) return false;
+  return event.key.toLowerCase() === key;
+}
+
 export type KeybindingIntent = { readonly kind: "fire" } | { readonly kind: "open"; readonly actionId: string } | { readonly kind: "execute"; readonly actionId: string; readonly args: Record<string, unknown> };
 
 /**
@@ -1535,7 +1613,7 @@ export function resolveToolActivation(current: string | null | undefined, reques
 }
 
 /** 🎛 Props for the per-window Action rail body (P1/P2). */
-export type WindowActionPanelProps = {
+export type WindowActionPaneProps = {
   readonly windowId: string;
   readonly controllerId: string;
   readonly actions: readonly ActionDefinition[];
@@ -1555,10 +1633,10 @@ export type WindowActionPanelProps = {
  * fires exactly ONE `ActionDescriptor` with the merged args, and keeps the staged values afterward.
  * When `disabled` (an active tool with `allowsActionsWhileActive === false`), every row renders disabled.
  */
-export function WindowActionPanel(props: WindowActionPanelProps): ReactElement {
+export function WindowActionPane(props: WindowActionPaneProps): ReactElement {
   const { windowId, controllerId, actions, expandedActionId, stagedArgsByKey, disabled, onExpandedChange, onStageArg, onResetArgs, onExecute } = props;
   return (
-    <div data-slot="window-action-panel" className="flex min-w-0 flex-col gap-single p-single">
+    <div data-slot="window-action-pane" className="flex min-w-0 flex-col gap-single p-single">
       {actions.map((action) => {
         if (!actionRequiresStagedForm(action)) {
           return (
@@ -1605,37 +1683,246 @@ export function WindowActionPanel(props: WindowActionPanelProps): ReactElement {
   );
 }
 
-/** 🧰 Slice of the {@link ActionPanelState} the {@link windowActionPanelNode} builder reads. */
-type ActionPanelSlice = Pick<ActionPanelState, "expandedByWindowId" | "stagedArgsByKey" | "activeToolByWindowId">;
+/** 🧰 Slice of the {@link ActionPaneState} the {@link windowActionPaneNode} builder reads. */
+type ActionPaneSlice = Pick<ActionPaneState, "expandedByWindowId" | "stagedArgsByKey" | "activeToolByWindowId">;
 
 /**
  * 🧰 Sibling of {@link windowToolbarNode}: resolves a window kind's panel-eligible actions and returns a
- * bound {@link WindowActionPanel}, or `undefined` when the window has no resolved actions (so the rail
+ * bound {@link WindowActionPane}, or `undefined` when the window has no resolved actions (so the rail
  * chip never renders). Rows render disabled while an active tool gates actions
  * (`allowsActionsWhileActive === false`).
  */
-function windowActionPanelNode(app: AppDefinition, windowKind: AppWindowKindDefinition, windowId: string, actionPanel: ActionPanelSlice, onAction: (action: ActionDescriptor) => void, dispatch: (action: ShellAction) => void): ReactNode {
+function windowActionPaneNode(app: AppDefinition, windowKind: AppWindowKindDefinition, windowId: string, actionPane: ActionPaneSlice, onAction: (action: ActionDescriptor) => void, dispatch: (action: ShellAction) => void): ReactNode {
   const actions = resolveWindowActions(app, windowKind);
   if (actions.length === 0) return undefined;
-  const activeToolId = actionPanel.activeToolByWindowId[windowId] ?? null;
+  const activeToolId = actionPane.activeToolByWindowId[windowId] ?? null;
   const activeTool = activeToolId ? (app.tools ?? []).find((tool) => tool.id === activeToolId) : undefined;
   const disabled = Boolean(activeTool && activeTool.allowsActionsWhileActive === false);
   return (
-    <WindowActionPanel
+    <WindowActionPane
       windowId={windowId}
       controllerId={app.controllerId}
       actions={actions}
-      expandedActionId={actionPanel.expandedByWindowId[windowId] ?? null}
-      stagedArgsByKey={actionPanel.stagedArgsByKey}
+      expandedActionId={actionPane.expandedByWindowId[windowId] ?? null}
+      stagedArgsByKey={actionPane.stagedArgsByKey}
       disabled={disabled}
-      onExpandedChange={(actionId) => dispatch({ type: "SET_ACTION_PANEL_EXPANDED", windowId, value: actionId })}
+      onExpandedChange={(actionId) => dispatch({ type: "SET_ACTION_PANE_EXPANDED", windowId, value: actionId })}
       onStageArg={(actionId, argId, value) => dispatch({ type: "STAGE_ACTION_ARG", windowId, actionId, argId, value })}
       onResetArgs={(actionId) => dispatch({ type: "RESET_ACTION_ARGS", windowId, actionId })}
       onExecute={onAction}
     />
   );
 }
-//#endregion 🧰WindowActionPanel
+//#endregion 🧰WindowActionPane
+
+//#region 🎛CommandRegistry
+/** 🎛 Where a resolved command came from — drives palette/footer category grouping and dispatch routing. */
+export type ResolvedCommand = {
+  readonly definition: CommandDefinition;
+  readonly source: { readonly kind: "os" } | { readonly kind: "plugin" } | { readonly kind: "app" } | { readonly kind: "mode"; readonly modeId: string };
+};
+
+/**
+ * 🎛 Aggregates every command visible for the current session: os built-ins, the active session's
+ * plugin-scope commands, the app's App-scope commands, and Mode-scope commands referenced by the
+ * active mode's `commands` refs. There are no window-level commands (see `CommandScope`) — unlike
+ * `resolveWindowActions`/`resolveWindowTools`, this never takes a window kind.
+ */
+export function resolveCommands(
+  osCommands: readonly CommandDefinition[],
+  activePluginManifest: Pick<PluginManifest, "commands"> | null | undefined,
+  app: Pick<AppDefinition, "commands" | "modes"> | null | undefined,
+  activeModeId: string,
+): ResolvedCommand[] {
+  const resolved: ResolvedCommand[] = osCommands.map((definition) => ({ definition, source: { kind: "os" as const } }));
+  for (const definition of activePluginManifest?.commands ?? []) {
+    resolved.push({ definition, source: { kind: "plugin" as const } });
+  }
+  if (!app) return resolved;
+  const activeMode = (app.modes as readonly AppModeDefinition[] | undefined)?.find((mode) => mode.id === activeModeId);
+  const modeCommandIds = new Set(activeMode?.commands ?? []);
+  for (const definition of app.commands ?? []) {
+    if (definition.scope === "app") resolved.push({ definition, source: { kind: "app" as const } });
+    else if (definition.scope === "mode" && modeCommandIds.has(definition.id)) resolved.push({ definition, source: { kind: "mode" as const, modeId: activeModeId } });
+  }
+  return resolved;
+}
+
+/** 🎛 Loose title-case for an open-set command category id (e.g. "appearance" -> "Appearance"). No i18n schema entry required — categories are app/plugin-invented strings, not a fixed framework vocabulary. */
+function titleizeCommandCategory(category: string): string {
+  return category.replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+/** 🎛 Ordered, deduped category tabs for the footer command panel, derived from whatever commands actually resolved. */
+export function commandCategories(commands: readonly ResolvedCommand[]): { readonly id: string; readonly label: string }[] {
+  const seen = new Set<string>();
+  const categories: { readonly id: string; readonly label: string }[] = [];
+  for (const { definition } of commands) {
+    if (seen.has(definition.category)) continue;
+    seen.add(definition.category);
+    categories.push({ id: definition.category, label: titleizeCommandCategory(definition.category) });
+  }
+  return categories;
+}
+
+function selectCommandArg(id: string, label: string, options: readonly { readonly value: string; readonly label: string }[]): ActionArgDef {
+  return { id, label, control: { kind: "select", options: options.map((option) => ({ ...option })) }, required: true };
+}
+
+/**
+ * 🎛 Os-level built-in commands — theme/layout/locale/appearance/expertise, `scope: "os"`, handled
+ * locally by the shell (never routed to a plugin). Rebuilt via `useMemo` since the theme and
+ * terminology option lists are live state.
+ */
+function buildOsCommands(themeList: readonly UiTheme[], terminologies: readonly string[]): CommandDefinition[] {
+  return [
+    {
+      id: "os.setAppearance",
+      label: "Set Appearance",
+      scope: "os",
+      category: "appearance",
+      inPalette: true,
+      args: [
+        selectCommandArg("appearance", "Appearance", [
+          { value: "system", label: "System" },
+          { value: "light", label: "Light" },
+          { value: "dark", label: "Dark" },
+        ]),
+      ],
+    },
+    {
+      id: "os.setThemeId",
+      label: "Set Theme",
+      scope: "os",
+      category: "appearance",
+      inPalette: true,
+      args: [selectCommandArg("themeId", "Theme", themeList.map((theme) => ({ value: theme.id, label: theme.label || theme.id })))],
+    },
+    {
+      id: "os.setLayout",
+      label: "Set Layout",
+      scope: "os",
+      category: "layout",
+      inPalette: true,
+      args: [
+        selectCommandArg("layout", "Layout", [
+          { value: "desktop", label: "Desktop" },
+          { value: "tablet", label: "Tablet" },
+        ]),
+      ],
+    },
+    { id: "os.toggleCompact", label: "Toggle Compact", scope: "os", category: "layout", inPalette: true, args: [] },
+    { id: "os.resetDock", label: "Reset Dock", scope: "os", category: "layout", inPalette: true, args: [] },
+    {
+      id: "os.setLocale",
+      label: "Set Locale",
+      scope: "os",
+      category: "language",
+      inPalette: true,
+      args: [
+        selectCommandArg("locale", "Locale", [
+          { value: "en", label: "English" },
+          { value: "de", label: "Deutsch" },
+        ]),
+      ],
+    },
+    {
+      id: "os.setTerminology",
+      label: "Set Terminology",
+      scope: "os",
+      category: "language",
+      inPalette: true,
+      args: [selectCommandArg("terminology", "Terminology", terminologies.map((id) => ({ value: id, label: shellTerminologyLabel(id) })))],
+    },
+    {
+      id: "os.setExpertise",
+      label: "Set Expertise",
+      scope: "os",
+      category: "general",
+      inPalette: true,
+      args: [
+        selectCommandArg("expertise", "Expertise", [
+          { value: "beginner", label: "Beginner" },
+          { value: "normal", label: "Normal" },
+          { value: "expert", label: "Expert" },
+        ]),
+      ],
+    },
+  ];
+}
+
+/** 🎛 Os-scope command ids that are handled locally by the shell — mirrors {@link buildOsCommands}. */
+function dispatchOsCommand(commandId: string, args: Record<string, unknown> | undefined, dispatch: (action: ShellAction) => void, dockLayoutStore: DockLayoutStore, dockUiStateStore: DockUiStateStore): void {
+  switch (commandId) {
+    case "os.setAppearance":
+      dispatch({ type: "SET_UI_APPEARANCE", value: (args?.appearance as ElementsSurfaceAppearance) ?? "system" });
+      return;
+    case "os.setThemeId":
+      if (typeof args?.themeId === "string") dispatch({ type: "SET_UI_THEME_ID", value: args.themeId });
+      return;
+    case "os.setLayout":
+      dispatch({ type: "SET_UI_LAYOUT", value: (args?.layout as UiChromeLayout) ?? "desktop" });
+      return;
+    case "os.toggleCompact":
+      dispatch({ type: "SET_UI_COMPACT", value: (current) => !current });
+      return;
+    case "os.resetDock":
+      dispatch({ type: "RESET_DOCK" });
+      dockLayoutStore.reset();
+      dockUiStateStore.reset();
+      return;
+    case "os.setLocale":
+      if (typeof args?.locale === "string") {
+        setUiLocale(args.locale as UiLocale);
+        dispatch({ type: "SET_UI_LOCALE", value: args.locale as UiLocale });
+      }
+      return;
+    case "os.setTerminology":
+      if (typeof args?.terminology === "string") dispatch({ type: "SET_UI_TERMINOLOGY", value: args.terminology });
+      return;
+    case "os.setExpertise":
+      if (typeof args?.expertise === "string") dispatch({ type: "SET_UI_EXPERTISE", value: args.expertise as Expertise });
+      return;
+    default:
+      return;
+  }
+}
+
+/**
+ * 🎛 Builds the footer's {@link CommandPanel} — the command mirror of {@link windowActionPaneNode}.
+ * `undefined` when there are no resolved commands at all, so the footer stays a plain empty bar (no
+ * empty category-tab row) exactly as it did before this feature existed.
+ */
+function commandPanelNode(
+  commands: readonly ResolvedCommand[],
+  categories: readonly { readonly id: string; readonly label: string }[],
+  commandPanelState: CommandPanelState,
+  onCommand: (source: ResolvedCommand["source"], commandId: string, args?: Record<string, unknown>) => void,
+  dispatch: (action: ShellAction) => void,
+): ReactNode {
+  if (commands.length === 0) return undefined;
+  const activeCategoryId = commandPanelState.activeCategoryId;
+  const activeCommands = commands.filter((entry) => entry.definition.category === activeCategoryId);
+  return (
+    <CommandPanel
+      categories={categories}
+      activeCategoryId={activeCategoryId}
+      onActiveCategoryChange={(id) => dispatch({ type: "SET_COMMAND_CATEGORY", value: id })}
+      commands={activeCommands.map((entry) => ({ id: entry.definition.id, label: entry.definition.label, keys: entry.definition.keys, args: entry.definition.args }))}
+      expandedCommandId={commandPanelState.expandedCommandId}
+      onExpandedChange={(id) => dispatch({ type: "SET_COMMAND_EXPANDED", value: id })}
+      stagedArgsByCommandId={commandPanelState.stagedArgsByCommandId}
+      renderField={renderStagedArgControl}
+      onExecute={(id, executeArgs) => {
+        const entry = activeCommands.find((candidate) => candidate.definition.id === id);
+        if (entry) onCommand(entry.source, id, executeArgs);
+      }}
+      onStageArg={(commandId, argId, value) => dispatch({ type: "STAGE_COMMAND_ARG", commandId, argId, value })}
+      onResetArgs={(commandId) => dispatch({ type: "RESET_COMMAND_ARGS", commandId })}
+    />
+  );
+}
+//#endregion 🎛CommandRegistry
 
 /** @emoji 🐢 Structural equality over plain JSON-shaped values (the shape every `UiNode`/`WindowEngagement`/`WindowMeasure` plugin payload takes) — no cycles, no non-JSON types. */
 function uiJsonDeepEqual(a: unknown, b: unknown): boolean {
@@ -1786,8 +2073,9 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const { loadedPlugins, session, error } = shellState.pluginRuntime;
   const { windowUiByKind, windowEngagementsByKind, windowMeasuresByKind, panelUiByKey, appLabelsOverlay } = shellState.windowUi;
   const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
-  const { foldedByWindowId: actionPanelFoldedByWindowId, expandedByWindowId: actionPanelExpandedByWindowId, stagedArgsByKey: actionPanelStagedArgsByKey, activeToolByWindowId } = shellState.actionPanel;
-  const { cornerPanels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, extraWindowInstances } = shellState.layout;
+  const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeToolByWindowId } = shellState.actionPane;
+  const { activeCategoryId: commandCategoryId, expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
+  const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, extraWindowInstances } = shellState.layout;
   const { searchOpen, findOpen, introductionStepIndex, dialog: overlayDialog } = shellState.overlays;
   const { uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft } = shellState.uiPrefs;
   const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
@@ -1888,10 +2176,10 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   activeToolByWindowIdRef.current = activeToolByWindowId;
   const activeWindowIdRef = useRef(activeWindowId);
   activeWindowIdRef.current = activeWindowId;
-  const actionPanelExpandedByWindowIdRef = useRef(actionPanelExpandedByWindowId);
-  actionPanelExpandedByWindowIdRef.current = actionPanelExpandedByWindowId;
-  const actionPanelStagedArgsByKeyRef = useRef(actionPanelStagedArgsByKey);
-  actionPanelStagedArgsByKeyRef.current = actionPanelStagedArgsByKey;
+  const actionPaneExpandedByWindowIdRef = useRef(actionPaneExpandedByWindowId);
+  actionPaneExpandedByWindowIdRef.current = actionPaneExpandedByWindowId;
+  const actionPaneStagedArgsByKeyRef = useRef(actionPaneStagedArgsByKey);
+  actionPaneStagedArgsByKeyRef.current = actionPaneStagedArgsByKey;
   const introductionStepIndexRef = useRef(introductionStepIndex);
   introductionStepIndexRef.current = introductionStepIndex;
 
@@ -2271,7 +2559,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   );
 
   /**
-   * 🐚 Consumes a plugin action's typed `requestedEffects: HostEffect[]` (WS-D's `ActionResponse`) —
+   * 🐚 Consumes a plugin action's typed `requestedEffects: HostEffect[]` (WS-D's `InvocationResponse`) —
    * replaces the deleted `processPluginOps` string-matching. The legacy `setDocument`-mirror
    * backbone-write block is gone entirely: document content sync now flows through
    * `openDocument`/`closeDocument`'s worker-backed `DocumentHost` lifecycle, not a per-op JS mirror.
@@ -2727,8 +3015,8 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     };
   }, [studioSessionActive]);
 
-  useCornerPanelChromeHotkeys({
-    onToggle: (corner) => dispatch({ type: "SET_CORNER_PANEL_VISIBLE", corner, value: (visible) => !visible }),
+  usePanelChromeHotkeys({
+    onToggle: (anchor) => dispatch({ type: "SET_PANEL_VISIBLE", anchor, value: (visible) => !visible }),
   });
 
   useElementsSurfaceChrome({ appearance: uiAppearance, device: uiDevice, expertise: uiExpertise, compact: uiCompact });
@@ -2861,6 +3149,10 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const uiThemeBase = uiThemeDraft ?? uiTheme;
   const uiThemeDirty = uiThemeDraft !== null;
   const uiThemeList = useMemo((): readonly UiTheme[] => [...builtinUiThemes(), ...Object.values(uiCustomThemes)], [uiCustomThemes]);
+  const osCommands = useMemo(
+    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])]),
+    [uiThemeList, session?.app.terminologies],
+  );
 
   const draftThemePatch = useCallback(
     (patch: (next: UiTheme) => void) => {
@@ -3118,14 +3410,14 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           if (definition && actionRequiresStagedForm(definition)) {
             const windowId = activeWindowIdRef.current;
             if (!windowId) return;
-            const expanded = actionPanelExpandedByWindowIdRef.current[windowId] ?? null;
-            const staged = actionPanelStagedArgsByKeyRef.current[actionStageKey(windowId, definition.id)] ?? {};
+            const expanded = actionPaneExpandedByWindowIdRef.current[windowId] ?? null;
+            const staged = actionPaneStagedArgsByKeyRef.current[actionStageKey(windowId, definition.id)] ?? {};
             const intent = resolveKeybindingIntent(definition, expanded, staged);
             if (intent.kind === "execute") {
               onAction({ controllerId: session.app.controllerId, action: intent.actionId, args: intent.args });
             } else if (intent.kind === "open") {
-              dispatch({ type: "SET_ACTION_PANEL_FOLDED", windowId, value: false });
-              dispatch({ type: "SET_ACTION_PANEL_EXPANDED", windowId, value: intent.actionId });
+              dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId, value: false });
+              dispatch({ type: "SET_ACTION_PANE_EXPANDED", windowId, value: intent.actionId });
             }
             return;
           }
@@ -3138,12 +3430,12 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onAction, session]);
 
-  const activeRightPanelTab = session?.app.panelTabs.find((tab) => panelCornerForGroup(tab.group) === "top-right");
+  const activeRightPanelTab = session?.app.panelTabs.find((tab) => panelAnchorForGroup(tab.group) === "top-right");
   const activePanelTabId = panel?.activePanelTab ?? (activeRightPanelTab ? panelTabKindId(activeRightPanelTab.kind) : undefined) ?? (session?.app.panelTabs[0] ? panelTabKindId(session.app.panelTabs[0].kind) : undefined);
 
   const workbenchLeftTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
-    const pluginLeftTabs = session.app.panelTabs.filter((tab) => panelCornerForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay));
+    const pluginLeftTabs = session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay));
     if (studioMode && session.app.id === S_PLAY_APP_ID && pluginLeftTabs.length > 0) return pluginLeftTabs;
     const hasPluginDocumentTab = pluginLeftTabs.some((tab) => tab.id === FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
     if (hasPluginDocumentTab) return pluginLeftTabs;
@@ -3167,7 +3459,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
 
   const detailsRightTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
-    return session.app.panelTabs.filter((tab) => panelCornerForGroup(tab.group) === "top-right").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay));
+    return session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-right").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay));
   }, [appLabelsOverlay, onAction, panelUiByKey, session]);
 
   const settingsRightTabs = useMemo((): PanelTabNode[] => frameworkSettingsTabs, [frameworkSettingsTabs]);
@@ -3231,7 +3523,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   }, [attachSyncBackbone, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId]);
   //#endregion 🔄SyncLeaf
 
-  //#region 🧭DockAssembly — default four-corner arrangement + persisted-override reconciliation + drag-and-drop wiring.
+  //#region 🧭DockAssembly — default four-corner arrangement (the two middle anchors start empty) + persisted-override reconciliation + drag-and-drop wiring.
   const defaultDock = useMemo((): PanelDock => {
     const topLeft: PanelTabNode[] = [{ kind: "branch", id: FRAMEWORK_CATEGORY_WORKBENCH_ID, icon: categoryTabIcon(workbenchLeftTabs, "folder"), name: shellLabel("ui.panelToggle.workbench"), order: 0, children: workbenchLeftTabs }];
     const bottomLeft: PanelTabNode[] = [];
@@ -3242,7 +3534,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     const topRight: PanelTabNode[] = [{ kind: "branch", id: FRAMEWORK_CATEGORY_DETAILS_ID, icon: categoryTabIcon(detailsRightTabs, "info"), name: shellLabel("ui.panelToggle.details"), order: 0, children: detailsRightTabs }];
     const bottomRight: PanelTabNode[] = [{ kind: "branch", id: FRAMEWORK_CATEGORY_SETTINGS_ID, icon: categoryTabIcon(settingsRightTabs, "settings-2"), name: shellLabel("ui.panelToggle.settings"), order: 0, children: settingsRightTabs }];
     if (frameworkToolsHistoryTab) bottomRight.push(frameworkToolsHistoryTab);
-    return { corners: { "top-left": topLeft, "top-right": topRight, "bottom-left": bottomLeft, "bottom-right": bottomRight } };
+    return { anchors: { "top-left": topLeft, "top-middle": [], "top-right": topRight, "bottom-left": bottomLeft, "bottom-middle": [], "bottom-right": bottomRight } };
   }, [detailsRightTabs, frameworkDisplayTabs, frameworkSyncTab, frameworkToolsHistoryTab, settingsRightTabs, uiLocale, workbenchLeftTabs]);
 
   useEffect(() => {
@@ -3279,20 +3571,20 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       dockUiPersistedOnceRef.current = true;
       return;
     }
-    const corners: Partial<Record<PanelCorner, DockUiCornerState>> = {};
-    for (const corner of PANEL_CORNERS) {
-      const cornerState = cornerPanels[corner];
-      const entry: DockUiCornerState = {};
-      if (cornerState.visible) entry.visible = true;
-      if (cornerState.size !== DEFAULT_CORNER_PANEL_SIZES[corner]) entry.size = cornerState.size;
-      if (cornerState.path.length > 0) entry.path = cornerState.path;
-      if (Object.keys(entry).length > 0) corners[corner] = entry;
+    const anchors: Partial<Record<PanelAnchor, DockUiPanelState>> = {};
+    for (const anchor of PANEL_ANCHORS) {
+      const panelState = panels[anchor];
+      const entry: DockUiPanelState = {};
+      if (panelState.visible) entry.visible = true;
+      if (panelState.size !== DEFAULT_PANEL_SIZES[anchor]) entry.size = panelState.size;
+      if (panelState.path.length > 0) entry.path = panelState.path;
+      if (Object.keys(entry).length > 0) anchors[anchor] = entry;
     }
     const hasPathMemory = Object.keys(panelPathMemory).length > 0;
     const hasTreeOpen = Object.keys(treeOpenStates).length > 0;
-    const isDefault = Object.keys(corners).length === 0 && !hasPathMemory && !hasTreeOpen;
-    dockUiStateStore.save(isDefault ? null : { version: 1, corners, pathMemory: hasPathMemory ? panelPathMemory : undefined, treeOpen: hasTreeOpen ? treeOpenStates : undefined });
-  }, [cornerPanels, panelPathMemory, treeOpenStates, dockUiStateStore]);
+    const isDefault = Object.keys(anchors).length === 0 && !hasPathMemory && !hasTreeOpen;
+    dockUiStateStore.save(isDefault ? null : { version: 2, anchors, pathMemory: hasPathMemory ? panelPathMemory : undefined, treeOpen: hasTreeOpen ? treeOpenStates : undefined });
+  }, [panels, panelPathMemory, treeOpenStates, dockUiStateStore]);
 
   const handleTabDockDrop = useCallback(
     (move: PanelTabDockMove) => {
@@ -3301,13 +3593,13 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       const nextSkeleton = dockSkeletonOf(nextDock);
       const defaultSkeleton = dockSkeletonOf(defaultDock);
       dispatch({ type: "SET_DOCK_OVERRIDE", value: dockSkeletonsEqual(nextSkeleton, defaultSkeleton) ? null : nextSkeleton });
-      const targetPath = findPanelTabPath(nextDock.corners[move.target.corner], move.tabId);
-      if (targetPath) dispatch({ type: "SET_CORNER_PANEL_PATH", corner: move.target.corner, value: targetPath });
-      if (move.fromCorner !== move.target.corner) {
-        const sourceTabs = nextDock.corners[move.fromCorner];
-        dispatch({ type: "SET_CORNER_PANEL_PATH", corner: move.fromCorner, value: (prev) => reconcileActivePath(sourceTabs, prev, panelTabChildren) });
+      const targetPath = findPanelTabPath(nextDock.anchors[move.target.anchor], move.tabId);
+      if (targetPath) dispatch({ type: "SET_PANEL_PATH", anchor: move.target.anchor, value: targetPath });
+      if (move.fromAnchor !== move.target.anchor) {
+        const sourceTabs = nextDock.anchors[move.fromAnchor];
+        dispatch({ type: "SET_PANEL_PATH", anchor: move.fromAnchor, value: (prev) => reconcileActivePath(sourceTabs, prev, panelTabChildren) });
       }
-      dispatch({ type: "SET_CORNER_PANEL_VISIBLE", corner: move.target.corner, value: true });
+      dispatch({ type: "SET_PANEL_VISIBLE", anchor: move.target.anchor, value: true });
     },
     [dock, defaultDock],
   );
@@ -3319,64 +3611,67 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       const nextSkeleton = dockSkeletonOf(nextDock);
       const defaultSkeleton = dockSkeletonOf(defaultDock);
       dispatch({ type: "SET_DOCK_OVERRIDE", value: dockSkeletonsEqual(nextSkeleton, defaultSkeleton) ? null : nextSkeleton });
-      dispatch({ type: "SET_CORNER_PANEL_VISIBLE", corner: move.target.corner, value: true });
+      dispatch({ type: "SET_PANEL_VISIBLE", anchor: move.target.anchor, value: true });
     },
     [dock, defaultDock],
   );
 
   const studioOverrideTabId = studioMode && session?.app.id === S_PLAY_APP_ID ? (panel?.activePanelTab ?? S_PLAY_CATALOGUE_TAB_ID) : undefined;
-  const studioOverrideCorner = studioOverrideTabId ? findPanelTabInDock(dock, studioOverrideTabId)?.corner : undefined;
+  const studioOverrideAnchor = studioOverrideTabId ? findPanelTabInDock(dock, studioOverrideTabId)?.anchor : undefined;
   const detailsOverrideTabId = panel?.activePanelTab;
-  const detailsOverrideCorner = detailsOverrideTabId ? findPanelTabInDock(dock, detailsOverrideTabId)?.corner : undefined;
+  const detailsOverrideAnchor = detailsOverrideTabId ? findPanelTabInDock(dock, detailsOverrideTabId)?.anchor : undefined;
 
-  /** 🧭 Progressive reveal means a stored path can legitimately end at a branch (or be empty) — this is now a plain per-corner truncation-validate, no override reassertion (see the write-through effects below). */
-  const cornerActivePaths = useMemo((): Record<PanelCorner, readonly string[]> => {
-    const result = {} as Record<PanelCorner, readonly string[]>;
-    for (const corner of PANEL_CORNERS) result[corner] = reconcileActivePath(dock.corners[corner], cornerPanels[corner].path, panelTabChildren);
+  /** 🧭 Progressive reveal means a stored path can legitimately end at a branch (or be empty) — this is now a plain per-anchor truncation-validate, no override reassertion (see the write-through effects below). */
+  const panelActivePaths = useMemo((): Record<PanelAnchor, readonly string[]> => {
+    const result = {} as Record<PanelAnchor, readonly string[]>;
+    for (const anchor of PANEL_ANCHORS) result[anchor] = reconcileActivePath(dock.anchors[anchor], panels[anchor].path, panelTabChildren);
     return result;
-  }, [cornerPanels, dock]);
+  }, [panels, dock]);
 
   /**
    * 🧭 Generalizes the old `leftPanelActivePath`/`rightPanelActivePath` studio/plugin "snap to the active panel
-   * tab" overrides across all four corners. Write-through rather than read-time: each override dispatches
-   * `SET_CORNER_PANEL_PATH` only when its target tab id actually changes, so a user's own collapse/navigation
+   * tab" overrides across all six anchors. Write-through rather than read-time: each override dispatches
+   * `SET_PANEL_PATH` only when its target tab id actually changes, so a user's own collapse/navigation
    * afterward sticks instead of being reasserted on every render (progressive reveal made read-time reassertion
-   * fight the user's own collapses). Studio wins over details when both would touch the same corner.
+   * fight the user's own collapses). Studio wins over details when both would touch the same anchor.
    **/
   const lastStudioOverrideTabIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (!studioOverrideTabId || !studioOverrideCorner) {
+    if (!studioOverrideTabId || !studioOverrideAnchor) {
       lastStudioOverrideTabIdRef.current = undefined;
       return;
     }
     if (lastStudioOverrideTabIdRef.current === studioOverrideTabId) return;
     lastStudioOverrideTabIdRef.current = studioOverrideTabId;
-    if (cornerPanels[studioOverrideCorner].path[0] === FRAMEWORK_CATEGORY_DISPLAY_ID) return;
-    const resolved = findPanelTabPath(dock.corners[studioOverrideCorner], studioOverrideTabId);
-    if (resolved) dispatch({ type: "SET_CORNER_PANEL_PATH", corner: studioOverrideCorner, value: resolved });
-  }, [studioOverrideTabId, studioOverrideCorner, dock, cornerPanels]);
+    if (panels[studioOverrideAnchor].path[0] === FRAMEWORK_CATEGORY_DISPLAY_ID) return;
+    const resolved = findPanelTabPath(dock.anchors[studioOverrideAnchor], studioOverrideTabId);
+    if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: studioOverrideAnchor, value: resolved });
+  }, [studioOverrideTabId, studioOverrideAnchor, dock, panels]);
 
   const lastDetailsOverrideTabIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (!detailsOverrideTabId || !detailsOverrideCorner) {
+    if (!detailsOverrideTabId || !detailsOverrideAnchor) {
       lastDetailsOverrideTabIdRef.current = undefined;
       return;
     }
     if (lastDetailsOverrideTabIdRef.current === detailsOverrideTabId) return;
     lastDetailsOverrideTabIdRef.current = detailsOverrideTabId;
-    if (detailsOverrideCorner === studioOverrideCorner) return;
-    if (cornerPanels[detailsOverrideCorner].path[0] === FRAMEWORK_CATEGORY_SETTINGS_ID) return;
-    const resolved = findPanelTabPath(dock.corners[detailsOverrideCorner], detailsOverrideTabId);
-    if (resolved) dispatch({ type: "SET_CORNER_PANEL_PATH", corner: detailsOverrideCorner, value: resolved });
-  }, [detailsOverrideTabId, detailsOverrideCorner, studioOverrideCorner, dock, cornerPanels]);
+    if (detailsOverrideAnchor === studioOverrideAnchor) return;
+    if (panels[detailsOverrideAnchor].path[0] === FRAMEWORK_CATEGORY_SETTINGS_ID) return;
+    const resolved = findPanelTabPath(dock.anchors[detailsOverrideAnchor], detailsOverrideTabId);
+    if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: detailsOverrideAnchor, value: resolved });
+  }, [detailsOverrideTabId, detailsOverrideAnchor, studioOverrideAnchor, dock, panels]);
   //#endregion 🧭DockAssembly
 
-  const mobilePanelTabs = useMemo(() => [...defaultDock.corners["top-left"], ...defaultDock.corners["top-right"], ...defaultDock.corners["bottom-left"], ...defaultDock.corners["bottom-right"]], [defaultDock]);
+  const mobilePanelTabs = useMemo(
+    () => [...defaultDock.anchors["top-left"], ...defaultDock.anchors["top-middle"], ...defaultDock.anchors["top-right"], ...defaultDock.anchors["bottom-left"], ...defaultDock.anchors["bottom-middle"], ...defaultDock.anchors["bottom-right"]],
+    [defaultDock],
+  );
 
   const mobilePanel = useMemo(() => {
     if (mobilePanelTabs.length === 0) return undefined;
     return {
-      visible: PANEL_CORNERS.some((corner) => cornerPanels[corner].visible),
+      visible: PANEL_ANCHORS.some((anchor) => panels[anchor].visible),
       tabs: mobilePanelTabs,
       activeTabPath: mobilePanelPath,
       onActiveTabPathChange: (path: readonly string[]) => {
@@ -3392,7 +3687,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       treeOpenStates,
       onTreeOpenStateChange: (id: string, open: boolean) => dispatch({ type: "SET_TREE_OPEN_STATE", id, open }),
     };
-  }, [cornerPanels, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, studioMode, treeOpenStates]);
+  }, [panels, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, studioMode, treeOpenStates]);
 
   const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
   const exampleOptions = useMemo(() => {
@@ -3422,6 +3717,44 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   }, [activeExampleId, exampleOptions, onAction, session]);
 
   const activeModeId = session?.viewState.activeModeId ?? session?.app.modes[0]?.id ?? session?.app.id ?? "";
+
+  const resolvedCommands = useMemo(
+    () => resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId),
+    [osCommands, activePluginManifest, session?.app, activeModeId],
+  );
+
+  const commandCategoryList = useMemo(() => commandCategories(resolvedCommands), [resolvedCommands]);
+
+  /**
+   * 🎛 Dispatches a resolved command: os-scope commands are handled locally (no plugin round trip);
+   * plugin/app/mode-scope commands route through the active session's plugin `handleCommand`, mirroring
+   * `onAction`'s tail. Plugin commands are only resolvable/dispatchable for the active session's plugin
+   * instance (no headless-instance routing for non-focused plugins yet).
+   */
+  const onCommand = useCallback(
+    (source: ResolvedCommand["source"], commandId: string, args?: Record<string, unknown>) => {
+      if (source.kind === "os") {
+        dispatchOsCommand(commandId, args, dispatch, dockLayoutStore, dockUiStateStore);
+        return;
+      }
+      if (!session) return;
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+      if (!plugin?.handleCommand) return;
+      const dispatchViewState = injectActiveTool(session.viewState);
+      void plugin
+        .handleCommand(session.instanceId, JSON.stringify({ command: commandId, args }), dispatchViewState)
+        .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
+        .catch((commandError) => {
+          console.error("[DEBUG] command failed", commandError);
+        });
+    },
+    [applyHostEffects, dockLayoutStore, dockUiStateStore, injectActiveTool, loadedPlugins, session],
+  );
+
+  const footerItems = useMemo((): NavbarItem[] => {
+    const panel = commandPanelNode(resolvedCommands, commandCategoryList, shellState.commandPanel, onCommand, dispatch);
+    return panel ? [{ key: "commands", content: panel }] : [];
+  }, [resolvedCommands, commandCategoryList, shellState.commandPanel, onCommand]);
 
   const navbarItems = useMemo((): NavbarItem[] => {
     if (!session) return [];
@@ -3520,8 +3853,8 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
             const windowId = hostWindowForAction(action.id);
             if (windowId) {
               dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: windowId });
-              dispatch({ type: "SET_ACTION_PANEL_FOLDED", windowId, value: false });
-              dispatch({ type: "SET_ACTION_PANEL_EXPANDED", windowId, value: action.id });
+              dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId, value: false });
+              dispatch({ type: "SET_ACTION_PANE_EXPANDED", windowId, value: action.id });
             }
             dispatch({ type: "SET_SEARCH_OPEN", value: false });
             return;
@@ -3538,6 +3871,28 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         description: binding.keys,
         category: shellLabel("ui.toolbar.parent.actions"),
         onSelect: () => onAction(binding.action),
+      });
+    }
+    // 🎛️ Commands (os/plugin/app/mode) — the footer twin of the window-rail P3 redirect above: an
+    // arg-carrying command never fires from the palette, it opens the footer panel at its category and
+    // expands its form instead.
+    for (const { definition, source } of resolvedCommands) {
+      if (!definition.inPalette) continue;
+      const argCarrying = (definition.args?.length ?? 0) > 0;
+      items.push({
+        id: `command.${definition.id}`,
+        label: argCarrying ? `${definition.label}…` : definition.label,
+        description: definition.keys,
+        category: titleizeCommandCategory(definition.category),
+        onSelect: () => {
+          if (argCarrying) {
+            dispatch({ type: "SET_COMMAND_CATEGORY", value: definition.category });
+            dispatch({ type: "SET_COMMAND_EXPANDED", value: definition.id });
+            dispatch({ type: "SET_SEARCH_OPEN", value: false });
+            return;
+          }
+          onCommand(source, definition.id);
+        },
       });
     }
     if (studioMode && panel) {
@@ -3573,13 +3928,13 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       );
     }
     return items;
-  }, [activeWindowId, appLabelsOverlay, onAction, panel, session, studioMode, uiLocale]);
+  }, [activeWindowId, appLabelsOverlay, onAction, onCommand, panel, resolvedCommands, session, studioMode, uiLocale]);
 
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
-    const actionPanelSlice: ActionPanelSlice = { expandedByWindowId: actionPanelExpandedByWindowId, stagedArgsByKey: actionPanelStagedArgsByKey, activeToolByWindowId };
-    const actionsFoldedFor = (windowId: string) => actionPanelFoldedByWindowId[windowId] ?? true;
-    const onActionsFoldedFor = (windowId: string) => (folded: boolean) => dispatch({ type: "SET_ACTION_PANEL_FOLDED", windowId, value: folded });
+    const actionPaneSlice: ActionPaneSlice = { expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeToolByWindowId };
+    const actionsFoldedFor = (windowId: string) => actionPaneFoldedByWindowId[windowId] ?? true;
+    const onActionsFoldedFor = (windowId: string) => (folded: boolean) => dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId, value: folded });
     // 🖱️ Window-body cursor follows the active tool's declared `cursor` (P5).
     const cursorFor = (app: AppDefinition, windowId: string): CSSProperties | undefined => {
       const toolId = activeToolByWindowId[windowId];
@@ -3602,7 +3957,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
             toolOptions: chrome?.toolOptions,
             engagement: chrome?.engagement,
             toolbar: spawnedApp && windowKind ? windowToolbarNode(resolveWindowToolNodes(spawnedApp, windowKind, activeToolByWindowId[spawned.id], spawned.id), spawned.id, onActionStable) : undefined,
-            actionPanel: spawnedApp && windowKind ? windowActionPanelNode(spawnedApp, windowKind, spawned.id, actionPanelSlice, onActionStable, dispatch) : undefined,
+            actionPane: spawnedApp && windowKind ? windowActionPaneNode(spawnedApp, windowKind, spawned.id, actionPaneSlice, onActionStable, dispatch) : undefined,
             actionsFolded: actionsFoldedFor(spawned.id),
             onActionsFoldedChange: onActionsFoldedFor(spawned.id),
             children: (
@@ -3623,7 +3978,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeToolByWindowId[kind.id], onActionStable),
       engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
       toolbar: windowToolbarNode(resolveWindowToolNodes(session.app, kind, activeToolByWindowId[kind.id], kind.id), kind.id, onActionStable),
-      actionPanel: windowActionPanelNode(session.app, kind, kind.id, actionPanelSlice, onActionStable, dispatch),
+      actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch),
       actionsFolded: actionsFoldedFor(kind.id),
       onActionsFoldedChange: onActionsFoldedFor(kind.id),
       children: (
@@ -3644,7 +3999,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeToolByWindowId[instance.id], onActionStable),
           engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
           toolbar: windowToolbarNode(resolveWindowToolNodes(session.app, kind, activeToolByWindowId[instance.id], instance.id), instance.id, onActionStable),
-          actionPanel: windowActionPanelNode(session.app, kind, instance.id, actionPanelSlice, onActionStable, dispatch),
+          actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch),
           actionsFolded: actionsFoldedFor(instance.id),
           onActionsFoldedChange: onActionsFoldedFor(instance.id),
           children: (
@@ -3657,9 +4012,9 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     });
     return [...baseWindows, ...extraWindows];
   }, [
-    actionPanelExpandedByWindowId,
-    actionPanelFoldedByWindowId,
-    actionPanelStagedArgsByKey,
+    actionPaneExpandedByWindowId,
+    actionPaneFoldedByWindowId,
+    actionPaneStagedArgsByKey,
     activeToolByWindowId,
     appLabelsOverlay,
     extraWindowInstances,
@@ -3777,19 +4132,19 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     );
   }, [activeWindowId, effectiveModeLayout, error, handleTemplateDrop, mobile, modeWindows, navigateHistory, onAction, panel, session, studioMode, uiLocale, updateStudioPanel]);
 
-  const buildCornerPanelProps = useCallback(
-    (corner: PanelCorner) => ({
-      visible: cornerPanels[corner].visible,
-      onVisibleChange: (value: boolean) => dispatch({ type: "SET_CORNER_PANEL_VISIBLE", corner, value }),
-      size: cornerPanels[corner].size,
-      onSizeChange: (value: number) => dispatch({ type: "SET_CORNER_PANEL_SIZE", corner, value }),
-      tabs: dock.corners[corner],
-      activeTabPath: cornerActivePaths[corner],
+  const buildPanelProps = useCallback(
+    (anchor: PanelAnchor) => ({
+      visible: panels[anchor].visible,
+      onVisibleChange: (value: boolean) => dispatch({ type: "SET_PANEL_VISIBLE", anchor, value }),
+      size: panels[anchor].size,
+      onSizeChange: (value: number) => dispatch({ type: "SET_PANEL_SIZE", anchor, value }),
+      tabs: dock.anchors[anchor],
+      activeTabPath: panelActivePaths[anchor],
       onActiveTabPathChange: (path: readonly string[]) => {
-        dispatch({ type: "SET_CORNER_PANEL_PATH", corner, value: path });
+        dispatch({ type: "SET_PANEL_PATH", anchor, value: path });
         const tabId = path[path.length - 1];
         // 🌱 Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
-        if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID && findPanelTabNode(dock.corners[corner], path)?.kind === "leaf") {
+        if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
           onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
         }
       },
@@ -3798,7 +4153,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       treeOpenStates,
       onTreeOpenStateChange: (id: string, open: boolean) => dispatch({ type: "SET_TREE_OPEN_STATE", id, open }),
     }),
-    [cornerActivePaths, cornerPanels, dock, onAction, panelPathMemory, session, studioMode, treeOpenStates],
+    [panelActivePaths, panels, dock, onAction, panelPathMemory, session, studioMode, treeOpenStates],
   );
 
   return (
@@ -3810,12 +4165,14 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
               mobile={mobile}
               mobilePanel={mobilePanel}
               navbar={<Navbar items={navbarItems} showFullscreenToggle />}
-              footer={<Footer items={[]} />}
-              cornerPanels={{
-                "top-left": dock.corners["top-left"].length > 0 ? buildCornerPanelProps("top-left") : undefined,
-                "top-right": dock.corners["top-right"].length > 0 ? buildCornerPanelProps("top-right") : undefined,
-                "bottom-left": dock.corners["bottom-left"].length > 0 ? buildCornerPanelProps("bottom-left") : undefined,
-                "bottom-right": dock.corners["bottom-right"].length > 0 ? buildCornerPanelProps("bottom-right") : undefined,
+              footer={<Footer items={footerItems} />}
+              panels={{
+                "top-left": buildPanelProps("top-left"),
+                "top-middle": buildPanelProps("top-middle"),
+                "top-right": buildPanelProps("top-right"),
+                "bottom-left": buildPanelProps("bottom-left"),
+                "bottom-middle": buildPanelProps("bottom-middle"),
+                "bottom-right": buildPanelProps("bottom-right"),
               }}
               canvas={<ShellRenderErrorBoundary>{canvas}</ShellRenderErrorBoundary>}
             />
@@ -3868,7 +4225,9 @@ export type PluginWasmHandle = {
   readonly manifest: PluginManifest;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
-  readonly handleAction: (instanceId: number, actionJson: string, viewState: ViewState) => Promise<ActionResponse>;
+  readonly handleAction: (instanceId: number, actionJson: string, viewState: ViewState) => Promise<InvocationResponse>;
+  /** 🎛️ Dispatches a scoped command (os/plugin/app/mode) — optional since not every plugin declares commands. */
+  readonly handleCommand?: (instanceId: number, commandJson: string, viewState: ViewState) => Promise<InvocationResponse>;
   readonly render: (instanceId: number, bodyKey: string, viewState: ViewState) => Promise<UiNode>;
   readonly renderWithDocument?: (instanceId: number, bodyKey: string, viewState: ViewState, documentJson: string) => Promise<UiNode>;
   readonly refreshUi: (instanceId: number, request: PluginUiRefreshRequest) => Promise<PluginUiRefreshResponse>;
@@ -3899,6 +4258,7 @@ function adaptPluginHandle(handle: CorePluginWasmHandle): PluginWasmHandle {
     createApp: (appId) => handle.createApp(appId),
     destroyApp: (instanceId) => handle.destroyApp(instanceId),
     handleAction: (instanceId, actionJson, viewState) => handle.handleAction(instanceId, actionJson, viewState),
+    handleCommand: handle.handleCommand ? (instanceId, commandJson, viewState) => handle.handleCommand!(instanceId, commandJson, viewState) : undefined,
     render: async (instanceId, bodyKey, viewState) => (await handle.render(instanceId, bodyKey, viewState)) as unknown as UiNode,
     renderWithDocument: handle.renderWithDocument ? async (instanceId, bodyKey, viewState, documentJson) => (await handle.renderWithDocument!(instanceId, bodyKey, viewState, documentJson)) as unknown as UiNode : undefined,
     refreshUi: (instanceId, request) => handle.refreshUi(instanceId, request),

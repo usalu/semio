@@ -3152,7 +3152,7 @@ pub mod app_rewrite {
             VcsDocumentApp::new(TrinityRewritePlayApp::default())
         }
 
-        fn dispatch(app: &mut VcsDocumentApp<TrinityRewritePlayApp>, action: &str, args: Option<&Value>) -> semio_framework_plugin::kernel::ActionResult {
+        fn dispatch(app: &mut VcsDocumentApp<TrinityRewritePlayApp>, action: &str, args: Option<&Value>) -> semio_framework_plugin::kernel::InvocationResult {
             app.handle_action(action, args, &ViewState::default(), &meta("local")).expect("dispatch")
         }
 

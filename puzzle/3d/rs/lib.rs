@@ -1137,6 +1137,7 @@ fn brush_preview_from_candidate(
 }
 
 struct FillBuilder {
+    base: Fixture,
     fixture: Fixture,
     sequence: Vec<BrushPlacePayload>,
     appended_objects: Vec<FixtureObject>,
@@ -1160,7 +1161,7 @@ impl FillBuilder {
                 }
             }
         }
-        Self { fixture: base, sequence: Vec::new(), appended_objects: Vec::new(), appended_attractions: Vec::new(), placed, candidate_cache: HashMap::new(), seed_object_ids, rng_state: seed, stalled: false, max_count: 0 }
+        Self { base: base.clone(), fixture: base, sequence: Vec::new(), appended_objects: Vec::new(), appended_attractions: Vec::new(), placed, candidate_cache: HashMap::new(), seed_object_ids, rng_state: seed, stalled: false, max_count: FILL_COUNT_MAX }
     }
 
     fn rng(&mut self) -> f64 {
@@ -1508,24 +1509,13 @@ impl Puzzle3dEngine {
     }
 
     fn apply_fill_count(&mut self, count: usize) -> Option<Fixture> {
-        if let Some(fill) = &mut self.fill {
-            fill.max_count = count.min(FILL_COUNT_MAX);
-            fill.stalled = false;
+        let catalogs = self.scene.as_ref()?.kind_catalogs.as_ref()?.clone();
+        let fill = self.fill.as_ref()?;
+        let mut fixture = fill.base.clone();
+        for payload in fill.sequence.iter().take(count.min(fill.sequence.len())) {
+            fixture = apply_brush_placement_to_fixture(&fixture, payload, &catalogs);
         }
-        loop {
-            let done = self
-                .fill
-                .as_ref()
-                .map(|fill| fill.stalled || fill.sequence.len() >= fill.max_count)
-                .unwrap_or(true);
-            if done {
-                break;
-            }
-            if !self.fill_step_one() {
-                break;
-            }
-        }
-        self.fill.as_ref().map(|fill| fill.fixture.clone())
+        Some(fixture)
     }
 
     fn apply_brush_placement(&mut self, payload: &BrushPlacePayload) -> Option<Fixture> {

@@ -16,6 +16,9 @@ import type {
   ActionArgOption as GeneratedActionArgOption,
   ToolDefinition as GeneratedToolDefinition,
   ToolRef as GeneratedToolRef,
+  CommandScope as GeneratedCommandScope,
+  CommandDefinition as GeneratedCommandDefinition,
+  CommandRef as GeneratedCommandRef,
   WindowMeasure as GeneratedWindowMeasure,
   WindowEngagementOption as GeneratedWindowEngagementOption,
   WindowEngagementInput as GeneratedWindowEngagementInput,
@@ -857,10 +860,10 @@ export interface DockTabSkeleton {
   trees?: readonly string[];
 }
 
-/** 🐳 The full persisted dock arrangement, one tab tree per corner — corner ids mirror `PanelCorner` in `ui/js/react/index.tsx` (kept inline here to stay dependency-free of that package). */
+/** 🐳 The full persisted dock arrangement, one tab tree per anchor — anchor ids mirror `PanelAnchor` in `ui/js/react/index.tsx` (kept inline here to stay dependency-free of that package). */
 export interface DockSkeleton {
-  version: 1;
-  corners: Record<"top-left" | "top-right" | "bottom-left" | "bottom-right", readonly DockTabSkeleton[]>;
+  version: 2;
+  anchors: Record<"top-left" | "top-middle" | "top-right" | "bottom-left" | "bottom-middle" | "bottom-right", readonly DockTabSkeleton[]>;
 }
 
 function dockOsStorageKey(): string {
@@ -877,7 +880,7 @@ function readDockSkeleton(storage: StoragePort, key: string): DockSkeleton | nul
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object" || (parsed as DockSkeleton).version !== 1 || !(parsed as DockSkeleton).corners || typeof (parsed as DockSkeleton).corners !== "object") return null;
+    if (!parsed || typeof parsed !== "object" || (parsed as DockSkeleton).version !== 2 || !(parsed as DockSkeleton).anchors || typeof (parsed as DockSkeleton).anchors !== "object") return null;
     return parsed as DockSkeleton;
   } catch {
     return null;
@@ -925,17 +928,17 @@ export class DockLayoutStore extends Store<DockSkeleton | null> {
 //#endregion DockLayoutStore
 
 //#region DockUiStateStore
-/** 🌱 Persisted per-corner panel chrome — only the fields that differ from the shell's computed defaults are ever stored. */
-export interface DockUiCornerState {
+/** 🌱 Persisted per-anchor panel chrome — only the fields that differ from the shell's computed defaults are ever stored. */
+export interface DockUiPanelState {
   visible?: boolean;
   size?: number;
   path?: readonly string[];
 }
 
-/** 🌱 The full persisted dock UI state: per-corner visibility/size/active-path, per-branch drill-down memory, and tree section/group expansion. Corner ids mirror `PanelCorner` (kept inline here to stay dependency-free of the `ui` package, same convention as {@link DockSkeleton}). */
+/** 🌱 The full persisted dock UI state: per-anchor visibility/size/active-path, per-branch drill-down memory, and tree section/group expansion. Anchor ids mirror `PanelAnchor` (kept inline here to stay dependency-free of the `ui` package, same convention as {@link DockSkeleton}). */
 export interface DockUiState {
-  version: 1;
-  corners: Partial<Record<"top-left" | "top-right" | "bottom-left" | "bottom-right", DockUiCornerState>>;
+  version: 2;
+  anchors: Partial<Record<"top-left" | "top-middle" | "top-right" | "bottom-left" | "bottom-middle" | "bottom-right", DockUiPanelState>>;
   pathMemory?: Readonly<Record<string, string>>;
   treeOpen?: Readonly<Record<string, boolean>>;
 }
@@ -954,14 +957,14 @@ function readDockUiState(storage: StoragePort, key: string): DockUiState | null 
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object" || (parsed as DockUiState).version !== 1 || !(parsed as DockUiState).corners || typeof (parsed as DockUiState).corners !== "object") return null;
+    if (!parsed || typeof parsed !== "object" || (parsed as DockUiState).version !== 2 || !(parsed as DockUiState).anchors || typeof (parsed as DockUiState).anchors !== "object") return null;
     return parsed as DockUiState;
   } catch {
     return null;
   }
 }
 
-/** 🌱 Persists corner-panel visibility/size/path, drill-down memory, and tree expansion across an "os" layer (global default) and an optional per-app layer that wins when present — `save(null)`/`saveOs(null)` remove rather than persist a JSON `"null"`. */
+/** 🌱 Persists panel visibility/size/path, drill-down memory, and tree expansion across an "os" layer (global default) and an optional per-app layer that wins when present — `save(null)`/`saveOs(null)` remove rather than persist a JSON `"null"`. */
 export class DockUiStateStore extends Store<DockUiState | null> {
   constructor(
     private readonly storage: StoragePort,
@@ -1115,6 +1118,11 @@ export type ActionArgOption = GeneratedActionArgOption;
 export type ToolDefinition = GeneratedToolDefinition;
 export type ToolRef = GeneratedToolRef;
 
+/** 🎛️ Generated from Rust `CommandScope`/`CommandDefinition`/`CommandRef` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
+export type CommandScope = GeneratedCommandScope;
+export type CommandDefinition = GeneratedCommandDefinition;
+export type CommandRef = GeneratedCommandRef;
+
 /** 🧰 The framework-owned action id apps dispatch to activate a tool — mirrors `SET_ACTIVE_TOOL_ACTION_ID`. */
 export const SET_ACTIVE_TOOL_ACTION_ID = "setActiveTool";
 
@@ -1210,6 +1218,8 @@ export type PluginManifest = {
   }[];
   readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string; readonly appId: string }[];
   readonly contributions?: readonly PluginContribution[];
+  /** 🎛️ Plugin-scope commands this plugin exposes — apply whenever any of its apps is focused. */
+  readonly commands?: readonly CommandDefinition[];
 };
 
 //#region AppManifestProtocol
@@ -1309,7 +1319,8 @@ export type PluginWasmHandle = {
   readonly manifest: PluginManifest;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
-  readonly handleAction: (instanceId: number, actionJson: string, viewState: PluginViewState) => Promise<ActionResponse>;
+  readonly handleAction: (instanceId: number, actionJson: string, viewState: PluginViewState) => Promise<InvocationResponse>;
+  readonly handleCommand?: (instanceId: number, commandJson: string, viewState: PluginViewState) => Promise<InvocationResponse>;
   readonly applyOperations?: (instanceId: number, operationsJson: string) => Promise<void>;
   readonly readAppDocument?: (instanceId: number) => Promise<string>;
   readonly loadAppDocument?: (instanceId: number, documentJson: string) => Promise<void>;
@@ -1540,7 +1551,7 @@ export type PluginRegistryEntry = {
   readonly consumes?: readonly string[];
 };
 
-//#region ActionResponse
+//#region InvocationResponse
 /** @emoji 🕰️ Hybrid logical clock stamp carried by every kernel operation. */
 export type HybridLogicalTimestamp = { readonly wall: number; readonly counter: number };
 
@@ -1564,7 +1575,7 @@ export type KernelOperation = {
   readonly id: string;
   readonly document: number;
   readonly baseVersion: number;
-  readonly actionId: string;
+  readonly invocationId: string;
   readonly diff: DocumentDiff;
   readonly inverse: InverseOperation;
   readonly dependencies?: readonly string[];
@@ -1572,9 +1583,9 @@ export type KernelOperation = {
   readonly timestamp: HybridLogicalTimestamp;
 };
 
-/** @emoji 🎁 The undo group binding an action invocation to its operations + inverses. */
+/** @emoji 🎁 The undo group binding an invocation (action or command) to its operations + inverses. */
 export type UndoGroup = {
-  readonly actionId: string;
+  readonly invocationId: string;
   readonly operations: readonly string[];
   readonly inverseOperations: readonly InverseOperation[];
 };
@@ -1607,7 +1618,7 @@ export type HostEffect =
 
 /**
  * @emoji 🐢 Mirrors the Rust `UiDirtyScope` — which rendered UI sections an action actually
- * invalidates. Absent (`undefined`) on an `ActionResponse` means the same as the Rust side's missing
+ * invalidates. Absent (`undefined`) on an `InvocationResponse` means the same as the Rust side's missing
  * field: treat as `{kind: "full"}` (see {@link resolveUiDirtyScope}) — every plugin that doesn't emit
  * this yet keeps today's whole-shell-refresh behavior.
  */
@@ -1630,11 +1641,12 @@ export function resolveUiDirtyScope(scope: UiDirtyScope | undefined): UiDirtySco
 }
 
 /**
- * @emoji 📤 Typed result of a plugin `handle-action` call — mirrors the Rust `ActionResult`. Replaces
- * the legacy `string[]` JSON-patch shape: operations are now typed `KernelOperation`s with true
- * inverses, and the shell applies `requestedEffects` through `applyHostEffects` (WS-E).
+ * @emoji 📤 Typed result of a plugin `handle-action`/`handle-command` call — mirrors the Rust
+ * `InvocationResult`. Replaces the legacy `string[]` JSON-patch shape: operations are now typed
+ * `KernelOperation`s with true inverses, and the shell applies `requestedEffects` through
+ * `applyHostEffects` (WS-E).
  */
-export type ActionResponse = {
+export type InvocationResponse = {
   readonly output: unknown;
   readonly operations: readonly KernelOperation[];
   readonly inverseGroup: UndoGroup;
@@ -1646,26 +1658,26 @@ export type ActionResponse = {
 
 // 🐢 `uiScope` deliberately left unset here (not `{kind: "none"}`) — `resolveUiDirtyScope` treats a
 // missing scope as `full`, the safe default for the rare failure paths that return this constant
-// (unparseable response, stub module missing `handleAction`).
-const EMPTY_ACTION_RESPONSE: ActionResponse = {
+// (unparseable response, stub module missing `handleAction`/`handleCommand`).
+const EMPTY_INVOCATION_RESPONSE: InvocationResponse = {
   output: null,
   operations: [],
-  inverseGroup: { actionId: "", operations: [], inverseOperations: [] },
+  inverseGroup: { invocationId: "", operations: [], inverseOperations: [] },
 };
 
-/** @emoji 📥 Parses a raw plugin `handle-action` response string into a typed {@link ActionResponse}. */
-export function parseActionResponse(raw: string): ActionResponse {
+/** @emoji 📥 Parses a raw plugin `handle-action`/`handle-command` response string into a typed {@link InvocationResponse}. */
+export function parseInvocationResponse(raw: string): InvocationResponse {
   try {
-    const parsed = JSON.parse(raw) as Partial<ActionResponse> | null;
+    const parsed = JSON.parse(raw) as Partial<InvocationResponse> | null;
     if (parsed && typeof parsed === "object" && Array.isArray(parsed.operations)) {
-      return parsed as ActionResponse;
+      return parsed as InvocationResponse;
     }
   } catch {
     // fall through to the empty response
   }
-  return EMPTY_ACTION_RESPONSE;
+  return EMPTY_INVOCATION_RESPONSE;
 }
-//#endregion ActionResponse
+//#endregion InvocationResponse
 
 export const DEFAULT_PLUGIN_REGISTRY: readonly PluginRegistryEntry[] = [{ pluginId: "draw", moduleUrl: "/plugin-modules/draw/draw_plugin.js" }];
 
@@ -1698,6 +1710,7 @@ export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): Plugin
     createApp: (appId) => runSerialized(() => handle.createApp(appId)),
     destroyApp: (instanceId) => runSerialized(() => handle.destroyApp(instanceId)),
     handleAction: (instanceId, actionJson, viewState) => runSerialized(() => handle.handleAction(instanceId, actionJson, viewState)),
+    handleCommand: handle.handleCommand ? (instanceId, commandJson, viewState) => runSerialized(() => handle.handleCommand!(instanceId, commandJson, viewState)) : undefined,
     render: (instanceId, bodyKey, viewState) => runSerialized(() => handle.render(instanceId, bodyKey, viewState)),
     renderWithDocument: handle.renderWithDocument ? (instanceId, bodyKey, viewState, documentJson) => runSerialized(() => handle.renderWithDocument!(instanceId, bodyKey, viewState, documentJson)) : undefined,
     refreshUi: (instanceId, request) => runSerialized(() => handle.refreshUi(instanceId, request)),
@@ -1713,7 +1726,7 @@ export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): Plugin
 
 //#region PluginWorkerClient
 /** @emoji 🧵 Message types the generated `plugin-worker.js` dispatches (framework/product/os/dev/script.ts `pluginWorkerSource`). */
-type PluginWorkerMessageType = "init" | "manifest" | "createApp" | "handleAction" | "render" | "destroy" | "refreshUi" | "error";
+type PluginWorkerMessageType = "init" | "manifest" | "createApp" | "handleAction" | "handleCommand" | "render" | "destroy" | "refreshUi" | "error";
 
 /** @emoji ⏱️ Logs only, never kills the worker — a plugin action owns in-flight, possibly undo-relevant
  * state, so abandoning it mid-call (the wgpu renderer's timeout+restart policy) would corrupt it. */
@@ -1805,6 +1818,10 @@ class PluginWorkerClient {
     return String((await this.request("handleAction", { instanceId, actionJson, contextJson })).value ?? "{}");
   }
 
+  async handleCommand(instanceId: number, commandJson: string, contextJson: string): Promise<string> {
+    return String((await this.request("handleCommand", { instanceId, commandJson, contextJson })).value ?? "{}");
+  }
+
   async render(instanceId: number, bodyKey: string, viewStateJson: string, documentJson?: string): Promise<string> {
     return String((await this.request("render", { instanceId, bodyKey, viewStateJson, documentJson })).value ?? "{}");
   }
@@ -1834,7 +1851,8 @@ async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): P
     manifest,
     createApp: (appId) => client.createApp(appId),
     destroyApp: (instanceId) => client.destroyApp(instanceId),
-    handleAction: async (instanceId, actionJson, viewState) => parseActionResponse(await client.handleAction(instanceId, actionJson, JSON.stringify({ viewState, actor: "local" }))),
+    handleAction: async (instanceId, actionJson, viewState) => parseInvocationResponse(await client.handleAction(instanceId, actionJson, JSON.stringify({ viewState, actor: "local" }))),
+    handleCommand: async (instanceId, commandJson, viewState) => parseInvocationResponse(await client.handleCommand(instanceId, commandJson, JSON.stringify({ viewState, actor: "local" }))),
     render: async (instanceId, bodyKey, viewState) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState))) as PluginUiNode,
     renderWithDocument: async (instanceId, bodyKey, viewState, documentJson) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState), documentJson)) as PluginUiNode,
     refreshUi: async (instanceId, request) => JSON.parse(await client.refreshUi(instanceId, JSON.stringify(request))) as PluginUiRefreshResponse,
@@ -1877,6 +1895,7 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
       createApp: (appId: string) => Promise<number>;
       destroyApp?: (instanceId: number) => Promise<void>;
       handleAction: (instanceId: number, actionJson: string, contextJson: string) => Promise<string>;
+      handleCommand?: (instanceId: number, commandJson: string, contextJson: string) => Promise<string>;
       render: (instanceId: number, bodyKey: string, viewStateJson: string) => Promise<string>;
       renderWithDocument?: (instanceId: number, bodyKey: string, viewStateJson: string, documentJson: string) => Promise<string>;
       refreshUi: (instanceId: number, requestJson: string) => Promise<string>;
@@ -1890,6 +1909,7 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
     semio_plugin_create_app?: (appId: string) => number;
     semio_plugin_destroy_app?: (instanceId: number) => void;
     semio_plugin_handle_action?: (instanceId: number, actionJson: string, viewStateJson: string) => string;
+    semio_plugin_handle_command?: (instanceId: number, commandJson: string, viewStateJson: string) => string;
     semio_plugin_render?: (instanceId: number, bodyKey: string, viewStateJson: string) => string;
     semio_plugin_refresh_ui?: (instanceId: number, requestJson: string) => string;
     semio_plugin_apply_operations?: (instanceId: number, operationsJson: string) => void;
@@ -1911,8 +1931,14 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
       },
       handleAction: async (instanceId, actionJson, viewState) => {
         const raw = await api.handleAction(instanceId, actionJson, JSON.stringify(viewState));
-        return parseActionResponse(raw);
+        return parseInvocationResponse(raw);
       },
+      handleCommand: api.handleCommand
+        ? async (instanceId, commandJson, viewState) => {
+            const raw = await api.handleCommand!(instanceId, commandJson, JSON.stringify(viewState));
+            return parseInvocationResponse(raw);
+          }
+        : undefined,
       render: async (instanceId, bodyKey, viewState) => JSON.parse(await api.render(instanceId, bodyKey, JSON.stringify(viewState))) as PluginUiNode,
       renderWithDocument: api.renderWithDocument ? async (instanceId, bodyKey, viewState, documentJson) => JSON.parse(await api.renderWithDocument!(instanceId, bodyKey, JSON.stringify(viewState), documentJson)) as PluginUiNode : undefined,
       refreshUi: async (instanceId, request) => JSON.parse(await api.refreshUi(instanceId, JSON.stringify(request))) as PluginUiRefreshResponse,
@@ -1941,9 +1967,15 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
     },
     async handleAction(instanceId: number, actionJson: string, viewState: PluginViewState) {
       const handle = module.semio_plugin_handle_action;
-      if (!handle) return EMPTY_ACTION_RESPONSE;
+      if (!handle) return EMPTY_INVOCATION_RESPONSE;
       const raw = handle(instanceId, actionJson, JSON.stringify(viewState));
-      return parseActionResponse(raw);
+      return parseInvocationResponse(raw);
+    },
+    async handleCommand(instanceId: number, commandJson: string, viewState: PluginViewState) {
+      const handle = module.semio_plugin_handle_command;
+      if (!handle) return EMPTY_INVOCATION_RESPONSE;
+      const raw = handle(instanceId, commandJson, JSON.stringify(viewState));
+      return parseInvocationResponse(raw);
     },
     async render(instanceId: number, bodyKey: string, viewState: PluginViewState) {
       const render = module.semio_plugin_render;
@@ -1990,6 +2022,9 @@ export function pluginHandleForBridge(handle: PluginWasmHandle) {
     createApp: (appId: string) => handle.createApp(appId),
     destroyApp: (instanceId: number) => handle.destroyApp(instanceId),
     handleAction: (instanceId: number, actionJson: string, viewStateJson: string) => handle.handleAction(instanceId, actionJson, JSON.parse(viewStateJson) as PluginViewState).then((ops) => JSON.stringify(ops)),
+    handleCommand: handle.handleCommand
+      ? (instanceId: number, commandJson: string, viewStateJson: string) => handle.handleCommand!(instanceId, commandJson, JSON.parse(viewStateJson) as PluginViewState).then((ops) => JSON.stringify(ops))
+      : undefined,
     render: (instanceId: number, bodyKey: string, viewStateJson: string) => handle.render(instanceId, bodyKey, JSON.parse(viewStateJson) as PluginViewState).then((node) => JSON.stringify(node)),
     renderWithDocument: handle.renderWithDocument
       ? (instanceId: number, bodyKey: string, viewStateJson: string, documentJson: string) => handle.renderWithDocument!(instanceId, bodyKey, JSON.parse(viewStateJson) as PluginViewState, documentJson).then((node) => JSON.stringify(node))
@@ -2034,7 +2069,10 @@ if (import.meta.vitest) {
   }
 
   describe("DockLayoutStore", () => {
-    const emptySkeleton = (): DockSkeleton => ({ version: 1, corners: { "top-left": [], "top-right": [], "bottom-left": [], "bottom-right": [] } });
+    const emptySkeleton = (): DockSkeleton => ({
+      version: 2,
+      anchors: { "top-left": [], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [] },
+    });
 
     it("returns null when nothing persisted", () => {
       const store = new DockLayoutStore(createMemoryStoragePort());
@@ -2045,7 +2083,7 @@ if (import.meta.vitest) {
       const storage = createMemoryStoragePort();
       const store = new DockLayoutStore(storage, "my-app");
       const osSkeleton = emptySkeleton();
-      const appSkeleton: DockSkeleton = { ...emptySkeleton(), corners: { ...emptySkeleton().corners, "top-left": [{ id: "a" }] } };
+      const appSkeleton: DockSkeleton = { ...emptySkeleton(), anchors: { ...emptySkeleton().anchors, "top-left": [{ id: "a" }] } };
       store.saveOs(osSkeleton);
       store.save(appSkeleton);
       expect(store.getSnapshot()).toEqual(appSkeleton);
@@ -2087,10 +2125,17 @@ if (import.meta.vitest) {
       expect(() => store.getSnapshot()).not.toThrow();
       expect(store.getSnapshot()).toBeNull();
     });
+
+    it("discards a stale version-1 (corners) blob instead of migrating it", () => {
+      const storage = createMemoryStoragePort();
+      storage.set("semio.os.dock", JSON.stringify({ version: 1, corners: { "top-left": [{ id: "a" }], "top-right": [], "bottom-left": [], "bottom-right": [] } }));
+      const store = new DockLayoutStore(storage);
+      expect(store.getSnapshot()).toBeNull();
+    });
   });
 
   describe("DockUiStateStore", () => {
-    const emptyUiState = (): DockUiState => ({ version: 1, corners: {} });
+    const emptyUiState = (): DockUiState => ({ version: 2, anchors: {} });
 
     it("returns null when nothing persisted", () => {
       const store = new DockUiStateStore(createMemoryStoragePort());
@@ -2101,7 +2146,7 @@ if (import.meta.vitest) {
       const storage = createMemoryStoragePort();
       const store = new DockUiStateStore(storage, "my-app");
       const osState = emptyUiState();
-      const appState: DockUiState = { ...emptyUiState(), corners: { "top-left": { visible: true, size: 320 } } };
+      const appState: DockUiState = { ...emptyUiState(), anchors: { "top-left": { visible: true, size: 320 } } };
       store.saveOs(osState);
       store.save(appState);
       expect(store.getSnapshot()).toEqual(appState);
@@ -2144,9 +2189,19 @@ if (import.meta.vitest) {
       expect(store.getSnapshot()).toBeNull();
     });
 
+    it("discards a stale version-1 (corners) blob instead of migrating it", () => {
+      const storage = createMemoryStoragePort();
+      storage.set("semio.os.dockUi", JSON.stringify({ version: 1, corners: { "top-left": { visible: true, size: 320 } } }));
+      const store = new DockUiStateStore(storage);
+      expect(store.getSnapshot()).toBeNull();
+    });
+
     it('uses a distinct key from DockLayoutStore for an app literally named "ui"', () => {
       const storage = createMemoryStoragePort();
-      new DockLayoutStore(storage, "ui").save({ version: 1, corners: { "top-left": [], "top-right": [], "bottom-left": [], "bottom-right": [] } });
+      new DockLayoutStore(storage, "ui").save({
+        version: 2,
+        anchors: { "top-left": [], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [] },
+      });
       new DockUiStateStore(storage).saveOs(emptyUiState());
       expect(storage.get("semio.os.dock.ui")).not.toBeNull();
       expect(storage.get("semio.os.dockUi")).not.toBeNull();

@@ -291,6 +291,11 @@ self.addEventListener("message", async (event) => {
           value: await api.handleAction(msg.instanceId, msg.actionJson, msg.contextJson ?? msg.viewStateJson),
         });
         break;
+      case "handleCommand":
+        reply(requestId, "handleCommand", {
+          value: await api.handleCommand(msg.instanceId, msg.commandJson, msg.contextJson ?? msg.viewStateJson),
+        });
+        break;
       case "render":
         reply(requestId, "render", {
           value: msg.documentJson && api.renderWithDocument
@@ -363,6 +368,15 @@ async function createPluginApiInner() {
       const response = await plugin.handleAction(instanceId, { json: actionJson }, { json: context });
       return response.json;
     },
+    async handleCommand(instanceId, commandJson, contextJson) {
+      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
+      const context =
+        contextJson && contextJson.trim().startsWith("{")
+          ? contextJson
+          : JSON.stringify({ viewState: JSON.parse(contextJson), actor: "local" });
+      const response = await plugin.handleCommand(instanceId, { json: commandJson }, { json: context });
+      return response.json;
+    },
     async render(instanceId, bodyKey, viewStateJson) {
       if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
       const response = await plugin.updateWindow(instanceId, {
@@ -389,6 +403,8 @@ async function createPluginApiInner() {
     destroyApp: (instanceId) => runSerialized(() => core.destroyApp(instanceId)),
     handleAction: (instanceId, actionJson, contextJson) =>
       runSerialized(() => core.handleAction(instanceId, actionJson, contextJson)),
+    handleCommand: (instanceId, commandJson, contextJson) =>
+      runSerialized(() => core.handleCommand(instanceId, commandJson, contextJson)),
     render: (instanceId, bodyKey, viewStateJson) =>
       runSerialized(() => core.render(instanceId, bodyKey, viewStateJson)),
     renderWithDocument: (instanceId, bodyKey, viewStateJson, documentJson) =>
