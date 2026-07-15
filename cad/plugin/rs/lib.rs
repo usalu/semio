@@ -861,7 +861,7 @@ mod interaction {
     /// and `event.point` — which `hasValidBox` and the commit params then read.
     ///
     /// The remaining `box.*` rubber-band helpers and selection-driven actions (used only by box's
-    /// advanced cube/3-point/center sub-modes and by selection-based tools) are a documented
+    /// advanced cube/3-point/center sub-modes and by selection-based utilities) are a documented
     /// follow-up; they no-op here rather than error.
     fn run_named_action_effect(
         context: &mut HashMap<String, Value>,
@@ -2126,10 +2126,10 @@ use semio_framework_plugin::{PanelGroup,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_mixed_vec3, ui_inspector_all_equal, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, AppLabelsOverlay, DocumentApp, DocumentView, MeshData, ToolCategory, ToolDefinition, UiFieldNode,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, AppLabelsOverlay, DocumentApp, DocumentView, MeshData, UtilityCategory, UtilityDefinition, UiFieldNode,
     UiInspectorFieldGroup, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiTreeItemAction, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
-    WindowEngagementPossible, WindowEngagementStatus, SET_ACTIVE_TOOL_ACTION_ID,
+    WindowEngagementPossible, WindowEngagementStatus, SET_ACTIVE_UTILITY_ACTION_ID,
     WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
     WindowLayoutWindowNode, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -2422,7 +2422,7 @@ fn default_selection_method() -> String {
 }
 
 /// @emoji 🕹️ The default active transform tool when the host has not yet set one — mirrors the
-/// framework toolbar's first-declared tool (`move`), read from `ViewState::active_tool_id`.
+/// framework toolbar's first-declared tool (`move`), read from `ViewState::active_utility_id`.
 const CAD_DEFAULT_TOOL_ID: &str = "move";
 
 impl Default for CadPlayRuntime {
@@ -3105,7 +3105,7 @@ fn world_meshes_json(objects: &[CadObject]) -> String {
     serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
 }
 
-fn world_selection_json(document: &CadScene, runtime: &CadPlayRuntime, active_tool: &str) -> String {
+fn world_selection_json(document: &CadScene, runtime: &CadPlayRuntime, active_utility: &str) -> String {
     let mut value: Value = serde_json::from_str(&world3d_selection_json(
         &runtime.selection_method,
         &runtime.selected_object_ids,
@@ -3113,7 +3113,7 @@ fn world_selection_json(document: &CadScene, runtime: &CadPlayRuntime, active_to
     ))
     .unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
-        object.insert("transformTool".into(), json!(active_tool));
+        object.insert("transformTool".into(), json!(active_utility));
         object.insert("gumballActive".into(), json!(gumball_active(runtime)));
         object.insert(
             "engagementSessionActive".into(),
@@ -3157,7 +3157,7 @@ fn world_references_json(document: &CadScene, pane: CadPaneId) -> Option<String>
     Some(serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()))
 }
 
-fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_id: &str, active_tool: &str) -> UiNode {
+fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_id: &str, active_utility: &str) -> UiNode {
     let objects = cad_pane_objects(&envelope.document, pane);
     let preview = envelope
         .runtime
@@ -3174,7 +3174,7 @@ fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_i
             camera_json(cad_pane_camera(&envelope.document, pane)),
             world_meshes_json(objects),
             world_instances_json(objects, &envelope.runtime),
-            world_selection_json(&envelope.document, &envelope.runtime, active_tool),
+            world_selection_json(&envelope.document, &envelope.runtime, active_utility),
             None,
             None,
             None,
@@ -3678,7 +3678,7 @@ fn build_catalogue_tree(labels: &CadLabels) -> UiNode {
     })
 }
 
-fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_tool: &str) -> UiNode {
+fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_utility: &str) -> UiNode {
     if let (Some(object_id), Some(primitive_id)) = (
         envelope.runtime.selected_object_ids.first(),
         envelope.runtime.selected_primitive_id.as_deref(),
@@ -3743,7 +3743,7 @@ fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_too
     }
     ui_stack_vertical(vec![
         ui_text(format!("Schema: {}", envelope.document.schema)),
-        ui_text(format!("Tool: {active_tool}")),
+        ui_text(format!("Tool: {active_utility}")),
         ui_text(format!("Objects: {}", envelope.document.objects.len())),
     ])
 }
@@ -4133,8 +4133,8 @@ fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId) -> WindowEngag
     WindowEngagement {
         session_active: Some(session_active),
         // 🧰 The move/rotate/scale transform switcher now lives in the framework toolbar (derived
-        // from `ToolDefinition`s + `ViewState::active_tool_id`); the engagement HUD no longer
-        // duplicates it — tools must have exactly one surface.
+        // from `UtilityDefinition`s + `ViewState::active_utility_id`); the engagement HUD no longer
+        // duplicates it — utilities must have exactly one surface.
         options: None,
         input: Some(WindowEngagementInput {
             id: Some("engagement-input".into()),
@@ -4480,8 +4480,8 @@ impl DocumentApp for CadApp {
                 self.runtime = runtime;
                 ActionEmit::ops(vec![CadOp::SetScene { scene: Box::new(scene) }])
             }
-            SET_ACTIVE_TOOL_ACTION_ID => {
-                // 🧰 Switching the host-owned active tool (`ViewState::active_tool_id`) is a pure
+            SET_ACTIVE_UTILITY_ACTION_ID => {
+                // 🧰 Switching the host-owned active tool (`ViewState::active_utility_id`) is a pure
                 // View action: it never mutates the document. Clear any in-progress engagement
                 // session / rubber-band scratch so a stale preview cannot leak across a tool switch.
                 self.runtime.engagement_input.clear();
@@ -4988,22 +4988,22 @@ impl DocumentApp for CadApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, CadScene>, view_state: &ViewState) -> UiNode {
         let view = CadPlayView { document: doc.projection.clone(), runtime: self.runtime.clone() };
         let labels = cad_labels(view_state);
-        let active_tool = view_state.active_tool_id.as_deref().unwrap_or(CAD_DEFAULT_TOOL_ID);
+        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(CAD_DEFAULT_TOOL_ID);
         match body_key {
-            CAD_PLAY_BODY_SHAPE => build_world_scene_for_pane(&view, CadPaneId::Shape, CAD_PLAY_SURFACE_SHAPE, active_tool),
+            CAD_PLAY_BODY_SHAPE => build_world_scene_for_pane(&view, CadPaneId::Shape, CAD_PLAY_SURFACE_SHAPE, active_utility),
             CAD_PLAY_BODY_BUILDING => {
-                build_world_scene_for_pane(&view, CadPaneId::Building, CAD_PLAY_SURFACE_BUILDING, active_tool)
+                build_world_scene_for_pane(&view, CadPaneId::Building, CAD_PLAY_SURFACE_BUILDING, active_utility)
             }
-            CAD_PLAY_BODY_ENERGY => build_world_scene_for_pane(&view, CadPaneId::Energy, CAD_PLAY_SURFACE_ENERGY, active_tool),
+            CAD_PLAY_BODY_ENERGY => build_world_scene_for_pane(&view, CadPaneId::Energy, CAD_PLAY_SURFACE_ENERGY, active_utility),
             CAD_PLAY_BODY_STRUCTURE_CLASSIC => build_world_scene_for_pane(
                 &view,
                 CadPaneId::StructureClassic,
                 CAD_PLAY_SURFACE_STRUCTURE_CLASSIC,
-                active_tool,
+                active_utility,
             ),
             CAD_PLAY_BODY_DOCUMENT => build_document_tree(&view, labels),
             CAD_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
-            CAD_PLAY_BODY_PROPERTIES => build_properties_panel(&view, labels, active_tool),
+            CAD_PLAY_BODY_PROPERTIES => build_properties_panel(&view, labels, active_utility),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -5103,19 +5103,19 @@ fn cad_quad_layout() -> WindowLayout {
 }
 
 /// @emoji 🧰 A cad transform-gumball tool: an exclusive member of the `transform` group rendered in
-/// the framework toolbar (`ToolCategory::Tools`). Switching it is a pure `setActiveTool` View action
-/// (`ViewState::active_tool_id`) — it gates the action panel while active (the default), since a
+/// the framework toolbar (`UtilityCategory::Tools`). Switching it is a pure `setActiveTool` View action
+/// (`ViewState::active_utility_id`) — it gates the action panel while active (the default), since a
 /// transform mode is a content-editing mode, not a passive viewing aid.
-fn cad_transform_tool(id: &str, label: &str, icon: &str) -> ToolDefinition {
-    ToolDefinition {
+fn cad_transform_utility(id: &str, label: &str, icon: &str) -> UtilityDefinition {
+    UtilityDefinition {
         group: Some("transform".into()),
-        category: Some(ToolCategory::Tools),
-        ..ToolDefinition::new(id, label, icon)
+        category: Some(UtilityCategory::Tools),
+        ..UtilityDefinition::new(id, label, icon)
     }
 }
 
 /// @emoji 🧰 The transform-tool refs scoping the gumball to every world-3d pane uniformly.
-fn cad_transform_tool_refs() -> Vec<semio_framework_plugin::ToolRef> {
+fn cad_transform_tool_refs() -> Vec<semio_framework_plugin::UtilityRef> {
     vec!["move".into(), "rotate".into(), "scale".into()]
 }
 
@@ -5188,9 +5188,9 @@ fn create_cad_app() -> App {
                 ActionArgOption::new("default", "Default"),
                 ActionArgOption::new(CAD_EXAMPLE_FOREST_LEFT, "Hexagonal Cut Concrete Forest Left"),
             ]).default_value("default")])
-            .tool(cad_transform_tool("move", "Move", "move"))
-            .tool(cad_transform_tool("rotate", "Rotate", "rotate-cw"))
-            .tool(cad_transform_tool("scale", "Scale", "maximize-2"))
+            .tool(cad_transform_utility("move", "Move", "move"))
+            .tool(cad_transform_utility("rotate", "Rotate", "rotate-cw"))
+            .tool(cad_transform_utility("scale", "Scale", "maximize-2"))
             .window_kind_tools(CAD_PLAY_WINDOW_SHAPE, cad_transform_tool_refs())
             .window_kind_tools(CAD_PLAY_WINDOW_BUILDING, cad_transform_tool_refs())
             .window_kind_tools(CAD_PLAY_WINDOW_ENERGY, cad_transform_tool_refs())
@@ -5439,21 +5439,21 @@ mod tests {
     #[test]
     fn app_definition_declares_transform_tools_and_no_actions_variant() {
         let definition = create_cad_app().definition;
-        let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
+        let tool_ids: Vec<&str> = definition.utilities.iter().map(|tool| tool.id.as_str()).collect();
         assert!(tool_ids.contains(&"move"));
         assert!(tool_ids.contains(&"rotate"));
         assert!(tool_ids.contains(&"scale"));
-        // 🧰 The framework auto-injects `setActiveTool` as a View action once tools are declared —
+        // 🧰 The framework auto-injects `setActiveTool` as a View action once utilities are declared —
         // cad must NOT also declare it as an Operation.
-        let set_active_tool = definition.actions.iter().find(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID).expect("setActiveTool auto-injected");
+        let set_active_tool = definition.actions.iter().find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveTool auto-injected");
         assert_eq!(set_active_tool.kind, semio_framework_plugin::ActionKind::View);
-        // 🚦 Transform tools gate the action panel while active (the default) — cad declares no
-        // passive `allows_actions_while_active` view tools.
-        assert!(definition.tools.iter().all(|tool| !tool.allows_actions_while_active));
-        // 🧭 Every world-3d pane scopes the three transform tools.
+        // 🚦 Transform utilities gate the action panel while active (the default) — cad declares no
+        // passive `allows_actions_while_active` view utilities.
+        assert!(definition.utilities.iter().all(|tool| !tool.allows_actions_while_active));
+        // 🧭 Every world-3d pane scopes the three transform utilities.
         for window in &definition.window_kinds {
-            let refs: Vec<&str> = window.tools.iter().map(|tool_ref| tool_ref.as_str()).collect();
-            assert_eq!(refs, vec!["move", "rotate", "scale"], "window {} tools", window.id);
+            let refs: Vec<&str> = window.utilities.iter().map(|tool_ref| tool_ref.as_str()).collect();
+            assert_eq!(refs, vec!["move", "rotate", "scale"], "window {} utilities", window.id);
         }
     }
 
@@ -5508,7 +5508,7 @@ mod tests {
         let scene = default_document();
         drive(&mut app, &scene, "setSelection", Some(json!({ "objectIds": ["object-box-1"] })));
         let selection = world_selection_json(&scene, &app.runtime, "rotate");
-        assert!(selection.contains("\"transformTool\":\"rotate\""), "gumball tool sourced from ViewState::active_tool_id");
+        assert!(selection.contains("\"transformTool\":\"rotate\""), "gumball tool sourced from ViewState::active_utility_id");
         assert!(selection.contains("\"gumballActive\":true"));
         assert!(selection.contains("\"gumballTarget\""));
     }
@@ -5526,11 +5526,11 @@ mod tests {
         let scene = default_document();
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
-        let view_state = ViewState { active_tool_id: Some("scale".into()), ..ViewState::default() };
+        let view_state = ViewState { active_utility_id: Some("scale".into()), ..ViewState::default() };
         let node = app.render(CAD_PLAY_BODY_SHAPE, &doc, &view_state);
         let json = serde_json::to_string(&node).unwrap();
         // The world selection blob is embedded as an escaped JSON string inside the scene node.
-        assert!(json.contains(r#"transformTool\":\"scale"#), "render sources gumball tool from ViewState::active_tool_id");
+        assert!(json.contains(r#"transformTool\":\"scale"#), "render sources gumball tool from ViewState::active_utility_id");
     }
 
     #[test]
@@ -5553,9 +5553,9 @@ mod tests {
         app.handle_action("addObject", Some(&json!({ "typology": "spatial.shape.primitive.box" })), &ViewState::default(), &meta("local"))
             .expect("add object");
         let projection_after_add = serde_json::to_string(&app.projection().expect("projection")).unwrap();
-        let view_state = ViewState { active_tool_id: Some("rotate".into()), ..ViewState::default() };
+        let view_state = ViewState { active_utility_id: Some("rotate".into()), ..ViewState::default() };
         let result = app
-            .handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "rotate" })), &view_state, &meta("local"))
+            .handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "rotate" })), &view_state, &meta("local"))
             .expect("set active tool");
         assert!(result.operations.is_empty(), "tool switch must emit zero operations");
         let projection_after_switch = serde_json::to_string(&app.projection().expect("projection")).unwrap();

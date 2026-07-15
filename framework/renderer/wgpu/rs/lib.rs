@@ -1659,7 +1659,7 @@ mod tests {
             modes: semio_framework_core::Modes::one(ModeDefinition {
                 id: "default".into(),
                 label: "Default".into(),
-                tools: vec![],
+                utilities: vec![],
                 layout_id: None,
                 commands: vec![],
             }),
@@ -1675,7 +1675,7 @@ mod tests {
                         icon_id: None,
                         options: WindowOptions::default(),
                         actions: vec![],
-                        tools: vec![],
+                        utilities: vec![],
                         params_schema: None,
                         document_projection_schema: None,
                         input_event_schema: None,
@@ -1694,7 +1694,7 @@ mod tests {
             }],
             keybindings: vec![],
             actions: vec![],
-            tools: vec![],
+            utilities: vec![],
             commands: vec![],
             named_layouts: vec![],
             default_layout: layout,
@@ -1930,7 +1930,7 @@ mod tests {
 
     //#region WindowActionsAndToolsTests
     use semio_framework_core::{
-        ActionArgDef, ActionDefinition, ActionKind, ActionRef, ToolDefinition, ToolRef,
+        ActionArgDef, ActionDefinition, ActionKind, ActionRef, UtilityDefinition, UtilityRef,
     };
     use ui_wgpu::{KeyAction, PointerModifiers};
 
@@ -1944,11 +1944,11 @@ mod tests {
     fn actions_tools_app() -> AppDefinition {
         let mut app = sample_app(&["main", "aux"], None);
         app.controller_id = "ctrl".into();
-        app.tools = vec![
-            ToolDefinition::new("tool.a", "Tool A", "icon.a"),
-            ToolDefinition {
+        app.utilities = vec![
+            UtilityDefinition::new("tool.a", "Tool A", "icon.a"),
+            UtilityDefinition {
                 allows_actions_while_active: true,
-                ..ToolDefinition::new("tool.b", "Tool B", "icon.b")
+                ..UtilityDefinition::new("tool.b", "Tool B", "icon.b")
             },
         ];
         app.actions = vec![
@@ -1968,7 +1968,7 @@ mod tests {
         // Scope tool.a + both actions to `main`; leave tool.b an orphan referenced by no window.
         for kind in app.window_kinds.iter_mut() {
             if kind.id == "main" {
-                kind.tools = vec![ToolRef::new("tool.a")];
+                kind.utilities = vec![UtilityRef::new("tool.a")];
                 kind.actions = vec![ActionRef::new("zeroArg"), ActionRef::new("withArgs")];
             }
         }
@@ -1984,11 +1984,11 @@ mod tests {
         let app = actions_tools_app();
         let main = app.window_kinds.iter().find(|k| k.id == "main").unwrap();
         let aux = app.window_kinds.iter().find(|k| k.id == "aux").unwrap();
-        let main_ids: Vec<&str> = crate::shell::resolve_window_tools(&app, main)
+        let main_ids: Vec<&str> = crate::shell::resolve_window_utilities(&app, main)
             .iter()
             .map(|t| t.id.as_str())
             .collect();
-        let aux_ids: Vec<&str> = crate::shell::resolve_window_tools(&app, aux)
+        let aux_ids: Vec<&str> = crate::shell::resolve_window_utilities(&app, aux)
             .iter()
             .map(|t| t.id.as_str())
             .collect();
@@ -2042,14 +2042,14 @@ mod tests {
     #[test]
     fn tool_activation_toggles_and_switches() {
         let mut shell = shell();
-        shell.apply_set_active_tool("main", "tool.a");
+        shell.apply_set_active_utility("main", "tool.a");
         assert_eq!(shell.active_tool_for_window("main"), Some("tool.a"));
         // Re-selecting the active tool deactivates it (the same update a re-click / Escape performs).
-        shell.apply_set_active_tool("main", "tool.a");
+        shell.apply_set_active_utility("main", "tool.a");
         assert_eq!(shell.active_tool_for_window("main"), None);
         // Switching to a different tool activates it.
-        shell.apply_set_active_tool("main", "tool.a");
-        shell.apply_set_active_tool("main", "tool.b");
+        shell.apply_set_active_utility("main", "tool.a");
+        shell.apply_set_active_utility("main", "tool.b");
         assert_eq!(shell.active_tool_for_window("main"), Some("tool.b"));
     }
 
@@ -2060,11 +2060,11 @@ mod tests {
         // No active tool → actions enabled.
         assert!(shell.actions_enabled_for_window(&app, "main"));
         // tool.a defaults to `allows_actions_while_active = false` → actions gated.
-        shell.apply_set_active_tool("main", "tool.a");
+        shell.apply_set_active_utility("main", "tool.a");
         assert!(!shell.actions_enabled_for_window(&app, "main"));
         // tool.b sets the flag true → actions stay enabled.
-        shell.apply_set_active_tool("main", "tool.a");
-        shell.apply_set_active_tool("main", "tool.b");
+        shell.apply_set_active_utility("main", "tool.a");
+        shell.apply_set_active_utility("main", "tool.b");
         assert!(shell.actions_enabled_for_window(&app, "main"));
     }
 
@@ -2088,7 +2088,7 @@ mod tests {
                 id: "brush-params".into(),
                 label: "Brush".into(),
                 default_open: Some(true),
-                active_tool_id: Some("tool.a".into()),
+                active_utility_id: Some("tool.a".into()),
                 children: vec![WindowMeasure::Slider {
                     id: "size".into(),
                     label: Some("Size".into()),
@@ -2103,7 +2103,7 @@ mod tests {
                 id: "grid".into(),
                 label: "Grid".into(),
                 default_open: Some(true),
-                active_tool_id: None,
+                active_utility_id: None,
                 children: vec![],
             },
         ];
@@ -2219,7 +2219,7 @@ struct BoardSyncCache {
     selection_json: Option<String>,
     camera_json: Option<String>,
     hovered_id: Option<String>,
-    active_tool: Option<String>,
+    active_utility: Option<String>,
     selection_method: Option<String>,
     grid_snap_enabled: Option<bool>,
     grid_factor: Option<f64>,
@@ -3870,10 +3870,10 @@ fn sync_board_host(host: &mut puzzle_2d::BoardHost, scene: &ui_wgpu::Puzzle2dBoa
         cache.hovered_id = scene.hovered_id.clone();
         host.set_hovered_id_silent(scene.hovered_id.clone());
     }
-    let active_tool = scene.active_tool.as_deref().unwrap_or("select");
-    if cache.active_tool.as_deref() != Some(active_tool) {
-        cache.active_tool = Some(active_tool.to_string());
-        host.set_active_tool(active_tool);
+    let active_utility = scene.active_utility.as_deref().unwrap_or("select");
+    if cache.active_utility.as_deref() != Some(active_utility) {
+        cache.active_utility = Some(active_utility.to_string());
+        host.set_active_tool(active_utility);
     }
     if sync_field(&mut cache.selection_method, &scene.selection_method) {
         host.set_selection_options(&scene.selection_method, "replace", true, true, true);
@@ -5251,7 +5251,7 @@ pub mod plugin_bridge {
 //! 🔌 Plugin bridge for wasm C-ABI modules (browser JS loader + wasmtime host).
 
 use semio_framework_core::{PluginManifest, ViewState};
-use ui_wgpu::{ToolNode, UiNode, WindowEngagement, WindowMeasure};
+use ui_wgpu::{UtilityNode, UiNode, WindowEngagement, WindowMeasure};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -7704,7 +7704,7 @@ struct NoteDocumentJson {
     id: String,
     camera: NoteCameraJson,
     blocks: Vec<Value>,
-    active_tool: Option<String>,
+    active_utility: Option<String>,
     grid_visible: Option<bool>,
     grid_spacing: Option<f64>,
     grid_subdivisions: Option<f64>,
@@ -7723,7 +7723,7 @@ impl Default for NoteDocumentJson {
             id: "empty".into(),
             camera: NoteCameraJson::default(),
             blocks: Vec::new(),
-            active_tool: Some("selectDirect".into()),
+            active_utility: Some("selectDirect".into()),
             grid_visible: None,
             grid_spacing: None,
             grid_subdivisions: None,
@@ -8256,7 +8256,7 @@ fn note_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, 
         .note_camera
         .map(|(cx, cy, cz)| NoteCameraF { x: cx, y: cy, zoom: cz })
         .unwrap_or_else(|| NoteCameraF::from(doc.camera.clone()));
-    let tool = doc.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
+    let tool = doc.active_utility.clone().unwrap_or_else(|| "selectDirect".into());
     let mut actions = Vec::new();
 
     let selection_bounds = note_selection_bounds(&doc.blocks, &state.note_overrides, &selected_ids);
@@ -8724,7 +8724,7 @@ fn render_note_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
     }
 
     let selection_bounds = note_selection_bounds(&doc.blocks, &overrides, &selected_ids);
-    let tool = doc.active_tool.clone().unwrap_or_else(|| "selectDirect".into());
+    let tool = doc.active_utility.clone().unwrap_or_else(|| "selectDirect".into());
     let show_handles = !is_navigator && (tool == "selectDirect" || tool == "selectMarquee") && selection_bounds.is_some() && !selected_ids.is_empty();
     if let Some(sel) = selection_bounds {
         note_draw_selection_chrome(ctx.draw, theme, camera, inner, sel, show_handles);
@@ -10453,7 +10453,7 @@ use semio_framework_core::{
 };
 use ui_wgpu::component::layout::WindowEngagementPossible;
 use ui_wgpu::{
-    ActionDescriptor, ToolCategory, ToolNode, UiButtonNode, UiNode, UiSelectItem, UiSelectNode, UiStackNode,
+    ActionDescriptor, UtilityCategory, UtilityNode, UiButtonNode, UiNode, UiSelectItem, UiSelectNode, UiStackNode,
     UiTextNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption,
     WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -10697,10 +10697,10 @@ pub struct ShellState {
     pub split_resize_secondary_origin: Vec<f32>,
     pub measures_resize_window_id: Option<String>,
     pub deferred_actions: Vec<ActionDescriptor>,
-    pub active_tools: Vec<ToolNode>,
+    pub active_tools: Vec<UtilityNode>,
     /// @emoji 🧰 Host-owned active tool per window kind (never a document field, never a VCS op).
-    /// Replaces the deleted `active_tool_id`/`find_active_tool_id` "first pressed toggle" heuristic.
-    pub active_tool_by_window: HashMap<String, String>,
+    /// Replaces the deleted `active_utility_id`/`find_active_tool_id` "first pressed toggle" heuristic.
+    pub active_utility_by_window: HashMap<String, String>,
     /// @emoji 📇 Per-window Actions-rail fold state (absent = folded, the default).
     pub action_panel_folded: HashMap<String, bool>,
     /// @emoji 📇 Per-window expanded action id (the accordion-open staged arg form).
@@ -10889,7 +10889,7 @@ impl ShellState {
             measures_resize_window_id: None,
             deferred_actions: Vec::new(),
             active_tools: Vec::new(),
-            active_tool_by_window: HashMap::new(),
+            active_utility_by_window: HashMap::new(),
             action_panel_folded: HashMap::new(),
             action_panel_expanded: HashMap::new(),
             staged_action_args: HashMap::new(),
@@ -10979,7 +10979,7 @@ impl ShellState {
             let view_state = ViewState {
                 active_mode_id: Some(s_app.default_mode_id.clone()),
                 active_window_kind_id: Some(s_app.window_kinds.first().id.clone()),
-                active_tool_id: None,
+                active_utility_id: None,
                 selection_json: None,
                 panel_json: Some(Self::panel_json(&panel_state)),
                 contributions_json: None,
@@ -11009,7 +11009,7 @@ impl ShellState {
                 view_state: ViewState {
                     active_mode_id: Some(app.default_mode_id.clone()),
                     active_window_kind_id: self.active_window_id.clone(),
-                    active_tool_id: None,
+                    active_utility_id: None,
                     selection_json: None,
                     panel_json: None,
                     contributions_json: None,
@@ -11194,7 +11194,7 @@ impl ShellState {
             for kind in &session.app.window_kinds {
                 // 🧰 Inject the host-owned active tool for this window kind so the plugin renders its
                 // live-preview overlay for the right tool (Architecture Decision 4).
-                view_state.active_tool_id = self.active_tool_by_window.get(&kind.id).cloned();
+                view_state.active_utility_id = self.active_utility_by_window.get(&kind.id).cloned();
                 let node = plugin
                     .render(session.instance_id, &kind.body_key, &view_state)
                     .await?;
@@ -11228,8 +11228,8 @@ impl ShellState {
             let resolved = self.resolve_external_slots(node, &view_state).await?;
             self.panel_ui.insert(tab.id().to_string(), resolved);
         }
-        // 🧰 The toolbar is derived from the app's declared `AppDefinition.tools` (scoped to the active
-        // window kind) via `ui_wgpu::derive_tool_nodes` — the old per-call `plugin.tools()` fetch and the
+        // 🧰 The toolbar is derived from the app's declared `AppDefinition.utilities` (scoped to the active
+        // window kind) via `ui_wgpu::derive_utility_nodes` — the old per-call `plugin.utilities()` fetch and the
         // `find_active_tool_id` "first pressed toggle" heuristic are gone (Architecture Decision 5).
         self.active_tools = self.derive_toolbar_nodes(&session);
         self.active_tools.extend(framework_sync_tools(self.sync_backbone_uri.as_deref()));
@@ -11259,7 +11259,7 @@ impl ShellState {
                             let view_state = ViewState {
                                 active_mode_id: Some(app.default_mode_id.clone()),
                                 active_window_kind_id: Some(app.window_kinds.first().id.clone()),
-                                active_tool_id: None,
+                                active_utility_id: None,
                                 selection_json: None,
                                 panel_json: None,
                                 contributions_json: None,
@@ -11836,14 +11836,14 @@ impl ShellState {
         }
         // 🧰 Intercept the framework `setActiveTool` View action to update the host-owned active-tool
         // map before forwarding to the plugin (which reacts by clearing its live-preview scratch). The
-        // authoritative state is the shell map + the `ViewState.active_tool_id` it injects on render.
-        if action.action == semio_framework_core::SET_ACTIVE_TOOL_ACTION_ID {
+        // authoritative state is the shell map + the `ViewState.active_utility_id` it injects on render.
+        if action.action == semio_framework_core::SET_ACTIVE_UTILITY_ACTION_ID {
             if let Some(session) = self.session.clone() {
                 if action.controller_id == session.app.controller_id {
-                    if let Some(tool_id) = action
+                    if let Some(utility_id) = action
                         .args
                         .as_ref()
-                        .and_then(|args| args.get("toolId"))
+                        .and_then(|args| args.get("utilityId"))
                         .and_then(|value| value.as_str())
                     {
                         let window_kind_id = action
@@ -11853,7 +11853,7 @@ impl ShellState {
                             .and_then(|value| value.as_str())
                             .map(String::from)
                             .unwrap_or_else(|| self.active_toolbar_window_kind(&session).id.clone());
-                        self.apply_set_active_tool(&window_kind_id, tool_id);
+                        self.apply_set_active_utility(&window_kind_id, utility_id);
                     }
                 }
             }
@@ -11876,12 +11876,12 @@ impl ShellState {
         let result = plugin
             .handle_action(session.instance_id, &action_json, &session.view_state)
             .await?;
-        // 🧰 A plugin may programmatically switch the active tool via `HostEffect::SetActiveTool`
+        // 🧰 A plugin may programmatically switch the active tool via `HostEffect::SetActiveUtility`
         // (Architecture Decision 4/9) — apply it to the host-owned map just like a user click.
         for effect in &result.requested_effects {
-            if let semio_framework_core::kernel::HostEffect::SetActiveTool { window_kind_id, tool_id } = effect {
-                self.active_tool_by_window
-                    .insert(window_kind_id.clone(), tool_id.clone());
+            if let semio_framework_core::kernel::HostEffect::SetActiveUtility { window_kind_id, utility_id } = effect {
+                self.active_utility_by_window
+                    .insert(window_kind_id.clone(), utility_id.clone());
             }
         }
         let ops: Vec<String> = result
@@ -12101,7 +12101,7 @@ impl ShellState {
         let next_view_state = view_state.unwrap_or_else(|| ViewState {
             active_mode_id: Some(app.default_mode_id.clone()),
             active_window_kind_id: Some(app.window_kinds.first().id.clone()),
-            active_tool_id: None,
+            active_utility_id: None,
             selection_json: None,
             panel_json: Some(Self::panel_json(&panel_state)),
             contributions_json: None,
@@ -13597,7 +13597,7 @@ impl ShellState {
         for action in &session.app.actions {
             if !action.in_palette
                 || action.kind == semio_framework_core::ActionKind::History
-                || action.id == semio_framework_core::SET_ACTIVE_TOOL_ACTION_ID
+                || action.id == semio_framework_core::SET_ACTIVE_UTILITY_ACTION_ID
             {
                 continue;
             }
@@ -13926,7 +13926,7 @@ impl ShellState {
         // 🧰 Escape deactivates the active tool for the focused window (P5).
         if idle && action == ui_wgpu::KeyAction::Escape {
             if let Some(window_id) = self.active_window_id.clone() {
-                if self.active_tool_by_window.remove(&window_id).is_some() {
+                if self.active_utility_by_window.remove(&window_id).is_some() {
                     self.refresh_ui().await?;
                     return Ok(());
                 }
@@ -14326,11 +14326,11 @@ fn backbone_kind_from_uri(uri: &str) -> &'static str {
     }
 }
 
-fn framework_sync_tools(active_uri: Option<&str>) -> Vec<ToolNode> {
+fn framework_sync_tools(active_uri: Option<&str>) -> Vec<UtilityNode> {
     let active_kind = active_uri.map(backbone_kind_from_uri);
     let pressed = |kind: &str| active_kind == Some(kind);
     vec![
-        ToolNode::Toggle {
+        UtilityNode::Toggle {
             id: "framework.sync.file".into(),
             icon_id: "file-json".into(),
             label: Some("File".into()),
@@ -14339,14 +14339,14 @@ fn framework_sync_tools(active_uri: Option<&str>) -> Vec<ToolNode> {
             order: Some(0),
             pressed: Some(pressed("file")),
             disabled: None,
-            category: Some(ToolCategory::Sync),
+            category: Some(UtilityCategory::Sync),
             on_change: ActionDescriptor {
                 controller_id: "framework.sync".into(),
                 action: "selectFile".into(),
                 args: None,
             },
         },
-        ToolNode::Toggle {
+        UtilityNode::Toggle {
             id: "framework.sync.folder".into(),
             icon_id: "folder".into(),
             label: Some("Folder".into()),
@@ -14355,14 +14355,14 @@ fn framework_sync_tools(active_uri: Option<&str>) -> Vec<ToolNode> {
             order: Some(1),
             pressed: Some(pressed("folder")),
             disabled: None,
-            category: Some(ToolCategory::Sync),
+            category: Some(UtilityCategory::Sync),
             on_change: ActionDescriptor {
                 controller_id: "framework.sync".into(),
                 action: "selectFolder".into(),
                 args: None,
             },
         },
-        ToolNode::Toggle {
+        UtilityNode::Toggle {
             id: "framework.sync.remote".into(),
             icon_id: "cloud".into(),
             label: Some("Remote".into()),
@@ -14371,7 +14371,7 @@ fn framework_sync_tools(active_uri: Option<&str>) -> Vec<ToolNode> {
             order: Some(2),
             pressed: Some(pressed("remote")),
             disabled: None,
-            category: Some(ToolCategory::Sync),
+            category: Some(UtilityCategory::Sync),
             on_change: ActionDescriptor {
                 controller_id: "framework.sync".into(),
                 action: "selectRemote".into(),
@@ -14381,14 +14381,14 @@ fn framework_sync_tools(active_uri: Option<&str>) -> Vec<ToolNode> {
     ]
 }
 
-fn partition_tools_by_category(tools: &[ToolNode]) -> [Vec<ToolNode>; 4] {
-    let mut buckets: [Vec<ToolNode>; 4] = [vec![], vec![], vec![], vec![]];
-    for tool in tools {
+fn partition_utilities_by_category(utilities: &[UtilityNode]) -> [Vec<UtilityNode>; 4] {
+    let mut buckets: [Vec<UtilityNode>; 4] = [vec![], vec![], vec![], vec![]];
+    for tool in utilities {
         let idx = match tool.category() {
-            ToolCategory::Selection => 0,
-            ToolCategory::Tools => 1,
-            ToolCategory::History => 2,
-            ToolCategory::Sync => 3,
+            UtilityCategory::Selection => 0,
+            UtilityCategory::Tools => 1,
+            UtilityCategory::History => 2,
+            UtilityCategory::Sync => 3,
         };
         buckets[idx].push(tool.clone());
     }
@@ -14412,15 +14412,15 @@ fn render_footer_tool_nodes(
     mut x: f32,
     btn_y: f32,
     btn_h: f32,
-    tools: &[ToolNode],
+    utilities: &[UtilityNode],
     collection_expanded: &HashMap<String, bool>,
 ) -> f32 {
-    for tool in tools {
+    for tool in utilities {
         match tool {
-            ToolNode::Separator { .. } => {
+            UtilityNode::Separator { .. } => {
                 x = render_footer_section_divider(draw, theme, x, btn_y, btn_h);
             }
-            ToolNode::Button {
+            UtilityNode::Button {
                 id,
                 icon_id,
                 label,
@@ -14455,7 +14455,7 @@ fn render_footer_tool_nodes(
                 });
                 x += item_w + theme.gap_standard * 0.5;
             }
-            ToolNode::Toggle {
+            UtilityNode::Toggle {
                 id,
                 icon_id,
                 label,
@@ -14491,7 +14491,7 @@ fn render_footer_tool_nodes(
                 });
                 x += item_w + theme.gap_standard * 0.5;
             }
-            ToolNode::Collection {
+            UtilityNode::Collection {
                 id,
                 icon_id,
                 label,
@@ -14527,9 +14527,9 @@ fn render_footer_tool_nodes(
                 });
                 x += item_w + theme.gap_standard * 0.5;
                 if expanded {
-                    let leaves: Vec<ToolNode> = children
+                    let leaves: Vec<UtilityNode> = children
                         .iter()
-                        .filter(|child| !matches!(child, ToolNode::Collection { .. }))
+                        .filter(|child| !matches!(child, UtilityNode::Collection { .. }))
                         .cloned()
                         .collect();
                     x = render_footer_tool_nodes(
@@ -14630,30 +14630,30 @@ where
 }
 
 //#region ActionPanelAndTools
-/// 🧰 Resolves the tools a window kind presents in the toolbar — the tool mirror of
-/// {@link semio_framework_core::resolve_window_actions}: explicit `window_kind.tools` refs in declared
+/// 🧰 Resolves the utilities a window kind presents in the toolbar — the tool mirror of
+/// {@link semio_framework_core::resolve_window_actions}: explicit `window_kind.utilities` refs in declared
 /// order, plus any app tool referenced by no window kind (an "orphan" appearing on every window — the
 /// scoping fallback that prevents blank toolbars mid-migration, Architecture Decision 8).
-pub(crate) fn resolve_window_tools<'a>(
+pub(crate) fn resolve_window_utilities<'a>(
     app: &'a semio_framework_core::AppDefinition,
     window_kind: &semio_framework_core::WindowKindDefinition,
-) -> Vec<&'a semio_framework_core::ToolDefinition> {
+) -> Vec<&'a semio_framework_core::UtilityDefinition> {
     use std::collections::HashSet;
     let referenced: HashSet<&str> = app
         .window_kinds
         .iter()
-        .flat_map(|window| window.tools.iter().map(|tool_ref| tool_ref.as_str()))
+        .flat_map(|window| window.utilities.iter().map(|tool_ref| tool_ref.as_str()))
         .collect();
-    let mut resolved: Vec<&'a semio_framework_core::ToolDefinition> = Vec::new();
+    let mut resolved: Vec<&'a semio_framework_core::UtilityDefinition> = Vec::new();
     let mut seen: HashSet<&str> = HashSet::new();
-    for tool_ref in &window_kind.tools {
-        if let Some(tool) = app.tools.iter().find(|tool| tool.id == tool_ref.as_str()) {
+    for tool_ref in &window_kind.utilities {
+        if let Some(tool) = app.utilities.iter().find(|tool| tool.id == tool_ref.as_str()) {
             if seen.insert(tool.id.as_str()) {
                 resolved.push(tool);
             }
         }
     }
-    for tool in &app.tools {
+    for tool in &app.utilities {
         if !referenced.contains(tool.id.as_str()) && seen.insert(tool.id.as_str()) {
             resolved.push(tool);
         }
@@ -14686,7 +14686,7 @@ fn fmt_num(value: f64) -> String {
     }
 }
 
-/// 🖱️ Maps a `ToolDefinition.cursor` CSS/winit cursor name onto the shell's {@link ui_wgpu::SemioCursor}.
+/// 🖱️ Maps a `UtilityDefinition.cursor` CSS/winit cursor name onto the shell's {@link ui_wgpu::SemioCursor}.
 fn semio_cursor_from_name(name: &str) -> ui_wgpu::SemioCursor {
     use ui_wgpu::SemioCursor;
     match name.trim().to_ascii_lowercase().as_str() {
@@ -14773,7 +14773,7 @@ pub(crate) fn key_event_matches_chord(
 
 impl ShellState {
     // #region tool-derivation
-    /// 🧰 The window kind whose tools/actions the shell chrome currently scopes to (the focused window,
+    /// 🧰 The window kind whose utilities/actions the shell chrome currently scopes to (the focused window,
     /// else the view-state's active kind, else the app's first kind).
     fn active_toolbar_window_kind<'a>(
         &self,
@@ -14788,20 +14788,20 @@ impl ShellState {
             .unwrap_or_else(|| session.app.window_kinds.first())
     }
 
-    /// 🧰 Derives the footer toolbar `ToolNode`s from the app's declared tools scoped to the active
+    /// 🧰 Derives the footer toolbar `UtilityNode`s from the app's declared utilities scoped to the active
     /// window kind, marking the host-owned active tool pressed (Architecture Decision 5).
-    fn derive_toolbar_nodes(&self, session: &ActiveSession) -> Vec<ToolNode> {
-        if session.app.tools.is_empty() {
+    fn derive_toolbar_nodes(&self, session: &ActiveSession) -> Vec<UtilityNode> {
+        if session.app.utilities.is_empty() {
             return Vec::new();
         }
         let window_kind = self.active_toolbar_window_kind(session);
-        let resolved = resolve_window_tools(&session.app, window_kind);
+        let resolved = resolve_window_utilities(&session.app, window_kind);
         if resolved.is_empty() {
             return Vec::new();
         }
-        let specs: Vec<ui_wgpu::component::tools::DerivedToolSpec> = resolved
+        let specs: Vec<ui_wgpu::component::utilities::DerivedUtilitySpec> = resolved
             .iter()
-            .map(|tool| ui_wgpu::component::tools::DerivedToolSpec {
+            .map(|tool| ui_wgpu::component::utilities::DerivedUtilitySpec {
                 id: tool.id.clone(),
                 label: tool.label.clone(),
                 icon_id: tool.icon_id.clone(),
@@ -14810,48 +14810,48 @@ impl ShellState {
             })
             .collect();
         let active = self
-            .active_tool_by_window
+            .active_utility_by_window
             .get(&window_kind.id)
             .map(String::as_str);
-        ui_wgpu::component::tools::derive_tool_nodes(&session.app.controller_id, &specs, active)
+        ui_wgpu::component::utilities::derive_utility_nodes(&session.app.controller_id, &specs, active)
     }
     // #endregion
 
     // #region active-tool
     /// 🧰 Applies a user-driven `setActiveTool`: re-selecting the active tool deactivates it, otherwise
     /// it becomes the active tool for that window kind (Architecture Decision 4).
-    pub(crate) fn apply_set_active_tool(&mut self, window_kind_id: &str, tool_id: &str) {
+    pub(crate) fn apply_set_active_utility(&mut self, window_kind_id: &str, utility_id: &str) {
         let already = self
-            .active_tool_by_window
+            .active_utility_by_window
             .get(window_kind_id)
             .map(String::as_str)
-            == Some(tool_id);
+            == Some(utility_id);
         if already {
-            self.active_tool_by_window.remove(window_kind_id);
+            self.active_utility_by_window.remove(window_kind_id);
         } else {
-            self.active_tool_by_window
-                .insert(window_kind_id.to_string(), tool_id.to_string());
+            self.active_utility_by_window
+                .insert(window_kind_id.to_string(), utility_id.to_string());
         }
     }
 
     /// 🧰 The active tool id for a window kind, if any.
     pub(crate) fn active_tool_for_window(&self, window_kind_id: &str) -> Option<&str> {
-        self.active_tool_by_window
+        self.active_utility_by_window
             .get(window_kind_id)
             .map(String::as_str)
     }
 
     /// 🖱️ The cursor the active tool requests while the pointer is over the active window's body — maps
-    /// `ToolDefinition.cursor` onto a {@link ui_wgpu::SemioCursor} (P5). `None` when no tool/cursor applies.
+    /// `UtilityDefinition.cursor` onto a {@link ui_wgpu::SemioCursor} (P5). `None` when no tool/cursor applies.
     pub(crate) fn tool_cursor_override(&self, x: f32, y: f32) -> Option<ui_wgpu::SemioCursor> {
         let session = self.session.as_ref()?;
         let window_id = self.active_window_id.as_deref()?;
-        let tool_id = self.active_tool_for_window(window_id)?;
+        let utility_id = self.active_tool_for_window(window_id)?;
         let cursor_name = session
             .app
-            .tools
+            .utilities
             .iter()
-            .find(|tool| tool.id == tool_id)?
+            .find(|tool| tool.id == utility_id)?
             .cursor
             .as_deref()?;
         let rect = self.window_content_rects.get(window_id)?;
@@ -14867,10 +14867,10 @@ impl ShellState {
     ) -> bool {
         match self.active_tool_for_window(window_kind_id) {
             None => true,
-            Some(tool_id) => app
-                .tools
+            Some(utility_id) => app
+                .utilities
                 .iter()
-                .find(|tool| tool.id == tool_id)
+                .find(|tool| tool.id == utility_id)
                 .map(|tool| tool.allows_actions_while_active)
                 .unwrap_or(true),
         }
@@ -15519,10 +15519,10 @@ impl ShellState {
         }
         let btn_h = theme.control_height;
         let btn_y = y + (theme.footer_height - btn_h) * 0.5;
-        // 🧰 Footer sections: Selection · Tools · History · Sync. The former `ToolCategory::Actions`
+        // 🧰 Footer sections: Selection · Tools · History · Sync. The former `UtilityCategory::Actions`
         // section is deleted — window-scoped actions now live in the per-window Actions rail
         // (Architecture Decision 8/9, P6).
-        let partitions = partition_tools_by_category(&self.active_tools);
+        let partitions = partition_utilities_by_category(&self.active_tools);
         let sections = [
             partitions[0].as_slice(),
             partitions[1].as_slice(),
@@ -15531,8 +15531,8 @@ impl ShellState {
         ];
         let mut tool_x = theme.padding_standard;
         let mut first_section = true;
-        for tools in sections {
-            if tools.is_empty() {
+        for utilities in sections {
+            if utilities.is_empty() {
                 continue;
             }
             if !first_section {
@@ -15548,7 +15548,7 @@ impl ShellState {
                 tool_x,
                 btn_y,
                 btn_h,
-                tools,
+                utilities,
                 &self.tool_collection_expanded,
             );
         }
@@ -16548,9 +16548,9 @@ impl ShellState {
         gpu: &mut ui_wgpu::GpuContext,
     ) -> WindowMeasuresRailOutcome {
         let inset = theme.gap_standard;
-        let active_tool = self.active_tool_by_window.get(window_id).cloned();
+        let active_utility = self.active_utility_by_window.get(window_id).cloned();
         let (measures, _tool_options) =
-            ui_wgpu::partition_window_measures(&self.measures_for_kind(kind), active_tool.as_deref());
+            ui_wgpu::partition_window_measures(&self.measures_for_kind(kind), active_utility.as_deref());
         if measures.is_empty() {
             return WindowMeasuresRailOutcome {
                 chip_hit: None,
@@ -16735,9 +16735,9 @@ impl ShellState {
         gpu: &mut ui_wgpu::GpuContext,
     ) {
         let inset = theme.gap_standard;
-        let active_tool = self.active_tool_by_window.get(window_id).cloned();
+        let active_utility = self.active_utility_by_window.get(window_id).cloned();
         let (_general, tool_options) =
-            ui_wgpu::partition_window_measures(&self.measures_for_kind(kind), active_tool.as_deref());
+            ui_wgpu::partition_window_measures(&self.measures_for_kind(kind), active_utility.as_deref());
         if tool_options.is_empty() {
             return;
         }

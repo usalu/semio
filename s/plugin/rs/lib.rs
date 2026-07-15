@@ -2961,7 +2961,7 @@ mod tests {
                     modes: vec![ModeDefinition {
                         id: "edit".into(),
                         label: "Edit".into(),
-                        tools: vec![],
+                        utilities: vec![],
                         layout_id: None,
                         commands: vec![],
                     }],
@@ -3411,7 +3411,7 @@ mod tests {
                 modes: vec![ModeDefinition {
                     id: "edit".into(),
                     label: "Edit".into(),
-                    tools: vec![],
+                    utilities: vec![],
                     layout_id: None,
                     commands: vec![],
                 }],
@@ -3433,7 +3433,7 @@ mod tests {
                     modes: vec![ModeDefinition {
                         id: "edit".into(),
                         label: "Edit".into(),
-                        tools: vec![],
+                        utilities: vec![],
                         layout_id: None,
                         commands: vec![],
                     }],
@@ -3455,7 +3455,7 @@ mod tests {
                 modes: vec![ModeDefinition {
                     id: "edit".into(),
                     label: "Edit".into(),
-                    tools: vec![],
+                    utilities: vec![],
                     layout_id: None,
                     commands: vec![],
                 }],
@@ -3477,7 +3477,7 @@ mod tests {
                     modes: vec![ModeDefinition {
                         id: "edit".into(),
                         label: "Edit".into(),
-                        tools: vec![],
+                        utilities: vec![],
                         layout_id: None,
                         commands: vec![],
                     }],

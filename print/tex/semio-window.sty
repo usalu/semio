@@ -1582,6 +1582,14 @@
   \setlength { \parindent } { 0pt }
   \semio@chrome@dims@compute
   \setcounter{tocdepth}{\semio@toc@depth@unlimited}
+  % 🪜 Every heading level through \subparagraph gets its own chip color and
+  % chip style (\semio@heading@installall below), so every level must also
+  % actually be numbered — KOMA's own default secnumdepth (3, chapter…
+  % subsubsection) silently leaves \paragraph/\subparagraph unnumbered, which
+  % breaks their \the<level> composition (a frozen, never-stepped counter
+  % renders as a phantom "…0" segment) without any visual sign that numbering
+  % was skipped, since the chip still renders regardless.
+  \setcounter{secnumdepth}{\semio@toc@depth@unlimited}
   \semio@hierarchy@hooks@install
   \semio@heading@installall
   \makeatother
@@ -1594,6 +1602,7 @@
 \AtBeginDocument{%
   \makeatletter
   \setcounter{tocdepth}{\semio@toc@depth@unlimited}
+  \setcounter{secnumdepth}{\semio@toc@depth@unlimited}
   \SemioChromeNavbarLabelsCompute
   \makeatother
   \ExplSyntaxOn
@@ -2305,6 +2314,22 @@
   \semio@heading@install@spacing{subsubsection}%
   \semio@heading@install@spacing{paragraph}%
   \semio@heading@install@spacing{subparagraph}%
+  % 🪜 \newcounter{paragraph}[subsubsection] resets paragraph whenever
+  % subsubsection steps, but a document may nest \paragraph directly under
+  % \subsection (skipping \subsubsection, e.g. the appendix user-story list)
+  % — that \subsection call still resets subsubsection to 0, so the kernel's
+  % default \theparagraph (always \thesubsubsection.\arabic{paragraph}) would
+  % render a phantom ".0." segment for a level that was never actually used.
+  % Drop that segment only when subsubsection is genuinely unused (=0); once
+  % \subsubsection *is* called, its counter is nonzero and the normal 4-level
+  % form composes exactly as before.
+  \renewcommand{\theparagraph}{%
+    \ifnum\c@subsubsection=\z@
+      \thesubsection.\arabic{paragraph}%
+    \else
+      \thesubsubsection.\arabic{paragraph}%
+    \fi
+  }%
 }
 
 %endregion Headings

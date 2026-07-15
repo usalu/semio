@@ -1,5 +1,5 @@
 //! 🔺 Lowpoly plugin — mesh + paint editor as a typed {@link DocumentApp}. Mesh/object structure and
-//! paint pixels are the document projection (undoable via the VCS store); tools, selection, camera and
+//! paint pixels are the document projection (undoable via the VCS store); utilities, selection, camera and
 //! the mid-drag paint scratch are ephemeral app-struct state.
 
 use base64::Engine;
@@ -17,13 +17,13 @@ use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
     world3d_camera_json, world3d_scene, world3d_selection_json, world3d_sun_measures, ActionArgDef,
     ActionArgOption, ActionDescriptor, ActionEmit, App, AppLabelsOverlay, Canvas2dScene, DocumentApp,
-    DocumentView, MeshData, PanelGroup, SurfaceKind, ToolCategory, ToolDefinition, UiFieldNode,
+    DocumentView, MeshData, PanelGroup, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode,
     UiInspectorFieldGroup, UiNode, UiToggleNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, MeasureSelectItem, WindowEngagementPossible,
-    WindowEngagementStatus, SET_ACTIVE_TOOL_ACTION_ID,
+    WindowEngagementStatus, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
@@ -419,7 +419,7 @@ fn gumball_active(view: LowpolyView) -> bool {
 //#endregion 🔖SelectionHelpers
 
 //#region 🔖Scene
-fn world_selection_json_for(view: LowpolyView, active_tool: &str, active_mode_id: Option<&str>, doc: Option<&LowpolyDocument>) -> String {
+fn world_selection_json_for(view: LowpolyView, active_utility: &str, active_mode_id: Option<&str>, doc: Option<&LowpolyDocument>) -> String {
     let runtime = view.runtime;
     let active = resolve_active_object_id(view.projection, runtime);
     let mut value: Value = serde_json::from_str(&world3d_selection_json(
@@ -431,7 +431,7 @@ fn world_selection_json_for(view: LowpolyView, active_tool: &str, active_mode_id
     if let Some(object) = value.as_object_mut() {
         object.insert("granularity".into(), json!(runtime.selection.mode));
         object.insert("targets".into(), json!(runtime.selection.targets));
-        object.insert("transformTool".into(), json!(active_tool));
+        object.insert("transformTool".into(), json!(active_utility));
         object.insert(
             "interactionMode".into(),
             json!(if active_mode_id == Some("paint") { "paint" } else { "model" }),
@@ -885,7 +885,7 @@ fn inspector_tool_param_field(id: &str, label: &str, key: &str, value: &Value) -
     })
 }
 
-fn build_inspector_tree(view: LowpolyView, active_tool: &str, labels: &LowpolyLabels) -> UiNode {
+fn build_inspector_tree(view: LowpolyView, active_utility: &str, labels: &LowpolyLabels) -> UiNode {
     let Some(object) = active_object(view) else {
         return ui_stack_vertical(vec![
             ui_text(format!("Schema: {LOWPOLY_DOCUMENT_SCHEMA}")),
@@ -955,7 +955,7 @@ fn build_inspector_tree(view: LowpolyView, active_tool: &str, labels: &LowpolyLa
             fields: vec![ui_inspector_readonly_field(
                 "lowpoly-play-inspector.transform.tool",
                 "Tool",
-                active_tool,
+                active_utility,
             )],
         },
         UiInspectorFieldGroup {
@@ -1002,9 +1002,9 @@ fn format_selection_targets_label(targets: &LowpolySelectionTargets) -> String {
     }
 }
 
-fn lowpoly_window_engagement(view: LowpolyView, active_tool: &str) -> WindowEngagement {
+fn lowpoly_window_engagement(view: LowpolyView, active_utility: &str) -> WindowEngagement {
     let runtime = view.runtime;
-    let transform = active_tool;
+    let transform = active_utility;
     let selected_count = runtime.selection.ids.len();
     WindowEngagement {
         session_active: Some(true),
@@ -1128,7 +1128,7 @@ fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime) -> Vec<WindowMeasure> {
             id: "lowpoly-measure-selection-kind".into(),
             label: "Selection Kind".into(),
             default_open: Some(true),
-            active_tool_id: None,
+            active_utility_id: None,
             children: vec![
                 selection_kind_toggle("mesh", "box", "Mesh", "mesh", targets.mesh),
                 selection_kind_toggle("face", "square", "Face", "face", targets.face),
@@ -1151,7 +1151,7 @@ fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime) -> Vec<WindowMeasure> {
             id: "lowpoly-measure-snap".into(),
             label: "Snap".into(),
             default_open: Some(false),
-            active_tool_id: None,
+            active_utility_id: None,
             children: vec![
                 lowpoly_tool_param_slider("snap", "Snap Grid", "snapGrid", params, 0.25, 0.05, 2.0, 0.05),
             ],
@@ -1162,8 +1162,8 @@ fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime) -> Vec<WindowMeasure> {
 }
 
 /// 🖌️ Tool Options for a stamping paint tool (`brush`/`eraser`) — the live brush size/opacity/hardness
-/// sliders, tagged `active_tool_id: Some(tool)` so [`partition_window_measures`] surfaces them in the
-/// Tool Options rail only while that exact tool is active. Both tools stamp through the same
+/// sliders, tagged `active_utility_id: Some(tool)` so [`partition_window_measures`] surfaces them in the
+/// Tool Options rail only while that exact tool is active. Both utilities stamp through the same
 /// `stamp_brush` path (radius/hardness/opacity + eraser flag), so they share an identical param set.
 fn lowpoly_paint_params_group(tool: &str, params: &Value) -> WindowMeasure {
     let slider = |suffix: &str, label: &str, key: &str, default: f64, min: f64, max: f64, step: f64| WindowMeasure::Slider {
@@ -1179,7 +1179,7 @@ fn lowpoly_paint_params_group(tool: &str, params: &Value) -> WindowMeasure {
         id: format!("lowpoly-measure-paint-params-{tool}"),
         label: "Brush".into(),
         default_open: Some(true),
-        active_tool_id: Some(tool.into()),
+        active_utility_id: Some(tool.into()),
         children: vec![
             slider("size", "Brush Size", "brushSize", 16.0, 1.0, 128.0, 1.0),
             slider("opacity", "Brush Opacity", "brushOpacity", 1.0, 0.0, 1.0, 0.05),
@@ -1586,14 +1586,14 @@ impl DocumentApp for LowpolyPlayApp {
                 }
                 ActionEmit::default()
             }
-            SET_ACTIVE_TOOL_ACTION_ID => {
+            SET_ACTIVE_UTILITY_ACTION_ID => {
                 self.stroke = None;
                 self.stroke_drag_active = false;
                 self.transform = None;
                 self.transform_drag_active = false;
                 self.runtime.hovered_target = None;
                 self.runtime.hovered_object_id = None;
-                if let Some(tool) = args.and_then(|value| value.get("toolId")).and_then(|value| value.as_str()) {
+                if let Some(tool) = args.and_then(|value| value.get("utilityId")).and_then(|value| value.as_str()) {
                     if matches!(tool, "brush" | "eraser" | "fill" | "eyedropper") {
                         self.runtime.paint_tool = tool.into();
                     }
@@ -2013,7 +2013,7 @@ impl DocumentApp for LowpolyPlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, LowpolyProjection>, view_state: &ViewState) -> UiNode {
         let projection = doc.projection;
         let labels = lowpoly_labels(view_state);
-        let active_tool = view_state.active_tool_id.as_deref().unwrap_or(LOWPOLY_TRANSFORM_TOOL_DEFAULT);
+        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(LOWPOLY_TRANSFORM_TOOL_DEFAULT);
         let view = self.view(projection);
         if matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV) {
             self.refresh_texture_cache(projection);
@@ -2031,7 +2031,7 @@ impl DocumentApp for LowpolyPlayApp {
                         lowpoly_world_camera_json(&self.runtime),
                         world_meshes_json(loaded, &texture_cache),
                         world_instances_json(view),
-                        world_selection_json_for(view, active_tool, view_state.active_mode_id.as_deref(), Some(loaded)),
+                        world_selection_json_for(view, active_utility, view_state.active_mode_id.as_deref(), Some(loaded)),
                         &self.runtime.sun,
                     ),
                 ),
@@ -2055,15 +2055,15 @@ impl DocumentApp for LowpolyPlayApp {
                 None => ui_text("Failed to load lowpoly document"),
             },
             LOWPOLY_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
-            LOWPOLY_PLAY_BODY_INSPECTION => build_inspector_tree(view, active_tool, labels),
+            LOWPOLY_PLAY_BODY_INSPECTION => build_inspector_tree(view, active_utility, labels),
             LOWPOLY_PLAY_BODY_LAYERS => build_layers_tree(view, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
     fn window_engagements(&self, doc: &DocumentView<'_, LowpolyProjection>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-        let active_tool = view_state.active_tool_id.as_deref().unwrap_or(LOWPOLY_TRANSFORM_TOOL_DEFAULT);
-        let engagement = lowpoly_window_engagement(self.view(doc.projection), active_tool);
+        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(LOWPOLY_TRANSFORM_TOOL_DEFAULT);
+        let engagement = lowpoly_window_engagement(self.view(doc.projection), active_utility);
         HashMap::from([
             (LOWPOLY_PLAY_WINDOW_MAIN.into(), engagement.clone()),
             (LOWPOLY_PLAY_WINDOW_UV.into(), engagement),
@@ -2154,12 +2154,12 @@ fn apply_transform(doc: &mut LowpolyDocument, transform: Transform) -> Result<()
 //#endregion 🔖LowpolyPlayApp
 
 //#region 🔖Manifest
-/// 🧰 One transform/paint tool declaration (id/label/icon reused verbatim from the retired `tools()` impl).
-fn lowpoly_tool(id: &str, label: &str, icon: &str, group: &str) -> ToolDefinition {
-    ToolDefinition {
+/// 🧰 One transform/paint tool declaration (id/label/icon reused verbatim from the retired `utilities()` impl).
+fn lowpoly_utility(id: &str, label: &str, icon: &str, group: &str) -> UtilityDefinition {
+    UtilityDefinition {
         group: Some(group.into()),
-        category: Some(ToolCategory::Tools),
-        ..ToolDefinition::new(id, label, icon)
+        category: Some(UtilityCategory::Tools),
+        ..UtilityDefinition::new(id, label, icon)
     }
 }
 
@@ -2281,16 +2281,16 @@ fn create_lowpoly_app() -> App {
                 ActionArgOption::new("ico_sphere", "Ico Sphere"),
             ]).default_value("box")])
             .action_args("markUvSeam", vec![ActionArgDef::toggle("seam", "Seam").default_value(true)])
-            // 🧰 Transform gumball + paint tools — exclusive per-window active tool is host-owned (never a
+            // 🧰 Transform gumball + paint utilities — exclusive per-window active tool is host-owned (never a
             // document op). Selection granularity is deliberately NOT a tool group (it is a multi-select
             // window measure); the transform group defaults to "move", paint bridges into `runtime.paint_tool`.
-            .tool(lowpoly_tool("move", "Move", "move", "transform"))
-            .tool(lowpoly_tool("rotate", "Rotate", "rotate-cw", "transform"))
-            .tool(lowpoly_tool("scale", "Scale", "maximize-2", "transform"))
-            .tool(lowpoly_tool("brush", "Brush", "paintbrush", "paint"))
-            .tool(lowpoly_tool("eraser", "Eraser", "eraser", "paint"))
-            .tool(lowpoly_tool("fill", "Fill", "paint-bucket", "paint"))
-            .tool(lowpoly_tool("eyedropper", "Eyedropper", "pipette", "paint"))
+            .tool(lowpoly_utility("move", "Move", "move", "transform"))
+            .tool(lowpoly_utility("rotate", "Rotate", "rotate-cw", "transform"))
+            .tool(lowpoly_utility("scale", "Scale", "maximize-2", "transform"))
+            .tool(lowpoly_utility("brush", "Brush", "paintbrush", "paint"))
+            .tool(lowpoly_utility("eraser", "Eraser", "eraser", "paint"))
+            .tool(lowpoly_utility("fill", "Fill", "paint-bucket", "paint"))
+            .tool(lowpoly_utility("eyedropper", "Eyedropper", "pipette", "paint"))
             .window_kind_tools(LOWPOLY_PLAY_WINDOW_MAIN, vec![
                 "move".into(), "rotate".into(), "scale".into(),
                 "brush".into(), "eraser".into(), "fill".into(), "eyedropper".into(),
@@ -2301,7 +2301,7 @@ fn create_lowpoly_app() -> App {
             // 📇 Per-window action scoping — MAIN (World3d) owns every mesh-editing/transform/UV-unwrap
             // operation (all run `mesh_edit` on the 3D mesh from 3D-view selection); the UV (Canvas2d)
             // window only paints its texture. Paint operations are listed on BOTH windows because the
-            // paint tools are scoped to both. Ephemeral view actions and global utilities
+            // paint utilities are scoped to both. Ephemeral view actions and global utilities
             // (selection/camera/sun/engagement/example/json) stay unscoped orphans, appearing on both.
             .window_kind_actions(LOWPOLY_PLAY_WINDOW_MAIN, vec![
                 "addPrimitive".into(), "patchObject".into(), "extrude".into(), "inset".into(),
@@ -2447,7 +2447,7 @@ mod tests {
         let measures = lowpoly_window_measures(&LowpolyPlayRuntime::default());
         let group_tag = |id: &str| {
             measures.iter().find_map(|measure| match measure {
-                WindowMeasure::Group { id: gid, active_tool_id, .. } if gid == id => Some(active_tool_id.clone()),
+                WindowMeasure::Group { id: gid, active_utility_id, .. } if gid == id => Some(active_utility_id.clone()),
                 _ => None,
             })
         };
@@ -2543,7 +2543,7 @@ mod tests {
     fn eyedropper_updates_paint_color_without_ops() {
         let mut app = new_app();
         // 🧰 The host-owned tool switch bridges into runtime.paint_tool and emits no ops.
-        let switch = app.handle_action("setActiveTool", Some(&json!({ "toolId": "eyedropper" })), &ViewState::default(), &meta("a")).unwrap();
+        let switch = app.handle_action("setActiveUtility", Some(&json!({ "utilityId": "eyedropper" })), &ViewState::default(), &meta("a")).unwrap();
         assert!(switch.operations.is_empty());
         let result = app.handle_action("paintSample", Some(&json!({ "u": 0.5, "v": 0.5 })), &ViewState::default(), &meta("a")).unwrap();
         assert!(result.operations.is_empty());
@@ -2584,7 +2584,7 @@ mod tests {
     fn active_tool_switch_emits_no_ops_and_no_history() {
         // 🧰 Selecting a host-owned tool must never create an undoable edit.
         let mut app = new_app();
-        let result = app.handle_action("setActiveTool", Some(&json!({ "toolId": "rotate" })), &ViewState::default(), &meta("a")).unwrap();
+        let result = app.handle_action("setActiveUtility", Some(&json!({ "utilityId": "rotate" })), &ViewState::default(), &meta("a")).unwrap();
         assert!(result.operations.is_empty(), "tool switch must emit no ops");
         // No history entry — an undo right after is a no-op leaving the projection untouched.
         let before = projection(&app);
@@ -2601,7 +2601,7 @@ mod tests {
         let engagement = lowpoly_window_engagement(LowpolyView { projection: &projection, runtime: &runtime }, "move");
         let options = engagement.options.expect("lowpoly engagement keeps its non-tool options");
         assert!(
-            options.iter().all(|option| option.action.as_ref().map(|action| action.action != SET_ACTIVE_TOOL_ACTION_ID).unwrap_or(true)),
+            options.iter().all(|option| option.action.as_ref().map(|action| action.action != SET_ACTIVE_UTILITY_ACTION_ID).unwrap_or(true)),
             "no engagement option may dispatch the framework setActiveTool action; transform switching lives on the toolbar",
         );
     }

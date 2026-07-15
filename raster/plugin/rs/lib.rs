@@ -4,11 +4,11 @@ use semio_framework_plugin::{SurfaceKind,
     build_raster_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical,
     ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor,
-    AppLabelsOverlay, DocumentApp, DocumentView, PanelGroup, RasterScene, ToolCategory, ToolDefinition,
+    AppLabelsOverlay, DocumentApp, DocumentView, PanelGroup, RasterScene, UtilityCategory, UtilityDefinition,
     UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-    create_default_layout, SET_ACTIVE_TOOL_ACTION_ID,
+    create_default_layout, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use raster::{
     empty_raster_projection, find_layer, flatten_raster_layers, layer_name, layer_node_id, layer_visible,
@@ -573,14 +573,14 @@ fn document_sync_json(document: &RasterDocument) -> String {
     value.to_string()
 }
 
-fn raster_scene(document: &RasterDocument, runtime: &RasterPlayRuntime, active_tool: &str, view_mode: &str) -> RasterScene {
+fn raster_scene(document: &RasterDocument, runtime: &RasterPlayRuntime, active_utility: &str, view_mode: &str) -> RasterScene {
     RasterScene {
         document_sync_json: document_sync_json(document),
         assets_json: serde_json::to_string(&document.assets).unwrap_or_else(|_| "{}".into()),
         camera_json: serde_json::to_string(&document.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into()),
         selection_json: serde_json::to_string(&runtime.selected_ids).unwrap_or_else(|_| "[]".into()),
         hovered_id: runtime.hovered_id.clone(),
-        active_tool: active_tool.into(),
+        active_utility: active_utility.into(),
         brush_size: runtime.brush_size as f64,
         brush_opacity: runtime.brush_opacity as f64,
         view_mode: view_mode.into(),
@@ -591,12 +591,12 @@ fn raster_scene(document: &RasterDocument, runtime: &RasterPlayRuntime, active_t
     }
 }
 
-fn render_composite_scene(document: &RasterDocument, runtime: &RasterPlayRuntime, active_tool: &str) -> UiNode {
-    build_raster_scene(RASTER_PLAY_SURFACE_COMPOSITE, RASTER_PLAY_CONTROLLER_ID, raster_scene(document, runtime, active_tool, "composite"))
+fn render_composite_scene(document: &RasterDocument, runtime: &RasterPlayRuntime, active_utility: &str) -> UiNode {
+    build_raster_scene(RASTER_PLAY_SURFACE_COMPOSITE, RASTER_PLAY_CONTROLLER_ID, raster_scene(document, runtime, active_utility, "composite"))
 }
 
-fn render_navigator_scene(document: &RasterDocument, runtime: &RasterPlayRuntime, active_tool: &str) -> UiNode {
-    build_raster_scene(RASTER_PLAY_SURFACE_NAVIGATOR, RASTER_PLAY_CONTROLLER_ID, raster_scene(document, runtime, active_tool, "navigator"))
+fn render_navigator_scene(document: &RasterDocument, runtime: &RasterPlayRuntime, active_utility: &str) -> UiNode {
+    build_raster_scene(RASTER_PLAY_SURFACE_NAVIGATOR, RASTER_PLAY_CONTROLLER_ID, raster_scene(document, runtime, active_utility, "navigator"))
 }
 //#endregion 🔖Scenes
 
@@ -664,7 +664,7 @@ impl DocumentApp for RasterApp {
                 }
                 ActionEmit::default()
             }
-            SET_ACTIVE_TOOL_ACTION_ID => {
+            SET_ACTIVE_UTILITY_ACTION_ID => {
                 // 🧰 Host-owned tool switch: the active tool lives in session view state (never the
                 // document). There is no plugin-side paint scratch to clear — brush strokes are painted
                 // host-side in the WASM canvas — so this simply acknowledges with no ops or history.
@@ -823,10 +823,10 @@ impl DocumentApp for RasterApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, RasterDocument>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
         let labels = raster_labels(view_state);
-        let active_tool = view_state.active_tool_id.as_deref().unwrap_or(RASTER_DEFAULT_TOOL);
+        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(RASTER_DEFAULT_TOOL);
         match body_key {
-            RASTER_PLAY_BODY_COMPOSITE => render_composite_scene(document, &self.runtime, active_tool),
-            RASTER_PLAY_BODY_NAVIGATOR => render_navigator_scene(document, &self.runtime, active_tool),
+            RASTER_PLAY_BODY_COMPOSITE => render_composite_scene(document, &self.runtime, active_utility),
+            RASTER_PLAY_BODY_NAVIGATOR => render_navigator_scene(document, &self.runtime, active_utility),
             RASTER_PLAY_BODY_LAYERS => render_layers_panel(document, &self.runtime, view_state, labels),
             RASTER_PLAY_BODY_MASKS => render_masks_panel(document, &self.runtime, view_state, labels),
             RASTER_PLAY_BODY_CATALOGUE => render_catalogue_panel(labels),
@@ -859,8 +859,8 @@ fn raster_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefi
 
 /// 🧰 One composite-window tool declaration; ids must stay host-compatible (`paint*` prefix paints,
 /// `paintEraser` erases, `selectMarquee` selects) because the scene's active tool feeds `RasterHost`.
-fn raster_tool(id: &str, label: &str, icon: &str, group: &str, category: ToolCategory) -> ToolDefinition {
-    ToolDefinition { group: Some(group.into()), category: Some(category), ..ToolDefinition::new(id, label, icon) }
+fn raster_utility(id: &str, label: &str, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
+    UtilityDefinition { group: Some(group.into()), category: Some(category), ..UtilityDefinition::new(id, label, icon) }
 }
 
 fn create_raster_app() -> App {
@@ -928,10 +928,10 @@ fn create_raster_app() -> App {
             .action_args("setDocument", vec![
                 ActionArgDef::text("document", "Document"),
             ])
-            // 🧰 Composite-window tools — one exclusive set, active tool host-owned (never a document op).
-            .tool(raster_tool("selectMarquee", "Marquee Select", "square-dashed", "Select", ToolCategory::Selection))
-            .tool(raster_tool("paintBrush", "Brush", "brush", "Paint", ToolCategory::Tools))
-            .tool(raster_tool("paintEraser", "Eraser", "eraser", "Paint", ToolCategory::Tools))
+            // 🧰 Composite-window utilities — one exclusive set, active tool host-owned (never a document op).
+            .tool(raster_utility("selectMarquee", "Marquee Select", "square-dashed", "Select", UtilityCategory::Selection))
+            .tool(raster_utility("paintBrush", "Brush", "brush", "Paint", UtilityCategory::Tools))
+            .tool(raster_utility("paintEraser", "Eraser", "eraser", "Paint", UtilityCategory::Tools))
             .window_kind_tools(RASTER_PLAY_WINDOW_COMPOSITE, vec![
                 "selectMarquee".into(), "paintBrush".into(), "paintEraser".into(),
             ])
@@ -1281,10 +1281,10 @@ mod tests {
     fn set_active_tool_switch_emits_no_ops_and_reads_from_view_state() {
         let mut app = new_app_with_registry();
         let before = app.projection().expect("projection");
-        let view = ViewState { active_tool_id: Some("paintBrush".into()), ..ViewState::default() };
-        // Switching tools is the framework View action: no document ops, nothing to sync/undo.
+        let view = ViewState { active_utility_id: Some("paintBrush".into()), ..ViewState::default() };
+        // Switching utilities is the framework View action: no document ops, nothing to sync/undo.
         let result = app
-            .handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "paintBrush" })), &view, &meta("local"))
+            .handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "paintBrush" })), &view, &meta("local"))
             .expect("switch tool");
         assert!(result.operations.is_empty(), "tool switching never emits document ops");
         assert_eq!(app.projection().expect("projection"), before, "tool switching does not mutate the document");
@@ -1296,16 +1296,16 @@ mod tests {
     #[test]
     fn tool_registry_declares_tools_scoped_to_the_composite_window() {
         let definition = create_raster_app().definition;
-        let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
+        let tool_ids: Vec<&str> = definition.utilities.iter().map(|tool| tool.id.as_str()).collect();
         assert_eq!(tool_ids, ["selectMarquee", "paintBrush", "paintEraser"]);
-        // The marquee carries the Selection category; the paint tools are Tools.
-        let selects: Vec<&str> = definition.tools.iter().filter(|tool| tool.category == Some(ToolCategory::Selection)).map(|tool| tool.id.as_str()).collect();
+        // The marquee carries the Selection category; the paint utilities are Tools.
+        let selects: Vec<&str> = definition.utilities.iter().filter(|tool| tool.category == Some(UtilityCategory::Selection)).map(|tool| tool.id.as_str()).collect();
         assert_eq!(selects, ["selectMarquee"]);
         let composite = definition.window_kinds.iter().find(|window| window.id == RASTER_PLAY_WINDOW_COMPOSITE).expect("composite window");
-        assert_eq!(composite.tools.len(), definition.tools.len(), "every tool is scoped to the composite window kind");
-        // The framework auto-injects the setActiveTool View action once tools are declared; no doc op survives.
-        assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID && matches!(action.kind, ActionKind::View)));
-        assert!(!definition.actions.iter().any(|action| action.id == "setActiveTool" && !matches!(action.kind, ActionKind::View)));
+        assert_eq!(composite.utilities.len(), definition.utilities.len(), "every tool is scoped to the composite window kind");
+        // The framework auto-injects the setActiveTool View action once utilities are declared; no doc op survives.
+        assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, ActionKind::View)));
+        assert!(!definition.actions.iter().any(|action| action.id == "setActiveUtility" && !matches!(action.kind, ActionKind::View)));
     }
 }
 //#endregion 🧪Tests

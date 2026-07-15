@@ -9,7 +9,6 @@ import {
   ButtonGroupItem,
   ChromeAwareWindowScrollSurface,
   COMPOSE_WINDOW_TEMPLATE_MIME,
-  CommandPanel,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -129,6 +128,7 @@ import {
   type RibbonDirection,
   type RibbonRow,
   type TreeDataItem,
+  type TreeDataSection,
   type TreePanelConfig,
   type UiChromeLayout,
   type UiChromeTerminologyId,
@@ -458,12 +458,12 @@ type SyncState = {
 };
 
 /**
- * 🎛️ Footer command panel state: the active category tab (`null` = collapsed to the tab row), the
- * command whose arg form is expanded one level above the command list, and locally-buffered staged
- * arg values (never dispatched until Execute). See {@link CommandPanel}.
+ * 🎛️ Command palette state not already covered by the generic per-anchor `Panel` state: the command
+ * whose arg form is expanded one level above the command list (exclusive — only one at a time), and
+ * locally-buffered staged arg values (never dispatched until Execute). Which category is active/folded
+ * lives in `layout.panels["bottom-middle"]` like any other anchor — see `buildCommandCategoryTabs`.
  */
 export type CommandPanelState = {
-  readonly activeCategoryId: string | null;
   readonly expandedCommandId: string | null;
   readonly stagedArgsByCommandId: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
 };
@@ -504,7 +504,6 @@ export type ShellAction =
   | { readonly type: "STAGE_ACTION_ARG"; readonly windowId: string; readonly actionId: string; readonly argId: string; readonly value: unknown }
   | { readonly type: "RESET_ACTION_ARGS"; readonly windowId: string; readonly actionId: string }
   | { readonly type: "SET_ACTIVE_TOOL"; readonly windowId: string; readonly toolId: string | null }
-  | { readonly type: "SET_COMMAND_CATEGORY"; readonly value: string | null }
   | { readonly type: "SET_COMMAND_EXPANDED"; readonly value: string | null }
   | { readonly type: "STAGE_COMMAND_ARG"; readonly commandId: string; readonly argId: string; readonly value: unknown }
   | { readonly type: "RESET_COMMAND_ARGS"; readonly commandId: string }
@@ -617,13 +616,9 @@ function actionPaneReducer(state: ActionPaneState, action: ShellAction): ActionP
   }
 }
 
-/** 🎛️ Reducer for the footer command panel slice. Switching category always collapses any expanded arg form (the next hierarchy level up only makes sense under its own category's command list). */
+/** 🎛️ Reducer for the command palette's arg-expansion/staging slice — category active/fold state is the `bottom-middle` anchor's own generic `SET_PANEL_VISIBLE`/`SET_PANEL_PATH` (see `shellLayoutReducer`), not handled here. */
 function commandPanelReducer(state: CommandPanelState, action: ShellAction): CommandPanelState {
   switch (action.type) {
-    case "SET_COMMAND_CATEGORY": {
-      if (state.activeCategoryId === action.value && state.expandedCommandId === null) return state;
-      return { ...state, activeCategoryId: action.value, expandedCommandId: null };
-    }
     case "SET_COMMAND_EXPANDED": {
       if (state.expandedCommandId === action.value) return state;
       return { ...state, expandedCommandId: action.value };
@@ -774,7 +769,7 @@ export function initialShellState(_props: { readonly pluginFilter?: string; read
     windowUi: { windowUiByKind: {}, windowEngagementsByKind: {}, windowMeasuresByKind: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
     spawnedWindow: { spawnedWindowUi: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {} },
     actionPane: { foldedByWindowId: {}, expandedByWindowId: {}, stagedArgsByKey: {}, activeToolByWindowId: {} },
-    commandPanel: { activeCategoryId: null, expandedCommandId: null, stagedArgsByCommandId: {} },
+    commandPanel: { expandedCommandId: null, stagedArgsByCommandId: {} },
     layout: {
       panels: Object.fromEntries(PANEL_ANCHORS.map((anchor) => [anchor, { visible: false, size: DEFAULT_PANEL_SIZES[anchor], path: [] }])) as Record<PanelAnchor, PanelState>,
       dockOverride: null,
@@ -1888,39 +1883,114 @@ function dispatchOsCommand(commandId: string, args: Record<string, unknown> | un
   }
 }
 
+/** @emoji 🎛 Fallback icon for every command-category leaf — categories are open-set strings any plugin/app/mode author can invent, so there's no per-category icon metadata to key off (unlike the framework's own Workbench/Details/Display/Settings categories). */
+const COMMAND_CATEGORY_ICON = shellTabIcon("wrench");
+
 /**
- * 🎛 Builds the footer's {@link CommandPanel} — the command mirror of {@link windowActionPaneNode}.
- * `undefined` when there are no resolved commands at all, so the footer stays a plain empty bar (no
- * empty category-tab row) exactly as it did before this feature existed.
+ * 🎛 One category's command list (and, if a command is expanded, its staged arg form) as a `TreePanelConfig`
+ * — the content a category `PanelTabLeaf` resolves to. A zero-arg command's row fires immediately on click
+ * (a plain fire-and-forget tree row, same pattern as {@link groupNamedLayoutsToTreeItems}'s layout rows —
+ * no `selectedIds`/`onSelectionChange` override, so it takes `Tree`'s default single-select highlight after
+ * firing, same as clicking a Display→Layout row does). An arg-carrying command's row toggles `expandedCommandId`
+ * itself (kept as its own exclusive, bespoke state — not `Tree`'s per-row `openStates`, which isn't naturally
+ * exclusive across sibling rows) and, when expanded, a synthetic form section (one row per arg, `control`
+ * holding the staged input, replacing the old `Field` wrapper since `TreeDataItem` already renders label +
+ * description + control in the same two-column layout) is prepended so it renders above the command list —
+ * `Tree` reverses top-level `sections` for `direction="up"` (bottom anchors), threaded here via `flowFromAnchor`/
+ * `FlowProvider`/`useFlow` down from the hosting `Panel`, not any manual reversal in this function.
  */
-function commandPanelNode(
+function buildCommandCategoryTree(
   commands: readonly ResolvedCommand[],
+  expandedCommandId: string | null,
+  stagedArgsByCommandId: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
+  onExecute: (entry: ResolvedCommand, executeArgs?: Record<string, unknown>) => void,
+  onToggleExpanded: (commandId: string | null) => void,
+  onStageArg: (commandId: string, argId: string, value: unknown) => void,
+  onResetArgs: (commandId: string) => void,
+): TreePanelConfig {
+  const expanded = expandedCommandId ? commands.find((entry) => entry.definition.id === expandedCommandId) : undefined;
+  const sections: TreeDataSection[] = [];
+  if (expanded) {
+    const staged = stagedArgsByCommandId[expanded.definition.id] ?? {};
+    const effective = effectiveActionArgs(expanded.definition.args, staged);
+    const missing = missingRequiredArgs(expanded.definition.args, effective);
+    sections.push({
+      id: `command.category.${expanded.definition.category}.form`,
+      items: [
+        ...expanded.definition.args.map(
+          (def): TreeDataItem => ({
+            id: `command.${expanded.definition.id}.arg.${def.id}`,
+            label: def.label,
+            description: def.description,
+            control: renderStagedArgControl(def, effective[def.id], (value) => onStageArg(expanded.definition.id, def.id, value)),
+          }),
+        ),
+        {
+          id: `command.${expanded.definition.id}.actions`,
+          label: "",
+          control: (
+            <div className="flex items-center gap-single">
+              <Button id={`command-${expanded.definition.id}-execute`} text="Execute" icon="check" disabled={missing.length > 0} onClick={() => onExecute(expanded, effective)} />
+              <Button id={`command-${expanded.definition.id}-reset`} text="Reset" icon="undo" onClick={() => onResetArgs(expanded.definition.id)} />
+            </div>
+          ),
+        },
+      ],
+    });
+  }
+  sections.push({
+    id: "command.category.list",
+    items: commands.map((entry): TreeDataItem => {
+      const argCarrying = entry.definition.args.length > 0;
+      const icon = entry.definition.iconId && entry.definition.iconId in ICONS ? <Icon icon={entry.definition.iconId as IconName} size="small" /> : undefined;
+      if (!argCarrying) return { id: `command.${entry.definition.id}`, label: entry.definition.label, icon, onClick: () => onExecute(entry) };
+      return {
+        id: `command.${entry.definition.id}`,
+        label: `${entry.definition.label}…`,
+        icon: <Icon icon={expandedCommandId === entry.definition.id ? "chevron-down" : "chevron-up"} size="small" />,
+        onClick: () => onToggleExpanded(expandedCommandId === entry.definition.id ? null : entry.definition.id),
+      };
+    }),
+  });
+  return { sections };
+}
+
+/**
+ * 🎛 One `PanelTabLeaf` per resolved command category, feeding `defaultDock.anchors["bottom-middle"]` — the
+ * command palette's fold/active-category/size/persistence is the generic per-anchor `Panel` state (see
+ * `buildPanelProps`); this only builds the tab tree. Content is a *lazy* `resolveTree` (mirrors
+ * {@link createFrameworkDisplayPanelTabs}'s windows tab) so this array — and therefore `defaultDock`'s own
+ * memo — never depends on `expandedCommandId`/`stagedArgsByCommandId`, which change on every keystroke while
+ * staging a command argument; `resolveTree` reads those fresh off refs at render time instead.
+ */
+function buildCommandCategoryTabs(
+  resolvedCommands: readonly ResolvedCommand[],
   categories: readonly { readonly id: string; readonly label: string }[],
-  commandPanelState: CommandPanelState,
+  expandedCommandIdRef: React.RefObject<string | null>,
+  stagedArgsByCommandIdRef: React.RefObject<Readonly<Record<string, Readonly<Record<string, unknown>>>>>,
   onCommand: (source: ResolvedCommand["source"], commandId: string, args?: Record<string, unknown>) => void,
   dispatch: (action: ShellAction) => void,
-): ReactNode {
-  if (commands.length === 0) return undefined;
-  const activeCategoryId = commandPanelState.activeCategoryId;
-  const activeCommands = commands.filter((entry) => entry.definition.category === activeCategoryId);
-  return (
-    <CommandPanel
-      categories={categories}
-      activeCategoryId={activeCategoryId}
-      onActiveCategoryChange={(id) => dispatch({ type: "SET_COMMAND_CATEGORY", value: id })}
-      commands={activeCommands.map((entry) => ({ id: entry.definition.id, label: entry.definition.label, keys: entry.definition.keys, args: entry.definition.args }))}
-      expandedCommandId={commandPanelState.expandedCommandId}
-      onExpandedChange={(id) => dispatch({ type: "SET_COMMAND_EXPANDED", value: id })}
-      stagedArgsByCommandId={commandPanelState.stagedArgsByCommandId}
-      renderField={renderStagedArgControl}
-      onExecute={(id, executeArgs) => {
-        const entry = activeCommands.find((candidate) => candidate.definition.id === id);
-        if (entry) onCommand(entry.source, id, executeArgs);
-      }}
-      onStageArg={(commandId, argId, value) => dispatch({ type: "STAGE_COMMAND_ARG", commandId, argId, value })}
-      onResetArgs={(commandId) => dispatch({ type: "RESET_COMMAND_ARGS", commandId })}
-    />
-  );
+): PanelTabNode[] {
+  return categories.map((category) => {
+    const categoryCommands = resolvedCommands.filter((entry) => entry.definition.category === category.id);
+    return singleTreeLeaf({
+      id: `command.category.${category.id}`,
+      icon: COMMAND_CATEGORY_ICON,
+      name: category.label,
+      tree: {
+        resolveTree: () =>
+          buildCommandCategoryTree(
+            categoryCommands,
+            expandedCommandIdRef.current,
+            stagedArgsByCommandIdRef.current,
+            (entry, executeArgs) => onCommand(entry.source, entry.definition.id, executeArgs),
+            (commandId) => dispatch({ type: "SET_COMMAND_EXPANDED", value: commandId }),
+            (commandId, argId, value) => dispatch({ type: "STAGE_COMMAND_ARG", commandId, argId, value }),
+            (commandId) => dispatch({ type: "RESET_COMMAND_ARGS", commandId }),
+          ),
+      },
+    });
+  });
 }
 //#endregion 🎛CommandRegistry
 
@@ -2074,7 +2144,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const { windowUiByKind, windowEngagementsByKind, windowMeasuresByKind, panelUiByKey, appLabelsOverlay } = shellState.windowUi;
   const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
   const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeToolByWindowId } = shellState.actionPane;
-  const { activeCategoryId: commandCategoryId, expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
+  const { expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
   const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, extraWindowInstances } = shellState.layout;
   const { searchOpen, findOpen, introductionStepIndex, dialog: overlayDialog } = shellState.overlays;
   const { uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft } = shellState.uiPrefs;
@@ -2182,6 +2252,14 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   actionPaneStagedArgsByKeyRef.current = actionPaneStagedArgsByKey;
   const introductionStepIndexRef = useRef(introductionStepIndex);
   introductionStepIndexRef.current = introductionStepIndex;
+  // 🎛️ So the command-category leaves' lazily-resolved tree content (built once per resolved-commands
+  // change, not per keystroke — see `buildCommandCategoryTabs`) can read the latest expand/staged-arg
+  // state without becoming a `defaultDock` memo dependency, which would otherwise persist-write the dock
+  // skeleton on every keystroke while staging a command argument.
+  const expandedCommandIdRef = useRef(expandedCommandId);
+  expandedCommandIdRef.current = expandedCommandId;
+  const commandStagedArgsByCommandIdRef = useRef(commandStagedArgsByCommandId);
+  commandStagedArgsByCommandIdRef.current = commandStagedArgsByCommandId;
 
   /** 🧰 Overlays the active window's host-owned `activeToolId` onto a view state at plugin-call time. */
   const injectActiveTool = useCallback((viewState: ViewState, windowId?: string | null): ViewState => {
@@ -3523,7 +3601,48 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   }, [attachSyncBackbone, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId]);
   //#endregion 🔄SyncLeaf
 
-  //#region 🧭DockAssembly — default four-corner arrangement (the two middle anchors start empty) + persisted-override reconciliation + drag-and-drop wiring.
+  const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
+  const activeModeId = session?.viewState.activeModeId ?? session?.app.modes[0]?.id ?? session?.app.id ?? "";
+
+  const resolvedCommands = useMemo(
+    () => resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId),
+    [osCommands, activePluginManifest, session?.app, activeModeId],
+  );
+
+  const commandCategoryList = useMemo(() => commandCategories(resolvedCommands), [resolvedCommands]);
+
+  /**
+   * 🎛 Dispatches a resolved command: os-scope commands are handled locally (no plugin round trip);
+   * plugin/app/mode-scope commands route through the active session's plugin `handleCommand`, mirroring
+   * `onAction`'s tail. Plugin commands are only resolvable/dispatchable for the active session's plugin
+   * instance (no headless-instance routing for non-focused plugins yet).
+   */
+  const onCommand = useCallback(
+    (source: ResolvedCommand["source"], commandId: string, args?: Record<string, unknown>) => {
+      if (source.kind === "os") {
+        dispatchOsCommand(commandId, args, dispatch, dockLayoutStore, dockUiStateStore);
+        return;
+      }
+      if (!session) return;
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+      if (!plugin?.handleCommand) return;
+      const dispatchViewState = injectActiveTool(session.viewState);
+      void plugin
+        .handleCommand(session.instanceId, JSON.stringify({ command: commandId, args }), dispatchViewState)
+        .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
+        .catch((commandError) => {
+          console.error("[DEBUG] command failed", commandError);
+        });
+    },
+    [applyHostEffects, dockLayoutStore, dockUiStateStore, injectActiveTool, loadedPlugins, session],
+  );
+
+  const commandCategoryTabs = useMemo(
+    () => buildCommandCategoryTabs(resolvedCommands, commandCategoryList, expandedCommandIdRef, commandStagedArgsByCommandIdRef, onCommand, dispatch),
+    [resolvedCommands, commandCategoryList, onCommand],
+  );
+
+  //#region 🧭DockAssembly — default four-corner arrangement (the two middle anchors start empty save the command palette in bottom-middle) + persisted-override reconciliation + drag-and-drop wiring.
   const defaultDock = useMemo((): PanelDock => {
     const topLeft: PanelTabNode[] = [{ kind: "branch", id: FRAMEWORK_CATEGORY_WORKBENCH_ID, icon: categoryTabIcon(workbenchLeftTabs, "folder"), name: shellLabel("ui.panelToggle.workbench"), order: 0, children: workbenchLeftTabs }];
     const bottomLeft: PanelTabNode[] = [];
@@ -3534,8 +3653,8 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     const topRight: PanelTabNode[] = [{ kind: "branch", id: FRAMEWORK_CATEGORY_DETAILS_ID, icon: categoryTabIcon(detailsRightTabs, "info"), name: shellLabel("ui.panelToggle.details"), order: 0, children: detailsRightTabs }];
     const bottomRight: PanelTabNode[] = [{ kind: "branch", id: FRAMEWORK_CATEGORY_SETTINGS_ID, icon: categoryTabIcon(settingsRightTabs, "settings-2"), name: shellLabel("ui.panelToggle.settings"), order: 0, children: settingsRightTabs }];
     if (frameworkToolsHistoryTab) bottomRight.push(frameworkToolsHistoryTab);
-    return { anchors: { "top-left": topLeft, "top-middle": [], "top-right": topRight, "bottom-left": bottomLeft, "bottom-middle": [], "bottom-right": bottomRight } };
-  }, [detailsRightTabs, frameworkDisplayTabs, frameworkSyncTab, frameworkToolsHistoryTab, settingsRightTabs, uiLocale, workbenchLeftTabs]);
+    return { anchors: { "top-left": topLeft, "top-middle": [], "top-right": topRight, "bottom-left": bottomLeft, "bottom-middle": commandCategoryTabs, "bottom-right": bottomRight } };
+  }, [commandCategoryTabs, detailsRightTabs, frameworkDisplayTabs, frameworkSyncTab, frameworkToolsHistoryTab, settingsRightTabs, uiLocale, workbenchLeftTabs]);
 
   useEffect(() => {
     dispatch({ type: "SET_DOCK_OVERRIDE", value: dockLayoutStore.getSnapshot() });
@@ -3753,7 +3872,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
 
   const footerItems = useMemo((): NavbarItem[] => {
     const panel = commandPanelNode(resolvedCommands, commandCategoryList, shellState.commandPanel, onCommand, dispatch);
-    return panel ? [{ key: "commands", content: panel }] : [];
+    return panel ? [{ key: "commands", centered: true, content: panel }] : [];
   }, [resolvedCommands, commandCategoryList, shellState.commandPanel, onCommand]);
 
   const navbarItems = useMemo((): NavbarItem[] => {

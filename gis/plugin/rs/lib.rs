@@ -554,7 +554,7 @@ pub mod app_2d {
                 id: "gis2d-play-window.layers".into(),
                 label: labels.layers_group.into(),
                 default_open: Some(true),
-                active_tool_id: None,
+                active_utility_id: None,
                 children: layer_toggles,
             },
             WindowMeasure::Group {
@@ -562,7 +562,7 @@ pub mod app_2d {
                 label: labels.layer_weights_group.into(),
                 default_open: Some(false),
                 children: layer_weight_sliders,
-                active_tool_id: None,
+                active_utility_id: None,
             },
         ]
     }

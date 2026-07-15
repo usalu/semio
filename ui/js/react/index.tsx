@@ -6420,7 +6420,7 @@ export const CommandPanel: React.FC<CommandPanelProps> = ({
   return (
     <div data-slot="command-panel" className={cn("relative flex h-full min-w-0 items-center", className)}>
       {activeCategoryId != null && (
-        <div data-slot="command-panel-levels" className={cn("absolute inset-x-0 bottom-full flex flex-col", bgClass)}>
+        <div data-slot="command-panel-levels" className={cn("absolute inset-x-0 bottom-full flex flex-col", "z-navbar", bgClass)}>
           {expandedCommand && expandedCommand.args.length > 0 && (
             <div data-slot="command-panel-arg-form" className={cn(panelAnchorTabBarClass("up"), "flex flex-col gap-single p-single")}>
               {expandedCommand.args.map((def) => (

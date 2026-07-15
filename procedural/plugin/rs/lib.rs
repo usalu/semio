@@ -1337,9 +1337,9 @@ pub mod app_3d {
         mesh_from_kind, render_generation_form_body, render_generation_preview_text, render_generations_tree,
         select_generation, selected_generation, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
         ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, DocumentApp, DocumentView, world3d_scene, world3d_selection_json, world3d_sun_measures,
-        ActionDescriptor, GenerationOp, GenerationPlayState, MeasureSelectItem, NodeGraphScene, ToolDefinition,
+        ActionDescriptor, GenerationOp, GenerationPlayState, MeasureSelectItem, NodeGraphScene, UtilityDefinition,
         UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowMeasure, WorldSunConfig,
-        SET_ACTIVE_TOOL_ACTION_ID,
+        SET_ACTIVE_UTILITY_ACTION_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
         FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
         FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -1388,7 +1388,7 @@ pub mod app_3d {
         ("outputPreview", "eye"),
     ];
 
-    /// 🧰 The gumball tool active when the host has not yet set `view_state.active_tool_id` (first ToolRef).
+    /// 🧰 The gumball tool active when the host has not yet set `view_state.active_utility_id` (first UtilityRef).
     const PROCEDURAL_3D_TRANSFORM_TOOL_DEFAULT: &str = "move";
     //#endregion 🔖Constants
 
@@ -2125,8 +2125,8 @@ pub mod app_3d {
     }
 
     /// 🧭 World-3d selection payload with the host-owned gumball tool spliced in, so the transform
-    /// handles follow `view_state.active_tool_id` instead of any document/runtime-stored tool.
-    fn preview_selection_json(runtime: &Procedural3dRuntime, active_tool: &str) -> String {
+    /// handles follow `view_state.active_utility_id` instead of any document/runtime-stored tool.
+    fn preview_selection_json(runtime: &Procedural3dRuntime, active_utility: &str) -> String {
         let mut value: Value = serde_json::from_str(&world3d_selection_json(
             &runtime.selection_method,
             &runtime.selected_node_ids,
@@ -2134,7 +2134,7 @@ pub mod app_3d {
         ))
         .unwrap_or_else(|_| json!({}));
         if let Some(object) = value.as_object_mut() {
-            object.insert("transformTool".into(), json!(active_tool));
+            object.insert("transformTool".into(), json!(active_utility));
             object.insert("gumballActive".into(), json!(!runtime.selected_node_ids.is_empty()));
         }
         value.to_string()
@@ -2480,7 +2480,7 @@ pub mod app_3d {
                 "nodeGraphHover" => ActionEmit::default(),
                 "worldPointerDown" | "graphPointerDown" => ActionEmit::default(),
                 // 🧰 Host-owned active-tool switch — clear in-progress hover scratch, never emit ops.
-                SET_ACTIVE_TOOL_ACTION_ID => {
+                SET_ACTIVE_UTILITY_ACTION_ID => {
                     self.runtime.hovered_node_id = None;
                     ActionEmit::default()
                 }
@@ -2720,7 +2720,7 @@ pub mod app_3d {
             let envelope = play_view(doc.projection, &self.runtime);
             let host = host_from_fixture(&envelope.fixture);
             let labels = procedural3d_labels(view_state);
-            let active_tool = view_state.active_tool_id.as_deref().unwrap_or(PROCEDURAL_3D_TRANSFORM_TOOL_DEFAULT);
+            let active_utility = view_state.active_utility_id.as_deref().unwrap_or(PROCEDURAL_3D_TRANSFORM_TOOL_DEFAULT);
             match body_key {
                 PROCEDURAL_3D_PLAY_BODY_MAIN => {
                     let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
@@ -2758,7 +2758,7 @@ pub mod app_3d {
                             preview_camera_json(&envelope.runtime),
                             meshes_json,
                             instances_json,
-                            preview_selection_json(&envelope.runtime, active_tool),
+                            preview_selection_json(&envelope.runtime, active_utility),
                             &envelope.runtime.sun,
                         ),
                     )
@@ -2972,9 +2972,9 @@ pub mod app_3d {
                     ]).required(),
                 ])
                 // 🧰 Transform gumball — an exclusive tool group scoped to the 3D preview window (active tool is host-owned).
-                .tool(ToolDefinition { group: Some("transform".into()), ..ToolDefinition::new("move", "Move", "move") })
-                .tool(ToolDefinition { group: Some("transform".into()), ..ToolDefinition::new("rotate", "Rotate", "rotate-cw") })
-                .tool(ToolDefinition { group: Some("transform".into()), ..ToolDefinition::new("scale", "Scale", "maximize-2") })
+                .tool(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
+                .tool(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
+                .tool(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })
                 .window_kind_tools(PROCEDURAL_3D_PLAY_WINDOW_PREVIEW, vec!["move".into(), "rotate".into(), "scale".into()])
                 .keybinding("mod+z", "undo")
                 .keybinding("mod+shift+z", "redo"),
@@ -3052,7 +3052,7 @@ pub mod app_3d {
             let before = app.projection().expect("projection");
             // Switching the gumball tool is the framework-injected View action: it clears scratch and emits no ops.
             let result = app
-                .handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "rotate" })), &ViewState::default(), &meta("local"))
+                .handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "rotate" })), &ViewState::default(), &meta("local"))
                 .expect("switch tool");
             assert!(result.operations.is_empty(), "tool switching never emits document ops");
             assert_eq!(app.projection().expect("projection"), before, "tool switching records no history entry");

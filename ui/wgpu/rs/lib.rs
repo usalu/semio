@@ -1,7 +1,7 @@
 //! 🖱️ Declarative UI components (default) and retained-mode wgpu engine (feature "engine").
 
 // #region component
-//! 🧩 Declarative UI component model (declarative `UiNode` tree, scene records, `SurfaceKind`, `WindowLayout`/`WindowEngagement`/`WindowMeasure`, `ToolNode`) — moved verbatim from framework/core/rs/lib.rs; JSON wire format is byte-identical to the pre-move version (see the inline `*_wire_format_tests` mods). Ungated (default features) so wasm32-wasip2 plugin builds stay dependency-clean; must never reference `semio_framework_core`.
+//! 🧩 Declarative UI component model (declarative `UiNode` tree, scene records, `SurfaceKind`, `WindowLayout`/`WindowEngagement`/`WindowMeasure`, `UtilityNode`) — moved verbatim from framework/core/rs/lib.rs; JSON wire format is byte-identical to the pre-move version (see the inline `*_wire_format_tests` mods). Ungated (default features) so wasm32-wasip2 plugin builds stay dependency-clean; must never reference `semio_framework_core`.
 pub mod component {
 pub mod layout {
 // #region layout
@@ -384,13 +384,13 @@ pub enum WindowMeasure {
         label: String,
         #[cfg_attr(feature = "typegen", ts(optional, rename = "defaultOpen"))]
         default_open: Option<bool>,
-        /// 🎯 When `Some(tool_id)`, this group is *tool-scoped chrome*: the shell surfaces it only while
-        /// `ViewState.active_tool_id == tool_id`, and renders it in the dedicated "Tool Options" rail
+        /// 🎯 When `Some(utility_id)`, this group is *tool-scoped chrome*: the shell surfaces it only while
+        /// `ViewState.active_utility_id == utility_id`, and renders it in the dedicated "Tool Options" rail
         /// beside the toolbar — never in the always-on Measures overlay. When absent, the group is a
         /// general measure and stays in the Measures overlay exactly as before. See [`partition_window_measures`].
         #[serde(skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "typegen", ts(optional, rename = "activeToolId"))]
-        active_tool_id: Option<String>,
+        active_utility_id: Option<String>,
         children: Vec<WindowMeasure>,
     },
 }
@@ -399,21 +399,21 @@ pub enum WindowMeasure {
 //#region 🔖PartitionWindowMeasures
 /// @emoji 🎯 Splits a window's top-level measures into `(general, tool_options)`.
 ///
-/// A top-level [`WindowMeasure::Group`] tagged with `active_tool_id: Some(id)` is *tool-scoped chrome*:
-/// it lands in `tool_options` **only** when `id == active_tool_id`, and is dropped from both buckets
+/// A top-level [`WindowMeasure::Group`] tagged with `active_utility_id: Some(id)` is *tool-scoped chrome*:
+/// it lands in `tool_options` **only** when `id == active_utility_id`, and is dropped from both buckets
 /// otherwise (it is irrelevant to whichever tool — or no tool — is currently active). Every untagged
 /// group and every non-group top-level measure stays in `general`, unchanged. Tagging is a top-level
 /// concept only: a matched group's `children` are carried along verbatim inside their group.
 pub fn partition_window_measures(
     measures: &[WindowMeasure],
-    active_tool_id: Option<&str>,
+    active_utility_id: Option<&str>,
 ) -> (Vec<WindowMeasure>, Vec<WindowMeasure>) {
     let mut general = Vec::new();
     let mut tool_options = Vec::new();
     for measure in measures {
         match measure {
-            WindowMeasure::Group { active_tool_id: Some(scoped), .. } => {
-                if active_tool_id == Some(scoped.as_str()) {
+            WindowMeasure::Group { active_utility_id: Some(scoped), .. } => {
+                if active_utility_id == Some(scoped.as_str()) {
                     tool_options.push(measure.clone());
                 }
             }
@@ -794,7 +794,7 @@ mod layout_wire_format_tests {
                 id: "m4".into(),
                 label: "Group".into(),
                 default_open: Some(true),
-                active_tool_id: None,
+                active_utility_id: None,
                 children: vec![],
             },
         ];
@@ -809,7 +809,7 @@ mod layout_wire_format_tests {
             id: id.into(),
             label: id.to_uppercase(),
             default_open: None,
-            active_tool_id: tool.map(str::to_string),
+            active_utility_id: tool.map(str::to_string),
             children: vec![],
         }
     }
@@ -912,9 +912,9 @@ mod layout_wire_format_tests {
 // #endregion layout
 }
 
-pub mod tools {
-// #region tools
-//! 🧰 Declarative per-mode toolbar tool trees.
+pub mod utilities {
+// #region utilities
+//! 🧰 Declarative per-mode toolbar utility trees.
 
 use super::layout::ActionDescriptor;
 use serde::{Deserialize, Serialize};
@@ -922,7 +922,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
-pub enum ToolCategory {
+pub enum UtilityCategory {
     Selection,
     Tools,
     History,
@@ -931,7 +931,7 @@ pub enum ToolCategory {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
-pub enum ToolNode {
+pub enum UtilityNode {
     Separator {
         id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -953,7 +953,7 @@ pub enum ToolNode {
         #[serde(skip_serializing_if = "Option::is_none")]
         disabled: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        category: Option<ToolCategory>,
+        category: Option<UtilityCategory>,
         on_press: ActionDescriptor,
     },
     Toggle {
@@ -972,7 +972,7 @@ pub enum ToolNode {
         #[serde(skip_serializing_if = "Option::is_none")]
         disabled: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        category: Option<ToolCategory>,
+        category: Option<UtilityCategory>,
         on_change: ActionDescriptor,
     },
     Collection {
@@ -989,48 +989,48 @@ pub enum ToolNode {
         #[serde(skip_serializing_if = "Option::is_none")]
         disabled: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        category: Option<ToolCategory>,
-        children: Vec<ToolNode>,
+        category: Option<UtilityCategory>,
+        children: Vec<UtilityNode>,
     },
 }
 
-impl ToolNode {
-    pub fn category(&self) -> ToolCategory {
+impl UtilityNode {
+    pub fn category(&self) -> UtilityCategory {
         match self {
-            ToolNode::Separator { .. } => ToolCategory::Tools,
-            ToolNode::Button { category, .. } => category.unwrap_or(ToolCategory::Tools),
-            ToolNode::Toggle { category, .. } => category.unwrap_or(ToolCategory::Tools),
-            ToolNode::Collection { category, .. } => category.unwrap_or(ToolCategory::Tools),
+            UtilityNode::Separator { .. } => UtilityCategory::Tools,
+            UtilityNode::Button { category, .. } => category.unwrap_or(UtilityCategory::Tools),
+            UtilityNode::Toggle { category, .. } => category.unwrap_or(UtilityCategory::Tools),
+            UtilityNode::Collection { category, .. } => category.unwrap_or(UtilityCategory::Tools),
         }
     }
 
-    pub fn with_category(mut self, category: ToolCategory) -> Self {
+    pub fn with_category(mut self, category: UtilityCategory) -> Self {
         match &mut self {
-            ToolNode::Button { category: slot, .. }
-            | ToolNode::Toggle { category: slot, .. }
-            | ToolNode::Collection { category: slot, .. } => *slot = Some(category),
-            ToolNode::Separator { .. } => {}
+            UtilityNode::Button { category: slot, .. }
+            | UtilityNode::Toggle { category: slot, .. }
+            | UtilityNode::Collection { category: slot, .. } => *slot = Some(category),
+            UtilityNode::Separator { .. } => {}
         }
         self
     }
 }
 
-pub fn tool_separator(id: impl Into<String>) -> ToolNode {
-    ToolNode::Separator {
+pub fn utility_separator(id: impl Into<String>) -> UtilityNode {
+    UtilityNode::Separator {
         id: id.into(),
         order: None,
         disabled: None,
     }
 }
 
-pub fn tool_button(
+pub fn utility_button(
     id: impl Into<String>,
     icon_id: impl Into<String>,
     label: impl Into<String>,
     on_press: ActionDescriptor,
-) -> ToolNode {
+) -> UtilityNode {
     let label = label.into();
-    ToolNode::Button {
+    UtilityNode::Button {
         id: id.into(),
         icon_id: icon_id.into(),
         label: Some(label.clone()),
@@ -1043,15 +1043,15 @@ pub fn tool_button(
     }
 }
 
-pub fn tool_toggle(
+pub fn utility_toggle(
     id: impl Into<String>,
     icon_id: impl Into<String>,
     label: impl Into<String>,
     pressed: bool,
     on_change: ActionDescriptor,
-) -> ToolNode {
+) -> UtilityNode {
     let label = label.into();
-    ToolNode::Toggle {
+    UtilityNode::Toggle {
         id: id.into(),
         icon_id: icon_id.into(),
         label: Some(label.clone()),
@@ -1065,14 +1065,14 @@ pub fn tool_toggle(
     }
 }
 
-pub fn tool_collection(
+pub fn utility_collection(
     id: impl Into<String>,
     icon_id: impl Into<String>,
     label: impl Into<String>,
-    children: Vec<ToolNode>,
-) -> ToolNode {
+    children: Vec<UtilityNode>,
+) -> UtilityNode {
     let label = label.into();
-    ToolNode::Collection {
+    UtilityNode::Collection {
         id: id.into(),
         icon_id: icon_id.into(),
         label: Some(label.clone()),
@@ -1087,61 +1087,61 @@ pub fn tool_collection(
 
 //#region 🔖DeriveToolNodes
 /// @emoji 🧰 A resolved tool ready to be laid out into the toolbar. `framework_core` maps its
-/// `ToolDefinition` onto this before calling `derive_tool_nodes` — `ui_wgpu` can't reference
-/// `framework_core::ToolDefinition` directly (that crate depends on `ui_wgpu`, not the reverse).
+/// `UtilityDefinition` onto this before calling `derive_utility_nodes` — `ui_wgpu` can't reference
+/// `framework_core::UtilityDefinition` directly (that crate depends on `ui_wgpu`, not the reverse).
 #[derive(Clone, Debug, PartialEq)]
-pub struct DerivedToolSpec {
+pub struct DerivedUtilitySpec {
     pub id: String,
     pub label: String,
     pub icon_id: String,
     pub group: Option<String>,
-    pub category: Option<ToolCategory>,
+    pub category: Option<UtilityCategory>,
 }
 
-/// @emoji 🧰 Derives the toolbar `ToolNode` tree from resolved tools and the host-owned active tool id.
-/// Each tool becomes a `Toggle` whose `pressed` reflects `active_tool_id == Some(id)` and whose
+/// @emoji 🧰 Derives the toolbar `UtilityNode` tree from resolved utilities and the host-owned active tool id.
+/// Each tool becomes a `Toggle` whose `pressed` reflects `active_utility_id == Some(id)` and whose
 /// `on_change` dispatches `setActiveTool { toolId }` against `controller_id`. Tools sharing a `group`
 /// collapse into one `Collection` (placed where the group first appears, in tool order); ungrouped
-/// tools stay flat siblings. This is the single source of truth for the toolbar — `DocumentApp::tools`
+/// utilities stay flat siblings. This is the single source of truth for the toolbar — `DocumentApp::utilities`
 /// no longer exists.
-pub fn derive_tool_nodes(
+pub fn derive_utility_nodes(
     controller_id: &str,
-    tools: &[DerivedToolSpec],
-    active_tool_id: Option<&str>,
-) -> Vec<ToolNode> {
-    fn tool_toggle_node(controller_id: &str, tool: &DerivedToolSpec, active_tool_id: Option<&str>) -> ToolNode {
-        ToolNode::Toggle {
+    utilities: &[DerivedUtilitySpec],
+    active_utility_id: Option<&str>,
+) -> Vec<UtilityNode> {
+    fn utility_toggle_node(controller_id: &str, tool: &DerivedUtilitySpec, active_utility_id: Option<&str>) -> UtilityNode {
+        UtilityNode::Toggle {
             id: tool.id.clone(),
             icon_id: tool.icon_id.clone(),
             label: Some(tool.label.clone()),
             text: None,
             title: Some(tool.label.clone()),
             order: None,
-            pressed: Some(active_tool_id == Some(tool.id.as_str())),
+            pressed: Some(active_utility_id == Some(tool.id.as_str())),
             disabled: None,
             category: tool.category,
             on_change: ActionDescriptor {
                 controller_id: controller_id.to_string(),
-                action: "setActiveTool".into(),
-                args: Some(serde_json::json!({ "toolId": tool.id })),
+                action: "setActiveUtility".into(),
+                args: Some(serde_json::json!({ "utilityId": tool.id })),
             },
         }
     }
 
-    let mut nodes: Vec<ToolNode> = Vec::new();
+    let mut nodes: Vec<UtilityNode> = Vec::new();
     let mut group_positions: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
-    for tool in tools {
-        let node = tool_toggle_node(controller_id, tool, active_tool_id);
+    for tool in utilities {
+        let node = utility_toggle_node(controller_id, tool, active_utility_id);
         match &tool.group {
             None => nodes.push(node),
             Some(group) => {
                 if let Some(&index) = group_positions.get(group) {
-                    if let ToolNode::Collection { children, .. } = &mut nodes[index] {
+                    if let UtilityNode::Collection { children, .. } = &mut nodes[index] {
                         children.push(node);
                     }
                 } else {
                     group_positions.insert(group.clone(), nodes.len());
-                    nodes.push(ToolNode::Collection {
+                    nodes.push(UtilityNode::Collection {
                         id: format!("group:{group}"),
                         icon_id: tool.icon_id.clone(),
                         label: Some(group.clone()),
@@ -1161,7 +1161,7 @@ pub fn derive_tool_nodes(
 //#endregion 🔖DeriveToolNodes
 
 //#region 🔖WireFormatGoldenTests
-/** 🧊 Golden wire-format tests: freeze exact JSON for ToolNode before it moves into ui_wgpu. */
+/** 🧊 Golden wire-format tests: freeze exact JSON for UtilityNode before it moves into ui_wgpu. */
 #[cfg(test)]
 mod tool_node_wire_format_tests {
     use super::*;
@@ -1172,31 +1172,31 @@ mod tool_node_wire_format_tests {
     #[test]
     fn tool_node_serializes_to_golden_json() {
         let nodes = vec![
-            ToolNode::Separator { id: "sep1".into(), order: Some(1), disabled: None },
-            tool_button(
+            UtilityNode::Separator { id: "sep1".into(), order: Some(1), disabled: None },
+            utility_button(
                 "btn1",
                 "icon.tool",
                 "Tool",
                 ActionDescriptor { controller_id: "ctrl".into(), action: "runTool".into(), args: None },
             )
-            .with_category(ToolCategory::History),
-            tool_toggle(
+            .with_category(UtilityCategory::History),
+            utility_toggle(
                 "tog1",
                 "icon.toggle",
                 "Toggle",
                 true,
                 ActionDescriptor { controller_id: "ctrl".into(), action: "toggleTool".into(), args: None },
             ),
-            tool_collection("col1", "icon.group", "Group", vec![tool_separator("sep2")]),
+            utility_collection("col1", "icon.group", "Group", vec![utility_separator("sep2")]),
         ];
         let json = serde_json::to_string(&nodes).unwrap();
         assert_eq!(json, GOLDEN_TOOL_NODE_JSON);
-        let roundtripped: Vec<ToolNode> = serde_json::from_str(&json).unwrap();
+        let roundtripped: Vec<UtilityNode> = serde_json::from_str(&json).unwrap();
         assert_eq!(roundtripped, nodes);
     }
 
-    fn spec(id: &str, group: Option<&str>) -> DerivedToolSpec {
-        DerivedToolSpec {
+    fn spec(id: &str, group: Option<&str>) -> DerivedUtilitySpec {
+        DerivedUtilitySpec {
             id: id.into(),
             label: id.to_uppercase(),
             icon_id: format!("icon.{id}"),
@@ -1207,19 +1207,19 @@ mod tool_node_wire_format_tests {
 
     #[test]
     fn derive_tool_nodes_marks_the_active_tool_pressed() {
-        let nodes = derive_tool_nodes("ctrl", &[spec("select", None), spec("brush", None)], Some("brush"));
+        let nodes = derive_utility_nodes("ctrl", &[spec("select", None), spec("brush", None)], Some("brush"));
         assert_eq!(nodes.len(), 2);
         match &nodes[0] {
-            ToolNode::Toggle { id, pressed, on_change, .. } => {
+            UtilityNode::Toggle { id, pressed, on_change, .. } => {
                 assert_eq!(id, "select");
                 assert_eq!(*pressed, Some(false));
-                assert_eq!(on_change.action, "setActiveTool");
-                assert_eq!(on_change.args, Some(serde_json::json!({ "toolId": "select" })));
+                assert_eq!(on_change.action, "setActiveUtility");
+                assert_eq!(on_change.args, Some(serde_json::json!({ "utilityId": "select" })));
             }
             other => panic!("expected toggle, got {other:?}"),
         }
         match &nodes[1] {
-            ToolNode::Toggle { id, pressed, .. } => {
+            UtilityNode::Toggle { id, pressed, .. } => {
                 assert_eq!(id, "brush");
                 assert_eq!(*pressed, Some(true));
             }
@@ -1229,26 +1229,26 @@ mod tool_node_wire_format_tests {
 
     #[test]
     fn derive_tool_nodes_groups_shared_group_into_one_collection() {
-        let nodes = derive_tool_nodes(
+        let nodes = derive_utility_nodes(
             "ctrl",
             &[spec("select", None), spec("line", Some("shapes")), spec("rect", Some("shapes"))],
             None,
         );
         assert_eq!(nodes.len(), 2, "one ungrouped toggle + one shapes collection");
-        assert!(matches!(&nodes[0], ToolNode::Toggle { id, .. } if id == "select"));
+        assert!(matches!(&nodes[0], UtilityNode::Toggle { id, .. } if id == "select"));
         match &nodes[1] {
-            ToolNode::Collection { id, children, .. } => {
+            UtilityNode::Collection { id, children, .. } => {
                 assert_eq!(id, "group:shapes");
                 assert_eq!(children.len(), 2);
-                assert!(matches!(&children[0], ToolNode::Toggle { id, .. } if id == "line"));
-                assert!(matches!(&children[1], ToolNode::Toggle { id, .. } if id == "rect"));
+                assert!(matches!(&children[0], UtilityNode::Toggle { id, .. } if id == "line"));
+                assert!(matches!(&children[1], UtilityNode::Toggle { id, .. } if id == "rect"));
             }
             other => panic!("expected collection, got {other:?}"),
         }
     }
 }
 //#endregion 🔖WireFormatGoldenTests
-// #endregion tools
+// #endregion utilities
 }
 
 pub mod ui {
@@ -2279,7 +2279,7 @@ pub struct RasterScene {
     pub selection_json: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hovered_id: Option<String>,
-    pub active_tool: String,
+    pub active_utility: String,
     pub brush_size: f64,
     pub brush_opacity: f64,
     pub view_mode: String,
@@ -2424,7 +2424,7 @@ pub struct Puzzle2dBoardScene {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hovered_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub active_tool: Option<String>,
+    pub active_utility: Option<String>,
     #[serde(default = "puzzle2d_board_default_selection_method")]
     pub selection_method: String,
     #[serde(default)]
@@ -2479,7 +2479,7 @@ impl Puzzle2dBoardScene {
             selection_json: puzzle2d_board_default_selection_json(),
             interactive,
             hovered_id: None,
-            active_tool: None,
+            active_utility: None,
             selection_method: puzzle2d_board_default_selection_method(),
             grid_snap_enabled: false,
             grid_factor: puzzle2d_board_default_grid_factor(),
@@ -2499,7 +2499,7 @@ pub struct NoteCanvasScene {
     pub selection_json: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hovered_id: Option<String>,
-    pub active_tool: String,
+    pub active_utility: String,
     pub view_mode: String,
     #[serde(default)]
     pub interactive: bool,
@@ -2511,12 +2511,12 @@ pub fn note_canvas_default_selection_json() -> String {
 
 impl NoteCanvasScene {
     /** @emoji 📝 Builds a note canvas scene with the default empty selection. */
-    pub fn base(document_json: String, active_tool: String, view_mode: String, interactive: bool) -> Self {
+    pub fn base(document_json: String, active_utility: String, view_mode: String, interactive: bool) -> Self {
         Self {
             document_json,
             selection_json: note_canvas_default_selection_json(),
             hovered_id: None,
-            active_tool,
+            active_utility,
             view_mode,
             interactive,
         }
@@ -3447,7 +3447,7 @@ mod ui_node_wire_format_tests {
                 camera_json: "{}".into(),
                 selection_json: "[]".into(),
                 hovered_id: Some("h1".into()),
-                active_tool: "brush".into(),
+                active_utility: "brush".into(),
                 brush_size: 4.0,
                 brush_opacity: 1.0,
                 view_mode: "composite".into(),
@@ -13852,7 +13852,7 @@ pub use component::layout::{
     FRAMEWORK_PANEL_TAB_PARAMETERS_ID, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
     framework_panel_tab_label,
 };
-pub use component::tools::{tool_button, tool_collection, tool_separator, tool_toggle, ToolCategory, ToolNode};
+pub use component::utilities::{utility_button, utility_collection, utility_separator, utility_toggle, UtilityCategory, UtilityNode};
 pub use component::ui::*;
 
 // 🖥️ Retained-mode engine surface (feature = "engine" only).

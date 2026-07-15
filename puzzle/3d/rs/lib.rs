@@ -1509,12 +1509,11 @@ impl Puzzle3dEngine {
     }
 
     fn apply_fill_count(&mut self, count: usize) -> Option<Fixture> {
-        let catalogs = self.scene.as_ref()?.kind_catalogs.as_ref()?.clone();
         let fill = self.fill.as_ref()?;
         let mut fixture = fill.base.clone();
-        for payload in fill.sequence.iter().take(count.min(fill.sequence.len())) {
-            fixture = apply_brush_placement_to_fixture(&fixture, payload, &catalogs);
-        }
+        let count = count.min(fill.sequence.len());
+        fixture.objects.extend(fill.appended_objects.iter().take(count).cloned());
+        fixture.attractions.extend(fill.appended_attractions.iter().take(count).cloned());
         Some(fixture)
     }
 

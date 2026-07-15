@@ -15,10 +15,10 @@ pub mod app_3d {
         apply_world3d_sun_action, build_world_3d_scene, create_default_layout, mesh_from_indexed_with_face_groups, mesh_from_kind,
         ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, world3d_camera_json, world3d_mesh_id_from_url, world3d_scene,
         world3d_sun_measures, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App,
-        DocumentApp, DocumentView, MeshData, MeshExporter, MeshImporter, PanelGroup, SurfaceKind, ToolCategory, ToolDefinition, UiFieldNode,
+        DocumentApp, DocumentView, MeshData, MeshExporter, MeshImporter, PanelGroup, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode,
         UiInputNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
         WindowEngagementControl, WindowEngagementInput, WindowEngagementStatus, WindowMeasure, WorldSunConfig,
-        SET_ACTIVE_TOOL_ACTION_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+        SET_ACTIVE_UTILITY_ACTION_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
         FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     };
     use serde::{Deserialize, Serialize};
@@ -166,17 +166,17 @@ pub mod app_3d {
         "rectangle".into()
     }
 
-    /// 🧰 The tool active when the host has not yet set `view_state.active_tool_id`.
+    /// 🧰 The tool active when the host has not yet set `view_state.active_utility_id`.
     const PROCESS3D_DEFAULT_TOOL: &str = "select";
 
     /// 🧰 Resolves the host-owned active tool from session view state, falling back to the default.
-    fn process3d_active_tool(view_state: &ViewState) -> &str {
-        view_state.active_tool_id.as_deref().unwrap_or(PROCESS3D_DEFAULT_TOOL)
+    fn process3d_active_utility(view_state: &ViewState) -> &str {
+        view_state.active_utility_id.as_deref().unwrap_or(PROCESS3D_DEFAULT_TOOL)
     }
 
     /// 🎛️ Ephemeral view state (selection, camera, engagement scratch, sun) — lives in the app struct,
     /// not the document, so it never pollutes undo history. The active tool is host-owned
-    /// (`view_state.active_tool_id`), never stored here.
+    /// (`view_state.active_utility_id`), never stored here.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase", default)]
     struct Process3dRuntime {
@@ -217,9 +217,9 @@ pub mod app_3d {
     }
 
     /// 🧰 Host effect that programmatically switches the workpiece window's active tool — the active
-    /// tool is host-owned session state (`view_state.active_tool_id`), never a document op.
+    /// tool is host-owned session state (`view_state.active_utility_id`), never a document op.
     fn set_active_tool_effect(tool: &str) -> HostEffect {
-        HostEffect::SetActiveTool { window_kind_id: PROCESS_3D_PLAY_WINDOW_MAIN.into(), tool_id: tool.into() }
+        HostEffect::SetActiveUtility { window_kind_id: PROCESS_3D_PLAY_WINDOW_MAIN.into(), utility_id: tool.into() }
     }
 
     /// 📇 A non-palette action declaration (dispatched by UI wiring/keybindings, never surfaced in the
@@ -239,17 +239,17 @@ pub mod app_3d {
 
     /// 🖱️ Extends the base object-selection JSON with face-picking/drag fields: `targets.face` lets the
     /// renderer hit-test individual triangles; `engagementSessionActive` gates the ground-click placement
-    /// path used by the cut/drill/attach tools; `faceDragActive` gates the push/pull drag gesture, only
+    /// path used by the cut/drill/attach utilities; `faceDragActive` gates the push/pull drag gesture, only
     /// while the select tool is active (so a click-to-place tool doesn't also start a face drag).
-    fn process3d_selection_json(runtime: &Process3dRuntime, active_tool: &str) -> String {
+    fn process3d_selection_json(runtime: &Process3dRuntime, active_utility: &str) -> String {
         let mut value: Value = serde_json::from_str(&world3d_selection_json(&runtime.selection_method, &selected_ids(runtime), runtime.hovered_id.as_deref()))
             .unwrap_or_else(|_| json!({}));
         if let Some(object) = value.as_object_mut() {
-            object.insert("engagementSessionActive".into(), json!(active_tool != "select"));
+            object.insert("engagementSessionActive".into(), json!(active_utility != "select"));
             object.insert("selectionMode".into(), json!("face"));
             object.insert("targets".into(), json!({ "mesh": true, "face": true, "vertex": false, "edge": false }));
             object.insert("componentIds".into(), json!(runtime.selected_face_id.map(|id| vec![id]).unwrap_or_default()));
-            object.insert("faceDragActive".into(), json!(active_tool == "select"));
+            object.insert("faceDragActive".into(), json!(active_utility == "select"));
         }
         value.to_string()
     }
@@ -1265,12 +1265,12 @@ pub mod app_3d {
     //#endregion 🔖Panels
 
     //#region 🔖Engagement
-    fn process3d_engagement(fixture: &process_3d::Process3dDocument, runtime: &Process3dRuntime, active_tool: &str) -> WindowEngagement {
+    fn process3d_engagement(fixture: &process_3d::Process3dDocument, runtime: &Process3dRuntime, active_utility: &str) -> WindowEngagement {
         let len = fixture.steps.len();
         let cursor = fixture.resolved_up_to.unwrap_or(len);
         let volume = processed_volume(fixture).unwrap_or(0.0);
         WindowEngagement {
-            session_active: Some(active_tool != "select"),
+            session_active: Some(active_utility != "select"),
             // 🧰 The select/cut/drill/attach switcher now lives in the framework toolbar (declared via `.tool` +
             // `.window_kind_tools`), so the engagement no longer duplicates it as toggle options.
             options: None,
@@ -1490,7 +1490,7 @@ pub mod app_3d {
                     let current = doc.projection.resolved_up_to.unwrap_or(len) as i64;
                     ActionEmit::ops(vec![Process3dOp::SetCursor { resolved_up_to: Some((current + delta).clamp(0, len as i64) as usize) }])
                 }
-                SET_ACTIVE_TOOL_ACTION_ID => {
+                SET_ACTIVE_UTILITY_ACTION_ID => {
                     self.runtime.selected_face_id = None;
                     ActionEmit::default()
                 }
@@ -1520,7 +1520,7 @@ pub mod app_3d {
                     }
                 }
                 "worldPointerDown" => {
-                    let tool = process3d_active_tool(view_state);
+                    let tool = process3d_active_utility(view_state);
                     if tool == "select" {
                         return ActionEmit::default();
                     }
@@ -1548,7 +1548,7 @@ pub mod app_3d {
                     ActionEmit::default()
                 }
                 "worldFaceDragEnd" => {
-                    if process3d_active_tool(view_state) != "select" {
+                    if process3d_active_utility(view_state) != "select" {
                         return ActionEmit::default();
                     }
                     let normal = args.and_then(|value| value.get("normal")).and_then(value_as_vec3);
@@ -1616,7 +1616,7 @@ pub mod app_3d {
                             world3d_camera_json(self.runtime.camera.position, self.runtime.camera.target, self.runtime.camera.fov),
                             meshes_json,
                             instances_json,
-                            process3d_selection_json(&self.runtime, process3d_active_tool(view_state)),
+                            process3d_selection_json(&self.runtime, process3d_active_utility(view_state)),
                             &self.runtime.sun,
                         ),
                     )
@@ -1629,7 +1629,7 @@ pub mod app_3d {
         }
 
         fn window_engagements(&self, doc: &DocumentView<'_, process_3d::Process3dDocument>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-            HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.into(), process3d_engagement(doc.projection, &self.runtime, process3d_active_tool(view_state)))])
+            HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.into(), process3d_engagement(doc.projection, &self.runtime, process3d_active_utility(view_state)))])
         }
 
         fn window_measures(&self, _doc: &DocumentView<'_, process_3d::Process3dDocument>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
@@ -1726,10 +1726,10 @@ pub mod app_3d {
                 // 🧰 Flat top-level exclusive toolbar scoped to the workpiece window (active tool is
                 // host-owned). These four are the window's entire tool set — not a sub-collection — so
                 // each carries `group: None` and renders as its own flat toolbar icon.
-                .tool(ToolDefinition { category: Some(ToolCategory::Selection), ..ToolDefinition::new("select", "Select", "cursor") })
-                .tool(ToolDefinition { category: Some(ToolCategory::Tools), ..ToolDefinition::new("cut", "Cut", "scissors") })
-                .tool(ToolDefinition { category: Some(ToolCategory::Tools), ..ToolDefinition::new("drill", "Drill", "circle-dot") })
-                .tool(ToolDefinition { category: Some(ToolCategory::Tools), ..ToolDefinition::new("attach", "Attach", "plus") })
+                .tool(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "cursor") })
+                .tool(UtilityDefinition { category: Some(UtilityCategory::Tools), ..UtilityDefinition::new("cut", "Cut", "scissors") })
+                .tool(UtilityDefinition { category: Some(UtilityCategory::Tools), ..UtilityDefinition::new("drill", "Drill", "circle-dot") })
+                .tool(UtilityDefinition { category: Some(UtilityCategory::Tools), ..UtilityDefinition::new("attach", "Attach", "plus") })
                 .window_kind_tools(PROCESS_3D_PLAY_WINDOW_MAIN, vec!["select".into(), "cut".into(), "drill".into(), "attach".into()])
                 .keybinding("mod+z", "undo")
                 .keybinding("mod+shift+z", "redo")
@@ -1776,9 +1776,9 @@ pub mod app_3d {
         }
 
         /// 🧰 A session view state with a specific host-owned active tool (mirrors how the shell threads
-        /// `active_tool_id` after a toolbar switch).
-        fn view_with_tool(tool: &str) -> ViewState {
-            ViewState { active_tool_id: Some(tool.into()), ..ViewState::default() }
+        /// `active_utility_id` after a toolbar switch).
+        fn view_with_utility(tool: &str) -> ViewState {
+            ViewState { active_utility_id: Some(tool.into()), ..ViewState::default() }
         }
 
         #[test]
@@ -1791,10 +1791,10 @@ pub mod app_3d {
         #[test]
         fn tool_registry_declares_four_flat_tools_scoped_to_workpiece_window() {
             let definition = create_process3d_app().definition;
-            let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
-            assert_eq!(tool_ids, ["select", "cut", "drill", "attach"], "tools declared in registry order");
+            let tool_ids: Vec<&str> = definition.utilities.iter().map(|tool| tool.id.as_str()).collect();
+            assert_eq!(tool_ids, ["select", "cut", "drill", "attach"], "utilities declared in registry order");
             assert!(
-                definition.tools.iter().all(|tool| tool.group.is_none()),
+                definition.utilities.iter().all(|tool| tool.group.is_none()),
                 "process's select/cut/drill/attach are the window's entire top-level tool set, so none carry a visual group (a shared group would fold them into one collection button)",
             );
             let window = definition
@@ -1802,8 +1802,8 @@ pub mod app_3d {
                 .iter()
                 .find(|window| window.id == PROCESS_3D_PLAY_WINDOW_MAIN)
                 .expect("workpiece window");
-            let scoped: Vec<&str> = window.tools.iter().map(|tool| tool.as_str()).collect();
-            assert_eq!(scoped, ["select", "cut", "drill", "attach"], "all four tools scoped to the workpiece window kind");
+            let scoped: Vec<&str> = window.utilities.iter().map(|tool| tool.as_str()).collect();
+            assert_eq!(scoped, ["select", "cut", "drill", "attach"], "all four utilities scoped to the workpiece window kind");
         }
 
         #[test]
@@ -1931,7 +1931,7 @@ pub mod app_3d {
         fn set_active_tool_emits_no_operations() {
             let mut app = new_app();
             let result = app
-                .handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "cut" })), &view_with_tool("cut"), &meta("local"))
+                .handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "cut" })), &view_with_utility("cut"), &meta("local"))
                 .expect("set tool");
             assert!(result.operations.is_empty(), "tool selection is host-owned view state and must never emit document ops or history");
         }
@@ -1968,7 +1968,7 @@ pub mod app_3d {
         #[test]
         fn world_pointer_down_reads_position_key_not_point() {
             let mut app = new_app();
-            let result = app.handle_action("worldPointerDown", Some(&json!({ "position": [1.0, 2.0, 3.0] })), &view_with_tool("cut"), &meta("local")).expect("pointer down");
+            let result = app.handle_action("worldPointerDown", Some(&json!({ "position": [1.0, 2.0, 3.0] })), &view_with_utility("cut"), &meta("local")).expect("pointer down");
             assert!(!result.operations.is_empty(), "worldPointerDown must read the `position` key the renderer actually sends");
             let document = app.projection().expect("projection");
             let last = document.steps.last().expect("inserted step");
@@ -1978,18 +1978,18 @@ pub mod app_3d {
         #[test]
         fn world_pointer_down_resets_active_tool_to_select() {
             let mut app = new_app();
-            let result = app.handle_action("worldPointerDown", Some(&json!({ "position": [1.0, 2.0, 3.0] })), &view_with_tool("cut"), &meta("local")).expect("pointer down");
+            let result = app.handle_action("worldPointerDown", Some(&json!({ "position": [1.0, 2.0, 3.0] })), &view_with_utility("cut"), &meta("local")).expect("pointer down");
             assert!(
-                result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::SetActiveTool { tool_id, .. } if tool_id == "select")),
-                "placing a step must hand the host a SetActiveTool(select) effect so the click-to-place tool disengages",
+                result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::SetActiveUtility { utility_id, .. } if utility_id == "select")),
+                "placing a step must hand the host a SetActiveUtility(select) effect so the click-to-place tool disengages",
             );
         }
 
         #[test]
         fn repeated_world_pointer_down_places_steps_at_distinct_positions() {
             let mut app = new_app();
-            app.handle_action("worldPointerDown", Some(&json!({ "position": [1.0, 0.0, 0.0] })), &view_with_tool("cut"), &meta("local")).expect("pointer 1");
-            app.handle_action("worldPointerDown", Some(&json!({ "position": [2.0, 0.0, 0.0] })), &view_with_tool("cut"), &meta("local")).expect("pointer 2");
+            app.handle_action("worldPointerDown", Some(&json!({ "position": [1.0, 0.0, 0.0] })), &view_with_utility("cut"), &meta("local")).expect("pointer 1");
+            app.handle_action("worldPointerDown", Some(&json!({ "position": [2.0, 0.0, 0.0] })), &view_with_utility("cut"), &meta("local")).expect("pointer 2");
             let document = app.projection().expect("projection");
             let last_two: Vec<&ProcessStep> = document.steps.iter().rev().take(2).collect();
             assert_ne!(step_pose(last_two[0]), step_pose(last_two[1]), "repeated clicks at different points must produce distinct step poses");
@@ -2088,7 +2088,7 @@ pub mod app_3d {
             let result = app.handle_action(
                 "worldFaceDragEnd",
                 Some(&json!({ "normal": [0.0, 0.0, 1.0], "startPoint": [0.5, 0.5, 1.0], "distance": -0.5 })),
-                &view_with_tool("cut"),
+                &view_with_utility("cut"),
                 &meta("local"),
             ).expect("face drag");
             assert!(result.operations.is_empty(), "worldFaceDragEnd should be a no-op while a placement tool is active, not the select tool");

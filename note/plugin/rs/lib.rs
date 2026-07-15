@@ -9,7 +9,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER, create_default_layout,
-    ActionDefinition, ActionKind, ActionArgDef, ActionArgOption, ToolDefinition, ToolCategory, SET_ACTIVE_TOOL_ACTION_ID,
+    ActionDefinition, ActionKind, ActionArgDef, ActionArgOption, UtilityDefinition, UtilityCategory, SET_ACTIVE_UTILITY_ACTION_ID,
     WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowMeasure,
 };
 use serde::{Deserialize, Serialize};
@@ -1188,7 +1188,7 @@ fn render_properties_panel(document: &NoteDocument, selected_ids: &[String], vie
         return ui_stack_vertical(vec![
             ui_text(format!("Schema: {}", document.schema)),
             ui_text(format!("Blocks: {}", flatten_blocks(&document.blocks).len())),
-            ui_text(format!("Tool: {}", view_state.active_tool_id.clone().unwrap_or_else(|| "selectDirect".into()))),
+            ui_text(format!("Tool: {}", view_state.active_utility_id.clone().unwrap_or_else(|| "selectDirect".into()))),
             ui_text(format!(
                 "Snap: {}",
                 if document.snap_enabled.unwrap_or(false) {
@@ -1267,7 +1267,7 @@ fn render_canvas_scene(
     document: &NoteDocument,
     selected_ids: &[String],
     hovered_id: Option<&str>,
-    active_tool: &str,
+    active_utility: &str,
     surface_id: &str,
     view_mode: &str,
 ) -> UiNode {
@@ -1280,7 +1280,7 @@ fn render_canvas_scene(
             document_json,
             selection_json,
             hovered_id: hovered_id.map(str::to_string),
-            active_tool: active_tool.into(),
+            active_utility: active_utility.into(),
             view_mode: view_mode.into(),
             interactive: view_mode == "composite",
         },
@@ -1365,7 +1365,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
             id: "note-measures.camera".into(),
             label: "Camera".into(),
             default_open: Some(true),
-            active_tool_id: None,
+            active_utility_id: None,
             children: vec![WindowMeasure::Slider {
                 id: "note-measures.zoom".into(),
                 label: Some("Zoom".into()),
@@ -1380,7 +1380,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
             id: "note-measures.grid".into(),
             label: "Grid".into(),
             default_open: Some(true),
-            active_tool_id: None,
+            active_utility_id: None,
             children: vec![
                 WindowMeasure::Toggle {
                     id: "note-measures.grid-visible".into(),
@@ -1423,7 +1423,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
             id: "note-measures.snap".into(),
             label: "Snap".into(),
             default_open: Some(false),
-            active_tool_id: None,
+            active_utility_id: None,
             children: vec![
                 WindowMeasure::Toggle {
                     id: "note-measures.snap-enabled".into(),
@@ -1448,7 +1448,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
             id: "note-measures.drawing".into(),
             label: "Drawing".into(),
             default_open: Some(false),
-            active_tool_id: None,
+            active_utility_id: None,
             children: vec![
                 WindowMeasure::Slider {
                     id: "note-measures.pencil-width".into(),
@@ -1532,7 +1532,7 @@ fn note_canvas_engagement(document: &NoteDocument, selected_ids: &[String], enga
     }
 }
 
-fn note_navigator_engagement(active_tool: &str) -> WindowEngagement {
+fn note_navigator_engagement(active_utility: &str) -> WindowEngagement {
     WindowEngagement {
         session_active: Some(false),
         options: None,
@@ -1548,14 +1548,14 @@ fn note_navigator_engagement(active_tool: &str) -> WindowEngagement {
         }),
         control: None,
         controls: None,
-        status: Some(vec![WindowEngagementStatus { id: "note-navigator-status.tool".into(), text: format!("tool: {active_tool}") }]),
+        status: Some(vec![WindowEngagementStatus { id: "note-navigator-status.tool".into(), text: format!("tool: {active_utility}") }]),
         possible_engagements: None,
     }
 }
 
-/// 🧰 One canvas tool declaration (id/label/icon reused verbatim from the retired `tools()`/toolbar).
-fn note_tool(id: &str, label: &str, icon: &str, group: &str, category: ToolCategory) -> ToolDefinition {
-    ToolDefinition { group: Some(group.into()), category: Some(category), ..ToolDefinition::new(id, label, icon) }
+/// 🧰 One canvas tool declaration (id/label/icon reused verbatim from the retired `utilities()`/toolbar).
+fn note_utility(id: &str, label: &str, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
+    UtilityDefinition { group: Some(group.into()), category: Some(category), ..UtilityDefinition::new(id, label, icon) }
 }
 
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector/keybound vocabulary
@@ -1625,8 +1625,8 @@ impl DocumentApp for NoteApp {
                 }
                 ActionEmit::default()
             }
-            SET_ACTIVE_TOOL_ACTION_ID => {
-                // 🧰 Host-owned tool switch: the active tool lives in `view_state.active_tool_id`, never
+            SET_ACTIVE_UTILITY_ACTION_ID => {
+                // 🧰 Host-owned tool switch: the active tool lives in `view_state.active_utility_id`, never
                 // the document. Note keeps no in-progress gesture scratch on the app struct (ink drags
                 // coalesce store-side), so there is nothing to clear and no op to emit.
                 ActionEmit::default()
@@ -1989,13 +1989,13 @@ impl DocumentApp for NoteApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, NoteDocument>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
         let labels = note_labels(view_state);
-        let active_tool = view_state.active_tool_id.clone().unwrap_or_else(|| "selectDirect".into());
+        let active_utility = view_state.active_utility_id.clone().unwrap_or_else(|| "selectDirect".into());
         match body_key {
             NOTE_PLAY_BODY_COMPOSITE => render_canvas_scene(
                 document,
                 &self.selected_ids,
                 self.hovered_id.as_deref(),
-                &active_tool,
+                &active_utility,
                 NOTE_PLAY_SURFACE_COMPOSITE,
                 "composite",
             ),
@@ -2003,7 +2003,7 @@ impl DocumentApp for NoteApp {
                 document,
                 &self.selected_ids,
                 self.hovered_id.as_deref(),
-                &active_tool,
+                &active_utility,
                 NOTE_PLAY_SURFACE_NAVIGATOR,
                 "navigator",
             ),
@@ -2015,10 +2015,10 @@ impl DocumentApp for NoteApp {
     }
 
     fn window_engagements(&self, doc: &DocumentView<'_, NoteDocument>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-        let active_tool = view_state.active_tool_id.clone().unwrap_or_else(|| "selectDirect".into());
+        let active_utility = view_state.active_utility_id.clone().unwrap_or_else(|| "selectDirect".into());
         HashMap::from([
             (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_engagement(doc.projection, &self.selected_ids, &self.engagement_input)),
-            (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), note_navigator_engagement(&active_tool)),
+            (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), note_navigator_engagement(&active_utility)),
         ])
     }
 
@@ -2354,17 +2354,17 @@ fn create_note_app() -> App {
                 ]).required().default_value("empty"),
             ])
             .action_args("setFixtureJson", vec![ActionArgDef::text("json", "Document JSON").required()])
-            // 🧰 Canvas tools — one exclusive set per window, active tool host-owned (never a document op).
-            .tool(note_tool("selectDirect", "Direct", "cursor", "Select", ToolCategory::Selection))
-            .tool(note_tool("selectMarquee", "Marquee", "selection", "Select", ToolCategory::Selection))
-            .tool(note_tool("text", "Text", "type", "Block", ToolCategory::Tools))
-            .tool(note_tool("image", "Image", "image", "Block", ToolCategory::Tools))
-            .tool(note_tool("table", "Table", "table", "Block", ToolCategory::Tools))
-            .tool(note_tool("math", "Math", "sigma", "Block", ToolCategory::Tools))
-            .tool(note_tool("pencil", "Pencil", "pencil", "Draw", ToolCategory::Tools))
-            .tool(note_tool("eraserStroke", "Stroke Eraser", "eraser", "Draw", ToolCategory::Tools))
-            .tool(note_tool("eraserPoint", "Point Eraser", "eraser", "Draw", ToolCategory::Tools))
-            .tool(note_tool("pan", "Pan", "hand", "View", ToolCategory::Tools))
+            // 🧰 Canvas utilities — one exclusive set per window, active tool host-owned (never a document op).
+            .tool(note_utility("selectDirect", "Direct", "cursor", "Select", UtilityCategory::Selection))
+            .tool(note_utility("selectMarquee", "Marquee", "selection", "Select", UtilityCategory::Selection))
+            .tool(note_utility("text", "Text", "type", "Block", UtilityCategory::Tools))
+            .tool(note_utility("image", "Image", "image", "Block", UtilityCategory::Tools))
+            .tool(note_utility("table", "Table", "table", "Block", UtilityCategory::Tools))
+            .tool(note_utility("math", "Math", "sigma", "Block", UtilityCategory::Tools))
+            .tool(note_utility("pencil", "Pencil", "pencil", "Draw", UtilityCategory::Tools))
+            .tool(note_utility("eraserStroke", "Stroke Eraser", "eraser", "Draw", UtilityCategory::Tools))
+            .tool(note_utility("eraserPoint", "Point Eraser", "eraser", "Draw", UtilityCategory::Tools))
+            .tool(note_utility("pan", "Pan", "hand", "View", UtilityCategory::Tools))
             .window_kind_tools(NOTE_PLAY_WINDOW_COMPOSITE, vec![
                 "selectDirect".into(), "selectMarquee".into(),
                 "text".into(), "image".into(), "table".into(), "math".into(),
@@ -2650,8 +2650,8 @@ mod tests {
         assert_eq!(app.projection().expect("projection").camera.zoom, 2.0);
     }
 
-    /// 🧰 Switching tools is the framework View action: host-owned `active_tool_id`, never a document op —
-    /// the retired `NoteOp::SetActiveTool` no longer pollutes undo history or sync.
+    /// 🧰 Switching utilities is the framework View action: host-owned `active_utility_id`, never a document op —
+    /// the retired `NoteOp::SetActiveUtility` no longer pollutes undo history or sync.
     fn new_app_with_registry() -> VcsDocumentApp<NoteApp> {
         let definition = create_note_app().definition;
         VcsDocumentApp::with_registry(NoteApp::default(), AppActionRegistry::from_definition(&definition))
@@ -2661,9 +2661,9 @@ mod tests {
     fn set_active_tool_emits_no_ops_and_no_history_entry() {
         let mut app = new_app_with_registry();
         let before = app.projection().expect("projection");
-        let view = ViewState { active_tool_id: Some("pencil".into()), ..ViewState::default() };
+        let view = ViewState { active_utility_id: Some("pencil".into()), ..ViewState::default() };
         let result = app
-            .handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "pencil" })), &view, &meta())
+            .handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "pencil" })), &view, &meta())
             .expect("switch tool");
         assert!(result.operations.is_empty(), "tool switching never emits document ops");
         assert_eq!(app.projection().expect("projection"), before, "tool switching does not mutate the document");
@@ -2672,16 +2672,16 @@ mod tests {
     #[test]
     fn tool_registry_declares_canvas_tools_scoped_to_composite_window() {
         let definition = create_note_app().definition;
-        let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
+        let tool_ids: Vec<&str> = definition.utilities.iter().map(|tool| tool.id.as_str()).collect();
         assert_eq!(
             tool_ids,
             ["selectDirect", "selectMarquee", "text", "image", "table", "math", "pencil", "eraserStroke", "eraserPoint", "pan"],
         );
-        let selects: Vec<&str> = definition.tools.iter().filter(|tool| tool.category == Some(ToolCategory::Selection)).map(|tool| tool.id.as_str()).collect();
+        let selects: Vec<&str> = definition.utilities.iter().filter(|tool| tool.category == Some(UtilityCategory::Selection)).map(|tool| tool.id.as_str()).collect();
         assert_eq!(selects, ["selectDirect", "selectMarquee"]);
         let canvas = definition.window_kinds.iter().find(|window| window.id == NOTE_PLAY_WINDOW_COMPOSITE).expect("canvas window");
-        assert_eq!(canvas.tools.len(), definition.tools.len(), "every tool is scoped to the composite canvas");
-        assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID && matches!(action.kind, ActionKind::View)));
+        assert_eq!(canvas.utilities.len(), definition.utilities.len(), "every tool is scoped to the composite canvas");
+        assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, ActionKind::View)));
     }
 
     #[test]

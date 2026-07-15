@@ -152,8 +152,8 @@ use semio_framework_core::{
     set_active_tool_action_definition, start_introduction_action_definition, ActionArgDef, ActionRef, AppDefinition,
     AppLabelsOverlay, ActionDefinition, ActionKind, CommandDefinition, CommandRef, CommandScope, Contribution, DialogDefinition, ExampleDefinition,
     IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, Keybinding, ModeDefinition, Modes, PanelGroup,
-    PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition, ToolDefinition, ToolRef, ViewState,
-    WindowKindDefinition, WindowKinds, SET_ACTIVE_TOOL_ACTION_ID, START_INTRODUCTION_ACTION_ID,
+    PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition, UtilityDefinition, UtilityRef, ViewState,
+    WindowKindDefinition, WindowKinds, SET_ACTIVE_UTILITY_ACTION_ID, START_INTRODUCTION_ACTION_ID,
 };
 use ui_wgpu::{
     collect_window_kind_ids_from_layout, ActionDescriptor, NamedLayout, UiNode, WindowEngagement,
@@ -171,7 +171,7 @@ use vcs::{
 pub struct ModeSpec {
     pub id: String,
     pub label: String,
-    pub tools: Vec<ToolRef>,
+    pub utilities: Vec<UtilityRef>,
     pub layout_id: Option<String>,
     pub commands: Vec<CommandRef>,
 }
@@ -185,7 +185,7 @@ pub struct WindowKindSpec {
     pub measures: Vec<WindowMeasure>,
     pub engagement: Option<WindowEngagement>,
     pub actions: Vec<ActionRef>,
-    pub tools: Vec<ToolRef>,
+    pub utilities: Vec<UtilityRef>,
 }
 
 /// 🌳 A leaf carries `body_key` (its rendered panel); a branch carries `children` (the tab row shown below it) — exactly one of the two.
@@ -288,7 +288,7 @@ pub struct AppBuilder {
     panel_tabs: Vec<PanelTabSpec>,
     keybindings: Vec<KeybindingSpec>,
     actions: Vec<ActionDefinition>,
-    tools: Vec<ToolDefinition>,
+    utilities: Vec<UtilityDefinition>,
     commands: Vec<CommandDefinition>,
     named_layouts: Vec<NamedLayout>,
     default_layout: Option<WindowLayout>,
@@ -312,7 +312,7 @@ impl AppBuilder {
             panel_tabs: Vec::new(),
             keybindings: Vec::new(),
             actions: Vec::new(),
-            tools: Vec::new(),
+            utilities: Vec::new(),
             commands: Vec::new(),
             named_layouts: Vec::new(),
             default_layout: None,
@@ -329,7 +329,7 @@ impl AppBuilder {
     }
 
     /// @emoji 🎓 Declares this app's first-run introduction walkthrough. Step anchors/advance
-    /// conditions are validated against declared window kinds/tools/actions/panel tabs in
+    /// conditions are validated against declared window kinds/utilities/actions/panel tabs in
     /// `build_definition`; declaring one auto-injects the `startIntroduction` action.
     pub fn introduction(mut self, introduction: IntroductionDefinition) -> Self {
         self.introduction = Some(introduction);
@@ -361,7 +361,7 @@ impl AppBuilder {
         self.modes.push(ModeSpec {
             id: id.into(),
             label: label.into(),
-            tools: Vec::new(),
+            utilities: Vec::new(),
             layout_id: None,
             commands: Vec::new(),
         });
@@ -386,11 +386,11 @@ impl AppBuilder {
         self
     }
 
-    /// 🧰 Scopes tools to a mode — references ids declared via `.tool()`/`.tool_simple()`.
-    pub fn mode_tools(mut self, mode_id: impl AsRef<str>, tool_ids: Vec<ToolRef>) -> Self {
+    /// 🧰 Scopes utilities to a mode — references ids declared via `.tool()`/`.tool_simple()`.
+    pub fn mode_tools(mut self, mode_id: impl AsRef<str>, tool_ids: Vec<UtilityRef>) -> Self {
         let mode_id = mode_id.as_ref();
         if let Some(mode) = self.modes.iter_mut().find(|entry| entry.id == mode_id) {
-            mode.tools = tool_ids;
+            mode.utilities = tool_ids;
         }
         self
     }
@@ -416,7 +416,7 @@ impl AppBuilder {
             measures: Vec::new(),
             engagement: None,
             actions: Vec::new(),
-            tools: Vec::new(),
+            utilities: Vec::new(),
         });
         self
     }
@@ -438,7 +438,7 @@ impl AppBuilder {
             measures: Vec::new(),
             engagement: Some(engagement),
             actions: Vec::new(),
-            tools: Vec::new(),
+            utilities: Vec::new(),
         });
         self
     }
@@ -461,12 +461,12 @@ impl AppBuilder {
         self
     }
 
-    /// 🧰 Scopes tools to a window kind — references ids declared via `.tool()`/`.tool_simple()`. Mirrors
+    /// 🧰 Scopes utilities to a window kind — references ids declared via `.tool()`/`.tool_simple()`. Mirrors
     /// `window_kind_actions`: the referenced tool ids are validated to resolve in `build_definition`.
-    pub fn window_kind_tools(mut self, window_kind_id: impl AsRef<str>, tool_ids: Vec<ToolRef>) -> Self {
+    pub fn window_kind_tools(mut self, window_kind_id: impl AsRef<str>, tool_ids: Vec<UtilityRef>) -> Self {
         let window_kind_id = window_kind_id.as_ref();
         if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
-            window.tools = tool_ids;
+            window.utilities = tool_ids;
         }
         self
     }
@@ -576,14 +576,14 @@ impl AppBuilder {
     }
 
     /// @emoji 🧰 Declares an interactive tool this app exposes (referenced by `window_kind_tools`/`mode_tools`).
-    pub fn tool(mut self, tool: ToolDefinition) -> Self {
-        self.tools.push(tool);
+    pub fn tool(mut self, tool: UtilityDefinition) -> Self {
+        self.utilities.push(tool);
         self
     }
 
     /// @emoji 🧰 Declares a tool with default settings (no group/keys/cursor/category, gates actions while active).
     pub fn tool_simple(self, id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<String>) -> Self {
-        self.tool(ToolDefinition::new(id, label, icon_id))
+        self.tool(UtilityDefinition::new(id, label, icon_id))
     }
 
     /// @emoji 🧷 Keybinding-vs-action-registry consistency is only enforced for apps that declare
@@ -661,7 +661,7 @@ impl AppBuilder {
             validate_arg_defs(&self.id, &format!("action {}", action.id), &action.args);
         }
         let mut declared_tool_ids = HashSet::new();
-        for tool in &self.tools {
+        for tool in &self.utilities {
             assert!(!tool.id.trim().is_empty(), "app {} tool id must be non-empty", self.id);
             assert!(
                 declared_tool_ids.insert(tool.id.clone()),
@@ -693,7 +693,7 @@ impl AppBuilder {
                 actions.push(history_action);
             }
         }
-        if !self.tools.is_empty() && declared_action_ids.insert(SET_ACTIVE_TOOL_ACTION_ID.to_string()) {
+        if !self.utilities.is_empty() && declared_action_ids.insert(SET_ACTIVE_UTILITY_ACTION_ID.to_string()) {
             actions.push(set_active_tool_action_definition());
         }
         if self.introduction.is_some() && declared_action_ids.insert(START_INTRODUCTION_ACTION_ID.to_string()) {
@@ -726,15 +726,15 @@ impl AppBuilder {
                 }
             }
         }
-        for tool in &self.tools {
+        for tool in &self.utilities {
             if let Some(keys) = &tool.keys {
                 if bound_keys.insert(keys.clone()) {
                     keybindings.push(Keybinding {
                         keys: keys.clone(),
                         action: ActionDescriptor {
                             controller_id: self.controller_id.clone(),
-                            action: SET_ACTIVE_TOOL_ACTION_ID.to_string(),
-                            args: Some(serde_json::json!({ "toolId": tool.id })),
+                            action: SET_ACTIVE_UTILITY_ACTION_ID.to_string(),
+                            args: Some(serde_json::json!({ "utilityId": tool.id })),
                         },
                     });
                 }
@@ -761,7 +761,7 @@ impl AppBuilder {
                     action_ref.as_str()
                 );
             }
-            for tool_ref in &window.tools {
+            for tool_ref in &window.utilities {
                 assert!(
                     declared_tool_ids.contains(tool_ref.as_str()),
                     "app {} window kind {} references undeclared tool {}",
@@ -781,7 +781,7 @@ impl AppBuilder {
                     command_ref.as_str()
                 );
             }
-            for tool_ref in &mode.tools {
+            for tool_ref in &mode.utilities {
                 assert!(
                     declared_tool_ids.contains(tool_ref.as_str()),
                     "app {} mode {} references undeclared tool {}",
@@ -908,7 +908,7 @@ impl AppBuilder {
                     .map(|mode| ModeDefinition {
                         id: mode.id,
                         label: mode.label,
-                        tools: mode.tools,
+                        utilities: mode.utilities,
                         layout_id: mode.layout_id,
                         commands: mode.commands,
                     })
@@ -930,7 +930,7 @@ impl AppBuilder {
                             engagement: window.engagement.map_or(WindowEngagementSlot::None, WindowEngagementSlot::Some),
                         },
                         actions: window.actions,
-                        tools: window.tools,
+                        utilities: window.utilities,
                         params_schema: None,
                         document_projection_schema: None,
                         input_event_schema: None,
@@ -943,7 +943,7 @@ impl AppBuilder {
             panel_tabs: self.panel_tabs.into_iter().map(panel_tab_spec_to_definition).collect(),
             keybindings,
             actions,
-            tools: self.tools,
+            utilities: self.utilities,
             commands: self.commands,
             named_layouts: self.named_layouts,
             default_layout: self.default_layout,
@@ -1058,15 +1058,15 @@ mod app_builder_tests {
 
     #[test]
     fn declaring_tools_injects_set_active_tool_action_and_keybinding() {
-        use semio_framework_core::{ActionKind, ToolDefinition, SET_ACTIVE_TOOL_ACTION_ID};
+        use semio_framework_core::{ActionKind, UtilityDefinition, SET_ACTIVE_UTILITY_ACTION_ID};
         let definition = minimal_app("tool-app")
-            .tool(ToolDefinition { keys: Some("b".into()), ..ToolDefinition::new("brush", "Brush", "icon.brush") })
+            .tool(UtilityDefinition { keys: Some("b".into()), ..UtilityDefinition::new("brush", "Brush", "icon.brush") })
             .tool_simple("eraser", "Eraser", "icon.eraser")
             .build_definition();
         let set_active_tool = definition
             .actions
             .iter()
-            .find(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID)
+            .find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID)
             .expect("setActiveTool injected");
         assert_eq!(set_active_tool.kind, ActionKind::View);
         assert!(!set_active_tool.in_palette);
@@ -1075,15 +1075,15 @@ mod app_builder_tests {
             .iter()
             .find(|binding| binding.keys == "b")
             .expect("tool keybinding auto-injected");
-        assert_eq!(binding.action.action, SET_ACTIVE_TOOL_ACTION_ID);
-        assert_eq!(binding.action.args, Some(serde_json::json!({ "toolId": "brush" })));
+        assert_eq!(binding.action.action, SET_ACTIVE_UTILITY_ACTION_ID);
+        assert_eq!(binding.action.args, Some(serde_json::json!({ "utilityId": "brush" })));
     }
 
     #[test]
     fn no_tools_means_no_set_active_tool_action() {
-        use semio_framework_core::SET_ACTIVE_TOOL_ACTION_ID;
+        use semio_framework_core::SET_ACTIVE_UTILITY_ACTION_ID;
         let definition = minimal_app("no-tool-app").build_definition();
-        assert!(!definition.actions.iter().any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID));
+        assert!(!definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID));
     }
 
     #[test]
@@ -1622,14 +1622,14 @@ macro_rules! app_action_enum {
 /// view state (selection/camera/active tool) lives in the app struct itself, not in the document.
 ///
 /// # 🔖ToolPreviewContract
-/// The formalized actions-vs-tools contract:
+/// The formalized actions-vs-utilities contract:
 /// - **Actions** are non-interactive: they carry optional declared `ActionArgDef`s, stage in the
 ///   renderer, and execute once. `Operation`-kind actions emit ops; `View`/`Shell`-kind actions must
 ///   emit **zero** ops ({@link VcsDocumentApp} enforces this — a View/Shell action returning ops is a
 ///   hard error).
 /// - **Tools** are interactive live-preview pointer modes. Exactly one tool is active per window kind;
-///   the active tool arrives via `view_state.active_tool_id` and is **never** stored in the document
-///   nor emitted as an op. Switching tools dispatches the framework `setActiveTool` View action; on a
+///   the active tool arrives via `view_state.active_utility_id` and is **never** stored in the document
+///   nor emitted as an op. Switching utilities dispatches the framework `setActiveTool` View action; on a
 ///   switch the app must clear any in-progress preview scratch.
 /// - **Two blessed preview patterns** (both funnel through {@link ActionEmit}):
 ///   1. per-tick coalesced — {@link ActionEmit::amend} folds each tick of a gesture into one amendable
@@ -3435,7 +3435,7 @@ fn ui_refresh_section<T: Serialize>(value: &T, known_hash: Option<&str>) -> (Str
 /// to make with **one** call. `request_json` lists every section the host wants (windows/panels by
 /// `{key, bodyKey, hash}`, engagements/measures/labels each `{hash}`); the response includes a payload
 /// only for sections whose hash differs from what the host already holds. Toolbars are no longer a
-/// plugin section — the renderer derives them from the tool registry via `derive_tool_nodes`.
+/// plugin section — the renderer derives them from the tool registry via `derive_utility_nodes`.
 pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String, String> {
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -3461,7 +3461,7 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
         #[serde(default)]
         panels: Vec<SectionRequest>,
         #[serde(default)]
-        tools: Vec<SectionRequest>,
+        utilities: Vec<SectionRequest>,
         #[serde(default)]
         engagements: Option<SingleRequest>,
         #[serde(default)]
@@ -3485,7 +3485,7 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
         #[serde(skip_serializing_if = "Vec::is_empty")]
         panels: Vec<SectionResponse>,
         #[serde(skip_serializing_if = "Vec::is_empty")]
-        tools: Vec<SectionResponse>,
+        utilities: Vec<SectionResponse>,
         #[serde(skip_serializing_if = "Option::is_none")]
         engagements: Option<SectionResponse>,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -3520,12 +3520,12 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
             let (hash, value) = ui_refresh_section(&node, entry.hash.as_deref());
             response.panels.push(SectionResponse { key: entry.key.clone(), hash, value });
         }
-        // 🚧 `tools` intentionally unhandled here: `PluginApp`/`DocumentApp` currently expose no
-        // object-safe `tools()` accessor (mid-refactor elsewhere toward a declarative `mode_tools(...)`
-        // builder — unrelated to this ticket). No puzzle2d scope ever requests `tools: true` (it uses
-        // static mode-level tools only), so `request.tools` is always empty in practice; wire this up
-        // once the tools API refactor lands.
-        let _ = &request.tools;
+        // 🚧 `utilities` intentionally unhandled here: `PluginApp`/`DocumentApp` currently expose no
+        // object-safe `utilities()` accessor (mid-refactor elsewhere toward a declarative `mode_tools(...)`
+        // builder — unrelated to this ticket). No puzzle2d scope ever requests `utilities: true` (it uses
+        // static mode-level utilities only), so `request.utilities` is always empty in practice; wire this up
+        // once the utilities API refactor lands.
+        let _ = &request.utilities;
         if let Some(requested) = &request.engagements {
             let engagements = instance.app.window_engagements(&request.view_state);
             let (hash, value) = ui_refresh_section(&engagements, requested.hash.as_deref());
@@ -3739,10 +3739,10 @@ mod semio_plugin_macro_tests {
                 // kind-discipline check rejects it.
                 "badView" => ActionEmit::ops(vec![TestOp::SetCount { value: 99 }]),
                 // 🧪 Reads the host-owned active tool from view state (never the document) and echoes it
-                // as an event — proving `setActiveTool` forwards `view_state.active_tool_id` and emits no ops.
-                "setActiveTool" => ActionEmit::event(AppEvent {
+                // as an event — proving `setActiveTool` forwards `view_state.active_utility_id` and emits no ops.
+                "setActiveUtility" => ActionEmit::event(AppEvent {
                     kind: "active-tool".into(),
-                    payload: json!({ "toolId": view_state.active_tool_id.clone().unwrap_or_default() }),
+                    payload: json!({ "utilityId": view_state.active_utility_id.clone().unwrap_or_default() }),
                 }),
                 "select" => {
                     self.selected = args
@@ -3995,13 +3995,13 @@ mod semio_plugin_macro_tests {
     #[test]
     fn set_active_tool_forwards_view_state_active_tool_and_emits_no_ops() {
         let mut app = contract_app_under_test();
-        let view_state = ViewState { active_tool_id: Some("brush".into()), ..ViewState::default() };
+        let view_state = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
         let result = app
-            .handle_action("setActiveTool", Some(&json!({ "toolId": "brush" })), &view_state, &meta())
+            .handle_action("setActiveUtility", Some(&json!({ "utilityId": "brush" })), &view_state, &meta())
             .expect("setActiveTool is a valid View action");
         assert!(result.operations.is_empty(), "tool switching must not create history");
         let event = result.events.iter().find(|event| event.kind == "active-tool").expect("echoed active tool");
-        assert_eq!(event.payload, json!({ "toolId": "brush" }));
+        assert_eq!(event.payload, json!({ "utilityId": "brush" }));
     }
 
     #[test]
@@ -4122,7 +4122,7 @@ pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl 
         id: format!("{id_prefix}-measure-sun"),
         label: "Sun".into(),
         default_open: Some(false),
-        active_tool_id: None,
+        active_utility_id: None,
         children: vec![
             WindowMeasure::Toggle {
                 id: format!("{id_prefix}-measure-sun-enabled"),
@@ -4615,7 +4615,7 @@ pub use world3d_host::{
     world3d_scene_extended, world3d_selection_json, world3d_sun_measures, WorldSunConfig,
 };
 pub use semio_framework_core::*;
-// 🧩 Declarative component model (UiNode, layouts, tools) — moved into ui_wgpu; re-exported here so
+// 🧩 Declarative component model (UiNode, layouts, utilities) — moved into ui_wgpu; re-exported here so
 // apps keep the flat `semio_framework_plugin::*` import surface with zero Cargo.toml churn.
 pub use ui_wgpu::*;
 

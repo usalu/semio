@@ -6,10 +6,10 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     ui_text, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
     world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind,
     App, ActionDescriptor, AppLabelsOverlay, DocumentApp,
-    DocumentView, IconRenderScene, MeasureSelectItem, ToolDefinition, UiFieldNode, UiInspectorFieldGroup,
+    DocumentView, IconRenderScene, MeasureSelectItem, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup,
     UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementPossible, WindowEngagementStatus, WindowMeasure, World3dScene,
-    WorldSunConfig, SET_ACTIVE_TOOL_ACTION_ID,
+    WorldSunConfig, SET_ACTIVE_UTILITY_ACTION_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
@@ -41,7 +41,7 @@ const SHOOTING_PLAY_WINDOW_SCENE: &str = "shooting-scene";
 const SHOOTING_PLAY_WINDOW_ICON: &str = "shooting-icon";
 const SHOOTING_EXAMPLE_DEFAULT_ID: &str = "base-icon";
 
-/// 🧰 The gumball tool active when the host has not yet set `view_state.active_tool_id` (first ToolRef).
+/// 🧰 The gumball tool active when the host has not yet set `view_state.active_utility_id` (first UtilityRef).
 const SHOOTING_TRANSFORM_TOOL_DEFAULT: &str = "move";
 
 const SHOOTING_FALLBACK_MESH_KIND: &str = "box";
@@ -53,7 +53,7 @@ static SHOOTING_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 //#region 🔖Runtime
 /// 🎛️ Ephemeral view state (selection, camera draft) — lives in the app struct, not the document, so
-/// it never pollutes undo history. The active transform tool is host-owned (`view_state.active_tool_id`).
+/// it never pollutes undo history. The active transform tool is host-owned (`view_state.active_utility_id`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 struct ShootingPlayRuntime {
@@ -194,7 +194,7 @@ fn world_meshes_json(fixture: &ShootingFixture) -> String {
     world3d_meshes_json_from_kinds_and_urls(&[SHOOTING_FALLBACK_MESH_KIND.into()], &collect_mesh_urls(fixture))
 }
 
-fn world_selection_json(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime, active_tool: &str) -> String {
+fn world_selection_json(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime, active_utility: &str) -> String {
     let mut value: Value = serde_json::from_str(&world3d_selection_json(
         &runtime.selection_method,
         &runtime.selected_asset_ids,
@@ -205,7 +205,7 @@ fn world_selection_json(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime
         object.insert("granularity".into(), json!("mesh"));
         object.insert("selectionMode".into(), json!("mesh"));
         object.insert("targets".into(), json!({ "mesh": true, "vertex": false, "edge": false, "face": false }));
-        object.insert("transformTool".into(), json!(active_tool));
+        object.insert("transformTool".into(), json!(active_utility));
         object.insert("activeObjectId".into(), json!(fixture.active_asset_id));
         object.insert("gumballActive".into(), json!(!runtime.selected_asset_ids.is_empty()));
         if let Some(target) = selection_centroid(fixture, &runtime.selected_asset_ids) {
@@ -684,7 +684,7 @@ fn asset_inspector_group(asset: &ShootingAsset, labels: &ShootingLabels) -> UiIn
 //#endregion 🔖Panels
 
 //#region 🔖Render
-fn render_model_scene(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime, active_tool: &str) -> UiNode {
+fn render_model_scene(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime, active_utility: &str) -> UiNode {
     build_world_3d_scene(
         SHOOTING_PLAY_SURFACE_SCENE,
         SHOOTING_PLAY_APP_ID,
@@ -696,7 +696,7 @@ fn render_model_scene(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime, 
                 camera_json(&fixture.camera),
                 world_meshes_json(fixture),
                 world_instances_json(fixture, runtime),
-                world_selection_json(fixture, runtime, active_tool),
+                world_selection_json(fixture, runtime, active_utility),
                 &WorldSunConfig::default(),
             )
         },
@@ -1106,7 +1106,7 @@ impl DocumentApp for ShootingPlayApp {
                 self.runtime.center_model = next;
                 ActionEmit::default()
             }
-            SET_ACTIVE_TOOL_ACTION_ID => {
+            SET_ACTIVE_UTILITY_ACTION_ID => {
                 self.runtime.hovered_asset_id = None;
                 ActionEmit::default()
             }
@@ -1393,9 +1393,9 @@ impl DocumentApp for ShootingPlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, ShootingFixture>, view_state: &ViewState) -> UiNode {
         let fixture = doc.projection;
         let labels = shooting_labels(view_state);
-        let active_tool = view_state.active_tool_id.as_deref().unwrap_or(SHOOTING_TRANSFORM_TOOL_DEFAULT);
+        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(SHOOTING_TRANSFORM_TOOL_DEFAULT);
         match body_key {
-            SHOOTING_PLAY_BODY_SCENE => render_model_scene(fixture, &self.runtime, active_tool),
+            SHOOTING_PLAY_BODY_SCENE => render_model_scene(fixture, &self.runtime, active_utility),
             SHOOTING_PLAY_BODY_ICON => render_icon_scene(fixture),
             SHOOTING_PLAY_BODY_DOCUMENT => build_document_tree(fixture, labels),
             SHOOTING_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
@@ -1531,9 +1531,9 @@ fn create_shooting_app() -> App {
                 ]).required(),
             ])
             // 🧰 Transform gumball — an exclusive tool group scoped to the scene window (active tool is host-owned).
-            .tool(ToolDefinition { group: Some("transform".into()), ..ToolDefinition::new("move", "Move", "move") })
-            .tool(ToolDefinition { group: Some("transform".into()), ..ToolDefinition::new("rotate", "Rotate", "rotate-cw") })
-            .tool(ToolDefinition { group: Some("transform".into()), ..ToolDefinition::new("scale", "Scale", "maximize-2") })
+            .tool(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
+            .tool(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
+            .tool(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })
             .window_kind_tools(SHOOTING_PLAY_WINDOW_SCENE, vec!["move".into(), "rotate".into(), "scale".into()]),
     )
     .example(
@@ -1790,12 +1790,12 @@ mod tests {
     #[test]
     fn tool_registry_scopes_transform_gumball_and_actions_are_declared() {
         let definition = create_shooting_app().definition;
-        let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
-        assert_eq!(tool_ids, ["move", "rotate", "scale"], "gumball tools declared in registry order");
-        assert!(definition.tools.iter().all(|tool| tool.group.as_deref() == Some("transform")), "one exclusive transform group");
+        let tool_ids: Vec<&str> = definition.utilities.iter().map(|tool| tool.id.as_str()).collect();
+        assert_eq!(tool_ids, ["move", "rotate", "scale"], "gumball utilities declared in registry order");
+        assert!(definition.utilities.iter().all(|tool| tool.group.as_deref() == Some("transform")), "one exclusive transform group");
         let scene = definition.window_kinds.iter().find(|window| window.id == SHOOTING_PLAY_WINDOW_SCENE).expect("scene window");
-        let scoped: Vec<&str> = scene.tools.iter().map(|tool| tool.as_str()).collect();
-        assert_eq!(scoped, ["move", "rotate", "scale"], "tools scoped to the scene window kind");
+        let scoped: Vec<&str> = scene.utilities.iter().map(|tool| tool.as_str()).collect();
+        assert_eq!(scoped, ["move", "rotate", "scale"], "utilities scoped to the scene window kind");
         for command in ["loadRequest", "importAssetRequest", "saveDownload", "exportActiveShot", "exportAllShots", "resetFixture", "saveCamera"] {
             assert!(definition.actions.iter().any(|action| action.id == command), "registry declares {command}");
         }
@@ -2063,11 +2063,11 @@ mod tests {
     fn set_active_tool_clears_scratch_and_emits_no_history_entry() {
         let mut app = new_app();
         app.handle_action("worldHover", Some(&json!({ "id": "base" })), &ViewState::default(), &meta("local")).expect("hover");
-        // Switching tools is the framework-injected View action: it clears in-progress scratch and
+        // Switching utilities is the framework-injected View action: it clears in-progress scratch and
         // must produce no document operations (zero history entries, nothing to sync).
-        let result = app.handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "rotate" })), &ViewState::default(), &meta("local")).expect("switch tool");
+        let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "rotate" })), &ViewState::default(), &meta("local")).expect("switch tool");
         assert!(result.operations.is_empty(), "tool switching never emits document ops");
-        let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState { active_tool_id: Some("rotate".into()), ..ViewState::default() }).expect("render");
+        let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState { active_utility_id: Some("rotate".into()), ..ViewState::default() }).expect("render");
         let selection: Value = serde_json::from_str(serde_json::to_value(&node).unwrap()["world3d"]["selectionJson"].as_str().unwrap()).unwrap();
         assert_eq!(selection["transformTool"], json!("rotate"), "the gumball follows the host-owned active tool");
     }

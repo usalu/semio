@@ -4,7 +4,7 @@ use semio_framework_core::{
     kernel::{CapabilityRequirement, ResourceKind, Rights, Scope},
     InvocationResult, PluginManifest, ViewState,
 };
-use ui_wgpu::{ToolNode, UiNode, WindowEngagement, WindowMeasure};
+use ui_wgpu::{UtilityNode, UiNode, WindowEngagement, WindowMeasure};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -440,7 +440,7 @@ impl WasmPluginRuntime {
         serde_json::from_str(&response.json).map_err(|error| error.to_string())
     }
 
-    pub fn tools(&self, _instance_id: u32, _view_state: &ViewState) -> Result<Vec<ToolNode>, String> {
+    pub fn utilities(&self, _instance_id: u32, _view_state: &ViewState) -> Result<Vec<UtilityNode>, String> {
         Ok(Vec::new())
     }
 
@@ -482,6 +482,7 @@ impl WasmPluginRuntime {
             examples: vec![],
             capabilities: vec![],
             contributions: vec![],
+            commands: vec![],
         };
         let mut store = Store::new(engine, Self::host_state("bootstrap", &manifest));
         let (bindings, _instance) = PluginWorld::instantiate(&mut store, component, linker)

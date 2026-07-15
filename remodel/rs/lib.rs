@@ -198,7 +198,7 @@ fn default_camera_fov() -> f64 {
 
 /// 🗂️ Top-level remodel project document — only persistent, undoable reconstruction state. Ephemeral
 /// viewport state (camera/selection) lives in the plugin runtime and the active tool is host-owned
-/// session state (`view_state.active_tool_id`), never in the document.
+/// session state (`view_state.active_utility_id`), never in the document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RemodelScene {
