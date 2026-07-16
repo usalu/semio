@@ -845,6 +845,8 @@ impl DocumentApp for RasterApp {
             ]),
             panel_tab_labels: HashMap::new(),
             mode_labels: HashMap::new(),
+            action_labels: HashMap::new(),
+            utility_labels: HashMap::new(),
         }
     }
 }

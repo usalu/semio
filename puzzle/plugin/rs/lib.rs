@@ -5884,15 +5884,117 @@ pub mod d3 {
 
         fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
             let labels = puzzle3d_labels(view_state);
+            let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
             semio_framework_plugin::AppLabelsOverlay {
                 app_label: None,
                 window_kind_labels: std::collections::HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string())]),
-                panel_tab_labels: std::collections::HashMap::new(),
+                panel_tab_labels: std::collections::HashMap::from([
+                    ("puzzle3d.panel.settings".to_string(), (if is_de { "Einstellungen" } else { "Settings" }).to_string()),
+                    ("puzzle3d.panel.jack".to_string(), "Jack".to_string()),
+                ]),
                 mode_labels: std::collections::HashMap::new(),
+                action_labels: puzzle3d_action_labels(is_de),
+                utility_labels: puzzle3d_utility_labels(is_de),
             }
         }
     }
     //#endregion 🔖Puzzle3dPlayApp
+
+    //#region 🔖CommandLabels
+    /// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_puzzle3d_app`'s
+    /// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+    /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+    fn puzzle3d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
+            ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+            ("addObjectKind", "Add Object", "Objekt hinzufuegen"),
+            ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+            ("duplicateSelection", "Duplicate Selection", "Auswahl duplizieren"),
+            ("setCamera", "Set Camera", "Kamera festlegen"),
+            ("setProjection", "Set Projection", "Projektion festlegen"),
+            ("setCameraViewPreset", "Set Camera View Preset", "Kameraansicht-Voreinstellung festlegen"),
+            ("translateSelection", "Translate Selection", "Auswahl verschieben"),
+            ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
+            ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
+            ("worldRelocate", "Relocate Object", "Objekt verlagern"),
+            ("setSelectionFlag", "Set Selection Flag", "Auswahlmarkierung festlegen"),
+            ("patchInspector", "Patch Inspector", "Inspektor aktualisieren"),
+            ("focusSelection", "Focus Selection", "Auswahl fokussieren"),
+            ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+            ("engagementRepeatLast", "Engagement Repeat Last", "Letzte Eingabe wiederholen"),
+            ("createAttraction", "Create Attraction", "Anziehung erstellen"),
+            ("deleteAttraction", "Delete Attraction", "Anziehung loeschen"),
+            ("addTargetVolume", "Add Target Volume", "Zielvolumen hinzufuegen"),
+            ("deleteTargetVolume", "Delete Target Volume", "Zielvolumen loeschen"),
+            ("setTargetVolumeFlag", "Set Target Volume Flag", "Zielvolumenmarkierung festlegen"),
+            ("addBrushObject", "Add Brush Object", "Pinselobjekt hinzufuegen"),
+            ("setFillCount", "Set Fill Count", "Fuellanzahl festlegen"),
+            ("acceptSuggestion", "Accept Suggestion", "Vorschlag annehmen"),
+            ("fillBuildTick", "Fill Build Tick", "Fuellaufbau-Takt"),
+            ("openAddObjectDialog", "Add Object…", "Objekt hinzufuegen…"),
+            ("setSelection", "Set Selection", "Auswahl festlegen"),
+            ("selectSameKindSelection", "Select Same Kind", "Gleiche Art auswaehlen"),
+            ("setJackQuery", "Set Jack Query", "Jack-Abfrage festlegen"),
+            ("worldSelect", "World Select", "Welt auswaehlen"),
+            ("worldHover", "World Hover", "Welt-Hover"),
+            ("setHover", "Set Hover", "Hover festlegen"),
+            ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
+            ("worldVortexHover", "World Vortex Hover", "Welt-Vortex-Hover"),
+            ("worldVortexSelect", "World Vortex Select", "Welt-Vortex auswaehlen"),
+            ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
+            ("toggleSun", "Toggle Sun", "Sonne umschalten"),
+            ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
+            ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
+            ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
+            ("setLodAutomatic", "Set Lod Automatic", "LOD automatisch festlegen"),
+            ("setLodDepthVariable", "Set Lod Depth Variable", "LOD-Tiefenvariable festlegen"),
+            ("setLodShowGrid", "Set Lod Show Grid", "LOD-Raster anzeigen"),
+            ("setLodManual", "Set Lod Manual", "LOD manuell festlegen"),
+            ("setGridSnapEnabled", "Set Grid Snap Enabled", "Rasterfang aktivieren"),
+            ("setGridFactor", "Set Grid Factor", "Rasterfaktor festlegen"),
+            ("setSelectionModeDefault", "Set Selection Mode Default", "Standardauswahlmodus festlegen"),
+            ("setProximityRadius", "Set Proximity Radius", "Naeheradius festlegen"),
+            ("setChunkSize", "Set Chunk Size", "Blockgroesse festlegen"),
+            ("setSelectableKind", "Set Selectable Kind", "Auswaehlbare Art festlegen"),
+            ("setKindHover", "Set Kind Hover", "Art-Hover festlegen"),
+            ("selectAll", "Select All", "Alles auswaehlen"),
+            ("clearSelection", "Clear Selection", "Auswahl aufheben"),
+            ("contextMenuAt", "Context Menu At", "Kontextmenue bei"),
+            ("engagementInput", "Engagement Input", "Eingabe"),
+            ("engagementAbort", "Engagement Abort", "Eingabe abbrechen"),
+            ("engagementControlSelect", "Engagement Control Select", "Eingabesteuerung auswaehlen"),
+            ("setFillEditTargetVolumes", "Set Fill Edit Target Volumes", "Zielvolumen-Bearbeitung festlegen"),
+            ("setVoxelDims", "Set Voxel Dims", "Voxel-Abmessungen festlegen"),
+            ("setBrushPlacementOverlapBudget", "Set Brush Placement Overlap Budget", "Pinsel-Ueberlappungsbudget festlegen"),
+            ("setObjectKindWeight", "Set Object Kind Weight", "Objektart-Gewicht festlegen"),
+            ("setVortexKindWeight", "Set Vortex Kind Weight", "Vortexart-Gewicht festlegen"),
+            ("cycleBrushCandidate", "Cycle Brush Candidate", "Pinselkandidat wechseln"),
+            ("cycleBrushCandidateBack", "Cycle Brush Candidate Back", "Pinselkandidat rueckwaerts wechseln"),
+            ("openVortexSuggestions", "Open Vortex Suggestions", "Vortex-Vorschlaege oeffnen"),
+            ("closeVortexSuggestions", "Close Vortex Suggestions", "Vortex-Vorschlaege schliessen"),
+            ("hoverSuggestion", "Hover Suggestion", "Vorschlag hovern"),
+            ("suggestionsTick", "Suggestions Tick", "Vorschlaege-Takt"),
+            ("registerBrushMesh", "Register Brush Mesh", "Pinsel-Mesh registrieren"),
+            ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrueckt"),
+        ];
+        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    }
+
+    /// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_puzzle3d_app`.
+    fn puzzle3d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            ("select", "Select", "Auswaehlen"),
+            ("move", "Move", "Verschieben"),
+            ("rotate", "Rotate", "Drehen"),
+            ("scale", "Scale", "Skalieren"),
+            ("brush", "Brush", "Pinsel"),
+            ("fill", "Fill", "Fuellen"),
+            ("worldRelocate", "Relocate", "Verlagern"),
+        ];
+        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    }
+    //#endregion 🔖CommandLabels
 
     //#region 🔖Manifest
     pub fn create_puzzle3d_app() -> App {

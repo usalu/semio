@@ -1281,9 +1281,9 @@ export function resolveUtilities(app: Pick<AppDefinition, "utilities">, windowKi
   return resolved;
 }
 
-/** 🧰 One `UtilityDefinition` → the lean `DerivedUtilitySpec` consumed by {@link deriveUtilityNodes}. */
-function utilityDefinitionToSpec(utility: UtilityDefinition): DerivedUtilitySpec {
-  return { id: utility.id, label: utility.label, iconId: utility.iconId, group: utility.group ?? undefined, category: utility.category ?? "tools" };
+/** 🧰 One `UtilityDefinition` → the lean `DerivedUtilitySpec` consumed by {@link deriveUtilityNodes}, resolving the label through the app's locale/terminology overlay. */
+function utilityDefinitionToSpec(utility: UtilityDefinition, appLabelsOverlay: PluginAppLabelsOverlay): DerivedUtilitySpec {
+  return { id: utility.id, label: resolveAppLabel(appLabelsOverlay, "utility", utility.id, utility.label), iconId: utility.iconId, group: utility.group ?? undefined, category: utility.category ?? "tools" };
 }
 
 /** 🧰 Stamps the owning `windowId` onto every `setActiveUtility` descriptor in a derived toolbar tree so the shell's `onAction` interceptor targets the right window regardless of which window is globally active. */
@@ -1302,10 +1302,10 @@ function tagSetActiveUtilityWindow(nodes: readonly UtilityNode[], windowId: stri
  * the host-owned active utility id — the replacement for the deleted plugin `list-tools` sourcing. Each
  * `setActiveUtility` descriptor is tagged with `windowId` so activation is scoped to this exact window.
  */
-export function resolveUtilityNodes(app: Pick<AppDefinition, "utilities" | "controllerId">, windowKind: Pick<AppWindowKindDefinition, "utilities">, activeUtilityId: string | null | undefined, windowId: string): UtilityNode[] {
+export function resolveUtilityNodes(app: Pick<AppDefinition, "utilities" | "controllerId">, windowKind: Pick<AppWindowKindDefinition, "utilities">, activeUtilityId: string | null | undefined, windowId: string, appLabelsOverlay: PluginAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY): UtilityNode[] {
   const utilities = resolveUtilities(app, windowKind);
   if (utilities.length === 0) return [];
-  return tagSetActiveUtilityWindow(deriveUtilityNodes(app.controllerId, utilities.map(utilityDefinitionToSpec), activeUtilityId ?? undefined), windowId);
+  return tagSetActiveUtilityWindow(deriveUtilityNodes(app.controllerId, utilities.map((utility) => utilityDefinitionToSpec(utility, appLabelsOverlay)), activeUtilityId ?? undefined), windowId);
 }
 //#endregion 🧰UtilityRegistry
 
@@ -1366,11 +1366,11 @@ function shellLabel(key: UiTranslationKey): string {
 }
 
 /** @emoji 🗣️ Stable empty overlay reference so components depending on it don't re-render before the first `appLabels` fetch resolves. */
-const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = { windowKindLabels: {}, panelTabLabels: {}, modeLabels: {} };
+const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = { windowKindLabels: {}, panelTabLabels: {}, modeLabels: {}, actionLabels: {}, utilityLabels: {} };
 
-/** @emoji 🗣️ Resolves a window-kind/panel-tab/mode id's locale-aware label from the active app's overlay, falling back to the static manifest label. */
-function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKind" | "panelTab" | "mode", id: string, fallback: string): string {
-  const map = kind === "windowKind" ? overlay.windowKindLabels : kind === "panelTab" ? overlay.panelTabLabels : overlay.modeLabels;
+/** @emoji 🗣️ Resolves a window-kind/panel-tab/mode/action/utility id's locale-aware label from the active app's overlay, falling back to the static manifest label. */
+function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKind" | "panelTab" | "mode" | "action" | "utility", id: string, fallback: string): string {
+  const map = kind === "windowKind" ? overlay.windowKindLabels : kind === "panelTab" ? overlay.panelTabLabels : kind === "mode" ? overlay.modeLabels : kind === "action" ? overlay.actionLabels : overlay.utilityLabels;
   return map[id] ?? fallback;
 }
 
@@ -1855,9 +1855,17 @@ export function resolveCommands(
   return resolved;
 }
 
-/** 🎛 Loose title-case for an open-set command category id (e.g. "appearance" -> "Appearance"). No i18n schema entry required — categories are app/plugin-invented strings, not a fixed framework vocabulary. */
+/** 🎛 Chrome-known command category ids that already have a `ui.settings.tab.*` translation key. */
+const CHROME_KNOWN_COMMAND_CATEGORIES = new Set(["general", "mode", "expertise", "app", "appearance", "layout", "language", "terminology", "theme"]);
+
+/** 🎛 Loose title-case for an open-set command category id (e.g. "appearance" -> "Appearance"). Falls back to this for app/plugin-invented categories that have no fixed framework vocabulary entry. */
 function titleizeCommandCategory(category: string): string {
   return category.replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+/** 🎛 Resolves a command category's display label, reusing the existing `ui.settings.tab.*` keys for chrome-known ids and falling back to a loose title-case for open-set app/plugin categories. */
+function commandCategoryLabel(category: string): string {
+  return CHROME_KNOWN_COMMAND_CATEGORIES.has(category) ? shellLabel(`ui.settings.tab.${category as "general" | "mode" | "expertise" | "app" | "appearance" | "layout" | "language" | "terminology" | "theme"}`) : titleizeCommandCategory(category);
 }
 
 /** 🎛 Ordered, deduped category tabs for the footer command panel, derived from whatever commands actually resolved. */
@@ -1867,7 +1875,7 @@ export function commandCategories(commands: readonly ResolvedCommand[]): { reado
   for (const { definition } of commands) {
     if (seen.has(definition.category)) continue;
     seen.add(definition.category);
-    categories.push({ id: definition.category, label: titleizeCommandCategory(definition.category) });
+    categories.push({ id: definition.category, label: commandCategoryLabel(definition.category) });
   }
   return categories;
 }
@@ -1885,85 +1893,85 @@ function buildOsCommands(themeList: readonly UiTheme[], terminologies: readonly 
   return [
     {
       id: "os.setAppearance",
-      label: "Set Appearance",
+      label: shellLabel("ui.command.setAppearance"),
       scope: "os",
       category: "appearance",
       inPalette: true,
       args: [
-        selectCommandArg("appearance", "Appearance", [
-          { value: "system", label: "System" },
-          { value: "light", label: "Light" },
-          { value: "dark", label: "Dark" },
+        selectCommandArg("appearance", shellLabel("ui.settings.tab.appearance"), [
+          { value: "system", label: shellLabel("ui.settings.appearance.system") },
+          { value: "light", label: shellLabel("ui.settings.appearance.light") },
+          { value: "dark", label: shellLabel("ui.settings.appearance.dark") },
         ]),
       ],
     },
     {
       id: "os.setThemeId",
-      label: "Set Theme",
+      label: shellLabel("ui.command.setTheme"),
       scope: "os",
       category: "appearance",
       inPalette: true,
       args: [
         selectCommandArg(
           "themeId",
-          "Theme",
+          shellLabel("ui.settings.tab.theme"),
           themeList.map((theme) => ({ value: theme.id, label: theme.label || theme.id })),
         ),
       ],
     },
     {
       id: "os.setLayout",
-      label: "Set Layout",
+      label: shellLabel("ui.command.setLayout"),
       scope: "os",
       category: "layout",
       inPalette: true,
       args: [
-        selectCommandArg("layout", "Layout", [
-          { value: "desktop", label: "Desktop" },
-          { value: "tablet", label: "Tablet" },
+        selectCommandArg("layout", shellLabel("ui.settings.tab.layout"), [
+          { value: "desktop", label: shellLabel("settings.layout.desktop") },
+          { value: "tablet", label: shellLabel("settings.layout.tablet") },
         ]),
       ],
     },
-    { id: "os.toggleCompact", label: "Toggle Compact", scope: "os", category: "layout", inPalette: true, args: [] },
-    { id: "os.resetDock", label: "Reset Dock", scope: "os", category: "layout", inPalette: true, args: [] },
+    { id: "os.toggleCompact", label: shellLabel("ui.command.toggleCompact"), scope: "os", category: "layout", inPalette: true, args: [] },
+    { id: "os.resetDock", label: shellLabel("ui.settings.resetDock"), scope: "os", category: "layout", inPalette: true, args: [] },
     {
       id: "os.setLocale",
-      label: "Set Locale",
+      label: shellLabel("ui.command.setLocale"),
       scope: "os",
       category: "language",
       inPalette: true,
       args: [
-        selectCommandArg("locale", "Locale", [
-          { value: "en", label: "English" },
-          { value: "de", label: "Deutsch" },
+        selectCommandArg("locale", shellLabel("ui.settings.tab.language"), [
+          { value: "en", label: shellLabel("ui.settings.language.en") },
+          { value: "de", label: shellLabel("ui.settings.language.de") },
         ]),
       ],
     },
     {
       id: "os.setTerminology",
-      label: "Set Terminology",
+      label: shellLabel("ui.command.setTerminology"),
       scope: "os",
       category: "language",
       inPalette: true,
       args: [
         selectCommandArg(
           "terminology",
-          "Terminology",
+          shellLabel("ui.settings.tab.terminology"),
           terminologies.map((id) => ({ value: id, label: shellTerminologyLabel(id) })),
         ),
       ],
     },
     {
       id: "os.setExpertise",
-      label: "Set Expertise",
+      label: shellLabel("ui.command.setExpertise"),
       scope: "os",
       category: "general",
       inPalette: true,
       args: [
-        selectCommandArg("expertise", "Expertise", [
-          { value: "beginner", label: "Beginner" },
-          { value: "normal", label: "Normal" },
-          { value: "expert", label: "Expert" },
+        selectCommandArg("expertise", shellLabel("ui.settings.tab.expertise"), [
+          { value: "beginner", label: shellLabel("settings.expertise.beginner") },
+          { value: "normal", label: shellLabel("settings.expertise.normal") },
+          { value: "expert", label: shellLabel("settings.expertise.expert") },
         ]),
       ],
     },
@@ -3351,7 +3359,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const uiThemeBase = uiThemeDraft ?? uiTheme;
   const uiThemeDirty = uiThemeDraft !== null;
   const uiThemeList = useMemo((): readonly UiTheme[] => [...builtinUiThemes(), ...Object.values(uiCustomThemes)], [uiCustomThemes]);
-  const osCommands = useMemo(() => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])]), [uiThemeList, session?.app.terminologies]);
+  const osCommands = useMemo(() => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])]), [uiThemeList, session?.app.terminologies, uiLocale, uiTerminology]);
 
   const draftThemePatch = useCallback(
     (patch: (next: UiTheme) => void) => {
@@ -3729,7 +3737,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
 
   const resolvedCommands = useMemo(() => resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId), [osCommands, activePluginManifest, session?.app, activeModeId]);
 
-  const commandCategoryList = useMemo(() => commandCategories(resolvedCommands), [resolvedCommands]);
+  const commandCategoryList = useMemo(() => commandCategories(resolvedCommands), [resolvedCommands, uiLocale]);
 
   /**
    * 🎛 Dispatches a resolved command: os-scope commands are handled locally (no plugin round trip);
@@ -4036,11 +4044,12 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       if (!action.inPalette) continue;
       declaredActionIds.add(action.id);
       const argCarrying = actionRequiresStagedForm(action);
+      const resolvedActionLabel = resolveAppLabel(appLabelsOverlay, "action", action.id, action.label);
       items.push({
         id: `action.${action.id}`,
         // ✍️ Arg-carrying actions never fire from the palette (P3): the "…" entry activates the hosting
         // window, unfolds its Actions rail, and expands this action's staged form instead of dispatching.
-        label: argCarrying ? `${action.label}…` : action.label,
+        label: argCarrying ? `${resolvedActionLabel}…` : resolvedActionLabel,
         description: action.keys ?? keysByActionId.get(action.id),
         category: action.category ?? (action.kind === "history" ? shellLabel("ui.toolbar.parent.history") : shellLabel("ui.toolbar.parent.actions")),
         onSelect: () => {
@@ -4078,7 +4087,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         id: `command.${definition.id}`,
         label: argCarrying ? `${definition.label}…` : definition.label,
         description: definition.keys,
-        category: titleizeCommandCategory(definition.category),
+        category: commandCategoryLabel(definition.category),
         onSelect: () => {
           if (argCarrying) {
             dispatch({ type: "SET_PANEL_VISIBLE", anchor: "bottom-middle", value: true });
@@ -4152,7 +4161,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
             measures: chrome?.measures,
             utilityOptions: chrome?.utilityOptions,
             engagement: chrome?.engagement,
-            toolbar: spawnedApp && windowKind ? utilityBarNode(resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[spawned.id], spawned.id), spawned.id, onActionStable) : undefined,
+            toolbar: spawnedApp && windowKind ? utilityBarNode(resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[spawned.id], spawned.id, appLabelsOverlay), spawned.id, onActionStable) : undefined,
             actionPane: spawnedApp && windowKind ? windowActionPaneNode(spawnedApp, windowKind, spawned.id, actionPaneSlice, onActionStable, dispatch) : undefined,
             actionsFolded: actionsFoldedFor(spawned.id),
             onActionsFoldedChange: onActionsFoldedFor(spawned.id),
@@ -4173,7 +4182,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       showControls: true,
       ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id], kind.id, onActionStable),
       engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
-      toolbar: utilityBarNode(resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id), kind.id, onActionStable),
+      toolbar: utilityBarNode(resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id, appLabelsOverlay), kind.id, onActionStable),
       actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch),
       actionsFolded: actionsFoldedFor(kind.id),
       onActionsFoldedChange: onActionsFoldedFor(kind.id),
@@ -4194,7 +4203,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           showControls: true,
           ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id], instance.id, onActionStable),
           engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
-          toolbar: utilityBarNode(resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id), instance.id, onActionStable),
+          toolbar: utilityBarNode(resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id, appLabelsOverlay), instance.id, onActionStable),
           actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch),
           actionsFolded: actionsFoldedFor(instance.id),
           onActionsFoldedChange: onActionsFoldedFor(instance.id),

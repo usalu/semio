@@ -3941,6 +3941,12 @@ pub struct AppLabelsOverlay {
     pub panel_tab_labels: std::collections::HashMap<String, String>,
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub mode_labels: std::collections::HashMap<String, String>,
+    /// 🗣️ Locale-aware overrides for `AppDefinition.actions[].label` (operations/view-actions/shell-actions), keyed by action id — covers the command palette and any other UI surfacing an action's static English label.
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub action_labels: std::collections::HashMap<String, String>,
+    /// 🗣️ Locale-aware overrides for `AppDefinition.utilities[].label` (toolbar tools), keyed by utility id.
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub utility_labels: std::collections::HashMap<String, String>,
 }
 
 impl AppLabelsOverlay {

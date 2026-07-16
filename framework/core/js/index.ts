@@ -1123,7 +1123,7 @@ export type CommandScope = GeneratedCommandScope;
 export type CommandDefinition = GeneratedCommandDefinition;
 export type CommandRef = GeneratedCommandRef;
 
-/** 🧰 The framework-owned action id apps dispatch to activate a tool — mirrors `SET_ACTIVE_UTILITY_ACTION_ID`. */
+/** 🧰 The framework-owned action id apps dispatch to activate a utility — mirrors `SET_ACTIVE_UTILITY_ACTION_ID`. */
 export const SET_ACTIVE_UTILITY_ACTION_ID = "setActiveUtility";
 
 /** 🎓 The framework-owned action id apps dispatch (or the shell auto-injects into the command palette)
@@ -1148,7 +1148,7 @@ export const HISTORY_ACTION_IDS = ["undo", "redo", "commitCheckpoint", "createAl
 export type PluginViewState = {
   readonly activeModeId?: string;
   readonly activeWindowKindId?: string;
-  /** 🧰 Host-owned active tool for the active window kind (never a document field, never a VCS op). */
+  /** 🧰 Host-owned active utility for the active window kind (never a document field, never a VCS op). */
   readonly activeUtilityId?: string;
   readonly selectionJson?: string;
   readonly panelJson?: string;
@@ -1165,9 +1165,11 @@ export type PluginAppLabelsOverlay = {
   readonly windowKindLabels: Readonly<Record<string, string>>;
   readonly panelTabLabels: Readonly<Record<string, string>>;
   readonly modeLabels: Readonly<Record<string, string>>;
+  readonly actionLabels: Readonly<Record<string, string>>;
+  readonly utilityLabels: Readonly<Record<string, string>>;
 };
 
-export const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = { windowKindLabels: {}, panelTabLabels: {}, modeLabels: {} };
+export const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = { windowKindLabels: {}, panelTabLabels: {}, modeLabels: {}, actionLabels: {}, utilityLabels: {} };
 
 /** 🗣️ Rust's `skip_serializing_if` omits empty maps entirely, so a parsed overlay may be missing keys — fill them back in. */
 export function normalizeAppLabelsOverlay(raw: Partial<PluginAppLabelsOverlay> | null | undefined): PluginAppLabelsOverlay {
@@ -1176,6 +1178,8 @@ export function normalizeAppLabelsOverlay(raw: Partial<PluginAppLabelsOverlay> |
     windowKindLabels: raw?.windowKindLabels ?? {},
     panelTabLabels: raw?.panelTabLabels ?? {},
     modeLabels: raw?.modeLabels ?? {},
+    actionLabels: raw?.actionLabels ?? {},
+    utilityLabels: raw?.utilityLabels ?? {},
   };
 }
 
@@ -1292,7 +1296,7 @@ export type PluginHotSwapEvent = {
 /** @emoji 🐢 One requested window/panel section — `bodyKey` only applies to windows/panels; `hash` is the host's known fnv1a-64 hex of that section's last payload, or absent on first fetch. */
 export type PluginUiRefreshSectionRequest = { readonly key: string; readonly bodyKey?: string; readonly hash?: string };
 
-/** @emoji 🐢 One batched, hash-conditional refresh request — one round trip for the window/panel/engagements/measures/labels sections. Toolbars are no longer a plugin section: the renderer derives them from the tool registry via {@link deriveUtilityNodes}. */
+/** @emoji 🐢 One batched, hash-conditional refresh request — one round trip for the window/panel/engagements/measures/labels sections. Toolbars are no longer a plugin section: the renderer derives them from the utility registry via {@link deriveUtilityNodes}. */
 export type PluginUiRefreshRequest = {
   readonly viewState: PluginViewState;
   readonly windows?: readonly PluginUiRefreshSectionRequest[];

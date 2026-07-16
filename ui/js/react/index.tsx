@@ -1483,14 +1483,17 @@ export function getGlassSurfaceClass(tier: GlassTier): string {
 /** @emoji 🎨 Shared transition for interactive chrome (hover, focus, active backgrounds). */
 export const interactiveControlTransitionClass = "transition-[color,border-color,background-color]";
 
-/** @emoji 🫳 Wraps a `hover:`-style utility (e.g. `"bg-hover-interactive-fill"`) so it's suppressed while the pointer is over a nested drag handle (`[data-slot="drag-handle"]`) instead of the element itself — hovering the grip then only highlights the grip. Safe to use unconditionally: the `:has()` guard is a no-op wherever no drag handle exists. */
+/** @emoji 🫳 `data-hover-scope` marks the element {@link DragHandle} should toggle `data-handle-hovered` on — the nearest ancestor styled by {@link selfHoverExcludingHandle}/{@link groupHoverExcludingHandle}. */
+const HANDLE_HOVER_SCOPE_ATTR = "data-hover-scope";
+
+/** @emoji 🫳 Wraps a `hover:`-style utility (e.g. `"bg-hover-interactive-fill"`) so it's suppressed while a nested {@link DragHandle} is hovered — hovering the grip then only highlights the grip, not the whole element. Pair with `{HANDLE_HOVER_SCOPE_ATTR}` on the same element (the handle toggles `data-handle-hovered` on its nearest `data-hover-scope` ancestor via plain DOM writes, no re-render). Deliberately avoids `:has()` — it isn't reliably supported across every environment this ships to (older embedded webviews), and `:has()`-based ancestor exclusion also matches ANY ancestor with a matching class, not necessarily the nearest one, which is wrong once tree rows nest. Plain attribute selectors have no such caveats. */
 function selfHoverExcludingHandle(utility: string): string {
-  return `[&:hover:not(:has([data-slot='drag-handle']:hover))]:${utility}`;
+  return `hover:not-data-[handle-hovered=true]:${utility}`;
 }
 
-/** @emoji 🫳 Wraps a `group-hover:`-style utility so it's suppressed while hovering a nested drag handle anywhere within the `group`. */
+/** @emoji 🫳 Wraps a `group-hover:`-style utility so it's suppressed while a nested {@link DragHandle} within the `group` is hovered. The `group` element itself needs `{HANDLE_HOVER_SCOPE_ATTR}`. */
 function groupHoverExcludingHandle(utility: string): string {
-  return `[.group:hover:not(:has([data-slot='drag-handle']:hover))_&]:${utility}`;
+  return `group-hover:not-group-data-[handle-hovered=true]:${utility}`;
 }
 
 /** @emoji 🎨 Normal-border gray fill for interactive hover states. */
@@ -3147,6 +3150,8 @@ export const uiChromeTranslationBundles = {
           windowOptions: { label: { normal: "Fensteroptionen", beginner: "Fensteroptionen" } },
           focus: { label: { normal: "Fokussieren", beginner: "Fokussieren" } },
           unfocus: { label: { normal: "Fokus aufheben", beginner: "Fokus aufheben" } },
+          example: { label: { normal: "Beispiel", beginner: "Beispiel" } },
+          noExample: { label: { normal: "Kein Beispiel", beginner: "Kein Beispiel" } },
         },
         protocolList: {
           steps: { label: { normal: "Schritte", beginner: "Schritte" } },
@@ -3626,6 +3631,8 @@ export const uiChromeTranslationBundles = {
           windowOptions: { label: { normal: "Window Options", beginner: "Window Options" } },
           focus: { label: { normal: "Focus", beginner: "Focus" } },
           unfocus: { label: { normal: "Unfocus", beginner: "Unfocus" } },
+          example: { label: { normal: "Example", beginner: "Example" } },
+          noExample: { label: { normal: "No example", beginner: "No example" } },
         },
         protocolList: {
           steps: { label: { normal: "Steps", beginner: "Steps" } },
@@ -4869,7 +4876,7 @@ export const floatingTagOffClass = "bg-transparent text-muted-foreground";
 export const canvasViewportClass = "relative h-full min-h-0 w-full min-w-0 bg-canvas outline-none";
 
 /** @emoji 📑 Panel tab strip base — sits above {@link panelChromeFrameLayerClass}; tabs sit flush against the panel's edges (no side inset — only tree/content rows carry that). `w-full` so the strip's divider border spans the whole row, not just the tabs' content width. Border side is added by callers ({@link panelTabBarClass}, {@link panelAnchorTabBarClass}). */
-const panelTabBarBaseClass = "relative z-40 flex w-full min-w-0 items-center shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single";
+const panelTabBarBaseClass = "relative z-40 flex w-full min-w-0 items-stretch shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single";
 
 /** @emoji 📑 Panel tab strip with its divider on the content-facing side. */
 export const panelTabBarClass = cn(panelTabBarBaseClass, borderNormalBottomClass);
@@ -4882,9 +4889,10 @@ export const panelTabLabelClass = "min-w-0 truncate text-xs leading-none";
 
 /** @emoji 📑 Panel tab button with icon and mandatory name (no per-tab borders — {@link panelTabBarClass} owns dividers). */
 export const panelTabButtonClass = cn(
-  "inline-flex h-full min-h-0 shrink-0 items-center gap-tiny border-r border-solid !border-normal last:border-r-0 bg-transparent p-0",
+  "inline-flex h-full min-h-0 shrink-0 items-center gap-tiny border-e border-solid !border-normal last:border-e-0 bg-transparent p-0",
   "cursor-pointer whitespace-nowrap text-xs leading-none text-element transition-colors",
   "outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-active-base",
+  "[&[data-active=true]:not(:first-child)]:border-s [&[data-active=true]:not(:first-child)]:-ms-px",
   selfHoverExcludingHandle("bg-hover-interactive-fill"),
   selfHoverExcludingHandle("text-emphasized"),
 );
@@ -4917,6 +4925,12 @@ export const DragHandle: React.FC<{
     )}
     onPointerDown={onPointerDown}
     onClick={onClick}
+    onPointerEnter={(event) => {
+      event.currentTarget.closest(`[${HANDLE_HOVER_SCOPE_ATTR}]`)?.setAttribute("data-handle-hovered", "true");
+    }}
+    onPointerLeave={(event) => {
+      event.currentTarget.closest(`[${HANDLE_HOVER_SCOPE_ATTR}]`)?.removeAttribute("data-handle-hovered");
+    }}
     {...(attributes as React.ComponentProps<"span">)}
     {...(listeners as React.ComponentProps<"span">)}
   >
@@ -5319,6 +5333,7 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
             <ChromeControlHint id={tab.id}>
               <button
                 data-slot={`${tabSlot}-tab-button`}
+                data-hover-scope
                 data-tab-id={tab.id}
                 data-tab-kind={tab.kind}
                 data-drag-source={isDragSource ? "true" : undefined}
@@ -10974,20 +10989,23 @@ export interface NavbarExampleSelectProps {
 }
 
 /** @emoji 🧪 Center-navbar dropdown for switching playground examples (kits, graphs, shape sources). */
-function NavbarExampleSelect({ id, label = "Example", value, options, onValueChange, className, includeNoExample = true }: NavbarExampleSelectProps) {
+function NavbarExampleSelect({ id, label, value, options, onValueChange, className, includeNoExample = true }: NavbarExampleSelectProps) {
+  const exampleLabel = useLabel("ui.common.example");
+  const noExampleLabel = useLabel("ui.common.noExample");
+  const resolvedLabel = label ?? exampleLabel ?? "Example";
   const resolvedOptions = reactHostPort.useMemo(() => {
     const withoutNone = options.filter((row) => row.id !== NAVBAR_NO_EXAMPLE_ID);
     if (!includeNoExample) return withoutNone;
-    return [{ id: NAVBAR_NO_EXAMPLE_ID, label: "No example" }, ...withoutNone];
-  }, [includeNoExample, options]);
+    return [{ id: NAVBAR_NO_EXAMPLE_ID, label: noExampleLabel ?? "No example" }, ...withoutNone];
+  }, [includeNoExample, options, noExampleLabel]);
   if (resolvedOptions.length === 0) return null;
   const resolvedValue = !value || value === NAVBAR_NO_EXAMPLE_ID ? NAVBAR_NO_EXAMPLE_ID : value;
   return (
     <div className={cn("flex min-w-0 max-w-md flex-1 items-center justify-center px-single", className)}>
-      <Label id={`${id}.label`} label={label} className="sr-only" />
+      <Label id={`${id}.label`} label={resolvedLabel} className="sr-only" />
       <Select value={resolvedValue} onValueChange={onValueChange}>
         <SelectTrigger className="h-medium w-full min-w-[12rem] max-w-md" id={`${id}.trigger`} size="sm">
-          <SelectValue placeholder={label} />
+          <SelectValue placeholder={resolvedLabel} />
         </SelectTrigger>
         <SelectContent>
           {resolvedOptions.map((row) => (
@@ -12545,6 +12563,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
       <div
         data-dim
         data-slot="tree-section-row"
+        data-hover-scope
         data-tree-row-kind="section"
         id={id}
         className={rowClassName}
@@ -12588,6 +12607,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
       <div
         data-dim
         data-slot="tree-section-row"
+        data-hover-scope
         data-tree-row-kind="section"
         id={id}
         className={rowClassName}
@@ -12709,6 +12729,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           <div
             data-dim
             data-slot="tree-item-row"
+            data-hover-scope
             data-tree-row-kind="group"
             data-tree-group
             role="treeitem"
@@ -12782,6 +12803,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         <div
           data-dim
           data-slot="tree-item-row"
+          data-hover-scope
           data-tree-row-kind="group"
           data-tree-group
           role="treeitem"
@@ -12859,6 +12881,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
       <div
         data-dim
         data-slot="tree-item-row"
+        data-hover-scope
         data-tree-row-kind="property"
         role="treeitem"
         id={id}
@@ -12896,6 +12919,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
     <div
       data-dim
       data-slot="tree-item-row"
+      data-hover-scope
       data-tree-row-kind="leaf"
       role="treeitem"
       id={id}
@@ -13085,6 +13109,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         <div
           data-dim
           data-slot="tree-property-item"
+          data-hover-scope
           data-tree-row-kind={isExpandable ? "group" : "property"}
           role="treeitem"
           id={id}
@@ -13205,6 +13230,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
             <div
               data-dim
               data-slot="tree-item-row"
+              data-hover-scope
               data-tree-row-kind="group"
               data-tree-group
               role="treeitem"
@@ -13336,6 +13362,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
       <div
         data-dim
         data-slot="tree-item-row"
+        data-hover-scope
         data-tree-row-kind={layoutKind === "property" ? "property" : "leaf"}
         role="treeitem"
         id={id}
@@ -22260,6 +22287,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
       <div
         key={tab.id}
         data-slot="mode-dock-tab"
+        data-hover-scope
         data-window-id={tab.id}
         data-stack-active={activeId === tab.id ? "true" : undefined}
         data-active={activeWindowId === tab.id ? "true" : undefined}

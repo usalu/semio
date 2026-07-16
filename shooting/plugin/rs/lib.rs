@@ -767,7 +767,7 @@ fn render_icon_scene(fixture: &ShootingFixture) -> UiNode {
 }
 //#endregion 🔖Render
 
-//#region 🔖Tools
+//#region 🔖Utilities
 fn shooting_model_measures(fixture: &ShootingFixture) -> Vec<WindowMeasure> {
     let scene = &fixture.scene;
     vec![
@@ -946,7 +946,7 @@ fn shooting_icon_engagement(fixture: &ShootingFixture, labels: &ShootingLabels) 
     }
 }
 
-//#endregion 🔖Tools
+//#endregion 🔖Utilities
 
 //#region 🔖ShootingPlayApp
 #[derive(Default)]
@@ -1430,6 +1430,8 @@ impl DocumentApp for ShootingPlayApp {
             ]),
             panel_tab_labels: HashMap::new(),
             mode_labels: HashMap::new(),
+            action_labels: HashMap::new(),
+            utility_labels: HashMap::new(),
         }
     }
 }

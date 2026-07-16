@@ -1068,6 +1068,8 @@ impl DocumentApp for DagPlayApp {
             ]),
             panel_tab_labels: std::collections::HashMap::new(),
             mode_labels: std::collections::HashMap::new(),
+            action_labels: HashMap::new(),
+            utility_labels: HashMap::new(),
         }
     }
 }

@@ -109,7 +109,7 @@ impl Identified<String> for LowpolyObject {
 }
 
 /// @emoji 🎞️ Persisted lowpoly document: a list of mesh objects each carrying geometry (`mesh_json`),
-/// transform, shading and paint layers. Ephemeral editing context (active object, selection, tools,
+/// transform, shading and paint layers. Ephemeral editing context (active object, selection, utilities,
 /// camera, brush) lives in the plugin's app struct, never here.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -12,7 +12,7 @@ pub const DRAW_BLEND_MODES: &[&str] = &[
 ];
 pub const DRAW_BOOLEAN_OPS: &[&str] = &["union", "difference", "intersection", "xor"];
 pub const DRAW_SHAPE_KINDS: &[&str] = &["rect", "ellipse", "circle", "line", "polygon"];
-pub const DRAW_TOOL_IDS: &[&str] = &[
+pub const DRAW_UTILITY_IDS: &[&str] = &[
     "selectMarquee", "selectLasso", "selectDirect", "pen", "shapeRect", "shapeEllipse", "shapeLine",
     "shapePolygon", "booleanCombine", "trace", "transformMove",
 ];

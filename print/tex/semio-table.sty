@@ -20,20 +20,12 @@
     \int_incr:N \l_tmpa_int
   }
 }
-%region HeaderRules
-\cs_new_protected:Npn \semio_table_header_rule: {
-  \tl_set:Nx \l_tmpa_tl {
-    \prg_replicate:nn { \seq_count:N \l_semio_table_row_seq } { - }
-  }
-  \exp_args:NV \hhline \l_tmpa_tl
-}
 \NewDocumentCommand \SemioTableHeaderRow { m } {
   \semio_table_header_row:n {#1}
   \\
-  \semio_table_header_rule:
+  \hline
   \global\semio@table@row@startedfalse
 }
-%endregion HeaderRules
 \cs_new_protected:Npn \semio_table_dot_count_int:n #1 {
   \int_zero:N \l_tmpa_int
   \tl_map_inline:nn {#1} {
@@ -215,27 +207,27 @@
     \if\relax\detokenize\expandafter{\semio@window@header@number}\relax
       \hbox{}%
     \else
-      \semio@heading@cap@muted@tab{\semio@window@header@number}%
+      \semio@heading@cap@muted{\semio@window@header@number}%
     \fi
   }%
   \setlength{\semio@window@gap@w}{%
-    \dimexpr\linewidth-2\arrayrulewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
+    \dimexpr\semio@table@long@inner@w-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
   }%
 }
 
-\newcommand{\semio@table@long@title@chrome@row}{%
-  \multicolumn{3}{@{\hspace{\semio@chrome@padding}}@{}l@{\hspace{\semio@chrome@padding}}@{}}{%
+\newcommand{\semio@table@long@title@chrome@row}[1]{%
+  \multicolumn{#1}{|@{\hspace{\semio@chrome@padding}}@{}l@{}@{\hspace{\semio@chrome@padding}}|}{%
     \hbox to \semio@table@long@inner@w{%
       \usebox{\semio@window@tab@box}%
-      \semio@window@header@gap@paint{semio-chrome-base}{semio-chrome-border-normal}%
+      \semio@window@header@gap@paint{semio-chrome-border-normal}%
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
   \\%
 }
 
-\newcommand{\semio@table@long@continuation@chrome}{%
-  \semio@table@long@title@chrome@row
+\newcommand{\semio@table@long@continuation@chrome}[1]{%
+  \semio@table@long@title@chrome@row{#1}%
 }
 
 \newcommand{\semio@register@table@header@long@repeat}{%
@@ -272,7 +264,7 @@
 \newcommand{\semio@abbreviations@table@header}{\semio@termlist@table@header@long@repeat{abbreviations}}
 \newcommand{\semio@abbreviations@table@header@long@repeat}{\semio@termlist@table@header@long@repeat{abbreviations}}
 
-\newcommand{\semio@table@long@render}[4]{%
+\newcommand{\semio@table@long@render}[5]{%
   \global\semio@table@long@mode=1\relax
   \global\semio@table@row@startedfalse
   \begingroup
@@ -282,6 +274,7 @@
   \semio@table@setup@long
   \color{semio-chrome-text-normal}%
   \semio@table@long@inner@w@set
+  \semio@table@long@title@chrome@prepare
   \nointerlineskip
   \raggedright
   \setlength{\LTpre}{0pt}%
@@ -292,6 +285,7 @@
   \begin{longtable}{#1}%
   #2%
   \endfirsthead
+  \semio@table@long@continuation@chrome{#5}%
   #3%
   \endhead
   \noalign{\vskip\dimexpr-\semio@table@body@height+2\arrayrulewidth\relax}%
@@ -323,13 +317,24 @@
   \fi
 }
 
+% 🩹 \semio@table@setup stays *before* \begingroup (not moved inside,
+% alongside the font-size apply, the way \semio@table@long@render orders it)
+% — moving it inside reproducibly threw a "Misplaced \omit" from deep inside
+% hhline, but only under the zukunftbau `zwischenbericht` type (its
+% `\SemioSetup{appendix-level=part}` chain, confirmed via bisection: neither
+% \semio@table@fontsize@apply itself, nor `appendix-level=part` alone on a
+% plain `semio` document, reproduce it — only this exact combination of
+% class + relocated group boundary does). Left where it was, \tabcolsep/
+% \extrarowheight/etc keep resolving against the *ambient* font rather than
+% a custom `text-size`, a smaller, tolerable inconsistency versus a hard
+% compile break.
 \newcommand{\semio@table@render}[2]{%
   \ExplSyntaxOff
   \semio@table@require@window
+  \semio@table@setup
   \begingroup
   \SemioSans
   \semio@table@fontsize@apply
-  \semio@table@setup
   \color{semio-chrome-text-normal}%
   \begin{tabular}{#1}%
   #2%
@@ -347,7 +352,7 @@
 }
 
 \newcommand{\SemioTableRegister}[1]{%
-  \expandafter\semio@table@long@render\expandafter{\semio@table@colspec@register@long}{\semio@register@table@header}{\semio@register@table@header@long@repeat}{#1}%
+  \expandafter\semio@table@long@render\expandafter{\semio@table@colspec@register@long}{\semio@register@table@header}{\semio@register@table@header@long@repeat}{#1}{3}%
 }
 
 \newcommand{\SemioTableReferenceRow}[3]{%
@@ -355,7 +360,7 @@
 }
 
 \newcommand{\SemioTableReference}[1]{%
-  \expandafter\semio@table@long@render\expandafter{\semio@table@colspec@reference@long}{\semio@references@table@header}{\semio@references@table@header@long@repeat}{#1}%
+  \expandafter\semio@table@long@render\expandafter{\semio@table@colspec@reference@long}{\semio@references@table@header}{\semio@references@table@header@long@repeat}{#1}{3}%
 }
 
 %region GenericLongTable
@@ -431,6 +436,7 @@
 }
 
 \newcommand{\semio@table@long@colspec@current}{}
+\newcommand{\semio@table@long@column@count}{3}
 
 % Named the plain (legacy) way, not \semio_table_long_prepare:nn — this gets
 % called from \SemioTableLong's body below, which is a plain \newcommand
@@ -439,6 +445,7 @@
 \cs_new_protected:Npn \semio@table@long@prepare #1#2 {
   \semio_table_long_colspec_build:n {#1}
   \semio_table_long_header_build:n {#2}
+  \cs_gset:Npx \semio@table@long@column@count { \clist_count:n {#1} }
   % Same \long-macro-by-bare-name treatment as the head (see above) — a
   % colspec flattened straight into the argument list via \exp_args:NV
   % throws the identical "Misplaced \omit" once a body row uses \multicolumn.
@@ -466,7 +473,7 @@
   \semio@table@keys@set{#1}%
   \semio@table@long@prepare{#3}{#4}%
   \semio@register@window@open{#2}%
-  \expandafter\semio@table@long@render\expandafter{\semio@table@long@colspec@current}{\semio@table@long@head@current}{\semio@table@long@head@current}{#5}%
+  \expandafter\semio@table@long@render\expandafter{\semio@table@long@colspec@current}{\semio@table@long@head@current}{\semio@table@long@head@current}{#5}{\semio@table@long@column@count}%
   \semio@register@window@close
   \semio@table@keys@reset
 }
@@ -557,7 +564,7 @@
 \ExplSyntaxOff
 
 \newcommand{\semio@table@termlist}[2]{%
-  \expandafter\semio@table@long@render\expandafter{\semio@table@colspec@glossary@long}{\csname semio@#1@table@header\endcsname}{\csname semio@#1@table@header@long@repeat\endcsname}{#2}%
+  \expandafter\semio@table@long@render\expandafter{\semio@table@colspec@glossary@long}{\csname semio@#1@table@header\endcsname}{\csname semio@#1@table@header@long@repeat\endcsname}{#2}{3}%
 }
 
 \newcommand{\SemioTableGlossary}[1]{\semio@table@termlist{glossary}{#1}}
@@ -565,13 +572,17 @@
 
 \newcommand{\semio@table@begin@tabular}[1]{\begin{tabular}{#1}}
 
+% 🩹 Same as \semio@table@render above: \semio@table@setup stays outside
+% \begingroup, not relocated next to the font-size apply — see that comment
+% for why (a reproducible "Misplaced \omit" under zukunftbau's
+% `zwischenbericht` type).
 \newcommand{\SemioTableBegin}[1]{%
   \ExplSyntaxOff
   \semio@table@require@window
+  \semio@table@setup
   \begingroup
   \SemioSans
   \semio@table@fontsize@apply
-  \semio@table@setup
   \color{semio-chrome-text-normal}%
   \def\semio@table@spec{#1}%
   \ifx\semio@table@spec\semio@table@spec@ll
