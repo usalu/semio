@@ -1483,18 +1483,27 @@ export function getGlassSurfaceClass(tier: GlassTier): string {
 /** @emoji 🎨 Shared transition for interactive chrome (hover, focus, active backgrounds). */
 export const interactiveControlTransitionClass = "transition-[color,border-color,background-color]";
 
-/** @emoji 🫳 `data-hover-scope` marks the element {@link DragHandle} should toggle `data-handle-hovered` on — the nearest ancestor styled by {@link selfHoverExcludingHandle}/{@link groupHoverExcludingHandle}. */
+/** @emoji 🫳 `data-hover-scope` marks the element {@link DragHandle} should toggle `data-handle-hovered` on — the nearest ancestor styled by the `hoverExcludingHandle*`/`groupHoverExcludingHandle*` classes below. */
 const HANDLE_HOVER_SCOPE_ATTR = "data-hover-scope";
 
-/** @emoji 🫳 Wraps a `hover:`-style utility (e.g. `"bg-hover-interactive-fill"`) so it's suppressed while a nested {@link DragHandle} is hovered — hovering the grip then only highlights the grip, not the whole element. Pair with `{HANDLE_HOVER_SCOPE_ATTR}` on the same element (the handle toggles `data-handle-hovered` on its nearest `data-hover-scope` ancestor via plain DOM writes, no re-render). Deliberately avoids `:has()` — it isn't reliably supported across every environment this ships to (older embedded webviews), and `:has()`-based ancestor exclusion also matches ANY ancestor with a matching class, not necessarily the nearest one, which is wrong once tree rows nest. Plain attribute selectors have no such caveats. */
-function selfHoverExcludingHandle(utility: string): string {
-  return `hover:not-data-[handle-hovered=true]:${utility}`;
-}
-
-/** @emoji 🫳 Wraps a `group-hover:`-style utility so it's suppressed while a nested {@link DragHandle} within the `group` is hovered. The `group` element itself needs `{HANDLE_HOVER_SCOPE_ATTR}`. */
-function groupHoverExcludingHandle(utility: string): string {
-  return `group-hover:not-group-data-[handle-hovered=true]:${utility}`;
-}
+/**
+ * @emoji 🫳 Hover-reactive utilities suppressed while a nested {@link DragHandle} is hovered — hovering the grip
+ * then only highlights the grip, not the whole element. Pair with `{HANDLE_HOVER_SCOPE_ATTR}` on the same element
+ * (the handle toggles `data-handle-hovered` on its nearest `data-hover-scope` ancestor via plain DOM writes, no
+ * re-render). Deliberately avoids `:has()` — it isn't reliably supported across every environment this ships to
+ * (older embedded webviews), and `:has()`-based ancestor exclusion also matches ANY ancestor with a matching
+ * class, not necessarily the nearest one, which is wrong once tree rows nest.
+ *
+ * These MUST be written as complete literal strings, not built via `${}` interpolation in a helper function —
+ * Tailwind's build only discovers classes by scanning source files for literal text, it never executes JS, so a
+ * class name assembled from a template placeholder at runtime is invisible to it and silently generates no CSS
+ * at all (this broke hover entirely here once already).
+ */
+const hoverExcludingHandleBgFillClass = "hover:not-data-[handle-hovered=true]:bg-hover-interactive-fill";
+const hoverExcludingHandleTextEmphasizedClass = "hover:not-data-[handle-hovered=true]:text-emphasized";
+const hoverExcludingHandleActiveBgClass = "hover:not-data-[handle-hovered=true]:bg-active-base/90";
+const hoverExcludingHandleActiveBorderClass = "hover:not-data-[handle-hovered=true]:border-active-base";
+const groupHoverExcludingHandleBgFillClass = "group-hover:not-group-data-[handle-hovered=true]:bg-hover-interactive-fill";
 
 /** @emoji 🎨 Normal-border gray fill for interactive hover states. */
 export const interactiveHoverFillClass = "hover:bg-hover-interactive-fill";
@@ -1534,9 +1543,9 @@ export const interactiveActiveFillClass = cn(
   "bg-active-base",
   interactiveActiveBorderClass,
   "text-emphasized",
-  selfHoverExcludingHandle("bg-active-base/90"),
-  selfHoverExcludingHandle("border-active-base"),
-  selfHoverExcludingHandle("text-emphasized"),
+  hoverExcludingHandleActiveBgClass,
+  hoverExcludingHandleActiveBorderClass,
+  hoverExcludingHandleTextEmphasizedClass,
 );
 
 /** @emoji 🎨 Table rows: element gray at rest, hover fill + emphasized content. */
@@ -4875,8 +4884,8 @@ export const floatingTagOffClass = "bg-transparent text-muted-foreground";
 /** @emoji 🪟 Canvas viewport surface inside a host root. */
 export const canvasViewportClass = "relative h-full min-h-0 w-full min-w-0 bg-canvas outline-none";
 
-/** @emoji 📑 Panel tab strip base — sits above {@link panelChromeFrameLayerClass}; tabs sit flush against the panel's edges (no side inset — only tree/content rows carry that). `w-full` so the strip's divider border spans the whole row, not just the tabs' content width. Border side is added by callers ({@link panelTabBarClass}, {@link panelAnchorTabBarClass}). */
-const panelTabBarBaseClass = "relative z-40 flex w-full min-w-0 items-stretch shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single";
+/** @emoji 📑 Panel tab strip base — sits above {@link panelChromeFrameLayerClass}; tabs sit flush against the panel's edges (no side inset — only tree/content rows carry that). `w-full` spans the divider across the row, while `ui-scrollbar-hidden` preserves the fixed control height when overflowing tabs remain horizontally scrollable. Border side is added by callers ({@link panelTabBarClass}, {@link panelAnchorTabBarClass}). */
+const panelTabBarBaseClass = "ui-scrollbar-hidden relative z-40 flex w-full min-w-0 items-stretch shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single";
 
 /** @emoji 📑 Panel tab strip with its divider on the content-facing side. */
 export const panelTabBarClass = cn(panelTabBarBaseClass, borderNormalBottomClass);
@@ -4889,12 +4898,12 @@ export const panelTabLabelClass = "min-w-0 truncate text-xs leading-none";
 
 /** @emoji 📑 Panel tab button with icon and mandatory name (no per-tab borders — {@link panelTabBarClass} owns dividers). */
 export const panelTabButtonClass = cn(
-  "inline-flex h-full min-h-0 shrink-0 items-center gap-tiny border-e border-solid !border-normal last:border-e-0 bg-transparent p-0",
+  "inline-flex min-h-0 shrink-0 items-center gap-tiny border-e border-solid !border-normal last:border-e-0 bg-transparent p-0",
   "cursor-pointer whitespace-nowrap text-xs leading-none text-element transition-colors",
   "outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-active-base",
   "[&[data-active=true]:not(:first-child)]:border-s [&[data-active=true]:not(:first-child)]:-ms-px",
-  selfHoverExcludingHandle("bg-hover-interactive-fill"),
-  selfHoverExcludingHandle("text-emphasized"),
+  hoverExcludingHandleBgFillClass,
+  hoverExcludingHandleTextEmphasizedClass,
 );
 
 /** @emoji 📑 Panel tab strip — divider sits on the content-facing side: bottom anchors grow "up" (tabs anchor at the screen edge, content above), so their divider flips to the top. */
@@ -5941,8 +5950,8 @@ export const modeDockInactiveTabBeforeGapClass = `relative z-30 box-border min-h
 /** @emoji 🪟 Default mode-dock tab label — element gray; emphasize on hover/active only. */
 export const modeDockTabClassName = cn(
   "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half px-single text-xs text-element select-none transition-colors",
-  selfHoverExcludingHandle("bg-hover-interactive-fill"),
-  selfHoverExcludingHandle("text-emphasized"),
+  hoverExcludingHandleBgFillClass,
+  hoverExcludingHandleTextEmphasizedClass,
 );
 
 /** @emoji 🪧 Static shell title (navbar app label, pane headings) — element gray at rest. */
@@ -12469,7 +12478,7 @@ function treeRowChromeShellClasses(isSelected: boolean, isHighlighted: boolean, 
   if (isHighlighted) {
     return cn("group", "text-emphasized", interactiveControlTransitionClass, hiddenClass);
   }
-  return cn("group", "text-element", interactiveControlTransitionClass, selfHoverExcludingHandle("text-emphasized"), hiddenClass);
+  return cn("group", "text-element", interactiveControlTransitionClass, hoverExcludingHandleTextEmphasizedClass, hiddenClass);
 }
 
 /** @emoji 🎨 Tree row content fill: backgrounds apply only on the label column, not the guide gutter. */
@@ -12481,7 +12490,7 @@ function treeRowChromeContentFillClasses(isSelected: boolean, isHighlighted: boo
   if (isHighlighted) {
     return cn("bg-hover-interactive-fill", interactiveControlTransitionClass, loadingClass);
   }
-  return cn(interactiveControlTransitionClass, groupHoverExcludingHandle("bg-hover-interactive-fill"), loadingClass);
+  return cn(interactiveControlTransitionClass, groupHoverExcludingHandleBgFillClass, loadingClass);
 }
 
 /** @emoji 🎨 Tree row chrome: element gray at rest; hover highlight; selected primary + emphasized (no hover fill override). */
@@ -23642,6 +23651,7 @@ if (import.meta.vitest) {
       expect(activeButton?.className).toContain("bg-active-base");
       expect(activeButton?.className).toContain("text-emphasized");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className).toContain("overflow-x-auto");
+      expect(container.querySelector('[data-slot="panel-tabs"]')?.className).toContain("ui-scrollbar-hidden");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className).toContain("z-40");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className?.split(" ")).not.toContain("px-single");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className?.split(" ")).toContain("w-full");

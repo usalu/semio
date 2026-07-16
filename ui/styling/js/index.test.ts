@@ -65,6 +65,16 @@ describe("styling resolve", () => {
     expect(uiCss).toContain("--element-panel: var(--color-gray-600);");
   });
 
+  it("ui.css keeps horizontally scrollable chrome from losing control height to scrollbars", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const { resolve } = await import("node:path");
+    const uiCss = await readFile(resolve(import.meta.dir, "ui.css"), "utf8");
+    expect(uiCss).toContain(".ui-scrollbar-hidden {");
+    expect(uiCss).toContain("scrollbar-width: none;");
+    expect(uiCss).toContain("&::-webkit-scrollbar {");
+    expect(uiCss).toContain("display: none;");
+  });
+
   it("ui.css defines the spinning + pulsing loading border ring", async () => {
     const { readFile } = await import("node:fs/promises");
     const { resolve } = await import("node:path");

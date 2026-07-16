@@ -181,6 +181,14 @@
       background: transparent;
     }
 
+    .ui-scrollbar-hidden {
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+
     [data-slot="scroll-area-scrollbar"] {
       background: transparent;
     }

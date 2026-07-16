@@ -211,13 +211,13 @@
     \fi
   }%
   \setlength{\semio@window@gap@w}{%
-    \dimexpr\semio@table@long@inner@w-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
+    \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
   }%
 }
 
 \newcommand{\semio@table@long@title@chrome@row}[1]{%
-  \multicolumn{#1}{|@{\hspace{\semio@chrome@padding}}@{}l@{}@{\hspace{\semio@chrome@padding}}|}{%
-    \hbox to \semio@table@long@inner@w{%
+  \multicolumn{#1}{@{}l@{}}{%
+    \hbox to \linewidth{%
       \usebox{\semio@window@tab@box}%
       \semio@window@header@gap@paint{semio-chrome-border-normal}%
       \usebox{\semio@window@ctrl@box}%
