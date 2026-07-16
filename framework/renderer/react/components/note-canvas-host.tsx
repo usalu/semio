@@ -90,7 +90,7 @@ export interface NoteDocument {
   readonly camera: NoteCamera;
   readonly blocks: readonly NoteBlockNode[];
   readonly assets?: Readonly<Record<string, NoteImageAsset>>;
-  readonly activeTool?: string;
+  readonly activeUtility?: string;
   readonly gridVisible?: boolean;
   readonly gridSpacing?: number;
   readonly gridSubdivisions?: number;
@@ -1002,8 +1002,8 @@ export function NoteCanvasHost({ node, onAction }: ComponentSceneHostProps) {
   );
 
   const selectionBounds = useMemo(() => (doc ? noteSelectionBounds(doc.blocks, selectedIds) : null), [doc, selectedIds]);
-  const tool = doc?.activeTool ?? "selectDirect";
-  const showResizeHandles = !isNavigator && (tool === "selectDirect" || tool === "selectMarquee") && Boolean(selectionBounds) && selectedIds.length > 0;
+  const utility = doc?.activeUtility ?? "selectDirect";
+  const showResizeHandles = !isNavigator && (utility === "selectDirect" || utility === "selectMarquee") && Boolean(selectionBounds) && selectedIds.length > 0;
 
   const beginMove = useCallback(
     (event: React.PointerEvent, blockId: string) => {
@@ -1033,47 +1033,47 @@ export function NoteCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       const screenX = event.clientX - rect.left;
       const screenY = event.clientY - rect.top;
       const [worldX, worldY] = screenToWorld(camera, screenX, screenY);
-      if (tool === "pan" || event.button === 1 || (tool === "selectDirect" && event.altKey)) {
+      if (utility === "pan" || event.button === 1 || (utility === "selectDirect" && event.altKey)) {
         setDragState({ kind: "pan", startX: screenX, startY: screenY, camera });
         return;
       }
-      if (tool === "eraserStroke" || tool === "eraserPoint") {
-        setDragState({ kind: "eraser", mode: tool });
-        const events = tool === "eraserStroke" ? noteEraseInkStrokeEventsAtPoint(doc, worldX, worldY) : noteEraseInkPointEventsNearPoint(doc, worldX, worldY, doc.eraserRadius ?? 12);
+      if (utility === "eraserStroke" || utility === "eraserPoint") {
+        setDragState({ kind: "eraser", mode: utility });
+        const events = utility === "eraserStroke" ? noteEraseInkStrokeEventsAtPoint(doc, worldX, worldY) : noteEraseInkPointEventsNearPoint(doc, worldX, worldY, doc.eraserRadius ?? 12);
         if (events.length) beginGesture(events);
         return;
       }
-      if (tool === "selectMarquee") {
+      if (utility === "selectMarquee") {
         setDragState({ kind: "marquee", start: { x: screenX, y: screenY } });
         setMarqueePoints([{ x: screenX, y: screenY }]);
         return;
       }
-      if (tool === "pencil") {
+      if (utility === "pencil") {
         const block = createNoteBlockByKind("ink", worldX, worldY);
         beginGesture([{ op: "addBlock", block }], [block.id]);
         setDragState({ kind: "ink", blockId: block.id });
         return;
       }
-      if (tool === "text" || tool === "image" || tool === "table" || tool === "math") {
+      if (utility === "text" || utility === "image" || utility === "table" || utility === "math") {
         const [placeX, placeY] = noteMaybeSnapWorldPoint(doc, worldX, worldY);
-        const block = createNoteBlockByKind(tool, placeX, placeY);
+        const block = createNoteBlockByKind(utility, placeX, placeY);
         atomicGesture([{ op: "addBlock", block }], [block.id]);
-        if (tool === "text") setTextEdit({ blockId: block.id, created: true });
+        if (utility === "text") setTextEdit({ blockId: block.id, created: true });
         return;
       }
       const hits = noteBlocksAtPoint(doc.blocks, worldX, worldY);
       const top = hits[0];
       if (!top || top.locked) {
-        if (tool === "selectDirect") dispatch("setSelection", { ids: [] });
+        if (utility === "selectDirect") dispatch("setSelection", { ids: [] });
         return;
       }
-      if (tool === "selectDirect") {
+      if (utility === "selectDirect") {
         const nextSelection = event.shiftKey ? [...new Set([...selectedIds, top.id])] : [top.id];
         dispatch("setSelection", { ids: nextSelection });
         beginMove(event, top.id);
       }
     },
-    [atomicGesture, beginGesture, beginMove, dispatch, doc, interactive, isNavigator, selectedIds, tool],
+    [atomicGesture, beginGesture, beginMove, dispatch, doc, interactive, isNavigator, selectedIds, utility],
   );
 
   const handleBlockPointerDown = useCallback(
@@ -1084,9 +1084,9 @@ export function NoteCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       if (!block || block.locked) return;
       const nextSelection = event.shiftKey ? [...new Set([...selectedIds, blockId])] : [blockId];
       dispatch("setSelection", { ids: nextSelection });
-      if (tool === "selectDirect" || tool === "selectMarquee") beginMove(event, blockId);
+      if (utility === "selectDirect" || utility === "selectMarquee") beginMove(event, blockId);
     },
-    [beginMove, dispatch, doc, interactive, selectedIds, tool],
+    [beginMove, dispatch, doc, interactive, selectedIds, utility],
   );
 
   const handleResizePointerDown = useCallback(

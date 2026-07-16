@@ -73,8 +73,8 @@ import {
   parseStudioShellPath,
   preserveJsonIdentity,
   reconcileUtilityPath,
-  resolveWindowUtilityNodes,
-  resolveWindowUtilities,
+  resolveUtilityNodes,
+  resolveUtilities,
   frameworkHistoryUtilityNodes,
   actionStageKey,
   actionRequiresStagedForm,
@@ -121,14 +121,14 @@ describe("framework sync utilities", () => {
     const { buildFrameworkSyncUtilities } = await import("@semio-tech/framework-os-core");
     const utilities = buildFrameworkSyncUtilities("file:///demo");
     expect(utilities).toHaveLength(3);
-    expect(utilities.map((tool) => tool.id)).toEqual(["framework.sync.file", "framework.sync.folder", "framework.sync.remote"]);
+    expect(utilities.map((utility) => utility.id)).toEqual(["framework.sync.file", "framework.sync.folder", "framework.sync.remote"]);
     expect(utilities[0]?.pressed).toBe(true);
   });
 
   it("has no active toggle when detached", async () => {
     const { buildFrameworkSyncUtilities } = await import("@semio-tech/framework-os-core");
     const utilities = buildFrameworkSyncUtilities(null);
-    expect(utilities.every((tool) => !tool.pressed)).toBe(true);
+    expect(utilities.every((utility) => !utility.pressed)).toBe(true);
   });
 
   it("groups File, Folder, and Remote under a single Sync category collection", async () => {
@@ -249,7 +249,7 @@ describe("shell store reducer", () => {
     expect(next.sync).toBe(state.sync);
   });
 
-  it("action-panel slice: fold/expand/stage/reset/active-tool update only their own keys and preserve identity on no-ops", () => {
+  it("action-panel slice: fold/expand/stage/reset/active-utility update only their own keys and preserve identity on no-ops", () => {
     const state = baseState();
 
     const folded = shellReducer(state, { type: "SET_ACTION_PANE_FOLDED", windowId: "w1", value: false });
@@ -980,7 +980,7 @@ describe("framework renderer hosts", () => {
             cameraY: 0,
             zoom: 1,
             layersJson: JSON.stringify([
-              { id: "meta:tool", role: "meta", tool: "selectDirect" },
+              { id: "meta:utility", role: "meta", utility: "selectDirect" },
               {
                 id: "shape-1",
                 transform: [1, 0, 0, 1, 0, 0],
@@ -1323,7 +1323,7 @@ describe("framework renderer hosts", () => {
         targetVolumesJson: "[]",
         referencesJson: "[]",
         brushPreviewJson: undefined,
-        interactionJson: '{"activeTool":"select"}',
+        interactionJson: '{"activeUtility":"select"}',
         engagementPreviewJson: '[{"kind":"point","role":"origin","position":[0,0,0]},{"kind":"box-preview","role":"preview","cornerA":[0,0,0],"cornerB":[2,2,0]}]',
         contextMenuJson: "[]",
         terrainJson: '{"tileUrlTemplate":"/dem/{z}/{x}/{y}.png","projectOriginLon":9.7382,"projectOriginLat":52.3759,"exaggeration":1.5,"colorRamp":"hypsometric","minZoom":6,"maxZoom":14}',
@@ -1610,7 +1610,7 @@ describe("framework renderer hosts", () => {
             assetsJson: "{}",
             cameraJson: '{"x":0,"y":0,"zoom":1}',
             selectionJson: "[]",
-            activeTool: "selectMarquee",
+            activeUtility: "selectMarquee",
             brushSize: 24,
             brushOpacity: 1,
             viewMode: "composite",
@@ -1637,7 +1637,7 @@ describe("framework renderer hosts", () => {
             assetsJson: "{}",
             cameraJson: '{"x":0,"y":0,"zoom":1}',
             selectionJson: "[]",
-            activeTool: "selectMarquee",
+            activeUtility: "selectMarquee",
             brushSize: 24,
             brushOpacity: 1,
             viewMode: "navigator",
@@ -1770,7 +1770,7 @@ describe("note canvas host", () => {
     id: "semio",
     title: "Semio Note",
     camera: { x: 0, y: 0, zoom: 1 },
-    activeTool: "selectDirect",
+    activeUtility: "selectDirect",
     gridVisible: true,
     snapEnabled: false,
     pencilWidth: 3,
@@ -1823,7 +1823,7 @@ describe("note canvas host", () => {
           noteCanvas: {
             documentJson: JSON.stringify(semioNoteDocument),
             selectionJson: "[]",
-            activeTool: "selectDirect",
+            activeUtility: "selectDirect",
             viewMode: "composite",
             interactive: true,
           },
@@ -1846,7 +1846,7 @@ describe("note canvas host", () => {
     };
     const compositeMarkup = renderToStaticMarkup(
       createElement(NoteCanvasHost, {
-        node: { ...baseNode, noteCanvas: { documentJson: JSON.stringify(semioNoteDocument), selectionJson: "[]", activeTool: "selectDirect", viewMode: "composite", interactive: true } },
+        node: { ...baseNode, noteCanvas: { documentJson: JSON.stringify(semioNoteDocument), selectionJson: "[]", activeUtility: "selectDirect", viewMode: "composite", interactive: true } },
         onAction: noopAction,
       }) as ReactElement,
     );
@@ -1854,7 +1854,7 @@ describe("note canvas host", () => {
 
     const navigatorMarkup = renderToStaticMarkup(
       createElement(NoteCanvasHost, {
-        node: { ...baseNode, noteCanvas: { documentJson: JSON.stringify(semioNoteDocument), selectionJson: "[]", activeTool: "selectDirect", viewMode: "navigator", interactive: false } },
+        node: { ...baseNode, noteCanvas: { documentJson: JSON.stringify(semioNoteDocument), selectionJson: "[]", activeUtility: "selectDirect", viewMode: "navigator", interactive: false } },
         onAction: noopAction,
       }) as ReactElement,
     );
@@ -1980,7 +1980,7 @@ describe("spawned window chrome", () => {
       {
         id: "edit",
         label: "Edit",
-        utilities: [{ id: "static-tool", kind: "button" as const, iconId: "save", controllerId: "cad-play", action: "save" }],
+        utilities: [{ id: "static-utility", kind: "button" as const, iconId: "save", controllerId: "cad-play", action: "save" }],
       },
     ],
     windowKinds: [
@@ -2031,34 +2031,34 @@ describe("spawned window chrome", () => {
 });
 
 describe("partitionWindowMeasures", () => {
-  const toolGroup = (id: string, activeUtilityId?: string): WindowMeasure => ({ kind: "group", id, label: id, activeUtilityId, children: [] });
+  const utilityGroup = (id: string, activeUtilityId?: string): WindowMeasure => ({ kind: "group", id, label: id, activeUtilityId, children: [] });
   const slider = (id: string): WindowMeasure => ({ kind: "slider", id, value: 1, min: 0, max: 2, onChange: { controllerId: "c", action: "a" } });
 
-  it("routes a tagged group to toolOptions only when its tool is active", () => {
-    const measures = [toolGroup("brush-params", "brush"), slider("zoom")];
+  it("routes a tagged group to utilityOptions only when its utility is active", () => {
+    const measures = [utilityGroup("brush-params", "brush"), slider("zoom")];
     const active = partitionWindowMeasures(measures, "brush");
-    expect(active.toolOptions.map((m) => m.id)).toEqual(["brush-params"]);
+    expect(active.utilityOptions.map((m) => m.id)).toEqual(["brush-params"]);
     expect(active.general.map((m) => m.id)).toEqual(["zoom"]);
   });
 
-  it("drops a tagged group from both buckets when a different or no tool is active", () => {
-    const measures = [toolGroup("brush-params", "brush"), slider("zoom")];
+  it("drops a tagged group from both buckets when a different or no utility is active", () => {
+    const measures = [utilityGroup("brush-params", "brush"), slider("zoom")];
     const other = partitionWindowMeasures(measures, "fill");
-    expect(other.toolOptions).toEqual([]);
+    expect(other.utilityOptions).toEqual([]);
     expect(other.general.map((m) => m.id)).toEqual(["zoom"]);
     const none = partitionWindowMeasures(measures, undefined);
-    expect(none.toolOptions).toEqual([]);
+    expect(none.utilityOptions).toEqual([]);
     expect(none.general.map((m) => m.id)).toEqual(["zoom"]);
   });
 
-  it("keeps untagged groups and non-group measures in general, unaffected by the active tool", () => {
-    const measures = [toolGroup("grid"), slider("zoom")];
-    const { general, toolOptions } = partitionWindowMeasures(measures, "brush");
+  it("keeps untagged groups and non-group measures in general, unaffected by the active utility", () => {
+    const measures = [utilityGroup("grid"), slider("zoom")];
+    const { general, utilityOptions } = partitionWindowMeasures(measures, "brush");
     expect(general.map((m) => m.id)).toEqual(["grid", "zoom"]);
-    expect(toolOptions).toEqual([]);
+    expect(utilityOptions).toEqual([]);
   });
 
-  it("wires a tool-scoped group into spawnedWindowChromeForKind's toolOptions slot only when its tool is active", () => {
+  it("wires a utility-scoped group into spawnedWindowChromeForKind's utilityOptions slot only when its utility is active", () => {
     const kind = { id: "w", label: "W", bodyKey: "b", surfaceKind: "raster", options: { engagement: { kind: "none" as const }, measures: [] } } as unknown as AppWindowKindDefinition;
     const brushGroup: WindowMeasure = {
       kind: "group",
@@ -2070,23 +2070,23 @@ describe("partitionWindowMeasures", () => {
     };
     const measures = { [kind.id]: [brushGroup] };
     const activeChrome = spawnedWindowChromeForKind(kind, {}, measures, "brush", noopAction);
-    expect(renderToStaticMarkup(activeChrome.toolOptions as ReactElement)).toContain("Brush size");
+    expect(renderToStaticMarkup(activeChrome.utilityOptions as ReactElement)).toContain("Brush size");
     expect(activeChrome.measures).toBeUndefined();
     const idleChrome = spawnedWindowChromeForKind(kind, {}, measures, "fill", noopAction);
-    expect(idleChrome.toolOptions).toBeUndefined();
+    expect(idleChrome.utilityOptions).toBeUndefined();
     expect(idleChrome.measures).toBeUndefined();
   });
 
-  it("parses the real ui_wgpu camelCase wire JSON and routes a tool-scoped fill group into toolOptions (snake_case divergence regression guard)", () => {
+  it("parses the real ui_wgpu camelCase wire JSON and routes a utility-scoped fill group into utilityOptions (snake_case divergence regression guard)", () => {
     // Verbatim shape of `ui_wgpu::WindowMeasure`'s serde wire after the D-4 `rename_all_fields = "camelCase"`
-    // fix: a fill-tool slider group tagged with `activeUtilityId`, plus an untagged toggle. This is the exact
+    // fix: a fill-utility slider group tagged with `activeUtilityId`, plus an untagged toggle. This is the exact
     // class of payload whose snake_case↔camelCase divergence made the puzzle fill slider invisible in React.
     const wireJson =
       '[{"kind":"group","id":"fill-params","label":"Fill","activeUtilityId":"fill","children":[{"kind":"slider","id":"fillCount","label":"Count","value":3,"min":1,"max":9,"step":1,"onChange":{"controllerId":"puzzle","action":"setFillCount"}}]},{"kind":"toggle","id":"grid","iconId":"icon.grid","pressed":true,"onChange":{"controllerId":"puzzle","action":"toggleGrid"}}]';
     const measures = JSON.parse(wireJson) as WindowMeasure[];
-    const { general, toolOptions } = partitionWindowMeasures(measures, "fill");
-    expect(toolOptions.map((m) => m.id)).toEqual(["fill-params"]);
-    const fillGroup = toolOptions[0];
+    const { general, utilityOptions } = partitionWindowMeasures(measures, "fill");
+    expect(utilityOptions.map((m) => m.id)).toEqual(["fill-params"]);
+    const fillGroup = utilityOptions[0];
     expect(fillGroup.kind).toBe("group");
     if (fillGroup.kind === "group") {
       expect(fillGroup.activeUtilityId).toBe("fill");
@@ -2097,20 +2097,20 @@ describe("partitionWindowMeasures", () => {
     expect(gridToggle.kind === "toggle" && gridToggle.iconId).toBe("icon.grid");
 
     // Regression guard for the fixed bug: the pre-fix snake_case wire leaves `activeUtilityId` undefined, so the
-    // tagged group silently falls through to `general` and the fill slider never reaches the Tool Options rail.
+    // tagged group silently falls through to `general` and the fill slider never reaches the Utility Options rail.
     const legacyJson = wireJson
-      .replace(/"activeUtilityId"/g, '"active_tool_id"')
+      .replace(/"activeUtilityId"/g, '"active_utility_id"')
       .replace(/"onChange"/g, '"on_change"')
       .replace(/"iconId"/g, '"icon_id"');
     const legacy = JSON.parse(legacyJson) as WindowMeasure[];
     const legacyPartition = partitionWindowMeasures(legacy, "fill");
-    expect(legacyPartition.toolOptions).toEqual([]);
+    expect(legacyPartition.utilityOptions).toEqual([]);
     expect(legacyPartition.general.map((m) => m.id)).toEqual(["fill-params", "grid"]);
   });
 });
 
 describe("toolbar ribbon", () => {
-  it("sorts tool nodes by order", () => {
+  it("sorts utility nodes by order", () => {
     const sorted = sortUtilityNodes([
       { id: "b", kind: "button", iconId: "box", order: 2, controllerId: "x", action: "b" },
       { id: "a", kind: "button", iconId: "box", order: 1, controllerId: "x", action: "a" },
@@ -2211,7 +2211,7 @@ describe("toolbar ribbon", () => {
     expect(reconcileUtilityPath(tree, [])).toEqual([]);
   });
 
-  it("buckets top-level tool nodes into ordered category collections (uncategorized nodes default to tools now that the Actions category is gone)", () => {
+  it("buckets top-level utility nodes into ordered category collections (uncategorized nodes default to tools now that the Actions category is gone)", () => {
     const grouped = groupUtilityNodesByCategory([
       { id: "sel", kind: "toggle", iconId: "cursor", controllerId: "x", action: "sel", category: "selection" },
       { id: "hist", kind: "button", iconId: "undo", controllerId: "x", action: "undo", category: "history" },
@@ -2265,7 +2265,7 @@ describe("toolbar ribbon", () => {
     expect(groupUtilityNodesByCategory(nodes, ["tools", "history"]).map((node) => node.id)).toEqual(["history"]);
   });
 
-  it("deduplicates tool nodes by id across window tool lists for a single shared footer entry", () => {
+  it("deduplicates utility nodes by id across window utility lists for a single shared footer entry", () => {
     const history = { id: "s-play.history", kind: "collection" as const, iconId: "clock", category: "history" as const, children: [] };
     const deduped = dedupeUtilityNodesById([[history, { id: "leaf-a", kind: "button" as const, iconId: "box", controllerId: "x", action: "a" }], [history], []]);
     expect(deduped).toEqual([history, { id: "leaf-a", kind: "button", iconId: "box", controllerId: "x", action: "a" }]);
@@ -2503,8 +2503,8 @@ describe("ui search/find (fuse re-export from @semio-tech/ui-react)", () => {
   });
 });
 
-// 🧰 Window Actions & Tools Contract (WS-2): staged argument forms (P1/P2), palette redirect (P3),
-// keybinding rule (P4), and registry-derived tool activation (P5).
+// 🧰 Window Actions & Utilities Contract (WS-2): staged argument forms (P1/P2), palette redirect (P3),
+// keybinding rule (P4), and registry-derived utility activation (P5).
 describe("window action panel — staging and single dispatch (P1/P2)", () => {
   afterEach(() => cleanup());
 
@@ -2601,7 +2601,7 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
     expect(onExecute).toHaveBeenCalledWith({ controllerId: "c", action: "flatten" });
   });
 
-  it("renders every row disabled when an active tool gates actions", () => {
+  it("renders every row disabled when an active utility gates actions", () => {
     const onExecute = vi.fn();
     const { container } = render(createElement(Harness, { actions: [zeroArgAction], onExecute, disabled: true }));
     fireEvent.click(buttonByText(container, "Flatten"));
@@ -2640,13 +2640,13 @@ describe("registry-derived utilities and activation (P5)", () => {
   ];
   const app = { controllerId: "draw", utilities } satisfies Pick<AppDefinition, "controllerId" | "utilities">;
 
-  it("resolveWindowUtilities scopes to the window kind's refs, falling back to all app utilities when unset", () => {
-    expect(resolveWindowUtilities(app, { utilities: ["brush"] } as Pick<AppWindowKindDefinition, "utilities">).map((t) => t.id)).toEqual(["brush"]);
-    expect(resolveWindowUtilities(app, { utilities: [] } as unknown as Pick<AppWindowKindDefinition, "utilities">).map((t) => t.id)).toEqual(["select", "brush", "erase"]);
+  it("resolveUtilities scopes to the window kind's refs, falling back to all app utilities when unset", () => {
+    expect(resolveUtilities(app, { utilities: ["brush"] } as Pick<AppWindowKindDefinition, "utilities">).map((t) => t.id)).toEqual(["brush"]);
+    expect(resolveUtilities(app, { utilities: [] } as unknown as Pick<AppWindowKindDefinition, "utilities">).map((t) => t.id)).toEqual(["select", "brush", "erase"]);
   });
 
-  it("derives grouped toolbar nodes with the active tool pressed and a setActiveTool onChange tagged by window", () => {
-    const nodes = resolveWindowUtilityNodes(app, { utilities: [] } as unknown as Pick<AppWindowKindDefinition, "utilities">, "brush", "w1");
+  it("derives grouped toolbar nodes with the active utility pressed and a setActiveUtility onChange tagged by window", () => {
+    const nodes = resolveUtilityNodes(app, { utilities: [] } as unknown as Pick<AppWindowKindDefinition, "utilities">, "brush", "w1");
     const select = nodes.find((node) => node.id === "select");
     expect(select && select.kind === "toggle" ? select.pressed : undefined).toBe(false);
     const paint = nodes.find((node) => node.id === "group:paint");
@@ -2656,7 +2656,7 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(brush && brush.kind === "toggle" && "onChange" in brush ? brush.onChange : undefined).toEqual({ controllerId: "draw", action: "setActiveUtility", args: { utilityId: "brush", windowId: "w1" } });
   });
 
-  it("deriveUtilityNodes twin marks exactly the active tool pressed", () => {
+  it("deriveUtilityNodes twin marks exactly the active utility pressed", () => {
     const nodes = deriveUtilityNodes(
       "draw",
       [
@@ -2687,7 +2687,7 @@ describe("registry-derived utilities and activation (P5)", () => {
       windowKinds: [{ actions: [] as string[] }],
     };
     const resolved = resolveWindowActions(actionsApp, { actions: [] as string[] });
-    // orphan operation appears; history + setActiveTool are never panel-eligible orphans
+    // orphan operation appears; history + setActiveUtility are never panel-eligible orphans
     expect(resolved.map((action) => action.id)).toEqual(["extrude"]);
     const history = frameworkHistoryUtilityNodes({ controllerId: "draw", actions: actionsApp.actions });
     expect(history).toHaveLength(1);

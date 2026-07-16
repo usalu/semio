@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/puzzle-2d.spec.ts
 // Specs: End-to-end checks for the framework renderer's puzzle 2d board host inside the aggregated Storybook static build.
-// Summary: Drives the WASM `BoardSession` through real pointer/wheel/keyboard input and asserts against the story's `puzzle2d-board-debug` readout (selection/camera/tool/counts) — GPU pixels are not asserted, only the CPU-side session state the debug readout reflects.
+// Summary: Drives the WASM `BoardSession` through real pointer/wheel/keyboard input and asserts against the story's `puzzle2d-board-debug` readout (selection/camera/utility/counts) — GPU pixels are not asserted, only the CPU-side session state the debug readout reflects.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -10,7 +10,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 type Puzzle2dBoardDebug = {
   readonly selection: readonly string[];
   readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
-  readonly activeTool: string;
+  readonly activeUtility: string;
   readonly nodeCount: number;
   readonly edgeCount: number;
 };
@@ -64,7 +64,7 @@ test("puzzle2d overview select: loads with the initial fixture reflected in the 
   const { debug } = await expectBoardStory(page, "puzzle-2d--overview-select");
   const state = await readPuzzle2dDebug(debug);
   expect(state.selection).toEqual([]);
-  expect(state.activeTool).toBe("select");
+  expect(state.activeUtility).toBe("select");
   expect(state.nodeCount).toBe(2);
   expect(state.edgeCount).toBe(1);
 });
@@ -128,10 +128,10 @@ test("puzzle2d lasso select: story boots with the lasso selection method", async
   expect(state.nodeCount).toBe(2);
 });
 
-test("puzzle2d brush tool: story boots with the brush tool active", async ({ page }) => {
-  const { debug } = await expectBoardStory(page, "puzzle-2d--brush-tool");
+test("puzzle2d brush utility: story boots with the brush utility active", async ({ page }) => {
+  const { debug } = await expectBoardStory(page, "puzzle-2d--brush-utility");
   const state = await readPuzzle2dDebug(debug);
-  expect(state.activeTool).toBe("brush");
+  expect(state.activeUtility).toBe("brush");
 });
 
 test("puzzle2d forced lod pane: non-interactive pane ignores pointer input", async ({ page }) => {

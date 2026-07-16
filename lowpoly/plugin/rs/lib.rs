@@ -44,8 +44,8 @@ const LOWPOLY_PLAY_BODY_INSPECTION: &str = "lowpoly.play.inspection";
 const LOWPOLY_PLAY_BODY_LAYERS: &str = "lowpoly.play.layers";
 const LOWPOLY_PLAY_WINDOW_MAIN: &str = "lowpoly-main";
 const LOWPOLY_PLAY_WINDOW_UV: &str = "lowpoly-uv";
-/// 🧰 The transform gumball tool a Model window falls back to when the host hasn't set an active tool.
-const LOWPOLY_TRANSFORM_TOOL_DEFAULT: &str = "move";
+/// 🧰 The transform gumball utility a Model window falls back to when the host hasn't set an active utility.
+const LOWPOLY_TRANSFORM_UTILITY_DEFAULT: &str = "move";
 
 const PRIMITIVE_CATALOG: &[(&str, &str, &str)] = &[
     ("box", "Cube", "box"),
@@ -100,13 +100,13 @@ fn lowpoly_world_camera_json(runtime: &LowpolyPlayRuntime) -> String {
 struct LowpolyPlayRuntime {
     active_object_id: String,
     selection: LowpolySelection,
-    paint_tool: String,
+    paint_utility: String,
     active_paint_layer: u32,
     selection_method: String,
     selected_object_ids: Vec<String>,
     hovered_object_id: Option<String>,
     hovered_target: Option<LowpolyHoverTarget>,
-    tool_params: Value,
+    utility_params: Value,
     paint_color: [u8; 4],
     world_camera: LowpolyWorldCamera,
     engagement_input: String,
@@ -119,13 +119,13 @@ impl Default for LowpolyPlayRuntime {
         Self {
             active_object_id: String::new(),
             selection: LowpolySelection::default(),
-            paint_tool: "brush".into(),
+            paint_utility: "brush".into(),
             active_paint_layer: 0,
             selection_method: "rectangle".into(),
             selected_object_ids: Vec::new(),
             hovered_object_id: None,
             hovered_target: None,
-            tool_params: default_tool_params(),
+            utility_params: default_utility_params(),
             paint_color: [255, 64, 64, 255],
             world_camera: LowpolyWorldCamera::default(),
             engagement_input: String::new(),
@@ -146,7 +146,7 @@ struct LowpolyHoverTarget {
     id: Option<u32>,
 }
 
-fn default_tool_params() -> Value {
+fn default_utility_params() -> Value {
     json!({
         "extrudeDistance": 0.25,
         "insetAmount": 0.1,
@@ -163,7 +163,7 @@ fn default_tool_params() -> Value {
 }
 
 /// @emoji 🧭 A borrowed read view — the document projection plus the ephemeral runtime — threaded into
-/// the render/panel/tool/scene builders.
+/// the render/panel/utility/scene builders.
 #[derive(Clone, Copy)]
 struct LowpolyView<'a> {
     projection: &'a LowpolyProjection,
@@ -178,16 +178,16 @@ fn lowpoly_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     }
 }
 
-fn tool_param_f32(params: &Value, key: &str, default: f32) -> f32 {
+fn utility_param_f32(params: &Value, key: &str, default: f32) -> f32 {
     params.get(key).and_then(|value| value.as_f64()).map(|v| v as f32).unwrap_or(default)
 }
 
-fn tool_param_u32(params: &Value, key: &str, default: u32) -> u32 {
+fn utility_param_u32(params: &Value, key: &str, default: u32) -> u32 {
     params.get(key).and_then(|value| value.as_u64()).map(|v| v as u32).unwrap_or(default)
 }
 
 fn mirror_axis_from_param(params: &Value) -> MirrorAxis {
-    match tool_param_u32(params, "mirrorAxis", 0) {
+    match utility_param_u32(params, "mirrorAxis", 0) {
         1 => MirrorAxis::Y,
         2 => MirrorAxis::Z,
         _ => MirrorAxis::X,
@@ -580,7 +580,7 @@ struct LowpolyLabels {
     primitive_ico_sphere: &'static str,
     object: &'static str,
     transform: &'static str,
-    tool_params: &'static str,
+    utility_params: &'static str,
     window_main: &'static str,
     window_uv: &'static str,
 }
@@ -600,7 +600,7 @@ const LOWPOLY_LABELS_NATIVE_EN: LowpolyLabels = LowpolyLabels {
     primitive_ico_sphere: "Ico Sphere",
     object: "Object",
     transform: "Transform",
-    tool_params: "Tool Params",
+    utility_params: "Tool Params",
     window_main: "Model",
     window_uv: "UV",
 };
@@ -620,7 +620,7 @@ const LOWPOLY_LABELS_NATIVE_DE: LowpolyLabels = LowpolyLabels {
     primitive_ico_sphere: "Ikokugel",
     object: "Objekt",
     transform: "Transformation",
-    tool_params: "Werkzeugparameter",
+    utility_params: "Werkzeugparameter",
     window_main: "Modell",
     window_uv: "UV",
 };
@@ -863,7 +863,7 @@ fn build_layers_tree(view: LowpolyView, labels: &LowpolyLabels) -> UiNode {
     })
 }
 
-fn inspector_tool_param_field(id: &str, label: &str, key: &str, value: &Value) -> UiNode {
+fn inspector_utility_param_field(id: &str, label: &str, key: &str, value: &Value) -> UiNode {
     UiNode::Field(UiFieldNode {
         id: format!("lowpoly-play-inspector.{id}"),
         label: label.into(),
@@ -873,7 +873,7 @@ fn inspector_tool_param_field(id: &str, label: &str, key: &str, value: &Value) -
             value: value.get(key).map(|entry| entry.to_string()).unwrap_or_else(|| "0".into()),
             placeholder: None,
             commit: None,
-            on_change: lowpoly_action("setToolParam", Some(json!({ "key": key }))),
+            on_change: lowpoly_action("setUtilityParam", Some(json!({ "key": key }))),
             min: None,
             max: None,
             step: None,
@@ -892,7 +892,7 @@ fn build_inspector_tree(view: LowpolyView, active_utility: &str, labels: &Lowpol
             ui_text("No active object".to_string()),
         ]);
     };
-    let params = &view.runtime.tool_params;
+    let params = &view.runtime.utility_params;
     ui_inspector_groups_to_tree(&[
         UiInspectorFieldGroup {
             id: "lowpoly-play-inspector.object".into(),
@@ -953,34 +953,34 @@ fn build_inspector_tree(view: LowpolyView, active_utility: &str, labels: &Lowpol
             label: labels.transform.into(),
             default_open: None,
             fields: vec![ui_inspector_readonly_field(
-                "lowpoly-play-inspector.transform.tool",
+                "lowpoly-play-inspector.transform.utility",
                 "Tool",
                 active_utility,
             )],
         },
         UiInspectorFieldGroup {
-            id: "lowpoly-play-inspector.tool-params".into(),
-            label: labels.tool_params.into(),
+            id: "lowpoly-play-inspector.utility-params".into(),
+            label: labels.utility_params.into(),
             default_open: Some(true),
             fields: vec![
-                inspector_tool_param_field("extrude", "Extrude Distance", "extrudeDistance", params),
-                inspector_tool_param_field("inset", "Inset Amount", "insetAmount", params),
-                inspector_tool_param_field("bevel", "Bevel Amount", "bevelAmount", params),
-                inspector_tool_param_field("bevel-segments", "Bevel Segments", "bevelSegments", params),
-                inspector_tool_param_field("loop-cuts", "Loop Cuts", "loopCuts", params),
-                inspector_tool_param_field("decimate", "Decimate Ratio", "decimateRatio", params),
-                inspector_tool_param_field("snap", "Snap Grid", "snapGrid", params),
-                inspector_tool_param_field("mirror", "Mirror Axis", "mirrorAxis", params),
-                inspector_tool_param_field("brush-size", "Brush Size", "brushSize", params),
-                inspector_tool_param_field("brush-opacity", "Brush Opacity", "brushOpacity", params),
-                inspector_tool_param_field("brush-hardness", "Brush Hardness", "brushHardness", params),
+                inspector_utility_param_field("extrude", "Extrude Distance", "extrudeDistance", params),
+                inspector_utility_param_field("inset", "Inset Amount", "insetAmount", params),
+                inspector_utility_param_field("bevel", "Bevel Amount", "bevelAmount", params),
+                inspector_utility_param_field("bevel-segments", "Bevel Segments", "bevelSegments", params),
+                inspector_utility_param_field("loop-cuts", "Loop Cuts", "loopCuts", params),
+                inspector_utility_param_field("decimate", "Decimate Ratio", "decimateRatio", params),
+                inspector_utility_param_field("snap", "Snap Grid", "snapGrid", params),
+                inspector_utility_param_field("mirror", "Mirror Axis", "mirrorAxis", params),
+                inspector_utility_param_field("brush-size", "Brush Size", "brushSize", params),
+                inspector_utility_param_field("brush-opacity", "Brush Opacity", "brushOpacity", params),
+                inspector_utility_param_field("brush-hardness", "Brush Hardness", "brushHardness", params),
             ],
         },
     ])
 }
 //#endregion 🔖Panels
 
-//#region 🔖Tools
+//#region 🔖Utilities
 fn format_selection_targets_label(targets: &LowpolySelectionTargets) -> String {
     let mut parts = Vec::new();
     if targets.mesh {
@@ -1009,7 +1009,7 @@ fn lowpoly_window_engagement(view: LowpolyView, active_utility: &str) -> WindowE
     WindowEngagement {
         session_active: Some(true),
         // 🧰 The move/rotate/scale transform switcher now lives in the framework toolbar (declared via `.utility` +
-        // `.window_kind_utilities`), so the engagement keeps only its non-tool options below.
+        // `.window_kind_utilities`), so the engagement keeps only its non-utility options below.
         options: Some(vec![
             WindowEngagementOption {
                 id: "lowpoly.opt.snap".into(),
@@ -1073,11 +1073,11 @@ fn lowpoly_window_engagement(view: LowpolyView, active_utility: &str) -> WindowE
     }
 }
 
-fn tool_param_f64(params: &Value, key: &str, default: f64) -> f64 {
-    tool_param_f32(params, key, default as f32) as f64
+fn utility_param_f64(params: &Value, key: &str, default: f64) -> f64 {
+    utility_param_f32(params, key, default as f32) as f64
 }
 
-fn lowpoly_tool_param_slider(
+fn lowpoly_utility_param_slider(
     id: &str,
     label: &str,
     key: &str,
@@ -1090,17 +1090,17 @@ fn lowpoly_tool_param_slider(
     WindowMeasure::Slider {
         id: format!("lowpoly-measure-{id}"),
         label: Some(label.into()),
-        value: tool_param_f64(params, key, default),
+        value: utility_param_f64(params, key, default),
         min,
         max,
         step: Some(step),
-        on_change: lowpoly_action("setToolParam", Some(json!({ "key": key }))),
+        on_change: lowpoly_action("setUtilityParam", Some(json!({ "key": key }))),
     }
 }
 
 /// 🎯 One selection-granularity toggle. Selection kinds are a non-exclusive multi-select (mesh + face +
 /// edge + vertex can all be active at once), so they are a window-measure toggle group — NOT a
-/// single-active tool group.
+/// single-active utility group.
 fn selection_kind_toggle(id: &str, icon: &str, label: &str, kind: &str, pressed: bool) -> WindowMeasure {
     WindowMeasure::Toggle {
         id: format!("lowpoly-measure-selection-{id}"),
@@ -1113,7 +1113,7 @@ fn selection_kind_toggle(id: &str, icon: &str, label: &str, kind: &str, pressed:
 }
 
 fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime) -> Vec<WindowMeasure> {
-    let params = &runtime.tool_params;
+    let params = &runtime.utility_params;
     let targets = &runtime.selection.targets;
     vec![
         WindowMeasure::Toggle {
@@ -1153,7 +1153,7 @@ fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime) -> Vec<WindowMeasure> {
             default_open: Some(false),
             active_utility_id: None,
             children: vec![
-                lowpoly_tool_param_slider("snap", "Snap Grid", "snapGrid", params, 0.25, 0.05, 2.0, 0.05),
+                lowpoly_utility_param_slider("snap", "Snap Grid", "snapGrid", params, 0.25, 0.05, 2.0, 0.05),
             ],
         },
         lowpoly_paint_params_group("brush", params),
@@ -1161,25 +1161,25 @@ fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime) -> Vec<WindowMeasure> {
     ]
 }
 
-/// 🖌️ Tool Options for a stamping paint tool (`brush`/`eraser`) — the live brush size/opacity/hardness
-/// sliders, tagged `active_utility_id: Some(tool)` so [`partition_window_measures`] surfaces them in the
-/// Tool Options rail only while that exact tool is active. Both utilities stamp through the same
+/// 🖌️ Utility Options for a stamping paint utility (`brush`/`eraser`) — the live brush size/opacity/hardness
+/// sliders, tagged `active_utility_id: Some(utility)` so [`partition_window_measures`] surfaces them in the
+/// Utility Options rail only while that exact utility is active. Both utilities stamp through the same
 /// `stamp_brush` path (radius/hardness/opacity + eraser flag), so they share an identical param set.
-fn lowpoly_paint_params_group(tool: &str, params: &Value) -> WindowMeasure {
+fn lowpoly_paint_params_group(utility: &str, params: &Value) -> WindowMeasure {
     let slider = |suffix: &str, label: &str, key: &str, default: f64, min: f64, max: f64, step: f64| WindowMeasure::Slider {
-        id: format!("lowpoly-measure-{tool}-{suffix}"),
+        id: format!("lowpoly-measure-{utility}-{suffix}"),
         label: Some(label.into()),
-        value: tool_param_f64(params, key, default),
+        value: utility_param_f64(params, key, default),
         min,
         max,
         step: Some(step),
-        on_change: lowpoly_action("setToolParam", Some(json!({ "key": key }))),
+        on_change: lowpoly_action("setUtilityParam", Some(json!({ "key": key }))),
     };
     WindowMeasure::Group {
-        id: format!("lowpoly-measure-paint-params-{tool}"),
+        id: format!("lowpoly-measure-paint-params-{utility}"),
         label: "Brush".into(),
         default_open: Some(true),
-        active_utility_id: Some(tool.into()),
+        active_utility_id: Some(utility.into()),
         children: vec![
             slider("size", "Brush Size", "brushSize", 16.0, 1.0, 128.0, 1.0),
             slider("opacity", "Brush Opacity", "brushOpacity", 1.0, 0.0, 1.0, 0.05),
@@ -1188,7 +1188,7 @@ fn lowpoly_paint_params_group(tool: &str, params: &Value) -> WindowMeasure {
     }
 }
 
-//#endregion 🔖Tools
+//#endregion 🔖Utilities
 
 //#region 🔖LowpolyPlayApp
 /// @emoji 🖌️ In-progress paint drag: the pre-stroke layer buffer and the accumulating scratch buffer.
@@ -1359,8 +1359,8 @@ impl LowpolyPlayApp {
     /// @emoji 🖌️ One mid-drag paint tick: brush/eraser/fill mutate the stroke scratch, eyedropper samples
     /// the paint color. Emits ZERO ops — the stroke commits only on `paintStrokeEnd` (View-kind safe).
     fn paint_tick(&mut self, projection: &LowpolyProjection, object_id: String, u: f32, v: f32) -> ActionEmit<LowpolyOp> {
-        let tool = self.runtime.paint_tool.clone();
-        if tool == "eyedropper" {
+        let utility = self.runtime.paint_utility.clone();
+        if utility == "eyedropper" {
             if let Some(object) = projection.objects.iter().find(|object| object.id == object_id) {
                 let composite = composite_layer_pixels(&object.paint_layers);
                 self.runtime.paint_color = sample_pixel_from(&composite, u, v);
@@ -1388,15 +1388,15 @@ impl LowpolyPlayApp {
             });
         }
         let color = self.runtime.paint_color;
-        let params = self.runtime.tool_params.clone();
+        let params = self.runtime.utility_params.clone();
         if let Some(session) = self.stroke.as_mut() {
-            if tool == "fill" {
+            if utility == "fill" {
                 flood_fill(&mut session.scratch, u, v, color);
             } else {
-                let radius = tool_param_f32(&params, "brushSize", 16.0);
-                let opacity = tool_param_f32(&params, "brushOpacity", 1.0);
-                let hardness = tool_param_f32(&params, "brushHardness", 0.5);
-                stamp_brush(&mut session.scratch, u, v, radius, color, hardness, opacity, tool == "eraser");
+                let radius = utility_param_f32(&params, "brushSize", 16.0);
+                let opacity = utility_param_f32(&params, "brushOpacity", 1.0);
+                let hardness = utility_param_f32(&params, "brushHardness", 0.5);
+                stamp_brush(&mut session.scratch, u, v, radius, color, hardness, opacity, utility == "eraser");
             }
         }
         self.stroke_dirty += 1;
@@ -1593,9 +1593,9 @@ impl DocumentApp for LowpolyPlayApp {
                 self.transform_drag_active = false;
                 self.runtime.hovered_target = None;
                 self.runtime.hovered_object_id = None;
-                if let Some(tool) = args.and_then(|value| value.get("utilityId")).and_then(|value| value.as_str()) {
-                    if matches!(tool, "brush" | "eraser" | "fill" | "eyedropper") {
-                        self.runtime.paint_tool = tool.into();
+                if let Some(utility) = args.and_then(|value| value.get("utilityId")).and_then(|value| value.as_str()) {
+                    if matches!(utility, "brush" | "eraser" | "fill" | "eyedropper") {
+                        self.runtime.paint_utility = utility.into();
                     }
                 }
                 ActionEmit::default()
@@ -1610,15 +1610,15 @@ impl DocumentApp for LowpolyPlayApp {
                     args.and_then(|value| value.get("layerIndex")).and_then(|value| value.as_u64()).unwrap_or(0) as u32;
                 ActionEmit::default()
             }
-            "setToolParam" => {
+            "setUtilityParam" => {
                 let key = args.and_then(|value| value.get("key")).and_then(|value| value.as_str()).unwrap_or("");
                 let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
-                if let Some(map) = self.runtime.tool_params.as_object_mut() {
+                if let Some(map) = self.runtime.utility_params.as_object_mut() {
                     map.insert(key.into(), value);
                 } else {
                     let mut map = Map::new();
                     map.insert(key.into(), value);
-                    self.runtime.tool_params = Value::Object(map);
+                    self.runtime.utility_params = Value::Object(map);
                 }
                 ActionEmit::default()
             }
@@ -1835,7 +1835,7 @@ impl DocumentApp for LowpolyPlayApp {
                 ActionEmit::ops(vec![LowpolyOp::Objects(CollectionOp::Patch { id: object_id.into(), patch })])
             }
             "extrude" => {
-                let distance = arg_f32(args, "extrudeDistance", tool_param_f32(&self.runtime.tool_params, "extrudeDistance", 0.25));
+                let distance = arg_f32(args, "extrudeDistance", utility_param_f32(&self.runtime.utility_params, "extrudeDistance", 0.25));
                 self.mesh_edit(projection, move |doc| {
                     let faces = doc.selected_face_ids();
                     if faces.is_empty() {
@@ -1846,7 +1846,7 @@ impl DocumentApp for LowpolyPlayApp {
                 })
             }
             "inset" => {
-                let amount = arg_f32(args, "insetAmount", tool_param_f32(&self.runtime.tool_params, "insetAmount", 0.1));
+                let amount = arg_f32(args, "insetAmount", utility_param_f32(&self.runtime.utility_params, "insetAmount", 0.1));
                 self.mesh_edit(projection, move |doc| {
                     let faces = doc.selected_face_ids();
                     doc.active_mesh_mut()?.inset_faces(&faces, amount).map_err(map_kernel_err)?;
@@ -1854,8 +1854,8 @@ impl DocumentApp for LowpolyPlayApp {
                 })
             }
             "bevel" => {
-                let amount = arg_f32(args, "bevelAmount", tool_param_f32(&self.runtime.tool_params, "bevelAmount", 0.05));
-                let segments = arg_u32(args, "bevelSegments", tool_param_u32(&self.runtime.tool_params, "bevelSegments", 1));
+                let amount = arg_f32(args, "bevelAmount", utility_param_f32(&self.runtime.utility_params, "bevelAmount", 0.05));
+                let segments = arg_u32(args, "bevelSegments", utility_param_u32(&self.runtime.utility_params, "bevelSegments", 1));
                 self.mesh_edit(projection, move |doc| {
                     let edges = doc.selected_edge_ids();
                     doc.active_mesh_mut()?.bevel_edges(&edges, amount, segments).map_err(map_kernel_err)?;
@@ -1863,7 +1863,7 @@ impl DocumentApp for LowpolyPlayApp {
                 })
             }
             "loopCut" => {
-                let cuts = arg_u32(args, "loopCuts", tool_param_u32(&self.runtime.tool_params, "loopCuts", 1));
+                let cuts = arg_u32(args, "loopCuts", utility_param_u32(&self.runtime.utility_params, "loopCuts", 1));
                 self.mesh_edit(projection, move |doc| {
                     let edges = doc.selected_edge_ids();
                     doc.active_mesh_mut()?.loop_cut(&edges, cuts).map_err(map_kernel_err)?;
@@ -1888,14 +1888,14 @@ impl DocumentApp for LowpolyPlayApp {
                         "z" => MirrorAxis::Z,
                         _ => MirrorAxis::X,
                     })
-                    .unwrap_or_else(|| mirror_axis_from_param(&self.runtime.tool_params));
+                    .unwrap_or_else(|| mirror_axis_from_param(&self.runtime.utility_params));
                 self.mesh_edit(projection, move |doc| {
                     doc.active_mesh_mut()?.mirror(axis, 0.001).map_err(map_kernel_err)?;
                     doc.sync_meshes_to_projection()
                 })
             }
             "decimate" => {
-                let ratio = arg_f32(args, "decimateRatio", tool_param_f32(&self.runtime.tool_params, "decimateRatio", 0.5));
+                let ratio = arg_f32(args, "decimateRatio", utility_param_f32(&self.runtime.utility_params, "decimateRatio", 0.5));
                 self.mesh_edit(projection, move |doc| {
                     doc.active_mesh_mut()?.decimate(ratio).map_err(map_kernel_err)?;
                     doc.sync_meshes_to_projection()
@@ -1929,7 +1929,7 @@ impl DocumentApp for LowpolyPlayApp {
                 doc.sync_meshes_to_projection()
             }),
             "snap" => {
-                let grid = tool_param_f32(&self.runtime.tool_params, "snapGrid", 0.25);
+                let grid = utility_param_f32(&self.runtime.utility_params, "snapGrid", 0.25);
                 self.mesh_edit(projection, move |doc| {
                     let verts = doc.selected_vertex_ids();
                     doc.active_mesh_mut()?.snap_vertices_to_grid(&verts, grid).map_err(map_kernel_err)?;
@@ -2013,7 +2013,7 @@ impl DocumentApp for LowpolyPlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, LowpolyProjection>, view_state: &ViewState) -> UiNode {
         let projection = doc.projection;
         let labels = lowpoly_labels(view_state);
-        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(LOWPOLY_TRANSFORM_TOOL_DEFAULT);
+        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(LOWPOLY_TRANSFORM_UTILITY_DEFAULT);
         let view = self.view(projection);
         if matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV) {
             self.refresh_texture_cache(projection);
@@ -2062,7 +2062,7 @@ impl DocumentApp for LowpolyPlayApp {
     }
 
     fn window_engagements(&self, doc: &DocumentView<'_, LowpolyProjection>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(LOWPOLY_TRANSFORM_TOOL_DEFAULT);
+        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(LOWPOLY_TRANSFORM_UTILITY_DEFAULT);
         let engagement = lowpoly_window_engagement(self.view(doc.projection), active_utility);
         HashMap::from([
             (LOWPOLY_PLAY_WINDOW_MAIN.into(), engagement.clone()),
@@ -2154,7 +2154,7 @@ fn apply_transform(doc: &mut LowpolyDocument, transform: Transform) -> Result<()
 //#endregion 🔖LowpolyPlayApp
 
 //#region 🔖Manifest
-/// 🧰 One transform/paint tool declaration (id/label/icon reused verbatim from the retired `utilities()` impl).
+/// 🧰 One transform/paint utility declaration (id/label/icon reused verbatim from the retired `utilities()` impl).
 fn lowpoly_utility(id: &str, label: &str, icon: &str, group: &str) -> UtilityDefinition {
     UtilityDefinition {
         group: Some(group.into()),
@@ -2170,7 +2170,7 @@ fn create_lowpoly_app() -> App {
         let runtime = LowpolyPlayRuntime::default();
         lowpoly_window_engagement(
             LowpolyView { projection: &projection, runtime: &runtime },
-            LOWPOLY_TRANSFORM_TOOL_DEFAULT,
+            LOWPOLY_TRANSFORM_UTILITY_DEFAULT,
         )
     };
     App::from_builder(
@@ -2238,7 +2238,7 @@ fn create_lowpoly_app() -> App {
             .view_action("toggleSelectionKind", "Toggle Selection Kind")
             .view_action("toggleSelectionTarget", "Toggle Selection Target")
             .view_action("setActivePaintLayer", "Set Active Paint Layer")
-            .view_action("setToolParam", "Set Tool Param")
+            .view_action("setUtilityParam", "Set Utility Param")
             .view_action("engagementInput", "Engagement Input")
             .view_action("toggleShowEdges", "Toggle Show Edges")
             .view_action("toggleSun", "Toggle Sun")
@@ -2259,7 +2259,7 @@ fn create_lowpoly_app() -> App {
             .view_action("paintSample", "Paint Sample")
             .view_action("transformBegin", "Transform Begin")
             // 📝 Staged argument forms for the P1 actions — the panel form seeds from these defaults and
-            // stages typed overrides read out of `args`; `runtime.tool_params` remains the live backing store.
+            // stages typed overrides read out of `args`; `runtime.utility_params` remains the live backing store.
             .action_args("extrude", vec![ActionArgDef::slider("extrudeDistance", "Extrude Distance", 0.01, 2.0).default_value(0.25)])
             .action_args("inset", vec![ActionArgDef::number("insetAmount", "Inset Amount").default_value(0.1)])
             .action_args("bevel", vec![
@@ -2281,9 +2281,9 @@ fn create_lowpoly_app() -> App {
                 ActionArgOption::new("ico_sphere", "Ico Sphere"),
             ]).default_value("box")])
             .action_args("markUvSeam", vec![ActionArgDef::toggle("seam", "Seam").default_value(true)])
-            // 🧰 Transform gumball + paint utilities — exclusive per-window active tool is host-owned (never a
-            // document op). Selection granularity is deliberately NOT a tool group (it is a multi-select
-            // window measure); the transform group defaults to "move", paint bridges into `runtime.paint_tool`.
+            // 🧰 Transform gumball + paint utilities — exclusive per-window active utility is host-owned (never a
+            // document op). Selection granularity is deliberately NOT a utility group (it is a multi-select
+            // window measure); the transform group defaults to "move", paint bridges into `runtime.paint_utility`.
             .utility(lowpoly_utility("move", "Move", "move", "transform"))
             .utility(lowpoly_utility("rotate", "Rotate", "rotate-cw", "transform"))
             .utility(lowpoly_utility("scale", "Scale", "maximize-2", "transform"))
@@ -2443,7 +2443,7 @@ mod tests {
     }
 
     #[test]
-    fn paint_tool_params_are_tool_tagged_and_mesh_op_measures_removed() {
+    fn paint_utility_params_are_utility_tagged_and_mesh_op_measures_removed() {
         let measures = lowpoly_window_measures(&LowpolyPlayRuntime::default());
         let group_tag = |id: &str| {
             measures.iter().find_map(|measure| match measure {
@@ -2451,11 +2451,11 @@ mod tests {
                 _ => None,
             })
         };
-        // 🖌️ Live paint params are now tool-scoped Tool Options — one tagged group per stamping tool, so
-        // `partition_window_measures` surfaces each only while that exact tool is the active tool.
+        // 🖌️ Live paint params are now utility-scoped Utility Options — one tagged group per stamping utility, so
+        // `partition_window_measures` surfaces each only while that exact utility is the active utility.
         assert_eq!(group_tag("lowpoly-measure-paint-params-brush"), Some(Some("brush".into())));
         assert_eq!(group_tag("lowpoly-measure-paint-params-eraser"), Some(Some("eraser".into())));
-        // 🧹 Snap grid stays a general (untagged) measure — it is not a single-tool parameter.
+        // 🧹 Snap grid stays a general (untagged) measure — it is not a single-utility parameter.
         assert_eq!(group_tag("lowpoly-measure-snap"), Some(None));
         // 🗑️ The mesh-op param sliders now live ONLY in the Action Panel's staged `action_args`, never a measure.
         let json = serde_json::to_string(&measures).unwrap();
@@ -2542,7 +2542,7 @@ mod tests {
     #[test]
     fn eyedropper_updates_paint_color_without_ops() {
         let mut app = new_app();
-        // 🧰 The host-owned tool switch bridges into runtime.paint_tool and emits no ops.
+        // 🧰 The host-owned utility switch bridges into runtime.paint_utility and emits no ops.
         let switch = app.handle_action("setActiveUtility", Some(&json!({ "utilityId": "eyedropper" })), &ViewState::default(), &meta("a")).unwrap();
         assert!(switch.operations.is_empty());
         let result = app.handle_action("paintSample", Some(&json!({ "u": 0.5, "v": 0.5 })), &ViewState::default(), &meta("a")).unwrap();
@@ -2581,28 +2581,28 @@ mod tests {
     }
 
     #[test]
-    fn active_tool_switch_emits_no_ops_and_no_history() {
-        // 🧰 Selecting a host-owned tool must never create an undoable edit.
+    fn active_utility_switch_emits_no_ops_and_no_history() {
+        // 🧰 Selecting a host-owned utility must never create an undoable edit.
         let mut app = new_app();
         let result = app.handle_action("setActiveUtility", Some(&json!({ "utilityId": "rotate" })), &ViewState::default(), &meta("a")).unwrap();
-        assert!(result.operations.is_empty(), "tool switch must emit no ops");
+        assert!(result.operations.is_empty(), "utility switch must emit no ops");
         // No history entry — an undo right after is a no-op leaving the projection untouched.
         let before = projection(&app);
         app.handle_action("undo", None, &ViewState::default(), &meta("a")).unwrap();
-        assert_eq!(projection(&app), before, "tool switch left nothing to undo");
+        assert_eq!(projection(&app), before, "utility switch left nothing to undo");
     }
 
     #[test]
-    fn engagement_options_contain_no_tool_switcher() {
+    fn engagement_options_contain_no_utility_switcher() {
         // 🧰 move/rotate/scale switching lives only on the framework toolbar; the engagement keeps its
-        // genuine non-tool options (snap/smooth/show-edges) but must never dispatch setActiveTool.
+        // genuine non-utility options (snap/smooth/show-edges) but must never dispatch setActiveUtility.
         let projection = projection(&new_app());
         let runtime = LowpolyPlayRuntime::default();
         let engagement = lowpoly_window_engagement(LowpolyView { projection: &projection, runtime: &runtime }, "move");
-        let options = engagement.options.expect("lowpoly engagement keeps its non-tool options");
+        let options = engagement.options.expect("lowpoly engagement keeps its non-utility options");
         assert!(
             options.iter().all(|option| option.action.as_ref().map(|action| action.action != SET_ACTIVE_UTILITY_ACTION_ID).unwrap_or(true)),
-            "no engagement option may dispatch the framework setActiveTool action; transform switching lives on the toolbar",
+            "no engagement option may dispatch the framework setActiveUtility action; transform switching lives on the toolbar",
         );
     }
 

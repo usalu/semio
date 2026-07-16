@@ -462,7 +462,7 @@ impl AppBuilder {
     }
 
     /// 🧰 Scopes utilities to a window kind — references ids declared via `.utility()`/`.utility_simple()`. Mirrors
-    /// `window_kind_actions`: the referenced tool ids are validated to resolve in `build_definition`.
+    /// `window_kind_actions`: the referenced utility ids are validated to resolve in `build_definition`.
     pub fn window_kind_utilities(mut self, window_kind_id: impl AsRef<str>, utility_ids: Vec<UtilityRef>) -> Self {
         let window_kind_id = window_kind_id.as_ref();
         if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
@@ -519,7 +519,7 @@ impl AppBuilder {
         self.action_with(ActionDefinition::new(id, label, ActionKind::Operation))
     }
 
-    /// @emoji 👁️ Declares an ephemeral view action (camera, selection, hover, active tool) — not recorded in history.
+    /// @emoji 👁️ Declares an ephemeral view action (camera, selection, hover, active utility) — not recorded in history.
     pub fn view_action(self, id: impl Into<String>, label: impl Into<String>) -> Self {
         self.action_with(ActionDefinition::new(id, label, ActionKind::View))
     }
@@ -576,8 +576,8 @@ impl AppBuilder {
     }
 
     /// @emoji 🧰 Declares an interactive utility this app exposes (referenced by `window_kind_utilities`/`mode_utilities`).
-    pub fn utility(mut self, tool: UtilityDefinition) -> Self {
-        self.utilities.push(tool);
+    pub fn utility(mut self, utility: UtilityDefinition) -> Self {
+        self.utilities.push(utility);
         self
     }
 
@@ -661,13 +661,13 @@ impl AppBuilder {
             validate_arg_defs(&self.id, &format!("action {}", action.id), &action.args);
         }
         let mut declared_utility_ids = HashSet::new();
-        for tool in &self.utilities {
-            assert!(!tool.id.trim().is_empty(), "app {} tool id must be non-empty", self.id);
+        for utility in &self.utilities {
+            assert!(!utility.id.trim().is_empty(), "app {} utility id must be non-empty", self.id);
             assert!(
-                declared_utility_ids.insert(tool.id.clone()),
-                "app {} duplicate tool id {}",
+                declared_utility_ids.insert(utility.id.clone()),
+                "app {} duplicate utility id {}",
                 self.id,
-                tool.id
+                utility.id
             );
         }
         let mut declared_command_scopes: HashMap<String, CommandScope> = HashMap::new();
@@ -726,15 +726,15 @@ impl AppBuilder {
                 }
             }
         }
-        for tool in &self.utilities {
-            if let Some(keys) = &tool.keys {
+        for utility in &self.utilities {
+            if let Some(keys) = &utility.keys {
                 if bound_keys.insert(keys.clone()) {
                     keybindings.push(Keybinding {
                         keys: keys.clone(),
                         action: ActionDescriptor {
                             controller_id: self.controller_id.clone(),
                             action: SET_ACTIVE_UTILITY_ACTION_ID.to_string(),
-                            args: Some(serde_json::json!({ "utilityId": tool.id })),
+                            args: Some(serde_json::json!({ "utilityId": utility.id })),
                         },
                     });
                 }
@@ -764,7 +764,7 @@ impl AppBuilder {
             for utility_ref in &window.utilities {
                 assert!(
                     declared_utility_ids.contains(utility_ref.as_str()),
-                    "app {} window kind {} references undeclared tool {}",
+                    "app {} window kind {} references undeclared utility {}",
                     self.id,
                     window.id,
                     utility_ref.as_str()
@@ -784,7 +784,7 @@ impl AppBuilder {
             for utility_ref in &mode.utilities {
                 assert!(
                     declared_utility_ids.contains(utility_ref.as_str()),
-                    "app {} mode {} references undeclared tool {}",
+                    "app {} mode {} references undeclared utility {}",
                     self.id,
                     mode.id,
                     utility_ref.as_str()
@@ -830,7 +830,7 @@ impl AppBuilder {
                     ),
                     IntroductionAnchor::Utility(utility_ref) => assert!(
                         declared_utility_ids.contains(utility_ref.as_str()),
-                        "app {} introduction step {} anchors undeclared tool {}",
+                        "app {} introduction step {} anchors undeclared utility {}",
                         self.id,
                         step.id,
                         utility_ref.as_str()
@@ -861,7 +861,7 @@ impl AppBuilder {
                     ),
                     IntroductionAdvance::Utility(utility_ref) => assert!(
                         declared_utility_ids.contains(utility_ref.as_str()),
-                        "app {} introduction step {} advance references undeclared tool {}",
+                        "app {} introduction step {} advance references undeclared utility {}",
                         self.id,
                         step.id,
                         utility_ref.as_str()
@@ -1057,32 +1057,32 @@ mod app_builder_tests {
     }
 
     #[test]
-    fn declaring_tools_injects_set_active_tool_action_and_keybinding() {
+    fn declaring_utilities_injects_set_active_utility_action_and_keybinding() {
         use semio_framework_core::{ActionKind, UtilityDefinition, SET_ACTIVE_UTILITY_ACTION_ID};
-        let definition = minimal_app("tool-app")
+        let definition = minimal_app("utility-app")
             .utility(UtilityDefinition { keys: Some("b".into()), ..UtilityDefinition::new("brush", "Brush", "icon.brush") })
             .utility_simple("eraser", "Eraser", "icon.eraser")
             .build_definition();
-        let set_active_tool = definition
+        let set_active_utility = definition
             .actions
             .iter()
             .find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID)
-            .expect("setActiveTool injected");
-        assert_eq!(set_active_tool.kind, ActionKind::View);
-        assert!(!set_active_tool.in_palette);
+            .expect("setActiveUtility injected");
+        assert_eq!(set_active_utility.kind, ActionKind::View);
+        assert!(!set_active_utility.in_palette);
         let binding = definition
             .keybindings
             .iter()
             .find(|binding| binding.keys == "b")
-            .expect("tool keybinding auto-injected");
+            .expect("utility keybinding auto-injected");
         assert_eq!(binding.action.action, SET_ACTIVE_UTILITY_ACTION_ID);
         assert_eq!(binding.action.args, Some(serde_json::json!({ "utilityId": "brush" })));
     }
 
     #[test]
-    fn no_tools_means_no_set_active_tool_action() {
+    fn no_utilities_means_no_set_active_utility_action() {
         use semio_framework_core::SET_ACTIVE_UTILITY_ACTION_ID;
-        let definition = minimal_app("no-tool-app").build_definition();
+        let definition = minimal_app("no-utility-app").build_definition();
         assert!(!definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID));
     }
 
@@ -1099,9 +1099,9 @@ mod app_builder_tests {
     }
 
     #[test]
-    fn build_definition_rejects_window_kind_tool_referencing_undeclared_tool() {
+    fn build_definition_rejects_window_kind_utility_referencing_undeclared_utility() {
         let result = std::panic::catch_unwind(|| {
-            minimal_app("bad-tool-ref-app")
+            minimal_app("bad-utility-ref-app")
                 .utility_simple("brush", "Brush", "icon.brush")
                 .window_kind_utilities("main", vec!["missing".into()])
                 .build_definition()
@@ -1150,7 +1150,7 @@ mod app_builder_tests {
             .find(|action| action.id == START_INTRODUCTION_ACTION_ID)
             .expect("startIntroduction injected");
         assert_eq!(start_introduction.kind, ActionKind::View);
-        assert!(start_introduction.in_palette, "unlike setActiveTool, replaying stays in the palette");
+        assert!(start_introduction.in_palette, "unlike setActiveUtility, replaying stays in the palette");
     }
 
     #[test]
@@ -1208,10 +1208,10 @@ mod app_builder_tests {
     }
 
     #[test]
-    fn build_definition_rejects_introduction_step_anchoring_undeclared_tool() {
+    fn build_definition_rejects_introduction_step_anchoring_undeclared_utility() {
         use semio_framework_core::{IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition};
         let result = std::panic::catch_unwind(|| {
-            minimal_app("bad-anchor-tool-app")
+            minimal_app("bad-anchor-utility-app")
                 .introduction(IntroductionDefinition {
                     title: "Welcome".into(),
                     steps: vec![IntroductionStepDefinition::new(
@@ -1265,10 +1265,10 @@ mod app_builder_tests {
     }
 
     #[test]
-    fn build_definition_rejects_introduction_step_advancing_on_undeclared_tool() {
+    fn build_definition_rejects_introduction_step_advancing_on_undeclared_utility() {
         use semio_framework_core::{IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition};
         let result = std::panic::catch_unwind(|| {
-            minimal_app("bad-advance-tool-app")
+            minimal_app("bad-advance-utility-app")
                 .introduction(IntroductionDefinition {
                     title: "Welcome".into(),
                     steps: vec![IntroductionStepDefinition::new("step", "A", "a", IntroductionAnchor::Screen)
@@ -1280,7 +1280,7 @@ mod app_builder_tests {
     }
 
     #[test]
-    fn build_definition_accepts_introduction_anchored_at_declared_window_tool_and_action() {
+    fn build_definition_accepts_introduction_anchored_at_declared_window_utility_and_action() {
         use semio_framework_core::{IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition};
         let definition = minimal_app("good-intro-app")
             .operation("addLayer", "Add Layer")
@@ -1292,7 +1292,7 @@ mod app_builder_tests {
                 steps: vec![
                     IntroductionStepDefinition::new("welcome", "Welcome", "Hi", IntroductionAnchor::Screen),
                     IntroductionStepDefinition::new("main-window", "Main Window", "…", IntroductionAnchor::WindowKind("main".into())),
-                    IntroductionStepDefinition::new("brush-tool", "Brush", "…", IntroductionAnchor::Utility("brush".into()))
+                    IntroductionStepDefinition::new("brush-utility", "Brush", "…", IntroductionAnchor::Utility("brush".into()))
                         .advance_on(IntroductionAdvance::Utility("brush".into())),
                     IntroductionStepDefinition::new("add-layer", "Add Layer", "…", IntroductionAnchor::Action("addLayer".into()))
                         .advance_on(IntroductionAdvance::Action("addLayer".into())),
@@ -1552,14 +1552,14 @@ impl<Op> ActionEmit<Op> {
 
     /// @emoji 🔁 Preview pattern (a): a per-tick coalesced emission. The `coalesce_key` folds every
     /// tick of one live gesture (drag/scrub) into a single amendable edit, so the whole gesture is one
-    /// undo. Use for cheap per-tick ops (camera/opacity). See the `🔖ToolPreviewContract` doc region.
+    /// undo. Use for cheap per-tick ops (camera/opacity). See the `🔖UtilityPreviewContract` doc region.
     pub fn amend(ops: Vec<Op>, coalesce_key: impl Into<String>) -> Self {
         Self { ops, coalesce_key: Some(coalesce_key.into()), ..Default::default() }
     }
 
     /// @emoji 📌 Preview pattern (b): the gesture-end commit of an app-runtime scratch draft as one
     /// described edit (`coalesce_key: None`). Use for megabyte-scale content where per-tick amending
-    /// would be O(N²) (draw drafts, lowpoly strokes). See the `🔖ToolPreviewContract` doc region.
+    /// would be O(N²) (draw drafts, lowpoly strokes). See the `🔖UtilityPreviewContract` doc region.
     pub fn commit(ops: Vec<Op>, description: impl Into<String>) -> Self {
         Self { ops, description: Some(description.into()), ..Default::default() }
     }
@@ -1619,17 +1619,17 @@ macro_rules! app_action_enum {
 /// @emoji 🧩 Typed, per-app author surface. An app declares its `Projection` and `Op` (a
 /// `vcs::Operation<Projection>`), mutates nothing directly, and returns an {@link ActionEmit} whose
 /// operations flow through a persistent `DocumentVcsStore` owned by {@link VcsDocumentApp}. Ephemeral
-/// view state (selection/camera/active tool) lives in the app struct itself, not in the document.
+/// view state (selection/camera/active utility) lives in the app struct itself, not in the document.
 ///
-/// # 🔖ToolPreviewContract
+/// # 🔖UtilityPreviewContract
 /// The formalized actions-vs-utilities contract:
 /// - **Actions** are non-interactive: they carry optional declared `ActionArgDef`s, stage in the
 ///   renderer, and execute once. `Operation`-kind actions emit ops; `View`/`Shell`-kind actions must
 ///   emit **zero** ops ({@link VcsDocumentApp} enforces this — a View/Shell action returning ops is a
 ///   hard error).
-/// - **Tools** are interactive live-preview pointer modes. Exactly one tool is active per window kind;
-///   the active tool arrives via `view_state.active_utility_id` and is **never** stored in the document
-///   nor emitted as an op. Switching utilities dispatches the framework `setActiveTool` View action; on a
+/// - **Utilities** are interactive live-preview pointer modes. Exactly one utility is active per window kind;
+///   the active utility arrives via `view_state.active_utility_id` and is **never** stored in the document
+///   nor emitted as an op. Switching utilities dispatches the framework `setActiveUtility` View action; on a
 ///   switch the app must clear any in-progress preview scratch.
 /// - **Two blessed preview patterns** (both funnel through {@link ActionEmit}):
 ///   1. per-tick coalesced — {@link ActionEmit::amend} folds each tick of a gesture into one amendable
@@ -3435,7 +3435,7 @@ fn ui_refresh_section<T: Serialize>(value: &T, known_hash: Option<&str>) -> (Str
 /// to make with **one** call. `request_json` lists every section the host wants (windows/panels by
 /// `{key, bodyKey, hash}`, engagements/measures/labels each `{hash}`); the response includes a payload
 /// only for sections whose hash differs from what the host already holds. Toolbars are no longer a
-/// plugin section — the renderer derives them from the tool registry via `derive_utility_nodes`.
+/// plugin section — the renderer derives them from the utility registry via `derive_utility_nodes`.
 pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String, String> {
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -3738,10 +3738,10 @@ mod semio_plugin_macro_tests {
                 // 🧪 A deliberately mis-behaving View action: emits ops it must not — the registry-backed
                 // kind-discipline check rejects it.
                 "badView" => ActionEmit::ops(vec![TestOp::SetCount { value: 99 }]),
-                // 🧪 Reads the host-owned active tool from view state (never the document) and echoes it
-                // as an event — proving `setActiveTool` forwards `view_state.active_utility_id` and emits no ops.
+                // 🧪 Reads the host-owned active utility from view state (never the document) and echoes it
+                // as an event — proving `setActiveUtility` forwards `view_state.active_utility_id` and emits no ops.
                 "setActiveUtility" => ActionEmit::event(AppEvent {
-                    kind: "active-tool".into(),
+                    kind: "active-utility".into(),
                     payload: json!({ "utilityId": view_state.active_utility_id.clone().unwrap_or_default() }),
                 }),
                 "select" => {
@@ -3796,8 +3796,8 @@ mod semio_plugin_macro_tests {
     }
 
     /// 🧪 A registry-backed app declaring the contract-enforcement fixtures: an operation with a
-    /// required arg, one with a defaulted optional arg, a mis-behaving View action, and a tool (which
-    /// auto-injects the `setActiveTool` View action).
+    /// required arg, one with a defaulted optional arg, a mis-behaving View action, and a utility (which
+    /// auto-injects the `setActiveUtility` View action).
     fn contract_registry() -> AppActionRegistry {
         let app = App::from_builder(
             App::builder("synthetic-play", "Synthetic")
@@ -3993,14 +3993,14 @@ mod semio_plugin_macro_tests {
     }
 
     #[test]
-    fn set_active_tool_forwards_view_state_active_tool_and_emits_no_ops() {
+    fn set_active_utility_forwards_view_state_active_utility_and_emits_no_ops() {
         let mut app = contract_app_under_test();
         let view_state = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
         let result = app
             .handle_action("setActiveUtility", Some(&json!({ "utilityId": "brush" })), &view_state, &meta())
-            .expect("setActiveTool is a valid View action");
-        assert!(result.operations.is_empty(), "tool switching must not create history");
-        let event = result.events.iter().find(|event| event.kind == "active-tool").expect("echoed active tool");
+            .expect("setActiveUtility is a valid View action");
+        assert!(result.operations.is_empty(), "utility switching must not create history");
+        let event = result.events.iter().find(|event| event.kind == "active-utility").expect("echoed active utility");
         assert_eq!(event.payload, json!({ "utilityId": "brush" }));
     }
 

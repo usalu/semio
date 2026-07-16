@@ -384,11 +384,11 @@ if (import.meta.vitest) {
       expect(() => applyBackboneMessage(null, messageJson)).toThrow("unsupported backbone message kind: bogus");
     });
 
-    it("builds sync tools reflecting the active backbone kind", () => {
-      const tools = buildFrameworkSyncUtilities("folder:///tmp");
-      expect(tools.map((tool) => tool.id)).toEqual(["framework.sync.file", "framework.sync.folder", "framework.sync.remote"]);
-      expect(tools.find((tool) => tool.id === "framework.sync.folder")?.pressed).toBe(true);
-      expect(tools.find((tool) => tool.id === "framework.sync.file")?.pressed).toBe(false);
+    it("builds sync utilities reflecting the active backbone kind", () => {
+      const utilities = buildFrameworkSyncUtilities("folder:///tmp");
+      expect(utilities.map((utility) => utility.id)).toEqual(["framework.sync.file", "framework.sync.folder", "framework.sync.remote"]);
+      expect(utilities.find((utility) => utility.id === "framework.sync.folder")?.pressed).toBe(true);
+      expect(utilities.find((utility) => utility.id === "framework.sync.file")?.pressed).toBe(false);
     });
   });
 }

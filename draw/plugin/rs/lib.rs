@@ -984,9 +984,9 @@ fn render_canvas(document: &DrawDocument, interaction: &DrawInteractionState, ac
     let scene_nodes = flatten_draw_document_to_scene_nodes(document);
     let mut records: Vec<Value> = Vec::with_capacity(scene_nodes.len() + 4);
     records.push(json!({
-        "id": "meta:tool",
+        "id": "meta:utility",
         "role": "meta",
-        "tool": active_utility,
+        "utility": active_utility,
     }));
     for node in &scene_nodes {
         records.push(serde_json::to_value(node).unwrap_or(Value::Null));

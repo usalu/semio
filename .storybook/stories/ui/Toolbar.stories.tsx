@@ -207,13 +207,13 @@ export const RibbonLevels: Story = {
 
 // #region 🗂️RecursiveCategoryGroups
 
-type DemoToolLeaf = { readonly id: string; readonly icon: ComponentType<{ size?: number; className?: string }> };
-type DemoToolNode =
-  | { readonly id: string; readonly label: string; readonly icon: DemoToolLeaf["icon"]; readonly kind: "leaves"; readonly leaves: readonly DemoToolLeaf[] }
-  | { readonly id: string; readonly label: string; readonly icon: DemoToolLeaf["icon"]; readonly kind: "group"; readonly children: readonly DemoToolNode[] };
+type DemoUtilityLeaf = { readonly id: string; readonly icon: ComponentType<{ size?: number; className?: string }> };
+type DemoUtilityNode =
+  | { readonly id: string; readonly label: string; readonly icon: DemoUtilityLeaf["icon"]; readonly kind: "leaves"; readonly leaves: readonly DemoUtilityLeaf[] }
+  | { readonly id: string; readonly label: string; readonly icon: DemoUtilityLeaf["icon"]; readonly kind: "group"; readonly children: readonly DemoUtilityNode[] };
 
 /** @emoji 🪟 Window-scoped categories only (selection / tools) — what belongs in a window's own bottom-left panel. Mode-wide categories like actions/history/sync don't: they're shared across every window in the mode, so they live once in the footer instead (see {@link ModeWideFooterCategories}). */
-const WINDOW_CATEGORY_DEMO_TREE: readonly DemoToolNode[] = [
+const WINDOW_CATEGORY_DEMO_TREE: readonly DemoUtilityNode[] = [
   {
     id: "selection",
     label: "Selection",
@@ -255,7 +255,7 @@ const WINDOW_CATEGORY_DEMO_TREE: readonly DemoToolNode[] = [
   },
 ];
 
-const FOOTER_CATEGORY_DEMO_TREE: readonly DemoToolNode[] = [
+const FOOTER_CATEGORY_DEMO_TREE: readonly DemoUtilityNode[] = [
   {
     id: "actions",
     label: "Actions",
@@ -290,7 +290,7 @@ const FOOTER_CATEGORY_DEMO_TREE: readonly DemoToolNode[] = [
 ];
 
 /** @emoji 🗂️ Builds `up`-stacked ribbon rows from a demo tool tree: at most one active group per level, activating a level appends its children as another line, recursing until a leaves group is reached or nothing is active. Mirrors {@link buildToolbarRibbonSegments} in `@semio-tech/framework-renderer-react` for storybook without pulling in the full renderer package. */
-function buildRecursiveCategoryRows(tree: readonly DemoToolNode[], activePath: readonly string[], onActivate: (depth: number, value: string) => void): RibbonRow[] {
+function buildRecursiveCategoryRows(tree: readonly DemoUtilityNode[], activePath: readonly string[], onActivate: (depth: number, value: string) => void): RibbonRow[] {
   const rows: RibbonRow[] = [];
   let level = tree;
   let depth = 0;
@@ -339,7 +339,7 @@ function buildRecursiveCategoryRows(tree: readonly DemoToolNode[], activePath: r
   return rows;
 }
 
-const CategoryGroupsDemo = ({ tree, direction }: { readonly tree: readonly DemoToolNode[]; readonly direction: "up" | "inline" }) => {
+const CategoryGroupsDemo = ({ tree, direction }: { readonly tree: readonly DemoUtilityNode[]; readonly direction: "up" | "inline" }) => {
   const [activePath, setActivePath] = useState<readonly string[]>([]);
   const onActivate = (depth: number, value: string) => {
     setActivePath((previous) => (value ? [...previous.slice(0, depth), value] : previous.slice(0, depth)));

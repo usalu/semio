@@ -2648,6 +2648,15 @@ export type UiTranslationSchema = {
       readonly unavailable: UiLabelValue;
       readonly resetDock: UiLabelValue;
     };
+    readonly command: {
+      readonly setAppearance: UiLabelValue;
+      readonly setTheme: UiLabelValue;
+      readonly setLayout: UiLabelValue;
+      readonly toggleCompact: UiLabelValue;
+      readonly setLocale: UiLabelValue;
+      readonly setTerminology: UiLabelValue;
+      readonly setExpertise: UiLabelValue;
+    };
     readonly toolbar: {
       readonly group: {
         readonly parent: UiLabelValue;
@@ -2670,6 +2679,8 @@ export type UiTranslationSchema = {
       readonly windowOptions: UiLabelValue;
       readonly focus: UiLabelValue;
       readonly unfocus: UiLabelValue;
+      readonly example: UiLabelValue;
+      readonly noExample: UiLabelValue;
     };
     readonly docs: {
       readonly navigation: {
@@ -3094,6 +3105,15 @@ export const uiChromeTranslationBundles = {
           },
           unavailable: { label: { normal: "Einstellungen nicht verfuegbar", beginner: "Einstellungen nicht verfuegbar" } },
           resetDock: { label: { normal: "Panels zuruecksetzen", beginner: "Panels zuruecksetzen" } },
+        },
+        command: {
+          setAppearance: { label: { normal: "Erscheinungsbild festlegen", beginner: "Erscheinungsbild festlegen" } },
+          setTheme: { label: { normal: "Thema festlegen", beginner: "Thema festlegen" } },
+          setLayout: { label: { normal: "Layout festlegen", beginner: "Layout festlegen" } },
+          toggleCompact: { label: { normal: "Kompakt umschalten", beginner: "Kompakt umschalten" } },
+          setLocale: { label: { normal: "Sprache festlegen", beginner: "Sprache festlegen" } },
+          setTerminology: { label: { normal: "Terminologie festlegen", beginner: "Terminologie festlegen" } },
+          setExpertise: { label: { normal: "Erfahrungsniveau festlegen", beginner: "Erfahrungsniveau festlegen" } },
         },
         toolbar: {
           group: {
@@ -3564,6 +3584,15 @@ export const uiChromeTranslationBundles = {
           },
           unavailable: { label: { normal: "Settings unavailable", beginner: "Settings unavailable" } },
           resetDock: { label: { normal: "Reset panels", beginner: "Reset panels" } },
+        },
+        command: {
+          setAppearance: { label: { normal: "Set Appearance", beginner: "Set Appearance" } },
+          setTheme: { label: { normal: "Set Theme", beginner: "Set Theme" } },
+          setLayout: { label: { normal: "Set Layout", beginner: "Set Layout" } },
+          toggleCompact: { label: { normal: "Toggle Compact", beginner: "Toggle Compact" } },
+          setLocale: { label: { normal: "Set Locale", beginner: "Set Locale" } },
+          setTerminology: { label: { normal: "Set Terminology", beginner: "Set Terminology" } },
+          setExpertise: { label: { normal: "Set Expertise", beginner: "Set Expertise" } },
         },
         toolbar: {
           group: {
@@ -4840,7 +4869,7 @@ export const floatingTagOffClass = "bg-transparent text-muted-foreground";
 export const canvasViewportClass = "relative h-full min-h-0 w-full min-w-0 bg-canvas outline-none";
 
 /** @emoji 📑 Panel tab strip base — sits above {@link panelChromeFrameLayerClass}; tabs sit flush against the panel's edges (no side inset — only tree/content rows carry that). `w-full` so the strip's divider border spans the whole row, not just the tabs' content width. Border side is added by callers ({@link panelTabBarClass}, {@link panelAnchorTabBarClass}). */
-const panelTabBarBaseClass = "relative z-40 flex w-full min-w-0 items-center shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single px-single gap-single py-tiny";
+const panelTabBarBaseClass = "relative z-40 flex w-full min-w-0 items-center shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single";
 
 /** @emoji 📑 Panel tab strip with its divider on the content-facing side. */
 export const panelTabBarClass = cn(panelTabBarBaseClass, borderNormalBottomClass);
@@ -4853,8 +4882,9 @@ export const panelTabLabelClass = "min-w-0 truncate text-xs leading-none";
 
 /** @emoji 📑 Panel tab button with icon and mandatory name (no per-tab borders — {@link panelTabBarClass} owns dividers). */
 export const panelTabButtonClass = cn(
-  "inline-flex h-full min-h-0 shrink-0 items-center gap-tiny border-0 bg-transparent p-0 rounded-sm",
+  "inline-flex h-full min-h-0 shrink-0 items-center gap-tiny border-r border-solid !border-normal last:border-r-0 bg-transparent p-0",
   "cursor-pointer whitespace-nowrap text-xs leading-none text-element transition-colors",
+  "outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-active-base",
   selfHoverExcludingHandle("bg-hover-interactive-fill"),
   selfHoverExcludingHandle("text-emphasized"),
 );
@@ -5321,7 +5351,13 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
                   <Icon size={12} />
                 </span>
                 <span className={panelTabLabelClass}>{tab.name}</span>
-                {anchor && dock ? <DragHandle onPointerDown={(event) => dock.startTabDrag(anchor, tab.id, tab.name, event)} onClick={(event) => event.stopPropagation()} /> : null}
+                {anchor && dock ? (
+                  <DragHandle
+                    onPointerDown={(event) => dock.startTabDrag(anchor, tab.id, tab.name, event)}
+                    onClick={(event) => event.stopPropagation()}
+                    emphasized={(isActive && showActiveColor) || isUnitDropReady}
+                  />
+                ) : null}
               </button>
             </ChromeControlHint>
           </React.Fragment>
@@ -13041,6 +13077,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   );
   const itemContentFillClassName = cn(treeRowChromeContentFillClasses(isSelected, isHighlighted, loading), isDropReady && dropZoneReadyFillClass);
   const treeLabelSelectClass = draggable && dragInitiation === "surface" ? "select-none" : "select-text";
+  const rowEmphasized = isSelected || isHighlighted || isDropReady;
 
   if (layoutKind === "property") {
     return (
@@ -13101,7 +13138,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               >
                 <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
                   <div className={treeHeaderMainClassName}>
-                    {renderTreeRowIcon(icon, isExpandable ? "folder" : "file-text")}
+                    {renderTreeRowIcon(icon, isExpandable ? "folder" : "file-text", rowEmphasized)}
                     <span
                       data-slot="tree-label"
                       title={controlHint}
@@ -13127,7 +13164,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                     </div>
                   )}
                   {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-                  {draggable && <DragHandle onPointerDown={dragInitiation === "handle" ? armDrag : undefined} />}
+                  {draggable && <DragHandle onPointerDown={dragInitiation === "handle" ? armDrag : undefined} emphasized={rowEmphasized} />}
                 </div>
               </TreeAlignedRow>
             );
@@ -13215,7 +13252,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               >
                 <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
                   <div className={treeHeaderMainClassName}>
-                    {renderTreeRowIcon(icon, "folder")}
+                    {renderTreeRowIcon(icon, "folder", rowEmphasized)}
                     <span
                       data-slot="tree-label"
                       className={cn(treeItemLabelSlotClassName, "cursor-selectable")}
@@ -13262,7 +13299,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                       </button>
                     </div>
                   )}
-                  {draggable && <DragHandle onPointerDown={dragInitiation === "handle" ? armDrag : undefined} />}
+                  {draggable && <DragHandle onPointerDown={dragInitiation === "handle" ? armDrag : undefined} emphasized={rowEmphasized} />}
                 </div>
               </TreeAlignedRow>
             </div>
@@ -13320,7 +13357,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" contentChromeClassName={itemContentFillClassName}>
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
-              {renderTreeRowIcon(icon, "file-text")}
+              {renderTreeRowIcon(icon, "file-text", rowEmphasized)}
               <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, draggable && dragInitiation === "surface" ? "cursor-grab" : "cursor-selectable", treeLabelSelectClass)} style={treeItemLabelStyle}>
                 {resolvedLabel as React.ReactNode}
               </span>
@@ -13357,7 +13394,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 </button>
               </div>
             )}
-            {draggable && <DragHandle onPointerDown={dragInitiation === "handle" ? armDrag : undefined} />}
+            {draggable && <DragHandle onPointerDown={dragInitiation === "handle" ? armDrag : undefined} emphasized={rowEmphasized} />}
           </div>
         </TreeAlignedRow>
       </div>
@@ -15565,7 +15602,7 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
         const onUnitOpenStateChange = onTreeOpenStateChange ? (id: string, open: boolean) => onTreeOpenStateChange(`${unitPrefix}${id}`, open) : undefined;
         return (
           <React.Fragment key={unit.id}>
-            {unit.label ? (
+            {unit.label || draggable ? (
               <div
                 data-slot="panel-tree-unit-header"
                 draggable={draggable}
@@ -15598,10 +15635,16 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
                       }
                     : undefined
                 }
-                className={cn("flex shrink-0 items-center gap-single px-single py-half text-2xs text-muted-foreground", draggable && "cursor-grab active:cursor-grabbing", unitDragActive && dropZoneReadyClass)}
+                className={cn(
+                  "flex shrink-0 items-center gap-single px-single py-half text-2xs",
+                  unitDragActive ? "text-emphasized" : "text-muted-foreground",
+                  draggable && "cursor-grab active:cursor-grabbing",
+                  unitDragActive && dropZoneReadyFillClass,
+                )}
               >
                 {UnitIcon ? <UnitIcon size={12} /> : null}
                 <span className="min-w-0 truncate">{unit.label}</span>
+                {draggable ? <DragHandle className="ms-auto" emphasized={unitDragActive} /> : null}
               </div>
             ) : null}
             <Tree
@@ -15646,7 +15689,12 @@ function PanelEmptyDockZone({ anchor }: { readonly anchor: PanelAnchor }) {
     <div
       ref={setRef}
       data-slot="panel-empty-drop-zone"
-      className={cn("flex h-medium min-w-[10rem] items-center justify-center rounded-sm border border-dashed text-muted-foreground", borderNormalClass, dropZoneReadyClass, isDropAnchor && "border-accent text-accent")}
+      className={cn(
+        "flex h-medium min-w-[10rem] items-center justify-center rounded-sm border border-dashed",
+        borderNormalClass,
+        dropZoneReadyFillClass,
+        isDropAnchor ? "border-accent text-accent" : "text-emphasized",
+      )}
     >
       <Icon icon="grip-vertical" size="small" />
     </div>
@@ -17036,8 +17084,8 @@ export interface WindowConfig {
   controls?: React.ReactNode;
   measures?: React.ReactNode;
   toolbar?: React.ReactNode;
-  /** @emoji 🎯 Tool Options rail body — tool-scoped measure controls, stacked directly above the toolbar (bottom-left) since they belong to the active tool. Rendered only when non-empty; reserves no space when absent. */
-  toolOptions?: React.ReactNode;
+  /** @emoji 🎯 Utility Options rail body — utility-scoped measure controls, stacked directly above the toolbar (bottom-left) since they belong to the active utility. Rendered only when non-empty; reserves no space when absent. */
+  utilityOptions?: React.ReactNode;
   /** @emoji 🎛 Bottom-right (free-corner) Actions rail body; folds to a chip by default. */
   actionPane?: React.ReactNode;
   /** @emoji 🎛 Controlled fold state for the Actions rail (default true); externally settable so the palette/keybinding redirect can force-unfold. */
@@ -17125,7 +17173,7 @@ const Window: React.FC<WindowProps> = ({
   controls,
   measures,
   toolbar,
-  toolOptions,
+  utilityOptions,
   actionPane,
   actionsFolded: actionsFoldedProp,
   onActionsFoldedChange,
@@ -17333,10 +17381,10 @@ const Window: React.FC<WindowProps> = ({
           {!measuresExpanded ? (
             <GlassTierProvider tier="windowOptions">
               <div data-slot="window-toolbar-overlay" data-folded={toolbarFolded ? "true" : undefined} className={windowToolbarOverlayClass}>
-                {toolOptions ? (
-                  <div data-dim data-slot="window-tool-options" className={cn(windowMeasuresStackClass, windowMeasuresStackFoldedClass, "mb-single")}>
-                    <div data-slot="window-tool-options-body" className={windowMeasuresBodyClass}>
-                      {toolOptions}
+                {utilityOptions ? (
+                  <div data-dim data-slot="window-utility-options" className={cn(windowMeasuresStackClass, windowMeasuresStackFoldedClass, "mb-single")}>
+                    <div data-slot="window-utility-options-body" className={windowMeasuresBodyClass}>
+                      {utilityOptions}
                     </div>
                   </div>
                 ) : null}
@@ -22206,31 +22254,34 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
     return isLastBeforeGap ? modeDockInactiveTabBeforeGapClass : cn(modeDockInactiveTabClass, baselineBottomClass);
   };
 
-  const renderTab = (tab: (typeof tabs)[number], stackIndex: number) => (
-    <div
-      key={tab.id}
-      data-slot="mode-dock-tab"
-      data-window-id={tab.id}
-      data-stack-active={activeId === tab.id ? "true" : undefined}
-      data-active={activeWindowId === tab.id ? "true" : undefined}
-      className={cn(
-        modeDockTabClassName,
-        !perTabActiveChrome && "bg-window",
-        perTabActiveChrome && activeId !== tab.id && inactiveTabChromeClass(stackIndex),
-        perTabActiveChrome && activeId === tab.id && !stackGloballyActive && inactiveTabChromeClass(stackIndex),
-        perTabActiveChrome && activeId === tab.id && stackGloballyActive && modeDockActiveTabClass,
-        !perTabActiveChrome && activeWindowId === tab.id && modeDockActiveTabFillClass,
-      )}
-      onClick={() => onSelectTab(tab.id)}
-      onPointerUp={(event) => {
-        if (event.button !== 0) return;
-        dock?.clearPendingDrag?.(event.pointerId);
-      }}
-    >
-      <span className="truncate">{tab.title}</span>
-      <DragHandle onPointerDown={(event) => dock?.startTabDrag(tab.id, stackPath, stackIndex, tab.title, event)} onClick={(event) => event.stopPropagation()} />
-    </div>
-  );
+  const renderTab = (tab: (typeof tabs)[number], stackIndex: number) => {
+    const tabActive = perTabActiveChrome ? activeId === tab.id && stackGloballyActive : activeWindowId === tab.id;
+    return (
+      <div
+        key={tab.id}
+        data-slot="mode-dock-tab"
+        data-window-id={tab.id}
+        data-stack-active={activeId === tab.id ? "true" : undefined}
+        data-active={activeWindowId === tab.id ? "true" : undefined}
+        className={cn(
+          modeDockTabClassName,
+          !perTabActiveChrome && "bg-window",
+          perTabActiveChrome && activeId !== tab.id && inactiveTabChromeClass(stackIndex),
+          perTabActiveChrome && activeId === tab.id && !stackGloballyActive && inactiveTabChromeClass(stackIndex),
+          perTabActiveChrome && activeId === tab.id && stackGloballyActive && modeDockActiveTabClass,
+          !perTabActiveChrome && activeWindowId === tab.id && modeDockActiveTabFillClass,
+        )}
+        onClick={() => onSelectTab(tab.id)}
+        onPointerUp={(event) => {
+          if (event.button !== 0) return;
+          dock?.clearPendingDrag?.(event.pointerId);
+        }}
+      >
+        <span className="truncate">{tab.title}</span>
+        <DragHandle onPointerDown={(event) => dock?.startTabDrag(tab.id, stackPath, stackIndex, tab.title, event)} onClick={(event) => event.stopPropagation()} emphasized={tabActive} />
+      </div>
+    );
+  };
 
   const controlsCap = (
     <div data-slot="mode-dock-controls-cap" className={cn(perTabActiveChrome ? (stackGloballyActive ? windowControlsCapActiveSplitClass : windowControlsCapClass) : stackGloballyActive ? windowControlsCapActiveClass : windowControlsCapClass)}>
@@ -23564,7 +23615,7 @@ if (import.meta.vitest) {
       expect(activeButton?.className).toContain("text-emphasized");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className).toContain("overflow-x-auto");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className).toContain("z-40");
-      expect(container.querySelector('[data-slot="panel-tabs"]')?.className?.split(" ")).toContain("px-single");
+      expect(container.querySelector('[data-slot="panel-tabs"]')?.className?.split(" ")).not.toContain("px-single");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className?.split(" ")).toContain("w-full");
       expect(container.querySelector('[data-slot="panel-chrome-frame"]')?.className).toContain("z-30");
     });

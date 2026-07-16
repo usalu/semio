@@ -149,7 +149,7 @@ type WorldFillBuildRecord = {
 };
 
 type WorldInteractionRecord = {
-  readonly activeTool?: string;
+  readonly activeUtility?: string;
   readonly brushCandidateIndex?: number;
   readonly hoveredVortexFullId?: string;
   readonly fillEditTargetVolumes?: boolean;
@@ -559,8 +559,8 @@ export function resolveWorldContextMenuTarget(interaction: WorldInteractionRecor
 }
 
 /** @emoji 🚫 Instance-mesh picking must be disabled for fill/brush engagements — otherwise a click meant for a vortex marker or a fill/voxel gesture falls through and selects/gumballs the underlying object instead. */
-export function worldInstancePickBlocked(activeTool: string | undefined): boolean {
-  return activeTool === "fill" || activeTool === "brush";
+export function worldInstancePickBlocked(activeUtility: string | undefined): boolean {
+  return activeUtility === "fill" || activeUtility === "brush";
 }
 
 /** @emoji 🖱️ In brush mode or vertex selection mode, pointer-down on a vortex persists it as the brush target/selection (`worldVortexSelect`); outside these modes it starts a drag-to-connect gesture instead. */
@@ -1966,9 +1966,9 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const environment = useMemo(() => parseEnvironment(scene?.environmentJson), [scene?.environmentJson]);
   const frame = useMemo(() => parseFrame(scene?.frameJson), [scene?.frameJson]);
   const fit = useMemo(() => parseFit(scene?.fitJson), [scene?.fitJson]);
-  const activeTool = interaction.activeTool ?? "select";
-  const fillMode = activeTool === "fill";
-  const brushMode = activeTool === "brush";
+  const activeUtility = interaction.activeUtility ?? "select";
+  const fillMode = activeUtility === "fill";
+  const brushMode = activeUtility === "brush";
   const hostRef = useRef<HTMLDivElement | null>(null);
   const instancesGroupRef = useRef<Group | null>(null);
   const lodRef = useRef(DEFAULT_MANUAL_LOD);
@@ -2138,11 +2138,11 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   }, [dispatch, interaction.suggestionMenu?.open, interaction.suggestionMenu?.pending]);
 
   useEffect(() => {
-    if (activeTool === "fill" && interaction.fillBuild && !interaction.fillBuild.done) {
+    if (activeUtility === "fill" && interaction.fillBuild && !interaction.fillBuild.done) {
       const timer = window.setInterval(() => dispatch("fillBuildTick"), 120);
       return () => window.clearInterval(timer);
     }
-  }, [activeTool, dispatch, interaction.fillBuild]);
+  }, [activeUtility, dispatch, interaction.fillBuild]);
 
   const selectionArgs = useCallback(
     () => ({
@@ -2562,7 +2562,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
                 onFaceDragStart={handleFaceDragStart}
                 mergedComponentIds={marqueePreview.mergedComponentIds}
                 mergedInstanceIds={marqueePreview.mergedInstanceIds}
-                blockPick={worldInstancePickBlocked(activeTool)}
+                blockPick={worldInstancePickBlocked(activeUtility)}
                 environment={environment}
               />
             </group>

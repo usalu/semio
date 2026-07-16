@@ -14,7 +14,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::{
     board_json_locked_option, board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
     handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero,
-    normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_json, property_bag_to_json, rectangle_handle_angle_toward, selection_drag_enclosing, selection_drag_shape, ActiveTool, BoardElementStyleKind, CachedIconBody, CompatSpecificity, EdgeData, EdgeDescJson,
+    normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_json, property_bag_to_json, rectangle_handle_angle_toward, selection_drag_enclosing, selection_drag_shape, ActiveUtility, BoardElementStyleKind, CachedIconBody, CompatSpecificity, EdgeData, EdgeDescJson,
     EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry, FixtureJson, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate,
     NodeShape, SceneDescriptorJson, SelectionOptions, CanvasPalette, WireData, WireKindDef,
 };
@@ -290,7 +290,7 @@ pub struct BoardHost {
     /// @emoji 📶 LOD tier pinned for the active wheel gesture so pan/zoom does not rebuild {@link BoardHost.world_content_cache} on every band crossing.
     wheel_zoom_render_lod: Option<BoardDrawLod>,
     /// @emoji 🖌️ Active viewport utility (`select` suppresses brush slot logic).
-    active_utility: ActiveTool,
+    active_utility: ActiveUtility,
     suggestion_offset: f64,
     brush_node_size: f64,
     brush_slot_source_id: Option<String>,
@@ -358,7 +358,7 @@ impl Default for BoardHost {
             world_content_cache: RefCell::new(None),
             wheel_zoom_active: false,
             wheel_zoom_render_lod: None,
-            active_utility: ActiveTool::Select,
+            active_utility: ActiveUtility::Select,
             suggestion_offset: DEFAULT_SUGGESTION_OFFSET,
             brush_node_size: DEFAULT_BRUSH_NODE_SIZE,
             brush_slot_source_id: None,
@@ -2332,11 +2332,11 @@ impl BoardHost {
     }
 
     pub fn set_active_utility(&mut self, label: &str) {
-        let next = if label == "brush" { ActiveTool::Brush } else { ActiveTool::Select };
+        let next = if label == "brush" { ActiveUtility::Brush } else { ActiveUtility::Select };
         if self.active_utility == next {
             return;
         }
-        if self.active_utility == ActiveTool::Brush {
+        if self.active_utility == ActiveUtility::Brush {
             self.brush_finish_slot();
         }
         self.active_utility = next;
@@ -2350,7 +2350,7 @@ impl BoardHost {
             return;
         }
         self.suggestion_offset = d;
-        if self.active_utility == ActiveTool::Brush {
+        if self.active_utility == ActiveUtility::Brush {
             self.brush_preview_emit_key = None;
             self.brush_rebuild_preview();
         }
@@ -2383,7 +2383,7 @@ impl BoardHost {
                 }
             }
         }
-        if self.active_utility != ActiveTool::Brush {
+        if self.active_utility != ActiveUtility::Brush {
             return;
         }
         if let Some(source) = self.brush_slot_source_id.clone() {
@@ -2401,7 +2401,7 @@ impl BoardHost {
             return;
         }
         self.brush_node_size = s;
-        if self.active_utility == ActiveTool::Brush {
+        if self.active_utility == ActiveUtility::Brush {
             self.brush_preview_emit_key = None;
             self.brush_rebuild_preview();
         }
@@ -4651,7 +4651,7 @@ impl BoardHost {
             if self.fixture_drop_preview.is_some() {
                 self.append_fixture_drop_preview_paint(&mut preview_layer, lod, true);
             }
-            if self.active_utility == ActiveTool::Brush || self.brush_preview.is_some() {
+            if self.active_utility == ActiveUtility::Brush || self.brush_preview.is_some() {
                 self.append_brush_preview_paint(&mut preview_layer, lod, true);
             }
             scene.append(&preview_layer, Some(cam_aff));
@@ -4659,7 +4659,7 @@ impl BoardHost {
             if self.fixture_drop_preview.is_some() {
                 self.append_fixture_drop_preview_paint(scene, lod, false);
             }
-            if self.active_utility == ActiveTool::Brush || self.brush_preview.is_some() {
+            if self.active_utility == ActiveUtility::Brush || self.brush_preview.is_some() {
                 self.append_brush_preview_paint(scene, lod, false);
             }
         }
@@ -5115,7 +5115,7 @@ impl BoardHost {
         self.set_selection_screen_preview(None);
         let screen = Point::new(sx, sy);
         let world = self.screen_to_world(screen);
-        if self.active_utility == ActiveTool::Brush {
+        if self.active_utility == ActiveUtility::Brush {
             if button == 1 {
                 self.interaction = Interaction::Pan { origin: self.camera.clone(), start_screen: screen };
             }
@@ -5237,7 +5237,7 @@ impl BoardHost {
     pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         let screen = Point::new(sx, sy);
         let world = self.screen_to_world(screen);
-        if self.active_utility == ActiveTool::Brush {
+        if self.active_utility == ActiveUtility::Brush {
             self.brush_update_alt(alt);
             match std::mem::replace(&mut self.interaction, Interaction::None) {
                 Interaction::Pan { origin, start_screen } => {
@@ -5369,7 +5369,7 @@ impl BoardHost {
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         let screen = Point::new(sx, sy);
         let world = self.screen_to_world(screen);
-        if self.active_utility == ActiveTool::Brush {
+        if self.active_utility == ActiveUtility::Brush {
             self.brush_update_alt(alt);
             if matches!(self.interaction, Interaction::Pan { .. }) {
                 self.interaction = Interaction::None;
@@ -5469,7 +5469,7 @@ impl BoardHost {
     }
 
     pub fn pointer_leave_screen(&mut self, alt: bool) {
-        if self.active_utility == ActiveTool::Brush {
+        if self.active_utility == ActiveUtility::Brush {
             self.brush_update_alt(alt);
             self.brush_finish_slot();
             self.set_hovered_id(None);

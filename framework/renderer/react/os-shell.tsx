@@ -389,7 +389,7 @@ type SpawnedWindowState = {
 
 /**
  * 🧰 Per-window Action rail (P1–P5) state: fold/expand chrome, locally-buffered staged arg values
- * (keyed `${windowId}:${actionId}`, never dispatched until Execute), and the host-owned active tool per
+ * (keyed `${windowId}:${actionId}`, never dispatched until Execute), and the host-owned active utility per
  * window (never a document field, never a VCS op). See {@link WindowActionPane}.
  */
 type ActionPaneState = {
@@ -812,7 +812,7 @@ const S_HOME_CONTROLLER_ID = "s-home";
 const S_PLAY_APP_ID = "studio";
 const S_PLAY_CONTROLLER_ID = "s-play";
 const S_PLAY_CATALOGUE_TAB_ID = "s-play-catalogue";
-/** @emoji 🧭 Starting width for each panel anchor — `top-left`/`top-right` mirror the old left/right side-panel defaults; `bottom-left`/`bottom-right` host the sync card and a compact tool tree, so a narrower default suits them; the middle anchors start empty but default wider since they grow both ways and tend to host transient centered content (e.g. search). */
+/** @emoji 🧭 Starting width for each panel anchor — `top-left`/`top-right` mirror the old left/right side-panel defaults; `bottom-left`/`bottom-right` host the sync card and a compact utility tree, so a narrower default suits them; the middle anchors start empty but default wider since they grow both ways and tend to host transient centered content (e.g. search). */
 const DEFAULT_PANEL_SIZES: Record<PanelAnchor, number> = {
   "top-left": 280,
   "top-middle": 360,
@@ -1474,7 +1474,7 @@ function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, o
   return <WindowMeasuresTree>{measures.map((measure) => renderWindowMeasure(measure, onAction))}</WindowMeasuresTree>;
 }
 
-function SelectionToolOptions({ activeUtilityId, windowId, onAction }: { readonly activeUtilityId: string | undefined; readonly windowId: string; readonly onAction: (action: ActionDescriptor) => void }) {
+function SelectionUtilityOptions({ activeUtilityId, windowId, onAction }: { readonly activeUtilityId: string | undefined; readonly windowId: string; readonly onAction: (action: ActionDescriptor) => void }) {
   const selectionMethod = activeUtilityId === "selectLasso" ? "lasso" : "rectangle";
 
   const [selectionMode, setSelectionMode] = useState<"default" | "additive" | "subtractive" | "invertive">(() => {
@@ -1714,7 +1714,7 @@ export function resolveKeybindingIntent(definition: ActionDefinition | undefined
   return { kind: "open", actionId: definition.id };
 }
 
-/** 🧰 Pure P5 activation decision: an empty request, or re-requesting the already-active tool, deactivates (null); otherwise the requested tool becomes active. */
+/** 🧰 Pure P5 activation decision: an empty request, or re-requesting the already-active utility, deactivates (null); otherwise the requested utility becomes active. */
 export function resolveUtilityActivation(current: string | null | undefined, requested: string): string | null {
   return requested === "" || (current ?? null) === requested ? null : requested;
 }
@@ -1738,7 +1738,7 @@ export type WindowActionPaneProps = {
  * actions expand a locally-buffered staged form — nothing dispatches on edit, effective value is
  * `staged ?? default ?? unset`, Execute is enabled only when every required arg has an effective value,
  * fires exactly ONE `ActionDescriptor` with the merged args, and keeps the staged values afterward.
- * When `disabled` (an active tool with `allowsActionsWhileActive === false`), every row renders disabled.
+ * When `disabled` (an active utility with `allowsActionsWhileActive === false`), every row renders disabled.
  */
 export function WindowActionPane(props: WindowActionPaneProps): ReactElement {
   const { windowId, controllerId, actions, expandedActionId, stagedArgsByKey, disabled, onExpandedChange, onStageArg, onResetArgs, onExecute } = props;
@@ -1796,15 +1796,15 @@ type ActionPaneSlice = Pick<ActionPaneState, "expandedByWindowId" | "stagedArgsB
 /**
  * 🧰 Sibling of {@link utilityBarNode}: resolves a window kind's panel-eligible actions and returns a
  * bound {@link WindowActionPane}, or `undefined` when the window has no resolved actions (so the rail
- * chip never renders). Rows render disabled while an active tool gates actions
+ * chip never renders). Rows render disabled while an active utility gates actions
  * (`allowsActionsWhileActive === false`).
  */
 function windowActionPaneNode(app: AppDefinition, windowKind: AppWindowKindDefinition, windowId: string, actionPane: ActionPaneSlice, onAction: (action: ActionDescriptor) => void, dispatch: (action: ShellAction) => void): ReactNode {
   const actions = resolveWindowActions(app, windowKind);
   if (actions.length === 0) return undefined;
   const activeUtilityId = actionPane.activeUtilityByWindowId[windowId] ?? null;
-  const activeTool = activeUtilityId ? (app.utilities ?? []).find((tool) => tool.id === activeUtilityId) : undefined;
-  const disabled = Boolean(activeTool && activeTool.allowsActionsWhileActive === false);
+  const activeUtility = activeUtilityId ? (app.utilities ?? []).find((utility) => utility.id === activeUtilityId) : undefined;
+  const disabled = Boolean(activeUtility && activeUtility.allowsActionsWhileActive === false);
   return (
     <WindowActionPane
       windowId={windowId}
@@ -2144,9 +2144,9 @@ function uiJsonDeepEqual(a: unknown, b: unknown): boolean {
 
 /**
  * @emoji 🐢 Reuses `previous`'s object identity when it's structurally equal to `next` — every plugin
- * `render()`/`tools()`/`windowEngagements()`/`windowMeasures()` call re-parses a fresh JSON payload
+ * `render()`/`utilities()`/`windowEngagements()`/`windowMeasures()` call re-parses a fresh JSON payload
  * every time, even when nothing about that body actually changed (e.g. a camera-only or selection-only
- * action still returns byte-identical panel/tool JSON). Without this, every downstream `React.memo`
+ * action still returns byte-identical panel/utility JSON). Without this, every downstream `React.memo`
  * (see `InterpretedUiNode`) sees a new prop reference every render and can never bail.
  */
 export function preserveJsonIdentity<T>(previous: T | undefined, next: T): T {
@@ -2364,8 +2364,8 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
   }, [session?.app.id, session?.app.introduction]);
 
-  // 🧰 Refs so `refreshUi`/`onAction`/`applyHostEffects` can read the current host-owned active tool and
-  // active window without re-creating those callbacks on every tool switch.
+  // 🧰 Refs so `refreshUi`/`onAction`/`applyHostEffects` can read the current host-owned active utility and
+  // active window without re-creating those callbacks on every utility switch.
   const activeUtilityByWindowIdRef = useRef(activeUtilityByWindowId);
   activeUtilityByWindowIdRef.current = activeUtilityByWindowId;
   const activeWindowIdRef = useRef(activeWindowId);
@@ -2508,7 +2508,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       const viewState: ViewState = injectActiveUtility({ ...nextSession.viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology });
       const panelTabLeaves = flattenPanelTabLeaves(nextSession.app.panelTabs);
       // 🐢 One batched, hash-conditional round trip replaces the old ~12 sequential
-      // render/tools/windowEngagements/windowMeasures/appLabels calls — the plugin omits payloads for
+      // render/utilities/windowEngagements/windowMeasures/appLabels calls — the plugin omits payloads for
       // any section whose hash still matches what `cache` already holds.
       const request = buildUiRefreshRequest(scope, nextSession.app.windowKinds, panelTabLeaves, viewState, cache);
       if (request) {
@@ -2606,7 +2606,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
       const fullViewState: ViewState = injectActiveUtility({ ...viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology }, spawned.id);
       const bodyKey = resolveCanvasBodyKey(app);
-      // 🐢 A spawned instance's view is a single body + tools + engagements + measures (no panels, no
+      // 🐢 A spawned instance's view is a single body + utilities + engagements + measures (no panels, no
       // labels) — that's already the minimal grouping, so there is no narrower-than-full "partial" scope
       // worth expressing here; only `none` (handled above) short-circuits the request.
       const singleWindowKind = [{ id: bodyKey, bodyKey }];
@@ -2776,7 +2776,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           continue;
         }
         if ("setActiveUtility" in effect) {
-          // 🧰 A plugin programmatically switched tool: mirror it into the host-owned store slice and,
+          // 🧰 A plugin programmatically switched utility: mirror it into the host-owned store slice and,
           // when it targets the active window, into the view state fed to the follow-up refresh.
           const { windowKindId, utilityId } = effect.setActiveUtility;
           dispatch({ type: "SET_ACTIVE_UTILITY", windowId: windowKindId, utilityId: utilityId || null });
@@ -3073,10 +3073,10 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         }
       };
 
-      // 🧰 Tool activation (P5): host-owned session state, never a document op. Re-clicking the active
-      // tool (or an empty utilityId) deactivates. We resolve the target window from the descriptor's tagged
+      // 🧰 Utility activation (P5): host-owned session state, never a document op. Re-clicking the active
+      // utility (or an empty utilityId) deactivates. We resolve the target window from the descriptor's tagged
       // `windowId` (see `tagSetActiveUtilityWindow`), falling back to the active window, update the store,
-      // then forward the resolved tool to the plugin so it can clear/prepare scratch.
+      // then forward the resolved utility to the plugin so it can clear/prepare scratch.
       if (action.action === SET_ACTIVE_UTILITY_ACTION_ID) {
         const args = typeof action.args === "object" && action.args != null ? (action.args as { utilityId?: unknown; windowId?: unknown }) : {};
         const windowId = typeof args.windowId === "string" && args.windowId ? args.windowId : (activeWindowIdRef.current ?? "");
@@ -3093,7 +3093,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           void plugin
             .handleAction(session.instanceId, JSON.stringify(forwarded), viewState)
             .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope)))
-            .catch((toolError) => console.error("[DEBUG] setActiveUtility failed", toolError));
+            .catch((utilityError) => console.error("[DEBUG] setActiveUtility failed", utilityError));
         }
         return;
       }
@@ -3590,7 +3590,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     const actionById = new Map(session.app.actions.map((action) => [action.id, action]));
     const onKeyDown = (event: KeyboardEvent) => {
       if (isEditableTarget(event.target)) return;
-      // 🧰 Escape deactivates the active window's active tool (P5) when nothing is being typed.
+      // 🧰 Escape deactivates the active window's active utility (P5) when nothing is being typed.
       if (event.key === "Escape") {
         const windowId = activeWindowIdRef.current;
         if (windowId && activeUtilityByWindowIdRef.current[windowId]) {
@@ -3663,7 +3663,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
 
   const settingsRightTabs = useMemo((): PanelTabNode[] => frameworkSettingsTabs, [frameworkSettingsTabs]);
 
-  //#region 🧰FooterToolLeaves — bottom-right's History tab, now sourced from the framework-owned History
+  //#region 🧰FooterUtilityLeaves — bottom-right's History tab, now sourced from the framework-owned History
   // actions in the app registry (the plugin `list-tools` surface is gone; the per-window Actions rail
   // replaces the old footer Actions tab entirely per P6).
   const frameworkUtilitiesHistoryTab = useMemo((): PanelTabNode | null => {
@@ -3680,7 +3680,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       },
     });
   }, [onAction, session]);
-  //#endregion 🧰FooterToolLeaves
+  //#endregion 🧰FooterUtilityLeaves
 
   //#region 🔄SyncLeaf — bottom-left's sync tab, replacing the old floating footer SyncAttachCard.
   const frameworkSyncTab = useMemo((): PanelTabNode | null => {
@@ -4131,10 +4131,10 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     const actionPaneSlice: ActionPaneSlice = { expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId };
     const actionsFoldedFor = (windowId: string) => actionPaneFoldedByWindowId[windowId] ?? true;
     const onActionsFoldedFor = (windowId: string) => (folded: boolean) => dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId, value: folded });
-    // 🖱️ Window-body cursor follows the active tool's declared `cursor` (P5).
+    // 🖱️ Window-body cursor follows the active utility's declared `cursor` (P5).
     const cursorFor = (app: AppDefinition, windowId: string): CSSProperties | undefined => {
       const utilityId = activeUtilityByWindowId[windowId];
-      const cursor = utilityId ? (app.utilities ?? []).find((tool) => tool.id === utilityId)?.cursor : undefined;
+      const cursor = utilityId ? (app.utilities ?? []).find((utility) => utility.id === utilityId)?.cursor : undefined;
       return cursor ? { cursor } : undefined;
     };
     if (studioMode && spawnedWindowUi && panel?.activeSpawnedId) {
@@ -5137,7 +5137,7 @@ function SyncAttachCard({ activeUri, cardKind, draftPath, syncUtilities, status,
 }
 //#endregion 🔖sync-attach-card
 
-//#region 🔖tool-tree
+//#region 🔖utility-tree
 
 type UtilityTreeProps = {
   readonly utilities: readonly UtilityNode[];
@@ -5157,7 +5157,7 @@ function resolveLeafAction(node: UtilityLeaf | Extract<UtilityNode, { readonly k
   return null;
 }
 
-function toolIcon(iconId: string): IconName {
+function utilityIcon(iconId: string): IconName {
   return iconId in ICONS ? (iconId as IconName) : "circle";
 }
 
@@ -5187,7 +5187,7 @@ function utilityNodeCategory(node: UtilityNode): UtilityCategory {
 }
 
 /**
- * 🕰️ Framework-owned History tool nodes derived from an app's registry (the six injected History
+ * 🕰️ Framework-owned History utility nodes derived from an app's registry (the six injected History
  * actions). Sources the bottom-right History footer tab now that the plugin `list-tools` surface is gone.
  */
 export function frameworkHistoryUtilityNodes(app: Pick<AppDefinition, "actions" | "controllerId">): UtilityNode[] {
@@ -5205,7 +5205,7 @@ export function frameworkHistoryUtilityNodes(app: Pick<AppDefinition, "actions" 
     }));
 }
 
-/** @emoji 🗂️ Buckets top-level tool nodes into the given categories (default: all) so activating a category expands the panel with another line, matching {@link buildToolbarRibbonSegments}'s one-active-group-per-level picker. A category with a single already-meaningful collection is used as-is instead of being re-wrapped in a synthetic one, avoiding a redundant picker level with a duplicate-looking label (e.g. a lone "Selection" collection nested under a "Selection" category chip). Separators default to `tools` (mirrors Rust `UtilityNode::category()`), so dividers between same-category runs survive; dividers that only separated different categories become redundant once those categories are separate picker lines. */
+/** @emoji 🗂️ Buckets top-level utility nodes into the given categories (default: all) so activating a category expands the panel with another line, matching {@link buildToolbarRibbonSegments}'s one-active-group-per-level picker. A category with a single already-meaningful collection is used as-is instead of being re-wrapped in a synthetic one, avoiding a redundant picker level with a duplicate-looking label (e.g. a lone "Selection" collection nested under a "Selection" category chip). Separators default to `tools` (mirrors Rust `UtilityNode::category()`), so dividers between same-category runs survive; dividers that only separated different categories become redundant once those categories are separate picker lines. */
 export function groupUtilityNodesByCategory(nodes: readonly UtilityNode[], categories: readonly UtilityCategory[] = UTILITY_CATEGORY_ORDER): UtilityNode[] {
   const buckets = new Map<UtilityCategory, UtilityNode[]>();
   for (const node of nodes) {
@@ -5224,7 +5224,7 @@ export function groupUtilityNodesByCategory(nodes: readonly UtilityNode[], categ
     });
 }
 
-/** @emoji 🦶 Deduplicates tool nodes by id across every window's tool set (mode-wide tools are attached identically to each window kind when a plugin doesn't differentiate per window), for a single shared footer entry per tool. */
+/** @emoji 🦶 Deduplicates utility nodes by id across every window's utility set (mode-wide utilities are attached identically to each window kind when a plugin doesn't differentiate per window), for a single shared footer entry per utility. */
 export function dedupeUtilityNodesById(nodeLists: readonly (readonly UtilityNode[])[]): UtilityNode[] {
   const seen = new Map<string, UtilityNode>();
   for (const nodes of nodeLists) {
@@ -5272,7 +5272,7 @@ export function buildToolbarRibbonSegments(nodes: readonly UtilityNode[], path: 
   return [...segments, ...buildToolbarRibbonSegments(active.children, path, depth + 1)];
 }
 
-/** @emoji 🎀 Validates an active-group path against the current tool tree: keeps each entry only while it still names an enabled collection at that level, truncating at the first miss rather than substituting a default. */
+/** @emoji 🎀 Validates an active-group path against the current utility tree: keeps each entry only while it still names an enabled collection at that level, truncating at the first miss rather than substituting a default. */
 export function reconcileUtilityPath(nodes: readonly UtilityNode[], path: readonly string[]): readonly string[] {
   let current = nodes;
   const reconciled: string[] = [];
@@ -5313,7 +5313,7 @@ function UtilityToolbarItems({ items, onAction }: { readonly items: readonly Uti
                   title={entry.title ?? entry.label}
                   disabled={entry.disabled}
                   onClick={() => onAction(action)}
-                  icon={<Icon icon={toolIcon(entry.iconId)} size="small" />}
+                  icon={<Icon icon={utilityIcon(entry.iconId)} size="small" />}
                   text={entry.text ?? entry.label}
                 />
               );
@@ -5343,7 +5343,7 @@ function UtilityToolbarItems({ items, onAction }: { readonly items: readonly Uti
             items={run.map((entry) => ({
               value: entry.id,
               id: entry.id,
-              icon: <Icon icon={toolIcon(entry.iconId)} size="small" />,
+              icon: <Icon icon={utilityIcon(entry.iconId)} size="small" />,
               text: entry.text ?? entry.label,
             }))}
           />
@@ -5404,7 +5404,7 @@ export function UtilityTree({ utilities, onAction, id = "ui.toolbar", direction 
           items={segment.collections.map((entry) => ({
             value: entry.id,
             id: `${id}.group.${entry.id}`,
-            icon: <Icon icon={toolIcon(entry.iconId)} size="small" />,
+            icon: <Icon icon={utilityIcon(entry.iconId)} size="small" />,
             text: entry.text ?? entry.label,
           }))}
         />
@@ -5450,7 +5450,7 @@ export function UtilityTree({ utilities, onAction, id = "ui.toolbar", direction 
       content: (
         <ToolbarZone>
           <ToolbarItem>
-            <SelectionToolOptions activeUtilityId={activeSelectionUtility.id} windowId={windowId} onAction={onAction} />
+            <SelectionUtilityOptions activeUtilityId={activeSelectionUtility.id} windowId={windowId} onAction={onAction} />
           </ToolbarItem>
         </ToolbarZone>
       ),
@@ -5463,7 +5463,7 @@ export function UtilityTree({ utilities, onAction, id = "ui.toolbar", direction 
     </UiChromeLabelPolicyProvider>
   );
 }
-//#endregion 🔖tool-tree
+//#endregion 🔖utility-tree
 
 //#region 🔖os-chrome-panels
 

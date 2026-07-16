@@ -208,7 +208,7 @@ pub mod types {
     }
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    pub enum ActiveTool {
+    pub enum ActiveUtility {
         Select,
         Brush,
     }

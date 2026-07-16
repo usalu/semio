@@ -20,12 +20,20 @@
     \int_incr:N \l_tmpa_int
   }
 }
+%region HeaderRules
+\cs_new_protected:Npn \semio_table_header_rule: {
+  \tl_set:Nx \l_tmpa_tl {
+    \prg_replicate:nn { \seq_count:N \l_semio_table_row_seq } { - }
+  }
+  \exp_args:NV \hhline \l_tmpa_tl
+}
 \NewDocumentCommand \SemioTableHeaderRow { m } {
   \semio_table_header_row:n {#1}
   \\
-  \hline
+  \semio_table_header_rule:
   \global\semio@table@row@startedfalse
 }
+%endregion HeaderRules
 \cs_new_protected:Npn \semio_table_dot_count_int:n #1 {
   \int_zero:N \l_tmpa_int
   \tl_map_inline:nn {#1} {
@@ -83,6 +91,46 @@
 \newlength{\semio@table@body@height}
 \newif\ifsemio@table@row@started
 \newcount\semio@table@long@mode
+
+% 🔤 Adjustable table body text size, mirroring the window `text-size`
+% keyval (semio-window.sty) so `\begin{Table}[text-size=8pt]` and
+% `\SemioTableLong[text-size=8pt]{...}` both work. Precedence: an explicit
+% table-local size wins over an enclosing window's `text-size`, which wins
+% over the fixed chrome body size. \l_semio_window_textsize_*  is only
+% *referenced* here, not declared — semio-window.sty loads after
+% semio-table.sty, but this body only runs at document time, long after
+% both packages are loaded.
+\ExplSyntaxOn
+\dim_new:N \l_semio_table_textsize_dim
+\bool_new:N \l_semio_table_textsize_set_bool
+\keys_define:nn { semio / table } {
+  text-size .code:n = {
+    \dim_set:Nn \l_semio_table_textsize_dim {#1}
+    \bool_set_true:N \l_semio_table_textsize_set_bool
+  },
+}
+% Named the plain (legacy) way, not \semio_table_keys_set:n — these get
+% called from \SemioTableLong's body, which is a plain \newcommand written
+% where `_`/`:` are ordinary (non-letter) characters, so an expl3-style name
+% would not tokenize as one control word there (see the identical rationale
+% on \semio@table@long@prepare below).
+\cs_new_protected:Npn \semio@table@keys@set #1 {
+  \keys_set:nn { semio / table } {#1}
+}
+\cs_new_protected:Npn \semio@table@keys@reset {
+  \bool_set_false:N \l_semio_table_textsize_set_bool
+}
+\cs_new_protected:Npn \semio@table@fontsize@apply {
+  \bool_if:NTF \l_semio_table_textsize_set_bool
+    { \tl_set:Nx \l_tmpa_tl { \dim_use:N \l_semio_table_textsize_dim } }
+    {
+      \bool_if:NTF \l_semio_window_textsize_set_bool
+        { \tl_set:Nx \l_tmpa_tl { \dim_use:N \l_semio_window_textsize_dim } }
+        { \tl_set:Nx \l_tmpa_tl { \semio@chrome@font@body } }
+    }
+  \fontsize{\tl_use:N \l_tmpa_tl}{\tl_use:N \l_tmpa_tl}\selectfont
+}
+\ExplSyntaxOff
 
 \newcommand{\semio@table@setup}{%
   \setlength{\semio@table@header@height}{\dimexpr
@@ -152,21 +200,12 @@
   \noalign{\hrule height\arrayrulewidth}%
 }
 
-\newcommand{\semio@table@header@bottom@rule}{%
-  \noalign{%
-    \color{semio-chrome-border-normal}%
-    \hrule height\arrayrulewidth
-  }%
-}
-
-
-
 \newcommand{\semio@table@long@header@repeat@three}[3]{%
   \hhline{|---|}
   \semio@table@header@cell{#1} &
   \semio@table@header@cell{#2} &
   \semio@table@header@cell{#3} \\
-  \semio@table@header@bottom@rule
+  \hhline{|---|}
   \global\semio@table@row@startedfalse
 }
 
@@ -239,7 +278,7 @@
   \begingroup
   \ifvmode\else\par\fi
   \SemioSans
-  \fontsize{\semio@chrome@font@body}{\semio@chrome@font@body}\selectfont
+  \semio@table@fontsize@apply
   \semio@table@setup@long
   \color{semio-chrome-text-normal}%
   \semio@table@long@inner@w@set
@@ -255,7 +294,7 @@
   \endfirsthead
   #3%
   \endhead
-  \noalign{\vskip-\semio@table@body@height}%
+  \noalign{\vskip\dimexpr-\semio@table@body@height+2\arrayrulewidth\relax}%
   #4%
   \end{longtable}%
   \endgroup
@@ -287,10 +326,10 @@
 \newcommand{\semio@table@render}[2]{%
   \ExplSyntaxOff
   \semio@table@require@window
-  \semio@table@setup
   \begingroup
   \SemioSans
-  \fontsize{\semio@chrome@font@body}{\semio@chrome@font@body}\selectfont
+  \semio@table@fontsize@apply
+  \semio@table@setup
   \color{semio-chrome-text-normal}%
   \begin{tabular}{#1}%
   #2%
@@ -373,7 +412,11 @@
   }
   \tl_put_right:Nn \l_semio_table_long_head_tl {
     \\
-    \semio@table@header@bottom@rule
+  }
+  \tl_put_right:Nx \l_semio_table_long_head_tl {
+    \exp_not:N \hhline { | \prg_replicate:nn { \seq_count:N \l_semio_table_row_seq } { - } | }
+  }
+  \tl_put_right:Nn \l_semio_table_long_head_tl {
     \global\semio@table@row@startedfalse
   }
   % 🩹 Not \tl_gset_eq:NN: that \let-aliases \semio@table@long@head@current to
@@ -410,11 +453,22 @@
 % macro reference like the head hits "Illegal pream-token", because array's
 % preamble parser (unlike longtable's head/repeathead slots) never expands
 % macro names on its own.
-\newcommand{\SemioTableLong}[4]{%
-  \semio@table@long@prepare{#2}{#3}%
-  \semio@register@window@open{#1}%
-  \expandafter\semio@table@long@render\expandafter{\semio@table@long@colspec@current}{\semio@table@long@head@current}{\semio@table@long@head@current}{#4}%
+%
+% 🩹 The leading [key=val] (e.g. [text-size=8pt]) uses the *kernel's* own
+% \newcommand[n][default] optional-argument support, not xparse/ltcmd — that
+% mechanism (\@protected@testopt/\@testopt/\@ifnextchar[) peeks for the `[`
+% at the call site, at the main vertical list, before \begin{longtable} ever
+% opens; the remaining 5 mandatory parameters are still grabbed by a plain
+% \long\def exactly as before. It is unrelated to the ltcmd-argument-grabbing
+% "Misplaced \omit" issue documented below on \SemioTableBandRow, so it does
+% not reintroduce that break.
+\newcommand{\SemioTableLong}[5][]{%
+  \semio@table@keys@set{#1}%
+  \semio@table@long@prepare{#3}{#4}%
+  \semio@register@window@open{#2}%
+  \expandafter\semio@table@long@render\expandafter{\semio@table@long@colspec@current}{\semio@table@long@head@current}{\semio@table@long@head@current}{#5}%
   \semio@register@window@close
+  \semio@table@keys@reset
 }
 
 % 🩹 Plain \newcommand, not \NewDocumentCommand/xparse: xparse's argument
@@ -514,10 +568,10 @@
 \newcommand{\SemioTableBegin}[1]{%
   \ExplSyntaxOff
   \semio@table@require@window
-  \semio@table@setup
   \begingroup
   \SemioSans
-  \fontsize{\semio@chrome@font@body}{\semio@chrome@font@body}\selectfont
+  \semio@table@fontsize@apply
+  \semio@table@setup
   \color{semio-chrome-text-normal}%
   \def\semio@table@spec{#1}%
   \ifx\semio@table@spec\semio@table@spec@ll

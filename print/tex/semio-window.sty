@@ -679,8 +679,7 @@
     % rendered into into so the *next* compile pass can show the ":<N>"
     % suffix on page 1 too (see \semio@window@break@record and the
     % `.window-breaks` aux file loaded by \semio_window_break_aux_load:).
-    overlay~unbroken={\semio@window@break@record{1}\semio@window@header@invoke@overlay},
-    overlay~first={\semio@window@header@invoke@overlay},
+    overlay~unbroken={\semio@window@break@record{1}},
     overlay~middle={\semio@window@header@repeat},
     overlay~last={\semio@window@header@repeat\semio@window@break@record{\arabic{tcbbreakpart}}},
   },
@@ -936,13 +935,17 @@
   }
 }
 
+% 🩹 Not \group_begin:/\ExplSyntaxOff/.../\group_end: (the pattern used
+% elsewhere in this file for \gdef payloads, where the group only needs to
+% scope the catcode change): \fontsize/\selectfont is a *local* assignment,
+% so wrapping it in a group discards the font change at \group_end: before
+% any content is typeset — text-size never visibly applied to window body
+% text. \ExplSyntaxOff is also pointless here at runtime; nothing in the
+% payload needs `_`/`:` to be non-letters.
 \cs_new_protected:Npn \semio_window_textsize_apply: {
   \bool_if:NT \l_semio_window_textsize_set_bool {
     \tl_set:Nx \l_tmpa_tl { \dim_use:N \l_semio_window_textsize_dim }
-    \group_begin:
-    \ExplSyntaxOff
     \fontsize{\tl_use:N \l_tmpa_tl}{\tl_use:N \l_tmpa_tl}\selectfont
-    \group_end:
   }
 }
 
@@ -1897,31 +1900,6 @@
   };%
 }
 
-% 🩹 Page 1 (and the first part of a genuinely broken window) still typesets
-% its header inline, before the tcolorbox opens, so \semio_window_vskip_
-% stroke_hairline: can pull the box up by one hairline and reclaim that
-% row's height from the WindowColumn overhead budget. But the box's own
-% colback fill is painted later in the PDF content stream than that inline
-% header row, so it silently overpaints the header-gap's closing baseline
-% stroke (see "Header gap" region above) wherever the fill sits underneath
-% it — i.e. exactly in the transparent gap between the title and hierarchy
-% chips. Redrawing the identical header row as an `overlay` (same
-% `frame.north`-anchored technique as \semio@window@header@repeat, which
-% never has this problem since it has no inline counterpart to be covered)
-% repaints it on top of the fill, so the border is never hidden.
-% ⚠️ Unlike \semio@window@header@repeat, this one is *not* shifted up by an
-% extra \semio@stroke@hairline: the inline header row already reserved its
-% own space above the box (via \semio_window_vskip_stroke_hairline:, which
-% pulls the box up to sit flush with that row's closing stroke), so anchoring
-% this redraw at exactly `frame.north` reuses that same seam — a yshift here
-% would instead push the redrawn stroke one hairline above the box's real top
-% edge, opening a sliver of bare page background between the border and the
-% (now visibly "shrunk") colback fill.
-\newcommand{\semio@window@header@invoke@overlay}{%
-  \node[anchor=south, inner sep=0pt] at (frame.north) {%
-    \semio@window@header@muted{\semio@window@header@number@page1}{\semio@window@header@title}%
-  };%
-}
 \ExplSyntaxOff
 %endregion WindowBreakParts chrome
 

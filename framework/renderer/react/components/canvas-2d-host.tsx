@@ -57,7 +57,7 @@ type CanvasLayerRecord = {
   readonly id?: string;
   readonly kind?: string;
   readonly role?: string;
-  readonly tool?: string;
+  readonly utility?: string;
   readonly name?: string;
   readonly color?: string;
   readonly selected?: boolean;
@@ -337,7 +337,7 @@ class JsonLayersCanvasSession implements GraphWasmSession {
   private panning = false;
   private panStart = { x: 0, y: 0 };
   private panCameraStart = { x: 0, y: 0 };
-  private activeTool = "selectDirect";
+  private activeUtility = "selectDirect";
 
   constructor(
     private readonly layersJson: string,
@@ -410,7 +410,7 @@ class JsonLayersCanvasSession implements GraphWasmSession {
     ctx.fillRect(0, 0, deviceWidth, deviceHeight);
     const records = this.parseLayers();
     const meta = records.find((record) => record.role === "meta");
-    if (meta?.tool) this.activeTool = meta.tool;
+    if (meta?.utility) this.activeUtility = meta.utility;
     const layers = records.filter((record) => record.role !== "meta");
     ctx.save();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -483,7 +483,7 @@ class JsonLayersCanvasSession implements GraphWasmSession {
   }
 
   pointerDown(x: number, y: number, button: number, _extend: boolean, modifiers?: CanvasInputModifiers): void {
-    if (button === 1 || this.activeTool === "transformMove") {
+    if (button === 1 || this.activeUtility === "transformMove") {
       this.panning = true;
       this.panStart = { x, y };
       this.panCameraStart = { x: this.camera.x, y: this.camera.y };

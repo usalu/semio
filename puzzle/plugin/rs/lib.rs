@@ -453,7 +453,7 @@ pub mod d2 {
     fn sync_host_runtime_state(host: &mut BoardHost, envelope: &Puzzle2dScene) {
         host.set_size(BOARD_DEFAULT_WIDTH, BOARD_DEFAULT_HEIGHT, 1.0);
         host.set_selection_ids(&envelope.runtime.selected_ids);
-        host.set_active_tool(&envelope.active_utility);
+        host.set_active_utility(&envelope.active_utility);
         let overview_lod_mode = envelope.runtime.lod_mode_by_pane.get(PUZZLE2D_PANE_OVERVIEW).map(String::as_str).unwrap_or(PUZZLE2D_LOD_MODE_AUTOMATIC);
         if overview_lod_mode == PUZZLE2D_LOD_MODE_AUTOMATIC {
             host.set_automatic_lod(true);
@@ -1707,7 +1707,7 @@ pub mod d2 {
                             // 🧰 Reconcile the engagement text-command utility switch through the host-owned
                             // active utility: point the local engine now and let the framework persist the new
                             // `view_state.active_utility_id` for the pane via `HostEffect::SetActiveUtility`.
-                            self.host.set_active_tool(value.as_str());
+                            self.host.set_active_utility(value.as_str());
                             effects.push(HostEffect::SetActiveUtility { window_kind_id: pane.clone(), utility_id: value.clone() });
                             true
                         }
@@ -1739,7 +1739,7 @@ pub mod d2 {
                         envelope.runtime.engagement_input_by_pane.insert(pane.to_string(), String::new());
                     }
                     if active_utility != PUZZLE2D_UTILITY_SELECT {
-                        self.host.set_active_tool(PUZZLE2D_UTILITY_SELECT);
+                        self.host.set_active_utility(PUZZLE2D_UTILITY_SELECT);
                         effects.push(HostEffect::SetActiveUtility { window_kind_id: pane.to_string(), utility_id: PUZZLE2D_UTILITY_SELECT.into() });
                     }
                     {}
@@ -1857,7 +1857,7 @@ pub mod d2 {
                     let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_f64()).map(|value| value.round().max(0.0) as u32).unwrap_or(0).min(PUZZLE2D_FILL_COUNT_MAX);
                     envelope.runtime.fill_count = count;
                     effects.push(HostEffect::SetActiveUtility { window_kind_id: PUZZLE2D_PANE_OVERVIEW.into(), utility_id: PUZZLE2D_UTILITY_FILL.into() });
-                    self.host.set_active_tool("brush");
+                    self.host.set_active_utility("brush");
                     self.host.brush_fill_session_begin(count, 1);
                     let step = self.host.brush_fill_session_step(count.max(1));
                     if let Ok(progress) = serde_json::from_str::<Value>(&step) {
@@ -3326,7 +3326,7 @@ pub mod d3 {
             "done": fill_build.get("done").cloned().unwrap_or(json!(true)),
         });
         json!({
-            "activeTool": puzzle3d_scene_mode(&envelope.active_utility),
+            "activeUtility": puzzle3d_scene_mode(&envelope.active_utility),
             "brushCandidateIndex": runtime.brush_candidate_index,
             "hoveredVortexFullId": runtime.hovered_vortex_full_id.clone(),
             "fillEditTargetVolumes": runtime.fill_edit_target_volumes,
@@ -6319,7 +6319,7 @@ pub mod d3 {
             let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
             let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &brush_view).expect("render");
             let interaction = interaction_of(&serde_json::to_value(&node).unwrap());
-            assert_eq!(interaction.get("activeTool").and_then(Value::as_str), Some("brush"));
+            assert_eq!(interaction.get("activeUtility").and_then(Value::as_str), Some("brush"));
             let menu = interaction.get("suggestionMenu").expect("suggestionMenu present");
             assert_eq!(menu.get("open").and_then(Value::as_bool), Some(true));
             assert_eq!(menu.get("x").and_then(Value::as_f64), Some(12.0));
@@ -7625,7 +7625,7 @@ pub mod d5 {
 
     fn world_interaction_json(runtime: &Puzzle5dRuntime, active_utility: &str) -> String {
         json!({
-            "activeTool": puzzle5d_scene_mode(active_utility),
+            "activeUtility": puzzle5d_scene_mode(active_utility),
             "brushCandidateIndex": runtime.brush_candidate_index,
             "fillCount": runtime.fill_count,
             "hoveredVortexFullId": runtime.selection.grip_ids.first().cloned(),

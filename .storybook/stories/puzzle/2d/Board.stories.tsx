@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/story/puzzle/2d/Board.stories.tsx
-// Specs: Host the framework renderer's `Puzzle2dBoardHost` for Storybook + Playwright selection/camera/tool checks.
-// Summary: Mounts the host directly against a `UiComponentSceneNode`; a story-local reducer emulates the `puzzle2d-play` Rust plugin's `applyBoardEvents`/selection/tool actions so the controlled scene ⇄ session loop round-trips without a running dev server.
+// Specs: Host the framework renderer's `Puzzle2dBoardHost` for Storybook + Playwright selection/camera/utility checks.
+// Summary: Mounts the host directly against a `UiComponentSceneNode`; a story-local reducer emulates the `puzzle2d-play` Rust plugin's `applyBoardEvents`/selection/utility actions so the controlled scene ⇄ session loop round-trips without a running dev server.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -24,7 +24,7 @@ type StoryPuzzle2dFixture = {
 
 type StoryPuzzle2dRuntime = {
   readonly selectedIds: readonly string[];
-  readonly activeTool: string;
+  readonly activeUtility: string;
   readonly selectionMethod: string;
   readonly gridSnapEnabled: boolean;
   readonly gridFactor: number;
@@ -40,7 +40,7 @@ type StoryPuzzle2dState = { readonly fixture: StoryPuzzle2dFixture; readonly run
 //#region PluginEmulator
 const STORY_DEFAULT_RUNTIME: StoryPuzzle2dRuntime = {
   selectedIds: [],
-  activeTool: "select",
+  activeUtility: "select",
   selectionMethod: "rectangle",
   gridSnapEnabled: false,
   gridFactor: 1,
@@ -141,8 +141,8 @@ function reduceStoryPuzzle2dAction(state: StoryPuzzle2dState, action: string, ar
         runtime: { ...runtime, selectedIds: [] },
       };
     }
-    case "setActiveTool":
-      return { fixture, runtime: { ...runtime, activeTool: typeof args?.tool === "string" ? args.tool : "select" } };
+    case "setActiveUtility":
+      return { fixture, runtime: { ...runtime, activeUtility: typeof args?.utilityId === "string" ? args.utilityId : "select" } };
     case "setSelectionFlag": {
       const flag = args?.flag === "locked" ? "locked" : "hidden";
       const value = Boolean(args?.value);
@@ -185,7 +185,7 @@ function buildStorySceneNode(state: StoryPuzzle2dState, interactive: boolean): U
       kindCatalogsJson: JSON.stringify(fixture.meta?.kindCatalogs ?? {}),
       selectionJson: JSON.stringify(runtime.selectedIds),
       interactive,
-      activeTool: runtime.activeTool,
+      activeUtility: runtime.activeUtility,
       selectionMethod: runtime.selectionMethod,
       gridSnapEnabled: runtime.gridSnapEnabled,
       gridFactor: runtime.gridFactor,
@@ -227,7 +227,7 @@ function Puzzle2dBoardStoryHost({ initialFixture, initialRuntime, interactive }:
   }, []);
 
   const node = useMemo(() => buildStorySceneNode(state, interactive), [state, interactive]);
-  const debug = useMemo(() => JSON.stringify({ selection: state.runtime.selectedIds, camera: state.fixture.camera, activeTool: state.runtime.activeTool, nodeCount: state.fixture.nodes.length, edgeCount: state.fixture.edges.length }), [state]);
+  const debug = useMemo(() => JSON.stringify({ selection: state.runtime.selectedIds, camera: state.fixture.camera, activeUtility: state.runtime.activeUtility, nodeCount: state.fixture.nodes.length, edgeCount: state.fixture.edges.length }), [state]);
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
@@ -271,10 +271,10 @@ export const LassoSelect: Story = {
   },
 };
 
-export const BrushTool: Story = {
+export const BrushUtility: Story = {
   args: {
     initialFixture: STORY_BRUSH_FIXTURE,
-    initialRuntime: { activeTool: "brush" },
+    initialRuntime: { activeUtility: "brush" },
     interactive: true,
   },
 };

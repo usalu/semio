@@ -1,0 +1,14 @@
+{
+  "title": "Panel Toggle Border Between Toggles",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "The panel toggle should show a border between the toggles e.g. history and settings",
+  "summary": "Add border-r border-solid !border-normal last:border-r-0 to panelTabButtonClass to show a border between panel toggles, excluding the last one",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2007"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
+  "sessions": [
+    "⚪a6aa1ad79c9c451186eb50d45b9e9824"
+  ]
+}

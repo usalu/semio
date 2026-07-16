@@ -74,14 +74,14 @@ function base64ToBytes(base64: string): Uint8Array {
   return bytes;
 }
 
-function rasterSelectionMethod(activeTool: string): SelectionMarqueeMethod | null {
-  if (activeTool === "selectMarquee") return "rectangle";
-  if (activeTool === "selectLasso") return "lasso";
+function rasterSelectionMethod(activeUtility: string): SelectionMarqueeMethod | null {
+  if (activeUtility === "selectMarquee") return "rectangle";
+  if (activeUtility === "selectLasso") return "lasso";
   return null;
 }
 
-function isRasterSelectionTool(activeTool: string): boolean {
-  return activeTool === "selectMarquee" || activeTool === "selectLasso" || activeTool === "selectWand";
+function isRasterSelectionUtility(activeUtility: string): boolean {
+  return activeUtility === "selectMarquee" || activeUtility === "selectLasso" || activeUtility === "selectWand";
 }
 //#endregion RasterParsing
 
@@ -100,7 +100,7 @@ function noopRasterSession(): RasterWasmSession {
     syncDocumentJson: () => {},
     uploadLayerImage: () => {},
     uploadRasterImageKey: () => {},
-    setActiveTool: () => {},
+    setActiveUtility: () => {},
     setBrushSize: () => {},
     setBrushOpacity: () => {},
     setHoveredIdSilent: () => {},
@@ -192,7 +192,7 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
       }
       assetsRef.current = scene.assetsJson;
     }
-    session.setActiveTool(scene.activeTool);
+    session.setActiveUtility(scene.activeUtility);
     session.setBrushSize(scene.brushSize);
     session.setBrushOpacity(scene.brushOpacity);
     session.setSelectionIdsJson(scene.selectionJson);
@@ -222,7 +222,7 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
       }
     }
     session.renderFrame();
-  }, [isNavigator, scene.documentSyncJson, scene.assetsJson, scene.cameraJson, scene.selectionJson, scene.hoveredId, scene.activeTool, scene.brushSize, scene.brushOpacity, scene.viewMode, scene.compositeViewportJson]);
+  }, [isNavigator, scene.documentSyncJson, scene.assetsJson, scene.cameraJson, scene.selectionJson, scene.hoveredId, scene.activeUtility, scene.brushSize, scene.brushOpacity, scene.viewMode, scene.compositeViewportJson]);
 
   useEffect(() => {
     syncAll();
@@ -306,7 +306,7 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
   //#endregion PickInteraction
 
   //#region Marquee
-  const selectionMethod = rasterSelectionMethod(scene.activeTool);
+  const selectionMethod = rasterSelectionMethod(scene.activeUtility);
 
   const updateMarqueeOverlay = useCallback(
     (point: { readonly x: number; readonly y: number }) => {
@@ -355,7 +355,7 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
         return;
       }
       if (isNavigator || !session) return;
-      if (isRasterSelectionTool(scene.activeTool)) {
+      if (isRasterSelectionUtility(scene.activeUtility)) {
         pickInteraction.onCanvasPointerDown({ x: event.clientX, y: event.clientY });
         if (selectionMethod) marqueeRef.current = { tracking: true, active: false, start: point, points: [point] };
         return;
@@ -363,7 +363,7 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
       session.pointerDownScreen(point.x, point.y, event.button);
       session.renderFrame();
     },
-    [clientPoint, isNavigator, pickInteraction, scene.activeTool, selectionMethod],
+    [clientPoint, isNavigator, pickInteraction, scene.activeUtility, selectionMethod],
   );
 
   const onPointerMove = useCallback(
@@ -394,7 +394,7 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
           updateMarqueeOverlay(point);
         }
       }
-      if (isRasterSelectionTool(scene.activeTool) && !pickInteraction.pickMenuOpen) {
+      if (isRasterSelectionUtility(scene.activeUtility) && !pickInteraction.pickMenuOpen) {
         pickInteraction.onCanvasPointerMove({ x: event.clientX, y: event.clientY });
         return;
       }
@@ -406,7 +406,7 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
       }
       session.renderFrame();
     },
-    [clientPoint, dispatch, isNavigator, pickInteraction, scene.activeTool, scene.cameraJson, selectionMethod, updateMarqueeOverlay],
+    [clientPoint, dispatch, isNavigator, pickInteraction, scene.activeUtility, scene.cameraJson, selectionMethod, updateMarqueeOverlay],
   );
 
   const onPointerUp = useCallback(
@@ -428,14 +428,14 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
         marqueeRef.current = { tracking: false, active: false, start: point, points: [] };
         setMarqueeOverlay(null);
       }
-      if (isRasterSelectionTool(scene.activeTool)) {
+      if (isRasterSelectionUtility(scene.activeUtility)) {
         pickInteraction.onCanvasPointerUp({ x: event.clientX, y: event.clientY }, { shift: event.shiftKey, ctrl: event.ctrlKey, meta: event.metaKey, alt: event.altKey });
         return;
       }
       session.pointerUpScreen(point.x, point.y);
       session.renderFrame();
     },
-    [clientPoint, commitMarqueeSelection, isNavigator, pickInteraction, scene.activeTool],
+    [clientPoint, commitMarqueeSelection, isNavigator, pickInteraction, scene.activeUtility],
   );
 
   const onWheel = useCallback(

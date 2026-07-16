@@ -670,8 +670,8 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
 
   useEffect(() => {
     if (!scene) return;
-    applyToSession(sessionRef.current, (session) => session.setActiveTool?.(scene.activeTool ?? "select"));
-  }, [sessionEpoch, scene?.activeTool]);
+    applyToSession(sessionRef.current, (session) => session.setActiveUtility?.(scene.activeUtility ?? "select"));
+  }, [sessionEpoch, scene?.activeUtility]);
 
   useEffect(() => {
     if (!scene) return;
@@ -850,7 +850,7 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
         }
         return;
       }
-      if (event.key === "Tab" && scene.activeTool === "brush") {
+      if (event.key === "Tab" && scene.activeUtility === "brush") {
         event.preventDefault();
         session.brushCycleCandidate?.(!event.shiftKey);
         try {
@@ -880,7 +880,7 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [dispatch, dispatchBufferedEvents, flushBoardEvents, node.controllerId, node.surfaceId, scene?.activeTool, scene?.interactive, scene?.selectionJson, settleGestureEnd]);
+  }, [dispatch, dispatchBufferedEvents, flushBoardEvents, node.controllerId, node.surfaceId, scene?.activeUtility, scene?.interactive, scene?.selectionJson, settleGestureEnd]);
   //#endregion Keyboard
 
   //#region ContextMenu

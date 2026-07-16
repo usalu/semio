@@ -243,7 +243,7 @@ struct WorldBrushPreviewRecord {
 #[derive(Clone, Debug, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 struct WorldInteractionRecord {
-    active_tool: Option<String>,
+    active_utility: Option<String>,
     brush_candidate_index: Option<usize>,
     hovered_vortex_full_id: Option<String>,
 }
@@ -280,7 +280,7 @@ pub struct World3dState {
     target_volumes: Vec<WorldTargetVolumeRecord>,
     references: Vec<WorldReferenceRecord>,
     brush_preview: Option<WorldBrushPreviewRecord>,
-    active_tool: String,
+    active_utility: String,
     hovered_vortex_id: Option<String>,
     drag_object_id: Option<String>,
     drag_object_z: f32,
@@ -357,7 +357,7 @@ impl World3dState {
             target_volumes: Vec::new(),
             references: Vec::new(),
             brush_preview: None,
-            active_tool: "select".into(),
+            active_utility: "select".into(),
             hovered_vortex_id: None,
             drag_object_id: None,
             drag_object_z: 0.0,
@@ -1714,8 +1714,8 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         .as_deref()
         .and_then(|json| serde_json::from_str(json).ok())
         .unwrap_or_default();
-    state.active_tool = interaction
-        .active_tool
+    state.active_utility = interaction
+        .active_utility
         .unwrap_or_else(|| "select".into());
     state.hovered_vortex_id = interaction.hovered_vortex_full_id;
     for reference in &state.references {
@@ -2143,7 +2143,7 @@ pub fn render_world_3d(
             Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices),
         );
     }
-    if !state.selected_ids.is_empty() && state.active_tool == "select" {
+    if !state.selected_ids.is_empty() && state.active_utility == "select" {
         append_gumball_geometry(
             &mut line_vertices,
             &mut translucent_draws,
@@ -2310,7 +2310,7 @@ pub fn handle_world3d_pointer_button(
                     args: Some(json!({ "surfaceId": state.surface_id })),
                 });
             }
-            if state.active_tool == "brush" || (state.active_tool == "select" && state.granularity == "vertex") {
+            if state.active_utility == "brush" || (state.active_utility == "select" && state.granularity == "vertex") {
                 if let Some(full_id) = pick_vortex_at(state, x, y, inner) {
                     let merge = if shift { "add" } else if ctrl { "toggle" } else { "replace" };
                     return Some(ActionDescriptor {
@@ -2319,7 +2319,7 @@ pub fn handle_world3d_pointer_button(
                         args: Some(json!({ "surfaceId": state.surface_id, "fullId": full_id, "merge": merge })),
                     });
                 }
-            } else if state.active_tool == "select" {
+            } else if state.active_utility == "select" {
                 if !state.selected_ids.is_empty() {
                     if let Some(handle) = pick_gumball_handle_at(state, x, y, inner) {
                         start_gumball_drag(state, handle, x, y, inner);
@@ -2391,7 +2391,7 @@ pub fn handle_world3d_pointer_button(
                 }
             }
         }
-        if state.active_tool == "brush" {
+        if state.active_utility == "brush" {
             if let Some(preview) = state.brush_preview.clone() {
                 if let (Some(target), Some(kind), Some(index)) = (
                     preview.target_vortex_full_id,
@@ -2593,7 +2593,7 @@ pub fn ingest_glb_mesh(state: &mut World3dState, url: &str, mesh: MeshData, mesh
 }
 
 fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> Option<ActionDescriptor> {
-    if state.active_tool == "brush" || (state.active_tool == "select" && state.granularity == "vertex") {
+    if state.active_utility == "brush" || (state.active_utility == "select" && state.granularity == "vertex") {
         let hit = pick_vortex_at(state, x, y, inner);
         if state.hovered_vortex_id == hit {
             return None;
@@ -3838,7 +3838,7 @@ mod tests {
     fn click_release_routes_to_pick_select_instead_of_empty_marquee() {
         let mesh = topology_mesh();
         let mut state = World3dState::new("surface-1".into(), "controller-1".into());
-        state.active_tool = "select".into();
+        state.active_utility = "select".into();
         state.granularity = "mesh".into();
         state.marquee_active = true;
         state.marquee_points = vec![[120.0, 140.0]];
