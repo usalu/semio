@@ -1,0 +1,13 @@
+{
+  "title": "Wire Raster Wgpu Dev Preview into Launch Config and Verify End to End",
+  "emoji": "🖼️",
+  "status": "open",
+  "description": "The `raster` technology (bitmap/layers editing plugin app under raster/rs, raster/plugin/rs) has a working `bun run dev:raster` script and is registered in the generated framework-os playground catalog (framework/plugin/registry/generated/playgrounds.json: variant raster, react port 6060, wgpu port 6160). It already has a `raster-react-dev` entry in .claude/launch.json (port 6060), but unlike note/puzzle2d/shooting/draw etc. it has NO `raster-wgpu-dev` entry — devs can only launch the wgpu variant via CLI, which CLAUDE.md forbids. Register raster-wgpu-dev in .claude/launch.json following the existing note-wgpu-dev/draw-wgpu-dev pairing pattern (name, runtimeExecutable bun, runtimeArgs run dev:raster, env RASTER_PLAY_PORT=6160 + SEMIO_RENDERER=wgpu, port 6160). Then launch both raster-react-dev and raster-wgpu-dev via the preview tooling and verify raster actually works end to end in the browser: the Semio Logo raster example (raster/example/semio.raster.json) loads, layers render on canvas (pixel/adjustment/group), camera pan/zoom works, and at least one tool is interactive with no console errors. framework/renderer/wgpu/rs/lib.rs already implements SurfaceKind::Raster and render_raster() (region //#region Raster, closed tickets RASTER-FRAMEWORK-INTEGRATION / RASTER-ZOOM-COMPOSITE-FIX say this was working) — confirm it still works post-verification; if wgpu is broken for an unrelated pre-existing reason, note it in the ticket summary without attempting to fix the wgpu renderer itself (out of scope beyond the launch config wiring).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2012"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪cb3deb67c45c49279231161a31878985"
+  ]
+}

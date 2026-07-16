@@ -185,6 +185,7 @@
 
 \newcommand{\semio@table@header@cell}[1]{%
   \cellcolor{semio-chrome-canvas}%
+  \SemioSans\semio@table@fontsize@apply
   \semio@text@emphasized{\bfseries #1}%
 }
 
@@ -201,18 +202,31 @@
   \global\semio@table@row@startedfalse
 }
 
+\newcommand{\semio@table@long@header@continuation@three}[3]{%
+  \hhline{|---|}
+  \semio@table@header@cell{#1} &
+  \semio@table@header@cell{#2} &
+  \semio@table@header@cell{#3} \\
+  \hhline{|---|}
+  \noalign{\vskip\dimexpr-\semio@table@body@height+2\arrayrulewidth\relax}%
+  \global\semio@table@row@startedfalse
+}
+
+\newif\ifsemio@table@long@title@number
+
 \newcommand{\semio@table@long@title@chrome@prepare}{%
-  \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{\semio@window@header@title}}%
-  \sbox{\semio@window@ctrl@box}{%
-    \if\relax\detokenize\expandafter{\semio@window@header@number}\relax
-      \hbox{}%
-    \else
-      \semio@heading@cap@muted{\semio@window@header@number}%
-    \fi
-  }%
-  \setlength{\semio@window@gap@w}{%
-    \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
-  }%
+  \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{\textcolor{semio-chrome-foreground}{\semio@window@header@title}}}%
+  \edef\semio@table@long@title@number{\semio@window@header@number}%
+  \ifx\semio@table@long@title@number\@empty
+    \semio@table@long@title@numberfalse
+    \setlength{\semio@window@gap@w}{\dimexpr\linewidth-\wd\semio@window@tab@box\relax}%
+  \else
+    \semio@table@long@title@numbertrue
+    \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted{\semio@table@long@title@number}}%
+    \setlength{\semio@window@gap@w}{%
+      \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
+    }%
+  \fi
 }
 
 \newcommand{\semio@table@long@title@chrome@row}[1]{%
@@ -220,7 +234,7 @@
     \hbox to \linewidth{%
       \usebox{\semio@window@tab@box}%
       \semio@window@header@gap@paint{semio-chrome-border-normal}%
-      \usebox{\semio@window@ctrl@box}%
+      \ifsemio@table@long@title@number\usebox{\semio@window@ctrl@box}\fi
     }%
   }%
   \\%
@@ -231,14 +245,14 @@
 }
 
 \newcommand{\semio@register@table@header@long@repeat}{%
-  \semio@table@long@header@repeat@three
+  \semio@table@long@header@continuation@three
     {\semio@register@header@key}
     {\semio@register@header@title}
     {\semio@register@header@page}%
 }
 
 \newcommand{\semio@references@table@header@long@repeat}{%
-  \semio@table@long@header@repeat@three
+  \semio@table@long@header@continuation@three
     {\semio@register@header@number}
     {\semio@register@header@reference}
     {\semio@register@header@year}%
@@ -253,7 +267,7 @@
 }
 
 \newcommand{\semio@termlist@table@header@long@repeat}[1]{%
-  \semio@table@long@header@repeat@three
+  \semio@table@long@header@continuation@three
     {\csname semio@#1@header@term\endcsname}
     {\csname semio@#1@header@definition\endcsname}
     {\csname semio@#1@header@pages\endcsname}%
@@ -391,6 +405,7 @@
 \tl_new:N \l_semio_table_long_colspec_tl
 \tl_new:N \l_semio_table_long_head_tl
 \newcommand{\semio@table@long@head@current}{}
+\newcommand{\semio@table@long@head@continuation@current}{}
 
 \cs_new_protected:Npn \semio_table_long_colspec_build:n #1 {
   \tl_set:Nn \l_semio_table_long_colspec_tl { | @ { \hspace{\semio@chrome@padding} } @ { } }
@@ -421,6 +436,10 @@
   \tl_put_right:Nx \l_semio_table_long_head_tl {
     \exp_not:N \hhline { | \prg_replicate:nn { \seq_count:N \l_semio_table_row_seq } { - } | }
   }
+  \global\long\expandafter\def\expandafter\semio@table@long@head@current\expandafter{\l_semio_table_long_head_tl\global\semio@table@row@startedfalse}
+  \tl_put_right:Nn \l_semio_table_long_head_tl {
+    \noalign{\vskip\dimexpr-\semio@table@body@height+2\arrayrulewidth\relax}%
+  }
   \tl_put_right:Nn \l_semio_table_long_head_tl {
     \global\semio@table@row@startedfalse
   }
@@ -432,7 +451,7 @@
   % \expandafter copies the tl's current tokens verbatim (one level, so
   % \hhline/\semio@table@header@cell inside stay unevaluated) into a fresh
   % \long macro instead of aliasing the tl var directly.
-  \global\long\expandafter\def\expandafter\semio@table@long@head@current\expandafter{\l_semio_table_long_head_tl}
+  \global\long\expandafter\def\expandafter\semio@table@long@head@continuation@current\expandafter{\l_semio_table_long_head_tl}
 }
 
 \newcommand{\semio@table@long@colspec@current}{}
@@ -473,7 +492,7 @@
   \semio@table@keys@set{#1}%
   \semio@table@long@prepare{#3}{#4}%
   \semio@register@window@open{#2}%
-  \expandafter\semio@table@long@render\expandafter{\semio@table@long@colspec@current}{\semio@table@long@head@current}{\semio@table@long@head@current}{#5}{\semio@table@long@column@count}%
+  \expandafter\semio@table@long@render\expandafter{\semio@table@long@colspec@current}{\semio@table@long@head@current}{\semio@table@long@head@continuation@current}{#5}{\semio@table@long@column@count}%
   \semio@register@window@close
   \semio@table@keys@reset
 }

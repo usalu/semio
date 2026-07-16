@@ -1,14 +1,16 @@
 // ../../core/js/index.ts
 class Store {
-  listeners = new Set();
+  listeners = new Set;
   disposed = false;
   subscribe(listener) {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
   notify() {
-    if (this.disposed) return;
-    for (const listener of this.listeners) listener();
+    if (this.disposed)
+      return;
+    for (const listener of this.listeners)
+      listener();
   }
   dispose() {
     this.disposed = true;
@@ -23,10 +25,12 @@ function dockAppStorageKey(appId) {
 }
 function readDockSkeleton(storage, key) {
   const raw = storage.get(key);
-  if (!raw) return null;
+  if (!raw)
+    return null;
   try {
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object" || parsed.version !== 1 || !parsed.corners || typeof parsed.corners !== "object") return null;
+    if (!parsed || typeof parsed !== "object" || parsed.version !== 2 || !parsed.anchors || typeof parsed.anchors !== "object")
+      return null;
     return parsed;
   } catch {
     return null;
@@ -44,7 +48,8 @@ class DockLayoutStore extends Store {
   getSnapshot() {
     if (this.appId) {
       const app = readDockSkeleton(this.storage, dockAppStorageKey(this.appId));
-      if (app) return app;
+      if (app)
+        return app;
     }
     return readDockSkeleton(this.storage, dockOsStorageKey());
   }
@@ -58,27 +63,87 @@ class DockLayoutStore extends Store {
   }
   reset() {
     this.storage.remove(dockOsStorageKey());
-    if (this.appId) this.storage.remove(dockAppStorageKey(this.appId));
+    if (this.appId)
+      this.storage.remove(dockAppStorageKey(this.appId));
     this.notify();
   }
   writeOrRemove(key, skeleton) {
-    if (skeleton === null) this.storage.remove(key);
-    else this.storage.set(key, JSON.stringify(skeleton));
+    if (skeleton === null)
+      this.storage.remove(key);
+    else
+      this.storage.set(key, JSON.stringify(skeleton));
   }
 }
-var EMPTY_ACTION_RESPONSE = {
+function dockUiOsStorageKey() {
+  return "semio.os.dockUi";
+}
+function dockUiAppStorageKey(appId) {
+  return `semio.os.dockUi.${appId}`;
+}
+function readDockUiState(storage, key) {
+  const raw = storage.get(key);
+  if (!raw)
+    return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || parsed.version !== 2 || !parsed.anchors || typeof parsed.anchors !== "object")
+      return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+class DockUiStateStore extends Store {
+  storage;
+  appId;
+  constructor(storage, appId) {
+    super();
+    this.storage = storage;
+    this.appId = appId;
+  }
+  getSnapshot() {
+    if (this.appId) {
+      const app = readDockUiState(this.storage, dockUiAppStorageKey(this.appId));
+      if (app)
+        return app;
+    }
+    return readDockUiState(this.storage, dockUiOsStorageKey());
+  }
+  save(state) {
+    this.writeOrRemove(this.appId ? dockUiAppStorageKey(this.appId) : dockUiOsStorageKey(), state);
+    this.notify();
+  }
+  saveOs(state) {
+    this.writeOrRemove(dockUiOsStorageKey(), state);
+    this.notify();
+  }
+  reset() {
+    this.storage.remove(dockUiOsStorageKey());
+    if (this.appId)
+      this.storage.remove(dockUiAppStorageKey(this.appId));
+    this.notify();
+  }
+  writeOrRemove(key, state) {
+    if (state === null)
+      this.storage.remove(key);
+    else
+      this.storage.set(key, JSON.stringify(state));
+  }
+}
+var EMPTY_INVOCATION_RESPONSE = {
   output: null,
   operations: [],
-  inverseGroup: { actionId: "", operations: [], inverseOperations: [] },
+  inverseGroup: { invocationId: "", operations: [], inverseOperations: [] }
 };
-function parseActionResponse(raw) {
+function parseInvocationResponse(raw) {
   try {
     const parsed = JSON.parse(raw);
     if (parsed && typeof parsed === "object" && Array.isArray(parsed.operations)) {
       return parsed;
     }
   } catch {}
-  return EMPTY_ACTION_RESPONSE;
+  return EMPTY_INVOCATION_RESPONSE;
 }
 var PLUGIN_WORKER_UNRESPONSIVE_MS = 1e4;
 function pluginWorkerUrl(moduleUrl) {
@@ -89,7 +154,7 @@ class PluginWorkerClient {
   pluginId;
   moduleUrl;
   worker = null;
-  pending = new Map();
+  pending = new Map;
   constructor(pluginId, moduleUrl) {
     this.pluginId = pluginId;
     this.moduleUrl = moduleUrl;
@@ -105,9 +170,11 @@ class PluginWorkerClient {
     worker.onmessage = (event) => {
       const message = event.data;
       const requestId = message.requestId;
-      if (!requestId) return;
+      if (!requestId)
+        return;
       const entry = this.pending.get(requestId);
-      if (!entry) return;
+      if (!entry)
+        return;
       window.clearTimeout(entry.watchdog);
       this.pending.delete(requestId);
       if (message.type === "error") {
@@ -154,6 +221,9 @@ class PluginWorkerClient {
   async handleAction(instanceId, actionJson, contextJson) {
     return String((await this.request("handleAction", { instanceId, actionJson, contextJson })).value ?? "{}");
   }
+  async handleCommand(instanceId, commandJson, contextJson) {
+    return String((await this.request("handleCommand", { instanceId, commandJson, contextJson })).value ?? "{}");
+  }
   async render(instanceId, bodyKey, viewStateJson, documentJson) {
     return String((await this.request("render", { instanceId, bodyKey, viewStateJson, documentJson })).value ?? "{}");
   }
@@ -166,10 +236,10 @@ class PluginWorkerClient {
     this.worker = null;
   }
 }
-var pluginModuleHandleCache = new Map();
+var pluginModuleHandleCache = new Map;
 if (import.meta.vitest) {
-  let createMemoryStoragePort = function () {
-    const map = new Map();
+  let createMemoryStoragePort = function() {
+    const map = new Map;
     return {
       get: (key) => map.get(key) ?? null,
       set: (key, value) => {
@@ -177,12 +247,15 @@ if (import.meta.vitest) {
       },
       remove: (key) => {
         map.delete(key);
-      },
+      }
     };
   };
   const { describe, expect, it } = import.meta.vitest;
   describe("DockLayoutStore", () => {
-    const emptySkeleton = () => ({ version: 1, corners: { "top-left": [], "top-right": [], "bottom-left": [], "bottom-right": [] } });
+    const emptySkeleton = () => ({
+      version: 2,
+      anchors: { "top-left": [], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [] }
+    });
     it("returns null when nothing persisted", () => {
       const store = new DockLayoutStore(createMemoryStoragePort());
       expect(store.getSnapshot()).toBeNull();
@@ -191,7 +264,7 @@ if (import.meta.vitest) {
       const storage = createMemoryStoragePort();
       const store = new DockLayoutStore(storage, "my-app");
       const osSkeleton = emptySkeleton();
-      const appSkeleton = { ...emptySkeleton(), corners: { ...emptySkeleton().corners, "top-left": [{ id: "a" }] } };
+      const appSkeleton = { ...emptySkeleton(), anchors: { ...emptySkeleton().anchors, "top-left": [{ id: "a" }] } };
       store.saveOs(osSkeleton);
       store.save(appSkeleton);
       expect(store.getSnapshot()).toEqual(appSkeleton);
@@ -229,6 +302,78 @@ if (import.meta.vitest) {
       expect(() => store.getSnapshot()).not.toThrow();
       expect(store.getSnapshot()).toBeNull();
     });
+    it("discards a stale version-1 (corners) blob instead of migrating it", () => {
+      const storage = createMemoryStoragePort();
+      storage.set("semio.os.dock", JSON.stringify({ version: 1, corners: { "top-left": [{ id: "a" }], "top-right": [], "bottom-left": [], "bottom-right": [] } }));
+      const store = new DockLayoutStore(storage);
+      expect(store.getSnapshot()).toBeNull();
+    });
+  });
+  describe("DockUiStateStore", () => {
+    const emptyUiState = () => ({ version: 2, anchors: {} });
+    it("returns null when nothing persisted", () => {
+      const store = new DockUiStateStore(createMemoryStoragePort());
+      expect(store.getSnapshot()).toBeNull();
+    });
+    it("app layer wins over os layer when both are set", () => {
+      const storage = createMemoryStoragePort();
+      const store = new DockUiStateStore(storage, "my-app");
+      const osState = emptyUiState();
+      const appState = { ...emptyUiState(), anchors: { "top-left": { visible: true, size: 320 } } };
+      store.saveOs(osState);
+      store.save(appState);
+      expect(store.getSnapshot()).toEqual(appState);
+    });
+    it("falls back to os layer when app layer absent", () => {
+      const storage = createMemoryStoragePort();
+      const store = new DockUiStateStore(storage, "my-app");
+      const osState = { ...emptyUiState(), pathMemory: { "framework.category.workbench": "framework.panel.document" } };
+      store.saveOs(osState);
+      expect(store.getSnapshot()).toEqual(osState);
+    });
+    it("save(null) removes the app-layer key", () => {
+      const storage = createMemoryStoragePort();
+      const store = new DockUiStateStore(storage, "my-app");
+      store.save(emptyUiState());
+      expect(storage.get("semio.os.dockUi.my-app")).not.toBeNull();
+      store.save(null);
+      expect(storage.get("semio.os.dockUi.my-app")).toBeNull();
+      expect(store.getSnapshot()).toBeNull();
+    });
+    it("reset() clears both layers", () => {
+      const storage = createMemoryStoragePort();
+      const store = new DockUiStateStore(storage, "my-app");
+      store.saveOs(emptyUiState());
+      store.save(emptyUiState());
+      store.reset();
+      expect(storage.get("semio.os.dockUi")).toBeNull();
+      expect(storage.get("semio.os.dockUi.my-app")).toBeNull();
+      expect(store.getSnapshot()).toBeNull();
+    });
+    it("returns null on corrupt JSON rather than throwing", () => {
+      const storage = createMemoryStoragePort();
+      storage.set("semio.os.dockUi", "{not json");
+      const store = new DockUiStateStore(storage);
+      expect(() => store.getSnapshot()).not.toThrow();
+      expect(store.getSnapshot()).toBeNull();
+    });
+    it("discards a stale version-1 (corners) blob instead of migrating it", () => {
+      const storage = createMemoryStoragePort();
+      storage.set("semio.os.dockUi", JSON.stringify({ version: 1, corners: { "top-left": { visible: true, size: 320 } } }));
+      const store = new DockUiStateStore(storage);
+      expect(store.getSnapshot()).toBeNull();
+    });
+    it('uses a distinct key from DockLayoutStore for an app literally named "ui"', () => {
+      const storage = createMemoryStoragePort();
+      new DockLayoutStore(storage, "ui").save({
+        version: 2,
+        anchors: { "top-left": [], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [] }
+      });
+      new DockUiStateStore(storage).saveOs(emptyUiState());
+      expect(storage.get("semio.os.dock.ui")).not.toBeNull();
+      expect(storage.get("semio.os.dockUi")).not.toBeNull();
+      expect(storage.get("semio.os.dock.ui")).not.toEqual(storage.get("semio.os.dockUi"));
+    });
   });
 }
 
@@ -263,11 +408,11 @@ var PLUGIN_BUILD_TARGETS = [
   { pluginId: "sourcing-module-windows", cratePath: "sourcing/module/windows/rs", wasmOut: "sourcing_module_windows.wasm", contributes: [], consumes: [] },
   { pluginId: "trinity", cratePath: "trinity/plugin/rs", wasmOut: "trinity_plugin.wasm", contributes: [], consumes: [] },
   { pluginId: "vcs", cratePath: "vcs/plugin/rs", wasmOut: "vcs_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "writer", cratePath: "writer/plugin/rs", wasmOut: "writer_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "writer", cratePath: "writer/plugin/rs", wasmOut: "writer_plugin.wasm", contributes: [], consumes: [] }
 ];
 var PLUGIN_TARGETS = PLUGIN_BUILD_TARGETS.map((target) => ({
   pluginId: target.pluginId,
-  moduleUrl: `/plugin-modules/${target.pluginId}/${target.wasmOut.replace(/\.wasm$/, ".js")}`,
+  moduleUrl: `/plugin-modules/${target.pluginId}/${target.wasmOut.replace(/\.wasm$/, ".js")}`
 }));
 
 // js/boot.ts
@@ -290,7 +435,7 @@ class PluginWorkerClient2 {
   pluginId;
   moduleUrl;
   worker = null;
-  pending = new Map();
+  pending = new Map;
   constructor(pluginId, moduleUrl) {
     this.pluginId = pluginId;
     this.moduleUrl = moduleUrl;
@@ -303,7 +448,8 @@ class PluginWorkerClient2 {
     }
   }
   terminateWorker() {
-    if (!this.worker) return;
+    if (!this.worker)
+      return;
     this.worker.terminate();
     this.worker = null;
   }
@@ -311,9 +457,11 @@ class PluginWorkerClient2 {
     worker.onmessage = (event) => {
       const message = event.data;
       const requestId = message.requestId;
-      if (!requestId) return;
+      if (!requestId)
+        return;
       const entry = this.pending.get(requestId);
-      if (!entry) return;
+      if (!entry)
+        return;
       window.clearTimeout(entry.timer);
       this.pending.delete(requestId);
       if (message.type === "error") {
@@ -377,12 +525,17 @@ class PluginWorkerClient2 {
     const response = await this.request("handleAction", { instanceId, actionJson, contextJson });
     return String(response.value ?? "{}");
   }
+  async handleCommand(instanceId, commandJson, viewState) {
+    const contextJson = JSON.stringify({ viewState, actor: "local" });
+    const response = await this.request("handleCommand", { instanceId, commandJson, contextJson });
+    return String(response.value ?? "{}");
+  }
   async render(instanceId, bodyKey, viewStateJson, documentJson) {
     const response = await this.request("render", { instanceId, bodyKey, viewStateJson, documentJson });
     return String(response.value ?? "{}");
   }
-  async tools(instanceId, viewStateJson) {
-    const response = await this.request("tools", { instanceId, viewStateJson });
+  async utilities(instanceId, viewStateJson) {
+    const response = await this.request("utilities", { instanceId, viewStateJson });
     return String(response.value ?? "[]");
   }
   async windowEngagements(instanceId, viewStateJson) {
@@ -405,7 +558,8 @@ function validatePluginManifest(pluginId, manifest) {
   }
   for (const app of apps) {
     const windowKinds = app.windowKinds;
-    if (!Array.isArray(windowKinds) || windowKinds.length === 0) continue;
+    if (!Array.isArray(windowKinds) || windowKinds.length === 0)
+      continue;
     for (const kind of windowKinds) {
       if (!kind.surfaceKind) {
         throw new Error(`[DEBUG] plugin ${pluginId} manifest window kind missing surfaceKind`);
@@ -423,12 +577,13 @@ async function loadPluginModuleViaWorker(pluginId, moduleUrl) {
     manifest,
     createApp: (appId) => client.createApp(appId),
     destroyApp: (instanceId) => client.destroyApp(instanceId),
-    handleAction: async (instanceId, actionJson, viewState) => parseActionResponse(await client.handleAction(instanceId, actionJson, viewState)),
+    handleAction: async (instanceId, actionJson, viewState) => parseInvocationResponse(await client.handleAction(instanceId, actionJson, viewState)),
+    handleCommand: async (instanceId, commandJson, viewState) => parseInvocationResponse(await client.handleCommand(instanceId, commandJson, viewState)),
     render: async (instanceId, bodyKey, viewState) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState))),
     renderWithDocument: async (instanceId, bodyKey, viewState, documentJson) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState), documentJson)),
-    tools: async (instanceId, viewState) => JSON.parse(await client.tools(instanceId, JSON.stringify(viewState))),
+    utilities: async (instanceId, viewState) => JSON.parse(await client.utilities(instanceId, JSON.stringify(viewState))),
     windowEngagements: async (instanceId, viewState) => JSON.parse(await client.windowEngagements(instanceId, JSON.stringify(viewState))),
-    windowMeasures: async (instanceId, viewState) => JSON.parse(await client.windowMeasures(instanceId, JSON.stringify(viewState))),
+    windowMeasures: async (instanceId, viewState) => JSON.parse(await client.windowMeasures(instanceId, JSON.stringify(viewState)))
   };
 }
 function pluginHandleForBridge(handle) {
@@ -437,15 +592,16 @@ function pluginHandleForBridge(handle) {
     createApp: (appId) => handle.createApp(appId),
     destroyApp: (instanceId) => handle.destroyApp(instanceId),
     handleAction: (instanceId, actionJson, viewStateJson) => handle.handleAction(instanceId, actionJson, JSON.parse(viewStateJson)).then((result) => JSON.stringify(result)),
+    handleCommand: (instanceId, commandJson, viewStateJson) => handle.handleCommand(instanceId, commandJson, JSON.parse(viewStateJson)).then((result) => JSON.stringify(result)),
     render: (instanceId, bodyKey, viewStateJson) => handle.render(instanceId, bodyKey, JSON.parse(viewStateJson)).then((node) => JSON.stringify(node)),
     renderWithDocument: handle.renderWithDocument ? (instanceId, bodyKey, viewStateJson, documentJson) => handle.renderWithDocument(instanceId, bodyKey, JSON.parse(viewStateJson), documentJson).then((node) => JSON.stringify(node)) : undefined,
-    tools: (instanceId, viewStateJson) => handle.tools(instanceId, JSON.parse(viewStateJson)).then((nodes) => JSON.stringify(nodes)),
+    utilities: (instanceId, viewStateJson) => handle.utilities(instanceId, JSON.parse(viewStateJson)).then((nodes) => JSON.stringify(nodes)),
     windowEngagements: (instanceId, viewStateJson) => handle.windowEngagements(instanceId, JSON.parse(viewStateJson)).then((engagements) => JSON.stringify(engagements)),
-    windowMeasures: (instanceId, viewStateJson) => handle.windowMeasures(instanceId, JSON.parse(viewStateJson)).then((measures) => JSON.stringify(measures)),
+    windowMeasures: (instanceId, viewStateJson) => handle.windowMeasures(instanceId, JSON.parse(viewStateJson)).then((measures) => JSON.stringify(measures))
   };
 }
 var pluginFromUrl = new URLSearchParams(location.search).get("plugin");
-var pluginFilter = pluginFromUrl ?? "puzzle2d";
+var pluginFilter = pluginFromUrl ?? "raster";
 var studioMode = pluginFilter === "s";
 var pluginTargets = studioMode ? PLUGIN_TARGETS : PLUGIN_TARGETS.filter((entry) => entry.pluginId === pluginFilter || entry.pluginId === `${pluginFilter}-module-procedural`);
 async function pluginModuleAvailable(moduleUrl) {
@@ -459,7 +615,8 @@ async function pluginModuleAvailable(moduleUrl) {
 function renderBootErrorBanner(message) {
   console.error(`[DEBUG] wgpu boot failed: ${message}`);
   const root = document.getElementById("root");
-  if (!root) return;
+  if (!root)
+    return;
   const banner = document.createElement("div");
   banner.style.cssText = "position:fixed;inset:0;padding:24px;background:#2a0a0a;color:#ffb4b4;font-family:monospace;font-size:14px;white-space:pre-wrap;overflow:auto;z-index:9999;";
   banner.textContent = `wgpu renderer boot failed:
@@ -477,12 +634,10 @@ try {
   if (availableTargets.length === 0) {
     throw new Error(`[DEBUG] no wasm plugin modules found for filter ${pluginFilter}`);
   }
-  const handles = await Promise.all(
-    availableTargets.map(async (entry) => ({
-      pluginId: entry.pluginId,
-      handle: pluginHandleForBridge(await loadPluginModule(entry.pluginId, entry.moduleUrl)),
-    })),
-  );
+  const handles = await Promise.all(availableTargets.map(async (entry) => ({
+    pluginId: entry.pluginId,
+    handle: pluginHandleForBridge(await loadPluginModule(entry.pluginId, entry.moduleUrl))
+  })));
   const bindings = await new Promise((resolve, reject) => {
     const host = window;
     const finish = () => {
@@ -504,10 +659,12 @@ try {
     };
     window.addEventListener("TrunkApplicationStarted", done, { once: true });
     const poll = window.setInterval(() => {
-      if (host.wasmBindings) done();
+      if (host.wasmBindings)
+        done();
     }, 50);
   });
-  if (!bindings.semioRendererBoot) throw new Error("[DEBUG] missing semioRendererBoot");
+  if (!bindings.semioRendererBoot)
+    throw new Error("[DEBUG] missing semioRendererBoot");
   await bindings.semioRendererBoot(handles, pluginFilter);
 } catch (error) {
   renderBootErrorBanner(error instanceof Error ? error.message : String(error));

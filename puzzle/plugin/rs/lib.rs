@@ -2031,6 +2031,8 @@ pub mod d2 {
                 ]),
                 panel_tab_labels: std::collections::HashMap::new(),
                 mode_labels: std::collections::HashMap::new(),
+                action_labels: std::collections::HashMap::new(),
+                utility_labels: std::collections::HashMap::new(),
             }
         }
     }
@@ -9016,6 +9018,8 @@ pub mod d5 {
                 ]),
                 panel_tab_labels: std::collections::HashMap::new(),
                 mode_labels: std::collections::HashMap::new(),
+                action_labels: std::collections::HashMap::new(),
+                utility_labels: std::collections::HashMap::new(),
             }
         }
     }

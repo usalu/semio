@@ -432,6 +432,7 @@ fn tree_item_with_action(
         items: None,
         control: None,
         is_hidden: None,
+        loading: None,
     }
 }
 
@@ -467,18 +468,21 @@ fn build_document_tree(fixture: &ShootingFixture, labels: &ShootingLabels) -> Ui
                 label: Some(labels.shots.into()),
                 default_open: Some(true),
                 items: shot_items,
+                loading: None,
             },
             UiTreeSectionNode {
                 id: "shooting-play-document.assets".into(),
                 label: Some(labels.assets.into()),
                 default_open: Some(true),
                 items: asset_items,
+                loading: None,
             },
         ],
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
         drop_action: None,
+        loading: None,
     })
 }
 
@@ -495,6 +499,7 @@ fn build_catalogue_tree(labels: &ShootingLabels) -> UiNode {
                     catalog_shot_item("svg-ellipse", labels.svg_ellipse, "svg", "ellipse"),
                     catalog_shot_item("png-ellipse", labels.png_ellipse, "png", "ellipse"),
                 ],
+                loading: None,
             },
             UiTreeSectionNode {
                 id: "shooting-play-catalogue.assets".into(),
@@ -506,12 +511,14 @@ fn build_catalogue_tree(labels: &ShootingLabels) -> UiNode {
                     Some("box"),
                     shooting_action("addAsset", Some(json!({ "format": "glb" }))),
                 )],
+                loading: None,
             },
         ],
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
         drop_action: None,
+        loading: None,
     })
 }
 

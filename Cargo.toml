@@ -62,6 +62,8 @@ members = [
     "procedural/plugin/rs",
     "trinity/rewrite/engine/rs",
     "trinity/jack/core/rs",
+    "trinity/jack/shell/rs",
+    "trinity/jack/lsp/rs",
     "trinity/ram/rs",
     "trinity/plugin/rs",
     "framework/graph/rs",

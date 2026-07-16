@@ -151,6 +151,16 @@
       "port": 6060
     },
     {
+      "name": "raster-wgpu-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:raster"],
+      "env": {
+        "RASTER_PLAY_PORT": "6160",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "port": 6160
+    },
+    {
       "name": "note-react-dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:note"],
@@ -169,6 +179,26 @@
         "SEMIO_RENDERER": "wgpu"
       },
       "port": 6180
+    },
+    {
+      "name": "draw-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:draw"],
+      "env": {
+        "DRAW_PLAY_PORT": "6064",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6064
+    },
+    {
+      "name": "draw-wgpu-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:draw"],
+      "env": {
+        "DRAW_PLAY_PORT": "6164",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "port": 6164
     },
     {
       "name": "trinity-jack-react-dev",

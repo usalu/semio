@@ -7039,6 +7039,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "trinity_jack_lsp"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph_dsl",
+ "serde",
+ "serde_json",
+ "trinity_jack",
+ "trinity_ram",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "trinity_jack_shell"
+version = "0.1.0"
+dependencies = [
+ "trinity_jack",
+ "trinity_ram",
+]
+
+[[package]]
 name = "trinity_ram"
 version = "0.1.0"
 dependencies = [
