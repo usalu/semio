@@ -1,7 +1,7 @@
 {
   "title": "First-Class Appendices for Print Reports and Zwischenbericht Anhänge",
   "emoji": "📎",
-  "status": "closed",
+  "status": "open",
   "description": "Add first-class appendix support to the semio print system (print/tex/): an appendix is a document attached to the main report, behaving like a chapter — numbered A, B, C…, labeled Anhang/Appendix, TOC entry, chip styling, cross-referenceable via \\appendixref, listed via \\listofappendices. Fix a pre-existing bug where window registers (\\listoffigures etc.) render header-only because semio@render@register reads the wrong body macro. Wire the feature into all six print templates (report, paper, flyer n/a, zukunftbau forschungsbericht/zwischenbericht/kompaktbericht). Then apply it to mit-bestand/bericht/zwischenbericht/zwischenbericht.tex: convert 9 Anhang markdown documents from temp/ into 8 LaTeX appendices (A-H), including a 67-project table with per-row avatar images sourced from temp/projekt_bilder/ (downscaled ~600px, copied into zwischenbericht/asset/projekt/). Update body cross-references to use \\appendixref. Full plan at /Users/ueli/.claude/plans/print-reports-should-be-joyful-haven.md.",
   "summary": "Standardized composed hierarchy identifiers on a single separator, \".\" only, per user request — previously appendix→chapter used \"-\" (BB-M, I-DG, US-BB) while every deeper level used \".\" (SB-B.1, H.a), an inconsistent mix.\n\nChanged `\\semio_appendix_child_id:nn` (semio-components.sty) to join the appendix id and its subprefix with \".\" instead of \"-\", so composed identifiers are now BB.M, I.DG, US.BB, SB.B.1, etc. — one separator throughout, at every depth. Hardened `\\semio_appendix_prefix_validate:n` to reject \"-\" in a user-supplied prefix in addition to the existing \".\" check (both are reserved as the hierarchy separator; either would produce ambiguous composed identifiers or corrupt the muting logic's split point). Simplified `\\semio_identifier_split_point:n` (semio-core.sty, the shared \"mute everything but the last segment\" helper used by chip numbers, the main TOC, and `\\listofappendices`/register tables) back down to a plain single-\".\" split now that \"-\" can never appear in a composed identifier — removed the now-dead normalize-a-throwaway-copy step and the `Nnx` seq_set_split variant it needed.\n\nVerified: rebuilt all 6 print templates and the full zwischenbericht clean (zero errors). Scanned the entire rendered PDF for any chip/TOC/register/cross-reference identifier containing a hyphen — found none (P.K, BB.M, SB.B.1, I.DG.1, Anlage I.DG, Tabelle: I.T.a, etc., all confirmed dot-only). The only hyphens left anywhere in the document are unrelated: German compound-word/line-break hyphens in prose, and the pre-existing flat content IDs (BB-01…BB-51 platform IDs, REQ-01…REQ-17 requirement clusters) that were part of the original research data before this feature existed and were explicitly kept in that format by an earlier decision in this same ticket — not print-system-generated hierarchy keys, so out of scope for this separator change. Confirmed the muted-prefix rendering (BB. muted, M bold) still works correctly with the simplified splitter.",
   "github": {
@@ -15,6 +15,7 @@
     "⚪00aaf6a264fe476782de898592c80ac8",
     "⚪c155c81e60e54adb938ac529c9bd2368",
     "⚪000f4d27e360498e8749eb20737d024c",
-    "⚪06a4cd24656446de99e4f603df044d1b"
+    "⚪06a4cd24656446de99e4f603df044d1b",
+    "⚪8bee11fb99ca4889bd00aaee88830bc5"
   ]
 }

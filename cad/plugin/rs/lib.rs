@@ -2421,9 +2421,9 @@ fn default_selection_method() -> String {
     "rectangle".into()
 }
 
-/// @emoji 🕹️ The default active transform tool when the host has not yet set one — mirrors the
-/// framework toolbar's first-declared tool (`move`), read from `ViewState::active_utility_id`.
-const CAD_DEFAULT_TOOL_ID: &str = "move";
+/// @emoji 🕹️ The default active transform utility when the host has not yet set one — mirrors the
+/// framework toolbar's first-declared utility (`move`), read from `ViewState::active_utility_id`.
+const CAD_DEFAULT_UTILITY_ID: &str = "move";
 
 impl Default for CadPlayRuntime {
     fn default() -> Self {
@@ -3743,7 +3743,7 @@ fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_uti
     }
     ui_stack_vertical(vec![
         ui_text(format!("Schema: {}", envelope.document.schema)),
-        ui_text(format!("Tool: {active_utility}")),
+        ui_text(format!("Utility: {active_utility}")),
         ui_text(format!("Objects: {}", envelope.document.objects.len())),
     ])
 }
@@ -4427,7 +4427,7 @@ fn start_interaction_session(runtime: &mut CadPlayRuntime, pane: CadPaneId, inte
 //#region 🔖CadApp
 /// @emoji 📐 The CAD play app. Document content lives in the wrapping `VcsDocumentApp`'s
 /// `DocumentVcsStore<CadScene, CadOp>`; only ephemeral view-state (selection, hover, engagement
-/// session, transform tool, sun) lives here on `runtime`. History (undo/redo/checkpoint) is
+/// session, transform utility, sun) lives here on `runtime`. History (undo/redo/checkpoint) is
 /// intercepted and dispatched by the wrapper — no manual arms or keybindings.
 #[derive(Default)]
 struct CadApp {
@@ -4481,9 +4481,9 @@ impl DocumentApp for CadApp {
                 ActionEmit::ops(vec![CadOp::SetScene { scene: Box::new(scene) }])
             }
             SET_ACTIVE_UTILITY_ACTION_ID => {
-                // 🧰 Switching the host-owned active tool (`ViewState::active_utility_id`) is a pure
+                // 🧰 Switching the host-owned active utility (`ViewState::active_utility_id`) is a pure
                 // View action: it never mutates the document. Clear any in-progress engagement
-                // session / rubber-band scratch so a stale preview cannot leak across a tool switch.
+                // session / rubber-band scratch so a stale preview cannot leak across a utility switch.
                 self.runtime.engagement_input.clear();
                 self.runtime.engagement_session = None;
                 self.runtime.engagement_step = "Idle".into();
@@ -4988,7 +4988,7 @@ impl DocumentApp for CadApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, CadScene>, view_state: &ViewState) -> UiNode {
         let view = CadPlayView { document: doc.projection.clone(), runtime: self.runtime.clone() };
         let labels = cad_labels(view_state);
-        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(CAD_DEFAULT_TOOL_ID);
+        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(CAD_DEFAULT_UTILITY_ID);
         match body_key {
             CAD_PLAY_BODY_SHAPE => build_world_scene_for_pane(&view, CadPaneId::Shape, CAD_PLAY_SURFACE_SHAPE, active_utility),
             CAD_PLAY_BODY_BUILDING => {
@@ -5102,8 +5102,8 @@ fn cad_quad_layout() -> WindowLayout {
     }
 }
 
-/// @emoji 🧰 A cad transform-gumball tool: an exclusive member of the `transform` group rendered in
-/// the framework toolbar (`UtilityCategory::Tools`). Switching it is a pure `setActiveTool` View action
+/// @emoji 🧰 A cad transform-gumball utility: an exclusive member of the `transform` group rendered in
+/// the framework toolbar (`UtilityCategory::Tools`). Switching it is a pure `setActiveUtility` View action
 /// (`ViewState::active_utility_id`) — it gates the action panel while active (the default), since a
 /// transform mode is a content-editing mode, not a passive viewing aid.
 fn cad_transform_utility(id: &str, label: &str, icon: &str) -> UtilityDefinition {
@@ -5114,7 +5114,7 @@ fn cad_transform_utility(id: &str, label: &str, icon: &str) -> UtilityDefinition
     }
 }
 
-/// @emoji 🧰 The transform-tool refs scoping the gumball to every world-3d pane uniformly.
+/// @emoji 🧰 The transform-utility refs scoping the gumball to every world-3d pane uniformly.
 fn cad_transform_utility_refs() -> Vec<semio_framework_plugin::UtilityRef> {
     vec!["move".into(), "rotate".into(), "scale".into()]
 }
@@ -5437,22 +5437,22 @@ mod tests {
     }
 
     #[test]
-    fn app_definition_declares_transform_tools_and_no_actions_variant() {
+    fn app_definition_declares_transform_utilities_and_no_actions_variant() {
         let definition = create_cad_app().definition;
-        let tool_ids: Vec<&str> = definition.utilities.iter().map(|tool| tool.id.as_str()).collect();
-        assert!(tool_ids.contains(&"move"));
-        assert!(tool_ids.contains(&"rotate"));
-        assert!(tool_ids.contains(&"scale"));
-        // 🧰 The framework auto-injects `setActiveTool` as a View action once utilities are declared —
+        let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
+        assert!(utility_ids.contains(&"move"));
+        assert!(utility_ids.contains(&"rotate"));
+        assert!(utility_ids.contains(&"scale"));
+        // 🧰 The framework auto-injects `setActiveUtility` as a View action once utilities are declared —
         // cad must NOT also declare it as an Operation.
-        let set_active_tool = definition.actions.iter().find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveTool auto-injected");
-        assert_eq!(set_active_tool.kind, semio_framework_plugin::ActionKind::View);
+        let set_active_utility = definition.actions.iter().find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility auto-injected");
+        assert_eq!(set_active_utility.kind, semio_framework_plugin::ActionKind::View);
         // 🚦 Transform utilities gate the action panel while active (the default) — cad declares no
         // passive `allows_actions_while_active` view utilities.
-        assert!(definition.utilities.iter().all(|tool| !tool.allows_actions_while_active));
+        assert!(definition.utilities.iter().all(|utility| !utility.allows_actions_while_active));
         // 🧭 Every world-3d pane scopes the three transform utilities.
         for window in &definition.window_kinds {
-            let refs: Vec<&str> = window.utilities.iter().map(|tool_ref| tool_ref.as_str()).collect();
+            let refs: Vec<&str> = window.utilities.iter().map(|utility_ref| utility_ref.as_str()).collect();
             assert_eq!(refs, vec!["move", "rotate", "scale"], "window {} utilities", window.id);
         }
     }
@@ -5508,20 +5508,20 @@ mod tests {
         let scene = default_document();
         drive(&mut app, &scene, "setSelection", Some(json!({ "objectIds": ["object-box-1"] })));
         let selection = world_selection_json(&scene, &app.runtime, "rotate");
-        assert!(selection.contains("\"transformTool\":\"rotate\""), "gumball tool sourced from ViewState::active_utility_id");
+        assert!(selection.contains("\"transformTool\":\"rotate\""), "gumball utility sourced from ViewState::active_utility_id");
         assert!(selection.contains("\"gumballActive\":true"));
         assert!(selection.contains("\"gumballTarget\""));
     }
 
     #[test]
     fn gumball_inactive_without_selection() {
-        let selection = world_selection_json(&default_document(), &CadPlayRuntime::default(), CAD_DEFAULT_TOOL_ID);
+        let selection = world_selection_json(&default_document(), &CadPlayRuntime::default(), CAD_DEFAULT_UTILITY_ID);
         assert!(selection.contains("\"gumballActive\":false"));
         assert!(!selection.contains("\"gumballTarget\""));
     }
 
     #[test]
-    fn active_tool_flows_from_view_state_into_scene() {
+    fn active_utility_flows_from_view_state_into_scene() {
         let app = CadApp::default();
         let scene = default_document();
         let history = empty_history();
@@ -5530,21 +5530,21 @@ mod tests {
         let node = app.render(CAD_PLAY_BODY_SHAPE, &doc, &view_state);
         let json = serde_json::to_string(&node).unwrap();
         // The world selection blob is embedded as an escaped JSON string inside the scene node.
-        assert!(json.contains(r#"transformTool\":\"scale"#), "render sources gumball tool from ViewState::active_utility_id");
+        assert!(json.contains(r#"transformTool\":\"scale"#), "render sources gumball utility from ViewState::active_utility_id");
     }
 
     #[test]
-    fn engagement_hud_no_longer_carries_tool_switcher_options() {
+    fn engagement_hud_no_longer_carries_utility_switcher_options() {
         let mut app = new_app();
         let engagements = app.window_engagements(&ViewState::default());
         for engagement in engagements.values() {
-            assert!(engagement.options.is_none(), "tool switching now lives in the framework toolbar, not the engagement HUD");
+            assert!(engagement.options.is_none(), "utility switching now lives in the framework toolbar, not the engagement HUD");
         }
     }
 
     #[test]
-    fn switching_tool_emits_no_operations_and_no_history_entry() {
-        // 🧰 The key regression guard: switching the host-owned active tool must be a pure View
+    fn switching_utility_emits_no_operations_and_no_history_entry() {
+        // 🧰 The key regression guard: switching the host-owned active utility must be a pure View
         // action — zero operations, no projection mutation, and (proven below) no intervening
         // history entry. If the switch recorded an edit, the single undo would revert the switch
         // instead of the preceding addObject.
@@ -5556,15 +5556,15 @@ mod tests {
         let view_state = ViewState { active_utility_id: Some("rotate".into()), ..ViewState::default() };
         let result = app
             .handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "rotate" })), &view_state, &meta("local"))
-            .expect("set active tool");
-        assert!(result.operations.is_empty(), "tool switch must emit zero operations");
+            .expect("set active utility");
+        assert!(result.operations.is_empty(), "utility switch must emit zero operations");
         let projection_after_switch = serde_json::to_string(&app.projection().expect("projection")).unwrap();
-        assert_eq!(projection_after_add, projection_after_switch, "tool switch must not mutate the projection");
+        assert_eq!(projection_after_add, projection_after_switch, "utility switch must not mutate the projection");
         app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
         assert_eq!(
             app.projection().expect("projection").objects.len(),
             before,
-            "a single undo reverts the addObject — proving the tool switch created no history entry"
+            "a single undo reverts the addObject — proving the utility switch created no history entry"
         );
     }
 
@@ -5637,7 +5637,7 @@ mod tests {
             selected_object_ids: vec!["object-box-1".into(), second_id],
             ..CadPlayRuntime::default()
         };
-        let panel = build_properties_panel(&view(scene, runtime), cad_labels(&ViewState::default()), CAD_DEFAULT_TOOL_ID);
+        let panel = build_properties_panel(&view(scene, runtime), cad_labels(&ViewState::default()), CAD_DEFAULT_UTILITY_ID);
         let json = serde_json::to_string(&panel).unwrap();
         assert!(json.contains("Mixed"));
         assert!(json.contains("cad-play-inspector.object.orientation"));
@@ -5648,7 +5648,7 @@ mod tests {
             selected_object_ids: vec!["object-box-1".into()],
             ..CadPlayRuntime::default()
         };
-        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(view_state), CAD_DEFAULT_TOOL_ID);
+        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(view_state), CAD_DEFAULT_UTILITY_ID);
         serde_json::to_string(&panel).unwrap()
     }
 
@@ -5687,7 +5687,7 @@ mod tests {
             ..CadPlayRuntime::default()
         };
         let view_state = ViewState { terminology: Some("reuse".into()), locale: Some("de".into()), ..ViewState::default() };
-        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(&view_state), CAD_DEFAULT_TOOL_ID);
+        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(&view_state), CAD_DEFAULT_UTILITY_ID);
         assert!(serde_json::to_string(&panel).unwrap().contains("Bauteil"));
     }
 

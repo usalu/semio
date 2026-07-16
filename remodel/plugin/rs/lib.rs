@@ -19,14 +19,14 @@ const REMODEL_PLAY_BODY_MAIN: &str = "remodel.play.main";
 const REMODEL_PLAY_BODY_DOCUMENT: &str = "remodel.play.document";
 const REMODEL_PLAY_WINDOW_MAIN: &str = "remodel-main";
 const REMODEL_MESH_ID: &str = "remodel-result";
-/// 🧰 The tool active when the host has not yet set `view_state.active_utility_id` (first UtilityRef default).
-const REMODEL_DEFAULT_TOOL: &str = "select";
+/// 🧰 The utility active when the host has not yet set `view_state.active_utility_id` (first UtilityRef default).
+const REMODEL_DEFAULT_UTILITY: &str = "select";
 //#endregion 🔖Constants
 
 //#region 🔖Runtime
 /// 🎛️ Ephemeral viewport state (orbit camera, face/vertex selection) — lives in the app struct, never
 /// in the document, so panning the camera or picking a face never lands in undo history nor syncs to
-/// peers. The active tool is host-owned session state (`view_state.active_utility_id`), not stored here.
+/// peers. The active utility is host-owned session state (`view_state.active_utility_id`), not stored here.
 #[derive(Clone, Debug, Default, PartialEq)]
 struct RemodelPlayRuntime {
     camera: CameraState,
@@ -90,8 +90,8 @@ fn build_document_panel(scene: &RemodelScene, runtime: &RemodelPlayRuntime, acti
             )
         })
         .unwrap_or_else(|| "Mesh: none".into());
-    let tool_label = format!("Tool: {} · selection: {} ({})", active_utility, runtime.selection.mode, runtime.selection.ids.len());
-    ui_stack_vertical(vec![ui_text(video_label), ui_text(job_label), ui_text(mesh_label), ui_text(tool_label)])
+    let utility_label = format!("Utility: {} · selection: {} ({})", active_utility, runtime.selection.mode, runtime.selection.ids.len());
+    ui_stack_vertical(vec![ui_text(video_label), ui_text(job_label), ui_text(mesh_label), ui_text(utility_label)])
 }
 
 fn placeholder_result() -> RemodelMesh {
@@ -133,7 +133,7 @@ impl DocumentApp for RemodelPlayApp {
     ) -> ActionEmit<RemodelOp> {
         match action {
             SET_ACTIVE_UTILITY_ACTION_ID => {
-                // 🧰 Host-owned tool switch: remodel keeps no in-progress gesture scratch, so emit nothing.
+                // 🧰 Host-owned utility switch: remodel keeps no in-progress gesture scratch, so emit nothing.
                 ActionEmit::default()
             }
             "setSelection" => {
@@ -193,7 +193,7 @@ impl DocumentApp for RemodelPlayApp {
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, RemodelScene>, view_state: &ViewState) -> UiNode {
         let scene = doc.projection;
-        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(REMODEL_DEFAULT_TOOL);
+        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(REMODEL_DEFAULT_UTILITY);
         match body_key {
             REMODEL_PLAY_BODY_MAIN => build_world_3d_scene(
                 REMODEL_PLAY_SURFACE_MAIN,
@@ -253,7 +253,7 @@ fn create_remodel_app() -> App {
                 ]).default_value("medium"),
                 ActionArgDef::slider("tsdfVoxelSizeMm", "TSDF Voxel Size (mm)", 1.0, 20.0).default_value(5.0),
             ])
-            // 🧰 Mesh-editing tool group — an exclusive per-window set (active tool is host-owned).
+            // 🧰 Mesh-editing utility group — an exclusive per-window set (active utility is host-owned).
             .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "mouse-pointer-2") })
             .utility(UtilityDefinition { category: Some(UtilityCategory::Tools), ..UtilityDefinition::new("sculpt", "Sculpt", "brush") })
             .window_kind_utilities(REMODEL_PLAY_WINDOW_MAIN, vec!["select".into(), "sculpt".into()]),
@@ -331,15 +331,15 @@ mod tests {
     }
 
     #[test]
-    fn set_active_tool_switches_host_view_state_without_ops_or_history() {
+    fn set_active_utility_switches_host_view_state_without_ops_or_history() {
         let mut app = new_app();
         let result = app
             .handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "sculpt" })), &ViewState::default(), &meta("local"))
-            .expect("switch tool");
-        assert!(result.operations.is_empty(), "tool switch is host-owned view state, never a document op");
+            .expect("switch utility");
+        assert!(result.operations.is_empty(), "utility switch is host-owned view state, never a document op");
         let view_state = ViewState { active_utility_id: Some("sculpt".into()), ..ViewState::default() };
         let document = app.render(REMODEL_PLAY_BODY_DOCUMENT, None, &view_state).expect("render doc");
-        assert!(serde_json::to_string(&document).unwrap().contains("sculpt"), "active tool comes from view_state.active_utility_id");
+        assert!(serde_json::to_string(&document).unwrap().contains("sculpt"), "active utility comes from view_state.active_utility_id");
     }
 
     #[test]

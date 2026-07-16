@@ -380,7 +380,7 @@ pub struct RasterHost {
     images: cavas::raster::RasterImageCache,
     paint_buffers: HashMap<String, Vec<u8>>,
     mask_buffers: HashMap<String, Vec<u8>>,
-    active_tool: String,
+    active_utility: String,
     brush_size: f32,
     brush_opacity: f32,
     hovered_id: Option<String>,
@@ -412,7 +412,7 @@ impl RasterHost {
             images: cavas::raster::RasterImageCache::default(),
             paint_buffers: HashMap::new(),
             mask_buffers: HashMap::new(),
-            active_tool: "selectMarquee".into(),
+            active_utility: "selectMarquee".into(),
             brush_size: 24.0,
             brush_opacity: 1.0,
             hovered_id: None,
@@ -467,7 +467,7 @@ impl RasterHost {
             self.pan_last = Some(Point::new(sx, sy));
             return;
         }
-        if self.active_tool.starts_with("paint") {
+        if self.active_utility.starts_with("paint") {
             self.painting = true;
             self.last_paint = Some(self.screen_to_world(sx, sy));
             self.paint_at(self.last_paint.unwrap());
@@ -523,7 +523,7 @@ impl RasterHost {
         let layer_id = self.selected_ids.first().cloned().unwrap_or_else(|| "bg".into());
         let (width, height) = (512u32, 512u32);
         let brush_opacity = self.brush_opacity;
-        let is_eraser = self.active_tool == "paintEraser";
+        let is_eraser = self.active_utility == "paintEraser";
         let buf = self.ensure_layer_buffer(&layer_id, width, height);
         let cx = world.x.round() as i32;
         let cy = world.y.round() as i32;
@@ -592,8 +592,8 @@ impl RasterHost {
         Ok(())
     }
 
-    pub fn set_active_tool(&mut self, tool: &str) {
-        self.active_tool = tool.to_string();
+    pub fn set_active_utility(&mut self, utility: &str) {
+        self.active_utility = utility.to_string();
     }
 
     pub fn set_brush_size(&mut self, size: f32) {
@@ -1224,9 +1224,9 @@ impl RasterSession {
             .map_err(|e| JsValue::from_str(&e))
     }
 
-    #[wasm_bindgen(js_name = setActiveTool)]
-    pub fn set_active_tool(&mut self, tool: &str) {
-        self.state.borrow_mut().host.set_active_tool(tool);
+    #[wasm_bindgen(js_name = setActiveUtility)]
+    pub fn set_active_utility(&mut self, utility: &str) {
+        self.state.borrow_mut().host.set_active_utility(utility);
     }
 
     #[wasm_bindgen(js_name = setBrushSize)]

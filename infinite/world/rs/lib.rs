@@ -2310,12 +2310,13 @@ pub fn handle_world3d_pointer_button(
                     args: Some(json!({ "surfaceId": state.surface_id })),
                 });
             }
-            if state.active_tool == "brush" {
+            if state.active_tool == "brush" || (state.active_tool == "select" && state.granularity == "vertex") {
                 if let Some(full_id) = pick_vortex_at(state, x, y, inner) {
+                    let merge = if shift { "add" } else if ctrl { "toggle" } else { "replace" };
                     return Some(ActionDescriptor {
                         controller_id: state.controller_id.clone(),
                         action: "worldVortexSelect".into(),
-                        args: Some(json!({ "surfaceId": state.surface_id, "fullId": full_id })),
+                        args: Some(json!({ "surfaceId": state.surface_id, "fullId": full_id, "merge": merge })),
                     });
                 }
             } else if state.active_tool == "select" {
@@ -2592,7 +2593,7 @@ pub fn ingest_glb_mesh(state: &mut World3dState, url: &str, mesh: MeshData, mesh
 }
 
 fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> Option<ActionDescriptor> {
-    if state.active_tool == "brush" {
+    if state.active_tool == "brush" || (state.active_tool == "select" && state.granularity == "vertex") {
         let hit = pick_vortex_at(state, x, y, inner);
         if state.hovered_vortex_id == hit {
             return None;

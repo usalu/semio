@@ -14,7 +14,7 @@ import type {
   ActionArgDef as GeneratedActionArgDef,
   ActionArgControl as GeneratedActionArgControl,
   ActionArgOption as GeneratedActionArgOption,
-  UtilityDefinition as GeneratedToolDefinition,
+  UtilityDefinition as GeneratedUtilityDefinition,
   UtilityRef as GeneratedUtilityRef,
   CommandScope as GeneratedCommandScope,
   CommandDefinition as GeneratedCommandDefinition,
@@ -553,7 +553,7 @@ export type RasterScene = {
   readonly cameraJson: string;
   readonly selectionJson: string;
   readonly hoveredId?: string;
-  readonly activeTool: string;
+  readonly activeUtility: string;
   readonly brushSize: number;
   readonly brushOpacity: number;
   readonly viewMode: string;
@@ -603,7 +603,7 @@ export type Puzzle2dBoardScene = {
   readonly selectionJson: string;
   readonly interactive: boolean;
   readonly hoveredId?: string;
-  readonly activeTool?: string;
+  readonly activeUtility?: string;
   readonly selectionMethod: string;
   readonly gridSnapEnabled: boolean;
   readonly gridFactor: number;
@@ -618,7 +618,7 @@ export type NoteCanvasScene = {
   readonly documentJson: string;
   readonly selectionJson: string;
   readonly hoveredId?: string;
-  readonly activeTool: string;
+  readonly activeUtility: string;
   readonly viewMode: string;
   readonly interactive: boolean;
 };
@@ -1115,7 +1115,7 @@ export type ActionDefinition = GeneratedActionDefinition;
 export type ActionArgDef = GeneratedActionArgDef;
 export type ActionArgControl = GeneratedActionArgControl;
 export type ActionArgOption = GeneratedActionArgOption;
-export type UtilityDefinition = GeneratedToolDefinition;
+export type UtilityDefinition = GeneratedUtilityDefinition;
 export type UtilityRef = GeneratedUtilityRef;
 
 /** 🎛️ Generated from Rust `CommandScope`/`CommandDefinition`/`CommandRef` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
@@ -1354,8 +1354,8 @@ export function resolveLayoutForMode(
   return app.defaultLayout;
 }
 
-//#region 🧰ActionArgsAndTools
-/** 🧰 A resolved tool ready for the toolbar — the TS twin of Rust `DerivedUtilitySpec` in `ui_wgpu`. */
+//#region 🧰ActionArgsAndUtilities
+/** 🧰 A resolved utility ready for the toolbar — the TS twin of Rust `DerivedUtilitySpec` in `ui_wgpu`. */
 export type DerivedUtilitySpec = {
   readonly id: string;
   readonly label: string;
@@ -1365,37 +1365,37 @@ export type DerivedUtilitySpec = {
 };
 
 /**
- * 🧰 Hand-written twin of Rust `derive_tool_nodes` (`ui/wgpu/rs/lib.rs`): builds the toolbar node tree
- * from resolved tools + the host-owned active tool id. Each tool becomes a `toggle` whose `pressed`
- * reflects `activeUtilityId === id` and whose `onChange` dispatches `setActiveUtility { utilityId }`; tools
+ * 🧰 Hand-written twin of Rust `derive_utility_nodes` (`ui/wgpu/rs/lib.rs`): builds the toolbar node tree
+ * from resolved utilities + the host-owned active utility id. Each utility becomes a `toggle` whose `pressed`
+ * reflects `activeUtilityId === id` and whose `onChange` dispatches `setActiveUtility { utilityId }`; utilities
  * sharing a `group` collapse into one `collection` placed where the group first appears.
  */
-export function deriveUtilityNodes(controllerId: string, tools: readonly DerivedUtilitySpec[], activeUtilityId?: string): UtilityNode[] {
-  const toggle = (tool: DerivedUtilitySpec): UtilityNode => ({
-    id: tool.id,
+export function deriveUtilityNodes(controllerId: string, utilities: readonly DerivedUtilitySpec[], activeUtilityId?: string): UtilityNode[] {
+  const toggle = (utility: DerivedUtilitySpec): UtilityNode => ({
+    id: utility.id,
     kind: "toggle",
-    iconId: tool.iconId,
-    label: tool.label,
-    title: tool.label,
-    pressed: activeUtilityId === tool.id,
-    category: tool.category,
-    onChange: { controllerId, action: SET_ACTIVE_UTILITY_ACTION_ID, args: { utilityId: tool.id } },
+    iconId: utility.iconId,
+    label: utility.label,
+    title: utility.label,
+    pressed: activeUtilityId === utility.id,
+    category: utility.category,
+    onChange: { controllerId, action: SET_ACTIVE_UTILITY_ACTION_ID, args: { utilityId: utility.id } },
   });
   const nodes: UtilityNode[] = [];
   const groupIndex = new Map<string, number>();
-  for (const tool of tools) {
-    const node = toggle(tool);
-    if (tool.group === undefined) {
+  for (const utility of utilities) {
+    const node = toggle(utility);
+    if (utility.group === undefined) {
       nodes.push(node);
       continue;
     }
-    const existing = groupIndex.get(tool.group);
+    const existing = groupIndex.get(utility.group);
     if (existing !== undefined) {
       const collection = nodes[existing] as Extract<UtilityNode, { kind: "collection" }>;
       (collection.children as UtilityNode[]).push(node);
     } else {
-      groupIndex.set(tool.group, nodes.length);
-      nodes.push({ id: `group:${tool.group}`, kind: "collection", iconId: tool.iconId, label: tool.group, title: tool.group, category: tool.category, children: [node] });
+      groupIndex.set(utility.group, nodes.length);
+      nodes.push({ id: `group:${utility.group}`, kind: "collection", iconId: utility.iconId, label: utility.group, title: utility.group, category: utility.category, children: [node] });
     }
   }
   return nodes;
@@ -1403,22 +1403,22 @@ export function deriveUtilityNodes(controllerId: string, tools: readonly Derived
 
 /**
  * 🎯 Hand-written twin of Rust `partition_window_measures` (`ui/wgpu/rs/lib.rs`): splits a window's
- * top-level measures into `general` and `toolOptions`. A top-level `group` tagged with `activeUtilityId`
- * lands in `toolOptions` only when it equals the window's active tool, and is dropped from both buckets
- * otherwise (irrelevant to whichever tool — or no tool — is active). Untagged groups and non-group
+ * top-level measures into `general` and `utilityOptions`. A top-level `group` tagged with `activeUtilityId`
+ * lands in `utilityOptions` only when it equals the window's active utility, and is dropped from both buckets
+ * otherwise (irrelevant to whichever utility — or no utility — is active). Untagged groups and non-group
  * top-level measures stay in `general`, unchanged.
  */
-export function partitionWindowMeasures(measures: readonly WindowMeasure[], activeUtilityId?: string): { readonly general: WindowMeasure[]; readonly toolOptions: WindowMeasure[] } {
+export function partitionWindowMeasures(measures: readonly WindowMeasure[], activeUtilityId?: string): { readonly general: WindowMeasure[]; readonly utilityOptions: WindowMeasure[] } {
   const general: WindowMeasure[] = [];
-  const toolOptions: WindowMeasure[] = [];
+  const utilityOptions: WindowMeasure[] = [];
   for (const measure of measures) {
     if (measure.kind === "group" && measure.activeUtilityId !== undefined) {
-      if (measure.activeUtilityId === activeUtilityId) toolOptions.push(measure);
+      if (measure.activeUtilityId === activeUtilityId) utilityOptions.push(measure);
       continue;
     }
     general.push(measure);
   }
-  return { general, toolOptions };
+  return { general, utilityOptions };
 }
 
 /**
@@ -1484,7 +1484,7 @@ export function resolveWindowActions(
   }
   return resolved;
 }
-//#endregion 🧰ActionArgsAndTools
+//#endregion 🧰ActionArgsAndUtilities
 
 /**
  * 🧩 Expands a plugin registry for a primary plugin: `primaryPluginId` is matched directly

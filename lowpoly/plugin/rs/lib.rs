@@ -1008,7 +1008,7 @@ fn lowpoly_window_engagement(view: LowpolyView, active_utility: &str) -> WindowE
     let selected_count = runtime.selection.ids.len();
     WindowEngagement {
         session_active: Some(true),
-        // 🧰 The move/rotate/scale transform switcher now lives in the framework toolbar (declared via `.tool` +
+        // 🧰 The move/rotate/scale transform switcher now lives in the framework toolbar (declared via `.utility` +
         // `.window_kind_utilities`), so the engagement keeps only its non-tool options below.
         options: Some(vec![
             WindowEngagementOption {

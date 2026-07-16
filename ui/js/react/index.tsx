@@ -1483,6 +1483,16 @@ export function getGlassSurfaceClass(tier: GlassTier): string {
 /** @emoji 🎨 Shared transition for interactive chrome (hover, focus, active backgrounds). */
 export const interactiveControlTransitionClass = "transition-[color,border-color,background-color]";
 
+/** @emoji 🫳 Wraps a `hover:`-style utility (e.g. `"bg-hover-interactive-fill"`) so it's suppressed while the pointer is over a nested drag handle (`[data-slot="drag-handle"]`) instead of the element itself — hovering the grip then only highlights the grip. Safe to use unconditionally: the `:has()` guard is a no-op wherever no drag handle exists. */
+function selfHoverExcludingHandle(utility: string): string {
+  return `[&:hover:not(:has([data-slot='drag-handle']:hover))]:${utility}`;
+}
+
+/** @emoji 🫳 Wraps a `group-hover:`-style utility so it's suppressed while hovering a nested drag handle anywhere within the `group`. */
+function groupHoverExcludingHandle(utility: string): string {
+  return `[.group:hover:not(:has([data-slot='drag-handle']:hover))_&]:${utility}`;
+}
+
 /** @emoji 🎨 Normal-border gray fill for interactive hover states. */
 export const interactiveHoverFillClass = "hover:bg-hover-interactive-fill";
 
@@ -1517,7 +1527,14 @@ export const interactiveOnClass = cn(
 );
 
 /** @emoji 🎨 Shared active fill for pressed tabs, toggles, and nav selection. */
-export const interactiveActiveFillClass = cn("bg-active-base", interactiveActiveBorderClass, "text-emphasized hover:bg-active-base/90 hover:border-active-base hover:text-emphasized");
+export const interactiveActiveFillClass = cn(
+  "bg-active-base",
+  interactiveActiveBorderClass,
+  "text-emphasized",
+  selfHoverExcludingHandle("bg-active-base/90"),
+  selfHoverExcludingHandle("border-active-base"),
+  selfHoverExcludingHandle("text-emphasized"),
+);
 
 /** @emoji 🎨 Table rows: element gray at rest, hover fill + emphasized content. */
 export const tableRowInteractiveClass = cn("text-element", interactiveControlTransitionClass, interactiveHoverClass);
@@ -4371,8 +4388,8 @@ function PanelGhostRoot({ children, className, style, ...props }: PanelGhostRoot
 export const GLASS_OVERLAY_BOX_CLASS = cn(getGlassSurfaceClass("panel"), "pointer-events-auto fixed z-tutorial max-w-sm rounded-lg border p-double shadow-lg");
 
 /** @emoji 🎓 CSS selector for an `IntroductionAnchor` — reuses ids/data-attributes the shell already
- * stamps on navbar/footer/window/tool/action/panel-tab chrome instead of adding new markup: tool leaf
- * buttons already carry `id={toolId}`, action rows carry `id="${windowId}-action-${actionId}"` (or the
+ * stamps on navbar/footer/window/utility/action/panel-tab chrome instead of adding new markup: utility leaf
+ * buttons already carry `id={utilityId}`, action rows carry `id="${windowId}-action-${actionId}"` (or the
  * `-execute` suffix for staged-arg actions), panel tab buttons carry `data-tab-id`, and window bodies
  * carry `data-window-kind-id`. `null` means "no specific element" (paired with `Screen`/`Center`). */
 export function introductionAnchorSelector(anchor: IntroductionAnchor): string | null {
@@ -4823,7 +4840,7 @@ export const floatingTagOffClass = "bg-transparent text-muted-foreground";
 export const canvasViewportClass = "relative h-full min-h-0 w-full min-w-0 bg-canvas outline-none";
 
 /** @emoji 📑 Panel tab strip base — sits above {@link panelChromeFrameLayerClass}; tabs sit flush against the panel's edges (no side inset — only tree/content rows carry that). `w-full` so the strip's divider border spans the whole row, not just the tabs' content width. Border side is added by callers ({@link panelTabBarClass}, {@link panelAnchorTabBarClass}). */
-const panelTabBarBaseClass = "relative z-40 flex w-full min-w-0 items-center shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single";
+const panelTabBarBaseClass = "relative z-40 flex w-full min-w-0 items-center shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single px-single gap-single py-tiny";
 
 /** @emoji 📑 Panel tab strip with its divider on the content-facing side. */
 export const panelTabBarClass = cn(panelTabBarBaseClass, borderNormalBottomClass);
@@ -4836,9 +4853,10 @@ export const panelTabLabelClass = "min-w-0 truncate text-xs leading-none";
 
 /** @emoji 📑 Panel tab button with icon and mandatory name (no per-tab borders — {@link panelTabBarClass} owns dividers). */
 export const panelTabButtonClass = cn(
-  "inline-flex h-full min-h-0 shrink-0 items-center gap-tiny border-0 bg-transparent p-0",
+  "inline-flex h-full min-h-0 shrink-0 items-center gap-tiny border-0 bg-transparent p-0 rounded-sm",
   "cursor-pointer whitespace-nowrap text-xs leading-none text-element transition-colors",
-  "hover:bg-hover-interactive-fill hover:text-emphasized",
+  selfHoverExcludingHandle("bg-hover-interactive-fill"),
+  selfHoverExcludingHandle("text-emphasized"),
 );
 
 /** @emoji 📑 Panel tab strip — divider sits on the content-facing side: bottom anchors grow "up" (tabs anchor at the screen edge, content above), so their divider flips to the top. */
@@ -4851,17 +4869,22 @@ export const panelAnchorTabButtonClass = cn(panelTabButtonClass, "px-tiny");
 
 //#region 🫳DragAffordance
 
-/** @emoji 🫳 Universal grip that starts a drag — pass `onPointerDown` for pointer-capture drags, spread dnd-kit `attributes`/`listeners`, or use as a pure affordance on whole-surface draggables. */
+/** @emoji 🫳 Universal grip that starts a drag — pass `onPointerDown` for pointer-capture drags, spread dnd-kit `attributes`/`listeners`, or use as a pure affordance on whole-surface draggables. `emphasized` mirrors the ambient active/ready state of the element it belongs to, so the grip reads as clearly as the label/icon beside it. */
 export const DragHandle: React.FC<{
   readonly onPointerDown?: React.PointerEventHandler<HTMLSpanElement>;
   readonly attributes?: object;
   readonly listeners?: Record<string, unknown>;
   readonly onClick?: React.MouseEventHandler<HTMLSpanElement>;
   readonly className?: string;
-}> = ({ onPointerDown, attributes, listeners, onClick, className }) => (
+  readonly emphasized?: boolean;
+}> = ({ onPointerDown, attributes, listeners, onClick, className, emphasized = false }) => (
   <span
     data-slot="drag-handle"
-    className={cn("inline-flex shrink-0 cursor-grab touch-none items-center justify-center text-muted-foreground transition-colors hover:text-emphasized active:cursor-grabbing", className)}
+    className={cn(
+      "inline-flex shrink-0 cursor-grab touch-none items-center justify-center transition-colors hover:text-emphasized active:cursor-grabbing",
+      emphasized ? "text-emphasized" : "text-muted-foreground",
+      className,
+    )}
     onPointerDown={onPointerDown}
     onClick={onClick}
     {...(attributes as React.ComponentProps<"span">)}
@@ -5865,7 +5888,11 @@ export const modeDockInactiveTabClass = `relative z-30 box-border min-h-medium s
 export const modeDockInactiveTabBeforeGapClass = `relative z-30 box-border min-h-medium shrink-0 border-t border-l border-r border-b-0 ${borderNormalClass} bg-window`;
 
 /** @emoji 🪟 Default mode-dock tab label — element gray; emphasize on hover/active only. */
-export const modeDockTabClassName = "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half px-single text-xs text-element select-none transition-colors hover:bg-hover-interactive-fill hover:text-emphasized";
+export const modeDockTabClassName = cn(
+  "group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half px-single text-xs text-element select-none transition-colors",
+  selfHoverExcludingHandle("bg-hover-interactive-fill"),
+  selfHoverExcludingHandle("text-emphasized"),
+);
 
 /** @emoji 🪧 Static shell title (navbar app label, pane headings) — element gray at rest. */
 export const shellChromeTitleClassName = "truncate text-sm font-medium text-element";
@@ -11400,11 +11427,11 @@ const treeItemLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center over
 const treeItemSecondaryTextClassName = "text-2xs leading-none text-muted-foreground";
 const treeSectionLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center truncate text-xs font-semibold uppercase leading-none tracking-wide text-element transition-colors select-text";
 const treeSectionChevronClassName = "size-small flex-shrink-0 text-element transition-colors";
-const treeRowDefaultIconClassName = "size-tiny flex-shrink-0 text-element transition-colors";
+const treeRowDefaultIconClassName = "size-tiny flex-shrink-0 transition-colors";
 
-/** @emoji 🖼️ Renders a tree row glyph before the label; uses {@link DefaultIcon} when `icon` is omitted. */
-const renderTreeRowIcon = (icon: React.ReactNode | undefined, defaultIcon: IconName) => (
-  <span data-slot="tree-icon" className="flex items-center justify-center flex-shrink-0 text-element transition-colors">
+/** @emoji 🖼️ Renders a tree row glyph before the label; uses {@link DefaultIcon} when `icon` is omitted. `emphasized` mirrors the row's active/highlighted/drop-ready state so the icon reads as clearly as the label beside it. */
+const renderTreeRowIcon = (icon: React.ReactNode | undefined, defaultIcon: IconName, emphasized = false) => (
+  <span data-slot="tree-icon" className={cn("flex items-center justify-center flex-shrink-0 transition-colors", emphasized ? "text-emphasized" : "text-element")}>
     {icon ?? <Icon icon={defaultIcon} size={12} className={treeRowDefaultIconClassName} />}
   </span>
 );
@@ -12388,7 +12415,7 @@ function treeRowChromeShellClasses(isSelected: boolean, isHighlighted: boolean, 
   if (isHighlighted) {
     return cn("group", "text-emphasized", interactiveControlTransitionClass, hiddenClass);
   }
-  return cn("group", "text-element", interactiveControlTransitionClass, "hover:text-emphasized", hiddenClass);
+  return cn("group", "text-element", interactiveControlTransitionClass, selfHoverExcludingHandle("text-emphasized"), hiddenClass);
 }
 
 /** @emoji 🎨 Tree row content fill: backgrounds apply only on the label column, not the guide gutter. */
@@ -12400,7 +12427,7 @@ function treeRowChromeContentFillClasses(isSelected: boolean, isHighlighted: boo
   if (isHighlighted) {
     return cn("bg-hover-interactive-fill", interactiveControlTransitionClass, loadingClass);
   }
-  return cn(interactiveControlTransitionClass, "group-hover:bg-hover-interactive-fill", loadingClass);
+  return cn(interactiveControlTransitionClass, groupHoverExcludingHandle("bg-hover-interactive-fill"), loadingClass);
 }
 
 /** @emoji 🎨 Tree row chrome: element gray at rest; hover highlight; selected primary + emphasized (no hover fill override). */
@@ -12507,8 +12534,8 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
         <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slot={null} contentClassName="min-w-0" contentChromeClassName={rowContentFillClassName}>
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
-              {renderTreeRowIcon(icon, "folder")}
-              <span data-slot="tree-label" title={controlHint} className={treeSectionLabelSlotClassName} style={treeItemLabelStyle}>
+              {renderTreeRowIcon(icon, "folder", isDropReady)}
+              <span data-slot="tree-label" title={controlHint} className={cn(treeSectionLabelSlotClassName, isDropReady && "text-emphasized")} style={treeItemLabelStyle}>
                 {displayLabel}
               </span>
             </div>
@@ -12560,8 +12587,8 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
         >
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
-              {renderTreeRowIcon(icon, "folder")}
-              <span data-slot="tree-label" title={controlHint} className={treeSectionLabelSlotClassName} style={treeItemLabelStyle}>
+              {renderTreeRowIcon(icon, "folder", isDropReady)}
+              <span data-slot="tree-label" title={controlHint} className={cn(treeSectionLabelSlotClassName, isDropReady && "text-emphasized")} style={treeItemLabelStyle}>
                 {displayLabel}
               </span>
             </div>
@@ -12635,6 +12662,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   };
 
   const isDropReady = isSorting && !isDragging;
+  const rowEmphasized = isSelected || isHighlighted || isDropReady;
   const itemShellClasses = cn(treeRowShellClassName, treeRowChromeShellClasses(isSelected, isHighlighted), "w-full", hasChildren ? "cursor-foldable" : "cursor-selectable", isDropReady && dropZoneReadyTextClass, className);
   const itemContentFillClassName = cn(treeRowChromeContentFillClasses(isSelected, isHighlighted), isDropReady && dropZoneReadyFillClass);
 
@@ -12682,7 +12710,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             >
               <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
                 <div className={treeHeaderMainClassName}>
-                  {renderTreeRowIcon(icon, "folder")}
+                  {renderTreeRowIcon(icon, "folder", rowEmphasized)}
                   <span
                     data-slot="tree-label"
                     className={cn(treeItemLabelSlotClassName, "cursor-selectable")}
@@ -12698,7 +12726,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
                   </span>
                 </div>
                 {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-                {isDragHandle && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} />}
+                {isDragHandle && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />}
               </div>
             </TreeAlignedRow>
           </div>
@@ -12755,7 +12783,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           >
             <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
               <div className={treeHeaderMainClassName}>
-                {renderTreeRowIcon(icon, "folder")}
+                {renderTreeRowIcon(icon, "folder", rowEmphasized)}
                 <span
                   data-slot="tree-label"
                   className={cn(treeItemLabelSlotClassName, "cursor-selectable")}
@@ -12771,7 +12799,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
                 </span>
               </div>
               {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-              {isDragHandle && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} />}
+              {isDragHandle && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />}
             </div>
           </TreeAlignedRow>
         </div>
@@ -12815,13 +12843,13 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" contentChromeClassName={itemContentFillClassName}>
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
-              {renderTreeRowIcon(icon, "file-text")}
+              {renderTreeRowIcon(icon, "file-text", rowEmphasized)}
               <span data-slot="tree-label" className={treeItemLabelSlotClassName} style={treeItemLabelStyle}>
                 {displayLabel as React.ReactNode}
               </span>
             </div>
             {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-            {isDragHandle && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} />}
+            {isDragHandle && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />}
           </div>
         </TreeAlignedRow>
       </div>
@@ -12852,13 +12880,13 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
       <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" contentChromeClassName={itemContentFillClassName}>
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
           <div className={treeHeaderMainClassName}>
-            {renderTreeRowIcon(icon, "file-text")}
+            {renderTreeRowIcon(icon, "file-text", rowEmphasized)}
             <span data-slot="tree-label" className={treeItemLabelSlotClassName} style={treeItemLabelStyle}>
               {displayLabel as React.ReactNode}
             </span>
           </div>
           {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-          {isDragHandle && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} />}
+          {isDragHandle && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />}
         </div>
       </TreeAlignedRow>
     </div>
@@ -23536,7 +23564,7 @@ if (import.meta.vitest) {
       expect(activeButton?.className).toContain("text-emphasized");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className).toContain("overflow-x-auto");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className).toContain("z-40");
-      expect(container.querySelector('[data-slot="panel-tabs"]')?.className?.split(" ")).not.toContain("px-single");
+      expect(container.querySelector('[data-slot="panel-tabs"]')?.className?.split(" ")).toContain("px-single");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className?.split(" ")).toContain("w-full");
       expect(container.querySelector('[data-slot="panel-chrome-frame"]')?.className).toContain("z-30");
     });

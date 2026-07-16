@@ -1188,7 +1188,7 @@ fn render_properties_panel(document: &NoteDocument, selected_ids: &[String], vie
         return ui_stack_vertical(vec![
             ui_text(format!("Schema: {}", document.schema)),
             ui_text(format!("Blocks: {}", flatten_blocks(&document.blocks).len())),
-            ui_text(format!("Tool: {}", view_state.active_utility_id.clone().unwrap_or_else(|| "selectDirect".into()))),
+            ui_text(format!("Utility: {}", view_state.active_utility_id.clone().unwrap_or_else(|| "selectDirect".into()))),
             ui_text(format!(
                 "Snap: {}",
                 if document.snap_enabled.unwrap_or(false) {
@@ -1548,12 +1548,12 @@ fn note_navigator_engagement(active_utility: &str) -> WindowEngagement {
         }),
         control: None,
         controls: None,
-        status: Some(vec![WindowEngagementStatus { id: "note-navigator-status.tool".into(), text: format!("tool: {active_utility}") }]),
+        status: Some(vec![WindowEngagementStatus { id: "note-navigator-status.utility".into(), text: format!("utility: {active_utility}") }]),
         possible_engagements: None,
     }
 }
 
-/// 🧰 One canvas tool declaration (id/label/icon reused verbatim from the retired `utilities()`/toolbar).
+/// 🧰 One canvas utility declaration (id/label/icon reused verbatim from the retired `utilities()`/toolbar).
 fn note_utility(id: &str, label: &str, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
     UtilityDefinition { group: Some(group.into()), category: Some(category), ..UtilityDefinition::new(id, label, icon) }
 }
@@ -1626,7 +1626,7 @@ impl DocumentApp for NoteApp {
                 ActionEmit::default()
             }
             SET_ACTIVE_UTILITY_ACTION_ID => {
-                // 🧰 Host-owned tool switch: the active tool lives in `view_state.active_utility_id`, never
+                // 🧰 Host-owned utility switch: the active utility lives in `view_state.active_utility_id`, never
                 // the document. Note keeps no in-progress gesture scratch on the app struct (ink drags
                 // coalesce store-side), so there is nothing to clear and no op to emit.
                 ActionEmit::default()
@@ -2354,7 +2354,7 @@ fn create_note_app() -> App {
                 ]).required().default_value("empty"),
             ])
             .action_args("setFixtureJson", vec![ActionArgDef::text("json", "Document JSON").required()])
-            // 🧰 Canvas utilities — one exclusive set per window, active tool host-owned (never a document op).
+            // 🧰 Canvas utilities — one exclusive set per window, active utility host-owned (never a document op).
             .utility(note_utility("selectDirect", "Direct", "cursor", "Select", UtilityCategory::Selection))
             .utility(note_utility("selectMarquee", "Marquee", "selection", "Select", UtilityCategory::Selection))
             .utility(note_utility("text", "Text", "type", "Block", UtilityCategory::Tools))
@@ -2658,29 +2658,29 @@ mod tests {
     }
 
     #[test]
-    fn set_active_tool_emits_no_ops_and_no_history_entry() {
+    fn set_active_utility_emits_no_ops_and_no_history_entry() {
         let mut app = new_app_with_registry();
         let before = app.projection().expect("projection");
         let view = ViewState { active_utility_id: Some("pencil".into()), ..ViewState::default() };
         let result = app
             .handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "pencil" })), &view, &meta())
-            .expect("switch tool");
-        assert!(result.operations.is_empty(), "tool switching never emits document ops");
-        assert_eq!(app.projection().expect("projection"), before, "tool switching does not mutate the document");
+            .expect("switch utility");
+        assert!(result.operations.is_empty(), "utility switching never emits document ops");
+        assert_eq!(app.projection().expect("projection"), before, "utility switching does not mutate the document");
     }
 
     #[test]
-    fn tool_registry_declares_canvas_tools_scoped_to_composite_window() {
+    fn utility_registry_declares_canvas_utilities_scoped_to_composite_window() {
         let definition = create_note_app().definition;
-        let tool_ids: Vec<&str> = definition.utilities.iter().map(|tool| tool.id.as_str()).collect();
+        let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
         assert_eq!(
-            tool_ids,
+            utility_ids,
             ["selectDirect", "selectMarquee", "text", "image", "table", "math", "pencil", "eraserStroke", "eraserPoint", "pan"],
         );
-        let selects: Vec<&str> = definition.utilities.iter().filter(|tool| tool.category == Some(UtilityCategory::Selection)).map(|tool| tool.id.as_str()).collect();
+        let selects: Vec<&str> = definition.utilities.iter().filter(|utility| utility.category == Some(UtilityCategory::Selection)).map(|utility| utility.id.as_str()).collect();
         assert_eq!(selects, ["selectDirect", "selectMarquee"]);
         let canvas = definition.window_kinds.iter().find(|window| window.id == NOTE_PLAY_WINDOW_COMPOSITE).expect("canvas window");
-        assert_eq!(canvas.utilities.len(), definition.utilities.len(), "every tool is scoped to the composite canvas");
+        assert_eq!(canvas.utilities.len(), definition.utilities.len(), "every utility is scoped to the composite canvas");
         assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, ActionKind::View)));
     }
 

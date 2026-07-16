@@ -407,9 +407,9 @@ impl BoardSession {
         self.state.borrow_mut().host.set_grid_factor(v).map_err(|e| JsValue::from_str(&e))
     }
 
-    #[wasm_bindgen(js_name = setActiveTool)]
-    pub fn set_active_tool_wasm(&mut self, label: &str) {
-        self.state.borrow_mut().host.set_active_tool(label);
+    #[wasm_bindgen(js_name = setActiveUtility)]
+    pub fn set_active_utility_wasm(&mut self, label: &str) {
+        self.state.borrow_mut().host.set_active_utility(label);
     }
 
     #[wasm_bindgen(js_name = setSuggestionOffset)]
@@ -3036,7 +3036,7 @@ mod host_tests {
     fn board_host_brush_slot_emits_preview_and_place_on_leave() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
-        h.set_active_tool("brush");
+        h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         let catalogs = json!({
@@ -3109,7 +3109,7 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 2.0);
-        h.set_active_tool("select");
+        h.set_active_utility("select");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         let catalogs = json!({
@@ -3184,7 +3184,7 @@ mod host_tests {
     fn board_host_brush_slot_commit_survives_pointer_move_out_of_slot() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
-        h.set_active_tool("brush");
+        h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         h.set_board_kind_catalogs_from_json(
@@ -3218,7 +3218,7 @@ mod host_tests {
     fn board_host_brush_slot_skips_place_on_leave_without_alt() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
-        h.set_active_tool("brush");
+        h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         h.set_board_kind_catalogs_from_json(
@@ -3325,10 +3325,10 @@ mod host_tests {
     }
 
     #[test]
-    fn board_host_fixture_drop_preview_json_paints_while_select_tool_active() {
+    fn board_host_fixture_drop_preview_json_paints_while_select_utility_active() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
-        h.set_active_tool("select");
+        h.set_active_utility("select");
         h.set_fixture_drop_preview_json(r#"{"nodeKind":"capsule_J","screenX":200.0,"screenY":150.0,"shape":"circle","radius":20.0,"iconKind":"capsule_J"}"#).unwrap();
         let ev = h.drain_events_json();
         assert!(!ev.contains("brushPlace"));
@@ -3368,7 +3368,7 @@ mod host_tests {
     fn board_host_brush_session_mirror_json_shows_preview_without_pointer() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
-        h.set_active_tool("brush");
+        h.set_active_utility("brush");
         h.set_board_kind_catalogs_from_json(
             &serde_json::json!({
                 "handleKinds": [{"id": "parent", "name": "Parent", "color": "#888888"}],
@@ -3410,7 +3410,7 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
-        h.set_active_tool("brush");
+        h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
@@ -3458,7 +3458,7 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
-        h.set_active_tool("brush");
+        h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
@@ -3592,7 +3592,7 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
-        h.set_active_tool("brush");
+        h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../example/nakagin-capsule-tower.2d.json")).unwrap();
@@ -3673,7 +3673,7 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_overview_lod(&mut h);
-        h.set_active_tool("brush");
+        h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         h.set_board_kind_catalogs_from_json(
@@ -3705,7 +3705,7 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
-        h.set_active_tool("brush");
+        h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();

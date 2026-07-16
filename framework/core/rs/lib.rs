@@ -2778,7 +2778,7 @@ pub struct Keybinding {
 pub enum ActionKind {
     /// Mutates the document — dispatched as VCS operations with a true inverse, recorded in history.
     Operation,
-    /// Ephemeral view state (camera, selection, hover, active tool) — not recorded in history.
+    /// Ephemeral view state (camera, selection, hover, active utility) — not recorded in history.
     View,
     /// Framework-provided undo/redo/checkpoint/alternative — auto-injected, never app-declared.
     History,
@@ -2986,7 +2986,7 @@ pub fn history_action_definitions() -> Vec<ActionDefinition> {
     ]
 }
 
-/// @emoji 🧰 The framework-owned action id apps dispatch to activate a tool — auto-injected as a View
+/// @emoji 🧰 The framework-owned action id apps dispatch to activate a utility — auto-injected as a View
 /// action into any `AppDefinition` that declares utilities (mirrors `history_action_definitions`).
 pub const SET_ACTIVE_UTILITY_ACTION_ID: &str = "setActiveUtility";
 
@@ -3011,7 +3011,7 @@ pub const START_INTRODUCTION_ACTION_ID: &str = "startIntroduction";
 
 /// @emoji 🎓 The framework-injected `startIntroduction` View action: fully shell-intercepted (never
 /// forwarded to the plugin), it resets playback to the first step of `AppDefinition.introduction`.
-/// Unlike `setActiveTool` this stays `in_palette: true` so replaying an introduction is one command away.
+/// Unlike `setActiveUtility` this stays `in_palette: true` so replaying an introduction is one command away.
 pub fn start_introduction_action_definition() -> ActionDefinition {
     ActionDefinition::new(START_INTRODUCTION_ACTION_ID, "Start Introduction", ActionKind::View)
 }
@@ -3046,9 +3046,9 @@ impl From<String> for ActionRef {
     }
 }
 
-//#region 🔖Tools
-/// @emoji 🧰 Declares one interactive tool (a live-preview pointer mode) an app exposes. Distinct from
-/// an `ActionDefinition`: exactly one tool is active per window kind at a time, and activation is
+//#region 🔖Utilities
+/// @emoji 🧰 Declares one interactive utility (a live-preview pointer mode) an app exposes. Distinct from
+/// an `ActionDefinition`: exactly one utility is active per window kind at a time, and activation is
 /// host-owned session view state (`ViewState.active_utility_id`), never a document field or VCS op.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
@@ -3057,29 +3057,29 @@ pub struct UtilityDefinition {
     pub id: String,
     pub label: String,
     pub icon_id: String,
-    /// 🧺 Visual toolbar collection this tool groups into; `None` = a flat top-level toolbar entry.
+    /// 🧺 Visual toolbar collection this utility groups into; `None` = a flat top-level toolbar entry.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub group: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub keys: Option<String>,
-    /// 🖱️ CSS/winit cursor name applied to the window body while this tool is active.
+    /// 🖱️ CSS/winit cursor name applied to the window body while this utility is active.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub cursor: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub category: Option<ui_wgpu::UtilityCategory>,
-    /// 🚦 Whether window-scoped actions stay enabled while this tool is active. Defaults to `false`
-    /// (matching today's whitelist-based gating where an active tool suppresses the action panel);
+    /// 🚦 Whether window-scoped actions stay enabled while this utility is active. Defaults to `false`
+    /// (matching today's whitelist-based gating where an active utility suppresses the action panel);
     /// set `true` for passive view utilities (e.g. cad `cad.play.view.*`) that should not gate actions.
     #[serde(default)]
     pub allows_actions_while_active: bool,
 }
 
 impl UtilityDefinition {
-    /// @emoji 🧰 A tool with sensible defaults (no group/keys/cursor/category, gates actions while active).
+    /// @emoji 🧰 A utility with sensible defaults (no group/keys/cursor/category, gates actions while active).
     pub fn new(id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<String>) -> Self {
         Self {
             id: id.into(),
@@ -3094,7 +3094,7 @@ impl UtilityDefinition {
     }
 }
 
-/// @emoji 🧰 A validated reference into an app's `AppDefinition.utilities` registry — the tool mirror of
+/// @emoji 🧰 A validated reference into an app's `AppDefinition.utilities` registry — the utility mirror of
 /// `ActionRef`, scoping utilities to window kinds/modes with a typed, resolvable id.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
@@ -3122,7 +3122,7 @@ impl From<String> for UtilityRef {
         Self(value)
     }
 }
-//#endregion 🔖Tools
+//#endregion 🔖Utilities
 
 //#region 🔖Commands
 /// @emoji 🗂️ Where a command is offered. There are no window-level commands — window-scoped verbs
@@ -3425,7 +3425,7 @@ impl DialogDefinition {
 pub struct ModeDefinition {
     pub id: String,
     pub label: String,
-    /// 🧰 Tools available while this mode is active — references `AppDefinition.utilities` ids.
+    /// 🧰 Utilities available while this mode is active — references `AppDefinition.utilities` ids.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub utilities: Vec<UtilityRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -3545,7 +3545,7 @@ pub struct WindowKindDefinition {
     /// every window" behavior.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actions: Vec<ActionRef>,
-    /// 🧰 Tools this window kind accepts — references `AppDefinition.utilities` ids. Empty = no utilities.
+    /// 🧰 Utilities this window kind accepts — references `AppDefinition.utilities` ids. Empty = no utilities.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub utilities: Vec<UtilityRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -3754,7 +3754,7 @@ pub fn missing_required_args(
 }
 
 /// @emoji 🚦 Whether an action is eligible to appear in a window's Actions panel — excludes the six
-/// framework History actions (rendered by the History rail) and the injected `setActiveTool` (an
+/// framework History actions (rendered by the History rail) and the injected `setActiveUtility` (an
 /// internal View action wired to the toolbar, never the panel).
 fn action_is_panel_eligible(action: &ActionDefinition) -> bool {
     action.kind != ActionKind::History && action.id != SET_ACTIVE_UTILITY_ACTION_ID
@@ -3902,7 +3902,7 @@ pub struct ViewState {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub active_window_kind_id: Option<String>,
-    /// 🧰 The host-owned active tool for the active window kind (never a document field, never a VCS op).
+    /// 🧰 The host-owned active utility for the active window kind (never a document field, never a VCS op).
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub active_utility_id: Option<String>,
@@ -4187,7 +4187,7 @@ pub struct Diagnostic {
 // struct-variant — those need `rename_all_fields` (serde 1.0.126+) or every multi-word field here
 // (window_kind_id, mime_type, program_id, ...) silently serializes as snake_case, breaking any TS side
 // that destructures camelCase (confirmed live: `SetActiveUtility` was shipping `window_kind_id`/`utility_id`,
-// so the host-owned tool switch after `openVortexSuggestions` never applied and the brush preview never
+// so the host-owned utility switch after `openVortexSuggestions` never applied and the brush preview never
 // rendered).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
@@ -4236,8 +4236,8 @@ pub enum HostEffect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         os_instance_id: Option<String>,
     },
-    /// @emoji 🧰 Programmatically switches the host-owned active tool of a window kind — the effect
-    /// form of `setActiveTool`, letting a plugin change utilities without a user click.
+    /// @emoji 🧰 Programmatically switches the host-owned active utility of a window kind — the effect
+    /// form of `setActiveUtility`, letting a plugin change utilities without a user click.
     SetActiveUtility { window_kind_id: String, utility_id: String },
     /// @emoji 🗨️ Opens a declared `AppDefinition.dialogs` entry; `args` (an object keyed by arg id)
     /// pre-seeds the staged form. Kernel-altitude — plain `String`/`Value`, no manifest types.
@@ -4800,7 +4800,7 @@ mod app_document_tests {
         );
     }
 
-    //#region 🔖ActionArgsAndToolsTests
+    //#region 🔖ActionArgsAndUtilitiesTests
     use crate::ui::{
         effective_action_args, missing_required_args, resolve_window_actions, ActionArgControl, ActionArgDef,
         ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, CommandDefinition, CommandRef,
@@ -4861,10 +4861,10 @@ mod app_document_tests {
     }
 
     #[test]
-    fn tool_definition_and_tool_ref_construction() {
-        let tool = UtilityDefinition::new("brush", "Brush", "icon.brush");
-        assert_eq!(tool.id, "brush");
-        assert!(!tool.allows_actions_while_active, "default gates actions while active");
+    fn utility_definition_and_utility_ref_construction() {
+        let utility = UtilityDefinition::new("brush", "Brush", "icon.brush");
+        assert_eq!(utility.id, "brush");
+        assert!(!utility.allows_actions_while_active, "default gates actions while active");
         assert_eq!(UtilityRef::new("brush").as_str(), "brush");
         assert_eq!(UtilityRef::from("brush").as_str(), "brush");
     }
@@ -4928,7 +4928,7 @@ mod app_document_tests {
     }
 
     #[test]
-    fn resolve_window_actions_excludes_history_and_set_active_tool_orphans() {
+    fn resolve_window_actions_excludes_history_and_set_active_utility_orphans() {
         let app = app_with(
             vec![
                 ActionDefinition::new("undo", "Undo", ActionKind::History),
@@ -4939,7 +4939,7 @@ mod app_document_tests {
         );
         let window = app.window_kinds.first();
         let resolved: Vec<&str> = resolve_window_actions(&app, window).iter().map(|a| a.id.as_str()).collect();
-        assert_eq!(resolved, vec!["add"], "history + setActiveTool are never panel-eligible orphans");
+        assert_eq!(resolved, vec!["add"], "history + setActiveUtility are never panel-eligible orphans");
         assert!(!resolved.contains(&SET_ACTIVE_UTILITY_ACTION_ID));
     }
 
@@ -4952,7 +4952,7 @@ mod app_document_tests {
     }
 
     #[test]
-    fn window_kind_deserializes_without_tools_field() {
+    fn window_kind_deserializes_without_utilities_field() {
         let window: WindowKindDefinition = serde_json::from_str(
             r#"{"id":"main","label":"Main","bodyKey":"a.main","surfaceKind":"canvas-2d"}"#,
         )
@@ -5066,7 +5066,7 @@ mod app_document_tests {
         let round: HostEffect = serde_json::from_str(&json).unwrap();
         assert_eq!(round, effect);
     }
-    //#endregion 🔖ActionArgsAndToolsTests
+    //#endregion 🔖ActionArgsAndUtilitiesTests
 
     #[cfg(feature = "typegen")]
     #[test]

@@ -384,8 +384,8 @@ pub enum WindowMeasure {
         label: String,
         #[cfg_attr(feature = "typegen", ts(optional, rename = "defaultOpen"))]
         default_open: Option<bool>,
-        /// 🎯 When `Some(utility_id)`, this group is *tool-scoped chrome*: the shell surfaces it only while
-        /// `ViewState.active_utility_id == utility_id`, and renders it in the dedicated "Tool Options" rail
+        /// 🎯 When `Some(utility_id)`, this group is *utility-scoped chrome*: the shell surfaces it only while
+        /// `ViewState.active_utility_id == utility_id`, and renders it in the dedicated "Utility Options" rail
         /// beside the toolbar — never in the always-on Measures overlay. When absent, the group is a
         /// general measure and stays in the Measures overlay exactly as before. See [`partition_window_measures`].
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -397,11 +397,11 @@ pub enum WindowMeasure {
 //#endregion 🔖WindowMeasure
 
 //#region 🔖PartitionWindowMeasures
-/// @emoji 🎯 Splits a window's top-level measures into `(general, tool_options)`.
+/// @emoji 🎯 Splits a window's top-level measures into `(general, utility_options)`.
 ///
-/// A top-level [`WindowMeasure::Group`] tagged with `active_utility_id: Some(id)` is *tool-scoped chrome*:
-/// it lands in `tool_options` **only** when `id == active_utility_id`, and is dropped from both buckets
-/// otherwise (it is irrelevant to whichever tool — or no tool — is currently active). Every untagged
+/// A top-level [`WindowMeasure::Group`] tagged with `active_utility_id: Some(id)` is *utility-scoped chrome*:
+/// it lands in `utility_options` **only** when `id == active_utility_id`, and is dropped from both buckets
+/// otherwise (it is irrelevant to whichever utility — or no utility — is currently active). Every untagged
 /// group and every non-group top-level measure stays in `general`, unchanged. Tagging is a top-level
 /// concept only: a matched group's `children` are carried along verbatim inside their group.
 pub fn partition_window_measures(
@@ -409,18 +409,18 @@ pub fn partition_window_measures(
     active_utility_id: Option<&str>,
 ) -> (Vec<WindowMeasure>, Vec<WindowMeasure>) {
     let mut general = Vec::new();
-    let mut tool_options = Vec::new();
+    let mut utility_options = Vec::new();
     for measure in measures {
         match measure {
             WindowMeasure::Group { active_utility_id: Some(scoped), .. } => {
                 if active_utility_id == Some(scoped.as_str()) {
-                    tool_options.push(measure.clone());
+                    utility_options.push(measure.clone());
                 }
             }
             _ => general.push(measure.clone()),
         }
     }
-    (general, tool_options)
+    (general, utility_options)
 }
 //#endregion 🔖PartitionWindowMeasures
 
@@ -804,38 +804,38 @@ mod layout_wire_format_tests {
         assert_eq!(roundtripped, measures);
     }
 
-    fn tool_scoped_group(id: &str, tool: Option<&str>) -> WindowMeasure {
+    fn utility_scoped_group(id: &str, utility: Option<&str>) -> WindowMeasure {
         WindowMeasure::Group {
             id: id.into(),
             label: id.to_uppercase(),
             default_open: None,
-            active_utility_id: tool.map(str::to_string),
+            active_utility_id: utility.map(str::to_string),
             children: vec![],
         }
     }
 
     #[test]
-    fn partition_window_measures_routes_matching_tool_group_to_tool_options() {
-        let measures = vec![tool_scoped_group("brush-params", Some("brush"))];
-        let (general, tool_options) = partition_window_measures(&measures, Some("brush"));
+    fn partition_window_measures_routes_matching_utility_group_to_utility_options() {
+        let measures = vec![utility_scoped_group("brush-params", Some("brush"))];
+        let (general, utility_options) = partition_window_measures(&measures, Some("brush"));
         assert!(general.is_empty());
-        assert_eq!(tool_options.len(), 1);
-        assert!(matches!(&tool_options[0], WindowMeasure::Group { id, .. } if id == "brush-params"));
+        assert_eq!(utility_options.len(), 1);
+        assert!(matches!(&utility_options[0], WindowMeasure::Group { id, .. } if id == "brush-params"));
     }
 
     #[test]
-    fn partition_window_measures_drops_non_matching_tool_group_from_both_buckets() {
-        let measures = vec![tool_scoped_group("brush-params", Some("brush"))];
-        let (general_other, tool_options_other) = partition_window_measures(&measures, Some("fill"));
-        assert!(general_other.is_empty() && tool_options_other.is_empty(), "wrong active tool drops the group entirely");
-        let (general_none, tool_options_none) = partition_window_measures(&measures, None);
-        assert!(general_none.is_empty() && tool_options_none.is_empty(), "no active tool drops the group entirely");
+    fn partition_window_measures_drops_non_matching_utility_group_from_both_buckets() {
+        let measures = vec![utility_scoped_group("brush-params", Some("brush"))];
+        let (general_other, utility_options_other) = partition_window_measures(&measures, Some("fill"));
+        assert!(general_other.is_empty() && utility_options_other.is_empty(), "wrong active utility drops the group entirely");
+        let (general_none, utility_options_none) = partition_window_measures(&measures, None);
+        assert!(general_none.is_empty() && utility_options_none.is_empty(), "no active utility drops the group entirely");
     }
 
     #[test]
     fn partition_window_measures_keeps_untagged_group_and_non_group_in_general() {
         let measures = vec![
-            tool_scoped_group("grid", None),
+            utility_scoped_group("grid", None),
             WindowMeasure::Slider {
                 id: "zoom".into(),
                 label: None,
@@ -846,15 +846,15 @@ mod layout_wire_format_tests {
                 on_change: ActionDescriptor { controller_id: "c".into(), action: "z".into(), args: None },
             },
         ];
-        let (general, tool_options) = partition_window_measures(&measures, Some("brush"));
+        let (general, utility_options) = partition_window_measures(&measures, Some("brush"));
         assert_eq!(general.len(), 2, "untagged group and slider both stay general");
-        assert!(tool_options.is_empty());
+        assert!(utility_options.is_empty());
     }
 
     #[test]
     fn partition_window_measures_empty_input_roundtrips_to_empty() {
-        let (general, tool_options) = partition_window_measures(&[], Some("brush"));
-        assert!(general.is_empty() && tool_options.is_empty());
+        let (general, utility_options) = partition_window_measures(&[], Some("brush"));
+        assert!(general.is_empty() && utility_options.is_empty());
     }
 
     const GOLDEN_WINDOW_ENGAGEMENT_JSON: &str = "{\"sessionActive\":true,\"options\":[{\"id\":\"opt1\",\"label\":\"Option\",\"pressed\":false}],\"input\":{\"id\":\"in1\",\"value\":\"v\"},\"control\":{\"kind\":\"slider\",\"id\":\"sl1\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":null,\"unit\":null,\"disabled\":null,\"onChange\":null,\"onCommit\":null},\"status\":[{\"id\":\"st1\",\"text\":\"Ready\"}],\"possibleEngagements\":[{\"id\":\"pe1\",\"label\":\"Possible\"}]}";
@@ -1085,8 +1085,8 @@ pub fn utility_collection(
     }
 }
 
-//#region 🔖DeriveToolNodes
-/// @emoji 🧰 A resolved tool ready to be laid out into the toolbar. `framework_core` maps its
+//#region 🔖DeriveUtilityNodes
+/// @emoji 🧰 A resolved utility ready to be laid out into the toolbar. `framework_core` maps its
 /// `UtilityDefinition` onto this before calling `derive_utility_nodes` — `ui_wgpu` can't reference
 /// `framework_core::UtilityDefinition` directly (that crate depends on `ui_wgpu`, not the reverse).
 #[derive(Clone, Debug, PartialEq)]
@@ -1098,10 +1098,10 @@ pub struct DerivedUtilitySpec {
     pub category: Option<UtilityCategory>,
 }
 
-/// @emoji 🧰 Derives the toolbar `UtilityNode` tree from resolved utilities and the host-owned active tool id.
-/// Each tool becomes a `Toggle` whose `pressed` reflects `active_utility_id == Some(id)` and whose
-/// `on_change` dispatches `setActiveTool { toolId }` against `controller_id`. Tools sharing a `group`
-/// collapse into one `Collection` (placed where the group first appears, in tool order); ungrouped
+/// @emoji 🧰 Derives the toolbar `UtilityNode` tree from resolved utilities and the host-owned active utility id.
+/// Each utility becomes a `Toggle` whose `pressed` reflects `active_utility_id == Some(id)` and whose
+/// `on_change` dispatches `setActiveUtility { utilityId }` against `controller_id`. Utilities sharing a `group`
+/// collapse into one `Collection` (placed where the group first appears, in utility order); ungrouped
 /// utilities stay flat siblings. This is the single source of truth for the toolbar — `DocumentApp::utilities`
 /// no longer exists.
 pub fn derive_utility_nodes(
@@ -1109,30 +1109,30 @@ pub fn derive_utility_nodes(
     utilities: &[DerivedUtilitySpec],
     active_utility_id: Option<&str>,
 ) -> Vec<UtilityNode> {
-    fn utility_toggle_node(controller_id: &str, tool: &DerivedUtilitySpec, active_utility_id: Option<&str>) -> UtilityNode {
+    fn utility_toggle_node(controller_id: &str, utility: &DerivedUtilitySpec, active_utility_id: Option<&str>) -> UtilityNode {
         UtilityNode::Toggle {
-            id: tool.id.clone(),
-            icon_id: tool.icon_id.clone(),
-            label: Some(tool.label.clone()),
+            id: utility.id.clone(),
+            icon_id: utility.icon_id.clone(),
+            label: Some(utility.label.clone()),
             text: None,
-            title: Some(tool.label.clone()),
+            title: Some(utility.label.clone()),
             order: None,
-            pressed: Some(active_utility_id == Some(tool.id.as_str())),
+            pressed: Some(active_utility_id == Some(utility.id.as_str())),
             disabled: None,
-            category: tool.category,
+            category: utility.category,
             on_change: ActionDescriptor {
                 controller_id: controller_id.to_string(),
                 action: "setActiveUtility".into(),
-                args: Some(serde_json::json!({ "utilityId": tool.id })),
+                args: Some(serde_json::json!({ "utilityId": utility.id })),
             },
         }
     }
 
     let mut nodes: Vec<UtilityNode> = Vec::new();
     let mut group_positions: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
-    for tool in utilities {
-        let node = utility_toggle_node(controller_id, tool, active_utility_id);
-        match &tool.group {
+    for utility in utilities {
+        let node = utility_toggle_node(controller_id, utility, active_utility_id);
+        match &utility.group {
             None => nodes.push(node),
             Some(group) => {
                 if let Some(&index) = group_positions.get(group) {
@@ -1143,13 +1143,13 @@ pub fn derive_utility_nodes(
                     group_positions.insert(group.clone(), nodes.len());
                     nodes.push(UtilityNode::Collection {
                         id: format!("group:{group}"),
-                        icon_id: tool.icon_id.clone(),
+                        icon_id: utility.icon_id.clone(),
                         label: Some(group.clone()),
                         text: None,
                         title: Some(group.clone()),
                         order: None,
                         disabled: None,
-                        category: tool.category,
+                        category: utility.category,
                         children: vec![node],
                     });
                 }
@@ -1158,19 +1158,19 @@ pub fn derive_utility_nodes(
     }
     nodes
 }
-//#endregion 🔖DeriveToolNodes
+//#endregion 🔖DeriveUtilityNodes
 
 //#region 🔖WireFormatGoldenTests
 /** 🧊 Golden wire-format tests: freeze exact JSON for UtilityNode before it moves into ui_wgpu. */
 #[cfg(test)]
-mod tool_node_wire_format_tests {
+mod utility_node_wire_format_tests {
     use super::*;
     use super::super::layout::ActionDescriptor;
 
-    const GOLDEN_TOOL_NODE_JSON: &str = "[{\"kind\":\"separator\",\"id\":\"sep1\",\"order\":1},{\"kind\":\"button\",\"id\":\"btn1\",\"iconId\":\"icon.tool\",\"label\":\"Tool\",\"title\":\"Tool\",\"category\":\"history\",\"onPress\":{\"controllerId\":\"ctrl\",\"action\":\"runTool\"}},{\"kind\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"icon.toggle\",\"label\":\"Toggle\",\"title\":\"Toggle\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggleTool\"}},{\"kind\":\"collection\",\"id\":\"col1\",\"iconId\":\"icon.group\",\"label\":\"Group\",\"title\":\"Group\",\"children\":[{\"kind\":\"separator\",\"id\":\"sep2\"}]}]";
+    const GOLDEN_UTILITY_NODE_JSON: &str = "[{\"kind\":\"separator\",\"id\":\"sep1\",\"order\":1},{\"kind\":\"button\",\"id\":\"btn1\",\"iconId\":\"icon.tool\",\"label\":\"Tool\",\"title\":\"Tool\",\"category\":\"history\",\"onPress\":{\"controllerId\":\"ctrl\",\"action\":\"runTool\"}},{\"kind\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"icon.toggle\",\"label\":\"Toggle\",\"title\":\"Toggle\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggleTool\"}},{\"kind\":\"collection\",\"id\":\"col1\",\"iconId\":\"icon.group\",\"label\":\"Group\",\"title\":\"Group\",\"children\":[{\"kind\":\"separator\",\"id\":\"sep2\"}]}]";
 
     #[test]
-    fn tool_node_serializes_to_golden_json() {
+    fn utility_node_serializes_to_golden_json() {
         let nodes = vec![
             UtilityNode::Separator { id: "sep1".into(), order: Some(1), disabled: None },
             utility_button(
@@ -1190,7 +1190,7 @@ mod tool_node_wire_format_tests {
             utility_collection("col1", "icon.group", "Group", vec![utility_separator("sep2")]),
         ];
         let json = serde_json::to_string(&nodes).unwrap();
-        assert_eq!(json, GOLDEN_TOOL_NODE_JSON);
+        assert_eq!(json, GOLDEN_UTILITY_NODE_JSON);
         let roundtripped: Vec<UtilityNode> = serde_json::from_str(&json).unwrap();
         assert_eq!(roundtripped, nodes);
     }
@@ -1206,7 +1206,7 @@ mod tool_node_wire_format_tests {
     }
 
     #[test]
-    fn derive_tool_nodes_marks_the_active_tool_pressed() {
+    fn derive_utility_nodes_marks_the_active_utility_pressed() {
         let nodes = derive_utility_nodes("ctrl", &[spec("select", None), spec("brush", None)], Some("brush"));
         assert_eq!(nodes.len(), 2);
         match &nodes[0] {
@@ -1228,7 +1228,7 @@ mod tool_node_wire_format_tests {
     }
 
     #[test]
-    fn derive_tool_nodes_groups_shared_group_into_one_collection() {
+    fn derive_utility_nodes_groups_shared_group_into_one_collection() {
         let nodes = derive_utility_nodes(
             "ctrl",
             &[spec("select", None), spec("line", Some("shapes")), spec("rect", Some("shapes"))],
@@ -3434,7 +3434,7 @@ mod ui_node_wire_format_tests {
         assert_eq!(roundtripped, kinds);
     }
 
-    const GOLDEN_SCENES_JSON: &str = "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeTool\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{\\\"raster\\\":true,\\\"water\\\":true,\\\"land\\\":true,\\\"roads\\\":true,\\\"buildings\\\":true,\\\"borders\\\":true,\\\"labels\\\":true,\\\"positions\\\":true,\\\"positionLabels\\\":true,\\\"routes\\\":true,\\\"regions\\\":true}\",\"layerStrokeScaleJson\":\"{\\\"raster\\\":1,\\\"water\\\":1,\\\"land\\\":1,\\\"roads\\\":1,\\\"buildings\\\":1,\\\"borders\\\":1,\\\"labels\\\":1,\\\"positions\\\":1,\\\"positionLabels\\\":1,\\\"routes\\\":1,\\\"regions\\\":1}\",\"selectionJson\":\"{\\\"positions\\\":[],\\\"routes\\\":[]}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"kindCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"selectionMethod\":\"rectangle\",\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"suggestionOffset\":0.0,\"brushKindWeightsJson\":\"{}\",\"kindCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeTool\":\"select\",\"viewMode\":\"edit\",\"interactive\":true},{\"columnsJson\":\"[]\"},{\"nodesJson\":\"[]\",\"edgesJson\":\"[]\",\"viewportJson\":\"{}\"},{\"buffer\":\"buf\",\"language\":\"rust\"},{\"stepsJson\":\"[]\",\"paletteJson\":\"[]\"}]";
+    const GOLDEN_SCENES_JSON: &str = "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeUtility\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{\\\"raster\\\":true,\\\"water\\\":true,\\\"land\\\":true,\\\"roads\\\":true,\\\"buildings\\\":true,\\\"borders\\\":true,\\\"labels\\\":true,\\\"positions\\\":true,\\\"positionLabels\\\":true,\\\"routes\\\":true,\\\"regions\\\":true}\",\"layerStrokeScaleJson\":\"{\\\"raster\\\":1,\\\"water\\\":1,\\\"land\\\":1,\\\"roads\\\":1,\\\"buildings\\\":1,\\\"borders\\\":1,\\\"labels\\\":1,\\\"positions\\\":1,\\\"positionLabels\\\":1,\\\"routes\\\":1,\\\"regions\\\":1}\",\"selectionJson\":\"{\\\"positions\\\":[],\\\"routes\\\":[]}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"kindCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"selectionMethod\":\"rectangle\",\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"suggestionOffset\":0.0,\"brushKindWeightsJson\":\"{}\",\"kindCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeUtility\":\"select\",\"viewMode\":\"edit\",\"interactive\":true},{\"columnsJson\":\"[]\"},{\"nodesJson\":\"[]\",\"edgesJson\":\"[]\",\"viewportJson\":\"{}\"},{\"buffer\":\"buf\",\"language\":\"rust\"},{\"stepsJson\":\"[]\",\"paletteJson\":\"[]\"}]";
 
     #[test]
     fn scene_records_serialize_to_golden_json() {

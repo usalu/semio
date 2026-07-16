@@ -1,0 +1,11 @@
+{
+  "title": "Uncollapsed Panel Styling Bug",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "ui: There is a bug when clicking on e.g. the left window panel then when it uncollapses the toggle is cut and has wrong styling.",
+  "summary": "Add px-single py-tiny padding and gap-single to panelTabBarBaseClass and rounded-sm to panelTabButtonClass, and update tests to fix uncollapsed panel styling clipping.",
+  "goal": "🎯ui🎯desktop",
+  "sessions": [
+    "⚪f8281de610f64e909defbf655199876a"
+  ]
+}

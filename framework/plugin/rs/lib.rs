@@ -387,10 +387,10 @@ impl AppBuilder {
     }
 
     /// 🧰 Scopes utilities to a mode — references ids declared via `.utility()`/`.utility_simple()`.
-    pub fn mode_utilities(mut self, mode_id: impl AsRef<str>, tool_ids: Vec<UtilityRef>) -> Self {
+    pub fn mode_utilities(mut self, mode_id: impl AsRef<str>, utility_ids: Vec<UtilityRef>) -> Self {
         let mode_id = mode_id.as_ref();
         if let Some(mode) = self.modes.iter_mut().find(|entry| entry.id == mode_id) {
-            mode.utilities = tool_ids;
+            mode.utilities = utility_ids;
         }
         self
     }
@@ -463,10 +463,10 @@ impl AppBuilder {
 
     /// 🧰 Scopes utilities to a window kind — references ids declared via `.utility()`/`.utility_simple()`. Mirrors
     /// `window_kind_actions`: the referenced tool ids are validated to resolve in `build_definition`.
-    pub fn window_kind_utilities(mut self, window_kind_id: impl AsRef<str>, tool_ids: Vec<UtilityRef>) -> Self {
+    pub fn window_kind_utilities(mut self, window_kind_id: impl AsRef<str>, utility_ids: Vec<UtilityRef>) -> Self {
         let window_kind_id = window_kind_id.as_ref();
         if let Some(window) = self.window_kinds.iter_mut().find(|entry| entry.id == window_kind_id) {
-            window.utilities = tool_ids;
+            window.utilities = utility_ids;
         }
         self
     }
@@ -660,11 +660,11 @@ impl AppBuilder {
             );
             validate_arg_defs(&self.id, &format!("action {}", action.id), &action.args);
         }
-        let mut declared_tool_ids = HashSet::new();
+        let mut declared_utility_ids = HashSet::new();
         for tool in &self.utilities {
             assert!(!tool.id.trim().is_empty(), "app {} tool id must be non-empty", self.id);
             assert!(
-                declared_tool_ids.insert(tool.id.clone()),
+                declared_utility_ids.insert(tool.id.clone()),
                 "app {} duplicate tool id {}",
                 self.id,
                 tool.id
@@ -761,13 +761,13 @@ impl AppBuilder {
                     action_ref.as_str()
                 );
             }
-            for tool_ref in &window.utilities {
+            for utility_ref in &window.utilities {
                 assert!(
-                    declared_tool_ids.contains(tool_ref.as_str()),
+                    declared_utility_ids.contains(utility_ref.as_str()),
                     "app {} window kind {} references undeclared tool {}",
                     self.id,
                     window.id,
-                    tool_ref.as_str()
+                    utility_ref.as_str()
                 );
             }
         }
@@ -781,13 +781,13 @@ impl AppBuilder {
                     command_ref.as_str()
                 );
             }
-            for tool_ref in &mode.utilities {
+            for utility_ref in &mode.utilities {
                 assert!(
-                    declared_tool_ids.contains(tool_ref.as_str()),
+                    declared_utility_ids.contains(utility_ref.as_str()),
                     "app {} mode {} references undeclared tool {}",
                     self.id,
                     mode.id,
-                    tool_ref.as_str()
+                    utility_ref.as_str()
                 );
             }
         }
@@ -828,12 +828,12 @@ impl AppBuilder {
                         step.id,
                         id
                     ),
-                    IntroductionAnchor::Utility(tool_ref) => assert!(
-                        declared_tool_ids.contains(tool_ref.as_str()),
+                    IntroductionAnchor::Utility(utility_ref) => assert!(
+                        declared_utility_ids.contains(utility_ref.as_str()),
                         "app {} introduction step {} anchors undeclared tool {}",
                         self.id,
                         step.id,
-                        tool_ref.as_str()
+                        utility_ref.as_str()
                     ),
                     IntroductionAnchor::Action(action_ref) => assert!(
                         declared_action_ids.contains(action_ref.as_str()),
@@ -859,12 +859,12 @@ impl AppBuilder {
                         step.id,
                         action_ref.as_str()
                     ),
-                    IntroductionAdvance::Utility(tool_ref) => assert!(
-                        declared_tool_ids.contains(tool_ref.as_str()),
+                    IntroductionAdvance::Utility(utility_ref) => assert!(
+                        declared_utility_ids.contains(utility_ref.as_str()),
                         "app {} introduction step {} advance references undeclared tool {}",
                         self.id,
                         step.id,
-                        tool_ref.as_str()
+                        utility_ref.as_str()
                     ),
                 }
             }

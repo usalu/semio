@@ -1388,8 +1388,8 @@ pub mod app_3d {
         ("outputPreview", "eye"),
     ];
 
-    /// 🧰 The gumball tool active when the host has not yet set `view_state.active_utility_id` (first UtilityRef).
-    const PROCEDURAL_3D_TRANSFORM_TOOL_DEFAULT: &str = "move";
+    /// 🧰 The gumball utility active when the host has not yet set `view_state.active_utility_id` (first UtilityRef).
+    const PROCEDURAL_3D_TRANSFORM_UTILITY_DEFAULT: &str = "move";
     //#endregion 🔖Constants
 
     //#region 🔖EvalCache
@@ -2124,8 +2124,8 @@ pub mod app_3d {
         serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
     }
 
-    /// 🧭 World-3d selection payload with the host-owned gumball tool spliced in, so the transform
-    /// handles follow `view_state.active_utility_id` instead of any document/runtime-stored tool.
+    /// 🧭 World-3d selection payload with the host-owned gumball utility spliced in, so the transform
+    /// handles follow `view_state.active_utility_id` instead of any document/runtime-stored utility.
     fn preview_selection_json(runtime: &Procedural3dRuntime, active_utility: &str) -> String {
         let mut value: Value = serde_json::from_str(&world3d_selection_json(
             &runtime.selection_method,
@@ -2141,7 +2141,7 @@ pub mod app_3d {
     }
 
     /// 🎚️ Level-of-detail display measure for the flow window — the migrated home of the old LOD
-    /// toolbar toggles (a display option, never an interactive tool). Dispatches `setLodMode` (a View action).
+    /// toolbar toggles (a display option, never an interactive utility). Dispatches `setLodMode` (a View action).
     fn procedural3d_lod_measure(lod_mode: &str) -> WindowMeasure {
         let current = if lod_mode.is_empty() { "solid" } else { lod_mode };
         WindowMeasure::Select {
@@ -2479,7 +2479,7 @@ pub mod app_3d {
                 }
                 "nodeGraphHover" => ActionEmit::default(),
                 "worldPointerDown" | "graphPointerDown" => ActionEmit::default(),
-                // 🧰 Host-owned active-tool switch — clear in-progress hover scratch, never emit ops.
+                // 🧰 Host-owned active-utility switch — clear in-progress hover scratch, never emit ops.
                 SET_ACTIVE_UTILITY_ACTION_ID => {
                     self.runtime.hovered_node_id = None;
                     ActionEmit::default()
@@ -2720,7 +2720,7 @@ pub mod app_3d {
             let envelope = play_view(doc.projection, &self.runtime);
             let host = host_from_fixture(&envelope.fixture);
             let labels = procedural3d_labels(view_state);
-            let active_utility = view_state.active_utility_id.as_deref().unwrap_or(PROCEDURAL_3D_TRANSFORM_TOOL_DEFAULT);
+            let active_utility = view_state.active_utility_id.as_deref().unwrap_or(PROCEDURAL_3D_TRANSFORM_UTILITY_DEFAULT);
             match body_key {
                 PROCEDURAL_3D_PLAY_BODY_MAIN => {
                     let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
@@ -2971,7 +2971,7 @@ pub mod app_3d {
                         ActionArgOption::new(PROCEDURAL_EXAMPLE_SPHERE_TORUS, "Sphere Cut With Torus"),
                     ]).required(),
                 ])
-                // 🧰 Transform gumball — an exclusive tool group scoped to the 3D preview window (active tool is host-owned).
+                // 🧰 Transform gumball — an exclusive utility group scoped to the 3D preview window (active utility is host-owned).
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })
@@ -3046,16 +3046,16 @@ pub mod app_3d {
         }
 
         #[test]
-        fn set_active_tool_switch_clears_scratch_and_emits_no_ops() {
+        fn set_active_utility_switch_clears_scratch_and_emits_no_ops() {
             let mut app = new_app_with_registry();
             app.handle_action("worldHover", Some(&json!({ "id": "extrude" })), &ViewState::default(), &meta("local")).expect("hover");
             let before = app.projection().expect("projection");
-            // Switching the gumball tool is the framework-injected View action: it clears scratch and emits no ops.
+            // Switching the gumball utility is the framework-injected View action: it clears scratch and emits no ops.
             let result = app
                 .handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "rotate" })), &ViewState::default(), &meta("local"))
-                .expect("switch tool");
-            assert!(result.operations.is_empty(), "tool switching never emits document ops");
-            assert_eq!(app.projection().expect("projection"), before, "tool switching records no history entry");
+                .expect("switch utility");
+            assert!(result.operations.is_empty(), "utility switching never emits document ops");
+            assert_eq!(app.projection().expect("projection"), before, "utility switching records no history entry");
         }
 
         #[test]

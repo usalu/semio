@@ -563,9 +563,9 @@ export function worldInstancePickBlocked(activeTool: string | undefined): boolea
   return activeTool === "fill" || activeTool === "brush";
 }
 
-/** @emoji 🖱️ In brush mode, pointer-down on a vortex persists it as the brush target (`worldVortexSelect`) so the placement preview survives a subsequent hover-out before the click completes; outside brush mode it starts a drag-to-connect gesture instead. */
-export function resolveVortexPointerDownIntent(brushMode: boolean): "select" | "connect-drag" {
-  return brushMode ? "select" : "connect-drag";
+/** @emoji 🖱️ In brush mode or vertex selection mode, pointer-down on a vortex persists it as the brush target/selection (`worldVortexSelect`); outside these modes it starts a drag-to-connect gesture instead. */
+export function resolveVortexPointerDownIntent(brushMode: boolean, selectionMode?: string): "select" | "connect-drag" {
+  return (brushMode || selectionMode === "vertex") ? "select" : "connect-drag";
 }
 
 /** @emoji 🧱 Builds the `addBrushObject` action args from a parsed brush preview, or `null` if there is nothing to place yet. */
@@ -1398,6 +1398,7 @@ function WorldVortexMarkers({
   vortices,
   palette,
   brushMode,
+  selectionMode,
   connectSourceFullId,
   onHover,
   onVortexSelect,
@@ -1409,13 +1410,14 @@ function WorldVortexMarkers({
   readonly vortices: readonly WorldVortexRecord[];
   readonly palette: MeshStylePalette;
   readonly brushMode: boolean;
+  readonly selectionMode?: string;
   readonly connectSourceFullId?: string;
   readonly onHover: (fullId: string | null) => void;
-  readonly onVortexSelect: (fullId: string) => void;
+  readonly onVortexSelect: (fullId: string, event?: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => void;
   readonly onBrushPlace: () => void;
   readonly onConnectDragStart: (fullId: string, position: readonly [number, number, number]) => void;
   readonly onConnectDragHover: (position: readonly [number, number, number]) => void;
-  readonly onConnectDragDrop: (fullId: string) => void;
+  readonly onConnectDragDrop: (fullId: string, event?: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => void;
 }) {
   if (!vortices.length) return null;
   return (
@@ -1440,8 +1442,8 @@ function WorldVortexMarkers({
             }}
             onPointerDown={(event) => {
               event.stopPropagation();
-              if (resolveVortexPointerDownIntent(brushMode) === "select") {
-                onVortexSelect(vortex.fullId);
+              if (resolveVortexPointerDownIntent(brushMode, selectionMode) === "select") {
+                onVortexSelect(vortex.fullId, event);
                 return;
               }
               onConnectDragStart(vortex.fullId, vortex.position);
@@ -1449,7 +1451,7 @@ function WorldVortexMarkers({
             onPointerUp={(event) => {
               if (brushMode || !connectSourceFullId) return;
               event.stopPropagation();
-              onConnectDragDrop(vortex.fullId);
+              onConnectDragDrop(vortex.fullId, event);
             }}
             onClick={(event) => {
               event.stopPropagation();
@@ -2199,8 +2201,9 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   );
 
   const handleVortexSelect = useCallback(
-    (fullId: string) => {
-      dispatch("worldVortexSelect", { fullId });
+    (fullId: string, event?: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
+      const merge = event ? instanceMergeArg(marqueeModeFromModifiers(event)) : (globalThis as any).__selectionMode || "default";
+      dispatch("worldVortexSelect", { fullId, merge });
     },
     [dispatch],
   );
@@ -2215,12 +2218,12 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   }, []);
 
   const handleConnectDragDrop = useCallback(
-    (targetFullId: string) => {
+    (targetFullId: string, event?: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
       connectDropConsumedRef.current = true;
       setConnectDragSource((source) => {
         if (source) {
           if (source.fullId === targetFullId) {
-            handleVortexSelect(targetFullId);
+            handleVortexSelect(targetFullId, event);
           } else {
             dispatch("createAttraction", { attracting: source.fullId, attracted: targetFullId });
           }
@@ -2567,6 +2570,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
               vortices={vortices}
               palette={meshStylePalette}
               brushMode={brushMode}
+              selectionMode={selectionMode}
               connectSourceFullId={connectDragSource?.fullId}
               onHover={handleVortexHover}
               onVortexSelect={handleVortexSelect}

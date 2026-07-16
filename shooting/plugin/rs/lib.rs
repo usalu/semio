@@ -41,8 +41,8 @@ const SHOOTING_PLAY_WINDOW_SCENE: &str = "shooting-scene";
 const SHOOTING_PLAY_WINDOW_ICON: &str = "shooting-icon";
 const SHOOTING_EXAMPLE_DEFAULT_ID: &str = "base-icon";
 
-/// 🧰 The gumball tool active when the host has not yet set `view_state.active_utility_id` (first UtilityRef).
-const SHOOTING_TRANSFORM_TOOL_DEFAULT: &str = "move";
+/// 🧰 The gumball utility active when the host has not yet set `view_state.active_utility_id` (first UtilityRef).
+const SHOOTING_TRANSFORM_UTILITY_DEFAULT: &str = "move";
 
 const SHOOTING_FALLBACK_MESH_KIND: &str = "box";
 
@@ -53,7 +53,7 @@ static SHOOTING_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 //#region 🔖Runtime
 /// 🎛️ Ephemeral view state (selection, camera draft) — lives in the app struct, not the document, so
-/// it never pollutes undo history. The active transform tool is host-owned (`view_state.active_utility_id`).
+/// it never pollutes undo history. The active transform utility is host-owned (`view_state.active_utility_id`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 struct ShootingPlayRuntime {
@@ -1393,7 +1393,7 @@ impl DocumentApp for ShootingPlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, ShootingFixture>, view_state: &ViewState) -> UiNode {
         let fixture = doc.projection;
         let labels = shooting_labels(view_state);
-        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(SHOOTING_TRANSFORM_TOOL_DEFAULT);
+        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(SHOOTING_TRANSFORM_UTILITY_DEFAULT);
         match body_key {
             SHOOTING_PLAY_BODY_SCENE => render_model_scene(fixture, &self.runtime, active_utility),
             SHOOTING_PLAY_BODY_ICON => render_icon_scene(fixture),
@@ -1530,7 +1530,7 @@ fn create_shooting_app() -> App {
                     ActionArgOption::new("empty", "Empty"),
                 ]).required(),
             ])
-            // 🧰 Transform gumball — an exclusive tool group scoped to the scene window (active tool is host-owned).
+            // 🧰 Transform gumball — an exclusive utility group scoped to the scene window (active utility is host-owned).
             .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
             .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
             .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })
@@ -1788,13 +1788,13 @@ mod tests {
     }
 
     #[test]
-    fn tool_registry_scopes_transform_gumball_and_actions_are_declared() {
+    fn utility_registry_scopes_transform_gumball_and_actions_are_declared() {
         let definition = create_shooting_app().definition;
-        let tool_ids: Vec<&str> = definition.utilities.iter().map(|tool| tool.id.as_str()).collect();
-        assert_eq!(tool_ids, ["move", "rotate", "scale"], "gumball utilities declared in registry order");
-        assert!(definition.utilities.iter().all(|tool| tool.group.as_deref() == Some("transform")), "one exclusive transform group");
+        let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
+        assert_eq!(utility_ids, ["move", "rotate", "scale"], "gumball utilities declared in registry order");
+        assert!(definition.utilities.iter().all(|utility| utility.group.as_deref() == Some("transform")), "one exclusive transform group");
         let scene = definition.window_kinds.iter().find(|window| window.id == SHOOTING_PLAY_WINDOW_SCENE).expect("scene window");
-        let scoped: Vec<&str> = scene.utilities.iter().map(|tool| tool.as_str()).collect();
+        let scoped: Vec<&str> = scene.utilities.iter().map(|utility| utility.as_str()).collect();
         assert_eq!(scoped, ["move", "rotate", "scale"], "utilities scoped to the scene window kind");
         for command in ["loadRequest", "importAssetRequest", "saveDownload", "exportActiveShot", "exportAllShots", "resetFixture", "saveCamera"] {
             assert!(definition.actions.iter().any(|action| action.id == command), "registry declares {command}");
@@ -2060,16 +2060,16 @@ mod tests {
     }
 
     #[test]
-    fn set_active_tool_clears_scratch_and_emits_no_history_entry() {
+    fn set_active_utility_clears_scratch_and_emits_no_history_entry() {
         let mut app = new_app();
         app.handle_action("worldHover", Some(&json!({ "id": "base" })), &ViewState::default(), &meta("local")).expect("hover");
         // Switching utilities is the framework-injected View action: it clears in-progress scratch and
         // must produce no document operations (zero history entries, nothing to sync).
-        let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "rotate" })), &ViewState::default(), &meta("local")).expect("switch tool");
-        assert!(result.operations.is_empty(), "tool switching never emits document ops");
+        let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "rotate" })), &ViewState::default(), &meta("local")).expect("switch utility");
+        assert!(result.operations.is_empty(), "utility switching never emits document ops");
         let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState { active_utility_id: Some("rotate".into()), ..ViewState::default() }).expect("render");
         let selection: Value = serde_json::from_str(serde_json::to_value(&node).unwrap()["world3d"]["selectionJson"].as_str().unwrap()).unwrap();
-        assert_eq!(selection["transformTool"], json!("rotate"), "the gumball follows the host-owned active tool");
+        assert_eq!(selection["transformTool"], json!("rotate"), "the gumball follows the host-owned active utility");
     }
 
     #[test]

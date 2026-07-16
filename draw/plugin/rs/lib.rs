@@ -25,8 +25,8 @@ use std::collections::HashMap;
 const DRAW_PLAY_APP_ID: &str = "draw-play";
 const DRAW_PLAY_CONTROLLER_ID: &str = "draw-play";
 const DRAW_PLAY_WINDOW_CANVAS: &str = "draw-composite";
-/// 🧰 The tool the canvas returns to after committing a shape/draft/trace (first UtilityRef default).
-const DRAW_DEFAULT_TOOL: &str = "selectDirect";
+/// 🧰 The utility the canvas returns to after committing a shape/draft/trace (first UtilityRef default).
+const DRAW_DEFAULT_UTILITY: &str = "selectDirect";
 const DRAW_PLAY_SURFACE_ID: &str = "draw.play.composite";
 const DRAW_PLAY_BODY_COMPOSITE: &str = "draw.play.composite";
 const DRAW_PLAY_BODY_LAYERS: &str = "draw.play.layers";
@@ -48,12 +48,12 @@ enum DrawDragState {
         active: bool,
     },
     Shape {
-        tool: String,
+        utility: String,
         start: [f64; 2],
         cursor: [f64; 2],
     },
     Draft {
-        tool: String,
+        utility: String,
         points: Vec<[f64; 2]>,
         cursor: [f64; 2],
     },
@@ -89,7 +89,7 @@ fn canvas_point_to_world(camera: &draw::DrawCamera, x: f64, y: f64, viewport_w: 
 }
 //#endregion 🔖Interaction
 
-//#region 🔖ToolStateMachine
+//#region 🔖UtilityStateMachine
 const DRAW_MARQUEE_THRESHOLD_PX: f64 = 4.0;
 const DRAW_PICK_TOLERANCE_PX: f64 = 8.0;
 
@@ -268,15 +268,15 @@ fn marquee_layer_hits(doc: &DrawDocument, start: [f64; 2], end: [f64; 2], crossi
     hits
 }
 
-fn shape_preview_segments(tool: &str, start: [f64; 2], end: [f64; 2]) -> Vec<PathSegment> {
-    if tool == "shapeLine" {
+fn shape_preview_segments(utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<PathSegment> {
+    if utility == "shapeLine" {
         return vec![PathSegment::Move { to: start }, PathSegment::Line { to: end }];
     }
     let x = start[0].min(end[0]);
     let y = start[1].min(end[1]);
     let width = (end[0] - start[0]).abs();
     let height = (end[1] - start[1]).abs();
-    if tool == "shapeRect" {
+    if utility == "shapeRect" {
         return vec![
             PathSegment::Move { to: [x, y] },
             PathSegment::Line { to: [x + width, y] },
@@ -300,7 +300,7 @@ fn shape_preview_segments(tool: &str, start: [f64; 2], end: [f64; 2]) -> Vec<Pat
     ]
 }
 
-fn draft_preview_segments(tool: &str, points: &[[f64; 2]], cursor: [f64; 2]) -> Vec<PathSegment> {
+fn draft_preview_segments(utility: &str, points: &[[f64; 2]], cursor: [f64; 2]) -> Vec<PathSegment> {
     if points.is_empty() {
         return Vec::new();
     }
@@ -309,7 +309,7 @@ fn draft_preview_segments(tool: &str, points: &[[f64; 2]], cursor: [f64; 2]) -> 
         segments.push(PathSegment::Line { to: *point });
     }
     segments.push(PathSegment::Line { to: cursor });
-    if tool == "shapePolygon" && points.len() > 1 {
+    if utility == "shapePolygon" && points.len() > 1 {
         segments.push(PathSegment::Close);
     }
     segments
@@ -317,7 +317,7 @@ fn draft_preview_segments(tool: &str, points: &[[f64; 2]], cursor: [f64; 2]) -> 
 
 /// 🔷 Emits the ops that commit a shape drag (add the shape layer + return to direct-select) and
 /// records the new layer as the current selection; empty when the drag is too small to commit.
-fn commit_shape_drag(interaction: &mut DrawInteractionState, doc: &DrawDocument, tool: &str, start: [f64; 2], end: [f64; 2]) -> Vec<DrawOp> {
+fn commit_shape_drag(interaction: &mut DrawInteractionState, doc: &DrawDocument, utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<DrawOp> {
     let x = start[0].min(end[0]);
     let y = start[1].min(end[1]);
     let width = (end[0] - start[0]).abs();
@@ -326,25 +326,25 @@ fn commit_shape_drag(interaction: &mut DrawInteractionState, doc: &DrawDocument,
         return Vec::new();
     }
     let layer = DrawLayerNode::Shape(draw::DrawShapeBody {
-        base: default_layer_base(match tool {
+        base: default_layer_base(match utility {
             "shapeLine" => "Line",
             "shapeEllipse" => "Ellipse",
             _ => "Rectangle",
         }),
-        shape_kind: match tool {
+        shape_kind: match utility {
             "shapeLine" => "line",
             "shapeEllipse" => "ellipse",
             _ => "rect",
         }
         .into(),
-        rect: if tool == "shapeRect" { Some(draw::DrawRect { x, y, width, height }) } else { None },
-        ellipse: if tool == "shapeEllipse" {
+        rect: if utility == "shapeRect" { Some(draw::DrawRect { x, y, width, height }) } else { None },
+        ellipse: if utility == "shapeEllipse" {
             Some(draw::DrawEllipse { cx: x + width / 2.0, cy: y + height / 2.0, rx: width / 2.0, ry: height / 2.0 })
         } else {
             None
         },
         circle: None,
-        line: if tool == "shapeLine" { Some(draw::DrawLine { x1: start[0], y1: start[1], x2: end[0], y2: end[1] }) } else { None },
+        line: if utility == "shapeLine" { Some(draw::DrawLine { x1: start[0], y1: start[1], x2: end[0], y2: end[1] }) } else { None },
         polygon: None,
     });
     let select_id = layer_id(&layer).to_string();
@@ -354,11 +354,11 @@ fn commit_shape_drag(interaction: &mut DrawInteractionState, doc: &DrawDocument,
 
 /// ✒️ Emits the ops that commit a freehand/polygon draft into a path or polygon layer and records it
 /// as the current selection; empty when the draft has too few points to form a shape.
-fn commit_draft(interaction: &mut DrawInteractionState, doc: &DrawDocument, tool: &str, points: &[[f64; 2]]) -> Vec<DrawOp> {
+fn commit_draft(interaction: &mut DrawInteractionState, doc: &DrawDocument, utility: &str, points: &[[f64; 2]]) -> Vec<DrawOp> {
     if points.len() < 2 {
         return Vec::new();
     }
-    let layer = if tool == "pen" {
+    let layer = if utility == "pen" {
         let mut segments = vec![PathSegment::Move { to: points[0] }];
         for point in points.iter().skip(1) {
             segments.push(PathSegment::Line { to: *point });
@@ -400,19 +400,19 @@ fn commit_trace_at(interaction: &mut DrawInteractionState, doc: &DrawDocument, w
 }
 
 /// 🧰 Wraps a committed gesture's `ops` as a single described edit plus the host effect that returns
-/// the canvas to the default select tool (the active tool is host-owned, never a document op).
-fn commit_with_tool_reset(ops: Vec<DrawOp>, description: &str) -> ActionEmit<DrawOp> {
+/// the canvas to the default select utility (the active utility is host-owned, never a document op).
+fn commit_with_utility_reset(ops: Vec<DrawOp>, description: &str) -> ActionEmit<DrawOp> {
     if ops.is_empty() {
         return ActionEmit::default();
     }
     let mut emit = ActionEmit::commit(ops, description);
     emit.effects.push(HostEffect::SetActiveUtility {
         window_kind_id: DRAW_PLAY_WINDOW_CANVAS.into(),
-        utility_id: DRAW_DEFAULT_TOOL.into(),
+        utility_id: DRAW_DEFAULT_UTILITY.into(),
     });
     emit
 }
-//#endregion 🔖ToolStateMachine
+//#endregion 🔖UtilityStateMachine
 
 //#region 🔖Terminology
 /// 🗣️ Complete UI label set for the draw app; one field per label makes every locale combination compile-checked.
@@ -591,7 +591,7 @@ impl DocumentApp for DrawApp {
         view_state: &ViewState,
     ) -> ActionEmit<DrawOp> {
         let document = doc.projection;
-        let active_utility = view_state.active_utility_id.clone().unwrap_or_else(|| DRAW_DEFAULT_TOOL.into());
+        let active_utility = view_state.active_utility_id.clone().unwrap_or_else(|| DRAW_DEFAULT_UTILITY.into());
         match action {
             //#region 🔖ContentOps
             "setDocument" | "commitDocument" => {
@@ -603,7 +603,7 @@ impl DocumentApp for DrawApp {
                 ActionEmit::default()
             }
             SET_ACTIVE_UTILITY_ACTION_ID => {
-                // 🧰 Host-owned tool switch: clear any in-progress gesture scratch, emit nothing.
+                // 🧰 Host-owned utility switch: clear any in-progress gesture scratch, emit nothing.
                 self.interaction.drag = None;
                 ActionEmit::default()
             }
@@ -829,11 +829,11 @@ impl DocumentApp for DrawApp {
                 let (Some(x), Some(y)) = (x, y) else { return ActionEmit::default() };
                 let (world_x, world_y) = canvas_point_to_world(&document.camera, x, y, viewport_w, viewport_h);
                 let world = [world_x, world_y];
-                let tool = active_utility.clone();
-                match tool.as_str() {
+                let utility = active_utility.clone();
+                match utility.as_str() {
                     "selectMarquee" | "selectLasso" => {
                         self.interaction.drag = Some(DrawDragState::Marquee {
-                            method: if tool == "selectLasso" { "lasso".into() } else { "rectangle".into() },
+                            method: if utility == "selectLasso" { "lasso".into() } else { "rectangle".into() },
                             start: world,
                             cursor: world,
                             merge: selection_merge_mode(shift, ctrl, meta).into(),
@@ -842,22 +842,22 @@ impl DocumentApp for DrawApp {
                         ActionEmit::default()
                     }
                     "shapeRect" | "shapeEllipse" | "shapeLine" => {
-                        self.interaction.drag = Some(DrawDragState::Shape { tool: tool.clone(), start: world, cursor: world });
+                        self.interaction.drag = Some(DrawDragState::Shape { utility: utility.clone(), start: world, cursor: world });
                         ActionEmit::default()
                     }
                     "pen" | "shapePolygon" => {
-                        let matches_existing = matches!(&self.interaction.drag, Some(DrawDragState::Draft { tool: existing, .. }) if existing == &tool);
+                        let matches_existing = matches!(&self.interaction.drag, Some(DrawDragState::Draft { utility: existing, .. }) if existing == &utility);
                         if matches_existing {
                             if let Some(DrawDragState::Draft { points, cursor, .. }) = &mut self.interaction.drag {
                                 points.push(world);
                                 *cursor = world;
                             }
                         } else {
-                            self.interaction.drag = Some(DrawDragState::Draft { tool: tool.clone(), points: vec![world], cursor: world });
+                            self.interaction.drag = Some(DrawDragState::Draft { utility: utility.clone(), points: vec![world], cursor: world });
                         }
                         ActionEmit::default()
                     }
-                    "trace" => commit_with_tool_reset(commit_trace_at(&mut self.interaction, document, world), "Trace image"),
+                    "trace" => commit_with_utility_reset(commit_trace_at(&mut self.interaction, document, world), "Trace image"),
                     _ => ActionEmit::default(),
                 }
             }
@@ -883,8 +883,8 @@ impl DocumentApp for DrawApp {
                     }
                     return ActionEmit::default();
                 }
-                let tool = active_utility.clone();
-                let include_control_points = tool == "selectDirect";
+                let utility = active_utility.clone();
+                let include_control_points = utility == "selectDirect";
                 let tolerance = DRAW_PICK_TOLERANCE_PX / document.camera.zoom.max(1e-6);
                 self.interaction.hovered_id = best_pick_layer_id(&resolve_pick_targets_at(document, world, tolerance, include_control_points));
                 ActionEmit::default()
@@ -913,9 +913,9 @@ impl DocumentApp for DrawApp {
                         }
                         ActionEmit::default()
                     }
-                    Some(DrawDragState::Shape { tool, start, .. }) => {
+                    Some(DrawDragState::Shape { utility, start, .. }) => {
                         self.interaction.drag = None;
-                        commit_with_tool_reset(commit_shape_drag(&mut self.interaction, document, &tool, start, world), "Add shape")
+                        commit_with_utility_reset(commit_shape_drag(&mut self.interaction, document, &utility, start, world), "Add shape")
                     }
                     None => {
                         if active_utility == "selectDirect" {
@@ -926,9 +926,9 @@ impl DocumentApp for DrawApp {
                 }
             }
             "canvasDoubleClick" | "canvasCommitDraft" => {
-                if let Some(DrawDragState::Draft { tool, points, .. }) = self.interaction.drag.clone() {
+                if let Some(DrawDragState::Draft { utility, points, .. }) = self.interaction.drag.clone() {
                     self.interaction.drag = None;
-                    commit_with_tool_reset(commit_draft(&mut self.interaction, document, &tool, &points), "Commit draft")
+                    commit_with_utility_reset(commit_draft(&mut self.interaction, document, &utility, &points), "Commit draft")
                 } else {
                     ActionEmit::default()
                 }
@@ -946,7 +946,7 @@ impl DocumentApp for DrawApp {
         let document = doc.projection;
         let interaction = &self.interaction;
         let labels = draw_labels(view_state);
-        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(DRAW_DEFAULT_TOOL);
+        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(DRAW_DEFAULT_UTILITY);
         match body_key {
             DRAW_PLAY_BODY_COMPOSITE => render_canvas(document, interaction, active_utility),
             DRAW_PLAY_BODY_LAYERS => render_layers_panel(document, interaction, labels),
@@ -1051,8 +1051,8 @@ fn render_canvas(document: &DrawDocument, interaction: &DrawInteractionState, ac
                     1.0,
                 ));
             }
-            DrawDragState::Shape { tool, start, cursor } => {
-                let segments = shape_preview_segments(tool, *start, *cursor);
+            DrawDragState::Shape { utility, start, cursor } => {
+                let segments = shape_preview_segments(utility, *start, *cursor);
                 records.push(overlay_record(
                     "overlay:preview".into(),
                     [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
@@ -1062,8 +1062,8 @@ fn render_canvas(document: &DrawDocument, interaction: &DrawInteractionState, ac
                     1.5,
                 ));
             }
-            DrawDragState::Draft { tool, points, cursor } => {
-                let segments = draft_preview_segments(tool, points, *cursor);
+            DrawDragState::Draft { utility, points, cursor } => {
+                let segments = draft_preview_segments(utility, points, *cursor);
                 records.push(overlay_record(
                     "overlay:preview".into(),
                     [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
@@ -1776,7 +1776,7 @@ fn render_properties_panel(document: &DrawDocument, interaction: &DrawInteractio
     if selected_layers.is_empty() {
         return ui_stack_vertical(vec![
             ui_text(format!("Schema: {}", DRAW_DOCUMENT_SCHEMA)),
-            ui_text(format!("Tool: {active_utility}")),
+            ui_text(format!("Utility: {active_utility}")),
             ui_text(format!("Layers: {}", flatten_draw_layers(&document.layers).len())),
         ]);
     }
@@ -1824,7 +1824,7 @@ fn draw_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefini
     ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, kind) }
 }
 
-/// 🧰 One canvas tool declaration (id/label/icon reused verbatim from the retired `utilities()` impl).
+/// 🧰 One canvas utility declaration (id/label/icon reused verbatim from the retired `utilities()` impl).
 fn draw_utility(id: &str, label: &str, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
     UtilityDefinition { group: Some(group.into()), category: Some(category), ..UtilityDefinition::new(id, label, icon) }
 }
@@ -1892,7 +1892,7 @@ fn create_draw_app() -> App {
             .action_with(draw_internal_action("setSelection", "Set Selection", ActionKind::View))
             .action_with(draw_internal_action("setHover", "Set Hover", ActionKind::View))
             .action_with(draw_internal_action("engagementInput", "Engagement Input", ActionKind::View))
-            // 🧰 Canvas utilities — one exclusive set per window, active tool host-owned (never a document op).
+            // 🧰 Canvas utilities — one exclusive set per window, active utility host-owned (never a document op).
             .utility(draw_utility("selectMarquee", "Marquee Select", "square-dashed", "Select", UtilityCategory::Selection))
             .utility(draw_utility("selectLasso", "Lasso Select", "lasso", "Select", UtilityCategory::Selection))
             .utility(draw_utility("selectDirect", "Direct Select", "mouse-pointer-2", "Select", UtilityCategory::Selection))
@@ -1975,9 +1975,9 @@ mod tests {
         VcsDocumentApp::with_registry(DrawApp::default(), AppActionRegistry::from_definition(&definition))
     }
 
-    /// 🧰 A view state whose host-owned active tool is `tool` (replaces the deleted document field).
-    fn view_with_utility(tool: &str) -> ViewState {
-        ViewState { active_utility_id: Some(tool.into()), ..ViewState::default() }
+    /// 🧰 A view state whose host-owned active utility is `utility` (replaces the deleted document field).
+    fn view_with_utility(utility: &str) -> ViewState {
+        ViewState { active_utility_id: Some(utility.into()), ..ViewState::default() }
     }
 
     fn first_layer_id(app: &VcsDocumentApp<DrawApp>) -> String {
@@ -2067,18 +2067,18 @@ mod tests {
     }
 
     #[test]
-    fn set_active_tool_clears_scratch_and_emits_no_history_entry() {
+    fn set_active_utility_clears_scratch_and_emits_no_history_entry() {
         let mut app = new_app_with_registry();
         // Begin a shape gesture so there is scratch to clear.
         app.handle_action("canvasPointerDown", Some(&json!({ "x": 10.0, "y": 10.0, "width": 800.0, "height": 600.0 })), &view_with_utility("shapeRect"), &meta()).expect("down");
         let before = app.projection().unwrap();
         // Switching utilities is the framework View action: no document ops, nothing to sync/undo.
-        let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "pen" })), &view_with_utility("pen"), &meta()).expect("switch tool");
-        assert!(result.operations.is_empty(), "tool switching never emits document ops");
-        assert_eq!(app.projection().unwrap(), before, "tool switching does not mutate the document");
+        let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "pen" })), &view_with_utility("pen"), &meta()).expect("switch utility");
+        assert!(result.operations.is_empty(), "utility switching never emits document ops");
+        assert_eq!(app.projection().unwrap(), before, "utility switching does not mutate the document");
         // The cleared scratch means a follow-up pointer up commits nothing.
         let up = app.handle_action("canvasPointerUp", Some(&json!({ "x": 40.0, "y": 40.0, "width": 800.0, "height": 600.0, "shift": false, "ctrl": false, "meta": false })), &view_with_utility("pen"), &meta()).expect("up");
-        assert!(up.operations.is_empty(), "the in-progress shape draft was cleared on tool switch");
+        assert!(up.operations.is_empty(), "the in-progress shape draft was cleared on utility switch");
     }
 
     #[test]
@@ -2111,7 +2111,7 @@ mod tests {
     }
 
     #[test]
-    fn shape_rect_drag_commits_one_layer_and_requests_tool_reset() {
+    fn shape_rect_drag_commits_one_layer_and_requests_utility_reset() {
         // Under the real registry: canvasPointerUp is an Operation-kind pointer handler, so emitting
         // the AddLayer op is allowed; the return-to-select is a HostEffect, not a document op.
         let mut app = new_app_with_registry();
@@ -2217,19 +2217,19 @@ mod tests {
     }
 
     #[test]
-    fn tool_registry_declares_all_canvas_tools_scoped_to_the_window() {
+    fn utility_registry_declares_all_canvas_utilities_scoped_to_the_window() {
         let definition = create_draw_app().definition;
-        let tool_ids: Vec<&str> = definition.utilities.iter().map(|tool| tool.id.as_str()).collect();
+        let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
         assert_eq!(
-            tool_ids,
+            utility_ids,
             ["selectMarquee", "selectLasso", "selectDirect", "pen", "shapeRect", "shapeEllipse", "shapeLine", "shapePolygon", "booleanCombine", "trace", "transformMove"],
         );
         // Selection utilities carry the Selection category; the rest are Tools.
-        let selects: Vec<&str> = definition.utilities.iter().filter(|tool| tool.category == Some(UtilityCategory::Selection)).map(|tool| tool.id.as_str()).collect();
+        let selects: Vec<&str> = definition.utilities.iter().filter(|utility| utility.category == Some(UtilityCategory::Selection)).map(|utility| utility.id.as_str()).collect();
         assert_eq!(selects, ["selectMarquee", "selectLasso", "selectDirect"]);
         let scene = definition.window_kinds.iter().find(|window| window.id == DRAW_PLAY_WINDOW_CANVAS).expect("canvas window");
-        assert_eq!(scene.utilities.len(), definition.utilities.len(), "every tool is scoped to the canvas window kind");
-        // The framework auto-injects the setActiveTool View action once utilities are declared.
+        assert_eq!(scene.utilities.len(), definition.utilities.len(), "every utility is scoped to the canvas window kind");
+        // The framework auto-injects the setActiveUtility View action once utilities are declared.
         assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, ActionKind::View)));
         // The retired document op vocabulary is gone.
         assert!(!definition.actions.iter().any(|action| action.id == "setActiveUtility" && !matches!(action.kind, ActionKind::View)));

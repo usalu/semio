@@ -1263,27 +1263,27 @@ function resolveCanvasBodyKey(app: AppDefinition): string {
   return windowKind.bodyKey;
 }
 
-//#region 🧰WindowUtilityRegistry
+//#region 🧰UtilityRegistry
 /**
- * 🧰 Resolves the `UtilityDefinition`s in scope for one window kind against the app's tool registry:
- * the window kind's own `tools` refs when non-empty, otherwise every tool the app declares (the
- * scoping fallback, mirroring `resolveWindowActions`' intent for tools). Unresolvable refs are dropped.
+ * 🧰 Resolves the `UtilityDefinition`s in scope for one window kind against the app's utility registry:
+ * the window kind's own `utilities` refs when non-empty, otherwise every utility the app declares (the
+ * scoping fallback, mirroring `resolveWindowActions`' intent for utilities). Unresolvable refs are dropped.
  */
-export function resolveWindowUtilities(app: Pick<AppDefinition, "utilities">, windowKind: Pick<AppWindowKindDefinition, "utilities">): UtilityDefinition[] {
+export function resolveUtilities(app: Pick<AppDefinition, "utilities">, windowKind: Pick<AppWindowKindDefinition, "utilities">): UtilityDefinition[] {
   const registry = app.utilities ?? [];
   const refs = windowKind.utilities ?? [];
   if (refs.length === 0) return [...registry];
   const resolved: UtilityDefinition[] = [];
   for (const ref of refs) {
-    const tool = registry.find((entry) => entry.id === ref);
-    if (tool) resolved.push(tool);
+    const utility = registry.find((entry) => entry.id === ref);
+    if (utility) resolved.push(utility);
   }
   return resolved;
 }
 
 /** 🧰 One `UtilityDefinition` → the lean `DerivedUtilitySpec` consumed by {@link deriveUtilityNodes}. */
-function utilityDefinitionToSpec(tool: UtilityDefinition): DerivedUtilitySpec {
-  return { id: tool.id, label: tool.label, iconId: tool.iconId, group: tool.group ?? undefined, category: tool.category ?? "tools" };
+function utilityDefinitionToSpec(utility: UtilityDefinition): DerivedUtilitySpec {
+  return { id: utility.id, label: utility.label, iconId: utility.iconId, group: utility.group ?? undefined, category: utility.category ?? "tools" };
 }
 
 /** 🧰 Stamps the owning `windowId` onto every `setActiveUtility` descriptor in a derived toolbar tree so the shell's `onAction` interceptor targets the right window regardless of which window is globally active. */
@@ -1298,30 +1298,30 @@ function tagSetActiveUtilityWindow(nodes: readonly UtilityNode[], windowId: stri
 }
 
 /**
- * 🧰 Builds the window toolbar `UtilityNode[]` for one window purely from the static tool registry plus
- * the host-owned active tool id — the replacement for the deleted plugin `list-tools` sourcing. Each
+ * 🧰 Builds the window toolbar `UtilityNode[]` for one window purely from the static utility registry plus
+ * the host-owned active utility id — the replacement for the deleted plugin `list-tools` sourcing. Each
  * `setActiveUtility` descriptor is tagged with `windowId` so activation is scoped to this exact window.
  */
-export function resolveWindowUtilityNodes(app: Pick<AppDefinition, "utilities" | "controllerId">, windowKind: Pick<AppWindowKindDefinition, "utilities">, activeUtilityId: string | null | undefined, windowId: string): UtilityNode[] {
-  const utilities = resolveWindowUtilities(app, windowKind);
+export function resolveUtilityNodes(app: Pick<AppDefinition, "utilities" | "controllerId">, windowKind: Pick<AppWindowKindDefinition, "utilities">, activeUtilityId: string | null | undefined, windowId: string): UtilityNode[] {
+  const utilities = resolveUtilities(app, windowKind);
   if (utilities.length === 0) return [];
   return tagSetActiveUtilityWindow(deriveUtilityNodes(app.controllerId, utilities.map(utilityDefinitionToSpec), activeUtilityId ?? undefined), windowId);
 }
-//#endregion 🧰WindowUtilityRegistry
+//#endregion 🧰UtilityRegistry
 
-/** @emoji 💬 Builds spawned-window engagement, measures, and tool-options chrome for one window kind. */
+/** @emoji 💬 Builds spawned-window engagement, measures, and utility-options chrome for one window kind. */
 export function spawnedWindowChromeForKind(
   kind: AppDefinition["windowKinds"][number],
   engagementsByKind: Readonly<Record<string, WindowEngagement>>,
   measuresByKind: Readonly<Record<string, readonly WindowMeasure[]>>,
   activeUtilityId: string | undefined,
   onAction: (action: ActionDescriptor) => void,
-): { readonly engagement?: EngagementSpec; readonly measures: ReactNode; readonly toolOptions: ReactNode } {
-  const { measures, toolOptions } = windowMeasuresChrome(measuresByKind[kind.id] ?? kind.options.measures, activeUtilityId, kind.id, onAction);
+): { readonly engagement?: EngagementSpec; readonly measures: ReactNode; readonly utilityOptions: ReactNode } {
+  const { measures, utilityOptions } = windowMeasuresChrome(measuresByKind[kind.id] ?? kind.options.measures, activeUtilityId, kind.id, onAction);
   return {
     engagement: windowEngagementToSpec(resolveWindowEngagement(kind, engagementsByKind), onAction),
     measures,
-    toolOptions,
+    utilityOptions,
   };
 }
 
@@ -1541,17 +1541,17 @@ function windowMeasuresChrome(
   activeUtilityId: string | undefined,
   windowId: string,
   onAction: (action: ActionDescriptor) => unknown,
-): { readonly measures: ReactNode | undefined; readonly toolOptions: ReactNode | undefined } {
-  const { general, toolOptions } = partitionWindowMeasures(measures ?? [], activeUtilityId);
+): { readonly measures: ReactNode | undefined; readonly utilityOptions: ReactNode | undefined } {
+  const { general, utilityOptions } = partitionWindowMeasures(measures ?? [], activeUtilityId);
   return {
     measures: windowMeasuresOverlay(general, onAction),
-    toolOptions: windowMeasuresOverlay(toolOptions, onAction),
+    utilityOptions: windowMeasuresOverlay(utilityOptions, onAction),
   };
 }
 
-function windowUtilityBarNode(utilities: readonly UtilityNode[] | undefined, windowId: string, onAction: (action: ActionDescriptor) => void): ReactNode {
+function utilityBarNode(utilities: readonly UtilityNode[] | undefined, windowId: string, onAction: (action: ActionDescriptor) => void): ReactNode {
   if (!utilities?.length) return undefined;
-  const categories = groupUtilityNodesByCategory(utilities, WINDOW_UTILITY_CATEGORIES);
+  const categories = groupUtilityNodesByCategory(utilities, UTILITY_CATEGORIES);
   if (!categories.length) return undefined;
   const grouped: UtilityNode[] = [];
   for (const node of categories) {
@@ -1794,7 +1794,7 @@ export function WindowActionPane(props: WindowActionPaneProps): ReactElement {
 type ActionPaneSlice = Pick<ActionPaneState, "expandedByWindowId" | "stagedArgsByKey" | "activeUtilityByWindowId">;
 
 /**
- * 🧰 Sibling of {@link windowUtilityBarNode}: resolves a window kind's panel-eligible actions and returns a
+ * 🧰 Sibling of {@link utilityBarNode}: resolves a window kind's panel-eligible actions and returns a
  * bound {@link WindowActionPane}, or `undefined` when the window has no resolved actions (so the rail
  * chip never renders). Rows render disabled while an active tool gates actions
  * (`allowsActionsWhileActive === false`).
@@ -1833,7 +1833,7 @@ export type ResolvedCommand = {
  * 🎛 Aggregates every command visible for the current session: os built-ins, the active session's
  * plugin-scope commands, the app's App-scope commands, and Mode-scope commands referenced by the
  * active mode's `commands` refs. There are no window-level commands (see `CommandScope`) — unlike
- * `resolveWindowActions`/`resolveWindowUtilities`, this never takes a window kind.
+ * `resolveWindowActions`/`resolveUtilities`, this never takes a window kind.
  */
 export function resolveCommands(
   osCommands: readonly CommandDefinition[],
@@ -4150,9 +4150,9 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
             fill: true,
             showControls: true,
             measures: chrome?.measures,
-            toolOptions: chrome?.toolOptions,
+            utilityOptions: chrome?.utilityOptions,
             engagement: chrome?.engagement,
-            toolbar: spawnedApp && windowKind ? windowUtilityBarNode(resolveWindowUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[spawned.id], spawned.id), spawned.id, onActionStable) : undefined,
+            toolbar: spawnedApp && windowKind ? utilityBarNode(resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[spawned.id], spawned.id), spawned.id, onActionStable) : undefined,
             actionPane: spawnedApp && windowKind ? windowActionPaneNode(spawnedApp, windowKind, spawned.id, actionPaneSlice, onActionStable, dispatch) : undefined,
             actionsFolded: actionsFoldedFor(spawned.id),
             onActionsFoldedChange: onActionsFoldedFor(spawned.id),
@@ -4173,7 +4173,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       showControls: true,
       ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id], kind.id, onActionStable),
       engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
-      toolbar: windowUtilityBarNode(resolveWindowUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id), kind.id, onActionStable),
+      toolbar: utilityBarNode(resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id), kind.id, onActionStable),
       actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch),
       actionsFolded: actionsFoldedFor(kind.id),
       onActionsFoldedChange: onActionsFoldedFor(kind.id),
@@ -4194,7 +4194,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           showControls: true,
           ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id], instance.id, onActionStable),
           engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
-          toolbar: windowUtilityBarNode(resolveWindowUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id), instance.id, onActionStable),
+          toolbar: utilityBarNode(resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id), instance.id, onActionStable),
           actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch),
           actionsFolded: actionsFoldedFor(instance.id),
           onActionsFoldedChange: onActionsFoldedFor(instance.id),
@@ -4643,7 +4643,7 @@ export type RasterWasmSession = {
   syncDocumentJson(json: string): void;
   uploadLayerImage(layerId: string, bytes: Uint8Array): void;
   uploadRasterImageKey(key: string, bytes: Uint8Array): void;
-  setActiveTool(tool: string): void;
+  setActiveUtility(utility: string): void;
   setBrushSize(size: number): void;
   setBrushOpacity(opacity: number): void;
   setHoveredIdSilent(id?: string | null): void;
@@ -4779,7 +4779,7 @@ export type Puzzle2dBoardWasmSession = {
   cameraJson(): string;
   gpuReady(): boolean;
   setHoveredIdSilent?(id?: string | null): void;
-  setActiveTool?(label: string): void;
+  setActiveUtility?(label: string): void;
   setSelectionOptions?(method: string, mode: string, selectNodes: boolean, selectEdges: boolean, selectHandles: boolean): void;
   setGridSnapEnabled?(enabled: boolean): void;
   setGridFactor?(v: number): void;
@@ -5171,7 +5171,7 @@ export function sortUtilityNodes(nodes: readonly UtilityNode[]): UtilityNode[] {
 const UTILITY_CATEGORY_ORDER: readonly UtilityCategory[] = ["selection", "tools", "history", "sync"];
 
 /** @emoji 🪟 Categories that are scoped to whatever window/pane the user is interacting with — selecting or editing content varies per window, so these live in each window's own bottom-left panel. */
-const WINDOW_UTILITY_CATEGORIES: readonly UtilityCategory[] = ["selection", "tools"];
+const UTILITY_CATEGORIES: readonly UtilityCategory[] = ["selection", "tools"];
 
 const UTILITY_CATEGORY_ICON_ID: Readonly<Record<UtilityCategory, string>> = {
   selection: "mouse-pointer",
