@@ -1317,7 +1317,7 @@ export function spawnedWindowChromeForKind(
   activeUtilityId: string | undefined,
   onAction: (action: ActionDescriptor) => void,
 ): { readonly engagement?: EngagementSpec; readonly measures: ReactNode; readonly toolOptions: ReactNode } {
-  const { measures, toolOptions } = windowMeasuresChrome(measuresByKind[kind.id] ?? kind.options.measures, activeUtilityId, onAction);
+  const { measures, toolOptions } = windowMeasuresChrome(measuresByKind[kind.id] ?? kind.options.measures, activeUtilityId, kind.id, onAction);
   return {
     engagement: windowEngagementToSpec(resolveWindowEngagement(kind, engagementsByKind), onAction),
     measures,
@@ -1474,13 +1474,74 @@ function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, o
   return <WindowMeasuresTree>{measures.map((measure) => renderWindowMeasure(measure, onAction))}</WindowMeasuresTree>;
 }
 
-/**
- * @emoji 🎯 Splits a window's measures via {@link partitionWindowMeasures} into the always-on Measures
- * overlay node (`measures`) and the tool-scoped Tool Options overlay node (`toolOptions`, shown beside
- * the toolbar only while its `activeUtilityId` matches the window's active tool). Both buckets render
- * through the same {@link renderWindowMeasure} control path; each is `undefined` when its bucket is empty.
- */
-function windowMeasuresChrome(measures: readonly WindowMeasure[] | undefined, activeUtilityId: string | undefined, onAction: (action: ActionDescriptor) => unknown): { readonly measures: ReactNode | undefined; readonly toolOptions: ReactNode | undefined } {
+function SelectionToolOptions({ activeUtilityId, windowId, onAction }: { readonly activeUtilityId: string | undefined; readonly windowId: string; readonly onAction: (action: ActionDescriptor) => void }) {
+  const selectionMethod = activeUtilityId === "selectLasso" ? "lasso" : "rectangle";
+
+  const [selectionMode, setSelectionMode] = useState<"default" | "additive" | "subtractive" | "invertive">(() => {
+    return (globalThis as any).__selectionMode || "default";
+  });
+
+  const handleModeChange = (mode: "default" | "additive" | "subtractive" | "invertive") => {
+    (globalThis as any).__selectionMode = mode;
+    setSelectionMode(mode);
+    window.dispatchEvent(new CustomEvent("semio:selectionOptionsChanged"));
+  };
+
+  const handleMethodChange = (method: "rectangle" | "lasso") => {
+    onAction({
+      controllerId: "window",
+      action: SET_ACTIVE_UTILITY_ACTION_ID,
+      args: { windowId, utilityId: method === "lasso" ? "selectLasso" : "selectMarquee" },
+    });
+  };
+
+  return (
+    <div className="flex items-center gap-double">
+      <div className="flex items-center gap-single">
+        <span className="text-tiny text-muted-foreground uppercase tracking-wider font-semibold">Method</span>
+        <ToggleGroup
+          kind="single"
+          value={selectionMethod}
+          onValueChange={(val) => {
+            if (val === "rectangle" || val === "lasso") {
+              handleMethodChange(val);
+            }
+          }}
+          items={[
+            { value: "rectangle", icon: <Icon icon="square-dashed" size="small" />, text: "Rectangle" },
+            { value: "lasso", icon: <Icon icon="lasso" size="small" />, text: "Lasso" },
+          ]}
+        />
+      </div>
+      <ToolbarDivider />
+      <div className="flex items-center gap-single">
+        <span className="text-tiny text-muted-foreground uppercase tracking-wider font-semibold">Mode</span>
+        <ToggleGroup
+          kind="single"
+          value={selectionMode}
+          onValueChange={(val) => {
+            if (val === "default" || val === "additive" || val === "subtractive" || val === "invertive") {
+              handleModeChange(val);
+            }
+          }}
+          items={[
+            { value: "default", text: "Selective" },
+            { value: "additive", text: "Additive" },
+            { value: "subtractive", text: "Subtractive" },
+            { value: "invertive", text: "Invertive" },
+          ]}
+        />
+      </div>
+    </div>
+  );
+}
+
+function windowMeasuresChrome(
+  measures: readonly WindowMeasure[] | undefined,
+  activeUtilityId: string | undefined,
+  windowId: string,
+  onAction: (action: ActionDescriptor) => unknown,
+): { readonly measures: ReactNode | undefined; readonly toolOptions: ReactNode | undefined } {
   const { general, toolOptions } = partitionWindowMeasures(measures ?? [], activeUtilityId);
   return {
     measures: windowMeasuresOverlay(general, onAction),
@@ -1494,8 +1555,18 @@ function windowUtilityBarNode(utilities: readonly UtilityNode[] | undefined, win
   if (!categories.length) return undefined;
   const grouped: UtilityNode[] = [];
   for (const node of categories) {
-    if (node.kind === "collection" && node.category === "tools") {
-      grouped.push(...node.children);
+    if (node.kind === "collection" && (node.category === "tools" || node.category === "selection")) {
+      if (node.id === "group:Select" || node.id === "group:selection" || node.label === "Select" || node.text === "Select") {
+        grouped.push(...node.children);
+      } else {
+        for (const child of node.children) {
+          if (child.kind === "collection" && (child.id === "group:Select" || child.id === "group:selection" || child.label === "Select" || child.text === "Select")) {
+            grouped.push(...child.children);
+          } else {
+            grouped.push(child);
+          }
+        }
+      }
     } else {
       grouped.push(node);
     }
@@ -1832,7 +1903,13 @@ function buildOsCommands(themeList: readonly UiTheme[], terminologies: readonly 
       scope: "os",
       category: "appearance",
       inPalette: true,
-      args: [selectCommandArg("themeId", "Theme", themeList.map((theme) => ({ value: theme.id, label: theme.label || theme.id })))],
+      args: [
+        selectCommandArg(
+          "themeId",
+          "Theme",
+          themeList.map((theme) => ({ value: theme.id, label: theme.label || theme.id })),
+        ),
+      ],
     },
     {
       id: "os.setLayout",
@@ -1868,7 +1945,13 @@ function buildOsCommands(themeList: readonly UiTheme[], terminologies: readonly 
       scope: "os",
       category: "language",
       inPalette: true,
-      args: [selectCommandArg("terminology", "Terminology", terminologies.map((id) => ({ value: id, label: shellTerminologyLabel(id) })))],
+      args: [
+        selectCommandArg(
+          "terminology",
+          "Terminology",
+          terminologies.map((id) => ({ value: id, label: shellTerminologyLabel(id) })),
+        ),
+      ],
     },
     {
       id: "os.setExpertise",
@@ -3268,10 +3351,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const uiThemeBase = uiThemeDraft ?? uiTheme;
   const uiThemeDirty = uiThemeDraft !== null;
   const uiThemeList = useMemo((): readonly UiTheme[] => [...builtinUiThemes(), ...Object.values(uiCustomThemes)], [uiCustomThemes]);
-  const osCommands = useMemo(
-    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])]),
-    [uiThemeList, session?.app.terminologies],
-  );
+  const osCommands = useMemo(() => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])]), [uiThemeList, session?.app.terminologies]);
 
   const draftThemePatch = useCallback(
     (patch: (next: UiTheme) => void) => {
@@ -3595,7 +3675,9 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       icon: shellTabIcon(UTILITY_CATEGORY_ICON_ID.history),
       name: shellLabel("ui.panel.toolsHistory"),
       order: 1,
-      tree: { sections: [{ id: "framework.utilities.history.root", label: "", items: [{ id: "framework.utilities.history.tree", label: "", control: <UtilityTree id="ui.toolbar.footer.history" utilities={grouped} onAction={onAction} direction="up" /> }] }] },
+      tree: {
+        sections: [{ id: "framework.utilities.history.root", label: "", items: [{ id: "framework.utilities.history.tree", label: "", control: <UtilityTree id="ui.toolbar.footer.history" utilities={grouped} onAction={onAction} direction="up" /> }] }],
+      },
     });
   }, [onAction, session]);
   //#endregion 🧰FooterToolLeaves
@@ -3645,10 +3727,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
   const activeModeId = session?.viewState.activeModeId ?? session?.app.modes[0]?.id ?? session?.app.id ?? "";
 
-  const resolvedCommands = useMemo(
-    () => resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId),
-    [osCommands, activePluginManifest, session?.app, activeModeId],
-  );
+  const resolvedCommands = useMemo(() => resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId), [osCommands, activePluginManifest, session?.app, activeModeId]);
 
   const commandCategoryList = useMemo(() => commandCategories(resolvedCommands), [resolvedCommands]);
 
@@ -3678,10 +3757,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     [applyHostEffects, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session],
   );
 
-  const commandCategoryTabs = useMemo(
-    () => buildCommandCategoryTabs(resolvedCommands, commandCategoryList, expandedCommandIdRef, commandStagedArgsByCommandIdRef, onCommand, dispatch),
-    [resolvedCommands, commandCategoryList, onCommand],
-  );
+  const commandCategoryTabs = useMemo(() => buildCommandCategoryTabs(resolvedCommands, commandCategoryList, expandedCommandIdRef, commandStagedArgsByCommandIdRef, onCommand, dispatch), [resolvedCommands, commandCategoryList, onCommand]);
 
   //#region 🧭DockAssembly — default four-corner arrangement (the two middle anchors start empty save the command palette in bottom-middle) + persisted-override reconciliation + drag-and-drop wiring.
   const defaultDock = useMemo((): PanelDock => {
@@ -4095,7 +4171,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       title: appWindowDocumentLabel(session.app, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label)),
       fill: true,
       showControls: true,
-      ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id], onActionStable),
+      ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id], kind.id, onActionStable),
       engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
       toolbar: windowUtilityBarNode(resolveWindowUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id), kind.id, onActionStable),
       actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch),
@@ -4116,7 +4192,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           title: instance.title,
           fill: true,
           showControls: true,
-          ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id], onActionStable),
+          ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id], instance.id, onActionStable),
           engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
           toolbar: windowUtilityBarNode(resolveWindowUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id), instance.id, onActionStable),
           actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch),
@@ -5337,6 +5413,23 @@ export function UtilityTree({ utilities, onAction, id = "ui.toolbar", direction 
       <UtilityToolbarItems items={segment.items} onAction={onAction} />
     );
 
+  const windowId = id.startsWith("ui.toolbar.") ? id.slice("ui.toolbar.".length) : "";
+
+  const findPressedSelectionUtility = (nodes: readonly UtilityNode[]): UtilityNode | undefined => {
+    for (const node of nodes) {
+      if (node.kind === "collection") {
+        const found = findPressedSelectionUtility(node.children);
+        if (found) return found;
+      } else if (node.kind === "toggle" && node.pressed && node.id.startsWith("select")) {
+        return node;
+      }
+    }
+    return undefined;
+  };
+
+  const activeSelectionUtility = findPressedSelectionUtility(utilities);
+  const hasActiveSelection = activeSelectionUtility != null;
+
   const rows: RibbonRow[] =
     direction === "inline"
       ? segments.map((segment, index) => ({ key: toolbarRibbonSegmentKey(segment, index), content: renderSegment(segment) }))
@@ -5350,6 +5443,19 @@ export function UtilityTree({ utilities, onAction, id = "ui.toolbar", direction 
         )
           .sort(([left], [right]) => left - right)
           .map(([depth, content]) => ({ key: `row-${depth}`, content }));
+
+  if (hasActiveSelection && direction !== "inline") {
+    rows.push({
+      key: "row-selection-options",
+      content: (
+        <ToolbarZone>
+          <ToolbarItem>
+            <SelectionToolOptions activeUtilityId={activeSelectionUtility.id} windowId={windowId} onAction={onAction} />
+          </ToolbarItem>
+        </ToolbarZone>
+      ),
+    });
+  }
 
   return (
     <UiChromeLabelPolicyProvider policy="always">

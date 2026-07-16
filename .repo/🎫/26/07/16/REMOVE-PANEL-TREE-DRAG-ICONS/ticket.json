@@ -1,8 +1,9 @@
 {
   "title": "Remove Panel Tree Drag Icons",
   "emoji": "🎨",
-  "status": "open",
+  "status": "closed",
   "description": "Remove the drag icon in the panels top left where the trees are, and just show the trees",
+  "summary": "Remove the drag icon in the panels top left where the trees are, and just show the trees. Also update the unit test to expect the correct drag handle data-slot.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2000"
   },

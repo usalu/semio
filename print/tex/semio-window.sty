@@ -1909,8 +1909,16 @@
 % `frame.north`-anchored technique as \semio@window@header@repeat, which
 % never has this problem since it has no inline counterpart to be covered)
 % repaints it on top of the fill, so the border is never hidden.
+% ⚠️ Unlike \semio@window@header@repeat, this one is *not* shifted up by an
+% extra \semio@stroke@hairline: the inline header row already reserved its
+% own space above the box (via \semio_window_vskip_stroke_hairline:, which
+% pulls the box up to sit flush with that row's closing stroke), so anchoring
+% this redraw at exactly `frame.north` reuses that same seam — a yshift here
+% would instead push the redrawn stroke one hairline above the box's real top
+% edge, opening a sliver of bare page background between the border and the
+% (now visibly "shrunk") colback fill.
 \newcommand{\semio@window@header@invoke@overlay}{%
-  \node[anchor=south, inner sep=0pt, yshift=\semio@stroke@hairline] at (frame.north) {%
+  \node[anchor=south, inner sep=0pt] at (frame.north) {%
     \semio@window@header@muted{\semio@window@header@number@page1}{\semio@window@header@title}%
   };%
 }

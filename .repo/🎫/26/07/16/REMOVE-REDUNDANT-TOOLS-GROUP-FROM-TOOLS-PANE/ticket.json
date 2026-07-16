@@ -1,8 +1,9 @@
 {
   "title": "Remove Redundant Tools Group from Tools Pane",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "Remove the redundant tools group/node called tools in the tools window pane when unfolded. There should just be the tools directly.",
+  "summary": "Flattened the tools category group in the window utility bar to avoid a redundant picker category button when unfolded.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2002"
   },

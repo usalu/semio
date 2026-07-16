@@ -2022,9 +2022,7 @@ export function pluginHandleForBridge(handle: PluginWasmHandle) {
     createApp: (appId: string) => handle.createApp(appId),
     destroyApp: (instanceId: number) => handle.destroyApp(instanceId),
     handleAction: (instanceId: number, actionJson: string, viewStateJson: string) => handle.handleAction(instanceId, actionJson, JSON.parse(viewStateJson) as PluginViewState).then((ops) => JSON.stringify(ops)),
-    handleCommand: handle.handleCommand
-      ? (instanceId: number, commandJson: string, viewStateJson: string) => handle.handleCommand!(instanceId, commandJson, JSON.parse(viewStateJson) as PluginViewState).then((ops) => JSON.stringify(ops))
-      : undefined,
+    handleCommand: handle.handleCommand ? (instanceId: number, commandJson: string, viewStateJson: string) => handle.handleCommand!(instanceId, commandJson, JSON.parse(viewStateJson) as PluginViewState).then((ops) => JSON.stringify(ops)) : undefined,
     render: (instanceId: number, bodyKey: string, viewStateJson: string) => handle.render(instanceId, bodyKey, JSON.parse(viewStateJson) as PluginViewState).then((node) => JSON.stringify(node)),
     renderWithDocument: handle.renderWithDocument
       ? (instanceId: number, bodyKey: string, viewStateJson: string, documentJson: string) => handle.renderWithDocument!(instanceId, bodyKey, JSON.parse(viewStateJson) as PluginViewState, documentJson).then((node) => JSON.stringify(node))

@@ -389,7 +389,7 @@ pub enum WindowMeasure {
         /// beside the toolbar — never in the always-on Measures overlay. When absent, the group is a
         /// general measure and stays in the Measures overlay exactly as before. See [`partition_window_measures`].
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional, rename = "activeToolId"))]
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "activeUtilityId"))]
         active_utility_id: Option<String>,
         children: Vec<WindowMeasure>,
     },

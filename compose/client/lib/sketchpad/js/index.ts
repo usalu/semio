@@ -165,7 +165,28 @@ function applyComposeSketchpadToolbarParentEntries(bundles: Record<UiLocale, { t
 
 //#region 🗣️VfsTerminology
 /** @emoji 🗣️ File-node/descriptor label keys for the kit virtual file system schema — the compose analog of a Rust plugin's `*Labels` struct. */
-type ComposeVfsLabelKey = "kit" | "folder" | "file" | "design" | "type" | "family" | "typology" | "piece" | "connection" | "representation" | "port" | "connector" | "path" | "nodeKind" | "version" | "kind" | "updated" | "createdBy" | "descriptorText" | "descriptorTime" | "descriptorAvatar";
+type ComposeVfsLabelKey =
+  | "kit"
+  | "folder"
+  | "file"
+  | "design"
+  | "type"
+  | "family"
+  | "typology"
+  | "piece"
+  | "connection"
+  | "representation"
+  | "port"
+  | "connector"
+  | "path"
+  | "nodeKind"
+  | "version"
+  | "kind"
+  | "updated"
+  | "createdBy"
+  | "descriptorText"
+  | "descriptorTime"
+  | "descriptorAvatar";
 
 const composeVfsLabelsNative: UiTerminologyLabelSet<ComposeVfsLabelKey> = {
   en: {

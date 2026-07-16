@@ -55,19 +55,15 @@ import "../globals.css";
 
 //#region 🪁CodaUiI18n
 /** @emoji 🪁 Coda's own i18n bundle namespace, registered on the shared UI i18n instance the same way compose's sketchpad registers `compose.*` keys. Coda has no entity nouns overlapping puzzle/CAD's "reuse" terminology, so this is locale-only — no terminology dimension. */
-type CodaTranslationKey =
-  | `coda.nav.${string}`
-  | "coda.titlebar.subtitle"
-  | "coda.titlebar.sidecarConnected"
-  | "coda.titlebar.sidecarDisconnected"
-  | "coda.titlebar.connected"
-  | "coda.titlebar.offline"
-  | "coda.titlebar.refresh";
+type CodaTranslationKey = `coda.nav.${string}` | "coda.titlebar.subtitle" | "coda.titlebar.sidecarConnected" | "coda.titlebar.sidecarDisconnected" | "coda.titlebar.connected" | "coda.titlebar.offline" | "coda.titlebar.refresh";
 
 const CODA_NAV_LABELS_EN: Readonly<Record<Page, string>> = { dashboard: "Dashboard", config: "Config", runs: "Runs", report: "Report", translations: "Translations", actions: "Actions", events: "Events" };
 const CODA_NAV_LABELS_DE: Readonly<Record<Page, string>> = { dashboard: "Uebersicht", config: "Konfiguration", runs: "Durchlaeufe", report: "Bericht", translations: "Uebersetzungen", actions: "Aktionen", events: "Ereignisse" };
 
-function codaTranslationBundle(nav: Readonly<Record<Page, string>>, titlebar: Readonly<Record<"subtitle" | "sidecarConnected" | "sidecarDisconnected" | "connected" | "offline" | "refresh", string>>): Readonly<Record<CodaTranslationKey, { readonly label: { readonly normal: string; readonly beginner: string } }>> {
+function codaTranslationBundle(
+  nav: Readonly<Record<Page, string>>,
+  titlebar: Readonly<Record<"subtitle" | "sidecarConnected" | "sidecarDisconnected" | "connected" | "offline" | "refresh", string>>,
+): Readonly<Record<CodaTranslationKey, { readonly label: { readonly normal: string; readonly beginner: string } }>> {
   const entries: Record<string, { readonly label: { readonly normal: string; readonly beginner: string } }> = {};
   for (const [id, label] of Object.entries(nav)) entries[`coda.nav.${id}`] = { label: { normal: label, beginner: label } };
   entries["coda.titlebar.subtitle"] = { label: { normal: titlebar.subtitle, beginner: titlebar.subtitle } };

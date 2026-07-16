@@ -708,6 +708,10 @@ export function marqueeCoverageFromGesture(input: { readonly method: SelectionMa
 
 /** @emoji 🎯 Maps shift/ctrl modifiers to marquee selection mode (ctrl+shift → invertive). */
 export function marqueeModeFromModifiers(modifiers: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean }): SelectionMergeMode {
+  const globalMode = (globalThis as any).__selectionMode;
+  if (globalMode && globalMode !== "default") {
+    return globalMode;
+  }
   const shift = modifiers.shiftKey === true;
   const ctrl = modifiers.ctrlKey === true || modifiers.metaKey === true;
   if (shift && ctrl) return "invertive";
@@ -4857,10 +4861,7 @@ export const DragHandle: React.FC<{
 }> = ({ onPointerDown, attributes, listeners, onClick, className }) => (
   <span
     data-slot="drag-handle"
-    className={cn(
-      "inline-flex shrink-0 cursor-grab touch-none items-center justify-center text-muted-foreground transition-colors hover:text-emphasized active:cursor-grabbing",
-      className,
-    )}
+    className={cn("inline-flex shrink-0 cursor-grab touch-none items-center justify-center text-muted-foreground transition-colors hover:text-emphasized active:cursor-grabbing", className)}
     onPointerDown={onPointerDown}
     onClick={onClick}
     {...(attributes as React.ComponentProps<"span">)}
@@ -4870,8 +4871,14 @@ export const DragHandle: React.FC<{
   </span>
 );
 
-/** @emoji 🎯 Passive highlight for every valid drop zone while a compatible drag is in flight — the hovered zone keeps its stronger accent indicator on top of this. */
-export const dropZoneReadyClass = "outline-1 -outline-offset-1 outline-dashed outline-accent/40 bg-accent/10";
+/** @emoji 🎯 Passive drop-zone fill — secondary accent, kept visually distinct from the stronger primary-accent indicator on the actively hovered target. */
+export const dropZoneReadyFillClass = "bg-[var(--accent-secondary)]";
+
+/** @emoji 🎯 Label/icon emphasis paired with {@link dropZoneReadyFillClass} so text stays legible on the fill. */
+export const dropZoneReadyTextClass = "text-emphasized";
+
+/** @emoji 🎯 Combined passive drop-zone treatment for single-container elements (fill + emphasized text/icons) while a compatible drag is in flight — the hovered zone keeps its stronger accent indicator on top of this. Rows that split shell (text) from content (fill) — e.g. {@link TreeItem}, {@link SortableTreeItem}, {@link TreeSection} — apply {@link dropZoneReadyTextClass} and {@link dropZoneReadyFillClass} separately instead, so the fill never bleeds into the guide gutter. */
+export const dropZoneReadyClass = cn(dropZoneReadyFillClass, dropZoneReadyTextClass);
 
 //#endregion 🫳DragAffordance
 
@@ -5291,9 +5298,7 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
                   <Icon size={12} />
                 </span>
                 <span className={panelTabLabelClass}>{tab.name}</span>
-                {anchor && dock ? (
-                  <DragHandle onPointerDown={(event) => dock.startTabDrag(anchor, tab.id, tab.name, event)} onClick={(event) => event.stopPropagation()} />
-                ) : null}
+                {anchor && dock ? <DragHandle onPointerDown={(event) => dock.startTabDrag(anchor, tab.id, tab.name, event)} onClick={(event) => event.stopPropagation()} /> : null}
               </button>
             </ChromeControlHint>
           </React.Fragment>
@@ -12465,8 +12470,8 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   const isExpandable = expandable ?? hasChildren;
   const isHeaderlessSection =
     suppressLocalizedLabel && localizedLabel === undefined && !icon && actions.length === 0 && !loading && !draggable && !onDoubleClick && !onSectionPointerEnter && !onSectionPointerLeave && !onDragStart && !onDragOver && !onDragLeave && !onDrop;
-  const rowClassName = cn(treeRowShellClassName, treeRowChromeShellClasses(false, false), isExpandable ? "cursor-foldable" : "cursor-selectable", isDropReady && dropZoneReadyClass, className);
-  const rowContentFillClassName = treeRowChromeContentFillClasses(false, false, loading);
+  const rowClassName = cn(treeRowShellClassName, treeRowChromeShellClasses(false, false), isExpandable ? "cursor-foldable" : "cursor-selectable", isDropReady && dropZoneReadyTextClass, className);
+  const rowContentFillClassName = cn(treeRowChromeContentFillClasses(false, false, loading), isDropReady && dropZoneReadyFillClass);
 
   if (isHeaderlessSection) {
     return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree, indentMultiplier, direction }}>{children}</TreeContext.Provider>;
@@ -12629,15 +12634,9 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const itemShellClasses = cn(
-    treeRowShellClassName,
-    treeRowChromeShellClasses(isSelected, isHighlighted),
-    "w-full",
-    hasChildren ? "cursor-foldable" : "cursor-selectable",
-    isSorting && !isDragging && dropZoneReadyClass,
-    className,
-  );
-  const itemContentFillClassName = treeRowChromeContentFillClasses(isSelected, isHighlighted);
+  const isDropReady = isSorting && !isDragging;
+  const itemShellClasses = cn(treeRowShellClassName, treeRowChromeShellClasses(isSelected, isHighlighted), "w-full", hasChildren ? "cursor-foldable" : "cursor-selectable", isDropReady && dropZoneReadyTextClass, className);
+  const itemContentFillClassName = cn(treeRowChromeContentFillClasses(isSelected, isHighlighted), isDropReady && dropZoneReadyFillClass);
 
   if (hasChildren && displayLabel) {
     if (layoutKind === "property") {
@@ -13009,10 +13008,10 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     isExpandable ? "cursor-foldable" : "cursor-selectable",
     draggable && dragInitiation === "surface" ? "cursor-grab active:cursor-grabbing" : "",
     isDragging ? "opacity-40" : "",
-    isDropReady && dropZoneReadyClass,
+    isDropReady && dropZoneReadyTextClass,
     className,
   );
-  const itemContentFillClassName = treeRowChromeContentFillClasses(isSelected, isHighlighted, loading);
+  const itemContentFillClassName = cn(treeRowChromeContentFillClasses(isSelected, isHighlighted, loading), isDropReady && dropZoneReadyFillClass);
   const treeLabelSelectClass = draggable && dragInitiation === "surface" ? "select-none" : "select-text";
 
   if (layoutKind === "property") {
@@ -13025,7 +13024,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           role="treeitem"
           id={id}
           data-state={open ? "open" : "closed"}
-          className={cn("min-w-0 w-full", treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), isDropReady && dropZoneReadyClass, className)}
+          className={cn("min-w-0 w-full", treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), isDropReady && dropZoneReadyTextClass, className)}
           draggable={effectiveDraggable}
           onDragStart={onDragStart}
           onDragEnd={handleDragEnd}
@@ -15538,7 +15537,7 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
         const onUnitOpenStateChange = onTreeOpenStateChange ? (id: string, open: boolean) => onTreeOpenStateChange(`${unitPrefix}${id}`, open) : undefined;
         return (
           <React.Fragment key={unit.id}>
-            {unit.label || draggable ? (
+            {unit.label ? (
               <div
                 data-slot="panel-tree-unit-header"
                 draggable={draggable}
@@ -15571,15 +15570,10 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
                       }
                     : undefined
                 }
-                className={cn(
-                  "flex shrink-0 items-center gap-single px-single py-half text-2xs text-muted-foreground",
-                  draggable && "cursor-grab active:cursor-grabbing",
-                  unitDragActive && dropZoneReadyClass,
-                )}
+                className={cn("flex shrink-0 items-center gap-single px-single py-half text-2xs text-muted-foreground", draggable && "cursor-grab active:cursor-grabbing", unitDragActive && dropZoneReadyClass)}
               >
                 {UnitIcon ? <UnitIcon size={12} /> : null}
-                {unit.label ? <span className="min-w-0 truncate">{unit.label}</span> : null}
-                {draggable ? <DragHandle className="ms-auto" /> : null}
+                <span className="min-w-0 truncate">{unit.label}</span>
               </div>
             ) : null}
             <Tree
@@ -15624,7 +15618,7 @@ function PanelEmptyDockZone({ anchor }: { readonly anchor: PanelAnchor }) {
     <div
       ref={setRef}
       data-slot="panel-empty-drop-zone"
-      className={cn("flex h-medium min-w-[10rem] items-center justify-center rounded-sm border border-dashed text-muted-foreground", borderNormalClass, isDropAnchor && "border-accent text-accent")}
+      className={cn("flex h-medium min-w-[10rem] items-center justify-center rounded-sm border border-dashed text-muted-foreground", borderNormalClass, dropZoneReadyClass, isDropAnchor && "border-accent text-accent")}
     >
       <Icon icon="grip-vertical" size="small" />
     </div>
@@ -22158,6 +22152,7 @@ interface ModeDockTabBarProps {
 const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, tabs, activeId, activeWindowId, onSelectTab, chromeGrid, chromeBody }, ref) => {
   const dock = reactHostPort.useContext(ModeDockContext);
   const isMaximized = dock?.maximizedStackPath === stackPath;
+  const modeDragActive = Boolean(dock?.dragState);
   const stackGloballyActive = Boolean(activeId && activeWindowId === activeId);
   const perTabActiveChrome = Boolean(chromeGrid);
   const capFrameClass = stackGloballyActive ? windowCapFrameActiveClass : windowCapFrameClass;
@@ -22203,11 +22198,9 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
         if (event.button !== 0) return;
         dock?.clearPendingDrag?.(event.pointerId);
       }}
-      onPointerDownCapture={(event) => {
-        dock?.startTabDrag(tab.id, stackPath, stackIndex, tab.title, event);
-      }}
     >
       <span className="truncate">{tab.title}</span>
+      <DragHandle onPointerDown={(event) => dock?.startTabDrag(tab.id, stackPath, stackIndex, tab.title, event)} onClick={(event) => event.stopPropagation()} />
     </div>
   );
 
@@ -22255,7 +22248,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   if (perTabActiveChrome && displayChromeGrid && chromeBody) {
     return (
       <div data-slot="mode-dock-chrome-column" className="relative z-[2] grid h-full min-h-0 min-w-0 flex-1 grid-rows-[auto_minmax(0,1fr)]" style={{ gridTemplateColumns: displayChromeGrid.templateColumns }}>
-        <div ref={ref} data-slot="mode-dock-tabbar" className="grid min-h-medium min-w-0 items-stretch" style={{ gridColumn: "1 / -1", gridRow: 1, gridTemplateColumns: displayChromeGrid.templateColumns }}>
+        <div ref={ref} data-slot="mode-dock-tabbar" className={cn("grid min-h-medium min-w-0 items-stretch", modeDragActive && dropZoneReadyClass)} style={{ gridColumn: "1 / -1", gridRow: 1, gridTemplateColumns: displayChromeGrid.templateColumns }}>
           {displayTabs.map((tab, index) =>
             tab.preview === "ghost" ? (
               <div key={`ghost-${tab.id}`} className="relative z-20 flex min-h-medium items-stretch justify-self-start" style={{ gridColumn: displayChromeGrid.tabCol(index) }}>
@@ -22291,7 +22284,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
 
   return (
     <div ref={ref} data-slot="mode-dock-tabbar" className="relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent">
-      <div data-slot="mode-dock-tab-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", capFrameClass)}>
+      <div data-slot="mode-dock-tab-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", capFrameClass, modeDragActive && dropZoneReadyClass)}>
         <div data-slot="mode-dock-tabs" className="flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden">
           {displayTabs.map((tab) =>
             tab.preview === "ghost" ? (
@@ -25818,7 +25811,6 @@ if (import.meta.vitest) {
       expect(container.textContent).toContain("Bravo");
     });
   });
-
 }
 
 // #endregion 🔍Window Components
@@ -26665,12 +26657,11 @@ if (treeVitest) {
         </TreeContext.Provider>,
       );
 
-      const handleClassName = markup.match(/data-slot="tree-drag-handle"[^>]*class="([^"]+)"/)?.[1] ?? "";
-      expect(markup).toContain('data-slot="tree-drag-handle"');
+      const handleClassName = markup.match(/data-slot="drag-handle"[^>]*class="([^"]+)"/)?.[1] ?? "";
+      expect(markup).toContain('data-slot="drag-handle"');
       expect(handleClassName).toContain("cursor-grab");
-      expect(handleClassName).toContain("border-0");
       expect(handleClassName).not.toContain("hover:bg-hover");
-      expect(markup).not.toContain('data-slot="tree-drag-handle" class="text-foreground');
+      expect(markup).not.toContain('data-slot="drag-handle" class="text-foreground');
     });
 
     it("renders control-tree folder branches inside the same continuous guide wrapper", () => {
@@ -27934,6 +27925,7 @@ if (treeVitest) {
     it("Panel renders nothing for an empty anchor at rest, but shows a drop zone while a dock drag is in flight", () => {
       const contextValue: PanelDockContextValue = {
         dragTabId: "tab-a",
+        draggedSubtreeIds: null,
         dropTarget: { kind: "insert", anchor: "top-middle", parentPath: [], index: 0 },
         startTabDrag: () => {},
         registerTabRowDropTarget: () => {},

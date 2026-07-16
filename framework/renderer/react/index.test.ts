@@ -2,7 +2,19 @@ import { createElement, useState, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { deriveUtilityNodes, resolveWindowActions, partitionWindowMeasures, type ActionArgDef, type ActionDefinition, type AppDefinition, type AppModeDefinition, type AppWindowKindDefinition, type CommandDefinition, type UtilityDefinition, type WindowMeasure } from "@semio-tech/framework-core";
+import {
+  deriveUtilityNodes,
+  resolveWindowActions,
+  partitionWindowMeasures,
+  type ActionArgDef,
+  type ActionDefinition,
+  type AppDefinition,
+  type AppModeDefinition,
+  type AppWindowKindDefinition,
+  type CommandDefinition,
+  type UtilityDefinition,
+  type WindowMeasure,
+} from "@semio-tech/framework-core";
 import { Canvas2dHost, worldToScreenLogical } from "./components/canvas-2d-host.tsx";
 import {
   Puzzle2dBoardHost,

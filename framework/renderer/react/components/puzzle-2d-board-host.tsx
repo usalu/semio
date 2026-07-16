@@ -675,7 +675,16 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
 
   useEffect(() => {
     if (!scene) return;
-    applyToSession(sessionRef.current, (session) => session.setSelectionOptions?.(scene.selectionMethod, "replace", true, true, true));
+    const updateOptions = () => {
+      const mode = (globalThis as any).__selectionMode || "default";
+      const wasmMode = mode === "default" ? "replace" : mode;
+      applyToSession(sessionRef.current, (session) => session.setSelectionOptions?.(scene.selectionMethod, wasmMode, true, true, true));
+    };
+    updateOptions();
+    window.addEventListener("semio:selectionOptionsChanged", updateOptions);
+    return () => {
+      window.removeEventListener("semio:selectionOptionsChanged", updateOptions);
+    };
   }, [sessionEpoch, scene?.selectionMethod]);
 
   useEffect(() => {
