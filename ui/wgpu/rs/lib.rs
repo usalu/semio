@@ -1943,10 +1943,10 @@ pub enum SurfaceKind {
     Paint2d,
     #[serde(rename = "virtualFileSystem")]
     VirtualFileSystem,
-    #[serde(rename = "gis2d-map")]
-    GisMap,
-    #[serde(rename = "puzzle2d-board")]
-    Puzzle2dBoard,
+    #[serde(rename = "tiled-map")]
+    TiledMap,
+    #[serde(rename = "board-2d")]
+    Board2d,
     #[serde(rename = "icon-render")]
     IconRender,
     #[serde(rename = "ink-canvas")]
@@ -1967,8 +1967,8 @@ impl SurfaceKind {
             Self::Table => "table",
             Self::Paint2d => "paint-2d",
             Self::VirtualFileSystem => "virtualFileSystem",
-            Self::GisMap => "gis2d-map",
-            Self::Puzzle2dBoard => "puzzle2d-board",
+            Self::TiledMap => "tiled-map",
+            Self::Board2d => "board-2d",
             Self::IconRender => "icon-render",
             Self::InkCanvas => "ink-canvas",
             Self::GraphTimeline => "graph-timeline",
@@ -1979,7 +1979,7 @@ impl SurfaceKind {
     pub fn is_viewport(self) -> bool {
         matches!(
             self,
-            Self::World3d | Self::NodeGraph | Self::Canvas2d | Self::Puzzle2dBoard | Self::InkCanvas
+            Self::World3d | Self::NodeGraph | Self::Canvas2d | Self::Board2d | Self::InkCanvas
         )
     }
 }
@@ -2315,96 +2315,96 @@ pub struct VirtualFileSystemScene {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GisMapScene {
+pub struct TiledMapScene {
     pub map_fixture_json: String,
     pub camera_json: String,
-    #[serde(default = "gis_map_default_render_mode")]
+    #[serde(default = "tiled_map_default_render_mode")]
     pub render_mode: String,
-    #[serde(default = "gis_map_default_vector_style")]
+    #[serde(default = "tiled_map_default_vector_style")]
     pub vector_style: String,
-    #[serde(default = "gis_map_default_lod_mode")]
+    #[serde(default = "tiled_map_default_lod_mode")]
     pub lod_mode: String,
-    #[serde(default = "gis_map_default_tile_url_template")]
+    #[serde(default = "tiled_map_default_tile_url_template")]
     pub tile_url_template: String,
-    #[serde(default = "gis_map_default_vector_tile_url_template")]
+    #[serde(default = "tiled_map_default_vector_tile_url_template")]
     pub vector_tile_url_template: String,
-    #[serde(default = "gis_map_default_layer_visibility_json")]
+    #[serde(default = "tiled_map_default_layer_visibility_json")]
     pub layer_visibility_json: String,
-    #[serde(default = "gis_map_default_layer_stroke_scale_json")]
+    #[serde(default = "tiled_map_default_layer_stroke_scale_json")]
     pub layer_stroke_scale_json: String,
-    #[serde(default = "gis_map_default_selection_json")]
+    #[serde(default = "tiled_map_default_selection_json")]
     pub selection_json: String,
-    #[serde(default = "gis_map_default_hover_json")]
+    #[serde(default = "tiled_map_default_hover_json")]
     pub hover_json: String,
-    #[serde(default = "gis_map_default_selection_method")]
+    #[serde(default = "tiled_map_default_selection_method")]
     pub selection_method: String,
-    #[serde(default = "gis_map_default_selection_mode")]
+    #[serde(default = "tiled_map_default_selection_mode")]
     pub selection_mode: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub context_menu_json: Option<String>,
 }
 
-pub fn gis_map_default_render_mode() -> String {
+pub fn tiled_map_default_render_mode() -> String {
     "combined".into()
 }
 
-pub fn gis_map_default_vector_style() -> String {
+pub fn tiled_map_default_vector_style() -> String {
     "colored".into()
 }
 
-pub fn gis_map_default_lod_mode() -> String {
+pub fn tiled_map_default_lod_mode() -> String {
     "automatic".into()
 }
 
-pub fn gis_map_default_tile_url_template() -> String {
+pub fn tiled_map_default_tile_url_template() -> String {
     "/osm/{z}/{x}/{y}.png".into()
 }
 
-pub fn gis_map_default_vector_tile_url_template() -> String {
+pub fn tiled_map_default_vector_tile_url_template() -> String {
     "/vt/{z}/{x}/{y}.pbf".into()
 }
 
-pub fn gis_map_default_layer_visibility_json() -> String {
+pub fn tiled_map_default_layer_visibility_json() -> String {
     r#"{"raster":true,"water":true,"land":true,"roads":true,"buildings":true,"borders":true,"labels":true,"positions":true,"positionLabels":true,"routes":true,"regions":true}"#.into()
 }
 
-pub fn gis_map_default_layer_stroke_scale_json() -> String {
+pub fn tiled_map_default_layer_stroke_scale_json() -> String {
     r#"{"raster":1,"water":1,"land":1,"roads":1,"buildings":1,"borders":1,"labels":1,"positions":1,"positionLabels":1,"routes":1,"regions":1}"#.into()
 }
 
-pub fn gis_map_default_selection_json() -> String {
+pub fn tiled_map_default_selection_json() -> String {
     r#"{"positions":[],"routes":[]}"#.into()
 }
 
-pub fn gis_map_default_hover_json() -> String {
+pub fn tiled_map_default_hover_json() -> String {
     "null".into()
 }
 
-pub fn gis_map_default_selection_method() -> String {
+pub fn tiled_map_default_selection_method() -> String {
     "rectangle".into()
 }
 
-pub fn gis_map_default_selection_mode() -> String {
+pub fn tiled_map_default_selection_mode() -> String {
     "default".into()
 }
 
-impl GisMapScene {
-    /** @emoji 🗺️ Builds a GIS map scene with optional extensions unset. */
+impl TiledMapScene {
+    /** @emoji 🗺️ Builds a tiled map scene with optional extensions unset. */
     pub fn base(map_fixture_json: String, camera_json: String) -> Self {
         Self {
             map_fixture_json,
             camera_json,
-            render_mode: gis_map_default_render_mode(),
-            vector_style: gis_map_default_vector_style(),
-            lod_mode: gis_map_default_lod_mode(),
-            tile_url_template: gis_map_default_tile_url_template(),
-            vector_tile_url_template: gis_map_default_vector_tile_url_template(),
-            layer_visibility_json: gis_map_default_layer_visibility_json(),
-            layer_stroke_scale_json: gis_map_default_layer_stroke_scale_json(),
-            selection_json: gis_map_default_selection_json(),
-            hover_json: gis_map_default_hover_json(),
-            selection_method: gis_map_default_selection_method(),
-            selection_mode: gis_map_default_selection_mode(),
+            render_mode: tiled_map_default_render_mode(),
+            vector_style: tiled_map_default_vector_style(),
+            lod_mode: tiled_map_default_lod_mode(),
+            tile_url_template: tiled_map_default_tile_url_template(),
+            vector_tile_url_template: tiled_map_default_vector_tile_url_template(),
+            layer_visibility_json: tiled_map_default_layer_visibility_json(),
+            layer_stroke_scale_json: tiled_map_default_layer_stroke_scale_json(),
+            selection_json: tiled_map_default_selection_json(),
+            hover_json: tiled_map_default_hover_json(),
+            selection_method: tiled_map_default_selection_method(),
+            selection_mode: tiled_map_default_selection_mode(),
             context_menu_json: None,
         }
     }
@@ -2412,12 +2412,12 @@ impl GisMapScene {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Puzzle2dBoardScene {
+pub struct Board2dScene {
     pub fixture_json: String,
     pub camera_json: String,
-    #[serde(default = "puzzle2d_board_default_kind_catalogs_json")]
+    #[serde(default = "board2d_default_kind_catalogs_json")]
     pub kind_catalogs_json: String,
-    #[serde(default = "puzzle2d_board_default_selection_json")]
+    #[serde(default = "board2d_default_selection_json")]
     pub selection_json: String,
     #[serde(default)]
     pub interactive: bool,
@@ -2425,68 +2425,68 @@ pub struct Puzzle2dBoardScene {
     pub hovered_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub active_utility: Option<String>,
-    #[serde(default = "puzzle2d_board_default_selection_method")]
+    #[serde(default = "board2d_default_selection_method")]
     pub selection_method: String,
     #[serde(default)]
     pub grid_snap_enabled: bool,
-    #[serde(default = "puzzle2d_board_default_grid_factor")]
+    #[serde(default = "board2d_default_grid_factor")]
     pub grid_factor: f64,
     #[serde(default)]
     pub suggestion_offset: f64,
-    #[serde(default = "puzzle2d_board_default_brush_kind_weights_json")]
+    #[serde(default = "board2d_default_brush_kind_weights_json")]
     pub brush_kind_weights_json: String,
-    #[serde(default = "puzzle2d_board_default_kind_compatibility_json")]
+    #[serde(default = "board2d_default_kind_compatibility_json")]
     pub kind_compatibility_json: String,
-    #[serde(default = "puzzle2d_board_default_lod_mode")]
+    #[serde(default = "board2d_default_lod_mode")]
     pub lod_mode: String,
 }
 
-pub fn puzzle2d_board_default_kind_catalogs_json() -> String {
+pub fn board2d_default_kind_catalogs_json() -> String {
     "{}".into()
 }
 
-pub fn puzzle2d_board_default_selection_json() -> String {
+pub fn board2d_default_selection_json() -> String {
     "[]".into()
 }
 
-pub fn puzzle2d_board_default_selection_method() -> String {
+pub fn board2d_default_selection_method() -> String {
     "rectangle".into()
 }
 
-pub fn puzzle2d_board_default_grid_factor() -> f64 {
+pub fn board2d_default_grid_factor() -> f64 {
     1.0
 }
 
-pub fn puzzle2d_board_default_brush_kind_weights_json() -> String {
+pub fn board2d_default_brush_kind_weights_json() -> String {
     "{}".into()
 }
 
-pub fn puzzle2d_board_default_kind_compatibility_json() -> String {
+pub fn board2d_default_kind_compatibility_json() -> String {
     "[]".into()
 }
 
-pub fn puzzle2d_board_default_lod_mode() -> String {
+pub fn board2d_default_lod_mode() -> String {
     "automatic".into()
 }
 
-impl Puzzle2dBoardScene {
-    /** @emoji 🧩 Builds a puzzle 2D board scene with optional extensions unset. */
+impl Board2dScene {
+    /** @emoji 🧩 Builds a 2D board scene with optional extensions unset. */
     pub fn base(fixture_json: String, camera_json: String, interactive: bool) -> Self {
         Self {
             fixture_json,
             camera_json,
-            kind_catalogs_json: puzzle2d_board_default_kind_catalogs_json(),
-            selection_json: puzzle2d_board_default_selection_json(),
+            kind_catalogs_json: board2d_default_kind_catalogs_json(),
+            selection_json: board2d_default_selection_json(),
             interactive,
             hovered_id: None,
             active_utility: None,
-            selection_method: puzzle2d_board_default_selection_method(),
+            selection_method: board2d_default_selection_method(),
             grid_snap_enabled: false,
-            grid_factor: puzzle2d_board_default_grid_factor(),
+            grid_factor: board2d_default_grid_factor(),
             suggestion_offset: 0.0,
-            brush_kind_weights_json: puzzle2d_board_default_brush_kind_weights_json(),
-            kind_compatibility_json: puzzle2d_board_default_kind_compatibility_json(),
-            lod_mode: puzzle2d_board_default_lod_mode(),
+            brush_kind_weights_json: board2d_default_brush_kind_weights_json(),
+            kind_compatibility_json: board2d_default_kind_compatibility_json(),
+            lod_mode: board2d_default_lod_mode(),
         }
     }
 }
@@ -2589,9 +2589,9 @@ pub struct UiComponentSceneNode {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub virtual_file_system: Option<VirtualFileSystemScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub gis_map: Option<GisMapScene>,
+    pub tiled_map: Option<TiledMapScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub puzzle2d_board: Option<Puzzle2dBoardScene>,
+    pub board2d: Option<Board2dScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon_render: Option<IconRenderScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2698,8 +2698,8 @@ pub mod text_editor_actions {
     pub const FORMAT_DOCUMENT: &str = "formatDocument";
 }
 
-/** @emoji 🗺️ Renderer-to-plugin action names for GIS map surfaces. */
-pub mod puzzle2d_board_actions {
+/** @emoji 🧩 Renderer-to-plugin action names for 2D board surfaces. */
+pub mod board2d_actions {
     pub const APPLY_BOARD_EVENTS: &str = "applyBoardEvents";
 }
 
@@ -2708,7 +2708,8 @@ pub mod ink_canvas_actions {
     pub const APPLY_EVENTS: &str = "inkApplyEvents";
 }
 
-pub mod gis_map_actions {
+/** @emoji 🗺️ Renderer-to-plugin action names for tiled map surfaces. */
+pub mod tiled_map_actions {
     pub const SET_CAMERA: &str = "setCamera";
     pub const SET_FEATURE_SELECTION: &str = "setFeatureSelection";
     pub const SET_HOVER: &str = "setHover";
@@ -2822,8 +2823,8 @@ fn component_scene(
     table: Option<TableScene>,
     paint_2d: Option<Paint2dScene>,
     virtual_file_system: Option<VirtualFileSystemScene>,
-    gis_map: Option<GisMapScene>,
-    puzzle2d_board: Option<Puzzle2dBoardScene>,
+    tiled_map: Option<TiledMapScene>,
+    board2d: Option<Board2dScene>,
 ) -> UiNode {
     UiNode::ComponentScene(UiComponentSceneNode {
         surface_id: surface_id.into(),
@@ -2838,8 +2839,8 @@ fn component_scene(
         table,
         paint_2d,
         virtual_file_system,
-        gis_map,
-        puzzle2d_board,
+        tiled_map,
+        board2d,
         icon_render: None,
         ink_canvas: None,
         graph_timeline: None,
@@ -3052,15 +3053,15 @@ pub fn build_virtual_file_system_scene(
     )
 }
 
-pub fn build_gis_map_scene(
+pub fn build_tiled_map_scene(
     surface_id: impl Into<String>,
     controller_id: impl Into<String>,
-    scene: GisMapScene,
+    scene: TiledMapScene,
 ) -> UiNode {
     component_scene(
         surface_id,
         controller_id,
-        SurfaceKind::GisMap,
+        SurfaceKind::TiledMap,
         None,
         None,
         None,
@@ -3075,15 +3076,15 @@ pub fn build_gis_map_scene(
     )
 }
 
-pub fn build_puzzle2d_board_scene(
+pub fn build_board2d_scene(
     surface_id: impl Into<String>,
     controller_id: impl Into<String>,
-    scene: Puzzle2dBoardScene,
+    scene: Board2dScene,
 ) -> UiNode {
     component_scene(
         surface_id,
         controller_id,
-        SurfaceKind::Puzzle2dBoard,
+        SurfaceKind::Board2d,
         None,
         None,
         None,
@@ -3365,8 +3366,8 @@ mod ui_node_wire_format_tests {
                     table: None,
                     raster: None,
                     virtual_file_system: None,
-                    gis_map: None,
-                    puzzle2d_board: None,
+                    tiled_map: None,
+                    board2d: None,
                     icon_render: None,
                     ink_canvas: None,
                     graph_timeline: None,
@@ -3410,7 +3411,7 @@ mod ui_node_wire_format_tests {
         assert_eq!(roundtripped, loading);
     }
 
-    const GOLDEN_SURFACE_KIND_JSON: &str = "[\"canvas-2d\",\"world-3d\",\"node-graph\",\"text-editor\",\"table\",\"paint-2d\",\"virtualFileSystem\",\"gis2d-map\",\"puzzle2d-board\",\"icon-render\",\"ink-canvas\",\"graph-timeline\"]";
+    const GOLDEN_SURFACE_KIND_JSON: &str = "[\"canvas-2d\",\"world-3d\",\"node-graph\",\"text-editor\",\"table\",\"paint-2d\",\"virtualFileSystem\",\"tiled-map\",\"board-2d\",\"icon-render\",\"ink-canvas\",\"graph-timeline\"]";
 
     #[test]
     fn surface_kind_serializes_to_golden_json() {
@@ -3422,8 +3423,8 @@ mod ui_node_wire_format_tests {
             SurfaceKind::Table,
             SurfaceKind::Paint2d,
             SurfaceKind::VirtualFileSystem,
-            SurfaceKind::GisMap,
-            SurfaceKind::Puzzle2dBoard,
+            SurfaceKind::TiledMap,
+            SurfaceKind::Board2d,
             SurfaceKind::IconRender,
             SurfaceKind::InkCanvas,
             SurfaceKind::GraphTimeline,
@@ -3462,8 +3463,8 @@ mod ui_node_wire_format_tests {
                 empty_message: Some("Empty".into()),
                 drag_drop_enabled: Some(true),
             },
-            GisMapScene::base("{}".into(), "{}".into()),
-            Puzzle2dBoardScene::base("{}".into(), "{}".into(), true),
+            TiledMapScene::base("{}".into(), "{}".into()),
+            Board2dScene::base("{}".into(), "{}".into(), true),
             InkCanvasScene::base("{}".into(), "select".into(), "edit".into(), true),
             GraphTimelineScene { columns_json: "[]".into() },
             NodeGraphScene::base("[]".into(), "[]".into(), "{}".into()),
@@ -3478,8 +3479,8 @@ mod ui_node_wire_format_tests {
             Paint2dScene,
             IconRenderScene,
             VirtualFileSystemScene,
-            GisMapScene,
-            Puzzle2dBoardScene,
+            TiledMapScene,
+            Board2dScene,
             InkCanvasScene,
             GraphTimelineScene,
             NodeGraphScene,
@@ -11709,8 +11710,8 @@ mod tests {
             table: None,
             raster: None,
             virtual_file_system: None,
-            gis_map: None,
-            puzzle2d_board: None,
+            tiled_map: None,
+            board2d: None,
             icon_render: None,
             ink_canvas: None,
             graph_timeline: None,
@@ -12075,6 +12076,705 @@ mod tests {
     }
 }
 // #endregion shell
+}
+
+#[cfg(feature = "engine")]
+pub mod engine {
+// #region engine
+//! 🧵 The retained-mode `Ui` façade: the missing keystone tying `arena`/`tree`/`reconcile`/`flex`/
+//! `paint`/`events`/`scene_slots`/`shell` into one usable pipeline — each of those regions was built
+//! and individually tested to its own milestone but nothing ever assembled them together, and nothing
+//! in `framework/renderer/wgpu` calls into any of it (see `.repo/🎫/26/07/11/RETAINED-MODE-UI-CRATE`'s
+//! plan for the historical intent). This module is purely additive: the immediate-mode `widgets`
+//! path stays the only pipeline actually driving pixels until a later workstream proves this façade
+//! out (via the golden `tests` module below) and cuts over.
+
+use std::collections::HashMap;
+
+use crate::component::layout::WindowLayout;
+use crate::component::ui::UiNode;
+use crate::draw::{DrawList, IconAtlas};
+use crate::events::{EventRouter, UiCommand, UiEvent};
+use crate::flex::LayoutEngine;
+use crate::paint::paint_tree;
+use crate::scene_slots::{collect_scene_slots, SceneHost};
+use crate::shell::{Shell, ShellEvent};
+use crate::text::FontAtlas;
+use crate::theme::Theme;
+use crate::tree::{NodeFlags, UiTree};
+
+//#region 🔖UiWindow
+/// 🪟 One window's retained pipeline state: its `UiTree` (`reconcile`'s diff target), the taffy
+/// `LayoutEngine` that lays it out (`flex`), the `EventRouter` owning its capture/focus/hover state
+/// (`events`), and the `DrawList` `paint::paint_tree` last painted into. Mirrors `tree`'s own doc
+/// comment ("the engine facade... holds `HashMap<window_id, UiTree>`") by keying the *whole*
+/// per-window pipeline the same way, not just the tree.
+struct UiWindow {
+    tree: UiTree,
+    layout: LayoutEngine,
+    router: EventRouter,
+    draw: DrawList,
+    viewport: (f32, f32),
+}
+
+impl UiWindow {
+    fn new(window_id: &str) -> Self {
+        Self { tree: UiTree::new(), layout: LayoutEngine::new(), router: EventRouter::new(window_id), draw: DrawList::default(), viewport: (0.0, 0.0) }
+    }
+
+    /// 🚨 Whether this window's root (and thus, transitively, anything below it per
+    /// `UiTree::mark_dirty`'s bubbling) still needs a layout or paint pass.
+    fn is_dirty(&self) -> bool {
+        self.tree.root.and_then(|root| self.tree.node(root)).is_some_and(|node| {
+            node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::DIRTY_PAINT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY)
+        })
+    }
+}
+//#endregion 🔖UiWindow
+
+//#region 🔖Ui
+/// 🧵 Assembles the individually-milestoned retained modules into the one façade a host drives per
+/// tick: `apply_tree` runs `reconcile`, `frame` runs `flex` (dirty-gated) then `paint` then hands
+/// `scene_slots` to an optional `SceneHost`, `dispatch_event` runs `events::EventRouter`, and
+/// `needs_frame` reads the same dirty flags `frame` itself gates on. One `UiWindow` per window id
+/// (app-content trees); window-chrome (dock/split/tab) is the separate `Shell` this façade also owns,
+/// since `shell`'s own doc comment models it as independent of any single window's content tree.
+/// Never submits to the GPU itself — `frame` returns a `&DrawList` for the caller to hand to the
+/// existing `gpu::GpuContext::render_frame`, exactly like the immediate-mode `widgets` path's callers
+/// already do; wiring that hand-off into a real host event loop is later, renderer-thinning work.
+pub struct Ui {
+    windows: HashMap<String, UiWindow>,
+    shell: Shell,
+    theme: Theme,
+    atlas: FontAtlas,
+    icons: Option<IconAtlas>,
+    scene_host: Option<Box<dyn SceneHost>>,
+    pending_commands: Vec<UiCommand>,
+}
+
+impl Ui {
+    pub fn new() -> Self {
+        Self {
+            windows: HashMap::new(),
+            shell: Shell::new(),
+            theme: Theme::default(),
+            atlas: FontAtlas::builtin(),
+            icons: None,
+            scene_host: None,
+            pending_commands: Vec::new(),
+        }
+    }
+
+    pub fn set_theme(&mut self, theme: Theme) {
+        self.theme = theme;
+    }
+
+    pub fn set_icons(&mut self, icons: Option<IconAtlas>) {
+        self.icons = icons;
+    }
+
+    /// 🎬 Registers the host's `scene_slots::SceneHost`; `frame` hands it every `ComponentScene`
+    /// leaf's resolved rect after each paint pass, per `scene_slots`'s own doc comment.
+    pub fn set_scene_host(&mut self, host: Box<dyn SceneHost>) {
+        self.scene_host = Some(host);
+    }
+
+    fn window_mut(&mut self, window_id: &str) -> &mut UiWindow {
+        self.windows.entry(window_id.to_string()).or_insert_with(|| UiWindow::new(window_id))
+    }
+
+    /// 📐 Stores the viewport a later `frame` call lays out against for `window_id`, creating that
+    /// window's retained state on first use.
+    pub fn set_viewport(&mut self, window_id: &str, width: f32, height: f32) {
+        self.window_mut(window_id).viewport = (width, height);
+    }
+
+    /// 🔁 Runs `UiTree::apply_tree` (`reconcile`) to diff `ui_node` into `window_id`'s retained tree,
+    /// creating that window's tree/layout-engine/event-router on first use.
+    pub fn apply_tree(&mut self, window_id: &str, ui_node: &UiNode) {
+        self.window_mut(window_id).tree.apply_tree(ui_node);
+    }
+
+    /// 🪟 Rebuilds the shared `Shell`'s retained dock/split/tab chrome from a declarative
+    /// `WindowLayout` (independent of any window's `apply_tree`d content — see `shell`'s doc comment).
+    pub fn set_window_layout(&mut self, layout: WindowLayout) {
+        self.shell.set_window_layout(layout);
+    }
+
+    /// 🧭 Forwards to `Shell::set_navbar` (stub — see that method's doc comment).
+    pub fn set_navbar(&mut self, items: Vec<String>) {
+        self.shell.set_navbar(items);
+    }
+
+    pub fn shell(&self) -> &Shell {
+        &self.shell
+    }
+
+    /// 🚦 True when any window's retained tree still carries `DIRTY_LAYOUT`/`DIRTY_PAINT`/
+    /// `SUBTREE_DIRTY` on its root. No animation-clock scaffolding exists anywhere in this crate yet
+    /// (nothing under `arena`/`tree`/`reconcile`/`flex`/`paint`/`events`/`scene_slots`/`shell`
+    /// schedules a future wake), so this is purely dirty-flag-driven; wiring a real animation deadline
+    /// is separate follow-up work, not this façade's job to invent.
+    pub fn needs_frame(&self) -> bool {
+        self.windows.values().any(UiWindow::is_dirty)
+    }
+
+    /// 🖼️ The dirty-gated per-tick pipeline for `window_id`: `flex::LayoutEngine::compute` (itself a
+    /// no-op unless the root carries `DIRTY_LAYOUT`/`SUBTREE_DIRTY`) followed — only if that or the
+    /// root's own `DIRTY_PAINT` fired — by `paint::paint_tree`, then handing every
+    /// `scene_slots::collect_scene_slots` leaf to the registered `SceneHost`. Returns `None` if
+    /// `window_id` has no tree yet (`apply_tree` never called). A dirty window always repaints its
+    /// whole tree — `paint::paint_tree`'s own doc comment: `DrawList` only supports a full
+    /// clear-and-rebuild, no incremental dirty-subtree replacement yet.
+    pub fn frame(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32) -> Option<&DrawList> {
+        let window = self.windows.get_mut(window_id)?;
+        let root = window.tree.root?;
+        window.viewport = (viewport_width, viewport_height);
+        let dirty = window.tree.node(root).is_some_and(|node| {
+            node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::DIRTY_PAINT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY)
+        });
+        if !dirty {
+            return Some(&window.draw);
+        }
+        window.layout.compute(&mut window.tree, root, &mut self.atlas, &self.theme, viewport_width, viewport_height);
+        window.draw.clear();
+        paint_tree(&mut window.tree, root, &self.theme, &mut self.atlas, self.icons.as_ref(), &mut window.draw);
+        if let Some(host) = self.scene_host.as_mut() {
+            for slot in collect_scene_slots(&window.tree, root) {
+                host.paint_slot(&slot, &mut window.draw);
+            }
+        }
+        Some(&window.draw)
+    }
+
+    /// 📤 Direct access to `window_id`'s last-painted `DrawList` without re-running the pipeline.
+    pub fn draw_list(&self, window_id: &str) -> Option<&DrawList> {
+        self.windows.get(window_id).map(|window| &window.draw)
+    }
+
+    /// 🕹️ Routes `event` through `window_id`'s `events::EventRouter` (hit-test, capture, focus, hover
+    /// updates), returning the `UiCommand`s it produced and also queuing them for a later
+    /// `drain_commands` call — callers may use either.
+    pub fn dispatch_event(&mut self, window_id: &str, event: UiEvent) -> Vec<UiCommand> {
+        let Some(window) = self.windows.get_mut(window_id) else { return Vec::new() };
+        let Some(root) = window.tree.root else { return Vec::new() };
+        let commands = window.router.dispatch(&mut window.tree, root, &event);
+        self.pending_commands.extend(commands.iter().cloned());
+        commands
+    }
+
+    /// 🪟 Routes `event` through the shared `Shell`'s own hit-testing, surfacing chrome-level
+    /// `ShellEvent`s (tab activation today; drag/drop is `Shell::dispatch`'s own documented gap).
+    pub fn dispatch_shell_event(&mut self, event: &UiEvent) -> Vec<ShellEvent> {
+        self.shell.dispatch(event)
+    }
+
+    /// 📥 Drains every `UiCommand` queued by `dispatch_event` calls since the last drain.
+    pub fn drain_commands(&mut self) -> Vec<UiCommand> {
+        std::mem::take(&mut self.pending_commands)
+    }
+}
+
+impl Default for Ui {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+//#endregion 🔖Ui
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::component::layout::ActionDescriptor;
+    use crate::component::ui::{
+        ui_node_to_control, SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode,
+        UiExternalSlotNode, UiFieldNode, UiIconSelectNode, UiImageNode, UiInputNode,
+        UiKeyValueEntry, UiKeyValueNode, UiNumberStepperNode, UiRingNode, UiSectionNode,
+        UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTextNode,
+        UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiVec3Node,
+    };
+    use crate::events::PointerButton;
+    use crate::geometry::Rect;
+    use crate::widgets::{
+        render_widget, ControlNode, InputState, KeyValueEntry, SelectItem, TreeItem,
+        TreeItemAction, TreeSection, WidgetContext, WidgetNode,
+    };
+    use std::collections::HashMap as StdHashMap;
+
+    //#region 🔖FacadeTests
+    fn stack_ui(children: Vec<UiNode>) -> UiNode {
+        UiNode::Stack(UiStackNode {
+            direction: "vertical".into(),
+            gap: None,
+            padding: None,
+            id: Some("root".into()),
+            selected: None,
+            loading: None,
+            activate: None,
+            drop_action: None,
+            children,
+        })
+    }
+
+    fn action() -> ActionDescriptor {
+        ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None }
+    }
+
+    fn button_ui(id: &str, label: &str) -> UiNode {
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: label.into(), action: action(), style: None, disabled: None, loading: None })
+    }
+
+    #[test]
+    fn apply_tree_then_frame_produces_a_non_empty_draw_list() {
+        let mut ui = Ui::new();
+        ui.apply_tree("main", &stack_ui(vec![UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None })]));
+
+        assert!(ui.needs_frame(), "a freshly applied tree must report needing a frame");
+        let draw = ui.frame("main", 400.0, 400.0).expect("frame must produce a draw list once a tree was applied");
+        let total: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
+        assert!(total > 0, "expected the text node to emit at least one glyph instance");
+    }
+
+    #[test]
+    fn frame_before_any_apply_tree_returns_none() {
+        let mut ui = Ui::new();
+        assert!(ui.frame("nonexistent", 400.0, 400.0).is_none());
+    }
+
+    #[test]
+    fn needs_frame_is_false_once_a_stable_tree_has_been_framed() {
+        let mut ui = Ui::new();
+        let ui_node = stack_ui(vec![UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None })]);
+        ui.apply_tree("main", &ui_node);
+        ui.frame("main", 400.0, 400.0);
+        assert!(!ui.needs_frame(), "nothing changed since the last frame, so no frame should be needed");
+
+        ui.apply_tree("main", &ui_node);
+        assert!(!ui.needs_frame(), "re-applying an identical tree must set zero dirty flags (reconcile's own golden rule)");
+    }
+
+    #[test]
+    fn dispatch_event_emits_a_button_click_command_and_it_is_also_drainable() {
+        let mut ui = Ui::new();
+        ui.apply_tree("main", &stack_ui(vec![button_ui("go", "Go")]));
+        ui.frame("main", 400.0, 400.0);
+
+        ui.dispatch_event("main", UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+        let commands = ui.dispatch_event("main", UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
+
+        assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { action, .. } if *action == action())));
+        let drained = ui.drain_commands();
+        assert!(!drained.is_empty(), "commands dispatched should also be queryable via drain_commands");
+        assert!(ui.drain_commands().is_empty(), "a second drain with nothing new dispatched must be empty");
+    }
+
+    #[test]
+    fn set_window_layout_wires_into_the_facades_shell() {
+        let mut ui = Ui::new();
+        ui.set_window_layout(crate::even_window_layout(&["app.viewport".to_string()]));
+        assert!(ui.shell().window_layout().is_some());
+    }
+    //#endregion 🔖FacadeTests
+
+    //#region 🔖GoldenHarness
+    //! 🏆 Acceptance gate for this workstream: for a curated fixture of every `UiNode` variant, runs
+    //! the retained façade (`apply_tree` + `frame`) and the immediate-mode path (`render_widget` over
+    //! a hand-converted `WidgetNode`) and asserts they emit structurally equivalent `DrawList`s
+    //! (same instance/vector/raster counts — not bit-identical geometry, per this ticket's brief).
+    //! `to_widget_node`/`control_to_widget`/`tree_*_to_widget` below mirror
+    //! `framework/renderer/wgpu/rs/lib.rs`'s private `ui_node_to_widget` conversion; they're
+    //! duplicated here (test-only) rather than shared because that crate depends on `ui_wgpu`, never
+    //! the reverse — keeping the two in sync is this harness's job.
+
+    fn to_widget_node(node: &UiNode) -> WidgetNode<ActionDescriptor> {
+        match node {
+            UiNode::Stack(stack) => WidgetNode::Stack {
+                direction: stack.direction.clone(),
+                gap: stack.gap.clone(),
+                padding: stack.padding.clone(),
+                children: stack.children.iter().map(to_widget_node).collect(),
+            },
+            UiNode::Text(text) => WidgetNode::Text { value: text.value.clone(), emphasize: text.emphasize.unwrap_or(false) },
+            UiNode::Separator(_) => WidgetNode::Separator,
+            UiNode::Button(button) => WidgetNode::Button { id: button.id.clone(), icon_id: Some(button.icon_id.clone()), label: button.label.clone(), event: Some(button.action.clone()) },
+            UiNode::Input(input) => WidgetNode::Input {
+                id: input.id.clone(),
+                input_kind: input.input_kind.clone(),
+                value: input.value.clone(),
+                placeholder: input.placeholder.clone(),
+                commit: input.commit.clone(),
+                on_change: Some(input.on_change.clone()),
+            },
+            UiNode::Select(select) => WidgetNode::Select {
+                id: select.id.clone(),
+                value: select.value.clone(),
+                items: select.items.iter().map(|item| SelectItem { value: item.value.clone(), label: item.label.clone() }).collect(),
+                placeholder: select.placeholder.clone(),
+                on_change: Some(select.on_change.clone()),
+            },
+            UiNode::Toggle(toggle) => WidgetNode::Toggle { id: toggle.id.clone(), icon_id: toggle.icon_id.clone(), pressed: toggle.pressed, text: toggle.text.clone(), on_change: Some(toggle.on_change.clone()) },
+            UiNode::Vec3(vec3) => WidgetNode::Vec3 { id: vec3.id.clone(), value: vec3.value, on_change: Some(vec3.on_change.clone()) },
+            UiNode::KeyValue(kv) => WidgetNode::KeyValue { entries: kv.entries.iter().map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
+            UiNode::Slider(slider) => WidgetNode::Slider { id: slider.id.clone(), value: slider.value, min: slider.min, max: slider.max, step: slider.step, on_change: Some(slider.on_change.clone()) },
+            UiNode::NumberStepper(stepper) => WidgetNode::NumberStepper {
+                id: stepper.id.clone(),
+                value: stepper.value,
+                step: stepper.step,
+                uniform: stepper.uniform,
+                on_absolute: Some(stepper.on_absolute.clone()),
+                on_delta: Some(stepper.on_delta.clone()),
+            },
+            UiNode::Ring(ring) => WidgetNode::Ring { id: ring.id.clone(), t: ring.t, disabled: ring.disabled.unwrap_or(false), on_change: Some(ring.on_change.clone()) },
+            UiNode::IconSelect(select) => WidgetNode::IconSelect { id: select.id.clone(), value: select.value.clone(), uniform: select.uniform, classifier_kind: select.classifier_kind.clone(), on_change: Some(select.on_change.clone()) },
+            UiNode::Field(field) => match ui_node_to_control(&field.child) {
+                Some(control) => WidgetNode::Field { id: field.id.clone(), label: field.label.clone(), child: control_to_widget(&control) },
+                None => WidgetNode::Section { id: field.id.clone(), label: Some(field.label.clone()), default_open: true, children: vec![to_widget_node(&field.child)] },
+            },
+            UiNode::Section(section) => WidgetNode::Section { id: section.id.clone(), label: section.label.clone(), default_open: section.default_open.unwrap_or(true), children: section.children.iter().map(to_widget_node).collect() },
+            UiNode::Tree(tree) => WidgetNode::Tree {
+                sections: tree.sections.iter().map(tree_section_to_widget).collect(),
+                selected_ids: tree.selected_ids.clone().unwrap_or_default(),
+                highlighted_ids: tree.highlighted_ids.clone().unwrap_or_default(),
+                selection_change: tree.selection_change.clone(),
+            },
+            // KNOWN GAP: `WidgetNode<E>` (the immediate-mode `widgets` region's tree type) has no
+            // Image/ComponentScene/ExternalSlot variant at all — the renderer's own
+            // `ui_node_to_widget` collapses all three to an empty placeholder `Text` node, which
+            // isn't a like-for-like rendering of the same node. There is no immediate-mode output to
+            // compare the retained `paint::paint_image`/`paint_component_scene`/`paint_external_slot`
+            // against; see the golden tests below for these three, which verify the retained side
+            // alone produces sane output and skip the two-pipeline equivalence assertion.
+            UiNode::Image(_) | UiNode::ComponentScene(_) | UiNode::ExternalSlot(_) => WidgetNode::Text { value: String::new(), emphasize: false },
+        }
+    }
+
+    fn control_to_widget(control: &UiControlNode) -> ControlNode<ActionDescriptor> {
+        match control {
+            UiControlNode::Button(n) => ControlNode::Button { id: n.id.clone(), icon_id: Some(n.icon_id.clone()), label: n.label.clone(), event: Some(n.action.clone()) },
+            UiControlNode::Input(n) => ControlNode::Input { id: n.id.clone(), input_kind: n.input_kind.clone(), value: n.value.clone(), placeholder: n.placeholder.clone(), commit: n.commit.clone(), on_change: Some(n.on_change.clone()) },
+            UiControlNode::Select(n) => ControlNode::Select {
+                id: n.id.clone(),
+                value: n.value.clone(),
+                items: n.items.iter().map(|item| SelectItem { value: item.value.clone(), label: item.label.clone() }).collect(),
+                placeholder: n.placeholder.clone(),
+                on_change: Some(n.on_change.clone()),
+            },
+            UiControlNode::Toggle(n) => ControlNode::Toggle { id: n.id.clone(), icon_id: n.icon_id.clone(), pressed: n.pressed, text: n.text.clone(), on_change: Some(n.on_change.clone()) },
+            UiControlNode::Vec3(n) => ControlNode::Vec3 { id: n.id.clone(), value: n.value, on_change: Some(n.on_change.clone()) },
+            UiControlNode::KeyValue(n) => ControlNode::KeyValue { entries: n.entries.iter().map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
+            UiControlNode::Slider(n) => ControlNode::Slider { id: n.id.clone(), value: n.value, min: n.min, max: n.max, step: n.step, on_change: Some(n.on_change.clone()) },
+            UiControlNode::NumberStepper(n) => ControlNode::NumberStepper { id: n.id.clone(), value: n.value, step: n.step, uniform: n.uniform, on_absolute: Some(n.on_absolute.clone()), on_delta: Some(n.on_delta.clone()) },
+            UiControlNode::Ring(n) => ControlNode::Ring { id: n.id.clone(), t: n.t, disabled: n.disabled.unwrap_or(false), on_change: Some(n.on_change.clone()) },
+            UiControlNode::IconSelect(n) => ControlNode::IconSelect { id: n.id.clone(), value: n.value.clone(), uniform: n.uniform, classifier_kind: n.classifier_kind.clone(), on_change: Some(n.on_change.clone()) },
+        }
+    }
+
+    fn tree_action_to_widget(action: &UiTreeItemAction) -> TreeItemAction<ActionDescriptor> {
+        TreeItemAction { icon_id: action.icon_id.clone(), label: action.label.clone(), event: action.action.clone(), reveal_on_hover: action.reveal_on_hover.unwrap_or(false) }
+    }
+
+    fn tree_item_to_widget(item: &UiTreeItemNode) -> TreeItem<ActionDescriptor> {
+        TreeItem {
+            id: item.id.clone(),
+            label: item.label.clone(),
+            description: item.description.clone(),
+            icon_id: item.icon_id.clone(),
+            selected: item.selected.unwrap_or(false),
+            highlighted: false,
+            default_open: item.default_open.unwrap_or(false),
+            is_hidden: item.is_hidden.unwrap_or(false),
+            event: item.action.clone(),
+            hover_event: item.hover_action.clone(),
+            unhover_event: item.unhover_action.clone(),
+            actions: item.actions.as_ref().map(|actions| actions.iter().map(tree_action_to_widget).collect()).unwrap_or_default(),
+            draggable: item.draggable.unwrap_or(false),
+            drag_data: item.drag_data.clone().unwrap_or_default(),
+            control: item.control.as_ref().map(|control| Box::new(control_to_widget(control))),
+            children: item.items.as_ref().map(|items| items.iter().map(tree_item_to_widget).collect()).unwrap_or_default(),
+        }
+    }
+
+    fn tree_section_to_widget(section: &UiTreeSectionNode) -> TreeSection<ActionDescriptor> {
+        TreeSection { id: section.id.clone(), label: section.label.clone(), default_open: section.default_open.unwrap_or(true), items: section.items.iter().map(tree_item_to_widget).collect() }
+    }
+
+    /// 📊 Total (ui_instances incl. overlay, vector_vertices incl. overlay, raster_instances) across
+    /// every layer of a `DrawList` — the "structurally equivalent" signal this harness compares,
+    /// deliberately coarser than exact geometry per this ticket's tolerance allowance.
+    fn stats(draw: &DrawList) -> (usize, usize, usize) {
+        let instances = draw.layers.iter().map(|layer| layer.ui_instances.len() + layer.overlay_ui_instances.len()).sum();
+        let vectors = draw.layers.iter().map(|layer| layer.vector_vertices.len() + layer.overlay_vector_vertices.len()).sum();
+        let raster = draw.layers.iter().map(|layer| layer.raster_instances.len()).sum();
+        (instances, vectors, raster)
+    }
+
+    fn retained_stats(node: &UiNode) -> (usize, usize, usize) {
+        let mut ui = Ui::new();
+        ui.apply_tree("golden", node);
+        let draw = ui.frame("golden", 400.0, 400.0).expect("apply_tree then frame must produce a draw list");
+        stats(draw)
+    }
+
+    fn immediate_stats(node: &UiNode, bounds: Rect) -> (usize, usize, usize) {
+        let widget = to_widget_node(node);
+        let mut draw = DrawList::default();
+        let mut atlas = FontAtlas::builtin();
+        let theme = Theme::default();
+        let mut input = InputState::<ActionDescriptor>::default();
+        let mut scroll_offsets: StdHashMap<String, f32> = StdHashMap::new();
+        let mut collapsed_sections: StdHashMap<String, bool> = StdHashMap::new();
+        let mut open_selects: StdHashMap<String, bool> = StdHashMap::new();
+        let mut ctx = WidgetContext {
+            draw: &mut draw,
+            overlay: None,
+            atlas: &mut atlas,
+            icons: None,
+            input: &mut input,
+            theme: &theme,
+            scroll_offsets: &mut scroll_offsets,
+            collapsed_sections: &mut collapsed_sections,
+            open_selects: &mut open_selects,
+            interaction_maps: None,
+            pick_clip: None,
+        };
+        render_widget(&widget, bounds, &mut ctx);
+        stats(&draw)
+    }
+
+    const VIEWPORT: Rect = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
+
+    /// 🧱 Wraps a leaf `UiNode` as the sole child of a gap-less/padding-less vertical `Stack`: on the
+    /// retained side, `flex::LayoutEngine` always forces the *root* to the full viewport size
+    /// (`compute`'s `root_style.size` override) and gives a `Stack`'s only child `flex_grow: 1.0`, so
+    /// the child's resolved `LayoutBucket` is exactly the full viewport. On the immediate side,
+    /// `layout::layout_vertical`/`layout_horizontal`'s `extra_per_child` gives a lone child the same
+    /// full bounds. Wrapping every leaf fixture this way guarantees both pipelines paint it at
+    /// identical bounds, which is what makes an exact instance/vector-count comparison meaningful
+    /// instead of an artifact of divergent layout math.
+    fn leaf(child: UiNode) -> UiNode {
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, selected: None, loading: None, activate: None, drop_action: None, children: vec![child] })
+    }
+
+    fn assert_equivalent(kind: &str, node: &UiNode) {
+        let retained = retained_stats(node);
+        let immediate = immediate_stats(node, VIEWPORT);
+        assert_eq!(retained, immediate, "{kind}: retained (instances, vectors, raster) {retained:?} != immediate {immediate:?}");
+    }
+
+    fn action() -> ActionDescriptor {
+        ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None }
+    }
+
+    #[test]
+    fn golden_stack() {
+        let node = UiNode::Stack(UiStackNode {
+            direction: "vertical".into(),
+            gap: Some("none".into()),
+            padding: Some("none".into()),
+            id: None,
+            selected: None,
+            loading: None,
+            activate: None,
+            drop_action: None,
+            children: vec![
+                UiNode::Text(UiTextNode { value: "hello".into(), emphasize: None, data_attributes: None }),
+                UiNode::Separator(UiSeparatorNode {}),
+            ],
+        });
+        assert_equivalent("Stack", &node);
+    }
+
+    #[test]
+    fn golden_text() {
+        assert_equivalent("Text", &leaf(UiNode::Text(UiTextNode { value: "hello world".into(), emphasize: Some(true), data_attributes: None })));
+    }
+
+    #[test]
+    fn golden_button() {
+        assert_equivalent("Button", &leaf(UiNode::Button(UiButtonNode { id: Some("btn".into()), icon_id: String::new(), label: "Go".into(), action: action(), style: None, disabled: None, loading: None })));
+    }
+
+    #[test]
+    fn golden_separator() {
+        assert_equivalent("Separator", &leaf(UiNode::Separator(UiSeparatorNode {})));
+    }
+
+    #[test]
+    fn golden_input() {
+        assert_equivalent(
+            "Input",
+            &leaf(UiNode::Input(UiInputNode { id: "in".into(), input_kind: "text".into(), value: "abc".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action() })),
+        );
+    }
+
+    #[test]
+    fn golden_select() {
+        assert_equivalent(
+            "Select",
+            &leaf(UiNode::Select(UiSelectNode {
+                id: "sel".into(),
+                value: "a".into(),
+                items: vec![UiSelectItem { value: "a".into(), label: "Alpha".into() }, UiSelectItem { value: "b".into(), label: "Beta".into() }],
+                placeholder: None,
+                on_change: action(),
+            })),
+        );
+    }
+
+    #[test]
+    fn golden_toggle() {
+        assert_equivalent("Toggle", &leaf(UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: String::new(), pressed: true, text: Some("On".into()), on_change: action() })));
+    }
+
+    #[test]
+    fn golden_vec3() {
+        assert_equivalent("Vec3", &leaf(UiNode::Vec3(UiVec3Node { id: "v3".into(), value: Some([1.0, 2.0, 3.0]), on_change: action() })));
+    }
+
+    #[test]
+    fn golden_key_value() {
+        assert_equivalent("KeyValue", &leaf(UiNode::KeyValue(UiKeyValueNode { entries: vec![UiKeyValueEntry { label: "Name".into(), value: "Semio".into() }] })));
+    }
+
+    #[test]
+    fn golden_slider() {
+        assert_equivalent("Slider", &leaf(UiNode::Slider(UiSliderNode { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, unit: None, on_change: action() })));
+    }
+
+    #[test]
+    fn golden_number_stepper() {
+        assert_equivalent("NumberStepper", &leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: false, on_absolute: action(), on_delta: action() })));
+    }
+
+    #[test]
+    fn golden_ring() {
+        assert_equivalent("Ring", &leaf(UiNode::Ring(UiRingNode { id: "ring".into(), orb_id: "orb".into(), t: 0.25, disabled: Some(false), on_change: action() })));
+    }
+
+    #[test]
+    fn golden_icon_select() {
+        assert_equivalent("IconSelect", &leaf(UiNode::IconSelect(UiIconSelectNode { id: "ic".into(), value: "star".into(), uniform: false, classifier_kind: "kind".into(), on_change: action() })));
+    }
+
+    #[test]
+    fn golden_tree() {
+        let item = |id: &str, label: &str| UiTreeItemNode {
+            id: id.into(),
+            label: label.into(),
+            description: None,
+            icon_id: None,
+            selected: None,
+            loading: None,
+            default_open: None,
+            action: None,
+            hover_action: None,
+            unhover_action: None,
+            actions: None,
+            draggable: None,
+            drag_data: None,
+            items: None,
+            control: None,
+            is_hidden: None,
+        };
+        let node = UiNode::Tree(UiTreeNode {
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, items: vec![item("i1", "Item One"), item("i2", "Item Two")] }],
+            loading: None,
+            selected_ids: None,
+            highlighted_ids: None,
+            selection_change: None,
+            drop_action: None,
+        });
+        assert_equivalent("Tree", &node);
+    }
+
+    /// KNOWN GAP: `reconcile` only expands `Field`/`Section` into a real retained child for their
+    /// `child`/`children` payload (per `reconcile`'s own module doc comment — M2 recurses into
+    /// `Stack`/`Section`/`Field` only), but `flex::LayoutEngine` only grants `flex_grow: 1.0` to a
+    /// `Stack`'s children (see `style_with_grow`'s `flex_grow_child` param, gated on
+    /// `matches!(node.spec.0, UiNode::Stack(_))`). A `Field`/`Section`'s synthetic retained child is
+    /// therefore laid out at its own intrinsic content size instead of filling the label-adjusted
+    /// remainder the way `widgets::render_widget`'s hand-rolled `Field`/`Section` branches
+    /// (`Rect::new(bounds.x, bounds.y + label_h + gap, bounds.w, bounds.h - label_h - gap)` for
+    /// `Field`, per-child accumulated `y` for `Section`) explicitly carve out. The two pipelines'
+    /// geometry — and therefore instance counts for size-dependent content like wrapped `Text` — can
+    /// genuinely diverge here. This is real follow-up work for `flex`, not something this façade can
+    /// paper over; these two tests verify the retained side alone produces sane, non-empty output.
+    #[test]
+    fn golden_field_known_gap() {
+        let node = UiNode::Field(UiFieldNode {
+            id: "f".into(),
+            label: "Label".into(),
+            description: None,
+            required: None,
+            error: None,
+            child: Box::new(UiNode::Input(UiInputNode { id: "in".into(), input_kind: "text".into(), value: "abc".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action() })),
+        });
+        let (instances, _, _) = retained_stats(&node);
+        assert!(instances > 0, "Field should paint its label plus its child control");
+    }
+
+    #[test]
+    fn golden_section_known_gap() {
+        let node = UiNode::Section(UiSectionNode {
+            id: "sec".into(),
+            label: Some("Section".into()),
+            default_open: Some(true),
+            loading: None,
+            children: vec![UiNode::Text(UiTextNode { value: "child".into(), emphasize: None, data_attributes: None })],
+        });
+        let (instances, _, _) = retained_stats(&node);
+        assert!(instances > 0, "Section should paint its header label plus its children");
+    }
+
+    /// KNOWN GAP: see `to_widget_node`'s own `UiNode::Image | UiNode::ComponentScene | UiNode::ExternalSlot`
+    /// match arm doc comment — `WidgetNode<E>` has no variant for any of these three, so there is no
+    /// immediate-mode equivalent to compare against at all. `paint::paint_image`/
+    /// `paint_component_scene`/`paint_external_slot` are themselves documented placeholders (no host
+    /// texture-upload queue / scene-host / plugin-body wiring exists in `ui_wgpu` yet either) — these
+    /// tests only verify the retained side produces the placeholder chrome its own doc comments
+    /// promise, not equivalence with anything immediate-mode.
+    #[test]
+    fn golden_image_known_gap() {
+        let node = UiNode::Image(UiImageNode { id: "img".into(), src: String::new(), alt: Some("alt text".into()) });
+        let (instances, _, _) = retained_stats(&node);
+        assert!(instances > 0, "an empty-src Image should still paint its alt text");
+    }
+
+    #[test]
+    fn golden_component_scene_known_gap() {
+        let node = UiNode::ComponentScene(UiComponentSceneNode {
+            surface_id: "surf".into(),
+            controller_id: "ctrl".into(),
+            component_kind: SurfaceKind::World3d,
+            pane_id: None,
+            binding_id: None,
+            canvas_2d: None,
+            world_3d: None,
+            node_graph: None,
+            text_editor: None,
+            table: None,
+            paint_2d: None,
+            virtual_file_system: None,
+            tiled_map: None,
+            board2d: None,
+            icon_render: None,
+            ink_canvas: None,
+            graph_timeline: None,
+            block_list: None,
+        });
+        let (instances, _, _) = retained_stats(&node);
+        assert!(instances > 0, "ComponentScene should paint its placeholder border chrome");
+    }
+
+    #[test]
+    fn golden_external_slot_known_gap() {
+        let node = UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "plug".into(), app_id: "app".into(), body_key: "body".into(), params_json: "{}".into() });
+        let (instances, _, _) = retained_stats(&node);
+        assert!(instances > 0, "ExternalSlot should paint its placeholder chrome plus its body_key label");
+    }
+    //#endregion 🔖GoldenHarness
+}
+// #endregion engine
 }
 
 #[cfg(feature = "engine")]

@@ -4,7 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { cadFixtureVitePlugin, gisMapTilesVitePlugins, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, terrainTilesVitePlugins, uiAssetsVitePlugin, puzzle3dMeshesVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
-import { semioBackboneVitePlugin } from "../script.ts";
+import { semioBackboneVitePlugin, semioBlobVitePlugin } from "../script.ts";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 const playDir = path.resolve(configDir, "..");
@@ -43,6 +43,7 @@ export default defineConfig({
   },
   plugins: [
     semioBackboneVitePlugin(),
+    semioBlobVitePlugin(),
     ...uiAssetsVitePlugin(uiAssetsRoot),
     ...cadFixtureVitePlugin(repoRoot),
     ...puzzle3dMeshesVitePlugin(repoRoot),

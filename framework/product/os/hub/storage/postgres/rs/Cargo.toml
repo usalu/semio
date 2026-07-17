@@ -20,6 +20,7 @@ uuid = { version = "1.20", features = ["v7"] }
 sqlx_core = { package = "sqlx-core", version = "0.8", features = ["_rt-tokio", "_tls-rustls-ring-webpki", "json"] }
 sqlx_postgres = { package = "sqlx-postgres", version = "0.8", features = ["uuid", "json"] }
 semio-framework-core = { path = "../../../../../../core/rs" }
+semio-framework-hash = { path = "../../../../../../hash/rs" }
 os-hub-storage = { path = "../../rs" }
 
 [dev-dependencies]

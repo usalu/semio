@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
 /** 🃏 `@semio-tech/graph-dsl` — shared Jack query language over queryable graphs. */
-import { BundleScript, runCargoTestBudgeted, runBundleScriptMain } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runCargoTestBudgeted, runBundleScriptMain } from "../../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
-class GraphDslScript extends BundleScript {
-  async test(): Promise<void> {
+class TestScript extends BundleScript {
+  run(): void {
     runCargoTestBudgeted(["mathematical_graph_dsl"], join(this.root, "rs"));
   }
 }
 
-const router = new GraphDslScript();
-runBundleScriptMain(router, import.meta.url);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+await runBundleScriptMain(router, import.meta.url);

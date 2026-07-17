@@ -1,0 +1,13 @@
+{
+  "title": "Fix Forms Plugin SDK Imports",
+  "emoji": "🔧",
+  "status": "open",
+  "description": "forms/plugin/rs/lib.rs (around lines 882-907) imports ProtocolBuilderConfig, PROTOCOL_BUILDER_LABELS_EN, render_protocol_builder, BlockPaletteEntry from semio_framework_plugin, but these symbols moved to the protocol crate as part of ticket #2033's SDK extraction. This leaves forms/plugin currently NOT compiling, blocking other concurrent work on the plugin SDK. Task: mirror the identical mechanical swap already applied in procedural/plugin/rs/lib.rs and flow/plugin/rs/lib.rs — add a dependency on the protocol crate to forms/plugin/rs/Cargo.toml (matching procedural/flow's style), fix the imports in forms/plugin/rs/lib.rs to pull from protocol instead of semio_framework_plugin, then run cargo check -p \u003cforms plugin package name\u003e and cargo test -p \u003csame\u003e until clean. Scope strictly limited to forms/plugin/rs/ and its Cargo.toml.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2042"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪9ca074682d504831887122004b9f04a0"
+  ]
+}

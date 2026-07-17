@@ -10,8 +10,8 @@ pub mod app_2d {
         GIS_MAP_SCHEMA,
     };
     use semio_framework_plugin::{SurfaceKind, PanelGroup,
-        build_gis_map_scene, create_default_layout, MeasureSelectItem, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle,
-        ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, ActionDescriptor, DocumentApp, DocumentView, DwgDrawing, DwgGeometry, GisMapScene,
+        build_tiled_map_scene, create_default_layout, MeasureSelectItem, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle,
+        ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, ActionDescriptor, DocumentApp, DocumentView, DwgDrawing, DwgGeometry, TiledMapScene,
         UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiSliderNode,
         UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowMeasure,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -806,7 +806,7 @@ pub mod app_2d {
     //#endregion 🔖Panels
 
     //#region 🔖Render
-    fn apply_gis_map_tile_base_url(scene: &mut GisMapScene) {
+    fn apply_gis_map_tile_base_url(scene: &mut TiledMapScene) {
         let Ok(base) = std::env::var("SEMIO_GIS_MAP_TILE_BASE_URL") else {
             return;
         };
@@ -816,7 +816,7 @@ pub mod app_2d {
     }
 
     fn render_canvas(document: &GisMapDocument, runtime: &Gis2dPlayRuntime) -> UiNode {
-        let mut scene = GisMapScene::base(gis_map_descriptor_json(document), runtime.camera_json.clone());
+        let mut scene = TiledMapScene::base(gis_map_descriptor_json(document), runtime.camera_json.clone());
         scene.render_mode = runtime.render_mode.clone();
         scene.vector_style = runtime.vector_style.clone();
         scene.lod_mode = runtime.lod_mode.clone();
@@ -827,7 +827,7 @@ pub mod app_2d {
         scene.selection_method = runtime.selection_method.clone();
         scene.selection_mode = runtime.selection_mode.clone();
         apply_gis_map_tile_base_url(&mut scene);
-        build_gis_map_scene(GIS2D_PLAY_SURFACE, GIS2D_PLAY_APP_ID, scene)
+        build_tiled_map_scene(GIS2D_PLAY_SURFACE, GIS2D_PLAY_APP_ID, scene)
     }
     //#endregion 🔖Render
 
@@ -1144,7 +1144,7 @@ pub mod app_2d {
                 .icon_id("gis2d")
                 .mode("edit", "Edit")
                 .default_mode_id("edit")
-                .window_kind(GIS2D_PLAY_WINDOW_MAIN, "Map", GIS2D_PLAY_BODY_COMPOSITE, SurfaceKind::GisMap)
+                .window_kind(GIS2D_PLAY_WINDOW_MAIN, "Map", GIS2D_PLAY_BODY_COMPOSITE, SurfaceKind::TiledMap)
                 .default_layout(create_default_layout(
                     &[GIS2D_PLAY_WINDOW_MAIN.into()],
                     "row",
@@ -1318,7 +1318,7 @@ pub mod app_2d {
         #[test]
         fn renders_gis_map_scene() {
             let mut app = new_app();
-            assert!(render(&mut app, GIS2D_PLAY_BODY_COMPOSITE, &ViewState::default()).contains("gis2d-map"));
+            assert!(render(&mut app, GIS2D_PLAY_BODY_COMPOSITE, &ViewState::default()).contains("tiled-map"));
         }
 
         #[test]

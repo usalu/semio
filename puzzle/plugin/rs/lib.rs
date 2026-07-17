@@ -5,9 +5,9 @@ pub mod d2 {
 
     use puzzle_2d::{handle_position_on_circle, handle_position_on_rectangle, puzzle2d_document_delta_ops, puzzle_2d_lod_scale_json, puzzle_board_host, BoardHost, Point, Puzzle2dExtension, Puzzle2dOp, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
     use semio_framework_plugin::{
-        build_canvas_2d_scene, build_puzzle2d_board_scene, create_default_layout,
+        build_canvas_2d_scene, build_board2d_scene, create_default_layout,
         MeasureSelectItem, WindowEngagementStatus,
-        ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp, DocumentView, PanelGroup, PluginBundle, Puzzle2dBoardScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
+        ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp, DocumentView, PanelGroup, PluginBundle, Board2dScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
         WindowEngagementInput, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
     };
     use semio_framework_plugin::kernel::HostEffect;
@@ -982,7 +982,7 @@ pub mod d2 {
         json
     }
 
-    fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> Puzzle2dBoardScene {
+    fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> Board2dScene {
         let fixture = &envelope.fixture;
         let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(fixture, pane);
         let camera_json = json!({ "x": camera_x, "y": camera_y, "zoom": zoom }).to_string();
@@ -1000,7 +1000,7 @@ pub mod d2 {
             .map(|value| value.to_string())
             .unwrap_or_else(|| "[]".into());
         let lod_mode = envelope.runtime.lod_mode_by_pane.get(pane).cloned().unwrap_or_else(|| PUZZLE2D_LOD_MODE_AUTOMATIC.to_string());
-        Puzzle2dBoardScene {
+        Board2dScene {
             fixture_json: cached_fixture_json(document_json, fixture),
             camera_json,
             kind_catalogs_json,
@@ -1019,7 +1019,7 @@ pub mod d2 {
     }
 
     fn render_canvas(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> UiNode {
-        build_puzzle2d_board_scene(format!("{PUZZLE2D_PLAY_SURFACE_ID}.{pane}"), PUZZLE2D_PLAY_CONTROLLER_ID, puzzle2d_board_scene(document_json, envelope, pane))
+        build_board2d_scene(format!("{PUZZLE2D_PLAY_SURFACE_ID}.{pane}"), PUZZLE2D_PLAY_CONTROLLER_ID, puzzle2d_board_scene(document_json, envelope, pane))
     }
 
     fn force_layout_fixture(fixture: &mut Value) {
@@ -2264,7 +2264,7 @@ pub mod d2 {
         fn renders_puzzle2d_board_scene() {
             let mut app = new_app();
             let node = app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, None, &ViewState::default()).expect("render");
-            assert!(serde_json::to_string(&node).unwrap().contains("puzzle2d-board"));
+            assert!(serde_json::to_string(&node).unwrap().contains("board-2d"));
         }
 
         #[test]
@@ -6738,10 +6738,10 @@ pub mod d5 {
     use puzzle_5d::{puzzle5d_document_delta_ops, BrushPlacePayload, Puzzle5dOp, Puzzle5dPrecomputeSession};
     use semio_framework_os::{register_mesh_exporter, register_mesh_importer};
     use semio_framework_plugin::{
-        apply_world3d_sun_action, build_puzzle2d_board_scene, build_world_3d_scene, create_default_layout,
+        apply_world3d_sun_action, build_board2d_scene, build_world_3d_scene, create_default_layout,
         ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, WindowEngagementStatus,
         merge_world_selection_ids, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
-        ActionDescriptor, PanelGroup, Puzzle2dBoardScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
+        ActionDescriptor, PanelGroup, Board2dScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
         WindowEngagementInput, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
         FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
     };
@@ -7570,8 +7570,8 @@ pub mod d5 {
         json!({ "nodeWeights": runtime.object_kind_weights, "handleWeights": runtime.vortex_kind_weights }).to_string()
     }
 
-    fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Puzzle2dBoardScene {
-        Puzzle2dBoardScene {
+    fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
+        Board2dScene {
             fixture_json: board_fixture_value(&envelope.document).to_string(),
             camera_json: board_camera_value(&envelope.document.camera2d).to_string(),
             kind_catalogs_json: board_kind_catalogs_value(&envelope.document).to_string(),
@@ -9189,7 +9189,7 @@ pub mod d5 {
             let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_utility);
             let labels = puzzle5d_labels(view_state);
             match body_key {
-                PUZZLE5D_PLAY_BODY_2D => build_puzzle2d_board_scene(PUZZLE5D_PLAY_SURFACE_2D, PUZZLE5D_PLAY_CONTROLLER_ID, puzzle5d_board_scene(&envelope)),
+                PUZZLE5D_PLAY_BODY_2D => build_board2d_scene(PUZZLE5D_PLAY_SURFACE_2D, PUZZLE5D_PLAY_CONTROLLER_ID, puzzle5d_board_scene(&envelope)),
                 PUZZLE5D_PLAY_BODY_3D => {
                     let brush_preview = world_brush_preview_json(&self.precompute, &envelope);
                     build_world_3d_scene(
@@ -9346,7 +9346,7 @@ pub mod d5 {
                 .terminology_document("reuse", ["Entwerfen mit Bestand", "puzzle", "5d"])
                 .mode("edit", "Edit")
                 .default_mode_id("edit")
-                .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_2D, "Puzzle 2D", PUZZLE5D_PLAY_BODY_2D, SurfaceKind::Puzzle2dBoard, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_2D, manifest_labels))
+                .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_2D, "Puzzle 2D", PUZZLE5D_PLAY_BODY_2D, SurfaceKind::Board2d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_2D, manifest_labels))
                 .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_3D, "Puzzle 3D", PUZZLE5D_PLAY_BODY_3D, SurfaceKind::World3d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_3D, manifest_labels))
                 .default_layout(create_default_layout(&[PUZZLE5D_PLAY_WINDOW_2D.into(), PUZZLE5D_PLAY_WINDOW_3D.into()], "row", Some(&[50.0, 50.0]), Some(&["Puzzle 2D".into(), "Puzzle 3D".into()])))
                 .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_DOCUMENT)
@@ -9430,7 +9430,7 @@ pub mod d5 {
                 .window_kind_utilities(PUZZLE5D_PLAY_WINDOW_3D, vec!["move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()])
                 // 📇 Per-window action scoping — the 3D window (World3d) owns the transform-gumball ops
                 // (move/rotate/scale/relocate utilities are 3D-only) plus its own camera; the 2D window
-                // (Puzzle2dBoard) owns board-event dispatch and its own camera. Select/brush/fill create
+                // (Board2d) owns board-event dispatch and its own camera. Select/brush/fill create
                 // ops, deletion, engagement, and global example/json actions apply to both surfaces and
                 // stay unscoped orphans, appearing on both windows.
                 .window_kind_actions(PUZZLE5D_PLAY_WINDOW_3D, vec![
@@ -9495,7 +9495,7 @@ pub mod d5 {
         fn renders_paired_board_and_world_scenes() {
             let mut app = new_app();
             let board = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_2D, None, &ViewState::default()).expect("render 2d")).unwrap();
-            assert!(board.contains("puzzle2d-board"));
+            assert!(board.contains("board-2d"));
             let world = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_3D, None, &ViewState::default()).expect("render 3d")).unwrap();
             assert!(world.contains("world-3d"));
         }

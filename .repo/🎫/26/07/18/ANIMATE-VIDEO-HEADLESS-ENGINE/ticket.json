@@ -1,0 +1,18 @@
+{
+  "title": "Animate Video Headless Engine",
+  "emoji": "🎬",
+  "status": "open",
+  "description": "Create animate/video/rs headless video engine depending on animate_core with VelloRenderer, SceneFileWriter, partial movie cache, render_scene API, script.ts, project.json, package.json, and tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2055"
+  },
+  "goal": "🎯animate",
+  "plan": {
+    "client": "cursor",
+    "id": "065717fc",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/animate_manim_parity_065717fc.plan.md"
+  },
+  "sessions": [
+    "⚪36e7bc38c3944cca821e0bd01f519afc"
+  ]
+}

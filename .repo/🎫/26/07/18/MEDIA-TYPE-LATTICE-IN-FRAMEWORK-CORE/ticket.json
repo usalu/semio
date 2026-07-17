@@ -1,0 +1,13 @@
+{
+  "title": "Media Type Lattice in Framework Core",
+  "emoji": "🎨",
+  "status": "open",
+  "description": "Add a foundational typed-media lattice to framework/core/rs/lib.rs: new MediaClass/MediaForm/MediaType/MediaWireFormat/MediaKindDescriptor/MediaPortDirection/MediaPortSpec types plus a media_types_compatible() compatibility function, placed in a new //#region MediaType immediately after //#endregion MediaFormat (~line 945). Extend AppDefinition (~3662) with three new optional Vec fields: media_kinds, media_inputs, media_outputs (serde default + skip_serializing_if so old manifests still parse). Regenerate ts-rs bindings so framework/core/js/generated/manifest.ts picks up the new types. This is foundational plumbing for later tickets that will wire real media-type checking into the media graph (wire typing today is a weak string `resource_kind` compared by literal equality, checked nowhere). Do not touch OsMediaCapability deletions (belongs to dependent tickets 1A/1B) — just design the surface they'll consume.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2043"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪c4eb5f03d093420790bf54d124be2886"
+  ]
+}

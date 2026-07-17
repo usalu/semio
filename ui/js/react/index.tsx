@@ -4991,7 +4991,7 @@ export const borderEmphasizedTopClass = `border-t ${borderEmphasizedClass}`;
 /** @emoji 📏 Subtle normal stroke for controls, windows, dividers, and in-chrome separators. */
 export const borderNormalClass = "!border-normal";
 
-/** @emoji 📏 Normal chrome frame (`border` + {@link borderNormalClass}); emphasized on `[data-panel]:hover` via CSS. */
+/** @emoji 📏 Normal chrome frame (`border` + {@link borderNormalClass}); emphasized on `[data-slot="panel"]:hover` via CSS. */
 export const borderNormalFrameClass = `box-border border border-solid ${borderNormalClass}`;
 
 /** @emoji 📏 Normal navbar bottom edge; emphasized on `[data-slot="navbar"]:hover` via CSS. */
@@ -5024,7 +5024,7 @@ export const sliderValueClassName = cn("text-element w-large text-end text-xs le
 /** @emoji 📏 Active window chrome line when that stack is globally active. */
 export const activeLineClass = "border-active-base";
 
-/** @emoji 🪟 Panel outline — normal gray frame; emphasized while the pointer is inside `[data-panel]`. */
+/** @emoji 🪟 Panel outline — normal gray frame; emphasized while the pointer is inside `[data-slot="panel"]`. */
 export const panelChromeBorderClass = borderNormalFrameClass;
 
 /** @emoji 🪟 Frosted fill layer behind panel content (no stroke — border lives on the frame). */
@@ -5929,6 +5929,9 @@ const DockDragChip: React.FC<{ readonly label: string; readonly x: number; reado
 
 /** @emoji 🌱 `dataTransfer` MIME identifying a tree-unit drag between leaf tabs. */
 export const PANEL_TREE_UNIT_MIME = "application/x-semio-panel-tree-unit";
+
+/** @emoji ↕️ `dataTransfer` MIME identifying a tree-section reorder drag within one {@link Tree}. */
+export const TREE_SECTION_REORDER_MIME = "application/x-semio-tree-section-reorder";
 
 export interface PanelTreeUnitDragSession {
   readonly tabId: string;
@@ -12236,6 +12239,8 @@ export interface TreeDataSection {
   onPointerEnter?: () => void;
   onPointerLeave?: () => void;
   onDoubleClick?: (event: React.MouseEvent) => void;
+  /** @emoji ↕️ When true (or when the host Tree enables {@link TreeRootProps.sortableSections}), this section header shows a drag handle for reordering among sibling sections. */
+  draggable?: boolean;
 }
 
 /** @emoji 🖱️ Pointer-driven external drag when native `draggable` does not start inside scroll panels. */
@@ -12511,12 +12516,17 @@ interface TreeSectionProps {
   onDoubleClick?: (event: React.MouseEvent) => void;
   draggable?: boolean;
   onDragStart?: React.DragEventHandler<HTMLDivElement>;
+  onDragEnd?: React.DragEventHandler<HTMLDivElement>;
   onDragOver?: React.DragEventHandler<HTMLDivElement>;
   onDragLeave?: React.DragEventHandler<HTMLDivElement>;
   onDrop?: React.DragEventHandler<HTMLDivElement>;
   isLastSection?: boolean;
   /** @emoji 🎯 Passive drop-zone highlight while a compatible tree drag is in flight. */
   isDropReady?: boolean;
+  /** @emoji 🫳 When true, renders a trailing {@link DragHandle} for reorder (with handle-only initiation unless {@link dragInitiation} is `"surface"`). */
+  isDragHandle?: boolean;
+  /** @emoji 🫳 `"handle"` restricts native drag start to the trailing grip; `"surface"` keeps the whole section header draggable. Defaults to `"handle"` when {@link isDragHandle} or {@link draggable} is set. */
+  dragInitiation?: "handle" | "surface";
 }
 
 /**
@@ -12628,6 +12638,26 @@ interface TreeRootProps {
   /** @emoji 🌱 Controlled section/group expansion (see {@link TreeStateProvider}) — lets a host persist which groups are open across remounts. Uncontrolled (per-mount) when omitted. */
   openStates?: Readonly<Record<string, boolean>>;
   onOpenStateChange?: (id: string, open: boolean) => void;
+  /** @emoji ↕️ When true, every section header renders a drag handle and sibling sections can be reordered. Defaults to true when there are two or more sections. */
+  sortableSections?: boolean;
+  /** @emoji ↕️ Fires after a section-handle reorder with the new section-id order (host may persist; Tree also keeps an internal merge so plugin re-renders do not snap order back). */
+  onSectionsReorder?: (orderedIds: readonly string[]) => void;
+}
+
+/** @emoji ↕️ Merges a remembered section-id order with the latest section list — keeps prior relative order for surviving ids, appends newly appeared sections in source order. */
+export function mergeTreeSectionOrder(previousIds: readonly string[], sections: readonly TreeDataSection[]): TreeDataSection[] {
+  const byId = new Map(sections.map((section) => [section.id, section]));
+  const ordered: TreeDataSection[] = [];
+  for (const id of previousIds) {
+    const section = byId.get(id);
+    if (!section) continue;
+    ordered.push(section);
+    byId.delete(id);
+  }
+  for (const section of sections) {
+    if (byId.has(section.id)) ordered.push(section);
+  }
+  return ordered;
 }
 
 /** @emoji ✅ Per-tree selection store; rows subscribe via {@link useSyncExternalStore} without invalidating {@link TreeDataRenderingContext}. */
@@ -12771,6 +12801,13 @@ interface TreeDataRenderingContextValue {
   readonly draggedIds: readonly string[];
   readonly dropPreview: { readonly targetId: string; readonly position: TreeDropPosition } | null;
   readonly buildPalettePointerProps: (item: TreeDataItem, section: TreeDataSection) => Pick<TreeItemProps, "onPointerDown">;
+  /** @emoji ↕️ Section headers render reorder grips and accept sibling-section drops. */
+  readonly sortableSections: boolean;
+  readonly draggedSectionId: string | null;
+  readonly handleSectionDragStart: (event: React.DragEvent<HTMLDivElement>, section: TreeDataSection) => void;
+  readonly handleSectionDragEnd: () => void;
+  readonly handleSectionDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
+  readonly handleSectionDrop: (event: React.DragEvent<HTMLDivElement>, section: TreeDataSection) => void;
 }
 
 const TreeDataRenderingContext = reactHostPort.createContext<TreeDataRenderingContextValue | null>(null);
@@ -12909,11 +12946,14 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   onDoubleClick,
   draggable = false,
   onDragStart,
+  onDragEnd,
   onDragOver,
   onDragLeave,
   onDrop,
   isLastSection = false,
   isDropReady = false,
+  isDragHandle = false,
+  dragInitiation,
 }) => {
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier, direction = "down" } = reactHostPort.useContext(TreeContext);
   const suppressLocalizedLabel = label == null || label === "";
@@ -12934,9 +12974,32 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   );
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
-  const isHeaderlessSection = suppressLocalizedLabel && localizedLabel === undefined && !icon && actions.length === 0 && !loading;
-  const rowClassName = cn(treeRowShellClassName, treeRowChromeShellClasses(false, false), isExpandable ? "cursor-foldable" : "cursor-selectable", isDropReady && dropZoneReadyTextClass, className);
+  const showDragHandle = Boolean(draggable || isDragHandle);
+  const resolvedDragInitiation = dragInitiation ?? (showDragHandle ? "handle" : "surface");
+  const [dragArmed, setDragArmed] = reactHostPort.useState(false);
+  const armDrag = reactHostPort.useCallback(() => {
+    setDragArmed(true);
+    window.addEventListener("pointerup", () => setDragArmed(false), { once: true });
+  }, []);
+  const effectiveDraggable = showDragHandle && (resolvedDragInitiation === "surface" || dragArmed);
+  const handleDragEnd = reactHostPort.useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      setDragArmed(false);
+      onDragEnd?.(event);
+    },
+    [onDragEnd],
+  );
+  const isHeaderlessSection = suppressLocalizedLabel && localizedLabel === undefined && !icon && actions.length === 0 && !loading && !showDragHandle;
+  const rowClassName = cn(
+    treeRowShellClassName,
+    treeRowChromeShellClasses(false, false),
+    isExpandable ? "cursor-foldable" : "cursor-selectable",
+    showDragHandle && resolvedDragInitiation === "surface" ? "cursor-grab active:cursor-grabbing" : "",
+    isDropReady && dropZoneReadyTextClass,
+    className,
+  );
   const rowContentFillClassName = cn(treeRowChromeContentFillClasses(false, false, loading), isDropReady && dropZoneReadyFillClass);
+  const sectionDragHandle = showDragHandle ? <DragHandle onPointerDown={resolvedDragInitiation === "handle" ? armDrag : undefined} emphasized={isDropReady} /> : null;
 
   if (isHeaderlessSection) {
     return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree, indentMultiplier, direction }}>{children}</TreeContext.Provider>;
@@ -12951,7 +13014,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
         data-tree-row-kind="section"
         id={id}
         className={rowClassName}
-        draggable={draggable}
+        draggable={effectiveDraggable}
         onPointerEnter={onSectionPointerEnter}
         onPointerLeave={(event) => {
           if (!shouldDispatchTreeRowPointerLeave(event.relatedTarget)) {
@@ -12960,6 +13023,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           onSectionPointerLeave?.();
         }}
         onDragStart={onDragStart}
+        onDragEnd={handleDragEnd}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
@@ -12979,6 +13043,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
               </span>
             </div>
             {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
+            {sectionDragHandle}
           </div>
         </TreeAlignedRow>
       </div>
@@ -12996,7 +13061,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
         id={id}
         className={rowClassName}
         role="button"
-        draggable={draggable}
+        draggable={effectiveDraggable}
         onPointerEnter={onSectionPointerEnter}
         onPointerLeave={(event) => {
           if (!shouldDispatchTreeRowPointerLeave(event.relatedTarget)) {
@@ -13005,6 +13070,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           onSectionPointerLeave?.();
         }}
         onDragStart={onDragStart}
+        onDragEnd={handleDragEnd}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
@@ -13033,6 +13099,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
               </span>
             </div>
             {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
+            {sectionDragHandle}
           </div>
         </TreeAlignedRow>
       </div>
@@ -13421,7 +13488,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         className={className}
         isSelected={isSelected}
         isHighlighted={isHighlighted}
-        isDragHandle={isDragHandle}
+        isDragHandle={true}
         defaultOpen={defaultOpen}
         isLastItem={isLastItem}
         actions={actions}
@@ -14294,13 +14361,30 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
 const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(props: { readonly section: TreeDataSection; readonly isLastSection: boolean }): React.ReactElement {
   const { section, isLastSection } = props;
   const { direction = "down" } = reactHostPort.useContext(TreeContext);
-  const { sectionItemsById, loadingById, loadSectionItems, handleDragOver, handleDropOnSection, dragAndDropController, draggedIds } = useTreeDataRendering();
+  const {
+    sectionItemsById,
+    loadingById,
+    loadSectionItems,
+    handleDragOver,
+    handleDropOnSection,
+    dragAndDropController,
+    draggedIds,
+    sortableSections,
+    draggedSectionId,
+    handleSectionDragStart,
+    handleSectionDragEnd,
+    handleSectionDragOver,
+    handleSectionDrop,
+  } = useTreeDataRendering();
   const treeOpenState = useTreeOpenState(getTreeSectionStateId(section.id), section.defaultOpen ?? false);
   const rawItems = getTreeSectionItems(section, sectionItemsById);
   const items = direction === "up" ? [...rawItems].reverse() : rawItems;
   const isLoading = (loadingById[getTreeSectionLoadingId(section.id)] ?? false) || Boolean(section.loading);
   const hasDynamicChildren = Boolean(section.getItems);
   const isExpandable = items.length > 0 || hasDynamicChildren || Boolean(section.emptyState);
+  const sectionReorderable = sortableSections || Boolean(section.draggable);
+  const sectionDragging = draggedSectionId === section.id;
+  const sectionDropReady = Boolean(draggedSectionId && draggedSectionId !== section.id) || (draggedIds.length > 0 && Boolean(dragAndDropController?.handleDrop));
 
   reactHostPort.useEffect(() => {
     if (treeOpenState.open && hasDynamicChildren) {
@@ -14313,7 +14397,7 @@ const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(prop
       id={section.id}
       label={section.label}
       icon={section.icon}
-      className={section.className}
+      className={cn(section.className, sectionDragging && "opacity-40")}
       defaultOpen={section.defaultOpen}
       open={treeOpenState.open}
       onOpenChange={treeOpenState.setOpen}
@@ -14323,10 +14407,24 @@ const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(prop
       onPointerEnter={section.onPointerEnter}
       onPointerLeave={section.onPointerLeave}
       onDoubleClick={section.onDoubleClick}
-      onDragOver={handleDragOver}
-      onDrop={(event) => handleDropOnSection(event, section)}
+      draggable={sectionReorderable}
+      isDragHandle={sectionReorderable}
+      dragInitiation="handle"
+      onDragStart={sectionReorderable ? (event) => handleSectionDragStart(event, section) : undefined}
+      onDragEnd={sectionReorderable ? () => handleSectionDragEnd() : undefined}
+      onDragOver={(event) => {
+        if (sectionReorderable) handleSectionDragOver(event);
+        handleDragOver(event);
+      }}
+      onDrop={(event) => {
+        if (event.dataTransfer.types.includes(TREE_SECTION_REORDER_MIME)) {
+          handleSectionDrop(event, section);
+          return;
+        }
+        handleDropOnSection(event, section);
+      }}
       isLastSection={isLastSection}
-      isDropReady={draggedIds.length > 0 && Boolean(dragAndDropController?.handleDrop)}
+      isDropReady={sectionDropReady}
     >
       {items.map((item, index) => (
         <TreeDataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={index === items.length - 1} />
@@ -14359,6 +14457,8 @@ export const Tree = (({
   direction = "down",
   openStates,
   onOpenStateChange,
+  sortableSections: sortableSectionsProp,
+  onSectionsReorder,
   children,
 }: TreeRootProps & { children?: React.ReactNode }) => {
   if (hasNonEmptyChildren(children)) {
@@ -14378,7 +14478,18 @@ export const Tree = (({
   const [uncontrolledSelectedIds, setUncontrolledSelectedIds] = reactHostPort.useState<string[]>(() => normalizeTreeSelectedIds(defaultSelectedIds, selectionMode));
   const [draggedIds, setDraggedIds] = reactHostPort.useState<string[]>([]);
   const [dropPreview, setDropPreview] = reactHostPort.useState<{ targetId: string; position: TreeDropPosition } | null>(null);
+  const [draggedSectionId, setDraggedSectionId] = reactHostPort.useState<string | null>(null);
   const resolvedSections = sections ?? EMPTY_TREE_SECTIONS;
+  const sortableSections = sortableSectionsProp ?? resolvedSections.length > 1;
+  const [sectionOrderIds, setSectionOrderIds] = reactHostPort.useState<readonly string[]>(() => resolvedSections.map((section) => section.id));
+  reactHostPort.useEffect(() => {
+    setSectionOrderIds((previous) => {
+      const merged = mergeTreeSectionOrder(previous, resolvedSections).map((section) => section.id);
+      if (merged.length === previous.length && merged.every((id, index) => id === previous[index])) return previous;
+      return merged;
+    });
+  }, [resolvedSections]);
+  const orderedByPreference = reactHostPort.useMemo(() => mergeTreeSectionOrder(sectionOrderIds, resolvedSections), [resolvedSections, sectionOrderIds]);
   const suppressPaletteClickRef = reactHostPort.useRef(false);
   const palettePointerGestureRef = reactHostPort.useRef<{ pending: boolean; dragging: boolean; encoded: string | null; startX: number; startY: number; target: EventTarget | null }>({
     pending: false,
@@ -14684,6 +14795,47 @@ export const Tree = (({
     [handleDrop],
   );
 
+  const handleSectionDragStart = reactHostPort.useCallback((event: React.DragEvent<HTMLDivElement>, section: TreeDataSection) => {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData(TREE_SECTION_REORDER_MIME, section.id);
+    setDraggedSectionId(section.id);
+  }, []);
+
+  const handleSectionDragEnd = reactHostPort.useCallback(() => {
+    setDraggedSectionId(null);
+  }, []);
+
+  const handleSectionDragOver = reactHostPort.useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    if (event.dataTransfer.types.includes(TREE_SECTION_REORDER_MIME)) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+    }
+  }, []);
+
+  const handleSectionDrop = reactHostPort.useCallback(
+    (event: React.DragEvent<HTMLDivElement>, targetSection: TreeDataSection) => {
+      if (!event.dataTransfer.types.includes(TREE_SECTION_REORDER_MIME)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const sourceId = event.dataTransfer.getData(TREE_SECTION_REORDER_MIME) || draggedSectionId;
+      setDraggedSectionId(null);
+      if (!sourceId || sourceId === targetSection.id) return;
+      setSectionOrderIds((previous) => {
+        const current = mergeTreeSectionOrder(previous, resolvedSections).map((section) => section.id);
+        const fromIndex = current.indexOf(sourceId);
+        const toIndex = current.indexOf(targetSection.id);
+        if (fromIndex < 0 || toIndex < 0) return previous;
+        const next = [...current];
+        const [moved] = next.splice(fromIndex, 1);
+        if (!moved) return previous;
+        next.splice(toIndex, 0, moved);
+        onSectionsReorder?.(next);
+        return next;
+      });
+    },
+    [draggedSectionId, onSectionsReorder, resolvedSections],
+  );
+
   const treeDataRenderingValue = reactHostPort.useMemo<TreeDataRenderingContextValue>(
     () => ({
       sectionItemsById,
@@ -14703,11 +14855,18 @@ export const Tree = (({
       draggedIds,
       dropPreview,
       buildPalettePointerProps,
+      sortableSections,
+      draggedSectionId,
+      handleSectionDragStart,
+      handleSectionDragEnd,
+      handleSectionDragOver,
+      handleSectionDrop,
     }),
     [
       buildPalettePointerProps,
       dragAndDropController,
       draggedIds,
+      draggedSectionId,
       dropPreview,
       handleDoubleClickItem,
       handleDragEnd,
@@ -14716,19 +14875,24 @@ export const Tree = (({
       handleDragStart,
       handleDropOnItem,
       handleDropOnSection,
+      handleSectionDragEnd,
+      handleSectionDragOver,
+      handleSectionDragStart,
+      handleSectionDrop,
       handleSelectItem,
       itemItemsById,
       loadItemItems,
       loadSectionItems,
       loadingById,
       sectionItemsById,
+      sortableSections,
     ],
   );
 
   const { treeRootRef, handleTreePointerOver, handleTreePointerLeave, refreshTreeHoverPath } = useTreeHoverPathRootHandlers();
   useTreeSelectionPathSync(treeRootRef, resolvedSelectedIds);
 
-  const orderedSections = direction === "up" ? [...resolvedSections].reverse() : resolvedSections;
+  const orderedSections = direction === "up" ? [...orderedByPreference].reverse() : orderedByPreference;
 
   return (
     <TreeStateProvider openStates={openStates} onOpenStateChange={onOpenStateChange}>
@@ -15870,6 +16034,9 @@ export interface TreePanelConfig {
   emptyState?: React.ReactNode;
   indentMultiplier?: number;
   className?: string;
+  /** @emoji ↕️ Override section-reorder grips; defaults to enabled when {@link sections} has more than one entry. */
+  sortableSections?: boolean;
+  onSectionsReorder?: (orderedIds: readonly string[]) => void;
 }
 
 export interface TreePanelDefinition {
@@ -15985,7 +16152,7 @@ export interface PanelProps {
   tabBarHost?: "panel" | "chrome";
 }
 
-/** @emoji 🌲 Leaf-tab tree body shared by {@link Panel} and {@link MobilePanel} — one section per unit (sorted by order); skipped when the active tab has no units. Under a {@link PanelDockProvider}, each unit's header becomes a native-DnD handle draggable to another leaf tab's unit list (see {@link PANEL_TREE_UNIT_MIME}). */
+/** @emoji 🌲 Leaf-tab tree body shared by {@link Panel} and {@link MobilePanel} — one section per unit (sorted by order); skipped when the active tab has no units. Under a {@link PanelDockProvider}, labeled (or multi-unit) headers become native-DnD handles draggable to another leaf tab's unit list (see {@link PANEL_TREE_UNIT_MIME}). Unlabeled single-unit tabs omit the unit header so trees are not topped by a lonely grip. */
 const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
   anchor,
   tabId,
@@ -16003,7 +16170,7 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
   const dock = usePanelDockContext();
   const flow = useFlow();
   const sortedUnits = [...units].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  const draggable = Boolean(dock && anchor);
+  const unitDockDraggable = Boolean(dock && anchor);
   const unitDragActive = usePanelTreeUnitDragActive();
   return (
     <>
@@ -16019,14 +16186,15 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
             )
           : undefined;
         const onUnitOpenStateChange = onTreeOpenStateChange ? (id: string, open: boolean) => onTreeOpenStateChange(`${unitPrefix}${id}`, open) : undefined;
+        const showUnitHeader = Boolean(unit.label || unit.icon) || sortedUnits.length > 1;
         return (
           <React.Fragment key={unit.id}>
-            {unit.label || draggable ? (
+            {showUnitHeader ? (
               <div
                 data-slot="panel-tree-unit-header"
-                draggable={draggable}
+                draggable={unitDockDraggable}
                 onDragStart={
-                  draggable
+                  unitDockDraggable
                     ? (event) => {
                         event.dataTransfer.effectAllowed = "move";
                         event.dataTransfer.setData(PANEL_TREE_UNIT_MIME, unit.id);
@@ -16034,16 +16202,16 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
                       }
                     : undefined
                 }
-                onDragEnd={draggable ? () => endPanelTreeUnitDrag() : undefined}
+                onDragEnd={unitDockDraggable ? () => endPanelTreeUnitDrag() : undefined}
                 onDragOver={
-                  draggable
+                  unitDockDraggable
                     ? (event) => {
                         if (event.dataTransfer.types.includes(PANEL_TREE_UNIT_MIME)) event.preventDefault();
                       }
                     : undefined
                 }
                 onDrop={
-                  draggable
+                  unitDockDraggable
                     ? (event) => {
                         if (!event.dataTransfer.types.includes(PANEL_TREE_UNIT_MIME) || !dock || !anchor) return;
                         event.preventDefault();
@@ -16057,13 +16225,13 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
                 className={cn(
                   "flex shrink-0 items-center gap-single px-single py-half text-2xs",
                   unitDragActive ? "text-emphasized" : "text-muted-foreground",
-                  draggable && "cursor-grab active:cursor-grabbing",
+                  unitDockDraggable && "cursor-grab active:cursor-grabbing",
                   unitDragActive && dropZoneReadyFillClass,
                 )}
               >
                 {UnitIcon ? <UnitIcon size={12} /> : null}
                 <span className="min-w-0 truncate">{unit.label}</span>
-                {draggable ? <DragHandle className="ms-auto" emphasized={unitDragActive} /> : null}
+                {unitDockDraggable ? <DragHandle className="ms-auto" emphasized={unitDragActive} /> : null}
               </div>
             ) : null}
             <Tree
@@ -16074,9 +16242,11 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
               highlightedIds={config.highlightedIds}
               indentMultiplier={config.indentMultiplier}
               onSelectionChange={config.onSelectionChange}
+              onSectionsReorder={config.onSectionsReorder}
               sections={config.sections}
               selectedIds={config.selectedIds}
               selectionMode={config.selectionMode}
+              sortableSections={config.sortableSections ?? config.sections.length > 1}
               direction={flow.block}
               openStates={unitOpenStates}
               onOpenStateChange={onUnitOpenStateChange}
@@ -24368,6 +24538,87 @@ if (import.meta.vitest) {
       expect(treeOpenStates["unit-b:tree-section-sec"]).toBeUndefined();
     });
 
+    it("PanelTreeUnitsPane omits unlabeled single-unit headers under PanelDockProvider (no lonely top grip)", () => {
+      const StubIcon = (): null => null;
+      const emptyDock: PanelDock = {
+        anchors: {
+          "top-left": [],
+          "top-middle": [],
+          "top-right": [],
+          "bottom-left": [],
+          "bottom-middle": [],
+          "bottom-right": [],
+        },
+      };
+      const tabs: PanelTabNode[] = [
+        singleTreeLeaf({
+          id: "framework.panel.document",
+          icon: StubIcon,
+          name: "Document",
+          tree: {
+            sections: [
+              { id: "objects", label: "Building Components", defaultOpen: false, items: [] },
+              { id: "references", label: "References", defaultOpen: false, items: [] },
+            ],
+          },
+        }),
+      ];
+      const { container } = render(
+        <PanelDockProvider dock={emptyDock} onTabDockDrop={() => undefined} onTreeUnitDockDrop={() => undefined}>
+          <Panel anchor="top-left" visible tabs={tabs} activeTabPath={["framework.panel.document"]} />
+        </PanelDockProvider>,
+      );
+      expect(container.querySelector('[data-slot="panel-tree-unit-header"]')).toBeNull();
+      const sectionHandles = container.querySelectorAll('[data-slot="tree-section-row"] [data-slot="drag-handle"]');
+      expect(sectionHandles.length).toBe(2);
+    });
+
+    it("Tree section reorder grips fire onSectionsReorder with the new id order", () => {
+      const onSectionsReorder = vi.fn();
+      const sections: TreeDataSection[] = [
+        { id: "a", label: "A", defaultOpen: false, items: [] },
+        { id: "b", label: "B", defaultOpen: false, items: [] },
+        { id: "c", label: "C", defaultOpen: false, items: [] },
+      ];
+      const { container } = render(<Tree sections={sections} sortableSections onSectionsReorder={onSectionsReorder} />);
+      const rows = container.querySelectorAll('[data-slot="tree-section-row"]');
+      expect(rows.length).toBe(3);
+      expect(container.querySelectorAll('[data-slot="tree-section-row"] [data-slot="drag-handle"]').length).toBe(3);
+      const source = rows[0] as HTMLElement;
+      const target = rows[2] as HTMLElement;
+      const dataTransfer = {
+        effectAllowed: "none",
+        dropEffect: "none",
+        types: [TREE_SECTION_REORDER_MIME],
+        setData: vi.fn(),
+        getData: vi.fn(() => "a"),
+      };
+      fireEvent.dragStart(source, { dataTransfer });
+      fireEvent.dragOver(target, { dataTransfer });
+      fireEvent.drop(target, { dataTransfer });
+      expect(onSectionsReorder).toHaveBeenCalledWith(["b", "c", "a"]);
+    });
+
+    it("mergeTreeSectionOrder keeps remembered order and appends new sections", () => {
+      const sections: TreeDataSection[] = [
+        { id: "a", label: "A" },
+        { id: "b", label: "B" },
+        { id: "c", label: "C" },
+      ];
+      expect(mergeTreeSectionOrder(["c", "a"], sections).map((section) => section.id)).toEqual(["c", "a", "b"]);
+    });
+
+    it("sortable TreeItem always renders a drag handle", () => {
+      const markup = renderToStaticMarkup(
+        <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+          <SortableTreeItems items={[{ id: "row-1" }]} onReorder={() => undefined}>
+            {(item) => <TreeItem id={item.id} label="Row" sortable sortableId={item.id} />}
+          </SortableTreeItems>
+        </TreeContext.Provider>,
+      );
+      expect(markup).toContain('data-slot="drag-handle"');
+    });
+
     it("Panel wires bottom corners' trees to direction=up (content above header) while top corners stay direction=down", () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [
@@ -28198,7 +28449,13 @@ if (treeVitest) {
       expect(resolveControlLabelId("engagement-input")).toBe("ui.engagement.action");
     });
 
-    it("uses normal shell edges on panel frame, navbar bottom, and footer top with CSS hover emphasis", () => {
+    it("uses normal shell edges on panel frame, navbar bottom, and footer top with CSS hover emphasis", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { resolve } = await import("node:path");
+      const uiCss = readFileSync(resolve(process.cwd(), "../../styling/js/ui.css"), "utf8");
+      expect(uiCss).toContain('[data-slot="panel"]:hover [data-slot="panel-chrome-frame"]');
+      expect(uiCss).toContain('[data-slot="mode-dock-stack"]:not([data-active="true"]):hover');
+      expect(uiCss).not.toContain("[data-panel]:hover [data-slot=\"panel-chrome-frame\"]");
       expect(panelChromeBorderClass).toContain("border-normal");
       expect(panelChromeBorderClass).not.toContain("border-emphasized");
       const navbarMarkup = renderToStaticMarkup(<Navbar items={[{ key: "a", content: "Nav" }]} />);
@@ -28227,6 +28484,7 @@ if (treeVitest) {
       expect(toolbarMarkup).toContain(borderNormalClass);
       expect(toolbarMarkup).not.toContain("border-emphasized");
       const panelMarkup = renderToStaticMarkup(<Panel anchor="top-left" visible tabs={[singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } })]} />);
+      expect(panelMarkup).toContain('data-slot="panel"');
       expect(panelMarkup).toContain('data-slot="panel-chrome-frame"');
       expect(panelMarkup).toContain("border-normal");
       expect(panelMarkup).not.toContain("border-emphasized");

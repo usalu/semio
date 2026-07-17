@@ -1,9 +1,21 @@
 #!/usr/bin/env bun
 /** 🔬 Wgpu↔React visual/structural parity harness. Boots the wgpu OS dev server, screenshots every
  * aligned playground, and (in --compare mode) diffs derived region statistics against the React
- * reference screenshots captured by `.repo/🎫/26/07/05/FIX-WGPU-WORLD3D-EMPTY-PREVIEW/verify-react-playgrounds-e2e.ts`.
- * Region-stat comparison (not pixel diffing) is intentional: the two renderers are different pipelines,
- * so exact pixel match isn't a realistic bar — see `.repo/🎫/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/parity-gap-update.md`.
+ * reference screenshots. Region-stat comparison (not pixel diffing) is intentional: the two renderers
+ * are different pipelines, so exact pixel match isn't a realistic bar — see
+ * `.repo/🎫/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/parity-gap-update.md`.
+ *
+ * Reference screenshots default to this ticket's own `screenshot-react-<plugin>.png` captures; set
+ * `REFERENCE_DIR` to point at a different capture (e.g. the older
+ * `.repo/🎫/26/07/05/FIX-WGPU-WORLD3D-EMPTY-PREVIEW/` set) without editing this file.
+ *
+ * Numeric parity gates (`|Δ meanLuma|`, per-channel `|Δ meanColor|`, relative `Δ nonBgRatio`) are read
+ * from `parity-thresholds.json` (global defaults + per-plugin overrides) rather than hardcoded here.
+ *
+ * Each wgpu capture is double-sampled ~1200ms apart (see AntiFlake region) so a still-settling frame
+ * doesn't get graded as authoritative; an unsettled pair downgrades to WARN rather than FAIL. Pass
+ * `--consecutive-pass`/`CONSECUTIVE_PASS=1` to require a plugin to reproduce PASS on a second, fully
+ * independent re-run before the report calls it PASS.
  */
 
 import { type Subprocess, spawn } from "bun";
@@ -13,7 +25,7 @@ import { PNG } from "pngjs";
 
 const ticketDir = import.meta.dir;
 const repoRoot = join(ticketDir, "../../../../../..");
-const referenceDir = join(ticketDir, "../../05/FIX-WGPU-WORLD3D-EMPTY-PREVIEW");
+const referenceDir = process.env.REFERENCE_DIR ?? join(ticketDir, "../../05/FIX-WGPU-WORLD3D-EMPTY-PREVIEW");
 
 //#region PlaygroundRegistry
 /** Aligned against `verify-react-playgrounds-e2e.ts` / `verify-wgpu-playgrounds-e2e.ts` plugin lists and
@@ -60,6 +72,7 @@ const port = process.env.S_OS_PORT ?? "7301";
 const baseUrl = `http://127.0.0.1:${port}/`;
 const bootTimeoutMs = 240_000;
 const useRunningServer = process.env.SKIP_DEV === "1";
+const consecutivePassMode = process.argv.includes("--consecutive-pass") || process.env.CONSECUTIVE_PASS === "1";
 //#endregion
 
 //#region RegionStats
@@ -144,6 +157,58 @@ function analyzeImage(png: Buffer): ImageStats {
 }
 //#endregion
 
+//#region Thresholds
+/** 📏 Numeric parity gates, externalized to `parity-thresholds.json` so a real run's findings can
+ * loosen/tighten a specific plugin's bounds without touching this script. */
+type ThresholdSet = {
+  readonly meanLumaAbsMax: number;
+  readonly meanColorChannelAbsMax: number;
+  readonly nonBgRatioRelMax: number;
+};
+
+type ThresholdsFile = {
+  readonly global: ThresholdSet;
+  readonly perPlugin: Partial<Record<PluginId, Partial<ThresholdSet>>>;
+};
+
+async function loadThresholds(): Promise<ThresholdsFile> {
+  const path = join(ticketDir, "parity-thresholds.json");
+  const file = Bun.file(path);
+  if (!(await file.exists())) throw new Error(`missing parity-thresholds.json at ${path}`);
+  return (await file.json()) as ThresholdsFile;
+}
+
+function thresholdsFor(thresholds: ThresholdsFile, plugin: PluginId): ThresholdSet {
+  return { ...thresholds.global, ...(thresholds.perPlugin[plugin] ?? {}) };
+}
+//#endregion
+
+//#region AntiFlake
+/** 🫨 Double-capture stability check: two wgpu canvas screenshots ~1200ms apart must agree (within a
+ * generous relative tolerance) on region stats before either is trusted as authoritative — guards
+ * against grading a still-settling frame (camera easing, async texture upload, first-frame flicker). */
+const STABILITY_TOLERANCE = 0.05;
+const DOUBLE_CAPTURE_GAP_MS = 1200;
+
+function relDelta(a: number, b: number): number {
+  const denom = Math.max(Math.abs(a), Math.abs(b), 1e-6);
+  return Math.abs(a - b) / denom;
+}
+
+function regionStabilityNote(label: string, a: RegionStats, b: RegionStats): string | null {
+  const lumaDelta = relDelta(a.meanLuma, b.meanLuma);
+  const ratioDelta = relDelta(a.nonBgRatio, b.nonBgRatio);
+  const colorDelta = Math.max(relDelta(a.meanColor[0], b.meanColor[0]), relDelta(a.meanColor[1], b.meanColor[1]), relDelta(a.meanColor[2], b.meanColor[2]));
+  if (lumaDelta <= STABILITY_TOLERANCE && ratioDelta <= STABILITY_TOLERANCE && colorDelta <= STABILITY_TOLERANCE) return null;
+  return `${label} Δluma=${(lumaDelta * 100).toFixed(1)}% Δratio=${(ratioDelta * 100).toFixed(1)}% Δcolor=${(colorDelta * 100).toFixed(1)}%`;
+}
+
+function statsStabilityNotes(a: ImageStats, b: ImageStats): readonly string[] {
+  const notes = [regionStabilityNote("navbar", a.navbar, b.navbar), regionStabilityNote("body", a.body, b.body), regionStabilityNote("footer", a.footer, b.footer)];
+  return notes.filter((note): note is string => note != null);
+}
+//#endregion
+
 //#region Compare
 const BODY_EMPTY_RATIO = 0.0015;
 const BODY_EMPTY_LUMA = 24;
@@ -158,9 +223,32 @@ type PluginReport = {
   readonly reasons: readonly string[];
   readonly react: ImageStats | null;
   readonly wgpu: ImageStats | null;
+  readonly settled: boolean;
 };
 
-function compareStats(plugin: PluginId, react: ImageStats, wgpu: ImageStats): PluginReport {
+/** 📐 Numeric parity gate for one region: pushes a human-readable reason for each breached metric and
+ * reports whether the region as a whole is within `thresholds`. */
+function numericGate(label: string, react: RegionStats, wgpu: RegionStats, thresholds: ThresholdSet, reasons: string[]): boolean {
+  let ok = true;
+  const lumaDelta = Math.abs(react.meanLuma - wgpu.meanLuma);
+  if (lumaDelta > thresholds.meanLumaAbsMax) {
+    ok = false;
+    reasons.push(`${label} meanLuma delta ${lumaDelta.toFixed(1)} exceeds threshold ${thresholds.meanLumaAbsMax}`);
+  }
+  const maxColorDelta = Math.max(Math.abs(react.meanColor[0] - wgpu.meanColor[0]), Math.abs(react.meanColor[1] - wgpu.meanColor[1]), Math.abs(react.meanColor[2] - wgpu.meanColor[2]));
+  if (maxColorDelta > thresholds.meanColorChannelAbsMax) {
+    ok = false;
+    reasons.push(`${label} meanColor channel delta ${maxColorDelta.toFixed(1)} exceeds threshold ${thresholds.meanColorChannelAbsMax}`);
+  }
+  const ratioRelDelta = Math.abs(react.nonBgRatio - wgpu.nonBgRatio) / Math.max(react.nonBgRatio, 1e-6);
+  if (ratioRelDelta > thresholds.nonBgRatioRelMax) {
+    ok = false;
+    reasons.push(`${label} nonBgRatio relative delta ${(ratioRelDelta * 100).toFixed(1)}% exceeds threshold ${(thresholds.nonBgRatioRelMax * 100).toFixed(1)}%`);
+  }
+  return ok;
+}
+
+function compareStats(plugin: PluginId, react: ImageStats, wgpu: ImageStats, thresholds: ThresholdSet): PluginReport {
   const reasons: string[] = [];
   const reactState = paintedState(react);
   const wgpuState = paintedState(wgpu);
@@ -184,7 +272,26 @@ function compareStats(plugin: PluginId, react: ImageStats, wgpu: ImageStats): Pl
   };
   chromeGate("navbar", react.navbar, wgpu.navbar);
   chromeGate("footer", react.footer, wgpu.footer);
-  return { plugin, status, reasons, react, wgpu };
+  const thresholdGate = (label: string, r: RegionStats, w: RegionStats) => {
+    if (!numericGate(label, r, w, thresholds, reasons) && status !== "FAIL") status = "FAIL";
+  };
+  thresholdGate("navbar", react.navbar, wgpu.navbar);
+  thresholdGate("body", react.body, wgpu.body);
+  thresholdGate("footer", react.footer, wgpu.footer);
+  return { plugin, status, reasons, react, wgpu, settled: true };
+}
+
+/** 🫨 Downgrades an otherwise-computed report to WARN (never upgrades a SKIPPED/PASS, never leaves a
+ * FAIL standing) when the double-capture stability check didn't settle — an unsettled capture isn't
+ * trustworthy enough to FAIL a plugin on, but is worth flagging. */
+function finalizeSettlement(base: PluginReport, settled: boolean, settleNote: string | undefined): PluginReport {
+  if (settled || base.status === "SKIPPED") return base;
+  return {
+    ...base,
+    status: "WARN",
+    settled: false,
+    reasons: [`capture did not settle across double-capture check (${settleNote ?? "unknown instability"})`, ...base.reasons],
+  };
 }
 //#endregion
 
@@ -275,7 +382,12 @@ async function waitForWgpuBoot(page: Page): Promise<void> {
   });
 }
 
-async function capturePlugin(browser: Browser, plugin: PluginId): Promise<{ png: Buffer } | { skipped: string }> {
+type CaptureResult = { readonly png: Buffer; readonly stats: ImageStats; readonly settled: boolean; readonly settleNote?: string };
+
+/** 🫨 Boots the plugin, then double-samples the canvas ~1200ms apart (see AntiFlake region). A stable
+ * pair returns the later sample as authoritative; an unstable pair gets one retry pair before giving
+ * up and returning the latest sample flagged `settled: false` for the caller to downgrade to WARN. */
+async function captureSettledPlugin(browser: Browser, plugin: PluginId): Promise<CaptureResult | { skipped: string }> {
   const page = await browser.newPage();
   try {
     const errors: string[] = [];
@@ -286,8 +398,18 @@ async function capturePlugin(browser: Browser, plugin: PluginId): Promise<{ png:
     await page.waitForSelector("#semio-wgpu-canvas", { timeout: bootTimeoutMs });
     await waitForWgpuBoot(page);
     await page.waitForTimeout(1200);
-    const png = await screenshotCanvas(page);
-    return { png };
+    const firstStats = analyzeImage(await screenshotCanvas(page));
+    await page.waitForTimeout(DOUBLE_CAPTURE_GAP_MS);
+    const secondPng = await screenshotCanvas(page);
+    const secondStats = analyzeImage(secondPng);
+    const firstPairNotes = statsStabilityNotes(firstStats, secondStats);
+    if (firstPairNotes.length === 0) return { png: secondPng, stats: secondStats, settled: true };
+    await page.waitForTimeout(DOUBLE_CAPTURE_GAP_MS);
+    const thirdPng = await screenshotCanvas(page);
+    const thirdStats = analyzeImage(thirdPng);
+    const retryPairNotes = statsStabilityNotes(secondStats, thirdStats);
+    if (retryPairNotes.length === 0) return { png: thirdPng, stats: thirdStats, settled: true };
+    return { png: thirdPng, stats: thirdStats, settled: false, settleNote: [...firstPairNotes, ...retryPairNotes].join("; ") };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return { skipped: message };
@@ -341,23 +463,23 @@ async function closeBrowserSafely(browser: Browser): Promise<void> {
 
 const CAPTURE_WATCHDOG_MS = bootTimeoutMs + 90_000;
 
-/** Watchdog around a single capture attempt: `capturePlugin` already passes `timeout` options to every
- * individual Playwright call, but if the browser process itself dies mid-navigation those internal
+/** Watchdog around a single capture attempt: `captureSettledPlugin` already passes `timeout` options to
+ * every individual Playwright call, but if the browser process itself dies mid-navigation those internal
  * timeouts can fail to fire (observed in this environment). This outer race guarantees the harness
  * always moves forward within a bounded time regardless of where internally it got stuck. */
-async function capturePluginWithWatchdog(browser: Browser, plugin: PluginId): Promise<{ png: Buffer } | { skipped: string }> {
+async function capturePluginWithWatchdog(browser: Browser, plugin: PluginId): Promise<CaptureResult | { skipped: string }> {
   try {
-    return await withTimeout(capturePlugin(browser, plugin), CAPTURE_WATCHDOG_MS, `capturePlugin(${plugin})`);
+    return await withTimeout(captureSettledPlugin(browser, plugin), CAPTURE_WATCHDOG_MS, `capturePlugin(${plugin})`);
   } catch (error) {
     return { skipped: error instanceof Error ? error.message : String(error) };
   }
 }
 
-function isWatchdogTimeout(result: { png: Buffer } | { skipped: string }): boolean {
+function isWatchdogTimeout(result: CaptureResult | { skipped: string }): boolean {
   return "skipped" in result && result.skipped.startsWith("capturePlugin(") && result.skipped.includes("timed out after");
 }
 
-async function capturePluginWithRetry(browser: Browser, plugin: PluginId): Promise<{ result: { png: Buffer } | { skipped: string }; browserMaybePoisoned: boolean }> {
+async function capturePluginWithRetry(browser: Browser, plugin: PluginId): Promise<{ result: CaptureResult | { skipped: string }; browserMaybePoisoned: boolean }> {
   const first = await capturePluginWithWatchdog(browser, plugin);
   if ("png" in first) return { result: first, browserMaybePoisoned: false };
   if (isWatchdogTimeout(first)) {
@@ -379,23 +501,29 @@ async function loadReferenceStatsAsync(plugin: PluginId): Promise<{ stats: Image
   return { stats: analyzeImage(buffer) };
 }
 
-function writeMarkdownReport(reports: readonly PluginReport[]): string {
+function writeMarkdownReport(reports: readonly PluginReport[], thresholds: ThresholdsFile): string {
   const counts = { PASS: 0, FAIL: 0, WARN: 0, SKIPPED: 0 };
   for (const r of reports) counts[r.status] += 1;
   const lines: string[] = [];
   lines.push("# Wgpu ↔ React Parity Report");
   lines.push("");
-  lines.push(`Generated by \`parity-verify.ts --compare\` against React reference screenshots in \`.repo/🎫/26/07/05/FIX-WGPU-WORLD3D-EMPTY-PREVIEW/\`.`);
+  lines.push(`Generated by \`parity-verify.ts --compare\` against React reference screenshots in \`${referenceDir}\`.`);
+  lines.push("");
+  lines.push(
+    `Numeric gates from \`parity-thresholds.json\`: |Δ meanLuma| ≤ ${thresholds.global.meanLumaAbsMax}, per-channel |Δ meanColor| ≤ ${thresholds.global.meanColorChannelAbsMax}, relative Δ nonBgRatio ≤ ${thresholds.global.nonBgRatioRelMax * 100}%` +
+      (Object.keys(thresholds.perPlugin).length > 0 ? ` (per-plugin overrides: ${Object.keys(thresholds.perPlugin).join(", ")})` : " (no per-plugin overrides yet)") +
+      (consecutivePassMode ? ". Consecutive-pass mode: a plugin only reports PASS if it reproduces PASS on an independent second run." : "."),
+  );
   lines.push("");
   lines.push(`**Summary:** ${counts.PASS} PASS / ${counts.FAIL} FAIL / ${counts.WARN} WARN / ${counts.SKIPPED} SKIPPED (of ${reports.length})`);
   lines.push("");
-  lines.push("| Playground | Status | React body ratio/luma | Wgpu body ratio/luma | Notes |");
-  lines.push("|---|---|---|---|---|");
+  lines.push("| Playground | Status | Settled | React body ratio/luma | Wgpu body ratio/luma | Notes |");
+  lines.push("|---|---|---|---|---|---|");
   for (const r of reports) {
     const reactCell = r.react ? `${r.react.body.nonBgRatio.toFixed(4)} / ${r.react.body.maxLuma.toFixed(1)}` : "—";
     const wgpuCell = r.wgpu ? `${r.wgpu.body.nonBgRatio.toFixed(4)} / ${r.wgpu.body.maxLuma.toFixed(1)}` : "—";
     const notes = r.reasons.join("; ").replace(/\|/g, "\\|");
-    lines.push(`| ${r.plugin} | ${r.status} | ${reactCell} | ${wgpuCell} | ${notes} |`);
+    lines.push(`| ${r.plugin} | ${r.status} | ${r.settled ? "yes" : "no"} | ${reactCell} | ${wgpuCell} | ${notes} |`);
   }
   lines.push("");
   lines.push("## Playground list reconciliation");
@@ -408,9 +536,37 @@ function writeMarkdownReport(reports: readonly PluginReport[]): string {
 }
 //#endregion
 
+//#region Evaluate
+/** 🧮 Full per-plugin evaluation: loads the react reference stats, captures+settles the wgpu side,
+ * writes the wgpu screenshot, and produces a `PluginReport`. Split out from the main loop so
+ * `--consecutive-pass` can invoke it twice independently for the same plugin. */
+async function evaluatePlugin(browser: Browser, plugin: PluginId, thresholds: ThresholdsFile): Promise<{ report: PluginReport; browserMaybePoisoned: boolean }> {
+  const refResult = await loadReferenceStatsAsync(plugin);
+  const { result: capture, browserMaybePoisoned } = await capturePluginWithRetry(browser, plugin);
+  if ("skipped" in capture) {
+    const reason = `wgpu capture failed: ${capture.skipped}`;
+    return {
+      browserMaybePoisoned,
+      report: { plugin, status: "SKIPPED", reasons: [reason], react: "stats" in refResult ? refResult.stats : null, wgpu: null, settled: true },
+    };
+  }
+  await Bun.write(join(ticketDir, `screenshot-wgpu-${plugin}.png`), capture.png);
+  if ("missing" in refResult) {
+    const reason = `no react reference screenshot at screenshot-react-${plugin}.png (referenceDir=${referenceDir})`;
+    return {
+      browserMaybePoisoned,
+      report: { plugin, status: "SKIPPED", reasons: [reason], react: null, wgpu: capture.stats, settled: capture.settled },
+    };
+  }
+  const base = compareStats(plugin, refResult.stats, capture.stats, thresholdsFor(thresholds, plugin));
+  return { browserMaybePoisoned, report: finalizeSettlement(base, capture.settled, capture.settleNote) };
+}
+//#endregion
+
 async function main(): Promise<void> {
   let devProc: Subprocess | null = null;
   const reports: PluginReport[] = [];
+  const thresholds = await loadThresholds();
   try {
     if (!useRunningServer) {
       devProc = spawn({
@@ -449,28 +605,22 @@ async function main(): Promise<void> {
           browser = await launchBrowser();
         }
         process.stdout.write(`PARITY ${plugin}... `);
-        const refResult = await loadReferenceStatsAsync(plugin);
-        const { result: capture, browserMaybePoisoned } = await capturePluginWithRetry(browser, plugin);
+        let { report, browserMaybePoisoned } = await evaluatePlugin(browser, plugin, thresholds);
         if (browserMaybePoisoned) {
           await closeBrowserSafely(browser);
           browser = await launchBrowser();
         }
-        if ("skipped" in capture) {
-          const reason = `wgpu capture failed: ${capture.skipped}`;
-          console.log(`SKIPPED (${reason})`);
-          reports.push({ plugin, status: "SKIPPED", reasons: [reason], react: "stats" in refResult ? refResult.stats : null, wgpu: null });
-          continue;
+        if (consecutivePassMode && report.status === "PASS") {
+          const second = await evaluatePlugin(browser, plugin, thresholds);
+          if (second.browserMaybePoisoned) {
+            await closeBrowserSafely(browser);
+            browser = await launchBrowser();
+          }
+          report =
+            second.report.status === "PASS"
+              ? report
+              : { ...second.report, reasons: [...second.report.reasons, "did not reproduce PASS on required second consecutive run (--consecutive-pass)"] };
         }
-        if ("missing" in refResult) {
-          const reason = `no react reference screenshot at screenshot-react-${plugin}.png`;
-          console.log(`SKIPPED (${reason})`);
-          reports.push({ plugin, status: "SKIPPED", reasons: [reason], react: null, wgpu: analyzeImage(capture.png) });
-          await Bun.write(join(ticketDir, `screenshot-wgpu-${plugin}.png`), capture.png);
-          continue;
-        }
-        await Bun.write(join(ticketDir, `screenshot-wgpu-${plugin}.png`), capture.png);
-        const wgpuStats = analyzeImage(capture.png);
-        const report = compareStats(plugin, refResult.stats, wgpuStats);
         console.log(report.status);
         reports.push(report);
       }
@@ -480,8 +630,8 @@ async function main(): Promise<void> {
 
     const jsonPath = join(ticketDir, "parity-report.json");
     const mdPath = join(ticketDir, "parity-report.md");
-    await Bun.write(jsonPath, `${JSON.stringify({ generatedWithCompare: compareMode, port, headed, reports }, null, 2)}\n`);
-    await Bun.write(mdPath, `${writeMarkdownReport(reports)}\n`);
+    await Bun.write(jsonPath, `${JSON.stringify({ generatedWithCompare: compareMode, port, headed, referenceDir, consecutivePassMode, thresholds, reports }, null, 2)}\n`);
+    await Bun.write(mdPath, `${writeMarkdownReport(reports, thresholds)}\n`);
 
     const counts = { PASS: 0, FAIL: 0, WARN: 0, SKIPPED: 0 };
     for (const r of reports) counts[r.status] += 1;

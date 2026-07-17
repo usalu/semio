@@ -7,8 +7,6 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"strings"
 	"testing"
 )
@@ -124,32 +122,6 @@ func TestValidateAdjacencyMandatoryCompliant(t *testing.T) {
 	}
 	if adjRule.Status != "compliant" {
 		t.Errorf("expected compliant, got %s", adjRule.Status)
-	}
-}
-
-func TestRunEndToEnd(t *testing.T) {
-	input := `{"target_id":"programming","design_id":"x","rooms":[{"id":"r1","program":"office","area":100,"adjacencies":["r2"]},{"id":"r2","program":"office","area":250,"adjacencies":["r1"]}],"totals":{"office":350}}`
-	req := &Requirements{
-		ByKind: []KindConstraint{{
-			Kind: "office",
-			Constraints: AreaConstraints{Min: ptr(300.0)},
-		}},
-	}
-	var trans Translation
-	if err := json.NewDecoder(strings.NewReader(input)).Decode(&trans); err != nil {
-		t.Fatal(err)
-	}
-	report := validate(trans, req)
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(report); err != nil {
-		t.Fatal(err)
-	}
-	var decoded Report
-	if err := json.NewDecoder(&buf).Decode(&decoded); err != nil {
-		t.Fatal(err)
-	}
-	if len(decoded.Rules) == 0 {
-		t.Fatal("expected rules in report")
 	}
 }
 

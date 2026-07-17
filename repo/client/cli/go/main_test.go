@@ -908,6 +908,9 @@ func TestContributorsNonEmpty(t *testing.T) {
 }
 
 func TestTicketsNonEmpty(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow tickets test in short mode")
+	}
 	executor := getTestExecutor(t)
 	ctx := context.Background()
 	result, err := executor.ExecuteJSON(ctx, "{ tickets { slug } }", nil)
@@ -928,6 +931,9 @@ func TestTicketsNonEmpty(t *testing.T) {
 }
 
 func TestPoliciesNonEmpty(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow policies test in short mode")
+	}
 	executor := getTestExecutor(t)
 	ctx := context.Background()
 	result, err := executor.ExecuteJSON(ctx, "{ policies { name } }", nil)
@@ -948,6 +954,9 @@ func TestPoliciesNonEmpty(t *testing.T) {
 }
 
 func TestStatutesNonEmpty(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow statutes test in short mode")
+	}
 	executor := getTestExecutor(t)
 	ctx := context.Background()
 	result, err := executor.ExecuteJSON(ctx, "{ statutes { id } }", nil)
@@ -982,6 +991,9 @@ func TestPolicyStatutesHaveMetadata(t *testing.T) {
 }
 
 func TestFoldersNonEmpty(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow folders test in short mode")
+	}
 	executor := getTestExecutor(t)
 	ctx := context.Background()
 	result, err := executor.ExecuteJSON(ctx, "{ folders { path } }", nil)
@@ -1002,6 +1014,9 @@ func TestFoldersNonEmpty(t *testing.T) {
 }
 
 func TestFilesNonEmpty(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow files test in short mode")
+	}
 	executor := getTestExecutor(t)
 	ctx := context.Background()
 	result, err := executor.ExecuteJSON(ctx, "{ files { path } }", nil)
@@ -1022,6 +1037,9 @@ func TestFilesNonEmpty(t *testing.T) {
 }
 
 func TestBreachsNonEmpty(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow breachs test in short mode")
+	}
 	executor := getTestExecutor(t)
 	ctx := context.Background()
 	// Unscoped breachs defaults to technology scope "compose" and runs full policy
@@ -1045,6 +1063,9 @@ func TestBreachsNonEmpty(t *testing.T) {
 }
 
 func TestTicketTitleValidation(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow ticket title validation test in short mode")
+	}
 	executor := getTestExecutor(t)
 	ctx := context.Background()
 
@@ -1142,6 +1163,9 @@ func TestFilterTicketWorkspaceFiles(t *testing.T) {
 }
 
 func TestNormalizeTicketFileInput(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow normalize ticket file input test in short mode")
+	}
 	absRoot := GetRootDir()
 	filePath := filepath.ToSlash(filepath.Join("repo", "client", "main.go"))
 	absPath := filepath.Join(absRoot, filePath)
@@ -1264,6 +1288,9 @@ func TestStreamAndListTicketsIgnoreNestedWorkspaceFiles(t *testing.T) {
 }
 
 func TestNodesAndEdgesQuick(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow nodes/edges quick test in short mode")
+	}
 	executor := getTestExecutor(t)
 	ctx := context.Background()
 	query := `{
@@ -1577,6 +1604,9 @@ func TestNodesAndEdges(t *testing.T) {
 }
 
 func TestNodeQuery(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow node query test in short mode")
+	}
 	executor := getTestExecutor(t)
 	ctx := context.Background()
 
@@ -1706,6 +1736,9 @@ func TestSectionsEdges(t *testing.T) {
 }
 
 func TestDefinitionsEdges(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow definitions edges test in short mode")
+	}
 	executor := getTestExecutor(t)
 	ctx := context.Background()
 
@@ -1784,6 +1817,9 @@ func TestDefinitionsEdges(t *testing.T) {
 }
 
 func TestDefinitionKind(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow definition kind test in short mode")
+	}
 	executor := getTestExecutor(t)
 	ctx := context.Background()
 
@@ -1973,6 +2009,9 @@ func normalizeRelativeTimes(s string) string {
 
 // 🧪#region 🏩Codebase
 func TestCodebaseCommand(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow codebase test in short mode")
+	}
 	result := ToolCodebase()
 	if result.Error != "" {
 		t.Errorf("ToolCodebase returned error: %s", result.Error)
@@ -3461,6 +3500,9 @@ func TestFixNonAutofixableNotFixed(t *testing.T) {
 }
 
 func TestFixViaGraphQL(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow fix via graphql test in short mode")
+	}
 	executor := getTestExecutor(t)
 	ctx := context.Background()
 
@@ -4501,6 +4543,9 @@ func TestPolicyCheckCommand(t *testing.T) {
 }
 
 func TestPolicyBreachListCommand(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow policy breach list test in short mode")
+	}
 	result := ToolPolicyBreachList("code")
 	if result.Error != "" {
 		t.Errorf("ToolPolicyBreachList returned error: %s", result.Error)
@@ -6107,6 +6152,9 @@ func TestRegisteredPoliciesHaveGroups(t *testing.T) {
 }
 
 func TestPolicyGroupsGraphQL(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow policy groups graphql test in short mode")
+	}
 	executor := getTestExecutor(t)
 	query := `{ policies { id name groups { name description scopes kinds { id } groups { name kinds { id } } } } }`
 	result, err := executor.Execute(context.Background(), query, nil)
@@ -6171,6 +6219,9 @@ func TestBundleListCommand(t *testing.T) {
 }
 
 func TestBundleTreeCommand(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow bundle tree test in short mode")
+	}
 	result := ToolTechnologyTree()
 	if result.Error != "" {
 		t.Errorf("ToolTechnologyTree returned error: %s", result.Error)
@@ -10706,6 +10757,9 @@ func TestSectionCommands(t *testing.T) {
 }
 
 func TestStreamingList(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow streaming list test in short mode")
+	}
 	cwd, _ := os.Getwd()
 	repoRoot := findTestRepoRoot(cwd)
 	SetRootDir(repoRoot)
@@ -12198,6 +12252,9 @@ func TestCacheIndexAndTreeQuery(t *testing.T) {
 }
 
 func TestQueryEmptyReturnsAll(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow query empty test in short mode")
+	}
 	cwd, _ := os.Getwd()
 	repoRoot := findTestRepoRoot(cwd)
 	SetRootDir(repoRoot)
@@ -12371,6 +12428,9 @@ func TestToolTechnologyList(t *testing.T) {
 }
 
 func TestToolTechnologyTree(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow tool technology tree test in short mode")
+	}
 	setupToolTest(t)
 	result := ToolTechnologyTree()
 	if result.Error != "" {
@@ -12565,6 +12625,9 @@ func TestToolFileCRUD(t *testing.T) {
 }
 
 func TestToolTicketLifecycle(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow ticket lifecycle test in short mode")
+	}
 	setupToolTest(t)
 	title := fmt.Sprintf("Test Lifecycle Ticket %d", time.Now().UnixNano())
 
@@ -12633,6 +12696,9 @@ func TestParseTicketPath(t *testing.T) {
 }
 
 func TestMcpTicketCloseAutoResolve(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow mcp ticket close auto-resolve test in short mode")
+	}
 	setupToolTest(t)
 
 	result := ToolTicketOpen("🎫", "Test Auto Resolve Close", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "", McpClientGeneric, "", "")
@@ -12662,6 +12728,9 @@ func TestMcpTicketCloseAutoResolve(t *testing.T) {
 }
 
 func TestMcpTicketCloseWithFullYearPath(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow mcp ticket close full-year-path test in short mode")
+	}
 	setupToolTest(t)
 
 	result := ToolTicketOpen("🎫", "Test Full Year Path", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "", McpClientGeneric, "", "")
@@ -21391,6 +21460,9 @@ func TestMermaidLocByTechnologiesBundlesFoldersFiles(t *testing.T) {
 }
 
 func TestMermaidLocByLanguage(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow mermaid loc-by-language test in short mode")
+	}
 	root := findTestRepoRoot(".")
 	SetRootDir(root)
 	result := MermaidLocByLanguage()
@@ -21417,6 +21489,9 @@ func TestMermaidLocByLanguage(t *testing.T) {
 }
 
 func TestMermaidLocByContributors(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow mermaid loc-by-contributors test in short mode")
+	}
 	root := findTestRepoRoot(".")
 	SetRootDir(root)
 	result := MermaidLocByContributors()
@@ -21433,6 +21508,9 @@ func TestMermaidLocByContributors(t *testing.T) {
 }
 
 func TestMermaidCommandLocByTechnologiesBundlesFoldersFiles(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow mermaid loc command test in short mode")
+	}
 	root := findTestRepoRoot(".")
 	SetRootDir(root)
 	cmd := NewRoot(testEngineFactory)
@@ -21449,6 +21527,9 @@ func TestMermaidCommandLocByTechnologiesBundlesFoldersFiles(t *testing.T) {
 }
 
 func TestMermaidCommandLocByLanguage(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow mermaid loc-by-language command test in short mode")
+	}
 	root := findTestRepoRoot(".")
 	SetRootDir(root)
 	cmd := NewRoot(testEngineFactory)

@@ -1,0 +1,13 @@
+{
+  "title": "Generalize Remaining Surface Kinds",
+  "emoji": "🏷️",
+  "status": "open",
+  "description": "Rename the app-named SurfaceKind variants GisMap -\u003e TiledMap (wire \"gis2d-map\" -\u003e \"tiled-map\") and Puzzle2dBoard -\u003e Board2d (wire \"puzzle2d-board\" -\u003e \"board-2d\") across ui/wgpu/rs/lib.rs (enum variants, wire string mappings, GisMapScene/Puzzle2dBoardScene struct renames, UiComponentSceneNode fields gis_map/puzzle2d_board, builder functions, golden wire-format tests), framework/core/js/index.ts (ComponentKind union + scene TS types + UiComponentSceneNode field names), framework/renderer/react/ui-interpreter.tsx and os-shell.tsx call sites, host component file renames (gis-map-host.tsx -\u003e tiled-map-host.tsx, puzzle-2d-board-host.tsx -\u003e board-2d-host.tsx) with import fixes, framework/renderer/wgpu/rs/lib.rs match arms, gis/plugin/rs/lib.rs and puzzle/plugin/rs/lib.rs (and puzzle2d/puzzle3d/puzzle5d variant crates) call sites, and any empty-scene literal fallbacks in mathematical/plugin and infinite/world crates referencing the old names (following the precedent from the closed GraphTimeline/BlockList rename ticket which found stragglers there). Part of the sequential SurfaceKind framework-purity generalization series under GENERALIZE-APPS-ONTO-FRAMEWORK-PRIMITIVES (issue #2029). NoteCanvas-\u003eInkCanvas rename is out of scope for this ticket (covered by a separate still-open ticket).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2046"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪6db8214d8b534467810474dbe2b8951a"
+  ]
+}

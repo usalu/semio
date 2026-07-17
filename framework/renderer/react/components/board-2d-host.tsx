@@ -11,9 +11,9 @@ import {
   type CanvasPickTarget,
 } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import type { ComponentSceneHostProps, Puzzle2dBoardScene } from "@semio-tech/framework-core";
-import type { Puzzle2dBoardWasmSession } from "../os-shell.tsx";
-import { createPuzzle2dBoardSession } from "../os-shell.tsx";
+import type { ComponentSceneHostProps, Board2dScene } from "@semio-tech/framework-core";
+import type { Board2dWasmSession } from "../os-shell.tsx";
+import { createBoard2dSession } from "../os-shell.tsx";
 
 //#region Types
 type BoardCamera = { readonly x: number; readonly y: number; readonly zoom: number };
@@ -48,7 +48,7 @@ function parseBoardCamera(json: string): BoardCamera | null {
   }
 }
 
-export function puzzle2dBoardCameraActionArgs(cameraJson: string): { readonly camera: BoardCamera } | null {
+export function board2dCameraActionArgs(cameraJson: string): { readonly camera: BoardCamera } | null {
   const camera = parseBoardCamera(cameraJson);
   return camera ? { camera } : null;
 }
@@ -87,7 +87,7 @@ const PUZZLE2D_TRANSIENT_EVENT_NAMES = new Set(["preselect", "brushPreview", "li
 const PUZZLE2D_FLUSH_NOW_EVENT_NAMES = new Set(["select", "preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete"]);
 
 /** @emoji 📬 Drops transient rows, coalesces `camera` to its latest value and `nodeMove` to one row per id (unless a `nodeDragEnd` follows), and flags whether the buffer should flush immediately. */
-export function coalescePuzzle2dBoardEvents(rows: readonly BoardEventRow[]): { readonly flushNow: boolean; readonly eventsJson: string } {
+export function coalesceBoard2dEvents(rows: readonly BoardEventRow[]): { readonly flushNow: boolean; readonly eventsJson: string } {
   const hasDragEnd = rows.some((row) => row.name === "nodeDragEnd");
   let flushNow = false;
   let lastCamera: BoardEventRow | null = null;
@@ -271,7 +271,7 @@ export function puzzle2dScreenToWorld(cameraJson: string, containerSize: { reado
 //#endregion FixtureDrop
 
 //#region Sync
-function applyToSession(session: Puzzle2dBoardWasmSession | null, action: (session: Puzzle2dBoardWasmSession) => void): void {
+function applyToSession(session: Board2dWasmSession | null, action: (session: Board2dWasmSession) => void): void {
   if (!session) return;
   try {
     action(session);
@@ -282,7 +282,7 @@ function applyToSession(session: Puzzle2dBoardWasmSession | null, action: (sessi
 }
 
 /** @emoji 🔁 Re-parses the fixture and silently re-applies selection/camera, since `parseFixtureJson` resets both to the fixture's own defaults. */
-function applyFixtureToSession(session: Puzzle2dBoardWasmSession, scene: Puzzle2dBoardScene): void {
+function applyFixtureToSession(session: Board2dWasmSession, scene: Board2dScene): void {
   session.parseFixtureJson(scene.fixtureJson);
   session.setSelectionOptions?.(scene.selectionMethod, "replace", true, true, true);
   if (session.setSelectionIdsJsonSilent) session.setSelectionIdsJsonSilent(scene.selectionJson);
@@ -297,59 +297,59 @@ function applyFixtureToSession(session: Puzzle2dBoardWasmSession, scene: Puzzle2
 
 //#region PeerSync
 /** @emoji 🐢 One triptych pane, registered so siblings can mirror its live gesture state without a plugin round trip. */
-type Puzzle2dBoardPeer = {
-  readonly session: Puzzle2dBoardWasmSession;
+type Board2dPeer = {
+  readonly session: Board2dWasmSession;
   /** @emoji 🫧 `flushed` is true when the gesture that just ended pushed a commit to the plugin — in that case a fresh scene is already in flight and any stashed pending echo should be dropped rather than applied, or it would flash the stale in-between state for one frame before the fresh one supersedes it. */
   readonly onPeerGestureEnded: (flushed: boolean) => void;
 };
 
 /** @emoji 🗺️ controllerId -> surfaceId -> peer. Assumes one puzzle2d-play triptych on screen at a time (matches the existing controllerId/surfaceId scoping used for action routing). */
-const puzzle2dBoardPeerRegistry = new Map<string, Map<string, Puzzle2dBoardPeer>>();
+const board2dPeerRegistry = new Map<string, Map<string, Board2dPeer>>();
 /** @emoji 🔒 controllerId -> surfaceId of the pane currently owning a live pointer gesture (drag/marquee), so siblings can defer conflicting echoes. */
-const puzzle2dBoardGestureOwner = new Map<string, string>();
+const board2dGestureOwner = new Map<string, string>();
 
-export function registerPuzzle2dBoardPeer(controllerId: string, surfaceId: string, peer: Puzzle2dBoardPeer): void {
-  let peers = puzzle2dBoardPeerRegistry.get(controllerId);
+export function registerBoard2dPeer(controllerId: string, surfaceId: string, peer: Board2dPeer): void {
+  let peers = board2dPeerRegistry.get(controllerId);
   if (!peers) {
     peers = new Map();
-    puzzle2dBoardPeerRegistry.set(controllerId, peers);
+    board2dPeerRegistry.set(controllerId, peers);
   }
   peers.set(surfaceId, peer);
 }
 
-export function unregisterPuzzle2dBoardPeer(controllerId: string, surfaceId: string): void {
-  const peers = puzzle2dBoardPeerRegistry.get(controllerId);
+export function unregisterBoard2dPeer(controllerId: string, surfaceId: string): void {
+  const peers = board2dPeerRegistry.get(controllerId);
   if (!peers) return;
   peers.delete(surfaceId);
-  if (peers.size === 0) puzzle2dBoardPeerRegistry.delete(controllerId);
-  if (puzzle2dBoardGestureOwner.get(controllerId) === surfaceId) puzzle2dBoardGestureOwner.delete(controllerId);
+  if (peers.size === 0) board2dPeerRegistry.delete(controllerId);
+  if (board2dGestureOwner.get(controllerId) === surfaceId) board2dGestureOwner.delete(controllerId);
 }
 
-export function puzzle2dBoardPeers(controllerId: string, excludeSurfaceId: string): readonly Puzzle2dBoardPeer[] {
-  const peers = puzzle2dBoardPeerRegistry.get(controllerId);
+export function board2dPeers(controllerId: string, excludeSurfaceId: string): readonly Board2dPeer[] {
+  const peers = board2dPeerRegistry.get(controllerId);
   if (!peers) return [];
-  const result: Puzzle2dBoardPeer[] = [];
+  const result: Board2dPeer[] = [];
   for (const [surfaceId, peer] of peers) if (surfaceId !== excludeSurfaceId) result.push(peer);
   return result;
 }
 
 export function beginPuzzle2dPeerGesture(controllerId: string, surfaceId: string): void {
-  puzzle2dBoardGestureOwner.set(controllerId, surfaceId);
+  board2dGestureOwner.set(controllerId, surfaceId);
 }
 
 export function endPuzzle2dPeerGesture(controllerId: string, surfaceId: string): void {
-  if (puzzle2dBoardGestureOwner.get(controllerId) === surfaceId) puzzle2dBoardGestureOwner.delete(controllerId);
+  if (board2dGestureOwner.get(controllerId) === surfaceId) board2dGestureOwner.delete(controllerId);
 }
 
 /** @emoji 🙅 True when a *different* pane owns the live gesture for this controller — the caller should defer applying an echoed scene. */
 export function puzzle2dPeerOwnsGesture(controllerId: string, surfaceId: string): boolean {
-  const owner = puzzle2dBoardGestureOwner.get(controllerId);
+  const owner = board2dGestureOwner.get(controllerId);
   return owner !== undefined && owner !== surfaceId;
 }
 
 export function pushPuzzle2dLiveMirrorOps(controllerId: string, surfaceId: string, ops: Puzzle2dLiveMirrorOps): void {
   if (ops.positions.length === 0 && !ops.selectionIds && !ops.preselect && !ops.clearPreselect) return;
-  const peers = puzzle2dBoardPeers(controllerId, surfaceId);
+  const peers = board2dPeers(controllerId, surfaceId);
   if (peers.length === 0) return;
   const positionsJson = ops.positions.length > 0 ? JSON.stringify(ops.positions) : null;
   const selectionJson = ops.selectionIds ? JSON.stringify(ops.selectionIds) : null;
@@ -366,7 +366,7 @@ export function pushPuzzle2dLiveMirrorOps(controllerId: string, surfaceId: strin
 }
 
 export function notifyPuzzle2dPeersGestureEnded(controllerId: string, surfaceId: string, flushed: boolean): void {
-  for (const peer of puzzle2dBoardPeers(controllerId, surfaceId)) {
+  for (const peer of board2dPeers(controllerId, surfaceId)) {
     try {
       peer.onPeerGestureEnded(flushed);
     } catch {
@@ -376,15 +376,15 @@ export function notifyPuzzle2dPeersGestureEnded(controllerId: string, surfaceId:
 }
 //#endregion PeerSync
 
-//#region Puzzle2dBoardHost
-export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
-  const scene = node.puzzle2dBoard;
+//#region Board2dHost
+export function Board2dHost({ node, onAction }: ComponentSceneHostProps) {
+  const scene = node.board2d;
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const sessionRef = useRef<Puzzle2dBoardWasmSession | null>(null);
+  const sessionRef = useRef<Board2dWasmSession | null>(null);
   const bootSyncedRef = useRef(false);
-  const pendingFixtureSceneRef = useRef<Puzzle2dBoardScene | null>(null);
+  const pendingFixtureSceneRef = useRef<Board2dScene | null>(null);
   const pendingEventRowsRef = useRef<BoardEventRow[]>([]);
   const hoverActiveRef = useRef(false);
   const cameraInteractionActiveRef = useRef(false);
@@ -444,7 +444,7 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
 
   const dispatchBufferedEvents = useCallback((): void => {
     if (pendingEventRowsRef.current.length === 0) return;
-    const { eventsJson } = coalescePuzzle2dBoardEvents(pendingEventRowsRef.current);
+    const { eventsJson } = coalesceBoard2dEvents(pendingEventRowsRef.current);
     pendingEventRowsRef.current = [];
     if (eventsJson && eventsJson !== "[]") dispatch("applyBoardEvents", { eventsJson });
   }, [dispatch]);
@@ -452,7 +452,7 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
   const drainAndMaybeFlush = useCallback((): void => {
     drainIntoBuffer();
     if (pendingEventRowsRef.current.length === 0) return;
-    const { flushNow } = coalescePuzzle2dBoardEvents(pendingEventRowsRef.current);
+    const { flushNow } = coalesceBoard2dEvents(pendingEventRowsRef.current);
     if (flushNow) dispatchBufferedEvents();
   }, [drainIntoBuffer, dispatchBufferedEvents]);
 
@@ -462,7 +462,7 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
   }, [drainIntoBuffer, dispatchBufferedEvents]);
 
   const applyPendingFixtureIfReady = useCallback(
-    (session: Puzzle2dBoardWasmSession): void => {
+    (session: Board2dWasmSession): void => {
       const pendingScene = pendingFixtureSceneRef.current;
       if (!pendingScene) return;
       if (session.defersDescriptorSyncFromJs?.() || cameraInteractionActiveRef.current || puzzle2dPeerOwnsGesture(node.controllerId, node.surfaceId)) return;
@@ -474,7 +474,7 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
 
   /** @emoji 🐢 Mirror of `applyPendingFixtureIfReady` for the selection-only echo — a peer-owned gesture defers the plugin's `selectionJson` so it doesn't clobber a mirrored preselect highlight mid-marquee. */
   const applyPendingSelectionIfReady = useCallback(
-    (session: Puzzle2dBoardWasmSession): void => {
+    (session: Board2dWasmSession): void => {
       const pendingSelectionJson = pendingSelectionJsonRef.current;
       if (pendingSelectionJson === null) return;
       if (puzzle2dPeerOwnsGesture(node.controllerId, node.surfaceId)) return;
@@ -508,7 +508,7 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
    * correct committed state. Returns whether a flush is pending, so the caller can pass it on to peers.
    */
   const settleGestureEnd = useCallback(
-    (session: Puzzle2dBoardWasmSession): boolean => {
+    (session: Board2dWasmSession): boolean => {
       drainIntoBuffer();
       const flushed = pendingEventRowsRef.current.length > 0;
       if (flushed) {
@@ -557,13 +557,13 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
     let resizeObserver: ResizeObserver | null = null;
     let raf = 0;
 
-    void createPuzzle2dBoardSession().then((session) => {
+    void createBoard2dSession().then((session) => {
       if (disposed) {
         session.free();
         return;
       }
       sessionRef.current = session;
-      registerPuzzle2dBoardPeer(node.controllerId, node.surfaceId, { session, onPeerGestureEnded: () => onPeerGestureEndedRef.current() });
+      registerBoard2dPeer(node.controllerId, node.surfaceId, { session, onPeerGestureEnded: () => onPeerGestureEndedRef.current() });
 
       const applySize = (): void => {
         const nextDpr = globalThis.devicePixelRatio || 1;
@@ -616,7 +616,7 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
       disposed = true;
       resizeObserver?.disconnect();
       if (raf) cancelAnimationFrame(raf);
-      unregisterPuzzle2dBoardPeer(node.controllerId, node.surfaceId);
+      unregisterBoard2dPeer(node.controllerId, node.surfaceId);
       sessionRef.current?.free();
       sessionRef.current = null;
     };
@@ -818,7 +818,7 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
       const delta = event.deltaY * (event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? 400 : 1);
       session.wheelScreen(point.x, point.y, delta);
       scheduleRender();
-      const cameraArgs = puzzle2dBoardCameraActionArgs(session.cameraJson());
+      const cameraArgs = board2dCameraActionArgs(session.cameraJson());
       if (cameraArgs) pendingCameraDispatchRef.current = cameraArgs;
       drainIntoBuffer();
     };
@@ -979,12 +979,12 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
   );
   //#endregion FixtureDropHandlers
 
-  if (!scene) return <div className="semio-puzzle2d-board-empty text-muted-foreground p-2 text-xs">{emptySceneLabel}</div>;
+  if (!scene) return <div className="semio-board-2d-empty text-muted-foreground p-2 text-xs">{emptySceneLabel}</div>;
 
   return (
     <div
       ref={containerRef}
-      className="semio-puzzle2d-board-host absolute inset-0 box-border min-h-0 min-w-0 overflow-hidden select-none"
+      className="semio-board-2d-host absolute inset-0 box-border min-h-0 min-w-0 overflow-hidden select-none"
       data-surface-id={node.surfaceId}
       style={{ touchAction: "none" }}
       onContextMenu={onContextMenu}
@@ -1010,4 +1010,4 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
     </div>
   );
 }
-//#endregion Puzzle2dBoardHost
+//#endregion Board2dHost

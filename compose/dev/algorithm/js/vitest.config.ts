@@ -11,12 +11,13 @@ import { defineConfig } from "vitest/config";
 // #endregion 🔌Adapters
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const composeWasmBg = path.resolve(__dirname, "../../client/lib/rs/pkg/compose_bg.wasm");
-const composeRsPkg = path.resolve(__dirname, "../../client/lib/rs/pkg/compose.js");
-const composeAssets = path.resolve(__dirname, "../../../asset");
-const composeFixtures = path.resolve(__dirname, "../../fixture");
+const composeWasmBg = path.resolve(__dirname, "../../../client/lib/rs/pkg/compose_bg.wasm");
+const composeRsPkg = path.resolve(__dirname, "../../../client/lib/rs/pkg/compose.js");
+const composeAssets = path.resolve(__dirname, "../../../../asset");
+const composeFixtures = path.resolve(__dirname, "../../../fixture/js/index.ts");
 
 export default defineConfig({
+  root: __dirname,
   resolve: {
     alias: {
       "@semio-tech/compose-rs-wasm": composeRsPkg,
@@ -29,6 +30,7 @@ export default defineConfig({
     environment: "node",
     globals: true,
     include: ["index.ts"],
+    includeSource: ["index.ts"],
     passWithNoTests: false,
     exclude: ["**/node_modules/**", "**/dist/**", "**/.storybook/**"],
     env: { COMPOSE_WASM_BG_PATH: composeWasmBg },

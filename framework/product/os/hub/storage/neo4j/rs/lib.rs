@@ -10,11 +10,13 @@ mod header {
 }
 
 use async_trait::async_trait;
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use neo4rs::{query, Graph};
 use os_hub_storage::error::{StorageError, StorageResult};
 use os_hub_storage::model::*;
 use os_hub_storage::HubStorage;
 use semio_framework_core::OpEnvelope;
+use semio_framework_hash::hash_bytes;
 use uuid::Uuid;
 
 fn now_ms() -> i64 {
@@ -55,6 +57,7 @@ const CONSTRAINTS: &[&str] = &[
     "CREATE CONSTRAINT IF NOT EXISTS FOR (n:Node) REQUIRE n.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (a:AuthSession) REQUIRE a.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (s:SyncSession) REQUIRE s.id IS UNIQUE",
+    "CREATE CONSTRAINT IF NOT EXISTS FOR (b:Blob) REQUIRE b.hash IS UNIQUE",
 ];
 
 /// @emoji 🕸️ Neo4j-backed `HubStorage`.
@@ -667,6 +670,53 @@ impl HubStorage for Neo4jStorage {
             });
         }
         Ok(sessions)
+    }
+    //#endregion
+
+    //#region Blobs
+    /// @emoji 🔡 Neo4j properties have no first-class byte-array type in this driver's ergonomic
+    /// param API, so bytes are base64-encoded into a string property — the same "structured payload
+    /// as a string" convention this backend already uses for `Document.snapshot`/`Op.envelope` (see
+    /// `header`). Dedupe is `MERGE`-free here (an explicit existence check) so a re-put never pays
+    /// the cost of re-encoding/re-writing the (potentially large) property.
+    async fn put_blob(&self, bytes: &[u8], media_type: &str) -> StorageResult<BlobRecord> {
+        let hash = hash_bytes(bytes);
+        let mut existing = self
+            .graph
+            .execute(query("MATCH (b:Blob {hash: $hash}) RETURN b.hash AS hash").param("hash", hash.clone()))
+            .await
+            .map_err(backend)?;
+        if existing.next().await.map_err(backend)?.is_none() {
+            self.graph
+                .run(
+                    query("CREATE (b:Blob {hash: $hash, mediaType: $media_type, size: $size, bytes: $bytes})")
+                        .param("hash", hash.clone())
+                        .param("media_type", media_type)
+                        .param("size", bytes.len() as i64)
+                        .param("bytes", BASE64.encode(bytes)),
+                )
+                .await
+                .map_err(backend)?;
+        }
+        Ok(BlobRecord { hash, media_type: media_type.to_string(), size: bytes.len() as i64 })
+    }
+
+    async fn get_blob(&self, hash: &str) -> StorageResult<Option<Vec<u8>>> {
+        let mut result =
+            self.graph.execute(query("MATCH (b:Blob {hash: $hash}) RETURN b.bytes AS bytes").param("hash", hash)).await.map_err(backend)?;
+        if let Some(row) = result.next().await.map_err(backend)? {
+            let encoded: String = row.get("bytes").map_err(backend)?;
+            let decoded = BASE64.decode(encoded).map_err(backend)?;
+            return Ok(Some(decoded));
+        }
+        Ok(None)
+    }
+
+    async fn has_blob(&self, hash: &str) -> StorageResult<bool> {
+        let mut result =
+            self.graph.execute(query("MATCH (b:Blob {hash: $hash}) RETURN count(b) AS c").param("hash", hash)).await.map_err(backend)?;
+        let count: i64 = result.next().await.map_err(backend)?.and_then(|row| row.get("c").ok()).unwrap_or(0);
+        Ok(count > 0)
     }
     //#endregion
 }

@@ -10,6 +10,7 @@ use os_hub_storage::error::{StorageError, StorageResult};
 use os_hub_storage::model::*;
 use os_hub_storage::HubStorage;
 use semio_framework_core::OpEnvelope;
+use semio_framework_hash::hash_bytes;
 pub use sqlx_core::row::Row;
 pub use sqlx_postgres::{PgPool, PgPoolOptions};
 use uuid::Uuid;
@@ -506,6 +507,33 @@ impl HubStorage for PostgresStorage {
             .collect())
     }
     //#endregion
+
+    //#region Blobs
+    async fn put_blob(&self, bytes: &[u8], media_type: &str) -> StorageResult<BlobRecord> {
+        let hash = hash_bytes(bytes);
+        sqlx_core::query::query("INSERT INTO hub_blob (hash, media_type, size, bytes) VALUES ($1, $2, $3, $4) ON CONFLICT (hash) DO NOTHING")
+            .bind(&hash)
+            .bind(media_type)
+            .bind(bytes.len() as i64)
+            .bind(bytes)
+            .execute(&self.pool)
+            .await
+            .map_err(backend)?;
+        Ok(BlobRecord { hash, media_type: media_type.to_string(), size: bytes.len() as i64 })
+    }
+
+    async fn get_blob(&self, hash: &str) -> StorageResult<Option<Vec<u8>>> {
+        let row: Option<(Vec<u8>,)> =
+            sqlx_core::query_as::query_as("SELECT bytes FROM hub_blob WHERE hash = $1").bind(hash).fetch_optional(&self.pool).await.map_err(backend)?;
+        Ok(row.map(|(bytes,)| bytes))
+    }
+
+    async fn has_blob(&self, hash: &str) -> StorageResult<bool> {
+        let row: (i64,) =
+            sqlx_core::query_as::query_as("SELECT COUNT(*) FROM hub_blob WHERE hash = $1").bind(hash).fetch_one(&self.pool).await.map_err(backend)?;
+        Ok(row.0 > 0)
+    }
+    //#endregion
 }
 
 fn user_from_row(row: (String, String, String, Option<String>, Option<String>, Option<String>, i64)) -> UserRecord {
@@ -548,6 +576,20 @@ mod tests {
         let user = storage.create_user("a@example.com", "Ada", None, None, None).await.expect("create user");
         let studio = storage.create_studio("Studio A", &user.id).await.expect("create studio");
         assert_eq!(storage.get_role(&studio.id, &user.id).await.unwrap(), Some(StudioRole::Owner));
+    }
+
+    // 🔬 Blobs dedupe by content hash against a real Postgres.
+    #[tokio::test]
+    async fn blob_put_get_dedupes_idempotently() {
+        let (storage, _container) = test_storage().await;
+        let bytes = b"hello hub blob";
+        assert!(!storage.has_blob("not-a-real-hash").await.unwrap());
+        let first = storage.put_blob(bytes, "text/plain").await.expect("first put");
+        let second = storage.put_blob(bytes, "text/plain").await.expect("second put");
+        assert_eq!(first.hash, second.hash, "identical bytes dedupe to the same hash");
+        assert!(storage.has_blob(&first.hash).await.unwrap());
+        let fetched = storage.get_blob(&first.hash).await.unwrap().expect("blob present");
+        assert_eq!(fetched, bytes);
     }
 }
 //#endregion 🔖Tests

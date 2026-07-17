@@ -93,7 +93,7 @@ function parseVisibleTerrainTilesJson(raw: string): TerrainTileRow[] {
 }
 
 /** 🧵 Owns a `TerrainSession`, fetches/uploads/evicts DEM tiles as the camera moves, and reports
- * the current set of tile geometries back to React — the 3D analog of `gis-map-host.tsx`'s
+ * the current set of tile geometries back to React — the 3D analog of `tiled-map-host.tsx`'s
  * `MapRenderer`, except it hands back mesh buffers for three.js instead of driving a canvas. */
 class TerrainTileRenderer {
   private disposed = false;

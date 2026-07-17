@@ -1,5 +1,6 @@
 //! @emoji 🎨 Framework-neutral styling tokens generated from `ui/styling/tokens.json`.
 
+#[allow(clippy::excessive_precision, reason = "🎨 float literals mirror ui/styling/tokens.json verbatim; truncating them by hand would drift from the source data on the next regeneration")]
 #[path = "generated.rs"]
 mod generated;
 
@@ -31,10 +32,7 @@ pub mod color {
 
 // #region 🔖Appearance
 pub mod appearance {
-    use super::generated::{
-        BoardPalette, CanvasPalette, ChromePalette, MapPalette, BOARD_DARK, BOARD_LIGHT, CANVAS_DARK, CANVAS_LIGHT,
-        CHROME_DARK, CHROME_LIGHT, MAP_DARK, MAP_LIGHT,
-    };
+    use super::generated::{BoardPalette, CanvasPalette, ChromePalette, MapPalette, BOARD_DARK, BOARD_LIGHT, CANVAS_DARK, CANVAS_LIGHT, CHROME_DARK, CHROME_LIGHT, MAP_DARK, MAP_LIGHT};
 
     /// @emoji 🎨 Active appearance (light/dark) for canvas hosts.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -90,13 +88,13 @@ mod tests {
 
     #[test]
     fn board_light_raster_clear_is_opaque() {
-        assert!(BOARD_LIGHT.raster_clear[3] > 0.9);
+        const { assert!(BOARD_LIGHT.raster_clear[3] > 0.9) };
     }
 
     #[test]
     fn stroke_widths_are_positive() {
-        assert!(strokes::EDGE_BASE > 0.0);
-        assert!(strokes::WIRE_HIGHLIGHT > 0.0);
+        const { assert!(strokes::EDGE_BASE > 0.0) };
+        const { assert!(strokes::WIRE_HIGHLIGHT > 0.0) };
     }
 
     #[test]

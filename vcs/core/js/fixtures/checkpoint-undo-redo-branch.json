@@ -1,0 +1,16 @@
+{
+  "name": "checkpoint-undo-redo-branch",
+  "description": "Toy counter op: apply/commit/apply/undo/redo/createAlternative(discards uncommitted)/apply/commit, asserting projection.n after each dispatch.",
+  "initialProjection": { "n": 0 },
+  "commands": [
+    { "kind": "apply", "operations": [{ "op": "setN", "n": 1 }] },
+    { "kind": "commitCheckpoint", "message": "init", "authors": [] },
+    { "kind": "apply", "operations": [{ "op": "setN", "n": 5 }] },
+    { "kind": "undo" },
+    { "kind": "redo" },
+    { "kind": "createAlternative", "name": "branch-a" },
+    { "kind": "apply", "operations": [{ "op": "setN", "n": 9 }] },
+    { "kind": "commitCheckpoint", "message": "branch commit", "authors": [] }
+  ],
+  "expectedProjectionNAfterEachCommand": [1, 1, 5, 1, 5, 1, 9, 9]
+}

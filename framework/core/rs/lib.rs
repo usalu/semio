@@ -887,8 +887,10 @@ fn stl_face_normal(a: [f32; 3], b: [f32; 3], c: [f32; 3]) -> [f32; 3] {
 //#endregion Stl
 
 //#region MediaFormat
-/// 🗂️ OS-level media export/import format. Lives here (not in `framework/product/os/core`) because `framework/core` sits below `framework/product/os/core` in the dependency graph — `os/core` depends on `framework-core`, never the reverse — so the `MeshExporter`/`MeshImporter` traits below, and every OS registration site, share one definition; `framework/product/os/core` re-exports it verbatim.
-#[derive(Clone, Debug, PartialEq)]
+/// 🗂️ OS-level media export/import format. Lives here (not in `framework/product/os/core`) because `framework/core` sits below `framework/product/os/core` in the dependency graph — `os/core` depends on `framework-core`, never the reverse — so the `MeshExporter`/`MeshImporter` traits below, and every OS registration site, share one definition; `framework/product/os/core` re-exports it verbatim. Serialize/Deserialize/TS derives added alongside the `//#region MediaType` lattice below since `MediaWireFormat`/`MediaKindDescriptor` carry this on the wire.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
 pub enum OsMediaFormat {
     Svg,
     Png,
@@ -943,6 +945,134 @@ impl OsMediaFormat {
     }
 }
 //#endregion MediaFormat
+
+//#region MediaType
+/// 🧬 Typed-media lattice: every port/wire in the media graph carries a `MediaType` (`class` × `form`) instead of the legacy string `resource_kind`. This is separate from `OsMediaFormat` above — `MediaType` is what a wire negotiates, `OsMediaFormat` is only how bytes are encoded once they actually cross a process boundary (see `MediaWireFormat`). Dependent tickets retire `OsMediaCapability` (`framework/plugin/rs`, `framework/product/os/core/rs`) onto `MediaForm::{Brep,Mesh}`, which already covers what `OsMediaCapability::{Brep,MeshOnly}` expressed.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum MediaClass {
+    TwoD,
+    ThreeD,
+    Text,
+    Data,
+    Graph,
+    Kit,
+    Computation,
+    Presentation,
+}
+
+/// 🧬 The shape/representation a `MediaClass` payload takes, orthogonal to `class` — e.g. `ThreeD` × `Brep` vs `ThreeD` × `Mesh`. `Any` only ever appears on the accepting side of a port (see `media_types_compatible`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum MediaForm {
+    Any,
+    Vector,
+    Raster,
+    Brep,
+    Mesh,
+    Document,
+    Value,
+    Dag,
+    Trinity,
+    Type,
+    Design,
+    Kit,
+    Flow,
+    Sequence,
+    Imperative,
+    Deck,
+}
+
+/// 🧬 A port or wire's declared media type — the pair a producer offers or a consumer accepts.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MediaType {
+    pub class: MediaClass,
+    pub form: MediaForm,
+}
+
+/// 🔌 How a `MediaType` is actually encoded once it crosses a process boundary — binary payloads reuse `OsMediaFormat`, structured payloads carry a schema id instead (see `MediaKindDescriptor::schema`).
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase", tag = "kind")]
+pub enum MediaWireFormat {
+    Binary { format: OsMediaFormat },
+    Document { schema: String },
+}
+
+/// 📇 An app-declared media kind — the manifest-level counterpart to `MediaType`, naming a concrete component/schema an app can produce or consume plus which `OsMediaFormat`s it can export/import.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MediaKindDescriptor {
+    pub id: String,
+    pub name: String,
+    pub media_type: MediaType,
+    pub schema: String,
+    pub component_kind: String,
+    pub export_formats: Vec<OsMediaFormat>,
+    pub import_formats: Vec<OsMediaFormat>,
+}
+
+/// 🔀 Which side of a wire a `MediaPortSpec` sits on.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum MediaPortDirection {
+    In,
+    Out,
+}
+
+/// 🔌 A single port an app exposes on the media graph — `kind_id` optionally pins it to one `MediaKindDescriptor.id` when the port is more specific than its `media_type` alone conveys.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MediaPortSpec {
+    pub id: String,
+    pub label: String,
+    pub direction: MediaPortDirection,
+    pub media_type: MediaType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub kind_id: Option<String>,
+    pub required: bool,
+}
+
+/// ⚖️ Result of checking whether a producer's `MediaType` can feed a consumer's accepted `MediaType`: exact match, a known lossy-but-allowed conversion, or outright rejection.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MediaCompat {
+    Direct,
+    Convert { from: MediaForm, to: MediaForm },
+    Reject,
+}
+
+/// 🔀 One-way `MediaForm` conversions the media graph is allowed to insert implicitly (e.g. a B-Rep producer feeding a mesh-only consumer). `media_types_compatible` looks up `(produced, accepted)` directly, so add the reverse pair too if a conversion should also hold the other way.
+const MEDIA_FORM_CONVERSIONS: &[(MediaForm, MediaForm)] = &[
+    (MediaForm::Brep, MediaForm::Mesh),
+    (MediaForm::Vector, MediaForm::Raster),
+    (MediaForm::Design, MediaForm::Kit),
+    (MediaForm::Type, MediaForm::Kit),
+];
+
+/// ⚖️ The single source of truth for wire compatibility: classes must match exactly, `MediaForm::Any` on the accepting side takes anything within the class, equal forms are always direct, and everything else falls through to the explicit `MEDIA_FORM_CONVERSIONS` table.
+pub fn media_types_compatible(produced: &MediaType, accepted: &MediaType) -> MediaCompat {
+    if produced.class != accepted.class {
+        return MediaCompat::Reject;
+    }
+    if matches!(accepted.form, MediaForm::Any) || produced.form == accepted.form {
+        return MediaCompat::Direct;
+    }
+    for (from, to) in MEDIA_FORM_CONVERSIONS {
+        if *from == produced.form && *to == accepted.form {
+            return MediaCompat::Convert { from: *from, to: *to };
+        }
+    }
+    MediaCompat::Reject
+}
+//#endregion MediaType
 
 //#region MeshCodec
 /// 🔌 Format-keyed mesh export codec; concrete implementations below are zero-dependency (hand-rolled OBJ/GLB/STL). B-Rep apps additionally get `SolidExporter` (kernel/3d/brep/rs) which wraps the real kernel's STEP/STL/OBJ writers, and reuse `GlbExporter`/`GlbImporter` here via a tessellation bridge so GLB is the same codec everywhere.
@@ -2762,6 +2892,7 @@ pub mod ui {
 
 use serde::{Deserialize, Serialize};
 use ui_wgpu::{ActionDescriptor, NamedLayout, SurfaceKind, WindowLayout, WindowOptions};
+use crate::mesh::{MediaKindDescriptor, MediaPortSpec};
 
 //#region 🔖Manifest
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3707,6 +3838,15 @@ pub struct AppDefinition {
     /// 🗨️ The modal form dialogs this app can open via `HostEffect::OpenDialog`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub dialogs: Vec<DialogDefinition>,
+    /// 🧬 The media kinds this app can produce or consume — see `crate::MediaKindDescriptor`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub media_kinds: Vec<MediaKindDescriptor>,
+    /// 🔌 This app's media graph input ports — see `crate::MediaPortSpec`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub media_inputs: Vec<MediaPortSpec>,
+    /// 🔌 This app's media graph output ports — see `crate::MediaPortSpec`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub media_outputs: Vec<MediaPortSpec>,
 }
 
 /// 🧭 Resolves the dock layout a mode should present.
@@ -4538,6 +4678,24 @@ impl OpDag {
 }
 
 //#region 🔖HubProtocol
+/// @emoji 📍 A live cursor position in document space, broadcast as part of a peer's presence frame.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PresencePoint {
+    pub x: f64,
+    pub y: f64,
+}
+
+/// @emoji 🖼️ A peer's visible canvas rectangle (pan + zoom), so remote cursors/ghosts can be rendered
+/// scaled relative to what each peer is actually looking at.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PresenceViewport {
+    pub x: f64,
+    pub y: f64,
+    pub zoom: f64,
+}
+
 /// @emoji 📡 Presence roster entry broadcast to every peer connected to a document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -4554,6 +4712,15 @@ pub struct PresencePeer {
     /// @emoji 🎚️ The peer's resolved studio role (`"owner"`/`"member"`/`"viewer"`), present alongside `user_id`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub role: Option<String>,
+    /// @emoji 🖱️ Live cursor position, when the peer's client streams pointer telemetry.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cursor: Option<PresencePoint>,
+    /// @emoji 🔭 The peer's current pan/zoom, for scaling remote cursors/ghosts relative to their view.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub viewport: Option<PresenceViewport>,
+    /// @emoji 👻 Serialized preview of an in-flight drag (opaque JSON, schema owned by the dragging app).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub drag_ghost_json: Option<String>,
 }
 
 /// @emoji 📨 Client→server hub wire frames; the counterpart is {@link HubServerFrame}.
@@ -5163,6 +5330,14 @@ mod app_document_tests {
         crate::ui::kernel::Rights::export().unwrap();
         crate::ui::kernel::ResourceKind::export().unwrap();
         crate::ui::kernel::Scope::export().unwrap();
+        crate::mesh::OsMediaFormat::export().unwrap();
+        crate::mesh::MediaClass::export().unwrap();
+        crate::mesh::MediaForm::export().unwrap();
+        crate::mesh::MediaType::export().unwrap();
+        crate::mesh::MediaWireFormat::export().unwrap();
+        crate::mesh::MediaKindDescriptor::export().unwrap();
+        crate::mesh::MediaPortDirection::export().unwrap();
+        crate::mesh::MediaPortSpec::export().unwrap();
     }
 }
 //#endregion 🔖Manifest
@@ -5181,6 +5356,8 @@ pub use mesh::{
     DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgLayer, DwgPathSegment,
     MeshExporter, MeshImporter, ObjExporter, ObjImporter, GlbExporter, GlbImporter, StlExporter, StlImporter,
     OsMediaFormat,
+    MediaClass, MediaForm, MediaType, MediaWireFormat, MediaKindDescriptor, MediaPortDirection, MediaPortSpec,
+    MediaCompat, media_types_compatible,
 };
 pub use platform::{PanelVisibility, Platform, PlatformSpec};
 pub use ui::*;
@@ -5190,6 +5367,7 @@ pub use ui::kernel::{
     ActionRequest, InvocationId, InvocationResult, Diagnostic, HostEffect, HubClientFrame, HubServerFrame, HybridLogicalTimestamp, IconRenderExportItem, InverseOperation,
     InsertResult, KernelOperation, MergeStrategyKind, DocumentDiff, DocumentHandle, DocumentId, DocumentKind,
     DocumentVersion, OpDag, OpDagError, OpEnvelope, OperationId, PayloadHash, PhysicalSize, PluginInstanceId, PresencePeer,
+    PresencePoint, PresenceViewport,
     ResourceId, ResourceKind, Appearance, Rights, SchemaId, SchemaVersion, Scope, UndoGroup, UndoPolicy,
     WindowEvent, WindowHandle, WindowInput, WindowKindDef, WindowKindId, WindowOutput,
 };

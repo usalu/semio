@@ -2300,8 +2300,8 @@ pub fn folder_binding(folder_path: std::path::PathBuf) -> PersistenceBinding {
 }
 
 /// @emoji ☁️ The hub persistence binding for a document.
-pub fn hub_binding(base_url: impl Into<String>, token: Option<String>) -> PersistenceBinding {
-    PersistenceBinding::Hub { base_url: base_url.into(), token }
+pub fn hub_binding(base_url: impl Into<String>, studio_id: impl Into<String>, token: Option<String>) -> PersistenceBinding {
+    PersistenceBinding::Hub { base_url: base_url.into(), studio_id: studio_id.into(), token }
 }
 
 /// @emoji 🔗 Builds the `DocumentActorConfig` to open an app instance's own document, from its
@@ -2392,6 +2392,9 @@ mod tests {
             connected_at_ms: 0,
             user_id: None,
             role: None,
+            cursor: None,
+            viewport: None,
+            drag_ghost_json: None,
         }];
         let json = presence_peers_json(&DocumentEvent::Presence { peers: peers.clone() }).expect("json");
         assert!(json.contains("\"actor\":\"a\""));

@@ -208,7 +208,7 @@ import {
   type IntroductionStepDefinition,
   type ComponentKind,
   type ComponentSceneHostProps,
-  type GisMapScene,
+  type TiledMapScene,
   type IconRenderScene,
   type NamedLayout,
   type NodeGraphScene,
@@ -225,7 +225,7 @@ import {
   type PresencePeer,
   type UiDirtyScope,
   type Paint2dScene,
-  type Puzzle2dBoardScene,
+  type Board2dScene,
   type StyleSpec,
   type TableScene,
   type TextEditorScene,
@@ -3247,7 +3247,8 @@ export function FrameworkOsShell({
             const rest = uri.slice("remote://".length);
             const slash = rest.indexOf("/");
             const baseUrl = slash > 0 ? `http://${rest.slice(0, slash)}` : `http://${rest}`;
-            return [{ kind: "hub", baseUrl }];
+            const studioId = slash > 0 ? rest.slice(slash + 1) || "default" : "default";
+            return [{ kind: "hub", baseUrl, studioId }];
           })()
         : uri.startsWith("folder://")
           ? [{ kind: "folder", path: uri.slice("folder://".length) }]
@@ -3367,7 +3368,11 @@ export function FrameworkOsShell({
           const uri =
             action.args && typeof action.args === "object" && "kind" in action.args
               ? String((action.args as { kind?: string }).kind) === "remote"
-                ? buildRemoteBackboneUri(path.split("/")[0] ?? "127.0.0.1:8787", path.split("/").slice(1).join("/") || syncDocumentId(session, panel, studioMode))
+                ? (() => {
+                    const [hostPort, ...rest] = path.split("/");
+                    const [studioId, documentId] = rest.length >= 2 ? [rest[0], rest.slice(1).join("/")] : ["default", rest[0] || syncDocumentId(session, panel, studioMode)];
+                    return buildRemoteBackboneUri(hostPort ?? "127.0.0.1:8787", studioId, documentId);
+                  })()
                 : String((action.args as { kind?: string }).kind) === "folder"
                   ? buildFolderBackboneUri(path)
                   : buildFileBackboneUri(path)
@@ -4700,11 +4705,13 @@ export function FrameworkOsShell({
     (): NavbarItem[] => [
       { key: "bottomLeftPanelTabs", content: <PanelChromeTabBar anchor="bottom-left" {...buildPanelSelectionProps("bottom-left")} /> },
       { key: "bottomMiddlePanelTabs", centered: true, content: <PanelChromeTabBar anchor="bottom-middle" {...buildPanelSelectionProps("bottom-middle")} /> },
-      // 🏛️ Bracketed by fill spacers on both sides so the funding credit floats between the command palette and the
-      // bottom-right corner toggle, with breathing room on both sides — not flush against either.
+      // 🏛️ A single leading fill spacer pushes the funding credit toward the trailing edge. Bracketing with a SECOND
+      // flex-1 spacer on the other side would instead center it at the exact midpoint of the footer — directly under
+      // the `centered` Command overlay above — so a fixed `w-huge` gap (not another flex-1, and not the far smaller
+      // `w-double`, which read as flush against the toggle group) separates it from the corner toggle instead.
       navbarFillItem("footerLeadingFill"),
       fundedByZukunftBauFooterItem(),
-      navbarFillItem("footerTrailingFill"),
+      { key: "footerFundedByGap", className: "w-huge", content: null },
       { key: "bottomRightPanelTabs", content: <PanelChromeTabBar anchor="bottom-right" {...buildPanelSelectionProps("bottom-right")} /> },
     ],
     [buildPanelSelectionProps],
@@ -5125,7 +5132,7 @@ export async function createTerrainSession(): Promise<TerrainWasmSession> {
 }
 //#endregion TerrainSession
 
-export type Puzzle2dBoardWasmSession = {
+export type Board2dWasmSession = {
   attach_canvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown>;
   setSize(width: number, height: number, dpr: number): void;
   renderFrame(): void;
@@ -5171,21 +5178,21 @@ export type Puzzle2dBoardWasmSession = {
   free(): void;
 };
 
-type Puzzle2dBoardSessionModule = {
+type Board2dSessionModule = {
   readonly default: (input?: unknown) => Promise<unknown>;
-  readonly BoardSession: new () => Puzzle2dBoardWasmSession;
+  readonly BoardSession: new () => Board2dWasmSession;
 };
 
-let puzzle2dBoardSessionPromise: Promise<Puzzle2dBoardSessionModule> | null = null;
+let board2dSessionPromise: Promise<Board2dSessionModule> | null = null;
 
-export async function createPuzzle2dBoardSession(): Promise<Puzzle2dBoardWasmSession> {
-  if (!puzzle2dBoardSessionPromise) {
-    puzzle2dBoardSessionPromise = import("@semio-tech/puzzle-2d-rs/pkg/puzzle_2d.js").then(async (mod) => {
+export async function createBoard2dSession(): Promise<Board2dWasmSession> {
+  if (!board2dSessionPromise) {
+    board2dSessionPromise = import("@semio-tech/puzzle-2d-rs/pkg/puzzle_2d.js").then(async (mod) => {
       await mod.default();
-      return mod as Puzzle2dBoardSessionModule;
+      return mod as Board2dSessionModule;
     });
   }
-  const mod = await puzzle2dBoardSessionPromise;
+  const mod = await board2dSessionPromise;
   return new mod.BoardSession();
 }
 //#endregion MapSession
@@ -5450,15 +5457,14 @@ function syncStatusLabel(status: DocumentSyncStatus | null): string | null {
 
 function SyncAttachCard({ activeUri, cardKind, draftPath, syncUtilities, status, onAction, onDraftPathChange, onClose, onAttach, onDetach }: SyncAttachCardProps): ReactElement {
   const open = cardKind != null;
-  const placeholder = cardKind === "remote" ? "127.0.0.1:8787/demo" : cardKind === "folder" ? "/absolute/project/folder" : "/absolute/document.json";
+  const placeholder = cardKind === "remote" ? "127.0.0.1:8787/studio-1/demo" : cardKind === "folder" ? "/absolute/project/folder" : "/absolute/document.json";
 
   const attachFromDraft = () => {
     if (!cardKind || !draftPath.trim()) return;
     if (cardKind === "remote") {
-      const slash = draftPath.indexOf("/");
-      const hostPort = slash > 0 ? draftPath.slice(0, slash) : draftPath;
-      const documentId = slash > 0 ? draftPath.slice(slash + 1) : "document";
-      onAttach(buildRemoteBackboneUri(hostPort, documentId));
+      const [hostPort, ...rest] = draftPath.split("/");
+      const [studioId, documentId] = rest.length >= 2 ? [rest[0], rest.slice(1).join("/")] : ["default", rest[0] || "document"];
+      onAttach(buildRemoteBackboneUri(hostPort || draftPath, studioId, documentId));
       return;
     }
     onAttach(cardKind === "folder" ? buildFolderBackboneUri(draftPath) : buildFileBackboneUri(draftPath));

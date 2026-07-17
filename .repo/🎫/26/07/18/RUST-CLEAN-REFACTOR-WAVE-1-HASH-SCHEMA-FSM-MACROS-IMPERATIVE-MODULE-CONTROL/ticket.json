@@ -1,0 +1,14 @@
+{
+  "title": "Rust Clean Refactor Wave 1 — Hash, Schema, Fsm Macros, Imperative Module Control",
+  "emoji": "🧹",
+  "status": "closed",
+  "description": "Wave 1 of repo-wide Rust cleanup campaign (zero rustc/clippy warnings, Result\u0026lt;_,String\u0026gt; migrated to thiserror, non-test panics reduced) for exactly these crates: framework/hash/rs, framework/schema/rs, fsm/macros/rs, imperative/module/control/rs. Apply tiers T1 (mechanical warnings/dead-code/allow-cleanup), T2 (thiserror error enums, \u0026amp;Vec\u0026lt;T\u0026gt; -\u003e \u0026amp;[T]), T3 (panic reduction) in order per crate; T4 clones are report-only for this batch. Coordinate via campaign folder LOCKS/API-CHANGELOG/CONFLICTS/BLOCKERS files, verify each crate with cargo clippy -D warnings and cargo test before moving on.",
+  "summary": "Audited all 4 assigned crates (framework/hash/rs, framework/schema/rs, fsm/macros/rs, imperative/module/control/rs) against the campaign's T1-T3 tiers (T4 report-only). All four were already fully compliant: zero clippy warnings under -D warnings, no Result\u003c_,String\u003e anywhere (framework/schema/rs already had a thiserror SchemaError enum; the others have no fallible public API surface needing one), no bare .unwrap()/panic! outside tests (fsm/macros/rs has 2 non-test .expect() calls, both already justified with reason strings and verified provably-infallible by tracing all call sites), no \u0026Vec\u003cT\u003e params, no #[allow(...)], no dead code. T4 clone audit (report-only): framework/hash/rs and imperative/module/control/rs have zero .clone() calls; framework/schema/rs has zero; fsm/macros/rs has 13, all proc-macro-compile-time Ident/String/Value clones (not runtime hot-path). No source edits were made to any crate — backups were still taken per protocol. No API-CHANGELOG entries needed (no public signature changes). cargo clippy -p \u003cpkg\u003e --all-targets -- -D warnings and cargo test -p \u003cpkg\u003e both pass clean for all 4 crates. Full per-crate reports written to the campaign reports/ folder.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2048"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪2b183a7fbb7944d3bbb36676d3e1cda2"
+  ]
+}

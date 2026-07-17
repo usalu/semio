@@ -139,7 +139,7 @@ impl Atom {
 // #region 🔖Schema
 pub const SCHEMA_KEY: &str = "$schema";
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "kind", content = "of")]
 pub enum ValueType {
     Boolean,
@@ -148,13 +148,8 @@ pub enum ValueType {
     Text,
     List(Box<ValueType>),
     Schema(String),
+    #[default]
     Any,
-}
-
-impl Default for ValueType {
-    fn default() -> Self {
-        Self::Any
-    }
 }
 
 impl ValueType {
@@ -266,6 +261,49 @@ impl Schema {
 }
 // #endregion 🔖Schema
 
+//#region ⚠️ Errors
+/// 🚨 Schema field/channel conversion, instance-read, and cardinality-parse failures.
+#[derive(Clone, Debug, PartialEq, thiserror::Error)]
+pub enum NeuralEngineError {
+    /// 🔢 Atom value doesn't match the scalar type a schema field declares.
+    #[error("{kind} field is not {reason}")]
+    FieldTypeMismatch { kind: &'static str, reason: &'static str },
+    /// 📦 Field value isn't a dictionary where a list/schema/any field required one.
+    #[error("field is not a dictionary")]
+    FieldNotDictionary,
+    /// 🕳️ Channel value is null where a value was required.
+    #[error("channel value is null")]
+    ChannelNull,
+    /// 📦 Channel value isn't the wrapping dictionary its scalar type expects.
+    #[error("{kind} channel is not a dictionary")]
+    ChannelTypeMismatch { kind: &'static str },
+    /// 📦 Channel value isn't a dictionary where a list/schema/any channel required one.
+    #[error("channel is not a dictionary")]
+    ChannelNotDictionary,
+    /// 🕳️ Channel dictionary is missing its `value` entry.
+    #[error("{kind} channel is missing value")]
+    ChannelMissingValue { kind: &'static str },
+    /// 🔍 A schema instance or field channel is absent from the input dictionary.
+    #[error("missing {0}")]
+    Missing(String),
+    /// ⚠️ A schema instance dictionary carries the wrong `$schema` tag.
+    #[error("invalid {0}")]
+    Invalid(String),
+    /// 🔍 A declared schema field is absent from the constructed dictionary.
+    #[error("missing field {0}")]
+    MissingField(String),
+    /// 🚫 Neither an instance nor any field inputs were provided to a schema component.
+    #[error("no instance or field inputs provided")]
+    NoInputProvided,
+    /// 🔢 A cardinality symbol string didn't parse to a known cardinality.
+    #[error("invalid cardinality: {0}")]
+    InvalidCardinality(String),
+    /// 🧬 The constructed/modified dictionary failed schema validation.
+    #[error(transparent)]
+    Validation(#[from] EvalError),
+}
+//#endregion ⚠️ Errors
+
 // #region 🔖SchemaComponent
 fn schema_component_operator_id(schema: &Schema) -> String {
     format!("{}.{}", schema.module, schema.id)
@@ -336,10 +374,10 @@ fn schema_input_present(input: &Dictionary, key: &str) -> bool {
     input.get(key).is_some_and(|value| !value.is_null())
 }
 
-fn field_to_channel(value: &Value, value_type: &ValueType) -> Result<Value, String> {
+fn field_to_channel(value: &Value, value_type: &ValueType) -> Result<Value, NeuralEngineError> {
     match value_type {
         ValueType::Decimal => {
-            let number = value.as_atom().and_then(|atom| atom.as_f64()).ok_or_else(|| "decimal field is not numeric".to_string())?;
+            let number = value.as_atom().and_then(|atom| atom.as_f64()).ok_or(NeuralEngineError::FieldTypeMismatch { kind: "decimal", reason: "numeric" })?;
             Ok(Value::Dictionary(Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(number)))))
         }
         ValueType::Integer => {
@@ -350,33 +388,33 @@ fn field_to_channel(value: &Value, value_type: &ValueType) -> Result<Value, Stri
                     Atom::Decimal(value) => Some(value.round() as i64),
                     _ => None,
                 })
-                .ok_or_else(|| "integer field is not integral".to_string())?;
+                .ok_or(NeuralEngineError::FieldTypeMismatch { kind: "integer", reason: "integral" })?;
             Ok(Value::Dictionary(Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Integer(number)))))
         }
         ValueType::Boolean => {
-            let boolean = value.as_atom().and_then(|atom| atom.as_bool()).ok_or_else(|| "boolean field is not boolean".to_string())?;
+            let boolean = value.as_atom().and_then(|atom| atom.as_bool()).ok_or(NeuralEngineError::FieldTypeMismatch { kind: "boolean", reason: "boolean" })?;
             Ok(Value::Dictionary(Dictionary::with_schema("boolean").insert("value", Value::Atom(Atom::Boolean(boolean)))))
         }
         ValueType::Text => {
-            let text = value.as_atom().and_then(|atom| atom.as_str()).ok_or_else(|| "text field is not text".to_string())?;
+            let text = value.as_atom().and_then(|atom| atom.as_str()).ok_or(NeuralEngineError::FieldTypeMismatch { kind: "text", reason: "text" })?;
             Ok(Value::Dictionary(Dictionary::with_schema("text").insert("value", Value::Atom(Atom::String(text.to_string())))))
         }
-        ValueType::List(_) | ValueType::Schema(_) | ValueType::Any => value.as_dictionary().cloned().map(Value::Dictionary).ok_or_else(|| "field is not a dictionary".to_string()),
+        ValueType::List(_) | ValueType::Schema(_) | ValueType::Any => value.as_dictionary().cloned().map(Value::Dictionary).ok_or(NeuralEngineError::FieldNotDictionary),
     }
 }
 
-fn channel_to_field(value: &Value, value_type: &ValueType) -> Result<Value, String> {
+fn channel_to_field(value: &Value, value_type: &ValueType) -> Result<Value, NeuralEngineError> {
     if value.is_null() {
-        return Err("channel value is null".into());
+        return Err(NeuralEngineError::ChannelNull);
     }
     match value_type {
         ValueType::Decimal => {
-            let dictionary = value.as_dictionary().ok_or_else(|| "decimal channel is not a dictionary".to_string())?;
-            let number = dictionary.get("value").and_then(|entry| entry.as_atom()).and_then(|atom| atom.as_f64()).ok_or_else(|| "decimal channel is missing value".to_string())?;
+            let dictionary = value.as_dictionary().ok_or(NeuralEngineError::ChannelTypeMismatch { kind: "decimal" })?;
+            let number = dictionary.get("value").and_then(|entry| entry.as_atom()).and_then(|atom| atom.as_f64()).ok_or(NeuralEngineError::ChannelMissingValue { kind: "decimal" })?;
             Ok(Value::Atom(Atom::Decimal(number)))
         }
         ValueType::Integer => {
-            let dictionary = value.as_dictionary().ok_or_else(|| "integer channel is not a dictionary".to_string())?;
+            let dictionary = value.as_dictionary().ok_or(NeuralEngineError::ChannelTypeMismatch { kind: "integer" })?;
             let number = dictionary
                 .get("value")
                 .and_then(|entry| entry.as_atom())
@@ -385,33 +423,33 @@ fn channel_to_field(value: &Value, value_type: &ValueType) -> Result<Value, Stri
                     Atom::Decimal(value) => Some(value.round() as i64),
                     _ => None,
                 })
-                .ok_or_else(|| "integer channel is missing value".to_string())?;
+                .ok_or(NeuralEngineError::ChannelMissingValue { kind: "integer" })?;
             Ok(Value::Atom(Atom::Integer(number)))
         }
         ValueType::Boolean => {
-            let dictionary = value.as_dictionary().ok_or_else(|| "boolean channel is not a dictionary".to_string())?;
-            let boolean = dictionary.get("value").and_then(|entry| entry.as_atom()).and_then(|atom| atom.as_bool()).ok_or_else(|| "boolean channel is missing value".to_string())?;
+            let dictionary = value.as_dictionary().ok_or(NeuralEngineError::ChannelTypeMismatch { kind: "boolean" })?;
+            let boolean = dictionary.get("value").and_then(|entry| entry.as_atom()).and_then(|atom| atom.as_bool()).ok_or(NeuralEngineError::ChannelMissingValue { kind: "boolean" })?;
             Ok(Value::Atom(Atom::Boolean(boolean)))
         }
         ValueType::Text => {
-            let dictionary = value.as_dictionary().ok_or_else(|| "text channel is not a dictionary".to_string())?;
-            let text = dictionary.get("value").and_then(|entry| entry.as_atom()).and_then(|atom| atom.as_str()).ok_or_else(|| "text channel is missing value".to_string())?;
+            let dictionary = value.as_dictionary().ok_or(NeuralEngineError::ChannelTypeMismatch { kind: "text" })?;
+            let text = dictionary.get("value").and_then(|entry| entry.as_atom()).and_then(|atom| atom.as_str()).ok_or(NeuralEngineError::ChannelMissingValue { kind: "text" })?;
             Ok(Value::Atom(Atom::String(text.to_string())))
         }
-        ValueType::List(_) | ValueType::Schema(_) | ValueType::Any => value.as_dictionary().cloned().map(Value::Dictionary).ok_or_else(|| "channel is not a dictionary".to_string()),
+        ValueType::List(_) | ValueType::Schema(_) | ValueType::Any => value.as_dictionary().cloned().map(Value::Dictionary).ok_or(NeuralEngineError::ChannelNotDictionary),
     }
 }
 
-fn read_schema_instance<'a>(input: &'a Dictionary, schema: &Schema) -> Result<&'a Dictionary, String> {
-    let instance = input.get(&schema.id).and_then(|value| value.as_dictionary()).ok_or_else(|| format!("missing {}", schema.id))?;
+fn read_schema_instance<'a>(input: &'a Dictionary, schema: &Schema) -> Result<&'a Dictionary, NeuralEngineError> {
+    let instance = input.get(&schema.id).and_then(|value| value.as_dictionary()).ok_or_else(|| NeuralEngineError::Missing(schema.id.clone()))?;
     if instance.schema() != Some(schema.id.as_str()) {
-        return Err(format!("invalid {}", schema.id));
+        return Err(NeuralEngineError::Invalid(schema.id.clone()));
     }
     Ok(instance)
 }
 
-fn read_schema_field_input(input: &Dictionary, field: &FieldSpec) -> Result<Value, String> {
-    let value = input.get(&field.key).ok_or_else(|| format!("missing {}", field.key))?;
+fn read_schema_field_input(input: &Dictionary, field: &FieldSpec) -> Result<Value, NeuralEngineError> {
+    let value = input.get(&field.key).ok_or_else(|| NeuralEngineError::Missing(field.key.clone()))?;
     channel_to_field(value, &field.value)
 }
 
@@ -421,43 +459,45 @@ pub struct SchemaComponent {
 }
 
 impl SchemaComponent {
-    fn construct(&self, input: &Dictionary, provided: &[&FieldSpec]) -> Result<Dictionary, String> {
+    fn construct(&self, input: &Dictionary, provided: &[&FieldSpec]) -> Result<Dictionary, NeuralEngineError> {
         let mut dictionary = self.schema.default_dictionary();
         for field in provided {
             dictionary = dictionary.insert(field.key.clone(), read_schema_field_input(input, field)?);
         }
         for field in &self.schema.fields {
             if dictionary.get(&field.key).is_none() {
-                return Err(format!("missing field {}", field.key));
+                return Err(NeuralEngineError::MissingField(field.key.clone()));
             }
         }
-        self.schema.validate(&dictionary).map_err(|error| error.to_string())?;
+        self.schema.validate(&dictionary)?;
         Ok(dictionary)
     }
 
-    fn deconstruct(&self, input: &Dictionary) -> Result<Dictionary, String> {
+    fn deconstruct(&self, input: &Dictionary) -> Result<Dictionary, NeuralEngineError> {
         let instance = read_schema_instance(input, &self.schema)?;
-        self.schema.validate(instance).map_err(|error| error.to_string())?;
+        self.schema.validate(instance)?;
         Ok(instance.clone())
     }
 
-    fn modify(&self, input: &Dictionary, provided: &[&FieldSpec]) -> Result<Dictionary, String> {
+    fn modify(&self, input: &Dictionary, provided: &[&FieldSpec]) -> Result<Dictionary, NeuralEngineError> {
         let mut dictionary = read_schema_instance(input, &self.schema)?.clone();
         for field in provided {
             dictionary = dictionary.insert(field.key.clone(), read_schema_field_input(input, field)?);
         }
-        self.schema.validate(&dictionary).map_err(|error| error.to_string())?;
+        self.schema.validate(&dictionary)?;
         Ok(dictionary)
     }
 
-    fn success_output(&self, instance: Dictionary) -> Dictionary {
+    fn success_output(&self, instance: Dictionary) -> Result<Dictionary, NeuralEngineError> {
         let mut output = Dictionary::new().insert(self.schema.id.clone(), Value::Dictionary(instance.clone()));
         for field in &self.schema.fields {
+            // 🛡️ `instance` only reaches here after `Schema::validate` confirmed every
+            // declared field.key is present, so this lookup can never miss.
             let value = instance.get(&field.key).expect("validated field");
-            let channel = field_to_channel(value, &field.value).expect("validated field channel");
+            let channel = field_to_channel(value, &field.value)?;
             output = output.insert(field.key.clone(), channel);
         }
-        output.insert("errors", Value::Dictionary(schema_errors_list(&[])))
+        Ok(output.insert("errors", Value::Dictionary(schema_errors_list(&[]))))
     }
 
     fn error_output(&self, messages: Vec<String>) -> Dictionary {
@@ -475,14 +515,14 @@ impl Operation for SchemaComponent {
         let provided: Vec<&FieldSpec> = self.schema.fields.iter().filter(|field| schema_input_present(input, &field.key)).collect();
         let has_fields = !provided.is_empty();
         let result = match (has_instance, has_fields) {
-            (false, false) => Err("no instance or field inputs provided".into()),
+            (false, false) => Err(NeuralEngineError::NoInputProvided),
             (false, true) => self.construct(input, &provided),
             (true, false) => self.deconstruct(input),
             (true, true) => self.modify(input, &provided),
         };
-        Ok(match result {
-            Ok(instance) => self.success_output(instance),
-            Err(message) => self.error_output(vec![message]),
+        Ok(match result.and_then(|instance| self.success_output(instance)) {
+            Ok(output) => output,
+            Err(error) => self.error_output(vec![error.to_string()]),
         })
     }
 }
@@ -625,14 +665,14 @@ impl Cardinality {
         }
     }
 
-    pub fn from_symbol(raw: &str) -> Result<Self, String> {
+    pub fn from_symbol(raw: &str) -> Result<Self, NeuralEngineError> {
         match raw.trim() {
             "!" => Ok(Self::ExactlyOne),
             "?" => Ok(Self::ZeroOrOne),
             "*" => Ok(Self::ZeroOrMore),
             "+" => Ok(Self::OneOrMore),
-            digits if digits.chars().all(|ch| ch.is_ascii_digit()) && !digits.is_empty() => digits.parse::<usize>().map(Self::Exactly).map_err(|_| format!("invalid cardinality: {raw}")),
-            other => Err(format!("invalid cardinality: {other}")),
+            digits if digits.chars().all(|ch| ch.is_ascii_digit()) && !digits.is_empty() => digits.parse::<usize>().map(Self::Exactly).map_err(|_| NeuralEngineError::InvalidCardinality(raw.to_string())),
+            other => Err(NeuralEngineError::InvalidCardinality(other.to_string())),
         }
     }
 
@@ -976,16 +1016,7 @@ impl Registry {
 
     /// 🏷️ Lightweight schema metadata for pickers and catalogues.
     pub fn schema_refs(&self) -> Vec<SchemaRef> {
-        self.schema_ids()
-            .into_iter()
-            .filter_map(|id| {
-                self.schemas.get(&id).map(|schema| SchemaRef {
-                    id: schema.id.clone(),
-                    name: schema.name.clone(),
-                    icon: schema.icon.clone(),
-                })
-            })
-            .collect()
+        self.schema_ids().into_iter().filter_map(|id| self.schemas.get(&id).map(|schema| SchemaRef { id: schema.id.clone(), name: schema.name.clone(), icon: schema.icon.clone() })).collect()
     }
 
     pub fn schema_catalogue(&self) -> Vec<Schema> {
@@ -995,20 +1026,20 @@ impl Registry {
     }
 
     pub fn operator_catalogue(&self) -> Vec<OperatorInfo> {
-        let mut items: Vec<OperatorInfo> = self.operators.values().map(|entry| Self::finalize_operator_info(&entry.info, self.operator_produces.get(&entry.info.id), &self.schema_providers)).collect();
+        let mut items: Vec<OperatorInfo> = self.operators.values().map(|entry| Self::finalize_operator_info(&entry.info, self.operator_produces.get(&entry.info.id).map(Vec::as_slice), &self.schema_providers)).collect();
         items.sort_by(|a, b| a.id.cmp(&b.id));
         items
     }
 
-    fn finalize_operator_info(info: &OperatorInfo, produces: Option<&Vec<String>>, schema_providers: &HashMap<String, HashSet<String>>) -> OperatorInfo {
+    fn finalize_operator_info(info: &OperatorInfo, produces: Option<&[String]>, schema_providers: &HashMap<String, HashSet<String>>) -> OperatorInfo {
         let mut finalized = info.clone();
-        let produces = produces.cloned().unwrap_or_default();
+        let produces = produces.unwrap_or(&[]);
         for channel in &mut finalized.outputs {
             if !channel.operators.is_empty() {
                 continue;
             }
             let mut provided = HashSet::new();
-            for schema in &produces {
+            for schema in produces {
                 if let Some(providers) = schema_providers.get(schema) {
                     provided.extend(providers.iter().cloned());
                 }
@@ -1063,9 +1094,9 @@ fn hash_value<H: Hasher>(hasher: &mut H, value: &Value) {
 }
 
 fn hash_dictionary<H: Hasher>(hasher: &mut H, dictionary: &Dictionary) {
-    for key in dictionary.keys() {
+    for (key, value) in &dictionary.pairs {
         hash_str(hasher, key);
-        hash_value(hasher, dictionary.get(key).expect("key"));
+        hash_value(hasher, value);
     }
 }
 
@@ -1099,6 +1130,10 @@ impl NeuralCache {
 
     pub fn len(&self) -> usize {
         self.entries.lock().map(|entries| entries.len()).unwrap_or(0)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.entries.lock().map(|entries| entries.is_empty()).unwrap_or(true)
     }
 
     pub fn get_or_insert_with<F>(&self, key: u64, compute: F) -> Result<Dictionary, EvalError>
@@ -1156,11 +1191,10 @@ fn hash_neuron_key<H: Hasher>(hasher: &mut H, neuron: &Neuron) {
 }
 
 fn hash_subtree<H: Hasher>(hasher: &mut H, tree: &Tree) {
-    let mut ids: Vec<&str> = tree.neurons.iter().map(|n| n.id.as_str()).collect();
-    ids.sort_unstable();
-    for id in ids {
-        hash_str(hasher, id);
-        let neuron = tree.neurons.iter().find(|n| n.id == id).expect("id from neurons");
+    let mut neurons: Vec<&Neuron> = tree.neurons.iter().collect();
+    neurons.sort_by(|a, b| a.id.cmp(&b.id));
+    for neuron in neurons {
+        hash_str(hasher, &neuron.id);
         hash_neuron_key(hasher, neuron);
     }
     let mut synapses: Vec<&Synapse> = tree.synapses.iter().collect();
@@ -1191,26 +1225,35 @@ fn incoming_edges_signature(tree: &Tree, neuron_id: &str) -> u64 {
     hasher.finish()
 }
 
+/// 🧬 Per-neuron structural/adjacency fingerprint, keyed once by id in [`TreeSnapshot`] instead
+/// of duplicated across parallel maps — cuts id clones on [`TreeSnapshot::capture`] from four
+/// per neuron down to one.
+#[derive(Default)]
+struct NeuronSnapshot {
+    key: u64,
+    incoming: u64,
+    /// `[to, ...]` — who reads this neuron's output, used for forward dirty propagation.
+    dependents: Vec<String>,
+}
+
 /// 📸 Structural fingerprint of a tree+seeds pair, used by [`compute_dirty_set`] to diff two
 /// evaluations without re-hashing or re-walking neurons that provably didn't change.
 #[derive(Default)]
 pub struct TreeSnapshot {
-    neuron_ids: HashSet<String>,
-    neuron_keys: HashMap<String, u64>,
-    incoming_keys: HashMap<String, u64>,
+    neurons: HashMap<String, NeuronSnapshot>,
     seed_keys: HashMap<String, u64>,
-    /// `from -> [to, ...]` — who reads this neuron's output, used for forward dirty propagation.
-    dependents: HashMap<String, Vec<String>>,
 }
 
 impl TreeSnapshot {
     pub fn capture(tree: &Tree, seeds: &HashMap<String, Dictionary>) -> Self {
-        let neuron_ids: HashSet<String> = tree.neurons.iter().map(|n| n.id.clone()).collect();
-        let mut neuron_keys = HashMap::new();
-        let mut incoming_keys = HashMap::new();
-        for neuron in &tree.neurons {
-            neuron_keys.insert(neuron.id.clone(), neuron_key_hash(neuron));
-            incoming_keys.insert(neuron.id.clone(), incoming_edges_signature(tree, &neuron.id));
+        let mut neurons: HashMap<String, NeuronSnapshot> = tree.neurons.iter().map(|neuron| (neuron.id.clone(), NeuronSnapshot { key: neuron_key_hash(neuron), incoming: incoming_edges_signature(tree, &neuron.id), dependents: Vec::new() })).collect();
+        for syn in &tree.synapses {
+            if !neurons.contains_key(&syn.to) {
+                continue;
+            }
+            if let Some(source) = neurons.get_mut(&syn.from) {
+                source.dependents.push(syn.to.clone());
+            }
         }
         let mut seed_keys = HashMap::new();
         for (id, dict) in seeds {
@@ -1218,14 +1261,7 @@ impl TreeSnapshot {
             hash_dictionary(&mut hasher, dict);
             seed_keys.insert(id.clone(), hasher.finish());
         }
-        let mut dependents: HashMap<String, Vec<String>> = neuron_ids.iter().map(|id| (id.clone(), Vec::new())).collect();
-        for syn in &tree.synapses {
-            if !neuron_ids.contains(&syn.from) || !neuron_ids.contains(&syn.to) {
-                continue;
-            }
-            dependents.entry(syn.from.clone()).or_default().push(syn.to.clone());
-        }
-        Self { neuron_ids, neuron_keys, incoming_keys, seed_keys, dependents }
+        Self { neurons, seed_keys }
     }
 }
 
@@ -1239,13 +1275,14 @@ impl TreeSnapshot {
 /// adjacency is dirty too — everything else is provably unaffected.
 pub fn compute_dirty_set(previous: Option<&TreeSnapshot>, current: &TreeSnapshot) -> HashSet<String> {
     let Some(previous) = previous else {
-        return current.neuron_ids.clone();
+        return current.neurons.keys().cloned().collect();
     };
     let mut direct: HashSet<String> = HashSet::new();
-    for id in &current.neuron_ids {
-        let is_new = !previous.neuron_ids.contains(id);
-        let structurally_changed = previous.neuron_keys.get(id) != current.neuron_keys.get(id);
-        let rewired = previous.incoming_keys.get(id) != current.incoming_keys.get(id);
+    for (id, snapshot) in &current.neurons {
+        let prev = previous.neurons.get(id);
+        let is_new = prev.is_none();
+        let structurally_changed = prev.map(|p| p.key) != Some(snapshot.key);
+        let rewired = prev.map(|p| p.incoming) != Some(snapshot.incoming);
         if is_new || structurally_changed || rewired {
             direct.insert(id.clone());
         }
@@ -1253,16 +1290,17 @@ pub fn compute_dirty_set(previous: Option<&TreeSnapshot>, current: &TreeSnapshot
     let mut seed_ids: HashSet<&String> = previous.seed_keys.keys().collect();
     seed_ids.extend(current.seed_keys.keys());
     for id in seed_ids {
-        if current.neuron_ids.contains(id) && previous.seed_keys.get(id) != current.seed_keys.get(id) {
+        if current.neurons.contains_key(id) && previous.seed_keys.get(id) != current.seed_keys.get(id) {
             direct.insert(id.clone());
         }
     }
-    for removed_id in previous.neuron_ids.difference(&current.neuron_ids) {
-        if let Some(prev_dependents) = previous.dependents.get(removed_id) {
-            for dependent in prev_dependents {
-                if current.neuron_ids.contains(dependent) {
-                    direct.insert(dependent.clone());
-                }
+    for (removed_id, removed_snapshot) in &previous.neurons {
+        if current.neurons.contains_key(removed_id) {
+            continue;
+        }
+        for dependent in &removed_snapshot.dependents {
+            if current.neurons.contains_key(dependent) {
+                direct.insert(dependent.clone());
             }
         }
     }
@@ -1272,8 +1310,8 @@ pub fn compute_dirty_set(previous: Option<&TreeSnapshot>, current: &TreeSnapshot
         if !dirty.insert(id.clone()) {
             continue;
         }
-        if let Some(deps) = current.dependents.get(&id) {
-            for dep in deps {
+        if let Some(snapshot) = current.neurons.get(&id) {
+            for dep in &snapshot.dependents {
                 if !dirty.contains(dep) {
                     queue.push_back(dep.clone());
                 }
@@ -1334,7 +1372,7 @@ impl<'a> Evaluator<'a> {
         result
     }
 
-    #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::too_many_arguments, reason = "incremental cache eval needs tree+seeds+infos+dispatch+cache+dirty+previous together; splitting into a params struct would ripple into flow/core/rs call sites outside this ticket's scope")]
     pub fn evaluate_channels_sequential_cached(
         &self,
         tree: &Tree,
@@ -1396,7 +1434,7 @@ impl<'a> Evaluator<'a> {
         result
     }
 
-    #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::too_many_arguments, reason = "incremental cache eval needs tree+seeds+infos+dispatch+cache+dirty+previous together; splitting into a params struct would ripple into flow/core/rs call sites outside this ticket's scope")]
     pub fn evaluate_channels_cached(
         &self,
         tree: &Tree,
@@ -1484,13 +1522,7 @@ impl<'a> Evaluator<'a> {
     }
 
     /// 🧮 Evaluates a tree as a function with custom dispatch and operator metadata.
-    pub fn evaluate_function_with(
-        &self,
-        tree: &Tree,
-        in_dict: &Dictionary,
-        operator_infos: &HashMap<String, OperatorInfo>,
-        dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync),
-    ) -> Result<Dictionary, EvalError> {
+    pub fn evaluate_function_with(&self, tree: &Tree, in_dict: &Dictionary, operator_infos: &HashMap<String, OperatorInfo>, dispatch: &(dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Sync)) -> Result<Dictionary, EvalError> {
         let seeds = seed_input_boundaries(tree, in_dict);
         let channels = self.evaluate_channels_with(tree, &seeds, operator_infos, dispatch)?;
         collect_output_boundaries(tree, &channels)
@@ -1944,7 +1976,7 @@ mod tests {
     fn evaluate_with_custom_dispatch() {
         let tree = Tree { neurons: vec![Neuron::with_kind("b", "double", Dictionary::new().insert("number", Value::Dictionary(number_dictionary(3.0))))], synapses: vec![] };
         let out = Evaluator::new(&Registry::new())
-            .evaluate_with(&tree, &HashMap::new(), &HashMap::new(), &mut |kind, input| {
+            .evaluate_with(&tree, &HashMap::new(), &HashMap::new(), &|kind, input| {
                 assert_eq!(kind, "double");
                 Double.evaluate(input)
             })
@@ -2105,12 +2137,7 @@ mod tests {
     #[test]
     fn evaluate_function_top_level() {
         let tree = Tree {
-            neurons: vec![
-                input_boundary("in_a", "a"),
-                input_boundary("in_b", "b"),
-                Neuron::with_kind("add", "math.add", Dictionary::new()),
-                output_boundary("out_sum", "sum"),
-            ],
+            neurons: vec![input_boundary("in_a", "a"), input_boundary("in_b", "b"), Neuron::with_kind("add", "math.add", Dictionary::new()), output_boundary("out_sum", "sum")],
             synapses: vec![
                 Synapse { id: "s1".into(), from: "in_a".into(), to: "add".into(), from_port: String::new(), to_port: "a".into() },
                 Synapse { id: "s2".into(), from: "in_b".into(), to: "add".into(), from_port: String::new(), to_port: "b".into() },
@@ -2120,9 +2147,7 @@ mod tests {
         let mut reg = Registry::new();
         reg.register_schema(number_schema());
         reg.register_operator(add_info(), vec![OperatorImpl { schemas: vec!["number".into(), "number".into()], operation: Box::new(AddNumbers) }], &["number"]);
-        let in_dict = Dictionary::new()
-            .insert("a", Value::Dictionary(number_dictionary(2.0)))
-            .insert("b", Value::Dictionary(number_dictionary(3.0)));
+        let in_dict = Dictionary::new().insert("a", Value::Dictionary(number_dictionary(2.0))).insert("b", Value::Dictionary(number_dictionary(3.0)));
         let out = Evaluator::new(&reg).evaluate_function(&tree, &in_dict).unwrap();
         assert_eq!(out.get("sum").and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(5.0));
     }
@@ -2207,7 +2232,7 @@ mod tests {
         let channels = Evaluator::new(&reg).evaluate_channels(&tree, &HashMap::new(), &HashMap::from([(add_info().id.clone(), add_info())])).unwrap();
         let add_out = channels.outputs.get("add").expect("add output");
         assert!(add_out.get("error").is_some() || add_out.get("sum").is_none());
-        assert!(channels.outputs.get("a").is_some());
+        assert!(channels.outputs.contains_key("a"));
     }
 
     #[test]
@@ -2354,12 +2379,7 @@ mod tests {
         // Two independent branches: a -> b, c -> d. Changing `a`'s params should dirty `a` and
         // `b` (its descendant), but never touch `c`/`d` (a disjoint branch).
         let make_tree = |a_value: f64| Tree {
-            neurons: vec![
-                Neuron::with_kind("a", "echo", number_dictionary(a_value)),
-                Neuron::with_kind("b", "double", Dictionary::new()),
-                Neuron::with_kind("c", "echo", number_dictionary(9.0)),
-                Neuron::with_kind("d", "double", Dictionary::new()),
-            ],
+            neurons: vec![Neuron::with_kind("a", "echo", number_dictionary(a_value)), Neuron::with_kind("b", "double", Dictionary::new()), Neuron::with_kind("c", "echo", number_dictionary(9.0)), Neuron::with_kind("d", "double", Dictionary::new())],
             synapses: vec![
                 Synapse { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "number".into() },
                 Synapse { id: "s2".into(), from: "c".into(), to: "d".into(), from_port: "x".into(), to_port: "number".into() },

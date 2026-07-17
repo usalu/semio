@@ -33,7 +33,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "compose/dev/algorithm",
-        "command": "bunx vitest run --config ./vitest.config.ts",
+        "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }
     }

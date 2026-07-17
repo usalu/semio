@@ -382,6 +382,7 @@ var PLUGIN_BUILD_TARGETS = [
   { pluginId: "cad", cratePath: "cad/plugin/rs", wasmOut: "cad_plugin.wasm", contributes: [], consumes: [] },
   { pluginId: "dag", cratePath: "infinite/board/port/directed/dag/plugin/rs", wasmOut: "dag_plugin.wasm", contributes: [], consumes: [] },
   { pluginId: "draw", cratePath: "draw/plugin/rs", wasmOut: "draw_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "fem", cratePath: "fem/plugin/rs", wasmOut: "fem_plugin.wasm", contributes: [], consumes: [] },
   { pluginId: "flow", cratePath: "flow/plugin/rs", wasmOut: "flow_plugin.wasm", contributes: [], consumes: [] },
   { pluginId: "forms", cratePath: "forms/plugin/rs", wasmOut: "forms_plugin.wasm", contributes: [], consumes: ["forms.questionKind"] },
   { pluginId: "gis", cratePath: "gis/plugin/rs", wasmOut: "gis_plugin.wasm", contributes: [], consumes: [] },
@@ -601,7 +602,7 @@ function pluginHandleForBridge(handle) {
   };
 }
 var pluginFromUrl = new URLSearchParams(location.search).get("plugin");
-var pluginFilter = pluginFromUrl ?? "draw";
+var pluginFilter = pluginFromUrl ?? "s";
 var studioMode = pluginFilter === "s";
 var pluginTargets = studioMode ? PLUGIN_TARGETS : PLUGIN_TARGETS.filter((entry) => entry.pluginId === pluginFilter || entry.pluginId === `${pluginFilter}-module-procedural`);
 async function pluginModuleAvailable(moduleUrl) {

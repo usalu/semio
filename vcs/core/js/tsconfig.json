@@ -1,0 +1,10 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "types": ["node", "vitest/importMeta"]
+  },
+  "include": ["index.ts", "hasher.ts"]
+}

@@ -1,0 +1,8 @@
+{
+  "global": {
+    "meanLumaAbsMax": 12,
+    "meanColorChannelAbsMax": 15,
+    "nonBgRatioRelMax": 0.25
+  },
+  "perPlugin": {}
+}

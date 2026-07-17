@@ -41,9 +41,11 @@ pub enum PersistenceBinding {
     /// @emoji 📁 Local canonical store. A directory uses the multi-document `folder://` sqlite store;
     /// a `*.json` path uses the single-blob `file://` export format.
     Folder { path: std::path::PathBuf },
-    /// @emoji ☁️ A hub node reachable over WebSocket (`remote://host:port` → `ws://host:port/documents/{id}/ws`).
+    /// @emoji ☁️ A hub node reachable over WebSocket
+    /// (`remote://host:port` → `ws://host:port/studios/{studio_id}/documents/{id}/ws`).
     Hub {
         base_url: String,
+        studio_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         token: Option<String>,
     },
@@ -198,8 +200,8 @@ fn op_envelope_from_stored_edit(schema: &str, document_id: &str, edit: Value) ->
 }
 
 /// @emoji 🔗 Derives a hub WebSocket URL: `remote://host:port` (or `http(s)://`, `ws(s)://`) →
-/// `ws(s)://host:port/documents/{document_id}/ws`.
-fn hub_ws_url(base_url: &str, document_id: &str) -> String {
+/// `ws(s)://host:port/studios/{studio_id}/documents/{document_id}/ws`.
+fn hub_ws_url(base_url: &str, studio_id: &str, document_id: &str) -> String {
     let secure = base_url.starts_with("https://") || base_url.starts_with("wss://");
     let authority = base_url
         .split_once("://")
@@ -209,7 +211,7 @@ fn hub_ws_url(base_url: &str, document_id: &str) -> String {
         .next()
         .unwrap_or(base_url);
     let scheme = if secure { "wss" } else { "ws" };
-    format!("{scheme}://{authority}/documents/{document_id}/ws")
+    format!("{scheme}://{authority}/studios/{studio_id}/documents/{document_id}/ws")
 }
 //#endregion 🔖Endpoints
 
@@ -486,6 +488,7 @@ mod native_actor {
         folder_watch_path: Option<PathBuf>,
         watch_external: bool,
         hub_base_url: Option<String>,
+        hub_studio_id: Option<String>,
         hub_token: Option<String>,
         hub: Option<HubConn>,
         hub_version: i64,
@@ -512,6 +515,7 @@ mod native_actor {
             let mut folder = None;
             let mut folder_watch_path = None;
             let mut hub_base_url = None;
+            let mut hub_studio_id = None;
             let mut hub_token = None;
             for binding in &config.bindings {
                 match binding {
@@ -521,9 +525,10 @@ mod native_actor {
                             folder_watch_path = Some(folder_watch_path_for(path));
                         }
                     }
-                    PersistenceBinding::Hub { base_url, token } => {
+                    PersistenceBinding::Hub { base_url, studio_id, token } => {
                         if hub_base_url.is_none() {
                             hub_base_url = Some(base_url.clone());
+                            hub_studio_id = Some(studio_id.clone());
                             hub_token = token.clone();
                         }
                     }
@@ -540,6 +545,7 @@ mod native_actor {
                 folder_watch_path,
                 watch_external: config.watch_external,
                 hub_base_url,
+                hub_studio_id,
                 hub_token,
                 hub: None,
                 hub_version: 0,
@@ -768,8 +774,9 @@ mod native_actor {
         //#region 🔖Hub
         async fn try_connect_hub(&mut self) {
             let Some(base_url) = self.hub_base_url.clone() else { return };
+            let studio_id = self.hub_studio_id.clone().unwrap_or_default();
             let token = self.hub_token.clone();
-            let url = hub_ws_url(&base_url, &self.document_id);
+            let url = hub_ws_url(&base_url, &studio_id, &self.document_id);
             self.set_remote_state(RemoteState::Connecting);
             match tokio_tungstenite::connect_async(url).await {
                 Ok((stream, _response)) => {
@@ -1053,6 +1060,7 @@ mod wasm_actor {
         remote: ChannelBackboneRemote,
         events: broadcast::Sender<DocumentEvent>,
         hub_base_url: Option<String>,
+        hub_studio_id: Option<String>,
         hub_token: Option<String>,
         ws: Option<WebSocket>,
         hub_version: i64,
@@ -1065,7 +1073,8 @@ mod wasm_actor {
     impl WasmActor {
         fn connect(&mut self) {
             let Some(base_url) = self.hub_base_url.clone() else { return };
-            let url = hub_ws_url(&base_url, &self.document_id);
+            let studio_id = self.hub_studio_id.clone().unwrap_or_default();
+            let url = hub_ws_url(&base_url, &studio_id, &self.document_id);
             let Ok(ws) = WebSocket::new(&url) else { return };
 
             let incoming = self.incoming_tx.clone();
@@ -1215,11 +1224,13 @@ mod wasm_actor {
     ) {
         let (incoming_tx, mut incoming_rx) = mpsc::unbounded_channel::<String>();
         let mut hub_base_url = None;
+        let mut hub_studio_id = None;
         let mut hub_token = None;
         for binding in &config.bindings {
-            if let PersistenceBinding::Hub { base_url, token } = binding {
+            if let PersistenceBinding::Hub { base_url, studio_id, token } = binding {
                 if hub_base_url.is_none() {
                     hub_base_url = Some(base_url.clone());
+                    hub_studio_id = Some(studio_id.clone());
                     hub_token = token.clone();
                 }
             }
@@ -1230,6 +1241,7 @@ mod wasm_actor {
             remote,
             events,
             hub_base_url,
+            hub_studio_id,
             hub_token,
             ws: None,
             hub_version: 0,
@@ -1417,16 +1429,16 @@ mod tests {
     #[test]
     fn hub_ws_url_derives_ws_endpoint_from_remote_uri() {
         assert_eq!(
-            hub_ws_url("remote://host:6070", "doc-1"),
-            "ws://host:6070/documents/doc-1/ws"
+            hub_ws_url("remote://host:6070", "studio-1", "doc-1"),
+            "ws://host:6070/studios/studio-1/documents/doc-1/ws"
         );
         assert_eq!(
-            hub_ws_url("https://hub.example.com", "doc-2"),
-            "wss://hub.example.com/documents/doc-2/ws"
+            hub_ws_url("https://hub.example.com", "studio-1", "doc-2"),
+            "wss://hub.example.com/studios/studio-1/documents/doc-2/ws"
         );
         assert_eq!(
-            hub_ws_url("ws://127.0.0.1:5000/prefix", "d"),
-            "ws://127.0.0.1:5000/documents/d/ws"
+            hub_ws_url("ws://127.0.0.1:5000/prefix", "studio-1", "d"),
+            "ws://127.0.0.1:5000/studios/studio-1/documents/d/ws"
         );
     }
 
@@ -1671,7 +1683,7 @@ mod tests {
             let channels_a = host_a.open(DocumentActorConfig {
                 document_id: "shared".into(),
                 schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), token: None }],
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), studio_id: "studio-1".into(), token: None }],
                 watch_external: false,
                 actor: "A".into(),
             });
@@ -1682,7 +1694,7 @@ mod tests {
             let channels_b = host_b.open(DocumentActorConfig {
                 document_id: "shared".into(),
                 schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), token: None }],
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), studio_id: "studio-1".into(), token: None }],
                 watch_external: false,
                 actor: "B".into(),
             });
@@ -1724,7 +1736,7 @@ mod tests {
             let channels_a = host_a.open(DocumentActorConfig {
                 document_id: "catchup".into(),
                 schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), token: None }],
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), studio_id: "studio-1".into(), token: None }],
                 watch_external: false,
                 actor: "A".into(),
             });
@@ -1749,7 +1761,7 @@ mod tests {
             let channels_b = host_b.open(DocumentActorConfig {
                 document_id: "catchup".into(),
                 schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url, token: None }],
+                bindings: vec![PersistenceBinding::Hub { base_url, studio_id: "studio-1".into(), token: None }],
                 watch_external: false,
                 actor: "B".into(),
             });
@@ -1780,7 +1792,7 @@ mod tests {
             let channels_b = host_b.open(DocumentActorConfig {
                 document_id: "drain".into(),
                 schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), token: None }],
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), studio_id: "studio-1".into(), token: None }],
                 watch_external: false,
                 actor: "B".into(),
             });
@@ -1792,7 +1804,7 @@ mod tests {
             let channels_a = host_a.open(DocumentActorConfig {
                 document_id: "drain".into(),
                 schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url, token: None }],
+                bindings: vec![PersistenceBinding::Hub { base_url, studio_id: "studio-1".into(), token: None }],
                 watch_external: false,
                 actor: "A".into(),
             });

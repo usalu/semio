@@ -130,6 +130,17 @@ pub mod model {
         pub connected_at: i64,
         pub disconnected_at: Option<i64>,
     }
+
+    /// @emoji 📦 A content-addressed blob's metadata (mirrors `vcs::BlobRef`) — this crate has no
+    /// dependency on the `vcs` engine crate, so the shape is duplicated rather than shared; bytes are
+    /// fetched separately via `HubStorage::get_blob`, never carried on this record.
+    #[derive(Clone, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct BlobRecord {
+        pub hash: String,
+        pub media_type: String,
+        pub size: i64,
+    }
 }
 //#endregion 🔖Model
 
@@ -199,6 +210,15 @@ pub trait HubStorage: Send + Sync + 'static {
     ) -> StorageResult<SyncSessionRecord>;
     async fn record_sync_session_close(&self, sync_session_id: &str) -> StorageResult<()>;
     async fn list_sync_sessions_for_document(&self, document_id: &str) -> StorageResult<Vec<SyncSessionRecord>>;
+    //#endregion
+
+    //#region Blobs
+    /// @emoji 📦 Stores `bytes` under their Blake3 content hash, idempotently (a re-put of identical
+    /// bytes never rewrites storage — mirrors `vcs::BlobStore::put`). HTTP routes exposing this over
+    /// `bin.rs` are a separate ticket; this trait is the seam that ticket builds on.
+    async fn put_blob(&self, bytes: &[u8], media_type: &str) -> StorageResult<BlobRecord>;
+    async fn get_blob(&self, hash: &str) -> StorageResult<Option<Vec<u8>>>;
+    async fn has_blob(&self, hash: &str) -> StorageResult<bool>;
     //#endregion
 }
 //#endregion 🔖Trait

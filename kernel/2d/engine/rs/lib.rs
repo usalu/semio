@@ -1,41 +1,42 @@
 //! 🖊️ Drawing kernel interface: scene nodes, styles, and export contracts.
 
 pub mod compute {
-// #region compute
-//! ⚙️ Offload CPU-heavy drawing kernel work to the rayon thread pool.
+    // #region compute
+    //! ⚙️ Offload CPU-heavy drawing kernel work to the rayon thread pool.
 
-use std::future::Future;
+    use std::future::Future;
 
-/// 🧵 Run a closure on the rayon pool (or inline when `parallel` is disabled).
-pub async fn run_blocking<F, R>(f: F) -> R
-where
-    F: FnOnce() -> R + Send + 'static,
-    R: Send + 'static,
-{
-    #[cfg(feature = "parallel")]
+    /// 🧵 Run a closure on the rayon pool (or inline when `parallel` is disabled).
+    pub async fn run_blocking<F, R>(f: F) -> R
+    where
+        F: FnOnce() -> R + Send + 'static,
+        R: Send + 'static,
     {
-        let (tx, rx) = futures::channel::oneshot::channel();
-        rayon::spawn(move || {
-            let _ = tx.send(f());
-        });
-        rx.await.expect("blocking task dropped")
+        #[cfg(feature = "parallel")]
+        {
+            let (tx, rx) = futures::channel::oneshot::channel();
+            rayon::spawn(move || {
+                let _ = tx.send(f());
+            });
+            // Canceled only if the rayon worker panicked before sending; that panic already
+            // surfaced once, so re-panicking here on the awaiting side is the correct terminal point.
+            rx.await.expect("blocking task dropped")
+        }
+        #[cfg(not(feature = "parallel"))]
+        {
+            f()
+        }
     }
-    #[cfg(not(feature = "parallel"))]
+
+    /// ⏳ Block the current thread until an async kernel call completes.
+    pub fn block_on<F>(future: F) -> F::Output
+    where
+        F: Future,
     {
-        f()
+        pollster::block_on(future)
     }
+    // #endregion compute
 }
-
-/// ⏳ Block the current thread until an async kernel call completes.
-pub fn block_on<F>(future: F) -> F::Output
-where
-    F: Future,
-{
-    pollster::block_on(future)
-}
-// #endregion compute
-}
-
 
 pub use compute::{block_on, run_blocking};
 
@@ -172,14 +173,7 @@ impl Affine2D {
     pub fn multiply(self, other: Self) -> Self {
         let [a, b, c, d, e, f] = self.0;
         let [a2, b2, c2, d2, e2, f2] = other.0;
-        Self([
-            a * a2 + c * b2,
-            b * a2 + d * b2,
-            a * c2 + c * d2,
-            b * c2 + d * d2,
-            a * e2 + c * f2 + e,
-            b * e2 + d * f2 + f,
-        ])
+        Self([a * a2 + c * b2, b * a2 + d * b2, a * c2 + c * d2, b * c2 + d * d2, a * e2 + c * f2 + e, b * e2 + d * f2 + f])
     }
 
     pub fn transform_point(self, point: Vec2) -> Vec2 {
@@ -235,25 +229,18 @@ impl Default for DrawingScene {
     }
 }
 
+// #region ⚠️ Errors
 /// ⚠️ Kernel operation error.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, thiserror::Error)]
 pub enum DrawingError {
+    #[error("invalid input: {0}")]
     InvalidInput(String),
+    #[error("missing handle: {0}")]
     MissingHandle(String),
+    #[error("operation failed: {0}")]
     Operation(String),
 }
-
-impl std::fmt::Display for DrawingError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            DrawingError::InvalidInput(message) => write!(f, "invalid input: {message}"),
-            DrawingError::MissingHandle(handle) => write!(f, "missing handle: {handle}"),
-            DrawingError::Operation(message) => write!(f, "operation failed: {message}"),
-        }
-    }
-}
-
-impl std::error::Error for DrawingError {}
+// #endregion ⚠️ Errors
 // #endregion 🔖Types
 
 // #region 🔖Kernel
@@ -343,14 +330,7 @@ mod tests {
         let scene = DrawingScene {
             width: 100.0,
             height: 50.0,
-            nodes: vec![SceneNode {
-                transform: Affine2D::identity(),
-                node: DrawingNode::Rect { x: 0.0, y: 0.0, width: 10.0, height: 10.0 },
-                fill: Some(FillStyle::Solid { color: [1.0, 0.0, 0.0, 1.0] }),
-                stroke: None,
-                opacity: 1.0,
-                clip: None,
-            }],
+            nodes: vec![SceneNode { transform: Affine2D::identity(), node: DrawingNode::Rect { x: 0.0, y: 0.0, width: 10.0, height: 10.0 }, fill: Some(FillStyle::Solid { color: [1.0, 0.0, 0.0, 1.0] }), stroke: None, opacity: 1.0, clip: None }],
         };
         assert_eq!(scene.nodes.len(), 1);
         assert_eq!(scene.width, 100.0);

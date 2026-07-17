@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀 `@semio-tech/trinity-jack-lsp` router: `bun ./script.ts wasm`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
 class WasmScript extends BundleScript {
@@ -23,7 +23,7 @@ class WasmScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    execFileSync("cargo", ["test", "-p", "trinity_jack_lsp", ...segments], { stdio: "inherit", cwd: this.repoRoot });
+    runCargoTestBudgeted(["trinity_jack_lsp"], this.repoRoot, segments);
   }
 }
 

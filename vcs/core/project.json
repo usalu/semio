@@ -1,0 +1,22 @@
+{
+  "name": "@semio-tech/vcs-core",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "vcs/core",
+        "command": "bun ./script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "vcs/core",
+        "command": "bun ./script.ts typecheck",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

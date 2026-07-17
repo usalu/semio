@@ -1,0 +1,22 @@
+{
+  "wave": 0,
+  "claims": [
+    {
+      "agent": "w0-engine-facade",
+      "file": "ui/wgpu/rs/lib.rs",
+      "regions": ["engine (new, to be created between shell and widgets)"],
+      "reads_only": ["arena", "tree", "reconcile", "flex", "paint", "events", "scene_slots", "shell", "draw", "gpu"],
+      "must_not_touch": ["widgets", "input", "layout", "component", "theme", "re-exports", "host"]
+    },
+    {
+      "agent": "w0-harness-and-reference",
+      "file": ".repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/parity-verify.ts",
+      "regions": ["whole file (harness script, not a shared source file)"],
+      "must_not_touch": ["ui/wgpu/rs/lib.rs", "framework/renderer/wgpu/rs/lib.rs"]
+    }
+  ],
+  "choke_points_reserved_for_integrator": [
+    "framework/renderer/wgpu/rs/lib.rs: ShellState struct + new()/init, render_ui_node dispatch, Registry, host tail (semio_renderer_boot/run_native), Cargo.toml",
+    "ui/wgpu/rs/lib.rs: UiNode enum, UiCommand enum, theme, re-exports, host, Cargo.toml"
+  ]
+}

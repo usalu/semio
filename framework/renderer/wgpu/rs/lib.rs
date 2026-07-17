@@ -3332,7 +3332,7 @@ pub fn paint_node_graph_overlays(
 }
 //#endregion NodeGraph
 
-//#region GisMap
+//#region TiledMap
 fn map_tile_url(template: &str, z: u32, x: u32, y: u32) -> String {
     template
         .replace("{z}", &z.to_string())
@@ -3367,7 +3367,7 @@ fn map_theme_json_from_ui_theme(theme: &Theme) -> String {
 
 fn sync_map_host(
     host: &mut gis_2d::MapHost,
-    scene: &ui_wgpu::GisMapScene,
+    scene: &ui_wgpu::TiledMapScene,
     cache: &mut MapSyncCache,
     pw: u32,
     ph: u32,
@@ -3415,7 +3415,7 @@ fn sync_map_host(
     }
 }
 
-fn queue_map_tile_fetches(surface_id: &str, scene: &ui_wgpu::GisMapScene, host: &mut gis_2d::MapHost) {
+fn queue_map_tile_fetches(surface_id: &str, scene: &ui_wgpu::TiledMapScene, host: &mut gis_2d::MapHost) {
     host.prepare_visible_tiles();
     let needs_raster = scene.render_mode == "image" || scene.render_mode == "combined";
     let needs_vector = scene.render_mode == "vector" || scene.render_mode == "combined";
@@ -3524,13 +3524,13 @@ pub fn apply_map_tile_bytes(surface_id: &str, fetch: &PendingMapTileFetch, bytes
     });
 }
 
-pub fn paint_gis_map(
+pub fn paint_tiled_map(
     gpu: &mut GpuContext,
     ctx: &mut FrameworkWidgetContext<'_>,
     scene: &UiComponentSceneNode,
     inner: Rect,
 ) {
-    let Some(map_scene) = &scene.gis_map else {
+    let Some(map_scene) = &scene.tiled_map else {
         return;
     };
     let pw = inner.w.max(1.0) as u32;
@@ -3712,23 +3712,23 @@ pub fn map_interaction_actions(
   vec![
       map_action(
           controller_id,
-          ui_wgpu::gis_map_actions::SET_CAMERA,
+          ui_wgpu::tiled_map_actions::SET_CAMERA,
           json!({ "surfaceId": surface_id, "camera": serde_json::from_str::<Value>(&host.camera_json()).unwrap_or(json!({})) }),
       ),
       map_action(
           controller_id,
-          ui_wgpu::gis_map_actions::SET_FEATURE_SELECTION,
+          ui_wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
           json!({ "surfaceId": surface_id, "positions": selection["positions"], "routes": selection["routes"] }),
       ),
       map_action(
           controller_id,
-          ui_wgpu::gis_map_actions::SET_HOVER,
+          ui_wgpu::tiled_map_actions::SET_HOVER,
           json!({ "surfaceId": surface_id, "hover": hover }),
       ),
   ]
 }
 
-pub fn gis_map_wheel(
+pub fn tiled_map_wheel(
     surface_id: &str,
     controller_id: &str,
     inner: Rect,
@@ -3754,9 +3754,9 @@ pub fn gis_map_wheel(
         map_interaction_actions(surface_id, controller_id, host)
     })
 }
-//#endregion GisMap
+//#endregion TiledMap
 
-//#region Puzzle2dBoard
+//#region Board2d
 /// @emoji 🧩 Raw event row drained from {@link puzzle_2d::BoardHost::drain_events_json}; mirrors the TS `BoardEventRow` shape.
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct BoardEventRow {
@@ -3773,8 +3773,8 @@ pub struct CoalescedBoardEvents {
 const PUZZLE2D_TRANSIENT_EVENT_NAMES: &[&str] = &["preselect", "brushPreview", "linkCompatibleNodes", "linkTargetRing"];
 const PUZZLE2D_FLUSH_NOW_EVENT_NAMES: &[&str] = &["select", "preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete"];
 
-/// @emoji 📬 Drops transient rows, coalesces `camera` to its latest value and `nodeMove` to one row per id (unless a `nodeDragEnd` follows), and flags whether the buffer should flush immediately. Port of `coalescePuzzle2dBoardEvents` in the React host.
-pub fn coalesce_puzzle2d_board_events(rows: &[BoardEventRow]) -> CoalescedBoardEvents {
+/// @emoji 📬 Drops transient rows, coalesces `camera` to its latest value and `nodeMove` to one row per id (unless a `nodeDragEnd` follows), and flags whether the buffer should flush immediately. Port of `coalesceBoard2dEvents` in the React host.
+pub fn coalesce_board2d_events(rows: &[BoardEventRow]) -> CoalescedBoardEvents {
     let has_drag_end = rows.iter().any(|row| row.name == "nodeDragEnd");
     let mut flush_now = false;
     let mut last_camera: Option<BoardEventRow> = None;
@@ -3834,7 +3834,7 @@ fn parse_board_selection_ids(json: &str) -> Vec<String> {
 }
 
 /// @emoji 🔁 Applies scene fields onto `host`, diffing against `cache` so only changed fields re-sync. Mirrors `applyFixtureToSession` plus the independent per-field effects in the React host: reparsing the fixture resets selection/camera, so both are silently re-applied right after. Skips fixture/selection/camera sync entirely while `host` defers descriptor sync (mid-gesture), matching `pendingFixtureSceneRef`.
-fn sync_board_host(host: &mut puzzle_2d::BoardHost, scene: &ui_wgpu::Puzzle2dBoardScene, cache: &mut BoardSyncCache, pw: u32, ph: u32, dpr: f64) {
+fn sync_board_host(host: &mut puzzle_2d::BoardHost, scene: &ui_wgpu::Board2dScene, cache: &mut BoardSyncCache, pw: u32, ph: u32, dpr: f64) {
     let size_key = format!("{pw}x{ph}@{dpr}");
     if sync_field(&mut cache.size_key, &size_key) {
         host.set_size(pw, ph, dpr);
@@ -3904,7 +3904,7 @@ fn sync_board_host(host: &mut puzzle_2d::BoardHost, scene: &ui_wgpu::Puzzle2dBoa
 }
 
 pub fn paint_puzzle_board(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
-    let Some(board_scene) = &scene.puzzle2d_board else {
+    let Some(board_scene) = &scene.board2d else {
         return;
     };
     let pw = inner.w.max(1.0) as u32;
@@ -4009,7 +4009,7 @@ fn board_take_buffer_coalesced(surface_id: &str) -> Option<String> {
     if rows.is_empty() {
         return None;
     }
-    let coalesced = coalesce_puzzle2d_board_events(&rows);
+    let coalesced = coalesce_board2d_events(&rows);
     if coalesced.events_json == "[]" {
         None
     } else {
@@ -4030,7 +4030,7 @@ fn board_drain_and_maybe_flush(surface_id: &str, controller_id: &str) -> Vec<Act
     let flush_now = ENGINE_SURFACES.with(|cell| {
         cell.borrow()
             .get(surface_id)
-            .map(|entry| coalesce_puzzle2d_board_events(&entry.board_pending_events).flush_now)
+            .map(|entry| coalesce_board2d_events(&entry.board_pending_events).flush_now)
             .unwrap_or(false)
     });
     if !flush_now {
@@ -4092,7 +4092,7 @@ pub fn puzzle_board_pointer_leave(surface_id: &str, controller_id: &str, alt: bo
     board_flush_events_action(surface_id, controller_id).into_iter().collect()
 }
 
-/// @emoji 🖐️ True while a node drag or area-select gesture is in flight, so pointer-up outside the surface bounds still reaches the host (mirrors `gis_map_drag_active`).
+/// @emoji 🖐️ True while a node drag or area-select gesture is in flight, so pointer-up outside the surface bounds still reaches the host (mirrors `tiled_map_drag_active`).
 pub fn board_drag_active(surface_id: &str) -> bool {
     with_board_host(surface_id, |host| host.defers_descriptor_sync_from_js() || host.is_dragging_area_select()).unwrap_or(false)
 }
@@ -4109,10 +4109,10 @@ pub fn puzzle_board_wheel(surface_id: &str, controller_id: &str, inner: Rect, x:
     }
     actions
 }
-//#endregion Puzzle2dBoard
+//#endregion Board2d
 
 #[cfg(test)]
-mod puzzle2d_board_engine_tests {
+mod board2d_engine_tests {
     use super::*;
 
     fn row(name: &str, payload: Value) -> BoardEventRow {
@@ -4122,7 +4122,7 @@ mod puzzle2d_board_engine_tests {
     #[test]
     fn coalesce_drops_transient_events() {
         let rows = vec![row("preselect", json!({})), row("brushPreview", json!({})), row("select", json!({ "ids": ["a"] }))];
-        let result = coalesce_puzzle2d_board_events(&rows);
+        let result = coalesce_board2d_events(&rows);
         assert!(result.flush_now);
         let parsed: Vec<Value> = serde_json::from_str(&result.events_json).unwrap();
         assert_eq!(parsed.len(), 1);
@@ -4132,7 +4132,7 @@ mod puzzle2d_board_engine_tests {
     #[test]
     fn coalesce_keeps_only_latest_camera() {
         let rows = vec![row("camera", json!({ "x": 1 })), row("camera", json!({ "x": 2 }))];
-        let result = coalesce_puzzle2d_board_events(&rows);
+        let result = coalesce_board2d_events(&rows);
         assert!(!result.flush_now);
         let parsed: Vec<Value> = serde_json::from_str(&result.events_json).unwrap();
         assert_eq!(parsed.len(), 1);
@@ -4146,7 +4146,7 @@ mod puzzle2d_board_engine_tests {
             row("nodeMove", json!({ "id": "b", "x": 2 })),
             row("nodeMove", json!({ "id": "a", "x": 3 })),
         ];
-        let result = coalesce_puzzle2d_board_events(&rows);
+        let result = coalesce_board2d_events(&rows);
         let parsed: Vec<Value> = serde_json::from_str(&result.events_json).unwrap();
         assert_eq!(parsed.len(), 2);
         assert_eq!(parsed[0]["payload"]["id"], "a");
@@ -4157,7 +4157,7 @@ mod puzzle2d_board_engine_tests {
     #[test]
     fn coalesce_drops_node_move_entirely_when_drag_end_follows() {
         let rows = vec![row("nodeMove", json!({ "id": "a", "x": 1 })), row("nodeDragEnd", json!({ "moves": [] }))];
-        let result = coalesce_puzzle2d_board_events(&rows);
+        let result = coalesce_board2d_events(&rows);
         let parsed: Vec<Value> = serde_json::from_str(&result.events_json).unwrap();
         assert_eq!(parsed.len(), 1);
         assert_eq!(parsed[0]["name"], "nodeDragEnd");
@@ -4166,14 +4166,14 @@ mod puzzle2d_board_engine_tests {
     #[test]
     fn coalesce_flags_flush_now_for_edge_and_brush_events() {
         for name in ["preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete"] {
-            let result = coalesce_puzzle2d_board_events(&[row(name, json!({}))]);
+            let result = coalesce_board2d_events(&[row(name, json!({}))]);
             assert!(result.flush_now, "{name} should flush immediately");
         }
     }
 
     #[test]
     fn coalesce_empty_input_produces_empty_array_and_no_flush() {
-        let result = coalesce_puzzle2d_board_events(&[]);
+        let result = coalesce_board2d_events(&[]);
         assert!(!result.flush_now);
         assert_eq!(result.events_json, "[]");
     }
@@ -4352,7 +4352,7 @@ pub mod interpreter {
 // #region interpreter
 //! 🧩 Maps framework UiNode trees to ui_wgpu widget nodes.
 
-use crate::scenes::{queue_canvas_image_upload, render_component_scene, GisMapSurface, NodeGraphSurface, Puzzle2dBoardSurface};
+use crate::scenes::{queue_canvas_image_upload, render_component_scene, TiledMapSurface, NodeGraphSurface, Board2dSurface};
 use ui_wgpu::{ActionDescriptor, UiComponentSceneNode, UiControlNode, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
 use serde_json::Value;
 use ui_wgpu::{
@@ -4564,7 +4564,7 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
             limits,
         )?;
     }
-    if let Some(map) = &scene.gis_map {
+    if let Some(map) = &scene.tiled_map {
         check_json_payload(&format!("{scene_label} gisMap.fixture"), &map.map_fixture_json, limits)?;
         check_json_payload(&format!("{scene_label} gisMap.camera"), &map.camera_json, limits)?;
         check_json_payload(
@@ -4585,7 +4585,7 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
             limits,
         )?;
     }
-    if let Some(board) = &scene.puzzle2d_board {
+    if let Some(board) = &scene.board2d {
         check_json_payload(&format!("{scene_label} puzzle2dBoard.fixture"), &board.fixture_json, limits)?;
         check_json_payload(&format!("{scene_label} puzzle2dBoard.camera"), &board.camera_json, limits)?;
         check_json_payload(
@@ -4727,14 +4727,14 @@ pub fn render_ui_node(
     gpu: &mut ui_wgpu::GpuContext,
     world3d_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
     node_graph_states: &mut std::collections::HashMap<String, NodeGraphSurface>,
-    gis_map_states: &mut std::collections::HashMap<String, GisMapSurface>,
+    tiled_map_states: &mut std::collections::HashMap<String, TiledMapSurface>,
     icon_render_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
-    puzzle2d_board_states: &mut std::collections::HashMap<String, Puzzle2dBoardSurface>,
+    board2d_states: &mut std::collections::HashMap<String, Board2dSurface>,
 ) {
     if let Err(message) = validate_ui_node(node, &RENDER_PLAN_LIMITS) {
         return render_plan_error_widget(&message, bounds, ctx);
     }
-    render_ui_node_inner(node, bounds, ctx, gpu, world3d_states, node_graph_states, gis_map_states, icon_render_states, puzzle2d_board_states);
+    render_ui_node_inner(node, bounds, ctx, gpu, world3d_states, node_graph_states, tiled_map_states, icon_render_states, board2d_states);
 }
 
 fn render_ui_node_inner(
@@ -4744,9 +4744,9 @@ fn render_ui_node_inner(
     gpu: &mut ui_wgpu::GpuContext,
     world3d_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
     node_graph_states: &mut std::collections::HashMap<String, NodeGraphSurface>,
-    gis_map_states: &mut std::collections::HashMap<String, GisMapSurface>,
+    tiled_map_states: &mut std::collections::HashMap<String, TiledMapSurface>,
     icon_render_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
-    puzzle2d_board_states: &mut std::collections::HashMap<String, Puzzle2dBoardSurface>,
+    board2d_states: &mut std::collections::HashMap<String, Board2dSurface>,
 ) {
     match node {
         UiNode::ComponentScene(scene) => render_component_scene(
@@ -4756,9 +4756,9 @@ fn render_ui_node_inner(
             gpu,
             world3d_states,
             node_graph_states,
-            gis_map_states,
+            tiled_map_states,
             icon_render_states,
-            puzzle2d_board_states,
+            board2d_states,
         ),
         UiNode::Stack(stack) => {
             let gap = gap_for_token(ctx.theme, stack.gap.as_deref());
@@ -4778,7 +4778,7 @@ fn render_ui_node_inner(
                 layout_horizontal(bounds, gap, padding, &sizes)
             };
             for (child, rect) in stack.children.iter().zip(rects.iter()) {
-                render_ui_node_inner(child, *rect, ctx, gpu, world3d_states, node_graph_states, gis_map_states, icon_render_states, puzzle2d_board_states);
+                render_ui_node_inner(child, *rect, ctx, gpu, world3d_states, node_graph_states, tiled_map_states, icon_render_states, board2d_states);
             }
         }
         UiNode::Section(section) => {
@@ -4791,7 +4791,7 @@ fn render_ui_node_inner(
                 .collect();
             let rects = layout_vertical(bounds, gap, padding, &sizes);
             for (child, rect) in section.children.iter().zip(rects.iter()) {
-                render_ui_node_inner(child, *rect, ctx, gpu, world3d_states, node_graph_states, gis_map_states, icon_render_states, puzzle2d_board_states);
+                render_ui_node_inner(child, *rect, ctx, gpu, world3d_states, node_graph_states, tiled_map_states, icon_render_states, board2d_states);
             }
         }
         UiNode::Image(image) => render_ui_image(image, bounds, ctx),
@@ -6107,7 +6107,7 @@ pub fn handle_scene_wheel(
             delta,
             ctrl,
         ),
-        SurfaceKind::GisMap => engine_canvas::gis_map_wheel(
+        SurfaceKind::TiledMap => engine_canvas::tiled_map_wheel(
             &scene.surface_id,
             &scene.controller_id,
             inner,
@@ -6579,9 +6579,9 @@ pub fn render_component_scene(
     gpu: &mut ui_wgpu::GpuContext,
     world3d_states: &mut HashMap<String, World3dState>,
     node_graph_states: &mut HashMap<String, NodeGraphSurface>,
-    gis_map_states: &mut HashMap<String, GisMapSurface>,
+    tiled_map_states: &mut HashMap<String, TiledMapSurface>,
     icon_render_states: &mut HashMap<String, World3dState>,
-    puzzle2d_board_states: &mut HashMap<String, Puzzle2dBoardSurface>,
+    board2d_states: &mut HashMap<String, Board2dSurface>,
 ) {
     if let Err(message) = validate_component_scene(scene, &RENDER_PLAN_LIMITS) {
         let theme = ctx.theme;
@@ -6613,7 +6613,7 @@ pub fn render_component_scene(
         SurfaceKind::Table => render_table(scene, bounds, ctx),
         SurfaceKind::Canvas2d => render_canvas_2d(scene, bounds, ctx),
         SurfaceKind::NodeGraph => render_node_graph(scene, bounds, ctx, gpu, node_graph_states),
-        SurfaceKind::GisMap => render_gis_map(scene, bounds, ctx, gpu, gis_map_states),
+        SurfaceKind::TiledMap => render_tiled_map(scene, bounds, ctx, gpu, tiled_map_states),
         SurfaceKind::VirtualFileSystem => render_vfs(scene, bounds, ctx),
         SurfaceKind::TextEditor => render_text_editor(scene, bounds, ctx, gpu),
         SurfaceKind::InkCanvas => render_note_canvas(scene, bounds, ctx, gpu),
@@ -6624,7 +6624,7 @@ pub fn render_component_scene(
             render_world_3d(scene, bounds, ctx, state, gpu);
         }
         SurfaceKind::IconRender => render_icon_render(scene, bounds, ctx, gpu, icon_render_states),
-        SurfaceKind::Puzzle2dBoard => render_puzzle_board(scene, bounds, ctx, gpu, puzzle2d_board_states),
+        SurfaceKind::Board2d => render_board2d(scene, bounds, ctx, gpu, board2d_states),
         SurfaceKind::GraphTimeline => render_graph_timeline(scene, bounds, ctx),
         _ => render_placeholder(scene.component_kind.as_str(), bounds, ctx),
     }
@@ -9109,9 +9109,9 @@ fn node_screen_pos(node: &GraphNode, state: &SceneSurfaceState, viewport: &Viewp
 }
 //#endregion NodeGraph
 
-//#region GisMap
+//#region TiledMap
 #[derive(Clone, Debug)]
-pub struct GisMapSurface {
+pub struct TiledMapSurface {
     pub bounds: Rect,
     pub controller_id: String,
     pub selection_method: String,
@@ -9147,7 +9147,7 @@ fn query_map_feature_hits(
     }
 }
 
-fn paint_gis_map_marquee(
+fn paint_tiled_map_marquee(
     ctx: &mut FrameworkWidgetContext<'_>,
     surface_id: &str,
     inner: Rect,
@@ -9178,7 +9178,7 @@ fn paint_gis_map_marquee(
 }
 
 /** @emoji 🗺️ Pushes GIS map context-menu items for a screen-space hit. */
-pub fn push_gis_map_context_menu(
+pub fn push_tiled_map_context_menu(
     surface_id: &str,
     controller_id: &str,
     inner: Rect,
@@ -9208,7 +9208,7 @@ pub fn push_gis_map_context_menu(
             label: "Select".into(),
             action: Some(engine_canvas::map_action(
                 controller_id,
-                ui_wgpu::gis_map_actions::SET_FEATURE_SELECTION,
+                ui_wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
                 json!({
                     "surfaceId": surface_id,
                     "positions": if kind == "position" { vec![id] } else { Vec::<&str>::new() },
@@ -9223,7 +9223,7 @@ pub fn push_gis_map_context_menu(
                 label: "Deselect".into(),
                 action: Some(engine_canvas::map_action(
                     controller_id,
-                    ui_wgpu::gis_map_actions::DESELECT,
+                    ui_wgpu::tiled_map_actions::DESELECT,
                     json!({ "surfaceId": surface_id, "featureId": id, "featureKind": kind }),
                 )),
             });
@@ -9233,7 +9233,7 @@ pub fn push_gis_map_context_menu(
             label: "Focus / zoom to".into(),
             action: Some(engine_canvas::map_action(
                 controller_id,
-                ui_wgpu::gis_map_actions::FOCUS_FEATURE,
+                ui_wgpu::tiled_map_actions::FOCUS_FEATURE,
                 json!({ "surfaceId": surface_id, "featureId": id, "featureKind": kind }),
             )),
         });
@@ -9252,7 +9252,7 @@ pub fn push_gis_map_context_menu(
                     label: "Open source".into(),
                     action: Some(engine_canvas::map_action(
                         controller_id,
-                        ui_wgpu::gis_map_actions::OPEN_SOURCE,
+                        ui_wgpu::tiled_map_actions::OPEN_SOURCE,
                         json!({ "surfaceId": surface_id, "featureId": id }),
                     )),
                 });
@@ -9265,7 +9265,7 @@ pub fn push_gis_map_context_menu(
         label: "Select all".into(),
         action: Some(engine_canvas::map_action(
             controller_id,
-            ui_wgpu::gis_map_actions::SELECT_ALL,
+            ui_wgpu::tiled_map_actions::SELECT_ALL,
             json!({ "surfaceId": surface_id }),
         )),
     });
@@ -9279,7 +9279,7 @@ pub fn push_gis_map_context_menu(
         action: if has_selection {
             Some(engine_canvas::map_action(
                 controller_id,
-                ui_wgpu::gis_map_actions::CLEAR_SELECTION,
+                ui_wgpu::tiled_map_actions::CLEAR_SELECTION,
                 json!({ "surfaceId": surface_id }),
             ))
         } else {
@@ -9291,13 +9291,13 @@ pub fn push_gis_map_context_menu(
         label: "Fit world".into(),
         action: Some(engine_canvas::map_action(
             controller_id,
-            ui_wgpu::gis_map_actions::FIT_WORLD,
+            ui_wgpu::tiled_map_actions::FIT_WORLD,
             json!({ "surfaceId": surface_id }),
         )),
     });
 }
 
-pub fn gis_map_pointer_down(
+pub fn tiled_map_pointer_down(
     surface_id: &str,
     controller_id: &str,
     inner: Rect,
@@ -9342,7 +9342,7 @@ pub fn gis_map_pointer_down(
     Vec::new()
 }
 
-pub fn gis_map_pointer_move(
+pub fn tiled_map_pointer_move(
     surface_id: &str,
     controller_id: &str,
     inner: Rect,
@@ -9408,12 +9408,12 @@ pub fn gis_map_pointer_move(
     });
     vec![engine_canvas::map_action(
         controller_id,
-        ui_wgpu::gis_map_actions::SET_HOVER,
+        ui_wgpu::tiled_map_actions::SET_HOVER,
         json!({ "surfaceId": surface_id, "hover": hover }),
     )]
 }
 
-pub fn gis_map_pointer_up(
+pub fn tiled_map_pointer_up(
     surface_id: &str,
     controller_id: &str,
     inner: Rect,
@@ -9458,7 +9458,7 @@ pub fn gis_map_pointer_up(
                 .unwrap_or_default();
                 actions.push(engine_canvas::map_action(
                     controller_id,
-                    ui_wgpu::gis_map_actions::SET_FEATURE_SELECTION,
+                    ui_wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
                     json!({
                         "surfaceId": surface_id,
                         "positions": positions,
@@ -9479,7 +9479,7 @@ pub fn gis_map_pointer_up(
                 if let (Some(kind), Some(id)) = (kind, id) {
                     actions.push(engine_canvas::map_action(
                         controller_id,
-                        ui_wgpu::gis_map_actions::SET_FEATURE_SELECTION,
+                        ui_wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
                         json!({
                             "surfaceId": surface_id,
                             "positions": if kind == "position" { vec![id] } else { Vec::<&str>::new() },
@@ -9500,36 +9500,36 @@ pub fn gis_map_pointer_up(
     actions
 }
 
-pub fn gis_map_drag_active(surface_id: &str) -> bool {
+pub fn tiled_map_drag_active(surface_id: &str) -> bool {
     scene_state(surface_id)
         .drag
         .as_ref()
         .is_some_and(|drag| matches!(drag.mode, SceneDragMode::MapMarquee { .. } | SceneDragMode::MapPan))
 }
 
-fn render_gis_map(
+fn render_tiled_map(
     scene: &UiComponentSceneNode,
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
     gpu: &mut ui_wgpu::GpuContext,
-    gis_map_states: &mut HashMap<String, GisMapSurface>,
+    tiled_map_states: &mut HashMap<String, TiledMapSurface>,
 ) {
-    let Some(map_scene) = &scene.gis_map else {
-        return render_placeholder("gis2d-map", bounds, ctx);
+    let Some(map_scene) = &scene.tiled_map else {
+        return render_placeholder("tiled-map", bounds, ctx);
     };
     let inner = bounds;
-    gis_map_states.insert(
+    tiled_map_states.insert(
         scene.surface_id.clone(),
-        GisMapSurface {
+        TiledMapSurface {
             bounds: inner,
             controller_id: scene.controller_id.clone(),
             selection_method: map_scene.selection_method.clone(),
         },
     );
-    engine_canvas::paint_gis_map(gpu, ctx, scene, inner);
-    paint_gis_map_marquee(ctx, &scene.surface_id, inner, ctx.theme);
+    engine_canvas::paint_tiled_map(gpu, ctx, scene, inner);
+    paint_tiled_map_marquee(ctx, &scene.surface_id, inner, ctx.theme);
 }
-//#endregion GisMap
+//#endregion TiledMap
 
 //#region IconRender
 #[derive(Deserialize)]
@@ -9726,8 +9726,8 @@ fn render_icon_render(
         table: None,
         paint_2d: None,
         virtual_file_system: None,
-        gis_map: None,
-        puzzle2d_board: None,
+        tiled_map: None,
+        board2d: None,
         icon_render: None,
         ink_canvas: None,
         graph_timeline: None,
@@ -9774,27 +9774,27 @@ fn render_icon_render(
 }
 //#endregion IconRender
 
-//#region Puzzle2dBoard
-pub struct Puzzle2dBoardSurface {
+//#region Board2d
+pub struct Board2dSurface {
     pub bounds: Rect,
     pub controller_id: String,
     pub fixture_json: String,
 }
 
-fn render_puzzle_board(
+fn render_board2d(
     scene: &UiComponentSceneNode,
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
     gpu: &mut ui_wgpu::GpuContext,
-    puzzle2d_board_states: &mut HashMap<String, Puzzle2dBoardSurface>,
+    board2d_states: &mut HashMap<String, Board2dSurface>,
 ) {
-    let Some(board_scene) = &scene.puzzle2d_board else {
-        return render_placeholder("puzzle2d-board", bounds, ctx);
+    let Some(board_scene) = &scene.board2d else {
+        return render_placeholder("board-2d", bounds, ctx);
     };
     let inner = bounds;
-    puzzle2d_board_states.insert(
+    board2d_states.insert(
         scene.surface_id.clone(),
-        Puzzle2dBoardSurface {
+        Board2dSurface {
             bounds: inner,
             controller_id: scene.controller_id.clone(),
             fixture_json: board_scene.fixture_json.clone(),
@@ -9819,7 +9819,7 @@ pub fn puzzle_board_pointer_leave(surface_id: &str, controller_id: &str, alt: bo
     engine_canvas::puzzle_board_pointer_leave(surface_id, controller_id, alt)
 }
 
-pub fn puzzle_board_drag_active(surface_id: &str) -> bool {
+pub fn board2d_drag_active(surface_id: &str) -> bool {
     engine_canvas::board_drag_active(surface_id)
 }
 
@@ -9900,8 +9900,8 @@ pub fn build_puzzle2d_selection_menu_items(fixture_json: &str, selection_ids: &[
 }
 //#endregion Puzzle2dSelectionMenu
 
-/// @emoji 🧩 Pushes puzzle2d-board context-menu items for a screen-space hit, eagerly selecting the clicked target if it isn't already selected (mirrors the React host's `onContextMenu`).
-pub async fn open_puzzle2d_board_context_menu(shell: &mut ShellState, surface_id: &str, controller_id: &str, fixture_json: &str, inner: Rect, x: f32, y: f32) {
+/// @emoji 🧩 Pushes board-2d context-menu items for a screen-space hit, eagerly selecting the clicked target if it isn't already selected (mirrors the React host's `onContextMenu`).
+pub async fn open_board2d_context_menu(shell: &mut ShellState, surface_id: &str, controller_id: &str, fixture_json: &str, inner: Rect, x: f32, y: f32) {
     let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
     let best = engine_canvas::board_pick_best_target_id(surface_id, sx, sy);
     let current: Vec<String> = engine_canvas::with_board_host(surface_id, |host| host.selection.iter().cloned().collect()).unwrap_or_default();
@@ -9923,7 +9923,7 @@ pub async fn open_puzzle2d_board_context_menu(shell: &mut ShellState, surface_id
         });
     }
 }
-//#endregion Puzzle2dBoard
+//#endregion Board2d
 
 //#region VirtualFileSystem
 #[derive(Deserialize)]
@@ -10434,8 +10434,8 @@ use crate::dock::{
 };
 use crate::interpreter::{framework_widget_context, render_ui_node, validate_window_body_surface};
 use crate::scenes::{
-    clear_graph_node_context, open_puzzle2d_board_context_menu, push_gis_map_context_menu, resolve_graph_context_action, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click, GisMapSurface, NodeGraphSurface,
-    Puzzle2dBoardSurface,
+    clear_graph_node_context, open_board2d_context_menu, push_tiled_map_context_menu, resolve_graph_context_action, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click, TiledMapSurface, NodeGraphSurface,
+    Board2dSurface,
 };
 use infinite_world::{
     fetch_pending_glb_meshes, fetch_pending_reference_images, handle_world3d_paint_actions,
@@ -10653,9 +10653,9 @@ pub struct ShellState {
     pub screen_h: f32,
     pub world3d_states: HashMap<String, World3dState>,
     pub node_graph_states: HashMap<String, NodeGraphSurface>,
-    pub gis_map_states: HashMap<String, GisMapSurface>,
+    pub tiled_map_states: HashMap<String, TiledMapSurface>,
     pub icon_render_states: HashMap<String, World3dState>,
-    pub puzzle2d_board_states: HashMap<String, Puzzle2dBoardSurface>,
+    pub board2d_states: HashMap<String, Board2dSurface>,
     pub dock: DockState,
     pub active_left_kind: LeftPanelKind,
     pub active_right_kind: RightPanelKind,
@@ -10844,9 +10844,9 @@ impl ShellState {
             screen_h: 720.0,
             world3d_states: HashMap::new(),
             node_graph_states: HashMap::new(),
-            gis_map_states: HashMap::new(),
+            tiled_map_states: HashMap::new(),
             icon_render_states: HashMap::new(),
-            puzzle2d_board_states: HashMap::new(),
+            board2d_states: HashMap::new(),
             dock: DockState::default(),
             active_left_kind: LeftPanelKind::Workbench,
             active_right_kind: RightPanelKind::Details,
@@ -11501,14 +11501,17 @@ impl ShellState {
     //#region 🔖NativeBackboneSync
     /// @emoji 🧭 Parses a shell sync-card uri into the `framework/sync` persistence bindings a
     /// document actor opens. `folder://` → the multi-document sqlite store; `file://x.json` → its
-    /// parent folder's store (single-blob export demoted per the plan); `remote://host:port` → the
-    /// hub over WebSocket. Superseded the fetch/CRUD `shell_backbone_read`/`write` pair.
+    /// parent folder's store (single-blob export demoted per the plan); `remote://host:port[/studio_id]`
+    /// → the hub over WebSocket, studio-scoped (an omitted studio segment falls back to `"default"`).
+    /// Superseded the fetch/CRUD `shell_backbone_read`/`write` pair.
     #[cfg(not(target_arch = "wasm32"))]
     fn parse_persistence_binding(uri: &str) -> Result<Vec<PersistenceBinding>, String> {
         if let Some(rest) = uri.strip_prefix("remote://") {
-            let host_port = rest.split_once('/').map(|(host, _)| host).unwrap_or(rest);
+            let (host_port, studio_id) = rest.split_once('/').unwrap_or((rest, "default"));
+            let studio_id = if studio_id.is_empty() { "default" } else { studio_id };
             return Ok(vec![PersistenceBinding::Hub {
                 base_url: format!("http://{host_port}"),
+                studio_id: studio_id.to_string(),
                 token: None,
             }]);
         }
@@ -12261,9 +12264,9 @@ impl ShellState {
             return Ok(());
         }
         if button == 2 {
-            for (surface_id, surface) in &self.gis_map_states {
+            for (surface_id, surface) in &self.tiled_map_states {
                 if surface.bounds.contains(x, y) {
-                    push_gis_map_context_menu(
+                    push_tiled_map_context_menu(
                         surface_id,
                         &surface.controller_id,
                         surface.bounds,
@@ -12274,12 +12277,12 @@ impl ShellState {
                 }
             }
             let puzzle_board_hit = self
-                .puzzle2d_board_states
+                .board2d_states
                 .iter()
                 .find(|(_, surface)| surface.bounds.contains(x, y))
                 .map(|(surface_id, surface)| (surface_id.clone(), surface.controller_id.clone(), surface.fixture_json.clone(), surface.bounds));
             if let Some((surface_id, controller_id, fixture_json, bounds)) = puzzle_board_hit {
-                open_puzzle2d_board_context_menu(self, &surface_id, &controller_id, &fixture_json, bounds, x, y).await;
+                open_board2d_context_menu(self, &surface_id, &controller_id, &fixture_json, bounds, x, y).await;
             }
             let hit = input.hit_at(x, y).cloned();
             self.open_context_menu(x, y, hit);
@@ -15076,8 +15079,8 @@ impl ShellState {
         CONTEXT_MENU_SINK.with(|cell| cell.borrow_mut().clear());
         clear_graph_node_context();
         self.node_graph_states.clear();
-        self.gis_map_states.clear();
-        self.puzzle2d_board_states.clear();
+        self.tiled_map_states.clear();
+        self.board2d_states.clear();
         self.widget_maps.clear_frame();
         let mut overlay_slot = Some(overlay);
         self.render_main_window(draw, &mut overlay_slot, atlas, icons, input, theme, body, gpu);
@@ -15674,7 +15677,7 @@ impl ShellState {
             Some(widget_maps),
         );
         ctx.pick_clip = Some(content);
-        render_ui_node(&ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.gis_map_states, &mut self.icon_render_states, &mut self.puzzle2d_board_states);
+        render_ui_node(&ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.tiled_map_states, &mut self.icon_render_states, &mut self.board2d_states);
         }
         panel_draw.pop_scissor();
         panel_draw.end_glass_content();
@@ -16082,7 +16085,7 @@ impl ShellState {
             Some(widget_maps),
         );
         ctx.pick_clip = Some(content);
-        render_ui_node(ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.gis_map_states, &mut self.icon_render_states, &mut self.puzzle2d_board_states);
+        render_ui_node(ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.tiled_map_states, &mut self.icon_render_states, &mut self.board2d_states);
         draw.pop_scissor();
     }
 
@@ -18305,9 +18308,9 @@ impl AppRuntime {
                     });
                 }
                 let mut map_actions = Vec::new();
-                for (surface_id, surface) in &self.shell.gis_map_states {
+                for (surface_id, surface) in &self.shell.tiled_map_states {
                     if surface.bounds.contains(x, y) {
-                        map_actions.extend(engine_canvas::gis_map_wheel(
+                        map_actions.extend(engine_canvas::tiled_map_wheel(
                             surface_id,
                             &surface.controller_id,
                             surface.bounds,
@@ -18329,7 +18332,7 @@ impl AppRuntime {
                     });
                 }
                 let mut board_actions = Vec::new();
-                for (surface_id, surface) in &self.shell.puzzle2d_board_states {
+                for (surface_id, surface) in &self.shell.board2d_states {
                     if surface.bounds.contains(x, y) {
                         board_actions.extend(scenes::puzzle_board_wheel(surface_id, &surface.controller_id, surface.bounds, x, y, wheel_delta));
                     }
@@ -18537,14 +18540,14 @@ impl AppRuntime {
         self.modifiers = modifiers.clone();
         if !down {
             let mut map_actions = Vec::new();
-            let map_had_active_drag = self.shell.gis_map_states.keys().any(|surface_id| {
-                scenes::gis_map_drag_active(surface_id)
+            let map_had_active_drag = self.shell.tiled_map_states.keys().any(|surface_id| {
+                scenes::tiled_map_drag_active(surface_id)
             });
-            for (surface_id, surface) in &self.shell.gis_map_states {
-                if !surface.bounds.contains(x, y) && !scenes::gis_map_drag_active(surface_id) {
+            for (surface_id, surface) in &self.shell.tiled_map_states {
+                if !surface.bounds.contains(x, y) && !scenes::tiled_map_drag_active(surface_id) {
                     continue;
                 }
-                map_actions.extend(scenes::gis_map_pointer_up(
+                map_actions.extend(scenes::tiled_map_pointer_up(
                     surface_id,
                     &surface.controller_id,
                     surface.bounds,
@@ -18556,9 +18559,9 @@ impl AppRuntime {
                 self.dispatch_actions(map_actions).await;
             }
             let mut board_actions = Vec::new();
-            let board_had_active_drag = self.shell.puzzle2d_board_states.keys().any(|surface_id| scenes::puzzle_board_drag_active(surface_id));
-            for (surface_id, surface) in &self.shell.puzzle2d_board_states {
-                if !surface.bounds.contains(x, y) && !scenes::puzzle_board_drag_active(surface_id) {
+            let board_had_active_drag = self.shell.board2d_states.keys().any(|surface_id| scenes::board2d_drag_active(surface_id));
+            for (surface_id, surface) in &self.shell.board2d_states {
+                if !surface.bounds.contains(x, y) && !scenes::board2d_drag_active(surface_id) {
                     continue;
                 }
                 board_actions.extend(scenes::puzzle_board_pointer_up(
@@ -18577,13 +18580,13 @@ impl AppRuntime {
             }
             let board_consumed = self
                 .shell
-                .puzzle2d_board_states
+                .board2d_states
                 .values()
                 .any(|surface| surface.bounds.contains(x, y))
                 || board_had_active_drag;
             let map_consumed = self
                 .shell
-                .gis_map_states
+                .tiled_map_states
                 .values()
                 .any(|surface| surface.bounds.contains(x, y))
                 || map_had_active_drag;
@@ -18711,13 +18714,13 @@ impl AppRuntime {
         }
         let mut map_actions = Vec::new();
         let mut map_pointer_on_surface = false;
-        for (surface_id, surface) in &self.shell.gis_map_states {
+        for (surface_id, surface) in &self.shell.tiled_map_states {
             if !surface.bounds.contains(x, y) {
                 continue;
             }
             map_pointer_on_surface = true;
             if down {
-                map_actions.extend(scenes::gis_map_pointer_down(
+                map_actions.extend(scenes::tiled_map_pointer_down(
                     surface_id,
                     &surface.controller_id,
                     surface.bounds,
@@ -18738,7 +18741,7 @@ impl AppRuntime {
             return;
         }
         let mut board_pointer_on_surface = false;
-        for (surface_id, surface) in &self.shell.puzzle2d_board_states {
+        for (surface_id, surface) in &self.shell.board2d_states {
             if !surface.bounds.contains(x, y) {
                 continue;
             }
@@ -18827,11 +18830,11 @@ impl AppRuntime {
             self.dispatch_actions(graph_actions).await;
         }
         let mut map_actions = Vec::new();
-        for (surface_id, surface) in &self.shell.gis_map_states {
-            if !surface.bounds.contains(x, y) && !scenes::gis_map_drag_active(surface_id) {
+        for (surface_id, surface) in &self.shell.tiled_map_states {
+            if !surface.bounds.contains(x, y) && !scenes::tiled_map_drag_active(surface_id) {
                 continue;
             }
-            map_actions.extend(scenes::gis_map_pointer_move(
+            map_actions.extend(scenes::tiled_map_pointer_move(
                 surface_id,
                 &surface.controller_id,
                 surface.bounds,
@@ -18844,7 +18847,7 @@ impl AppRuntime {
             self.dispatch_actions(map_actions).await;
         }
         let mut board_actions = Vec::new();
-        for (surface_id, surface) in &self.shell.puzzle2d_board_states {
+        for (surface_id, surface) in &self.shell.board2d_states {
             let inside = surface.bounds.contains(x, y);
             if inside {
                 board_actions.extend(scenes::puzzle_board_pointer_move(

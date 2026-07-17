@@ -1,6 +1,6 @@
 // #region 🧲Header
 // 💻 .storybook/story/puzzle/2d/Board.stories.tsx
-// Specs: Host the framework renderer's `Puzzle2dBoardHost` for Storybook + Playwright selection/camera/utility checks.
+// Specs: Host the framework renderer's `Board2dHost` for Storybook + Playwright selection/camera/utility checks.
 // Summary: Mounts the host directly against a `UiComponentSceneNode`; a story-local reducer emulates the `puzzle2d-play` Rust plugin's `applyBoardEvents`/selection/utility actions so the controlled scene ⇄ session loop round-trips without a running dev server.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
@@ -8,7 +8,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 
-import { Puzzle2dBoardHost } from "../../../../framework/renderer/react/components/puzzle-2d-board-host.tsx";
+import { Board2dHost } from "../../../../framework/renderer/react/components/board-2d-host.tsx";
 import type { ActionDescriptor, UiComponentSceneNode } from "../../../../framework/renderer/react/os-shell.tsx";
 
 //#region StoryTypes
@@ -178,8 +178,8 @@ function buildStorySceneNode(state: StoryPuzzle2dState, interactive: boolean): U
     type: "componentScene",
     surfaceId: "puzzle2d.story.overview",
     controllerId: "puzzle2d-story",
-    componentKind: "puzzle2d-board",
-    puzzle2dBoard: {
+    componentKind: "board-2d",
+    board2d: {
       fixtureJson: JSON.stringify(fixture),
       cameraJson: JSON.stringify(fixture.camera),
       kindCatalogsJson: JSON.stringify(fixture.meta?.kindCatalogs ?? {}),
@@ -219,7 +219,7 @@ const STORY_BRUSH_FIXTURE: StoryPuzzle2dFixture = {
 //#endregion Fixtures
 
 //#region StoryHost
-function Puzzle2dBoardStoryHost({ initialFixture, initialRuntime, interactive }: { readonly initialFixture: StoryPuzzle2dFixture; readonly initialRuntime: Partial<StoryPuzzle2dRuntime>; readonly interactive: boolean }): ReactElement {
+function Board2dStoryHost({ initialFixture, initialRuntime, interactive }: { readonly initialFixture: StoryPuzzle2dFixture; readonly initialRuntime: Partial<StoryPuzzle2dRuntime>; readonly interactive: boolean }): ReactElement {
   const [state, setState] = useState<StoryPuzzle2dState>(() => ({ fixture: initialFixture, runtime: { ...STORY_DEFAULT_RUNTIME, ...initialRuntime } }));
 
   const onAction = useCallback((descriptor: ActionDescriptor): void => {
@@ -232,7 +232,7 @@ function Puzzle2dBoardStoryHost({ initialFixture, initialRuntime, interactive }:
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
       <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
-        <Puzzle2dBoardHost node={node} onAction={onAction} />
+        <Board2dHost node={node} onAction={onAction} />
       </div>
       <pre data-testid="puzzle2d-board-debug" style={{ margin: 0, padding: 4, fontSize: 11 }}>
         {debug}
@@ -244,12 +244,12 @@ function Puzzle2dBoardStoryHost({ initialFixture, initialRuntime, interactive }:
 
 const meta = {
   title: "🧩puzzle🩻2d",
-  component: Puzzle2dBoardStoryHost,
+  component: Board2dStoryHost,
   parameters: {
     layout: "fullscreen",
   },
   tags: ["autodocs"],
-} satisfies Meta<typeof Puzzle2dBoardStoryHost>;
+} satisfies Meta<typeof Board2dStoryHost>;
 
 export default meta;
 

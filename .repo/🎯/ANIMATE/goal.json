@@ -1,0 +1,11 @@
+{
+  "title": "Animate",
+  "description": "Manim-class Rust animation compiler: Sobject scene graph, imperative Scene timeline, headless video and present engines.",
+  "prompt": "Build animate technology with full Manim parity — animate/core, animate/video, animate/present — replacing framework/product/presentation.",
+  "status": "open",
+  "dates": {
+    "due": "2026-12-31"
+  },
+  "client": "cursor-chat",
+  "llm": "composer-2.5"
+}

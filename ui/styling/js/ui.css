@@ -1524,7 +1524,7 @@
 }
 
 /* Panel frame stroke is on [data-slot="panel-chrome-frame"]; inset scroll hosts so scrollbars stay inside. */
-[data-panel] [data-slot="scroll-area"] {
+[data-slot="panel"] [data-slot="scroll-area"] {
   box-sizing: border-box;
   padding: var(--stroke-hairline);
 }
@@ -1536,8 +1536,19 @@
   transition: border-color 120ms ease;
 }
 
-[data-panel]:hover [data-slot="panel-chrome-frame"] {
+[data-slot="panel"]:hover [data-slot="panel-chrome-frame"] {
   border-color: var(--border-emphasized-color) !important;
+}
+
+[data-slot="mode-dock-stack"]:not([data-active="true"]):hover
+  :is(
+    [data-slot="mode-dock-stack-body"],
+    [data-slot="mode-dock-tab-cap"],
+    [data-slot="mode-dock-controls-cap"],
+    [data-slot="mode-dock-tab-gap"]
+  ) {
+  border-color: var(--border-emphasized-color) !important;
+  transition: border-color 120ms ease;
 }
 
 [data-slot="side-panel-tab-button"],

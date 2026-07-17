@@ -79,6 +79,13 @@ CREATE TABLE IF NOT EXISTS hub_share_token (
     created_at BIGINT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS hub_blob (
+    hash TEXT PRIMARY KEY,
+    media_type TEXT NOT NULL,
+    size BIGINT NOT NULL,
+    bytes BYTEA NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_membership_user ON hub_studio_membership (user_id);
 CREATE INDEX IF NOT EXISTS idx_node_studio_parent ON hub_node (studio_id, parent_id);
 CREATE INDEX IF NOT EXISTS idx_op_document_version ON hub_document_op (document_id, version);

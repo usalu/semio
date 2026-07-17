@@ -7,7 +7,7 @@ use semio_framework_core::{
 use ui_wgpu::{UtilityNode, UiNode, WindowEngagement, WindowMeasure};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use wasmtime::component::{bindgen, Component, Linker};
 use wasmtime::{Config, Engine, Store};
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
@@ -27,6 +27,10 @@ struct HostState {
     granted_capabilities: Vec<CapabilityRequirement>,
     plugin_id: String,
     backbones: HashMap<String, Box<dyn vcs::Backbone>>,
+    /// @emoji 📦 Backing store for `write-blob`/`read-blob`, injected via
+    /// {@link WasmPluginRuntime::register_host_blob_store} — `None` until a caller registers one
+    /// (mirrors `backbones`' explicit-registration convention, not a stub-forever like `read-asset`).
+    blob_store: Option<Arc<dyn vcs::BlobStore>>,
 }
 
 impl WasiView for HostState {
@@ -94,6 +98,25 @@ impl semio::framework::host::Host for HostState {
 
     fn network_fetch(&mut self, _origin: String, _path: String) -> Result<Vec<u8>, String> {
         Err("network-fetch not implemented".into())
+    }
+
+    fn write_blob(&mut self, data: Vec<u8>, media_type: String) -> Result<String, String> {
+        let store = self
+            .blob_store
+            .as_ref()
+            .ok_or("no host blob store registered; call register_host_blob_store")?;
+        store.put(&data, &media_type).map(|blob_ref| blob_ref.hash).map_err(|error| error.to_string())
+    }
+
+    fn read_blob(&mut self, hash: String) -> Result<Vec<u8>, String> {
+        let store = self
+            .blob_store
+            .as_ref()
+            .ok_or("no host blob store registered; call register_host_blob_store")?;
+        store
+            .get(&hash)
+            .map_err(|error| error.to_string())?
+            .ok_or_else(|| format!("blob not found: {hash}"))
     }
 
     fn backbone_send(&mut self, uri: String, message_json: String) -> Result<(), String> {
@@ -169,6 +192,7 @@ impl WasmPluginRuntime {
             granted_capabilities: manifest.capabilities.clone(),
             plugin_id: plugin_id.to_string(),
             backbones: HashMap::new(),
+            blob_store: None,
         }
     }
 
@@ -263,6 +287,23 @@ impl WasmPluginRuntime {
     pub fn deregister_host_backbone(&self, uri: &str) -> Result<(), String> {
         let mut store = self.store.lock().map_err(|_| "plugin store lock poisoned")?;
         store.data_mut().backbones.remove(uri);
+        Ok(())
+    }
+
+    /// @emoji 📦 Registers the native-side `BlobStore` the sandboxed plugin's `write-blob`/`read-blob`
+    /// host calls operate against. Not granted by default (unlike backbones there is no capability
+    /// gate on these two calls today — every plugin that links `write-blob`/`read-blob` gets them once
+    /// a store is registered); callers that embed this runtime decide when/whether to call this.
+    pub fn register_host_blob_store(&self, store: Arc<dyn vcs::BlobStore>) -> Result<(), String> {
+        let mut plugin_store = self.store.lock().map_err(|_| "plugin store lock poisoned")?;
+        plugin_store.data_mut().blob_store = Some(store);
+        Ok(())
+    }
+
+    /// @emoji ✂️ Removes the previously registered native blob store.
+    pub fn deregister_host_blob_store(&self) -> Result<(), String> {
+        let mut plugin_store = self.store.lock().map_err(|_| "plugin store lock poisoned")?;
+        plugin_store.data_mut().blob_store = None;
         Ok(())
     }
 

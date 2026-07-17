@@ -19192,7 +19192,7 @@ def computeChildPlane(
 # Tests for the compose py module.
 
 TEST_TOLERANCE = 0.001
-TEST_ASSETS_DIR = "../asset/compose"
+TEST_ASSETS_DIR = "../../../fixture"
 REPORTS_EXPORT_DIR = (
     pathlib.Path(__file__).resolve().parents[2]
     / "reports"

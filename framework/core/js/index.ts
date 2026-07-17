@@ -577,8 +577,8 @@ export type VirtualFileSystemScene = {
   readonly dragDropEnabled?: boolean;
 };
 
-/** 🗺️ A GIS map surface scene payload — mirrors the wasm `componentScene` node's `gisMap` field. */
-export type GisMapScene = {
+/** 🗺️ A tiled map surface scene payload — mirrors the wasm `componentScene` node's `tiledMap` field. */
+export type TiledMapScene = {
   readonly mapFixtureJson: string;
   readonly cameraJson: string;
   readonly renderMode: string;
@@ -595,8 +595,8 @@ export type GisMapScene = {
   readonly contextMenuJson?: string;
 };
 
-/** 🧩 A puzzle-2d board surface scene payload — mirrors the wasm `componentScene` node's `puzzle2dBoard` field. */
-export type Puzzle2dBoardScene = {
+/** 🧩 A 2D board surface scene payload — mirrors the wasm `componentScene` node's `board2d` field. */
+export type Board2dScene = {
   readonly fixtureJson: string;
   readonly cameraJson: string;
   readonly kindCatalogsJson: string;
@@ -661,7 +661,7 @@ export type UiExternalSlotNode = {
 };
 
 /** 🧭 The dispatch key on {@link UiComponentSceneNode} — matches the lazy-loaded host component per `framework/renderer/react/components/*-host.tsx`. */
-export type ComponentKind = "canvas-2d" | "world-3d" | "node-graph" | "text-editor" | "table" | "paint-2d" | "gis2d-map" | "puzzle2d-board" | "icon-render" | "ink-canvas" | "graph-timeline" | "block-list";
+export type ComponentKind = "canvas-2d" | "world-3d" | "node-graph" | "text-editor" | "table" | "paint-2d" | "tiled-map" | "board-2d" | "icon-render" | "ink-canvas" | "graph-timeline" | "block-list";
 
 /** 🖥️ A native (non-declarative) rendering surface — mirrors the wasm `componentScene` node; the active `componentKind` selects which optional scene field is populated. */
 export type UiComponentSceneNode = {
@@ -678,8 +678,8 @@ export type UiComponentSceneNode = {
   readonly table?: TableScene;
   readonly paint2d?: Paint2dScene;
   readonly virtualFileSystem?: VirtualFileSystemScene;
-  readonly gisMap?: GisMapScene;
-  readonly puzzle2dBoard?: Puzzle2dBoardScene;
+  readonly tiledMap?: TiledMapScene;
+  readonly board2d?: Board2dScene;
   readonly iconRender?: IconRenderScene;
   readonly inkCanvas?: InkCanvasScene;
   readonly graphTimeline?: GraphTimelineScene;

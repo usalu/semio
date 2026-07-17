@@ -1,5 +1,14 @@
 // #region Header
-/** @emoji 🖥️ `@semio-tech/framework-os-core` — minimal JS surface for OS program registration until full port lands. */
+/**
+ * 🖥️ `@semio-tech/framework-os-core` — JS sync/backbone protocol surface (backbone URIs, document
+ * envelopes, `backbone-worker.ts` request/response wire types, `PersistenceBinding`/`OpEnvelope`,
+ * {@link buildFrameworkSyncUtilities}) consumed by `framework/renderer/react/os-shell.tsx` and
+ * `framework/product/os/dev/script.ts`. The OS kernel itself (media graph, program registry, ops)
+ * is Rust/wasm-only, hosted by the s-plugin wasm — this file is not a JS port of it. It still
+ * exposes a small legacy `osBaselineResource`/`mergeOsProgramDefinition`/`registerAppVcsHandler`
+ * app-registration shim kept alive only because `compose/client/lib/sketchpad/js/index.ts` still
+ * calls it; do not extend that shim further.
+ */
 // #endregion Header
 
 export type OsProgramResourceMap = Readonly<Record<string, { readonly kind: string; readonly id: string; readonly label: string }>>;
@@ -17,14 +26,6 @@ export function mergeOsProgramDefinition(programId: string, definition: unknown,
 
 export function registerAppVcsHandler(handler: () => void): void {
   vcsHandlers.add(handler);
-}
-
-export function osOutPort(resourceKind: string, id = "out", label = "Out") {
-  return { id, label, resourceKind };
-}
-
-export function osInPort(resourceKind: string, id: string, label: string, required = false) {
-  return { id, label, resourceKind, required };
 }
 
 //#region 🔖Backbone
@@ -51,16 +52,18 @@ export function documentBackboneRef(uri: string): DocumentBackboneRef {
   return { kind: backboneKindFromUri(uri), uri };
 }
 
-export function parseRemoteBackboneUri(uri: string): { readonly hostPort: string; readonly documentId: string } | null {
+export function parseRemoteBackboneUri(uri: string): { readonly hostPort: string; readonly studioId: string; readonly documentId: string } | null {
   if (!uri.startsWith("remote://")) return null;
   const rest = uri.slice("remote://".length);
-  const slash = rest.indexOf("/");
-  if (slash <= 0) return null;
-  return { hostPort: rest.slice(0, slash), documentId: rest.slice(slash + 1) };
+  const firstSlash = rest.indexOf("/");
+  if (firstSlash <= 0) return null;
+  const secondSlash = rest.indexOf("/", firstSlash + 1);
+  if (secondSlash <= 0) return null;
+  return { hostPort: rest.slice(0, firstSlash), studioId: rest.slice(firstSlash + 1, secondSlash), documentId: rest.slice(secondSlash + 1) };
 }
 
-export function buildRemoteBackboneUri(hostPort: string, documentId: string): string {
-  return `remote://${hostPort}/${documentId}`;
+export function buildRemoteBackboneUri(hostPort: string, studioId: string, documentId: string): string {
+  return `remote://${hostPort}/${studioId}/${documentId}`;
 }
 
 export function buildFileBackboneUri(path: string): string {
@@ -73,11 +76,15 @@ export function buildFolderBackboneUri(path: string): string {
   return `folder://${normalized}`;
 }
 
+function remoteEnvelopeUrl(remote: { readonly hostPort: string; readonly studioId: string; readonly documentId: string }): string {
+  return `http://${remote.hostPort}/studios/${encodeURIComponent(remote.studioId)}/documents/${encodeURIComponent(remote.documentId)}/envelope`;
+}
+
 export async function readBackboneEnvelope(uri: string): Promise<string | null> {
   if (uri.startsWith("remote://")) {
     const remote = parseRemoteBackboneUri(uri);
     if (!remote) return null;
-    const response = await fetch(`http://${remote.hostPort}/documents/${encodeURIComponent(remote.documentId)}/envelope`);
+    const response = await fetch(remoteEnvelopeUrl(remote));
     if (response.status === 404) return null;
     if (!response.ok) throw new Error(`remote backbone read failed (${response.status})`);
     const body = (await response.json()) as { envelope?: unknown };
@@ -93,9 +100,9 @@ export async function writeBackboneEnvelope(uri: string, envelopeJson: string): 
   if (uri.startsWith("remote://")) {
     const remote = parseRemoteBackboneUri(uri);
     if (!remote) throw new Error(`invalid remote backbone uri: ${uri}`);
-    const current = await fetch(`http://${remote.hostPort}/documents/${encodeURIComponent(remote.documentId)}/envelope`);
+    const current = await fetch(remoteEnvelopeUrl(remote));
     const version = current.ok ? Number(((await current.json()) as { version?: number }).version ?? 0) : 0;
-    const response = await fetch(`http://${remote.hostPort}/documents/${encodeURIComponent(remote.documentId)}/envelope`, {
+    const response = await fetch(remoteEnvelopeUrl(remote), {
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ version, envelope: JSON.parse(envelopeJson) }),
@@ -196,6 +203,15 @@ export function buildFrameworkSyncUtilities(activeUri: string | null): readonly 
 }
 //#endregion 🔖Backbone
 
+//#region 🔖Blob
+/** 📦 Dev-server-proxied content-addressed blob endpoint: `PUT ${BLOB_ENDPOINT_PATH}?mediaType=` (raw
+ * bytes body, returns `{"hash":"..."}`) and `GET ${BLOB_ENDPOINT_PATH}/:hash` (raw bytes response).
+ * Shared with the dev host shim (`framework/product/os/dev/script.ts`'s `hostShimSource`) and the
+ * browser blob cache (`backbone-worker.ts`) so all three stay in sync on the same literal. Backed by
+ * `vcs::BlobStore`'s native counterpart; a hub-backed route is a later ticket. */
+export const BLOB_ENDPOINT_PATH = "/semio-blob";
+//#endregion 🔖Blob
+
 //#region 🔖SyncProtocol
 /**
  * 🔁 TS mirror of `framework/sync`'s Rust actor protocol (`DocumentActorConfig`/`DocumentActorMsg`/
@@ -230,6 +246,9 @@ export type DocumentPresencePeer = {
   readonly connectedAtMs: number;
   readonly userId?: string;
   readonly role?: string;
+  readonly cursor?: { readonly x: number; readonly y: number };
+  readonly viewport?: { readonly x: number; readonly y: number; readonly zoom: number };
+  readonly dragGhostJson?: string;
 };
 
 /** 📨 Client→server hub wire frames — mirrors Rust `HubClientFrame` byte-for-byte. */
@@ -251,7 +270,7 @@ export type HubServerFrame =
   | { readonly kind: "error"; readonly message: string };
 
 /** 🗃️ A durable place a document synchronizes with — mirrors Rust `PersistenceBinding`. */
-export type PersistenceBinding = { readonly kind: "folder"; readonly path: string } | { readonly kind: "hub"; readonly baseUrl: string; readonly token?: string };
+export type PersistenceBinding = { readonly kind: "folder"; readonly path: string } | { readonly kind: "hub"; readonly baseUrl: string; readonly studioId: string; readonly token?: string };
 
 /** 🧾 Everything the worker needs to open one document's actor — mirrors `DocumentActorConfig`. */
 export type DocumentActorConfig = {
@@ -304,10 +323,8 @@ if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
   describe("@semio-tech/framework-os-core program registration", () => {
-    it("builds baseline resources and ports", () => {
+    it("builds baseline resources", () => {
       expect(osBaselineResource("document", "note-1", "Note 1")).toEqual({ kind: "document", id: "note-1", label: "Note 1" });
-      expect(osOutPort("document")).toEqual({ id: "out", label: "Out", resourceKind: "document" });
-      expect(osInPort("document", "in", "In", true)).toEqual({ id: "in", label: "In", resourceKind: "document", required: true });
     });
 
     it("merges program definitions and registers vcs handlers without throwing", () => {
@@ -331,8 +348,9 @@ if (import.meta.vitest) {
     it("builds and parses backbone uris", () => {
       expect(buildFileBackboneUri("tmp/a.json")).toBe("file:///tmp/a.json");
       expect(buildFolderBackboneUri("tmp")).toBe("folder:///tmp");
-      expect(buildRemoteBackboneUri("localhost:1234", "doc-1")).toBe("remote://localhost:1234/doc-1");
-      expect(parseRemoteBackboneUri("remote://localhost:1234/doc-1")).toEqual({ hostPort: "localhost:1234", documentId: "doc-1" });
+      expect(buildRemoteBackboneUri("localhost:1234", "studio-1", "doc-1")).toBe("remote://localhost:1234/studio-1/doc-1");
+      expect(parseRemoteBackboneUri("remote://localhost:1234/studio-1/doc-1")).toEqual({ hostPort: "localhost:1234", studioId: "studio-1", documentId: "doc-1" });
+      expect(parseRemoteBackboneUri("remote://localhost:1234/doc-1")).toBeNull();
       expect(parseRemoteBackboneUri("file:///tmp/a.json")).toBeNull();
     });
 
@@ -357,6 +375,10 @@ if (import.meta.vitest) {
 
     it("exposes the shared backbone endpoint path", () => {
       expect(BACKBONE_ENDPOINT_PATH).toBe("/semio-backbone");
+    });
+
+    it("exposes the shared blob endpoint path", () => {
+      expect(BLOB_ENDPOINT_PATH).toBe("/semio-blob");
     });
 
     it("applies a snapshot message by overwriting the stored envelope", () => {

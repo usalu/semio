@@ -14,6 +14,7 @@
     "framework/renderer/wgpu",
     "framework/product/os/dev",
     "vcs/rs",
+    "vcs/core",
     "framework/product/os/core",
     "framework/product/presentation/core",
     "infinite/cavas/react-renderer",

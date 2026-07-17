@@ -25,10 +25,12 @@ impl Vec3 {
         self.0[2]
     }
 
+    #[allow(clippy::should_implement_trait, reason = "renaming ripples through lowpoly/core, lowpoly/plugin, remodel/plugin (outside this crate); add/sub read better than +/- across this file's dense vector algebra")]
     pub fn add(self, o: Self) -> Self {
         Self([self.x() + o.x(), self.y() + o.y(), self.z() + o.z()])
     }
 
+    #[allow(clippy::should_implement_trait, reason = "renaming ripples through lowpoly/core, lowpoly/plugin, remodel/plugin (outside this crate); add/sub read better than +/- across this file's dense vector algebra")]
     pub fn sub(self, o: Self) -> Self {
         Self([self.x() - o.x(), self.y() - o.y(), self.z() - o.z()])
     }
@@ -42,11 +44,7 @@ impl Vec3 {
     }
 
     pub fn cross(self, o: Self) -> Self {
-        Self([
-            self.y() * o.z() - self.z() * o.y(),
-            self.z() * o.x() - self.x() * o.z(),
-            self.x() * o.y() - self.y() * o.x(),
-        ])
+        Self([self.y() * o.z() - self.z() * o.y(), self.z() * o.x() - self.x() * o.z(), self.x() * o.y() - self.y() * o.x()])
     }
 
     pub fn length(self) -> f32 {
@@ -92,14 +90,22 @@ pub enum MirrorAxis {
     Z,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+//#region ⚠️ Errors
+/// ⚠️ Half-edge mesh kernel operation failure.
+#[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum MeshKernelError {
+    #[error("invalid handle")]
     InvalidHandle,
+    #[error("mesh is non-manifold")]
     NonManifold,
+    #[error("degenerate operation")]
     DegenerateOperation,
+    #[error("empty selection")]
     EmptySelection,
+    #[error("invalid input: {0}")]
     InvalidInput(String),
 }
+//#endregion ⚠️ Errors
 
 pub type MeshResult<T> = Result<T, MeshKernelError>;
 
@@ -167,12 +173,7 @@ pub struct HalfedgeMesh {
 
 impl HalfedgeMesh {
     pub fn empty() -> Self {
-        Self {
-            vertices: Vec::new(),
-            halfedges: Vec::new(),
-            faces: Vec::new(),
-            uv_seams: HashSet::new(),
-        }
+        Self { vertices: Vec::new(), halfedges: Vec::new(), faces: Vec::new(), uv_seams: HashSet::new() }
     }
 
     pub fn vertex_count(&self) -> usize {
@@ -188,17 +189,11 @@ impl HalfedgeMesh {
     }
 
     pub fn vertex_position(&self, id: VertexId) -> MeshResult<Vec3> {
-        self.vertices
-            .get(id.0 as usize)
-            .map(|v| Vec3(v.position))
-            .ok_or(MeshKernelError::InvalidHandle)
+        self.vertices.get(id.0 as usize).map(|v| Vec3(v.position)).ok_or(MeshKernelError::InvalidHandle)
     }
 
     pub fn set_vertex_position(&mut self, id: VertexId, pos: Vec3) -> MeshResult<()> {
-        let v = self
-            .vertices
-            .get_mut(id.0 as usize)
-            .ok_or(MeshKernelError::InvalidHandle)?;
+        let v = self.vertices.get_mut(id.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;
         v.position = pos.0;
         Ok(())
     }
@@ -266,31 +261,21 @@ impl HalfedgeMesh {
     }
 
     pub fn from_indexed_triangles(positions: &[f32], indices: &[u32]) -> MeshResult<Self> {
-        if positions.len() % 3 != 0 {
+        if !positions.len().is_multiple_of(3) {
             return Err(MeshKernelError::InvalidInput("positions length must be a multiple of 3".into()));
         }
-        if indices.len() % 3 != 0 {
+        if !indices.len().is_multiple_of(3) {
             return Err(MeshKernelError::InvalidInput("indices length must be a multiple of 3".into()));
         }
-        let verts: Vec<[f32; 3]> = positions
-            .chunks_exact(3)
-            .map(|chunk| [chunk[0], chunk[1], chunk[2]])
-            .collect();
-        let faces: Vec<Vec<u32>> = indices
-            .chunks_exact(3)
-            .map(|tri| vec![tri[0], tri[1], tri[2]])
-            .collect();
+        let verts: Vec<[f32; 3]> = positions.as_chunks::<3>().0.to_vec();
+        let faces: Vec<Vec<u32>> = indices.as_chunks::<3>().0.iter().map(|tri| tri.to_vec()).collect();
         Self::from_faces(&verts, &faces)
     }
 
     pub fn from_faces(positions: &[[f32; 3]], faces: &[Vec<u32>]) -> MeshResult<Self> {
         let mut mesh = Self::empty();
         for p in positions {
-            mesh.vertices.push(MeshVertex {
-                position: *p,
-                normal: None,
-                halfedge: None,
-            });
+            mesh.vertices.push(MeshVertex { position: *p, normal: None, halfedge: None });
         }
         let mut edge_map: HashMap<(u32, u32), u32> = HashMap::new();
         for face_verts in faces {
@@ -306,13 +291,7 @@ impl HalfedgeMesh {
                     return Err(MeshKernelError::InvalidInput("face index out of range".into()));
                 }
                 let he_id = mesh.halfedges.len() as u32;
-                mesh.halfedges.push(HalfEdge {
-                    vertex: v0,
-                    twin: None,
-                    next: 0,
-                    face: Some(face_id),
-                    uv: [0.0, 0.0],
-                });
+                mesh.halfedges.push(HalfEdge { vertex: v0, twin: None, next: 0, face: Some(face_id), uv: [0.0, 0.0] });
                 face_hes.push(he_id);
                 if let Some(&twin_id) = edge_map.get(&(v1, v0)) {
                     mesh.halfedges[he_id as usize].twin = Some(twin_id);
@@ -325,11 +304,7 @@ impl HalfedgeMesh {
                 mesh.halfedges[face_hes[i] as usize].next = next;
             }
             let start_he = face_hes[0];
-            mesh.faces.push(MeshFace {
-                halfedge: start_he,
-                smooth: false,
-                flipped: false,
-            });
+            mesh.faces.push(MeshFace { halfedge: start_he, smooth: false, flipped: false });
             let v0 = mesh.halfedges[start_he as usize].vertex;
             mesh.vertices[v0 as usize].halfedge = Some(start_he);
         }
@@ -339,57 +314,8 @@ impl HalfedgeMesh {
 
     fn add_vertex(&mut self, pos: [f32; 3]) -> VertexId {
         let id = self.vertices.len() as u32;
-        self.vertices.push(MeshVertex {
-            position: pos,
-            normal: None,
-            halfedge: None,
-        });
+        self.vertices.push(MeshVertex { position: pos, normal: None, halfedge: None });
         VertexId(id)
-    }
-
-    fn add_face(&mut self, vert_ids: &[u32]) -> MeshResult<FaceId> {
-        if vert_ids.len() < 3 {
-            return Err(MeshKernelError::DegenerateOperation);
-        }
-        let face_id = self.faces.len() as u32;
-        let mut face_hes = Vec::new();
-        for i in 0..vert_ids.len() {
-            let v0 = vert_ids[i];
-            let v1 = vert_ids[(i + 1) % vert_ids.len()];
-            let he_id = self.halfedges.len() as u32;
-            let mut twin = None;
-            for (idx, e) in self.halfedges.iter().enumerate() {
-                if e.vertex == v1 {
-                    let n = &self.halfedges[e.next as usize];
-                    if n.vertex == v0 {
-                        twin = Some(idx as u32);
-                        break;
-                    }
-                }
-            }
-            self.halfedges.push(HalfEdge {
-                vertex: v0,
-                twin,
-                next: 0,
-                face: Some(face_id),
-                uv: [0.0, 0.0],
-            });
-            if let Some(t) = twin {
-                self.halfedges[t as usize].twin = Some(he_id);
-            }
-            face_hes.push(he_id);
-        }
-        for i in 0..face_hes.len() {
-            self.halfedges[face_hes[i] as usize].next = face_hes[(i + 1) % face_hes.len()];
-        }
-        let start = face_hes[0];
-        self.faces.push(MeshFace {
-            halfedge: start,
-            smooth: false,
-            flipped: false,
-        });
-        self.vertices[vert_ids[0] as usize].halfedge = Some(start);
-        Ok(FaceId(face_id))
     }
 
     fn rebuild_from_polygon_soup(&mut self, positions: &[[f32; 3]], faces: &[Vec<u32>]) -> MeshResult<()> {
@@ -418,39 +344,15 @@ impl HalfedgeMesh {
         let hw = width * 0.5;
         let hh = height * 0.5;
         let hd = depth * 0.5;
-        let positions = [
-            [-hw, -hh, -hd],
-            [hw, -hh, -hd],
-            [hw, hh, -hd],
-            [-hw, hh, -hd],
-            [-hw, -hh, hd],
-            [hw, -hh, hd],
-            [hw, hh, hd],
-            [-hw, hh, hd],
-        ];
-        let faces = vec![
-            vec![0, 1, 2, 3],
-            vec![4, 7, 6, 5],
-            vec![0, 4, 5, 1],
-            vec![1, 5, 6, 2],
-            vec![2, 6, 7, 3],
-            vec![3, 7, 4, 0],
-        ];
+        let positions = [[-hw, -hh, -hd], [hw, -hh, -hd], [hw, hh, -hd], [-hw, hh, -hd], [-hw, -hh, hd], [hw, -hh, hd], [hw, hh, hd], [-hw, hh, hd]];
+        let faces = vec![vec![0, 1, 2, 3], vec![4, 7, 6, 5], vec![0, 4, 5, 1], vec![1, 5, 6, 2], vec![2, 6, 7, 3], vec![3, 7, 4, 0]];
         Self::from_faces(&positions, &faces)
     }
 
     pub fn plane_prim(width: f32, depth: f32) -> MeshResult<Self> {
         let hw = width * 0.5;
         let hd = depth * 0.5;
-        Self::from_faces(
-            &[
-                [-hw, 0.0, -hd],
-                [hw, 0.0, -hd],
-                [hw, 0.0, hd],
-                [-hw, 0.0, hd],
-            ],
-            &[vec![0, 1, 2, 3]],
-        )
+        Self::from_faces(&[[-hw, 0.0, -hd], [hw, 0.0, -hd], [hw, 0.0, hd], [-hw, 0.0, hd]], &[vec![0, 1, 2, 3]])
     }
 
     pub fn cylinder_prim(radius: f32, height: f32, segments: u32) -> MeshResult<Self> {
@@ -508,20 +410,7 @@ impl HalfedgeMesh {
 
     pub fn ico_sphere_prim(radius: f32, subdivisions: u32) -> MeshResult<Self> {
         let t = (1.0 + 5.0_f32.sqrt()) * 0.5;
-        let mut positions = vec![
-            [-1.0, t, 0.0],
-            [1.0, t, 0.0],
-            [-1.0, -t, 0.0],
-            [1.0, -t, 0.0],
-            [0.0, -1.0, t],
-            [0.0, 1.0, t],
-            [0.0, -1.0, -t],
-            [0.0, 1.0, -t],
-            [t, 0.0, -1.0],
-            [t, 0.0, 1.0],
-            [-t, 0.0, -1.0],
-            [-t, 0.0, 1.0],
-        ];
+        let mut positions = vec![[-1.0, t, 0.0], [1.0, t, 0.0], [-1.0, -t, 0.0], [1.0, -t, 0.0], [0.0, -1.0, t], [0.0, 1.0, t], [0.0, -1.0, -t], [0.0, 1.0, -t], [t, 0.0, -1.0], [t, 0.0, 1.0], [-t, 0.0, -1.0], [-t, 0.0, 1.0]];
         for p in &mut positions {
             let v = Vec3(*p).normalize().scale(radius);
             *p = v.0;
@@ -611,11 +500,7 @@ impl HalfedgeMesh {
 
     pub fn scale(&mut self, factor: Vec3) -> MeshResult<()> {
         for v in &mut self.vertices {
-            v.position = [
-                v.position[0] * factor.x(),
-                v.position[1] * factor.y(),
-                v.position[2] * factor.z(),
-            ];
+            v.position = [v.position[0] * factor.x(), v.position[1] * factor.y(), v.position[2] * factor.z()];
         }
         self.recompute_normals()
     }
@@ -658,20 +543,12 @@ impl HalfedgeMesh {
         for &vid in verts {
             let v = self.vertices.get_mut(vid.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;
             let p = Vec3(v.position).sub(pivot);
-            v.position = pivot
-                .add(Vec3::new(p.x() * factor.x(), p.y() * factor.y(), p.z() * factor.z()))
-                .0;
+            v.position = pivot.add(Vec3::new(p.x() * factor.x(), p.y() * factor.y(), p.z() * factor.z())).0;
         }
         self.recompute_normals()
     }
 
-    pub fn move_vertices_proportional(
-        &mut self,
-        verts: &[VertexId],
-        delta: Vec3,
-        pivot: Vec3,
-        radius: f32,
-    ) -> MeshResult<()> {
+    pub fn move_vertices_proportional(&mut self, verts: &[VertexId], delta: Vec3, pivot: Vec3, radius: f32) -> MeshResult<()> {
         if verts.is_empty() {
             return Err(MeshKernelError::EmptySelection);
         }
@@ -692,11 +569,7 @@ impl HalfedgeMesh {
         }
         for &vid in verts {
             let v = self.vertices.get_mut(vid.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;
-            v.position = [
-                (v.position[0] / grid).round() * grid,
-                (v.position[1] / grid).round() * grid,
-                (v.position[2] / grid).round() * grid,
-            ];
+            v.position = [(v.position[0] / grid).round() * grid, (v.position[1] / grid).round() * grid, (v.position[2] / grid).round() * grid];
         }
         Ok(())
     }
@@ -733,12 +606,11 @@ impl HalfedgeMesh {
                 new_faces.push(vec![o0, o1, n1, n0]);
             }
         }
-        let (mut positions, mut face_list) = self.polygon_soup();
+        let (positions, mut face_list) = self.polygon_soup();
         for f in new_faces {
             face_list.push(f);
         }
         self.rebuild_from_polygon_soup(&positions, &face_list)?;
-        let _ = positions;
         Ok(())
     }
 
@@ -898,11 +770,7 @@ impl HalfedgeMesh {
         new_positions[keep as usize] = target_pos.0;
         let new_faces: Vec<Vec<u32>> = face_list
             .into_iter()
-            .map(|f| {
-                f.into_iter()
-                    .map(|vi| *remap.get(&vi).unwrap_or(&vi))
-                    .collect::<Vec<_>>()
-            })
+            .map(|f| f.into_iter().map(|vi| *remap.get(&vi).unwrap_or(&vi)).collect::<Vec<_>>())
             .filter(|f| {
                 let mut unique = f.clone();
                 unique.sort();
@@ -953,10 +821,7 @@ impl HalfedgeMesh {
         }
         let remove: HashMap<u32, bool> = verts.iter().map(|v| (v.0, true)).collect();
         let (positions, face_list) = self.polygon_soup();
-        let new_faces: Vec<Vec<u32>> = face_list
-            .into_iter()
-            .filter(|f| !f.iter().any(|vi| remove.contains_key(vi)))
-            .collect();
+        let new_faces: Vec<Vec<u32>> = face_list.into_iter().filter(|f| !f.iter().any(|vi| remove.contains_key(vi))).collect();
         self.rebuild_from_polygon_soup(&positions, &new_faces)
     }
 
@@ -964,7 +829,7 @@ impl HalfedgeMesh {
         if faces.is_empty() {
             return Err(MeshKernelError::EmptySelection);
         }
-        let (mut positions, mut face_list) = self.polygon_soup();
+        let (mut positions, face_list) = self.polygon_soup();
         let selected: HashMap<u32, bool> = faces.iter().map(|f| (f.0, true)).collect();
         let mut new_faces = Vec::new();
         for (fi, face) in face_list.iter().enumerate() {
@@ -994,7 +859,6 @@ impl HalfedgeMesh {
             for i in 0..face.len() {
                 let v = face[i];
                 let m0 = mids[i];
-                let m1 = mids[(i + face.len() - 1) % face.len()];
                 new_faces.push(vec![v, m0, ci]);
                 new_faces.push(vec![m0, mids[(i + 1) % face.len()], ci]);
             }
@@ -1031,16 +895,7 @@ impl HalfedgeMesh {
                 for i in 0..a_len {
                     let u = face_list[ai][i];
                     let v = face_list[ai][(i + 1) % a_len];
-                    let mut bi_found = None;
-                    for bi in 0..face_list.len() {
-                        if bi == ai {
-                            continue;
-                        }
-                        if find_edge_position(&face_list[bi], v, u).is_some() {
-                            bi_found = Some(bi);
-                            break;
-                        }
-                    }
+                    let bi_found = face_list.iter().enumerate().find(|&(bi, f)| bi != ai && find_edge_position(f, v, u).is_some()).map(|(bi, _)| bi);
                     let Some(bi) = bi_found else { continue };
                     if !faces_coplanar(&positions, &face_list[ai], &face_list[bi]) {
                         continue;
@@ -1125,10 +980,9 @@ impl HalfedgeMesh {
                 let mut probe = self.halfedges[current as usize].next;
                 let mut guard = 0usize;
                 let next_boundary = loop {
-                    if self.halfedges[probe as usize].twin.is_none() {
+                    let Some(twin) = self.halfedges[probe as usize].twin else {
                         break Some(probe);
-                    }
-                    let twin = self.halfedges[probe as usize].twin.unwrap();
+                    };
                     probe = self.halfedges[twin as usize].next;
                     guard += 1;
                     if guard > self.halfedges.len() + 4 {
@@ -1220,10 +1074,7 @@ impl HalfedgeMesh {
                     continue;
                 }
                 if let Ok((v0, v1)) = self.edge_endpoints(EdgeId(he_id as u32)) {
-                    let len = self
-                        .vertex_position(v0)?
-                        .sub(self.vertex_position(v1)?)
-                        .length();
+                    let len = self.vertex_position(v0)?.sub(self.vertex_position(v1)?).length();
                     if shortest.map(|(_, l)| len < l).unwrap_or(true) {
                         shortest = Some((EdgeId(he_id as u32), len));
                     }
@@ -1311,7 +1162,7 @@ fn cot_angle(a: Vec3, b: Vec3, c: Vec3) -> f32 {
     ab.dot(ac) / cross_len
 }
 
-fn solve_lscm_1d(n: usize, triplets: &[(usize, usize, f64)], rhs: &[f64], pin_a: usize, pin_b: usize, val_a: f64, val_b: f64) -> Vec<f64> {
+fn solve_lscm_1d(n: usize, triplets: &[(usize, usize, f64)], pin_a: usize, pin_b: usize, val_a: f64, val_b: f64) -> Vec<f64> {
     let free: Vec<usize> = (0..n).filter(|&i| i != pin_a && i != pin_b).collect();
     let m = free.len();
     if m == 0 {
@@ -1505,13 +1356,9 @@ impl HalfedgeMesh {
                 pin_b = i;
             }
         }
-        let u = solve_lscm_1d(n, &triplets, &vec![0.0; n], pin_a, pin_b, 0.0, 1.0);
-        let v = solve_lscm_1d(n, &triplets, &vec![0.0; n], pin_a, pin_b, 0.0, 0.0);
-        verts
-            .into_iter()
-            .enumerate()
-            .map(|(i, vid)| (vid, [u[i] as f32, v[i] as f32]))
-            .collect()
+        let u = solve_lscm_1d(n, &triplets, pin_a, pin_b, 0.0, 1.0);
+        let v = solve_lscm_1d(n, &triplets, pin_a, pin_b, 0.0, 0.0);
+        verts.into_iter().enumerate().map(|(i, vid)| (vid, [u[i] as f32, v[i] as f32])).collect()
     }
 
     fn pack_island_uvs(&self, islands: &[Vec<usize>]) -> HashMap<u32, [f32; 2]> {
@@ -1742,12 +1589,7 @@ fn triangulate_polygon(positions: &[Vec3]) -> Vec<[usize; 3]> {
 
 fn find_edge_position(loop_verts: &[u32], from: u32, to: u32) -> Option<usize> {
     let n = loop_verts.len();
-    for i in 0..n {
-        if loop_verts[i] == from && loop_verts[(i + 1) % n] == to {
-            return Some(i);
-        }
-    }
-    None
+    (0..n).find(|&i| loop_verts[i] == from && loop_verts[(i + 1) % n] == to)
 }
 
 /// Merges two face loops that share exactly one boundary edge (in opposite winding, as guaranteed by a
@@ -1856,7 +1698,7 @@ fn collinear_cleanup(positions: &[[f32; 3]], face_list: &[Vec<u32>]) -> Vec<Vec<
         if pairs.len() != 1 {
             continue;
         }
-        let &(prev, next) = pairs.iter().next().unwrap();
+        let Some(&(prev, next)) = pairs.iter().next() else { continue };
         if prev == next || prev == vid || next == vid {
             continue;
         }
@@ -1869,11 +1711,7 @@ fn collinear_cleanup(positions: &[[f32; 3]], face_list: &[Vec<u32>]) -> Vec<Vec<
             removable.insert(vid);
         }
     }
-    face_list
-        .iter()
-        .map(|face| face.iter().copied().filter(|v| !removable.contains(v)).collect::<Vec<u32>>())
-        .filter(|face: &Vec<u32>| face.len() >= 3)
-        .collect()
+    face_list.iter().map(|face| face.iter().copied().filter(|v| !removable.contains(v)).collect::<Vec<u32>>()).filter(|face: &Vec<u32>| face.len() >= 3).collect()
 }
 
 //#endregion Polygon
@@ -1898,10 +1736,7 @@ impl HalfedgeMesh {
             let face = &self.faces[fi];
             let smooth = face.smooth;
             let topology_hes = self.face_halfedge_ids(FaceId(fi as u32))?;
-            let topology_verts: Vec<VertexId> = topology_hes
-                .iter()
-                .map(|halfedge| VertexId(self.halfedges[*halfedge as usize].vertex))
-                .collect();
+            let topology_verts: Vec<VertexId> = topology_hes.iter().map(|halfedge| VertexId(self.halfedges[*halfedge as usize].vertex)).collect();
             let mut hes = topology_hes.clone();
             if face.flipped {
                 hes.reverse();
@@ -1916,11 +1751,7 @@ impl HalfedgeMesh {
             let push_corner = |he_id: u32, positions: &mut Vec<f32>, normals: &mut Vec<f32>, vertex_ids: &mut Vec<u32>, uvs: &mut Vec<f32>, normal: Vec3| {
                 let he = &self.halfedges[he_id as usize];
                 let vert = &self.vertices[he.vertex as usize];
-                let n = if smooth {
-                    vert.normal.map(Vec3).unwrap_or(normal)
-                } else {
-                    normal
-                };
+                let n = if smooth { vert.normal.map(Vec3).unwrap_or(normal) } else { normal };
                 positions.extend_from_slice(&vert.position);
                 normals.extend_from_slice(&n.0);
                 vertex_ids.push(he.vertex);
@@ -1978,18 +1809,7 @@ impl HalfedgeMesh {
             }
         }
 
-        Ok(MeshTransfer {
-            positions,
-            normals,
-            indices,
-            edge_positions,
-            face_ids,
-            vertex_ids,
-            edge_ids,
-            uvs,
-            edge_uvs,
-            edge_is_seam,
-        })
+        Ok(MeshTransfer { positions, normals, indices, edge_positions, face_ids, vertex_ids, edge_ids, uvs, edge_uvs, edge_is_seam })
     }
 
     pub fn to_obj(&self) -> MeshResult<String> {
@@ -2237,16 +2057,7 @@ mod tests {
     fn merge_and_cleanup_collapses_seam_vertices_of_a_contiguous_strip() {
         // Three coplanar quads in a row sharing seam edges; the seam vertices are used by exactly
         // two faces each and lie on straight boundary lines, so they must be dropped after merge.
-        let positions = vec![
-            [0.0, 0.0, 0.0],
-            [1.0, 0.0, 0.0],
-            [1.0, 1.0, 0.0],
-            [0.0, 1.0, 0.0],
-            [2.0, 0.0, 0.0],
-            [2.0, 1.0, 0.0],
-            [3.0, 0.0, 0.0],
-            [3.0, 1.0, 0.0],
-        ];
+        let positions = vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [2.0, 0.0, 0.0], [2.0, 1.0, 0.0], [3.0, 0.0, 0.0], [3.0, 1.0, 0.0]];
         let faces = vec![vec![0, 1, 2, 3], vec![1, 4, 5, 2], vec![4, 6, 7, 5]];
         let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).unwrap();
         assert_eq!(mesh.face_count(), 3);
@@ -2314,7 +2125,7 @@ mod tests {
                 *directed.entry((verts[i].0, verts[(i + 1) % n].0)).or_insert(0) += 1;
             }
         }
-        for (&(a, b), _) in &directed {
+        for &(a, b) in directed.keys() {
             assert!(directed.contains_key(&(b, a)), "edge {a}->{b} has no opposite counterpart after fill_holes");
         }
     }
@@ -2342,7 +2153,6 @@ mod tests {
             assert_eq!(mesh.face_vertex_ids(FaceId(fi as u32)).unwrap().len(), 4);
         }
     }
-
 }
 
 //#endregion Tests

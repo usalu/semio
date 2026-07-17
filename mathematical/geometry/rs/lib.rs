@@ -513,7 +513,7 @@ pub fn normalize_or_zero(vector: Vec2) -> Vec2 {
     vector / len
 }
 
-#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+/// 📡 Point where a ray from the origin along unit direction `(ux, uy)` exits an axis-aligned rectangle of half-extents `(hw, hh)`.
 pub fn ray_from_origin_to_axis_aligned_rectangle_edge(hw: f64, hh: f64, ux: f64, uy: f64) -> Point {
     let mut t_best = f64::INFINITY;
     if ux.abs() > 1e-12 {
@@ -692,7 +692,7 @@ pub fn convex_hull(points: &[Point]) -> Vec<Point> {
         return points.to_vec();
     }
     let mut sorted: Vec<Point> = points.to_vec();
-    sorted.sort_by(|a, b| a.x().partial_cmp(&b.x()).unwrap().then(a.y().partial_cmp(&b.y()).unwrap()));
+    sorted.sort_by(|a, b| a.x().total_cmp(&b.x()).then(a.y().total_cmp(&b.y())));
     sorted.dedup_by(|a, b| (a.x() - b.x()).abs() < f64::EPSILON && (a.y() - b.y()).abs() < f64::EPSILON);
     if sorted.len() < 3 {
         return sorted;

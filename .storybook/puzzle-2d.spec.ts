@@ -52,8 +52,8 @@ async function expectBoardStory(page: Page, storyId: string): Promise<{ readonly
 
   const debug = page.getByTestId("puzzle2d-board-debug");
   await expect(debug).toBeVisible();
-  await expect(page.locator(".semio-puzzle2d-board-host canvas")).toBeVisible();
-  const canvas = page.locator(".semio-puzzle2d-board-host canvas");
+  await expect(page.locator(".semio-board-2d-host canvas")).toBeVisible();
+  const canvas = page.locator(".semio-board-2d-host canvas");
 
   expect(pageErrors.map((error) => error.message)).toEqual([]);
   expect(significantConsoleErrors(consoleErrors)).toEqual([]);

@@ -1,21 +1,20 @@
 //! 🧭 Brep kernel interface: geometry handles and mesh transfer contracts.
 
 pub mod compute {
-// #region compute
-//! ⚙️ Block the current thread until an async kernel call completes.
+    // #region compute
+    //! ⚙️ Block the current thread until an async kernel call completes.
 
-use std::future::Future;
+    use std::future::Future;
 
-/// ⏳ Block the current thread until an async kernel call completes.
-pub fn block_on<F>(future: F) -> F::Output
-where
-    F: Future,
-{
-    pollster::block_on(future)
+    /// ⏳ Block the current thread until an async kernel call completes.
+    pub fn block_on<F>(future: F) -> F::Output
+    where
+        F: Future,
+    {
+        pollster::block_on(future)
+    }
+    // #endregion compute
 }
-// #endregion compute
-}
-
 
 pub use compute::block_on;
 
@@ -89,7 +88,7 @@ pub struct FaceGroup {
 }
 
 /// 🖼️ Tessellated mesh payload for preview upload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct MeshTransfer {
     pub position: Vec<f32>,
     pub normal: Vec<f32>,
@@ -106,12 +105,6 @@ pub struct BrepTopology {
     pub vertices: Vec<GeometryHandle>,
     pub edges: Vec<GeometryHandle>,
     pub faces: Vec<GeometryHandle>,
-}
-
-impl Default for MeshTransfer {
-    fn default() -> Self {
-        Self { position: Vec::new(), normal: Vec::new(), index: Vec::new(), edges: Vec::new(), points: Vec::new(), face_groups: Vec::new() }
-    }
 }
 
 /// 📍 Point classification relative to a solid.
@@ -132,26 +125,20 @@ pub struct ClosestPoint {
     pub uv: Option<[f64; 2]>,
 }
 
+// #endregion 🔖Types
+
+// #region ⚠️ Errors
 /// ⚠️ Kernel operation error.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, thiserror::Error)]
 pub enum BrepError {
+    #[error("invalid input: {0}")]
     InvalidInput(String),
+    #[error("missing handle: {0}")]
     MissingHandle(String),
+    #[error("operation failed: {0}")]
     Operation(String),
 }
-
-impl std::fmt::Display for BrepError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            BrepError::InvalidInput(message) => write!(f, "invalid input: {message}"),
-            BrepError::MissingHandle(handle) => write!(f, "missing handle: {handle}"),
-            BrepError::Operation(message) => write!(f, "operation failed: {message}"),
-        }
-    }
-}
-
-impl std::error::Error for BrepError {}
-// #endregion 🔖Types
+// #endregion ⚠️ Errors
 
 // #region 🔖Kernel
 /// 🔌 Model-free BREP kernel interface (fully async).
@@ -214,6 +201,7 @@ pub trait BrepKernel {
     async fn copy_shape(&mut self, shape: &GeometryHandle) -> Result<GeometryHandle, BrepError>;
     async fn linear_pattern(&mut self, shape: &GeometryHandle, direction: Vec3, spacing: f64, count: usize) -> Result<GeometryHandle, BrepError>;
     async fn circular_pattern(&mut self, shape: &GeometryHandle, axis: Vec3, count: usize) -> Result<GeometryHandle, BrepError>;
+    #[allow(clippy::too_many_arguments, reason = "grid pattern needs an independent spacing/count pair per axis; grouping into a params struct would ripple through every out-of-scope BrepKernel implementor and caller")]
     async fn grid_pattern(&mut self, shape: &GeometryHandle, dir_x: Vec3, dir_y: Vec3, spacing_x: f64, spacing_y: f64, count_x: usize, count_y: usize) -> Result<GeometryHandle, BrepError>;
     // #endregion Transforms
 

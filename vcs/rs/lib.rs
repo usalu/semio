@@ -4,6 +4,7 @@ use semio_framework_core::{
     ActorId, DocumentDiff, DocumentId, DocumentVersion, HybridLogicalTimestamp, InverseOperation,
     MergeStrategyKind, OpEnvelope, OperationId, PayloadHash, SchemaId, SchemaVersion, UndoPolicy,
 };
+use semio_framework_hash::hash_bytes;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -393,6 +394,14 @@ pub trait Operation<P>: Clone + Serialize + DeserializeOwned {
     fn merge_strategy(&self) -> MergeStrategyKind {
         MergeStrategyKind::LwwRegister
     }
+    /// @emoji 🤝 Post-materialization reconciliation pass (e.g. cross-document studio graph checks).
+    /// Defaults to a no-op so every existing document kind keeps its exact prior behavior; a
+    /// technology opts in by overriding this to inspect `projection` and report {@link StudioConflict}s.
+    /// Takes `projection` by value (rather than adding a `P: Clone` bound to this trait) since the
+    /// only caller already owns a freshly materialized projection.
+    fn reconcile(projection: P) -> (P, Vec<StudioConflict>) {
+        (projection, Vec::new())
+    }
 }
 
 pub fn apply_operation<P, Op>(projection: &P, operation: &Op) -> P
@@ -524,6 +533,22 @@ where
     P: Clone,
     Op: Operation<P>,
 {
+    materialize_document_projection_with_conflicts(envelope, applied_edit_ids).map(|(projection, _conflicts)| projection)
+}
+
+/// @emoji 🤝 Same replay as {@link materialize_document_projection}, additionally surfacing whatever
+/// {@link Operation::reconcile} reports for the resulting projection. Kept as a twin function (rather
+/// than changing `materialize_document_projection`'s signature) so every existing caller across the
+/// workspace is unaffected; call sites that care about conflicts (e.g. `DocumentVcsStore`) opt into
+/// this one instead.
+pub fn materialize_document_projection_with_conflicts<P, Op>(
+    envelope: &DocumentVcsEnvelope<P, Op>,
+    applied_edit_ids: &[String],
+) -> Result<(P, Vec<StudioConflict>), VcsError>
+where
+    P: Clone,
+    Op: Operation<P>,
+{
     let mut projection = envelope.vcs.initial_projection.clone();
     for edit_id in applied_edit_ids {
         let edit = envelope
@@ -536,7 +561,7 @@ where
             projection = apply_operation(&projection, operation);
         }
     }
-    Ok(projection)
+    Ok(Op::reconcile(projection))
 }
 
 fn now_iso() -> String {
@@ -727,6 +752,10 @@ where
     /// edits. Not part of the wire envelope — callers that reconstruct the store per call must
     /// save/restore it via {@link local_actor_id}/{@link set_local_actor_id}.
     local_actor_id: Option<String>,
+    /// @emoji 🤝 Conflicts reported by the last {@link Operation::reconcile} pass, refreshed after
+    /// remote ingestion (see {@link ingest_envelope}). Empty for every document kind that keeps the
+    /// default no-op `reconcile`. Not part of the wire envelope — it is derived, not source of truth.
+    conflicts: Vec<StudioConflict>,
 }
 
 /// @emoji 🖋️ Derives an edit's authoring actor from its per-operation metadata (the author of its
@@ -773,6 +802,7 @@ where
             generation: 0,
             current_checkpoint_id,
             local_actor_id: None,
+            conflicts: Vec::new(),
         }
     }
 
@@ -861,6 +891,7 @@ where
         self.envelope = envelope;
         self.applied_edit_ids = applied_edit_ids;
         self.redo_edit_ids = redo_edit_ids;
+        self.conflicts = Vec::new();
         self.bump();
     }
 
@@ -883,6 +914,17 @@ where
 
     pub fn projection(&self) -> Result<P, VcsError> {
         materialize_document_projection(&self.envelope, &self.applied_edit_ids)
+    }
+
+    /// @emoji 🤝 Fresh replay plus whatever {@link Operation::reconcile} reports for the result. See
+    /// {@link materialize_document_projection_with_conflicts}.
+    pub fn projection_with_conflicts(&self) -> Result<(P, Vec<StudioConflict>), VcsError> {
+        materialize_document_projection_with_conflicts(&self.envelope, &self.applied_edit_ids)
+    }
+
+    /// @emoji 🤝 Conflicts from the last reconciliation pass (see {@link conflicts} field doc).
+    pub fn conflicts(&self) -> &[StudioConflict] {
+        &self.conflicts
     }
 
     pub fn dispatch(&mut self, command: DocumentVcsCommand<Op>) -> Result<(), VcsError> {
@@ -1264,6 +1306,10 @@ where
         let edit_id = edit.id.clone();
         self.envelope.vcs.edits.push(edit);
         self.applied_edit_ids.push(edit_id);
+        // 🤝 Tail reconciliation hook: remote ingestion is the one path where this store's projection
+        // can diverge from what a local `Apply` alone would produce, so refresh conflicts here.
+        let (_, conflicts) = self.projection_with_conflicts()?;
+        self.conflicts = conflicts;
         self.bump();
         Ok(())
     }
@@ -1846,6 +1892,12 @@ impl FolderSqliteStorage {
                  schema TEXT,\
                  json TEXT NOT NULL,\
                  updated_at INTEGER NOT NULL\
+             );\
+             CREATE TABLE IF NOT EXISTS blobs (\
+                 hash TEXT PRIMARY KEY,\
+                 media_type TEXT NOT NULL,\
+                 size INTEGER NOT NULL,\
+                 bytes BLOB NOT NULL\
              );",
         )
         .map_err(|e| VcsError::Backbone(e.to_string()))
@@ -1896,6 +1948,563 @@ pub fn resolve_backbone(uri: &str) -> Result<Box<dyn Backbone>, VcsError> {
     Ok(Box::new(PortBackbone::new(uri)))
 }
 //#endregion 🔖Backbone
+
+//#region 🔖BlobStore
+/// @emoji 📦 A content-addressed blob's identity + metadata. Never carries the bytes themselves —
+/// callers that just put/read a blob already hold those; this is what gets embedded in a document
+/// (e.g. a `MergeStrategyKind::ContentAddressedBlob` field) to reference it durably.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BlobRef {
+    pub hash: String,
+    pub size: u64,
+    pub media_type: String,
+}
+
+/// @emoji 🗄️ Content-addressed blob persistence backing `MergeStrategyKind::ContentAddressedBlob` /
+/// `DocumentKind::ContentAddressedBlob` (`framework/core/rs` 🔖MergeStrategy region). `put` is idempotent —
+/// it dedupes by the Blake3 hash of the bytes ({@link semio_framework_hash::hash_bytes}), so writing
+/// the same content twice never rewrites storage. Implementors decide the backing medium (sqlite here,
+/// a hub HTTP route in a later ticket, an IndexedDB cache in the browser).
+pub trait BlobStore: Send + Sync {
+    fn put(&self, bytes: &[u8], media_type: &str) -> Result<BlobRef, VcsError>;
+    fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, VcsError>;
+    fn has(&self, hash: &str) -> Result<bool, VcsError>;
+    fn delete(&self, hash: &str) -> Result<(), VcsError>;
+}
+
+/// @emoji 🗄️ `FolderSqliteStorage`'s `blobs(hash, media_type, size, bytes)` table (bootstrapped
+/// alongside `document` in `ensure_schema`) — one whole-blob `BLOB` column is plenty for v1; this
+/// crate's other tables don't chunk large payloads either, and the `BlobStore` trait itself stays
+/// whole-blob regardless of how a given backend chooses to store the bytes internally.
+#[cfg(not(target_arch = "wasm32"))]
+impl BlobStore for FolderSqliteStorage {
+    fn put(&self, bytes: &[u8], media_type: &str) -> Result<BlobRef, VcsError> {
+        let hash = hash_bytes(bytes);
+        let conn = self.connection()?;
+        conn.execute(
+            "INSERT OR IGNORE INTO blobs (hash, media_type, size, bytes) VALUES (?1, ?2, ?3, ?4)",
+            rusqlite::params![hash, media_type, bytes.len() as i64, bytes],
+        )
+        .map_err(|e| VcsError::Backbone(e.to_string()))?;
+        Ok(BlobRef { hash, size: bytes.len() as u64, media_type: media_type.to_string() })
+    }
+
+    fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, VcsError> {
+        use rusqlite::OptionalExtension;
+        let conn = self.connection()?;
+        conn.query_row("SELECT bytes FROM blobs WHERE hash = ?1", [hash], |row| row.get(0))
+            .optional()
+            .map_err(|e| VcsError::Backbone(e.to_string()))
+    }
+
+    fn has(&self, hash: &str) -> Result<bool, VcsError> {
+        let conn = self.connection()?;
+        let count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM blobs WHERE hash = ?1", [hash], |row| row.get(0))
+            .map_err(|e| VcsError::Backbone(e.to_string()))?;
+        Ok(count > 0)
+    }
+
+    fn delete(&self, hash: &str) -> Result<(), VcsError> {
+        let conn = self.connection()?;
+        conn.execute("DELETE FROM blobs WHERE hash = ?1", [hash])
+            .map_err(|e| VcsError::Backbone(e.to_string()))?;
+        Ok(())
+    }
+}
+//#endregion 🔖BlobStore
+
+//#region 🔖Studio
+//#region StudioMember
+/// @emoji 🧑‍🤝‍🧑 Object-safe façade over a `DocumentVcsStore<P, Op>` so a studio host can hold a
+/// heterogeneous registry of documents (`HashMap<String, Box<dyn StudioMember>>`) without knowing
+/// each member's concrete `P`/`Op`. Blanket-implemented below by delegating to `dispatch` — never
+/// reimplement the underlying VCS mechanics here.
+pub trait StudioMember {
+    fn document_id(&self) -> &str;
+    /// @emoji 🩸 Whether this member has edits applied since its last checkpoint (mirrors the
+    /// `CommitCheckpoint` dispatch's own "nothing to commit" check via `uncommitted_edit_ids`).
+    fn is_dirty(&self) -> bool;
+    fn commit_checkpoint(&mut self, message: String, authors: Vec<Author>) -> Result<String, VcsError>;
+    fn current_checkpoint_id(&self) -> Option<String>;
+    fn current_alternative_id(&self) -> Option<String>;
+    fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str) -> Result<(), VcsError>;
+    fn create_alternative(&mut self, name: String) -> Result<String, VcsError>;
+    fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
+    fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
+    fn undo(&mut self) -> Result<(), VcsError>;
+    fn redo(&mut self) -> Result<(), VcsError>;
+    /// @emoji 🪄 Downcast escape hatch: a studio host UI (or a test) needs the concrete
+    /// `DocumentVcsStore<P, Op>` back out of a `Box<dyn StudioMember>` — e.g. to `Apply` a
+    /// technology-specific `Op`, which can't appear in this object-safe trait. `Self: 'static` is
+    /// implied by every real `P`/`Op` pair, so this never fails for a genuine member.
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
+}
+
+impl<P, Op> StudioMember for DocumentVcsStore<P, Op>
+where
+    P: Clone + Serialize + DeserializeOwned + 'static,
+    Op: Clone + Serialize + DeserializeOwned + Operation<P> + 'static,
+{
+    fn document_id(&self) -> &str {
+        self.envelope().id.as_str()
+    }
+
+    fn is_dirty(&self) -> bool {
+        !uncommitted_edit_ids(&self.envelope, self.applied_edit_ids()).is_empty()
+    }
+
+    fn commit_checkpoint(&mut self, message: String, authors: Vec<Author>) -> Result<String, VcsError> {
+        self.dispatch(DocumentVcsCommand::CommitCheckpoint {
+            message: Some(message),
+            authors,
+        })?;
+        // `self.current_checkpoint_id()` resolves to the inherent method (`Option<&str>`), not this
+        // trait method — Rust prefers inherent methods over trait methods of the same name.
+        self.current_checkpoint_id().map(|id| id.to_string()).ok_or(VcsError::NoCheckpoint)
+    }
+
+    fn current_checkpoint_id(&self) -> Option<String> {
+        self.current_checkpoint_id().map(|id| id.to_string())
+    }
+
+    fn current_alternative_id(&self) -> Option<String> {
+        self.envelope().active_alternative_id.clone()
+    }
+
+    fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str) -> Result<(), VcsError> {
+        if !alternative_id.is_empty() {
+            let is_alternative_tip = self
+                .envelope()
+                .vcs
+                .alternatives
+                .iter()
+                .find(|alternative| alternative.id == alternative_id)
+                .map(|alternative| alternative.checkpoint_ids.last().map(String::as_str) == Some(checkpoint_id))
+                .unwrap_or(false);
+            if is_alternative_tip {
+                return self.dispatch(DocumentVcsCommand::SwitchAlternative {
+                    alternative_id: alternative_id.to_string(),
+                });
+            }
+        }
+        self.dispatch(DocumentVcsCommand::CheckoutCheckpoint {
+            checkpoint_id: checkpoint_id.to_string(),
+        })
+    }
+
+    fn create_alternative(&mut self, name: String) -> Result<String, VcsError> {
+        self.dispatch(DocumentVcsCommand::CreateAlternative { name })?;
+        self.envelope().active_alternative_id.clone().ok_or(VcsError::NoCheckpoint)
+    }
+
+    fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
+        self.applied_edit_ids().iter().rev().find_map(|edit_id| {
+            if !self.edit_is_local(edit_id) {
+                return None;
+            }
+            self.envelope()
+                .vcs
+                .edits
+                .iter()
+                .find(|edit| edit.id == *edit_id)
+                .and_then(|edit| edit.operation_meta.last())
+                .map(|meta| meta.timestamp)
+        })
+    }
+
+    fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
+        self.redo_edit_ids().iter().rev().find_map(|edit_id| {
+            if !self.edit_is_local(edit_id) {
+                return None;
+            }
+            self.envelope()
+                .vcs
+                .edits
+                .iter()
+                .find(|edit| edit.id == *edit_id)
+                .and_then(|edit| edit.operation_meta.last())
+                .map(|meta| meta.timestamp)
+        })
+    }
+
+    fn undo(&mut self) -> Result<(), VcsError> {
+        self.dispatch(DocumentVcsCommand::Undo)
+    }
+
+    fn redo(&mut self) -> Result<(), VcsError> {
+        self.dispatch(DocumentVcsCommand::Redo)
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+}
+//#endregion StudioMember
+
+//#region StudioHistoryDocument
+/// @emoji 📌 One member document's position at the moment a `StudioCheckpoint` was recorded.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StudioMemberPin {
+    pub document_id: String,
+    pub checkpoint_id: String,
+    /// @emoji 🌿 Empty string when the member had no active alternative (its own trunk) at pin time.
+    #[serde(default)]
+    pub alternative_id: String,
+}
+
+/// @emoji 🗄️ A studio-wide checkpoint: one pin per registered member, so checking it out (or an
+/// alternative built on top of it) fans out deterministically to every member's own VCS.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StudioCheckpoint {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent_id: Option<String>,
+    pub message: String,
+    pub authors: Vec<Author>,
+    pub timestamp: HybridLogicalTimestamp,
+    pub members: Vec<StudioMemberPin>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StudioAlternative {
+    pub id: String,
+    pub name: String,
+    pub checkpoint_ids: Vec<String>,
+}
+
+/// @emoji 🗄️ Projection of the `"os.studio.history"` meta-document: itself an ordinary `DocumentVcs`
+/// document kind (dogfooded — no bespoke transport), holding the studio-level checkpoint/alternative
+/// graph that `StudioVcsHost` composes on top of every registered member's own history.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StudioHistoryProjection {
+    pub checkpoints: Vec<StudioCheckpoint>,
+    pub alternatives: Vec<StudioAlternative>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub active_alternative_id: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum StudioHistoryOp {
+    CommitStudioCheckpoint { checkpoint: StudioCheckpoint },
+    CreateStudioAlternative { alternative: StudioAlternative },
+    SwitchStudioAlternative { alternative_id: String },
+    /// @emoji ↩️ Mechanical inverse of `CommitStudioCheckpoint`; never dispatched directly by
+    /// `StudioVcsHost` (studio undo is derived and member-local, see `StudioVcsHost::undo`), only
+    /// produced by `backwards` for VCS round-trip correctness.
+    RemoveStudioCheckpoint { checkpoint_id: String },
+    /// @emoji ↩️ Mechanical inverse of `CreateStudioAlternative`; see `RemoveStudioCheckpoint`.
+    RemoveStudioAlternative { alternative_id: String },
+    /// @emoji ↩️ Mechanical inverse of `SwitchStudioAlternative`; see `RemoveStudioCheckpoint`.
+    SetActiveStudioAlternative { alternative_id: Option<String> },
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StudioHistoryDiff {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub add_checkpoint: Option<StudioCheckpoint>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub remove_checkpoint_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub add_alternative: Option<StudioAlternative>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub remove_alternative_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub set_active_alternative_id: Option<Option<String>>,
+}
+
+impl OperationDiff<StudioHistoryProjection> for StudioHistoryDiff {
+    fn apply(&self, projection: &StudioHistoryProjection) -> StudioHistoryProjection {
+        let mut next = projection.clone();
+        if let Some(checkpoint) = &self.add_checkpoint {
+            next.checkpoints.push(checkpoint.clone());
+        }
+        if let Some(checkpoint_id) = &self.remove_checkpoint_id {
+            next.checkpoints.retain(|checkpoint| checkpoint.id != *checkpoint_id);
+        }
+        if let Some(alternative) = &self.add_alternative {
+            next.alternatives.push(alternative.clone());
+        }
+        if let Some(alternative_id) = &self.remove_alternative_id {
+            next.alternatives.retain(|alternative| alternative.id != *alternative_id);
+        }
+        if let Some(active) = &self.set_active_alternative_id {
+            next.active_alternative_id = active.clone();
+        }
+        next
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.add_checkpoint.is_some() {
+            self.add_checkpoint = other.add_checkpoint;
+        }
+        if other.remove_checkpoint_id.is_some() {
+            self.remove_checkpoint_id = other.remove_checkpoint_id;
+        }
+        if other.add_alternative.is_some() {
+            self.add_alternative = other.add_alternative;
+        }
+        if other.remove_alternative_id.is_some() {
+            self.remove_alternative_id = other.remove_alternative_id;
+        }
+        if other.set_active_alternative_id.is_some() {
+            self.set_active_alternative_id = other.set_active_alternative_id;
+        }
+    }
+}
+
+impl Operation<StudioHistoryProjection> for StudioHistoryOp {
+    type Diff = StudioHistoryDiff;
+
+    fn diff(&self, _projection: &StudioHistoryProjection) -> StudioHistoryDiff {
+        match self {
+            StudioHistoryOp::CommitStudioCheckpoint { checkpoint } => StudioHistoryDiff {
+                add_checkpoint: Some(checkpoint.clone()),
+                ..Default::default()
+            },
+            StudioHistoryOp::CreateStudioAlternative { alternative } => StudioHistoryDiff {
+                add_alternative: Some(alternative.clone()),
+                set_active_alternative_id: Some(Some(alternative.id.clone())),
+                ..Default::default()
+            },
+            StudioHistoryOp::SwitchStudioAlternative { alternative_id } => StudioHistoryDiff {
+                set_active_alternative_id: Some(Some(alternative_id.clone())),
+                ..Default::default()
+            },
+            StudioHistoryOp::RemoveStudioCheckpoint { checkpoint_id } => StudioHistoryDiff {
+                remove_checkpoint_id: Some(checkpoint_id.clone()),
+                ..Default::default()
+            },
+            StudioHistoryOp::RemoveStudioAlternative { alternative_id } => StudioHistoryDiff {
+                remove_alternative_id: Some(alternative_id.clone()),
+                ..Default::default()
+            },
+            StudioHistoryOp::SetActiveStudioAlternative { alternative_id } => StudioHistoryDiff {
+                set_active_alternative_id: Some(alternative_id.clone()),
+                ..Default::default()
+            },
+        }
+    }
+
+    fn backwards(&self, projection: &StudioHistoryProjection) -> Vec<Self> {
+        match self {
+            StudioHistoryOp::CommitStudioCheckpoint { checkpoint } => {
+                vec![StudioHistoryOp::RemoveStudioCheckpoint {
+                    checkpoint_id: checkpoint.id.clone(),
+                }]
+            }
+            StudioHistoryOp::CreateStudioAlternative { alternative } => vec![
+                StudioHistoryOp::SetActiveStudioAlternative {
+                    alternative_id: projection.active_alternative_id.clone(),
+                },
+                StudioHistoryOp::RemoveStudioAlternative {
+                    alternative_id: alternative.id.clone(),
+                },
+            ],
+            StudioHistoryOp::SwitchStudioAlternative { .. } => vec![StudioHistoryOp::SetActiveStudioAlternative {
+                alternative_id: projection.active_alternative_id.clone(),
+            }],
+            StudioHistoryOp::RemoveStudioCheckpoint { checkpoint_id } => projection
+                .checkpoints
+                .iter()
+                .find(|checkpoint| checkpoint.id == *checkpoint_id)
+                .map(|checkpoint| vec![StudioHistoryOp::CommitStudioCheckpoint { checkpoint: checkpoint.clone() }])
+                .unwrap_or_default(),
+            StudioHistoryOp::RemoveStudioAlternative { alternative_id } => projection
+                .alternatives
+                .iter()
+                .find(|alternative| alternative.id == *alternative_id)
+                .map(|alternative| vec![StudioHistoryOp::CreateStudioAlternative { alternative: alternative.clone() }])
+                .unwrap_or_default(),
+            StudioHistoryOp::SetActiveStudioAlternative { .. } => vec![StudioHistoryOp::SetActiveStudioAlternative {
+                alternative_id: projection.active_alternative_id.clone(),
+            }],
+        }
+    }
+}
+//#endregion StudioHistoryDocument
+
+//#region StudioVcsHost
+/// @emoji 🏛️ Composes many `StudioMember` documents under one studio-wide checkpoint/alternative
+/// timeline, itself stored in a dogfooded `"os.studio.history"` meta-document. App-agnostic: this
+/// crate has no notion of what a member document *is*, only that it satisfies `StudioMember`.
+pub struct StudioVcsHost {
+    meta: DocumentVcsStore<StudioHistoryProjection, StudioHistoryOp>,
+    members: HashMap<String, Box<dyn StudioMember>>,
+}
+
+impl StudioVcsHost {
+    pub fn new(meta_envelope: DocumentVcsEnvelope<StudioHistoryProjection, StudioHistoryOp>) -> Self {
+        Self {
+            meta: DocumentVcsStore::new(meta_envelope),
+            members: HashMap::new(),
+        }
+    }
+
+    pub fn register_member(&mut self, member: Box<dyn StudioMember>) {
+        self.members.insert(member.document_id().to_string(), member);
+    }
+
+    pub fn unregister_member(&mut self, document_id: &str) -> Option<Box<dyn StudioMember>> {
+        self.members.remove(document_id)
+    }
+
+    pub fn member(&self, document_id: &str) -> Option<&dyn StudioMember> {
+        self.members.get(document_id).map(|member| member.as_ref())
+    }
+
+    pub fn member_mut<'a>(&'a mut self, document_id: &str) -> Option<&'a mut (dyn StudioMember + 'a)> {
+        match self.members.get_mut(document_id) {
+            Some(member) => Some(member.as_mut()),
+            None => None,
+        }
+    }
+
+    pub fn meta_projection(&self) -> Result<StudioHistoryProjection, VcsError> {
+        self.meta.projection()
+    }
+
+    /// @emoji 💾 Commits every dirty member (leaving clean members' existing checkpoints untouched),
+    /// pins each member's resulting `(checkpoint, alternative)`, and records one `StudioCheckpoint`
+    /// on the meta-document — applied *and* committed there too, so the studio history itself is
+    /// durable the moment this returns.
+    pub fn commit_studio_checkpoint(&mut self, message: String, authors: Vec<Author>) -> Result<String, VcsError> {
+        let mut document_ids: Vec<String> = self.members.keys().cloned().collect();
+        document_ids.sort();
+        let mut pins = Vec::with_capacity(document_ids.len());
+        for document_id in &document_ids {
+            let member = self.members.get_mut(document_id).expect("just collected from members");
+            if member.is_dirty() {
+                member.commit_checkpoint(message.clone(), authors.clone())?;
+            }
+            let checkpoint_id = member.current_checkpoint_id().ok_or(VcsError::NoCheckpoint)?;
+            pins.push(StudioMemberPin {
+                document_id: document_id.clone(),
+                checkpoint_id,
+                alternative_id: member.current_alternative_id().unwrap_or_default(),
+            });
+        }
+        let checkpoint_id = create_document_vcs_id("studio-checkpoint");
+        let parent_id = self
+            .meta
+            .projection()?
+            .checkpoints
+            .last()
+            .map(|checkpoint| checkpoint.id.clone());
+        let checkpoint = StudioCheckpoint {
+            id: checkpoint_id.clone(),
+            parent_id,
+            message: message.clone(),
+            authors,
+            timestamp: HybridLogicalTimestamp::new(0, now_ms()),
+            members: pins,
+        };
+        self.meta.dispatch(DocumentVcsCommand::Apply {
+            operations: vec![StudioHistoryOp::CommitStudioCheckpoint { checkpoint }],
+            description: Some(message),
+        })?;
+        self.meta.dispatch(DocumentVcsCommand::CommitCheckpoint {
+            message: None,
+            authors: Vec::new(),
+        })?;
+        Ok(checkpoint_id)
+    }
+
+    /// @emoji 🌿 Records a `StudioAlternative` pinned at the current studio checkpoint tip (or none,
+    /// if nothing has been committed yet), so it can later be switched back into.
+    pub fn create_studio_alternative(&mut self, name: String) -> Result<String, VcsError> {
+        let checkpoint_id = self.meta.projection()?.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
+        let alternative_id = create_document_vcs_id("studio-alternative");
+        let alternative = StudioAlternative {
+            id: alternative_id.clone(),
+            name,
+            checkpoint_ids: checkpoint_id.into_iter().collect(),
+        };
+        self.meta.dispatch(DocumentVcsCommand::Apply {
+            operations: vec![StudioHistoryOp::CreateStudioAlternative { alternative }],
+            description: None,
+        })?;
+        Ok(alternative_id)
+    }
+
+    /// @emoji 🔀 Fans out to every member pinned by `checkpoint_id`'s `StudioCheckpoint`, restoring
+    /// each to its exact recorded `(checkpoint, alternative)`.
+    pub fn checkout_studio_checkpoint(&mut self, checkpoint_id: &str) -> Result<(), VcsError> {
+        let projection = self.meta.projection()?;
+        let checkpoint = projection
+            .checkpoints
+            .iter()
+            .find(|checkpoint| checkpoint.id == checkpoint_id)
+            .ok_or(VcsError::NoCheckpoint)?;
+        for pin in &checkpoint.members {
+            if let Some(member) = self.members.get_mut(&pin.document_id) {
+                member.checkout(&pin.checkpoint_id, &pin.alternative_id)?;
+            }
+        }
+        Ok(())
+    }
+
+    /// @emoji 🔀 Switches the studio's active alternative and fans out to its tip checkpoint's pins.
+    pub fn switch_studio_alternative(&mut self, alternative_id: &str) -> Result<(), VcsError> {
+        let projection = self.meta.projection()?;
+        let alternative = projection
+            .alternatives
+            .iter()
+            .find(|alternative| alternative.id == alternative_id)
+            .ok_or_else(|| VcsError::UnknownAlternative(alternative_id.to_string()))?;
+        let checkpoint_id = alternative.checkpoint_ids.last().cloned().ok_or(VcsError::NoCheckpoint)?;
+        self.meta.dispatch(DocumentVcsCommand::Apply {
+            operations: vec![StudioHistoryOp::SwitchStudioAlternative {
+                alternative_id: alternative_id.to_string(),
+            }],
+            description: None,
+        })?;
+        self.checkout_studio_checkpoint(&checkpoint_id)
+    }
+
+    /// @emoji ↩️ Derived, local-only undo: targets whichever registered member has the most recent
+    /// `last_local_edit_timestamp` (by {@link HybridLogicalTimestamp::cmp_key}) and undoes just that
+    /// member. Never dispatched against the meta-document — studio-level undo has no `StudioHistoryOp`
+    /// of its own, it is purely a cross-member ordering policy.
+    pub fn undo(&mut self) -> Result<(), VcsError> {
+        let target = self
+            .members
+            .iter()
+            .filter_map(|(document_id, member)| {
+                member.last_local_edit_timestamp().map(|timestamp| (timestamp.cmp_key(), document_id.clone()))
+            })
+            .max_by_key(|(cmp_key, _)| *cmp_key)
+            .map(|(_, document_id)| document_id);
+        let document_id = target.ok_or(VcsError::NothingToUndo)?;
+        self.members.get_mut(&document_id).ok_or(VcsError::NothingToUndo)?.undo()
+    }
+
+    /// @emoji ↪️ Derived, local-only redo: mirrors `undo`, targeting the member with the most
+    /// recent `last_undone_local_edit_timestamp`.
+    pub fn redo(&mut self) -> Result<(), VcsError> {
+        let target = self
+            .members
+            .iter()
+            .filter_map(|(document_id, member)| {
+                member
+                    .last_undone_local_edit_timestamp()
+                    .map(|timestamp| (timestamp.cmp_key(), document_id.clone()))
+            })
+            .max_by_key(|(cmp_key, _)| *cmp_key)
+            .map(|(_, document_id)| document_id);
+        let document_id = target.ok_or(VcsError::NothingToRedo)?;
+        self.members.get_mut(&document_id).ok_or(VcsError::NothingToRedo)?.redo()
+    }
+}
+//#endregion StudioVcsHost
+//#endregion 🔖Studio
 
 //#region 🔖TestSupport
 /// @emoji 🧪 Round-trip assertions shared by every technology crate's `Operation` test suite.
@@ -2484,6 +3093,31 @@ mod tests {
     }
 
     #[test]
+    fn blob_store_put_get_dedupes_idempotently() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
+        let bytes = b"hello content-addressed world";
+        assert!(!storage.has("not-a-real-hash").expect("has on empty store"));
+
+        let first = storage.put(bytes, "text/plain").expect("first put");
+        let second = storage.put(bytes, "text/plain").expect("second put");
+        assert_eq!(first, second, "putting identical bytes twice is idempotent and dedupes by hash");
+        assert_eq!(first.size, bytes.len() as u64);
+        assert_eq!(first.media_type, "text/plain");
+
+        assert!(storage.has(&first.hash).expect("has after put"));
+        let fetched = storage.get(&first.hash).expect("get").expect("blob present");
+        assert_eq!(fetched, bytes);
+
+        let other = storage.put(b"different content", "text/plain").expect("put other");
+        assert_ne!(other.hash, first.hash, "different bytes hash differently");
+
+        storage.delete(&first.hash).expect("delete");
+        assert!(!storage.has(&first.hash).expect("has after delete"));
+        assert_eq!(storage.get(&first.hash).expect("get after delete"), None);
+    }
+
+    #[test]
     fn attach_reconciles_a_pushed_snapshot() {
         let (channel, remote) = ChannelBackbone::pair("chan");
         let seeded: DocumentVcsEnvelope<DemoProjection, DemoOp> =
@@ -2863,5 +3497,337 @@ mod tests {
         test_support::assert_operation_round_trip(&DemoProjection { n: 4 }, DemoOp::SetN { n: 9 });
         test_support::assert_store_roundtrip(DemoProjection { n: 4 }, DemoOp::SetN { n: 9 });
     }
+
+    //#region 🏛️StudioTests
+    /// @emoji ⏱️ Like `DemoOp` but with an explicit, test-controlled `timestamp()` override, so
+    /// undo-ordering-by-HLT tests don't depend on real wall-clock resolution.
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[serde(tag = "op")]
+    enum TimestampedOp {
+        SetN { n: i32, physical_ms: u64 },
+    }
+
+    impl Operation<DemoProjection> for TimestampedOp {
+        type Diff = DemoDiff;
+
+        fn diff(&self, _projection: &DemoProjection) -> DemoDiff {
+            match self {
+                TimestampedOp::SetN { n, .. } => DemoDiff { n: Some(*n) },
+            }
+        }
+
+        fn backwards(&self, projection: &DemoProjection) -> Vec<Self> {
+            vec![TimestampedOp::SetN {
+                n: projection.n,
+                physical_ms: 0,
+            }]
+        }
+
+        fn timestamp(&self) -> Option<HybridLogicalTimestamp> {
+            match self {
+                TimestampedOp::SetN { physical_ms, .. } => Some(HybridLogicalTimestamp::new(0, *physical_ms)),
+            }
+        }
+    }
+
+    /// @emoji 🪄 Downcasts a registered `dyn StudioMember` back to its concrete demo store.
+    fn demo_member<'a, Op: Operation<DemoProjection> + 'static>(
+        host: &'a mut StudioVcsHost,
+        document_id: &str,
+    ) -> &'a mut DocumentVcsStore<DemoProjection, Op> {
+        host.member_mut(document_id)
+            .expect("member registered")
+            .as_any_mut()
+            .downcast_mut::<DocumentVcsStore<DemoProjection, Op>>()
+            .expect("concrete member type matches")
+    }
+
+    #[test]
+    fn studio_checkpoint_commits_dirty_members_and_pins_their_checkpoints() {
+        let mut member_a = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOp>(
+            "demo/v1",
+            "member-a",
+            DemoProjection { n: 0 },
+            None,
+        ));
+        member_a
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 1 }],
+                description: None,
+            })
+            .expect("apply a");
+
+        let mut member_b = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOp>(
+            "demo/v1",
+            "member-b",
+            DemoProjection { n: 0 },
+            None,
+        ));
+        member_b
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 5 }],
+                description: None,
+            })
+            .expect("apply b");
+        member_b
+            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                message: Some("b-init".into()),
+                authors: Vec::new(),
+            })
+            .expect("commit b upfront, so it starts clean");
+        let member_b_checkpoint = member_b.current_checkpoint_id().expect("b checkpoint").to_string();
+
+        let mut host = StudioVcsHost::new(create_document_vcs_envelope(
+            "os.studio.history/v1",
+            "studio",
+            StudioHistoryProjection::default(),
+            None,
+        ));
+        host.register_member(Box::new(member_a));
+        host.register_member(Box::new(member_b));
+
+        let studio_checkpoint_id = host
+            .commit_studio_checkpoint(
+                "studio init".into(),
+                vec![Author {
+                    id: "a1".into(),
+                    name: "Alice".into(),
+                    avatar: None,
+                }],
+            )
+            .expect("commit studio checkpoint");
+
+        let projection = host.meta_projection().expect("meta projection");
+        assert_eq!(projection.checkpoints.len(), 1);
+        let checkpoint = &projection.checkpoints[0];
+        assert_eq!(checkpoint.id, studio_checkpoint_id);
+        assert_eq!(checkpoint.members.len(), 2, "pins one entry per registered member");
+        let pin_b = checkpoint.members.iter().find(|pin| pin.document_id == "member-b").expect("pin b");
+        assert_eq!(pin_b.checkpoint_id, member_b_checkpoint, "clean member reuses its existing checkpoint");
+        assert!(
+            !host.member("member-a").expect("member a").is_dirty(),
+            "dirty member-a is committed (and therefore clean) by the studio checkpoint"
+        );
+    }
+
+    #[test]
+    fn studio_checkout_checkpoint_fans_out_and_restores_pinned_member_state() {
+        let member_a = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOp>(
+            "demo/v1",
+            "member-a",
+            DemoProjection { n: 0 },
+            None,
+        ));
+        let mut host = StudioVcsHost::new(create_document_vcs_envelope(
+            "os.studio.history/v1",
+            "studio",
+            StudioHistoryProjection::default(),
+            None,
+        ));
+        host.register_member(Box::new(member_a));
+
+        demo_member::<DemoOp>(&mut host, "member-a")
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 1 }],
+                description: None,
+            })
+            .expect("apply 1");
+        let studio_checkpoint_1 = host.commit_studio_checkpoint("first".into(), Vec::new()).expect("commit 1");
+
+        demo_member::<DemoOp>(&mut host, "member-a")
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 2 }],
+                description: None,
+            })
+            .expect("apply 2");
+        host.commit_studio_checkpoint("second".into(), Vec::new()).expect("commit 2");
+        assert_eq!(
+            demo_member::<DemoOp>(&mut host, "member-a").projection().expect("projection").n,
+            2,
+            "member reflects the second studio checkpoint before checking out the first"
+        );
+
+        host.checkout_studio_checkpoint(&studio_checkpoint_1).expect("checkout studio checkpoint 1");
+        assert_eq!(
+            demo_member::<DemoOp>(&mut host, "member-a").projection().expect("projection").n,
+            1,
+            "checking out the first studio checkpoint fans out and restores member-a's pinned state"
+        );
+    }
+
+    #[test]
+    fn studio_switch_alternative_fans_out_and_restores_pinned_member_state() {
+        let member_a = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOp>(
+            "demo/v1",
+            "member-a",
+            DemoProjection { n: 0 },
+            None,
+        ));
+        let mut host = StudioVcsHost::new(create_document_vcs_envelope(
+            "os.studio.history/v1",
+            "studio",
+            StudioHistoryProjection::default(),
+            None,
+        ));
+        host.register_member(Box::new(member_a));
+
+        demo_member::<DemoOp>(&mut host, "member-a")
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 1 }],
+                description: None,
+            })
+            .expect("apply 1");
+        host.commit_studio_checkpoint("root".into(), Vec::new()).expect("commit root");
+
+        let alt_id = host.create_studio_alternative("branch-a".into()).expect("create alternative");
+
+        demo_member::<DemoOp>(&mut host, "member-a")
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 2 }],
+                description: None,
+            })
+            .expect("apply 2 (uncommitted at the studio level)");
+        assert_eq!(
+            demo_member::<DemoOp>(&mut host, "member-a").projection().expect("projection").n,
+            2,
+            "uncommitted edit is live before switching"
+        );
+
+        host.switch_studio_alternative(&alt_id).expect("switch alternative fans out to its pinned checkpoint");
+        assert_eq!(
+            demo_member::<DemoOp>(&mut host, "member-a").projection().expect("projection").n,
+            1,
+            "switching alternatives restores each member to its pinned checkpoint, discarding the uncommitted edit"
+        );
+    }
+
+    #[test]
+    fn studio_undo_and_redo_target_the_member_with_the_most_recent_local_edit_by_hlt() {
+        let mut member_early = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, TimestampedOp>(
+            "demo-ts/v1",
+            "member-early",
+            DemoProjection { n: 0 },
+            None,
+        ));
+        member_early
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![TimestampedOp::SetN { n: 1, physical_ms: 1_000 }],
+                description: None,
+            })
+            .expect("apply early");
+
+        let mut member_late = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, TimestampedOp>(
+            "demo-ts/v1",
+            "member-late",
+            DemoProjection { n: 0 },
+            None,
+        ));
+        member_late
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![TimestampedOp::SetN { n: 9, physical_ms: 2_000 }],
+                description: None,
+            })
+            .expect("apply late");
+
+        let mut host = StudioVcsHost::new(create_document_vcs_envelope(
+            "os.studio.history/v1",
+            "studio",
+            StudioHistoryProjection::default(),
+            None,
+        ));
+        host.register_member(Box::new(member_early));
+        host.register_member(Box::new(member_late));
+
+        host.undo().expect("studio undo targets the member with the higher HLT");
+        assert_eq!(
+            demo_member::<TimestampedOp>(&mut host, "member-early").projection().expect("early projection").n,
+            1,
+            "earlier local edit (lower HLT) is untouched"
+        );
+        assert_eq!(
+            demo_member::<TimestampedOp>(&mut host, "member-late").projection().expect("late projection").n,
+            0,
+            "later local edit (higher HLT) is the one undone"
+        );
+
+        host.redo().expect("studio redo targets the most recently undone edit");
+        assert_eq!(
+            demo_member::<TimestampedOp>(&mut host, "member-late").projection().expect("late projection after redo").n,
+            9,
+            "redo restores the member's most recently undone edit"
+        );
+    }
+
+    #[test]
+    fn default_reconcile_hook_is_a_no_op_for_existing_document_kinds() {
+        let projection = DemoProjection { n: 4 };
+        let (reconciled, conflicts) = DemoOp::reconcile(projection.clone());
+        assert_eq!(reconciled, projection, "default reconcile leaves the projection untouched");
+        assert!(conflicts.is_empty(), "default reconcile reports no conflicts");
+
+        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 3 }],
+                description: None,
+            })
+            .expect("apply");
+        let replayed = materialize_document_projection(store.envelope(), store.applied_edit_ids()).expect("replay");
+        assert_eq!(replayed.n, 3, "materialize_document_projection is unaffected by the no-op default reconcile hook");
+        let (with_conflicts, conflicts) = store.projection_with_conflicts().expect("projection with conflicts");
+        assert_eq!(with_conflicts.n, 3);
+        assert!(conflicts.is_empty());
+        assert!(store.conflicts().is_empty(), "no remote ingestion happened, so the store's conflict buffer stays empty");
+    }
+
+    #[test]
+    fn studio_history_op_round_trips() {
+        let checkpoint = StudioCheckpoint {
+            id: "sc-1".into(),
+            parent_id: None,
+            message: "root".into(),
+            authors: Vec::new(),
+            timestamp: HybridLogicalTimestamp::new(0, 1),
+            members: vec![StudioMemberPin {
+                document_id: "member-a".into(),
+                checkpoint_id: "cp-1".into(),
+                alternative_id: String::new(),
+            }],
+        };
+        test_support::assert_operation_round_trip(
+            &StudioHistoryProjection::default(),
+            StudioHistoryOp::CommitStudioCheckpoint {
+                checkpoint: checkpoint.clone(),
+            },
+        );
+
+        let with_checkpoint = StudioHistoryProjection {
+            checkpoints: vec![checkpoint],
+            alternatives: Vec::new(),
+            active_alternative_id: None,
+        };
+        let alternative = StudioAlternative {
+            id: "sa-1".into(),
+            name: "branch".into(),
+            checkpoint_ids: vec!["sc-1".into()],
+        };
+        test_support::assert_operation_round_trip(
+            &with_checkpoint,
+            StudioHistoryOp::CreateStudioAlternative { alternative },
+        );
+
+        let with_alternative_active = StudioHistoryProjection {
+            active_alternative_id: Some("sa-1".into()),
+            ..with_checkpoint
+        };
+        test_support::assert_operation_round_trip(
+            &with_alternative_active,
+            StudioHistoryOp::SwitchStudioAlternative {
+                alternative_id: "sa-other".into(),
+            },
+        );
+    }
+    //#endregion 🏛️StudioTests
 }
 //#endregion 🧪Tests

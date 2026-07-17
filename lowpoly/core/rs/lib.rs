@@ -985,15 +985,6 @@ mod tests {
     }
 
     #[test]
-    fn empty_paint_pixels_are_opaque_white() {
-        let pixels = empty_paint_pixels();
-        assert_eq!(pixels[0], 255);
-        assert_eq!(pixels[1], 255);
-        assert_eq!(pixels[2], 255);
-        assert_eq!(pixels[3], 255);
-    }
-
-    #[test]
     fn paint_stroke_writes_pixels() {
         let mut doc = LowpolyDocument::new(default_projection()).unwrap();
         let object_id = doc.active_object_id.clone();

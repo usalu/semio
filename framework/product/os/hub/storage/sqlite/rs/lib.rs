@@ -19,6 +19,7 @@ use os_hub_storage::model::*;
 use os_hub_storage::HubStorage;
 use rusqlite::{Connection, OptionalExtension};
 use semio_framework_core::OpEnvelope;
+use semio_framework_hash::hash_bytes;
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
@@ -88,6 +89,12 @@ CREATE TABLE IF NOT EXISTS hub_sync_session (
     client_label TEXT NOT NULL,
     connected_at INTEGER NOT NULL,
     disconnected_at INTEGER
+);
+CREATE TABLE IF NOT EXISTS hub_blob (
+    hash TEXT PRIMARY KEY,
+    media_type TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    bytes BLOB NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_membership_user ON hub_studio_membership (user_id);
 CREATE INDEX IF NOT EXISTS idx_node_studio_parent ON node (studio_id, parent_id);
@@ -603,6 +610,34 @@ impl HubStorage for SqliteStorage {
         Ok(rows.filter_map(|row| row.ok()).collect())
     }
     //#endregion
+
+    //#region Blobs
+    async fn put_blob(&self, bytes: &[u8], media_type: &str) -> StorageResult<BlobRecord> {
+        let hash = hash_bytes(bytes);
+        self.lock()
+            .execute(
+                "INSERT OR IGNORE INTO hub_blob (hash, media_type, size, bytes) VALUES (?1, ?2, ?3, ?4)",
+                rusqlite::params![hash, media_type, bytes.len() as i64, bytes],
+            )
+            .map_err(backend)?;
+        Ok(BlobRecord { hash, media_type: media_type.to_string(), size: bytes.len() as i64 })
+    }
+
+    async fn get_blob(&self, hash: &str) -> StorageResult<Option<Vec<u8>>> {
+        self.lock()
+            .query_row("SELECT bytes FROM hub_blob WHERE hash = ?1", [hash], |row| row.get(0))
+            .optional()
+            .map_err(backend)
+    }
+
+    async fn has_blob(&self, hash: &str) -> StorageResult<bool> {
+        let count: i64 = self
+            .lock()
+            .query_row("SELECT COUNT(*) FROM hub_blob WHERE hash = ?1", [hash], |row| row.get(0))
+            .map_err(backend)?;
+        Ok(count > 0)
+    }
+    //#endregion
 }
 
 fn user_row(row: &rusqlite::Row) -> rusqlite::Result<UserRecord> {
@@ -672,6 +707,23 @@ mod tests {
         let token = storage.create_share_token("default").await.expect("mint token");
         assert!(!storage.authorized_by_token("default", None).await.unwrap());
         assert!(storage.authorized_by_token("default", Some(&token)).await.unwrap());
+    }
+
+    // 🔬 Blobs dedupe by content hash: an identical re-put is idempotent, distinct bytes hash apart.
+    #[tokio::test]
+    async fn blob_put_get_dedupes_idempotently() {
+        let storage = SqliteStorage::connect(":memory:").await.expect("connect");
+        let bytes = b"hello hub blob";
+        assert!(!storage.has_blob("not-a-real-hash").await.unwrap());
+        let first = storage.put_blob(bytes, "text/plain").await.expect("first put");
+        let second = storage.put_blob(bytes, "text/plain").await.expect("second put");
+        assert_eq!(first.hash, second.hash, "identical bytes dedupe to the same hash");
+        assert_eq!(first.size, bytes.len() as i64);
+        assert!(storage.has_blob(&first.hash).await.unwrap());
+        let fetched = storage.get_blob(&first.hash).await.unwrap().expect("blob present");
+        assert_eq!(fetched, bytes);
+        let other = storage.put_blob(b"different bytes", "text/plain").await.expect("put other");
+        assert_ne!(other.hash, first.hash);
     }
 }
 //#endregion 🔖Tests

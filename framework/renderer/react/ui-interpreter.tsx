@@ -54,8 +54,8 @@ const COMPONENT_SCENE_HOSTS: Record<ComponentKind, LazyExoticComponent<Component
   "text-editor": lazyHost(() => import("./components/text-editor-host.tsx"), "TextEditorHost"),
   table: lazyHost(() => import("./components/table-host.tsx"), "TableHost"),
   "paint-2d": lazyHost(() => import("./components/paint-2d-host.tsx"), "Paint2dHost"),
-  "gis2d-map": lazyHost(() => import("./components/gis-map-host.tsx"), "GisMapHost"),
-  "puzzle2d-board": lazyHost(() => import("./components/puzzle-2d-board-host.tsx"), "Puzzle2dBoardHost"),
+  "tiled-map": lazyHost(() => import("./components/tiled-map-host.tsx"), "TiledMapHost"),
+  "board-2d": lazyHost(() => import("./components/board-2d-host.tsx"), "Board2dHost"),
   "icon-render": lazyHost(() => import("./components/icon-render-host.tsx"), "IconRenderHost"),
   "ink-canvas": lazyHost(() => import("./components/ink-canvas-host.tsx"), "InkCanvasHost"),
   "graph-timeline": lazyHost(() => import("./components/graph-timeline-host.tsx"), "GraphTimelineHost"),
@@ -335,6 +335,7 @@ export function uiTreeNodeToTreePanelConfig(treeNode: UiTreeNode, onAction: UiIn
     selectedIds: treeNode.selectedIds as string[] | undefined,
     highlightedIds: treeNode.highlightedIds,
     onSelectionChange: treeNode.selectionChange ? (selectedIds) => dispatchUiAction(onAction, treeNode.selectionChange!, { ids: selectedIds }) : undefined,
+    sortableSections: sections.length > 1,
   };
 }
 
@@ -390,6 +391,8 @@ function DeclarativeTreePanel({ treeNode, onAction }: { readonly treeNode: UiTre
       highlightedIds={config.highlightedIds}
       onSelectionChange={config.onSelectionChange}
       dragAndDropController={dragController}
+      sortableSections={config.sortableSections ?? config.sections.length > 1}
+      onSectionsReorder={config.onSectionsReorder}
     />
   );
 }

@@ -103,6 +103,7 @@ export const Default: Story = {
               { content: "UTF-8", key: "selection" },
               navbarFillItem("footerTrailingFill"),
               fundedByZukunftBauFooterItem(),
+              { key: "fundedByGap", className: "w-huge", content: null },
               {
                 key: "bottomRightPanelTabs",
                 content: (

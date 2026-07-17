@@ -1,0 +1,14 @@
+{
+  "title": "Fix Panel Tree Drag Handles",
+  "emoji": "🫳",
+  "status": "closed",
+  "description": "Panel trees show a lonely drag handle at the top of the panel content (unlabeled PanelTreeUnit header under PanelDockProvider). Fix: (1) remove that false affordance for single unlabeled tree units; (2) every reorderable tree section and tree item must render its own DragHandle; (3) tree sections must support reordering with per-section handles. Root is in ui/js/react/index.tsx PanelTreeUnitsPane / TreeSection / TreeItem. Related closed tickets: REMOVE-PANEL-TREE-DRAG-ICONS (#2000), UNIVERSAL-DRAG-HANDLES (#2001).",
+  "summary": "Removed the lonely unlabeled panel tree-unit drag handle (regression of #2000 under PanelDockProvider). Tree sections with 2+ siblings now show per-section DragHandles and reorder via TREE_SECTION_REORDER_MIME, with mergeTreeSectionOrder so plugin re-renders keep the user’s section order. Sortable TreeItems always render a drag handle. Wired sortableSections through PanelTreeUnitsPane and DeclarativeTreePanel.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2051"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪879063f79e374197ba69e4c58f00a444"
+  ]
+}

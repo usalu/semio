@@ -2817,6 +2817,7 @@ name = "forms-plugin"
 version = "0.1.0"
 dependencies = [
  "forms",
+ "protocol",
  "semio-framework-core",
  "semio-framework-plugin",
  "serde",
@@ -4685,6 +4686,7 @@ dependencies = [
  "pollster",
  "rayon",
  "serde",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -4725,6 +4727,7 @@ dependencies = [
  "pollster",
  "rayon",
  "serde",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -4733,6 +4736,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -5472,6 +5476,7 @@ dependencies = [
  "rayon",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -6061,9 +6066,11 @@ name = "os-hub-storage-neo4j"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "base64 0.22.1",
  "neo4rs",
  "os-hub-storage",
  "semio-framework-core",
+ "semio-framework-hash",
  "serde_json",
  "tokio",
  "uuid",
@@ -6076,6 +6083,7 @@ dependencies = [
  "async-trait",
  "os-hub-storage",
  "semio-framework-core",
+ "semio-framework-hash",
  "serde_json",
  "sqlx-core",
  "sqlx-postgres",
@@ -6092,6 +6100,7 @@ dependencies = [
  "os-hub-storage",
  "rusqlite",
  "semio-framework-core",
+ "semio-framework-hash",
  "serde_json",
  "tokio",
  "uuid",

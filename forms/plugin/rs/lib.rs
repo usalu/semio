@@ -879,11 +879,11 @@ fn forms_utility_labels(_is_de: bool) -> std::collections::HashMap<String, Strin
 //#endregion 🔖CommandLabels
 
 //#region 🔖Builder
-fn forms_protocol_builder_config() -> semio_framework_plugin::ProtocolBuilderConfig {
-    semio_framework_plugin::ProtocolBuilderConfig {
+fn forms_protocol_builder_config() -> protocol::ProtocolBuilderConfig {
+    protocol::ProtocolBuilderConfig {
         action_namespace: "forms-blueprint",
         controller_id: FORMS_PLAY_CONTROLLER_ID,
-        labels: semio_framework_plugin::PROTOCOL_BUILDER_LABELS_EN,
+        labels: protocol::PROTOCOL_BUILDER_LABELS_EN,
     }
 }
 
@@ -897,7 +897,7 @@ fn render_blueprint_builder(spec: &FormSpec, runtime: &FormsPlayRuntime, contrib
         })
         .collect();
     let config = forms_protocol_builder_config();
-    semio_framework_plugin::render_protocol_builder(
+    protocol::render_protocol_builder(
         FORMS_PLAY_SURFACE_BLUEPRINT,
         spec,
         &palette,

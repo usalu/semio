@@ -17,7 +17,7 @@ import {
   type SelectionMergeMode,
   type SelectionMarqueeMethod,
 } from "@semio-tech/ui-react";
-import type { ComponentSceneHostProps, GisMapScene } from "@semio-tech/framework-core";
+import type { ComponentSceneHostProps, TiledMapScene } from "@semio-tech/framework-core";
 import type { MapWasmSession } from "../os-shell.tsx";
 import { createMapSession } from "../os-shell.tsx";
 
@@ -66,7 +66,7 @@ const MAP_VELLO_THEME_FALLBACK_RGBA = {
 //#endregion Types
 
 //#region Parsing
-/** 🌐 Resolves a translation key outside of component render (e.g. `buildGisMapContextMenuItems`), mirroring `shellLabel`/`interpLabel`. */
+/** 🌐 Resolves a translation key outside of component render (e.g. `buildTiledMapContextMenuItems`), mirroring `shellLabel`/`interpLabel`. */
 function hostLabel(key: string): string {
   return resolveTranslationLabel(uiI18n.t(key as never)) ?? key;
 }
@@ -170,7 +170,7 @@ function screenRectFromPoints(points: readonly SelectionMarqueePoint[]): { x: nu
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
 
-function getGisMapCameraLimits(session?: MapWasmSession): { min: number; max: number } {
+function getTiledMapCameraLimits(session?: MapWasmSession): { min: number; max: number } {
   if (session) {
     return JSON.parse(session.cameraLimitsJson()) as { min: number; max: number };
   }
@@ -512,13 +512,13 @@ class MapRenderer {
 //#endregion MapRenderer
 
 //#region ContextMenu
-function buildGisMapContextMenuItems(scene: GisMapScene, feature: MapHoveredFeature | null, dispatch: (action: string, args?: Record<string, unknown>) => void): ContextMenuItem[] {
+function buildTiledMapContextMenuItems(scene: TiledMapScene, feature: MapHoveredFeature | null, dispatch: (action: string, args?: Record<string, unknown>) => void): ContextMenuItem[] {
   const selection = parseFeatureSelection(scene.selectionJson);
   if (feature) {
     const selected = feature.kind === "position" ? selection.positions.includes(feature.id) : selection.routes.includes(feature.id);
     const items: ContextMenuItem[] = [
       {
-        id: "gis-map.ctx.select",
+        id: "tiled-map.ctx.select",
         label: hostLabel("ui.contextMenu.select"),
         onSelect: () =>
           dispatch("setFeatureSelection", {
@@ -530,13 +530,13 @@ function buildGisMapContextMenuItems(scene: GisMapScene, feature: MapHoveredFeat
     ];
     if (selected) {
       items.push({
-        id: "gis-map.ctx.deselect",
+        id: "tiled-map.ctx.deselect",
         label: hostLabel("ui.contextMenu.deselect"),
         onSelect: () => dispatch("deselect", { featureId: feature.id, featureKind: feature.kind }),
       });
     }
     items.push({
-      id: "gis-map.ctx.focus",
+      id: "tiled-map.ctx.focus",
       label: hostLabel("ui.contextMenu.focusZoom"),
       onSelect: () => dispatch("focusFeature", { featureId: feature.id, featureKind: feature.kind }),
     });
@@ -544,7 +544,7 @@ function buildGisMapContextMenuItems(scene: GisMapScene, feature: MapHoveredFeat
       const meta = parsePositionMeta(scene.mapFixtureJson).get(feature.id);
       if (meta?.sourceUrl) {
         items.push({
-          id: "gis-map.ctx.source",
+          id: "tiled-map.ctx.source",
           label: hostLabel("ui.contextMenu.openSource"),
           onSelect: () => dispatch("openSource", { featureId: feature.id }),
         });
@@ -553,21 +553,21 @@ function buildGisMapContextMenuItems(scene: GisMapScene, feature: MapHoveredFeat
     return items;
   }
   return [
-    { id: "gis-map.ctx.select-all", label: hostLabel("ui.contextMenu.selectAll"), onSelect: () => dispatch("selectAll") },
+    { id: "tiled-map.ctx.select-all", label: hostLabel("ui.contextMenu.selectAll"), onSelect: () => dispatch("selectAll") },
     {
-      id: "gis-map.ctx.clear",
+      id: "tiled-map.ctx.clear",
       label: hostLabel("ui.contextMenu.clearSelection"),
       disabled: selection.positions.length + selection.routes.length === 0,
       onSelect: () => dispatch("clearSelection"),
     },
-    { id: "gis-map.ctx.fit-world", label: hostLabel("ui.contextMenu.fitWorld"), onSelect: () => dispatch("fitWorld") },
+    { id: "tiled-map.ctx.fit-world", label: hostLabel("ui.contextMenu.fitWorld"), onSelect: () => dispatch("fitWorld") },
   ];
 }
 //#endregion ContextMenu
 
-//#region GisMapHost
-export function GisMapHost({ node, onAction }: ComponentSceneHostProps) {
-  const scene = node.gisMap;
+//#region TiledMapHost
+export function TiledMapHost({ node, onAction }: ComponentSceneHostProps) {
+  const scene = node.tiledMap;
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<MapRenderer | null>(null);
@@ -604,7 +604,7 @@ export function GisMapHost({ node, onAction }: ComponentSceneHostProps) {
   );
 
   const clampMapZoom = useCallback((zoom: number): number => {
-    const { min, max } = getGisMapCameraLimits(rendererRef.current?.session);
+    const { min, max } = getTiledMapCameraLimits(rendererRef.current?.session);
     return Math.min(max, Math.max(min, zoom));
   }, []);
 
@@ -1014,7 +1014,7 @@ export function GisMapHost({ node, onAction }: ComponentSceneHostProps) {
       event.stopPropagation();
       const point = clientToLocal(event.clientX, event.clientY);
       const feature = queryHitFeature(point);
-      const items = buildGisMapContextMenuItems(scene, feature, dispatch);
+      const items = buildTiledMapContextMenuItems(scene, feature, dispatch);
       setContextMenu({ open: items.length > 0, position: { x: event.clientX, y: event.clientY }, items });
     };
     canvas.addEventListener("pointerdown", onPointerDown);
@@ -1031,10 +1031,10 @@ export function GisMapHost({ node, onAction }: ComponentSceneHostProps) {
     };
   }, [clientToLocal, dispatch, emitFeatureSelection, mirrorSessionCameraToReact, queryFeatureHits, queryHitFeature, resetMarquee, scene, selectionMethod]);
 
-  if (!scene) return <div className="semio-gis-map-empty text-muted-foreground p-2 text-xs">{emptySceneLabel}</div>;
+  if (!scene) return <div className="semio-tiled-map-empty text-muted-foreground p-2 text-xs">{emptySceneLabel}</div>;
 
   return (
-    <div ref={containerRef} className="semio-gis-map-host absolute inset-0 box-border min-h-0 min-w-0 overflow-hidden select-none" data-surface-id={node.surfaceId} style={{ touchAction: "none" }}>
+    <div ref={containerRef} className="semio-tiled-map-host absolute inset-0 box-border min-h-0 min-w-0 overflow-hidden select-none" data-surface-id={node.surfaceId} style={{ touchAction: "none" }}>
       <canvas ref={canvasRef} className="absolute inset-0 block size-full touch-none outline-none focus:outline-none" />
       {marqueeOverlay?.shape === "rect" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} /> : null}
       {marqueeOverlay?.shape === "polygon" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} /> : null}
@@ -1059,4 +1059,4 @@ export function GisMapHost({ node, onAction }: ComponentSceneHostProps) {
     </div>
   );
 }
-//#endregion GisMapHost
+//#endregion TiledMapHost

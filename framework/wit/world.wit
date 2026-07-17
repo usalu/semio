@@ -113,6 +113,8 @@ interface host {
   invoke-action: func(target: string, invocation-json: string) -> result<string, string>;
   read-asset: func(handle: u64) -> result<list<u8>, string>;
   network-fetch: func(origin: string, path: string) -> result<list<u8>, string>;
+  write-blob: func(data: list<u8>, media-type: string) -> result<string, string>;
+  read-blob: func(hash: string) -> result<list<u8>, string>;
   backbone-send: func(uri: string, message-json: string) -> result<_, string>;
   backbone-poll: func(uri: string) -> result<list<string>, string>;
   backbone-status: func(uri: string) -> result<string, string>;

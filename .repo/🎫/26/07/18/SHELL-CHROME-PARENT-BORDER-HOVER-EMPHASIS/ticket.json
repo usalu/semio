@@ -1,0 +1,19 @@
+{
+  "title": "Shell Chrome Parent Border Hover Emphasis",
+  "emoji": "🖱️",
+  "status": "closed",
+  "description": "When the pointer is anywhere inside shell chrome (panel, navbar, window), emphasize that container's border. Navbar/footer already work. Fix panel selector mismatch ([data-panel] vs data-slot=panel). Add mode-dock-stack hover border emphasis; active stacks keep border-active-base.",
+  "summary": "Shell chrome parent-border hover emphasis: retargeted panel hover CSS from `[data-panel]` to `[data-slot=\"panel\"]` so floating panels emphasize their chrome frame on pointer enter; added inactive mode-dock-stack `:hover` rules that emphasize the U-frame (tab cap, gap, controls cap, body) via `--border-emphasized-color` while active stacks keep `border-active-base`; updated class docstrings and extended vitest to assert CSS selectors and `data-slot=\"panel\"` on panel roots.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2052"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "b039e4b5",
+    "local": "chrome_hover_borders_b039e4b5.plan.md"
+  },
+  "sessions": [
+    "⚪3bc29bb6f2ca4dafa9ee9d11332fadcf"
+  ]
+}

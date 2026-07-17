@@ -17,23 +17,23 @@ import {
 } from "@semio-tech/framework-core";
 import { Canvas2dHost, worldToScreenLogical } from "./components/canvas-2d-host.tsx";
 import {
-  Puzzle2dBoardHost,
-  puzzle2dBoardCameraActionArgs,
+  Board2dHost,
+  board2dCameraActionArgs,
   buildPuzzle2dSelectionMenuItems,
   beginPuzzle2dPeerGesture,
   collectPuzzle2dLiveMirrorOps,
-  coalescePuzzle2dBoardEvents,
+  coalesceBoard2dEvents,
   endPuzzle2dPeerGesture,
   notifyPuzzle2dPeersGestureEnded,
   parsePuzzle2dCatalogueDragPayload,
-  puzzle2dBoardPeers,
+  board2dPeers,
   puzzle2dFixtureDropPreviewJson,
   puzzle2dPeerOwnsGesture,
   puzzle2dScreenToWorld,
   pushPuzzle2dLiveMirrorOps,
-  registerPuzzle2dBoardPeer,
-  unregisterPuzzle2dBoardPeer,
-} from "./components/puzzle-2d-board-host.tsx";
+  registerBoard2dPeer,
+  unregisterBoard2dPeer,
+} from "./components/board-2d-host.tsx";
 import { NodeGraphHost, catalogueGhostDescriptorJson, computeDagMarqueeOverlay, nodeGraphViewportActionArgs, parseCatalogueAppDragPayload, parseDagSliderOverlays, resolveFixtureWidgetInstanceId } from "./components/node-graph-host.tsx";
 import { SelectionMarquee } from "@semio-tech/ui-react";
 import { Paint2dHost } from "./components/paint-2d-host.tsx";
@@ -1034,13 +1034,13 @@ describe("framework renderer hosts", () => {
 
   it("renders puzzle 2d board host shell", () => {
     const markup = renderToStaticMarkup(
-      createElement(Puzzle2dBoardHost, {
+      createElement(Board2dHost, {
         node: {
           type: "componentScene",
           surfaceId: "puzzle2d.play.composite.2d-overview",
           controllerId: "puzzle2d-play",
-          componentKind: "puzzle2d-board",
-          puzzle2dBoard: {
+          componentKind: "board-2d",
+          board2d: {
             fixtureJson: JSON.stringify({ nodes: [], edges: [], camera: { x: 0, y: 0, zoom: 1 } }),
             cameraJson: '{"x":0,"y":0,"zoom":1}',
             kindCatalogsJson: "{}",
@@ -1058,11 +1058,11 @@ describe("framework renderer hosts", () => {
         onAction: noopAction,
       }),
     );
-    expect(markup).toContain("semio-puzzle2d-board-host");
+    expect(markup).toContain("semio-board-2d-host");
   });
 
   it("uses the live puzzle 2d board camera for wheel persistence actions", () => {
-    expect(puzzle2dBoardCameraActionArgs('{"x":345,"y":-123,"zoom":4.25}')).toEqual({
+    expect(board2dCameraActionArgs('{"x":345,"y":-123,"zoom":4.25}')).toEqual({
       camera: { x: 345, y: -123, zoom: 4.25 },
     });
   });
@@ -1076,7 +1076,7 @@ describe("framework renderer hosts", () => {
       { name: "nodeMove", payload: { id: "alpha", x: 20, y: 20 } },
       { name: "nodeMove", payload: { id: "beta", x: 5, y: 5 } },
     ];
-    const { flushNow, eventsJson } = coalescePuzzle2dBoardEvents(rows);
+    const { flushNow, eventsJson } = coalesceBoard2dEvents(rows);
     const events = JSON.parse(eventsJson) as { name: string; payload: Record<string, unknown> }[];
     expect(flushNow).toBe(false);
     expect(events.find((event) => event.name === "preselect")).toBeUndefined();
@@ -1093,17 +1093,17 @@ describe("framework renderer hosts", () => {
       { name: "nodeMove", payload: { id: "alpha", x: 10, y: 10 } },
       { name: "nodeDragEnd", payload: { moves: [{ id: "alpha", x: 20, y: 20 }] } },
     ];
-    const { eventsJson } = coalescePuzzle2dBoardEvents(rows);
+    const { eventsJson } = coalesceBoard2dEvents(rows);
     const events = JSON.parse(eventsJson) as { name: string }[];
     expect(events.some((event) => event.name === "nodeMove")).toBe(false);
     expect(events.some((event) => event.name === "nodeDragEnd")).toBe(true);
   });
 
   it("flushes puzzle 2d board events immediately for select/brushPlace/edge/delete rows, not for camera/nodeMove alone", () => {
-    expect(coalescePuzzle2dBoardEvents([{ name: "camera", payload: { x: 0, y: 0, zoom: 1 } }]).flushNow).toBe(false);
-    expect(coalescePuzzle2dBoardEvents([{ name: "nodeMove", payload: { id: "alpha", x: 0, y: 0 } }]).flushNow).toBe(false);
+    expect(coalesceBoard2dEvents([{ name: "camera", payload: { x: 0, y: 0, zoom: 1 } }]).flushNow).toBe(false);
+    expect(coalesceBoard2dEvents([{ name: "nodeMove", payload: { id: "alpha", x: 0, y: 0 } }]).flushNow).toBe(false);
     for (const name of ["select", "preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete"]) {
-      expect(coalescePuzzle2dBoardEvents([{ name, payload: {} }]).flushNow).toBe(true);
+      expect(coalesceBoard2dEvents([{ name, payload: {} }]).flushNow).toBe(true);
     }
   });
 
@@ -1165,19 +1165,19 @@ describe("framework renderer hosts", () => {
     const peerA = { session: {} as never, onPeerGestureEnded: () => {} };
     const peerB = { session: {} as never, onPeerGestureEnded: () => {} };
     const peerOther = { session: {} as never, onPeerGestureEnded: () => {} };
-    registerPuzzle2dBoardPeer("puzzle2d-play", "pane.a", peerA);
-    registerPuzzle2dBoardPeer("puzzle2d-play", "pane.b", peerB);
-    registerPuzzle2dBoardPeer("other-controller", "pane.a", peerOther);
+    registerBoard2dPeer("puzzle2d-play", "pane.a", peerA);
+    registerBoard2dPeer("puzzle2d-play", "pane.b", peerB);
+    registerBoard2dPeer("other-controller", "pane.a", peerOther);
 
-    expect(puzzle2dBoardPeers("puzzle2d-play", "pane.a")).toEqual([peerB]);
-    expect(puzzle2dBoardPeers("puzzle2d-play", "pane.b")).toEqual([peerA]);
-    expect(puzzle2dBoardPeers("other-controller", "pane.z")).toEqual([peerOther]);
+    expect(board2dPeers("puzzle2d-play", "pane.a")).toEqual([peerB]);
+    expect(board2dPeers("puzzle2d-play", "pane.b")).toEqual([peerA]);
+    expect(board2dPeers("other-controller", "pane.z")).toEqual([peerOther]);
 
-    unregisterPuzzle2dBoardPeer("puzzle2d-play", "pane.b");
-    expect(puzzle2dBoardPeers("puzzle2d-play", "pane.a")).toEqual([]);
+    unregisterBoard2dPeer("puzzle2d-play", "pane.b");
+    expect(board2dPeers("puzzle2d-play", "pane.a")).toEqual([]);
 
-    unregisterPuzzle2dBoardPeer("puzzle2d-play", "pane.a");
-    unregisterPuzzle2dBoardPeer("other-controller", "pane.a");
+    unregisterBoard2dPeer("puzzle2d-play", "pane.a");
+    unregisterBoard2dPeer("other-controller", "pane.a");
   });
 
   it("peer gesture ownership: begin/end tracks the owning surfaceId; a pane never defers against its own gesture", () => {
@@ -1199,8 +1199,8 @@ describe("framework renderer hosts", () => {
       } as never,
       onPeerGestureEnded: () => {},
     });
-    registerPuzzle2dBoardPeer("mirror-test", "pane.source", makePeer("pane.source"));
-    registerPuzzle2dBoardPeer("mirror-test", "pane.sibling", makePeer("pane.sibling"));
+    registerBoard2dPeer("mirror-test", "pane.source", makePeer("pane.source"));
+    registerBoard2dPeer("mirror-test", "pane.sibling", makePeer("pane.sibling"));
 
     pushPuzzle2dLiveMirrorOps("mirror-test", "pane.source", {
       positions: [{ id: "alpha", x: 1, y: 2 }],
@@ -1214,20 +1214,20 @@ describe("framework renderer hosts", () => {
       { pane: "pane.sibling", method: "setSelectionIdsJsonSilent", arg: JSON.stringify(["alpha"]) },
     ]);
 
-    unregisterPuzzle2dBoardPeer("mirror-test", "pane.source");
-    unregisterPuzzle2dBoardPeer("mirror-test", "pane.sibling");
+    unregisterBoard2dPeer("mirror-test", "pane.source");
+    unregisterBoard2dPeer("mirror-test", "pane.sibling");
   });
 
   it("notifies peers when a gesture ends, skipping the source pane, passing whether it flushed", () => {
     const ended: { pane: string; flushed: boolean }[] = [];
-    registerPuzzle2dBoardPeer("notify-test", "pane.source", { session: {} as never, onPeerGestureEnded: (flushed) => ended.push({ pane: "pane.source", flushed }) });
-    registerPuzzle2dBoardPeer("notify-test", "pane.sibling", { session: {} as never, onPeerGestureEnded: (flushed) => ended.push({ pane: "pane.sibling", flushed }) });
+    registerBoard2dPeer("notify-test", "pane.source", { session: {} as never, onPeerGestureEnded: (flushed) => ended.push({ pane: "pane.source", flushed }) });
+    registerBoard2dPeer("notify-test", "pane.sibling", { session: {} as never, onPeerGestureEnded: (flushed) => ended.push({ pane: "pane.sibling", flushed }) });
 
     notifyPuzzle2dPeersGestureEnded("notify-test", "pane.source", true);
     expect(ended).toEqual([{ pane: "pane.sibling", flushed: true }]);
 
-    unregisterPuzzle2dBoardPeer("notify-test", "pane.source");
-    unregisterPuzzle2dBoardPeer("notify-test", "pane.sibling");
+    unregisterBoard2dPeer("notify-test", "pane.source");
+    unregisterBoard2dPeer("notify-test", "pane.sibling");
   });
 
   it("builds a select-all menu when nothing is selected", () => {

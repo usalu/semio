@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀 `@semio-tech/flow-module-draw` router: `bun ./script.ts wasm`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild, runCargoTestBudgeted } from "../../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
 class WasmScript extends BundleScript {
@@ -24,7 +24,7 @@ class WasmScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(): void {
-    Bun.spawnSync(["cargo", "test", "-p", "flow_module_draw"], { cwd: join(this.root, "rs"), stdio: "inherit" });
+    runCargoTestBudgeted(["flow_module_draw"], join(this.root, "rs"));
   }
 }
 
