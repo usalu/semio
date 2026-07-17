@@ -1067,7 +1067,7 @@ pub mod app_jack {
                 ]),
                 panel_tab_labels: HashMap::new(),
                 mode_labels: HashMap::new(),
-                action_labels: HashMap::new(),
+                action_labels: trinity_jack_action_labels(view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))),
                 utility_labels: HashMap::new(),
                 example_labels: HashMap::new(),
                 action_arg_labels: HashMap::new(),
@@ -1077,6 +1077,39 @@ pub mod app_jack {
         }
     }
     //#endregion 🔖TrinityJackPlayApp
+
+    //#region 🔖CommandLabels
+    /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_trinity_jack_app`'s static
+    /// manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command palette
+    /// and Actions rail get a translated label without threading locale through the whole builder chain.
+    fn trinity_jack_action_labels(is_de: bool) -> HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
+            ("nodeGraphViewport", "Set Graph Viewport", "Graph-Ansicht festlegen"),
+            ("patchTrinityNodes", "Patch Nodes", "Knoten aktualisieren"),
+            ("reorganize", "Reorganize", "Neu anordnen"),
+            ("runJackQuery", "Run Jack Query", "Jack-Abfrage ausfuehren"),
+            ("submit", "Submit Jack Query", "Jack-Abfrage absenden"),
+            ("loadExampleQuery", "Load Example Query", "Beispielabfrage laden"),
+            ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+            ("setSelection", "Set Selection", "Auswahl festlegen"),
+            ("selectNode", "Select Node", "Knoten auswaehlen"),
+            ("nodeGraphSelect", "Select Graph Node", "Graph-Knoten auswaehlen"),
+            ("nodeGraphHover", "Hover Graph Node", "Graph-Knoten hovern"),
+            ("textEdit", "Edit Jack Query", "Jack-Abfrage bearbeiten"),
+            ("textSelect", "Select Jack Query Text", "Jack-Abfragetext auswaehlen"),
+            ("textHover", "Hover Jack Query Text", "Jack-Abfragetext hovern"),
+            ("requestCompletions", "Request Completions", "Vervollstaendigungen anfordern"),
+            ("formatDocument", "Format Jack Query", "Jack-Abfrage formatieren"),
+            ("setLodMode", "Set LOD Mode", "LOD-Modus festlegen"),
+            ("editorEngagementInput", "Editor Engagement Input", "Editor-Eingabe"),
+            ("graphEngagementInput", "Graph Engagement Input", "Graph-Eingabe"),
+            ("resultsEngagementInput", "Results Engagement Input", "Ergebnis-Eingabe"),
+            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
+        ];
+        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    }
+    //#endregion 🔖CommandLabels
 
     //#region 🔖Manifest
     fn jack_window_stack(id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {
@@ -3016,7 +3049,7 @@ pub mod app_rewrite {
                 ]),
                 panel_tab_labels: HashMap::new(),
                 mode_labels: HashMap::new(),
-                action_labels: HashMap::new(),
+                action_labels: trinity_rewrite_action_labels(view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))),
                 utility_labels: HashMap::new(),
                 example_labels: HashMap::new(),
                 action_arg_labels: HashMap::new(),
@@ -3026,6 +3059,35 @@ pub mod app_rewrite {
         }
     }
     //#endregion 🔖TrinityRewritePlayApp
+
+    //#region 🔖CommandLabels
+    /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_rewrite_app`'s static
+    /// manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command palette
+    /// and Actions rail get a translated label without threading locale through the whole builder chain.
+    fn trinity_rewrite_action_labels(is_de: bool) -> HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            ("addRuleClause", "Add Rule Clause", "Regelklausel hinzufuegen"),
+            ("resetRule", "Reset Rule", "Regel zuruecksetzen"),
+            ("setParameter", "Set Parameter", "Parameter festlegen"),
+            ("patchTrinityNodes", "Patch Nodes", "Knoten aktualisieren"),
+            ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
+            ("nodeGraphViewport", "Set Graph Viewport", "Graph-Ansicht festlegen"),
+            ("setLhsJson", "Set LHS Json", "LHS-JSON festlegen"),
+            ("setRhsJson", "Set RHS Json", "RHS-JSON festlegen"),
+            ("setSelection", "Set Selection", "Auswahl festlegen"),
+            ("selectNode", "Select Node", "Knoten auswaehlen"),
+            ("nodeGraphSelect", "Select Graph Node", "Graph-Knoten auswaehlen"),
+            ("nodeGraphHover", "Hover Graph Node", "Graph-Knoten hovern"),
+            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
+            ("textSelect", "Select Text", "Text auswaehlen"),
+            ("textHover", "Hover Text", "Text hovern"),
+            ("recomputeRewrite", "Recompute Rewrite", "Rewrite neu berechnen"),
+            ("reorganize", "Reorganize", "Neu anordnen"),
+            ("setLodMode", "Set LOD Mode", "LOD-Modus festlegen"),
+        ];
+        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    }
+    //#endregion 🔖CommandLabels
 
     //#region 🔖Manifest
     fn rewrite_window_stack(id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {

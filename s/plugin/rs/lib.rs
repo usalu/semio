@@ -193,10 +193,11 @@ impl vcs::Operation<SHomeDocument> for SHomeOp {
 /// 🗣️ Complete UI label set for the Home launcher; one field per label makes every locale combination compile-checked.
 struct SHomeLabels {
     vfs_empty_message: &'static str,
+    window_main: &'static str,
 }
 
-const S_HOME_LABELS_NATIVE_EN: SHomeLabels = SHomeLabels { vfs_empty_message: "No studios yet. Create one from the toolbar." };
-const S_HOME_LABELS_NATIVE_DE: SHomeLabels = SHomeLabels { vfs_empty_message: "Noch keine Studios vorhanden. Erstelle eines über die Werkzeugleiste." };
+const S_HOME_LABELS_NATIVE_EN: SHomeLabels = SHomeLabels { vfs_empty_message: "No studios yet. Create one from the toolbar.", window_main: "Studios" };
+const S_HOME_LABELS_NATIVE_DE: SHomeLabels = SHomeLabels { vfs_empty_message: "Noch keine Studios vorhanden. Erstelle eines ueber die Werkzeugleiste.", window_main: "Studios" };
 
 /// 🗣️ Resolves the active Home label set from the shell-provided locale.
 fn s_home_labels(view_state: &ViewState) -> &'static SHomeLabels {
@@ -233,6 +234,21 @@ struct SStudioLabels {
     window_media_graph: &'static str,
     window_media_vfs: &'static str,
     window_compiled_dag: &'static str,
+    toggle_on: &'static str,
+    toggle_off: &'static str,
+    mixed_placeholder: &'static str,
+    parameter_count_suffix: &'static str,
+    media_node_count_label: &'static str,
+    app_instance_count_label: &'static str,
+    context_open_instance: &'static str,
+    context_duplicate: &'static str,
+    context_copy: &'static str,
+    context_paste: &'static str,
+    context_rename_label: &'static str,
+    context_remove: &'static str,
+    context_select_all: &'static str,
+    context_clear_selection: &'static str,
+    context_reorganize: &'static str,
 }
 
 const S_STUDIO_LABELS_NATIVE_EN: SStudioLabels = SStudioLabels {
@@ -263,18 +279,33 @@ const S_STUDIO_LABELS_NATIVE_EN: SStudioLabels = SStudioLabels {
     window_media_graph: "Media Graph",
     window_media_vfs: "Media VFS",
     window_compiled_dag: "Compiled DAG",
+    toggle_on: "On",
+    toggle_off: "Off",
+    mixed_placeholder: "Mixed",
+    parameter_count_suffix: "parameter(s)",
+    media_node_count_label: "media node(s)",
+    app_instance_count_label: "app instance(s)",
+    context_open_instance: "Open instance",
+    context_duplicate: "Duplicate",
+    context_copy: "Copy",
+    context_paste: "Paste",
+    context_rename_label: "Rename label…",
+    context_remove: "Remove",
+    context_select_all: "Select all",
+    context_clear_selection: "Clear selection",
+    context_reorganize: "Reorganize",
 };
 
 const S_STUDIO_LABELS_NATIVE_DE: SStudioLabels = SStudioLabels {
     apps_section: "Apps",
     media_vfs_empty_message: "Keine App-Instanzen im Mediengraphen.",
-    add_parameter: "Parameter hinzufügen",
+    add_parameter: "Parameter hinzufuegen",
     name: "Name",
     value: "Wert",
     min: "Min",
     max: "Max",
     step: "Schritt",
-    add_option: "Option hinzufügen",
+    add_option: "Option hinzufuegen",
     new_option_placeholder: "Neue Option",
     remove: "Entfernen",
     node_id: "Knoten-ID",
@@ -284,7 +315,7 @@ const S_STUDIO_LABELS_NATIVE_DE: SStudioLabels = SStudioLabels {
     media_graph_nodes: "Mediengraph-Knoten",
     app_instance: "App-Instanz",
     app_instances: "App-Instanzen",
-    select_hint: "Wähle Mediengraph-Knoten oder App-Instanzen im Arbeitsbereich aus.",
+    select_hint: "Waehle Mediengraph-Knoten oder App-Instanzen im Arbeitsbereich aus.",
     program_prefix: "Programm",
     app_prefix: "App",
     instance_id_prefix: "Instanz-ID",
@@ -293,6 +324,21 @@ const S_STUDIO_LABELS_NATIVE_DE: SStudioLabels = SStudioLabels {
     window_media_graph: "Mediengraph",
     window_media_vfs: "Media-VFS",
     window_compiled_dag: "Kompilierter DAG",
+    toggle_on: "An",
+    toggle_off: "Aus",
+    mixed_placeholder: "Gemischt",
+    parameter_count_suffix: "Parameter",
+    media_node_count_label: "Medienknoten",
+    app_instance_count_label: "App-Instanz(en)",
+    context_open_instance: "Instanz oeffnen",
+    context_duplicate: "Duplizieren",
+    context_copy: "Kopieren",
+    context_paste: "Einfuegen",
+    context_rename_label: "Bezeichnung umbenennen…",
+    context_remove: "Entfernen",
+    context_select_all: "Alle auswaehlen",
+    context_clear_selection: "Auswahl aufheben",
+    context_reorganize: "Neu anordnen",
 };
 
 /// 🗣️ Resolves the active Studio label set from the shell-provided locale.
@@ -301,6 +347,78 @@ fn s_studio_labels(view_state: &ViewState) -> &'static SStudioLabels {
     if is_de { &S_STUDIO_LABELS_NATIVE_DE } else { &S_STUDIO_LABELS_NATIVE_EN }
 }
 //#endregion 🔖Terminology
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every shell/view action declared in `create_home_app`'s static
+/// manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
+/// command palette and Actions rail get a translated label without threading locale through the builder.
+fn s_home_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("createStudio", "Create Studio", "Studio erstellen"),
+        ("bindStudioFile", "Bind Studio File", "Studio-Datei verknuepfen"),
+        ("importStudio", "Import Studio", "Studio importieren"),
+        ("openStudio", "Open Studio", "Studio oeffnen"),
+        ("navigateVirtualFileSystemNode", "Navigate File System Node", "Dateisystemknoten navigieren"),
+        ("deleteVirtualFileSystemNode", "Delete File System Node", "Dateisystemknoten loeschen"),
+        ("goHome", "Go Home", "Zur Startseite"),
+        ("setActivePanelTab", "Set Active Panel Tab", "Aktiven Panel-Tab festlegen"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+
+/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in
+/// `create_studio_app`'s static manifest — same rationale as {@link s_home_action_labels}.
+fn s_studio_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        // 🔧 Document-mutating operations
+        ("setParameter", "Set Parameter", "Parameter festlegen"),
+        ("patchParameter", "Patch Parameter", "Parameter aktualisieren"),
+        ("addParameter", "Add Parameter", "Parameter hinzufuegen"),
+        ("removeParameter", "Remove Parameter", "Parameter entfernen"),
+        ("spawnApp", "Spawn App", "App erzeugen"),
+        ("moveMediaNode", "Move Media Node", "Medienknoten verschieben"),
+        ("connectMediaPorts", "Connect Media Ports", "Medien-Ports verbinden"),
+        ("disconnectMediaEdge", "Disconnect Media Edge", "Medienverbindung trennen"),
+        ("removeAppInstance", "Remove App Instance", "App-Instanz entfernen"),
+        ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+        ("copyAppInstance", "Copy App Instance", "App-Instanz kopieren"),
+        ("duplicateAppInstance", "Duplicate App Instance", "App-Instanz duplizieren"),
+        ("pasteAppInstance", "Paste App Instance", "App-Instanz einfuegen"),
+        ("renameAppInstance", "Rename App Instance", "App-Instanz umbenennen"),
+        ("patchMediaNodes", "Patch Media Nodes", "Medienknoten aktualisieren"),
+        ("patchAppInstances", "Patch App Instances", "App-Instanzen aktualisieren"),
+        ("bindParameterField", "Bind Parameter Field", "Parameterfeld verknuepfen"),
+        ("unbindParameterField", "Unbind Parameter Field", "Parameterfeld loesen"),
+        ("reorganizeMediaGraph", "Reorganize Media Graph", "Mediengraph neu anordnen"),
+        ("mediaGraphEngagementSubmit", "Media Graph Engagement Submit", "Mediengraph-Eingabe bestaetigen"),
+        ("compiledDagEngagementSubmit", "Compiled DAG Engagement Submit", "Kompilierter-DAG-Eingabe bestaetigen"),
+        ("nodeGraphEdit", "Edit Media Graph", "Mediengraph bearbeiten"),
+        // 👁️ Ephemeral view state
+        ("setActivePanelTab", "Set Active Panel Tab", "Aktiven Panel-Tab festlegen"),
+        ("selectInstance", "Select Instance", "Instanz auswaehlen"),
+        ("nodeGraphSelect", "Select Graph Node", "Graphknoten auswaehlen"),
+        ("setMediaNodeSelection", "Set Media Node Selection", "Medienknoten-Auswahl festlegen"),
+        ("nodeGraphHover", "Hover Graph Node", "Graphknoten hovern"),
+        ("textHover", "Text Hover", "Text-Hover"),
+        ("nodeGraphViewport", "Set Graph Viewport", "Graph-Ansichtsfenster festlegen"),
+        ("presenceHeartbeat", "Presence Heartbeat", "Anwesenheits-Heartbeat"),
+        ("setAppInstanceSelection", "Set App Instance Selection", "App-Instanz-Auswahl festlegen"),
+        ("mediaGraphEngagementInput", "Media Graph Engagement Input", "Mediengraph-Eingabe"),
+        ("compiledDagEngagementInput", "Compiled DAG Engagement Input", "Kompilierter-DAG-Eingabe"),
+        // 🗨️ Shell-only effects
+        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+        ("exportMedia", "Export Media", "Medien exportieren"),
+        ("importMedia", "Import Media", "Medien importieren"),
+        ("importMediaPayload", "Import Media Payload", "Medien-Payload importieren"),
+        ("openStudio", "Open Studio", "Studio oeffnen"),
+        ("openInstance", "Open Instance", "Instanz oeffnen"),
+        ("closeFocusedInstance", "Close Focused Instance", "Fokussierte Instanz schliessen"),
+        ("goHome", "Go Home", "Zur Startseite"),
+        ("navigateVirtualFileSystemNode", "Navigate File System Node", "Dateisystemknoten navigieren"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+//#endregion 🔖CommandLabels
 
 //#region 🔖CatalogBackbone
 fn ensure_studio_fixtures_registered() {
@@ -566,17 +684,17 @@ fn selected_instance_ids(runtime: &StudioRuntimeState, projection: &OsProjection
         .collect()
 }
 
-fn media_graph_context_menu_json() -> String {
+fn media_graph_context_menu_json(labels: &SStudioLabels) -> String {
     json!([
-        { "id": "open-instance", "label": "Open instance", "action": "openInstance" },
-        { "id": "duplicate-instance", "label": "Duplicate", "action": "duplicateAppInstance" },
-        { "id": "copy-instance", "label": "Copy", "action": "copyAppInstance" },
-        { "id": "paste-instance", "label": "Paste", "action": "pasteAppInstance" },
-        { "id": "rename-instance", "label": "Rename label…", "action": "renameAppInstance" },
-        { "id": "remove-instance", "label": "Remove", "action": "removeAppInstance" },
-        { "id": "select-all", "label": "Select all", "action": "setMediaNodeSelection", "args": { "selectAll": true } },
-        { "id": "clear-selection", "label": "Clear selection", "action": "setMediaNodeSelection", "args": { "nodeIds": [] } },
-        { "id": "reorganize", "label": "Reorganize", "action": "reorganizeMediaGraph" }
+        { "id": "open-instance", "label": labels.context_open_instance, "action": "openInstance" },
+        { "id": "duplicate-instance", "label": labels.context_duplicate, "action": "duplicateAppInstance" },
+        { "id": "copy-instance", "label": labels.context_copy, "action": "copyAppInstance" },
+        { "id": "paste-instance", "label": labels.context_paste, "action": "pasteAppInstance" },
+        { "id": "rename-instance", "label": labels.context_rename_label, "action": "renameAppInstance" },
+        { "id": "remove-instance", "label": labels.context_remove, "action": "removeAppInstance" },
+        { "id": "select-all", "label": labels.context_select_all, "action": "setMediaNodeSelection", "args": { "selectAll": true } },
+        { "id": "clear-selection", "label": labels.context_clear_selection, "action": "setMediaNodeSelection", "args": { "nodeIds": [] } },
+        { "id": "reorganize", "label": labels.context_reorganize, "action": "reorganizeMediaGraph" }
     ])
     .to_string()
 }
@@ -877,7 +995,7 @@ fn build_catalogue_tree(panel: &StudioPanelState, labels: &SStudioLabels) -> UiN
     })
 }
 
-fn parameter_value_control(parameter: &OsParameter) -> UiNode {
+fn parameter_value_control(parameter: &OsParameter, labels: &SStudioLabels) -> UiNode {
     match parameter {
         OsParameter::Numeric { id, value, step, .. } => UiNode::NumberStepper(UiNumberStepperNode {
             id: format!("s-play-parameters.{id}.value"),
@@ -913,7 +1031,7 @@ fn parameter_value_control(parameter: &OsParameter) -> UiNode {
             id: format!("s-play-parameters.{id}.value"),
             icon_id: "toggle-left".into(),
             pressed: *value,
-            text: Some(if *value { "On".into() } else { "Off".into() }),
+            text: Some(if *value { labels.toggle_on.into() } else { labels.toggle_off.into() }),
             on_change: s_play_action(
                 "patchParameter",
                 Some(json!({ "parameterId": id, "field": "value" })),
@@ -1076,7 +1194,7 @@ fn build_parameters_tree(projection: &OsProjection, labels: &SStudioLabels) -> U
                 style: None,
                 disabled: None,
             }),
-            ui_text(format!("{} parameter(s)", projection.parameters.len())),
+            ui_text(format!("{} {}", projection.parameters.len(), labels.parameter_count_suffix)),
         ],
     }];
     for parameter in &projection.parameters {
@@ -1112,7 +1230,7 @@ fn build_parameters_tree(projection: &OsProjection, labels: &SStudioLabels) -> U
             UiNode::Field(UiFieldNode {
                 id: format!("s-play-parameters.{parameter_id}.value-field"),
                 label: labels.value.into(),
-                child: Box::new(parameter_value_control(parameter)),
+                child: Box::new(parameter_value_control(parameter, labels)),
                 description: None,
                 required: None,
                 error: None,
@@ -1153,9 +1271,11 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
         label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
         default_open: Some(true),
         children: vec![ui_text(format!(
-            "{} media node(s) · {} app instance(s)",
+            "{} {} · {} {}",
             media_node_ids.len(),
-            instance_ids.len()
+            term_labels.media_node_count_label,
+            instance_ids.len(),
+            term_labels.app_instance_count_label
         ))],
     }];
     if !media_node_ids.is_empty() {
@@ -1200,7 +1320,7 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
                 } else {
                     String::new()
                 },
-                placeholder: if x_uniform { None } else { Some("Mixed".into()) },
+                placeholder: if x_uniform { None } else { Some(term_labels.mixed_placeholder.into()) },
                 commit: None,
                 on_change: s_play_action(
                     "patchMediaNodes",
@@ -1226,7 +1346,7 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
                 } else {
                     String::new()
                 },
-                placeholder: if y_uniform { None } else { Some("Mixed".into()) },
+                placeholder: if y_uniform { None } else { Some(term_labels.mixed_placeholder.into()) },
                 commit: None,
                 on_change: s_play_action(
                     "patchMediaNodes",
@@ -1270,7 +1390,7 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
                 if program_uniform {
                     programs.first().cloned().unwrap_or_default()
                 } else {
-                    "Mixed".into()
+                    term_labels.mixed_placeholder.into()
                 }
             )),
             ui_text(format!(
@@ -1279,7 +1399,7 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
                 if app_uniform {
                     apps.first().cloned().unwrap_or_default()
                 } else {
-                    "Mixed".into()
+                    term_labels.mixed_placeholder.into()
                 }
             )),
             UiNode::Field(UiFieldNode {
@@ -1293,7 +1413,7 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
                     } else {
                         String::new()
                     },
-                    placeholder: if label_uniform { None } else { Some("Mixed".into()) },
+                    placeholder: if label_uniform { None } else { Some(term_labels.mixed_placeholder.into()) },
                     commit: None,
                     on_change: s_play_action(
                         "patchAppInstances",
@@ -1573,7 +1693,7 @@ fn compiled_dag_engagement(projection: &OsProjection) -> WindowEngagement {
 //#endregion 🔖CompiledDag
 
 //#region 🔖StudioWindows
-fn render_media_graph(projection: &OsProjection, runtime: &StudioRuntimeState) -> UiNode {
+fn render_media_graph(projection: &OsProjection, runtime: &StudioRuntimeState, labels: &SStudioLabels) -> UiNode {
     let graph_payload = os_media_graph_to_node_graph_payload(&projection.media_graph, &projection.app_instances);
     let camera = runtime.media_graph_camera.clone().unwrap_or_default();
     let fixture = os_media_graph_to_flow_fixture(&projection.media_graph, &projection.app_instances, &camera);
@@ -1596,7 +1716,7 @@ fn render_media_graph(projection: &OsProjection, runtime: &StudioRuntimeState) -
         NodeGraphScene {
             editable: Some(true),
             operators_json: Some(serde_json::to_string(&operators).unwrap_or_else(|_| "[]".into())),
-            context_menu_json: Some(media_graph_context_menu_json()),
+            context_menu_json: Some(media_graph_context_menu_json(labels)),
             find_items_json: Some(graph_payload.find_items_json),
             selection_json,
             hover_json,
@@ -1785,6 +1905,23 @@ impl DocumentApp for SHomeApp {
         match body_key {
             S_HOME_BODY => render_home_vfs(labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
+        }
+    }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = s_home_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: None,
+            window_kind_labels: std::collections::HashMap::from([(S_HOME_WINDOW.to_string(), labels.window_main.to_string())]),
+            panel_tab_labels: HashMap::new(),
+            mode_labels: HashMap::new(),
+            action_labels: s_home_action_labels(is_de),
+            utility_labels: HashMap::new(),
+            example_labels: HashMap::new(),
+            action_arg_labels: HashMap::new(),
+            dialog_labels: HashMap::new(),
+            introduction_labels: HashMap::new(),
         }
     }
 }
@@ -2609,7 +2746,7 @@ impl DocumentApp for SStudioApp {
         let panel = parse_panel_state(view_state);
         let labels = s_studio_labels(view_state);
         match body_key {
-            S_PLAY_BODY_MEDIA_GRAPH => render_media_graph(projection, &self.runtime),
+            S_PLAY_BODY_MEDIA_GRAPH => render_media_graph(projection, &self.runtime, labels),
             S_PLAY_BODY_MEDIA_VFS => render_media_vfs(projection, labels),
             S_PLAY_BODY_COMPILED_DAG => render_compiled_dag(projection),
             S_PLAY_CATALOGUE_BODY_KEY => build_catalogue_tree(&panel, labels),
@@ -2629,6 +2766,7 @@ impl DocumentApp for SStudioApp {
 
     fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
         let labels = s_studio_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         semio_framework_plugin::AppLabelsOverlay {
             app_label: None,
             window_kind_labels: std::collections::HashMap::from([
@@ -2638,7 +2776,8 @@ impl DocumentApp for SStudioApp {
             ]),
             panel_tab_labels: std::collections::HashMap::new(),
             mode_labels: std::collections::HashMap::new(),
-            action_labels: HashMap::new(),
+            action_labels: s_studio_action_labels(is_de),
+            // 🧰 `create_studio_app` declares no `.utility(...)` entries, so there is nothing to overlay here.
             utility_labels: HashMap::new(),
             example_labels: HashMap::new(),
             action_arg_labels: HashMap::new(),
@@ -3698,7 +3837,7 @@ mod tests {
         assert!(parameters_json.contains("Add Parameter"));
         assert!(parameters_json.contains("\"Name\""));
         assert!(parameters_json.contains("\"Remove\""));
-        assert!(!parameters_json.contains("Parameter hinzufügen"));
+        assert!(!parameters_json.contains("Parameter hinzufuegen"));
     }
 
     #[test]
@@ -3715,12 +3854,12 @@ mod tests {
         let projection = demo_studio_projection();
         let doc = DocumentView { projection: &projection, history: &history };
         let parameters_json = serde_json::to_string(&app.render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &view_state)).unwrap();
-        assert!(parameters_json.contains("Parameter hinzufügen"));
+        assert!(parameters_json.contains("Parameter hinzufuegen"));
         assert!(parameters_json.contains("\"Entfernen\""));
         assert!(!parameters_json.contains("Add Parameter"));
 
         let inspector_json = serde_json::to_string(&app.render(S_PLAY_INSPECTOR_BODY_KEY, &doc, &view_state)).unwrap();
-        assert!(inspector_json.contains("Wähle Mediengraph-Knoten oder App-Instanzen im Arbeitsbereich aus."));
+        assert!(inspector_json.contains("Waehle Mediengraph-Knoten oder App-Instanzen im Arbeitsbereich aus."));
     }
 }
 //#endregion 🧪Tests

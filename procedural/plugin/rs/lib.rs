@@ -18,6 +18,7 @@ pub mod app_2d {
     };
     use serde::Serialize;
     use serde_json::{json, Value};
+    use std::collections::HashMap;
 
     //#region 🔖Constants
     const PROCEDURAL2D_PLAY_APP_ID: &str = "procedural2d-play";
@@ -70,6 +71,7 @@ pub mod app_2d {
         window_generations: &'static str,
         window_generate_form: &'static str,
         window_generate_preview: &'static str,
+        delete_selection: &'static str,
     }
 
     const PROCEDURAL2D_LABELS_NATIVE_EN: Procedural2dLabels = Procedural2dLabels {
@@ -99,6 +101,7 @@ pub mod app_2d {
         window_generations: "Generations",
         window_generate_form: "Form",
         window_generate_preview: "Preview",
+        delete_selection: "Delete selection",
     };
 
     const PROCEDURAL2D_LABELS_NATIVE_DE: Procedural2dLabels = Procedural2dLabels {
@@ -128,6 +131,7 @@ pub mod app_2d {
         window_generations: "Generationen",
         window_generate_form: "Formular",
         window_generate_preview: "Vorschau",
+        delete_selection: "Auswahl loeschen",
     };
 
     /// 🗣️ Resolves the active label set from the shell-provided locale; falls back to native English.
@@ -648,7 +652,7 @@ pub mod app_2d {
     //#endregion 🔖Panels
 
     //#region 🔖Render
-    fn render_main_graph(play: &Procedural2dPlayView) -> UiNode {
+    fn render_main_graph(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -> UiNode {
         let host = host_from_fixture(&play.fixture);
         let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
         let viewport_json = serde_json::to_string(&play.fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
@@ -658,6 +662,13 @@ pub mod app_2d {
             serde_json::to_string(&play.runtime.selected_ids).ok()
         };
         let flow_extras = flow_backed_node_graph_extras(&play.fixture, "", 0.0);
+        let context_menu_json = serde_json::to_string(&json!([{
+            "id": "delete-selection",
+            "label": labels.delete_selection,
+            "action": "nodeGraphEdit",
+            "args": { "ops": [{ "op": "deleteSelection" }] },
+        }]))
+        .ok();
         build_node_graph_scene(
             PROCEDURAL2D_PLAY_SURFACE_MAIN,
             PROCEDURAL2D_PLAY_APP_ID,
@@ -668,9 +679,7 @@ pub mod app_2d {
                 lod_json: flow_extras.lod_json,
                 fixture_json: flow_extras.fixture_json,
                 selection_json,
-                context_menu_json: Some(
-                    r#"[{"id":"delete-selection","label":"Delete selection","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
-                ),
+                context_menu_json,
                 ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
             },
         )
@@ -983,7 +992,7 @@ pub mod app_2d {
             let play = play_view(doc.projection, &self.runtime);
             let labels = procedural2d_labels(view_state);
             match body_key {
-                PROCEDURAL2D_PLAY_BODY_MAIN => render_main_graph(&play),
+                PROCEDURAL2D_PLAY_BODY_MAIN => render_main_graph(&play, labels),
                 PROCEDURAL2D_PLAY_BODY_PREVIEW => render_preview_canvas(&play),
                 PROCEDURAL2D_PLAY_BODY_GENERATIONS => render_generate_generations(&play),
                 PROCEDURAL2D_PLAY_BODY_GENERATE_FORM => render_generate_form(&play, labels),
@@ -997,6 +1006,7 @@ pub mod app_2d {
 
         fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
             let labels = procedural2d_labels(view_state);
+            let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
             semio_framework_plugin::AppLabelsOverlay {
                 app_label: None,
                 window_kind_labels: std::collections::HashMap::from([
@@ -1007,10 +1017,15 @@ pub mod app_2d {
                     (PROCEDURAL2D_PLAY_WINDOW_GENERATE_PREVIEW.to_string(), labels.window_generate_preview.to_string()),
                 ]),
                 panel_tab_labels: std::collections::HashMap::new(),
-                mode_labels: std::collections::HashMap::new(),
-                action_labels: HashMap::new(),
+                mode_labels: std::collections::HashMap::from([
+                    ("edit".to_string(), (if is_de { "Bearbeiten" } else { "Edit" }).to_string()),
+                    ("generate".to_string(), (if is_de { "Generieren" } else { "Generate" }).to_string()),
+                ]),
+                action_labels: procedural2d_action_labels(is_de),
                 utility_labels: HashMap::new(),
-                example_labels: HashMap::new(),
+                example_labels: std::collections::HashMap::from([
+                    ("default".to_string(), (if is_de { "Standard" } else { "Default" }).to_string()),
+                ]),
                 action_arg_labels: HashMap::new(),
                 dialog_labels: HashMap::new(),
                 introduction_labels: HashMap::new(),
@@ -1018,6 +1033,40 @@ pub mod app_2d {
         }
     }
     //#endregion 🔖Procedural2dPlayApp
+
+    //#region 🔖CommandLabels
+    /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_procedural2d_app`'s
+    /// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+    /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+    fn procedural2d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            ("nodeGraphViewport", "Set Viewport", "Ansicht festlegen"),
+            ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
+            ("moveMediaNode", "Move Node", "Knoten verschieben"),
+            ("addWidget", "Add Widget", "Element hinzufuegen"),
+            ("removeWidget", "Remove Widget", "Element entfernen"),
+            ("connectMediaPorts", "Connect Ports", "Ports verbinden"),
+            ("reorganize", "Reorganize", "Neu anordnen"),
+            ("addGeneration", "Add Generation", "Generation hinzufuegen"),
+            ("removeGeneration", "Remove Generation", "Generation entfernen"),
+            ("renameGeneration", "Rename Generation", "Generation umbenennen"),
+            ("updateGenerationValues", "Update Generation Values", "Generationswerte aktualisieren"),
+            ("setSelection", "Set Selection", "Auswahl festlegen"),
+            ("selectNode", "Select Node", "Knoten auswaehlen"),
+            ("nodeGraphSelect", "Node Graph Select", "Graph-Auswahl"),
+            ("nodeGraphHover", "Node Graph Hover", "Graph-Hover"),
+            ("setShowMode", "Set Show Mode", "Anzeigemodus festlegen"),
+            ("generate", "Generate", "Generieren"),
+            ("setEvalOutputs", "Set Eval Outputs", "Auswertungsausgaben festlegen"),
+            ("canvasPointerDown", "Canvas Pointer Down", "Canvas-Zeiger gedrueckt"),
+            ("canvasPointerMove", "Canvas Pointer Move", "Canvas-Zeiger bewegt"),
+            ("canvasPointerUp", "Canvas Pointer Up", "Canvas-Zeiger losgelassen"),
+            ("canvasWheel", "Canvas Wheel", "Canvas-Mausrad"),
+            ("selectGeneration", "Select Generation", "Generation auswaehlen"),
+        ];
+        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    }
+    //#endregion 🔖CommandLabels
 
     //#region 🔖AppFactory
     pub fn create_procedural2d_app() -> App {
@@ -1352,7 +1401,7 @@ pub mod app_3d {
     };
     use semio_framework_core::mesh_from_indexed;
     use ui_wgpu::SurfaceKind;
-    use std::collections::{hash_map::DefaultHasher, HashSet};
+    use std::collections::{hash_map::DefaultHasher, HashMap, HashSet};
     use std::hash::{Hash, Hasher};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
@@ -1435,6 +1484,7 @@ pub mod app_3d {
         window_generations: &'static str,
         window_generate_form: &'static str,
         window_generate_preview: &'static str,
+        delete_selection: &'static str,
     }
 
     const PROCEDURAL3D_LABELS_NATIVE_EN: Procedural3dLabels = Procedural3dLabels {
@@ -1457,6 +1507,7 @@ pub mod app_3d {
         window_generations: "Generations",
         window_generate_form: "Form",
         window_generate_preview: "Preview",
+        delete_selection: "Delete selection",
     };
 
     const PROCEDURAL3D_LABELS_NATIVE_DE: Procedural3dLabels = Procedural3dLabels {
@@ -1479,6 +1530,7 @@ pub mod app_3d {
         window_generations: "Generationen",
         window_generate_form: "Formular",
         window_generate_preview: "Vorschau",
+        delete_selection: "Auswahl loeschen",
     };
 
     /// 🗣️ Resolves the active label set from the shell-provided locale; falls back to native English.
@@ -2738,6 +2790,13 @@ pub mod app_3d {
                         serde_json::to_string(&envelope.runtime.selected_node_ids).ok()
                     };
                     let flow_extras = flow_backed_node_graph_extras(&envelope.fixture, &envelope.runtime.lod_mode, 0.0);
+                    let context_menu_json = serde_json::to_string(&json!([{
+                        "id": "delete-selection",
+                        "label": labels.delete_selection,
+                        "action": "nodeGraphEdit",
+                        "args": { "ops": [{ "op": "deleteSelection" }] },
+                    }]))
+                    .ok();
                     build_node_graph_scene(
                         PROCEDURAL_3D_PLAY_SURFACE_MAIN,
                         PROCEDURAL_3D_PLAY_APP_ID,
@@ -2748,9 +2807,7 @@ pub mod app_3d {
                             lod_json: flow_extras.lod_json,
                             fixture_json: flow_extras.fixture_json,
                             selection_json,
-                            context_menu_json: Some(
-                                r#"[{"id":"delete-selection","label":"Delete selection","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
-                            ),
+                            context_menu_json,
                             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
                         },
                     )
@@ -2798,6 +2855,7 @@ pub mod app_3d {
 
         fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
             let labels = procedural3d_labels(view_state);
+            let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
             semio_framework_plugin::AppLabelsOverlay {
                 app_label: None,
                 window_kind_labels: std::collections::HashMap::from([
@@ -2811,10 +2869,17 @@ pub mod app_3d {
                     ),
                 ]),
                 panel_tab_labels: std::collections::HashMap::new(),
-                mode_labels: std::collections::HashMap::new(),
-                action_labels: HashMap::new(),
-                utility_labels: HashMap::new(),
-                example_labels: HashMap::new(),
+                mode_labels: std::collections::HashMap::from([
+                    ("edit".to_string(), (if is_de { "Bearbeiten" } else { "Edit" }).to_string()),
+                    ("generate".to_string(), (if is_de { "Generieren" } else { "Generate" }).to_string()),
+                ]),
+                action_labels: procedural3d_action_labels(is_de),
+                utility_labels: procedural3d_utility_labels(is_de),
+                example_labels: std::collections::HashMap::from([
+                    (PROCEDURAL_EXAMPLE_HEX_COLUMN.to_string(), (if is_de { "Sechseckige Pilzsaeule" } else { "Hexagonal Mushroom Column" }).to_string()),
+                    (PROCEDURAL_EXAMPLE_RECT_EXTRUDE.to_string(), (if is_de { "Rechteck-Extrusionsvolumen" } else { "Rectangle Extrude Volume" }).to_string()),
+                    (PROCEDURAL_EXAMPLE_SPHERE_TORUS.to_string(), (if is_de { "Kugel mit Torus geschnitten" } else { "Sphere Cut With Torus" }).to_string()),
+                ]),
                 action_arg_labels: HashMap::new(),
                 dialog_labels: HashMap::new(),
                 introduction_labels: HashMap::new(),
@@ -2843,6 +2908,60 @@ pub mod app_3d {
             .unwrap_or_default()
     }
     //#endregion 🔖Procedural3dPlayApp
+
+    //#region 🔖CommandLabels
+    /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_procedural3d_app`'s
+    /// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+    /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+    fn procedural3d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            ("nodeGraphViewport", "Set Viewport", "Ansicht festlegen"),
+            ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+            ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
+            ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+            ("removeWidget", "Remove Widget", "Element entfernen"),
+            ("moveMediaNode", "Move Node", "Knoten verschieben"),
+            ("addWidget", "Add Widget", "Element hinzufuegen"),
+            ("patchFlowWidgets", "Patch Flow Widgets", "Flow-Elemente aktualisieren"),
+            ("reorganize", "Reorganize", "Neu anordnen"),
+            ("translateSelection", "Translate Selection", "Auswahl verschieben"),
+            ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
+            ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
+            ("addGeneration", "Add Generation", "Generation hinzufuegen"),
+            ("removeGeneration", "Remove Generation", "Generation entfernen"),
+            ("renameGeneration", "Rename Generation", "Generation umbenennen"),
+            ("updateGenerationValues", "Update Generation Values", "Generationswerte aktualisieren"),
+            ("setSelection", "Set Selection", "Auswahl festlegen"),
+            ("selectNode", "Select Node", "Knoten auswaehlen"),
+            ("nodeGraphSelect", "Node Graph Select", "Graph-Auswahl"),
+            ("nodeGraphHover", "Node Graph Hover", "Graph-Hover"),
+            ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrueckt"),
+            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
+            ("worldSelect", "World Select", "Welt auswaehlen"),
+            ("worldHover", "World Hover", "Welt-Hover"),
+            ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
+            ("setLodMode", "Set Lod Mode", "LOD-Modus festlegen"),
+            ("setShowMode", "Set Show Mode", "Anzeigemodus festlegen"),
+            ("toggleSun", "Toggle Sun", "Sonne umschalten"),
+            ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
+            ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
+            ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
+            ("setCamera", "Set Camera", "Kamera festlegen"),
+            ("selectGeneration", "Select Generation", "Generation auswaehlen"),
+        ];
+        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    }
+
+    /// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_procedural3d_app`.
+    fn procedural3d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            ("move", "Move", "Verschieben"),
+            ("rotate", "Rotate", "Drehen"),
+            ("scale", "Scale", "Skalieren"),
+        ];
+        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    }
+    //#endregion 🔖CommandLabels
 
     fn procedural3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
         ActionDescriptor {

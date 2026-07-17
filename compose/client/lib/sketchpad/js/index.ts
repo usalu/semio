@@ -13958,12 +13958,43 @@ function sketchpadAllEqual<T>(values: readonly T[]): boolean {
   return true;
 }
 
+/** @emoji 🗣️ Atomic labels for the document/catalogue/inspection corner panels, resolved at call time via {@link composeCurrentUiLocale}. */
+const SKETCHPAD_PANEL_LABELS: UiTerminologyLabelSet<"selectedKits" | "openKits" | "designs" | "types" | "homeSelection" | "id" | "name" | "description" | "gap" | "representations" | "quality"> = {
+  en: {
+    selectedKits: "Selected kits",
+    openKits: "Open kits",
+    designs: "Designs",
+    types: "Types",
+    homeSelection: "Home selection",
+    id: "Id",
+    name: "Name",
+    description: "Description",
+    gap: "Gap",
+    representations: "Representations",
+    quality: "Quality",
+  },
+  de: {
+    selectedKits: "Ausgewaehlte Kits",
+    openKits: "Offene Kits",
+    designs: "Designs",
+    types: "Typen",
+    homeSelection: "Home-Auswahl",
+    id: "Id",
+    name: "Name",
+    description: "Beschreibung",
+    gap: "Abstand",
+    representations: "Repraesentationen",
+    quality: "Qualitaet",
+  },
+};
+
 function sketchpadDocumentSelectedIds(selection: SketchpadRouteSelection): string[] {
   return [...selection.pieceIds.map((id) => `sketchpad.document.piece.${id}`), ...selection.connectionIds.map((id) => `sketchpad.document.connection.${id}`), ...selection.kitWiresNodeIds.map((id) => `sketchpad.document.kit-node.${id}`)];
 }
 
 /** @emoji 🌳 Workbench document for the active sketchpad route. */
 function buildSketchpadDocumentPanelBody(ctx: WindowBodyViewContext): UiTreeNode {
+  const l = SKETCHPAD_PANEL_LABELS[composeCurrentUiLocale()];
   const ctrl = getSketchpadShellController();
   const routeUri = ctrl?.navigationPath ?? ctx.platform.uri ?? "/";
   const pathOnly = routeUri.split("?")[0] ?? "/";
@@ -13995,7 +14026,7 @@ function buildSketchpadDocumentPanelBody(ctx: WindowBodyViewContext): UiTreeNode
       sections.push({
         type: "section",
         id: "sketchpad.document.home-selected",
-        label: "Selected kits",
+        label: l.selectedKits,
         children: homeSelected.map((id) => {
           const kit = ctrl?.getKitStore(id)?.getSnapshot().kit;
           return {
@@ -14010,7 +14041,7 @@ function buildSketchpadDocumentPanelBody(ctx: WindowBodyViewContext): UiTreeNode
     sections.push({
       type: "section",
       id: "sketchpad.document.open-kits",
-      label: "Open kits",
+      label: l.openKits,
       children: kitItems.length
         ? kitItems.map((item) => ({ type: "button", id: item.id, label: item.label, action: item.action }))
         : [{ type: "text", value: `${open.length} kit(s) open` }, sketchpadPanelActionButton("Import kit archive…", "importKitFromFile"), sketchpadPanelActionButton("Create empty kit", "createTemporaryKit", { name: "Untitled Kit" })],
@@ -14093,13 +14124,13 @@ function buildSketchpadDocumentPanelBody(ctx: WindowBodyViewContext): UiTreeNode
       {
         type: "section",
         id: "sketchpad.document.designs",
-        label: "Designs",
+        label: l.designs,
         children: designItems.length ? designItems.map((item) => ({ type: "button", id: item.id, label: item.label, action: item.action })) : [{ type: "text", value: "(none)" }],
       },
       {
         type: "section",
         id: "sketchpad.document.types",
-        label: "Types",
+        label: l.types,
         children: typeItems.length ? typeItems.map((item) => ({ type: "button", id: item.id, label: item.label, action: item.action })) : [{ type: "text", value: "(none)" }],
       },
     );
@@ -14146,6 +14177,7 @@ function buildSketchpadCataloguePanelBody(ctx: WindowBodyViewContext): UiTreeNod
 
 /** @emoji 🔎 Editable inspection panel bound to {@link SketchpadRouteSelection}. */
 function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNode {
+  const l = SKETCHPAD_PANEL_LABELS[composeCurrentUiLocale()];
   const ctrl = getSketchpadShellController();
   const routeUri = ctrl?.navigationPath ?? ctx.platform.uri ?? "/";
   const { kitId, designId, typeId, qualityId } = parseSketchpadRouteScopeFromPath(routeUri);
@@ -14170,7 +14202,7 @@ function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNo
       children.push({
         type: "section",
         id: "sketchpad.inspection.home",
-        label: "Home selection",
+        label: l.homeSelection,
         children: homeSelected.map((id) => {
           const kit = ctrl?.getKitStore(id)?.getSnapshot().kit;
           return { type: "text", id: `sketchpad.inspection.home.${id}`, value: kit?.name ?? id };
@@ -14197,7 +14229,7 @@ function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNo
       pieceFields.push({
         type: "field",
         id: "sketchpad.inspection.piece.id",
-        label: "Id",
+        label: l.id,
         child: { type: "text", value: selection.pieceIds[0]! },
       });
     }
@@ -14205,7 +14237,7 @@ function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNo
       {
         type: "field",
         id: "sketchpad.inspection.piece.name",
-        label: "Name",
+        label: l.name,
         child: {
           type: "input",
           id: "sketchpad.inspection.piece.name.input",
@@ -14218,7 +14250,7 @@ function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNo
       {
         type: "field",
         id: "sketchpad.inspection.piece.description",
-        label: "Description",
+        label: l.description,
         child: {
           type: "input",
           id: "sketchpad.inspection.piece.description.input",
@@ -14247,7 +14279,7 @@ function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNo
       connectionFields.push({
         type: "field",
         id: "sketchpad.inspection.connection.id",
-        label: "Id",
+        label: l.id,
         child: { type: "text", value: selection.connectionIds[0]! },
       });
     }
@@ -14255,7 +14287,7 @@ function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNo
       connectionFields.push({
         type: "field",
         id: "sketchpad.inspection.connection.gap",
-        label: "Gap",
+        label: l.gap,
         child: {
           type: "input",
           id: "sketchpad.inspection.connection.gap.input",
@@ -14295,19 +14327,19 @@ function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNo
       {
         type: "field",
         id: "sketchpad.inspection.type.name",
-        label: "Name",
+        label: l.name,
         child: { type: "text", value: ownType?.name ?? typeId },
       },
       {
         type: "field",
         id: "sketchpad.inspection.type.description",
-        label: "Description",
+        label: l.description,
         child: { type: "text", value: ownType?.description ?? "" },
       },
       {
         type: "field",
         id: "sketchpad.inspection.type.representations",
-        label: "Representations",
+        label: l.representations,
         child: { type: "text", value: String(ownType?.representations?.length ?? 0) },
       },
     ];
@@ -14335,7 +14367,7 @@ function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNo
     children.push({
       type: "section",
       id: "sketchpad.inspection.quality",
-      label: "Quality",
+      label: l.quality,
       children: [
         { type: "text", value: quality?.key ?? qualityId },
         { type: "text", value: quality?.value ?? "" },
@@ -15164,9 +15196,48 @@ function sketchpadHomePanelTabs(): readonly SideTabSpec[] {
   ];
 }
 
+/** @emoji 🗣️ Atomic labels for the sketchpad plugin manifest (apps/window kinds/modes/panel tabs), resolved at call time via {@link composeCurrentUiLocale}. */
+const SKETCHPAD_MANIFEST_LABELS: UiTerminologyLabelSet<"display" | "composeSketchpad" | "kit" | "explore" | "fileSystem" | "wires" | "design" | "edit" | "scene" | "diagram" | "type" | "docs" | "feedback" | "windows" | "sketchpad"> = {
+  en: {
+    display: "Display",
+    composeSketchpad: "Compose Sketchpad",
+    kit: "Kit",
+    explore: "Explore",
+    fileSystem: "File System",
+    wires: "Wires",
+    design: "Design",
+    edit: "Edit",
+    scene: "Scene",
+    diagram: "Diagram",
+    type: "Type",
+    docs: "Docs",
+    feedback: "Feedback",
+    windows: "Windows",
+    sketchpad: "Sketchpad",
+  },
+  de: {
+    display: "Anzeige",
+    composeSketchpad: "Compose Sketchpad",
+    kit: "Kit",
+    explore: "Erkunden",
+    fileSystem: "Dateisystem",
+    wires: "Wires",
+    design: "Design",
+    edit: "Bearbeiten",
+    scene: "Szene",
+    diagram: "Diagramm",
+    type: "Typ",
+    docs: "Dokumentation",
+    feedback: "Feedback",
+    windows: "Fenster",
+    sketchpad: "Sketchpad",
+  },
+};
+
 function sketchpadKitPanelTabs(): readonly SideTabSpec[] {
+  const l = SKETCHPAD_MANIFEST_LABELS[composeCurrentUiLocale()];
   return [
-    { id: "display", iconId: "compose.sketchpad.icon.windows", panel: "display", bodyKey: SKETCHPAD_PANEL_WINDOWS_BODY, label: "Display" },
+    { id: "display", iconId: "compose.sketchpad.icon.windows", panel: "display", bodyKey: SKETCHPAD_PANEL_WINDOWS_BODY, label: l.display },
     { id: FRAMEWORK_PANEL_TAB_DOCUMENT_ID, iconId: FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID, panel: "workbench", order: 0, bodyKey: SKETCHPAD_PANEL_DOCUMENT_BODY, label: FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL },
     { id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: SKETCHPAD_PANEL_CATALOGUE_BODY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
     { id: FRAMEWORK_PANEL_TAB_INSPECTION_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: SKETCHPAD_PANEL_INSPECTION_BODY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
@@ -15174,60 +15245,61 @@ function sketchpadKitPanelTabs(): readonly SideTabSpec[] {
 }
 
 function buildSketchpadExtensionManifest(): PluginManifest {
+  const l = SKETCHPAD_MANIFEST_LABELS[composeCurrentUiLocale()];
   return {
     id: SKETCHPAD_EXTENSION_ID,
-    label: "Compose Sketchpad",
+    label: l.composeSketchpad,
     contributes: {
       apps: [
         {
           id: SKETCHPAD_KIT_APP_ID,
-          label: "Kit",
+          label: l.kit,
           controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-          modes: [{ id: "explore", label: "Explore" }],
+          modes: [{ id: "explore", label: l.explore }],
           windowKinds: [
-            { id: "vfs", label: "File System", bodyKey: SKETCHPAD_BODY_KIT_VFS },
-            { id: "wires", label: "Wires", bodyKey: SKETCHPAD_BODY_KIT_WIRES },
+            { id: "vfs", label: l.fileSystem, bodyKey: SKETCHPAD_BODY_KIT_VFS },
+            { id: "wires", label: l.wires, bodyKey: SKETCHPAD_BODY_KIT_WIRES },
           ],
-          defaultLayout: createDefaultLayout(["vfs", "wires"], "row", [50, 50], ["File System", "Wires"]),
+          defaultLayout: createDefaultLayout(["vfs", "wires"], "row", [50, 50], [l.fileSystem, l.wires]),
           actions: sketchpadKitAppActions(),
           panelTabs: sketchpadKitPanelTabs(),
         },
         {
           id: SKETCHPAD_DESIGN_APP_ID,
-          label: "Design",
+          label: l.design,
           controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-          modes: [{ id: "edit", label: "Edit" }],
+          modes: [{ id: "edit", label: l.edit }],
           windowKinds: [
-            { id: "scene", label: "Scene", bodyKey: SKETCHPAD_BODY_DESIGN_SCENE },
-            { id: "diagram", label: "Diagram", bodyKey: SKETCHPAD_BODY_DESIGN_DIAGRAM },
+            { id: "scene", label: l.scene, bodyKey: SKETCHPAD_BODY_DESIGN_SCENE },
+            { id: "diagram", label: l.diagram, bodyKey: SKETCHPAD_BODY_DESIGN_DIAGRAM },
           ],
-          defaultLayout: createDefaultLayout(["scene", "diagram"], "row", [60, 40], ["Scene", "Diagram"]),
+          defaultLayout: createDefaultLayout(["scene", "diagram"], "row", [60, 40], [l.scene, l.diagram]),
           panelTabs: sketchpadKitPanelTabs(),
         },
         {
           id: SKETCHPAD_TYPE_APP_ID,
-          label: "Type",
+          label: l.type,
           controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-          modes: [{ id: "edit", label: "Edit" }],
-          windowKinds: [{ id: "type-empty", label: "Type", bodyKey: SKETCHPAD_BODY_TYPE_REP }],
-          defaultLayout: createTabStackLayout(["type-empty"], ["Type"]),
+          modes: [{ id: "edit", label: l.edit }],
+          windowKinds: [{ id: "type-empty", label: l.type, bodyKey: SKETCHPAD_BODY_TYPE_REP }],
+          defaultLayout: createTabStackLayout(["type-empty"], [l.type]),
           panelTabs: sketchpadKitPanelTabs(),
         },
         {
           id: SKETCHPAD_DOCS_APP_ID,
-          label: "Docs",
+          label: l.docs,
           controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-          modes: [{ id: "explore", label: "Explore" }],
-          windowKinds: [{ id: "docs-main", label: "Docs", bodyKey: SKETCHPAD_BODY_DOCS }],
-          defaultLayout: createTabStackLayout(["docs-main"], ["Docs"]),
+          modes: [{ id: "explore", label: l.explore }],
+          windowKinds: [{ id: "docs-main", label: l.docs, bodyKey: SKETCHPAD_BODY_DOCS }],
+          defaultLayout: createTabStackLayout(["docs-main"], [l.docs]),
         },
         {
           id: SKETCHPAD_FEEDBACK_APP_ID,
-          label: "Feedback",
+          label: l.feedback,
           controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-          modes: [{ id: "explore", label: "Explore" }],
-          windowKinds: [{ id: "feedback-main", label: "Feedback", bodyKey: SKETCHPAD_BODY_FEEDBACK }],
-          defaultLayout: createTabStackLayout(["feedback-main"], ["Feedback"]),
+          modes: [{ id: "explore", label: l.explore }],
+          windowKinds: [{ id: "feedback-main", label: l.feedback, bodyKey: SKETCHPAD_BODY_FEEDBACK }],
+          defaultLayout: createTabStackLayout(["feedback-main"], [l.feedback]),
         },
       ],
     },
@@ -15260,7 +15332,7 @@ function registerSketchpadWindowBodies(): void {
       sections: [
         {
           id: "sketchpad.windows.list",
-          label: "Windows",
+          label: SKETCHPAD_MANIFEST_LABELS[composeCurrentUiLocale()].windows,
           defaultOpen: false,
           items: windowKinds.map((windowKind) => ({
             id: `sketchpad.windows.${windowKind.id}`,
@@ -15415,16 +15487,17 @@ const SKETCHPAD_PLATFORM_SPEC: PlatformSpec = {
 
 /** @emoji 🖥️ Sketchpad as a s {@link PlatformDefinition} program (apps mirror {@link buildSketchpadExtensionManifest}). */
 export function buildSketchpadProgramDefinition(): PlatformDefinition {
+  const l = SKETCHPAD_MANIFEST_LABELS[composeCurrentUiLocale()];
   return {
     id: SKETCHPAD_PLATFORM_SPEC.id,
     name: SKETCHPAD_PLATFORM_SPEC.name,
     apiVersion: "1",
     apps: [
-      { id: SKETCHPAD_KIT_APP_ID, label: "Kit", controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "explore", label: "Explore" }] },
-      { id: SKETCHPAD_DESIGN_APP_ID, label: "Design", controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }] },
-      { id: SKETCHPAD_TYPE_APP_ID, label: "Type", controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }] },
-      { id: SKETCHPAD_DOCS_APP_ID, label: "Docs", controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "explore", label: "Explore" }] },
-      { id: SKETCHPAD_FEEDBACK_APP_ID, label: "Feedback", controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "explore", label: "Explore" }] },
+      { id: SKETCHPAD_KIT_APP_ID, label: l.kit, controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "explore", label: l.explore }] },
+      { id: SKETCHPAD_DESIGN_APP_ID, label: l.design, controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "edit", label: l.edit }] },
+      { id: SKETCHPAD_TYPE_APP_ID, label: l.type, controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "edit", label: l.edit }] },
+      { id: SKETCHPAD_DOCS_APP_ID, label: l.docs, controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "explore", label: l.explore }] },
+      { id: SKETCHPAD_FEEDBACK_APP_ID, label: l.feedback, controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "explore", label: l.explore }] },
     ],
     createPlatformApi: () => ({}),
   };
@@ -17332,9 +17405,9 @@ export const sketchpadAppRenderer: AppRendererContribution = {
 /** @emoji 🛝 Compose sketchpad playground app. */
 export const sketchpadPlayAppDefinition = createPlaygroundApp({
   id: SKETCHPAD_PLATFORM_SPEC.id,
-  label: "Sketchpad",
+  label: SKETCHPAD_MANIFEST_LABELS[composeCurrentUiLocale()].sketchpad,
   controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-  modes: [{ id: "explore", label: "Explore" }],
+  modes: [{ id: "explore", label: SKETCHPAD_MANIFEST_LABELS[composeCurrentUiLocale()].explore }],
   defaultModeId: "explore",
   devHost: {
     playEntryKind: "sketchpad",
@@ -17385,12 +17458,13 @@ export function createComposeKitAppVcsHandler() {
 export const sketchpadProgramContribution: OsProgramContribution = {
   programId: "compose.sketchpad",
   register() {
+    const l = SKETCHPAD_MANIFEST_LABELS[composeCurrentUiLocale()];
     mergeOsProgramDefinition("compose.sketchpad", buildSketchpadProgramDefinition(), {
-      kit: osBaselineResource("kit.compose", "compose.kit", "virtualFileSystem", [{ id: "explore", label: "Explore" }]),
-      design: osBaselineResource("5d.puzzle", "compose.design", "puzzle5d", [{ id: "edit", label: "Edit" }]),
-      type: osBaselineResource("3d.puzzle", "compose.type", "puzzle3d", [{ id: "edit", label: "Edit" }]),
-      docs: osBaselineResource("text.document", "writer.document", "panel", [{ id: "explore", label: "Explore" }]),
-      feedback: osBaselineResource("form.dictionary", "forms.dictionary", "panel", [{ id: "explore", label: "Explore" }]),
+      kit: osBaselineResource("kit.compose", "compose.kit", "virtualFileSystem", [{ id: "explore", label: l.explore }]),
+      design: osBaselineResource("5d.puzzle", "compose.design", "puzzle5d", [{ id: "edit", label: l.edit }]),
+      type: osBaselineResource("3d.puzzle", "compose.type", "puzzle3d", [{ id: "edit", label: l.edit }]),
+      docs: osBaselineResource("text.document", "writer.document", "panel", [{ id: "explore", label: l.explore }]),
+      feedback: osBaselineResource("form.dictionary", "forms.dictionary", "panel", [{ id: "explore", label: l.explore }]),
     });
     registerAppVcsHandler(createComposeDesignAppVcsHandler());
     registerAppVcsHandler(createComposeTypeAppVcsHandler());
@@ -17461,16 +17535,7 @@ function sketchpadBuildDocsRegistryFromGlob(): readonly SketchpadDocSection[] {
     sectionMap.set(sectionId, pages);
   }
   if (sectionMap.size === 0) {
-    return [
-      {
-        id: "getting-started",
-        label: "Getting started",
-        pages: [
-          { path: "getting-started/index", title: "Getting started" },
-          { path: "getting-started/installation", title: "Installation" },
-        ],
-      },
-    ];
+    return sketchpadDocsRegistryFallback();
   }
   return [...sectionMap.entries()]
     .map(([id, pages]) => ({

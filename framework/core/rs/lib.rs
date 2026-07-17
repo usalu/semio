@@ -2933,9 +2933,7 @@ pub struct ActionDefinition {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub icon_id: Option<String>,
-    /// 📝 Typed argument declarations. Empty (the common case) = a no-argument action; serde-defaults
-    /// to empty so manifests/fixtures without this field still deserialize.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    /// 📝 Typed argument declarations. Empty (the common case) = a no-argument action.
     pub args: Vec<ActionArgDef>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
@@ -3158,7 +3156,6 @@ pub struct CommandDefinition {
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub icon_id: Option<String>,
     /// 📝 Reuses `ActionArgDef` — one staged-form contract shared by actions, dialogs, and commands.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub args: Vec<ActionArgDef>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
@@ -3362,7 +3359,6 @@ pub struct DialogDefinition {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub body: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub args: Vec<ActionArgDef>,
     /// 📇 References `AppDefinition.actions` — dispatched with the merged effective args on submit.
     pub submit_action: ActionRef,
@@ -4966,11 +4962,17 @@ mod app_document_tests {
     }
 
     #[test]
-    fn action_definition_deserializes_without_args_field() {
-        // Forward-compat: legacy JSON with no `args`/`category` still deserializes with empty defaults.
-        let action: ActionDefinition =
-            serde_json::from_str(r#"{"id":"x","label":"X","kind":"operation","inPalette":true}"#).unwrap();
-        assert!(action.args.is_empty());
+    fn action_definition_requires_and_serializes_args_field() {
+        let action = ActionDefinition::new("x", "X", ActionKind::Operation);
+        let json = serde_json::to_value(&action).unwrap();
+        assert_eq!(json["args"], json!([]));
+        assert!(serde_json::from_value::<ActionDefinition>(json!({
+            "id": "x",
+            "label": "X",
+            "kind": "operation",
+            "inPalette": true
+        }))
+        .is_err());
     }
 
     #[test]
@@ -5028,6 +5030,7 @@ mod app_document_tests {
     fn dialog_definition_round_trips_camel_case_with_defaults() {
         let dialog = DialogDefinition::new("confirm-delete", "Delete?", ActionRef::new("deleteSelection"));
         let json = serde_json::to_string(&dialog).unwrap();
+        assert!(json.contains("\"args\":[]"), "{json}");
         assert!(json.contains("\"submitAction\":\"deleteSelection\""), "{json}");
         assert!(json.contains("\"submitLabel\":\"OK\""), "{json}");
         assert!(!json.contains("cancelAction"), "omitted when unset: {json}");
@@ -5052,9 +5055,9 @@ mod app_document_tests {
 
     #[test]
     fn command_definition_round_trips_camel_case_with_defaults() {
-        let command = CommandDefinition::new("os.setThemeId", "Set Theme", CommandScope::Os, "appearance")
-            .with_args(vec![ActionArgDef::text("themeId", "Theme").required()]);
+        let command = CommandDefinition::new("os.setThemeId", "Set Theme", CommandScope::Os, "appearance");
         let json = serde_json::to_string(&command).unwrap();
+        assert!(json.contains("\"args\":[]"), "{json}");
         assert!(json.contains("\"scope\":\"os\""), "{json}");
         assert!(json.contains("\"category\":\"appearance\""), "{json}");
         assert!(json.contains("\"inPalette\":true"), "{json}");

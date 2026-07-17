@@ -840,7 +840,7 @@ pub mod d2 {
             }),
             control: None,
             controls: None,
-            status: Some(vec![WindowEngagementStatus { id: "puzzle2d-board-status".into(), text: format!("{node_count} nodes · {edge_count} edges · LOD {lod}") }]),
+            status: Some(vec![WindowEngagementStatus { id: "puzzle2d-board-status".into(), text: format!("{node_count} {} · {edge_count} {} · {} {lod}", labels.nodes, labels.edges, labels.lod) }]),
             // 🧰 The select/brush/fill switcher now lives in the framework toolbar (declared via `.utility` +
             // `.window_kind_utilities`), so the engagement no longer duplicates it as toggle options.
             options: None,
@@ -2031,8 +2031,8 @@ pub mod d2 {
                 ]),
                 panel_tab_labels: std::collections::HashMap::new(),
                 mode_labels: std::collections::HashMap::new(),
-                action_labels: std::collections::HashMap::new(),
-                utility_labels: std::collections::HashMap::new(),
+                action_labels: puzzle2d_action_labels(view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))),
+                utility_labels: puzzle2d_utility_labels(view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))),
                 example_labels: HashMap::new(),
                 action_arg_labels: HashMap::new(),
                 dialog_labels: HashMap::new(),
@@ -2041,6 +2041,64 @@ pub mod d2 {
         }
     }
     //#endregion 🔖Puzzle2dPlayApp
+
+    //#region 🔖CommandLabels
+    /// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_puzzle2d_app`'s
+    /// static manifest — mirrors `puzzle3d_action_labels`.
+    fn puzzle2d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            ("addNode", "Add Node", "Knoten hinzufuegen"),
+            ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+            ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+            ("duplicateSelection", "Duplicate Selection", "Auswahl duplizieren"),
+            ("forceLayout", "Force Layout", "Kraftbasiertes Layout"),
+            ("focusSelection", "Focus Selection", "Auswahl fokussieren"),
+            ("selectAll", "Select All", "Alles auswaehlen"),
+            ("clearSelection", "Clear Selection", "Auswahl aufheben"),
+            ("selectSameKind", "Select Same Kind", "Gleiche Art auswaehlen"),
+            ("setSelectionFlag", "Set Selection Flag", "Auswahlmarkierung festlegen"),
+            ("setCamera", "Set Camera", "Kamera festlegen"),
+            ("patchInspectorNodes", "Patch Inspector Nodes", "Inspektorknoten aktualisieren"),
+            ("redrawHandles", "Redraw Handles", "Anschluesse neu zeichnen"),
+            ("reorganize", "Reorganize", "Neu anordnen"),
+            ("applyBoardEvents", "Apply Board Events", "Board-Ereignisse anwenden"),
+            ("setFillCount", "Set Fill Count", "Fuellanzahl festlegen"),
+            ("brushFillSessionStep", "Brush Fill Session Step", "Pinsel-Fuellsitzung-Schritt"),
+            ("brushCommitSlot", "Brush Commit Slot", "Pinsel-Platz uebernehmen"),
+            ("setSelection", "Set Selection", "Auswahl festlegen"),
+            ("documentSelect", "Document Select", "Dokument auswaehlen"),
+            ("engagementInput", "Engagement Input", "Eingabe"),
+            ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+            ("engagementAbort", "Engagement Abort", "Eingabe abbrechen"),
+            ("engagementControlSelect", "Engagement Control Select", "Eingabesteuerung auswaehlen"),
+            ("setLodModeForPane", "Set Lod Mode For Pane", "LOD-Modus fuer Bereich festlegen"),
+            ("setGridSnapEnabled", "Set Grid Snap Enabled", "Rasterfang aktivieren"),
+            ("setGridFactor", "Set Grid Factor", "Rasterfaktor festlegen"),
+            ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
+            ("setBrushKindWeights", "Set Brush Kind Weights", "Pinsel-Artgewichte festlegen"),
+            ("setBrushNodeSize", "Set Brush Node Size", "Pinsel-Knotengroesse festlegen"),
+            ("setSuggestionOffset", "Set Suggestion Offset", "Vorschlagsversatz festlegen"),
+            ("brushCycleCandidate", "Brush Cycle Candidate", "Pinselkandidat wechseln"),
+            ("brushSetCandidateIndex", "Brush Set Candidate Index", "Pinselkandidatenindex festlegen"),
+            ("brushOpenSlot", "Brush Open Slot", "Pinsel-Platz oeffnen"),
+            ("brushCancelSlot", "Brush Cancel Slot", "Pinsel-Platz abbrechen"),
+            ("brushFillSessionBegin", "Brush Fill Session Begin", "Pinsel-Fuellsitzung beginnen"),
+            ("brushFillSessionClear", "Brush Fill Session Clear", "Pinsel-Fuellsitzung leeren"),
+            ("lodScaleJson", "Lod Scale Json", "LOD-Skalierung-Json"),
+        ];
+        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    }
+
+    /// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_puzzle2d_app`.
+    fn puzzle2d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            (PUZZLE2D_UTILITY_SELECT, "Select", "Auswaehlen"),
+            (PUZZLE2D_UTILITY_BRUSH, "Brush", "Pinsel"),
+            (PUZZLE2D_UTILITY_FILL, "Fill", "Fuellen"),
+        ];
+        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    }
+    //#endregion 🔖CommandLabels
 
     //#region 🔖AppFactory
     /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector/engagement-bound
@@ -3295,7 +3353,7 @@ pub mod d3 {
         serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
     }
 
-    fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> String {
+    fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecomputeSession) -> String {
         let runtime = &envelope.runtime;
         let suggestion_menu = runtime.suggestion_menu.map(|[x, y]| {
             let (pending, candidates) = puzzle3d_brush_target_vortex(envelope)
@@ -3310,7 +3368,7 @@ pub mod d3 {
                         .map(|(index, candidate)| {
                             let object_label = candidate.get("objectKind").and_then(Value::as_str).or_else(|| candidate.get("objectKindId").and_then(Value::as_str)).unwrap_or("kind");
                             let source_vortex_index = candidate.get("sourceVortexIndex").and_then(Value::as_u64).unwrap_or(0);
-                            json!({ "index": index, "objectLabel": object_label, "vortexLabel": format!("{} {source_vortex_index}", labels.vortex) })
+                            json!({ "index": index, "objectLabel": object_label, "vortexLabel": format!("vortex {source_vortex_index}") })
                         })
                         .collect();
                     (pending, candidates)
@@ -4036,18 +4094,11 @@ pub mod d3 {
     //#region 🔖Terminology
     /// 🗣️ Complete UI label set for the 3d app; one field per label makes every terminology×locale combination compile-checked.
     struct Puzzle3dLabels {
-        // entity nouns — remapped under the "reuse" terminology
         objects: &'static str,
         object: &'static str,
         vortices: &'static str,
         vortex: &'static str,
         attractions: &'static str,
-        attraction: &'static str,
-        references: &'static str,
-        reference: &'static str,
-        target_volumes: &'static str,
-        target_volume: &'static str,
-        cables: &'static str,
         window_main: &'static str,
         fill: &'static str,
         mode: &'static str,
@@ -4061,63 +4112,6 @@ pub mod d3 {
         hide: &'static str,
         lock: &'static str,
         unlock: &'static str,
-        // inspector field labels
-        delete: &'static str,
-        selected: &'static str,
-        id: &'static str,
-        label: &'static str,
-        kind: &'static str,
-        origin: &'static str,
-        full_id: &'static str,
-        vortex_kind: &'static str,
-        position: &'static str,
-        radius: &'static str,
-        attracting: &'static str,
-        attracted: &'static str,
-        gap: &'static str,
-        shift: &'static str,
-        rise: &'static str,
-        rotation: &'static str,
-        turn: &'static str,
-        tilt: &'static str,
-        source_url: &'static str,
-        schema: &'static str,
-        domain: &'static str,
-        // settings body
-        selection_mode: &'static str,
-        default_option: &'static str,
-        additive: &'static str,
-        subtractive: &'static str,
-        invertive: &'static str,
-        settings_group: &'static str,
-        overlap_budget: &'static str,
-        proximity_radius: &'static str,
-        chunk_size: &'static str,
-        grid_factor: &'static str,
-        // jack body
-        query: &'static str,
-        results: &'static str,
-        error_prefix: &'static str,
-        // context menu
-        duplicate: &'static str,
-        select_same_kind: &'static str,
-        zoom_to_selection: &'static str,
-        suggest_objects: &'static str,
-        // measures
-        lod: &'static str,
-        auto_zoom: &'static str,
-        depth_variable: &'static str,
-        grid: &'static str,
-        select_group: &'static str,
-        rectangle: &'static str,
-        lasso: &'static str,
-        brush_group: &'static str,
-        distribution: &'static str,
-        view_group: &'static str,
-        perspective: &'static str,
-        top: &'static str,
-        front: &'static str,
-        right: &'static str,
     }
 
     const PUZZLE3D_LABELS_NATIVE_EN: Puzzle3dLabels = Puzzle3dLabels {
@@ -4126,12 +4120,6 @@ pub mod d3 {
         vortices: "Vortices",
         vortex: "Vortex",
         attractions: "Attractions",
-        attraction: "Attraction",
-        references: "References",
-        reference: "Reference",
-        target_volumes: "Target Volumes",
-        target_volume: "Target Volume",
-        cables: "Cables",
         window_main: "Puzzle 3D",
         fill: "Fill",
         mode: "Mode",
@@ -4145,58 +4133,6 @@ pub mod d3 {
         hide: "Hide",
         lock: "Lock",
         unlock: "Unlock",
-        delete: "Delete",
-        selected: "selected",
-        id: "Id",
-        label: "Label",
-        kind: "Kind",
-        origin: "Origin",
-        full_id: "Full Id",
-        vortex_kind: "Vortex Kind",
-        position: "Position",
-        radius: "Radius",
-        attracting: "Attracting",
-        attracted: "Attracted",
-        gap: "Gap",
-        shift: "Shift",
-        rise: "Rise",
-        rotation: "Rotation (°)",
-        turn: "Turn (°)",
-        tilt: "Tilt (°)",
-        source_url: "Source Url",
-        schema: "Schema",
-        domain: "Domain",
-        selection_mode: "Selection Mode",
-        default_option: "Default",
-        additive: "Additive",
-        subtractive: "Subtractive",
-        invertive: "Invertive",
-        settings_group: "Settings",
-        overlap_budget: "Brush Overlap Budget (m³)",
-        proximity_radius: "Proximity Radius",
-        chunk_size: "Chunk Size",
-        grid_factor: "Grid Factor",
-        query: "Query",
-        results: "results",
-        error_prefix: "Error",
-        duplicate: "Duplicate",
-        select_same_kind: "Select all of same kind",
-        zoom_to_selection: "Zoom to selection",
-        suggest_objects: "Suggest objects",
-        lod: "LOD",
-        auto_zoom: "Auto zoom",
-        depth_variable: "Depth-variable",
-        grid: "Grid",
-        select_group: "Select",
-        rectangle: "Rectangle",
-        lasso: "Lasso",
-        brush_group: "Brush",
-        distribution: "Distribution",
-        view_group: "View",
-        perspective: "Perspective",
-        top: "Top",
-        front: "Front",
-        right: "Right",
     };
     const PUZZLE3D_LABELS_NATIVE_DE: Puzzle3dLabels = Puzzle3dLabels {
         objects: "Objekte",
@@ -4204,12 +4140,6 @@ pub mod d3 {
         vortices: "Vortices",
         vortex: "Vortex",
         attractions: "Anziehungen",
-        attraction: "Anziehung",
-        references: "Referenzen",
-        reference: "Referenz",
-        target_volumes: "Zielvolumen",
-        target_volume: "Zielvolumen",
-        cables: "Kabel",
         window_main: "Puzzle 3D",
         fill: "Fuellen",
         mode: "Modus",
@@ -4223,85 +4153,9 @@ pub mod d3 {
         hide: "Ausblenden",
         lock: "Sperren",
         unlock: "Entsperren",
-        delete: "Loeschen",
-        selected: "ausgewaehlt",
-        id: "Id",
-        label: "Bezeichnung",
-        kind: "Art",
-        origin: "Ursprung",
-        full_id: "Vollstaendige Id",
-        vortex_kind: "Vortex-Art",
-        position: "Position",
-        radius: "Radius",
-        attracting: "Anziehend",
-        attracted: "Angezogen",
-        gap: "Abstand",
-        shift: "Verschiebung",
-        rise: "Anstieg",
-        rotation: "Rotation (°)",
-        turn: "Drehung (°)",
-        tilt: "Neigung (°)",
-        source_url: "Quell-URL",
-        schema: "Schema",
-        domain: "Domaene",
-        selection_mode: "Auswahlmodus",
-        default_option: "Standard",
-        additive: "Additiv",
-        subtractive: "Subtraktiv",
-        invertive: "Invertierend",
-        settings_group: "Einstellungen",
-        overlap_budget: "Pinsel-Ueberlappungsbudget (m³)",
-        proximity_radius: "Naeheradius",
-        chunk_size: "Blockgroesse",
-        grid_factor: "Rasterfaktor",
-        query: "Abfrage",
-        results: "Ergebnisse",
-        error_prefix: "Fehler",
-        duplicate: "Duplizieren",
-        select_same_kind: "Alle gleicher Art auswaehlen",
-        zoom_to_selection: "Auf Auswahl zoomen",
-        suggest_objects: "Objekte vorschlagen",
-        lod: "LOD",
-        auto_zoom: "Auto-Zoom",
-        depth_variable: "Tiefenvariabel",
-        grid: "Raster",
-        select_group: "Auswaehlen",
-        rectangle: "Rechteck",
-        lasso: "Lasso",
-        brush_group: "Pinsel",
-        distribution: "Verteilung",
-        view_group: "Ansicht",
-        perspective: "Perspektive",
-        top: "Oben",
-        front: "Vorne",
-        right: "Rechts",
     };
-    const PUZZLE3D_LABELS_REUSE_EN: Puzzle3dLabels = Puzzle3dLabels {
-        objects: "Building components",
-        object: "Building component",
-        vortices: "Connection points",
-        vortex: "Connection point",
-        attractions: "Component connections",
-        attraction: "Component connection",
-        references: "Component references",
-        reference: "Component reference",
-        target_volumes: "Component volumes",
-        target_volume: "Component volume",
-        ..PUZZLE3D_LABELS_NATIVE_EN
-    };
-    const PUZZLE3D_LABELS_REUSE_DE: Puzzle3dLabels = Puzzle3dLabels {
-        objects: "Baukomponenten",
-        object: "Baukomponente",
-        vortices: "Verbindungspunkte",
-        vortex: "Verbindungspunkt",
-        attractions: "Baukomponentenverbindungen",
-        attraction: "Baukomponentenverbindung",
-        references: "Baukomponentenreferenzen",
-        reference: "Baukomponentenreferenz",
-        target_volumes: "Baukomponentenvolumen",
-        target_volume: "Baukomponentenvolumen",
-        ..PUZZLE3D_LABELS_NATIVE_DE
-    };
+    const PUZZLE3D_LABELS_REUSE_EN: Puzzle3dLabels = Puzzle3dLabels { objects: "Building components", object: "Building component", vortices: "Connection points", vortex: "Connection point", ..PUZZLE3D_LABELS_NATIVE_EN };
+    const PUZZLE3D_LABELS_REUSE_DE: Puzzle3dLabels = Puzzle3dLabels { objects: "Baukomponenten", object: "Baukomponente", vortices: "Verbindungspunkte", vortex: "Verbindungspunkt", ..PUZZLE3D_LABELS_NATIVE_DE };
 
     /// 🗣️ Resolves the active label set from the shell-provided locale/terminology; unknown terminology ids fall back to native.
     fn puzzle3d_labels(view_state: &ViewState) -> &'static Puzzle3dLabels {
@@ -4463,9 +4317,9 @@ pub mod d3 {
             loading: None,
             sections: vec![
                 UiTreeSectionNode { id: "puzzle3d-play-document.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), loading: None, items: object_items },
-                UiTreeSectionNode { id: "puzzle3d-play-document.references".into(), label: Some(labels.references.into()), default_open: Some(false), loading: None, items: reference_items },
-                UiTreeSectionNode { id: "puzzle3d-play-document.target-volumes".into(), label: Some(labels.target_volumes.into()), default_open: Some(false), loading: None, items: target_volume_items },
-                UiTreeSectionNode { id: "puzzle3d-play-document.attractions".into(), label: Some(labels.attractions.into()), default_open: Some(false), loading: None, items: attraction_items },
+                UiTreeSectionNode { id: "puzzle3d-play-document.references".into(), label: Some("References".into()), default_open: Some(false), loading: None, items: reference_items },
+                UiTreeSectionNode { id: "puzzle3d-play-document.target-volumes".into(), label: Some("Target Volumes".into()), default_open: Some(false), loading: None, items: target_volume_items },
+                UiTreeSectionNode { id: "puzzle3d-play-document.attractions".into(), label: Some("Attractions".into()), default_open: Some(false), loading: None, items: attraction_items },
             ],
             selected_ids: None,
             highlighted_ids: None,
@@ -4575,8 +4429,8 @@ pub mod d3 {
             sections: vec![
                 UiTreeSectionNode { id: "puzzle3d-play-kinds.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), loading: None, items: object_entries.iter().map(puzzle3d_object_kind_item).collect() },
                 UiTreeSectionNode { id: "puzzle3d-play-kinds.vortices".into(), label: Some(labels.vortices.into()), default_open: Some(false), loading: None, items: vortex_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "circle-dot")).collect() },
-                UiTreeSectionNode { id: "puzzle3d-play-kinds.cables".into(), label: Some(labels.cables.into()), default_open: Some(false), loading: None, items: cable_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "plug")).collect() },
-                UiTreeSectionNode { id: "puzzle3d-play-kinds.attractions".into(), label: Some(labels.attractions.into()), default_open: Some(false), loading: None, items: attraction_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "link")).collect() },
+                UiTreeSectionNode { id: "puzzle3d-play-kinds.cables".into(), label: Some("Cables".into()), default_open: Some(false), loading: None, items: cable_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "plug")).collect() },
+                UiTreeSectionNode { id: "puzzle3d-play-kinds.attractions".into(), label: Some("Attractions".into()), default_open: Some(false), loading: None, items: attraction_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "link")).collect() },
             ],
             selected_ids: None,
             highlighted_ids: None,
@@ -4643,10 +4497,10 @@ pub mod d3 {
         })
     }
 
-    fn inspector_header_and_delete(count: usize, noun: &str, labels: &Puzzle3dLabels) -> Vec<UiNode> {
+    fn inspector_header_and_delete(count: usize, noun: &str) -> Vec<UiNode> {
         vec![
-            ui_text(format!("{count} {noun} {}", labels.selected)),
-            UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some("puzzle3d-play-inspector.delete".into()), icon_id: "trash".into(), label: labels.delete.into(), action: puzzle3d_action("deleteSelection", None), style: None, disabled: None, loading: None }),
+            ui_text(format!("{count} {noun} selected")),
+            UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some("puzzle3d-play-inspector.delete".into()), icon_id: "trash".into(), label: "Delete".into(), action: puzzle3d_action("deleteSelection", None), style: None, disabled: None, loading: None }),
         ]
     }
 
@@ -4657,16 +4511,16 @@ pub mod d3 {
             if !objects.is_empty() {
                 let ids_json = json!(selection.object_ids);
                 let patch_cmd = |field: &str| puzzle3d_action("patchInspector", Some(json!({ "entity": "object", "ids": ids_json, "field": field })));
-                let mut fields = inspector_header_and_delete(objects.len(), term_labels.object, term_labels);
+                let mut fields = inspector_header_and_delete(objects.len(), term_labels.object);
                 if let [object] = objects.as_slice() {
-                    fields.push(ui_inspector_readonly_field("puzzle3d-play-inspector.object.id", term_labels.id, &object.id));
+                    fields.push(ui_inspector_readonly_field("puzzle3d-play-inspector.object.id", "Id", &object.id));
                 }
-                let object_labels: Vec<String> = objects.iter().map(|object| object.label.clone().unwrap_or_default()).collect();
+                let labels: Vec<String> = objects.iter().map(|object| object.label.clone().unwrap_or_default()).collect();
                 let kinds: Vec<String> = objects.iter().map(|object| object.object_kind.clone().unwrap_or_default()).collect();
                 let origins: Vec<[f64; 3]> = objects.iter().map(|object| object.origin).collect();
-                fields.push(inspector_text_field("puzzle3d-play-inspector.object.label", term_labels.label, semio_framework_plugin::ui_inspector_mixed_text(&object_labels), patch_cmd("label")));
-                fields.push(ui_inspector_readonly_field("puzzle3d-play-inspector.object.kind", term_labels.kind, &semio_framework_plugin::ui_inspector_mixed_text(&kinds).value));
-                fields.push(inspector_vec3_field("puzzle3d-play-inspector.object.origin", term_labels.origin, semio_framework_plugin::ui_inspector_mixed_vec3(&origins), patch_cmd("origin")));
+                fields.push(inspector_text_field("puzzle3d-play-inspector.object.label", "Label", semio_framework_plugin::ui_inspector_mixed_text(&labels), patch_cmd("label")));
+                fields.push(ui_inspector_readonly_field("puzzle3d-play-inspector.object.kind", "Kind", &semio_framework_plugin::ui_inspector_mixed_text(&kinds).value));
+                fields.push(inspector_vec3_field("puzzle3d-play-inspector.object.origin", "Origin", semio_framework_plugin::ui_inspector_mixed_vec3(&origins), patch_cmd("origin")));
                 return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.object".into(), label: term_labels.object.into(), default_open: None, fields }]);
             }
         }
@@ -4682,17 +4536,17 @@ pub mod d3 {
                 let full_ids: Vec<String> = vortices.iter().map(|(object, vortex)| puzzle3d_vortex_full_id(&object.id, &vortex.id)).collect();
                 let ids_json = json!(full_ids);
                 let patch_cmd = |field: &str| puzzle3d_action("patchInspector", Some(json!({ "entity": "vortex", "ids": ids_json, "field": field })));
-                let mut fields = inspector_header_and_delete(vortices.len(), term_labels.vortex, term_labels);
+                let mut fields = inspector_header_and_delete(vortices.len(), term_labels.vortex);
                 if let [(_, vortex)] = vortices.as_slice() {
-                    fields.push(ui_inspector_readonly_field("puzzle3d-play-inspector.vortex.id", term_labels.full_id, &full_ids[0]));
+                    fields.push(ui_inspector_readonly_field("puzzle3d-play-inspector.vortex.id", "Full Id", &full_ids[0]));
                     let _ = vortex;
                 }
                 let kinds: Vec<String> = vortices.iter().map(|(_, vortex)| vortex.vortex_kind.clone().unwrap_or_default()).collect();
                 let positions: Vec<[f64; 3]> = vortices.iter().map(|(_, vortex)| vortex.position).collect();
                 let radii: Vec<f64> = vortices.iter().map(|(_, vortex)| vortex.radius.unwrap_or(0.35)).collect();
-                fields.push(inspector_text_field("puzzle3d-play-inspector.vortex.kind", term_labels.vortex_kind, semio_framework_plugin::ui_inspector_mixed_text(&kinds), patch_cmd("vortexKind")));
-                fields.push(inspector_vec3_field("puzzle3d-play-inspector.vortex.position", term_labels.position, semio_framework_plugin::ui_inspector_mixed_vec3(&positions), patch_cmd("position")));
-                fields.push(inspector_number_field("puzzle3d-play-inspector.vortex.radius", term_labels.radius, semio_framework_plugin::ui_inspector_mixed_number(&radii), patch_cmd("radius")));
+                fields.push(inspector_text_field("puzzle3d-play-inspector.vortex.kind", "Vortex Kind", semio_framework_plugin::ui_inspector_mixed_text(&kinds), patch_cmd("vortexKind")));
+                fields.push(inspector_vec3_field("puzzle3d-play-inspector.vortex.position", "Position", semio_framework_plugin::ui_inspector_mixed_vec3(&positions), patch_cmd("position")));
+                fields.push(inspector_number_field("puzzle3d-play-inspector.vortex.radius", "Radius", semio_framework_plugin::ui_inspector_mixed_number(&radii), patch_cmd("radius")));
                 return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.vortex".into(), label: term_labels.vortex.into(), default_open: None, fields }]);
             }
         }
@@ -4701,24 +4555,24 @@ pub mod d3 {
             if !attractions.is_empty() {
                 let ids_json = json!(selection.attraction_ids);
                 let patch_cmd = |field: &str| puzzle3d_action("patchInspector", Some(json!({ "entity": "attraction", "ids": ids_json, "field": field })));
-                let mut fields = inspector_header_and_delete(attractions.len(), term_labels.attraction, term_labels);
+                let mut fields = inspector_header_and_delete(attractions.len(), "attraction");
                 let attracting: Vec<String> = attractions.iter().map(|attraction| attraction.attracting.clone()).collect();
                 let attracted: Vec<String> = attractions.iter().map(|attraction| attraction.attracted.clone()).collect();
-                fields.push(inspector_text_field("puzzle3d-play-inspector.attraction.attracting", term_labels.attracting, semio_framework_plugin::ui_inspector_mixed_text(&attracting), patch_cmd("attracting")));
-                fields.push(inspector_text_field("puzzle3d-play-inspector.attraction.attracted", term_labels.attracted, semio_framework_plugin::ui_inspector_mixed_text(&attracted), patch_cmd("attracted")));
+                fields.push(inspector_text_field("puzzle3d-play-inspector.attraction.attracting", "Attracting", semio_framework_plugin::ui_inspector_mixed_text(&attracting), patch_cmd("attracting")));
+                fields.push(inspector_text_field("puzzle3d-play-inspector.attraction.attracted", "Attracted", semio_framework_plugin::ui_inspector_mixed_text(&attracted), patch_cmd("attracted")));
                 let gaps: Vec<f64> = attractions.iter().map(|attraction| attraction.gap).collect();
                 let shifts: Vec<f64> = attractions.iter().map(|attraction| attraction.shift).collect();
                 let rises: Vec<f64> = attractions.iter().map(|attraction| attraction.rise).collect();
                 let rotations: Vec<f64> = attractions.iter().map(|attraction| attraction.rotation).collect();
                 let turns: Vec<f64> = attractions.iter().map(|attraction| attraction.turn).collect();
                 let tilts: Vec<f64> = attractions.iter().map(|attraction| attraction.tilt).collect();
-                fields.push(inspector_number_field("puzzle3d-play-inspector.attraction.gap", term_labels.gap, semio_framework_plugin::ui_inspector_mixed_number(&gaps), patch_cmd("gap")));
-                fields.push(inspector_number_field("puzzle3d-play-inspector.attraction.shift", term_labels.shift, semio_framework_plugin::ui_inspector_mixed_number(&shifts), patch_cmd("shift")));
-                fields.push(inspector_number_field("puzzle3d-play-inspector.attraction.rise", term_labels.rise, semio_framework_plugin::ui_inspector_mixed_number(&rises), patch_cmd("rise")));
-                fields.push(inspector_number_field("puzzle3d-play-inspector.attraction.rotation", term_labels.rotation, semio_framework_plugin::ui_inspector_mixed_number(&rotations), patch_cmd("rotation")));
-                fields.push(inspector_number_field("puzzle3d-play-inspector.attraction.turn", term_labels.turn, semio_framework_plugin::ui_inspector_mixed_number(&turns), patch_cmd("turn")));
-                fields.push(inspector_number_field("puzzle3d-play-inspector.attraction.tilt", term_labels.tilt, semio_framework_plugin::ui_inspector_mixed_number(&tilts), patch_cmd("tilt")));
-                return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.attraction".into(), label: term_labels.attraction.into(), default_open: None, fields }]);
+                fields.push(inspector_number_field("puzzle3d-play-inspector.attraction.gap", "Gap", semio_framework_plugin::ui_inspector_mixed_number(&gaps), patch_cmd("gap")));
+                fields.push(inspector_number_field("puzzle3d-play-inspector.attraction.shift", "Shift", semio_framework_plugin::ui_inspector_mixed_number(&shifts), patch_cmd("shift")));
+                fields.push(inspector_number_field("puzzle3d-play-inspector.attraction.rise", "Rise", semio_framework_plugin::ui_inspector_mixed_number(&rises), patch_cmd("rise")));
+                fields.push(inspector_number_field("puzzle3d-play-inspector.attraction.rotation", "Rotation (°)", semio_framework_plugin::ui_inspector_mixed_number(&rotations), patch_cmd("rotation")));
+                fields.push(inspector_number_field("puzzle3d-play-inspector.attraction.turn", "Turn (°)", semio_framework_plugin::ui_inspector_mixed_number(&turns), patch_cmd("turn")));
+                fields.push(inspector_number_field("puzzle3d-play-inspector.attraction.tilt", "Tilt (°)", semio_framework_plugin::ui_inspector_mixed_number(&tilts), patch_cmd("tilt")));
+                return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.attraction".into(), label: "Attraction".into(), default_open: None, fields }]);
             }
         }
         if !selection.reference_ids.is_empty() {
@@ -4726,14 +4580,14 @@ pub mod d3 {
             if !references.is_empty() {
                 let ids_json = json!(selection.reference_ids);
                 let patch_cmd = |field: &str| puzzle3d_action("patchInspector", Some(json!({ "entity": "reference", "ids": ids_json, "field": field })));
-                let mut fields = inspector_header_and_delete(references.len(), term_labels.reference, term_labels);
+                let mut fields = inspector_header_and_delete(references.len(), "reference");
                 let urls: Vec<String> = references.iter().map(|reference| reference.source.url.clone()).collect();
                 let origins: Vec<[f64; 3]> = references.iter().map(|reference| reference.origin).collect();
                 let widths: Vec<f64> = references.iter().map(|reference| reference.width_world).collect();
-                fields.push(inspector_text_field("puzzle3d-play-inspector.reference.url", term_labels.source_url, semio_framework_plugin::ui_inspector_mixed_text(&urls), patch_cmd("sourceUrl")));
-                fields.push(inspector_vec3_field("puzzle3d-play-inspector.reference.origin", term_labels.position, semio_framework_plugin::ui_inspector_mixed_vec3(&origins), patch_cmd("origin")));
-                fields.push(inspector_number_field("puzzle3d-play-inspector.reference.width", term_labels.width, semio_framework_plugin::ui_inspector_mixed_number(&widths), patch_cmd("widthWorld")));
-                return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.reference".into(), label: term_labels.reference.into(), default_open: None, fields }]);
+                fields.push(inspector_text_field("puzzle3d-play-inspector.reference.url", "Source Url", semio_framework_plugin::ui_inspector_mixed_text(&urls), patch_cmd("sourceUrl")));
+                fields.push(inspector_vec3_field("puzzle3d-play-inspector.reference.origin", "Position", semio_framework_plugin::ui_inspector_mixed_vec3(&origins), patch_cmd("origin")));
+                fields.push(inspector_number_field("puzzle3d-play-inspector.reference.width", "Width", semio_framework_plugin::ui_inspector_mixed_number(&widths), patch_cmd("widthWorld")));
+                return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.reference".into(), label: "Reference".into(), default_open: None, fields }]);
             }
         }
         if !selection.target_volume_ids.is_empty() {
@@ -4741,32 +4595,28 @@ pub mod d3 {
             if !volumes.is_empty() {
                 let ids_json = json!(selection.target_volume_ids);
                 let patch_cmd = |field: &str| puzzle3d_action("patchInspector", Some(json!({ "entity": "targetVolume", "ids": ids_json, "field": field })));
-                let mut fields = inspector_header_and_delete(volumes.len(), term_labels.target_volume, term_labels);
+                let mut fields = inspector_header_and_delete(volumes.len(), "target volume");
                 let origins: Vec<[f64; 3]> = volumes.iter().map(|volume| volume.origin).collect();
-                fields.push(inspector_vec3_field("puzzle3d-play-inspector.target-volume.origin", term_labels.origin, semio_framework_plugin::ui_inspector_mixed_vec3(&origins), patch_cmd("origin")));
-                return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.target-volume".into(), label: term_labels.target_volume.into(), default_open: None, fields }]);
+                fields.push(inspector_vec3_field("puzzle3d-play-inspector.target-volume.origin", "Origin", semio_framework_plugin::ui_inspector_mixed_vec3(&origins), patch_cmd("origin")));
+                return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.target-volume".into(), label: "Target Volume".into(), default_open: None, fields }]);
             }
         }
-        ui_stack_vertical(vec![
-            ui_text(format!("{}: {}", term_labels.schema, envelope.fixture.schema)),
-            ui_text(format!("{}: {}", term_labels.domain, envelope.fixture.domain)),
-            ui_text(format!("{}: {}", term_labels.objects, envelope.fixture.objects.len())),
-        ])
+        ui_stack_vertical(vec![ui_text(format!("Schema: {}", envelope.fixture.schema)), ui_text(format!("Domain: {}", envelope.fixture.domain)), ui_text(format!("Objects: {}", envelope.fixture.objects.len()))])
     }
 
-    fn build_settings_body(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiNode {
+    fn build_settings_body(envelope: &Puzzle3dScene) -> UiNode {
         let runtime = &envelope.runtime;
         let selection_mode_field = UiNode::Field(UiFieldNode {
             id: "puzzle3d-play-settings.selection-mode".into(),
-            label: labels.selection_mode.into(),
+            label: "Selection Mode".into(),
             child: Box::new(UiNode::Select(semio_framework_plugin::UiSelectNode {
                 id: "puzzle3d-play-settings.selection-mode.input".into(),
                 value: runtime.selection_mode_default.clone(),
                 items: vec![
-                    semio_framework_plugin::UiSelectItem { value: "default".into(), label: labels.default_option.into() },
-                    semio_framework_plugin::UiSelectItem { value: "additive".into(), label: labels.additive.into() },
-                    semio_framework_plugin::UiSelectItem { value: "subtractive".into(), label: labels.subtractive.into() },
-                    semio_framework_plugin::UiSelectItem { value: "invertive".into(), label: labels.invertive.into() },
+                    semio_framework_plugin::UiSelectItem { value: "default".into(), label: "Default".into() },
+                    semio_framework_plugin::UiSelectItem { value: "additive".into(), label: "Additive".into() },
+                    semio_framework_plugin::UiSelectItem { value: "subtractive".into(), label: "Subtractive".into() },
+                    semio_framework_plugin::UiSelectItem { value: "invertive".into(), label: "Invertive".into() },
                 ],
                 placeholder: None,
                 on_change: puzzle3d_action("setSelectionModeDefault", None),
@@ -4777,24 +4627,24 @@ pub mod d3 {
         });
         ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
             id: "puzzle3d-play-settings".into(),
-            label: labels.settings_group.into(),
+            label: "Settings".into(),
             default_open: Some(true),
             fields: vec![
                 selection_mode_field,
                 inspector_number_field(
                     "puzzle3d-play-settings.overlap-budget",
-                    labels.overlap_budget,
+                    "Brush Overlap Budget (m³)",
                     semio_framework_plugin::UiInspectorMixedNumber { value: runtime.overlap_budget, uniform: true },
                     puzzle3d_action("setBrushPlacementOverlapBudget", None),
                 ),
                 inspector_number_field(
                     "puzzle3d-play-settings.proximity-radius",
-                    labels.proximity_radius,
+                    "Proximity Radius",
                     semio_framework_plugin::UiInspectorMixedNumber { value: runtime.proximity_radius, uniform: true },
                     puzzle3d_action("setProximityRadius", None),
                 ),
-                inspector_number_field("puzzle3d-play-settings.chunk-size", labels.chunk_size, semio_framework_plugin::UiInspectorMixedNumber { value: runtime.chunk_size, uniform: true }, puzzle3d_action("setChunkSize", None)),
-                inspector_number_field("puzzle3d-play-settings.grid-factor", labels.grid_factor, semio_framework_plugin::UiInspectorMixedNumber { value: runtime.grid_factor, uniform: true }, puzzle3d_action("setGridFactor", None)),
+                inspector_number_field("puzzle3d-play-settings.chunk-size", "Chunk Size", semio_framework_plugin::UiInspectorMixedNumber { value: runtime.chunk_size, uniform: true }, puzzle3d_action("setChunkSize", None)),
+                inspector_number_field("puzzle3d-play-settings.grid-factor", "Grid Factor", semio_framework_plugin::UiInspectorMixedNumber { value: runtime.grid_factor, uniform: true }, puzzle3d_action("setGridFactor", None)),
             ],
         }])
     }
@@ -4858,7 +4708,7 @@ pub mod d3 {
         }
     }
 
-    fn puzzle3d_context_menu_json(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Option<String> {
+    fn puzzle3d_context_menu_json(envelope: &Puzzle3dScene) -> Option<String> {
         let selection = &envelope.runtime.selection;
         if !selection.object_ids.is_empty() {
             let all_hidden = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.hidden);
@@ -4866,34 +4716,34 @@ pub mod d3 {
             let items = vec![
                 json!({
                     "id": "duplicate",
-                    "label": labels.duplicate,
+                    "label": "Duplicate",
                     "action": "duplicateSelection",
                 }),
                 json!({
                     "id": "select-same-kind",
-                    "label": labels.select_same_kind,
+                    "label": "Select all of same kind",
                     "action": "selectSameKindSelection",
                 }),
                 json!({
                     "id": "hide-show",
-                    "label": if all_hidden { labels.show } else { labels.hide },
+                    "label": if all_hidden { "Show" } else { "Hide" },
                     "action": "setSelectionFlag",
                     "args": { "flag": "hidden", "value": !all_hidden },
                 }),
                 json!({
                     "id": "lock-unlock",
-                    "label": if all_locked { labels.unlock } else { labels.lock },
+                    "label": if all_locked { "Unlock" } else { "Lock" },
                     "action": "setSelectionFlag",
                     "args": { "flag": "locked", "value": !all_locked },
                 }),
                 json!({
                     "id": "zoom",
-                    "label": labels.zoom_to_selection,
+                    "label": "Zoom to selection",
                     "action": "zoomToSelection",
                 }),
                 json!({
                     "id": "delete",
-                    "label": labels.delete,
+                    "label": "Delete",
                     "action": "deleteSelection",
                 }),
             ];
@@ -4904,7 +4754,7 @@ pub mod d3 {
             if let [only] = selection.vortex_ids.as_slice() {
                 items.push(json!({
                     "id": "suggest",
-                    "label": labels.suggest_objects,
+                    "label": "Suggest objects",
                     "action": "openVortexSuggestions",
                     "args": { "fullId": only },
                 }));
@@ -4914,7 +4764,7 @@ pub mod d3 {
         if let Some(id) = selection.attraction_ids.first() {
             let items = vec![json!({
                 "id": "delete",
-                "label": labels.delete,
+                "label": "Delete",
                 "action": "deleteAttraction",
                 "args": { "id": id },
             })];
@@ -4927,19 +4777,19 @@ pub mod d3 {
             let items = vec![
                 json!({
                     "id": "hide-show",
-                    "label": if hidden { labels.show } else { labels.hide },
+                    "label": if hidden { "Show" } else { "Hide" },
                     "action": "setTargetVolumeFlag",
                     "args": { "id": id, "flag": "hidden", "value": !hidden },
                 }),
                 json!({
                     "id": "lock-unlock",
-                    "label": if locked { labels.unlock } else { labels.lock },
+                    "label": if locked { "Unlock" } else { "Lock" },
                     "action": "setTargetVolumeFlag",
                     "args": { "id": id, "flag": "locked", "value": !locked },
                 }),
                 json!({
                     "id": "delete",
-                    "label": labels.delete,
+                    "label": "Delete",
                     "action": "deleteTargetVolume",
                     "args": { "id": id },
                 }),
@@ -4965,17 +4815,17 @@ pub mod d3 {
             .unwrap_or_default()
     }
 
-    fn puzzle3d_lod_measures_group(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
+    fn puzzle3d_lod_measures_group(runtime: &Puzzle3dRuntime) -> WindowMeasure {
         WindowMeasure::Group {
             id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod"),
-            label: labels.lod.into(),
+            label: "LOD".into(),
             default_open: Some(true),
             active_utility_id: None,
             children: vec![
-                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-auto"), icon_id: "zoom-in".into(), label: Some(labels.auto_zoom.into()), pressed: runtime.lod_automatic, text: None, on_change: puzzle3d_action("setLodAutomatic", None) },
-                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-depth-variable"), icon_id: "layers".into(), label: Some(labels.depth_variable.into()), pressed: runtime.lod_depth_variable, text: None, on_change: puzzle3d_action("setLodDepthVariable", None) },
-                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-grid"), icon_id: "layout-grid".into(), label: Some(labels.grid.into()), pressed: runtime.lod_show_grid, text: None, on_change: puzzle3d_action("setLodShowGrid", None) },
-                WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-value"), label: Some(format!("{} {:.0}", labels.lod, runtime.lod_manual)), value: runtime.lod_manual, min: PUZZLE3D_LOD_SLIDER_MIN, max: PUZZLE3D_LOD_SLIDER_MAX, step: Some(1.0), on_change: puzzle3d_action("setLodManual", None) },
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-auto"), icon_id: "zoom-in".into(), label: Some("Auto zoom".into()), pressed: runtime.lod_automatic, text: None, on_change: puzzle3d_action("setLodAutomatic", None) },
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-depth-variable"), icon_id: "layers".into(), label: Some("Depth-variable".into()), pressed: runtime.lod_depth_variable, text: None, on_change: puzzle3d_action("setLodDepthVariable", None) },
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-grid"), icon_id: "layout-grid".into(), label: Some("Grid".into()), pressed: runtime.lod_show_grid, text: None, on_change: puzzle3d_action("setLodShowGrid", None) },
+                WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-value"), label: Some(format!("LOD {:.0}", runtime.lod_manual)), value: runtime.lod_manual, min: PUZZLE3D_LOD_SLIDER_MIN, max: PUZZLE3D_LOD_SLIDER_MAX, step: Some(1.0), on_change: puzzle3d_action("setLodManual", None) },
             ],
         }
     }
@@ -4983,15 +4833,15 @@ pub mod d3 {
     fn puzzle3d_select_measures_group(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
         WindowMeasure::Group {
             id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select"),
-            label: labels.select_group.into(),
+            label: "Select".into(),
             default_open: Some(true),
             active_utility_id: None,
             children: vec![
-                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-rectangle"), icon_id: "square".into(), label: Some(labels.rectangle.into()), pressed: runtime.selection_method == "rectangle", text: None, on_change: puzzle3d_action("setSelectionMethod", Some(json!({ "method": "rectangle" }))) },
-                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-lasso"), icon_id: "lasso".into(), label: Some(labels.lasso.into()), pressed: runtime.selection_method == "lasso", text: None, on_change: puzzle3d_action("setSelectionMethod", Some(json!({ "method": "lasso" }))) },
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-rectangle"), icon_id: "square".into(), label: Some("Rectangle".into()), pressed: runtime.selection_method == "rectangle", text: None, on_change: puzzle3d_action("setSelectionMethod", Some(json!({ "method": "rectangle" }))) },
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-lasso"), icon_id: "lasso".into(), label: Some("Lasso".into()), pressed: runtime.selection_method == "lasso", text: None, on_change: puzzle3d_action("setSelectionMethod", Some(json!({ "method": "lasso" }))) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-objects"), icon_id: "box".into(), label: Some(labels.objects.into()), pressed: runtime.selectable_kinds.objects, text: None, on_change: puzzle3d_action("setSelectableKind", Some(json!({ "kind": "objects" }))) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-vortices"), icon_id: "circle-dot".into(), label: Some(labels.vortices.into()), pressed: runtime.selectable_kinds.vortices, text: None, on_change: puzzle3d_action("setSelectableKind", Some(json!({ "kind": "vortices" }))) },
-                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-attractions"), icon_id: "link".into(), label: Some(labels.attractions.into()), pressed: runtime.selectable_kinds.attractions, text: None, on_change: puzzle3d_action("setSelectableKind", Some(json!({ "kind": "attractions" }))) },
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-attractions"), icon_id: "link".into(), label: Some("Attractions".into()), pressed: runtime.selectable_kinds.attractions, text: None, on_change: puzzle3d_action("setSelectableKind", Some(json!({ "kind": "attractions" }))) },
             ],
         }
     }
@@ -5181,7 +5031,7 @@ pub mod d3 {
     fn puzzle3d_window_measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
         let mut measures = vec![
             puzzle3d_view_measure(&envelope.runtime),
-            puzzle3d_lod_measures_group(&envelope.runtime, labels),
+            puzzle3d_lod_measures_group(&envelope.runtime),
             puzzle3d_select_measures_group(&envelope.runtime, labels),
             puzzle3d_brush_measures_group(envelope, labels),
             world3d_sun_measures("puzzle3d", &envelope.runtime.sun, puzzle3d_action),
@@ -5933,11 +5783,11 @@ pub mod d3 {
                             Some(world_target_volumes_json(&envelope.fixture)),
                             Some(world_references_json(&envelope.fixture)),
                             brush_preview,
-                            Some(world_interaction_json(&envelope, &self.precompute, labels)),
+                            Some(world_interaction_json(&envelope, &self.precompute)),
                             None,
                             Some(world3d_lod_json(&envelope.runtime)),
                             Some(world3d_chunking_json(envelope.runtime.chunk_size, 8000.0)),
-                            puzzle3d_context_menu_json(&envelope, labels),
+                            puzzle3d_context_menu_json(&envelope),
                             Some(world3d_environment_json(&envelope.runtime.sun)),
                         ),
                     )
@@ -5945,7 +5795,7 @@ pub mod d3 {
                 PUZZLE3D_PLAY_BODY_DOCUMENT => build_document_tree(&envelope, labels),
                 PUZZLE3D_PLAY_BODY_KINDS => build_kinds_tree(&envelope, labels),
                 PUZZLE3D_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope, labels),
-                PUZZLE3D_PLAY_BODY_SETTINGS => build_settings_body(&envelope, labels),
+                PUZZLE3D_PLAY_BODY_SETTINGS => build_settings_body(&envelope),
                 _ => ui_text(format!("Unknown body: {body_key}")),
             }
         }
@@ -6785,6 +6635,23 @@ pub mod d5 {
         overlap: &'static str,
         window_2d: &'static str,
         window_3d: &'static str,
+        // inspector field labels
+        id: &'static str,
+        kind: &'static str,
+        label: &'static str,
+        flat_text: &'static str,
+        flat_x: &'static str,
+        flat_y: &'static str,
+        volume_origin: &'static str,
+        flat_angle: &'static str,
+        radius: &'static str,
+        position: &'static str,
+        direction: &'static str,
+        source: &'static str,
+        target: &'static str,
+        schema: &'static str,
+        utility: &'static str,
+        none: &'static str,
     }
 
     const PUZZLE5D_LABELS_NATIVE_EN: Puzzle5dLabels = Puzzle5dLabels {
@@ -6811,6 +6678,22 @@ pub mod d5 {
         overlap: "Overlap",
         window_2d: "Puzzle 2D",
         window_3d: "Puzzle 3D",
+        id: "Id",
+        kind: "Kind",
+        label: "Label",
+        flat_text: "Flat text",
+        flat_x: "Flat x",
+        flat_y: "Flat y",
+        volume_origin: "Volume origin",
+        flat_angle: "Flat angle",
+        radius: "Radius",
+        position: "Position",
+        direction: "Direction",
+        source: "Source",
+        target: "Target",
+        schema: "Schema",
+        utility: "Utility",
+        none: "(none)",
     };
 
     const PUZZLE5D_LABELS_NATIVE_DE: Puzzle5dLabels = Puzzle5dLabels {
@@ -6837,12 +6720,51 @@ pub mod d5 {
         overlap: "Überlappung",
         window_2d: "Puzzle 2D",
         window_3d: "Puzzle 3D",
+        id: "Id",
+        kind: "Art",
+        label: "Bezeichnung",
+        flat_text: "Flachtext",
+        flat_x: "Flach-X",
+        flat_y: "Flach-Y",
+        volume_origin: "Volumenursprung",
+        flat_angle: "Flachwinkel",
+        radius: "Radius",
+        position: "Position",
+        direction: "Richtung",
+        source: "Quelle",
+        target: "Ziel",
+        schema: "Schema",
+        utility: "Werkzeug",
+        none: "(keine)",
     };
 
-    /// 🗣️ Resolves the active label set from the shell-provided locale; puzzle5d has no alternate terminology, only native language switching.
+    const PUZZLE5D_LABELS_REUSE_EN: Puzzle5dLabels = Puzzle5dLabels {
+        parts: "Building components",
+        part: "Building component",
+        grips: "Connection points",
+        grip: "Connection point",
+        fasteners: "Component connections",
+        ..PUZZLE5D_LABELS_NATIVE_EN
+    };
+    const PUZZLE5D_LABELS_REUSE_DE: Puzzle5dLabels = Puzzle5dLabels {
+        parts: "Baukomponenten",
+        part: "Baukomponente",
+        grips: "Verbindungspunkte",
+        grip: "Verbindungspunkt",
+        fasteners: "Baukomponentenverbindungen",
+        ..PUZZLE5D_LABELS_NATIVE_DE
+    };
+
+    /// 🗣️ Resolves the active label set from the shell-provided locale/terminology; unknown terminology ids fall back to native — mirrors `puzzle3d_labels`.
     fn puzzle5d_labels(view_state: &ViewState) -> &'static Puzzle5dLabels {
+        let terminology = view_state.terminology.as_deref().unwrap_or("native");
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        if is_de { &PUZZLE5D_LABELS_NATIVE_DE } else { &PUZZLE5D_LABELS_NATIVE_EN }
+        match (terminology, is_de) {
+            ("reuse", true) => &PUZZLE5D_LABELS_REUSE_DE,
+            ("reuse", false) => &PUZZLE5D_LABELS_REUSE_EN,
+            (_, true) => &PUZZLE5D_LABELS_NATIVE_DE,
+            (_, false) => &PUZZLE5D_LABELS_NATIVE_EN,
+        }
     }
     //#endregion 🔖Terminology
 
@@ -7864,7 +7786,7 @@ pub mod d5 {
     /// [`WindowMeasure::Group`]s in [`puzzle5d_window_measures`] (surfaced by [`partition_window_measures`]
     /// in the dedicated "Utility Options" rail only while their utility is active), so the engagement HUD is a
     /// bare command input plus a status line.
-    fn puzzle5d_engagement(envelope: &Puzzle5dScene, window: &str) -> WindowEngagement {
+    fn puzzle5d_engagement(envelope: &Puzzle5dScene, window: &str, labels: &Puzzle5dLabels) -> WindowEngagement {
         let part_count = envelope.document.parts.len();
         let fastener_count = envelope.document.fasteners.len();
         let active_utility = envelope.active_utility.as_str();
@@ -7888,7 +7810,7 @@ pub mod d5 {
             }),
             control: None,
             controls: None,
-            status: Some(vec![WindowEngagementStatus { id: format!("puzzle5d-status-{window}"), text: format!("{part_count} parts · {fastener_count} fasteners · utility {}", active_utility) }]),
+            status: Some(vec![WindowEngagementStatus { id: format!("puzzle5d-status-{window}"), text: format!("{part_count} {} · {fastener_count} {} · {} {active_utility}", labels.parts, labels.fasteners, labels.utility) }]),
             options: None,
             possible_engagements: None,
         }
@@ -8152,14 +8074,14 @@ pub mod d5 {
                     id: "puzzle5d-play-document.parts".into(),
                     label: Some(labels.parts.into()),
                     default_open: Some(true),
-                    items: if part_items.is_empty() { vec![tree_info_item("puzzle5d-play-document.parts.empty", "(none)", None)] } else { part_items },
+                    items: if part_items.is_empty() { vec![tree_info_item("puzzle5d-play-document.parts.empty", labels.none, None)] } else { part_items },
                 },
                 UiTreeSectionNode {
                     loading: None,
                     id: "puzzle5d-play-document.fasteners".into(),
                     label: Some(labels.fasteners.into()),
                     default_open: Some(false),
-                    items: if fastener_items.is_empty() { vec![tree_info_item("puzzle5d-play-document.fasteners.empty", "(none)", None)] } else { fastener_items },
+                    items: if fastener_items.is_empty() { vec![tree_info_item("puzzle5d-play-document.fasteners.empty", labels.none, None)] } else { fastener_items },
                 },
             ],
             selected_ids: Some(document_tree_selected_ids(envelope)),
@@ -8195,7 +8117,7 @@ pub mod d5 {
         HashMap::from([(PUZZLE5D_CATALOGUE_DRAG_MIME.to_string(), payload.to_string())])
     }
 
-    fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value], add_action: Option<&str>) -> UiTreeSectionNode {
+    fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value], add_action: Option<&str>, none_label: &str) -> UiTreeSectionNode {
         let items: Vec<UiTreeItemNode> = entries
             .iter()
             .enumerate()
@@ -8218,7 +8140,7 @@ pub mod d5 {
             id: section_id.into(),
             label: Some(label.into()),
             default_open: Some(!items.is_empty()),
-            items: if items.is_empty() { vec![tree_info_item(format!("{section_id}.empty"), "(none)", None)] } else { items },
+            items: if items.is_empty() { vec![tree_info_item(format!("{section_id}.empty"), none_label, None)] } else { items },
         }
     }
 
@@ -8235,10 +8157,10 @@ pub mod d5 {
         UiNode::Tree(UiTreeNode {
             loading: None,
             sections: vec![
-                kind_catalog_section("puzzle5d-play-kinds.parts", labels.parts, &part_entries, Some("addPartKind")),
-                kind_catalog_section("puzzle5d-play-kinds.grips", labels.grips, &slice("grips"), None),
-                kind_catalog_section("puzzle5d-play-kinds.fasteners", labels.fasteners, &slice("fasteners"), None),
-                kind_catalog_section("puzzle5d-play-kinds.ropes", labels.ropes, &slice("ropes"), None),
+                kind_catalog_section("puzzle5d-play-kinds.parts", labels.parts, &part_entries, Some("addPartKind"), labels.none),
+                kind_catalog_section("puzzle5d-play-kinds.grips", labels.grips, &slice("grips"), None, labels.none),
+                kind_catalog_section("puzzle5d-play-kinds.fasteners", labels.fasteners, &slice("fasteners"), None, labels.none),
+                kind_catalog_section("puzzle5d-play-kinds.ropes", labels.ropes, &slice("ropes"), None, labels.none),
             ],
             selected_ids: None,
             highlighted_ids: None,
@@ -8276,13 +8198,13 @@ pub mod d5 {
             label: labels.part.into(),
             default_open: None,
             fields: vec![
-                ui_inspector_readonly_field("puzzle5d-play-inspector.part.id", "Id", &part.id),
-                inspector_text_field("puzzle5d-play-inspector.part.kind", "Kind", part.part_kind.clone(), puzzle5d_action("patchPart", Some(json!({ "partId": part.id, "field": "partKind" })))),
-                inspector_text_field("puzzle5d-play-inspector.part.label", "Label", part.part_3d.label.clone().unwrap_or_default(), puzzle5d_action("patchPart", Some(json!({ "partId": part.id, "field": "label" })))),
-                inspector_text_field("puzzle5d-play-inspector.part.text", "Flat text", part.part_2d.text.clone(), puzzle5d_action("patchPart", Some(json!({ "partId": part.id, "field": "text" })))),
-                inspector_text_field("puzzle5d-play-inspector.part.x", "Flat x", format!("{}", part.part_2d.x), puzzle5d_action("patchPart", Some(json!({ "partId": part.id, "field": "x" })))),
-                inspector_text_field("puzzle5d-play-inspector.part.y", "Flat y", format!("{}", part.part_2d.y), puzzle5d_action("patchPart", Some(json!({ "partId": part.id, "field": "y" })))),
-                inspector_text_field("puzzle5d-play-inspector.part.origin", "Volume origin", format!("{:.3}, {:.3}, {:.3}", origin[0], origin[1], origin[2]), puzzle5d_action("patchPart", Some(json!({ "partId": part.id, "field": "origin" })))),
+                ui_inspector_readonly_field("puzzle5d-play-inspector.part.id", labels.id, &part.id),
+                inspector_text_field("puzzle5d-play-inspector.part.kind", labels.kind, part.part_kind.clone(), puzzle5d_action("patchPart", Some(json!({ "partId": part.id, "field": "partKind" })))),
+                inspector_text_field("puzzle5d-play-inspector.part.label", labels.label, part.part_3d.label.clone().unwrap_or_default(), puzzle5d_action("patchPart", Some(json!({ "partId": part.id, "field": "label" })))),
+                inspector_text_field("puzzle5d-play-inspector.part.text", labels.flat_text, part.part_2d.text.clone(), puzzle5d_action("patchPart", Some(json!({ "partId": part.id, "field": "text" })))),
+                inspector_text_field("puzzle5d-play-inspector.part.x", labels.flat_x, format!("{}", part.part_2d.x), puzzle5d_action("patchPart", Some(json!({ "partId": part.id, "field": "x" })))),
+                inspector_text_field("puzzle5d-play-inspector.part.y", labels.flat_y, format!("{}", part.part_2d.y), puzzle5d_action("patchPart", Some(json!({ "partId": part.id, "field": "y" })))),
+                inspector_text_field("puzzle5d-play-inspector.part.origin", labels.volume_origin, format!("{:.3}, {:.3}, {:.3}", origin[0], origin[1], origin[2]), puzzle5d_action("patchPart", Some(json!({ "partId": part.id, "field": "origin" })))),
             ],
         }])
     }
@@ -8296,12 +8218,12 @@ pub mod d5 {
             label: labels.grip.into(),
             default_open: None,
             fields: vec![
-                ui_inspector_readonly_field("puzzle5d-play-inspector.grip.id", "Id", &full_id),
-                inspector_text_field("puzzle5d-play-inspector.grip.kind", "Kind", grip.grip_kind.clone(), puzzle5d_action("patchGrip", Some(json!({ "gripFullId": full_id, "field": "gripKind" })))),
-                inspector_text_field("puzzle5d-play-inspector.grip.angle", "Flat angle", format!("{}", grip.grip_2d.angle), puzzle5d_action("patchGrip", Some(json!({ "gripFullId": full_id, "field": "angle" })))),
-                inspector_text_field("puzzle5d-play-inspector.grip.radius", "Radius", format!("{}", grip.grip_3d.radius), puzzle5d_action("patchGrip", Some(json!({ "gripFullId": full_id, "field": "radius" })))),
-                inspector_text_field("puzzle5d-play-inspector.grip.position", "Position", format!("{:.3}, {:.3}, {:.3}", position[0], position[1], position[2]), puzzle5d_action("patchGrip", Some(json!({ "gripFullId": full_id, "field": "position" })))),
-                inspector_text_field("puzzle5d-play-inspector.grip.direction", "Direction", format!("{:.3}, {:.3}, {:.3}", direction[0], direction[1], direction[2]), puzzle5d_action("patchGrip", Some(json!({ "gripFullId": full_id, "field": "direction" })))),
+                ui_inspector_readonly_field("puzzle5d-play-inspector.grip.id", labels.id, &full_id),
+                inspector_text_field("puzzle5d-play-inspector.grip.kind", labels.kind, grip.grip_kind.clone(), puzzle5d_action("patchGrip", Some(json!({ "gripFullId": full_id, "field": "gripKind" })))),
+                inspector_text_field("puzzle5d-play-inspector.grip.angle", labels.flat_angle, format!("{}", grip.grip_2d.angle), puzzle5d_action("patchGrip", Some(json!({ "gripFullId": full_id, "field": "angle" })))),
+                inspector_text_field("puzzle5d-play-inspector.grip.radius", labels.radius, format!("{}", grip.grip_3d.radius), puzzle5d_action("patchGrip", Some(json!({ "gripFullId": full_id, "field": "radius" })))),
+                inspector_text_field("puzzle5d-play-inspector.grip.position", labels.position, format!("{:.3}, {:.3}, {:.3}", position[0], position[1], position[2]), puzzle5d_action("patchGrip", Some(json!({ "gripFullId": full_id, "field": "position" })))),
+                inspector_text_field("puzzle5d-play-inspector.grip.direction", labels.direction, format!("{:.3}, {:.3}, {:.3}", direction[0], direction[1], direction[2]), puzzle5d_action("patchGrip", Some(json!({ "gripFullId": full_id, "field": "direction" })))),
             ],
         }])
     }
@@ -8320,18 +8242,18 @@ pub mod d5 {
         if let Some(fastener_id) = envelope.runtime.selection.fastener_ids.first() {
             if let Some(fastener) = envelope.document.fasteners.iter().find(|entry| &entry.id == fastener_id) {
                 return ui_stack_vertical(vec![
-                    ui_inspector_readonly_field("puzzle5d-play-inspector.fastener.id", "Id", &fastener.id),
-                    ui_inspector_readonly_field("puzzle5d-play-inspector.fastener.source", "Source", &fastener.source),
-                    ui_inspector_readonly_field("puzzle5d-play-inspector.fastener.target", "Target", &fastener.target),
-                    ui_inspector_readonly_field("puzzle5d-play-inspector.fastener.kind", "Kind", fastener.fastener_kind.as_deref().unwrap_or("link")),
+                    ui_inspector_readonly_field("puzzle5d-play-inspector.fastener.id", labels.id, &fastener.id),
+                    ui_inspector_readonly_field("puzzle5d-play-inspector.fastener.source", labels.source, &fastener.source),
+                    ui_inspector_readonly_field("puzzle5d-play-inspector.fastener.target", labels.target, &fastener.target),
+                    ui_inspector_readonly_field("puzzle5d-play-inspector.fastener.kind", labels.kind, fastener.fastener_kind.as_deref().unwrap_or("link")),
                 ]);
             }
         }
         ui_stack_vertical(vec![
-            ui_text(format!("Schema: {}", envelope.document.schema)),
-            ui_text(format!("Parts: {}", envelope.document.parts.len())),
-            ui_text(format!("Fasteners: {}", envelope.document.fasteners.len())),
-            ui_text(format!("Utility: {}", envelope.active_utility)),
+            ui_text(format!("{}: {}", labels.schema, envelope.document.schema)),
+            ui_text(format!("{}: {}", labels.parts, envelope.document.parts.len())),
+            ui_text(format!("{}: {}", labels.fasteners, envelope.document.fasteners.len())),
+            ui_text(format!("{}: {}", labels.utility, envelope.active_utility)),
         ])
     }
     //#endregion 🔖Panels
@@ -9077,7 +8999,8 @@ pub mod d5 {
         fn window_engagements(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
             let active_utility = view_state.active_utility_id.as_deref().unwrap_or(PUZZLE5D_DEFAULT_UTILITY);
             let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_utility);
-            PUZZLE5D_PLAY_WINDOWS.iter().map(|window| (window.to_string(), puzzle5d_engagement(&envelope, window))).collect()
+            let labels = puzzle5d_labels(view_state);
+            PUZZLE5D_PLAY_WINDOWS.iter().map(|window| (window.to_string(), puzzle5d_engagement(&envelope, window, labels))).collect()
         }
 
         fn window_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
@@ -9097,8 +9020,8 @@ pub mod d5 {
                 ]),
                 panel_tab_labels: std::collections::HashMap::new(),
                 mode_labels: std::collections::HashMap::new(),
-                action_labels: std::collections::HashMap::new(),
-                utility_labels: std::collections::HashMap::new(),
+                action_labels: puzzle5d_action_labels(view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))),
+                utility_labels: puzzle5d_utility_labels(view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))),
                 example_labels: HashMap::new(),
                 action_arg_labels: HashMap::new(),
                 dialog_labels: HashMap::new(),
@@ -9107,6 +9030,84 @@ pub mod d5 {
         }
     }
     //#endregion 🔖Puzzle5dPlayApp
+
+    //#region 🔖CommandLabels
+    /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_puzzle5d_app`'s
+    /// static manifest — mirrors `puzzle3d_action_labels`.
+    fn puzzle5d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
+            ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+            ("addNode", "Add Node", "Knoten hinzufuegen"),
+            ("addPartKind", "Add Part", "Teil hinzufuegen"),
+            ("addBrushPart", "Add Brush Part", "Pinselteil hinzufuegen"),
+            ("addBrushObject", "Add Brush Object", "Pinselobjekt hinzufuegen"),
+            ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+            ("duplicateSelection", "Duplicate Selection", "Auswahl duplizieren"),
+            ("setSelectionFlag", "Set Selection Flag", "Auswahlmarkierung festlegen"),
+            ("zoomToSelection", "Zoom To Selection", "Auf Auswahl zoomen"),
+            ("focusSelection", "Focus Selection", "Auswahl fokussieren"),
+            ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+            ("setFillCount", "Set Fill Count", "Fuellanzahl festlegen"),
+            ("patchPart", "Patch Part", "Teil aktualisieren"),
+            ("patchGrip", "Patch Grip", "Griff aktualisieren"),
+            ("setCamera", "Set Camera", "Kamera festlegen"),
+            ("setCamera2d", "Set Camera 2D", "Kamera 2D festlegen"),
+            ("setCamera3d", "Set Camera 3D", "Kamera 3D festlegen"),
+            ("translateSelection", "Translate Selection", "Auswahl verschieben"),
+            ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
+            ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
+            ("worldRelocate", "Relocate Part", "Teil verlagern"),
+            ("applyBoardEvents", "Apply Board Events", "Board-Ereignisse anwenden"),
+            ("setSelection", "Set Selection", "Auswahl festlegen"),
+            ("documentSelect", "Document Select", "Dokument auswaehlen"),
+            ("clearSelection", "Clear Selection", "Auswahl aufheben"),
+            ("selectAll", "Select All", "Alles auswaehlen"),
+            ("selectSameKindSelection", "Select Same Kind", "Gleiche Art auswaehlen"),
+            ("selectSameKind", "Select Same Kind (alias)", "Gleiche Art auswaehlen (Alias)"),
+            ("toggleSun", "Toggle Sun", "Sonne umschalten"),
+            ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
+            ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
+            ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
+            ("engagementInput", "Engagement Input", "Eingabe"),
+            ("engagementAbort", "Engagement Abort", "Eingabe abbrechen"),
+            ("engagementControlSelect", "Engagement Control Select", "Eingabesteuerung auswaehlen"),
+            ("cycleBrushCandidate", "Cycle Brush Candidate", "Pinselkandidat wechseln"),
+            ("registerBrushMesh", "Register Brush Mesh", "Pinsel-Mesh registrieren"),
+            ("setBrushPlacementOverlapBudget", "Set Brush Placement Overlap Budget", "Pinsel-Ueberlappungsbudget festlegen"),
+            ("setObjectKindWeight", "Set Object Kind Weight", "Objektart-Gewicht festlegen"),
+            ("setVortexKindWeight", "Set Vortex Kind Weight", "Vortexart-Gewicht festlegen"),
+            ("worldSelect", "World Select", "Welt auswaehlen"),
+            ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
+            ("worldHover", "World Hover", "Welt-Hover"),
+            ("setHover", "Set Hover", "Hover festlegen"),
+            ("worldVortexHover", "World Vortex Hover", "Welt-Vortex-Hover"),
+            ("worldVortexSelect", "World Vortex Select", "Welt-Vortex auswaehlen"),
+            ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
+            ("setLodMode", "Set Lod Mode", "LOD-Modus festlegen"),
+            ("setSuggestionOffset", "Set Suggestion Offset", "Vorschlagsversatz festlegen"),
+            ("setGridSnapEnabled", "Set Grid Snap Enabled", "Rasterfang aktivieren"),
+            ("setGridFactor", "Set Grid Factor", "Rasterfaktor festlegen"),
+            ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrueckt"),
+            ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrueckt"),
+        ];
+        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    }
+
+    /// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_puzzle5d_app`.
+    fn puzzle5d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            ("select", "Select", "Auswaehlen"),
+            ("move", "Move", "Verschieben"),
+            ("rotate", "Rotate", "Drehen"),
+            ("scale", "Scale", "Skalieren"),
+            ("brush", "Brush", "Pinsel"),
+            ("fill", "Fill", "Fuellen"),
+            ("worldRelocate", "Relocate", "Verlagern"),
+        ];
+        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    }
+    //#endregion 🔖CommandLabels
 
     //#region 🔖Manifest
     pub fn create_puzzle5d_app() -> App {
@@ -9117,10 +9118,11 @@ pub mod d5 {
             App::builder(PUZZLE5D_PLAY_APP_ID, "Puzzle 5D")
                 .document(["semio", "puzzle", "5d"])
                 .icon_id("puzzle")
+                .terminology("reuse")
                 .mode("edit", "Edit")
                 .default_mode_id("edit")
-                .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_2D, "Puzzle 2D", PUZZLE5D_PLAY_BODY_2D, SurfaceKind::Puzzle2dBoard, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_2D))
-                .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_3D, "Puzzle 3D", PUZZLE5D_PLAY_BODY_3D, SurfaceKind::World3d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_3D))
+                .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_2D, "Puzzle 2D", PUZZLE5D_PLAY_BODY_2D, SurfaceKind::Puzzle2dBoard, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_2D, manifest_labels))
+                .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_3D, "Puzzle 3D", PUZZLE5D_PLAY_BODY_3D, SurfaceKind::World3d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_3D, manifest_labels))
                 .default_layout(create_default_layout(&[PUZZLE5D_PLAY_WINDOW_2D.into(), PUZZLE5D_PLAY_WINDOW_3D.into()], "row", Some(&[50.0, 50.0]), Some(&["Puzzle 2D".into(), "Puzzle 3D".into()])))
                 .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_DOCUMENT)
                 .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_KINDS)
@@ -9402,7 +9404,7 @@ pub mod d5 {
                 let measures = puzzle5d_window_measures(window, &fill_scene, &session, labels);
                 assert_eq!(group_tag(&measures, "puzzle5d-play-utility-options-fill"), Some(Some("fill".into())), "{window} fill Utility Options must be tagged for the fill utility");
                 assert!(fill_slider_in_group(&measures, "puzzle5d-play-utility-options-fill"), "{window} fill Utility Options must carry the fill-count slider");
-                let fill_hud = puzzle5d_engagement(&fill_scene, window);
+                let fill_hud = puzzle5d_engagement(&fill_scene, window, labels);
                 assert!(fill_hud.control.is_none() && fill_hud.controls.is_none(), "{window} fill engagement HUD must no longer carry the relocated control");
             }
             // 🖌️ Brush utility: with no candidates to place, the "brush"-tagged group is absent (matching the old
@@ -9410,7 +9412,7 @@ pub mod d5 {
             let brush_scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: "brush".into() };
             for window in [PUZZLE5D_PLAY_WINDOW_2D, PUZZLE5D_PLAY_WINDOW_3D] {
                 assert_eq!(group_tag(&puzzle5d_window_measures(window, &brush_scene, &session, labels), "puzzle5d-play-utility-options-brush"), None, "{window} brush Utility Options is absent without candidates");
-                let brush_hud = puzzle5d_engagement(&brush_scene, window);
+                let brush_hud = puzzle5d_engagement(&brush_scene, window, labels);
                 assert!(brush_hud.control.is_none() && brush_hud.controls.is_none(), "{window} brush engagement HUD must no longer carry the relocated control");
             }
             // 🖌️ The positive brush-candidate surfacing (group present ⇒ tagged "brush") is proven by

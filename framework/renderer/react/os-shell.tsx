@@ -113,6 +113,7 @@ import {
   UIDialog,
   readStoredIntroductionSeen,
   writeStoredIntroductionSeen,
+  fundedByZukunftBauFooterItem,
   type ElementsSurfaceAppearance,
   type ElementsSurfaceDevice,
   type EngagementControl,
@@ -4473,7 +4474,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
               mobile={mobile}
               mobilePanel={mobilePanel}
               navbar={<Navbar items={navbarItems} showFullscreenToggle />}
-              footer={<Footer items={[]} />}
+              footer={<Footer items={[fundedByZukunftBauFooterItem()]} />}
               panels={{
                 "top-left": buildPanelProps("top-left"),
                 "top-middle": buildPanelProps("top-middle"),

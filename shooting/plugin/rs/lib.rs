@@ -348,6 +348,21 @@ struct ShootingLabels {
     shape_ellipse: &'static str,
     window_scene: &'static str,
     window_icon: &'static str,
+    measure_center_model: &'static str,
+    measure_sun: &'static str,
+    measure_sun_azimuth: &'static str,
+    measure_sun_elevation: &'static str,
+    measure_sun_intensity: &'static str,
+    measure_ambient: &'static str,
+    measure_shadow: &'static str,
+    measure_roughness: &'static str,
+    field_label: &'static str,
+    field_format: &'static str,
+    field_shape: &'static str,
+    field_width: &'static str,
+    field_height: &'static str,
+    field_name: &'static str,
+    field_url: &'static str,
 }
 
 const SHOOTING_LABELS_NATIVE_EN: ShootingLabels = ShootingLabels {
@@ -374,6 +389,21 @@ const SHOOTING_LABELS_NATIVE_EN: ShootingLabels = ShootingLabels {
     shape_ellipse: "Ellipse",
     window_scene: "Scene",
     window_icon: "Icon",
+    measure_center_model: "Center Model",
+    measure_sun: "Sun",
+    measure_sun_azimuth: "Sun Azimuth",
+    measure_sun_elevation: "Sun Elevation",
+    measure_sun_intensity: "Sun Intensity",
+    measure_ambient: "Ambient",
+    measure_shadow: "Shadow",
+    measure_roughness: "Roughness",
+    field_label: "Label",
+    field_format: "Format",
+    field_shape: "Shape",
+    field_width: "Width",
+    field_height: "Height",
+    field_name: "Name",
+    field_url: "URL",
 };
 
 const SHOOTING_LABELS_NATIVE_DE: ShootingLabels = ShootingLabels {
@@ -400,6 +430,21 @@ const SHOOTING_LABELS_NATIVE_DE: ShootingLabels = ShootingLabels {
     shape_ellipse: "Ellipse",
     window_scene: "Szene",
     window_icon: "Symbol",
+    measure_center_model: "Modell zentrieren",
+    measure_sun: "Sonne",
+    measure_sun_azimuth: "Sonnenazimut",
+    measure_sun_elevation: "Sonnenhoehe",
+    measure_sun_intensity: "Sonnenintensitaet",
+    measure_ambient: "Umgebungslicht",
+    measure_shadow: "Schatten",
+    measure_roughness: "Rauheit",
+    field_label: "Bezeichnung",
+    field_format: "Format",
+    field_shape: "Form",
+    field_width: "Breite",
+    field_height: "Hoehe",
+    field_name: "Name",
+    field_url: "URL",
 };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; no terminology variant exists for this app.
@@ -564,7 +609,7 @@ fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspe
         fields: vec![
             UiNode::Field(UiFieldNode {
                 id: "shooting-play-inspector.shot.label".into(),
-                label: "Label".into(),
+                label: labels.field_label.into(),
                 child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
                     id: "shooting-play-inspector.shot.label.input".into(),
                     input_kind: "text".into(),
@@ -584,11 +629,11 @@ fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspe
                 required: None,
                 error: None,
             }),
-            ui_inspector_readonly_field("shooting-play-inspector.shot.format", "Format", &shot.format),
-            ui_inspector_readonly_field("shooting-play-inspector.shot.shape", "Shape", &shot.shape),
+            ui_inspector_readonly_field("shooting-play-inspector.shot.format", labels.field_format, &shot.format),
+            ui_inspector_readonly_field("shooting-play-inspector.shot.shape", labels.field_shape, &shot.shape),
             UiNode::Field(UiFieldNode {
                 id: "shooting-play-inspector.shot.width".into(),
-                label: "Width".into(),
+                label: labels.field_width.into(),
                 child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
                     id: "shooting-play-inspector.shot.width.input".into(),
                     input_kind: "number".into(),
@@ -610,7 +655,7 @@ fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspe
             }),
             UiNode::Field(UiFieldNode {
                 id: "shooting-play-inspector.shot.height".into(),
-                label: "Height".into(),
+                label: labels.field_height.into(),
                 child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
                     id: "shooting-play-inspector.shot.height.input".into(),
                     input_kind: "number".into(),
@@ -642,7 +687,7 @@ fn asset_inspector_group(asset: &ShootingAsset, labels: &ShootingLabels) -> UiIn
         fields: vec![
             UiNode::Field(UiFieldNode {
                 id: "shooting-play-inspector.asset.name".into(),
-                label: "Name".into(),
+                label: labels.field_name.into(),
                 child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
                     id: "shooting-play-inspector.asset.name.input".into(),
                     input_kind: "text".into(),
@@ -664,7 +709,7 @@ fn asset_inspector_group(asset: &ShootingAsset, labels: &ShootingLabels) -> UiIn
             }),
             UiNode::Field(UiFieldNode {
                 id: "shooting-play-inspector.asset.url".into(),
-                label: "URL".into(),
+                label: labels.field_url.into(),
                 child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
                     id: "shooting-play-inspector.asset.url.input".into(),
                     input_kind: "text".into(),
@@ -684,7 +729,7 @@ fn asset_inspector_group(asset: &ShootingAsset, labels: &ShootingLabels) -> UiIn
                 required: None,
                 error: None,
             }),
-            ui_inspector_readonly_field("shooting-play-inspector.asset.format", "Format", &asset.format),
+            ui_inspector_readonly_field("shooting-play-inspector.asset.format", labels.field_format, &asset.format),
         ],
     }
 }
@@ -775,13 +820,13 @@ fn render_icon_scene(fixture: &ShootingFixture) -> UiNode {
 //#endregion 🔖Render
 
 //#region 🔖Utilities
-fn shooting_model_measures(fixture: &ShootingFixture) -> Vec<WindowMeasure> {
+fn shooting_model_measures(fixture: &ShootingFixture, labels: &ShootingLabels) -> Vec<WindowMeasure> {
     let scene = &fixture.scene;
     vec![
         WindowMeasure::Toggle {
             id: "shooting.measure.center-model".into(),
             icon_id: "focus".into(),
-            label: Some("Center Model".into()),
+            label: Some(labels.measure_center_model.into()),
             pressed: true,
             text: None,
             on_change: shooting_action("setCenterModel", None),
@@ -789,14 +834,14 @@ fn shooting_model_measures(fixture: &ShootingFixture) -> Vec<WindowMeasure> {
         WindowMeasure::Toggle {
             id: "shooting.measure.sun-enabled".into(),
             icon_id: "sun".into(),
-            label: Some("Sun".into()),
+            label: Some(labels.measure_sun.into()),
             pressed: scene.sun.enabled,
             text: None,
             on_change: shooting_action("toggleSun", None),
         },
         WindowMeasure::Slider {
             id: "shooting.measure.sun-azimuth".into(),
-            label: Some("Sun Azimuth".into()),
+            label: Some(labels.measure_sun_azimuth.into()),
             value: scene.sun.azimuth,
             min: 0.0,
             max: 360.0,
@@ -805,7 +850,7 @@ fn shooting_model_measures(fixture: &ShootingFixture) -> Vec<WindowMeasure> {
         },
         WindowMeasure::Slider {
             id: "shooting.measure.sun-elevation".into(),
-            label: Some("Sun Elevation".into()),
+            label: Some(labels.measure_sun_elevation.into()),
             value: scene.sun.elevation,
             min: -10.0,
             max: 90.0,
@@ -814,7 +859,7 @@ fn shooting_model_measures(fixture: &ShootingFixture) -> Vec<WindowMeasure> {
         },
         WindowMeasure::Slider {
             id: "shooting.measure.sun-intensity".into(),
-            label: Some("Sun Intensity".into()),
+            label: Some(labels.measure_sun_intensity.into()),
             value: scene.sun.intensity,
             min: 0.0,
             max: 5.0,
@@ -823,7 +868,7 @@ fn shooting_model_measures(fixture: &ShootingFixture) -> Vec<WindowMeasure> {
         },
         WindowMeasure::Slider {
             id: "shooting.measure.ambient".into(),
-            label: Some("Ambient".into()),
+            label: Some(labels.measure_ambient.into()),
             value: scene.ambient.intensity,
             min: 0.0,
             max: 3.0,
@@ -833,14 +878,14 @@ fn shooting_model_measures(fixture: &ShootingFixture) -> Vec<WindowMeasure> {
         WindowMeasure::Toggle {
             id: "shooting.measure.shadow".into(),
             icon_id: "sun".into(),
-            label: Some("Shadow".into()),
+            label: Some(labels.measure_shadow.into()),
             pressed: scene.shadow.enabled,
             text: None,
             on_change: shooting_action("setShadowEnabled", None),
         },
         WindowMeasure::Slider {
             id: "shooting.measure.roughness".into(),
-            label: Some("Roughness".into()),
+            label: Some(labels.measure_roughness.into()),
             value: scene.material.roughness,
             min: 0.0,
             max: 1.0,
@@ -954,6 +999,71 @@ fn shooting_icon_engagement(fixture: &ShootingFixture, labels: &ShootingLabels) 
 }
 
 //#endregion 🔖Utilities
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_shooting_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+fn shooting_action_labels(is_de: bool) -> HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
+        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+        ("setActiveShot", "Set Active Shot", "Aktive Aufnahme festlegen"),
+        ("setActiveAsset", "Set Active Asset", "Aktives Objekt festlegen"),
+        ("setCamera", "Set Camera", "Kamera festlegen"),
+        ("setShotCamera", "Set Shot Camera", "Aufnahmekamera festlegen"),
+        ("saveCamera", "Save Camera", "Kamera speichern"),
+        ("loadSavedCamera", "Load Saved Camera", "Gespeicherte Kamera laden"),
+        ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
+        ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
+        ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
+        ("setAmbientIntensity", "Set Ambient Intensity", "Umgebungslichtintensitaet festlegen"),
+        ("setMaterialRoughness", "Set Material Roughness", "Materialrauheit festlegen"),
+        ("setShadowEnabled", "Set Shadow Enabled", "Schatten aktivieren"),
+        ("toggleSun", "Toggle Sun", "Sonne umschalten"),
+        ("setActiveShotLabel", "Set Active Shot Label", "Bezeichnung der aktiven Aufnahme festlegen"),
+        ("setActiveShotFormat", "Set Active Shot Format", "Format der aktiven Aufnahme festlegen"),
+        ("setActiveShotShape", "Set Active Shot Shape", "Form der aktiven Aufnahme festlegen"),
+        ("patchShot", "Patch Shot", "Aufnahme aktualisieren"),
+        ("patchShots", "Patch Shots", "Aufnahmen aktualisieren"),
+        ("patchAsset", "Patch Asset", "Objekt aktualisieren"),
+        ("patchAssets", "Patch Assets", "Objekte aktualisieren"),
+        ("addShot", "Add Shot", "Aufnahme hinzufuegen"),
+        ("addAsset", "Add Asset", "Objekt hinzufuegen"),
+        ("importAsset", "Import Asset", "Objekt importieren"),
+        ("resetFixture", "Reset Fixture", "Vorgabe zuruecksetzen"),
+        ("translateSelection", "Translate Selection", "Auswahl verschieben"),
+        ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
+        ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+        ("setCameraDraftLabel", "Set Camera Draft Label", "Kamera-Entwurfsbezeichnung festlegen"),
+        ("setCenterModel", "Set Center Model", "Modellzentrierung festlegen"),
+        ("worldSelect", "World Select", "Welt auswaehlen"),
+        ("worldHover", "World Hover", "Welt-Hover"),
+        ("setHover", "Set Hover", "Hover festlegen"),
+        ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
+        ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
+        ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrueckt"),
+        ("worldPointerMove", "World Pointer Move", "Welt-Zeiger bewegt"),
+        ("saveDownload", "Save Download", "Download speichern"),
+        ("loadRequest", "Load Request", "Ladeanfrage"),
+        ("importAssetRequest", "Import Asset Request", "Objekt-Importanfrage"),
+        ("exportActiveShot", "Export Active Shot", "Aktive Aufnahme exportieren"),
+        ("exportAllShots", "Export All Shots", "Alle Aufnahmen exportieren"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_shooting_app`.
+fn shooting_utility_labels(is_de: bool) -> HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("move", "Move", "Verschieben"),
+        ("rotate", "Rotate", "Drehen"),
+        ("scale", "Scale", "Skalieren"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+//#endregion 🔖CommandLabels
 
 //#region 🔖ShootingPlayApp
 #[derive(Default)]
@@ -1422,13 +1532,14 @@ impl DocumentApp for ShootingPlayApp {
     fn window_measures(&self, doc: &DocumentView<'_, ShootingFixture>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = shooting_labels(view_state);
         HashMap::from([
-            (SHOOTING_PLAY_WINDOW_SCENE.into(), shooting_model_measures(doc.projection)),
+            (SHOOTING_PLAY_WINDOW_SCENE.into(), shooting_model_measures(doc.projection, labels)),
             (SHOOTING_PLAY_WINDOW_ICON.into(), shooting_icon_measures(doc.projection, labels)),
         ])
     }
 
     fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
         let labels = shooting_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         AppLabelsOverlay {
             app_label: None,
             window_kind_labels: HashMap::from([
@@ -1437,8 +1548,8 @@ impl DocumentApp for ShootingPlayApp {
             ]),
             panel_tab_labels: HashMap::new(),
             mode_labels: HashMap::new(),
-            action_labels: HashMap::new(),
-            utility_labels: HashMap::new(),
+            action_labels: shooting_action_labels(is_de),
+            utility_labels: shooting_utility_labels(is_de),
             example_labels: HashMap::new(),
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),

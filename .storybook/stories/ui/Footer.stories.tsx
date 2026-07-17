@@ -8,8 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Footer, ToolbarItem, ToolbarZone } from "@semio-tech/ui-react";
-import { createIconComponent } from "@semio-tech/ui-react";
+import { Footer, createIconComponent, fundedByZukunftBauFooterItem } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 🔷#region 🎮Footer
@@ -32,28 +31,20 @@ export const Default: Story = {
   args: {
     items: [
       {
-        id: "success",
+        key: "success",
         content: (
           <div className="flex items-center gap-unit">
             <CheckCircle2 size={14} className="text-green-500" />
             <span>Success</span>
           </div>
         ),
-        order: 0,
       },
-      { id: "status", content: "Ready", order: 1 },
-      { id: "cursor", content: "Ln 1, Col 1", order: 2 },
-      { id: "encoding", content: "UTF-8", order: 3 },
-      { id: "language", content: "TypeScript", order: 4 },
+      { key: "status", content: "Ready" },
+      { key: "cursor", content: "Ln 1, Col 1" },
+      { key: "encoding", content: "UTF-8" },
+      { key: "language", content: "TypeScript" },
+      fundedByZukunftBauFooterItem(),
     ],
-    isVisible: true,
-    toolbar: (
-      <div role="toolbar" className="flex w-fit max-w-full shrink-0 items-center justify-start gap-single">
-        <ToolbarZone>
-          <ToolbarItem>Sync</ToolbarItem>
-        </ToolbarZone>
-      </div>
-    ),
   },
 };
 

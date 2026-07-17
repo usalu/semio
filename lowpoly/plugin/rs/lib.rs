@@ -1098,7 +1098,7 @@ fn format_selection_targets_label(targets: &LowpolySelectionTargets) -> String {
     }
 }
 
-fn lowpoly_window_engagement(view: LowpolyView, active_utility: &str) -> WindowEngagement {
+fn lowpoly_window_engagement(view: LowpolyView, active_utility: &str, labels: &LowpolyLabels) -> WindowEngagement {
     let runtime = view.runtime;
     let transform = active_utility;
     let selected_count = runtime.selection.ids.len();
@@ -1109,7 +1109,7 @@ fn lowpoly_window_engagement(view: LowpolyView, active_utility: &str) -> WindowE
         options: Some(vec![
             WindowEngagementOption {
                 id: "lowpoly.opt.snap".into(),
-                label: Some("Snap".into()),
+                label: Some(labels.snap.into()),
                 icon_id: Some("magnet".into()),
                 pressed: None,
                 disabled: None,
@@ -1117,7 +1117,7 @@ fn lowpoly_window_engagement(view: LowpolyView, active_utility: &str) -> WindowE
             },
             WindowEngagementOption {
                 id: "lowpoly.opt.smooth".into(),
-                label: Some("Smooth".into()),
+                label: Some(labels.smooth.into()),
                 icon_id: Some("sun".into()),
                 pressed: None,
                 disabled: None,
@@ -1125,7 +1125,7 @@ fn lowpoly_window_engagement(view: LowpolyView, active_utility: &str) -> WindowE
             },
             WindowEngagementOption {
                 id: "lowpoly.opt.show-edges".into(),
-                label: Some("Show Edges".into()),
+                label: Some(labels.show_edges.into()),
                 icon_id: Some("git-commit-horizontal".into()),
                 pressed: Some(runtime.show_edges),
                 disabled: None,
@@ -1147,21 +1147,22 @@ fn lowpoly_window_engagement(view: LowpolyView, active_utility: &str) -> WindowE
         status: Some(vec![WindowEngagementStatus {
             id: "lowpoly-status".into(),
             text: format!(
-                "{} · {} · {selected_count} selected",
+                "{} · {} · {selected_count} {}",
                 format_selection_targets_label(&runtime.selection.targets),
                 transform,
+                labels.selected,
             ),
         }]),
         possible_engagements: Some(vec![
             WindowEngagementPossible {
                 id: "lowpoly.eng.extrude".into(),
-                label: "Extrude".into(),
+                label: labels.extrude.into(),
                 detail: None,
                 action: Some(lowpoly_action("extrude", None)),
             },
             WindowEngagementPossible {
                 id: "lowpoly.eng.triangulate".into(),
-                label: "Triangulate".into(),
+                label: labels.triangulate.into(),
                 detail: None,
                 action: Some(lowpoly_action("triangulate", None)),
             },
@@ -1208,52 +1209,52 @@ fn selection_kind_toggle(id: &str, icon: &str, label: &str, kind: &str, pressed:
     }
 }
 
-fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime) -> Vec<WindowMeasure> {
+fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime, labels: &LowpolyLabels) -> Vec<WindowMeasure> {
     let params = &runtime.utility_params;
     let targets = &runtime.selection.targets;
     vec![
         WindowMeasure::Toggle {
             id: "lowpoly-measure-show-edges".into(),
             icon_id: "git-commit-horizontal".into(),
-            label: Some("Show Edges".into()),
+            label: Some(labels.show_edges.into()),
             pressed: runtime.show_edges,
             text: None,
             on_change: lowpoly_action("toggleShowEdges", None),
         },
         WindowMeasure::Group {
             id: "lowpoly-measure-selection-kind".into(),
-            label: "Selection Kind".into(),
+            label: labels.selection_kind.into(),
             default_open: Some(true),
             active_utility_id: None,
             children: vec![
-                selection_kind_toggle("mesh", "box", "Mesh", "mesh", targets.mesh),
-                selection_kind_toggle("face", "square", "Face", "face", targets.face),
-                selection_kind_toggle("edge", "minus", "Edge", "edge", targets.edge),
-                selection_kind_toggle("vertex", "circle", "Vertex", "vertex", targets.vertex),
+                selection_kind_toggle("mesh", "box", labels.mesh, "mesh", targets.mesh),
+                selection_kind_toggle("face", "square", labels.face, "face", targets.face),
+                selection_kind_toggle("edge", "minus", labels.edge, "edge", targets.edge),
+                selection_kind_toggle("vertex", "circle", labels.vertex, "vertex", targets.vertex),
             ],
         },
         world3d_sun_measures("lowpoly", &runtime.sun, lowpoly_action),
         WindowMeasure::Select {
             id: "lowpoly-measure-selection-method".into(),
-            label: Some("Selection Method".into()),
+            label: Some(labels.selection_method.into()),
             value: runtime.selection_method.clone(),
             items: vec![
-                MeasureSelectItem { id: "rectangle".into(), value: "rectangle".into(), label: "Rectangle".into() },
-                MeasureSelectItem { id: "lasso".into(), value: "lasso".into(), label: "Lasso".into() },
+                MeasureSelectItem { id: "rectangle".into(), value: "rectangle".into(), label: labels.rectangle.into() },
+                MeasureSelectItem { id: "lasso".into(), value: "lasso".into(), label: labels.lasso.into() },
             ],
             on_change: lowpoly_action("setSelectionMethod", None),
         },
         WindowMeasure::Group {
             id: "lowpoly-measure-snap".into(),
-            label: "Snap".into(),
+            label: labels.snap.into(),
             default_open: Some(false),
             active_utility_id: None,
             children: vec![
-                lowpoly_utility_param_slider("snap", "Snap Grid", "snapGrid", params, 0.25, 0.05, 2.0, 0.05),
+                lowpoly_utility_param_slider("snap", labels.snap_grid, "snapGrid", params, 0.25, 0.05, 2.0, 0.05),
             ],
         },
-        lowpoly_paint_params_group("brush", params),
-        lowpoly_paint_params_group("eraser", params),
+        lowpoly_paint_params_group("brush", params, labels),
+        lowpoly_paint_params_group("eraser", params, labels),
     ]
 }
 
@@ -1261,7 +1262,7 @@ fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime) -> Vec<WindowMeasure> {
 /// sliders, tagged `active_utility_id: Some(utility)` so [`partition_window_measures`] surfaces them in the
 /// Utility Options rail only while that exact utility is active. Both utilities stamp through the same
 /// `stamp_brush` path (radius/hardness/opacity + eraser flag), so they share an identical param set.
-fn lowpoly_paint_params_group(utility: &str, params: &Value) -> WindowMeasure {
+fn lowpoly_paint_params_group(utility: &str, params: &Value, labels: &LowpolyLabels) -> WindowMeasure {
     let slider = |suffix: &str, label: &str, key: &str, default: f64, min: f64, max: f64, step: f64| WindowMeasure::Slider {
         id: format!("lowpoly-measure-{utility}-{suffix}"),
         label: Some(label.into()),
@@ -1273,13 +1274,13 @@ fn lowpoly_paint_params_group(utility: &str, params: &Value) -> WindowMeasure {
     };
     WindowMeasure::Group {
         id: format!("lowpoly-measure-paint-params-{utility}"),
-        label: "Brush".into(),
+        label: labels.brush_group.into(),
         default_open: Some(true),
         active_utility_id: Some(utility.into()),
         children: vec![
-            slider("size", "Brush Size", "brushSize", 16.0, 1.0, 128.0, 1.0),
-            slider("opacity", "Brush Opacity", "brushOpacity", 1.0, 0.0, 1.0, 0.05),
-            slider("hardness", "Brush Hardness", "brushHardness", 0.5, 0.0, 1.0, 0.05),
+            slider("size", labels.brush_size, "brushSize", 16.0, 1.0, 128.0, 1.0),
+            slider("opacity", labels.brush_opacity, "brushOpacity", 1.0, 0.0, 1.0, 0.05),
+            slider("hardness", labels.brush_hardness, "brushHardness", 0.5, 0.0, 1.0, 0.05),
         ],
     }
 }
@@ -2159,15 +2160,17 @@ impl DocumentApp for LowpolyPlayApp {
 
     fn window_engagements(&self, doc: &DocumentView<'_, LowpolyProjection>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let active_utility = view_state.active_utility_id.as_deref().unwrap_or(LOWPOLY_TRANSFORM_UTILITY_DEFAULT);
-        let engagement = lowpoly_window_engagement(self.view(doc.projection), active_utility);
+        let labels = lowpoly_labels(view_state);
+        let engagement = lowpoly_window_engagement(self.view(doc.projection), active_utility, labels);
         HashMap::from([
             (LOWPOLY_PLAY_WINDOW_MAIN.into(), engagement.clone()),
             (LOWPOLY_PLAY_WINDOW_UV.into(), engagement),
         ])
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, LowpolyProjection>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let measures = lowpoly_window_measures(&self.runtime);
+    fn window_measures(&self, _doc: &DocumentView<'_, LowpolyProjection>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        let labels = lowpoly_labels(view_state);
+        let measures = lowpoly_window_measures(&self.runtime, labels);
         HashMap::from([
             (LOWPOLY_PLAY_WINDOW_MAIN.into(), measures.clone()),
             (LOWPOLY_PLAY_WINDOW_UV.into(), measures),
@@ -2176,23 +2179,110 @@ impl DocumentApp for LowpolyPlayApp {
 
     fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
         let labels = lowpoly_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         AppLabelsOverlay {
             app_label: None,
             window_kind_labels: HashMap::from([
                 (LOWPOLY_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()),
                 (LOWPOLY_PLAY_WINDOW_UV.to_string(), labels.window_uv.to_string()),
             ]),
-            panel_tab_labels: HashMap::new(),
-            mode_labels: HashMap::new(),
-            action_labels: HashMap::new(),
-            utility_labels: HashMap::new(),
-            example_labels: HashMap::new(),
+            panel_tab_labels: HashMap::from([
+                ("framework.panel.layers".to_string(), (if is_de { "Ebenen" } else { "Layers" }).to_string()),
+            ]),
+            mode_labels: HashMap::from([
+                ("edit".to_string(), (if is_de { "Bearbeiten" } else { "Edit" }).to_string()),
+                ("paint".to_string(), (if is_de { "Malen" } else { "Paint" }).to_string()),
+            ]),
+            action_labels: lowpoly_action_labels(is_de),
+            utility_labels: lowpoly_utility_labels(is_de),
+            example_labels: HashMap::from([
+                ("default".to_string(), (if is_de { "Standard" } else { "Default" }).to_string()),
+            ]),
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),
             introduction_labels: HashMap::new(),
         }
     }
 }
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_lowpoly_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
+/// command palette and Actions rail get a translated label without threading locale through the whole builder chain.
+fn lowpoly_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("addPrimitive", "Add Primitive", "Primitive hinzufuegen"),
+        ("patchObject", "Patch Object", "Objekt aktualisieren"),
+        ("extrude", "Extrude", "Extrudieren"),
+        ("inset", "Inset", "Einziehen"),
+        ("bevel", "Bevel", "Fasen"),
+        ("loopCut", "Loop Cut", "Schleifenschnitt"),
+        ("subdivide", "Subdivide", "Unterteilen"),
+        ("triangulate", "Triangulate", "Triangulieren"),
+        ("mirror", "Mirror", "Spiegeln"),
+        ("decimate", "Decimate", "Dezimieren"),
+        ("flipFaces", "Flip Faces", "Flaechen umkehren"),
+        ("merge", "Merge", "Zusammenfuehren"),
+        ("dissolve", "Dissolve", "Aufloesen"),
+        ("snap", "Snap", "Einrasten"),
+        ("toggleSmooth", "Toggle Smooth", "Glaettung umschalten"),
+        ("unwrapActive", "Unwrap", "Abwickeln"),
+        ("markUvSeam", "Mark Seam", "Naht markieren"),
+        ("clearSeam", "Clear Seam", "Naht entfernen"),
+        ("translateSelection", "Translate Selection", "Auswahl verschieben"),
+        ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
+        ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
+        ("transformEnd", "Transform End", "Transformation beenden"),
+        ("addPaintLayer", "Add Paint Layer", "Malebene hinzufuegen"),
+        ("paintStrokeEnd", "Paint Stroke End", "Malstrich beenden"),
+        ("paintFill", "Paint Fill", "Fuellen malen"),
+        ("fillBucket", "Fill Bucket", "Fuelleimer"),
+        ("setProjectionJson", "Set Projection Json", "Projektions-JSON festlegen"),
+        ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
+        ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+        ("setActiveObject", "Set Active Object", "Aktives Objekt festlegen"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+        ("toggleSelectionKind", "Toggle Selection Kind", "Auswahlart umschalten"),
+        ("toggleSelectionTarget", "Toggle Selection Target", "Auswahlziel umschalten"),
+        ("setActivePaintLayer", "Set Active Paint Layer", "Aktive Malebene festlegen"),
+        ("setUtilityParam", "Set Utility Param", "Werkzeugparameter festlegen"),
+        ("engagementInput", "Engagement Input", "Eingabe"),
+        ("toggleShowEdges", "Toggle Show Edges", "Kantenanzeige umschalten"),
+        ("toggleSun", "Toggle Sun", "Sonne umschalten"),
+        ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
+        ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
+        ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
+        ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
+        ("setCamera", "Set Camera", "Kamera festlegen"),
+        ("worldSelect", "World Select", "Welt auswaehlen"),
+        ("worldHover", "World Hover", "Welt-Hover"),
+        ("setHover", "Set Hover", "Hover festlegen"),
+        ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
+        ("paintStrokeBegin", "Paint Stroke Begin", "Malstrich beginnen"),
+        ("paintStroke", "Paint Stroke", "Malstrich"),
+        ("paintAt", "Paint At", "Malen bei"),
+        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrueckt"),
+        ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegt"),
+        ("paintSample", "Paint Sample", "Farbe aufnehmen"),
+        ("transformBegin", "Transform Begin", "Transformation beginnen"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_lowpoly_app`.
+fn lowpoly_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("move", "Move", "Verschieben"),
+        ("rotate", "Rotate", "Drehen"),
+        ("scale", "Scale", "Skalieren"),
+        ("brush", "Brush", "Pinsel"),
+        ("eraser", "Eraser", "Radierer"),
+        ("fill", "Fill", "Fuellen"),
+        ("eyedropper", "Eyedropper", "Pipette"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+//#endregion 🔖CommandLabels
 
 //#region 🔖TransformHelpers
 enum Transform {
@@ -2273,6 +2363,7 @@ fn create_lowpoly_app() -> App {
         lowpoly_window_engagement(
             LowpolyView { projection: &projection, runtime: &runtime },
             LOWPOLY_TRANSFORM_UTILITY_DEFAULT,
+            &LOWPOLY_LABELS_NATIVE_EN,
         )
     };
     App::from_builder(
@@ -2546,7 +2637,7 @@ mod tests {
 
     #[test]
     fn paint_utility_params_are_utility_tagged_and_mesh_op_measures_removed() {
-        let measures = lowpoly_window_measures(&LowpolyPlayRuntime::default());
+        let measures = lowpoly_window_measures(&LowpolyPlayRuntime::default(), &LOWPOLY_LABELS_NATIVE_EN);
         let group_tag = |id: &str| {
             measures.iter().find_map(|measure| match measure {
                 WindowMeasure::Group { id: gid, active_utility_id, .. } if gid == id => Some(active_utility_id.clone()),
@@ -2700,7 +2791,7 @@ mod tests {
         // genuine non-utility options (snap/smooth/show-edges) but must never dispatch setActiveUtility.
         let projection = projection(&new_app());
         let runtime = LowpolyPlayRuntime::default();
-        let engagement = lowpoly_window_engagement(LowpolyView { projection: &projection, runtime: &runtime }, "move");
+        let engagement = lowpoly_window_engagement(LowpolyView { projection: &projection, runtime: &runtime }, "move", &LOWPOLY_LABELS_NATIVE_EN);
         let options = engagement.options.expect("lowpoly engagement keeps its non-utility options");
         assert!(
             options.iter().all(|option| option.action.as_ref().map(|action| action.action != SET_ACTIVE_UTILITY_ACTION_ID).unwrap_or(true)),

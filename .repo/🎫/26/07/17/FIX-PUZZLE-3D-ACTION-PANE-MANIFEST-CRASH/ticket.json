@@ -1,0 +1,14 @@
+{
+  "title": "Fix Puzzle 3D Action Pane Manifest Crash",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Puzzle 3D UI crashes about one second after launch in FrameworkOsShell because windowActionPaneNode calls action.args.map while deserialized no-argument actions omit args. Fix the root serialization contract, extend existing tests, rebuild required artifacts, and verify runtime behavior.",
+  "summary": "Fixed the delayed Puzzle 3D shell crash at its wire-contract source. ActionDefinition, CommandDefinition, and DialogDefinition now always serialize their required args arrays, including empty arrays, and reject payloads that omit args. Extended the existing framework core tests to pin zero-argument serialization and missing-field rejection. Verified 44 Rust tests and 30 TypeScript tests pass, rebuilt the focused Puzzle plugin through Nx, then loaded Puzzle 3D in the in-app browser, waited beyond the delayed failure, expanded the Actions pane, and confirmed the action list remains visible with zero console errors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2017"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪f665a7e79a0b45af94a12664991e349c"
+  ]
+}

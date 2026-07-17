@@ -1,0 +1,13 @@
+{
+  "title": "Inline Workbench Panels Into Navbar And Footer",
+  "emoji": "🧭",
+  "status": "open",
+  "description": "Remove the top-left workbench tab and inline Document and Catalogue directly on the navbar. Same for Settings: remove the workbench tab and inline Theme and Settings directly in the footer. Same for Details: remove the workbench tab and inline Inspector directly.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2019"
+  },
+  "goal": "r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪6918c7699f3348f6a2b859ee9c1b1ccd"
+  ]
+}

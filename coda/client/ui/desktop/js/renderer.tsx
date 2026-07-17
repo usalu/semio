@@ -55,16 +55,120 @@ import "../globals.css";
 
 //#region 🪁CodaUiI18n
 /** @emoji 🪁 Coda's own i18n bundle namespace, registered on the shared UI i18n instance the same way compose's sketchpad registers `compose.*` keys. Coda has no entity nouns overlapping puzzle/CAD's "reuse" terminology, so this is locale-only — no terminology dimension. */
-type CodaTranslationKey = `coda.nav.${string}` | "coda.titlebar.subtitle" | "coda.titlebar.sidecarConnected" | "coda.titlebar.sidecarDisconnected" | "coda.titlebar.connected" | "coda.titlebar.offline" | "coda.titlebar.refresh";
+type CodaTranslationKey =
+  | `coda.nav.${string}`
+  | `coda.page.${string}`
+  | `coda.section.${string}`
+  | `coda.column.${string}`
+  | `coda.card.${string}`
+  | `coda.welcome.${string}`
+  | `coda.common.${string}`
+  | `coda.loading.${string}`
+  | `coda.empty.${string}`
+  | `coda.placeholder.${string}`
+  | "coda.titlebar.subtitle"
+  | "coda.titlebar.sidecarConnected"
+  | "coda.titlebar.sidecarDisconnected"
+  | "coda.titlebar.connected"
+  | "coda.titlebar.offline"
+  | "coda.titlebar.refresh";
 
 const CODA_NAV_LABELS_EN: Readonly<Record<Page, string>> = { dashboard: "Dashboard", config: "Config", runs: "Runs", report: "Report", translations: "Translations", actions: "Actions", events: "Events" };
 const CODA_NAV_LABELS_DE: Readonly<Record<Page, string>> = { dashboard: "Uebersicht", config: "Konfiguration", runs: "Durchlaeufe", report: "Bericht", translations: "Uebersetzungen", actions: "Aktionen", events: "Ereignisse" };
 
+/** @emoji 🪁 Flat one-off `coda.*` label keys (page/section titles, card titles, placeholders, loading/empty copy) that don't fit the nav/titlebar shape below — mirrors the flat-map style used by `mcp-app.tsx`'s `McpAppTranslationKey` bundle. */
+const CODA_MISC_LABELS_EN: Readonly<Record<string, string>> = {
+  "coda.page.dashboard.title": "Dashboard",
+  "coda.page.config.title": "Configuration",
+  "coda.page.runs.title": "Runs & Iterations",
+  "coda.page.report.title": "Compliance Report",
+  "coda.page.translations.title": "Translations",
+  "coda.page.actions.title": "Actions",
+  "coda.page.events.title": "Events",
+  "coda.section.generalConfig.title": "General Configuration",
+  "coda.section.properties.title": "Properties",
+  "coda.section.rules.title": "Rules",
+  "coda.section.items.title": "Items",
+  "coda.section.levels.title": "Levels",
+  "coda.section.targets.title": "Targets",
+  "coda.column.id": "ID",
+  "coda.column.started": "Started",
+  "coda.card.latestValidation.title": "Latest Validation",
+  "coda.card.currentRun.title": "Current Run",
+  "coda.card.runManagement.title": "Run Management",
+  "coda.card.translationValidation.title": "Translation & Validation",
+  "coda.card.fixDesign.title": "Fix Design",
+  "coda.card.manualFixResult.title": "Manual Fix Result",
+  "coda.card.actionLog.title": "Action Log",
+  "coda.welcome.createProject.title": "Create New Project",
+  "coda.welcome.openProject.title": "Open Existing Project",
+  "coda.welcome.projectName.label": "Project Name",
+  "coda.welcome.projectFolder.label": "Project Folder",
+  "coda.common.loading": "Loading...",
+  "coda.loading.dashboard": "Loading dashboard...",
+  "coda.loading.config": "Loading configuration...",
+  "coda.loading.runs": "Loading runs...",
+  "coda.loading.report": "Loading report...",
+  "coda.empty.noRuns": "No runs yet. Start a run from the Actions page.",
+  "coda.empty.noIterations": "No iterations yet.",
+  "coda.placeholder.fixResultJson": "Paste fix result JSON here...",
+  "coda.placeholder.fixDescriptionExample": "e.g., Increase gross floor area to meet room program requirements",
+  "coda.placeholder.filterEvents": "Filter events by kind or content...",
+  "coda.placeholder.projectName": "My Project",
+};
+
+const CODA_MISC_LABELS_DE: Readonly<Record<string, string>> = {
+  "coda.page.dashboard.title": "Uebersicht",
+  "coda.page.config.title": "Konfiguration",
+  "coda.page.runs.title": "Durchlaeufe & Iterationen",
+  "coda.page.report.title": "Konformitaetsbericht",
+  "coda.page.translations.title": "Uebersetzungen",
+  "coda.page.actions.title": "Aktionen",
+  "coda.page.events.title": "Ereignisse",
+  "coda.section.generalConfig.title": "Allgemeine Konfiguration",
+  "coda.section.properties.title": "Eigenschaften",
+  "coda.section.rules.title": "Regeln",
+  "coda.section.items.title": "Elemente",
+  "coda.section.levels.title": "Stufen",
+  "coda.section.targets.title": "Ziele",
+  "coda.column.id": "ID",
+  "coda.column.started": "Gestartet",
+  "coda.card.latestValidation.title": "Letzte Validierung",
+  "coda.card.currentRun.title": "Aktueller Durchlauf",
+  "coda.card.runManagement.title": "Durchlauf-Verwaltung",
+  "coda.card.translationValidation.title": "Uebersetzung & Validierung",
+  "coda.card.fixDesign.title": "Entwurf korrigieren",
+  "coda.card.manualFixResult.title": "Manuelles Korrekturergebnis",
+  "coda.card.actionLog.title": "Aktionsprotokoll",
+  "coda.welcome.createProject.title": "Neues Projekt erstellen",
+  "coda.welcome.openProject.title": "Bestehendes Projekt oeffnen",
+  "coda.welcome.projectName.label": "Projektname",
+  "coda.welcome.projectFolder.label": "Projektordner",
+  "coda.common.loading": "Wird geladen...",
+  "coda.loading.dashboard": "Uebersicht wird geladen...",
+  "coda.loading.config": "Konfiguration wird geladen...",
+  "coda.loading.runs": "Durchlaeufe werden geladen...",
+  "coda.loading.report": "Bericht wird geladen...",
+  "coda.empty.noRuns": "Noch keine Durchlaeufe. Starte einen Durchlauf auf der Aktionen-Seite.",
+  "coda.empty.noIterations": "Noch keine Iterationen.",
+  "coda.placeholder.fixResultJson": "Korrekturergebnis-JSON hier einfuegen...",
+  "coda.placeholder.fixDescriptionExample": "z. B. Bruttogeschossflaeche erhoehen, um die Raumprogrammanforderungen zu erfuellen",
+  "coda.placeholder.filterEvents": "Ereignisse nach Art oder Inhalt filtern...",
+  "coda.placeholder.projectName": "Mein Projekt",
+};
+
+function codaMiscTranslationBundle(misc: Readonly<Record<string, string>>): Readonly<Record<string, { readonly label: { readonly normal: string; readonly beginner: string } }>> {
+  const entries: Record<string, { readonly label: { readonly normal: string; readonly beginner: string } }> = {};
+  for (const [id, label] of Object.entries(misc)) entries[id] = { label: { normal: label, beginner: label } };
+  return entries;
+}
+
 function codaTranslationBundle(
   nav: Readonly<Record<Page, string>>,
   titlebar: Readonly<Record<"subtitle" | "sidecarConnected" | "sidecarDisconnected" | "connected" | "offline" | "refresh", string>>,
+  misc: Readonly<Record<string, string>>,
 ): Readonly<Record<CodaTranslationKey, { readonly label: { readonly normal: string; readonly beginner: string } }>> {
-  const entries: Record<string, { readonly label: { readonly normal: string; readonly beginner: string } }> = {};
+  const entries: Record<string, { readonly label: { readonly normal: string; readonly beginner: string } }> = { ...codaMiscTranslationBundle(misc) };
   for (const [id, label] of Object.entries(nav)) entries[`coda.nav.${id}`] = { label: { normal: label, beginner: label } };
   entries["coda.titlebar.subtitle"] = { label: { normal: titlebar.subtitle, beginner: titlebar.subtitle } };
   entries["coda.titlebar.sidecarConnected"] = { label: { normal: titlebar.sidecarConnected, beginner: titlebar.sidecarConnected } };
@@ -77,24 +181,32 @@ function codaTranslationBundle(
 
 registerUiTranslationBundles({
   en: {
-    translation: codaTranslationBundle(CODA_NAV_LABELS_EN, {
-      subtitle: "ACC Design Assistant",
-      sidecarConnected: "Sidecar connected",
-      sidecarDisconnected: "Sidecar disconnected (offline mode)",
-      connected: "Connected",
-      offline: "Offline",
-      refresh: "Refresh data",
-    }),
+    translation: codaTranslationBundle(
+      CODA_NAV_LABELS_EN,
+      {
+        subtitle: "ACC Design Assistant",
+        sidecarConnected: "Sidecar connected",
+        sidecarDisconnected: "Sidecar disconnected (offline mode)",
+        connected: "Connected",
+        offline: "Offline",
+        refresh: "Refresh data",
+      },
+      CODA_MISC_LABELS_EN,
+    ),
   },
   de: {
-    translation: codaTranslationBundle(CODA_NAV_LABELS_DE, {
-      subtitle: "ACC Entwurfsassistent",
-      sidecarConnected: "Sidecar verbunden",
-      sidecarDisconnected: "Sidecar getrennt (Offline-Modus)",
-      connected: "Verbunden",
-      offline: "Offline",
-      refresh: "Daten aktualisieren",
-    }),
+    translation: codaTranslationBundle(
+      CODA_NAV_LABELS_DE,
+      {
+        subtitle: "ACC Entwurfsassistent",
+        sidecarConnected: "Sidecar verbunden",
+        sidecarDisconnected: "Sidecar getrennt (Offline-Modus)",
+        connected: "Verbunden",
+        offline: "Offline",
+        refresh: "Daten aktualisieren",
+      },
+      CODA_MISC_LABELS_DE,
+    ),
   },
 });
 //#endregion 🪁CodaUiI18n
@@ -646,14 +758,16 @@ function Button({
  * A centered loading spinner.
  *MUST display an animated spinning indicator.
  **/
-function Spinner({ label = "Loading..." }: { label?: string }) {
+function Spinner({ label }: { label?: string }) {
+  const fallbackLabel = useLabel("coda.common.loading" as CodaTranslationKey);
+  const resolvedLabel = label ?? fallbackLabel ?? "Loading...";
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-12 text-muted-foreground">
       <svg className="w-6 h-6 animate-spin" viewBox="0 0 24 24" fill="none">
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
       </svg>
-      <span className="text-sm">{label}</span>
+      <span className="text-sm">{resolvedLabel}</span>
     </div>
   );
 }
@@ -1139,12 +1253,18 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
 
   const totalPropertyCount = reactHostPort.useMemo(() => (properties ? countProperties(properties) : 0), [properties]);
 
-  if (loading) return <Spinner label="Loading dashboard..." />;
+  const loadingDashboardLabel = useLabel("coda.loading.dashboard" as CodaTranslationKey);
+  const dashboardTitle = useLabel("coda.page.dashboard.title" as CodaTranslationKey);
+  const latestValidationTitle = useLabel("coda.card.latestValidation.title" as CodaTranslationKey);
+  const generalConfigTitle = useLabel("coda.section.generalConfig.title" as CodaTranslationKey);
+  const propertiesTitle = useLabel("coda.section.properties.title" as CodaTranslationKey);
+
+  if (loading) return <Spinner label={loadingDashboardLabel} />;
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-foreground">Dashboard</h2>
+        <h2 className="text-lg font-bold text-foreground">{dashboardTitle}</h2>
         <p className="text-sm text-muted-foreground mt-1">Overview of the coda compliance checking status.</p>
       </div>
 
@@ -1156,7 +1276,7 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
       </div>
 
       {report?.validations && report.validations.length > 0 && (
-        <Card title="Latest Validation">
+        <Card title={latestValidationTitle}>
           <div className="space-y-4">
             {report.validations.map((validation) => (
               <ValidationTree key={validation.instance} report={validation} defaultExpanded={false} />
@@ -1167,12 +1287,12 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
 
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-foreground">General Configuration</h3>
+          <h3 className="text-sm font-semibold text-foreground">{generalConfigTitle}</h3>
           <span className="text-xs bg-info-bg text-info-foreground px-1.5 py-0.5 rounded">not project-scoped</span>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {properties && properties.length > 0 && (
-            <Card title={`Properties (${totalPropertyCount})`}>
+            <Card title={`${propertiesTitle} (${totalPropertyCount})`}>
               <div className="space-y-1">
                 {properties.map((prop) => (
                   <div key={prop.id} className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-hover-window">
@@ -1245,6 +1365,9 @@ function countProperties(props: Property[]): number {
  *MUST display kind, measure_kinds, description, levels, nested properties, and items recursively.
  **/
 function PropertyView({ prop, depth = 0 }: { prop: Property; depth?: number }) {
+  const levelsTitle = useLabel("coda.section.levels.title" as CodaTranslationKey);
+  const itemsTitle = useLabel("coda.section.items.title" as CodaTranslationKey);
+  const propertiesTitle = useLabel("coda.section.properties.title" as CodaTranslationKey);
   return (
     <div className={`rounded bg-panel border border-border-window p-2 ${depth > 0 ? "ml-3" : ""}`}>
       <div className="flex items-center gap-2 flex-wrap">
@@ -1281,7 +1404,9 @@ function PropertyView({ prop, depth = 0 }: { prop: Property; depth?: number }) {
       )}
       {prop.levels && prop.levels.length > 0 && (
         <div className="mt-2 space-y-2">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Levels ({prop.levels.length})</span>
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            {levelsTitle} ({prop.levels.length})
+          </span>
           {prop.levels.map((level) => (
             <div key={level.value} className="rounded border border-border-window p-2 space-y-1.5">
               <div className="flex items-start gap-2 text-xs">
@@ -1340,7 +1465,7 @@ function PropertyView({ prop, depth = 0 }: { prop: Property; depth?: number }) {
       )}
       {prop.items && (
         <div className="mt-2">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Items</span>
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{itemsTitle}</span>
           {prop.items.properties && prop.items.properties.length > 0 && (
             <div className="mt-1 space-y-1.5">
               {prop.items.properties.map((child) => (
@@ -1352,7 +1477,9 @@ function PropertyView({ prop, depth = 0 }: { prop: Property; depth?: number }) {
       )}
       {prop.properties && prop.properties.length > 0 && (
         <div className="mt-2">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Properties ({prop.properties.length})</span>
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            {propertiesTitle} ({prop.properties.length})
+          </span>
           <div className="mt-1 space-y-1.5">
             {prop.properties.map((child) => (
               <PropertyView key={child.id} prop={child} depth={depth + 1} />
@@ -1377,14 +1504,18 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
   const { data: platforms, loading: platformsLoading } = useCodaResource<Platform[]>("coda://platforms", refreshKey);
 
   const loading = propertyKindsLoading || propertiesLoading || correlationLoading || frameworksLoading || platformsLoading;
-  if (loading) return <Spinner label="Loading configuration..." />;
+  const loadingConfigLabel = useLabel("coda.loading.config" as CodaTranslationKey);
+  const configTitle = useLabel("coda.page.config.title" as CodaTranslationKey);
+  const propertiesTitle = useLabel("coda.section.properties.title" as CodaTranslationKey);
+  const rulesTitle = useLabel("coda.section.rules.title" as CodaTranslationKey);
+  if (loading) return <Spinner label={loadingConfigLabel} />;
 
   const totalPropertyCount = properties ? countProperties(properties) : 0;
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-foreground">Configuration</h2>
+        <h2 className="text-lg font-bold text-foreground">{configTitle}</h2>
         <p className="text-sm text-muted-foreground mt-1">Property kinds, properties, correlation, frameworks, and platforms from the coda configuration.</p>
       </div>
 
@@ -1412,7 +1543,7 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
         )}
       </Card>
 
-      <Card title={`Properties (${totalPropertyCount})`} action={<span className="text-xs bg-info-bg text-info-foreground px-1.5 py-0.5 rounded">general</span>}>
+      <Card title={`${propertiesTitle} (${totalPropertyCount})`} action={<span className="text-xs bg-info-bg text-info-foreground px-1.5 py-0.5 rounded">general</span>}>
         {properties && properties.length > 0 ? (
           <div className="space-y-2">
             {properties.map((prop) => (
@@ -1471,7 +1602,7 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
                 <div className="space-y-3">
                   {fw.properties && fw.properties.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Properties</h4>
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{propertiesTitle}</h4>
                       <div className="space-y-1.5">
                         {fw.properties.map((prop) => (
                           <PropertyView key={prop.id} prop={prop} />
@@ -1482,7 +1613,7 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
 
                   {fw.rules && fw.rules.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Rules</h4>
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{rulesTitle}</h4>
                       <div className="space-y-1.5">
                         {fw.rules.map((rule) => (
                           <div key={rule.id} className="rounded bg-panel border border-border-window p-2">
@@ -1635,33 +1766,41 @@ function RunsPage({ refreshKey }: { refreshKey: number }) {
   const { data: iteration, loading: iterLoading } = useCodaResource<Iteration>("coda://current-iteration", refreshKey);
 
   const loading = runLoading || itersLoading || iterLoading;
-  if (loading) return <Spinner label="Loading runs..." />;
+  const loadingRunsLabel = useLabel("coda.loading.runs" as CodaTranslationKey);
+  const runsTitle = useLabel("coda.page.runs.title" as CodaTranslationKey);
+  const currentRunTitle = useLabel("coda.card.currentRun.title" as CodaTranslationKey);
+  const idColumn = useLabel("coda.column.id" as CodaTranslationKey);
+  const startedColumn = useLabel("coda.column.started" as CodaTranslationKey);
+  const noRunsMessage = useLabel("coda.empty.noRuns" as CodaTranslationKey);
+  const noIterationsMessage = useLabel("coda.empty.noIterations" as CodaTranslationKey);
+  const targetsTitle = useLabel("coda.section.targets.title" as CodaTranslationKey);
+  if (loading) return <Spinner label={loadingRunsLabel} />;
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-foreground">Runs & Iterations</h2>
+        <h2 className="text-lg font-bold text-foreground">{runsTitle}</h2>
         <p className="text-sm text-muted-foreground mt-1">Manage and inspect compliance checking runs.</p>
       </div>
 
-      <Card title="Current Run">
+      <Card title={currentRunTitle}>
         {runError ? (
           <EmptyState message={runError} />
         ) : run ? (
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider w-16">ID</span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider w-16">{idColumn}</span>
               <span className="text-sm font-mono text-foreground">{run.id ?? run.run_id ?? "—"}</span>
             </div>
             {run.started && (
               <div className="flex items-center gap-3">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider w-16">Started</span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider w-16">{startedColumn}</span>
                 <span className="text-sm text-foreground">{run.started}</span>
               </div>
             )}
           </div>
         ) : (
-          <EmptyState message="No runs yet. Start a run from the Actions page." />
+          <EmptyState message={noRunsMessage ?? ""} />
         )}
       </Card>
 
@@ -1676,7 +1815,7 @@ function RunsPage({ refreshKey }: { refreshKey: number }) {
             ))}
           </div>
         ) : (
-          <EmptyState message="No iterations yet." />
+          <EmptyState message={noIterationsMessage ?? ""} />
         )}
       </Card>
 
@@ -1685,7 +1824,7 @@ function RunsPage({ refreshKey }: { refreshKey: number }) {
           <div className="space-y-2">
             {iteration.targets && iteration.targets.length > 0 && (
               <div>
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Targets</span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{targetsTitle}</span>
                 <div className="mt-1 flex flex-wrap gap-1.5">
                   {iteration.targets.map((tid) => (
                     <span key={tid} className="text-xs bg-panel border border-border-window px-2 py-1 rounded font-mono">
@@ -1712,8 +1851,10 @@ function RunsPage({ refreshKey }: { refreshKey: number }) {
  **/
 function ReportPage({ refreshKey }: { refreshKey: number }) {
   const { data: report, loading: reportLoading, error: reportError } = useCodaResource<Report>("coda://report", refreshKey);
+  const loadingReportLabel = useLabel("coda.loading.report" as CodaTranslationKey);
+  const reportTitle = useLabel("coda.page.report.title" as CodaTranslationKey);
 
-  if (reportLoading) return <Spinner label="Loading report..." />;
+  if (reportLoading) return <Spinner label={loadingReportLabel} />;
 
   const totalValidations = report?.validations?.length ?? 0;
   const violatedValidations = report?.validations?.filter((v) => v.truth === "false") ?? [];
@@ -1723,7 +1864,7 @@ function ReportPage({ refreshKey }: { refreshKey: number }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-foreground">Compliance Report</h2>
+        <h2 className="text-lg font-bold text-foreground">{reportTitle}</h2>
         <p className="text-sm text-muted-foreground mt-1">Results from the latest validation iteration.</p>
       </div>
 
@@ -1789,11 +1930,12 @@ function ReportPage({ refreshKey }: { refreshKey: number }) {
 function TranslationsPage({ refreshKey }: { refreshKey: number }) {
   const { data: project } = useCodaResource<Project>("coda://project", refreshKey);
   const targetIds = reactHostPort.useMemo(() => project?.targets?.map((t) => t.id) ?? [], [project]);
+  const translationsTitle = useLabel("coda.page.translations.title" as CodaTranslationKey);
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-foreground">Translations</h2>
+        <h2 className="text-lg font-bold text-foreground">{translationsTitle}</h2>
         <p className="text-sm text-muted-foreground mt-1">Translation outputs for each target in the current iteration.</p>
       </div>
 
@@ -1834,6 +1976,12 @@ function ActionsPage({ refreshKey, onRefresh }: { refreshKey: number; onRefresh:
 
   const [actionLog, setActionLog] = reactHostPort.useState<Array<{ id: number; action: string; result: unknown; timestamp: string; success: boolean }>>([]);
   const [loading, setLoading] = reactHostPort.useState<string | null>(null);
+  const actionsTitle = useLabel("coda.page.actions.title" as CodaTranslationKey);
+  const runManagementTitle = useLabel("coda.card.runManagement.title" as CodaTranslationKey);
+  const translationValidationTitle = useLabel("coda.card.translationValidation.title" as CodaTranslationKey);
+  const fixDesignTitle = useLabel("coda.card.fixDesign.title" as CodaTranslationKey);
+  const manualFixResultTitle = useLabel("coda.card.manualFixResult.title" as CodaTranslationKey);
+  const actionLogTitle = useLabel("coda.card.actionLog.title" as CodaTranslationKey);
 
   const runTool = reactHostPort.useCallback(
     async (name: string, args: Record<string, unknown>, label: string) => {
@@ -1874,12 +2022,12 @@ function ActionsPage({ refreshKey, onRefresh }: { refreshKey: number; onRefresh:
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-foreground">Actions</h2>
+        <h2 className="text-lg font-bold text-foreground">{actionsTitle}</h2>
         <p className="text-sm text-muted-foreground mt-1">Invoke coda tools to run compliance checking workflows.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Card title="Run Management">
+        <Card title={runManagementTitle}>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
               <Button variant="primary" onClick={() => runTool("start_run", {}, "Start Run")} loading={loading === "Start Run"} disabled={loading !== null}>
@@ -1898,22 +2046,22 @@ function ActionsPage({ refreshKey, onRefresh }: { refreshKey: number; onRefresh:
           </div>
         </Card>
 
-        <Card title="Translation & Validation">
+        <Card title={translationValidationTitle}>
           <div className="space-y-3">{targetIds.length === 0 ? <EmptyState message="No project targets found." /> : targetIds.map((tid) => <TargetActionCard key={tid} targetId={tid} loading={loading} runTool={runTool} runCall={runCall} />)}</div>
         </Card>
       </div>
 
-      <Card title="Fix Design">
+      <Card title={fixDesignTitle}>
         <FixAction loading={loading} onFix={(prompt) => runTool("fix", { prompt }, `Fix: ${prompt.slice(0, 30)}...`)} disabled={loading !== null} />
       </Card>
 
-      <Card title="Manual Fix Result">
+      <Card title={manualFixResultTitle}>
         <ManualFixInput loading={loading} onSubmit={(result) => runCall("save_report", { report_data: typeof result === "string" ? result : JSON.stringify(result) }, "Manual Save Report")} disabled={loading !== null} />
       </Card>
 
       {actionLog.length > 0 && (
         <Card
-          title="Action Log"
+          title={actionLogTitle}
           action={
             <Button onClick={() => setActionLog([])} className="text-xs">
               Clear
@@ -2059,6 +2207,7 @@ function TargetActionCard({
  **/
 function ManualFixInput({ loading, onSubmit, disabled }: { loading: string | null; onSubmit: (result: unknown) => void; disabled: boolean }) {
   const [input, setInput] = reactHostPort.useState("");
+  const fixResultJsonPlaceholder = useLabel("coda.placeholder.fixResultJson" as CodaTranslationKey);
   const handleSubmit = () => {
     if (!input.trim()) return;
     try {
@@ -2075,7 +2224,7 @@ function ManualFixInput({ loading, onSubmit, disabled }: { loading: string | nul
       <textarea
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        placeholder="Paste fix result JSON here..."
+        placeholder={fixResultJsonPlaceholder}
         rows={4}
         className="w-full rounded-md border border-border-window bg-window px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base resize-y"
       />
@@ -2094,6 +2243,7 @@ function ManualFixInput({ loading, onSubmit, disabled }: { loading: string | nul
  **/
 function FixAction({ loading, onFix, disabled }: { loading: string | null; onFix: (prompt: string) => void; disabled: boolean }) {
   const [prompt, setPrompt] = reactHostPort.useState("");
+  const fixDescriptionExamplePlaceholder = useLabel("coda.placeholder.fixDescriptionExample" as CodaTranslationKey);
   const handleSubmit = () => {
     if (prompt.trim()) {
       onFix(prompt.trim());
@@ -2109,7 +2259,7 @@ function FixAction({ loading, onFix, disabled }: { loading: string | null; onFix
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-          placeholder="e.g., Increase gross floor area to meet room program requirements"
+          placeholder={fixDescriptionExamplePlaceholder}
           className="flex-1 rounded-md border border-border-window bg-window px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base"
         />
         <Button variant="danger" onClick={handleSubmit} loading={loading?.startsWith("Fix:") ?? false} disabled={disabled || !prompt.trim()}>
@@ -2135,6 +2285,8 @@ function FixAction({ loading, onFix, disabled }: { loading: string | null; onFix
  **/
 function EventsPage({ events, onClear }: { events: CodaEvent[]; onClear: () => void }) {
   const [filter, setFilter] = reactHostPort.useState("");
+  const eventsTitle = useLabel("coda.page.events.title" as CodaTranslationKey);
+  const filterEventsPlaceholder = useLabel("coda.placeholder.filterEvents" as CodaTranslationKey);
 
   const filteredEvents = reactHostPort.useMemo(() => {
     if (!filter.trim()) return events;
@@ -2151,7 +2303,7 @@ function EventsPage({ events, onClear }: { events: CodaEvent[]; onClear: () => v
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-foreground">Events</h2>
+          <h2 className="text-lg font-bold text-foreground">{eventsTitle}</h2>
           <p className="text-sm text-muted-foreground mt-1">Real-time event stream from the coda sidecar ({events.length} total).</p>
         </div>
         <div className="flex items-center gap-2">
@@ -2166,7 +2318,7 @@ function EventsPage({ events, onClear }: { events: CodaEvent[]; onClear: () => v
           type="text"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          placeholder="Filter events by kind or content..."
+          placeholder={filterEventsPlaceholder}
           className="flex-1 rounded-md border border-border-window bg-window px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base"
         />
         {uniqueKinds.length > 0 && (
@@ -2225,6 +2377,11 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
   const [error, setError] = reactHostPort.useState<string | null>(null);
   const [loading, setLoading] = reactHostPort.useState(false);
   const titlebarSubtitle = useLabel("coda.titlebar.subtitle" as CodaTranslationKey);
+  const createProjectTitle = useLabel("coda.welcome.createProject.title" as CodaTranslationKey);
+  const openProjectTitle = useLabel("coda.welcome.openProject.title" as CodaTranslationKey);
+  const projectNameLabel = useLabel("coda.welcome.projectName.label" as CodaTranslationKey);
+  const projectFolderLabel = useLabel("coda.welcome.projectFolder.label" as CodaTranslationKey);
+  const projectNamePlaceholder = useLabel("coda.placeholder.projectName" as CodaTranslationKey);
 
   const handlePickFolder = reactHostPort.useCallback(async () => {
     const folder = await window.dialog.openFolder();
@@ -2323,7 +2480,7 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
                   </svg>
                 </div>
                 <div className="text-center">
-                  <div className="text-base font-semibold text-foreground">Create New Project</div>
+                  <div className="text-base font-semibold text-foreground">{createProjectTitle}</div>
                   <p className="mt-1 text-sm text-muted-foreground">Start fresh with a new coda project in a folder of your choice.</p>
                 </div>
               </button>
@@ -2341,7 +2498,7 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
                   </svg>
                 </div>
                 <div className="text-center">
-                  <div className="text-base font-semibold text-foreground">Open Existing Project</div>
+                  <div className="text-base font-semibold text-foreground">{openProjectTitle}</div>
                   <p className="mt-1 text-sm text-muted-foreground">Open a folder that already contains a coda project configuration.</p>
                 </div>
               </button>
@@ -2363,26 +2520,26 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
                     <polyline points="15 18 9 12 15 6" />
                   </svg>
                 </button>
-                <h2 className="text-base font-semibold text-foreground">{mode === "create" ? "Create New Project" : "Open Existing Project"}</h2>
+                <h2 className="text-base font-semibold text-foreground">{mode === "create" ? createProjectTitle : openProjectTitle}</h2>
               </div>
 
               {mode === "create" && (
                 <div className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-foreground">Project Name</label>
+                    <label className="text-sm font-medium text-foreground">{projectNameLabel}</label>
                     <input
                       type="text"
                       value={projectName}
                       onChange={(e) => setProjectName(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-                      placeholder="My Project"
+                      placeholder={projectNamePlaceholder}
                       className="w-full rounded-md border border-border-window bg-window px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base"
                       autoFocus
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-foreground">Project Folder</label>
+                    <label className="text-sm font-medium text-foreground">{projectFolderLabel}</label>
                     <div className="flex gap-2">
                       <div className="flex-1 rounded-md border border-border-window bg-window px-3 py-2 text-sm text-muted-foreground truncate">{selectedFolder ?? "No folder selected"}</div>
                       <Button onClick={handlePickFolder} variant="secondary">
@@ -2832,6 +2989,7 @@ function App() {
   const connectedLabel = useLabel("coda.titlebar.connected" as CodaTranslationKey);
   const offlineLabel = useLabel("coda.titlebar.offline" as CodaTranslationKey);
   const refreshLabel = useLabel("coda.titlebar.refresh" as CodaTranslationKey);
+  const loadingLabel = useLabel("coda.common.loading" as CodaTranslationKey);
 
   reactHostPort.useEffect(() => {
     async function init() {
@@ -2897,7 +3055,7 @@ function App() {
   if (projectPath === undefined) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-window">
-        <Spinner label="Loading..." />
+        <Spinner label={loadingLabel} />
       </div>
     );
   }

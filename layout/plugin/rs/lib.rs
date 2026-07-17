@@ -417,7 +417,7 @@ fn resolve_run_style(doc: &LayoutDocument, paragraph_style_id: Option<&str>, cha
     (family, size)
 }
 
-fn run_layout_preflight(doc: &LayoutDocument) -> Vec<PreflightIssue> {
+fn run_layout_preflight(doc: &LayoutDocument, labels: &LayoutLabels) -> Vec<PreflightIssue> {
     let mut issues = Vec::new();
     for page in &doc.pages {
         let resolved = resolve_page(doc, page);
@@ -431,7 +431,7 @@ fn run_layout_preflight(doc: &LayoutDocument) -> Vec<PreflightIssue> {
                 issues.push(PreflightIssue {
                     severity: "warning".into(),
                     code: "object.out_of_bounds".into(),
-                    message: format!("Object {} extends outside page bounds", frame.id()),
+                    message: preflight_msg(labels.preflight_out_of_bounds, &[frame.id()]),
                     object_id: Some(frame.id().into()),
                     page_id: Some(page.id.clone()),
                 });
@@ -443,21 +443,21 @@ fn run_layout_preflight(doc: &LayoutDocument) -> Vec<PreflightIssue> {
                         Some("missing") | None => issues.push(PreflightIssue {
                             severity: "error".into(),
                             code: "asset.missing".into(),
-                            message: format!("Linked asset missing for {}", frame.id()),
+                            message: preflight_msg(labels.preflight_asset_missing, &[frame.id()]),
                             object_id: Some(frame.id().into()),
                             page_id: Some(page.id.clone()),
                         }),
                         Some("modified") => issues.push(PreflightIssue {
                             severity: "warning".into(),
                             code: "asset.modified".into(),
-                            message: format!("Linked asset modified for {}", frame.id()),
+                            message: preflight_msg(labels.preflight_asset_modified, &[frame.id()]),
                             object_id: Some(frame.id().into()),
                             page_id: Some(page.id.clone()),
                         }),
                         Some("low_resolution") => issues.push(PreflightIssue {
                             severity: "warning".into(),
                             code: "asset.low_resolution".into(),
-                            message: format!("Linked asset is low resolution for {}", frame.id()),
+                            message: preflight_msg(labels.preflight_asset_low_resolution, &[frame.id()]),
                             object_id: Some(frame.id().into()),
                             page_id: Some(page.id.clone()),
                         }),
@@ -467,7 +467,7 @@ fn run_layout_preflight(doc: &LayoutDocument) -> Vec<PreflightIssue> {
                         issues.push(PreflightIssue {
                             severity: "info".into(),
                             code: "image.empty_frame".into(),
-                            message: format!("Image frame {} has no preview", frame.id()),
+                            message: preflight_msg(labels.preflight_image_empty_frame, &[frame.id()]),
                             object_id: Some(frame.id().into()),
                             page_id: Some(page.id.clone()),
                         });
@@ -478,7 +478,7 @@ fn run_layout_preflight(doc: &LayoutDocument) -> Vec<PreflightIssue> {
                         issues.push(PreflightIssue {
                             severity: "error".into(),
                             code: "text.missing_story".into(),
-                            message: format!("Text frame {} has no story", frame.id()),
+                            message: preflight_msg(labels.preflight_text_missing_story, &[frame.id()]),
                             object_id: Some(frame.id().into()),
                             page_id: Some(page.id.clone()),
                         });
@@ -498,7 +498,7 @@ fn run_layout_preflight(doc: &LayoutDocument) -> Vec<PreflightIssue> {
                             issues.push(PreflightIssue {
                                 severity: "warning".into(),
                                 code: "text.below_minimum_size".into(),
-                                message: format!("Text in {} is below minimum readable size", frame.id()),
+                                message: preflight_msg(labels.preflight_text_below_minimum_size, &[frame.id()]),
                                 object_id: Some(frame.id().into()),
                                 page_id: Some(page.id.clone()),
                             });
@@ -508,7 +508,7 @@ fn run_layout_preflight(doc: &LayoutDocument) -> Vec<PreflightIssue> {
                             issues.push(PreflightIssue {
                                 severity: "error".into(),
                                 code: "font.missing".into(),
-                                message: format!("Font {family} used by {} is not available", frame.id()),
+                                message: preflight_msg(labels.preflight_font_missing, &[family, frame.id()]),
                                 object_id: Some(frame.id().into()),
                                 page_id: Some(page.id.clone()),
                             });
@@ -518,7 +518,7 @@ fn run_layout_preflight(doc: &LayoutDocument) -> Vec<PreflightIssue> {
                         issues.push(PreflightIssue {
                             severity: "error".into(),
                             code: "text.overset".into(),
-                            message: format!("Text in {} overflows its frame", frame.id()),
+                            message: preflight_msg(labels.preflight_text_overset, &[frame.id()]),
                             object_id: Some(frame.id().into()),
                             page_id: Some(page.id.clone()),
                         });
@@ -534,7 +534,7 @@ fn run_layout_preflight(doc: &LayoutDocument) -> Vec<PreflightIssue> {
                 issues.push(PreflightIssue {
                     severity: "warning".into(),
                     code: "asset.rgb_in_print".into(),
-                    message: format!("Linked asset {} uses RGB in a print document", link.id),
+                    message: preflight_msg(labels.preflight_asset_rgb_in_print, &[&link.id]),
                     object_id: Some(link.id.clone()),
                     page_id: None,
                 });
@@ -593,6 +593,21 @@ struct LayoutLabels {
     no_issues: &'static str,
     window_blueprint: &'static str,
     window_preview: &'static str,
+    parent: &'static str,
+    objects: &'static str,
+    chars: &'static str,
+    undo: &'static str,
+    redo: &'static str,
+    preflight_out_of_bounds: &'static str,
+    preflight_asset_missing: &'static str,
+    preflight_asset_modified: &'static str,
+    preflight_asset_low_resolution: &'static str,
+    preflight_image_empty_frame: &'static str,
+    preflight_text_missing_story: &'static str,
+    preflight_text_below_minimum_size: &'static str,
+    preflight_font_missing: &'static str,
+    preflight_text_overset: &'static str,
+    preflight_asset_rgb_in_print: &'static str,
 }
 
 const LAYOUT_LABELS_NATIVE_EN: LayoutLabels = LayoutLabels {
@@ -641,6 +656,21 @@ const LAYOUT_LABELS_NATIVE_EN: LayoutLabels = LayoutLabels {
     no_issues: "No issues",
     window_blueprint: "Blueprint",
     window_preview: "Preview",
+    parent: "parent",
+    objects: "objects",
+    chars: "chars",
+    undo: "Undo",
+    redo: "Redo",
+    preflight_out_of_bounds: "Object {} extends outside page bounds",
+    preflight_asset_missing: "Linked asset missing for {}",
+    preflight_asset_modified: "Linked asset modified for {}",
+    preflight_asset_low_resolution: "Linked asset is low resolution for {}",
+    preflight_image_empty_frame: "Image frame {} has no preview",
+    preflight_text_missing_story: "Text frame {} has no story",
+    preflight_text_below_minimum_size: "Text in {} is below minimum readable size",
+    preflight_font_missing: "Font {} used by {} is not available",
+    preflight_text_overset: "Text in {} overflows its frame",
+    preflight_asset_rgb_in_print: "Linked asset {} uses RGB in a print document",
 };
 
 const LAYOUT_LABELS_NATIVE_DE: LayoutLabels = LayoutLabels {
@@ -689,6 +719,21 @@ const LAYOUT_LABELS_NATIVE_DE: LayoutLabels = LayoutLabels {
     no_issues: "Keine Probleme",
     window_blueprint: "Entwurf",
     window_preview: "Vorschau",
+    parent: "uebergeordnet",
+    objects: "Objekte",
+    chars: "Zeichen",
+    undo: "Rueckgaengig",
+    redo: "Wiederholen",
+    preflight_out_of_bounds: "Objekt {} liegt ausserhalb der Seitengrenzen",
+    preflight_asset_missing: "Verknuepftes Element fehlt fuer {}",
+    preflight_asset_modified: "Verknuepftes Element geaendert fuer {}",
+    preflight_asset_low_resolution: "Verknuepftes Element hat niedrige Aufloesung fuer {}",
+    preflight_image_empty_frame: "Bildrahmen {} hat keine Vorschau",
+    preflight_text_missing_story: "Textrahmen {} hat keinen Textfluss",
+    preflight_text_below_minimum_size: "Text in {} ist kleiner als die Mindestlesbarkeitsgroesse",
+    preflight_font_missing: "Schriftart {} verwendet von {} ist nicht verfuegbar",
+    preflight_text_overset: "Text in {} laeuft ueber den Rahmen hinaus",
+    preflight_asset_rgb_in_print: "Verknuepftes Element {} verwendet RGB in einem Druckdokument",
 };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
@@ -709,6 +754,15 @@ fn catalogue_kind_label(kind: &'static str, labels: &LayoutLabels) -> &'static s
         "image" => labels.kind_image,
         _ => kind,
     }
+}
+
+/// 🗣️ Fills a localized preflight message template's positional `{}` placeholders, in order, with the given values.
+fn preflight_msg(template: &str, args: &[&str]) -> String {
+    let mut result = template.to_string();
+    for arg in args {
+        result = result.replacen("{}", arg, 1);
+    }
+    result
 }
 //#endregion 🔖Terminology
 
@@ -769,7 +823,7 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
             tree_item_hoverable(
                 page_row_id(&page.id),
                 page.name.clone(),
-                page.parent_page_id.as_ref().map(|parent_id| format!("parent: {parent_id}")),
+                page.parent_page_id.as_ref().map(|parent_id| format!("{}: {parent_id}", labels.parent)),
                 Some("file".into()),
                 Some(layout_action("setActivePage", Some(json!({ "pageId": page.id })))),
                 &page.id,
@@ -821,7 +875,7 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
                 tree_item(
                     layer_row_id(&page.id, &layer.id),
                     format!("{} · {}", page.name, layer.name),
-                    Some(format!("{} objects", layer.object_ids.len())),
+                    Some(format!("{} {}", layer.object_ids.len(), labels.objects)),
                     Some("layers".into()),
                     None,
                 )
@@ -832,7 +886,7 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
     let story_items: Vec<UiTreeItemNode> = doc
         .stories
         .iter()
-        .map(|story| tree_item(story_row_id(&story.id), story.id.clone(), Some(format!("{} chars", story.content.chars().count())), Some("file-text".into()), None))
+        .map(|story| tree_item(story_row_id(&story.id), story.id.clone(), Some(format!("{} {}", story.content.chars().count(), labels.chars)), Some("file-text".into()), None))
         .collect();
 
     let link_items: Vec<UiTreeItemNode> = doc
@@ -1227,7 +1281,7 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
 }
 
 fn build_preflight_tree(doc: &LayoutDocument, labels: &LayoutLabels) -> UiNode {
-    let issues = run_layout_preflight(doc);
+    let issues = run_layout_preflight(doc, labels);
     let items: Vec<UiTreeItemNode> = if issues.is_empty() {
         vec![tree_item("layout-preflight.empty", labels.no_issues, None, Some("check-circle".into()), None)]
     } else {
@@ -1268,7 +1322,7 @@ fn build_preflight_tree(doc: &LayoutDocument, labels: &LayoutLabels) -> UiNode {
     })
 }
 
-fn layout_window_engagement(runtime: &LayoutPlayRuntime, label: &str) -> WindowEngagement {
+fn layout_window_engagement(runtime: &LayoutPlayRuntime, label: &str, labels: &LayoutLabels) -> WindowEngagement {
     WindowEngagement {
         session_active: Some(false),
         options: None,
@@ -1286,11 +1340,11 @@ fn layout_window_engagement(runtime: &LayoutPlayRuntime, label: &str) -> WindowE
         controls: None,
         status: Some(vec![WindowEngagementStatus {
             id: format!("layout-status-{label}"),
-            text: format!("Page {}", runtime.active_page_id),
+            text: format!("{} {}", labels.page, runtime.active_page_id),
         }]),
         possible_engagements: Some(vec![
-            WindowEngagementPossible { id: "layout.eng.undo".into(), label: "Undo".into(), detail: None, action: Some(layout_action("undo", None)) },
-            WindowEngagementPossible { id: "layout.eng.redo".into(), label: "Redo".into(), detail: None, action: Some(layout_action("redo", None)) },
+            WindowEngagementPossible { id: "layout.eng.undo".into(), label: labels.undo.into(), detail: None, action: Some(layout_action("undo", None)) },
+            WindowEngagementPossible { id: "layout.eng.redo".into(), label: labels.redo.into(), detail: None, action: Some(layout_action("redo", None)) },
         ]),
     }
 }
@@ -1732,7 +1786,8 @@ impl DocumentApp for LayoutPlayApp {
                 }
             }
             "exportPackage" => {
-                let preflight_json = serde_json::to_string(&run_layout_preflight(document)).unwrap_or_else(|_| "[]".into());
+                let preflight_json =
+                    serde_json::to_string(&run_layout_preflight(document, layout_labels(view_state))).unwrap_or_else(|_| "[]".into());
                 let doc_json = serde_json::to_string(document).unwrap_or_default();
                 match export_package_zip(&doc_json, &preflight_json) {
                     Ok(bytes) => ActionEmit::effect(HostEffect::DownloadMediaExport {
@@ -1781,26 +1836,34 @@ impl DocumentApp for LayoutPlayApp {
         }
     }
 
-    fn window_engagements(&self, _doc: &DocumentView<'_, LayoutDocument>, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(&self, _doc: &DocumentView<'_, LayoutDocument>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+        let labels = layout_labels(view_state);
         HashMap::from([
-            (LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(&self.runtime, "blueprint")),
-            (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), layout_window_engagement(&self.runtime, "preview")),
+            (LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(&self.runtime, "blueprint", labels)),
+            (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), layout_window_engagement(&self.runtime, "preview", labels)),
         ])
     }
 
     fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
         let labels = layout_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         semio_framework_plugin::AppLabelsOverlay {
             app_label: None,
             window_kind_labels: std::collections::HashMap::from([
                 (LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), labels.window_blueprint.to_string()),
                 (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), labels.window_preview.to_string()),
             ]),
-            panel_tab_labels: std::collections::HashMap::new(),
-            mode_labels: std::collections::HashMap::new(),
-            action_labels: HashMap::new(),
-            utility_labels: HashMap::new(),
-            example_labels: HashMap::new(),
+            panel_tab_labels: std::collections::HashMap::from([
+                (LAYOUT_PLAY_PREFLIGHT_TAB_ID.to_string(), labels.preflight.to_string()),
+            ]),
+            mode_labels: std::collections::HashMap::from([
+                ("edit".to_string(), (if is_de { "Bearbeiten" } else { "Edit" }).to_string()),
+            ]),
+            action_labels: layout_action_labels(is_de),
+            utility_labels: layout_utility_labels(is_de),
+            example_labels: std::collections::HashMap::from([
+                ("sample".to_string(), (if is_de { "Beispiel" } else { "Sample" }).to_string()),
+            ]),
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),
             introduction_labels: HashMap::new(),
@@ -1808,6 +1871,45 @@ impl DocumentApp for LayoutPlayApp {
     }
 }
 //#endregion 🔖LayoutPlayApp
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_layout_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+fn layout_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("addFrame", "Add Frame", "Rahmen hinzufuegen"),
+        ("addPage", "Add Page", "Seite hinzufuegen"),
+        ("exportPng", "Export Png", "Png exportieren"),
+        ("exportSvg", "Export Svg", "Svg exportieren"),
+        ("exportPdf", "Export Pdf", "Pdf exportieren"),
+        ("exportPackage", "Export Package", "Paket exportieren"),
+        ("patchPage", "Patch Page", "Seite aktualisieren"),
+        ("patchFrame", "Patch Frame", "Rahmen aktualisieren"),
+        ("setCamera", "Set Camera", "Kamera festlegen"),
+        ("canvasDrop", "Canvas Drop", "Ablegen auf Leinwand"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+        ("setActivePage", "Set Active Page", "Aktive Seite festlegen"),
+        ("setHover", "Set Hover", "Hover festlegen"),
+        ("focusPreflightIssue", "Focus Preflight Issue", "Preflight-Problem fokussieren"),
+        ("engagementInput", "Engagement Input", "Eingabe"),
+        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrueckt"),
+        ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegt"),
+        ("canvasPointerUp", "Canvas Pointer Up", "Leinwand-Zeiger losgelassen"),
+        ("canvasDragOver", "Canvas Drag Over", "Ziehen ueber Leinwand"),
+        ("canvasDragLeave", "Canvas Drag Leave", "Ziehen verlaesst Leinwand"),
+        ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_layout_app`.
+/// The layout app currently declares no utilities, so this returns an empty map — kept for parity with the
+/// other crates' overlay-wiring shape and to compile-check the moment a utility is added.
+fn layout_utility_labels(_is_de: bool) -> std::collections::HashMap<String, String> {
+    std::collections::HashMap::new()
+}
+//#endregion 🔖CommandLabels
 
 //#region 🔖AppFactory
 /// 🛠️ An internal (non-palette) action declaration — the pointer/inspector/DnD/engagement-bound
@@ -2104,7 +2206,7 @@ mod tests {
 
     #[test]
     fn preflight_finds_missing_asset() {
-        let issues = run_layout_preflight(&default_document());
+        let issues = run_layout_preflight(&default_document(), &LAYOUT_LABELS_NATIVE_EN);
         assert!(issues.iter().any(|issue| issue.code == "asset.missing"));
         let mut app = new_app();
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_PREFLIGHT);
@@ -2469,7 +2571,7 @@ mod tests {
         if let Some(story) = doc.stories.iter_mut().find(|story| story.id == "story-overset") {
             story.content = "a".repeat(450);
         }
-        let issues = run_layout_preflight(&doc);
+        let issues = run_layout_preflight(&doc, &LAYOUT_LABELS_NATIVE_EN);
         let codes: Vec<&str> = issues.iter().map(|issue| issue.code.as_str()).collect();
         for expected in [
             "object.out_of_bounds",
