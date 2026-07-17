@@ -417,6 +417,11 @@ fn commit_with_utility_reset(ops: Vec<DrawOp>, description: &str) -> ActionEmit<
 //#region 🔖Terminology
 /// 🗣️ Complete UI label set for the draw app; one field per label makes every locale combination compile-checked.
 struct DrawLabels {
+    window_canvas: &'static str,
+    mode_edit: &'static str,
+    panel_document: &'static str,
+    panel_catalogue: &'static str,
+    panel_inspection: &'static str,
     add_path: &'static str,
     add_rectangle: &'static str,
     add_text: &'static str,
@@ -463,6 +468,11 @@ struct DrawLabels {
 }
 
 const DRAW_LABELS_NATIVE_EN: DrawLabels = DrawLabels {
+    window_canvas: "Canvas",
+    mode_edit: "Edit",
+    panel_document: "Document",
+    panel_catalogue: "Catalogue",
+    panel_inspection: "Inspection",
     add_path: "Add Path",
     add_rectangle: "Add Rectangle",
     add_text: "Add Text",
@@ -509,6 +519,11 @@ const DRAW_LABELS_NATIVE_EN: DrawLabels = DrawLabels {
 };
 
 const DRAW_LABELS_NATIVE_DE: DrawLabels = DrawLabels {
+    window_canvas: "Leinwand",
+    mode_edit: "Bearbeiten",
+    panel_document: "Dokument",
+    panel_catalogue: "Katalog",
+    panel_inspection: "Inspektion",
     add_path: "Pfad hinzufügen",
     add_rectangle: "Rechteck hinzufügen",
     add_text: "Text hinzufügen",
@@ -955,8 +970,86 @@ impl DocumentApp for DrawApp {
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = draw_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: None,
+            window_kind_labels: HashMap::from([(DRAW_PLAY_WINDOW_CANVAS.to_string(), labels.window_canvas.to_string())]),
+            panel_tab_labels: HashMap::from([
+                ("framework.panel.document".to_string(), labels.panel_document.to_string()),
+                ("framework.panel.catalogue".to_string(), labels.panel_catalogue.to_string()),
+                ("framework.panel.inspection".to_string(), labels.panel_inspection.to_string()),
+            ]),
+            mode_labels: HashMap::from([("edit".to_string(), labels.mode_edit.to_string())]),
+            action_labels: draw_action_labels(is_de),
+            utility_labels: draw_utility_labels(is_de),
+            example_labels: HashMap::new(),
+            action_arg_labels: HashMap::new(),
+            dialog_labels: HashMap::new(),
+            introduction_labels: HashMap::new(),
+        }
+    }
 }
 //#endregion 🔖DrawApp
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action/action_with declared in `create_draw_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+fn draw_action_labels(is_de: bool) -> HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("addLayer", "Add Layer", "Ebene hinzufuegen"),
+        ("combineBoolean", "Combine Boolean", "Boolean kombinieren"),
+        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+        ("setDocument", "Set Document", "Dokument festlegen"),
+        ("commitDocument", "Commit Document", "Dokument uebernehmen"),
+        ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
+        ("setCamera", "Set Camera", "Kamera festlegen"),
+        ("setCameraZoom", "Set Camera Zoom", "Kamerazoom festlegen"),
+        ("setSelectedOpacity", "Set Selected Opacity", "Deckkraft der Auswahl festlegen"),
+        ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+        ("dropLayerKind", "Drop Layer Kind", "Ebenenart ablegen"),
+        ("moveLayer", "Move Layer", "Ebene verschieben"),
+        ("deleteLayer", "Delete Layer", "Ebene loeschen"),
+        ("duplicateLayer", "Duplicate Layer", "Ebene duplizieren"),
+        ("toggleLayerVisible", "Toggle Layer Visible", "Ebenensichtbarkeit umschalten"),
+        ("patchLayer", "Patch Layer", "Ebene aktualisieren"),
+        ("patchLayers", "Patch Layers", "Ebenen aktualisieren"),
+        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrueckt"),
+        ("canvasPointerUp", "Canvas Pointer Up", "Leinwand-Zeiger losgelassen"),
+        ("canvasDoubleClick", "Canvas Double Click", "Leinwand-Doppelklick"),
+        ("canvasCommitDraft", "Canvas Commit Draft", "Leinwand-Entwurf uebernehmen"),
+        ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegen"),
+        ("canvasEscape", "Canvas Escape", "Leinwand abbrechen"),
+        ("selectAll", "Select All", "Alles auswaehlen"),
+        ("clearSelection", "Clear Selection", "Auswahl aufheben"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+        ("setHover", "Set Hover", "Hover festlegen"),
+        ("engagementInput", "Engagement Input", "Eingabe"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_draw_app`.
+fn draw_utility_labels(is_de: bool) -> HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("selectMarquee", "Marquee Select", "Rahmenauswahl"),
+        ("selectLasso", "Lasso Select", "Lasso-Auswahl"),
+        ("selectDirect", "Direct Select", "Direktauswahl"),
+        ("pen", "Pen", "Stift"),
+        ("shapeRect", "Rectangle", "Rechteck"),
+        ("shapeEllipse", "Ellipse", "Ellipse"),
+        ("shapeLine", "Line", "Linie"),
+        ("shapePolygon", "Polygon", "Polygon"),
+        ("booleanCombine", "Boolean", "Boolean"),
+        ("trace", "Trace", "Nachzeichnen"),
+        ("transformMove", "Pan", "Verschieben"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+//#endregion 🔖CommandLabels
 
 //#region 🔖Canvas
 fn overlay_record(id: String, transform: [f64; 6], segments: &[PathSegment], fill: Option<[f64; 4]>, stroke_color: [f64; 4], stroke_width: f64) -> Value {

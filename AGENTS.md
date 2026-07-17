@@ -16,6 +16,7 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - You MUST NOT use any modifying git command such as `git commit`, `git stash`, `git stash pop`, `git checkout`, … because others will lose their work.
   - You MUST edit the existing files.
   - You MUST NOT create new files for broken files.
+  - You MUST NOT use git worktrees.
 - You are working on a greenfield repo.
   - The codebase is under design and development and not used in production yet.
     - You MUST not care about backwards compatibility.

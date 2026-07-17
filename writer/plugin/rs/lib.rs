@@ -1173,6 +1173,10 @@ struct WriterLabels {
     tab_size: &'static str,
     engagement_placeholder: &'static str,
     editor_mode_status: &'static str,
+    window_main: &'static str,
+    mode_edit: &'static str,
+    panel_tab_content: &'static str,
+    panel_tab_outline: &'static str,
 }
 
 const WRITER_LABELS_NATIVE_EN: WriterLabels = WriterLabels {
@@ -1190,6 +1194,10 @@ const WRITER_LABELS_NATIVE_EN: WriterLabels = WriterLabels {
     tab_size: "Tab size",
     engagement_placeholder: "Format, lint, line numbers",
     editor_mode_status: "Text editor",
+    window_main: "Jack",
+    mode_edit: "Edit",
+    panel_tab_content: "Content",
+    panel_tab_outline: "Outline",
 };
 
 const WRITER_LABELS_NATIVE_DE: WriterLabels = WriterLabels {
@@ -1200,13 +1208,17 @@ const WRITER_LABELS_NATIVE_DE: WriterLabels = WriterLabels {
     camera: "Kamera",
     diagnostics: "Diagnosen",
     format: "Formatieren",
-    lint: "Prüfen",
+    lint: "Pruefen",
     line_numbers: "Zeilennummern",
-    font_size: "Schriftgröße",
-    line_height: "Zeilenhöhe",
-    tab_size: "Tabulatorgröße",
-    engagement_placeholder: "Format, prüfen, Zeilennummern",
+    font_size: "Schriftgroesse",
+    line_height: "Zeilenhoehe",
+    tab_size: "Tabulatorgroesse",
+    engagement_placeholder: "Format, pruefen, Zeilennummern",
     editor_mode_status: "Texteditor",
+    window_main: "Jack",
+    mode_edit: "Bearbeiten",
+    panel_tab_content: "Inhalt",
+    panel_tab_outline: "Gliederung",
 };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
@@ -1782,8 +1794,66 @@ impl DocumentApp for WriterApp {
         ];
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), measures)])
     }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = writer_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: None,
+            window_kind_labels: std::collections::HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), labels.window_main.to_string())]),
+            panel_tab_labels: std::collections::HashMap::from([
+                (WRITER_PANEL_TAB_DOCUMENT_CONTENT_ID.to_string(), labels.panel_tab_content.to_string()),
+                (WRITER_PANEL_TAB_DOCUMENT_OUTLINE_ID.to_string(), labels.panel_tab_outline.to_string()),
+            ]),
+            mode_labels: std::collections::HashMap::from([("edit".to_string(), labels.mode_edit.to_string())]),
+            action_labels: writer_action_labels(is_de),
+            utility_labels: writer_utility_labels(is_de),
+            example_labels: HashMap::new(),
+            action_arg_labels: HashMap::new(),
+            dialog_labels: HashMap::new(),
+            introduction_labels: HashMap::new(),
+        }
+    }
 }
 //#endregion 🔖WriterApp
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_writer_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
+/// command palette and Actions rail get a translated label without threading locale through the whole builder chain.
+fn writer_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("formatDocument", "Format Document", "Dokument formatieren"),
+        ("lintDocument", "Lint Document", "Dokument pruefen"),
+        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+        ("textEdit", "Edit Text", "Text bearbeiten"),
+        ("setText", "Set Text", "Text festlegen"),
+        ("setCamera", "Set Camera", "Kamera festlegen"),
+        ("commitRename", "Commit Rename", "Umbenennung uebernehmen"),
+        ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+        ("setDocument", "Set Document", "Dokument festlegen"),
+        ("setDocumentJson", "Set Document JSON", "Dokument-JSON festlegen"),
+        ("setFixtureJson", "Set Fixture JSON", "Fixture-JSON festlegen"),
+        ("requestCompletions", "Request Completions", "Vervollstaendigungen anfordern"),
+        ("textSelect", "Text Select", "Text auswaehlen"),
+        ("setEditorSelection", "Set Editor Selection", "Editor-Auswahl festlegen"),
+        ("selectAstNode", "Select Ast Node", "AST-Knoten auswaehlen"),
+        ("setAstSelection", "Set Ast Selection", "AST-Auswahl festlegen"),
+        ("setAstHover", "Set Ast Hover", "AST-Hover festlegen"),
+        ("textHover", "Text Hover", "Text-Hover"),
+        ("toggleLineNumbers", "Toggle Line Numbers", "Zeilennummern umschalten"),
+        ("setEditorSetting", "Set Editor Setting", "Editor-Einstellung festlegen"),
+        ("engagementInput", "Engagement Input", "Eingabe"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_writer_app`.
+/// Writer declares no utilities today; kept for parity with the other apps' `app_labels()` wiring.
+fn writer_utility_labels(_is_de: bool) -> std::collections::HashMap<String, String> {
+    std::collections::HashMap::new()
+}
+//#endregion 🔖CommandLabels
 
 //#region 🔖Manifest
 /// 🙈 An internal document operation kept out of the command palette — editor events (text edits,

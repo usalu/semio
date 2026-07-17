@@ -33,6 +33,7 @@ import {
   NavbarExampleSelect,
   PANEL_ANCHORS,
   PanelDockProvider,
+  PanelToggleGroup,
   Popover,
   PopoverAnchor,
   PopoverContent,
@@ -111,6 +112,8 @@ import {
   UI_TERMINOLOGY_NATIVE,
   UIIntroduction,
   UIDialog,
+  introductionWindowActionPaneUnfoldSelector,
+  introductionWindowToolbarUnfoldSelector,
   readStoredIntroductionSeen,
   writeStoredIntroductionSeen,
   fundedByZukunftBauFooterItem,
@@ -125,6 +128,7 @@ import {
   type PanelDock,
   type PanelTabDockMove,
   type PanelTabNode,
+  type PanelToggleItem,
   type PanelTreeUnitDockMove,
   type RibbonDirection,
   type RibbonRow,
@@ -198,6 +202,7 @@ import {
   type AppPanelTabDefinition,
   type Canvas2dScene,
   type DialogDefinition,
+  type IntroductionAnchor,
   type IntroductionDefinition,
   type IntroductionStepDefinition,
   type ComponentKind,
@@ -826,11 +831,10 @@ const DEFAULT_PANEL_SIZES: Record<PanelAnchor, number> = {
   "bottom-right": 240,
 };
 
-/** @emoji 🌳 Root category ids for the nested dock tab tree — the top row of {@link defaultDock}'s per-anchor tabs. */
-const FRAMEWORK_CATEGORY_WORKBENCH_ID = "framework.category.workbench";
+/** @emoji 🌳 Root category id for the nested dock tab tree — the top row of {@link defaultDock}'s bottom-left (Display) anchor tabs; top-left (Workbench), top-right (Details) and bottom-right (Settings) render their tabs flat instead of under a category branch. */
 const FRAMEWORK_CATEGORY_DISPLAY_ID = "framework.category.display";
-const FRAMEWORK_CATEGORY_DETAILS_ID = "framework.category.details";
-const FRAMEWORK_CATEGORY_SETTINGS_ID = "framework.category.settings";
+/** @emoji 🎛 Root category id bundling every command-category leaf under one expandable Command toggle on bottom-middle (mirrors Display on bottom-left). */
+const FRAMEWORK_CATEGORY_COMMAND_ID = "framework.category.command";
 const APP_DOCUMENT_SEPARATOR = " · ";
 
 const PRESENCE_CLIENT_STORAGE_KEY = "semio.presence.client";
@@ -1613,7 +1617,13 @@ function windowMeasuresChrome(
   };
 }
 
-function utilityBarNode(utilities: readonly UtilityNode[] | undefined, windowId: string, onAction: (action: ActionDescriptor) => void): ReactNode {
+/** @emoji 🎓 Whether a utility node tree has a node (leaf or group) with the given id anywhere in it — used
+ * to decide if this window's toolbar is the one an introduction step's `Utility` anchor targets. */
+function utilityNodeTreeContainsId(nodes: readonly UtilityNode[], targetId: string): boolean {
+  return nodes.some((node) => node.id === targetId || (node.kind === "collection" && utilityNodeTreeContainsId(node.children, targetId)));
+}
+
+function utilityBarNode(utilities: readonly UtilityNode[] | undefined, windowId: string, onAction: (action: ActionDescriptor) => void, revealUtilityId?: string | null): ReactNode {
   if (!utilities?.length) return undefined;
   const categories = groupUtilityNodesByCategory(utilities, UTILITY_CATEGORIES);
   if (!categories.length) return undefined;
@@ -1635,7 +1645,7 @@ function utilityBarNode(utilities: readonly UtilityNode[] | undefined, windowId:
       grouped.push(node);
     }
   }
-  return <UtilityTree id={`ui.toolbar.${windowId}`} utilities={grouped} onAction={onAction} direction="up" />;
+  return <UtilityTree id={`ui.toolbar.${windowId}`} utilities={grouped} onAction={onAction} direction="up" revealUtilityId={revealUtilityId} />;
 }
 
 //#region 🧰WindowActionPane
@@ -2182,12 +2192,14 @@ export function buildCommandCategoryTree(
 }
 
 /**
- * 🎛 One `PanelTabLeaf` per resolved command category, feeding `defaultDock.anchors["bottom-middle"]` — the
- * command palette's fold/active-category/size/persistence is the generic per-anchor `Panel` state (see
- * `buildPanelProps`); this only builds the tab tree. Content is a *lazy* `resolveTree` (mirrors
- * {@link createFrameworkDisplayPanelTabs}'s windows tab) so this array — and therefore `defaultDock`'s own
- * memo — never depends on `expandedCommandId`/`stagedArgsByCommandId`, which change on every keystroke while
- * staging a command argument; `resolveTree` reads those fresh off refs at render time instead.
+ * 🎛 One `PanelTabLeaf` per resolved command category — consumers wrap these under the Command branch
+ * (`FRAMEWORK_CATEGORY_COMMAND_ID`) on `defaultDock.anchors["bottom-middle"]` so the folded chrome shows
+ * a single expandable Command toggle. The command palette's fold/active-category/size/persistence is the
+ * generic per-anchor `Panel` state (see `buildPanelProps`); this only builds the category tab leaves.
+ * Content is a *lazy* `resolveTree` (mirrors {@link createFrameworkDisplayPanelTabs}'s windows tab) so
+ * this array — and therefore `defaultDock`'s own memo — never depends on `expandedCommandId`/
+ * `stagedArgsByCommandId`, which change on every keystroke while staging a command argument; `resolveTree`
+ * reads those fresh off refs at render time instead.
  */
 export function buildCommandCategoryTabs(
   resolvedCommands: readonly ResolvedCommand[],
@@ -3866,16 +3878,26 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
 
   //#region 🧭DockAssembly — default four-corner arrangement (the two middle anchors start empty save the command palette in bottom-middle) + persisted-override reconciliation + drag-and-drop wiring.
   const defaultDock = useMemo((): PanelDock => {
-    const topLeft: PanelTabNode[] = [{ kind: "branch", id: FRAMEWORK_CATEGORY_WORKBENCH_ID, icon: categoryTabIcon(workbenchLeftTabs, "folder"), name: shellLabel("ui.panelToggle.workbench"), order: 0, children: workbenchLeftTabs }];
+    // 🧭 Top-left (Workbench: Document/Catalogue), top-right (Details: Inspection/Parameters) and bottom-right
+    // (Settings: Theme/Settings) render their tabs flat, one level up from where they used to sit — the
+    // category-branch wrapper tab is gone, so each leaf is a top-level toggle instead of two clicks deep.
+    const topLeft: PanelTabNode[] = [...workbenchLeftTabs];
     const bottomLeft: PanelTabNode[] = [];
     if (frameworkDisplayTabs.length > 0) {
       bottomLeft.push({ kind: "branch", id: FRAMEWORK_CATEGORY_DISPLAY_ID, icon: categoryTabIcon(frameworkDisplayTabs, "layout-grid"), name: shellLabel("ui.panelToggle.display"), order: 0, children: frameworkDisplayTabs });
     }
     if (frameworkSyncTab) bottomLeft.push(frameworkSyncTab);
-    const topRight: PanelTabNode[] = [{ kind: "branch", id: FRAMEWORK_CATEGORY_DETAILS_ID, icon: categoryTabIcon(detailsRightTabs, "info"), name: shellLabel("ui.panelToggle.details"), order: 0, children: detailsRightTabs }];
-    const bottomRight: PanelTabNode[] = [{ kind: "branch", id: FRAMEWORK_CATEGORY_SETTINGS_ID, icon: categoryTabIcon(settingsRightTabs, "settings-2"), name: shellLabel("ui.panelToggle.settings"), order: 0, children: settingsRightTabs }];
+    const topRight: PanelTabNode[] = [...detailsRightTabs];
+    const bottomRight: PanelTabNode[] = [...settingsRightTabs];
     if (frameworkUtilitiesHistoryTab) bottomRight.push(frameworkUtilitiesHistoryTab);
-    return { anchors: { "top-left": topLeft, "top-middle": [], "top-right": topRight, "bottom-left": bottomLeft, "bottom-middle": commandCategoryTabs, "bottom-right": bottomRight } };
+    // 🎛 Command categories stay nested under one expandable Command branch (unlike flat Theme/Settings
+    // footer toggles) so the folded bottom-middle chrome shows a single Command toggle, not every
+    // category leaf inlined along the footer.
+    const bottomMiddle: PanelTabNode[] =
+      commandCategoryTabs.length > 0
+        ? [{ kind: "branch", id: FRAMEWORK_CATEGORY_COMMAND_ID, icon: categoryTabIcon(commandCategoryTabs, "wrench"), name: shellLabel("ui.panelToggle.command"), order: 0, children: commandCategoryTabs }]
+        : [];
+    return { anchors: { "top-left": topLeft, "top-middle": [], "top-right": topRight, "bottom-left": bottomLeft, "bottom-middle": bottomMiddle, "bottom-right": bottomRight } };
   }, [commandCategoryTabs, detailsRightTabs, frameworkDisplayTabs, frameworkSyncTab, frameworkUtilitiesHistoryTab, settingsRightTabs, uiLocale, workbenchLeftTabs]);
 
   useEffect(() => {
@@ -3962,6 +3984,51 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const detailsOverrideTabId = panel?.activePanelTab;
   const detailsOverrideAnchor = detailsOverrideTabId ? findPanelTabInDock(dock, detailsOverrideTabId)?.anchor : undefined;
 
+  /** @emoji 🎓 The current introduction step's anchor, decomposed by kind — `null` unless that kind is
+   * active, so every reveal override below (here and in `modeWindows`) is a plain truthiness check. A
+   * folded toolbar/Actions rail/dock panel would otherwise hide the step's anchor from ever mounting (see
+   * `useIntroductionAnchorRect`), leaving the step centered with no highlight and no way for the user to
+   * find what to do. */
+  const activeIntroductionStepAnchor: IntroductionAnchor | null = session?.app.introduction && introductionStepIndex != null ? (session.app.introduction.steps[introductionStepIndex]?.anchor ?? null) : null;
+  const introductionUtilityId = activeIntroductionStepAnchor?.kind === "utility" ? activeIntroductionStepAnchor.id : null;
+  const introductionActionId = activeIntroductionStepAnchor?.kind === "action" ? activeIntroductionStepAnchor.id : null;
+  const introductionPanelTabId = activeIntroductionStepAnchor?.kind === "panelTab" ? activeIntroductionStepAnchor.id : null;
+  const introductionPanelTabAnchor = introductionPanelTabId ? findPanelTabInDock(dock, introductionPanelTabId)?.anchor : undefined;
+  const introductionUtilityWindowId = useMemo(() => {
+    if (!introductionUtilityId || !session) return null;
+    for (const kind of session.app.windowKinds) {
+      const utilities = resolveUtilityNodes(session.app, kind, null, kind.id, appLabelsOverlay);
+      if (utilityNodeTreeContainsId(utilities, introductionUtilityId)) return kind.id;
+    }
+    return null;
+  }, [appLabelsOverlay, introductionUtilityId, session]);
+  const introductionActionWindowId = useMemo(() => {
+    if (!introductionActionId || !session) return null;
+    for (const kind of session.app.windowKinds) {
+      const actions = resolveWindowActions(session.app, kind);
+      if (actions.some((action) => action.id === introductionActionId)) return kind.id;
+    }
+    return null;
+  }, [introductionActionId, session]);
+  const introductionAnchorFallbackSelectors = useMemo((): readonly string[] => {
+    if (introductionUtilityWindowId) return [introductionWindowToolbarUnfoldSelector(introductionUtilityWindowId)];
+    if (introductionActionWindowId) return [introductionWindowActionPaneUnfoldSelector(introductionActionWindowId)];
+    return [];
+  }, [introductionActionWindowId, introductionUtilityWindowId]);
+
+  const lastIntroductionPanelTabIdRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!introductionPanelTabId || !introductionPanelTabAnchor) {
+      lastIntroductionPanelTabIdRef.current = undefined;
+      return;
+    }
+    if (lastIntroductionPanelTabIdRef.current === introductionPanelTabId) return;
+    lastIntroductionPanelTabIdRef.current = introductionPanelTabId;
+    const resolved = findPanelTabPath(dock.anchors[introductionPanelTabAnchor], introductionPanelTabId);
+    if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: introductionPanelTabAnchor, value: resolved });
+    dispatch({ type: "SET_PANEL_VISIBLE", anchor: introductionPanelTabAnchor, value: true });
+  }, [introductionPanelTabId, introductionPanelTabAnchor, dock]);
+
   /** 🧭 Progressive reveal means a stored path can legitimately end at a branch (or be empty) — this is now a plain per-anchor truncation-validate, no override reassertion (see the write-through effects below). */
   const panelActivePaths = useMemo((): Record<PanelAnchor, readonly string[]> => {
     const result = {} as Record<PanelAnchor, readonly string[]>;
@@ -3998,10 +4065,12 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     if (lastDetailsOverrideTabIdRef.current === detailsOverrideTabId) return;
     lastDetailsOverrideTabIdRef.current = detailsOverrideTabId;
     if (detailsOverrideAnchor === studioOverrideAnchor) return;
-    if (panels[detailsOverrideAnchor].path[0] === FRAMEWORK_CATEGORY_SETTINGS_ID) return;
+    // 🧭 Settings tabs render flat now (no category branch to check against) — skip the override if the
+    // anchor's active leaf already belongs to Settings, so browsing Theme/Settings there doesn't get stomped.
+    if (settingsRightTabs.some((tab) => tab.id === panels[detailsOverrideAnchor].path[0])) return;
     const resolved = findPanelTabPath(dock.anchors[detailsOverrideAnchor], detailsOverrideTabId);
     if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: detailsOverrideAnchor, value: resolved });
-  }, [detailsOverrideTabId, detailsOverrideAnchor, studioOverrideAnchor, dock, panels]);
+  }, [detailsOverrideTabId, detailsOverrideAnchor, studioOverrideAnchor, dock, panels, settingsRightTabs]);
   //#endregion 🧭DockAssembly
 
   const mobilePanelTabs = useMemo(
@@ -4056,6 +4125,45 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: "" } });
   }, [activeExampleId, exampleOptions, onAction, session]);
 
+  //#region 🎛️InlinedPanelToggles — Document/Catalogue (top-left) and Theme/Settings (bottom-right) now toggle
+  // straight from the navbar/footer bar instead of through the removed Workbench/Settings category tab.
+  const workbenchToggleItems = useMemo(
+    (): PanelToggleItem[] =>
+      workbenchLeftTabs.map((tab) => {
+        const TabIcon = tab.icon;
+        return {
+          id: tab.id,
+          icon: <TabIcon size={16} />,
+          text: tab.name,
+          pressed: panels["top-left"].visible && panelActivePaths["top-left"][0] === tab.id,
+          onPressedChange: (pressed: boolean) => {
+            dispatch({ type: "SET_PANEL_VISIBLE", anchor: "top-left", value: pressed });
+            if (pressed) dispatch({ type: "SET_PANEL_PATH", anchor: "top-left", value: [tab.id] });
+          },
+        };
+      }),
+    [workbenchLeftTabs, panels, panelActivePaths],
+  );
+
+  const settingsToggleItems = useMemo(
+    (): PanelToggleItem[] =>
+      settingsRightTabs.map((tab) => {
+        const TabIcon = tab.icon;
+        return {
+          id: tab.id,
+          icon: <TabIcon size={16} />,
+          text: tab.name,
+          pressed: panels["bottom-right"].visible && panelActivePaths["bottom-right"][0] === tab.id,
+          onPressedChange: (pressed: boolean) => {
+            dispatch({ type: "SET_PANEL_VISIBLE", anchor: "bottom-right", value: pressed });
+            if (pressed) dispatch({ type: "SET_PANEL_PATH", anchor: "bottom-right", value: [tab.id] });
+          },
+        };
+      }),
+    [settingsRightTabs, panels, panelActivePaths],
+  );
+  //#endregion 🎛️InlinedPanelToggles
+
   const navbarItems = useMemo((): NavbarItem[] => {
     if (!session) return [];
     // Logo/title, example selector, and mode switcher render as one cluster, centered as a group in the navbar
@@ -4102,8 +4210,12 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         </ButtonGroup>,
       );
     }
-    return [{ key: "center", centered: true, content: <div className="flex min-w-0 items-center gap-double">{centerContent}</div> }];
-  }, [activeExampleId, activeModeId, appLabelsOverlay, applyModeChange, exampleOptions, onAction, session]);
+    const items: NavbarItem[] = [{ key: "center", centered: true, content: <div className="flex min-w-0 items-center gap-double">{centerContent}</div> }];
+    if (workbenchToggleItems.length > 0) {
+      items.push({ key: "workbenchToggle", content: <PanelToggleGroup items={workbenchToggleItems} /> });
+    }
+    return items;
+  }, [activeExampleId, activeModeId, appLabelsOverlay, applyModeChange, exampleOptions, onAction, session, workbenchToggleItems]);
 
   const searchItems = useMemo(() => {
     if (!session) return [];
@@ -4188,7 +4300,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         onSelect: () => {
           if (argCarrying) {
             dispatch({ type: "SET_PANEL_VISIBLE", anchor: "bottom-middle", value: true });
-            dispatch({ type: "SET_PANEL_PATH", anchor: "bottom-middle", value: [`command.category.${definition.category}`] });
+            dispatch({ type: "SET_PANEL_PATH", anchor: "bottom-middle", value: [FRAMEWORK_CATEGORY_COMMAND_ID, `command.category.${definition.category}`] });
             dispatch({ type: "SET_COMMAND_EXPANDED", value: definition.id });
             dispatch({ type: "SET_SEARCH_OPEN", value: false });
             return;
@@ -4235,7 +4347,8 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
     const actionPaneSlice: ActionPaneSlice = { expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId };
-    const actionsFoldedFor = (windowId: string) => actionPaneFoldedByWindowId[windowId] ?? true;
+    const actionsFoldedFor = (windowId: string, actions: readonly ActionDefinition[]) =>
+      introductionActionId && actions.some((action) => action.id === introductionActionId) ? false : (actionPaneFoldedByWindowId[windowId] ?? true);
     const onActionsFoldedFor = (windowId: string) => (folded: boolean) => dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId, value: folded });
     // 🖱️ Window-body cursor follows the active utility's declared `cursor` (P5).
     const cursorFor = (app: AppDefinition, windowId: string): CSSProperties | undefined => {
@@ -4249,6 +4362,8 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         const spawnedApp = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
         const windowKind = spawnedApp?.windowKinds[0];
         const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawnedWindowEngagements, spawnedWindowMeasures, activeUtilityByWindowId[spawned.id], onActionStable) : undefined;
+        const spawnedUtilities = spawnedApp && windowKind ? resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[spawned.id], spawned.id, appLabelsOverlay) : [];
+        const spawnedActions = spawnedApp && windowKind ? resolveWindowActions(spawnedApp, windowKind) : [];
         return [
           {
             id: spawned.id,
@@ -4258,9 +4373,9 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
             measures: chrome?.measures,
             utilityOptions: chrome?.utilityOptions,
             engagement: chrome?.engagement,
-            toolbar: spawnedApp && windowKind ? utilityBarNode(resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[spawned.id], spawned.id, appLabelsOverlay), spawned.id, onActionStable) : undefined,
+            toolbar: spawnedApp && windowKind ? utilityBarNode(spawnedUtilities, spawned.id, onActionStable, introductionUtilityId) : undefined,
             actionPane: spawnedApp && windowKind ? windowActionPaneNode(spawnedApp, windowKind, spawned.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay) : undefined,
-            actionsFolded: actionsFoldedFor(spawned.id),
+            actionsFolded: actionsFoldedFor(spawned.id, spawnedActions),
             onActionsFoldedChange: onActionsFoldedFor(spawned.id),
             children: (
               <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={spawnedApp ? cursorFor(spawnedApp, spawned.id) : undefined}>
@@ -4272,26 +4387,32 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       }
     }
     if (Object.keys(windowUiByKind).length === 0) return [];
-    const baseWindows = session.app.windowKinds.map((kind) => ({
-      id: kind.id,
-      title: appWindowDocumentLabel(session.app, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label)),
-      fill: true,
-      showControls: true,
-      ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id], kind.id, onActionStable),
-      engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
-      toolbar: utilityBarNode(resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id, appLabelsOverlay), kind.id, onActionStable),
-      actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay),
-      actionsFolded: actionsFoldedFor(kind.id),
-      onActionsFoldedChange: onActionsFoldedFor(kind.id),
-      children: (
-        <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id} style={cursorFor(session.app, kind.id)}>
-          <InterpretedUiNode node={windowUiByKind[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
-        </ChromeAwareWindowScrollSurface>
-      ),
-    }));
+    const baseWindows = session.app.windowKinds.map((kind) => {
+      const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id, appLabelsOverlay);
+      const actions = resolveWindowActions(session.app, kind);
+      return {
+        id: kind.id,
+        title: appWindowDocumentLabel(session.app, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label)),
+        fill: true,
+        showControls: true,
+        ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id], kind.id, onActionStable),
+        engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
+        toolbar: utilityBarNode(utilities, kind.id, onActionStable, introductionUtilityId),
+        actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay),
+        actionsFolded: actionsFoldedFor(kind.id, actions),
+        onActionsFoldedChange: onActionsFoldedFor(kind.id),
+        children: (
+          <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id} style={cursorFor(session.app, kind.id)}>
+            <InterpretedUiNode node={windowUiByKind[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
+          </ChromeAwareWindowScrollSurface>
+        ),
+      };
+    });
     const extraWindows = extraWindowInstances.flatMap((instance) => {
       const kind = session.app.windowKinds.find((entry) => entry.id === instance.windowKindId);
       if (!kind) return [];
+      const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id, appLabelsOverlay);
+      const actions = resolveWindowActions(session.app, kind);
       return [
         {
           id: instance.id,
@@ -4300,9 +4421,10 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           showControls: true,
           ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id], instance.id, onActionStable),
           engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
-          toolbar: utilityBarNode(resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id, appLabelsOverlay), instance.id, onActionStable),
+          toolbar: utilityBarNode(utilities, instance.id, onActionStable, introductionUtilityId),
+          toolbarFolded: toolbarFoldedFor(utilities),
           actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay),
-          actionsFolded: actionsFoldedFor(instance.id),
+          actionsFolded: actionsFoldedFor(instance.id, actions),
           onActionsFoldedChange: onActionsFoldedFor(instance.id),
           children: (
             <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id} style={cursorFor(session.app, instance.id)}>
@@ -4320,6 +4442,8 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
     activeUtilityByWindowId,
     appLabelsOverlay,
     extraWindowInstances,
+    introductionActionId,
+    introductionUtilityId,
     loadedPlugins,
     onActionStable,
     panel,
@@ -4440,6 +4564,9 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       onVisibleChange: (value: boolean) => dispatch({ type: "SET_PANEL_VISIBLE", anchor, value }),
       size: panels[anchor].size,
       onSizeChange: (value: number) => dispatch({ type: "SET_PANEL_SIZE", anchor, value }),
+      // 🎛️ Document/Catalogue and Theme/Settings toggle from the navbar/footer now (see workbenchToggleItems/
+      // settingsToggleItems) — their own floating panel no longer needs a redundant tab bar of its own.
+      hideTabBar: anchor === "top-left" || anchor === "bottom-right",
       tabs: dock.anchors[anchor],
       activeTabPath: panelActivePaths[anchor],
       onActiveTabPathChange: (path: readonly string[]) => {
@@ -4447,8 +4574,9 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         // 🎛️ Command palette only: switching category leaves always collapses any expanded arg form — the
         // next hierarchy level up only makes sense under its own category's command list (mirrors the old
         // dedicated `SET_COMMAND_CATEGORY` reducer case, now expressed at the generic path-change call site
-        // since category-active state itself is just this anchor's `activeTabPath`).
-        if (anchor === "bottom-middle" && panels[anchor].path[0] !== path[0]) {
+        // since category-active state itself is just this anchor's `activeTabPath`). Categories sit under
+        // the Command branch, so compare the category segment (path[1]), not the shared branch root.
+        if (anchor === "bottom-middle" && panels[anchor].path[1] !== path[1]) {
           dispatch({ type: "SET_COMMAND_EXPANDED", value: null });
         }
         const tabId = path[path.length - 1];
@@ -4474,7 +4602,14 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
               mobile={mobile}
               mobilePanel={mobilePanel}
               navbar={<Navbar items={navbarItems} showFullscreenToggle />}
-              footer={<Footer items={[fundedByZukunftBauFooterItem()]} />}
+              footer={
+                <Footer
+                  items={[
+                    ...(settingsToggleItems.length > 0 ? [{ key: "settingsToggle", content: <PanelToggleGroup items={settingsToggleItems} /> }] : []),
+                    fundedByZukunftBauFooterItem(),
+                  ]}
+                />
+              }
               panels={{
                 "top-left": buildPanelProps("top-left"),
                 "top-middle": buildPanelProps("top-middle"),
@@ -4493,6 +4628,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           <UIIntroduction
             introduction={resolveIntroductionDefinition(session.app.introduction, appLabelsOverlay)}
             stepIndex={introductionStepIndex}
+            anchorFallbackSelectors={introductionAnchorFallbackSelectors}
             onStepIndexChange={(value) => dispatch({ type: "SET_INTRODUCTION_STEP", value })}
             onDismiss={() => {
               dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
@@ -5251,6 +5387,10 @@ type UtilityTreeProps = {
   readonly id?: string;
   /** @emoji 🎀 `up` stacks a new ribbon line above the base row per pressed collection (window toolbar); `inline` keeps the horizontal drill-down (footer). */
   readonly direction?: RibbonDirection;
+  /** @emoji 🎓 A utility id the introduction walkthrough is anchored on — when it names a leaf nested inside
+   * a collapsed group picker, the picker auto-drills into that group so the leaf actually mounts (see
+   * {@link findUtilityGroupPath}). `null`/not-found leaves `activePath` alone. */
+  readonly revealUtilityId?: string | null;
 };
 
 function resolveLeafAction(node: UtilityLeaf | Extract<UtilityNode, { readonly kind: "button" | "toggle" }>): ActionDescriptor | null {
@@ -5394,6 +5534,20 @@ export function reconcileUtilityPath(nodes: readonly UtilityNode[], path: readon
   return reconciled;
 }
 
+/** @emoji 🎓 Finds the group-id path (in {@link reconcileUtilityPath} shape) leading down to a utility leaf,
+ * so a folded picker can drill straight to it. Returns `[]` when the id is a top-level (ungrouped) node,
+ * `null` when the tree has no node with that id at all. */
+export function findUtilityGroupPath(nodes: readonly UtilityNode[], targetId: string, prefix: readonly string[] = []): readonly string[] | null {
+  for (const node of nodes) {
+    if (node.id === targetId) return prefix;
+    if (node.kind === "collection") {
+      const nested = findUtilityGroupPath(node.children, targetId, [...prefix, node.id]);
+      if (nested) return nested;
+    }
+  }
+  return null;
+}
+
 function UtilityToolbarItems({ items, onAction }: { readonly items: readonly UtilityLeaf[]; readonly onAction: (action: ActionDescriptor) => void }): ReactElement {
   const sorted = useMemo(() => sortUtilityNodes(items) as UtilityLeaf[], [items]);
   const nodes = useMemo(() => {
@@ -5487,12 +5641,18 @@ function toolbarRibbonSegmentKey(segment: ToolbarRibbonSegment, index: number): 
   return segment.kind === "picker" ? `picker-${segment.depth}-${segment.collections.map((entry) => entry.id).join("-")}` : `tools-${index}-${segment.items.map((entry) => entry.id).join("-")}`;
 }
 
-export function UtilityTree({ utilities, onAction, id = "ui.toolbar", direction = "inline" }: UtilityTreeProps): ReactElement | null {
+export function UtilityTree({ utilities, onAction, id = "ui.toolbar", direction = "inline", revealUtilityId = null }: UtilityTreeProps): ReactElement | null {
   const [activePath, setActivePath] = useState<readonly string[]>([]);
 
   useEffect(() => {
     setActivePath((previousPath) => reconcileUtilityPath(utilities, previousPath));
   }, [utilities]);
+
+  useEffect(() => {
+    if (!revealUtilityId) return;
+    const path = findUtilityGroupPath(utilities, revealUtilityId);
+    if (path) setActivePath((previousPath) => (previousPath.length === path.length && previousPath.every((entry, index) => entry === path[index]) ? previousPath : path));
+  }, [revealUtilityId, utilities]);
 
   const segments = useMemo(() => buildToolbarRibbonSegments(utilities, activePath), [utilities, activePath]);
 

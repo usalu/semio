@@ -205,7 +205,17 @@ fn control_slots(kind: &str) -> &'static [&'static str] {
     }
 }
 
-fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture) -> UiTreeItemNode {
+/// 🗣️ Localizes a control-flow slot name ("then"/"else"/"body") for tree display; unknown slot names fall back to the raw id.
+fn slot_label<'a>(slot_name: &'a str, labels: &'a SequenceLabels) -> &'a str {
+    match slot_name {
+        "then" => labels.slot_then,
+        "else" => labels.slot_else,
+        "body" => labels.slot_body,
+        other => other,
+    }
+}
+
+fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: &SequenceLabels) -> UiTreeItemNode {
     let mut item = tree_item_with_action(
         format!("sequence-play-document.step.{}", step.id),
         format!("{} ({})", step.id, step.kind),
@@ -229,12 +239,12 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture) -> UiTre
                     .filter(|entry| {
                         entry.slot.as_ref().is_some_and(|slot| slot.owner == step.id && slot.name == *slot_name)
                     })
-                    .map(|entry| build_step_tree_item(entry, fixture))
+                    .map(|entry| build_step_tree_item(entry, fixture, labels))
                     .collect();
                 UiTreeItemNode {
                     id: format!("sequence-play-document.slot.{}.{}", step.id, slot_name),
-                    label: (*slot_name).into(),
-                    description: Some(format!("{} slot", step.id)),
+                    label: slot_label(slot_name, labels).into(),
+                    description: Some(format!("{} {}", step.id, labels.slot)),
                     icon_id: Some("folder".into()),
                     selected: None,
                     default_open: Some(true),
@@ -285,6 +295,11 @@ struct SequenceLabels {
     window_main: &'static str,
     window_script: &'static str,
     window_compiled: &'static str,
+    none: &'static str,
+    slot: &'static str,
+    slot_then: &'static str,
+    slot_else: &'static str,
+    slot_body: &'static str,
 }
 
 const SEQUENCE_LABELS_NATIVE_EN: SequenceLabels = SequenceLabels {
@@ -311,6 +326,11 @@ const SEQUENCE_LABELS_NATIVE_EN: SequenceLabels = SequenceLabels {
     window_main: "Sequence",
     window_script: "Script",
     window_compiled: "DSL",
+    none: "(none)",
+    slot: "slot",
+    slot_then: "Then",
+    slot_else: "Else",
+    slot_body: "Body",
 };
 
 const SEQUENCE_LABELS_NATIVE_DE: SequenceLabels = SequenceLabels {
@@ -337,6 +357,11 @@ const SEQUENCE_LABELS_NATIVE_DE: SequenceLabels = SequenceLabels {
     window_main: "Sequenz",
     window_script: "Skript",
     window_compiled: "DSL",
+    none: "(keine)",
+    slot: "Slot",
+    slot_then: "Dann",
+    slot_else: "Sonst",
+    slot_body: "Rumpf",
 };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; this app has no terminology variants.
@@ -346,13 +371,51 @@ fn sequence_labels(view_state: &ViewState) -> &'static SequenceLabels {
 }
 //#endregion 🔖Terminology
 
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_sequence_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+fn sequence_action_labels(is_de: bool) -> HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("addStep", "Add Step", "Schritt hinzufuegen"),
+        ("addStepToSlot", "Add Step To Slot", "Schritt zu Slot hinzufuegen"),
+        ("addStepDropped", "Add Step Dropped", "Schritt per Ablegen hinzufuegen"),
+        ("removeStep", "Remove Step", "Schritt entfernen"),
+        ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+        ("moveMediaNode", "Move Step", "Schritt verschieben"),
+        ("connectMediaPorts", "Connect Steps", "Schritte verbinden"),
+        ("disconnectSteps", "Disconnect Steps", "Schritte trennen"),
+        ("setStepParams", "Set Step Params", "Schrittparameter festlegen"),
+        ("setStepCollapsed", "Set Step Collapsed", "Schritt einklappen"),
+        ("reorganize", "Reorganize", "Neu anordnen"),
+        ("nodeGraphEdit", "Node Graph Edit", "Knotengraph bearbeiten"),
+        ("nodeGraphViewport", "Node Graph Viewport", "Knotengraph-Ansicht"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+        ("selectNode", "Select Node", "Knoten auswaehlen"),
+        ("nodeGraphSelect", "Node Graph Select", "Knotengraph-Auswahl"),
+        ("nodeGraphHover", "Node Graph Hover", "Knotengraph-Hover"),
+        ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
+        ("setOrientation", "Set Orientation", "Ausrichtung festlegen"),
+        ("run", "Run", "Ausfuehren"),
+        ("stop", "Stop", "Stopp"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_sequence_app`;
+/// this manifest declares none, so this is an empty overlay kept for parity with the shared `app_labels` wiring.
+fn sequence_utility_labels(_is_de: bool) -> HashMap<String, String> {
+    HashMap::new()
+}
+//#endregion 🔖CommandLabels
+
 //#region 🔖Panels
 fn build_document_tree(fixture: &SequenceFixture, selected: &[String], labels: &SequenceLabels) -> UiNode {
     let step_items: Vec<UiTreeItemNode> = fixture
         .steps
         .iter()
         .filter(|step| step.slot.is_none())
-        .map(|step| build_step_tree_item(step, fixture))
+        .map(|step| build_step_tree_item(step, fixture, labels))
         .collect();
     let edge_items: Vec<UiTreeItemNode> = fixture
         .edges
@@ -384,7 +447,7 @@ fn build_document_tree(fixture: &SequenceFixture, selected: &[String], labels: &
                 label: Some(labels.steps.into()),
                 default_open: Some(true),
                 items: if step_items.is_empty() {
-                    vec![tree_item("sequence-play-document.steps.empty", "(none)")]
+                    vec![tree_item("sequence-play-document.steps.empty", labels.none)]
                 } else {
                     step_items
                 },
@@ -394,7 +457,7 @@ fn build_document_tree(fixture: &SequenceFixture, selected: &[String], labels: &
                 label: Some(labels.flow_edges.into()),
                 default_open: Some(false),
                 items: if edge_items.is_empty() {
-                    vec![tree_item("sequence-play-document.edges.empty", "(none)")]
+                    vec![tree_item("sequence-play-document.edges.empty", labels.none)]
                 } else {
                     edge_items
                 },
@@ -828,6 +891,7 @@ impl DocumentApp for SequencePlayApp {
 
     fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
         let labels = sequence_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         AppLabelsOverlay {
             app_label: None,
             window_kind_labels: HashMap::from([
@@ -837,8 +901,8 @@ impl DocumentApp for SequencePlayApp {
             ]),
             panel_tab_labels: HashMap::new(),
             mode_labels: HashMap::new(),
-            action_labels: HashMap::new(),
-            utility_labels: HashMap::new(),
+            action_labels: sequence_action_labels(is_de),
+            utility_labels: sequence_utility_labels(is_de),
             example_labels: HashMap::new(),
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),

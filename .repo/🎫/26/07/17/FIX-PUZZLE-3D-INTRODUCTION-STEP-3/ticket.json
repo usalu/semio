@@ -1,0 +1,13 @@
+{
+  "title": "Fix Puzzle 3D Introduction Step 3",
+  "emoji": "🎓",
+  "status": "open",
+  "description": "The puzzle 3D app introduction is not finished. Step 3 isn't showing the pulsating tools pane toggle.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2021"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad/🎯runningsketchpadapps",
+  "sessions": [
+    "⚪c1a8fd80c55641b2aef464d6e796bf4c"
+  ]
+}

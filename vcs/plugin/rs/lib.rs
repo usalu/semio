@@ -783,6 +783,7 @@ impl DocumentApp for VcsPlayApp {
 
     fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
         let labels = vcs_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         AppLabelsOverlay {
             app_label: None,
             window_kind_labels: std::collections::HashMap::from([
@@ -791,8 +792,8 @@ impl DocumentApp for VcsPlayApp {
             ]),
             panel_tab_labels: std::collections::HashMap::new(),
             mode_labels: std::collections::HashMap::new(),
-            action_labels: HashMap::new(),
-            utility_labels: HashMap::new(),
+            action_labels: vcs_action_labels(is_de),
+            utility_labels: vcs_utility_labels(is_de),
             example_labels: HashMap::new(),
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),
@@ -801,6 +802,34 @@ impl DocumentApp for VcsPlayApp {
     }
 }
 //#endregion 🔖VcsPlayApp
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_vcs_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
+/// command palette and Actions rail get a translated label without threading locale through the whole
+/// builder chain; mirrors `puzzle3d_action_labels`.
+fn vcs_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("incrementCounter", "Increment Counter", "Zaehler erhoehen"),
+        ("patchProjection", "Patch Projection", "Projektion aktualisieren"),
+        ("textEdit", "Edit Text", "Text bearbeiten"),
+        ("edit", "Edit", "Bearbeiten"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+        ("noop", "No-op", "Keine Aktion"),
+        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrueckt"),
+        ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegt"),
+        ("canvasPointerUp", "Canvas Pointer Up", "Leinwand-Zeiger losgelassen"),
+        ("canvasWheel", "Canvas Wheel", "Leinwand-Mausrad"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_vcs_app`;
+/// currently empty since this manifest declares no utilities, kept for parity with `puzzle3d_utility_labels`.
+fn vcs_utility_labels(_is_de: bool) -> std::collections::HashMap<String, String> {
+    std::collections::HashMap::new()
+}
+//#endregion 🔖CommandLabels
 
 //#region 🔖AppFactory
 fn create_vcs_app() -> App {

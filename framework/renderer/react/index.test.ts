@@ -302,15 +302,15 @@ describe("shell store reducer", () => {
 
   it("command palette category is the bottom-middle anchor's own SET_PANEL_PATH; the UI's category-switch handler additionally dispatches SET_COMMAND_EXPANDED:null (reproducing the old single-action collapse-on-switch behavior across two actions)", () => {
     const state = baseState();
-    const onCategory = shellReducer(state, { type: "SET_PANEL_PATH", anchor: "bottom-middle", value: ["command.category.appearance"] });
-    expect(onCategory.layout.panels["bottom-middle"].path).toEqual(["command.category.appearance"]);
+    const onCategory = shellReducer(state, { type: "SET_PANEL_PATH", anchor: "bottom-middle", value: ["framework.category.command", "command.category.appearance"] });
+    expect(onCategory.layout.panels["bottom-middle"].path).toEqual(["framework.category.command", "command.category.appearance"]);
 
     const expanded = shellReducer(onCategory, { type: "SET_COMMAND_EXPANDED", value: "os.setThemeId" });
     expect(expanded.commandPanel.expandedCommandId).toBe("os.setThemeId");
 
-    const switchedPath = shellReducer(expanded, { type: "SET_PANEL_PATH", anchor: "bottom-middle", value: ["command.category.layout"] });
+    const switchedPath = shellReducer(expanded, { type: "SET_PANEL_PATH", anchor: "bottom-middle", value: ["framework.category.command", "command.category.layout"] });
     const switched = shellReducer(switchedPath, { type: "SET_COMMAND_EXPANDED", value: null });
-    expect(switched.layout.panels["bottom-middle"].path).toEqual(["command.category.layout"]);
+    expect(switched.layout.panels["bottom-middle"].path).toEqual(["framework.category.command", "command.category.layout"]);
     expect(switched.commandPanel.expandedCommandId).toBeNull();
   });
 });

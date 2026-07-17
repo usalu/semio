@@ -73,6 +73,20 @@ pub mod app_3d {
         provenance: &'static str,
         validation_warning: &'static str,
         source: &'static str,
+        window_main: &'static str,
+        field_width: &'static str,
+        field_depth: &'static str,
+        field_height: &'static str,
+        field_radius: &'static str,
+        field_pos_x: &'static str,
+        field_pos_y: &'static str,
+        field_pos_z: &'static str,
+        field_angle: &'static str,
+        stock_kind_box: &'static str,
+        stock_kind_cylinder: &'static str,
+        stock_kind_sphere: &'static str,
+        import_model: &'static str,
+        step_control: &'static str,
     }
 
     const PROCESS3D_LABELS_NATIVE_EN: Process3dLabels = Process3dLabels {
@@ -92,6 +106,20 @@ pub mod app_3d {
         provenance: "Made By",
         validation_warning: "Warning",
         source: "Source",
+        window_main: "Workpiece",
+        field_width: "Width",
+        field_depth: "Depth",
+        field_height: "Height",
+        field_radius: "Radius",
+        field_pos_x: "X",
+        field_pos_y: "Y",
+        field_pos_z: "Z",
+        field_angle: "Angle",
+        stock_kind_box: "Box",
+        stock_kind_cylinder: "Cylinder",
+        stock_kind_sphere: "Sphere",
+        import_model: "Import Model…",
+        step_control: "Step",
     };
 
     const PROCESS3D_LABELS_NATIVE_DE: Process3dLabels = Process3dLabels {
@@ -111,6 +139,20 @@ pub mod app_3d {
         provenance: "Erstellt von",
         validation_warning: "Warnung",
         source: "Quelle",
+        window_main: "Werkstueck",
+        field_width: "Breite",
+        field_depth: "Tiefe",
+        field_height: "Hoehe",
+        field_radius: "Radius",
+        field_pos_x: "X",
+        field_pos_y: "Y",
+        field_pos_z: "Z",
+        field_angle: "Winkel",
+        stock_kind_box: "Quader",
+        stock_kind_cylinder: "Zylinder",
+        stock_kind_sphere: "Kugel",
+        import_model: "Modell importieren…",
+        step_control: "Schritt",
     };
 
     /// 🗣️ Resolves the active label set from the shell-provided locale; falls back to native English.
@@ -1163,10 +1205,10 @@ pub mod app_3d {
             })
             .collect();
         let stock_items = vec![
-            tree_item_with_action("process3d-catalogue.stock-box", "Box", Some("box"), process3d_action("setStock", Some(json!({ "kind": "box" })))),
-            tree_item_with_action("process3d-catalogue.stock-cylinder", "Cylinder", Some("cylinder"), process3d_action("setStock", Some(json!({ "kind": "cylinder" })))),
-            tree_item_with_action("process3d-catalogue.stock-sphere", "Sphere", Some("circle"), process3d_action("setStock", Some(json!({ "kind": "sphere" })))),
-            tree_item_with_action("process3d-catalogue.stock-import", "Import Model…", Some("folder-open"), process3d_action("loadModelRequest", None)),
+            tree_item_with_action("process3d-catalogue.stock-box", labels.stock_kind_box, Some("box"), process3d_action("setStock", Some(json!({ "kind": "box" })))),
+            tree_item_with_action("process3d-catalogue.stock-cylinder", labels.stock_kind_cylinder, Some("cylinder"), process3d_action("setStock", Some(json!({ "kind": "cylinder" })))),
+            tree_item_with_action("process3d-catalogue.stock-sphere", labels.stock_kind_sphere, Some("circle"), process3d_action("setStock", Some(json!({ "kind": "sphere" })))),
+            tree_item_with_action("process3d-catalogue.stock-import", labels.import_model, Some("folder-open"), process3d_action("loadModelRequest", None)),
         ];
         sections.push(UiTreeSectionNode { id: "process3d-play-catalogue.stock".into(), label: Some(labels.stock.into()), default_open: Some(false), loading: None, items: stock_items });
         UiNode::Tree(UiTreeNode { sections, loading: None, selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None })
@@ -1176,16 +1218,16 @@ pub mod app_3d {
         let mut fields = vec![text_field("process3d-inspector.label", labels.label_field, &stock.label, &stock.id, "label")];
         match &stock.solid {
             SolidSpec::Box { width, depth, height } => {
-                fields.push(number_field("process3d-inspector.width", "Width", *width, &stock.id, "width"));
-                fields.push(number_field("process3d-inspector.depth", "Depth", *depth, &stock.id, "depth"));
-                fields.push(number_field("process3d-inspector.height", "Height", *height, &stock.id, "height"));
+                fields.push(number_field("process3d-inspector.width", labels.field_width, *width, &stock.id, "width"));
+                fields.push(number_field("process3d-inspector.depth", labels.field_depth, *depth, &stock.id, "depth"));
+                fields.push(number_field("process3d-inspector.height", labels.field_height, *height, &stock.id, "height"));
             }
             SolidSpec::Cylinder { radius, height } => {
-                fields.push(number_field("process3d-inspector.radius", "Radius", *radius, &stock.id, "radius"));
-                fields.push(number_field("process3d-inspector.height", "Height", *height, &stock.id, "height"));
+                fields.push(number_field("process3d-inspector.radius", labels.field_radius, *radius, &stock.id, "radius"));
+                fields.push(number_field("process3d-inspector.height", labels.field_height, *height, &stock.id, "height"));
             }
             SolidSpec::Sphere { radius } => {
-                fields.push(number_field("process3d-inspector.radius", "Radius", *radius, &stock.id, "radius"));
+                fields.push(number_field("process3d-inspector.radius", labels.field_radius, *radius, &stock.id, "radius"));
             }
             SolidSpec::ImportedMesh { mesh_url } => {
                 fields.push(ui_inspector_readonly_field("process3d-inspector.source", labels.source, mesh_url.clone()));
@@ -1194,10 +1236,10 @@ pub mod app_3d {
                 fields.push(ui_inspector_readonly_field("process3d-inspector.source", labels.source, format!("solid #{solid_handle}")));
             }
         }
-        fields.push(number_field("process3d-inspector.posX", "X", stock.pose.position[0], &stock.id, "posX"));
-        fields.push(number_field("process3d-inspector.posY", "Y", stock.pose.position[1], &stock.id, "posY"));
-        fields.push(number_field("process3d-inspector.posZ", "Z", stock.pose.position[2], &stock.id, "posZ"));
-        fields.push(number_field("process3d-inspector.angle", "Angle", stock.pose.angle, &stock.id, "angle"));
+        fields.push(number_field("process3d-inspector.posX", labels.field_pos_x, stock.pose.position[0], &stock.id, "posX"));
+        fields.push(number_field("process3d-inspector.posY", labels.field_pos_y, stock.pose.position[1], &stock.id, "posY"));
+        fields.push(number_field("process3d-inspector.posZ", labels.field_pos_z, stock.pose.position[2], &stock.id, "posZ"));
+        fields.push(number_field("process3d-inspector.angle", labels.field_angle, stock.pose.angle, &stock.id, "angle"));
         if let Some(volume) = processed_volume(fixture) {
             fields.push(ui_inspector_readonly_field("process3d-inspector.volume", labels.volume, format!("{volume:.4} m³")));
         }
@@ -1219,29 +1261,29 @@ pub mod app_3d {
         let pose = match &step.measure {
             ProcessMeasure::Cut { tool, pose } => {
                 if let SolidSpec::Box { width, depth, height } = tool {
-                    fields.push(number_field("process3d-inspector.toolWidth", "Width", *width, &target, "toolWidth"));
-                    fields.push(number_field("process3d-inspector.toolDepth", "Depth", *depth, &target, "toolDepth"));
-                    fields.push(number_field("process3d-inspector.toolHeight", "Height", *height, &target, "toolHeight"));
+                    fields.push(number_field("process3d-inspector.toolWidth", labels.field_width, *width, &target, "toolWidth"));
+                    fields.push(number_field("process3d-inspector.toolDepth", labels.field_depth, *depth, &target, "toolDepth"));
+                    fields.push(number_field("process3d-inspector.toolHeight", labels.field_height, *height, &target, "toolHeight"));
                 }
                 pose
             }
             ProcessMeasure::Drill { radius, depth, pose } => {
-                fields.push(number_field("process3d-inspector.radius", "Radius", *radius, &target, "radius"));
-                fields.push(number_field("process3d-inspector.depth", "Depth", *depth, &target, "depth"));
+                fields.push(number_field("process3d-inspector.radius", labels.field_radius, *radius, &target, "radius"));
+                fields.push(number_field("process3d-inspector.depth", labels.field_depth, *depth, &target, "depth"));
                 pose
             }
             ProcessMeasure::Attach { component, pose } => {
                 if let SolidSpec::Cylinder { radius, height } = component {
-                    fields.push(number_field("process3d-inspector.radius", "Radius", *radius, &target, "radius"));
-                    fields.push(number_field("process3d-inspector.height", "Height", *height, &target, "height"));
+                    fields.push(number_field("process3d-inspector.radius", labels.field_radius, *radius, &target, "radius"));
+                    fields.push(number_field("process3d-inspector.height", labels.field_height, *height, &target, "height"));
                 }
                 pose
             }
         };
-        fields.push(number_field("process3d-inspector.posX", "X", pose.position[0], &target, "posX"));
-        fields.push(number_field("process3d-inspector.posY", "Y", pose.position[1], &target, "posY"));
-        fields.push(number_field("process3d-inspector.posZ", "Z", pose.position[2], &target, "posZ"));
-        fields.push(number_field("process3d-inspector.angle", "Angle", pose.angle, &target, "angle"));
+        fields.push(number_field("process3d-inspector.posX", labels.field_pos_x, pose.position[0], &target, "posX"));
+        fields.push(number_field("process3d-inspector.posY", labels.field_pos_y, pose.position[1], &target, "posY"));
+        fields.push(number_field("process3d-inspector.posZ", labels.field_pos_z, pose.position[2], &target, "posZ"));
+        fields.push(number_field("process3d-inspector.angle", labels.field_angle, pose.angle, &target, "angle"));
         ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
             id: "process3d-inspector.step".into(),
             label: process3d_measure_label(&step.measure, labels).into(),
@@ -1265,7 +1307,7 @@ pub mod app_3d {
     //#endregion 🔖Panels
 
     //#region 🔖Engagement
-    fn process3d_engagement(fixture: &process_3d::Process3dDocument, runtime: &Process3dRuntime, active_utility: &str) -> WindowEngagement {
+    fn process3d_engagement(fixture: &process_3d::Process3dDocument, runtime: &Process3dRuntime, active_utility: &str, labels: &Process3dLabels) -> WindowEngagement {
         let len = fixture.steps.len();
         let cursor = fixture.resolved_up_to.unwrap_or(len);
         let volume = processed_volume(fixture).unwrap_or(0.0);
@@ -1286,7 +1328,7 @@ pub mod app_3d {
             }),
             control: Some(WindowEngagementControl::Stepper {
                 id: Some("process3d-cursor".into()),
-                label: Some("Step".into()),
+                label: Some(labels.step_control.into()),
                 value: cursor as f64,
                 min: Some(0.0),
                 max: Some(len as f64),
@@ -1629,7 +1671,27 @@ pub mod app_3d {
         }
 
         fn window_engagements(&self, doc: &DocumentView<'_, process_3d::Process3dDocument>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-            HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.into(), process3d_engagement(doc.projection, &self.runtime, process3d_active_utility(view_state)))])
+            HashMap::from([(
+                PROCESS_3D_PLAY_WINDOW_MAIN.into(),
+                process3d_engagement(doc.projection, &self.runtime, process3d_active_utility(view_state), process3d_labels(view_state)),
+            )])
+        }
+
+        fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+            let labels = process3d_labels(view_state);
+            let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+            semio_framework_plugin::AppLabelsOverlay {
+                app_label: None,
+                window_kind_labels: std::collections::HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string())]),
+                panel_tab_labels: std::collections::HashMap::new(),
+                mode_labels: std::collections::HashMap::new(),
+                action_labels: process3d_action_labels(is_de),
+                utility_labels: process3d_utility_labels(is_de),
+                example_labels: HashMap::new(),
+                action_arg_labels: HashMap::new(),
+                dialog_labels: HashMap::new(),
+                introduction_labels: HashMap::new(),
+            }
         }
 
         fn window_measures(&self, _doc: &DocumentView<'_, process_3d::Process3dDocument>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
@@ -1637,6 +1699,59 @@ pub mod app_3d {
         }
     }
     //#endregion 🔖Process3dPlayApp
+
+    //#region 🔖CommandLabels
+    /// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in
+    /// `create_process3d_app`'s static manifest — the manifest itself has no `view_state`/locale
+    /// parameter, so this overlay is how the command palette and Actions rail get a translated label
+    /// without threading locale through the whole builder chain.
+    fn process3d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            ("addStep", "Add Step", "Schritt hinzufuegen"),
+            ("setStock", "Set Stock", "Rohteil festlegen"),
+            ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+            ("removeSelectedStep", "Remove Selected Step", "Ausgewaehlten Schritt entfernen"),
+            ("exportModel", "Export Model", "Modell exportieren"),
+            ("loadModelRequest", "Load Model…", "Modell laden…"),
+            ("setDocument", "Set Document", "Dokument festlegen"),
+            ("importModelFile", "Import Model File", "Modelldatei importieren"),
+            ("removeStep", "Remove Step", "Schritt entfernen"),
+            ("moveStep", "Move Step", "Schritt verschieben"),
+            ("updateStep", "Update Step", "Schritt aktualisieren"),
+            ("setStepEnabled", "Set Step Enabled", "Schrittaktivierung festlegen"),
+            ("patchInspector", "Patch Inspector", "Inspektor aktualisieren"),
+            ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrueckt"),
+            ("worldFaceDragEnd", "World Face Drag End", "Welt-Flaechenzug beendet"),
+            ("setCursor", "Set Cursor", "Cursor festlegen"),
+            ("stepCursor", "Step Cursor", "Cursor schrittweise bewegen"),
+            ("stepCursorBack", "Step Cursor Back", "Cursor zurueck"),
+            ("stepCursorForward", "Step Cursor Forward", "Cursor vorwaerts"),
+            ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+            ("engagementInput", "Engagement Input", "Eingabe"),
+            ("engagementAbort", "Engagement Abort", "Eingabe abbrechen"),
+            ("setSelection", "Set Selection", "Auswahl festlegen"),
+            ("setHover", "Set Hover", "Hover festlegen"),
+            ("setCamera", "Set Camera", "Kamera festlegen"),
+            ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
+            ("toggleSun", "Toggle Sun", "Sonne umschalten"),
+            ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
+            ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
+            ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
+        ];
+        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    }
+
+    /// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_process3d_app`.
+    fn process3d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            ("select", "Select", "Auswaehlen"),
+            ("cut", "Cut", "Schneiden"),
+            ("drill", "Drill", "Bohren"),
+            ("attach", "Attach", "Anbauen"),
+        ];
+        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    }
+    //#endregion 🔖CommandLabels
 
     //#region 🔖Manifest
     pub fn create_process3d_app() -> App {
@@ -1651,7 +1766,7 @@ pub mod app_3d {
                     "Workpiece",
                     PROCESS_3D_PLAY_BODY_MAIN,
                     SurfaceKind::World3d,
-                    process3d_engagement(&default_document(), &Process3dRuntime::default(), PROCESS3D_DEFAULT_UTILITY),
+                    process3d_engagement(&default_document(), &Process3dRuntime::default(), PROCESS3D_DEFAULT_UTILITY, &PROCESS3D_LABELS_NATIVE_EN),
                 )
                 .default_layout(create_default_layout(&[PROCESS_3D_PLAY_WINDOW_MAIN.into()], "row", None, Some(&["Workpiece".into()])))
                 .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PROCESS_3D_PLAY_BODY_DOCUMENT)
@@ -1940,7 +2055,7 @@ pub mod app_3d {
         fn engagement_exposes_no_utility_switch_options() {
             let app = Process3dPlayApp::default();
             let doc = process_3d::Process3dDocument::default();
-            let engagement = process3d_engagement(&doc, &app.runtime, "cut");
+            let engagement = process3d_engagement(&doc, &app.runtime, "cut", &PROCESS3D_LABELS_NATIVE_EN);
             assert!(
                 engagement.options.is_none(),
                 "select/cut/drill/attach switching lives only on the framework toolbar; the engagement must not duplicate it as options",

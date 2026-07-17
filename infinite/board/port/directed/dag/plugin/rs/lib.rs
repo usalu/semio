@@ -528,6 +528,33 @@ fn dag_play_labels(view_state: &ViewState) -> &'static DagPlayLabels {
 }
 //#endregion 🔖Terminology
 
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_dag_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+fn dag_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("addNode", "Add Node", "Knoten hinzufuegen"),
+        ("removeNode", "Remove Node", "Knoten entfernen"),
+        ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+        ("nodeGraphEdit", "Node Graph Edit", "Knotengraph bearbeiten"),
+        ("connectMediaPorts", "Connect Ports", "Anschluesse verbinden"),
+        ("disconnect", "Disconnect", "Trennen"),
+        ("moveMediaNode", "Move Node", "Knoten verschieben"),
+        ("renameDagNode", "Rename Node", "Knoten umbenennen"),
+        ("reorganize", "Reorganize", "Neu anordnen"),
+        ("patchDagNodes", "Patch Nodes", "Knoten aktualisieren"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+        ("selectNode", "Select Node", "Knoten auswaehlen"),
+        ("nodeGraphSelect", "Node Graph Select", "Knotengraph auswaehlen"),
+        ("nodeGraphHover", "Node Graph Hover", "Knotengraph-Hover"),
+        ("nodeGraphViewport", "Node Graph Viewport", "Knotengraph-Ansicht"),
+        ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+//#endregion 🔖CommandLabels
+
 //#region 🔖Panels
 fn build_document_tree(document: &DagDocument, selected: &[String], labels: &DagPlayLabels) -> UiNode {
     let node_items: Vec<UiTreeItemNode> = document
@@ -1060,6 +1087,7 @@ impl DocumentApp for DagPlayApp {
 
     fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
         let labels = dag_play_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         semio_framework_plugin::AppLabelsOverlay {
             app_label: None,
             window_kind_labels: std::collections::HashMap::from([
@@ -1067,10 +1095,10 @@ impl DocumentApp for DagPlayApp {
                 (DAG_PLAY_WINDOW_COMPILED.to_string(), labels.window_compiled.to_string()),
             ]),
             panel_tab_labels: std::collections::HashMap::new(),
-            mode_labels: std::collections::HashMap::new(),
-            action_labels: HashMap::new(),
+            mode_labels: std::collections::HashMap::from([("edit".to_string(), (if is_de { "Bearbeiten" } else { "Edit" }).to_string())]),
+            action_labels: dag_action_labels(is_de),
             utility_labels: HashMap::new(),
-            example_labels: HashMap::new(),
+            example_labels: std::collections::HashMap::from([("demo".to_string(), "Demo".to_string())]),
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),
             introduction_labels: HashMap::new(),

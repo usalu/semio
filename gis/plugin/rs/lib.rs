@@ -1069,8 +1069,57 @@ pub mod app_2d {
             let labels = gis2d_labels(view_state);
             HashMap::from([(GIS2D_PLAY_WINDOW_MAIN.into(), gis2d_window_measures(&self.runtime, labels))])
         }
+
+        fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+            let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+            semio_framework_plugin::AppLabelsOverlay {
+                app_label: None,
+                window_kind_labels: std::collections::HashMap::from([(GIS2D_PLAY_WINDOW_MAIN.to_string(), (if is_de { "Karte" } else { "Map" }).to_string())]),
+                panel_tab_labels: std::collections::HashMap::new(),
+                mode_labels: std::collections::HashMap::from([("edit".to_string(), (if is_de { "Bearbeiten" } else { "Edit" }).to_string())]),
+                action_labels: gis2d_action_labels(is_de),
+                utility_labels: HashMap::new(),
+                example_labels: HashMap::new(),
+                action_arg_labels: HashMap::new(),
+                dialog_labels: HashMap::new(),
+                introduction_labels: HashMap::new(),
+            }
+        }
     }
     //#endregion 🔖Gis2dPlayApp
+
+    //#region 🔖CommandLabels
+    /// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in
+    /// `create_gis2d_app`'s static manifest — the manifest itself has no `view_state`/locale parameter, so
+    /// this overlay is how the command palette and Actions rail get a translated label without threading
+    /// locale through the whole builder chain.
+    fn gis2d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+            ("patchPositions", "Patch Positions", "Positionen aktualisieren"),
+            ("patchRoutes", "Patch Routes", "Routen aktualisieren"),
+            ("patchRoute", "Patch Route", "Route aktualisieren"),
+            ("setSelection", "Set Selection", "Auswahl festlegen"),
+            ("toggleLayerVisibility", "Toggle Layer Visibility", "Ebenensichtbarkeit umschalten"),
+            ("fitWorld", "Fit World", "Welt einpassen"),
+            ("setCamera", "Set Camera", "Kamera festlegen"),
+            ("setRenderMode", "Set Render Mode", "Darstellungsmodus festlegen"),
+            ("setVectorStyle", "Set Vector Style", "Vektorstil festlegen"),
+            ("setLodMode", "Set LOD Mode", "LOD-Modus festlegen"),
+            ("setFeatureSelection", "Set Feature Selection", "Objektauswahl festlegen"),
+            ("setHover", "Set Hover", "Hover festlegen"),
+            ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
+            ("setSelectionMode", "Set Selection Mode", "Auswahlmodus festlegen"),
+            ("clearSelection", "Clear Selection", "Auswahl aufheben"),
+            ("selectAll", "Select All", "Alles auswaehlen"),
+            ("deselect", "Deselect", "Abwaehlen"),
+            ("focusFeature", "Focus Feature", "Objekt fokussieren"),
+            ("setLayerStrokeScale", "Set Layer Stroke Scale", "Ebenenstrichstaerke festlegen"),
+            ("openSource", "Open Source", "Quelle oeffnen"),
+        ];
+        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    }
+    //#endregion 🔖CommandLabels
 
     //#region 🔖AppFactory
     /// 🔽 The static LOD-mode choices for the palette arg schema: the automatic mode plus each LOD scale
@@ -1605,8 +1654,40 @@ pub mod app_3d {
                 _ => ui_text(format!("Unknown body: {body_key}")),
             }
         }
+
+        fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+            let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+            semio_framework_plugin::AppLabelsOverlay {
+                app_label: None,
+                window_kind_labels: HashMap::from([(GIS3D_PLAY_WINDOW_MAIN.to_string(), (if is_de { "Gelaende" } else { "Terrain" }).to_string())]),
+                panel_tab_labels: HashMap::new(),
+                mode_labels: HashMap::from([("view".to_string(), (if is_de { "Ansicht" } else { "View" }).to_string())]),
+                action_labels: gis3d_action_labels(is_de),
+                utility_labels: HashMap::new(),
+                example_labels: HashMap::new(),
+                action_arg_labels: HashMap::new(),
+                dialog_labels: HashMap::new(),
+                introduction_labels: HashMap::new(),
+            }
+        }
     }
     //#endregion 🔖Gis3dPlayApp
+
+    //#region 🔖CommandLabels
+    /// 🗣️ (action id) -> localized label for every view-action/operation declared in `create_gis3d_app`'s
+    /// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how
+    /// the command palette and Actions rail get a translated label without threading locale through the
+    /// whole builder chain.
+    fn gis3d_action_labels(is_de: bool) -> HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            ("setCamera", "Set Camera", "Kamera festlegen"),
+            ("setSelection", "Set Selection", "Auswahl festlegen"),
+            ("worldSelect", "Select", "Auswaehlen"),
+            ("setExaggeration", "Set Exaggeration", "Ueberhoehung festlegen"),
+        ];
+        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    }
+    //#endregion 🔖CommandLabels
 
     //#region 🔖AppFactory
     pub fn create_gis3d_app() -> App {

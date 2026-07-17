@@ -6067,6 +6067,7 @@ pub mod d3 {
                             "Activate the Move utility to reposition objects in the scene.",
                             IntroductionAnchor::Utility("move".into()),
                         )
+                        .emphasis(IntroductionEmphasis::Highlight)
                         .advance_on(IntroductionAdvance::Utility("move".into())),
                         IntroductionStepDefinition::new(
                             "catalogue",

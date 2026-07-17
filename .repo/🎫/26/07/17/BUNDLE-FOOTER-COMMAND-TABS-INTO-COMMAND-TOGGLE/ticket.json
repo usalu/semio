@@ -1,0 +1,13 @@
+{
+  "title": "Bundle Footer Command Tabs Into Command Toggle",
+  "emoji": "🎛",
+  "status": "open",
+  "description": "Bundle all the inlined command category tabs in the footer (bottom-middle panel root tabs) into one expandable Command toggle, matching the Display branch pattern so only Command shows when folded and categories reveal on expand.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2022"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪ddcf251f7bae4edd91570ef173266ce9"
+  ]
+}

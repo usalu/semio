@@ -2580,6 +2580,7 @@ export type UiTranslationSchema = {
       readonly bottomLeft: UiLabelValue;
       readonly bottomRight: UiLabelValue;
       readonly display: UiLabelValue;
+      readonly command: UiLabelValue;
       readonly overview: UiLabelValue;
       readonly workbench: UiLabelValue;
       readonly details: UiLabelValue;
@@ -3054,6 +3055,12 @@ export const uiChromeTranslationBundles = {
             label: {
               normal: "Anzeige",
               beginner: "Anzeige",
+            },
+          },
+          command: {
+            label: {
+              normal: "Befehl",
+              beginner: "Befehl",
             },
           },
           overview: {
@@ -3583,6 +3590,12 @@ export const uiChromeTranslationBundles = {
             label: {
               normal: "Display",
               beginner: "Display",
+            },
+          },
+          command: {
+            label: {
+              normal: "Command",
+              beginner: "Command",
             },
           },
           overview: {
@@ -4604,7 +4617,19 @@ export function introductionAnchorSelector(anchor: IntroductionAnchor): string |
   }
 }
 
+/** @emoji 🧰 CSS selector for a window's folded Tools-rail unfold chip — used when a utility anchor is still hidden inside the folded toolbar. */
+export function introductionWindowToolbarUnfoldSelector(windowId: string): string {
+  return `[id="${windowId}-window-toolbar-unfold"]`;
+}
+
+/** @emoji 🎛 CSS selector for a window's folded Actions-rail unfold chip — used when an action anchor is still hidden inside the folded action pane. */
+export function introductionWindowActionPaneUnfoldSelector(windowId: string): string {
+  return `[id="${windowId}-window-action-pane-unfold"]`;
+}
+
 type IntroductionRect = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
+
+type IntroductionAnchorResolution = { readonly rect: IntroductionRect | null; readonly viaFallback: boolean };
 
 function domRectToIntroductionRect(rect: DOMRect): IntroductionRect {
   return { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
@@ -4613,29 +4638,43 @@ function domRectToIntroductionRect(rect: DOMRect): IntroductionRect {
 /** @emoji 🎓 Live-tracks the DOM rect of an introduction step's anchor, re-measuring on element resize
  * and window resize. Retries briefly if the anchor isn't mounted yet (a folded panel/toolbar) instead
  * of failing closed; a `null` selector or a never-found anchor both resolve to `null`, which the caller
- * treats as a `Screen`-style full veil with no cutout. */
-function useIntroductionAnchorRect(selector: string | null): IntroductionRect | null {
-  const [rect, setRect] = reactHostPort.useState<IntroductionRect | null>(null);
+ * treats as a `Screen`-style full veil with no cutout. When `fallbackSelectors` are given, the first
+ * mounted selector wins in order — the primary anchor first, then each fallback (e.g. a folded Tools
+ * rail's unfold chip while the utility button is still hidden). */
+function useIntroductionAnchorRect(selector: string | null, fallbackSelectors: readonly string[] = []): IntroductionAnchorResolution {
+  const [resolution, setResolution] = reactHostPort.useState<IntroductionAnchorResolution>({ rect: null, viaFallback: false });
 
   reactHostPort.useEffect(() => {
-    if (!selector) {
-      setRect(null);
+    const selectors = [selector, ...fallbackSelectors].filter((entry): entry is string => Boolean(entry));
+    if (selectors.length === 0) {
+      setResolution({ rect: null, viaFallback: false });
       return;
     }
     let element: Element | null = null;
+    let activeSelectorIndex = -1;
     let observer: ResizeObserver | null = null;
     let retryTimer: ReturnType<typeof setInterval> | null = null;
 
     const measure = () => {
-      if (element) setRect(domRectToIntroductionRect(element.getBoundingClientRect()));
+      if (element) setResolution({ rect: domRectToIntroductionRect(element.getBoundingClientRect()), viaFallback: activeSelectorIndex > 0 });
     };
     const attach = (): boolean => {
-      element = document.querySelector(selector);
-      if (!element) return false;
-      measure();
-      observer = new ResizeObserver(measure);
-      observer.observe(element);
-      return true;
+      observer?.disconnect();
+      observer = null;
+      element = null;
+      activeSelectorIndex = -1;
+      for (let index = 0; index < selectors.length; index += 1) {
+        const candidate = document.querySelector(selectors[index]!);
+        if (!candidate) continue;
+        element = candidate;
+        activeSelectorIndex = index;
+        measure();
+        observer = new ResizeObserver(measure);
+        observer.observe(candidate);
+        return true;
+      }
+      setResolution({ rect: null, viaFallback: false });
+      return false;
     };
 
     if (!attach()) {
@@ -4646,16 +4685,17 @@ function useIntroductionAnchorRect(selector: string | null): IntroductionRect | 
         }
       }, 200);
     }
-    window.addEventListener("resize", measure);
+    const onResize = () => measure();
+    window.addEventListener("resize", onResize);
     return () => {
       observer?.disconnect();
       if (retryTimer) clearInterval(retryTimer);
-      window.removeEventListener("resize", measure);
-      setRect(null);
+      window.removeEventListener("resize", onResize);
+      setResolution({ rect: null, viaFallback: false });
     };
-  }, [selector]);
+  }, [selector, fallbackSelectors]);
 
-  return rect;
+  return resolution;
 }
 
 export type IntroductionVeilBand = IntroductionRect;
@@ -4723,15 +4763,17 @@ export type UIIntroductionProps = {
   readonly stepIndex: number;
   readonly onStepIndexChange: (index: number) => void;
   readonly onDismiss: (completed: boolean) => void;
+  /** @emoji 🎯 Folded-chrome fallbacks tried after the step's primary anchor selector — e.g. a Tools-rail unfold chip while a utility button is still hidden. */
+  readonly anchorFallbackSelectors?: readonly string[];
 };
 
 /** @emoji 🎓 Full-screen first-run walkthrough: a glass veil covers the screen, the current step's
  * anchor is cut out of it (optionally with a pulsing highlight ring), and an info box explains it —
  * renders the declarative `IntroductionDefinition`/`IntroductionStepDefinition` contract. */
-export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, stepIndex, onStepIndexChange, onDismiss }) => {
+export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, stepIndex, onStepIndexChange, onDismiss, anchorFallbackSelectors = [] }) => {
   const step: IntroductionStepDefinition | undefined = introduction.steps[stepIndex];
   const selector = step ? introductionAnchorSelector(step.anchor) : null;
-  const anchorRect = useIntroductionAnchorRect(selector);
+  const { rect: anchorRect, viaFallback } = useIntroductionAnchorRect(selector, anchorFallbackSelectors);
   const [viewport, setViewport] = reactHostPort.useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
   const [boxSize, setBoxSize] = reactHostPort.useState({ width: 320, height: 160 });
   const boxRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -4768,7 +4810,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   if (!step) return null;
 
   const advance: IntroductionAdvance = step.advance;
-  const emphasis: IntroductionEmphasis = anchorRect ? step.emphasis : "none";
+  const emphasis: IntroductionEmphasis = anchorRect ? (viaFallback ? "highlight" : step.emphasis) : "none";
   const cutout = emphasis === "none" ? null : anchorRect;
   const bands = introductionVeilBands(viewport, cutout);
   const boxPosition = resolveIntroductionPlacement(step.placement, anchorRect, boxSize, viewport);
@@ -6659,9 +6701,10 @@ export const ShellFindDialog: React.FC<ShellFindDialogProps> = ({ open, query, o
 // #endregion 🔎ShellFindDialog
 
 // #region 🎛CommandPanel
-// The footer command palette used to be its own bespoke component; commands now render as leaf tabs of
-// the real `Panel` at anchor="bottom-middle" (see `buildCommandCategoryTabs`/`buildCommandCategoryTree`
-// in framework/renderer/react/os-shell.tsx) — no ui-react component needed here anymore.
+// The footer command palette used to be its own bespoke component; commands now render as category leaf
+// tabs under one expandable Command branch of the real `Panel` at anchor="bottom-middle" (see
+// `buildCommandCategoryTabs`/`FRAMEWORK_CATEGORY_COMMAND_ID` in framework/renderer/react/os-shell.tsx) —
+// no ui-react component needed here anymore.
 // #endregion 🎛CommandPanel
 
 // #region 🎮Footer
@@ -15840,6 +15883,8 @@ export interface PanelProps {
   maxSize?: number;
   zIndex?: 10 | 20 | 30 | 40;
   className?: string;
+  /** @emoji 🎛 Suppresses this panel's own tab button group — for anchors whose tab switching now lives in an external toggle (e.g. inlined into the navbar/footer) instead of the panel's chrome. */
+  hideTabBar?: boolean;
 }
 
 /** @emoji 🌲 Leaf-tab tree body shared by {@link Panel} and {@link MobilePanel} — one section per unit (sorted by order); skipped when the active tab has no units. Under a {@link PanelDockProvider}, each unit's header becomes a native-DnD handle draggable to another leaf tab's unit list (see {@link PANEL_TREE_UNIT_MIME}). */
@@ -16051,6 +16096,7 @@ const Panel: React.FC<PanelProps> = ({
   maxSize = 600,
   zIndex = 20,
   className = "",
+  hideTabBar = false,
 }) => {
   const dock = usePanelDockContext();
   const [hoveredSide, setHoveredSide] = reactHostPort.useState<"left" | "right" | null>(null);
@@ -16067,7 +16113,7 @@ const Panel: React.FC<PanelProps> = ({
   const flow = flowFromAnchor(anchor);
   const horizontal = anchorHorizontal(anchor);
   const isBottom = flow.block === "up";
-  const showTabBar = tabs.length > 0;
+  const showTabBar = tabs.length > 0 && !hideTabBar;
   const resolvedPath = reactHostPort.useMemo(() => reconcileActivePath(tabs, activeTabPath ?? internalActivePath, panelTabChildren), [tabs, activeTabPath, internalActivePath]);
   const activeNode = reactHostPort.useMemo(() => findPanelTabNode(tabs, resolvedPath), [tabs, resolvedPath]);
   const activeTabTrees = activeNode?.kind === "leaf" ? activeNode.trees : null;
@@ -17360,6 +17406,10 @@ export interface WindowConfig {
   controls?: React.ReactNode;
   measures?: React.ReactNode;
   toolbar?: React.ReactNode;
+  /** @emoji 🎛 Controlled fold state for the Tools rail (default true); externally settable so the introduction walkthrough can force-unfold a step's utility anchor into view. */
+  toolbarFolded?: boolean;
+  /** @emoji 🎛 Fires when the user or a redirect toggles the Tools rail fold state. */
+  onToolbarFoldedChange?: (folded: boolean) => void;
   /** @emoji 🎯 Utility Options rail body — utility-scoped measure controls, stacked directly above the toolbar (bottom-left) since they belong to the active utility. Rendered only when non-empty; reserves no space when absent. */
   utilityOptions?: React.ReactNode;
   /** @emoji 🎛 Bottom-right (free-corner) Actions rail body; folds to a chip by default. */
@@ -17449,6 +17499,8 @@ const Window: React.FC<WindowProps> = ({
   controls,
   measures,
   toolbar,
+  toolbarFolded: toolbarFoldedProp,
+  onToolbarFoldedChange,
   utilityOptions,
   actionPane,
   actionsFolded: actionsFoldedProp,
@@ -17464,8 +17516,14 @@ const Window: React.FC<WindowProps> = ({
   const measuresOverlayRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [measuresFolded, setMeasuresFolded] = reactHostPort.useState(true);
   const [measuresExpanded, setMeasuresExpanded] = reactHostPort.useState(false);
-  const [toolbarFolded, setToolbarFolded] = reactHostPort.useState(true);
   const [engagementFolded, setEngagementFolded] = reactHostPort.useState(true);
+  // 🎛 Controlled-with-default fold state for the bottom-left Tools rail (default true).
+  const [toolbarFoldedInternal, setToolbarFoldedInternal] = reactHostPort.useState(true);
+  const toolbarFolded = toolbarFoldedProp ?? toolbarFoldedInternal;
+  const setToolbarFolded = (folded: boolean) => {
+    onToolbarFoldedChange?.(folded);
+    if (toolbarFoldedProp === undefined) setToolbarFoldedInternal(folded);
+  };
   // 🎛 Controlled-with-default fold state for the bottom-right Actions rail (default true).
   const [actionsFoldedInternal, setActionsFoldedInternal] = reactHostPort.useState(true);
   const actionsFolded = actionsFoldedProp ?? actionsFoldedInternal;
@@ -23492,6 +23550,47 @@ if (import.meta.vitest) {
       expect(introductionAnchorSelector({ kind: "action", id: "addLayer" })).toBe('[id$="-action-addLayer"], [id$="-action-addLayer-execute"]');
       expect(introductionAnchorSelector({ kind: "panelTab", id: "puzzle.catalogue" })).toBe('[data-tab-id="puzzle.catalogue"]');
       expect(introductionAnchorSelector({ kind: "slot", id: "window-body" })).toBe('[data-slot="window-body"]');
+    });
+
+    it("maps folded window chrome toggles for utility/action fallbacks", () => {
+      expect(introductionWindowToolbarUnfoldSelector("puzzle3d-main")).toBe('[id="puzzle3d-main-window-toolbar-unfold"]');
+      expect(introductionWindowActionPaneUnfoldSelector("puzzle3d-main")).toBe('[id="puzzle3d-main-window-action-pane-unfold"]');
+    });
+  });
+
+  describe("UIIntroduction folded-chrome fallbacks", () => {
+    it("highlights a fallback Tools-rail unfold chip while the utility anchor is still hidden", async () => {
+      const { container } = render(
+        <div>
+          <button type="button" id="puzzle3d-main-window-toolbar-unfold">
+            Tools
+          </button>
+          <UIIntroduction
+            introduction={{
+              title: "Welcome",
+              steps: [
+                {
+                  id: "move-utility",
+                  title: "Move Objects",
+                  body: "Activate Move.",
+                  anchor: { kind: "utility", id: "move" },
+                  emphasis: "cutout",
+                  placement: "auto",
+                  advance: { kind: "utility", id: "move" },
+                },
+              ],
+            }}
+            stepIndex={0}
+            anchorFallbackSelectors={[introductionWindowToolbarUnfoldSelector("puzzle3d-main")]}
+            onStepIndexChange={vi.fn()}
+            onDismiss={vi.fn()}
+          />
+        </div>,
+      );
+      await waitFor(() => {
+        expect(container.querySelector(".animate-pulse")).toBeTruthy();
+      });
+      expect(container.querySelector(".animate-pulse")?.className).toContain("border-primary");
     });
   });
 
