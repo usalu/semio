@@ -45,6 +45,8 @@ pub mod app_wires {
         relationship_kind_is: &'static str,
         relationship_kind_references: &'static str,
         relationship_kind_has: &'static str,
+        window_main: &'static str,
+        mode_edit: &'static str,
     }
 
     const WIRES_LABELS_NATIVE_EN: WiresLabels = WiresLabels {
@@ -56,6 +58,8 @@ pub mod app_wires {
         relationship_kind_is: "Is",
         relationship_kind_references: "References",
         relationship_kind_has: "Has",
+        window_main: "Canvas",
+        mode_edit: "Edit",
     };
 
     const WIRES_LABELS_NATIVE_DE: WiresLabels = WiresLabels {
@@ -67,6 +71,8 @@ pub mod app_wires {
         relationship_kind_is: "Ist",
         relationship_kind_references: "Referenziert",
         relationship_kind_has: "Hat",
+        window_main: "Leinwand",
+        mode_edit: "Bearbeiten",
     };
 
     /// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
@@ -808,8 +814,48 @@ pub mod app_wires {
                 _ => ui_text(format!("Unknown body: {body_key}")),
             }
         }
+
+        fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+            let labels = wires_labels(view_state);
+            let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+            let mut overlay = semio_framework_plugin::AppLabelsOverlay::with_framework_panel_tabs(
+                ["framework.panel.document", "framework.panel.catalogue", "framework.panel.inspection"],
+                is_de,
+            );
+            overlay.window_kind_labels = std::collections::HashMap::from([("reasoning-wires-composite".to_string(), labels.window_main.to_string())]);
+            overlay.mode_labels = std::collections::HashMap::from([("edit".to_string(), labels.mode_edit.to_string())]);
+            overlay.action_labels = wires_action_labels(is_de);
+            overlay.utility_labels = std::collections::HashMap::new();
+            overlay.example_labels = std::collections::HashMap::from([
+                ("empty".to_string(), (if is_de { "Leer" } else { "Empty" }).to_string()),
+                (WIRES_PLAY_EXAMPLE_METABOLISM_ID.to_string(), "Metabolism".to_string()),
+            ]);
+            overlay
+        }
     }
     //#endregion 🔖WiresPlayApp
+
+    //#region 🔖CommandLabels
+    /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_wires_app`'s
+    /// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+    /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+    fn wires_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+            ("addNode", "Add Node", "Knoten hinzufuegen"),
+            ("addRelationship", "Add Relationship", "Beziehung hinzufuegen"),
+            ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+            ("forceLayout", "Force Layout", "Kraftbasiertes Layout"),
+            ("reorganize", "Reorganize", "Neu anordnen"),
+            ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegt"),
+            ("setSelection", "Set Selection", "Auswahl festlegen"),
+            ("documentSelect", "Document Select", "Dokument auswaehlen"),
+            ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrueckt"),
+            ("canvasPointerUp", "Canvas Pointer Up", "Leinwand-Zeiger losgelassen"),
+        ];
+        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    }
+    //#endregion 🔖CommandLabels
 
     //#region 🔖AppFactory
     pub fn create_wires_app() -> App {

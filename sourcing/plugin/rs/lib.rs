@@ -120,6 +120,72 @@ fn available_modules(view_state: &ViewState) -> Vec<ModuleCatalogue> {
 }
 //#endregion 🔖Contributions
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the curate app; one field per label makes every locale combination compile-checked.
+struct SourcingLabels {
+    window_pool: &'static str,
+    window_curated: &'static str,
+    window_preview: &'static str,
+    window_grid: &'static str,
+    mode_curate: &'static str,
+    search_placeholder: &'static str,
+    all_typologies: &'static str,
+    col_name: &'static str,
+    col_module: &'static str,
+    col_typology: &'static str,
+    col_availability: &'static str,
+    col_curated: &'static str,
+    col_count: &'static str,
+    remove: &'static str,
+    no_selection: &'static str,
+}
+
+const SOURCING_LABELS_NATIVE_EN: SourcingLabels = SourcingLabels {
+    window_pool: "Pool",
+    window_curated: "Curated",
+    window_preview: "Preview",
+    window_grid: "Grid",
+    mode_curate: "Curate",
+    search_placeholder: "Search…",
+    all_typologies: "All Typologies",
+    col_name: "Name",
+    col_module: "Module",
+    col_typology: "Typology",
+    col_availability: "Availability",
+    col_curated: "Curated",
+    col_count: "Count",
+    remove: "Remove",
+    no_selection: "No selection",
+};
+const SOURCING_LABELS_NATIVE_DE: SourcingLabels = SourcingLabels {
+    window_pool: "Pool",
+    window_curated: "Kuratiert",
+    window_preview: "Vorschau",
+    window_grid: "Raster",
+    mode_curate: "Kuratieren",
+    search_placeholder: "Suchen…",
+    all_typologies: "Alle Typologien",
+    col_name: "Name",
+    col_module: "Modul",
+    col_typology: "Typologie",
+    col_availability: "Verfuegbarkeit",
+    col_curated: "Kuratiert",
+    col_count: "Anzahl",
+    remove: "Entfernen",
+    no_selection: "Keine Auswahl",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; this app has no reuse-terminology mapping.
+fn sourcing_labels(view_state: &ViewState) -> &'static SourcingLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de {
+        &SOURCING_LABELS_NATIVE_DE
+    } else {
+        &SOURCING_LABELS_NATIVE_EN
+    }
+}
+//#endregion 🔖Terminology
+
 //#region 🔖Layout
 fn sourcing_window(window_kind_id: &str, title: &str) -> WindowLayoutWindowNode {
     WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None }
@@ -158,12 +224,12 @@ fn sourcing_three_column_layout() -> WindowLayout {
 //#endregion 🔖Layout
 
 //#region 🔖Panels
-fn build_filter_bar(document: &CurateDocument, modules: &[ModuleCatalogue]) -> UiNode {
+fn build_filter_bar(document: &CurateDocument, modules: &[ModuleCatalogue], labels: &SourcingLabels) -> UiNode {
     let mut children = vec![UiNode::Input(UiInputNode {
         id: "sourcing-filter-query".into(),
         input_kind: "text".into(),
         value: document.filters.query.clone(),
-        placeholder: Some("Search…".into()),
+        placeholder: Some(labels.search_placeholder.into()),
         commit: None,
         min: None,
         max: None,
@@ -181,7 +247,7 @@ fn build_filter_bar(document: &CurateDocument, modules: &[ModuleCatalogue]) -> U
             on_change: sourcing_action("setFilterModule", Some(json!({ "moduleId": module.module_id, "enabled": !pressed }))),
         }));
     }
-    let mut typology_items = vec![UiSelectItem { value: String::new(), label: "All Typologies".into() }];
+    let mut typology_items = vec![UiSelectItem { value: String::new(), label: labels.all_typologies.into() }];
     for module in modules {
         for (path, label) in typology_flatten(&module.typology) {
             typology_items.push(UiSelectItem { value: path.join("/"), label });
@@ -205,18 +271,18 @@ fn build_filter_bar(document: &CurateDocument, modules: &[ModuleCatalogue]) -> U
     ui_stack_vertical(children)
 }
 
-fn pool_columns_json() -> String {
+fn pool_columns_json(labels: &SourcingLabels) -> String {
     json!([
-        {"id": "name", "label": "Name"},
-        {"id": "module", "label": "Module", "sortable": true},
-        {"id": "typology", "label": "Typology"},
-        {"id": "availability", "label": "Availability", "sortable": true},
-        {"id": "curated", "label": "Curated"},
+        {"id": "name", "label": labels.col_name},
+        {"id": "module", "label": labels.col_module, "sortable": true},
+        {"id": "typology", "label": labels.col_typology},
+        {"id": "availability", "label": labels.col_availability, "sortable": true},
+        {"id": "curated", "label": labels.col_curated},
     ])
     .to_string()
 }
 
-fn build_pool_table(document: &CurateDocument) -> UiNode {
+fn build_pool_table(document: &CurateDocument, labels: &SourcingLabels) -> UiNode {
     let mut filtered = document.filtered_stock();
     if let Some(sort) = &document.filters.sort {
         filtered.sort_by(|a, b| {
@@ -257,7 +323,7 @@ fn build_pool_table(document: &CurateDocument) -> UiNode {
             )
         })
         .collect();
-    let mut scene = TableScene::base(pool_columns_json(), serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into()));
+    let mut scene = TableScene::base(pool_columns_json(labels), serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into()));
     scene.selection_json = Some(selection_json_for(document));
     scene.row_drag_mime = Some(SOURCING_DRAG_MIME.into());
     scene.drop_action = Some(sourcing_action("dropOnPool", None));
@@ -265,11 +331,11 @@ fn build_pool_table(document: &CurateDocument) -> UiNode {
     build_table_scene(SURFACE_POOL, SOURCING_CONTROLLER_ID, scene)
 }
 
-fn build_curated_table(document: &CurateDocument) -> UiNode {
+fn build_curated_table(document: &CurateDocument, labels: &SourcingLabels) -> UiNode {
     let columns = json!([
-        {"id": "name", "label": "Name"},
-        {"id": "availability", "label": "Availability"},
-        {"id": "count", "label": "Count"},
+        {"id": "name", "label": labels.col_name},
+        {"id": "availability", "label": labels.col_availability},
+        {"id": "count", "label": labels.col_count},
         {"id": "actions", "label": ""},
     ])
     .to_string();
@@ -299,7 +365,7 @@ fn build_curated_table(document: &CurateDocument) -> UiNode {
                         TableCell::Buttons {
                             buttons: vec![UiTreeItemAction {
                                 icon_id: "trash".into(),
-                                label: Some("Remove".into()),
+                                label: Some(labels.remove.into()),
                                 action: sourcing_action("curateRemove", Some(json!({ "objectId": kind.id }))),
                                 reveal_on_hover: None,
                             }],
@@ -337,9 +403,9 @@ fn instance_json(kind: &ObjectKind, position: [f64; 3], scale: f64, selected: bo
     })
 }
 
-fn render_preview(document: &CurateDocument) -> UiNode {
+fn render_preview(document: &CurateDocument, labels: &SourcingLabels) -> UiNode {
     let Some(kind) = document.runtime.selected_object_id.as_ref().and_then(|id| document.stock.iter().find(|kind| &kind.id == id)) else {
-        return ui_text("No selection");
+        return ui_text(labels.no_selection);
     };
     let meshes_json = json!([kind_mesh_json(kind)]).to_string();
     let instances_json = json!([instance_json(kind, [0.0, 0.0, 0.0], 1.0, false)]).to_string();
@@ -373,6 +439,37 @@ fn render_grid(document: &CurateDocument) -> UiNode {
     build_world_3d_scene(SURFACE_GRID, SOURCING_CONTROLLER_ID, scene)
 }
 //#endregion 🔖World3d
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/hidden-op declared in `create_sourcing_curate_app`'s
+/// static manifest — mirrors `puzzle3d_action_labels`.
+fn sourcing_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+        ("stockFromCatalogue", "Stock From Catalogue", "Bestand aus Katalog"),
+        ("setDocument", "Set Document", "Dokument festlegen"),
+        ("setFilterQuery", "Set Filter Query", "Filterabfrage festlegen"),
+        ("setFilterModule", "Set Filter Module", "Filtermodul festlegen"),
+        ("setFilterTypology", "Set Filter Typology", "Filtertypologie festlegen"),
+        ("setFilterMinAvailability", "Set Filter Min Availability", "Mindestverfuegbarkeit festlegen"),
+        ("sortTable", "Sort Table", "Tabelle sortieren"),
+        ("curateAdd", "Curate Add", "Kuratierung hinzufuegen"),
+        ("curateSetCount", "Curate Set Count", "Kuratierte Anzahl festlegen"),
+        ("curateRemove", "Curate Remove", "Kuratierung entfernen"),
+        ("dropOnPool", "Drop On Pool", "Auf Pool ablegen"),
+        ("dropOnCurated", "Drop On Curated", "Auf Kuratiert ablegen"),
+        ("selectRow", "Select Row", "Zeile auswaehlen"),
+        ("worldSelect", "World Select", "Welt auswaehlen"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label; `create_sourcing_curate_app` declares no `.utility(...)`
+/// entries, so this is empty — kept for shape-parity with `puzzle3d_utility_labels`.
+fn sourcing_utility_labels(_is_de: bool) -> std::collections::HashMap<String, String> {
+    std::collections::HashMap::new()
+}
+//#endregion 🔖CommandLabels
 
 //#region 🔖SourcingCurateApp
 pub fn create_sourcing_curate_app() -> App {
@@ -551,15 +648,41 @@ impl DocumentApp for SourcingCurateApp {
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, CurateDocument>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
+        let labels = sourcing_labels(view_state);
         match body_key {
             BODY_POOL => {
                 let modules = available_modules(view_state);
-                ui_stack_vertical(vec![build_filter_bar(document, &modules), build_pool_table(document)])
+                ui_stack_vertical(vec![build_filter_bar(document, &modules, labels), build_pool_table(document, labels)])
             }
-            BODY_CURATED => build_curated_table(document),
-            BODY_PREVIEW => render_preview(document),
+            BODY_CURATED => build_curated_table(document, labels),
+            BODY_PREVIEW => render_preview(document, labels),
             BODY_GRID => render_grid(document),
             _ => ui_text(""),
+        }
+    }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = sourcing_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: None,
+            window_kind_labels: std::collections::HashMap::from([
+                (WINDOW_POOL.to_string(), labels.window_pool.to_string()),
+                (WINDOW_CURATED.to_string(), labels.window_curated.to_string()),
+                (WINDOW_PREVIEW.to_string(), labels.window_preview.to_string()),
+                (WINDOW_GRID.to_string(), labels.window_grid.to_string()),
+            ]),
+            panel_tab_labels: std::collections::HashMap::new(),
+            mode_labels: std::collections::HashMap::from([("curate".to_string(), labels.mode_curate.to_string())]),
+            action_labels: sourcing_action_labels(is_de),
+            utility_labels: sourcing_utility_labels(is_de),
+            example_labels: std::collections::HashMap::from([
+                (DEMO_STOCK_EXAMPLE_ID.to_string(), (if is_de { "Beispielbestand" } else { "Demo Stock" }).to_string()),
+                (EMPTY_EXAMPLE_ID.to_string(), (if is_de { "Leere Kuratierung" } else { "Empty Curation" }).to_string()),
+            ]),
+            action_arg_labels: std::collections::HashMap::new(),
+            dialog_labels: std::collections::HashMap::new(),
+            introduction_labels: std::collections::HashMap::new(),
         }
     }
 }
@@ -626,7 +749,7 @@ mod tests {
     fn pool_render_respects_query_filter() {
         let mut document = default_document();
         document.filters.query = "glulam".into();
-        let node = build_pool_table(&document);
+        let node = build_pool_table(&document, &SOURCING_LABELS_NATIVE_EN);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Glulam"));
         assert!(!json.contains("Hollow Core"));
@@ -636,7 +759,7 @@ mod tests {
     fn pool_stepper_cell_max_equals_availability() {
         let document = default_document();
         let kind = &document.stock[0];
-        let node = build_pool_table(&document);
+        let node = build_pool_table(&document, &SOURCING_LABELS_NATIVE_EN);
         let json = serde_json::to_value(&node).unwrap();
         let rows_json = json.pointer("/table/rowsJson").and_then(|value| value.as_str()).unwrap();
         let rows: Vec<Value> = serde_json::from_str(rows_json).unwrap();
@@ -704,7 +827,7 @@ mod tests {
         let mut document = default_document();
         let object_id = document.stock[0].id.clone();
         document.runtime.selected_object_id = Some(object_id.clone());
-        let node = render_preview(&document);
+        let node = render_preview(&document, &SOURCING_LABELS_NATIVE_EN);
         let json = serde_json::to_value(&node).unwrap();
         let meshes_json = json.pointer("/world3d/meshesJson").and_then(|value| value.as_str()).unwrap();
         let meshes: Vec<Value> = serde_json::from_str(meshes_json).unwrap();
@@ -715,7 +838,7 @@ mod tests {
     #[test]
     fn preview_shows_placeholder_without_selection() {
         let document = default_document();
-        let node = render_preview(&document);
+        let node = render_preview(&document, &SOURCING_LABELS_NATIVE_EN);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("No selection"));
     }

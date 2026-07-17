@@ -61,21 +61,22 @@ fn world_instances_json(scene: &RemodelScene) -> String {
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-fn build_document_panel(scene: &RemodelScene, runtime: &RemodelPlayRuntime, active_utility: &str) -> UiNode {
+fn build_document_panel(scene: &RemodelScene, runtime: &RemodelPlayRuntime, active_utility: &str, labels: &RemodelLabels) -> UiNode {
     let video_label = scene
         .source_video
         .as_ref()
-        .map(|video| format!("Source video: {} ({} frames, {:.1} fps)", video.filename, video.frame_count, video.fps))
-        .unwrap_or_else(|| "No source video imported yet".into());
+        .map(|video| format!("{}: {} ({} {}, {:.1} fps)", labels.source_video, video.filename, video.frame_count, labels.frames, video.fps))
+        .unwrap_or_else(|| labels.no_source_video.into());
     let job_label = format!(
-        "Reconstruction: {:?} ({:.0}%){}",
+        "{}: {:?} ({:.0}%){}",
+        labels.reconstruction,
         scene.job.stage,
         scene.job.progress_0_1 * 100.0,
         scene
             .job
             .error
             .as_ref()
-            .map(|error| format!(" — error: {error}"))
+            .map(|error| format!(" — {}: {error}", labels.error))
             .unwrap_or_default()
     );
     let mesh_label = scene
@@ -83,14 +84,17 @@ fn build_document_panel(scene: &RemodelScene, runtime: &RemodelPlayRuntime, acti
         .as_ref()
         .map(|result| {
             format!(
-                "Mesh: {:?}, {} vertices, {} triangles",
+                "{}: {:?}, {} {}, {} {}",
+                labels.mesh,
                 result.source,
                 result.mesh.vertex_count(),
-                result.mesh.triangle_count()
+                labels.vertices,
+                result.mesh.triangle_count(),
+                labels.triangles
             )
         })
-        .unwrap_or_else(|| "Mesh: none".into());
-    let utility_label = format!("Utility: {} · selection: {} ({})", active_utility, runtime.selection.mode, runtime.selection.ids.len());
+        .unwrap_or_else(|| format!("{}: {}", labels.mesh, labels.mesh_none));
+    let utility_label = format!("{}: {} · {}: {} ({})", labels.utility, active_utility, labels.selection, runtime.selection.mode, runtime.selection.ids.len());
     ui_stack_vertical(vec![ui_text(video_label), ui_text(job_label), ui_text(mesh_label), ui_text(utility_label)])
 }
 
@@ -206,12 +210,138 @@ impl DocumentApp for RemodelPlayApp {
                     &WorldSunConfig::default(),
                 ),
             ),
-            REMODEL_PLAY_BODY_DOCUMENT => build_document_panel(scene, &self.runtime, active_utility),
+            REMODEL_PLAY_BODY_DOCUMENT => build_document_panel(scene, &self.runtime, active_utility, remodel_labels(view_state)),
             _ => ui_text(format!("Unknown body: {body_key}")),
+        }
+    }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = remodel_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: None,
+            window_kind_labels: std::collections::HashMap::from([(REMODEL_PLAY_WINDOW_MAIN.to_string(), labels.model.to_string())]),
+            panel_tab_labels: std::collections::HashMap::new(),
+            mode_labels: std::collections::HashMap::from([("model".to_string(), labels.model.to_string())]),
+            action_labels: remodel_action_labels(is_de),
+            utility_labels: remodel_utility_labels(is_de),
+            example_labels: std::collections::HashMap::from([("default".to_string(), labels.default_example.to_string())]),
+            action_arg_labels: std::collections::HashMap::new(),
+            dialog_labels: std::collections::HashMap::new(),
+            introduction_labels: std::collections::HashMap::new(),
         }
     }
 }
 //#endregion 🔖RemodelPlayApp
+
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the remodel play app; one field per label makes every locale
+/// combination compile-checked. Native-only (no reuse-terminology variant): remodel's domain nouns
+/// (video/reconstruction/mesh/vertices/triangles) do not map onto the Object/Vortex/Attraction
+/// reuse vocabulary.
+struct RemodelLabels {
+    model: &'static str,
+    set_params: &'static str,
+    reset_placeholder_mesh: &'static str,
+    clear_result: &'static str,
+    import_video: &'static str,
+    set_selection: &'static str,
+    set_camera: &'static str,
+    select: &'static str,
+    sculpt: &'static str,
+    default_example: &'static str,
+    source_video: &'static str,
+    no_source_video: &'static str,
+    reconstruction: &'static str,
+    error: &'static str,
+    mesh: &'static str,
+    mesh_none: &'static str,
+    vertices: &'static str,
+    triangles: &'static str,
+    utility: &'static str,
+    selection: &'static str,
+    frames: &'static str,
+}
+
+const REMODEL_LABELS_NATIVE_EN: RemodelLabels = RemodelLabels {
+    model: "Model",
+    set_params: "Set Params",
+    reset_placeholder_mesh: "Reset Placeholder Mesh",
+    clear_result: "Clear Result",
+    import_video: "Import Video",
+    set_selection: "Set Selection",
+    set_camera: "Set Camera",
+    select: "Select",
+    sculpt: "Sculpt",
+    default_example: "Default",
+    source_video: "Source video",
+    no_source_video: "No source video imported yet",
+    reconstruction: "Reconstruction",
+    error: "error",
+    mesh: "Mesh",
+    mesh_none: "none",
+    vertices: "vertices",
+    triangles: "triangles",
+    utility: "Utility",
+    selection: "selection",
+    frames: "frames",
+};
+const REMODEL_LABELS_NATIVE_DE: RemodelLabels = RemodelLabels {
+    model: "Modell",
+    set_params: "Parameter festlegen",
+    reset_placeholder_mesh: "Platzhalter-Mesh zuruecksetzen",
+    clear_result: "Ergebnis loeschen",
+    import_video: "Video importieren",
+    set_selection: "Auswahl festlegen",
+    set_camera: "Kamera festlegen",
+    select: "Auswaehlen",
+    sculpt: "Formen",
+    default_example: "Standard",
+    source_video: "Quellvideo",
+    no_source_video: "Noch kein Quellvideo importiert",
+    reconstruction: "Rekonstruktion",
+    error: "Fehler",
+    mesh: "Mesh",
+    mesh_none: "keine",
+    vertices: "Vertices",
+    triangles: "Dreiecke",
+    utility: "Werkzeug",
+    selection: "Auswahl",
+    frames: "Frames",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; unrecognized locales fall back to English.
+fn remodel_labels(view_state: &ViewState) -> &'static RemodelLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de { &REMODEL_LABELS_NATIVE_DE } else { &REMODEL_LABELS_NATIVE_EN }
+}
+//#endregion 🔖Terminology
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_remodel_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
+/// command palette and Actions rail get a translated label without threading locale through the builder chain.
+fn remodel_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    let labels = if is_de { &REMODEL_LABELS_NATIVE_DE } else { &REMODEL_LABELS_NATIVE_EN };
+    std::collections::HashMap::from([
+        ("setParams".to_string(), labels.set_params.to_string()),
+        ("resetPlaceholderMesh".to_string(), labels.reset_placeholder_mesh.to_string()),
+        ("clearResult".to_string(), labels.clear_result.to_string()),
+        ("importVideo".to_string(), labels.import_video.to_string()),
+        ("setSelection".to_string(), labels.set_selection.to_string()),
+        ("setCamera".to_string(), labels.set_camera.to_string()),
+    ])
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_remodel_app`.
+fn remodel_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    let labels = if is_de { &REMODEL_LABELS_NATIVE_DE } else { &REMODEL_LABELS_NATIVE_EN };
+    std::collections::HashMap::from([
+        ("select".to_string(), labels.select.to_string()),
+        ("sculpt".to_string(), labels.sculpt.to_string()),
+    ])
+}
+//#endregion 🔖CommandLabels
 
 //#region 🔖Manifest
 fn create_remodel_app() -> App {

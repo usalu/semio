@@ -22,6 +22,64 @@ const PROTOCOL_PLAY_BODY_BUILDER: &str = "protocol.play.builder";
 const PROTOCOL_PLAY_WINDOW_BUILDER: &str = "protocol-builder";
 //#endregion 🔖Constants
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the protocol-play app; one field per label makes every locale combination compile-checked.
+struct ProtocolPlayLabels {
+    app_label: &'static str,
+    mode_builder: &'static str,
+    window_builder: &'static str,
+    kind_arg: &'static str,
+}
+
+const PROTOCOL_PLAY_LABELS_EN: ProtocolPlayLabels = ProtocolPlayLabels {
+    app_label: "Protocol",
+    mode_builder: "Builder",
+    window_builder: "Builder",
+    kind_arg: "Kind",
+};
+const PROTOCOL_PLAY_LABELS_DE: ProtocolPlayLabels = ProtocolPlayLabels {
+    app_label: "Protokoll",
+    mode_builder: "Builder",
+    window_builder: "Builder",
+    kind_arg: "Art",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; native-only (no terminology variant).
+fn protocol_play_labels(view_state: &ViewState) -> &'static ProtocolPlayLabels {
+    if view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de")) {
+        &PROTOCOL_PLAY_LABELS_DE
+    } else {
+        &PROTOCOL_PLAY_LABELS_EN
+    }
+}
+//#endregion 🔖Terminology
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_protocol_play_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+fn protocol_play_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("addStep", "Add Step", "Schritt hinzufuegen"),
+        ("removeStep", "Remove Step", "Schritt entfernen"),
+        ("moveStep", "Move Step", "Schritt verschieben"),
+        ("addBlock", "Add Block", "Baustein hinzufuegen"),
+        ("removeBlock", "Remove Block", "Baustein entfernen"),
+        ("moveBlock", "Move Block", "Baustein verschieben"),
+        ("updateProtocol", "Update Protocol", "Protokoll aktualisieren"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_protocol_play_app`.
+/// The protocol manifest declares no toolbar utilities, so this always resolves empty; kept for parity with the
+/// other play apps' terminology plumbing.
+fn protocol_play_utility_labels(_is_de: bool) -> std::collections::HashMap<String, String> {
+    std::collections::HashMap::new()
+}
+//#endregion 🔖CommandLabels
+
 //#region 🔖Builder
 fn protocol_builder_config() -> ProtocolBuilderConfig {
     ProtocolBuilderConfig {
@@ -185,6 +243,23 @@ impl DocumentApp for ProtocolPlayApp {
         match body_key {
             PROTOCOL_PLAY_BODY_BUILDER => render_builder(doc.projection, self.selected_ids.first().map(String::as_str)),
             _ => ui_text(format!("Unknown body: {body_key}")),
+        }
+    }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = protocol_play_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: Some(labels.app_label.to_string()),
+            window_kind_labels: std::collections::HashMap::from([(PROTOCOL_PLAY_WINDOW_BUILDER.to_string(), labels.window_builder.to_string())]),
+            panel_tab_labels: std::collections::HashMap::new(),
+            mode_labels: std::collections::HashMap::from([("builder".to_string(), labels.mode_builder.to_string())]),
+            action_labels: protocol_play_action_labels(is_de),
+            utility_labels: protocol_play_utility_labels(is_de),
+            example_labels: std::collections::HashMap::new(),
+            action_arg_labels: std::collections::HashMap::from([("addBlock.kind".to_string(), labels.kind_arg.to_string())]),
+            dialog_labels: std::collections::HashMap::new(),
+            introduction_labels: std::collections::HashMap::new(),
         }
     }
 }

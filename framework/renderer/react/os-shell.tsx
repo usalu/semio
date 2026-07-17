@@ -4422,7 +4422,6 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id], instance.id, onActionStable),
           engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
           toolbar: utilityBarNode(utilities, instance.id, onActionStable, introductionUtilityId),
-          toolbarFolded: toolbarFoldedFor(utilities),
           actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay),
           actionsFolded: actionsFoldedFor(instance.id, actions),
           onActionsFoldedChange: onActionsFoldedFor(instance.id),

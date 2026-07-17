@@ -978,29 +978,36 @@
   }
 }
 
+% 🪟 The tcolorbox option list is built here via \tl_set:Nx and passed to
+% \begin{tcolorbox}[...] as a single pre-expanded token list, rather than
+% embedding \tl_use:N calls directly inside the [...] argument — pgfkeys
+% resolves an already-expanded literal height differently from one it must
+% still expand itself, and for a fixed-height, non-breakable, image-filled
+% box the latter form was observed to make tcolorbox typeset the body twice
+% (confirmed by counting \includegraphics invocations via debug \typeout).
+% \semio_window_begin_row:n (used by the generic \Window in item context)
+% already pre-expanded its height the same way and never showed the bug.
+\tl_new:N \l_semio_window_tcbopts_tl
 \cs_new_protected:Npn \semio_window_tcb_open:n #1 {
-  % 🪟 No forced `breakable=false` here anymore — a "kind" window (Table,
-  % Figure, ...) genuinely inherits `breakable` from its `semio~window` tier
-  % style and may legitimately continue onto further pages; callers that need
-  % a non-breakable box (the generic \Window arrangement primitives) pass
-  % `breakable=false` explicitly in #1 themselves (see
-  % \semio_window_generic_begin:n / \semio_window_begin_row:n).
   \bool_if:NTF \l_semio_window_height_set_bool {
     \semio_window_height_tl_set:
-    \typeout{[DEBUG]~height_tl=\tl_use:N\l_semio_window_height_tl~valign=\tl_use:N\l_semio_window_valign_tl~halign=\tl_use:N\l_semio_window_halign_tl}
-    \begin{tcolorbox}[
+    \tl_set:Nx \l_semio_window_tcbopts_tl {
       #1,
-      height=\tl_use:N \l_semio_window_height_tl,
-      valign=\tl_use:N \l_semio_window_valign_tl,
-      halign=\tl_use:N \l_semio_window_halign_tl
-    ]
+      height = \tl_use:N \l_semio_window_height_tl,
+      valign = \tl_use:N \l_semio_window_valign_tl,
+      halign = \tl_use:N \l_semio_window_halign_tl
+    }
   } {
-    \begin{tcolorbox}[
+    \tl_set:Nx \l_semio_window_tcbopts_tl {
       #1,
-      valign=\tl_use:N \l_semio_window_valign_tl,
-      halign=\tl_use:N \l_semio_window_halign_tl
-    ]
+      valign = \tl_use:N \l_semio_window_valign_tl,
+      halign = \tl_use:N \l_semio_window_halign_tl
+    }
   }
+  \exp_args:NV \semio_window_tcb_open_aux:n \l_semio_window_tcbopts_tl
+}
+\cs_new_protected:Npn \semio_window_tcb_open_aux:n #1 {
+  \begin{tcolorbox}[#1]
 }
 
 \msg_new:nnn { semio-window } { text-fit-no-height }
@@ -1094,22 +1101,60 @@
 }
 
 \cs_new_protected:Npn \semio_window_kind_begin:nnn #1 #2 #3 {
-  \typeout{[DEBUG]~kind_begin~entered~for~#1}
   \semio_window_content_state_reset:
+  \bool_set_true:N \l_semio_window_hierarchy_bool
+  \tl_clear:N \l_semio_window_kind_title_tl
   \keys_set:nn { semio / window / kind } { #3 }
   \semio_window_arrangement_height_adopt:
+  \semio_window_content_validate:
+  \use:c { semio@window@enter }
+  \bool_if:NTF \l_semio_register_list_bool {
+    \tl_if_empty:NT \l_semio_window_kind_title_tl {
+      \tl_set:Nn \l_semio_window_kind_title_tl {
+        \semio_kind_label:n { \use:c { semio@window@#1@kind } }
+      }
+    }
+    \tl_set:Nx \l_semio_window_kind_title_tl { \tl_use:N \l_semio_window_kind_title_tl }
+    \tl_clear:N \l_semio_window_number_tl
+    \tl_gclear:N \g_semio_window_current_regnum_tl
+    \bool_gset_false:N \g_semio_window_break_suffix_bool
+  } {
+    \bool_if:NTF \l_semio_window_hierarchy_bool {
+      \refstepcounter {#1}
+      \tl_if_empty:NTF \l_semio_window_kind_title_tl {
+        \tl_set:Nn \l_semio_window_kind_title_tl {
+          \semio_kind_label:n { \use:c { semio@window@#1@kind } }
+        }
+      } { }
+      \tl_set:Nx \l_semio_window_kind_title_tl { \tl_use:N \l_semio_window_kind_title_tl }
+      \semio_window_kind_number_set:n {#1}
+      \semio_window_register_write:nn {#1} { \use:c { semio@window@#1@kind } }
+      \semio_window_break_suffix_apply:
+    } {
+      \tl_if_empty:NTF \l_semio_window_kind_title_tl {
+        \tl_set:Nn \l_semio_window_kind_title_tl {
+          \semio_kind_label:n { \use:c { semio@window@#1@kind } }
+        }
+      } { }
+      \tl_set:Nx \l_semio_window_kind_title_tl { \tl_use:N \l_semio_window_kind_title_tl }
+      \tl_clear:N \l_semio_window_number_tl
+      \tl_gclear:N \g_semio_window_current_regnum_tl
+    \bool_gset_false:N \g_semio_window_break_suffix_bool
+    }
+  }
+  \semio_window_header_store:
+  \semio_block_sep_before:
+  \semio_window_header_muted_use:
+  \semio_window_vskip_stroke_hairline:
   \noindent
   % 🩹 A "kind" window (Table, Figure, Photo, ...) never checked
   % \l_semio_window_in_item_bool the way the generic \Window does (compare
   % \semio_window_generic_begin: below, which passes breakable=false when
   % inside a WindowItem) — so a kind window placed in a WindowRow/WindowItem
-  % stayed `breakable`. tcolorbox's breakable measurement pass isn't always
-  % a discarded dry run: for some images (reproduced in isolation, confirmed
-  % via debug \typeout counting \includegraphics invocations) it visibly
-  % ships the graphic to the page a second time, rendering it doubled. No
-  % kind window was ever placed inside a WindowItem anywhere in this
-  % codebase before that combination was introduced, so disabling
-  % breakable only in that context cannot change any existing behavior.
+  % stayed `breakable`. The actual duplication root cause was a separate bug
+  % in \semio_window_tcb_open:n (see its comment) — but a kind window inside
+  % a WindowItem genuinely should be non-breakable regardless, matching the
+  % generic \Window's behavior for the same context.
   \str_if_eq:nnTF {#1} { semiotable }
     {
       \bool_if:NTF \l_semio_window_in_item_bool
@@ -1133,6 +1178,7 @@
   \exp_args:Ne \NewDocumentEnvironment { #3 } { O{} } {
     \semio_window_kind_begin:nnn {#1} {#4} {##1}
   } {
+    \par
     \end{tcolorbox}
     \semio_block_sep_after:
     \use:c { semio@window@leave }

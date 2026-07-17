@@ -1,12 +1,13 @@
 {
   "title": "Inline Workbench Panels Into Navbar And Footer",
   "emoji": "🧭",
-  "status": "open",
+  "status": "closed",
   "description": "Remove the top-left workbench tab and inline Document and Catalogue directly on the navbar. Same for Settings: remove the workbench tab and inline Theme and Settings directly in the footer. Same for Details: remove the workbench tab and inline Inspector directly.",
+  "summary": "Flattened the top-left (Workbench), top-right (Details) and bottom-right (Settings) dock category-branch tabs in the Framework OS shell into flat leaf lists, so Document/Catalogue, Inspection/Parameters and Theme/Settings are each one click instead of two. Added an inline `PanelToggleGroup` of Document/Catalogue toggles directly to the Navbar and Theme/Settings toggles directly to the Footer (wired to the existing SET_PANEL_VISIBLE/SET_PANEL_PATH dispatches for the top-left/bottom-right anchors), and added a `hideTabBar` prop to the shared `Panel` component so those two anchors no longer show a redundant floating tab bar now that their toggle lives in the navbar/footer. Details/Inspector keeps its own flat tab bar in the top-right floating panel (per user's chosen option) with no separate button. Also fixed the details-override effect's stale `FRAMEWORK_CATEGORY_SETTINGS_ID` guard to check membership in the (now flat) settings tab ids instead. Full framework-renderer-react test suite passes (163/163); ui-react suite has pre-existing unrelated failures (legacy ShellDisplayPanel/ShellSettingsPanel select-dropdown rendering and tree-branch-stem DOM assertions) not touched by this change. Could not visually verify in the browser preview — the s-react-dev dev server on port 6070 is occupied by another concurrent session in this same working directory.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2019"
   },
-  "goal": "r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
   "sessions": [
     "⚪6918c7699f3348f6a2b859ee9c1b1ccd"
   ]

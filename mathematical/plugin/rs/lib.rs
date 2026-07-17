@@ -427,8 +427,80 @@ impl DocumentApp for MathPlayApp {
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
+
+    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = math_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+        semio_framework_plugin::AppLabelsOverlay {
+            app_label: None,
+            window_kind_labels: std::collections::HashMap::from([
+                (MATH_WINDOW_GRAPH.to_string(), labels.window_graph.to_string()),
+                (MATH_WINDOW_GEOMETRY.to_string(), labels.window_geometry.to_string()),
+            ]),
+            panel_tab_labels: std::collections::HashMap::new(),
+            mode_labels: std::collections::HashMap::from([("edit".to_string(), labels.mode_edit.to_string())]),
+            action_labels: math_action_labels(is_de),
+            utility_labels: std::collections::HashMap::new(),
+            example_labels: std::collections::HashMap::from([("demo".to_string(), labels.example_demo.to_string())]),
+            action_arg_labels: std::collections::HashMap::new(),
+            dialog_labels: std::collections::HashMap::new(),
+            introduction_labels: std::collections::HashMap::new(),
+        }
+    }
 }
 //#endregion 🔖MathPlayApp
+
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the mathematical app; one field per label makes every locale combination compile-checked.
+/// 🧮 Graph/node/geometry vocabulary here is pure math terminology, not building-assembly terminology, so no reuse variant applies.
+struct MathLabels {
+    window_graph: &'static str,
+    window_geometry: &'static str,
+    mode_edit: &'static str,
+    example_demo: &'static str,
+}
+
+const MATH_LABELS_NATIVE_EN: MathLabels = MathLabels {
+    window_graph: "Graph",
+    window_geometry: "Geometry",
+    mode_edit: "Edit",
+    example_demo: "Demo",
+};
+
+const MATH_LABELS_NATIVE_DE: MathLabels = MathLabels {
+    window_graph: "Graph",
+    window_geometry: "Geometrie",
+    mode_edit: "Bearbeiten",
+    example_demo: "Demo",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; this app has no terminology variant.
+fn math_labels(view_state: &ViewState) -> &'static MathLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de {
+        &MATH_LABELS_NATIVE_DE
+    } else {
+        &MATH_LABELS_NATIVE_EN
+    }
+}
+//#endregion 🔖Terminology
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation declared in `create_mathematical_app`'s static manifest —
+/// the manifest itself has no `view_state`/locale parameter, so this overlay is how the command palette and Actions
+/// rail get a translated label without threading locale through the whole builder chain.
+fn math_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("setDocument", "Set Document", "Dokument festlegen"),
+        ("setAlgorithm", "Set Algorithm", "Algorithmus festlegen"),
+        ("setDirected", "Set Directed", "Gerichtet festlegen"),
+        ("nodeGraphEdit", "Node Graph Edit", "Knotengraph bearbeiten"),
+        ("nodeGraphViewport", "Node Graph Viewport", "Knotengraph-Ansicht"),
+        ("setPoints", "Set Points", "Punkte festlegen"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+//#endregion 🔖CommandLabels
 
 //#region 🔖Manifest
 fn create_mathematical_app() -> App {

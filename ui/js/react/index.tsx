@@ -6770,7 +6770,8 @@ export interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ navbar, footer, panels, mobilePanel, canvas, mobile = false, className = "" }) => (
   <GhostProvider>
     <div className={cn("relative flex flex-col overflow-hidden", mobile ? "h-full w-full" : "h-screen w-screen", className)}>
-      {navbar && <div className="flex-shrink-0">{navbar}</div>}
+      {/* 🎛️ Above the floating Panels' default z-index (20) — a navbar-hosted toggle (see PanelToggleGroup usages) must stay clickable/visible even while its own panel is open and floating over this same corner. */}
+      {navbar && <div className="relative z-30 flex-shrink-0">{navbar}</div>}
       {mobile ? (
         <div className="flex flex-col flex-1 min-h-0">
           {mobilePanel && mobilePanel.visible && <MobilePanel {...mobilePanel} />}
@@ -6785,7 +6786,7 @@ const Layout: React.FC<LayoutProps> = ({ navbar, footer, panels, mobilePanel, ca
           </div>
         </div>
       )}
-      {footer && <div className="flex-shrink-0">{footer}</div>}
+      {footer && <div className="relative z-30 flex-shrink-0">{footer}</div>}
       {/* Positioned against the full screen (this root), so panels float over the navbar/footer/canvas instead of stopping at them — same overlay relationship as a window's options rail over its canvas. */}
       {!mobile
         ? PANEL_ANCHORS.map((anchor) => {
@@ -28089,6 +28090,10 @@ if (treeVitest) {
       const footerMarkup = renderToStaticMarkup(<Footer items={[{ key: "a", content: "Footer" }]} />);
       expect(footerMarkup).toContain(borderNormalTopClass);
       expect(footerMarkup).not.toContain("border-emphasized");
+      const fundedByMarkup = renderToStaticMarkup(<Footer items={[fundedByZukunftBauFooterItem()]} />);
+      expect(fundedByMarkup).toContain(ZUKUNFT_BAU_PROJECT_URL);
+      expect(fundedByMarkup).toContain("Funded by Zukunft Bau");
+      expect(fundedByMarkup).toContain("ms-auto");
       const breadcrumbMarkup = renderToStaticMarkup(<Breadcrumb items={[{ content: "Home" }, { content: "Project" }]} />);
       expect(breadcrumbMarkup).toContain(borderNormalClass);
       expect(breadcrumbMarkup).not.toContain("border-emphasized");
