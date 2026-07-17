@@ -1710,6 +1710,7 @@
 %region References
 \ExplSyntaxOn
 \seq_new:N \g_semio_references_keys_seq
+\box_new:N \g_semio_references_url_box
 
 \cs_new_protected:Npn \semio_references_keys_clear: {
   \seq_clear:N \g_semio_references_keys_seq
@@ -1721,9 +1722,22 @@
 
 \cs_new_protected:Npn \semio_references_row_handler:n #1 {
   \stepcounter{semio@reference@nr}
-  \gappto\semio@references@rows {
-    \SemioTableReferenceRow{\thesemio@reference@nr}{\citeauthor{#1}, \citefield{title}{#1}}{\citeyear{#1}}
-  }
+  \exp_args:Nnx \semio_references_row_append:nn {#1} { \arabic{semio@reference@nr} }
+}
+
+\cs_new_protected:Npn \semio_references_row_append:nn #1#2 {
+  \hbox_set:Nn \g_semio_references_url_box { \citeurl{#1} }
+  \bool_if:nTF { \dim_compare_p:n { \box_wd:N \g_semio_references_url_box > 0pt } }
+    {
+      \gappto\semio@references@rows {
+        \SemioTableReferenceRow{#2}{\citeauthor{#1}, \citefield{#1}{title}\\{\footnotesize\citeurl{#1}}}{\citeyear{#1}}
+      }
+    }
+    {
+      \gappto\semio@references@rows {
+        \SemioTableReferenceRow{#2}{\citeauthor{#1}, \citefield{#1}{title}}{\citeyear{#1}}
+      }
+    }
 }
 
 \cs_new_protected:Npn \semio_references_rows_build: {

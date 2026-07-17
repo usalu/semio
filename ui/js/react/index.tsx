@@ -2661,6 +2661,7 @@ export type UiTranslationSchema = {
       readonly resetDock: UiLabelValue;
     };
     readonly command: {
+      readonly introduceApp: UiLabelValue;
       readonly setAppearance: UiLabelValue;
       readonly setTheme: UiLabelValue;
       readonly setLayout: UiLabelValue;
@@ -3119,6 +3120,7 @@ export const uiChromeTranslationBundles = {
           resetDock: { label: { normal: "Panels zuruecksetzen", beginner: "Panels zuruecksetzen" } },
         },
         command: {
+          introduceApp: { label: { normal: "App vorstellen", beginner: "App vorstellen" } },
           setAppearance: { label: { normal: "Erscheinungsbild festlegen", beginner: "Erscheinungsbild festlegen" } },
           setTheme: { label: { normal: "Thema festlegen", beginner: "Thema festlegen" } },
           setLayout: { label: { normal: "Layout festlegen", beginner: "Layout festlegen" } },
@@ -3600,6 +3602,7 @@ export const uiChromeTranslationBundles = {
           resetDock: { label: { normal: "Reset panels", beginner: "Reset panels" } },
         },
         command: {
+          introduceApp: { label: { normal: "Introduce App", beginner: "Introduce App" } },
           setAppearance: { label: { normal: "Set Appearance", beginner: "Set Appearance" } },
           setTheme: { label: { normal: "Set Theme", beginner: "Set Theme" } },
           setLayout: { label: { normal: "Set Layout", beginner: "Set Layout" } },
@@ -4430,7 +4433,7 @@ function PanelGhostRoot({ children, className, style, ...props }: PanelGhostRoot
 // #region 🎓Introduction
 /** 🪟 The glass overlay box recipe shared by the introduction info box and modal dialogs (see
  * `UIDialog`) — the two mechanisms are styled identically by construction, not by convention. */
-export const GLASS_OVERLAY_BOX_CLASS = cn(getGlassSurfaceClass("panel"), "pointer-events-auto fixed z-tutorial max-w-sm rounded-lg border p-double shadow-lg");
+export const GLASS_OVERLAY_BOX_CLASS = cn(getGlassSurfaceClass("panel"), "text-foreground pointer-events-auto fixed z-tutorial max-w-sm rounded-lg border p-double shadow-lg");
 
 /** @emoji 🎓 CSS selector for an `IntroductionAnchor` — reuses ids/data-attributes the shell already
  * stamps on navbar/footer/window/utility/action/panel-tab chrome instead of adding new markup: utility leaf
@@ -4642,11 +4645,11 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
       <div ref={boxRef} data-slot="introduction-info-box" className={GLASS_OVERLAY_BOX_CLASS} style={{ top: boxPosition.top, left: boxPosition.left }}>
         <div className="mb-single flex items-center justify-between gap-double">
           <h3 className="text-sm font-medium">{step.title}</h3>
-          <span className="text-xs text-muted">
+          <span className="text-xs text-muted-foreground">
             {stepIndex + 1} / {introduction.steps.length}
           </span>
         </div>
-        <p className="mb-double text-xs text-muted">{step.body}</p>
+        <p className="mb-double text-xs text-muted-foreground">{step.body}</p>
         <div className="flex items-center justify-between gap-single">
           <Button id="ui.introduction.skip" variant="ghost" icon="x" text="Skip" onClick={skip} />
           <div className="flex items-center gap-single">
@@ -4654,7 +4657,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
             {advance.kind === "next" ? (
               <Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? "Done" : "Next"} onClick={next} />
             ) : (
-              <span className="text-xs text-muted">{advance.kind === "utility" ? `Activate "${advance.id}" to continue` : `Perform "${advance.id}" to continue`}</span>
+              <span className="text-xs text-muted-foreground">{advance.kind === "utility" ? `Activate "${advance.id}" to continue` : `Perform "${advance.id}" to continue`}</span>
             )}
           </div>
         </div>
@@ -4697,12 +4700,12 @@ export const UIDialog: React.FC<UIDialogProps> = ({ dialog, seedArgs, renderFiel
       <div className="ui-glass-veil z-tutorial fixed inset-0 pointer-events-auto" onClick={onCancel} />
       <div data-slot="dialog-box" className={cn(GLASS_OVERLAY_BOX_CLASS, "top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]")}>
         <h3 className="mb-single text-sm font-medium">{dialog.title}</h3>
-        {dialog.body && <p className="mb-double text-xs text-muted">{dialog.body}</p>}
+        {dialog.body && <p className="mb-double text-xs text-muted-foreground">{dialog.body}</p>}
         {dialog.args.length > 0 && (
           <div className="mb-double flex flex-col gap-single">
             {dialog.args.map((def) => (
               <div key={def.id} className="flex flex-col gap-tiny">
-                <span className="text-xs text-muted">{def.label}</span>
+                <span className="text-xs text-muted-foreground">{def.label}</span>
                 {renderField(def, effective[def.id], (value) => setStaged((prev) => ({ ...prev, [def.id]: value })))}
               </div>
             ))}
@@ -11732,6 +11735,7 @@ export interface TreeSectionAction {
   title?: string;
   text?: string;
   id?: string;
+  disabled?: boolean;
   /** @emoji 👁️ When true, the action stays hidden until the tree row is hovered. */
   revealOnHover?: boolean;
 }
@@ -11790,6 +11794,7 @@ const renderTreeHeaderActions = (actions: TreeHeaderAction[]) => (
             id={action.id}
             icon={action.icon}
             text={action.text ?? action.title}
+            disabled={action.disabled}
           />
         </span>
       ),
@@ -12558,8 +12563,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   );
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
-  const isHeaderlessSection =
-    suppressLocalizedLabel && localizedLabel === undefined && !icon && actions.length === 0 && !loading && !draggable && !onDoubleClick && !onSectionPointerEnter && !onSectionPointerLeave && !onDragStart && !onDragOver && !onDragLeave && !onDrop;
+  const isHeaderlessSection = suppressLocalizedLabel && localizedLabel === undefined && !icon && actions.length === 0 && !loading;
   const rowClassName = cn(treeRowShellClassName, treeRowChromeShellClasses(false, false), isExpandable ? "cursor-foldable" : "cursor-selectable", isDropReady && dropZoneReadyTextClass, className);
   const rowContentFillClassName = cn(treeRowChromeContentFillClasses(false, false, loading), isDropReady && dropZoneReadyFillClass);
 
@@ -23251,6 +23255,36 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("UIIntroduction appearance", () => {
+    it("uses adaptive foreground tokens for primary and secondary text", () => {
+      const { container } = render(
+        <UIIntroduction
+          introduction={{
+            title: "Welcome",
+            steps: [
+              {
+                id: "welcome",
+                title: "Welcome",
+                body: "Introduction body",
+                anchor: { kind: "screen" },
+                emphasis: "none",
+                placement: "center",
+                advance: { kind: "next" },
+              },
+            ],
+          }}
+          stepIndex={0}
+          onStepIndexChange={vi.fn()}
+          onDismiss={vi.fn()}
+        />,
+      );
+      const box = container.querySelector('[data-slot="introduction-info-box"]');
+      expect(box?.className).toContain("text-foreground");
+      expect(box?.querySelector("p")?.className).toContain("text-muted-foreground");
+      expect(box?.querySelector("p")?.className).not.toMatch(/(?:^|\s)text-muted(?:\s|$)/);
+    });
+  });
+
   describe("introductionVeilBands", () => {
     it("returns one full-viewport band when there is no cutout", () => {
       const bands = introductionVeilBands({ width: 800, height: 600 }, null);
@@ -26522,6 +26556,22 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-section-row"');
       expect(markup).toContain('data-tree-row-kind="group"');
       expect(markup).toContain('data-tree-row-kind="leaf"');
+    });
+
+    it("renders unlabeled data-tree sections without a folder header row", () => {
+      const markup = renderToStaticMarkup(
+        <Tree
+          sections={[
+            {
+              id: "command.category.general.form",
+              items: [{ id: "command.os.setExpertise.arg.expertise", label: "Expertise", control: <span>beginner</span> }],
+            },
+          ]}
+        />,
+      );
+
+      expect(markup).not.toContain('data-slot="tree-section-row"');
+      expect(markup).toContain("Expertise");
     });
 
     it("renders tree item descriptions inline on one row with muted secondary text", () => {

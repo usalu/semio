@@ -3004,16 +3004,20 @@ pub fn set_active_utility_action_definition() -> ActionDefinition {
     ])
 }
 
-/// @emoji 🎓 The framework-owned action id apps dispatch (or the shell auto-injects into the command
-/// palette) to (re)start an app's introduction — auto-injected as a View action into any
+/// @emoji 🎓 The framework-owned action id apps dispatch to (re)start an app's introduction —
+/// auto-injected as a shell-intercepted View action into any
 /// `AppDefinition` that declares one (mirrors `SET_ACTIVE_UTILITY_ACTION_ID`).
 pub const START_INTRODUCTION_ACTION_ID: &str = "startIntroduction";
 
 /// @emoji 🎓 The framework-injected `startIntroduction` View action: fully shell-intercepted (never
 /// forwarded to the plugin), it resets playback to the first step of `AppDefinition.introduction`.
-/// Unlike `setActiveUtility` this stays `in_palette: true` so replaying an introduction is one command away.
+/// Unlike ordinary app actions this stays out of the action palette because the shell exposes the
+/// dedicated `Introduce App` command.
 pub fn start_introduction_action_definition() -> ActionDefinition {
-    ActionDefinition::new(START_INTRODUCTION_ACTION_ID, "Start Introduction", ActionKind::View)
+    ActionDefinition {
+        in_palette: false,
+        ..ActionDefinition::new(START_INTRODUCTION_ACTION_ID, "Introduce App", ActionKind::View)
+    }
 }
 
 /// 📇 A validated reference into an app's `AppDefinition.actions` registry — prevents windows/modes
@@ -3947,6 +3951,18 @@ pub struct AppLabelsOverlay {
     /// 🗣️ Locale-aware overrides for `AppDefinition.utilities[].label` (toolbar tools), keyed by utility id.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub utility_labels: std::collections::HashMap<String, String>,
+    /// 🗣️ Locale-aware overrides for `AppDefinition.examples[].label` (example/fixture picker), keyed by example id.
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub example_labels: std::collections::HashMap<String, String>,
+    /// 🗣️ Locale-aware overrides for action-arg labels and their select-option labels, keyed `"{actionId}.{argId}"` and `"{actionId}.{argId}.option.{value}"`.
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub action_arg_labels: std::collections::HashMap<String, String>,
+    /// 🗣️ Locale-aware overrides for `DialogDefinition` text, keyed `"{dialogId}.title"` / `".body"` / `".submit"`.
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub dialog_labels: std::collections::HashMap<String, String>,
+    /// 🗣️ Locale-aware overrides for `IntroductionDefinition` text, keyed `"intro.title"` / `"intro.step.{stepId}.title"` / `".body"`.
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub introduction_labels: std::collections::HashMap<String, String>,
 }
 
 impl AppLabelsOverlay {

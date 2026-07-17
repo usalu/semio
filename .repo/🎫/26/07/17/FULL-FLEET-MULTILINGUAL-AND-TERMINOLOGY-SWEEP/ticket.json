@@ -1,0 +1,13 @@
+{
+  "title": "Full Fleet Multilingual And Terminology Sweep",
+  "emoji": "🌐",
+  "status": "open",
+  "description": "Comprehensive sweep making every app multilingual (EN/DE) and terminology-aware (reuse vocabulary where entity nouns map), per the approved plan at /Users/ueli/.claude/plans/all-uis-must-be-resilient-koala.md. Three audits quantified remaining gaps: puzzle 2d/3d/5d (~120 strings, root cause of reported bug is PUZZLE3D_LABELS_REUSE_EN/DE not overriding the attractions field), 24 non-puzzle plugin crates (~900-1000 strings, action_labels/utility_labels/panel_tab_labels/mode_labels empty in all 24, 4 crates with zero i18n infrastructure), shell/renderer (2 more stale-memoization bugs, ~45 host component strings, ui/js/react defaults), and TS products compose/coda (~100 remaining strings). Plan: (A) extend AppLabelsOverlay with example_labels/action_arg_labels/dialog_labels/introduction_labels maps (JSON-additive, no WIT change) and wire os-shell consumption; (B) WGPU renderer chrome deferred to its own ticket per dev decision; (C) shell/TS chrome fixes (stale memo deps, Execute/Reset in buildCommandCategoryTree, ui-interpreter.tsx, new ui.host.*/ui.contextMenu.* schema groups, host component wiring, ui/js/react defaults); then per-crate rollout in order: puzzle-3d completion, puzzle-2d+5d, cad, the 14 other Labels+app_labels crates, the 5 crates with Labels but no overlay wiring, the 4 zero-infrastructure crates, then compose/coda. Reuse terminology extended to every app with mappable entity nouns per dev decision \"reuse everywhere possible\" (Object/Node/Part -\u003e Building component, Vortex/Handle/Grip/Port -\u003e Connection point, Attraction/Edge/Fastener/Connection -\u003e Component connection). Architecture phases run inline; the ~23-crate mechanical rollout runs via Workflow fan-out per dev decision, one subagent per crate applying the canonical pattern with per-crate cargo check verification. Known conflicts: forms-plugin/shooting-plugin have pre-existing unrelated compile failures from another session's in-flight \"loading field\" rollout (already flagged separately) - do not fix those in this ticket, just don't let them block. Check freshness of draw/plugin and trinity files before editing (uncommitted concurrent work observed at ticket-open time).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2015"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪e01d1cd56ad4427580189b9fd8bd2d0e"
+  ]
+}

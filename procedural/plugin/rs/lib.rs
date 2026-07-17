@@ -1010,6 +1010,10 @@ pub mod app_2d {
                 mode_labels: std::collections::HashMap::new(),
                 action_labels: HashMap::new(),
                 utility_labels: HashMap::new(),
+                example_labels: HashMap::new(),
+                action_arg_labels: HashMap::new(),
+                dialog_labels: HashMap::new(),
+                introduction_labels: HashMap::new(),
             }
         }
     }
@@ -2810,6 +2814,10 @@ pub mod app_3d {
                 mode_labels: std::collections::HashMap::new(),
                 action_labels: HashMap::new(),
                 utility_labels: HashMap::new(),
+                example_labels: HashMap::new(),
+                action_arg_labels: HashMap::new(),
+                dialog_labels: HashMap::new(),
+                introduction_labels: HashMap::new(),
             }
         }
     }

@@ -1150,7 +1150,7 @@ mod app_builder_tests {
             .find(|action| action.id == START_INTRODUCTION_ACTION_ID)
             .expect("startIntroduction injected");
         assert_eq!(start_introduction.kind, ActionKind::View);
-        assert!(start_introduction.in_palette, "unlike setActiveUtility, replaying stays in the palette");
+        assert!(!start_introduction.in_palette, "the shell-owned Introduce App command owns palette discovery");
     }
 
     #[test]

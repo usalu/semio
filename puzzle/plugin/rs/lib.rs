@@ -2033,6 +2033,10 @@ pub mod d2 {
                 mode_labels: std::collections::HashMap::new(),
                 action_labels: std::collections::HashMap::new(),
                 utility_labels: std::collections::HashMap::new(),
+                example_labels: HashMap::new(),
+                action_arg_labels: HashMap::new(),
+                dialog_labels: HashMap::new(),
+                introduction_labels: HashMap::new(),
             }
         }
     }
@@ -2581,7 +2585,6 @@ pub mod d3 {
     const PUZZLE3D_PLAY_BODY_KINDS: &str = "puzzle.3d.play.kinds";
     const PUZZLE3D_PLAY_BODY_INSPECTOR: &str = "puzzle.3d.play.inspector";
     const PUZZLE3D_PLAY_BODY_SETTINGS: &str = "puzzle.3d.play.settings";
-    const PUZZLE3D_PLAY_BODY_JACK: &str = "puzzle.3d.play.jack";
     const PUZZLE3D_PLAY_WINDOW_MAIN: &str = "puzzle3d-main";
     const PUZZLE3D_FIXTURE_SCHEMA: &str = "puzzle.3d.fixture";
     const PUZZLE3D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
@@ -2840,8 +2843,6 @@ pub mod d3 {
         fill_edit_target_volumes: bool,
         #[serde(default = "default_voxel_dims")]
         voxel_dims: [u32; 3],
-        #[serde(default = "default_jack_query")]
-        jack_query: String,
         #[serde(default = "default_view_preset")]
         view_preset: String,
         #[serde(default)]
@@ -2877,7 +2878,6 @@ pub mod d3 {
                 chunk_size: default_chunk_size(),
                 fill_edit_target_volumes: false,
                 voxel_dims: default_voxel_dims(),
-                jack_query: default_jack_query(),
                 view_preset: default_view_preset(),
                 sun: WorldSunConfig::default(),
             }
@@ -2916,9 +2916,6 @@ pub mod d3 {
         [1, 1, 1]
     }
 
-    fn default_jack_query() -> String {
-        "MATCH (n:Object) RETURN n.name".into()
-    }
 
     /// 🧾 Transient render/mutation bundle pairing the persisted projection (the bare `Puzzle3dFixture`
     /// json) with the app's ephemeral view state. Never persisted — the {@link VcsDocumentApp} store owns
@@ -4595,125 +4592,6 @@ pub mod d3 {
     }
     //#endregion 🔖Panels
 
-    //#region 🔖Jack
-    /// 🕸️ A row produced by [`puzzle3d_run_jack_query`] — `entity`/`id` let a click reselect the exact match in the scene.
-    struct Puzzle3dJackRow {
-        entity: &'static str,
-        id: String,
-        value: String,
-    }
-
-    /// 🕸️ Parses the one supported shape — `MATCH (n:Label) RETURN n.field` — this is a deliberately minimal, self-contained
-    /// stand-in for premigration's full Jack graph-query language (ported here without a cross-technology dependency on
-    /// `trinity-jack`/`trinity-ram`, which CLAUDE.md's "do not mix technologies" rule rules out for a puzzle-3d ticket).
-    fn puzzle3d_parse_jack_query(query: &str) -> Option<(String, String)> {
-        let query = query.trim();
-        let match_marker = "MATCH (n:";
-        let match_start = query.find(match_marker)? + match_marker.len();
-        let match_end = match_start + query[match_start..].find(')')?;
-        let label = query[match_start..match_end].trim().to_string();
-        let return_marker = "RETURN n.";
-        let return_start = query.find(return_marker)? + return_marker.len();
-        let field = query[return_start..].trim().to_string();
-        if label.is_empty() || field.is_empty() {
-            return None;
-        }
-        Some((label, field))
-    }
-
-    fn puzzle3d_run_jack_query(fixture: &Puzzle3dFixture, query: &str) -> Result<Vec<Puzzle3dJackRow>, String> {
-        let (label, field) = puzzle3d_parse_jack_query(query).ok_or_else(|| "expected \"MATCH (n:Label) RETURN n.field\"".to_string())?;
-        match label.as_str() {
-            "Object" => Ok(fixture
-                .objects
-                .iter()
-                .map(|object| {
-                    let value = match field.as_str() {
-                        "id" => object.id.clone(),
-                        "label" => object.label.clone().unwrap_or_default(),
-                        "kind" => object.object_kind.clone().unwrap_or_default(),
-                        _ => object.label.clone().or_else(|| object.object_kind.clone()).unwrap_or_else(|| object.id.clone()),
-                    };
-                    Puzzle3dJackRow { entity: "object", id: object.id.clone(), value }
-                })
-                .collect()),
-            "Vortex" => Ok(fixture
-                .objects
-                .iter()
-                .flat_map(|object| {
-                    let field = field.as_str();
-                    object.vortices.iter().map(move |vortex| {
-                        let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
-                        let value = match field {
-                            "id" => full_id.clone(),
-                            "kind" => vortex.vortex_kind.clone().unwrap_or_default(),
-                            _ => vortex.vortex_kind.clone().unwrap_or_else(|| full_id.clone()),
-                        };
-                        Puzzle3dJackRow { entity: "vortex", id: full_id, value }
-                    })
-                })
-                .collect()),
-            "Attraction" => Ok(fixture
-                .attractions
-                .iter()
-                .map(|attraction| {
-                    let value = match field.as_str() {
-                        "id" => attraction.id.clone(),
-                        _ => format!("{} → {}", attraction.attracting, attraction.attracted),
-                    };
-                    Puzzle3dJackRow { entity: "attraction", id: attraction.id.clone(), value }
-                })
-                .collect()),
-            other => Err(format!("unknown label \"{other}\" — supported: Object, Vortex, Attraction")),
-        }
-    }
-
-    fn jack_row_selection_args(row: &Puzzle3dJackRow) -> Value {
-        match row.entity {
-            "object" => json!({ "selection": { "objectIds": [row.id], "vortexIds": [], "attractionIds": [] } }),
-            "vortex" => json!({ "selection": { "objectIds": [], "vortexIds": [row.id], "attractionIds": [] } }),
-            "attraction" => json!({ "selection": { "objectIds": [], "vortexIds": [], "attractionIds": [row.id] } }),
-            _ => json!({ "selection": {} }),
-        }
-    }
-
-    fn build_jack_body(envelope: &Puzzle3dScene) -> UiNode {
-        let query_field = UiNode::Field(UiFieldNode {
-            id: "puzzle3d-play-jack.query".into(),
-            label: "Query".into(),
-            child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
-                id: "puzzle3d-play-jack.query.input".into(),
-                input_kind: "text".into(),
-                value: envelope.runtime.jack_query.clone(),
-                placeholder: Some("MATCH (n:Object) RETURN n.name".into()),
-                commit: None,
-                on_change: puzzle3d_action("setJackQuery", None),
-                min: None,
-                max: None,
-                step: None,
-                accept: None,
-            })),
-            description: None,
-            required: None,
-            error: None,
-        });
-        match puzzle3d_run_jack_query(&envelope.fixture, &envelope.runtime.jack_query) {
-            Ok(rows) => {
-                let items: Vec<UiTreeItemNode> = rows.iter().map(|row| tree_item_with_action(format!("puzzle3d-jack-row:{}:{}", row.entity, row.id), row.value.clone(), None, puzzle3d_action("setSelection", Some(jack_row_selection_args(row))))).collect();
-                let results = UiNode::Tree(UiTreeNode {
-                    loading: None,
-                    sections: vec![UiTreeSectionNode { id: "puzzle3d-play-jack.results".into(), label: Some(format!("{} results", items.len())), default_open: Some(true), loading: None, items }],
-                    selected_ids: None,
-                    highlighted_ids: None,
-                    selection_change: None,
-                    drop_action: None,
-                });
-                ui_stack_vertical(vec![query_field, results])
-            }
-            Err(message) => ui_stack_vertical(vec![query_field, ui_text(format!("Error: {message}"))]),
-        }
-    }
-    //#endregion 🔖Jack
 
     //#region 🔖Engagement
     fn parse_brush_candidates_free(raw: &str) -> Vec<Value> {
@@ -5295,11 +5173,6 @@ pub mod d3 {
                         envelope.runtime.view_preset = preset.into();
                     }
                 }
-                "setJackQuery" => {
-                    if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
-                        envelope.runtime.jack_query = value.into();
-                    }
-                }
                 "translateSelection" => {
                     let ids = mesh_selection_ids(args, &envelope.runtime.selection.object_ids);
                     let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
@@ -5865,7 +5738,6 @@ pub mod d3 {
                 PUZZLE3D_PLAY_BODY_KINDS => build_kinds_tree(&envelope, labels),
                 PUZZLE3D_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope, labels),
                 PUZZLE3D_PLAY_BODY_SETTINGS => build_settings_body(&envelope),
-                PUZZLE3D_PLAY_BODY_JACK => build_jack_body(&envelope),
                 _ => ui_text(format!("Unknown body: {body_key}")),
             }
         }
@@ -5896,6 +5768,10 @@ pub mod d3 {
                 mode_labels: std::collections::HashMap::new(),
                 action_labels: puzzle3d_action_labels(is_de),
                 utility_labels: puzzle3d_utility_labels(is_de),
+                example_labels: HashMap::new(),
+                action_arg_labels: HashMap::new(),
+                dialog_labels: HashMap::new(),
+                introduction_labels: HashMap::new(),
             }
         }
     }
@@ -6098,9 +5974,6 @@ pub mod d3 {
                 // 📝 Staged argument forms for the panel-visible create/query actions (P1).
                 .action_args("addObjectKind", vec![
                     ActionArgDef::select("objectKind", "Kind", vec![ActionArgOption::new("Object", "Object")]).default_value("Object"),
-                ])
-                .action_args("setJackQuery", vec![
-                    ActionArgDef::text("value", "Query").default_value(default_jack_query()),
                 ])
                 // 🧰 Flat per-window utility set (host-owned `view_state.active_utility_id`); `select` is the default.
                 .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "cursor") })
@@ -9018,6 +8891,10 @@ pub mod d5 {
                 mode_labels: std::collections::HashMap::new(),
                 action_labels: std::collections::HashMap::new(),
                 utility_labels: std::collections::HashMap::new(),
+                example_labels: HashMap::new(),
+                action_arg_labels: HashMap::new(),
+                dialog_labels: HashMap::new(),
+                introduction_labels: HashMap::new(),
             }
         }
     }

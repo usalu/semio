@@ -1366,11 +1366,38 @@ function shellLabel(key: UiTranslationKey): string {
 }
 
 /** @emoji 🗣️ Stable empty overlay reference so components depending on it don't re-render before the first `appLabels` fetch resolves. */
-const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = { windowKindLabels: {}, panelTabLabels: {}, modeLabels: {}, actionLabels: {}, utilityLabels: {} };
+const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = {
+  windowKindLabels: {},
+  panelTabLabels: {},
+  modeLabels: {},
+  actionLabels: {},
+  utilityLabels: {},
+  exampleLabels: {},
+  actionArgLabels: {},
+  dialogLabels: {},
+  introductionLabels: {},
+};
 
-/** @emoji 🗣️ Resolves a window-kind/panel-tab/mode/action/utility id's locale-aware label from the active app's overlay, falling back to the static manifest label. */
-function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKind" | "panelTab" | "mode" | "action" | "utility", id: string, fallback: string): string {
-  const map = kind === "windowKind" ? overlay.windowKindLabels : kind === "panelTab" ? overlay.panelTabLabels : kind === "mode" ? overlay.modeLabels : kind === "action" ? overlay.actionLabels : overlay.utilityLabels;
+/** @emoji 🗣️ Resolves a window-kind/panel-tab/mode/action/utility/example/actionArg/dialog/introduction id's locale-aware label from the active app's overlay, falling back to the static manifest label. */
+function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKind" | "panelTab" | "mode" | "action" | "utility" | "example" | "actionArg" | "dialog" | "introduction", id: string, fallback: string): string {
+  const map =
+    kind === "windowKind"
+      ? overlay.windowKindLabels
+      : kind === "panelTab"
+        ? overlay.panelTabLabels
+        : kind === "mode"
+          ? overlay.modeLabels
+          : kind === "action"
+            ? overlay.actionLabels
+            : kind === "utility"
+              ? overlay.utilityLabels
+              : kind === "example"
+                ? overlay.exampleLabels
+                : kind === "actionArg"
+                  ? overlay.actionArgLabels
+                  : kind === "dialog"
+                    ? overlay.dialogLabels
+                    : overlay.introductionLabels;
   return map[id] ?? fallback;
 }
 
@@ -1885,12 +1912,16 @@ function selectCommandArg(id: string, label: string, options: readonly { readonl
 }
 
 /**
- * 🎛 Os-level built-in commands — theme/layout/locale/appearance/expertise, `scope: "os"`, handled
+ * 🎛 Os-level built-in commands — app introduction/theme/layout/locale/appearance/expertise,
+ * `scope: "os"`, handled
  * locally by the shell (never routed to a plugin). Rebuilt via `useMemo` since the theme and
  * terminology option lists are live state.
  */
-function buildOsCommands(themeList: readonly UiTheme[], terminologies: readonly string[]): CommandDefinition[] {
+export function buildOsCommands(themeList: readonly UiTheme[], terminologies: readonly string[], hasIntroduction: boolean): CommandDefinition[] {
   return [
+    ...(hasIntroduction
+      ? [{ id: "os.introduceApp", label: shellLabel("ui.command.introduceApp"), scope: "os" as const, category: "app", inPalette: true, args: [] }]
+      : []),
     {
       id: "os.setAppearance",
       label: shellLabel("ui.command.setAppearance"),
@@ -1979,8 +2010,11 @@ function buildOsCommands(themeList: readonly UiTheme[], terminologies: readonly 
 }
 
 /** 🎛 Os-scope command ids that are handled locally by the shell — mirrors {@link buildOsCommands}. */
-function dispatchOsCommand(commandId: string, args: Record<string, unknown> | undefined, dispatch: (action: ShellAction) => void, dockLayoutStore: DockLayoutStore, dockUiStateStore: DockUiStateStore): void {
+export function dispatchOsCommand(commandId: string, args: Record<string, unknown> | undefined, dispatch: (action: ShellAction) => void, dockLayoutStore: DockLayoutStore, dockUiStateStore: DockUiStateStore): void {
   switch (commandId) {
+    case "os.introduceApp":
+      dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
+      return;
     case "os.setAppearance":
       dispatch({ type: "SET_UI_APPEARANCE", value: (args?.appearance as ElementsSurfaceAppearance) ?? "system" });
       return;
@@ -2040,50 +2074,60 @@ export function buildCommandCategoryTree(
   onStageArg: (commandId: string, argId: string, value: unknown) => void,
   onResetArgs: (commandId: string) => void,
 ): TreePanelConfig {
-  const expanded = expandedCommandId ? commands.find((entry) => entry.definition.id === expandedCommandId) : undefined;
+  const argCarryingCommands = commands.filter((entry) => entry.definition.args.length > 0);
+  const autoExpandedSingleton = argCarryingCommands.length === 1 ? argCarryingCommands[0] : undefined;
+  const expanded =
+    (expandedCommandId ? commands.find((entry) => entry.definition.id === expandedCommandId) : undefined) ?? autoExpandedSingleton;
+  const effectiveExpandedId = expanded?.definition.id ?? null;
   const sections: TreeDataSection[] = [];
-  if (expanded) {
+  if (expanded && expanded.definition.args.length > 0) {
     const staged = stagedArgsByCommandId[expanded.definition.id] ?? {};
     const effective = effectiveActionArgs(expanded.definition.args, staged);
     const missing = missingRequiredArgs(expanded.definition.args, effective);
     sections.push({
       id: `command.category.${expanded.definition.category}.form`,
-      items: [
-        ...expanded.definition.args.map(
-          (def): TreeDataItem => ({
-            id: `command.${expanded.definition.id}.arg.${def.id}`,
-            label: def.label,
-            description: def.description,
-            control: renderStagedArgControl(def, effective[def.id], (value) => onStageArg(expanded.definition.id, def.id, value)),
-          }),
-        ),
+      items: expanded.definition.args.map(
+        (def): TreeDataItem => ({
+          id: `command.${expanded.definition.id}.arg.${def.id}`,
+          label: def.label,
+          description: def.description,
+          control: renderStagedArgControl(def, effective[def.id], (value) => onStageArg(expanded.definition.id, def.id, value)),
+        }),
+      ),
+      actions: [
         {
-          id: `command.${expanded.definition.id}.actions`,
-          label: "",
-          control: (
-            <div className="flex items-center gap-single">
-              <Button id={`command-${expanded.definition.id}-execute`} text="Execute" icon="check" disabled={missing.length > 0} onClick={() => onExecute(expanded, effective)} />
-              <Button id={`command-${expanded.definition.id}-reset`} text="Reset" icon="undo" onClick={() => onResetArgs(expanded.definition.id)} />
-            </div>
-          ),
+          id: `command-${expanded.definition.id}-execute`,
+          icon: <Icon icon="check" size="small" />,
+          text: "Execute",
+          disabled: missing.length > 0,
+          onClick: () => onExecute(expanded, effective),
+        },
+        {
+          id: `command-${expanded.definition.id}-reset`,
+          icon: <Icon icon="undo" size="small" />,
+          text: "Reset",
+          onClick: () => onResetArgs(expanded.definition.id),
         },
       ],
     });
   }
-  sections.push({
-    id: "command.category.list",
-    items: commands.map((entry): TreeDataItem => {
-      const argCarrying = entry.definition.args.length > 0;
-      const icon = entry.definition.iconId && entry.definition.iconId in ICONS ? <Icon icon={entry.definition.iconId as IconName} size="small" /> : undefined;
-      if (!argCarrying) return { id: `command.${entry.definition.id}`, label: entry.definition.label, icon, onClick: () => onExecute(entry) };
-      return {
-        id: `command.${entry.definition.id}`,
-        label: `${entry.definition.label}…`,
-        icon: <Icon icon={expandedCommandId === entry.definition.id ? "chevron-down" : "chevron-up"} size="small" />,
-        onClick: () => onToggleExpanded(expandedCommandId === entry.definition.id ? null : entry.definition.id),
-      };
-    }),
-  });
+  const listCommands = commands.filter((entry) => entry.definition.id !== effectiveExpandedId);
+  if (listCommands.length > 0) {
+    sections.push({
+      id: "command.category.list",
+      items: listCommands.map((entry): TreeDataItem => {
+        const argCarrying = entry.definition.args.length > 0;
+        const icon = entry.definition.iconId && entry.definition.iconId in ICONS ? <Icon icon={entry.definition.iconId as IconName} size="small" /> : undefined;
+        if (!argCarrying) return { id: `command.${entry.definition.id}`, label: entry.definition.label, icon, onClick: () => onExecute(entry) };
+        return {
+          id: `command.${entry.definition.id}`,
+          label: `${entry.definition.label}…`,
+          icon: <Icon icon={expandedCommandId === entry.definition.id ? "chevron-down" : "chevron-up"} size="small" />,
+          onClick: () => onToggleExpanded(expandedCommandId === entry.definition.id ? null : entry.definition.id),
+        };
+      }),
+    });
+  }
   return { sections };
 }
 
@@ -2365,7 +2409,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   }, [session]);
 
   // 🎓 Auto-starts an app's introduction the first time it launches on this device; replaying stays
-  // available afterward via the framework-injected `startIntroduction` palette action.
+  // available afterward via the shell-owned Introduce App command.
   useEffect(() => {
     if (!session?.app.introduction) return;
     if (readStoredIntroductionSeen(session.app.id)) return;
@@ -3359,7 +3403,10 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const uiThemeBase = uiThemeDraft ?? uiTheme;
   const uiThemeDirty = uiThemeDraft !== null;
   const uiThemeList = useMemo((): readonly UiTheme[] => [...builtinUiThemes(), ...Object.values(uiCustomThemes)], [uiCustomThemes]);
-  const osCommands = useMemo(() => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])]), [uiThemeList, session?.app.terminologies, uiLocale, uiTerminology]);
+  const osCommands = useMemo(
+    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])], session?.app.introduction != null),
+    [uiThemeList, session?.app.terminologies, session?.app.introduction, uiLocale, uiTerminology],
+  );
 
   const draftThemePatch = useCallback(
     (patch: (next: UiTheme) => void) => {

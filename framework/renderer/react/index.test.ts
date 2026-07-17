@@ -85,7 +85,9 @@ import {
   commandCategories,
   buildCommandCategoryTree,
   buildCommandCategoryTabs,
+  buildOsCommands,
   createLatestAsyncDispatcher,
+  dispatchOsCommand,
   type ResolvedCommand,
   shellReducer,
   sortUtilityNodes,
@@ -2738,10 +2740,31 @@ describe("resolveCommands / commandCategories (footer command panel registry)", 
   });
 });
 
+describe("Introduce App command", () => {
+  it("is available only for apps with an introduction", () => {
+    expect(buildOsCommands([], [], true).find((command) => command.id === "os.introduceApp")).toMatchObject({ label: "Introduce App", scope: "os", category: "app", args: [] });
+    expect(buildOsCommands([], [], false).some((command) => command.id === "os.introduceApp")).toBe(false);
+  });
+
+  it("starts the introduction at its first step", () => {
+    const dispatch = vi.fn();
+    dispatchOsCommand("os.introduceApp", undefined, dispatch, { reset: vi.fn() } as never, { reset: vi.fn() } as never);
+    expect(dispatch).toHaveBeenCalledWith({ type: "SET_INTRODUCTION_STEP", value: 0 });
+  });
+});
+
 describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette as a real bottom-middle Panel)", () => {
   const zeroArgCommand: ResolvedCommand = { definition: { id: "os.resetDock", label: "Reset Dock", scope: "os", category: "layout", inPalette: true, args: [] }, source: { kind: "os" } };
   const argCommand: ResolvedCommand = {
     definition: { id: "os.setThemeId", label: "Set Theme", scope: "os", category: "appearance", inPalette: true, args: [{ id: "themeId", label: "Theme", control: { kind: "text" }, required: true }] },
+    source: { kind: "os" },
+  };
+  const secondArgCommand: ResolvedCommand = {
+    definition: { id: "os.setAppearance", label: "Set Appearance", scope: "os", category: "appearance", inPalette: true, args: [{ id: "appearance", label: "Appearance", control: { kind: "text" }, required: true }] },
+    source: { kind: "os" },
+  };
+  const singletonArgCommand: ResolvedCommand = {
+    definition: { id: "os.setExpertise", label: "Set Expertise", scope: "os", category: "general", inPalette: true, args: [{ id: "expertise", label: "Expertise", control: { kind: "text" }, required: true }] },
     source: { kind: "os" },
   };
 
@@ -2755,21 +2778,29 @@ describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette a
     expect(onExecute).toHaveBeenCalledWith(zeroArgCommand);
   });
 
+  it("auto-expands a singleton arg-carrying category into a flat form with section actions and no disclosure list", () => {
+    const tree = buildCommandCategoryTree([singletonArgCommand], null, {}, vi.fn(), vi.fn(), vi.fn(), vi.fn());
+    expect(tree.sections).toHaveLength(1);
+    expect(tree.sections[0]!.id).toBe("command.category.general.form");
+    expect(tree.sections[0]!.items?.map((item) => item.id)).toEqual(["command.os.setExpertise.arg.expertise"]);
+    expect(tree.sections[0]!.actions?.map((action) => action.id)).toEqual(["command-os.setExpertise-execute", "command-os.setExpertise-reset"]);
+  });
+
   it("an arg-carrying command row toggles expansion instead of executing, and a synthetic arg-form section only appears while expanded", () => {
     const onToggleExpanded = vi.fn();
-    const collapsedTree = buildCommandCategoryTree([argCommand], null, {}, vi.fn(), onToggleExpanded, vi.fn(), vi.fn());
+    const collapsedTree = buildCommandCategoryTree([argCommand, secondArgCommand], null, {}, vi.fn(), onToggleExpanded, vi.fn(), vi.fn());
     expect(collapsedTree.sections).toHaveLength(1);
     const collapsedRow = collapsedTree.sections[0]!.items!.find((item) => item.id === "command.os.setThemeId")!;
     expect(collapsedRow.label).toBe("Set Theme…");
     collapsedRow.onClick?.({} as never, {} as never);
     expect(onToggleExpanded).toHaveBeenCalledWith("os.setThemeId");
 
-    const expandedTree = buildCommandCategoryTree([argCommand], "os.setThemeId", {}, vi.fn(), vi.fn(), vi.fn(), vi.fn());
+    const expandedTree = buildCommandCategoryTree([argCommand, secondArgCommand], "os.setThemeId", {}, vi.fn(), vi.fn(), vi.fn(), vi.fn());
     expect(expandedTree.sections).toHaveLength(2);
     const formItems = expandedTree.sections[0]!.items!;
     expect(formItems.find((item) => item.id === "command.os.setThemeId.arg.themeId")?.label).toBe("Theme");
-    const actionsRow = formItems.find((item) => item.id === "command.os.setThemeId.actions")!;
-    expect(actionsRow.control).toBeTruthy();
+    expect(expandedTree.sections[0]!.actions?.map((action) => action.id)).toEqual(["command-os.setThemeId-execute", "command-os.setThemeId-reset"]);
+    expect(expandedTree.sections[1]!.items?.map((item) => item.id)).toEqual(["command.os.setAppearance"]);
   });
 
   it("Execute is disabled until the required arg is staged, and calling it passes the effective (staged) args; Reset dispatches onResetArgs", () => {
@@ -2777,18 +2808,17 @@ describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette a
     const onStageArg = vi.fn();
     const onResetArgs = vi.fn();
 
-    const missingTree = buildCommandCategoryTree([argCommand], "os.setThemeId", {}, onExecute, vi.fn(), onStageArg, onResetArgs);
-    const missingActionsRow = missingTree.sections[0]!.items!.find((item) => item.id === "command.os.setThemeId.actions")!;
-    const missingButtons = (missingActionsRow.control as ReactElement).props.children as ReactElement[];
-    expect(missingButtons[0]!.props.disabled).toBe(true);
+    const missingTree = buildCommandCategoryTree([argCommand, secondArgCommand], "os.setThemeId", {}, onExecute, vi.fn(), onStageArg, onResetArgs);
+    const missingExecute = missingTree.sections[0]!.actions!.find((action) => action.id === "command-os.setThemeId-execute")!;
+    expect(missingExecute.disabled).toBe(true);
 
-    const stagedTree = buildCommandCategoryTree([argCommand], "os.setThemeId", { "os.setThemeId": { themeId: "semio" } }, onExecute, vi.fn(), onStageArg, onResetArgs);
-    const stagedActionsRow = stagedTree.sections[0]!.items!.find((item) => item.id === "command.os.setThemeId.actions")!;
-    const stagedButtons = (stagedActionsRow.control as ReactElement).props.children as ReactElement[];
-    expect(stagedButtons[0]!.props.disabled).toBe(false);
-    stagedButtons[0]!.props.onClick();
+    const stagedTree = buildCommandCategoryTree([argCommand, secondArgCommand], "os.setThemeId", { "os.setThemeId": { themeId: "semio" } }, onExecute, vi.fn(), onStageArg, onResetArgs);
+    const stagedExecute = stagedTree.sections[0]!.actions!.find((action) => action.id === "command-os.setThemeId-execute")!;
+    const stagedReset = stagedTree.sections[0]!.actions!.find((action) => action.id === "command-os.setThemeId-reset")!;
+    expect(stagedExecute.disabled).toBe(false);
+    stagedExecute.onClick();
     expect(onExecute).toHaveBeenCalledWith(argCommand, { themeId: "semio" });
-    stagedButtons[1]!.props.onClick();
+    stagedReset.onClick();
     expect(onResetArgs).toHaveBeenCalledWith("os.setThemeId");
   });
 

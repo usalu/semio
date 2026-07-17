@@ -2041,6 +2041,10 @@ impl DocumentApp for NoteApp {
             mode_labels: HashMap::new(),
             action_labels: HashMap::new(),
             utility_labels: HashMap::new(),
+            example_labels: HashMap::new(),
+            action_arg_labels: HashMap::new(),
+            dialog_labels: HashMap::new(),
+            introduction_labels: HashMap::new(),
         }
     }
 }

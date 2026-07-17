@@ -53,8 +53,9 @@ function keyFor(row: Row): string {
   return key;
 }
 
+// bib field values are compiled as LaTeX text (unlike slugs) — keep existing TeX escaping (\&, \_) intact
 function escapeBibField(s: string): string {
-  return deTeX(s);
+  return s;
 }
 
 // rows whose herausgeber is just a duplicate of the title (no real author/publisher known)

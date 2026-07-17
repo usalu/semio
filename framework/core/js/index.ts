@@ -1167,9 +1167,23 @@ export type PluginAppLabelsOverlay = {
   readonly modeLabels: Readonly<Record<string, string>>;
   readonly actionLabels: Readonly<Record<string, string>>;
   readonly utilityLabels: Readonly<Record<string, string>>;
+  readonly exampleLabels: Readonly<Record<string, string>>;
+  readonly actionArgLabels: Readonly<Record<string, string>>;
+  readonly dialogLabels: Readonly<Record<string, string>>;
+  readonly introductionLabels: Readonly<Record<string, string>>;
 };
 
-export const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = { windowKindLabels: {}, panelTabLabels: {}, modeLabels: {}, actionLabels: {}, utilityLabels: {} };
+export const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = {
+  windowKindLabels: {},
+  panelTabLabels: {},
+  modeLabels: {},
+  actionLabels: {},
+  utilityLabels: {},
+  exampleLabels: {},
+  actionArgLabels: {},
+  dialogLabels: {},
+  introductionLabels: {},
+};
 
 /** 🗣️ Rust's `skip_serializing_if` omits empty maps entirely, so a parsed overlay may be missing keys — fill them back in. */
 export function normalizeAppLabelsOverlay(raw: Partial<PluginAppLabelsOverlay> | null | undefined): PluginAppLabelsOverlay {
@@ -1180,6 +1194,10 @@ export function normalizeAppLabelsOverlay(raw: Partial<PluginAppLabelsOverlay> |
     modeLabels: raw?.modeLabels ?? {},
     actionLabels: raw?.actionLabels ?? {},
     utilityLabels: raw?.utilityLabels ?? {},
+    exampleLabels: raw?.exampleLabels ?? {},
+    actionArgLabels: raw?.actionArgLabels ?? {},
+    dialogLabels: raw?.dialogLabels ?? {},
+    introductionLabels: raw?.introductionLabels ?? {},
   };
 }
 

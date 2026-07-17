@@ -1,0 +1,15 @@
+{
+  "title": "Introduce App Command",
+  "emoji": "🎓",
+  "status": "closed",
+  "description": "Add an Introduce App command to the OS command registry and make executing it start the active app introduction from the first step.",
+  "summary": "Added the localized Introduce App command and corrected the shared introduction/dialog glass overlay to use appearance-adaptive semantic foreground tokens. Primary text now uses text-foreground and secondary text uses text-muted-foreground, with a focused rendered-DOM regression test confirming the adaptive classes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2014"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪ff07e75f6088478a85c0e978b748ea92",
+    "⚪9a9521d99e08401885a1d3b6dc2adf83"
+  ]
+}
