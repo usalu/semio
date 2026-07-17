@@ -1,0 +1,22 @@
+{
+  "name": "@semio-tech/fem-3d-rs",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "fem/3d/rs",
+        "command": "bun ./script.ts wasm"
+      },
+      "outputs": ["{projectRoot}/pkg"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "fem/3d/rs",
+        "command": "bun ./script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

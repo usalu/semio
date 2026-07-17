@@ -156,8 +156,8 @@ use semio_framework_core::{
     WindowKindDefinition, WindowKinds, SET_ACTIVE_UTILITY_ACTION_ID, START_INTRODUCTION_ACTION_ID,
 };
 use ui_wgpu::{
-    collect_window_kind_ids_from_layout, ActionDescriptor, NamedLayout, UiNode, WindowEngagement,
-    WindowEngagementSlot, WindowLayout, WindowMeasure, WindowOptions, SurfaceKind,
+    collect_window_kind_ids_from_layout, ActionDescriptor, NamedLayout, UiNode, UiTreeItemNode, UiTreeNode,
+    UiTreeSectionNode, WindowEngagement, WindowEngagementSlot, WindowLayout, WindowMeasure, WindowOptions, SurfaceKind,
 };
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -276,6 +276,33 @@ pub struct KeybindingSpec {
     pub action: String,
 }
 
+//#region 🔖ResourceKind
+/// 🗂️ Which geometry backend a resource kind's media exporters/importers target. Structurally
+/// mirrors `semio_framework_os::OsMediaCapability` (the "os" product crate, which itself depends on
+/// this SDK crate — `semio-framework-os` cannot be a dependency here without a cycle). Intentionally
+/// duplicated rather than shared for now; a later wave should hoist one canonical definition into
+/// `semio-framework-core` (which both this crate and `semio-framework-os` already depend on) the same
+/// way `OsMediaFormat` already lives there, and have `semio_framework_os::OsMediaCapability` become a
+/// re-export of it instead of a second definition.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum OsMediaCapability {
+    MeshOnly,
+    Brep,
+}
+
+/// 🗂️ Declares one resource kind an app produces/consumes (e.g. a 3D mesh format, a raster format) —
+/// registers with the OS media graph so import/export/preview wiring is data-driven instead of the OS
+/// hardcoding a per-app match on kind-id strings.
+pub struct ResourceKindSpec {
+    pub id: String,
+    pub name: String,
+    pub source_format: String,
+    pub component_kind: String,
+    pub dimension: String,
+    pub media_capability: OsMediaCapability,
+}
+//#endregion 🔖ResourceKind
+
 pub struct AppBuilder {
     id: String,
     label: String,
@@ -293,8 +320,10 @@ pub struct AppBuilder {
     named_layouts: Vec<NamedLayout>,
     default_layout: Option<WindowLayout>,
     terminologies: Vec<String>,
+    terminology_documents: std::collections::HashMap<String, Vec<String>>,
     introduction: Option<IntroductionDefinition>,
     dialogs: Vec<DialogDefinition>,
+    resource_kinds: Vec<ResourceKindSpec>,
 }
 
 impl AppBuilder {
@@ -317,14 +346,29 @@ impl AppBuilder {
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
+            terminology_documents: std::collections::HashMap::new(),
             introduction: None,
             dialogs: Vec::new(),
+            resource_kinds: Vec::new(),
         }
+    }
+
+    /// 🗂️ Declares one resource kind this app produces/consumes (see `ResourceKindSpec`). Repeatable.
+    pub fn resource_kind(mut self, spec: ResourceKindSpec) -> Self {
+        self.resource_kinds.push(spec);
+        self
     }
 
     /// 🗣️ Declares an alternative terminology id this app supports beyond the implicit "native" default.
     pub fn terminology(mut self, id: impl Into<String>) -> Self {
         self.terminologies.push(id.into());
+        self
+    }
+
+    /// 🗺️ Replaces the full document path (product + app segments) while terminology `id` is active;
+    /// `id` must also be declared via `terminology` — validated in `build_definition`.
+    pub fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        self.terminology_documents.insert(id.into(), document.into_iter().map(Into::into).collect());
         self
     }
 
@@ -595,6 +639,20 @@ impl AppBuilder {
             "app {} document must contain non-empty segments",
             self.id
         );
+        for (terminology_id, document) in &self.terminology_documents {
+            assert!(
+                self.terminologies.iter().any(|id| id == terminology_id),
+                "app {} declares terminology_document for undeclared terminology {}",
+                self.id,
+                terminology_id
+            );
+            assert!(
+                !document.is_empty() && document.iter().all(|segment| !segment.trim().is_empty()),
+                "app {} terminology_document for {} must contain non-empty segments",
+                self.id,
+                terminology_id
+            );
+        }
         assert!(
             !self.window_kinds.is_empty(),
             "app {} must declare at least one window kind",
@@ -948,11 +1006,630 @@ impl AppBuilder {
             named_layouts: self.named_layouts,
             default_layout: self.default_layout,
             terminologies: self.terminologies,
+            terminology_documents: self.terminology_documents,
             introduction: self.introduction,
             dialogs: self.dialogs,
         }
     }
 }
+
+//#region 🔖PanelKit
+// 🌳 Shared panel-tree builders — lifts the verbatim-duplicated `tree_item*`/`selection_ids` helpers
+// and the `build_document_tree`/`build_inspector_tree`/`build_catalogue_tree` skeleton found across
+// ~15 plugin crates (flow, procedural, layout, gis, puzzle, sequence, trinity, dag, …) into the SDK.
+
+/// 🌳 A bare tree item — thin wrapper over `UiTreeItemNode::base`.
+pub fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
+    UiTreeItemNode::base(id, label)
+}
+
+/// 🌳 A tree item with a description line.
+pub fn tree_item_desc(id: impl Into<String>, label: impl Into<String>, description: Option<String>) -> UiTreeItemNode {
+    UiTreeItemNode { description, ..UiTreeItemNode::base(id, label) }
+}
+
+/// 🌳 A tree item that dispatches `action` on click.
+pub fn tree_item_with_action(
+    id: impl Into<String>,
+    label: impl Into<String>,
+    description: Option<String>,
+    action: ActionDescriptor,
+) -> UiTreeItemNode {
+    UiTreeItemNode { description, action: Some(action), ..UiTreeItemNode::base(id, label) }
+}
+
+/// 🌳 A draggable tree item: `drag_data` is a JSON object whose entries become the item's
+/// MIME-type -> payload drag-data map (string values are used verbatim; non-string values are
+/// serialized), e.g. `json!({ "application/x-my-widget": descriptor.to_string() })`. Generalizes the
+/// single-hardcoded-MIME-key pattern duplicated per app (each app previously baked its own MIME
+/// constant into this function) — the caller now supplies the key(s) explicitly.
+pub fn tree_item_with_action_draggable(
+    id: impl Into<String>,
+    label: impl Into<String>,
+    description: Option<String>,
+    action: ActionDescriptor,
+    drag_data: &Value,
+) -> UiTreeItemNode {
+    let mut item = tree_item_with_action(id, label, description, action);
+    item.draggable = Some(true);
+    item.drag_data = drag_data.as_object().map(|entries| {
+        entries
+            .iter()
+            .map(|(key, value)| (key.clone(), value.as_str().map(str::to_string).unwrap_or_else(|| value.to_string())))
+            .collect()
+    });
+    item
+}
+
+/// 🎯 Parses a selection-action's `ids` array arg into a plain `Vec<String>` — the shape used by the
+/// majority of duplicate copies (`layout`, `gis`, `presentation`, …). A handful of apps additionally
+/// fall back to a singular `id`/`nodeId`/`nodeIds` key (`puzzle`, `sequence`, `trinity`, `procedural`,
+/// `mindmap`); those apps keep their own fallback wrapper around this shared core for now.
+pub fn selection_ids(args: Option<&Value>) -> Vec<String> {
+    args.and_then(|value| value.get("ids"))
+        .and_then(|value| serde_json::from_value(value.clone()).ok())
+        .unwrap_or_default()
+}
+
+/// 🌳 Fluent builder for the `build_document_tree`/`build_inspector_tree`/`build_catalogue_tree`
+/// skeleton duplicated across plugin crates: namespaced item ids, sections (optionally substituting a
+/// single "(none)" placeholder item for the empty state), a selected/highlighted id set, a
+/// selection-change action, and a drop action — ending in `.build()` -> a `UiNode::Tree`.
+pub struct PanelTreeBuilder {
+    namespace: String,
+    sections: Vec<UiTreeSectionNode>,
+    selected_ids: Option<Vec<String>>,
+    highlighted_ids: Option<Vec<String>>,
+    selection_change: Option<ActionDescriptor>,
+    drop_action: Option<ActionDescriptor>,
+}
+
+impl PanelTreeBuilder {
+    /// 🌳 `namespace` prefixes every id built via `.item_id()`, e.g. `"flow-play-document"`.
+    pub fn new(namespace: impl Into<String>) -> Self {
+        Self {
+            namespace: namespace.into(),
+            sections: Vec::new(),
+            selected_ids: None,
+            highlighted_ids: None,
+            selection_change: None,
+            drop_action: None,
+        }
+    }
+
+    /// 🌳 Builds a namespaced item id: `"{namespace}.{kind}.{id}"`.
+    pub fn item_id(&self, kind: &str, id: &str) -> String {
+        format!("{}.{kind}.{id}", self.namespace)
+    }
+
+    /// 🌳 Adds a section verbatim.
+    pub fn section(mut self, id: impl Into<String>, label: Option<String>, default_open: bool, items: Vec<UiTreeItemNode>) -> Self {
+        self.sections.push(UiTreeSectionNode { id: id.into(), label, default_open: Some(default_open), items, loading: None });
+        self
+    }
+
+    /// 🌳 Adds a section, substituting a single "(none)"-style placeholder item when `items` is empty —
+    /// the empty-state pattern duplicated in `build_document_tree`/`build_catalogue_tree` across apps.
+    pub fn section_or_placeholder(
+        mut self,
+        id: impl Into<String>,
+        label: Option<String>,
+        default_open: bool,
+        items: Vec<UiTreeItemNode>,
+        placeholder_label: impl Into<String>,
+    ) -> Self {
+        let id = id.into();
+        let items = if items.is_empty() { vec![tree_item(format!("{id}.empty"), placeholder_label)] } else { items };
+        self.sections.push(UiTreeSectionNode { id, label, default_open: Some(default_open), items, loading: None });
+        self
+    }
+
+    pub fn selected(mut self, ids: Vec<String>) -> Self {
+        self.selected_ids = Some(ids);
+        self
+    }
+
+    pub fn highlighted(mut self, ids: Vec<String>) -> Self {
+        self.highlighted_ids = Some(ids);
+        self
+    }
+
+    pub fn selection_change(mut self, action: ActionDescriptor) -> Self {
+        self.selection_change = Some(action);
+        self
+    }
+
+    pub fn drop_action(mut self, action: ActionDescriptor) -> Self {
+        self.drop_action = Some(action);
+        self
+    }
+
+    pub fn build(self) -> UiNode {
+        UiNode::Tree(UiTreeNode {
+            sections: self.sections,
+            loading: None,
+            selected_ids: self.selected_ids,
+            highlighted_ids: self.highlighted_ids,
+            selection_change: self.selection_change,
+            drop_action: self.drop_action,
+        })
+    }
+}
+
+#[cfg(test)]
+mod panel_kit_tests {
+    use super::*;
+
+    #[test]
+    fn tree_item_builds_a_bare_item() {
+        let item = tree_item("ns.kind.a", "A");
+        assert_eq!(item.id, "ns.kind.a");
+        assert_eq!(item.label, "A");
+        assert!(item.description.is_none());
+        assert!(item.action.is_none());
+    }
+
+    #[test]
+    fn tree_item_with_action_draggable_maps_json_object_to_string_drag_data() {
+        let action = ActionDescriptor { controller_id: "app".into(), action: "addWidget".into(), args: None };
+        let item = tree_item_with_action_draggable(
+            "ns.kind.a",
+            "A",
+            None,
+            action,
+            &serde_json::json!({ "application/x-widget": "{\"kind\":\"a\"}" }),
+        );
+        assert_eq!(item.draggable, Some(true));
+        assert_eq!(
+            item.drag_data.unwrap().get("application/x-widget").map(String::as_str),
+            Some("{\"kind\":\"a\"}")
+        );
+    }
+
+    #[test]
+    fn selection_ids_reads_the_ids_array_arg() {
+        let args = serde_json::json!({ "ids": ["a", "b"] });
+        assert_eq!(selection_ids(Some(&args)), vec!["a".to_string(), "b".to_string()]);
+        assert!(selection_ids(None).is_empty());
+    }
+
+    #[test]
+    fn panel_tree_builder_produces_a_namespaced_tree_with_placeholder() {
+        let builder = PanelTreeBuilder::new("ns-play-document");
+        let item_id = builder.item_id("widget", "w1");
+        assert_eq!(item_id, "ns-play-document.widget.w1");
+        let node = builder
+            .section("ns-play-document.widgets", Some("Widgets".into()), true, vec![tree_item(item_id, "W1")])
+            .section_or_placeholder("ns-play-document.synapses", Some("Synapses".into()), false, vec![], "(none)")
+            .selected(vec!["ns-play-document.widget.w1".into()])
+            .build();
+        let UiNode::Tree(tree) = node else { panic!("expected a Tree node") };
+        assert_eq!(tree.sections.len(), 2);
+        assert_eq!(tree.sections[0].items.len(), 1);
+        assert_eq!(tree.sections[1].items[0].label, "(none)");
+        assert_eq!(tree.selected_ids, Some(vec!["ns-play-document.widget.w1".to_string()]));
+    }
+}
+//#endregion 🔖PanelKit
+
+//#region 🔖Terminology
+// 🗣️ Shared locale-label resolution — replaces the ~25x hand-rolled `struct XLabels { .. }` +
+// `const X_LABELS_EN/DE` + `fn x_labels(view_state) -> &'static XLabels` pattern duplicated per app,
+// plus the per-app `(id, en, de)` action/utility label-map builder functions.
+
+/// 🗣️ A locale label set: a `&'static` accessor per locale. Implement via `app_labels!` rather than by
+/// hand — accessors (not associated consts) because Rust's constant-promotion of `&Self::CONST` to
+/// `&'static Self` only fires for a concrete type, not through a generic type parameter; each concrete
+/// `impl LocaleLabels for XLabels` promotes its own `&Self::EN`/`&Self::DE` internally instead.
+pub trait LocaleLabels: Sized + 'static {
+    fn locale_labels_en() -> &'static Self;
+    fn locale_labels_de() -> &'static Self;
+}
+
+/// 🗣️ True when `view_state.locale` names a German variant ("de", "de-DE", …).
+pub fn is_de_locale(view_state: &ViewState) -> bool {
+    view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))
+}
+
+/// 🗣️ Resolves the active label set for the shell-provided locale; unknown/absent locales fall back
+/// to the English set. Replaces the ~25x hand-rolled `fn x_labels(view_state) -> &'static XLabels { if
+/// is_de { &X_LABELS_DE } else { &X_LABELS_EN } }`.
+pub fn resolve_labels<L: LocaleLabels>(view_state: &ViewState) -> &'static L {
+    if is_de_locale(view_state) { L::locale_labels_de() } else { L::locale_labels_en() }
+}
+
+/// 🗣️ Declares a locale label struct plus its `EN`/`DE` consts and `LocaleLabels` impl in one compact
+/// block — resolve the active set with `resolve_labels::<XLabels>(view_state)`. Replaces the ~25x
+/// hand-rolled `struct XLabels { .. }` + two `const` items + resolver fn.
+///
+/// ```ignore
+/// semio_framework_plugin::app_labels! {
+///     struct FlowPlayLabels {
+///         widgets: &'static str = en: "Widgets", de: "Widgets";
+///         synapses: &'static str = en: "Synapses", de: "Synapsen";
+///     }
+/// }
+/// ```
+#[macro_export]
+macro_rules! app_labels {
+    (
+        $(#[$meta:meta])*
+        $vis:vis struct $Name:ident {
+            $( $field:ident: $ty:ty = en: $en_value:expr, de: $de_value:expr );+ $(;)?
+        }
+    ) => {
+        $(#[$meta])*
+        $vis struct $Name {
+            $( $vis $field: $ty ),+
+        }
+
+        impl $Name {
+            const EN: Self = Self { $( $field: $en_value ),+ };
+            const DE: Self = Self { $( $field: $de_value ),+ };
+        }
+
+        impl $crate::app::LocaleLabels for $Name {
+            fn locale_labels_en() -> &'static Self {
+                &Self::EN
+            }
+            fn locale_labels_de() -> &'static Self {
+                &Self::DE
+            }
+        }
+    };
+}
+
+/// 🗣️ Builds an (id -> localized label) map from `(id, en, de)` triples — replaces the per-crate
+/// hand-rolled action/utility label-map builder functions (e.g. `flow_action_labels`,
+/// `protocol_play_action_labels`).
+pub fn localized_label_map(is_de: bool, entries: &[(&str, &str, &str)]) -> HashMap<String, String> {
+    entries.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+
+/// 🗣️ Fluent builder extension for `AppLabelsOverlay` — an *extension trait*, not inherent methods:
+/// `AppLabelsOverlay` is defined in `semio-framework-core`, so Rust's orphan rules permit a local trait
+/// impl on it but not inherent methods from this downstream crate. Replaces the large hand-constructed
+/// `AppLabelsOverlay { .. }` struct literals every app's `DocumentApp::app_labels` currently writes.
+pub trait AppLabelsOverlayExt: Sized {
+    fn window_kind_label(self, id: impl Into<String>, label: impl Into<String>) -> Self;
+    fn panel_tab_label(self, id: impl Into<String>, label: impl Into<String>) -> Self;
+    fn mode_label(self, id: impl Into<String>, label: impl Into<String>) -> Self;
+    fn action_labels(self, labels: HashMap<String, String>) -> Self;
+    fn utility_labels(self, labels: HashMap<String, String>) -> Self;
+    fn example_labels(self, labels: HashMap<String, String>) -> Self;
+    fn action_arg_label(self, key: impl Into<String>, label: impl Into<String>) -> Self;
+    fn dialog_labels(self, labels: HashMap<String, String>) -> Self;
+    fn introduction_labels(self, labels: HashMap<String, String>) -> Self;
+}
+
+impl AppLabelsOverlayExt for AppLabelsOverlay {
+    fn window_kind_label(mut self, id: impl Into<String>, label: impl Into<String>) -> Self {
+        self.window_kind_labels.insert(id.into(), label.into());
+        self
+    }
+    fn panel_tab_label(mut self, id: impl Into<String>, label: impl Into<String>) -> Self {
+        self.panel_tab_labels.insert(id.into(), label.into());
+        self
+    }
+    fn mode_label(mut self, id: impl Into<String>, label: impl Into<String>) -> Self {
+        self.mode_labels.insert(id.into(), label.into());
+        self
+    }
+    fn action_labels(mut self, labels: HashMap<String, String>) -> Self {
+        self.action_labels = labels;
+        self
+    }
+    fn utility_labels(mut self, labels: HashMap<String, String>) -> Self {
+        self.utility_labels = labels;
+        self
+    }
+    fn example_labels(mut self, labels: HashMap<String, String>) -> Self {
+        self.example_labels = labels;
+        self
+    }
+    fn action_arg_label(mut self, key: impl Into<String>, label: impl Into<String>) -> Self {
+        self.action_arg_labels.insert(key.into(), label.into());
+        self
+    }
+    fn dialog_labels(mut self, labels: HashMap<String, String>) -> Self {
+        self.dialog_labels = labels;
+        self
+    }
+    fn introduction_labels(mut self, labels: HashMap<String, String>) -> Self {
+        self.introduction_labels = labels;
+        self
+    }
+}
+
+#[cfg(test)]
+mod terminology_tests {
+    use super::*;
+
+    app_labels! {
+        struct SampleLabels {
+            greeting: &'static str = en: "Hello", de: "Hallo";
+        }
+    }
+
+    #[test]
+    fn resolve_labels_picks_en_or_de_by_locale() {
+        let en = ViewState { locale: Some("en-US".into()), ..ViewState::default() };
+        let de = ViewState { locale: Some("de-DE".into()), ..ViewState::default() };
+        let none = ViewState::default();
+        assert_eq!(resolve_labels::<SampleLabels>(&en).greeting, "Hello");
+        assert_eq!(resolve_labels::<SampleLabels>(&de).greeting, "Hallo");
+        assert_eq!(resolve_labels::<SampleLabels>(&none).greeting, "Hello");
+    }
+
+    #[test]
+    fn localized_label_map_selects_by_locale() {
+        let entries: &[(&str, &str, &str)] = &[("addStep", "Add Step", "Schritt hinzufuegen")];
+        let en = localized_label_map(false, entries);
+        let de = localized_label_map(true, entries);
+        assert_eq!(en.get("addStep").map(String::as_str), Some("Add Step"));
+        assert_eq!(de.get("addStep").map(String::as_str), Some("Schritt hinzufuegen"));
+    }
+
+    #[test]
+    fn app_labels_overlay_ext_builds_fluently() {
+        let overlay = AppLabelsOverlay::default()
+            .window_kind_label("main", "Main")
+            .mode_label("edit", "Edit")
+            .action_labels(localized_label_map(false, &[("addStep", "Add Step", "Schritt hinzufuegen")]));
+        assert_eq!(overlay.window_kind_labels.get("main").map(String::as_str), Some("Main"));
+        assert_eq!(overlay.mode_labels.get("edit").map(String::as_str), Some("Edit"));
+        assert_eq!(overlay.action_labels.get("addStep").map(String::as_str), Some("Add Step"));
+    }
+}
+//#endregion 🔖Terminology
+
+//#region 🔖Testkit
+pub mod testkit {
+//! 🧪 Generic test-harness helpers for `DocumentApp` implementors. Factors out the ~24x duplicated
+//! `meta()`/`new_app()`/`new_app_with_registry()`/`paired_apps()` boilerplate plus the repeated
+//! undo-redo / two-instance-convergence / ingest-idempotency test *bodies* (parameterized by closures
+//! for the app-specific action names/projection shape, so only the control flow is shared). Not
+//! `#[cfg(test)]` — apps' own `#[cfg(test)]` modules call these as a regular dependency; see
+//! `terminology_tests`/`panel_kit_tests` above for the sibling pattern of testing SDK primitives
+//! themselves inline.
+
+use super::{ActionMeta, App, AppActionRegistry, DocumentApp, PluginApp, VcsDocumentApp};
+use semio_framework_core::ViewState;
+use vcs::{Backbone, BackboneMessage, MemoryBackbone};
+
+/// 🪪 A local-actor `ActionMeta` for test dispatch (`instance_id: 1`).
+pub fn meta(actor: &str) -> ActionMeta {
+    ActionMeta { actor: actor.into(), instance_id: 1 }
+}
+
+/// 🧬 A registry-less wrapper (`VcsDocumentApp::new`) — contract enforcement (required args, kind
+/// discipline) is skipped, matching most apps' plain unit tests.
+pub fn new_app<A: DocumentApp + Default>() -> VcsDocumentApp<A> {
+    VcsDocumentApp::new(A::default())
+}
+
+/// 🧬 A registry-backed wrapper carrying `manifest`'s real `AppActionRegistry` — needed whenever a
+/// test must exercise declared-arg defaults/required-arg enforcement or View/Shell kind discipline.
+pub fn new_app_with_registry<A: DocumentApp + Default>(manifest: fn() -> App) -> VcsDocumentApp<A> {
+    let definition = manifest().definition;
+    VcsDocumentApp::with_registry(A::default(), AppActionRegistry::from_definition(&definition))
+}
+
+/// 🔗 Two registry-less instances joined by an in-memory backbone on `channel` — the standard fixture
+/// for convergence tests.
+pub fn paired_apps<A: DocumentApp + Default>(channel: &str) -> (VcsDocumentApp<A>, VcsDocumentApp<A>) {
+    let mut a = new_app::<A>();
+    let mut b = new_app::<A>();
+    let (backbone_a, backbone_b) = MemoryBackbone::pair(channel, channel);
+    a.attach_backbone(Box::new(backbone_a)).expect("attach a");
+    b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+    (a, b)
+}
+
+/// 🧪 Runs `action` once, asserts `probe(app)` matches `after`, undoes and asserts `before`, redoes and
+/// asserts `after` again — the repeated undo/redo round-trip test body.
+pub fn assert_undo_redo_round_trip<A, P>(
+    app: &mut VcsDocumentApp<A>,
+    action: &str,
+    args: Option<&serde_json::Value>,
+    probe: impl Fn(&VcsDocumentApp<A>) -> P,
+    before: P,
+    after: P,
+) where
+    A: DocumentApp,
+    P: PartialEq + std::fmt::Debug,
+{
+    app.handle_action(action, args, &ViewState::default(), &meta("local")).expect("apply action");
+    assert_eq!(probe(app), after, "action did not produce the expected projection");
+    app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+    assert_eq!(probe(app), before, "undo did not revert to the expected projection");
+    app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+    assert_eq!(probe(app), after, "redo did not reapply the expected projection");
+}
+
+/// 🧪 `action_a`/`action_b` are applied to two `paired_apps` instances, a neutral history action
+/// (`commitCheckpoint`) pumps each side's inbound ops, then `probe` must agree on both — the repeated
+/// two-instance-convergence test body (see `protocol-plugin`'s
+/// `two_instances_converge_disjoint_edits_via_backbone` for the original, app-specific version).
+pub fn assert_two_instances_converge<A, P>(
+    channel: &str,
+    action_a: (&str, Option<&serde_json::Value>),
+    action_b: (&str, Option<&serde_json::Value>),
+    probe: impl Fn(&VcsDocumentApp<A>) -> P,
+) where
+    A: DocumentApp + Default,
+    P: PartialEq + std::fmt::Debug,
+{
+    let (mut instance_a, mut instance_b) = paired_apps::<A>(channel);
+    instance_a.handle_action(action_a.0, action_a.1, &ViewState::default(), &meta("actor-a")).expect("a applies its edit");
+    instance_b.handle_action(action_b.0, action_b.1, &ViewState::default(), &meta("actor-b")).expect("b applies its edit");
+    instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
+    instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+    assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same projection");
+}
+
+/// 🧪 Applies `action` on a sender attached to a backbone, replays the resulting envelopes onto a
+/// fresh receiver twice, and asserts `probe` sees the same result both times — feeding the same op
+/// twice must not double-apply.
+pub fn assert_ingest_idempotent<A, P>(
+    action: &str,
+    args: Option<&serde_json::Value>,
+    probe: impl Fn(&VcsDocumentApp<A>) -> P,
+) where
+    A: DocumentApp + Default,
+    P: PartialEq + std::fmt::Debug,
+{
+    let mut sender = new_app::<A>();
+    let (near, mut far) = MemoryBackbone::pair("mem://testkit-idempotent", "mem://testkit-idempotent");
+    sender.attach_backbone(Box::new(near)).expect("attach sender");
+    sender.handle_action(action, args, &ViewState::default(), &meta("local")).expect("apply action");
+
+    let mut envelopes = Vec::new();
+    for message in far.receive().expect("receive") {
+        if let BackboneMessage::Ops { envelopes: ops } = message {
+            envelopes.extend(ops);
+        }
+    }
+    let operations_json = serde_json::to_string(&envelopes).expect("serialize envelopes");
+
+    let mut receiver = new_app::<A>();
+    receiver.ingest_operations(&operations_json).expect("ingest once");
+    let once = probe(&receiver);
+    receiver.ingest_operations(&operations_json).expect("ingest twice");
+    assert_eq!(probe(&receiver), once, "feeding the same op twice must not double-apply");
+}
+
+#[cfg(test)]
+mod testkit_tests {
+    //! 🧪 Proves each `testkit` primitive against a minimal dummy `DocumentApp` before any real app
+    //! adopts them.
+    use super::*;
+    use crate::app::{ActionEmit, DocumentView};
+    use crate::{ui_text, UiNode};
+    use serde::{Deserialize, Serialize};
+    use serde_json::Value;
+    use vcs::{Operation, OperationDiff};
+
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    struct DummyProjection {
+        count: i32,
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    struct DummyDiff {
+        count: Option<i32>,
+    }
+
+    impl OperationDiff<DummyProjection> for DummyDiff {
+        fn apply(&self, projection: &DummyProjection) -> DummyProjection {
+            DummyProjection { count: self.count.unwrap_or(projection.count) }
+        }
+
+        fn absorb(&mut self, other: Self) {
+            if other.count.is_some() {
+                self.count = other.count;
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[serde(tag = "op", rename_all = "camelCase")]
+    enum DummyOp {
+        SetCount { value: i32 },
+    }
+
+    impl Operation<DummyProjection> for DummyOp {
+        type Diff = DummyDiff;
+
+        fn diff(&self, _projection: &DummyProjection) -> DummyDiff {
+            match self {
+                DummyOp::SetCount { value } => DummyDiff { count: Some(*value) },
+            }
+        }
+
+        fn backwards(&self, projection: &DummyProjection) -> Vec<Self> {
+            vec![DummyOp::SetCount { value: projection.count }]
+        }
+    }
+
+    #[derive(Default)]
+    struct DummyApp;
+
+    impl DocumentApp for DummyApp {
+        type Projection = DummyProjection;
+        type Op = DummyOp;
+
+        fn app_id(&self) -> &str {
+            "testkit-dummy"
+        }
+
+        fn document_schema(&self) -> &str {
+            "semio.testkit/v1"
+        }
+
+        fn initial_projection(&self) -> DummyProjection {
+            DummyProjection::default()
+        }
+
+        fn handle_action(
+            &mut self,
+            action: &str,
+            _args: Option<&Value>,
+            doc: &DocumentView<'_, DummyProjection>,
+            _view_state: &ViewState,
+        ) -> ActionEmit<DummyOp> {
+            match action {
+                "increment" => ActionEmit {
+                    ops: vec![DummyOp::SetCount { value: doc.projection.count + 1 }],
+                    description: Some("increment".into()),
+                    ..Default::default()
+                },
+                _ => ActionEmit::default(),
+            }
+        }
+
+        fn render(&self, _body_key: &str, doc: &DocumentView<'_, DummyProjection>, _view_state: &ViewState) -> UiNode {
+            ui_text(format!("count={}", doc.projection.count))
+        }
+    }
+
+    #[test]
+    fn meta_carries_actor_and_local_instance_id() {
+        let m = meta("actor-x");
+        assert_eq!(m.actor, "actor-x");
+        assert_eq!(m.instance_id, 1);
+    }
+
+    #[test]
+    fn new_app_constructs_a_registry_less_wrapper() {
+        let mut app = new_app::<DummyApp>();
+        app.handle_action("increment", None, &ViewState::default(), &meta("local")).expect("increment");
+        assert_eq!(app.projection().unwrap().count, 1);
+    }
+
+    #[test]
+    fn assert_undo_redo_round_trip_passes_for_a_real_operation() {
+        let mut app = new_app::<DummyApp>();
+        assert_undo_redo_round_trip(&mut app, "increment", None, |app| app.projection().unwrap().count, 0, 1);
+    }
+
+    #[test]
+    fn assert_two_instances_converge_on_disjoint_edits() {
+        assert_two_instances_converge::<DummyApp, i32>(
+            "mem://testkit-converge",
+            ("increment", None),
+            ("increment", None),
+            |app| app.projection().unwrap().count,
+        );
+    }
+
+    #[test]
+    fn assert_ingest_idempotent_does_not_double_apply() {
+        assert_ingest_idempotent::<DummyApp, i32>("increment", None, |app| app.projection().unwrap().count);
+    }
+}
+}
+//#endregion 🔖Testkit
 
 #[cfg(test)]
 mod app_builder_tests {
@@ -985,6 +1662,38 @@ mod app_builder_tests {
             .build_definition();
         assert_eq!(definition.window_kinds.len(), 1);
         assert_eq!(definition.panel_tabs.len(), 1);
+    }
+
+    #[test]
+    fn build_definition_rejects_terminology_document_for_undeclared_terminology() {
+        let result = std::panic::catch_unwind(|| {
+            App::builder("bad-terminology-app", "Bad")
+                .document(["semio", "bad"])
+                .mode("edit", "Edit")
+                .mode_utilities("edit", vec![])
+                .window_kind("main", "Main", "bad.main", SurfaceKind::Canvas2d)
+                .default_layout(create_default_layout(&["main".into()], "row", None, None))
+                .terminology_document("reuse", ["Entwerfen mit Bestand", "Bad"])
+                .build_definition();
+        });
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn build_definition_accepts_declared_terminology_document() {
+        let definition = App::builder("good-terminology-app", "Good")
+            .document(["semio", "good"])
+            .mode("edit", "Edit")
+            .mode_utilities("edit", vec![])
+            .window_kind("main", "Main", "good.main", SurfaceKind::Canvas2d)
+            .default_layout(create_default_layout(&["main".into()], "row", None, None))
+            .terminology("reuse")
+            .terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])
+            .build_definition();
+        assert_eq!(
+            definition.terminology_documents.get("reuse").map(Vec::as_slice),
+            Some(["Entwerfen mit Bestand".to_string(), "Aggregator".to_string()].as_slice())
+        );
     }
 
     fn minimal_app(id: &str) -> AppBuilder {
@@ -1459,6 +2168,13 @@ pub struct App {
     pub definition: AppDefinition,
     pub examples: Vec<ExampleDefinition>,
     pub program: Option<ProgramDefinition>,
+    /// 🗂️ Resource kinds declared via `.resource_kind(...)`. Rust-level only for now — `AppDefinition`
+    /// (in `semio-framework-core`, outside this crate's ownership) has no `resource_kinds` field yet, so
+    /// this does not yet round-trip through the JSON plugin-manifest wire format the way `window_kinds`/
+    /// `panel_tabs` do. A later wave should add that field to `AppDefinition` and thread it through
+    /// `AppBuilder::build_definition` so OS-side media graph registration can consume it from the manifest
+    /// instead of from this in-process `App` value.
+    pub resource_kinds: Vec<ResourceKindSpec>,
 }
 
 impl App {
@@ -1466,11 +2182,13 @@ impl App {
         AppBuilder::new(id, label)
     }
 
-    pub fn from_builder(builder: AppBuilder) -> Self {
+    pub fn from_builder(mut builder: AppBuilder) -> Self {
+        let resource_kinds = std::mem::take(&mut builder.resource_kinds);
         Self {
             definition: builder.build_definition(),
             examples: Vec::new(),
             program: None,
+            resource_kinds,
         }
     }
 
@@ -2284,859 +3002,6 @@ impl Plugin for PluginBundle {
     }
 }
 // #endregion app
-}
-
-pub mod generate_mode {
-// #region generate_mode
-//! 🧬 Shared Generate mode state, CRUD, and declarative UI helpers.
-
-use protocol::{default_value_for_block, flatten_protocol_blocks, is_block_visible, ProtocolBlock, ProtocolSpec};
-use ui_wgpu::{
-    build_text_editor_scene, ui_stack_vertical, ui_text, ActionDescriptor, TextEditorScene, UiControlNode,
-    UiFieldNode, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemAction,
-    UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
-};
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Map, Value};
-
-//#region 🔖Types
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FormGeneration {
-    pub id: String,
-    pub name: String,
-    pub values: Map<String, Value>,
-}
-
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GenerationPlayState {
-    #[serde(default)]
-    pub generations: Vec<FormGeneration>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub selected_generation_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub preview_text: Option<String>,
-}
-//#endregion 🔖Types
-
-//#region 🔖Crud
-fn next_generation_id(generations: &[FormGeneration]) -> String {
-    format!("generation-{}", generations.len() + 1)
-}
-
-fn next_generation_name(generations: &[FormGeneration]) -> String {
-    format!("Generation {}", generations.len() + 1)
-}
-
-pub fn initial_generation_values(spec: &ProtocolSpec) -> Map<String, Value> {
-    let mut values = Map::new();
-    for question in flatten_protocol_blocks(spec) {
-        values.insert(question.id.clone(), default_value_for_block(question));
-    }
-    values
-}
-
-pub fn add_generation(state: &mut GenerationPlayState, spec: &ProtocolSpec) -> String {
-    let id = next_generation_id(&state.generations);
-    let name = next_generation_name(&state.generations);
-    state.generations.push(FormGeneration {
-        id: id.clone(),
-        name,
-        values: initial_generation_values(spec),
-    });
-    state.selected_generation_id = Some(id.clone());
-    id
-}
-
-pub fn remove_generation(state: &mut GenerationPlayState, generation_id: &str) {
-    state.generations.retain(|entry| entry.id != generation_id);
-    if state.selected_generation_id.as_deref() == Some(generation_id) {
-        state.selected_generation_id = state.generations.first().map(|entry| entry.id.clone());
-    }
-}
-
-pub fn rename_generation(state: &mut GenerationPlayState, generation_id: &str, name: &str) {
-    if let Some(entry) = state.generations.iter_mut().find(|entry| entry.id == generation_id) {
-        entry.name = name.to_string();
-    }
-}
-
-pub fn select_generation(state: &mut GenerationPlayState, generation_id: &str) {
-    if state.generations.iter().any(|entry| entry.id == generation_id) {
-        state.selected_generation_id = Some(generation_id.to_string());
-    }
-}
-
-pub fn selected_generation<'a>(state: &'a GenerationPlayState) -> Option<&'a FormGeneration> {
-    let selected_id = state.selected_generation_id.as_deref()?;
-    state.generations.iter().find(|entry| entry.id == selected_id)
-}
-
-pub fn selected_generation_mut<'a>(state: &'a mut GenerationPlayState) -> Option<&'a mut FormGeneration> {
-    let selected_id = state.selected_generation_id.clone()?;
-    state.generations.iter_mut().find(|entry| entry.id == selected_id)
-}
-
-pub fn update_generation_values(
-    state: &mut GenerationPlayState,
-    generation_id: &str,
-    question_id: &str,
-    value: Value,
-) {
-    if let Some(entry) = state.generations.iter_mut().find(|entry| entry.id == generation_id) {
-        entry.values.insert(question_id.to_string(), value);
-    }
-}
-
-pub fn handle_generation_action(
-    action: &str,
-    args: Option<&Value>,
-    state: &mut GenerationPlayState,
-    spec: &ProtocolSpec,
-    controller_id: &str,
-) -> bool {
-    match action {
-        "addGeneration" => {
-            add_generation(state, spec);
-            true
-        }
-        "removeGeneration" => {
-            if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
-                remove_generation(state, id);
-            }
-            true
-        }
-        "selectGeneration" => {
-            if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
-                select_generation(state, id);
-            }
-            true
-        }
-        "renameGeneration" => {
-            let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
-            let name = args.and_then(|value| value.get("name")).and_then(|value| value.as_str());
-            if let (Some(id), Some(name)) = (id, name) {
-                rename_generation(state, id, name);
-            }
-            true
-        }
-        "updateGenerationValues" => {
-            let generation_id = args
-                .and_then(|value| value.get("generationId"))
-                .and_then(|value| value.as_str())
-                .map(str::to_string)
-                .or_else(|| state.selected_generation_id.clone());
-            let question_id = args.and_then(|value| value.get("questionId")).and_then(|value| value.as_str());
-            let value = args.and_then(|value| value.get("value"));
-            if let (Some(generation_id), Some(question_id), Some(value)) = (generation_id, question_id, value) {
-                update_generation_values(state, &generation_id, question_id, value.clone());
-            }
-            let _ = controller_id;
-            true
-        }
-        _ => false,
-    }
-}
-//#endregion 🔖Crud
-
-//#region 🔖Ops
-/// @emoji 🧬 Typed, invertible Generate-mode operation vocabulary. WS-F embeds this as a variant in
-/// `forms/module/procedural`'s own `Op` enum so generation edits flow through the document store with
-/// true inverses (replacing the in-place-mutating CRUD helpers as the document mutation surface).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
-pub enum GenerationOp {
-    Add { generation: FormGeneration },
-    Remove { id: String },
-    Rename { id: String, name: String },
-    UpdateValues { id: String, question_id: String, value: Value },
-}
-
-/// @emoji 🎛️ Maps a Generate-mode action id to the document operations it produces, or `None` for
-/// non-document (view) actions like `selectGeneration`. Pure — reads `state`/`spec` but mutates
-/// nothing; the caller applies the returned ops through its store.
-pub fn generation_ops(
-    action: &str,
-    args: Option<&Value>,
-    state: &GenerationPlayState,
-    spec: &ProtocolSpec,
-) -> Option<Vec<GenerationOp>> {
-    let arg_str = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
-    match action {
-        "addGeneration" => Some(vec![GenerationOp::Add {
-            generation: FormGeneration {
-                id: next_generation_id(&state.generations),
-                name: next_generation_name(&state.generations),
-                values: initial_generation_values(spec),
-            },
-        }]),
-        "removeGeneration" => arg_str("id").map(|id| vec![GenerationOp::Remove { id }]),
-        "renameGeneration" => {
-            let id = arg_str("id")?;
-            let name = arg_str("name")?;
-            Some(vec![GenerationOp::Rename { id, name }])
-        }
-        "updateGenerationValues" => {
-            let id = arg_str("generationId").or_else(|| state.selected_generation_id.clone())?;
-            let question_id = arg_str("questionId")?;
-            let value = args.and_then(|value| value.get("value")).cloned()?;
-            Some(vec![GenerationOp::UpdateValues { id, question_id, value }])
-        }
-        _ => None,
-    }
-}
-
-/// @emoji ▶️ Applies a {@link GenerationOp} to `state` in place.
-pub fn apply_generation_op(state: &mut GenerationPlayState, op: &GenerationOp) {
-    match op {
-        GenerationOp::Add { generation } => {
-            state.generations.push(generation.clone());
-            state.selected_generation_id = Some(generation.id.clone());
-        }
-        GenerationOp::Remove { id } => remove_generation(state, id),
-        GenerationOp::Rename { id, name } => rename_generation(state, id, name),
-        GenerationOp::UpdateValues { id, question_id, value } => {
-            update_generation_values(state, id, question_id, value.clone())
-        }
-    }
-}
-
-/// @emoji ↩️ Computes the inverse of a {@link GenerationOp} from the pre-state `state`.
-pub fn invert_generation_op(state: &GenerationPlayState, op: &GenerationOp) -> Vec<GenerationOp> {
-    match op {
-        GenerationOp::Add { generation } => vec![GenerationOp::Remove { id: generation.id.clone() }],
-        GenerationOp::Remove { id } => state
-            .generations
-            .iter()
-            .find(|entry| entry.id == *id)
-            .map(|entry| vec![GenerationOp::Add { generation: entry.clone() }])
-            .unwrap_or_default(),
-        GenerationOp::Rename { id, .. } => state
-            .generations
-            .iter()
-            .find(|entry| entry.id == *id)
-            .map(|entry| vec![GenerationOp::Rename { id: id.clone(), name: entry.name.clone() }])
-            .unwrap_or_default(),
-        GenerationOp::UpdateValues { id, question_id, .. } => state
-            .generations
-            .iter()
-            .find(|entry| entry.id == *id)
-            .map(|entry| {
-                vec![GenerationOp::UpdateValues {
-                    id: id.clone(),
-                    question_id: question_id.clone(),
-                    value: entry.values.get(question_id).cloned().unwrap_or(Value::Null),
-                }]
-            })
-            .unwrap_or_default(),
-    }
-}
-//#endregion 🔖Ops
-
-//#region 🔖Render
-fn generation_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: controller_id.into(),
-        action: action.into(),
-        args,
-    }
-}
-
-pub fn render_generations_tree(
-    controller_id: &str,
-    surface_prefix: &str,
-    generations: &[FormGeneration],
-    selected_id: Option<&str>,
-) -> UiNode {
-    let items: Vec<UiTreeItemNode> = generations
-        .iter()
-        .map(|generation| {
-            let mut actions = vec![UiTreeItemAction {
-                icon_id: "trash-2".into(),
-                label: Some("Remove".into()),
-                action: generation_action(
-                    controller_id,
-                    "removeGeneration",
-                    Some(json!({ "id": generation.id })),
-                ),
-                reveal_on_hover: Some(true),
-            }];
-            actions.insert(
-                0,
-                UiTreeItemAction {
-                    icon_id: "pencil".into(),
-                    label: Some("Rename".into()),
-                    action: generation_action(
-                        controller_id,
-                        "renameGeneration",
-                        Some(json!({ "id": generation.id, "name": format!("{} copy", generation.name) })),
-                    ),
-                    reveal_on_hover: Some(true),
-                },
-            );
-            UiTreeItemNode {
-                id: format!("{surface_prefix}.generation.{}", generation.id),
-                label: generation.name.clone(),
-                description: Some(format!("{} values", generation.values.len())),
-                icon_id: Some("layers".into()),
-                selected: Some(selected_id == Some(generation.id.as_str())),
-                default_open: None,
-                action: Some(generation_action(
-                    controller_id,
-                    "selectGeneration",
-                    Some(json!({ "id": generation.id })),
-                )),
-                hover_action: None,
-                unhover_action: None,
-                actions: Some(actions),
-                draggable: None,
-                drag_data: None,
-                items: None,
-                control: None,
-                is_hidden: None,
-                loading: None,
-            }
-        })
-        .collect();
-    let mut sections = vec![UiTreeSectionNode {
-        id: format!("{surface_prefix}.generations"),
-        label: Some("Generations".into()),
-        default_open: Some(true),
-        items: if items.is_empty() {
-            vec![UiTreeItemNode {
-                id: format!("{surface_prefix}.generations.empty"),
-                label: "(no generations)".into(),
-                description: None,
-                icon_id: None,
-                selected: None,
-                default_open: None,
-                action: None,
-                hover_action: None,
-                unhover_action: None,
-                actions: None,
-                draggable: None,
-                drag_data: None,
-                items: None,
-                control: None,
-                is_hidden: None,
-                loading: None,
-            }]
-        } else {
-            items
-        },
-        loading: None,
-    }];
-    sections.push(UiTreeSectionNode {
-        id: format!("{surface_prefix}.actions"),
-        label: Some("Actions".into()),
-        default_open: Some(true),
-        items: vec![UiTreeItemNode {
-            id: format!("{surface_prefix}.add-generation"),
-            label: "Add Generation".into(),
-            description: None,
-            icon_id: Some("plus".into()),
-            selected: None,
-            default_open: None,
-            action: Some(generation_action(controller_id, "addGeneration", None)),
-            hover_action: None,
-            unhover_action: None,
-            actions: None,
-            draggable: None,
-            drag_data: None,
-            items: None,
-            control: None,
-            is_hidden: None,
-            loading: None,
-        }],
-        loading: None,
-    });
-    UiNode::Tree(UiTreeNode {
-        sections,
-        loading: None,
-        selected_ids: selected_id.map(|id| vec![format!("{surface_prefix}.generation.{id}")]),
-        highlighted_ids: None,
-        selection_change: Some(generation_action(controller_id, "selectGeneration", None)),
-        drop_action: None,
-    })
-}
-
-fn render_question_field(
-    question: &ProtocolBlock,
-    values: &Map<String, Value>,
-    controller_id: &str,
-    patch_action: &str,
-    generation_id: &str,
-) -> Option<UiNode> {
-    if !is_block_visible(question, values) {
-        return None;
-    }
-    let value = values
-        .get(&question.id)
-        .cloned()
-        .unwrap_or_else(|| default_value_for_block(question));
-    let field_id = format!("generate.form.{}", question.id);
-    let on_change = || {
-        generation_action(
-            controller_id,
-            patch_action,
-            Some(json!({
-                "generationId": generation_id,
-                "questionId": question.id,
-            })),
-        )
-    };
-    let child = match question.kind.as_str() {
-        "text" | "longText" => UiControlNode::Input(UiInputNode {
-            id: format!("{field_id}.input"),
-            input_kind: if question.kind == "longText" { "textarea".into() } else { "text".into() },
-            value: value.as_str().unwrap_or_default().to_string(),
-            placeholder: question.placeholder.clone(),
-            commit: None,
-            on_change: on_change(),
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-        }),
-        "number" => UiControlNode::Input(UiInputNode {
-            id: format!("{field_id}.input"),
-            input_kind: "number".into(),
-            value: value.as_f64().map(|number| number.to_string()).unwrap_or_default(),
-            placeholder: question.placeholder.clone(),
-            commit: None,
-            on_change: on_change(),
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-        }),
-        "slider" => UiControlNode::Slider(UiSliderNode {
-            id: format!("{field_id}.slider"),
-            value: value.as_f64().unwrap_or_else(|| question.min.unwrap_or(0.0)),
-            min: question.min.unwrap_or(0.0),
-            max: question.max.unwrap_or(100.0),
-            step: question.step.unwrap_or(1.0),
-            on_change: on_change(),
-            unit: None,
-        }),
-        "boolean" => UiControlNode::Toggle(UiToggleNode {
-            id: format!("{field_id}.toggle"),
-            icon_id: "toggle-left".into(),
-            pressed: value.as_bool().unwrap_or(false),
-            text: Some(question.label.clone()),
-            on_change: on_change(),
-        }),
-        "single" => {
-            let items = question
-                .options
-                .as_ref()
-                .map(|options| {
-                    options
-                        .iter()
-                        .map(|option| UiSelectItem {
-                            value: option.value.clone(),
-                            label: option.label.clone(),
-                        })
-                        .collect()
-                })
-                .unwrap_or_default();
-            UiControlNode::Select(UiSelectNode {
-                id: format!("{field_id}.select"),
-                value: value.as_str().unwrap_or_default().to_string(),
-                items,
-                placeholder: question.placeholder.clone(),
-                on_change: on_change(),
-            })
-        }
-        "vector" => {
-            let numbers = value
-                .as_array()
-                .cloned()
-                .unwrap_or_else(|| {
-                    question
-                        .fields
-                        .as_ref()
-                        .map(|fields| fields.iter().map(|field| json!(field.value.unwrap_or(0.0))).collect())
-                        .unwrap_or_default()
-                });
-            let labels: Vec<String> = question
-                .fields
-                .as_ref()
-                .map(|fields| {
-                    fields
-                        .iter()
-                        .map(|field| field.label.clone().unwrap_or_else(|| field.key.clone()))
-                        .collect()
-                })
-                .unwrap_or_else(|| numbers.iter().enumerate().map(|(index, _)| format!("Field {}", index + 1)).collect());
-            let children: Vec<UiNode> = numbers
-                .iter()
-                .enumerate()
-                .map(|(index, number)| {
-                    let label = labels.get(index).cloned().unwrap_or_else(|| format!("Field {}", index + 1));
-                    UiNode::Field(UiFieldNode {
-                        id: format!("{field_id}.vector.{index}"),
-                        label,
-                        child: Box::new(UiNode::Input(UiInputNode {
-                            id: format!("{field_id}.vector.{index}.input"),
-                            input_kind: "number".into(),
-                            value: number.as_f64().map(|entry| entry.to_string()).unwrap_or_default(),
-                            placeholder: None,
-                            commit: None,
-                            on_change: generation_action(
-                                controller_id,
-                                patch_action,
-                                Some(json!({
-                                    "generationId": generation_id,
-                                    "questionId": question.id,
-                                    "fieldIndex": index,
-                                })),
-                            ),
-                            min: None,
-                            max: None,
-                            step: None,
-                            accept: None,
-                        })),
-                        description: None,
-                        required: None,
-                        error: None,
-                    })
-                })
-                .collect();
-            return Some(ui_stack_vertical(children));
-        }
-        "note" => return Some(ui_text(question.text.clone().unwrap_or_default())),
-        "image" => return Some(ui_text(question.src.clone().unwrap_or_else(|| "(no image)".into()))),
-        _ => UiControlNode::Input(UiInputNode {
-            id: format!("{field_id}.input"),
-            input_kind: "text".into(),
-            value: value.to_string(),
-            placeholder: question.placeholder.clone(),
-            commit: None,
-            on_change: on_change(),
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-        }),
-    };
-    Some(UiNode::Field(UiFieldNode {
-        id: field_id,
-        label: question.label.clone(),
-        child: Box::new(ui_wgpu::ui_control_to_node(child)),
-        description: None,
-        required: None,
-        error: None,
-    }))
-}
-
-pub fn render_generation_form_body(
-    form_spec: &ProtocolSpec,
-    values: &Map<String, Value>,
-    controller_id: &str,
-    patch_action: &str,
-    generation_id: &str,
-) -> UiNode {
-    let mut children = Vec::new();
-    for step in &form_spec.steps {
-        if !step.blocks.is_empty() {
-            children.push(ui_text(step.title.clone()));
-        }
-        for question in &step.blocks {
-            if let Some(field) = render_question_field(question, values, controller_id, patch_action, generation_id) {
-                children.push(field);
-            }
-        }
-    }
-    if children.is_empty() {
-        return ui_text("No input widgets to generate from.");
-    }
-    ui_stack_vertical(children)
-}
-
-pub fn render_generation_preview_text(surface: &str, controller_id: &str, text: &str) -> UiNode {
-    build_text_editor_scene(
-        surface,
-        controller_id,
-        TextEditorScene::base(text.to_string(), Some("json".into()), None),
-    )
-}
-//#endregion 🔖Render
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use protocol::{ProtocolBlock, ProtocolStep, PROTOCOL_DOCUMENT_SCHEMA};
-
-    fn sample_spec() -> ProtocolSpec {
-        ProtocolSpec {
-            schema: PROTOCOL_DOCUMENT_SCHEMA.into(),
-            id: "sample".into(),
-            version: "1".into(),
-            title: None,
-            steps: vec![ProtocolStep {
-                id: "s".into(),
-                title: "Inputs".into(),
-                description: None,
-                blocks: vec![ProtocolBlock {
-                    id: "width".into(),
-                    label: "Width".into(),
-                    kind: "slider".into(),
-                    description: None,
-                    required: None,
-                    placeholder: None,
-                    default: Some(json!(1.0)),
-                    min: Some(0.0),
-                    max: Some(10.0),
-                    step: Some(0.5),
-                    unit: None,
-                    text: None,
-                    options: None,
-                    fields: None,
-                    schema: None,
-                    src: None,
-                    accept: None,
-                    fixture_slug: None,
-                    params: None,
-                    condition: None,
-                }],
-            }],
-        }
-    }
-
-    #[test]
-    fn generation_crud_round_trip() {
-        let spec = sample_spec();
-        let mut state = GenerationPlayState::default();
-        let id = add_generation(&mut state, &spec);
-        assert_eq!(state.generations.len(), 1);
-        rename_generation(&mut state, &id, "Variant A");
-        update_generation_values(&mut state, &id, "width", json!(4.0));
-        assert_eq!(selected_generation(&state).unwrap().name, "Variant A");
-        remove_generation(&mut state, &id);
-        assert!(state.generations.is_empty());
-    }
-
-    #[test]
-    fn render_generations_tree_contains_add_action() {
-        let json = serde_json::to_string(&render_generations_tree(
-            "flow-play",
-            "flow-generate",
-            &[],
-            None,
-        ))
-        .unwrap();
-        assert!(json.contains("addGeneration"));
-    }
-}
-// #endregion generate_mode
-}
-
-pub mod protocol_mode {
-// #region protocol_mode
-//! 🧩 Shared strict-list, Blockly-like builder engine: generic step/block CRUD op-builders and
-//! [`ProtocolListScene`] rendering, reused by `protocol-plugin` (standalone) and `forms-plugin`
-//! (embedded Blueprint mode). Block-kind-specific property editing stays with the host app.
-
-use protocol::{ProtocolBlock, ProtocolOp, ProtocolSpec, ProtocolStep};
-use ui_wgpu::{
-    ActionDescriptor, ProtocolListScene, ProtocolPaletteEntry, SurfaceKind, UiComponentSceneNode, UiNode,
-};
-use serde_json::Value;
-
-//#region 🔖Config
-#[derive(Clone, Debug)]
-pub struct ProtocolBuilderLabels {
-    pub add_step: &'static str,
-    pub remove_step: &'static str,
-    pub move_up: &'static str,
-    pub move_down: &'static str,
-    pub add_block: &'static str,
-}
-
-pub const PROTOCOL_BUILDER_LABELS_EN: ProtocolBuilderLabels = ProtocolBuilderLabels {
-    add_step: "Add Step",
-    remove_step: "Remove Step",
-    move_up: "Move Up",
-    move_down: "Move Down",
-    add_block: "Add Block",
-};
-
-/// 🧩 Configures the generic strict-list builder for a host app: an action-namespace prefix
-/// (used for element/surface ids so multiple embeddings don't collide), and its labels.
-#[derive(Clone, Debug)]
-pub struct ProtocolBuilderConfig {
-    pub action_namespace: &'static str,
-    pub controller_id: &'static str,
-    pub labels: ProtocolBuilderLabels,
-}
-//#endregion 🔖Config
-
-//#region 🔖OpBuilders
-pub fn add_step_op(spec: &ProtocolSpec, step_id: String) -> ProtocolOp {
-    ProtocolOp::AddStep {
-        step: ProtocolStep {
-            id: step_id,
-            title: format!("Step {}", spec.steps.len() + 1),
-            description: None,
-            blocks: Vec::new(),
-        },
-        index: None,
-    }
-}
-
-pub fn remove_step_op(step_id: &str) -> ProtocolOp {
-    ProtocolOp::RemoveStep { step_id: step_id.into() }
-}
-
-pub fn move_step_op(step_id: &str, index: usize) -> ProtocolOp {
-    ProtocolOp::MoveStep {
-        step_id: step_id.into(),
-        index,
-    }
-}
-
-pub fn add_block_op(step_id: &str, block: ProtocolBlock, index: Option<usize>) -> ProtocolOp {
-    ProtocolOp::AddBlock {
-        step_id: step_id.into(),
-        block,
-        index,
-    }
-}
-
-pub fn remove_block_op(step_id: &str, block_id: &str) -> ProtocolOp {
-    ProtocolOp::RemoveBlock {
-        step_id: step_id.into(),
-        block_id: block_id.into(),
-    }
-}
-
-pub fn move_block_op(block_id: &str, from_step_id: &str, to_step_id: &str, index: usize) -> ProtocolOp {
-    ProtocolOp::MoveBlock {
-        block_id: block_id.into(),
-        from_step_id: from_step_id.into(),
-        to_step_id: to_step_id.into(),
-        index,
-    }
-}
-
-pub fn update_protocol_title_op(title: Option<String>) -> ProtocolOp {
-    ProtocolOp::UpdateProtocol { title }
-}
-//#endregion 🔖OpBuilders
-
-//#region 🔖Render
-pub fn protocol_builder_action(config: &ProtocolBuilderConfig, action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: config.controller_id.into(),
-        action: action.into(),
-        args,
-    }
-}
-
-/// 🧩 Builds the palette of insertable block kinds from a host app's built-in kinds plus any
-/// `Contribution::ProtocolBlockKind` modules already resolved by the caller into label/icon pairs.
-pub fn build_palette(builtin: &[(&str, &str, &str)], extensions: &[(String, String, String)]) -> Vec<ProtocolPaletteEntry> {
-    let mut entries: Vec<ProtocolPaletteEntry> = builtin
-        .iter()
-        .map(|(kind, label, icon_id)| ProtocolPaletteEntry {
-            block_kind: (*kind).into(),
-            label: (*label).into(),
-            icon_id: (*icon_id).into(),
-        })
-        .collect();
-    entries.extend(extensions.iter().map(|(kind, label, icon_id)| ProtocolPaletteEntry {
-        block_kind: kind.clone(),
-        label: label.clone(),
-        icon_id: icon_id.clone(),
-    }));
-    entries
-}
-
-pub fn build_protocol_list_scene(spec: &ProtocolSpec, palette: &[ProtocolPaletteEntry], selected_id: Option<&str>) -> ProtocolListScene {
-    ProtocolListScene {
-        steps_json: serde_json::to_string(&spec.steps).unwrap_or_else(|_| "[]".into()),
-        palette_json: serde_json::to_string(palette).unwrap_or_else(|_| "[]".into()),
-        selected_id: selected_id.map(String::from),
-        dragging_id: None,
-    }
-}
-
-/// 🧩 Renders the strict-list Blockly-like builder as a [`SurfaceKind::ProtocolList`] component
-/// scene, handed off to the dedicated `protocol-list-host.tsx` React host for drag-and-drop.
-pub fn render_protocol_builder(
-    surface_id: &str,
-    spec: &ProtocolSpec,
-    palette: &[ProtocolPaletteEntry],
-    selected_id: Option<&str>,
-    config: &ProtocolBuilderConfig,
-) -> UiNode {
-    UiNode::ComponentScene(UiComponentSceneNode {
-        surface_id: surface_id.into(),
-        controller_id: config.controller_id.into(),
-        component_kind: SurfaceKind::ProtocolList,
-        pane_id: None,
-        binding_id: None,
-        canvas_2d: None,
-        world_3d: None,
-        node_graph: None,
-        text_editor: None,
-        table: None,
-        raster: None,
-        virtual_file_system: None,
-        gis_map: None,
-        puzzle2d_board: None,
-        icon_render: None,
-        note_canvas: None,
-        vcs_history: None,
-        protocol_list: Some(build_protocol_list_scene(spec, palette, selected_id)),
-    })
-}
-//#endregion 🔖Render
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use protocol::empty_protocol_projection;
-
-    fn sample_config() -> ProtocolBuilderConfig {
-        ProtocolBuilderConfig {
-            action_namespace: "protocol-play",
-            controller_id: "protocol-play",
-            labels: PROTOCOL_BUILDER_LABELS_EN,
-        }
-    }
-
-    #[test]
-    fn add_step_op_names_step_by_position() {
-        let spec = empty_protocol_projection();
-        let op = add_step_op(&spec, "step-2".into());
-        assert_eq!(
-            op,
-            ProtocolOp::AddStep {
-                step: ProtocolStep {
-                    id: "step-2".into(),
-                    title: "Step 2".into(),
-                    description: None,
-                    blocks: Vec::new(),
-                },
-                index: None,
-            }
-        );
-    }
-
-    #[test]
-    fn render_protocol_builder_emits_protocol_list_component_scene() {
-        let spec = empty_protocol_projection();
-        let config = sample_config();
-        let node = render_protocol_builder("surface", &spec, &[], None, &config);
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("\"componentKind\":\"protocol-list\""));
-        assert!(json.contains("\"protocolList\""));
-    }
-}
-// #endregion protocol_mode
 }
 
 pub mod plugin_runtime {
@@ -4582,22 +4447,15 @@ mod tests {
 
 pub use app::{
     ActionEmit, ActionMeta, App, AppBuilder, AppInstance, DocumentApp, DocumentView, HistoryView,
-    KeybindingSpec, ModeSpec, PanelTabSpec, Plugin, PluginApp, PluginBundle, VcsDocumentApp,
-    WindowKindSpec,
+    KeybindingSpec, ModeSpec, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBundle,
+    ResourceKindSpec, VcsDocumentApp, WindowKindSpec,
 };
+pub use app::{
+    is_de_locale, localized_label_map, resolve_labels, selection_ids, tree_item, tree_item_desc,
+    tree_item_with_action, tree_item_with_action_draggable, AppLabelsOverlayExt, LocaleLabels,
+};
+pub use app::testkit;
 pub use semio_framework_core::AppLabelsOverlay;
-pub use generate_mode::{
-    add_generation, apply_generation_op, generation_ops, handle_generation_action,
-    initial_generation_values, invert_generation_op, remove_generation, rename_generation,
-    render_generation_form_body, render_generation_preview_text, render_generations_tree,
-    select_generation, selected_generation, selected_generation_mut, update_generation_values,
-    FormGeneration, GenerationOp, GenerationPlayState,
-};
-pub use protocol_mode::{
-    add_block_op, add_step_op, build_palette, build_protocol_list_scene, move_block_op, move_step_op,
-    protocol_builder_action, remove_block_op, remove_step_op, render_protocol_builder, update_protocol_title_op,
-    ProtocolBuilderConfig, ProtocolBuilderLabels, PROTOCOL_BUILDER_LABELS_EN,
-};
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 pub use host_port::{
     host_backbone_poll, host_backbone_send, host_backbone_status, host_now_ms,

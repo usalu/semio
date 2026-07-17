@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Canvas, Panel, Footer, HorizontalWindows, Layout, Navbar, Page, PanelToggleGroup, singleTreeLeaf, Window, fundedByZukunftBauFooterItem, navbarFillItem } from "@semio-tech/ui-react";
+import { Canvas, Panel, PanelChromeTabBar, Footer, HorizontalWindows, Layout, Navbar, Page, singleTreeLeaf, Window, fundedByZukunftBauFooterItem, navbarFillItem } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ComponentType } from "react";
@@ -39,12 +39,43 @@ const ExampleContent = ({ title }: { title: string }) => (
   </div>
 );
 
+const layoutPanelLeafTab = (id: string, icon: ComponentType<{ size?: number }>, name: string, order: number, content: string) =>
+  singleTreeLeaf({ id, icon, name, order, tree: { sections: [{ id: `${id}.section`, label: "", items: [{ id: `${id}.item`, label: "", control: <div className="p-2">{content}</div> }] }] } });
+
+// Root-level "Workbench" branch with two leaf children — exercises the depth split between a chrome-hosted
+// bar (root row only) and the floating panel it opens (depth ≥ 1 rows), the same shape os-shell's own
+// Document/Catalogue tabs use.
+const topLeftTabs = [
+  {
+    kind: "branch" as const,
+    id: "workbench",
+    icon: Layers,
+    name: "Workbench",
+    children: [
+      singleTreeLeaf({
+        id: "explorer",
+        icon: Layers,
+        name: "Explorer",
+        order: 0,
+        tree: { sections: [{ id: "explorer.section", label: "", items: [{ id: "explorer.item", label: "", control: <div className="p-double">Explorer content</div> }] }] },
+      }),
+      singleTreeLeaf({ id: "search", icon: Info, name: "Search", order: 1, tree: { sections: [{ id: "search.section", label: "", items: [{ id: "search.item", label: "", control: <div className="p-double">Search content</div> }] }] } }),
+    ],
+  },
+];
+
+const bottomRightTabs = [layoutPanelLeafTab("settings", Settings, "Settings", 0, "Settings panel content")];
+
 export const Default: Story = {
   args: { canvas: null },
   render: () => {
     const [topLeftSize, setTopLeftSize] = useState(250);
     const [topMiddleSize, setTopMiddleSize] = useState(360);
     const [topRightSize, setTopRightSize] = useState(300);
+    const [topLeftVisible, setTopLeftVisible] = useState(true);
+    const [topLeftPath, setTopLeftPath] = useState<readonly string[]>(["workbench", "explorer"]);
+    const [bottomRightVisible, setBottomRightVisible] = useState(false);
+    const [bottomRightPath, setBottomRightPath] = useState<readonly string[]>(["settings"]);
 
     return (
       <Layout
@@ -54,7 +85,12 @@ export const Default: Story = {
               { content: <Home size={20} />, key: "home" },
               { content: <span className="font-bold">Application</span>, key: "title" },
               { content: <input type="text" placeholder="Search..." className="px-2 py-1 bg-panel border rounded w-full" />, key: "search", className: "flex-1" },
-              { content: <Settings size={20} />, key: "settings" },
+              {
+                key: "topLeftPanelTabs",
+                content: (
+                  <PanelChromeTabBar anchor="top-left" tabs={topLeftTabs} visible={topLeftVisible} onVisibleChange={setTopLeftVisible} activeTabPath={topLeftPath} onActiveTabPathChange={setTopLeftPath} />
+                ),
+              },
               { content: <User size={20} />, key: "user" },
             ]}
           />
@@ -68,10 +104,15 @@ export const Default: Story = {
               navbarFillItem("footerTrailingFill"),
               fundedByZukunftBauFooterItem(),
               {
-                key: "settingsToggle",
+                key: "bottomRightPanelTabs",
                 content: (
-                  <PanelToggleGroup
-                    items={[{ id: "settings", icon: <Settings size={16} />, text: "Settings", pressed: false, onPressedChange: () => {} }]}
+                  <PanelChromeTabBar
+                    anchor="bottom-right"
+                    tabs={bottomRightTabs}
+                    visible={bottomRightVisible}
+                    onVisibleChange={setBottomRightVisible}
+                    activeTabPath={bottomRightPath}
+                    onActiveTabPathChange={setBottomRightPath}
                   />
                 ),
               },
@@ -80,26 +121,24 @@ export const Default: Story = {
         }
         panels={{
           "bottom-right": {
-            visible: false,
-            hideTabBar: true,
+            visible: bottomRightVisible,
+            onVisibleChange: setBottomRightVisible,
+            activeTabPath: bottomRightPath,
+            onActiveTabPathChange: setBottomRightPath,
+            tabBarHost: "chrome",
             size: 300,
             onSizeChange: () => {},
-            tabs: [layoutPanelLeafTab("settings", Settings, "Settings", 0, "Settings panel content")],
+            tabs: bottomRightTabs,
           },
           "top-left": {
-            visible: true,
+            visible: topLeftVisible,
+            onVisibleChange: setTopLeftVisible,
+            activeTabPath: topLeftPath,
+            onActiveTabPathChange: setTopLeftPath,
+            tabBarHost: "chrome",
             size: topLeftSize,
             onSizeChange: setTopLeftSize,
-            tabs: [
-              singleTreeLeaf({
-                id: "explorer",
-                icon: Layers,
-                name: "Explorer",
-                order: 0,
-                tree: { sections: [{ id: "explorer.section", label: "", items: [{ id: "explorer.item", label: "", control: <div className="p-double">Explorer content</div> }] }] },
-              }),
-              singleTreeLeaf({ id: "search", icon: Info, name: "Search", order: 1, tree: { sections: [{ id: "search.section", label: "", items: [{ id: "search.item", label: "", control: <div className="p-double">Search content</div> }] }] } }),
-            ],
+            tabs: topLeftTabs,
           },
           "top-middle": {
             visible: true,
@@ -166,9 +205,6 @@ export const PageDefault: Story = {
 // #endregion 🌈Page
 
 // 💻#region 🧭Panel
-const layoutPanelLeafTab = (id: string, icon: ComponentType<{ size?: number }>, name: string, order: number, content: string) =>
-  singleTreeLeaf({ id, icon, name, order, tree: { sections: [{ id: `${id}.section`, label: "", items: [{ id: `${id}.item`, label: "", control: <div className="p-2">{content}</div> }] }] } });
-
 export const PanelDefault: Story = {
   args: { canvas: null },
   render: () => {

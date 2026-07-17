@@ -38,9 +38,48 @@ Run \texttt{bun ./script.ts generate} to refresh \texttt{semio-tokens.sty}
 \begin{Photo}[title=Logo Cover Demo, height=4cm, image-fit=cover, anchor=center]
   \SemioImage{../../asset/demo-strip.png}
 \end{Photo}
+\begin{Photo}[title=Cover Anchor NW, height=4cm, image-fit=cover, anchor=nw]
+  \SemioImage{../../asset/demo-strip.png}
+\end{Photo}
+\begin{Photo}[title=Cover Anchor SE, height=4cm, image-fit=cover, anchor=se]
+  \SemioImage{../../asset/demo-strip.png}
+\end{Photo}
+\begin{Photo}[title=Cover Anchor W (narrow), height=4cm, image-fit=cover, anchor=w]
+  \SemioImage[width=4cm]{../../asset/demo-strip.png}
+\end{Photo}
+\begin{Photo}[title=Cover Anchor E (narrow), height=4cm, image-fit=cover, anchor=e]
+  \SemioImage[width=4cm]{../../asset/demo-strip.png}
+\end{Photo}
+\begin{Photo}[title=DEBUG Cover Center Narrow, height=4cm, image-fit=cover, anchor=center]
+  \SemioImage[width=4cm]{../../asset/demo-strip.png}
+\end{Photo}
+\begin{Photo}[title=DEBUG Cover No-Anchor Narrow, height=4cm, image-fit=cover]
+  \SemioImage[width=4cm]{../../asset/demo-strip.png}
+\end{Photo}
+\begin{Photo}[title=DEBUG Cover Narrow Tall (vcrop), height=6cm, image-fit=cover]
+  \SemioImage[width=2cm]{../../asset/demo-strip.png}
+\end{Photo}
+\begin{Photo}[title=DEBUG Contain Narrow (control), height=4cm, image-fit=contain]
+  \SemioImage[width=4cm]{../../asset/demo-strip.png}
+\end{Photo}
 \begin{Image}[title=Logo Contain Demo, height=4cm, anchor=sw]
   \SemioImage[fit=contain]{../../asset/demo-strip.png}
 \end{Image}
+
+\begin{WindowArrangement}[height=30mm]
+  \begin{WindowRow}
+    \WindowItem[0.3]{
+      \begin{Photo}[title=Cover In Item, image-fit=cover, anchor=center]
+        \SemioImage{../../asset/demo-strip.png}
+      \end{Photo}
+    }
+    \WindowItem[0.7]{
+      \begin{Blockquote}
+        In-item cover checkpoint: this image must render exactly once, filling its 0.3-width slot without spilling below the 30mm row
+      \end{Blockquote}
+    }
+  \end{WindowRow}
+\end{WindowArrangement}
 
 \chapter{Conclusion}
 The print technology keeps reports consistent with the semio design language

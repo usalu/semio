@@ -3,20 +3,20 @@ import { Button, Icon, closestCenter, DndContext, DndCSS, SortableContext, useLa
 import { ICONS, type IconName } from "@semio-tech/ui-asset";
 import type { ActionDescriptor, ComponentSceneHostProps } from "@semio-tech/framework-core";
 
-//#region ProtocolListHost
+//#region BlockListHost
 //#region Types
-type ProtocolBlockRecord = { readonly id: string; readonly label: string; readonly kind: string; readonly description?: string };
-type ProtocolStepRecord = { readonly id: string; readonly title: string; readonly description?: string; readonly blocks: readonly ProtocolBlockRecord[] };
-type ProtocolPaletteEntryRecord = { readonly blockKind: string; readonly label: string; readonly iconId: string };
-const PALETTE_DRAG_MIME = "application/x-semio-protocol-block-kind";
+type BlockRecord = { readonly id: string; readonly label: string; readonly kind: string; readonly description?: string };
+type StepRecord = { readonly id: string; readonly title: string; readonly description?: string; readonly blocks: readonly BlockRecord[] };
+type PaletteEntryRecord = { readonly blockKind: string; readonly label: string; readonly iconId: string };
+const PALETTE_DRAG_MIME = "application/x-semio-block-list-block-kind";
 //#endregion Types
 
 //#region Helpers
-function resolveProtocolIcon(iconId: string): IconName {
+function resolveBlockIcon(iconId: string): IconName {
   return iconId in ICONS ? (iconId as IconName) : "circle-dot";
 }
 
-function dispatchProtocolAction(onAction: (action: ActionDescriptor) => void, controllerId: string, action: string, args: Record<string, unknown>): void {
+function dispatchBlockListAction(onAction: (action: ActionDescriptor) => void, controllerId: string, action: string, args: Record<string, unknown>): void {
   onAction({ controllerId, action, args });
 }
 //#endregion Helpers
@@ -35,17 +35,17 @@ function SortableRow({ id, children }: { readonly id: string; readonly children:
 //#endregion SortableRow
 
 //#region Block
-function ProtocolBlockCard({ block, stepId, controllerId, onAction }: { readonly block: ProtocolBlockRecord; readonly stepId: string; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
+function BlockCard({ block, stepId, controllerId, onAction }: { readonly block: BlockRecord; readonly stepId: string; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
   return (
     <SortableRow id={block.id}>
       {() => (
-        <div className="semio-protocol-block-card flex items-center gap-2 rounded border border-border bg-panel p-single" data-block-id={block.id}>
+        <div className="semio-block-card flex items-center gap-2 rounded border border-border bg-panel p-single" data-block-id={block.id}>
           <Icon icon="grip-vertical" size="small" />
           <div className="min-w-0 flex-1">
             <div className="truncate text-xs font-medium">{block.label}</div>
             <div className="truncate text-xs text-muted-foreground">{block.kind}</div>
           </div>
-          <Button className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchProtocolAction(onAction, controllerId, "removeBlock", { stepId, blockId: block.id })} />
+          <Button className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, controllerId, "removeBlock", { stepId, blockId: block.id })} />
         </div>
       )}
     </SortableRow>
@@ -54,14 +54,14 @@ function ProtocolBlockCard({ block, stepId, controllerId, onAction }: { readonly
 //#endregion Block
 
 //#region Step
-function ProtocolStepCard({
+function StepCard({
   step,
   palette,
   controllerId,
   onAction,
 }: {
-  readonly step: ProtocolStepRecord;
-  readonly palette: readonly ProtocolPaletteEntryRecord[];
+  readonly step: StepRecord;
+  readonly palette: readonly PaletteEntryRecord[];
   readonly controllerId: string;
   readonly onAction: (action: ActionDescriptor) => void;
 }) {
@@ -72,14 +72,14 @@ function ProtocolStepCard({
     if (!over || active.id === over.id) return;
     const index = step.blocks.findIndex((block) => block.id === over.id);
     if (index === -1) return;
-    dispatchProtocolAction(onAction, controllerId, "moveBlock", { blockId: active.id, fromStepId: step.id, toStepId: step.id, index });
+    dispatchBlockListAction(onAction, controllerId, "moveBlock", { blockId: active.id, fromStepId: step.id, toStepId: step.id, index });
   }
 
   return (
     <SortableRow id={step.id}>
       {() => (
         <div
-          className="semio-protocol-step-card flex flex-col gap-2 rounded border border-border bg-panel p-single"
+          className="semio-step-card flex flex-col gap-2 rounded border border-border bg-panel p-single"
           data-step-id={step.id}
           onDragOver={(event) => {
             event.preventDefault();
@@ -89,20 +89,20 @@ function ProtocolStepCard({
             event.preventDefault();
             const kind = event.dataTransfer.getData(PALETTE_DRAG_MIME);
             if (!kind) return;
-            dispatchProtocolAction(onAction, controllerId, "addBlock", { stepId: step.id, kind });
+            dispatchBlockListAction(onAction, controllerId, "addBlock", { stepId: step.id, kind });
           }}
         >
           <div className="flex items-center gap-2">
             <Icon icon="grip-vertical" size="small" />
             <div className="min-w-0 flex-1 truncate text-sm font-medium">{step.title}</div>
-            <Button className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchProtocolAction(onAction, controllerId, "removeStep", { stepId: step.id })} />
+            <Button className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, controllerId, "removeStep", { stepId: step.id })} />
           </div>
           {step.description && <div className="text-xs text-muted-foreground">{step.description}</div>}
           <DndContext collisionDetection={closestCenter} onDragEnd={handleBlockDragEnd}>
             <SortableContext items={blockIds} strategy={verticalListSortingStrategy}>
               <div className="flex flex-col gap-1">
                 {step.blocks.map((block) => (
-                  <ProtocolBlockCard key={block.id} block={block} stepId={step.id} controllerId={controllerId} onAction={onAction} />
+                  <BlockCard key={block.id} block={block} stepId={step.id} controllerId={controllerId} onAction={onAction} />
                 ))}
               </div>
             </SortableContext>
@@ -115,9 +115,9 @@ function ProtocolStepCard({
 //#endregion Step
 
 //#region Palette
-function ProtocolPalettePanel({ palette, controllerId, onAction }: { readonly palette: readonly ProtocolPaletteEntryRecord[]; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
+function PalettePanel({ palette, controllerId, onAction }: { readonly palette: readonly PaletteEntryRecord[]; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
   return (
-    <div className="semio-protocol-palette flex shrink-0 flex-col gap-1 border-l border-border p-single">
+    <div className="semio-palette flex shrink-0 flex-col gap-1 border-l border-border p-single">
       {palette.map((entry) => (
         <div
           key={entry.blockKind}
@@ -127,9 +127,9 @@ function ProtocolPalettePanel({ palette, controllerId, onAction }: { readonly pa
             event.dataTransfer.effectAllowed = "copy";
           }}
           className="flex cursor-grab items-center gap-1 rounded border border-border p-single text-xs"
-          onClick={() => dispatchProtocolAction(onAction, controllerId, "addBlock", { kind: entry.blockKind })}
+          onClick={() => dispatchBlockListAction(onAction, controllerId, "addBlock", { kind: entry.blockKind })}
         >
-          <Icon icon={resolveProtocolIcon(entry.iconId)} size="small" />
+          <Icon icon={resolveBlockIcon(entry.iconId)} size="small" />
           {entry.label}
         </div>
       ))}
@@ -139,59 +139,59 @@ function ProtocolPalettePanel({ palette, controllerId, onAction }: { readonly pa
 //#endregion Palette
 
 //#region Component
-export function ProtocolListHost({ node, onAction }: ComponentSceneHostProps) {
-  const scene = node.protocolList;
+export function BlockListHost({ node, onAction }: ComponentSceneHostProps) {
+  const scene = node.blockList;
   const steps = useMemo(() => {
-    if (!scene) return [] as ProtocolStepRecord[];
+    if (!scene) return [] as StepRecord[];
     try {
-      return JSON.parse(scene.stepsJson) as ProtocolStepRecord[];
+      return JSON.parse(scene.stepsJson) as StepRecord[];
     } catch {
       return [];
     }
   }, [scene]);
   const palette = useMemo(() => {
-    if (!scene) return [] as ProtocolPaletteEntryRecord[];
+    if (!scene) return [] as PaletteEntryRecord[];
     try {
-      return JSON.parse(scene.paletteJson) as ProtocolPaletteEntryRecord[];
+      return JSON.parse(scene.paletteJson) as PaletteEntryRecord[];
     } catch {
       return [];
     }
   }, [scene]);
   const stepIds = useMemo(() => steps.map((step) => step.id), [steps]);
-  const stepsLabel = useLabel("ui.protocolList.steps");
-  const addStepLabel = useLabel("ui.protocolList.addStep");
-  const emptyLabel = useLabel("ui.protocolList.empty");
+  const stepsLabel = useLabel("ui.blockList.steps");
+  const addStepLabel = useLabel("ui.blockList.addStep");
+  const emptyLabel = useLabel("ui.host.emptyScene");
 
-  if (!scene) return <div className="semio-protocol-list-empty">{emptyLabel}</div>;
+  if (!scene) return <div className="semio-block-list-empty">{emptyLabel}</div>;
 
   function handleStepDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const index = steps.findIndex((step) => step.id === over.id);
     if (index === -1) return;
-    dispatchProtocolAction(onAction, node.controllerId, "moveStep", { stepId: active.id, index });
+    dispatchBlockListAction(onAction, node.controllerId, "moveStep", { stepId: active.id, index });
   }
 
   return (
-    <div className="semio-protocol-list-host flex h-full min-h-0 w-full" data-surface-id={node.surfaceId}>
+    <div className="semio-block-list-host flex h-full min-h-0 w-full" data-surface-id={node.surfaceId}>
       <div className="flex min-w-0 flex-1 flex-col gap-2 overflow-auto p-single">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">{stepsLabel}</span>
-          <Button className="h-medium shrink-0 px-2" icon="plus" text={addStepLabel} type="button" variant="outline" onClick={() => dispatchProtocolAction(onAction, node.controllerId, "addStep", {})} />
+          <Button className="h-medium shrink-0 px-2" icon="plus" text={addStepLabel} type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, node.controllerId, "addStep", {})} />
         </div>
         <DndContext collisionDetection={closestCenter} onDragEnd={handleStepDragEnd}>
           <SortableContext items={stepIds} strategy={verticalListSortingStrategy}>
             <div className="flex flex-col gap-2">
               {steps.map((step) => (
-                <ProtocolStepCard key={step.id} step={step} palette={palette} controllerId={node.controllerId} onAction={onAction} />
+                <StepCard key={step.id} step={step} palette={palette} controllerId={node.controllerId} onAction={onAction} />
               ))}
             </div>
           </SortableContext>
         </DndContext>
       </div>
-      <ProtocolPalettePanel palette={palette} controllerId={node.controllerId} onAction={onAction} />
+      <PalettePanel palette={palette} controllerId={node.controllerId} onAction={onAction} />
     </div>
   );
 }
 //#endregion Component
-//#endregion ProtocolListHost
+//#endregion BlockListHost

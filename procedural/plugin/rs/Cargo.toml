@@ -29,6 +29,7 @@ path = "lib.rs"
 [dependencies]
 procedural_2d = { path = "../../2d/rs" }
 procedural_3d = { path = "../../3d/rs" }
+protocol = { path = "../../../protocol/rs" }
 flow_core = { path = "../../../flow/core/rs" }
 flow_module_draw = { path = "../../../flow/module/draw/rs", default-features = false }
 flow_module_brep = { path = "../../../flow/module/brep/rs", default-features = false }

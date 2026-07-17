@@ -1848,7 +1848,6 @@ impl DocumentApp for LayoutPlayApp {
         let labels = layout_labels(view_state);
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         semio_framework_plugin::AppLabelsOverlay {
-            app_label: None,
             window_kind_labels: std::collections::HashMap::from([
                 (LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), labels.window_blueprint.to_string()),
                 (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), labels.window_preview.to_string()),

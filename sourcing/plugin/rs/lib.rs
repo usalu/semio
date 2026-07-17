@@ -669,7 +669,6 @@ impl DocumentApp for SourcingCurateApp {
         let labels = sourcing_labels(view_state);
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         semio_framework_plugin::AppLabelsOverlay {
-            app_label: None,
             window_kind_labels: std::collections::HashMap::from([
                 (WINDOW_POOL.to_string(), labels.window_pool.to_string()),
                 (WINDOW_CURATED.to_string(), labels.window_curated.to_string()),

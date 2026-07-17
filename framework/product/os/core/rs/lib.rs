@@ -1672,6 +1672,7 @@ mod tests {
                 named_layouts: Vec::new(),
                 default_layout: None,
                 terminologies: Vec::new(),
+                terminology_documents: std::collections::HashMap::new(),
                 introduction: None,
                 dialogs: Vec::new(),
             }],
@@ -1729,6 +1730,7 @@ mod tests {
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
+            terminology_documents: std::collections::HashMap::new(),
             introduction: None,
             dialogs: Vec::new(),
         };
@@ -1769,6 +1771,7 @@ mod tests {
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
+            terminology_documents: std::collections::HashMap::new(),
             introduction: None,
             dialogs: Vec::new(),
         };
@@ -1855,6 +1858,7 @@ mod tests {
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
+            terminology_documents: std::collections::HashMap::new(),
             introduction: None,
             dialogs: Vec::new(),
         };
@@ -1995,6 +1999,7 @@ mod tests {
                 named_layouts: Vec::new(),
                 default_layout: None,
                 terminologies: Vec::new(),
+                terminology_documents: std::collections::HashMap::new(),
                 introduction: None,
                 dialogs: Vec::new(),
             }],
@@ -5292,6 +5297,7 @@ pub fn resolve_os_app_definition(
         named_layouts: Vec::new(),
         default_layout: None,
         terminologies: Vec::new(),
+        terminology_documents: std::collections::HashMap::new(),
         introduction: None,
         dialogs: Vec::new(),
     })

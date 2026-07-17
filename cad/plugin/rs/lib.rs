@@ -5105,7 +5105,6 @@ impl DocumentApp for CadApp {
         let labels = cad_labels(view_state);
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         AppLabelsOverlay {
-            app_label: None,
             window_kind_labels: std::collections::HashMap::from([
                 (CAD_PLAY_WINDOW_SHAPE.to_string(), labels.pane_shape.to_string()),
                 (CAD_PLAY_WINDOW_BUILDING.to_string(), labels.pane_building.to_string()),
@@ -5257,6 +5256,7 @@ fn create_cad_app() -> App {
         App::builder(CAD_PLAY_APP_ID, "CAD").document(["semio", "cad"])
             .icon_id("box")
             .terminology("reuse")
+            .terminology_document("reuse", ["Entwerfen mit Bestand", "cad"])
             .mode("edit", "Edit")
             .default_mode_id("edit")
             .window_kind(CAD_PLAY_WINDOW_SHAPE, "Shape", CAD_PLAY_BODY_SHAPE, SurfaceKind::World3d)

@@ -2181,7 +2181,6 @@ impl DocumentApp for LowpolyPlayApp {
         let labels = lowpoly_labels(view_state);
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         AppLabelsOverlay {
-            app_label: None,
             window_kind_labels: HashMap::from([
                 (LOWPOLY_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()),
                 (LOWPOLY_PLAY_WINDOW_UV.to_string(), labels.window_uv.to_string()),

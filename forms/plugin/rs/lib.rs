@@ -888,9 +888,9 @@ fn forms_protocol_builder_config() -> semio_framework_plugin::ProtocolBuilderCon
 }
 
 fn render_blueprint_builder(spec: &FormSpec, runtime: &FormsPlayRuntime, contributions: &[PluginContributionEntry], labels: &FormsLabels) -> UiNode {
-    let palette: Vec<semio_framework_plugin::ProtocolPaletteEntry> = catalogue_kinds(contributions, labels)
+    let palette: Vec<semio_framework_plugin::BlockPaletteEntry> = catalogue_kinds(contributions, labels)
         .into_iter()
-        .map(|(kind, label, icon_id)| semio_framework_plugin::ProtocolPaletteEntry {
+        .map(|(kind, label, icon_id)| semio_framework_plugin::BlockPaletteEntry {
             block_kind: kind,
             label,
             icon_id,
@@ -2207,7 +2207,7 @@ fn create_forms_app() -> App {
             .icon_id("forms")
             .mode("blueprint", "Blueprint")
             .default_mode_id("blueprint")
-            .window_kind(FORMS_PLAY_WINDOW_BLUEPRINT, "Blueprint", FORMS_PLAY_BODY_BLUEPRINT, SurfaceKind::ProtocolList)
+            .window_kind(FORMS_PLAY_WINDOW_BLUEPRINT, "Blueprint", FORMS_PLAY_BODY_BLUEPRINT, SurfaceKind::BlockList)
             .window_kind(FORMS_PLAY_WINDOW_TRY, "Try", FORMS_PLAY_BODY_TRY, SurfaceKind::Canvas2d)
             .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, FORMS_PLAY_BODY_DOCUMENT)
             .panel_tab("framework.panel.catalogue", "Catalogue", PanelGroup::Workbench, FORMS_PLAY_BODY_CATALOGUE)
@@ -2349,9 +2349,9 @@ mod tests {
         let mut app = new_app();
         let first_question_id = app.projection().expect("projection").steps[0].blocks[0].id.clone();
         let json = render(&mut app, FORMS_PLAY_BODY_BLUEPRINT, &ViewState::default());
-        assert!(json.contains(r#""componentKind":"protocol-list""#));
+        assert!(json.contains(r#""componentKind":"block-list""#));
         assert!(json.contains(r#""surfaceId":"forms.play.blueprint""#));
-        assert!(json.contains("\"protocolList\""));
+        assert!(json.contains("\"blockList\""));
         assert!(json.contains(&first_question_id));
     }
 

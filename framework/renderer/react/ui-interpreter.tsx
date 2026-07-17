@@ -58,8 +58,8 @@ const COMPONENT_SCENE_HOSTS: Record<ComponentKind, LazyExoticComponent<Component
   "puzzle2d-board": lazyHost(() => import("./components/puzzle-2d-board-host.tsx"), "Puzzle2dBoardHost"),
   "icon-render": lazyHost(() => import("./components/icon-render-host.tsx"), "IconRenderHost"),
   "note-canvas": lazyHost(() => import("./components/note-canvas-host.tsx"), "NoteCanvasHost"),
-  "vcs-history": lazyHost(() => import("./components/vcs-history-host.tsx"), "VcsHistoryHost"),
-  "protocol-list": lazyHost(() => import("./components/protocol-list-host.tsx"), "ProtocolListHost"),
+  "graph-timeline": lazyHost(() => import("./components/graph-timeline-host.tsx"), "GraphTimelineHost"),
+  "block-list": lazyHost(() => import("./components/block-list-host.tsx"), "BlockListHost"),
 };
 //#endregion ComponentSceneHostRegistry
 

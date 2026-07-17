@@ -1,27 +1,73 @@
-# Print Uniform Block Spacing Verify
+# Print Uniform Block Spacing — Reopen Verify
 
-## Fix summary
+## Reopen scope
 
-Root cause: pre-chip `\vspace` inside `\titleformat` `[block]` never reached the vertical list between body text and the chip. The gap was trapped inside the title box.
+Superseded the original fix's deliberate 2×/1× before/after asymmetry
+(`semio@block@sep@before@skip = 2 × semio@spacing@single`). Dev now wants
+exactly one unit between every adjacent body element — paragraph<->paragraph,
+paragraph<->window, window<->window, heading<->anything, nested blocks —
+keyed to the paragraph-to-paragraph gap (`\parskip`).
 
-Solution:
+## Mechanism
 
-- **Before chip (2× single unit):** `\titlespacing*{#1}{0pt}{\semio@block@sep@before@skip}{...}` for all titlesec headings; `\semio@heading@block@before` uses the same skip for `SemioNest` and window blocks.
-- **After chip (1× single unit):** `\titlespacing` after-sep and `\semio@heading@block@after` for nested paragraphs.
-- Removed `block@sep@done` flag and internal `row@wrap` trailing vskip (single source of truth per edge).
+`\parskip` is set to `\semio@block@sep@skip` (the single unit, 0.2em).
+Every block emits one `\addvspace`-based before-space via `\semio@block@before`
+(max-merging, vanishes on an empty vlist so page tops stay flush); nothing
+emits an explicit after-space — the tcolorbox `after skip` and the next
+paragraph's `\parskip` deliver the gap instead. KOMA's own before/after skip
+is neutralized to `1sp` (must stay >0pt to avoid run-in heading style) since
+KOMA suppresses `beforeskip` under `@nobreak` (heading directly following
+another heading); the real before-space for headings is emitted
+unconditionally by `\semio@block@before` inside `\semio@koma@heading@lines`.
 
-Token: `semio@block@sep@before@skip = 2 × semio@spacing@single` (0.4em), `semio@block@sep@skip = semio@spacing@single` (0.2em).
+Two additional unshielded `\noindent`s were found and fixed during
+implementation (both were harmless while `\parskip=0pt`, but became a second,
+stacked unit once `\parskip` became the unit):
+- `\semio_window_header_muted_use:` (window header row invoke)
+- (chip row wraps `\semio@heading@row@wrap` / `\semio@window@header@row@wrap`
+  were already the primary shield targets per plan)
 
-## Raster checks
+A stray `\noindent` in the kind-window begin path (between the header row and
+`\tcolorbox` open) was removed as dead weight.
 
-Page 6 raster: `report-p6-spacing.png` (Arbeitspakete / AP-Erfahrung / nested paragraphs)
+## Files changed
 
-Notable ink-band gaps on page 6 (scale 3, expected single unit ≈ 9.6px):
-| Gap | px | em | note |
-| --- | --- | --- | --- |
-| 22 | 22 | 0.458 | ~2× single — body→chip block gap |
-| 14 | 17 | 0.354 | block gap |
-| 7 | 16 | 0.333 | block gap |
-| 5–6 | 10 | 0.208 | ~1× single — chip→body |
+- `print/tex/semio-core.sty` — replaced `\semio@block@sep@before@skip` /
+  `@before@set` / `\semio@block@sep` / `\semio@heading@block@before` with
+  `\semio@block@before`, `\semio@block@after`, `\semio@noindent@noparskip`.
+- `print/tex/semio-window.sty` — `\AfterEndPreamble` sets `\parskip` to the
+  unit and resets `\chapterheadstartvskip`; `\semio_block_sep_before:` now
+  calls `\semio@block@before`; `\semio_block_sep_after:` and its 3 call
+  sites deleted; tcbset `after skip` changed from `0pt` to the unit;
+  `\semio@heading@block@after` deleted; `\semio@koma@heading@lines` now
+  calls `\semio@block@before` unconditionally; `\semio@heading@install@spacing`
+  uses `1sp`/`1sp`; `\semio@heading@row@wrap` / `\semio@window@header@row@wrap`
+  / `\semio_window_header_muted_use:` shielded with `\semio@noindent@noparskip`;
+  `SemioNest`'s `\semio@nest@paragraph` uses `\semio@block@before`/`@after`;
+  stray `\noindent` removed from kind-window begin.
 
-Build: `bun ./script.ts build` in `mit-bestand/bericht` — zwischenbericht PDF OK.
+## Verification
+
+1. `verify-uniform.tex` (ticket-local fixture) exercising all adjacencies —
+   compiled clean via Tectonic, rendered to `uniform-p1.png`..`uniform-p5.png`.
+   Visual inspection confirms: paragraph<->paragraph, paragraph<->window,
+   window<->window, 5 stacked headings (chapter through subparagraph),
+   heading<->window, window<->heading, and `SemioNest` all render with the
+   same small, uniform gap. Page-top behavior (`\newpage`, chapter start)
+   confirmed flush — no residual top-of-page skip.
+2. Full build: `bun ./script.ts build` in `print/` for all 6 templates.
+   `report` fails on an unrelated, pre-existing WIP bug (`Undefined control
+   sequence` in `\semio_image_cover_trim_distribute:nnn`, part of an
+   in-flight anchor-aware image-cover-crop change already present in the
+   working tree before this ticket reopened — confirmed via
+   `git diff HEAD -- print/tex/semio-window.sty`, unrelated to spacing,
+   not touched by this fix). The other 5 templates (paper, flyer,
+   forschungsbericht, zwischenbericht, kompaktbericht) all built clean,
+   light+dark, no errors.
+3. Real production document: `bun ./script.ts build` in
+   `mit-bestand/bericht` — the `zwischenbericht` document matching the
+   dev's original screenshot — built clean, light+dark, no errors.
+   Rendered pages 10-11 (`zwb-p10.png`, `zwb-p11.png`) visually confirm
+   uniform gaps between every subsection chip and its paragraph, and
+   between consecutive paragraph/heading blocks, throughout dense
+   real content (previously showed the reported inconsistent spacing).

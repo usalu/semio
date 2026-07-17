@@ -298,8 +298,8 @@ fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiCom
         puzzle2d_board: None,
         icon_render: None,
         note_canvas: None,
-        vcs_history: None,
-        protocol_list: None,
+        graph_timeline: None,
+        block_list: None,
     }
 }
 
@@ -432,7 +432,6 @@ impl DocumentApp for MathPlayApp {
         let labels = math_labels(view_state);
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         semio_framework_plugin::AppLabelsOverlay {
-            app_label: None,
             window_kind_labels: std::collections::HashMap::from([
                 (MATH_WINDOW_GRAPH.to_string(), labels.window_graph.to_string()),
                 (MATH_WINDOW_GEOMETRY.to_string(), labels.window_geometry.to_string()),

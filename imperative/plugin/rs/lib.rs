@@ -475,7 +475,6 @@ impl DocumentApp for ImperativePlayApp {
         let labels = imperative_labels(view_state);
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         AppLabelsOverlay {
-            app_label: None,
             window_kind_labels: std::collections::HashMap::from([
                 (IMPERATIVE_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()),
                 (IMPERATIVE_PLAY_WINDOW_SCRIPT.to_string(), labels.window_script.to_string()),

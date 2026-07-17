@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/fem-3d-rs",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./pkg/fem_3d.js"
+  }
+}

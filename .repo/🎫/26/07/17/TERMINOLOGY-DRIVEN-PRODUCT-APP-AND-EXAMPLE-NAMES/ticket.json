@@ -1,0 +1,13 @@
+{
+  "title": "Terminology-Driven Product App And Example Names",
+  "emoji": "🗣️",
+  "status": "open",
+  "description": "Extend the terminology mechanism so a terminology can rename the product name, app names, and example names — not just window/panel/action labels. Under \"reuse\": semio -\u003e Entwerfen mit Bestand, puzzle 3d -\u003e Aggregator, Concrete Forest example -\u003e Abbau Aufbau. Add AppDefinition.terminology_documents (terminology id -\u003e full replacement document path), wire it through core/plugin builder/React shell (os-shell.tsx)/wgpu shell, remove the dead AppLabelsOverlay.app_label field, add example_labels overrides for concrete-forest in puzzle 2d/3d/5d.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2026"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯apps",
+  "sessions": [
+    "⚪308850b2a032423a901530b7185fe1bd"
+  ]
+}

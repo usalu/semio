@@ -6,12 +6,15 @@ pub mod app_2d {
     use flow_core::{dag::DagFixture, flow_backed_node_graph_extras, flow_neuron_kind_infos_json, forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec}, FlowFixture, FlowHost, Widget};
     use flow_module_draw::render_scene_json;
     use procedural_2d::{procedural2d_fixture_ops, Procedural2dDocument, Procedural2dOp, PROCEDURAL_2D_SCHEMA};
+    use protocol::{
+        apply_generation_op, generation_ops, render_generation_form_body, render_generation_preview_text,
+        render_generations_tree, select_generation, selected_generation, GenerationPlayState,
+    };
     use semio_framework_plugin::{SurfaceKind, PanelGroup,
-        apply_generation_op, build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout,
-        generation_ops, render_generation_form_body, render_generation_preview_text, render_generations_tree,
-        select_generation, selected_generation, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
+        build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout,
+        ui_inspector_groups_to_tree, ui_inspector_readonly_field,
         ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView,
-        GenerationPlayState, NodeGraphScene, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode,
+        NodeGraphScene, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode,
         UiTreeSectionNode, ViewState,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
         FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -497,6 +500,7 @@ pub mod app_2d {
     //#region 🔖Panels
     fn tree_item(id: impl Into<String>, label: impl Into<String>, action: Option<ActionDescriptor>) -> UiTreeItemNode {
         UiTreeItemNode {
+            loading: None,
             id: id.into(),
             label: label.into(),
             description: None,
@@ -530,7 +534,9 @@ pub mod app_2d {
             })
             .collect();
         UiNode::Tree(UiTreeNode {
+            loading: None,
             sections: vec![UiTreeSectionNode {
+                loading: None,
                 id: "procedural2d-play-document.widgets".into(),
                 label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
                 default_open: Some(true),
@@ -558,8 +564,10 @@ pub mod app_2d {
         let components = [("math.add", labels.component_add), ("logic.and", labels.component_and), ("text.concat", labels.component_concat)];
         let sinks = [("outputPreview", labels.sink_preview), ("outputExport", labels.sink_export)];
         UiNode::Tree(UiTreeNode {
+            loading: None,
             sections: vec![
                 UiTreeSectionNode {
+                    loading: None,
                     id: "procedural2d-play-catalogue.sources".into(),
                     label: Some(labels.sources.into()),
                     default_open: Some(true),
@@ -575,6 +583,7 @@ pub mod app_2d {
                         .collect(),
                 },
                 UiTreeSectionNode {
+                    loading: None,
                     id: "procedural2d-play-catalogue.components".into(),
                     label: Some(labels.components.into()),
                     default_open: Some(true),
@@ -593,6 +602,7 @@ pub mod app_2d {
                         .collect(),
                 },
                 UiTreeSectionNode {
+                    loading: None,
                     id: "procedural2d-play-catalogue.sinks".into(),
                     label: Some(labels.sinks.into()),
                     default_open: Some(true),
@@ -608,6 +618,7 @@ pub mod app_2d {
                         .collect(),
                 },
                 UiTreeSectionNode {
+                    loading: None,
                     id: "procedural2d-play-catalogue.modes".into(),
                     label: Some(labels.show_mode_section.into()),
                     default_open: Some(false),
@@ -1008,7 +1019,6 @@ pub mod app_2d {
             let labels = procedural2d_labels(view_state);
             let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
             semio_framework_plugin::AppLabelsOverlay {
-                app_label: None,
                 window_kind_labels: std::collections::HashMap::from([
                     (PROCEDURAL2D_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()),
                     (PROCEDURAL2D_PLAY_WINDOW_PREVIEW.to_string(), labels.window_preview.to_string()),
@@ -1386,13 +1396,16 @@ pub mod app_3d {
     };
     use flow_module_brep::tessellate_geometry_json;
     use procedural_3d::{procedural3d_fixture_ops, Procedural3dDocument, Procedural3dOp, PROCEDURAL_3D_SCHEMA};
+    use protocol::{
+        apply_generation_op, generation_ops, render_generation_form_body, render_generation_preview_text,
+        render_generations_tree, select_generation, selected_generation, GenerationOp, GenerationPlayState,
+    };
     use semio_framework_plugin::{PanelGroup,
-        apply_generation_op, apply_world3d_sun_action, build_node_graph_scene, build_world_3d_scene, create_default_layout,
-        create_named_layout, generation_ops, merge_world_selection_ids,
-        mesh_from_kind, render_generation_form_body, render_generation_preview_text, render_generations_tree,
-        select_generation, selected_generation, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
+        apply_world3d_sun_action, build_node_graph_scene, build_world_3d_scene, create_default_layout,
+        create_named_layout, merge_world_selection_ids,
+        mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
         ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, DocumentApp, DocumentView, world3d_scene, world3d_selection_json, world3d_sun_measures,
-        ActionDescriptor, GenerationOp, GenerationPlayState, MeasureSelectItem, NodeGraphScene, UtilityDefinition,
+        ActionDescriptor, MeasureSelectItem, NodeGraphScene, UtilityDefinition,
         UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowMeasure, WorldSunConfig,
         SET_ACTIVE_UTILITY_ACTION_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -2242,6 +2255,7 @@ pub mod app_3d {
         action: ActionDescriptor,
     ) -> UiTreeItemNode {
         UiTreeItemNode {
+            loading: None,
             id: id.into(),
             label: label.into(),
             description: None,
@@ -2275,7 +2289,9 @@ pub mod app_3d {
             })
             .collect();
         UiNode::Tree(UiTreeNode {
+            loading: None,
             sections: vec![UiTreeSectionNode {
+                loading: None,
                 id: "procedural-play-document.widgets".into(),
                 label: Some(labels.widgets.into()),
                 default_open: Some(true),
@@ -2301,7 +2317,9 @@ pub mod app_3d {
             })
             .collect();
         UiNode::Tree(UiTreeNode {
+            loading: None,
             sections: vec![UiTreeSectionNode {
+                loading: None,
                 id: "procedural-play-catalogue.widgets".into(),
                 label: Some(labels.widgets.into()),
                 default_open: Some(true),
@@ -2392,7 +2410,7 @@ pub mod app_3d {
         )
     }
 
-    fn render_generate_preview(envelope: &Procedural3dPlayView, labels: &Procedural3dLabels) -> UiNode {
+    fn render_generate_preview(envelope: &Procedural3dPlayView, labels: &Procedural3dLabels, active_utility: &str) -> UiNode {
         let (meshes_json, instances_json) = generation_preview_payload(envelope);
         if meshes_json == "[]" && instances_json == "[]" {
             let text = envelope
@@ -2414,7 +2432,7 @@ pub mod app_3d {
                 preview_camera_json(&envelope.runtime),
                 meshes_json,
                 instances_json,
-                preview_selection_json(&envelope.runtime),
+                preview_selection_json(&envelope.runtime, active_utility),
                 &envelope.runtime.sun,
             ),
         )
@@ -2828,7 +2846,7 @@ pub mod app_3d {
                 }
                 PROCEDURAL_3D_PLAY_BODY_GENERATIONS => render_generate_generations(&envelope),
                 PROCEDURAL_3D_PLAY_BODY_GENERATE_FORM => render_generate_form(&envelope, labels),
-                PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&envelope, labels),
+                PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&envelope, labels, active_utility),
                 PROCEDURAL_3D_PLAY_BODY_DOCUMENT => {
                     build_document_tree(&envelope.fixture, &envelope.runtime.selected_node_ids, labels)
                 }
@@ -2857,7 +2875,6 @@ pub mod app_3d {
             let labels = procedural3d_labels(view_state);
             let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
             semio_framework_plugin::AppLabelsOverlay {
-                app_label: None,
                 window_kind_labels: std::collections::HashMap::from([
                     (PROCEDURAL_3D_PLAY_WINDOW_MAIN.to_string(), labels.window_flow.to_string()),
                     (PROCEDURAL_3D_PLAY_WINDOW_PREVIEW.to_string(), labels.window_preview.to_string()),

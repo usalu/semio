@@ -295,6 +295,265 @@ impl Mat2 {
 }
 // #endregion 🔖Mat2
 
+// #region 🔖VecD
+/// 📏 Heap-allocated f64 vector for element and system-level numerics (loads, displacements, residuals).
+#[derive(Clone, Debug, PartialEq)]
+pub struct VecD(pub Vec<f64>);
+
+impl VecD {
+    pub fn zeros(n: usize) -> Self {
+        Self(vec![0.0; n])
+    }
+
+    pub fn from_vec(data: Vec<f64>) -> Self {
+        Self(data)
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn get(&self, i: usize) -> f64 {
+        self.0[i]
+    }
+
+    pub fn set(&mut self, i: usize, value: f64) {
+        self.0[i] = value;
+    }
+
+    pub fn add_at(&mut self, i: usize, value: f64) {
+        self.0[i] += value;
+    }
+
+    pub fn dot(&self, other: &Self) -> f64 {
+        self.0.iter().zip(other.0.iter()).map(|(a, b)| a * b).sum()
+    }
+
+    pub fn scale(&self, s: f64) -> Self {
+        Self(self.0.iter().map(|v| v * s).collect())
+    }
+
+    pub fn add(&self, other: &Self) -> Self {
+        Self(self.0.iter().zip(other.0.iter()).map(|(a, b)| a + b).collect())
+    }
+
+    pub fn sub(&self, other: &Self) -> Self {
+        Self(self.0.iter().zip(other.0.iter()).map(|(a, b)| a - b).collect())
+    }
+
+    pub fn norm2(&self) -> f64 {
+        self.dot(self).sqrt()
+    }
+
+    pub fn norm_inf(&self) -> f64 {
+        self.0.iter().fold(0.0_f64, |acc, v| acc.max(v.abs()))
+    }
+}
+// #endregion 🔖VecD
+
+// #region 🔖MatD
+/// 🧮 Dynamic dense f64 matrix, row-major storage; sized for element stiffness matrices and small global systems.
+#[derive(Clone, Debug, PartialEq)]
+pub struct MatD {
+    pub rows: usize,
+    pub cols: usize,
+    pub data: Vec<f64>,
+}
+
+impl MatD {
+    pub fn zeros(rows: usize, cols: usize) -> Self {
+        Self { rows, cols, data: vec![0.0; rows * cols] }
+    }
+
+    pub fn identity(n: usize) -> Self {
+        let mut m = Self::zeros(n, n);
+        for i in 0..n {
+            m.set(i, i, 1.0);
+        }
+        m
+    }
+
+    pub fn get(&self, row: usize, col: usize) -> f64 {
+        self.data[row * self.cols + col]
+    }
+
+    pub fn set(&mut self, row: usize, col: usize, value: f64) {
+        self.data[row * self.cols + col] = value;
+    }
+
+    pub fn add_at(&mut self, row: usize, col: usize, value: f64) {
+        self.data[row * self.cols + col] += value;
+    }
+
+    pub fn transpose(&self) -> Self {
+        let mut out = Self::zeros(self.cols, self.rows);
+        for row in 0..self.rows {
+            for col in 0..self.cols {
+                out.set(col, row, self.get(row, col));
+            }
+        }
+        out
+    }
+
+    pub fn matmul(&self, other: &Self) -> Self {
+        assert_eq!(self.cols, other.rows, "matmul dimension mismatch");
+        let mut out = Self::zeros(self.rows, other.cols);
+        for row in 0..self.rows {
+            for k in 0..self.cols {
+                let a = self.get(row, k);
+                if a == 0.0 {
+                    continue;
+                }
+                for col in 0..other.cols {
+                    out.add_at(row, col, a * other.get(k, col));
+                }
+            }
+        }
+        out
+    }
+
+    pub fn mul_vec(&self, x: &VecD) -> VecD {
+        assert_eq!(self.cols, x.len(), "mul_vec dimension mismatch");
+        let mut out = VecD::zeros(self.rows);
+        for row in 0..self.rows {
+            let mut sum = 0.0;
+            for col in 0..self.cols {
+                sum += self.get(row, col) * x.get(col);
+            }
+            out.set(row, sum);
+        }
+        out
+    }
+
+    /// 🧮 `Bᵀ D B` scaled by `weight`, accumulated into `self` — the element-stiffness Gauss-point kernel.
+    pub fn add_triple_product(&mut self, b: &MatD, d: &MatD, weight: f64) {
+        let btdb = b.transpose().matmul(d).matmul(b);
+        for i in 0..self.data.len() {
+            self.data[i] += weight * btdb.data[i];
+        }
+    }
+
+    /// 🧮 Solves `Ax = b` via Gaussian elimination with partial pivoting; `None` if `A` is singular.
+    pub fn lu_solve(&self, b: &VecD) -> Option<VecD> {
+        assert_eq!(self.rows, self.cols, "lu_solve requires a square matrix");
+        assert_eq!(self.rows, b.len(), "lu_solve dimension mismatch");
+        let n = self.rows;
+        let mut a = self.data.clone();
+        let mut x = b.0.clone();
+        for pivot in 0..n {
+            let (mut best_row, mut best_val) = (pivot, a[pivot * n + pivot].abs());
+            for row in (pivot + 1)..n {
+                let val = a[row * n + pivot].abs();
+                if val > best_val {
+                    best_row = row;
+                    best_val = val;
+                }
+            }
+            if best_val < 1e-12 {
+                return None;
+            }
+            if best_row != pivot {
+                for col in 0..n {
+                    a.swap(pivot * n + col, best_row * n + col);
+                }
+                x.swap(pivot, best_row);
+            }
+            let pivot_value = a[pivot * n + pivot];
+            for row in (pivot + 1)..n {
+                let factor = a[row * n + pivot] / pivot_value;
+                if factor == 0.0 {
+                    continue;
+                }
+                for col in pivot..n {
+                    a[row * n + col] -= factor * a[pivot * n + col];
+                }
+                x[row] -= factor * x[pivot];
+            }
+        }
+        for row in (0..n).rev() {
+            let mut sum = x[row];
+            for col in (row + 1)..n {
+                sum -= a[row * n + col] * x[col];
+            }
+            x[row] = sum / a[row * n + row];
+        }
+        Some(VecD(x))
+    }
+}
+// #endregion 🔖MatD
+
+// #region 🔖Mat3d
+/// 🧊 3x3 f64 matrix for element local frames and rotation transforms, column-major storage.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Mat3d {
+    pub cols: [[f64; 3]; 3],
+}
+
+impl Mat3d {
+    pub const IDENTITY: Self = Self { cols: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]] };
+
+    /// 🧭 Rotation matrix from an orthonormal local basis, columns `(x, y, z)` expressed in global coordinates.
+    pub fn from_axes(x: [f64; 3], y: [f64; 3], z: [f64; 3]) -> Self {
+        Self { cols: [x, y, z] }
+    }
+
+    pub fn transpose(self) -> Self {
+        Self {
+            cols: [
+                [self.cols[0][0], self.cols[1][0], self.cols[2][0]],
+                [self.cols[0][1], self.cols[1][1], self.cols[2][1]],
+                [self.cols[0][2], self.cols[1][2], self.cols[2][2]],
+            ],
+        }
+    }
+
+    pub fn mul(self, other: Self) -> Self {
+        let entry = |row: usize, col: usize| {
+            self.cols[0][row] * other.cols[col][0] + self.cols[1][row] * other.cols[col][1] + self.cols[2][row] * other.cols[col][2]
+        };
+        Self {
+            cols: [
+                [entry(0, 0), entry(1, 0), entry(2, 0)],
+                [entry(0, 1), entry(1, 1), entry(2, 1)],
+                [entry(0, 2), entry(1, 2), entry(2, 2)],
+            ],
+        }
+    }
+
+    pub fn mul_vec3(self, v: [f64; 3]) -> [f64; 3] {
+        [
+            self.cols[0][0] * v[0] + self.cols[1][0] * v[1] + self.cols[2][0] * v[2],
+            self.cols[0][1] * v[0] + self.cols[1][1] * v[1] + self.cols[2][1] * v[2],
+            self.cols[0][2] * v[0] + self.cols[1][2] * v[1] + self.cols[2][2] * v[2],
+        ]
+    }
+}
+
+pub fn vec3d_sub(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
+}
+
+pub fn vec3d_length(v: [f64; 3]) -> f64 {
+    (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt()
+}
+
+pub fn vec3d_normalize(v: [f64; 3]) -> [f64; 3] {
+    let len = vec3d_length(v);
+    if len < 1e-12 {
+        return [0.0, 0.0, 0.0];
+    }
+    [v[0] / len, v[1] / len, v[2] / len]
+}
+
+pub fn vec3d_cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+}
+// #endregion 🔖Mat3d
+
 // #region 🔖Tests
 #[cfg(test)]
 mod tests {
@@ -387,6 +646,141 @@ mod tests {
     fn mat2_rotation_like_matrix_has_complex_eigenvalues() {
         let m = Mat2::new(0.0, -1.0, 1.0, 0.0);
         assert!(m.eigenvalues().is_none());
+    }
+
+    #[test]
+    fn vecd_dot_and_norm() {
+        let a = VecD::from_vec(vec![3.0, 4.0]);
+        let b = VecD::from_vec(vec![1.0, 0.0]);
+        assert!((a.dot(&b) - 3.0).abs() < 1e-12);
+        assert!((a.norm2() - 5.0).abs() < 1e-12);
+        assert!((a.norm_inf() - 4.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn vecd_add_sub_scale_round_trip() {
+        let a = VecD::from_vec(vec![1.0, 2.0, 3.0]);
+        let b = VecD::from_vec(vec![0.5, 0.5, 0.5]);
+        let sum = a.add(&b);
+        let back = sum.sub(&b);
+        for i in 0..3 {
+            assert!((back.get(i) - a.get(i)).abs() < 1e-12);
+        }
+        assert!((a.scale(2.0).get(1) - 4.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn matd_matmul_identity_is_noop() {
+        let mut m = MatD::zeros(2, 2);
+        m.set(0, 0, 1.0);
+        m.set(0, 1, 2.0);
+        m.set(1, 0, 3.0);
+        m.set(1, 1, 4.0);
+        let id = MatD::identity(2);
+        let out = m.matmul(&id);
+        assert_eq!(out, m);
+    }
+
+    #[test]
+    fn matd_transpose_round_trips() {
+        let mut m = MatD::zeros(2, 3);
+        for row in 0..2 {
+            for col in 0..3 {
+                m.set(row, col, (row * 3 + col) as f64);
+            }
+        }
+        assert_eq!(m.transpose().transpose(), m);
+    }
+
+    #[test]
+    fn matd_mul_vec_matches_matrix_vector_multiply() {
+        let mut m = MatD::zeros(2, 2);
+        m.set(0, 0, 2.0);
+        m.set(0, 1, 0.0);
+        m.set(1, 0, 0.0);
+        m.set(1, 1, 3.0);
+        let x = VecD::from_vec(vec![1.0, 1.0]);
+        let y = m.mul_vec(&x);
+        assert!((y.get(0) - 2.0).abs() < 1e-12);
+        assert!((y.get(1) - 3.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn matd_lu_solve_matches_hand_solved_system() {
+        // 2x + y = 5, x + 3y = 10  =>  x = 1, y = 3
+        let mut a = MatD::zeros(2, 2);
+        a.set(0, 0, 2.0);
+        a.set(0, 1, 1.0);
+        a.set(1, 0, 1.0);
+        a.set(1, 1, 3.0);
+        let b = VecD::from_vec(vec![5.0, 10.0]);
+        let x = a.lu_solve(&b).expect("solvable");
+        assert!((x.get(0) - 1.0).abs() < 1e-9);
+        assert!((x.get(1) - 3.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn matd_lu_solve_detects_singular_matrix() {
+        let mut a = MatD::zeros(2, 2);
+        a.set(0, 0, 1.0);
+        a.set(0, 1, 2.0);
+        a.set(1, 0, 2.0);
+        a.set(1, 1, 4.0);
+        let b = VecD::from_vec(vec![1.0, 2.0]);
+        assert!(a.lu_solve(&b).is_none());
+    }
+
+    #[test]
+    fn matd_add_triple_product_matches_btdb() {
+        let mut b = MatD::zeros(1, 2);
+        b.set(0, 0, 1.0);
+        b.set(0, 1, 2.0);
+        let mut d = MatD::zeros(1, 1);
+        d.set(0, 0, 3.0);
+        let mut ke = MatD::zeros(2, 2);
+        ke.add_triple_product(&b, &d, 1.0);
+        // Bᵀ D B = [1;2] * 3 * [1 2] = [[3,6],[6,12]]
+        assert!((ke.get(0, 0) - 3.0).abs() < 1e-12);
+        assert!((ke.get(0, 1) - 6.0).abs() < 1e-12);
+        assert!((ke.get(1, 1) - 12.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn mat3d_identity_axes_is_identity() {
+        let m = Mat3d::from_axes([1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]);
+        assert_eq!(m, Mat3d::IDENTITY);
+    }
+
+    #[test]
+    fn mat3d_transpose_is_inverse_for_orthonormal_basis() {
+        let x = vec3d_normalize([1.0, 1.0, 0.0]);
+        let z = [0.0, 0.0, 1.0];
+        let y = vec3d_cross(z, x);
+        let m = Mat3d::from_axes(x, y, z);
+        let round = m.mul(m.transpose());
+        for row in 0..3 {
+            for col in 0..3 {
+                let expected = if row == col { 1.0 } else { 0.0 };
+                assert!((round.cols[col][row] - expected).abs() < 1e-9);
+            }
+        }
+    }
+
+    #[test]
+    fn mat3d_mul_vec3_transforms_basis_vector() {
+        let m = Mat3d::from_axes([0.0, 1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, 1.0]);
+        let out = m.mul_vec3([1.0, 0.0, 0.0]);
+        assert!((out[0] - 0.0).abs() < 1e-12);
+        assert!((out[1] - 1.0).abs() < 1e-12);
+        assert!((out[2] - 0.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn vec3d_cross_is_perpendicular_to_inputs() {
+        let a = [1.0, 0.0, 0.0];
+        let b = [0.0, 1.0, 0.0];
+        let c = vec3d_cross(a, b);
+        assert!((c[2] - 1.0).abs() < 1e-12);
     }
 }
 // #endregion 🔖Tests

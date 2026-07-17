@@ -2744,6 +2744,7 @@ mod tests {
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
+            terminology_documents: std::collections::HashMap::new(),
             introduction: None,
             dialogs: Vec::new(),
         });
@@ -3695,6 +3696,10 @@ pub struct AppDefinition {
     /// 🗣️ Terminology ids this app declares beyond the implicit "native" default.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub terminologies: Vec<String>,
+    /// 🗺️ Terminology id -> full replacement document path (product + app segments), e.g. "reuse" ->
+    /// ["Entwerfen mit Bestand", "Aggregator"]; ids absent here keep `document` under that terminology.
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub terminology_documents: std::collections::HashMap<String, Vec<String>>,
     /// 🎓 This app's first-run walkthrough, if it declares one — see `IntroductionDefinition`.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
@@ -3812,9 +3817,14 @@ pub fn app_document_label(document: &[String]) -> String {
     document.join(" · ")
 }
 
-/// 🗂️ Formats a window tab within its canonical app document.
-pub fn app_window_document_label(app: &AppDefinition, window_label: &str) -> String {
-    let mut document = app.document.clone();
+/// 🗺️ Resolves the document path effective under the active terminology; unknown/native ids fall back to `document`.
+pub fn resolve_app_document<'a>(app: &'a AppDefinition, terminology: &str) -> &'a [String] {
+    app.terminology_documents.get(terminology).map(Vec::as_slice).unwrap_or(&app.document)
+}
+
+/// 🗂️ Formats a window tab within its canonical app document, resolved under the active terminology.
+pub fn app_window_document_label(app: &AppDefinition, terminology: &str, window_label: &str) -> String {
+    let mut document = resolve_app_document(app, terminology).to_vec();
     let normalized_window = window_label.trim().to_lowercase();
     let normalized_app = app.label.trim().to_lowercase();
     if !normalized_window.is_empty()
@@ -3840,7 +3850,7 @@ pub struct ExampleDefinition {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum Contribution {
-    /// 🧩 A module contributing an extension block kind to a protocol-list (Blockly-like) builder host app.
+    /// 🧩 A module contributing an extension block kind to a block-list (Blockly-like) builder host app.
     ProtocolBlockKind {
         #[cfg_attr(feature = "typegen", ts(rename = "appId"))]
         app_id: String,
@@ -3932,9 +3942,6 @@ pub struct ViewState {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct AppLabelsOverlay {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
-    pub app_label: Option<String>,
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub window_kind_labels: std::collections::HashMap<String, String>,
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
@@ -4925,6 +4932,7 @@ mod app_document_tests {
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
+            terminology_documents: std::collections::HashMap::new(),
             introduction: None,
             dialogs: Vec::new(),
         }

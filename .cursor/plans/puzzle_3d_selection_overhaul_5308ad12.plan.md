@@ -16,10 +16,10 @@ todos:
     status: completed
   - id: vortex-host
     content: World3dHost click-vs-drag vortex select vs connect; update index.test.ts
-    status: in_progress
+    status: completed
   - id: tests-verify
     content: Extend existing Rust/TS tests; run them; ticket_close with summary
-    status: pending
+    status: completed
 isProject: false
 ---
 

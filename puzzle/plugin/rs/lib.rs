@@ -1081,6 +1081,8 @@ pub mod d2 {
         brush: &'static str,
         fill: &'static str,
         placement: &'static str,
+        // example picker
+        example_concrete_forest: &'static str,
     }
 
     const PUZZLE2D_LABELS_NATIVE_EN: Puzzle2dLabels = Puzzle2dLabels {
@@ -1107,6 +1109,7 @@ pub mod d2 {
         brush: "Brush",
         fill: "Fill",
         placement: "Placement",
+        example_concrete_forest: "Concrete Forest",
     };
 
     const PUZZLE2D_LABELS_NATIVE_DE: Puzzle2dLabels = Puzzle2dLabels {
@@ -1133,6 +1136,7 @@ pub mod d2 {
         brush: "Pinsel",
         fill: "Füllen",
         placement: "Platzierung",
+        example_concrete_forest: "Concrete Forest",
     };
 
     const PUZZLE2D_LABELS_REUSE_EN: Puzzle2dLabels = Puzzle2dLabels {
@@ -1141,6 +1145,7 @@ pub mod d2 {
         window_overview: "Assembly",
         window_detail: "Connection Detail",
         window_selection: "Component Selection",
+        example_concrete_forest: "Abbau Aufbau",
         ..PUZZLE2D_LABELS_NATIVE_EN
     };
     const PUZZLE2D_LABELS_REUSE_DE: Puzzle2dLabels = Puzzle2dLabels {
@@ -1149,6 +1154,7 @@ pub mod d2 {
         window_overview: "Baugruppe",
         window_detail: "Verbindungsdetail",
         window_selection: "Komponentenauswahl",
+        example_concrete_forest: "Abbau Aufbau",
         ..PUZZLE2D_LABELS_NATIVE_DE
     };
 
@@ -2023,7 +2029,6 @@ pub mod d2 {
         fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
             let labels = puzzle2d_labels(view_state);
             semio_framework_plugin::AppLabelsOverlay {
-                app_label: None,
                 window_kind_labels: std::collections::HashMap::from([
                     (PUZZLE2D_PANE_OVERVIEW.to_string(), labels.window_overview.to_string()),
                     (PUZZLE2D_PANE_DETAIL.to_string(), labels.window_detail.to_string()),
@@ -2033,7 +2038,7 @@ pub mod d2 {
                 mode_labels: std::collections::HashMap::new(),
                 action_labels: puzzle2d_action_labels(view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))),
                 utility_labels: puzzle2d_utility_labels(view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))),
-                example_labels: HashMap::new(),
+                example_labels: std::collections::HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concrete_forest.to_string())]),
                 action_arg_labels: HashMap::new(),
                 dialog_labels: HashMap::new(),
                 introduction_labels: HashMap::new(),
@@ -2124,6 +2129,7 @@ pub mod d2 {
                 .document(["semio", "puzzle", "2d"])
                 .icon_id("puzzle2d")
                 .terminology("reuse")
+                .terminology_document("reuse", ["Entwerfen mit Bestand", "puzzle", "2d"])
                 .mode("edit", "Edit")
                 .default_mode_id("edit")
                 .window_kind_with_engagement(PUZZLE2D_PANE_OVERVIEW, "Overview", PUZZLE2D_PLAY_BODY_OVERVIEW, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_OVERVIEW, labels))
@@ -2620,7 +2626,7 @@ pub mod d3 {
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_world_3d_scene, create_default_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
         ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, PanelGroup,
-        SurfaceKind, UtilityCategory, UtilityDefinition, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        SurfaceKind, UtilityDefinition, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
         IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionEmphasis, IntroductionStepDefinition,
         ActionRef, DialogDefinition,
@@ -4134,6 +4140,7 @@ pub mod d3 {
         vortex: &'static str,
         attractions: &'static str,
         window_main: &'static str,
+        example_concrete_forest: &'static str,
         fill: &'static str,
         mode: &'static str,
         edit_volumes: &'static str,
@@ -4155,6 +4162,7 @@ pub mod d3 {
         vortex: "Vortex",
         attractions: "Attractions",
         window_main: "Puzzle 3D",
+        example_concrete_forest: "Concrete Forest",
         fill: "Fill",
         mode: "Mode",
         edit_volumes: "Edit Volumes",
@@ -4175,6 +4183,7 @@ pub mod d3 {
         vortex: "Vortex",
         attractions: "Anziehungen",
         window_main: "Puzzle 3D",
+        example_concrete_forest: "Concrete Forest",
         fill: "Fuellen",
         mode: "Modus",
         edit_volumes: "Volumen bearbeiten",
@@ -4188,8 +4197,24 @@ pub mod d3 {
         lock: "Sperren",
         unlock: "Entsperren",
     };
-    const PUZZLE3D_LABELS_REUSE_EN: Puzzle3dLabels = Puzzle3dLabels { objects: "Building components", object: "Building component", vortices: "Connection points", vortex: "Connection point", ..PUZZLE3D_LABELS_NATIVE_EN };
-    const PUZZLE3D_LABELS_REUSE_DE: Puzzle3dLabels = Puzzle3dLabels { objects: "Baukomponenten", object: "Baukomponente", vortices: "Verbindungspunkte", vortex: "Verbindungspunkt", ..PUZZLE3D_LABELS_NATIVE_DE };
+    const PUZZLE3D_LABELS_REUSE_EN: Puzzle3dLabels = Puzzle3dLabels {
+        objects: "Building components",
+        object: "Building component",
+        vortices: "Connection points",
+        vortex: "Connection point",
+        window_main: "Aggregator",
+        example_concrete_forest: "Abbau Aufbau",
+        ..PUZZLE3D_LABELS_NATIVE_EN
+    };
+    const PUZZLE3D_LABELS_REUSE_DE: Puzzle3dLabels = Puzzle3dLabels {
+        objects: "Baukomponenten",
+        object: "Baukomponente",
+        vortices: "Verbindungspunkte",
+        vortex: "Verbindungspunkt",
+        window_main: "Aggregator",
+        example_concrete_forest: "Abbau Aufbau",
+        ..PUZZLE3D_LABELS_NATIVE_DE
+    };
 
     /// 🗣️ Resolves the active label set from the shell-provided locale/terminology; unknown terminology ids fall back to native.
     fn puzzle3d_labels(view_state: &ViewState) -> &'static Puzzle3dLabels {
@@ -5870,7 +5895,6 @@ pub mod d3 {
             let labels = puzzle3d_labels(view_state);
             let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
             semio_framework_plugin::AppLabelsOverlay {
-                app_label: None,
                 window_kind_labels: std::collections::HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string())]),
                 panel_tab_labels: std::collections::HashMap::from([
                     ("puzzle3d.panel.settings".to_string(), (if is_de { "Einstellungen" } else { "Settings" }).to_string()),
@@ -5878,7 +5902,7 @@ pub mod d3 {
                 mode_labels: std::collections::HashMap::new(),
                 action_labels: puzzle3d_action_labels(is_de),
                 utility_labels: puzzle3d_utility_labels(is_de),
-                example_labels: HashMap::new(),
+                example_labels: std::collections::HashMap::from([(PUZZLE3D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
                 action_arg_labels: HashMap::new(),
                 dialog_labels: HashMap::new(),
                 introduction_labels: HashMap::new(),
@@ -5991,6 +6015,7 @@ pub mod d3 {
                 .document(["semio", "puzzle", "3d"])
                 .icon_id("puzzle")
                 .terminology("reuse")
+                .terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])
                 .mode("edit", "Edit")
                 .default_mode_id("edit")
                 .window_kind_with_engagement(PUZZLE3D_PLAY_WINDOW_MAIN, "Puzzle 3D", PUZZLE3D_PLAY_BODY_COMPOSITE, SurfaceKind::World3d, puzzle3d_engagement(&envelope, &PUZZLE3D_LABELS_NATIVE_EN))
@@ -6806,6 +6831,7 @@ pub mod d5 {
         schema: &'static str,
         utility: &'static str,
         none: &'static str,
+        example_concrete_forest: &'static str,
     }
 
     const PUZZLE5D_LABELS_NATIVE_EN: Puzzle5dLabels = Puzzle5dLabels {
@@ -6848,6 +6874,7 @@ pub mod d5 {
         schema: "Schema",
         utility: "Utility",
         none: "(none)",
+        example_concrete_forest: "Concrete Forest",
     };
 
     const PUZZLE5D_LABELS_NATIVE_DE: Puzzle5dLabels = Puzzle5dLabels {
@@ -6890,6 +6917,7 @@ pub mod d5 {
         schema: "Schema",
         utility: "Werkzeug",
         none: "(keine)",
+        example_concrete_forest: "Concrete Forest",
     };
 
     const PUZZLE5D_LABELS_REUSE_EN: Puzzle5dLabels = Puzzle5dLabels {
@@ -6898,6 +6926,7 @@ pub mod d5 {
         grips: "Connection points",
         grip: "Connection point",
         fasteners: "Component connections",
+        example_concrete_forest: "Abbau Aufbau",
         ..PUZZLE5D_LABELS_NATIVE_EN
     };
     const PUZZLE5D_LABELS_REUSE_DE: Puzzle5dLabels = Puzzle5dLabels {
@@ -6906,6 +6935,7 @@ pub mod d5 {
         grips: "Verbindungspunkte",
         grip: "Verbindungspunkt",
         fasteners: "Baukomponentenverbindungen",
+        example_concrete_forest: "Abbau Aufbau",
         ..PUZZLE5D_LABELS_NATIVE_DE
     };
 
@@ -9208,7 +9238,6 @@ pub mod d5 {
         fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
             let labels = puzzle5d_labels(view_state);
             semio_framework_plugin::AppLabelsOverlay {
-                app_label: None,
                 window_kind_labels: std::collections::HashMap::from([
                     (PUZZLE5D_PLAY_WINDOW_2D.to_string(), labels.window_2d.to_string()),
                     (PUZZLE5D_PLAY_WINDOW_3D.to_string(), labels.window_3d.to_string()),
@@ -9217,7 +9246,7 @@ pub mod d5 {
                 mode_labels: std::collections::HashMap::new(),
                 action_labels: puzzle5d_action_labels(view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))),
                 utility_labels: puzzle5d_utility_labels(view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))),
-                example_labels: HashMap::new(),
+                example_labels: std::collections::HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
                 action_arg_labels: HashMap::new(),
                 dialog_labels: HashMap::new(),
                 introduction_labels: HashMap::new(),
@@ -9314,6 +9343,7 @@ pub mod d5 {
                 .document(["semio", "puzzle", "5d"])
                 .icon_id("puzzle")
                 .terminology("reuse")
+                .terminology_document("reuse", ["Entwerfen mit Bestand", "puzzle", "5d"])
                 .mode("edit", "Edit")
                 .default_mode_id("edit")
                 .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_2D, "Puzzle 2D", PUZZLE5D_PLAY_BODY_2D, SurfaceKind::Puzzle2dBoard, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_2D, manifest_labels))

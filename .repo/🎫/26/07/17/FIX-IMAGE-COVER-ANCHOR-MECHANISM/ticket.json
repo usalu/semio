@@ -1,0 +1,13 @@
+{
+  "title": "Fix Image Cover Anchor Mechanism",
+  "emoji": "🖼️",
+  "status": "open",
+  "description": "The image-fit=cover mechanism in print/tex/semio-window.sty always center-crops (hard-coded symmetric trim), ignoring the window's anchor. Fix it to behave like CSS object-fit:cover + object-position: scale the image without distortion to fully cover the target box, then crop overflow according to anchor (nw..se). Also switch the appendix Photo windows in mit-bestand/bericht/zwischenbericht/anhang/projekte.tex from image-fit=contain to image-fit=cover (they currently letterbox instead of covering), while ensuring the cover path is safe inside fixed-height WindowItems (avoid the documented tcolorbox double-typeset bug) by making cover width-only sized instead of height-sized.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2027"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪b33b4c7f5bfd4d21a3df927dc333608f"
+  ]
+}

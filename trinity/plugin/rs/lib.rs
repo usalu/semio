@@ -1059,7 +1059,6 @@ pub mod app_jack {
         fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
             let labels = trinity_jack_labels(view_state);
             AppLabelsOverlay {
-                app_label: None,
                 window_kind_labels: HashMap::from([
                     (TRINITY_JACK_PLAY_WINDOW_GRAPH.to_string(), labels.window_graph.to_string()),
                     (TRINITY_JACK_PLAY_WINDOW_EDITOR.to_string(), labels.window_editor.to_string()),
@@ -3038,7 +3037,6 @@ pub mod app_rewrite {
         fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
             let labels = trinity_rewrite_labels(view_state);
             AppLabelsOverlay {
-                app_label: None,
                 window_kind_labels: HashMap::from([
                     (TRINITY_REWRITE_PLAY_WINDOW_BEFORE.to_string(), labels.window_before.to_string()),
                     (TRINITY_REWRITE_PLAY_WINDOW_AFTER.to_string(), labels.window_after.to_string()),

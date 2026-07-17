@@ -1,7 +1,7 @@
 //! 📏 Procedural 2d document model on `vcs`.
 
 use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
-use semio_framework_plugin::{apply_generation_op, invert_generation_op, GenerationOp, GenerationPlayState};
+use protocol::{apply_generation_op, invert_generation_op, GenerationOp, GenerationPlayState};
 use serde::{Deserialize, Serialize};
 use vcs::{
     create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
@@ -399,7 +399,7 @@ mod tests {
     #[test]
     fn generation_op_round_trips() {
         let before = empty_procedural2d_projection();
-        let generation = semio_framework_plugin::FormGeneration {
+        let generation = protocol::FormGeneration {
             id: "generation-1".into(),
             name: "Generation 1".into(),
             values: serde_json::Map::new(),

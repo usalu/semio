@@ -1,0 +1,13 @@
+{
+  "title": "Fem 2d and Fem 3d Structural Analysis Apps",
+  "emoji": "🏗️",
+  "status": "open",
+  "description": "Implement two new full-blown Rust apps `fem/2d` and `fem/3d` for finite element structural analysis (displacements, reactions, N/V/M diagrams, stress contours, modal, buckling), plus the greenfield math/solver/meshing kernels they require: `mathematical/sparse` (sparse LDLT, PCG, subspace-iteration eigensolver), RCM ordering in `mathematical/graph`, dense f64 extensions to `mathematical/algebra`, `kernel/2d/mesh` (constrained Delaunay via spade), `kernel/3d/volume` (hex/extrusion/tet-split volumetric meshing), `fem/core` (element trait, formulation toolkit, assembly pipeline, analyses), full 2D/3D element libraries in `fem_2d`/`fem_3d`, and `fem-plugin` (two playground apps, ports 6085/6086, mirroring the `procedural` app template with DocumentApp/ops/undo). Full plan at /Users/ueli/.claude/plans/create-new-fullblown-apps-staged-breeze.md. Phased delivery: v0 2D frame/truss linear static, v1 2D continuum + meshing + contours, v2 3D + modal + buckling. Includes workspace wiring (Cargo.toml members, package.json dev scripts, launch.json entries, plugin registry), verification against analytical benchmarks (patch tests, Cook's membrane, Euler buckling, etc.), and identified renderer gaps (Canvas2d triangles layer, World3d clipping/animation/labels) as a follow-up workstream.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2032"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪d76ebcff4709469cbae9242abaada305"
+  ]
+}

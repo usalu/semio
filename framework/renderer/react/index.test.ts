@@ -38,7 +38,7 @@ import { NodeGraphHost, catalogueGhostDescriptorJson, computeDagMarqueeOverlay, 
 import { SelectionMarquee } from "@semio-tech/ui-react";
 import { RasterHost } from "./components/raster-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
-import { VcsHistoryHost } from "./components/vcs-history-host.tsx";
+import { GraphTimelineHost } from "./components/graph-timeline-host.tsx";
 import { TextEditorHost, buildTextEditorContextMenuItems, lineRangeAt, multiSpanReplace } from "./components/text-editor-host.tsx";
 import { World3dHost, brushObjectPlacementArgs, parsePuzzle3dCatalogueDragPayload, resolveMeshStyle, resolveVortexPointerDownIntent, resolveWorldContextMenuTarget, snapWorldPointToGrid, worldInstancePickBlocked } from "./components/world-3d-host.tsx";
 import { parseWorldTerrainStyle } from "./components/world-terrain-layer.tsx";
@@ -61,6 +61,7 @@ import {
   appDocumentLabel,
   appWindowDocumentLabel,
   applyUiRefreshResponseToCache,
+  resolveAppDocument,
   buildToolbarRibbonSegments,
   buildUiRefreshRequest,
   dedupeUtilityNodesById,
@@ -88,6 +89,7 @@ import {
   buildOsCommands,
   createLatestAsyncDispatcher,
   dispatchOsCommand,
+  resolveShellLocks,
   type ResolvedCommand,
   shellReducer,
   sortUtilityNodes,
@@ -520,6 +522,7 @@ describe("framework renderer types", () => {
       id: "puzzle3d-play",
       label: "Puzzle 3D",
       document: ["semio", "puzzle", "3d"],
+      terminologyDocuments: { reuse: ["Entwerfen mit Bestand", "Aggregator"] },
       controllerId: "puzzle3d-play",
       modes: [],
       windowKinds: [],
@@ -527,9 +530,13 @@ describe("framework renderer types", () => {
       keybindings: [],
     };
     expect(appDocumentLabel(app.document)).toBe("semio · puzzle · 3d");
-    expect(appWindowDocumentLabel(app, "Flow")).toBe("Flow");
-    expect(appWindowDocumentLabel(app, "Preview")).toBe("Preview");
-    expect(appWindowDocumentLabel(app, "")).toBe("Puzzle 3D");
+    expect(appWindowDocumentLabel(app, "native", "Flow")).toBe("Flow");
+    expect(appWindowDocumentLabel(app, "native", "Preview")).toBe("Preview");
+    expect(appWindowDocumentLabel(app, "native", "")).toBe("Puzzle 3D");
+    expect(appWindowDocumentLabel(app, "reuse", "")).toBe("Aggregator");
+    expect(resolveAppDocument(app, "native")).toEqual(["semio", "puzzle", "3d"]);
+    expect(resolveAppDocument(app, "reuse")).toEqual(["Entwerfen mit Bestand", "Aggregator"]);
+    expect(appDocumentLabel(resolveAppDocument(app, "reuse"))).toBe("Entwerfen mit Bestand · Aggregator");
   });
 
   it("flattens a recursive panelTabs tree to its leaves, depth-first", () => {
@@ -566,17 +573,17 @@ describe("framework renderer types", () => {
     expect(node.componentKind).toBe("canvas-2d");
   });
 
-  it("accepts vcs-history component scene nodes", () => {
+  it("accepts graph-timeline component scene nodes", () => {
     const node: UiNode = {
       type: "componentScene",
       surfaceId: "vcs.play.history",
       controllerId: "vcs-play",
-      componentKind: "vcs-history",
-      vcsHistory: {
+      componentKind: "graph-timeline",
+      graphTimeline: {
         columnsJson: "[]",
       },
     };
-    expect(node.componentKind).toBe("vcs-history");
+    expect(node.componentKind).toBe("graph-timeline");
   });
 });
 
@@ -1588,21 +1595,21 @@ describe("framework renderer hosts", () => {
       },
     ];
     const markup = renderToStaticMarkup(
-      createElement(VcsHistoryHost, {
+      createElement(GraphTimelineHost, {
         node: {
           type: "componentScene",
           surfaceId: "vcs.play.history",
           controllerId: "vcs-play",
-          componentKind: "vcs-history",
-          vcsHistory: {
+          componentKind: "graph-timeline",
+          graphTimeline: {
             columnsJson: JSON.stringify(columns),
           },
         },
         onAction: noopAction,
       }),
     );
-    expect(markup).toContain("semio-vcs-history-host");
-    expect(markup).toContain("vcs-history-table");
+    expect(markup).toContain("semio-graph-timeline-host");
+    expect(markup).toContain("graph-timeline-table");
     expect(markup).toContain('d="M ');
     expect(markup.match(/<circle /g)?.length).toBe(3);
     expect(markup).toContain("branch b");
@@ -2760,6 +2767,51 @@ describe("Introduce App command", () => {
     const dispatch = vi.fn();
     dispatchOsCommand("os.introduceApp", undefined, dispatch, { reset: vi.fn() } as never, { reset: vi.fn() } as never);
     expect(dispatch).toHaveBeenCalledWith({ type: "SET_INTRODUCTION_STEP", value: 0 });
+  });
+});
+
+describe("shell option locks (SEMIO_LOCKED_*)", () => {
+  it("resolves valid locale/appearance and falls back with a warning on invalid values while staying locked", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    expect(resolveShellLocks({ locale: "de" })).toMatchObject({ locale: "de" });
+    expect(resolveShellLocks({ locale: "fr" })).toMatchObject({ locale: "en" });
+    expect(resolveShellLocks({ appearance: "dark" })).toMatchObject({ appearance: "dark" });
+    expect(resolveShellLocks({ appearance: "bogus" })).toMatchObject({ appearance: "system" });
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it("accepts any non-empty terminology id verbatim (app-declared ids can't be validated at boot)", () => {
+    expect(resolveShellLocks({ terminology: "reuse" })).toMatchObject({ terminology: "reuse" });
+    expect(resolveShellLocks({ terminology: "some-app-declared-id" })).toMatchObject({ terminology: "some-app-declared-id" });
+    expect(resolveShellLocks({ terminology: "" })).toEqual({});
+  });
+
+  it("returns an empty object for undefined locks", () => {
+    expect(resolveShellLocks(undefined)).toEqual({});
+  });
+
+  it("initialShellState applies locked values over stored/default prefs", () => {
+    const state = initialShellState({ plugins: [], locks: { exampleId: "concrete-forest", locale: "de", terminology: "reuse", themeId: "semio", appearance: "dark" } });
+    expect(state.layout.activeExampleId).toBe("concrete-forest");
+    expect(state.uiPrefs.uiLocale).toBe("de");
+    expect(state.uiPrefs.uiTerminology).toBe("reuse");
+    expect(state.uiPrefs.uiThemeId).toBe("semio");
+    expect(state.uiPrefs.uiAppearance).toBe("dark");
+  });
+
+  it("buildOsCommands omits only the commands for locked prefs", () => {
+    const ids = buildOsCommands([], [], false, { locale: "de", appearance: "dark" }).map((c) => c.id);
+    expect(ids).not.toContain("os.setLocale");
+    expect(ids).not.toContain("os.setAppearance");
+    expect(ids).toContain("os.setTerminology");
+    expect(ids).toContain("os.setThemeId");
+  });
+
+  it("dispatchOsCommand is a no-op for a locked pref even if invoked directly", () => {
+    const dispatch = vi.fn();
+    dispatchOsCommand("os.setLocale", { locale: "de" }, dispatch, { reset: vi.fn() } as never, { reset: vi.fn() } as never, { locale: "en" });
+    expect(dispatch).not.toHaveBeenCalled();
   });
 });
 

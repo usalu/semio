@@ -53,10 +53,10 @@
 \bool_new:N \g_semio_image_target_h_set_bool
 \dim_new:N \l_semio_image_target_w_dim
 \dim_new:N \l_semio_image_target_h_dim
-\dim_new:N \l_semio_image_nat_w_dim
-\dim_new:N \l_semio_image_nat_h_dim
-\dim_new:N \l_semio_image_trim_dim
-\dim_new:N \l_semio_image_trim_half_dim
+\dim_new:N \l_semio_image_cover_excess_dim
+\dim_new:N \l_semio_image_cover_offset_dim
+\dim_new:N \l_semio_image_cover_offset_neg_dim
+\dim_new:N \l_semio_image_cover_ypos_dim
 \tl_new:N \l_semio_window_height_tl
 \bool_new:N \l_semio_register_list_bool
 \bool_set_false:N \l_semio_register_list_bool
@@ -401,29 +401,12 @@
   \group_end:
 }
 
-\cs_new_protected:Npn \semio_block_sep: {
-  \ExplSyntaxOff
-  \semio@block@sep
-  \ExplSyntaxOn
-}
-
 \cs_new_protected:Npn \semio_block_sep_before: {
   \bool_if:NF \l_semio_window_in_item_bool {
     \bool_if:NF \l_semio_register_list_bool {
       \group_begin:
       \ExplSyntaxOff
-      \semio@heading@block@before
-      \group_end:
-    }
-  }
-}
-
-\cs_new_protected:Npn \semio_block_sep_after: {
-  \bool_if:NF \l_semio_window_in_item_bool {
-    \bool_if:NF \l_semio_register_list_bool {
-      \group_begin:
-      \ExplSyntaxOff
-      \vskip\semio@block@sep@skip
+      \semio@block@before
       \group_end:
     }
   }
@@ -468,7 +451,6 @@
 }
 
 \cs_new_protected:Npn \semio_register_list_end: {
-  \semio_block_sep_after:
   \semio_register_list_reset:
   \use:c { semio@window@leave }
 }
@@ -691,7 +673,7 @@
     right=\semio@chrome@padding,
     bottom=\semio@chrome@padding,
     before~skip=0pt,
-    after~skip=0pt,
+    after~skip=\semio@block@sep@skip,
     parbox=false,
     % 🪟 Repeat the header chip row (title chip + hierarchy chip, see
     % \semio@window@header@repeat) on every continuation page-part of a
@@ -1079,7 +1061,7 @@
   \ExplSyntaxOff
   \makeatletter
   \ifvmode\else\par\fi
-  \noindent
+  \semio@noindent@noparskip
   \semio@window@header@invoke
   \makeatother
   \group_end:
@@ -1153,7 +1135,6 @@
   \semio_window_header_keep_with_body:
   \semio_window_header_muted_use:
   \semio_window_vskip_stroke_hairline:
-  \noindent
   % 🩹 A "kind" window (Table, Figure, Photo, ...) never checked
   % \l_semio_window_in_item_bool the way the generic \Window does (compare
   % \semio_window_generic_begin: below, which passes breakable=false when
@@ -1187,7 +1168,6 @@
   } {
     \par
     \end{tcolorbox}
-    \semio_block_sep_after:
     \use:c { semio@window@leave }
   }
 }
@@ -1253,7 +1233,31 @@
   \dim_set:Nn \l_semio_image_nat_h_dim { \semio@image@nat@h@value }
 }
 
+% 🎯 Distributes a symmetric trim amount across the two edges of one axis
+% according to a CSS object-position-style keyword, so cover crops toward
+% the anchor instead of always centering: #1 = the resolved align value
+% (halign for the horizontal axis, valign for the vertical), #2 = the
+% keyword that keeps the leading edge (trim goes entirely to slot b), #3 =
+% the keyword that keeps the trailing edge (trim goes entirely to slot a);
+% anything else (center, justify) splits the trim half/half.
+\cs_new_protected:Npn \semio_image_cover_trim_distribute:nnn #1#2#3 {
+  \str_case:nnF {#1} {
+    {#2} {
+      \dim_zero:N \l_semio_image_trim_a_dim
+      \dim_set_eq:NN \l_semio_image_trim_b_dim \l_semio_image_trim_dim
+    }
+    {#3} {
+      \dim_set_eq:NN \l_semio_image_trim_a_dim \l_semio_image_trim_dim
+      \dim_zero:N \l_semio_image_trim_b_dim
+    }
+  } {
+    \dim_set_eq:NN \l_semio_image_trim_a_dim \l_semio_image_trim_half_dim
+    \dim_set_eq:NN \l_semio_image_trim_b_dim \l_semio_image_trim_half_dim
+  }
+}
+
 \cs_new_protected:Npn \semio_image_typeset_cover:n #1 {
+  \typeout{[DEBUG]~semio_image_typeset_cover~called~for~#1}
   \semio_image_nat_measure:n {#1}
   \exp_args:Nxx \semio_image_target_wh_sync:nn
     { \dim_use:N \l_semio_image_target_w_dim }
@@ -1279,11 +1283,15 @@
     \dim_set:Nn \l_semio_image_trim_half_dim {
       \dim_eval:n { \dim_use:N \l_semio_image_trim_dim / 2 }
     }
+    % 🎯 Horizontal crop: keeps the left edge when halign=left, the right
+    % edge when halign=right, else centers — matches CSS object-position.
+    \exp_args:Nx \semio_image_cover_trim_distribute:nnn
+      { \semio@window@halign } { left } { right }
     \exp_args:Nxx \semio_image_cover_dims_sync:wwn
-      { \dim_use:N \l_semio_image_trim_half_dim }
-      { \dim_use:N \l_semio_image_trim_half_dim }
-      { \dim_use:N \l_semio_image_target_h_dim }
-    \semio_image_cover_render_height:n {#1}
+      { \dim_use:N \l_semio_image_trim_a_dim }
+      { \dim_use:N \l_semio_image_trim_b_dim }
+      { \dim_use:N \l_semio_image_target_w_dim }
+    \semio_image_cover_render_hcrop:n {#1}
   } {
     \dim_set:Nn \l_semio_image_trim_dim {
       \dim_eval:n {
@@ -1298,11 +1306,15 @@
     \dim_set:Nn \l_semio_image_trim_half_dim {
       \dim_eval:n { \dim_use:N \l_semio_image_trim_dim / 2 }
     }
+    % 🎯 Vertical crop: keeps the top edge when valign=top, the bottom edge
+    % when valign=bottom, else centers — matches CSS object-position.
+    \exp_args:Nx \semio_image_cover_trim_distribute:nnn
+      { \semio@window@valign } { bottom } { top }
     \exp_args:Nxx \semio_image_cover_dims_sync:wwn
-      { \dim_use:N \l_semio_image_trim_half_dim }
-      { \dim_use:N \l_semio_image_trim_half_dim }
+      { \dim_use:N \l_semio_image_trim_a_dim }
+      { \dim_use:N \l_semio_image_trim_b_dim }
       { \dim_use:N \l_semio_image_target_w_dim }
-    \semio_image_cover_render_width:n {#1}
+    \semio_image_cover_render_vcrop:n {#1}
   }
 }
 
@@ -1312,7 +1324,14 @@
   \xdef\semio@image@cover@target@dim{#3}
 }
 
-\cs_new_protected:Npn \semio_image_cover_render_height:n #1 {
+% 🎯 Both crop directions size by width only (never height) — the trimmed
+% bounding box already has exactly the target aspect ratio, so width=target
+% alone yields rendered height == target too. Staying width-only keeps cover
+% outside the tcolorbox double-typeset trigger set documented at
+% \semio_image_typeset:n's "contain" branch, so it renders correctly inside
+% a fixed-height WindowItem without an itemclip wrapper.
+\cs_new_protected:Npn \semio_image_cover_render_hcrop:n #1 {
+  \typeout{[DEBUG]~render_hcrop~a=\semio@image@cover@trim@a~b=\semio@image@cover@trim@b~target=\semio@image@cover@target@dim}
   \semio@image@graphics@cover@h
     { \semio@image@cover@trim@a }
     { \semio@image@cover@trim@b }
@@ -1320,7 +1339,8 @@
     {#1}
 }
 
-\cs_new_protected:Npn \semio_image_cover_render_width:n #1 {
+\cs_new_protected:Npn \semio_image_cover_render_vcrop:n #1 {
+  \typeout{[DEBUG]~render_vcrop~a=\semio@image@cover@trim@a~b=\semio@image@cover@trim@b~target=\semio@image@cover@target@dim}
   \semio@image@graphics@cover@w
     { \semio@image@cover@trim@a }
     { \semio@image@cover@trim@b }
@@ -1424,6 +1444,11 @@
       \semio_image_graphics_fill:n {#1}
     }
     { cover } {
+      % 🎯 Unlike contain below, cover never needs the in-item/itemclip
+      % split: \semio_image_typeset_cover:n always sizes by width (the
+      % post-trim box already has the target aspect ratio), so it never
+      % feeds a height-derived value into the graphic's sizing and stays
+      % outside the tcolorbox double-typeset trigger described below.
       \semio_image_bounded_height_required:n { cover }
       \semio_image_typeset_cover:n {#1}
     }
@@ -1671,10 +1696,12 @@
 \AfterEndPreamble {%
   \ExplSyntaxOff
   \makeatletter
-  \setlength { \parskip } { 0pt }
   \setlength { \semio@block@sep@skip } { \semio@spacing@single }
-  \semio@block@sep@before@set
+  \setlength { \parskip } { \semio@block@sep@skip }
   \setlength { \parindent } { 0pt }
+  \ifcsname chapterheadstartvskip\endcsname
+    \renewcommand*{\chapterheadstartvskip}{}%
+  \fi
   \semio@chrome@dims@compute
   \setcounter{tocdepth}{\semio@toc@depth@unlimited}
   % 🪜 Every heading level through \subparagraph gets its own chip color and
@@ -1747,7 +1774,6 @@
   \semio_window_textsize_apply:
 }
 \cs_new_protected:Npn \semio_window_generic_end_tail: {
-  \bool_if:NF \l_semio_window_in_item_bool { \semio_block_sep_after: }
   \use:c { semio@window@leave }
 }
 \cs_new_protected:Npn \semio_window_generic_end: {
@@ -2220,12 +2246,8 @@
 }
 
 
-\newcommand{\semio@heading@block@after}{%
-  \vskip\semio@block@sep@skip
-}
-
 \newcommand{\semio@heading@row@wrap}[1]{%
-  \noindent
+  \semio@noindent@noparskip
   \vbox{%
     #1%
   }%
@@ -2324,6 +2346,7 @@
 \def\semio@heading@style@outline@marker{outline}%
 
 \newcommand{\semio@koma@heading@lines}[5]{%
+  \semio@block@before
   \ifnum\numexpr\semio@toc@level{#1}\relax>\value{tocdepth}\else
     \semio@toc@track@num{#1}{\csname the#1\endcsname}{#3}%
   \fi
@@ -2353,9 +2376,14 @@
 }
 
 \newcommand{\semio@heading@install@spacing}[1]{%
+  % 🪝 KOMA suppresses beforeskip when a heading directly follows another
+  % heading (\@nobreak); the real before-space is emitted unconditionally
+  % by \semio@block@before inside \semio@koma@heading@lines instead. Both
+  % skips stay a strictly positive 1sp only so KOMA keeps display-style
+  % (not run-in) heading placement — see \@xsect.
   \RedeclareSectionCommand[
-    beforeskip=\semio@block@sep@before@skip,
-    afterskip=\semio@block@sep@skip,
+    beforeskip=1sp,
+    afterskip=1sp,
   ]{#1}%
 }
 
@@ -2501,7 +2529,7 @@
 }
 
 \newcommand{\semio@nest@paragraph}[1]{%
-  \semio@heading@block@before
+  \semio@block@before
   \semio@nest@counter@step
   \edef\semio@nest@num{\semio@nest@build@number}%
   \ifnum\numexpr\semio@toc@level@subparagraph+\value{semio@nest@depth}\relax>\value{tocdepth}\else
@@ -2509,7 +2537,7 @@
   \fi
   \semio@nest@style@resolve
   \semio@heading@pair@nofill@num{\semio@nest@num}{#1}{semio-chrome-foreground}{\semio@nest@style@border}%
-  \semio@heading@block@after
+  \semio@block@after
 }
 
 \newenvironment{SemioNest}{%
@@ -2551,7 +2579,7 @@
 
 \newcommand{\semio@window@header@row@wrap}[1]{%
   \ifvmode\else\par\fi
-  \noindent
+  \semio@noindent@noparskip
   #1%
   \ifvmode\nointerlineskip\fi
 }
@@ -2595,18 +2623,25 @@
 \newcommand{\semio@image@cover@target@dim}{0pt}
 \newcommand{\semio@image@target@w@plain}{0pt}
 \newcommand{\semio@image@target@h@plain}{0pt}
+% 🎯 Measures into a dedicated savebox rather than \settowidth/
+% \settototalheight, which stage their content through the shared
+% \@tempboxa register — clobbering it while cover's measurement runs
+% inside a tcolorbox body corrupts tcolorbox's own box bookkeeping and
+% makes it paint the box twice (confirmed: reproduces for any
+% narrower-than-window cover image, contain is unaffected since it never
+% measures via \@tempboxa-based commands).
+\newsavebox{\semio@image@measure@box}
 \newcommand{\semio@image@measure}[1]{%
-  \settowidth{\semio@image@nat@w}{\includegraphics{#1}}%
-  \settototalheight{\semio@image@nat@h}{\includegraphics{#1}}%
-  \xdef\semio@image@nat@w@value{\the\semio@image@nat@w}%
-  \xdef\semio@image@nat@h@value{\the\semio@image@nat@h}%
+  \sbox{\semio@image@measure@box}{\includegraphics{#1}}%
+  \xdef\semio@image@nat@w@value{\the\wd\semio@image@measure@box}%
+  \xdef\semio@image@nat@h@value{\the\dimexpr\ht\semio@image@measure@box+\dp\semio@image@measure@box\relax}%
 }
 \newcommand{\semio@image@graphics@none}[1]{\leavevmode\includegraphics{#1}}
 \newcommand{\semio@image@graphics@w}[2]{\leavevmode\includegraphics[width=#1, keepaspectratio=true]{#2}}
 \newcommand{\semio@image@graphics@wh}[3]{\leavevmode\includegraphics[width=#1, height=#2, keepaspectratio=true]{#3}}
 \newcommand{\semio@image@graphics@fill}[3]{\leavevmode\includegraphics[width=#1, height=#2, keepaspectratio=false]{#3}}
 \newcommand{\semio@image@graphics@cover@h}[4]{%
-  \edef\semio@image@cover@opts{trim=#1 0pt #2 0pt, clip=true, height=#3}%
+  \edef\semio@image@cover@opts{trim=#1 0pt #2 0pt, clip=true, width=#3}%
   \leavevmode\expandafter\includegraphics\expandafter[\semio@image@cover@opts]{#4}%
 }
 \newcommand{\semio@image@graphics@cover@w}[4]{%

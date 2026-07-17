@@ -2751,10 +2751,9 @@ export type UiTranslationSchema = {
         readonly next: UiLabelValue;
       };
     };
-    readonly protocolList: {
+    readonly blockList: {
       readonly steps: UiLabelValue;
       readonly addStep: UiLabelValue;
-      readonly empty: UiLabelValue;
     };
     readonly ring: {
       readonly demo: UiLabelValue;
@@ -3267,10 +3266,9 @@ export const uiChromeTranslationBundles = {
           noPlacement: { label: { normal: "Keine kollisionsfreie Platzierung an diesem Verbinder", beginner: "Keine kollisionsfreie Platzierung an diesem Verbinder" } },
           canvasUnavailable: { label: { normal: "Leinwand nicht verfuegbar", beginner: "Leinwand nicht verfuegbar" } },
         },
-        protocolList: {
+        blockList: {
           steps: { label: { normal: "Schritte", beginner: "Schritte" } },
           addStep: { label: { normal: "Schritt hinzufuegen", beginner: "Schritt hinzufuegen" } },
-          empty: { label: { normal: "Kein Protokoll-Szenario", beginner: "Kein Protokoll-Szenario" } },
         },
         docs: {
           navigation: {
@@ -3802,10 +3800,9 @@ export const uiChromeTranslationBundles = {
           noPlacement: { label: { normal: "No collision-free placement at this connector", beginner: "No collision-free placement at this connector" } },
           canvasUnavailable: { label: { normal: "Canvas unavailable", beginner: "Canvas unavailable" } },
         },
-        protocolList: {
+        blockList: {
           steps: { label: { normal: "Steps", beginner: "Steps" } },
           addStep: { label: { normal: "Add Step", beginner: "Add Step" } },
-          empty: { label: { normal: "No protocol scene", beginner: "No protocol scene" } },
         },
         docs: {
           navigation: {
@@ -21250,7 +21247,7 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ columns, className, 
   }, [sorted.length]);
   const graphHeight = Math.max(sorted.length, 1) * rowHeight;
   return (
-    <div className={cn("text-xs", className)} data-testid="vcs-history-table">
+    <div className={cn("text-xs", className)} data-testid="graph-timeline-table">
       {sorted.length === 0 ? (
         <div className="px-single py-single text-muted-foreground">—</div>
       ) : (
@@ -28692,7 +28689,7 @@ if (treeVitest) {
         },
       ];
       const markup = renderToStaticMarkup(<HistoryTable columns={columns} />);
-      expect(markup).toContain('data-testid="vcs-history-table"');
+      expect(markup).toContain('data-testid="graph-timeline-table"');
       expect(markup).toContain('d="M ');
       expect(markup.match(/<line /g)?.length ?? 0).toBeGreaterThanOrEqual(3);
       expect(markup.match(/<circle /g)?.length).toBe(3);
@@ -28704,7 +28701,7 @@ if (treeVitest) {
 
     it("renders an em dash placeholder for an empty history", () => {
       const markup = renderToStaticMarkup(<HistoryTable columns={[]} />);
-      expect(markup).toContain('data-testid="vcs-history-table"');
+      expect(markup).toContain('data-testid="graph-timeline-table"');
       expect(markup).toContain("—");
     });
 

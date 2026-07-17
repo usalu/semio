@@ -1,8 +1,9 @@
 {
   "title": "Puzzle 3D Selection and Tools Overhaul",
   "emoji": "🧩",
-  "status": "open",
+  "status": "closed",
   "description": "Overhaul Puzzle 3D (and 5D parity) selection/tools: remove select utility, move selection to window options, fix worldPick deselect, gumball only on transform tools, vortex click-vs-drag select vs connect.",
+  "summary": "Overhauled Puzzle 3D selection/tools: removed select utility (default move), expanded Select window measures, fixed worldPick deselect and cross-entity selection, gated gumball to transform tools only, limited engagement session to brush/fill/relocate, and implemented vortex click-vs-drag in World3dHost. Applied matching 5D 3D-window fixes.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2024"
   },

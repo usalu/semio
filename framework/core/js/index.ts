@@ -624,19 +624,19 @@ export type NoteCanvasScene = {
 };
 
 /** 🗄️ A checkpoint ancestor-graph history view. `columnsJson` is a `HistoryColumn[]` array, newest checkpoint first. */
-export type VcsHistoryScene = {
+export type GraphTimelineScene = {
   readonly columnsJson: string;
 };
 
-/** 🧩 A palette entry for a block kind insertable into a {@link ProtocolListScene}, contributed either by the host app's own built-ins or by a `protocolBlockKind` module contribution. */
-export type ProtocolPaletteEntry = {
+/** 🧩 A palette entry for a block kind insertable into a {@link BlockListScene}, contributed either by the host app's own built-ins or by a `protocolBlockKind` module contribution. */
+export type BlockPaletteEntry = {
   readonly blockKind: string;
   readonly label: string;
   readonly iconId: string;
 };
 
-/** 🧩 A strict, ordered list of steps/blocks for the Blockly-like list editor. `stepsJson` is a `ProtocolStep[]` array, `paletteJson` is a `ProtocolPaletteEntry[]` array of the block kinds available to insert. */
-export type ProtocolListScene = {
+/** 🧩 A strict, ordered list of steps/blocks for the Blockly-like list editor. `stepsJson` is a `ProtocolStep[]` array, `paletteJson` is a `BlockPaletteEntry[]` array of the block kinds available to insert. */
+export type BlockListScene = {
   readonly stepsJson: string;
   readonly paletteJson: string;
   readonly selectedId?: string;
@@ -653,7 +653,7 @@ export type UiExternalSlotNode = {
 };
 
 /** 🧭 The dispatch key on {@link UiComponentSceneNode} — matches the lazy-loaded host component per `framework/renderer/react/components/*-host.tsx`. */
-export type ComponentKind = "canvas-2d" | "world-3d" | "node-graph" | "text-editor" | "table" | "raster" | "gis2d-map" | "puzzle2d-board" | "icon-render" | "note-canvas" | "vcs-history" | "protocol-list";
+export type ComponentKind = "canvas-2d" | "world-3d" | "node-graph" | "text-editor" | "table" | "raster" | "gis2d-map" | "puzzle2d-board" | "icon-render" | "note-canvas" | "graph-timeline" | "block-list";
 
 /** 🖥️ A native (non-declarative) rendering surface — mirrors the wasm `componentScene` node; the active `componentKind` selects which optional scene field is populated. */
 export type UiComponentSceneNode = {
@@ -674,8 +674,8 @@ export type UiComponentSceneNode = {
   readonly puzzle2dBoard?: Puzzle2dBoardScene;
   readonly iconRender?: IconRenderScene;
   readonly noteCanvas?: NoteCanvasScene;
-  readonly vcsHistory?: VcsHistoryScene;
-  readonly protocolList?: ProtocolListScene;
+  readonly graphTimeline?: GraphTimelineScene;
+  readonly blockList?: BlockListScene;
 };
 
 /** 🧷 Shared prop shape for every `framework/renderer/react/components/*-host.tsx` component. */
@@ -1161,7 +1161,6 @@ export type PluginUiNode = Record<string, unknown> & { readonly type: string };
 
 /** 🗣️ Locale/terminology-aware label patch for an app's window-kind/panel-tab/mode labels, resolved fresh per {@link PluginViewState} — merge over the static {@link PluginManifest} app labels by id. */
 export type PluginAppLabelsOverlay = {
-  readonly appLabel?: string;
   readonly windowKindLabels: Readonly<Record<string, string>>;
   readonly panelTabLabels: Readonly<Record<string, string>>;
   readonly modeLabels: Readonly<Record<string, string>>;
@@ -1188,7 +1187,6 @@ export const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = {
 /** 🗣️ Rust's `skip_serializing_if` omits empty maps entirely, so a parsed overlay may be missing keys — fill them back in. */
 export function normalizeAppLabelsOverlay(raw: Partial<PluginAppLabelsOverlay> | null | undefined): PluginAppLabelsOverlay {
   return {
-    appLabel: raw?.appLabel,
     windowKindLabels: raw?.windowKindLabels ?? {},
     panelTabLabels: raw?.panelTabLabels ?? {},
     modeLabels: raw?.modeLabels ?? {},

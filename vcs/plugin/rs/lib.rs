@@ -1,10 +1,10 @@
 //! 🗂️ VCS plugin — declarative version-control play app bundled as a hot-swappable WASM component.
 
 use semio_framework_plugin::{SurfaceKind,
-    build_vcs_history_scene, create_default_layout, ui_inspector_readonly_field,
+    build_graph_timeline_scene, create_default_layout, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, ActionEmit, App, ActionDescriptor, AppLabelsOverlay, DocumentApp,
     DocumentView, HistoryView, PanelGroup, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiStackNode,
-    UiTreeItemNode, UiTreeNode, UiTreeSectionNode, VcsHistoryScene, ViewState, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    UiTreeItemNode, UiTreeNode, UiTreeSectionNode, GraphTimelineScene, ViewState, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -682,10 +682,10 @@ fn render_editor(projection: &VcsDemoProjection, labels: &VcsLabels) -> UiNode {
 }
 
 fn render_history(history: &HistoryView) -> UiNode {
-    build_vcs_history_scene(
+    build_graph_timeline_scene(
         VCS_PLAY_SURFACE_HISTORY,
         VCS_PLAY_APP_ID,
-        VcsHistoryScene {
+        GraphTimelineScene {
             columns_json: serde_json::to_string(&history.columns).unwrap_or_else(|_| "[]".into()),
         },
     )
@@ -785,7 +785,6 @@ impl DocumentApp for VcsPlayApp {
         let labels = vcs_labels(view_state);
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         AppLabelsOverlay {
-            app_label: None,
             window_kind_labels: std::collections::HashMap::from([
                 (VCS_PLAY_WINDOW_EDITOR.to_string(), labels.window_editor.to_string()),
                 (VCS_PLAY_WINDOW_HISTORY.to_string(), labels.window_history.to_string()),
@@ -839,7 +838,7 @@ fn create_vcs_app() -> App {
             .mode("edit", "Edit")
             .default_mode_id("edit")
             .window_kind(VCS_PLAY_WINDOW_EDITOR, "Editor", VCS_PLAY_BODY_EDITOR, SurfaceKind::Canvas2d)
-            .window_kind(VCS_PLAY_WINDOW_HISTORY, "History", VCS_PLAY_BODY_HISTORY, SurfaceKind::VcsHistory)
+            .window_kind(VCS_PLAY_WINDOW_HISTORY, "History", VCS_PLAY_BODY_HISTORY, SurfaceKind::GraphTimeline)
             .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, VCS_PLAY_BODY_DOCUMENT)
             .panel_tab("framework.panel.inspection", "Inspection", PanelGroup::Details, VCS_PLAY_BODY_INSPECTION)
             .operation("incrementCounter", "Increment Counter")
@@ -911,7 +910,7 @@ mod tests {
         let mut app = new_app();
         let node = app.render(VCS_PLAY_BODY_HISTORY, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("vcs-history"), "missing vcs-history surface kind: {json}");
+        assert!(json.contains("graph-timeline"), "missing graph-timeline surface kind: {json}");
         assert!(json.contains("lane"), "missing lane field in history columns: {json}");
         assert!(!json.contains("\"table\""), "history must not fall back to a generic table: {json}");
     }

@@ -1951,10 +1951,10 @@ pub enum SurfaceKind {
     IconRender,
     #[serde(rename = "note-canvas")]
     NoteCanvas,
-    #[serde(rename = "vcs-history")]
-    VcsHistory,
-    #[serde(rename = "protocol-list")]
-    ProtocolList,
+    #[serde(rename = "graph-timeline")]
+    GraphTimeline,
+    #[serde(rename = "block-list")]
+    BlockList,
 }
 
 impl SurfaceKind {
@@ -1971,8 +1971,8 @@ impl SurfaceKind {
             Self::Puzzle2dBoard => "puzzle2d-board",
             Self::IconRender => "icon-render",
             Self::NoteCanvas => "note-canvas",
-            Self::VcsHistory => "vcs-history",
-            Self::ProtocolList => "protocol-list",
+            Self::GraphTimeline => "graph-timeline",
+            Self::BlockList => "block-list",
         }
     }
 
@@ -2527,15 +2527,15 @@ impl NoteCanvasScene {
  * (see `vcs::HistoryColumn`), newest checkpoint first. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct VcsHistoryScene {
+pub struct GraphTimelineScene {
     pub columns_json: String,
 }
 
-/** @emoji 🧩 A palette entry for a block kind insertable into a [`ProtocolListScene`], contributed
+/** @emoji 🧩 A palette entry for a block kind insertable into a [`BlockListScene`], contributed
  * either by the host app's own built-ins or by a `Contribution::ProtocolBlockKind` module. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ProtocolPaletteEntry {
+pub struct BlockPaletteEntry {
     pub block_kind: String,
     pub label: String,
     pub icon_id: String,
@@ -2543,10 +2543,10 @@ pub struct ProtocolPaletteEntry {
 
 /** @emoji 🧩 A strict, ordered list of steps/blocks for the Blockly-like list editor. `steps_json`
  * is a `ProtocolStep[]` array (see `protocol::ProtocolStep`), `palette_json` is a
- * `ProtocolPaletteEntry[]` array of the block kinds available to insert. */
+ * `BlockPaletteEntry[]` array of the block kinds available to insert. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ProtocolListScene {
+pub struct BlockListScene {
     pub steps_json: String,
     pub palette_json: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2597,9 +2597,9 @@ pub struct UiComponentSceneNode {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub note_canvas: Option<NoteCanvasScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub vcs_history: Option<VcsHistoryScene>,
+    pub graph_timeline: Option<GraphTimelineScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub protocol_list: Option<ProtocolListScene>,
+    pub block_list: Option<BlockListScene>,
 }
 //#endregion 🔖ComponentScenes
 
@@ -2842,8 +2842,8 @@ fn component_scene(
         puzzle2d_board,
         icon_render: None,
         note_canvas: None,
-        vcs_history: None,
-        protocol_list: None,
+        graph_timeline: None,
+        block_list: None,
     })
 }
 
@@ -3156,15 +3156,15 @@ pub fn build_note_canvas_scene(
     })
 }
 
-pub fn build_vcs_history_scene(
+pub fn build_graph_timeline_scene(
     surface_id: impl Into<String>,
     controller_id: impl Into<String>,
-    scene: VcsHistoryScene,
+    scene: GraphTimelineScene,
 ) -> UiNode {
     let UiNode::ComponentScene(node) = component_scene(
         surface_id,
         controller_id,
-        SurfaceKind::VcsHistory,
+        SurfaceKind::GraphTimeline,
         None,
         None,
         None,
@@ -3180,7 +3180,7 @@ pub fn build_vcs_history_scene(
         unreachable!()
     };
     UiNode::ComponentScene(UiComponentSceneNode {
-        vcs_history: Some(scene),
+        graph_timeline: Some(scene),
         ..node
     })
 }
@@ -3369,8 +3369,8 @@ mod ui_node_wire_format_tests {
                     puzzle2d_board: None,
                     icon_render: None,
                     note_canvas: None,
-                    vcs_history: None,
-                    protocol_list: None,
+                    graph_timeline: None,
+                    block_list: None,
                 }),
                 UiNode::ExternalSlot(UiExternalSlotNode {
                     plugin_id: "plugin1".into(),
@@ -3410,7 +3410,7 @@ mod ui_node_wire_format_tests {
         assert_eq!(roundtripped, loading);
     }
 
-    const GOLDEN_SURFACE_KIND_JSON: &str = "[\"canvas-2d\",\"world-3d\",\"node-graph\",\"text-editor\",\"table\",\"raster\",\"virtualFileSystem\",\"gis2d-map\",\"puzzle2d-board\",\"icon-render\",\"note-canvas\",\"vcs-history\"]";
+    const GOLDEN_SURFACE_KIND_JSON: &str = "[\"canvas-2d\",\"world-3d\",\"node-graph\",\"text-editor\",\"table\",\"raster\",\"virtualFileSystem\",\"gis2d-map\",\"puzzle2d-board\",\"icon-render\",\"note-canvas\",\"graph-timeline\"]";
 
     #[test]
     fn surface_kind_serializes_to_golden_json() {
@@ -3426,7 +3426,7 @@ mod ui_node_wire_format_tests {
             SurfaceKind::Puzzle2dBoard,
             SurfaceKind::IconRender,
             SurfaceKind::NoteCanvas,
-            SurfaceKind::VcsHistory,
+            SurfaceKind::GraphTimeline,
         ];
         let json = serde_json::to_string(&kinds).unwrap();
         assert_eq!(json, GOLDEN_SURFACE_KIND_JSON);
@@ -3465,10 +3465,10 @@ mod ui_node_wire_format_tests {
             GisMapScene::base("{}".into(), "{}".into()),
             Puzzle2dBoardScene::base("{}".into(), "{}".into(), true),
             NoteCanvasScene::base("{}".into(), "select".into(), "edit".into(), true),
-            VcsHistoryScene { columns_json: "[]".into() },
+            GraphTimelineScene { columns_json: "[]".into() },
             NodeGraphScene::base("[]".into(), "[]".into(), "{}".into()),
             TextEditorScene::base("buf".into(), Some("rust".into()), None),
-            ProtocolListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None },
+            BlockListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None },
         );
         let json = serde_json::to_string(&scenes).unwrap();
         assert_eq!(json, GOLDEN_SCENES_JSON);
@@ -3481,10 +3481,10 @@ mod ui_node_wire_format_tests {
             GisMapScene,
             Puzzle2dBoardScene,
             NoteCanvasScene,
-            VcsHistoryScene,
+            GraphTimelineScene,
             NodeGraphScene,
             TextEditorScene,
-            ProtocolListScene,
+            BlockListScene,
         ) = serde_json::from_str(&json).unwrap();
         assert_eq!(roundtripped, scenes);
     }
@@ -11713,8 +11713,8 @@ mod tests {
             puzzle2d_board: None,
             icon_render: None,
             note_canvas: None,
-            vcs_history: None,
-            protocol_list: None,
+            graph_timeline: None,
+            block_list: None,
         })
     }
 

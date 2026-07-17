@@ -68,6 +68,17 @@
       }
     },
     {
+      "name": "🛠️dev🎛️dashboard",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./repo/cli/rs/script.ts run",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 1
+      }
+    },
+    {
       "name": "🛠️dev📐cad⚛️react",
       "type": "node-terminal",
       "request": "launch",
@@ -2295,6 +2306,57 @@
       }
     },
     {
+      "name": "🛠️dev🏺remodel⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:remodel",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "REMODEL_PLAY_PORT": "6063",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 389
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6063)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🏺remodel🧊wgpu🌐wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:remodel",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "REMODEL_PLAY_PORT": "6163",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 389.1
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6163)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🏺remodel🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native remodel",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 389.2
+      }
+    },
+    {
       "name": "🛠️dev🖱️ui🪁typecheck",
       "type": "node-terminal",
       "request": "launch",
@@ -2336,6 +2398,108 @@
       "presentation": {
         "group": "3_dev",
         "order": 391.2
+      }
+    },
+    {
+      "name": "🛠️dev🏗️fem🩻2d⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:fem:2d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "FEM_2D_PLAY_PORT": "6086",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 392
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6086)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🏗️fem🩻2d🧊wgpu🌐wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:fem:2d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "FEM_2D_PLAY_PORT": "6186",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 392.1
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6186)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🏗️fem🩻2d🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native fem2d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 392.2
+      }
+    },
+    {
+      "name": "🛠️dev🏗️fem🏙️3d⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:fem:3d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "FEM_3D_PLAY_PORT": "6087",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 392.3
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6087)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🏗️fem🏙️3d🧊wgpu🌐wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:fem:3d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "FEM_3D_PLAY_PORT": "6187",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 392.4
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6187)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🏗️fem🏙️3d🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native fem3d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 392.5
       }
     },
     {

@@ -1,0 +1,13 @@
+{
+  "title": "Generalize Apps onto Framework Primitives",
+  "emoji": "🧰",
+  "status": "open",
+  "description": "All apps (cad, draw, forms, gis, note, procedural, process, puzzle, raster, reasoning/mindmap, shooting, sourcing, writer, flow, layout, lowpoly, trinity, s, sequence, vcs, remodel, imperative, mathematical, protocol) must be implemented with the same mechanisms using only primitives from the framework. The framework must be rich enough to enable all apps but contain zero hardcoded knowledge of any specific app.\n\nTwo violations to fix:\n1. Framework knows apps: six app-named surface kinds (Raster, GisMap, Puzzle2dBoard, NoteCanvas, VcsHistory, ProtocolList) baked into ui/wgpu/rs, framework/core/js, ui-interpreter.tsx, framework/renderer/wgpu; os-shell.tsx statically imports 5 app engine wasm packages; OS resource catalog hardcodes the app roster; dev tooling branches on gis/puzzle/cad; plugin SDK depends on the protocol app crate.\n2. Apps don't share mechanisms: 24 plugin crates copy-paste panel builders, tree_item helpers, selection_ids, \u003cName\u003eLabels terminology structs, and the whole test harness; naming/region/layout conventions drift; writer/draw/layout re-implement existing crates; mindmap imports puzzle_2d directly.\n\nFull plan (waves, consistency contract, file ownership, verification) is at /Users/ueli/.claude/plans/all-apps-must-be-moonlit-turing.md — executed via a multi-agent Workflow across 5 waves: (0) setup, (1) framework head (SDK primitives, surface generalization, OS resource registry, engine relocation, metadata-driven tooling), (2) per-app fan-out (23 crates adopt SDK primitives + normalize structure), (3) deep consolidation (writer/draw/layout/mindmap onto existing shared crates), (4) adversarial audit + durable policy lint.\n\nChild tickets will be opened per wave/agent with this as parent.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2029"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪fc5559647ab44a3f805d6da2add36677"
+  ]
+}

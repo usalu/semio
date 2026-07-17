@@ -2,14 +2,13 @@
 //! WASM component. Independently launchable/testable without going through `forms`.
 
 use protocol::{
-    empty_protocol_projection, ProtocolBlock, ProtocolOp, ProtocolSpec, PROTOCOL_BUILTIN_KINDS,
-    PROTOCOL_DOCUMENT_SCHEMA,
+    add_block_op, add_step_op, empty_protocol_projection, move_block_op, move_step_op, remove_block_op,
+    remove_step_op, render_protocol_builder, update_protocol_title_op, ProtocolBlock, ProtocolBuilderConfig,
+    ProtocolOp, ProtocolSpec, PROTOCOL_BUILDER_LABELS_EN, PROTOCOL_BUILTIN_KINDS, PROTOCOL_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{
-    add_block_op, add_step_op, create_default_layout, move_block_op, move_step_op, remove_block_op, remove_step_op,
-    render_protocol_builder, ui_text, update_protocol_title_op, ActionArgDef, ActionArgOption, ActionEmit, App,
-    DocumentApp, DocumentView, PluginBundle, ProtocolBuilderConfig, ProtocolPaletteEntry, SurfaceKind, UiNode,
-    ViewState, PROTOCOL_BUILDER_LABELS_EN,
+    create_default_layout, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, DocumentApp, DocumentView,
+    PluginBundle, BlockPaletteEntry, SurfaceKind, UiNode, ViewState,
 };
 use serde_json::Value;
 
@@ -25,20 +24,17 @@ const PROTOCOL_PLAY_WINDOW_BUILDER: &str = "protocol-builder";
 //#region 🔖Terminology
 /// 🗣️ Complete UI label set for the protocol-play app; one field per label makes every locale combination compile-checked.
 struct ProtocolPlayLabels {
-    app_label: &'static str,
     mode_builder: &'static str,
     window_builder: &'static str,
     kind_arg: &'static str,
 }
 
 const PROTOCOL_PLAY_LABELS_EN: ProtocolPlayLabels = ProtocolPlayLabels {
-    app_label: "Protocol",
     mode_builder: "Builder",
     window_builder: "Builder",
     kind_arg: "Kind",
 };
 const PROTOCOL_PLAY_LABELS_DE: ProtocolPlayLabels = ProtocolPlayLabels {
-    app_label: "Protokoll",
     mode_builder: "Builder",
     window_builder: "Builder",
     kind_arg: "Art",
@@ -89,10 +85,10 @@ fn protocol_builder_config() -> ProtocolBuilderConfig {
     }
 }
 
-fn builtin_palette() -> Vec<ProtocolPaletteEntry> {
+fn builtin_palette() -> Vec<BlockPaletteEntry> {
     PROTOCOL_BUILTIN_KINDS
         .iter()
-        .map(|kind| ProtocolPaletteEntry {
+        .map(|kind| BlockPaletteEntry {
             block_kind: (*kind).into(),
             label: (*kind).into(),
             icon_id: "circle".into(),
@@ -250,7 +246,6 @@ impl DocumentApp for ProtocolPlayApp {
         let labels = protocol_play_labels(view_state);
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         semio_framework_plugin::AppLabelsOverlay {
-            app_label: Some(labels.app_label.to_string()),
             window_kind_labels: std::collections::HashMap::from([(PROTOCOL_PLAY_WINDOW_BUILDER.to_string(), labels.window_builder.to_string())]),
             panel_tab_labels: std::collections::HashMap::new(),
             mode_labels: std::collections::HashMap::from([("builder".to_string(), labels.mode_builder.to_string())]),
@@ -270,7 +265,7 @@ fn create_protocol_play_app() -> App {
             .document(["semio", "protocol"])
             .mode("builder", "Builder")
             .default_mode_id("builder")
-            .window_kind(PROTOCOL_PLAY_WINDOW_BUILDER, "Builder", PROTOCOL_PLAY_BODY_BUILDER, SurfaceKind::ProtocolList)
+            .window_kind(PROTOCOL_PLAY_WINDOW_BUILDER, "Builder", PROTOCOL_PLAY_BODY_BUILDER, SurfaceKind::BlockList)
             .default_layout(create_default_layout(&[PROTOCOL_PLAY_WINDOW_BUILDER.into()], "row", None, None))
             .operation("addStep", "Add Step")
             .operation("removeStep", "Remove Step")

@@ -1,0 +1,14 @@
+{
+  "title": "Fix Duplicate Playground Ports Between Lowpoly And Protocol Plugins",
+  "emoji": "🔌",
+  "status": "closed",
+  "description": "The native plugin-registry validator (repo/cli/rs, `semio plugin registry check`) flags that lowpoly/plugin/rs/Cargo.toml and protocol/plugin/rs/Cargo.toml both declare `ports = { react = 6078, wgpu = 6178 }` in their [[package.metadata.semio.playground]] block — a pre-existing duplicate the uniqueness validation now catches. Keep 6078/6178 on lowpoly (it has active examples: concrete-forest-left, default) and reassign protocol to a free, currently-unused port pair (checked against every plugin Cargo.toml and framework/plugin/registry/generated/playgrounds.json), then regenerate the registry catalog.",
+  "summary": "Fixed the genuine pre-existing playground port collision: protocol/plugin/rs and lowpoly/plugin/rs both declared react=6078/wgpu=6178. Kept 6078/6178 on lowpoly (has active examples: concrete-forest-left, default) and reassigned protocol to the free pair react=6085/wgpu=6185, checked against every plugin Cargo.toml and the generated catalog. Regenerated framework/plugin/registry/generated/playgrounds.json via `bun nx run @semio-tech/plugin-registry:generate` (60 plugin crates, 62 playgrounds). Verified programmatically that no genuine duplicate port pairs remain among real (non-worktree) crates. The `check` nx target still reports duplicates, but only against .claude/worktrees/agent-afa905cc164f52ed8 — a separate, concurrently active git worktree for another agent session (confirmed via `git worktree list`) that the registry scanner doesn't exclude from its crate discovery. That scanner behavior is a pre-existing, unrelated bug (it will false-flag duplicates against any concurrent worktree) and is out of scope for this ticket.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2028"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "⚪002680e78ee84883acc19f2ade32faa0"
+  ]
+}

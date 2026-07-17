@@ -975,7 +975,6 @@ impl DocumentApp for DrawApp {
         let labels = draw_labels(view_state);
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         semio_framework_plugin::AppLabelsOverlay {
-            app_label: None,
             window_kind_labels: HashMap::from([(DRAW_PLAY_WINDOW_CANVAS.to_string(), labels.window_canvas.to_string())]),
             panel_tab_labels: HashMap::from([
                 ("framework.panel.document".to_string(), labels.panel_document.to_string()),

@@ -2,9 +2,9 @@ import { useMemo } from "react";
 import { HistoryTable, useLabel, type HistoryColumn } from "@semio-tech/ui-react";
 import type { ComponentSceneHostProps } from "@semio-tech/framework-core";
 
-//#region VcsHistoryHost
-export function VcsHistoryHost({ node, onAction }: ComponentSceneHostProps) {
-  const scene = node.vcsHistory;
+//#region GraphTimelineHost
+export function GraphTimelineHost({ node, onAction }: ComponentSceneHostProps) {
+  const scene = node.graphTimeline;
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const columns = useMemo(() => {
     if (!scene) return [] as HistoryColumn[];
@@ -15,10 +15,10 @@ export function VcsHistoryHost({ node, onAction }: ComponentSceneHostProps) {
     }
   }, [scene]);
 
-  if (!scene) return <div className="semio-vcs-history-empty">{emptySceneLabel}</div>;
+  if (!scene) return <div className="semio-graph-timeline-empty">{emptySceneLabel}</div>;
 
   return (
-    <div className="semio-vcs-history-host h-full min-h-0 w-full overflow-auto p-single" data-surface-id={node.surfaceId}>
+    <div className="semio-graph-timeline-host h-full min-h-0 w-full overflow-auto p-single" data-surface-id={node.surfaceId}>
       <HistoryTable
         columns={columns}
         onSelectCheckpoint={(checkpointId) =>
@@ -32,4 +32,4 @@ export function VcsHistoryHost({ node, onAction }: ComponentSceneHostProps) {
     </div>
   );
 }
-//#endregion VcsHistoryHost
+//#endregion GraphTimelineHost

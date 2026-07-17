@@ -1912,7 +1912,6 @@ impl DocumentApp for SHomeApp {
         let labels = s_home_labels(view_state);
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         semio_framework_plugin::AppLabelsOverlay {
-            app_label: None,
             window_kind_labels: std::collections::HashMap::from([(S_HOME_WINDOW.to_string(), labels.window_main.to_string())]),
             panel_tab_labels: HashMap::new(),
             mode_labels: HashMap::new(),
@@ -2768,7 +2767,6 @@ impl DocumentApp for SStudioApp {
         let labels = s_studio_labels(view_state);
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         semio_framework_plugin::AppLabelsOverlay {
-            app_label: None,
             window_kind_labels: std::collections::HashMap::from([
                 (S_PLAY_WINDOW_MEDIA_GRAPH.to_string(), labels.window_media_graph.to_string()),
                 (S_PLAY_WINDOW_MEDIA_VFS.to_string(), labels.window_media_vfs.to_string()),

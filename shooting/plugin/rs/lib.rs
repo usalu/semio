@@ -1541,7 +1541,6 @@ impl DocumentApp for ShootingPlayApp {
         let labels = shooting_labels(view_state);
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         AppLabelsOverlay {
-            app_label: None,
             window_kind_labels: HashMap::from([
                 (SHOOTING_PLAY_WINDOW_SCENE.to_string(), labels.window_scene.to_string()),
                 (SHOOTING_PLAY_WINDOW_ICON.to_string(), labels.window_icon.to_string()),

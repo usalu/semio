@@ -1,0 +1,13 @@
+{
+  "title": "Extract Shared Plugin-SDK Primitives And De-App Framework Plugin",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "F1: Extract shared plugin-SDK primitives (PanelKit tree-item/selection helpers, Terminology locale-label resolver + macro, Testkit generic test harness) into framework/plugin/rs, add a ResourceKindSpec manifest primitive to AppBuilder, and remove framework/plugin/rs's dependency on the protocol app-domain crate by moving its protocol-specific rendering code (generate_mode + protocol_mode modules: render_question_field, render_generation_form_body, render_generation_preview_text, ProtocolBuilderConfig, protocol builder op-builders/render) into protocol/rs. Fix call sites in protocol-plugin, procedural-plugin, and flow-plugin. Produce a migration guide for the new primitives' exact signatures.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2033"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪0b071556c110426d8fce6f15ff9bfd97"
+  ]
+}

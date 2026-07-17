@@ -32,8 +32,8 @@ import {
   Navbar,
   NavbarExampleSelect,
   PANEL_ANCHORS,
+  PanelChromeTabBar,
   PanelDockProvider,
-  PanelToggleGroup,
   Popover,
   PopoverAnchor,
   PopoverContent,
@@ -129,7 +129,7 @@ import {
   type PanelDock,
   type PanelTabDockMove,
   type PanelTabNode,
-  type PanelToggleItem,
+  type PanelTabSelectionOptions,
   type PanelTreeUnitDockMove,
   type RibbonDirection,
   type RibbonRow,
@@ -259,7 +259,7 @@ import {
   type UiTreeNode,
   type UiTreeSectionNode,
   type UiVec3Node,
-  type VcsHistoryScene,
+  type GraphTimelineScene,
   type VirtualFileSystemScene,
   type WindowEngagement,
   type WindowEngagementControl,
@@ -903,6 +903,9 @@ const DEFAULT_PANEL_SIZES: Record<PanelAnchor, number> = {
 const FRAMEWORK_CATEGORY_DISPLAY_ID = "framework.category.display";
 /** @emoji 🎛 Root category id bundling every command-category leaf under one expandable Command toggle on bottom-middle (mirrors Display on bottom-left). */
 const FRAMEWORK_CATEGORY_COMMAND_ID = "framework.category.command";
+
+/** @emoji 🎛️ Which anchors' root tab row renders inline in navbar/footer chrome (via {@link PanelChromeTabBar}) instead of on their own floating panel — the single source of truth `buildPanelSelectionProps`/`buildPanelProps` key off of. */
+const PANEL_TAB_BAR_HOSTS: Partial<Record<PanelAnchor, "navbar" | "footer">> = { "top-left": "navbar", "bottom-right": "footer" };
 const APP_DOCUMENT_SEPARATOR = " · ";
 
 const PRESENCE_CLIENT_STORAGE_KEY = "semio.presence.client";
@@ -1066,8 +1069,25 @@ export function appDocumentLabel(document: readonly string[]): string {
   return document.join(APP_DOCUMENT_SEPARATOR);
 }
 
-export function appWindowDocumentLabel(app: AppDefinition, windowLabel: string): string {
-  return windowLabel.trim() || app.label.trim();
+/** 🗺️ Resolves the document path effective under the active terminology; unknown/native ids fall back to `app.document`. */
+export function resolveAppDocument(app: Pick<AppDefinition, "document" | "terminologyDocuments">, terminology: string): readonly string[] {
+  return app.terminologyDocuments[terminology] ?? app.document;
+}
+
+/** 🗺️ Resolves the document path for a non-active app (studio spawn palette/spawned entries) by looking up its `AppDefinition` across loaded plugins; falls back to the raw `document` when the app can't be found. */
+export function resolveDocumentByAppId(loadedPlugins: readonly LoadedPluginState[], appId: string, document: readonly string[], terminology: string): readonly string[] {
+  for (const plugin of loadedPlugins) {
+    const app = plugin.manifest.apps.find((candidate) => candidate.id === appId);
+    if (app) return resolveAppDocument(app, terminology);
+  }
+  return document;
+}
+
+export function appWindowDocumentLabel(app: AppDefinition, terminology: string, windowLabel: string): string {
+  const trimmed = windowLabel.trim();
+  if (trimmed) return trimmed;
+  const override = app.terminologyDocuments[terminology];
+  return override?.[override.length - 1]?.trim() || app.label.trim();
 }
 
 function buildStudioPanelState(programs: readonly StudioProgramEntry[], spawnedApps: readonly SpawnedAppEntry[], activePanelTab = "s-play-catalogue", activeSpawnedId?: string): StudioPanelState {
@@ -2052,7 +2072,7 @@ export function buildOsCommands(themeList: readonly UiTheme[], terminologies: re
     ...(locks.locale ? ["os.setLocale"] : []),
     ...(locks.terminology ? ["os.setTerminology"] : []),
   ]);
-  return [
+  const commands: CommandDefinition[] = [
     ...(hasIntroduction
       ? [{ id: "os.introduceApp", label: shellLabel("ui.command.introduceApp"), scope: "os" as const, category: "app", inPalette: true, args: [] }]
       : []),
@@ -2140,7 +2160,8 @@ export function buildOsCommands(themeList: readonly UiTheme[], terminologies: re
         ]),
       ],
     },
-  ].filter((command) => !lockedCommandIds.has(command.id));
+  ];
+  return commands.filter((command) => !lockedCommandIds.has(command.id));
 }
 
 /** 🎛 Os-scope command ids that are handled locally by the shell — mirrors {@link buildOsCommands}. */
@@ -2561,7 +2582,12 @@ export function FrameworkOsShell({
   // action) so a `session` refresh that leaves `panelJson` untouched reuses the same parsed `panel`
   // object — a prerequisite for any downstream `useMemo`/`React.memo` keyed on `panel` to bail.
   const panel = useMemo(() => (session ? parsePanelState(session.viewState) : null), [session?.viewState.panelJson]);
-  const activeAppTitle = appDocumentLabel(panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId)?.document ?? session?.app.document ?? []);
+  const activeSpawnedEntry = panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
+  const activeAppTitle = appDocumentLabel(
+    activeSpawnedEntry
+      ? resolveDocumentByAppId(loadedPlugins, activeSpawnedEntry.appId, activeSpawnedEntry.document, uiTerminology)
+      : (session ? resolveAppDocument(session.app, uiTerminology) : []),
+  );
 
   useEffect(() => {
     sessionRef.current = session;
@@ -3697,7 +3723,7 @@ export function FrameworkOsShell({
   const settingsHost: SettingsHostApi = useMemo(
     () => ({
       appId: session?.app.id,
-      appLabel: session ? appDocumentLabel(session.app.document) : undefined,
+      appLabel: session ? appDocumentLabel(resolveAppDocument(session.app, uiTerminology)) : undefined,
       controllerId: session?.app.controllerId,
       pluginId: session?.pluginId,
       compact: uiCompact,
@@ -4226,44 +4252,38 @@ export function FrameworkOsShell({
     onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: "" } });
   }, [activeExampleId, exampleOptions, onAction, session]);
 
-  //#region 🎛️InlinedPanelToggles — Document/Catalogue (top-left) and Theme/Settings (bottom-right) now toggle
-  // straight from the navbar/footer bar instead of through the removed Workbench/Settings category tab.
-  const workbenchToggleItems = useMemo(
-    (): PanelToggleItem[] =>
-      workbenchLeftTabs.map((tab) => {
-        const TabIcon = tab.icon;
-        return {
-          id: tab.id,
-          icon: <TabIcon size={16} />,
-          text: tab.name,
-          pressed: panels["top-left"].visible && panelActivePaths["top-left"][0] === tab.id,
-          onPressedChange: (pressed: boolean) => {
-            dispatch({ type: "SET_PANEL_VISIBLE", anchor: "top-left", value: pressed });
-            if (pressed) dispatch({ type: "SET_PANEL_PATH", anchor: "top-left", value: [tab.id] });
-          },
-        };
-      }),
-    [workbenchLeftTabs, panels, panelActivePaths],
+  //#region 🎛️PanelTabBarHosting — `buildPanelSelectionProps` is the single source of an anchor's tab
+  // selection state, shared by the chrome-hosted `PanelChromeTabBar` (below, for anchors in
+  // {@link PANEL_TAB_BAR_HOSTS}) and the floating `Panel` itself (`buildPanelProps`) — the two hosts of the
+  // SAME anchor always read/write the exact same controlled state.
+  const buildPanelSelectionProps = useCallback(
+    (anchor: PanelAnchor): PanelTabSelectionOptions => ({
+      tabs: dock.anchors[anchor],
+      visible: panels[anchor].visible,
+      onVisibleChange: (value: boolean) => dispatch({ type: "SET_PANEL_VISIBLE", anchor, value }),
+      activeTabPath: panelActivePaths[anchor],
+      onActiveTabPathChange: (path: readonly string[]) => {
+        dispatch({ type: "SET_PANEL_PATH", anchor, value: path });
+        // 🎛️ Command palette only: switching category leaves always collapses any expanded arg form — the
+        // next hierarchy level up only makes sense under its own category's command list (mirrors the old
+        // dedicated `SET_COMMAND_CATEGORY` reducer case, now expressed at the generic path-change call site
+        // since category-active state itself is just this anchor's `activeTabPath`). Categories sit under
+        // the Command branch, so compare the category segment (path[1]), not the shared branch root.
+        if (anchor === "bottom-middle" && panels[anchor].path[1] !== path[1]) {
+          dispatch({ type: "SET_COMMAND_EXPANDED", value: null });
+        }
+        const tabId = path[path.length - 1];
+        // 🌱 Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
+        if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
+          onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
+        }
+      },
+      pathMemory: panelPathMemory,
+      onPathMemoryChange: (value: Readonly<Record<string, string>>) => dispatch({ type: "SET_PANEL_PATH_MEMORY", value }),
+    }),
+    [dock, onAction, panelActivePaths, panelPathMemory, panels, session, studioMode],
   );
-
-  const settingsToggleItems = useMemo(
-    (): PanelToggleItem[] =>
-      settingsRightTabs.map((tab) => {
-        const TabIcon = tab.icon;
-        return {
-          id: tab.id,
-          icon: <TabIcon size={16} />,
-          text: tab.name,
-          pressed: panels["bottom-right"].visible && panelActivePaths["bottom-right"][0] === tab.id,
-          onPressedChange: (pressed: boolean) => {
-            dispatch({ type: "SET_PANEL_VISIBLE", anchor: "bottom-right", value: pressed });
-            if (pressed) dispatch({ type: "SET_PANEL_PATH", anchor: "bottom-right", value: [tab.id] });
-          },
-        };
-      }),
-    [settingsRightTabs, panels, panelActivePaths],
-  );
-  //#endregion 🎛️InlinedPanelToggles
+  //#endregion 🎛️PanelTabBarHosting
 
   const navbarItems = useMemo((): NavbarItem[] => {
     if (!session) return [];
@@ -4273,7 +4293,7 @@ export function FrameworkOsShell({
       <div key="logoAndTitle" className="flex min-w-0 shrink-0 items-center gap-single">
         <SemioLogo className="size-workbench shrink-0" />
         <span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>
-          {appDocumentLabel(session.app.document)}
+          {appDocumentLabel(resolveAppDocument(session.app, uiTerminology))}
         </span>
       </div>,
     ];
@@ -4312,11 +4332,10 @@ export function FrameworkOsShell({
       );
     }
     const items: NavbarItem[] = [{ key: "center", centered: true, content: <div className="flex min-w-0 items-center gap-double">{centerContent}</div> }];
-    if (workbenchToggleItems.length > 0) {
-      items.push({ key: "workbenchToggle", content: <PanelToggleGroup items={workbenchToggleItems} /> });
-    }
+    // 🎛️ Document/Catalogue's root tab row — PanelChromeTabBar self-hides once top-left has no tabs (and no drag in flight).
+    items.push({ key: "topLeftPanelTabs", content: <PanelChromeTabBar anchor="top-left" {...buildPanelSelectionProps("top-left")} /> });
     return items;
-  }, [activeExampleId, activeModeId, appLabelsOverlay, applyModeChange, exampleOptions, locks.exampleId, onAction, session, workbenchToggleItems]);
+  }, [activeExampleId, activeModeId, appLabelsOverlay, applyModeChange, buildPanelSelectionProps, exampleOptions, locks.exampleId, onAction, session, uiTerminology]);
 
   const searchItems = useMemo(() => {
     if (!session) return [];
@@ -4414,7 +4433,7 @@ export function FrameworkOsShell({
       for (const program of panel.programs) {
         items.push({
           id: `spawn.${program.programId}`,
-          label: `${shellLabel("ui.palette.spawnPrefix")} ${appDocumentLabel(program.document)}`,
+          label: `${shellLabel("ui.palette.spawnPrefix")} ${appDocumentLabel(resolveDocumentByAppId(loadedPlugins, program.appId, program.document, uiTerminology))}`,
           category: shellLabel("ui.search.category.catalogue"),
           onSelect: () => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "spawnApp", args: { programId: program.programId } }),
         });
@@ -4443,7 +4462,7 @@ export function FrameworkOsShell({
       );
     }
     return items;
-  }, [activeWindowId, appLabelsOverlay, onAction, onCommand, panel, resolvedCommands, session, studioMode, uiLocale]);
+  }, [activeWindowId, appLabelsOverlay, loadedPlugins, onAction, onCommand, panel, resolvedCommands, session, studioMode, uiLocale, uiTerminology]);
 
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
@@ -4468,7 +4487,7 @@ export function FrameworkOsShell({
         return [
           {
             id: spawned.id,
-            title: appDocumentLabel(spawned.document),
+            title: appDocumentLabel(spawnedApp ? resolveAppDocument(spawnedApp, uiTerminology) : spawned.document),
             fill: true,
             showControls: true,
             measures: chrome?.measures,
@@ -4493,7 +4512,7 @@ export function FrameworkOsShell({
       const actions = resolveWindowActions(session.app, kind);
       return {
         id: kind.id,
-        title: appWindowDocumentLabel(session.app, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label)),
+        title: appWindowDocumentLabel(session.app, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label)),
         fill: true,
         showControls: true,
         ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id], kind.id, onActionStable),
@@ -4553,6 +4572,7 @@ export function FrameworkOsShell({
     spawnedWindowUi,
     studioMode,
     uiLocale,
+    uiTerminology,
     windowEngagementsByKind,
     windowMeasuresByKind,
     windowUiByKind,
@@ -4579,7 +4599,7 @@ export function FrameworkOsShell({
           {error}
         </p>
       );
-    const modes = session.app.modes.length > 0 ? session.app.modes : [{ id: session.app.id, label: appDocumentLabel(session.app.document) }];
+    const modes = session.app.modes.length > 0 ? session.app.modes : [{ id: session.app.id, label: appDocumentLabel(resolveAppDocument(session.app, uiTerminology)) }];
     const studioHomeBar =
       studioMode && session.app.id === S_PLAY_APP_ID && !panel?.activeSpawnedId ? (
         <button
@@ -4597,7 +4617,7 @@ export function FrameworkOsShell({
           ← {shellLabel("ui.common.backToMediaGraph")}
         </button>
         <span>·</span>
-        <span>{appDocumentLabel(focusedSpawned.document)}</span>
+        <span>{appDocumentLabel(resolveDocumentByAppId(loadedPlugins, focusedSpawned.appId, focusedSpawned.document, uiTerminology))}</span>
       </div>
     ) : null;
     return (
@@ -4656,41 +4676,20 @@ export function FrameworkOsShell({
         </div>
       </div>
     );
-  }, [activeWindowId, effectiveModeLayout, error, handleTemplateDrop, mobile, modeWindows, navigateHistory, onAction, panel, session, studioMode, uiLocale, updateStudioPanel]);
+  }, [activeWindowId, effectiveModeLayout, error, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateHistory, onAction, panel, session, studioMode, uiLocale, uiTerminology, updateStudioPanel]);
 
   const buildPanelProps = useCallback(
     (anchor: PanelAnchor) => ({
-      visible: panels[anchor].visible,
-      onVisibleChange: (value: boolean) => dispatch({ type: "SET_PANEL_VISIBLE", anchor, value }),
+      ...buildPanelSelectionProps(anchor),
       size: panels[anchor].size,
       onSizeChange: (value: number) => dispatch({ type: "SET_PANEL_SIZE", anchor, value }),
-      // 🎛️ Document/Catalogue and Theme/Settings toggle from the navbar/footer now (see workbenchToggleItems/
-      // settingsToggleItems) — their own floating panel no longer needs a redundant tab bar of its own.
-      hideTabBar: anchor === "top-left" || anchor === "bottom-right",
-      tabs: dock.anchors[anchor],
-      activeTabPath: panelActivePaths[anchor],
-      onActiveTabPathChange: (path: readonly string[]) => {
-        dispatch({ type: "SET_PANEL_PATH", anchor, value: path });
-        // 🎛️ Command palette only: switching category leaves always collapses any expanded arg form — the
-        // next hierarchy level up only makes sense under its own category's command list (mirrors the old
-        // dedicated `SET_COMMAND_CATEGORY` reducer case, now expressed at the generic path-change call site
-        // since category-active state itself is just this anchor's `activeTabPath`). Categories sit under
-        // the Command branch, so compare the category segment (path[1]), not the shared branch root.
-        if (anchor === "bottom-middle" && panels[anchor].path[1] !== path[1]) {
-          dispatch({ type: "SET_COMMAND_EXPANDED", value: null });
-        }
-        const tabId = path[path.length - 1];
-        // 🌱 Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
-        if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
-          onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
-        }
-      },
-      pathMemory: panelPathMemory,
-      onPathMemoryChange: (value: Readonly<Record<string, string>>) => dispatch({ type: "SET_PANEL_PATH_MEMORY", value }),
+      // 🎛️ Document/Catalogue and Theme/Settings' root row lives in a sibling PanelChromeTabBar (see
+      // PANEL_TAB_BAR_HOSTS + the navbar/footer wiring below) instead of on this floating panel.
+      tabBarHost: (PANEL_TAB_BAR_HOSTS[anchor] ? "chrome" : "panel") as "panel" | "chrome",
       treeOpenStates,
       onTreeOpenStateChange: (id: string, open: boolean) => dispatch({ type: "SET_TREE_OPEN_STATE", id, open }),
     }),
-    [panelActivePaths, panels, dock, onAction, panelPathMemory, session, studioMode, treeOpenStates],
+    [buildPanelSelectionProps, panels, treeOpenStates],
   );
 
   return (
@@ -4705,12 +4704,10 @@ export function FrameworkOsShell({
               footer={
                 <Footer
                   items={[
-                    // 🏛️ Fill spacer keeps the funding credit and the Settings corner toggle grouped together at the
-                    // right edge (between the centered command palette and the true corner) instead of each fighting
-                    // ms-auto for the same pixel where the floating bottom-right Panel also anchors.
+                    // 🏛️ Fill spacer keeps the funding credit and Theme/Settings' root tab row grouped together at the trailing edge.
                     navbarFillItem("footerTrailingFill"),
                     fundedByZukunftBauFooterItem(),
-                    ...(settingsToggleItems.length > 0 ? [{ key: "settingsToggle", content: <PanelToggleGroup items={settingsToggleItems} /> }] : []),
+                    { key: "bottomRightPanelTabs", content: <PanelChromeTabBar anchor="bottom-right" {...buildPanelSelectionProps("bottom-right")} /> },
                   ]}
                 />
               }
@@ -6430,8 +6427,8 @@ export function createFrameworkSettingsPanelTabs(getHost: () => SettingsHostApi 
         },
       },
     }),
-    // 🔒 A locked theme means no theme editing/saving either — drop the whole tab (its footer toggle
-    // in `settingsToggleItems` derives from `settingsRightTabs`, so it disappears for free).
+    // 🔒 A locked theme means no theme editing/saving either — drop the whole tab (the footer's chrome tab
+    // bar renders `settingsRightTabs` directly, so its toggle disappears for free).
     ...(getHost()?.locks.themeId
       ? []
       : [

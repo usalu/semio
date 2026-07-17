@@ -1799,7 +1799,6 @@ impl DocumentApp for WriterApp {
         let labels = writer_labels(view_state);
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         semio_framework_plugin::AppLabelsOverlay {
-            app_label: None,
             window_kind_labels: std::collections::HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), labels.window_main.to_string())]),
             panel_tab_labels: std::collections::HashMap::from([
                 (WRITER_PANEL_TAB_DOCUMENT_CONTENT_ID.to_string(), labels.panel_tab_content.to_string()),

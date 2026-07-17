@@ -6117,7 +6117,7 @@ pub fn handle_scene_wheel(
             ctrl,
         ),
         SurfaceKind::NoteCanvas => note_wheel(scene, inner, x, y, delta),
-        SurfaceKind::VcsHistory => {
+        SurfaceKind::GraphTimeline => {
             let current = scroll_offset(&scene.surface_id, "history");
             set_scroll_offset(&scene.surface_id, "history", current + delta * 0.5);
             Vec::new()
@@ -6625,7 +6625,7 @@ pub fn render_component_scene(
         }
         SurfaceKind::IconRender => render_icon_render(scene, bounds, ctx, gpu, icon_render_states),
         SurfaceKind::Puzzle2dBoard => render_puzzle_board(scene, bounds, ctx, gpu, puzzle2d_board_states),
-        SurfaceKind::VcsHistory => render_vcs_history(scene, bounds, ctx),
+        SurfaceKind::GraphTimeline => render_graph_timeline(scene, bounds, ctx),
         _ => render_placeholder(scene.component_kind.as_str(), bounds, ctx),
     }
     apply_scene_wheel(scene, bounds, ctx);
@@ -7099,7 +7099,7 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
 }
 //#endregion Table
 
-//#region VcsHistory
+//#region GraphTimeline
 /** @emoji 🗄️ Mirrors `vcs::HistoryColumn` / React `HistoryColumn` (`ui/js/react/index.tsx:19116`). */
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -7186,10 +7186,10 @@ fn history_row_lane_guides(columns: &[HistoryColumnJson], lane_count: usize) -> 
     guides
 }
 
-fn render_vcs_history(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
-    let Some(history) = &scene.vcs_history else {
-        return render_placeholder("vcs-history", bounds, ctx);
+    let Some(history) = &scene.graph_timeline else {
+        return render_placeholder("graph-timeline", bounds, ctx);
     };
     let columns: Vec<HistoryColumnJson> = serde_json::from_str(&history.columns_json).unwrap_or_default();
     let inner = bounds;
@@ -7313,11 +7313,11 @@ fn render_vcs_history(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
     }
     ctx.draw.pop_scissor();
 }
-//#endregion VcsHistory
+//#endregion GraphTimeline
 
-//#region VcsHistoryTests
+//#region GraphTimelineTests
 #[cfg(test)]
-mod vcs_history_tests {
+mod graph_timeline_tests {
     use super::*;
 
     fn column(id: &str, lane: usize, parent: Option<&str>) -> HistoryColumnJson {
@@ -7376,7 +7376,7 @@ mod vcs_history_tests {
         assert!(columns[0].description.is_none());
     }
 }
-//#endregion VcsHistoryTests
+//#endregion GraphTimelineTests
 
 //#region Canvas2d
 #[derive(Deserialize)]
@@ -9730,8 +9730,8 @@ fn render_icon_render(
         puzzle2d_board: None,
         icon_render: None,
         note_canvas: None,
-        vcs_history: None,
-        protocol_list: None,
+        graph_timeline: None,
+        block_list: None,
     };
 
     let state = icon_render_states
@@ -10448,7 +10448,7 @@ use semio_framework_sync::{
     DocumentActorMsg, DocumentEvent, DocumentHost, DocumentSyncStatus, PersistenceBinding, RemoteState,
 };
 use semio_framework_core::{
-    app_document_label, app_window_document_label, AppDefinition, ExampleDefinition,
+    app_document_label, app_window_document_label, resolve_app_document, AppDefinition, ExampleDefinition,
     ModeDefinition, PanelGroup, PanelTabDefinition, ViewState,
 };
 use ui_wgpu::component::layout::WindowEngagementPossible;
@@ -15328,7 +15328,7 @@ impl ShellState {
         let title = self
             .session
             .as_ref()
-            .map(|s| app_document_label(&s.app.document))
+            .map(|s| app_document_label(resolve_app_document(&s.app, &self.terminology_id)))
             .unwrap_or_else(|| if self.studio_mode { "semio · s · studio".into() } else { "semio · os".into() });
         chrome_text(
             draw,
@@ -15793,7 +15793,7 @@ impl ShellState {
             .map(|kind| {
                 (
                     kind.id.clone(),
-                    app_window_document_label(&session.app, &kind.label),
+                    app_window_document_label(&session.app, &self.terminology_id, &kind.label),
                 )
             })
             .collect();
@@ -15930,7 +15930,7 @@ impl ShellState {
                 atlas,
                 input,
                 theme,
-                &app_document_label(&session.app.document),
+                &app_document_label(resolve_app_document(&session.app, &self.terminology_id)),
                 canvas.x + 16.0,
                 canvas.y + 32.0,
                 theme.font_size_body,

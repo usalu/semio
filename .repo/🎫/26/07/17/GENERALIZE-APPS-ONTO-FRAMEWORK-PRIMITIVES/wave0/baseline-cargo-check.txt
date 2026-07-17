@@ -1,0 +1,2 @@
+    Blocking waiting for file lock on build directory
+baseline: cargo check --workspace exit 0, zero errors/warnings reported

@@ -18,7 +18,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
 use vcs::CollectionOp;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 
 //#region 🔖Constants
 const DAG_PLAY_APP_ID: &str = "dag-play";
@@ -380,6 +380,7 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         description: None,
         icon_id: None,
         selected: None,
+        loading: None,
         default_open: None,
         action: None,
         hover_action: None,
@@ -400,6 +401,7 @@ fn tree_item_with_description(id: impl Into<String>, label: impl Into<String>, d
         description: Some(description.into()),
         icon_id: None,
         selected: None,
+        loading: None,
         default_open: None,
         action: None,
         hover_action: None,
@@ -420,6 +422,7 @@ fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, descri
         description,
         icon_id: None,
         selected: None,
+        loading: None,
         default_open: None,
         action: Some(action),
         hover_action: None,
@@ -581,11 +584,13 @@ fn build_document_tree(document: &DagDocument, selected: &[String], labels: &Dag
         })
         .collect();
     UiNode::Tree(UiTreeNode {
+        loading: None,
         sections: vec![
             UiTreeSectionNode {
                 id: "dag-play-document.nodes".into(),
                 label: Some(labels.nodes.into()),
                 default_open: Some(true),
+                loading: None,
                 items: if node_items.is_empty() {
                     vec![tree_item("dag-play-document.nodes.empty", labels.empty)]
                 } else {
@@ -596,6 +601,7 @@ fn build_document_tree(document: &DagDocument, selected: &[String], labels: &Dag
                 id: "dag-play-document.edges".into(),
                 label: Some(labels.edges.into()),
                 default_open: Some(false),
+                loading: None,
                 items: if edge_items.is_empty() {
                     vec![tree_item("dag-play-document.edges.empty", labels.empty)]
                 } else {
@@ -621,10 +627,12 @@ fn build_catalogue_tree(labels: &DagPlayLabels) -> UiNode {
         ("screen", labels.kind_screen),
     ];
     UiNode::Tree(UiTreeNode {
+        loading: None,
         sections: vec![UiTreeSectionNode {
             id: "dag-play-catalogue.node-kinds".into(),
             label: Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()),
             default_open: Some(true),
+            loading: None,
             items: kinds
                 .iter()
                 .map(|(kind, label)| {
@@ -696,6 +704,7 @@ fn build_inspector_tree(document: &DagDocument, selected: &[String], labels: &Da
             id: "dag-play-inspector.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
+            loading: None,
             children: vec![ui_text(labels.select_a_node)],
         }]);
     }
@@ -708,6 +717,7 @@ fn build_inspector_tree(document: &DagDocument, selected: &[String], labels: &Da
             id: "dag-play-inspector.missing".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
+            loading: None,
             children: vec![ui_text(labels.node_not_found)],
         }]);
     }
@@ -1089,7 +1099,6 @@ impl DocumentApp for DagPlayApp {
         let labels = dag_play_labels(view_state);
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         semio_framework_plugin::AppLabelsOverlay {
-            app_label: None,
             window_kind_labels: std::collections::HashMap::from([
                 (DAG_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()),
                 (DAG_PLAY_WINDOW_COMPILED.to_string(), labels.window_compiled.to_string()),

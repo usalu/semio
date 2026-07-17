@@ -7,12 +7,15 @@ use flow_core::{
     forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
     CameraJson, FlowFixture, FlowHost, FlowOp, Widget,
 };
+use protocol::{
+    handle_generation_action, render_generation_form_body, render_generation_preview_text, render_generations_tree,
+    selected_generation, GenerationPlayState,
+};
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout,
-    handle_generation_action, render_generation_form_body, render_generation_preview_text, render_generations_tree,
-    selected_generation, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
+    ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp,
-    DocumentView, GenerationPlayState,
+    DocumentView,
     NodeGraphScene, TextEditorScene, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -281,6 +284,7 @@ fn widget_id(widget: &Widget) -> &str {
 
 fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
     UiTreeItemNode {
+        loading: None,
         id: id.into(),
         label: label.into(),
         description: None,
@@ -328,6 +332,7 @@ fn tree_item_with_action_draggable(
 
 fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode {
+        loading: None,
         id: id.into(),
         label: label.into(),
         description,
@@ -547,6 +552,7 @@ fn build_document_tree(fixture: &FlowFixture, selected: &[String], labels: &Flow
         .iter()
         .map(|synapse| {
             UiTreeItemNode {
+                loading: None,
                 id: format!("flow-play-document.synapse.{}", synapse.id),
                 label: format!("{} → {}", synapse.from, synapse.to),
                 description: Some(format!("{} → {}", synapse.from_port, synapse.to_port)),
@@ -566,8 +572,10 @@ fn build_document_tree(fixture: &FlowFixture, selected: &[String], labels: &Flow
         })
         .collect();
     UiNode::Tree(UiTreeNode {
+        loading: None,
         sections: vec![
             UiTreeSectionNode {
+                loading: None,
                 id: "flow-play-document.widgets".into(),
                 label: Some(labels.widgets.into()),
                 default_open: Some(true),
@@ -578,6 +586,7 @@ fn build_document_tree(fixture: &FlowFixture, selected: &[String], labels: &Flow
                 },
             },
             UiTreeSectionNode {
+                loading: None,
                 id: "flow-play-document.synapses".into(),
                 label: Some(labels.synapses.into()),
                 default_open: Some(false),
@@ -645,6 +654,7 @@ fn build_catalogue_tree(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels
                 })
                 .unwrap_or_default();
             Some(UiTreeSectionNode {
+                loading: None,
                 id: format!("flow-play-catalogue.{id}"),
                 label: Some(title),
                 default_open: Some(true),
@@ -655,6 +665,7 @@ fn build_catalogue_tree(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels
     let mut tree_sections = if tree_sections.is_empty() { catalogue_tree_sections_fallback(labels) } else { tree_sections };
     tree_sections.extend(flow_extensions_tree_sections(runtime, labels));
     UiNode::Tree(UiTreeNode {
+        loading: None,
         sections: tree_sections,
         selected_ids: Some(vec![]),
         highlighted_ids: None,
@@ -690,6 +701,7 @@ fn flow_extensions_tree_sections(runtime: &FlowPlayRuntime, labels: &FlowPlayLab
         })
         .collect();
     let mut sections = vec![UiTreeSectionNode {
+        loading: None,
         id: "flow-play-extensions.installed".into(),
         label: Some(labels.extensions.into()),
         default_open: Some(false),
@@ -697,6 +709,7 @@ fn flow_extensions_tree_sections(runtime: &FlowPlayRuntime, labels: &FlowPlayLab
     }];
     if !actions.is_empty() {
         sections.push(UiTreeSectionNode {
+            loading: None,
             id: "flow-play-extensions.actions".into(),
             label: Some(labels.extension_actions.into()),
             default_open: Some(false),
@@ -712,6 +725,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
     let sinks = [("outputPreview", labels.catalogue_preview), ("outputExport", labels.catalogue_export)];
     vec![
         UiTreeSectionNode {
+            loading: None,
             id: "flow-play-catalogue.sources".into(),
             label: Some(labels.sources.into()),
             default_open: Some(true),
@@ -730,6 +744,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
                 .collect(),
         },
         UiTreeSectionNode {
+            loading: None,
             id: "flow-play-catalogue.components".into(),
             label: Some(labels.components.into()),
             default_open: Some(true),
@@ -748,6 +763,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
                 .collect(),
         },
         UiTreeSectionNode {
+            loading: None,
             id: "flow-play-catalogue.sinks".into(),
             label: Some(labels.sinks.into()),
             default_open: Some(false),
@@ -833,6 +849,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
         .collect();
     if widgets.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
+            loading: None,
             id: "flow-play-inspector.missing".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
@@ -1420,7 +1437,6 @@ impl DocumentApp for FlowPlayApp {
         let labels = flow_labels(view_state);
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         semio_framework_plugin::AppLabelsOverlay {
-            app_label: None,
             window_kind_labels: std::collections::HashMap::from([
                 (FLOW_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()),
                 (FLOW_PLAY_WINDOW_COMPILED.to_string(), labels.window_compiled.to_string()),

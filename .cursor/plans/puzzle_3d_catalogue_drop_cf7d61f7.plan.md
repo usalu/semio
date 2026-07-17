@@ -13,10 +13,10 @@ todos:
     status: completed
   - id: tests
     content: Extend index.test.ts and puzzle d3 Rust tests; run them
-    status: in_progress
+    status: completed
   - id: close
     content: ticket_close with summary and files
-    status: pending
+    status: completed
 isProject: false
 ---
 

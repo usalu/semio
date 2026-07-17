@@ -1678,6 +1678,50 @@ dependencies = [
 ]
 
 [[package]]
+name = "fem-plugin"
+version = "0.1.0"
+dependencies = [
+ "fem_2d",
+ "fem_3d",
+ "fem_core",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "vcs",
+]
+
+[[package]]
+name = "fem_2d"
+version = "0.1.0"
+dependencies = [
+ "fem_core",
+ "serde",
+ "serde_json",
+ "vcs",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "fem_3d"
+version = "0.1.0"
+dependencies = [
+ "fem_core",
+ "serde",
+ "serde_json",
+ "vcs",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "fem_core"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "find-msvc-tools"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1711,6 +1755,7 @@ name = "flow-plugin"
 version = "0.1.0"
 dependencies = [
  "flow_core",
+ "protocol",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -5065,6 +5110,7 @@ dependencies = [
  "kernel_3d_scene",
  "procedural_2d",
  "procedural_3d",
+ "protocol",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-plugin",
@@ -5079,7 +5125,7 @@ name = "procedural_2d"
 version = "0.1.0"
 dependencies = [
  "flow_core",
- "semio-framework-plugin",
+ "protocol",
  "serde",
  "serde_json",
  "vcs",
@@ -5091,7 +5137,7 @@ name = "procedural_3d"
 version = "0.1.0"
 dependencies = [
  "flow_core",
- "semio-framework-plugin",
+ "protocol",
  "serde",
  "serde_json",
  "vcs",
@@ -5159,6 +5205,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
+ "ui_wgpu",
  "vcs",
  "wasm-bindgen",
 ]
@@ -6020,7 +6067,6 @@ dependencies = [
 name = "semio-framework-plugin"
 version = "0.1.0"
 dependencies = [
- "protocol",
  "semio-framework-core",
  "serde",
  "serde_json",

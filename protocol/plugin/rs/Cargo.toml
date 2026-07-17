@@ -11,7 +11,7 @@ package = "semio:protocol"
 
 [[package.metadata.semio.playground]]
 variant = "protocol"
-ports = { react = 6078, wgpu = 6178 }
+ports = { react = 6085, wgpu = 6185 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]

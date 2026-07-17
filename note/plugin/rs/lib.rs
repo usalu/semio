@@ -2096,7 +2096,6 @@ impl DocumentApp for NoteApp {
         let labels = note_labels(view_state);
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         AppLabelsOverlay {
-            app_label: None,
             window_kind_labels: HashMap::from([
                 (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), labels.window_composite.to_string()),
                 (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), labels.window_navigator.to_string()),

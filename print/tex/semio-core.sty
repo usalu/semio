@@ -598,20 +598,20 @@
 }
 
 \newskip\semio@block@sep@skip
-\newskip\semio@block@sep@before@skip
 \setlength{\semio@block@sep@skip}{0.2em}
-\newcommand{\semio@block@sep@before@set}{%
-  \setlength{\semio@block@sep@before@skip}{\dimexpr2\semio@block@sep@skip\relax}%
-}
-\semio@block@sep@before@set
-\newcommand{\semio@block@sep}{%
+% 🧱 Single choke point for inter-element gaps: every block emits exactly one
+% max-merging \addvspace{unit} before itself and nothing after; \parskip
+% (set to the same unit in \AfterEndPreamble) supplies the gap wherever a
+% paragraph is the next element, so paragraph<->paragraph, paragraph<->block,
+% and block<->block junctions all land on exactly one unit. \addvspace tops
+% any residual glue instead of summing, and vanishes on an empty vlist
+% (\lastnodetype=-1), so blocks sit flush at the top of a page.
+\newcommand{\semio@block@before}{%
   \ifhmode\par\fi
-  \nointerlineskip\vskip\semio@block@sep@skip
+  \ifnum\lastnodetype=-1 \else\addvspace{\semio@block@sep@skip}\fi
 }
-\newcommand{\semio@heading@block@before}{%
-  \ifhmode\par\fi
-  \vskip\semio@block@sep@before@skip
-}
+\newcommand{\semio@block@after}{\ifhmode\par\fi\nobreak}
+\newcommand{\semio@noindent@noparskip}{\begingroup\parskip\z@\noindent\endgroup}
 \newcommand{\SemioSpacingUnit}{\semio@spacing@single}
 \newcommand{\SemioSpacingDouble}{\semio@spacing@double}
 \makeatother

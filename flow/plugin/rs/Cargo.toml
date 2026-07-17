@@ -19,6 +19,7 @@ path = "lib.rs"
 
 [dependencies]
 flow_core = { path = "../../core/rs" }
+protocol = { path = "../../../protocol/rs" }
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }
 vcs = { path = "../../../vcs/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

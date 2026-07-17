@@ -3497,7 +3497,8 @@ mod tests {
             puzzle2d_board: None,
             icon_render: None,
             note_canvas: None,
-            vcs_history: None,
+            graph_timeline: None,
+            block_list: None,
         }
     }
 
