@@ -5102,6 +5102,9 @@ export function panelAnchorTabBarClass(direction: "up" | "down"): string {
 /** @emoji 📑 Panel tab button padding. */
 export const panelAnchorTabButtonClass = cn(panelTabButtonClass, "px-tiny");
 
+/** @emoji 📑 Framed root-row strip for a chrome-hosted anchor's tabs (see {@link PanelChromeTabBar}) — a bordered `h-medium` group living inline in the navbar/footer instead of on the floating panel. */
+export const panelChromeTabBarClass = cn(panelTabBarBaseClass, "h-medium border", borderNormalClass);
+
 //#region 🫳DragAffordance
 
 /** @emoji 🫳 Universal grip that starts a drag — pass `onPointerDown` for pointer-capture drags, spread dnd-kit `attributes`/`listeners`, or use as a pure affordance on whole-surface draggables. `emphasized` mirrors the ambient active/ready state of the element it belongs to, so the grip reads as clearly as the label/icon beside it. */
@@ -5147,7 +5150,8 @@ export const dropZoneReadyClass = cn(dropZoneReadyFillClass, dropZoneReadyTextCl
 //#endregion 🫳DragAffordance
 
 /** @emoji 📑 Shared panel/mobile panel tab bar variant. */
-export type PanelTabBarVariant = "panel" | "mobile";
+/** @emoji 📑 `"chrome"` hosts the SAME root row (full DnD) inline in the navbar/footer chrome instead of on the floating panel — see {@link PanelChromeTabBar}. */
+export type PanelTabBarVariant = "panel" | "mobile" | "chrome";
 
 /** @emoji 🧭 Validates a path's segments against a node tree, truncating at the first segment that no longer exists at its level — no first-sibling substitution, no auto-descend (progressive reveal owns how deep a path goes). `[]` is a valid result. */
 export function reconcileActivePath<T extends { readonly id: string }>(nodes: readonly T[], path: readonly string[], childrenOf: (node: T) => readonly T[] | undefined): string[] {
@@ -5343,6 +5347,62 @@ export function progressPanelTabSelection(tabs: readonly PanelTabNode[], current
   return { path, memory: nextMemory, fold: false };
 }
 
+/** @emoji 🌱 Controlled/uncontrolled selection state shared by every {@link PanelTabBar} host ({@link Panel}, {@link PanelChromeTabBar}, {@link MobilePanel}). */
+export interface PanelTabSelectionOptions {
+  readonly tabs: readonly PanelTabNode[];
+  readonly visible: boolean;
+  /** @emoji 🎛 Fired when a tab press opens or folds the hosting surface (see {@link usePanelTabSelection}). */
+  readonly onVisibleChange?: (visible: boolean) => void;
+  readonly activeTabPath?: readonly string[];
+  readonly onActiveTabPathChange?: (path: readonly string[]) => void;
+  /** @emoji 🌱 Per-branch drill-down memory (see {@link progressPanelTabSelection}) — which child was last active under each branch, so returning to it restores the drill-down. */
+  readonly pathMemory?: Readonly<Record<string, string>>;
+  readonly onPathMemoryChange?: (memory: Readonly<Record<string, string>>) => void;
+}
+
+/**
+ * 🌱 Shared fold/open/drill-down state machine for every {@link PanelTabBar} host: resolves the active path
+ * against `tabs`, and interprets a raw tab press via {@link progressPanelTabSelection} — opening a closed host
+ * on first press (swallowing that same press if it only re-selects the already-active leaf), folding it on an
+ * active-root re-press, and otherwise advancing the path/memory (controlled when the matching `on*Change` is
+ * given, else internal state). One instance of this state must back a single anchor's tabs, however many
+ * hosts (panel chrome, navbar/footer chrome bar, mobile) render it — hosting is presentation-only.
+ **/
+export function usePanelTabSelection({ tabs, visible, onVisibleChange, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange }: PanelTabSelectionOptions): {
+  readonly resolvedPath: readonly string[];
+  readonly memory: Readonly<Record<string, string>>;
+  readonly handlePathChange: (raw: readonly string[]) => void;
+} {
+  const [internalActivePath, setInternalActivePath] = reactHostPort.useState<readonly string[]>(() => reconcileActivePath(tabs, [], panelTabChildren));
+  const [internalMemory, setInternalMemory] = reactHostPort.useState<Readonly<Record<string, string>>>({});
+  const memory = pathMemory ?? internalMemory;
+  const resolvedPath = reactHostPort.useMemo(() => reconcileActivePath(tabs, activeTabPath ?? internalActivePath, panelTabChildren), [tabs, activeTabPath, internalActivePath]);
+
+  const handlePathChange = (raw: readonly string[]) => {
+    if (!visible) {
+      onVisibleChange?.(true);
+      if (raw[raw.length - 1] === resolvedPath[raw.length - 1]) return;
+    }
+    const result = progressPanelTabSelection(tabs, resolvedPath, raw, memory);
+    if (visible && result.fold) {
+      onVisibleChange?.(false);
+      return;
+    }
+    if (onActiveTabPathChange) {
+      onActiveTabPathChange(result.path);
+    } else {
+      setInternalActivePath(result.path);
+    }
+    if (onPathMemoryChange) {
+      onPathMemoryChange(result.memory);
+    } else {
+      setInternalMemory(result.memory);
+    }
+  };
+
+  return { resolvedPath, memory, handlePathChange };
+}
+
 /** @emoji 🗄️ Full arrangement of tabs across all six anchors — the pure, draggable dock model. */
 export interface PanelDock {
   readonly anchors: Record<PanelAnchor, readonly PanelTabNode[]>;
@@ -5483,7 +5543,7 @@ interface PanelTabRowProps {
 const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath = [], tabs, activeId, onSelect, showActiveColor = true, direction = "down" }) => {
   const barRef = reactHostPort.useRef<HTMLDivElement>(null);
   const dock = usePanelDockContext();
-  const tabSlot = variant === "panel" ? "panel" : "mobile-panel";
+  const tabSlot = variant === "mobile" ? "mobile-panel" : "panel";
   const sortedTabs = reactHostPort.useMemo(() => [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [tabs]);
   const resolvedActiveId = activeId;
 
@@ -5507,8 +5567,8 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
 
   if (sortedTabs.length === 0) return null;
 
-  const barClass = variant === "panel" ? panelAnchorTabBarClass(direction) : mobilePanelTabBarClass;
-  const buttonClass = variant === "panel" ? panelAnchorTabButtonClass : mobilePanelTabButtonClass;
+  const barClass = variant === "panel" ? panelAnchorTabBarClass(direction) : variant === "chrome" ? panelChromeTabBarClass : mobilePanelTabBarClass;
+  const buttonClass = variant === "mobile" ? mobilePanelTabButtonClass : panelAnchorTabButtonClass;
   const dropTarget = dock?.dropTarget;
   const isDropRow = Boolean(anchor && dropTarget?.kind === "insert" && dropTarget.anchor === anchor && dropTarget.parentPath.length === parentPath.length && dropTarget.parentPath.every((id, index) => id === parentPath[index]));
   const dropInsertIndex = isDropRow && dropTarget?.kind === "insert" ? dropTarget.index : null;
@@ -5590,14 +5650,16 @@ export interface PanelTabBarProps {
   readonly onActivePathChange: (path: readonly string[]) => void;
   /** @emoji 🎀 Stacking direction for nested rows — `"up"` for bottom panels (rows grow toward the display center), `"down"` otherwise. */
   readonly direction?: "up" | "down";
-  /** @emoji 🗜️ Renders only the root row — used by a folded {@link Panel}'s button group so nested branch children stay hidden until the panel opens. */
-  readonly rootRowOnly?: boolean;
+  /** @emoji 🗜️ Skips rows above this depth without skipping the descent through them — pairs with a `"chrome"`-hosted root row rendered elsewhere (see {@link PanelChromeTabBar}) so the floating panel picks up at depth 1. */
+  readonly startDepth?: number;
+  /** @emoji 🗜️ Stops after this many emitted rows — `1` is the generalization of the old "root row only" (a folded {@link Panel}'s button group, or a chrome-hosted bar, both of which only ever show one row). */
+  readonly maxRows?: number;
   /** @emoji 🎨 Paints the active tab's fill/border — off for a folded {@link Panel}, whose button group shouldn't claim a tab is "active" while nothing is showing. */
   readonly showActiveColor?: boolean;
 }
 
-/** @emoji 📑 Panel tab strip shared by {@link Panel} and {@link MobilePanel} — one {@link PanelTabRow} per tree level, stacked in a {@link Ribbon}. */
-export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, anchor, tabs, activePath, onActivePathChange, direction = "down", rootRowOnly = false, showActiveColor = true }) => {
+/** @emoji 📑 Panel tab strip shared by {@link Panel}, {@link PanelChromeTabBar} and {@link MobilePanel} — one {@link PanelTabRow} per tree level (within `[startDepth, startDepth + maxRows)`), stacked in a {@link Ribbon}. */
+export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, anchor, tabs, activePath, onActivePathChange, direction = "down", startDepth = 0, maxRows = Infinity, showActiveColor = true }) => {
   const rows: RibbonRow[] = [];
   let level = tabs;
   let depth = 0;
@@ -5606,22 +5668,24 @@ export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, anchor, tabs,
     const activeId = sorted.some((tab) => tab.id === activePath[depth]) ? activePath[depth] : undefined;
     const rowDepth = depth;
     const parentPath = activePath.slice(0, rowDepth);
-    rows.push({
-      key: `${variant}-row-${rowDepth}`,
-      content: (
-        <PanelTabRow
-          variant={variant}
-          anchor={anchor}
-          parentPath={parentPath}
-          tabs={sorted}
-          activeId={activeId}
-          onSelect={(tabId) => onActivePathChange([...activePath.slice(0, rowDepth), tabId])}
-          showActiveColor={showActiveColor}
-          direction={direction}
-        />
-      ),
-    });
-    if (rootRowOnly) break;
+    if (depth >= startDepth) {
+      rows.push({
+        key: `${variant}-row-${rowDepth}`,
+        content: (
+          <PanelTabRow
+            variant={variant}
+            anchor={anchor}
+            parentPath={parentPath}
+            tabs={sorted}
+            activeId={activeId}
+            onSelect={(tabId) => onActivePathChange([...activePath.slice(0, rowDepth), tabId])}
+            showActiveColor={showActiveColor}
+            direction={direction}
+          />
+        ),
+      });
+      if (rows.length >= maxRows) break;
+    }
     const active = activeId ? sorted.find((tab) => tab.id === activeId) : undefined;
     level = (active && panelTabChildren(active)) ?? [];
     depth++;
@@ -6061,6 +6125,45 @@ export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTa
 //#endregion 🎛️Provider
 
 // #endregion 🧲PanelDock
+
+//#region 🎛️PanelChromeTabBar
+
+/** @emoji 🎛️ Props for {@link PanelChromeTabBar}: the anchor's own tab-selection state (see {@link usePanelTabSelection}) plus which anchor it drives. */
+export interface PanelChromeTabBarProps extends PanelTabSelectionOptions {
+  readonly anchor: PanelAnchor;
+  readonly className?: string;
+}
+
+/**
+ * 🎛️ Hosts an anchor's root tab row inline in the navbar/footer chrome instead of on the floating panel — the
+ * SAME {@link PanelTabBar} mechanism (progressive reveal, drill-down memory, drag-and-drop) as a panel-hosted
+ * bar, just placed elsewhere. Renders nothing at rest once `tabs` is empty; becomes a drop target only while a
+ * dock drag is in flight, mirroring {@link PanelEmptyDockZone}'s empty-anchor behavior. Pair with `Panel`'s
+ * `tabBarHost="chrome"` for the matching anchor, and pass the SAME controlled selection props to both — chrome
+ * hosting requires controlled state so the two hosts never fork.
+ **/
+export const PanelChromeTabBar: React.FC<PanelChromeTabBarProps> = ({ anchor, className = "", ...selection }) => {
+  const dock = usePanelDockContext();
+  const { resolvedPath, handlePathChange } = usePanelTabSelection(selection);
+  const { tabs, visible } = selection;
+
+  if (tabs.length === 0) {
+    if (!dock?.dragTabId) return null;
+    return (
+      <GhostRegionShell data-slot="panel-chrome-tab-bar" data-anchor={anchor} className={cn("flex shrink-0 items-center", className)}>
+        <PanelEmptyDockZone anchor={anchor} />
+      </GhostRegionShell>
+    );
+  }
+
+  return (
+    <GhostRegionShell data-slot="panel-chrome-tab-bar" data-anchor={anchor} className={cn("flex shrink-0 items-center", className)}>
+      <PanelTabBar variant="chrome" anchor={anchor} tabs={tabs} activePath={resolvedPath} onActivePathChange={handlePathChange} maxRows={1} showActiveColor={visible} />
+    </GhostRegionShell>
+  );
+};
+
+//#endregion 🎛️PanelChromeTabBar
 
 /** @emoji 📑 Mobile panel tab strip height. */
 export const mobilePanelTabBarClass = cn(panelTabBarClass, "h-large");
@@ -6770,30 +6873,29 @@ export interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ navbar, footer, panels, mobilePanel, canvas, mobile = false, className = "" }) => (
   <GhostProvider>
     <div className={cn("relative flex flex-col overflow-hidden", mobile ? "h-full w-full" : "h-screen w-screen", className)}>
-      {/* 🎛️ Above the floating Panels' default z-index (20) — a navbar-hosted toggle (see PanelToggleGroup usages) must stay clickable/visible even while its own panel is open and floating over this same corner. */}
-      {navbar && <div className="relative z-30 flex-shrink-0">{navbar}</div>}
+      {navbar && <div className="flex-shrink-0">{navbar}</div>}
       {mobile ? (
         <div className="flex flex-col flex-1 min-h-0">
           {mobilePanel && mobilePanel.visible && <MobilePanel {...mobilePanel} />}
           <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
         </div>
       ) : (
+        // Positioned within this region (relative, between navbar and footer), not the whole display — panels
+        // open below the navbar / above the footer instead of floating over them, while still overlaying canvas
+        // the same way a window's options rail overlays its own canvas.
         <div className="flex flex-1 min-h-0 relative">
           <div className="flex flex-col flex-1 min-w-0 relative z-0">
             <div className="flex flex-1 min-h-0 relative">
               <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
             </div>
           </div>
-        </div>
-      )}
-      {footer && <div className="relative z-30 flex-shrink-0">{footer}</div>}
-      {/* Positioned against the full screen (this root), so panels float over the navbar/footer/canvas instead of stopping at them — same overlay relationship as a window's options rail over its canvas. */}
-      {!mobile
-        ? PANEL_ANCHORS.map((anchor) => {
+          {PANEL_ANCHORS.map((anchor) => {
             const panelProps = panels?.[anchor];
             return panelProps ? <Panel key={anchor} {...panelProps} anchor={anchor} /> : null;
-          })
-        : null}
+          })}
+        </div>
+      )}
+      {footer && <div className="flex-shrink-0">{footer}</div>}
     </div>
   </GhostProvider>
 );
@@ -11220,15 +11322,12 @@ export const ZUKUNFT_BAU_PROJECT_URL = "https://www.zukunftbau.de/projekte/forsc
 
 /**
  * @emoji 🏛️ A plain (non-margined) footer item — the caller controls right-alignment by pairing it with
- * {@link navbarFillItem} (or its own trailing group), the same way `workbenchToggleItems`/`settingsToggleItems`
- * do. It never claims `ms-auto` itself so it can sit immediately beside a corner panel toggle (e.g. Settings)
- * instead of both competing for the exact same corner pixel where the floating `Panel` for that anchor renders.
- * `relative z-40` matches `panel-tabs`' z-index so it never disappears behind an anchored panel's own chrome.
+ * {@link navbarFillItem} (or its own trailing group), e.g. alongside a {@link PanelChromeTabBar}. It never
+ * claims `ms-auto` itself so it composes with whatever else shares the footer's trailing edge.
  **/
 export function fundedByZukunftBauFooterItem(key = "fundedByZukunftBau"): NavbarItem {
   return {
     key,
-    className: "relative z-40",
     content: (
       <a
         href={ZUKUNFT_BAU_PROJECT_URL}
@@ -11244,30 +11343,13 @@ export function fundedByZukunftBauFooterItem(key = "fundedByZukunftBau"): Navbar
 }
 //#endregion 🏛️FundedByZukunftBauFooterItem
 
-/** @emoji 🎛 One side-panel toggle in the navbar trailing strip. */
-export interface PanelToggleItem {
-  readonly id: string;
-  readonly icon: React.ReactNode;
-  readonly text?: string;
-  readonly pressed: boolean;
-  readonly onPressedChange: (pressed: boolean) => void;
-}
-
-/** @emoji 🎛 Grouped side-panel toggles for product navbar trailing chrome. */
-function PanelToggleGroup({ items }: { readonly items: readonly PanelToggleItem[] }) {
-  return (
-    <div data-slot="app-panel-toggle-group" className={cn("flex min-w-0 items-stretch border h-medium", borderNormalClass)}>
-      {items.map((item, index) => (
-        <Toggle key={item.id} id={item.id} text={item.text} pressed={item.pressed} onPressedChange={item.onPressedChange} className={cn("border-0 rounded-none shrink-0", index > 0 && cn("border-s", borderNormalClass))} icon={item.icon} />
-      ))}
-    </div>
-  );
-}
-
-export { PanelToggleGroup };
-
 /** @emoji ∅ Sentinel id for the navbar “No example” row (matches {@link PLAYGROUND_NO_EXAMPLE_ID}). */
 export const NAVBAR_NO_EXAMPLE_ID = "__none__";
+
+/** @emoji 🧹 Maps navbar sentinel / legacy empty ids to the canonical blank example id (`""`). */
+export function normalizePlaygroundExampleId(exampleId: string): string {
+  return !exampleId || exampleId === NAVBAR_NO_EXAMPLE_ID || exampleId === "empty" ? "" : exampleId;
+}
 
 /** @emoji 🧪 One selectable example row for {@link NavbarExampleSelect}. */
 export interface NavbarExampleOption {
@@ -11292,16 +11374,16 @@ function NavbarExampleSelect({ id, label, value, options, onValueChange, classNa
   const noExampleLabel = useLabel("ui.common.noExample");
   const resolvedLabel = label ?? exampleLabel ?? "Example";
   const resolvedOptions = reactHostPort.useMemo(() => {
-    const withoutNone = options.filter((row) => row.id !== NAVBAR_NO_EXAMPLE_ID);
-    if (!includeNoExample) return withoutNone;
-    return [{ id: NAVBAR_NO_EXAMPLE_ID, label: noExampleLabel ?? "No example" }, ...withoutNone];
+    const withoutSentinels = options.filter((row) => row.id !== NAVBAR_NO_EXAMPLE_ID && row.id !== "empty");
+    if (!includeNoExample) return withoutSentinels;
+    return [{ id: NAVBAR_NO_EXAMPLE_ID, label: noExampleLabel ?? "No example" }, ...withoutSentinels];
   }, [includeNoExample, options, noExampleLabel]);
   if (resolvedOptions.length === 0) return null;
   const resolvedValue = !value || value === NAVBAR_NO_EXAMPLE_ID ? NAVBAR_NO_EXAMPLE_ID : value;
   return (
     <div className={cn("flex min-w-0 max-w-md flex-1 items-center justify-center px-single", className)}>
       <Label id={`${id}.label`} label={resolvedLabel} className="sr-only" />
-      <Select value={resolvedValue} onValueChange={onValueChange}>
+      <Select value={resolvedValue} onValueChange={(next) => onValueChange(normalizePlaygroundExampleId(next))}>
         <SelectTrigger className="h-medium w-full min-w-[12rem] max-w-md" id={`${id}.trigger`} size="sm">
           <SelectValue placeholder={resolvedLabel} />
         </SelectTrigger>
@@ -15890,8 +15972,14 @@ export interface PanelProps {
   maxSize?: number;
   zIndex?: 10 | 20 | 30 | 40;
   className?: string;
-  /** @emoji 🎛 Suppresses this panel's own tab button group — for anchors whose tab switching now lives in an external toggle (e.g. inlined into the navbar/footer) instead of the panel's chrome. */
-  hideTabBar?: boolean;
+  /**
+   * @emoji 🎛 Where this anchor's root tab row renders — `"panel"` (default) draws it on the floating panel
+   * itself; `"chrome"` renders only depth ≥ 1 rows here (or nothing while closed/empty) because the root row
+   * instead lives in a sibling {@link PanelChromeTabBar} placed in the navbar/footer. Pair the two by passing
+   * the SAME controlled `visible`/`activeTabPath`/`pathMemory` (+ their `on*Change`) to both — chrome hosting
+   * requires controlled selection state so the panel and its chrome bar never fork.
+   */
+  tabBarHost?: "panel" | "chrome";
 }
 
 /** @emoji 🌲 Leaf-tab tree body shared by {@link Panel} and {@link MobilePanel} — one section per unit (sorted by order); skipped when the active tab has no units. Under a {@link PanelDockProvider}, each unit's header becomes a native-DnD handle draggable to another leaf tab's unit list (see {@link PANEL_TREE_UNIT_MIME}). */
@@ -16103,14 +16191,11 @@ const Panel: React.FC<PanelProps> = ({
   maxSize = 600,
   zIndex = 20,
   className = "",
-  hideTabBar = false,
+  tabBarHost = "panel",
 }) => {
   const dock = usePanelDockContext();
   const [hoveredSide, setHoveredSide] = reactHostPort.useState<"left" | "right" | null>(null);
   const [resizingSide, setResizingSide] = reactHostPort.useState<"left" | "right" | null>(null);
-  const [internalActivePath, setInternalActivePath] = reactHostPort.useState<readonly string[]>(() => reconcileActivePath(tabs, [], panelTabChildren));
-  const [internalMemory, setInternalMemory] = reactHostPort.useState<Readonly<Record<string, string>>>({});
-  const memory = pathMemory ?? internalMemory;
   const sizeRef = reactHostPort.useRef(size);
 
   reactHostPort.useEffect(() => {
@@ -16120,36 +16205,13 @@ const Panel: React.FC<PanelProps> = ({
   const flow = flowFromAnchor(anchor);
   const horizontal = anchorHorizontal(anchor);
   const isBottom = flow.block === "up";
-  const showTabBar = tabs.length > 0 && !hideTabBar;
-  const resolvedPath = reactHostPort.useMemo(() => reconcileActivePath(tabs, activeTabPath ?? internalActivePath, panelTabChildren), [tabs, activeTabPath, internalActivePath]);
+  const isChromeHosted = tabBarHost === "chrome";
+  const { resolvedPath, handlePathChange } = usePanelTabSelection({ tabs, visible, onVisibleChange, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange });
   const activeNode = reactHostPort.useMemo(() => findPanelTabNode(tabs, resolvedPath), [tabs, resolvedPath]);
   const activeTabTrees = activeNode?.kind === "leaf" ? activeNode.trees : null;
 
-  // 🎛 The tab button group doubles as the panel's own progressive fold/unfold/drill-down control (see {@link progressPanelTabSelection}).
-  const handlePathChange = (raw: readonly string[]) => {
-    if (!visible) {
-      onVisibleChange?.(true);
-      if (raw[raw.length - 1] === resolvedPath[raw.length - 1]) return;
-    }
-    const result = progressPanelTabSelection(tabs, resolvedPath, raw, memory);
-    if (visible && result.fold) {
-      onVisibleChange?.(false);
-      return;
-    }
-    if (onActiveTabPathChange) {
-      onActiveTabPathChange(result.path);
-    } else {
-      setInternalActivePath(result.path);
-    }
-    if (onPathMemoryChange) {
-      onPathMemoryChange(result.memory);
-    } else {
-      setInternalMemory(result.memory);
-    }
-  };
-
-  // Positioned against the whole display (Layout's root), not the row between navbar and footer, so it floats over both — spacing is relative to the screen edges only, like a window's options rail over its canvas.
-  // Height hugs content up to that same display bound (`maxHeight`, not a fixed `bottom`) — taller content scrolls internally instead of forcing the box to fill the screen. A corner panel grows in one horizontal direction and is resizable only on its inner (canvas-facing) edge; a middle panel is centered (`translateX(-50%)`) and grows both ways, resizable from either edge.
+  // Positioned within the region between navbar and footer (Layout's middle flex row), not the whole display — spacing is relative to that region's edges only, like a window's options rail over its canvas.
+  // Height hugs content up to that same region bound (`maxHeight`, not a fixed `bottom`) — taller content scrolls internally instead of forcing the box to fill the region. A corner panel grows in one horizontal direction and is resizable only on its inner (canvas-facing) edge; a middle panel is centered (`translateX(-50%)`) and grows both ways, resizable from either edge.
   const positionStyle = {
     ...(horizontal === "middle" ? { left: "50%", transform: "translateX(-50%)" } : { [horizontal]: "var(--spacing-single)" }),
     [anchorVertical(anchor)]: "var(--spacing-single)",
@@ -16158,10 +16220,12 @@ const Panel: React.FC<PanelProps> = ({
     zIndex,
   };
 
-  // 🎯 An anchor with no tabs renders nothing at rest — nothing to fold, nothing to show. It becomes a drop target
-  // only while a dock drag is in flight, so a tab can be dragged into an otherwise-empty middle anchor.
+  // 🎯 An anchor with no tabs renders nothing at rest. Panel-hosted: it becomes a drop target only while a dock
+  // drag is in flight, so a tab can be dragged into an otherwise-empty anchor. Chrome-hosted: the sibling
+  // {@link PanelChromeTabBar} owns that empty-drop-zone role instead (registering under the same `${anchor}:`
+  // row key), so this always renders nothing when empty.
   if (tabs.length === 0) {
-    if (!dock?.dragTabId) return null;
+    if (isChromeHosted || !dock?.dragTabId) return null;
     return (
       <LevelProvider level="panel">
         <PanelGhostRoot
@@ -16177,6 +16241,9 @@ const Panel: React.FC<PanelProps> = ({
       </LevelProvider>
     );
   }
+
+  // 🎛 Chrome-hosted: the sibling {@link PanelChromeTabBar} is this anchor's folded representation — no floating button group of our own.
+  if (isChromeHosted && !visible) return null;
 
   const resizeSides: readonly ("left" | "right")[] = horizontal === "middle" ? ["left", "right"] : [horizontal === "left" ? "right" : "left"];
   const activeAccentSide = resizingSide ?? hoveredSide;
@@ -16195,7 +16262,12 @@ const Panel: React.FC<PanelProps> = ({
           <div data-dim aria-hidden className={panelChromeFillLayerClass} />
           <div data-dim data-slot="panel-chrome-frame" aria-hidden className={cn(panelChromeFrameLayerClass, visible && activeAccentSide && panelResizeEdgeAccentClass(activeAccentSide, true))} />
           <UiChromeLabelPolicyProvider policy="always">
-            {showTabBar ? <PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} rootRowOnly={!visible} showActiveColor={visible} /> : null}
+            {isChromeHosted ? (
+              // 🎛️ The root row lives in the sibling PanelChromeTabBar — this panel only ever shows depth ≥ 1 (only reachable while open, so no fold-affordance row is needed here).
+              <PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} startDepth={1} showActiveColor={visible} />
+            ) : (
+              <PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} maxRows={visible ? undefined : 1} showActiveColor={visible} />
+            )}
           </UiChromeLabelPolicyProvider>
           {visible ? (
             <>
@@ -16261,30 +16333,15 @@ export interface MobilePanelProps {
  * It merges all tabs into a single non-resizable panel.
  **/
 const MobilePanel: React.FC<MobilePanelProps> = ({ visible = false, tabs, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, treeOpenStates, onTreeOpenStateChange, className = "", height = 260 }) => {
-  const [internalActivePath, setInternalActivePath] = reactHostPort.useState<readonly string[]>(() => reconcileActivePath(tabs, [], panelTabChildren));
-  const [internalMemory, setInternalMemory] = reactHostPort.useState<Readonly<Record<string, string>>>({});
-  const memory = pathMemory ?? internalMemory;
+  // 🌱 `visible: true` — MobilePanel has no folded state of its own (it renders nothing at all instead, below);
+  // this just keeps `usePanelTabSelection`'s open/fold branches inert so it behaves as pure path/memory selection.
+  const { resolvedPath, handlePathChange } = usePanelTabSelection({ tabs, visible: true, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange });
 
   if (!visible || tabs.length === 0) return null;
 
   const showTabBar = tabs.length > 0;
-  const resolvedPath = reconcileActivePath(tabs, activeTabPath ?? internalActivePath, panelTabChildren);
   const activeNode = findPanelTabNode(tabs, resolvedPath);
   const activeTabTrees = activeNode?.kind === "leaf" ? activeNode.trees : null;
-
-  const handlePathChange = (raw: readonly string[]) => {
-    const result = progressPanelTabSelection(tabs, resolvedPath, raw, memory);
-    if (onActiveTabPathChange) {
-      onActiveTabPathChange(result.path);
-    } else {
-      setInternalActivePath(result.path);
-    }
-    if (onPathMemoryChange) {
-      onPathMemoryChange(result.memory);
-    } else {
-      setInternalMemory(result.memory);
-    }
-  };
 
   return (
     <LevelProvider level="panel">
@@ -24112,6 +24169,21 @@ if (import.meta.vitest) {
       expect(onActiveTabPathChange).not.toHaveBeenCalled();
     });
 
+    it("Panel with tabBarHost=\"chrome\" renders nothing while closed and only depth ≥ 1 rows once open, leaving the root row to its sibling PanelChromeTabBar", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [
+        { kind: "branch", id: "root-a", icon: StubIcon, name: "Root A", children: [singleTreeLeaf({ id: "leaf-a", icon: StubIcon, name: "Leaf A", tree: { sections: [] } }), singleTreeLeaf({ id: "leaf-b", icon: StubIcon, name: "Leaf B", tree: { sections: [] } })] },
+      ];
+      const { container, rerender } = render(<Panel anchor="top-left" tabBarHost="chrome" visible={false} tabs={tabs} activeTabPath={["root-a", "leaf-a"]} />);
+      expect(container.querySelector('[data-slot="panel"]')).toBeNull();
+
+      rerender(<Panel anchor="top-left" tabBarHost="chrome" visible tabs={tabs} activeTabPath={["root-a", "leaf-a"]} />);
+      expect(container.querySelectorAll('[data-slot="panel-tabs"]').length).toBe(1);
+      expect(screen.queryByText("Root A")).toBeNull();
+      expect(screen.getByText("Leaf A")).toBeTruthy();
+      expect(screen.getByText("Leaf B")).toBeTruthy();
+    });
+
     it("flowFromAnchor mirrors right anchors inline and bottom anchors in block; middle anchors never mirror", () => {
       expect(flowFromAnchor("top-left")).toEqual({ inline: "ltr", block: "down" });
       expect(flowFromAnchor("top-right")).toEqual({ inline: "rtl", block: "down" });
@@ -27874,18 +27946,28 @@ if (treeVitest) {
       expect(markup).not.toContain("data-missing-icon");
     });
 
-    it("renders centralized panel toggle group chrome", () => {
-      const markup = renderToStaticMarkup(
-        <PanelToggleGroup
-          items={[
-            { id: "ui.panelToggle.workbench", icon: "folder", pressed: true, onPressedChange: () => undefined },
-            { id: "ui.panelToggle.details", icon: "info", pressed: false, onPressedChange: () => undefined },
-          ]}
-        />,
+    it("PanelChromeTabBar renders only the root row for a nested tree, and a press on a closed host opens it without changing the active path", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [
+        {
+          kind: "branch",
+          id: "framework.category.workbench",
+          icon: StubIcon,
+          name: "Workbench",
+          children: [singleTreeLeaf({ id: "framework.panel.document", icon: StubIcon, name: "Document", tree: { sections: [] } }), singleTreeLeaf({ id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } })],
+        },
+      ];
+      let visible = false;
+      let path: readonly string[] = ["framework.category.workbench", "framework.panel.document"];
+      const { container } = render(
+        <PanelChromeTabBar anchor="top-left" tabs={tabs} visible={visible} onVisibleChange={(next) => (visible = next)} activeTabPath={path} onActiveTabPathChange={(next) => (path = next)} />,
       );
-      expect(markup).toContain('data-slot="app-panel-toggle-group"');
-      expect(markup).toContain('id="ui.panelToggle.workbench"');
-      expect(markup).toContain('id="ui.panelToggle.details"');
+      expect(container.querySelectorAll('[data-slot="panel-tabs"]').length).toBe(1);
+      expect(screen.getByText("Workbench")).toBeTruthy();
+      expect(screen.queryByText("Document")).toBeNull();
+      fireEvent.click(screen.getByText("Workbench"));
+      expect(visible).toBe(true);
+      expect(path).toEqual(["framework.category.workbench", "framework.panel.document"]);
     });
 
     it("exposes navbar fill helper for trailing chrome alignment", () => {
@@ -28099,7 +28181,6 @@ if (treeVitest) {
       const fundedByMarkup = renderToStaticMarkup(<Footer items={[navbarFillItem("fill"), fundedByZukunftBauFooterItem()]} />);
       expect(fundedByMarkup).toContain(ZUKUNFT_BAU_PROJECT_URL);
       expect(fundedByMarkup).toContain("Funded by Zukunft Bau");
-      expect(fundedByMarkup).toContain("z-40");
       const breadcrumbMarkup = renderToStaticMarkup(<Breadcrumb items={[{ content: "Home" }, { content: "Project" }]} />);
       expect(breadcrumbMarkup).toContain(borderNormalClass);
       expect(breadcrumbMarkup).not.toContain("border-emphasized");

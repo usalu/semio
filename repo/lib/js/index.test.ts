@@ -200,6 +200,19 @@ describe("micro-commit", () => {
     expect(extractCounterFromSubject("Merge branch foo")).toBeNull();
   });
 
+  test("extractNumericCounterFromSubject reads GitKraken numeric subjects", async () => {
+    const { extractNumericCounterFromSubject } = await import("./index.ts");
+    expect(extractNumericCounterFromSubject("299")).toBe(299);
+    expect(extractNumericCounterFromSubject("001")).toBe(1);
+    expect(extractNumericCounterFromSubject("🐙ueli🎆26🌙06☀️04🚩151")).toBeNull();
+  });
+
+  test("line1BaseFromBundleTag reads WIP epoch from squash tag", async () => {
+    const { line1BaseFromBundleTag } = await import("./index.ts");
+    expect(line1BaseFromBundleTag("🐙ueli🎆26🌙06☀️04🚩")).toBe("🐙ueli🎆26🌙06☀️04");
+    expect(line1BaseFromBundleTag("🐙ueli🎆26🌙06☀️04🚩151")).toBeNull();
+  });
+
   test("bumpCounterFromHistory uses max across formatted commits", async () => {
     const { bumpCounterFromHistory } = await import("./index.ts");
     const contributor = { alias: "ueli", emoji: "🐙", name: "Ueli", email: "u@example.com" };
@@ -209,6 +222,15 @@ describe("micro-commit", () => {
     expect(bumped.nnn).toBe("034");
     const fresh = bumpCounterFromHistory(["unrelated"], contributor, new Date("2026-06-02T12:00:00"));
     expect(fresh.nnn).toBe("001");
+  });
+
+  test("bumpCounterFromHistory continues numeric GitKraken subjects with WIP epoch", async () => {
+    const { bumpCounterFromHistory } = await import("./index.ts");
+    const contributor = { alias: "ueli", emoji: "🐙", name: "Ueli", email: "u@example.com" };
+    const subjects = ["299", "298", "297"];
+    const bumped = bumpCounterFromHistory(subjects, contributor, new Date("2026-07-17T12:00:00"), "🐙ueli🎆26🌙06☀️04");
+    expect(bumped.line1Base).toBe("🐙ueli🎆26🌙06☀️04");
+    expect(bumped.nnn).toBe("300");
   });
 
   test("normalizeBulletLines strips uloc block lines", async () => {

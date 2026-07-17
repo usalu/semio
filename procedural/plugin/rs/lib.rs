@@ -1670,7 +1670,7 @@ pub mod app_3d {
             PROCEDURAL_EXAMPLE_HEX_COLUMN | "demo" => Some(HEX_COLUMN_EXAMPLE_JSON),
             PROCEDURAL_EXAMPLE_RECT_EXTRUDE => Some(RECT_EXTRUDE_EXAMPLE_JSON),
             PROCEDURAL_EXAMPLE_SPHERE_TORUS => Some(SPHERE_TORUS_EXAMPLE_JSON),
-            "" | "empty" => None,
+            "" => None,
             _ => None,
         };
         let fixture = fixture_json

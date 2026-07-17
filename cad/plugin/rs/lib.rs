@@ -4524,7 +4524,7 @@ impl DocumentApp for CadApp {
                     .and_then(|value| value.get("exampleId"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("");
-                let (scene, runtime) = if example_id.is_empty() || example_id == "empty" || example_id == "default" {
+                let (scene, runtime) = if example_id.is_empty() {
                     (default_document(), CadPlayRuntime::default())
                 } else if example_id == CAD_EXAMPLE_FOREST_LEFT || example_id == "forest-left" {
                     (
@@ -5117,7 +5117,6 @@ impl DocumentApp for CadApp {
             action_labels: cad_action_labels(is_de),
             utility_labels: cad_utility_labels(is_de),
             example_labels: std::collections::HashMap::from([
-                ("default".to_string(), (if is_de { "Standard" } else { "Default" }).to_string()),
                 (CAD_EXAMPLE_FOREST_LEFT.to_string(), (if is_de { "Sechseckig Geschnittener Betonwald Links" } else { "Hexagonal Cut Concrete Forest Left" }).to_string()),
             ]),
             action_arg_labels: HashMap::new(),
@@ -5319,9 +5318,8 @@ fn create_cad_app() -> App {
                 ActionArgOption::new(CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC, "Structure Classic"),
             ]).required()])
             .action_args("setActiveExample", vec![ActionArgDef::select("exampleId", "Example", vec![
-                ActionArgOption::new("default", "Default"),
                 ActionArgOption::new(CAD_EXAMPLE_FOREST_LEFT, "Hexagonal Cut Concrete Forest Left"),
-            ]).default_value("default")])
+            ]).required()])
             .utility(cad_transform_utility("move", "Move", "move"))
             .utility(cad_transform_utility("rotate", "Rotate", "rotate-cw"))
             .utility(cad_transform_utility("scale", "Scale", "maximize-2"))
@@ -5348,7 +5346,6 @@ fn create_cad_app() -> App {
                 CAD_PLAY_BODY_PROPERTIES,
             ),
     )
-    .example("default", "Default", &serde_json::to_string(&default_document()).unwrap())
     .example(
         CAD_EXAMPLE_FOREST_LEFT,
         "Hexagonal Cut Concrete Forest Left",

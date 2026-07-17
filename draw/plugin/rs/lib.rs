@@ -670,7 +670,7 @@ impl DocumentApp for DrawApp {
             }
             "setActiveExample" => {
                 let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
-                let next = if example_id == "empty" || example_id.is_empty() {
+                let next = if example_id.is_empty() {
                     Some(default_draw_document("empty", None))
                 } else if example_id == DRAW_PLAY_EXAMPLE_DEFAULT_ID {
                     Some(serde_json::from_str(SEMIO_DRAW_EXAMPLE_JSON).unwrap_or_else(|_| empty_draw_projection()))
@@ -2025,7 +2025,6 @@ fn create_draw_app() -> App {
                 Some(&["Canvas".into()]),
             )),
     )
-    .example("empty", "Empty", serde_json::to_string(&default_draw_document("empty", None)).unwrap())
     .example(
         DRAW_PLAY_EXAMPLE_DEFAULT_ID,
         "Semio",

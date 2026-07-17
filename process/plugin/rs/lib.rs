@@ -1388,7 +1388,7 @@ pub mod app_3d {
                     let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
                     let document = match example_id {
                         PROCESS3D_EXAMPLE_PLATE | "plate" => plate_document(),
-                        "empty" => process_3d::Process3dDocument::default(),
+                        "" => process_3d::Process3dDocument::default(),
                         _ => default_document(),
                     };
                     self.runtime.selected_id = None;
@@ -1827,7 +1827,6 @@ pub mod app_3d {
                     ActionArgDef::select("exampleId", "Example", vec![
                         ActionArgOption::new(PROCESS3D_EXAMPLE_TIMBER, "Timber Beam Joinery"),
                         ActionArgOption::new(PROCESS3D_EXAMPLE_PLATE, "Drilled Plate"),
-                        ActionArgOption::new("empty", "Empty"),
                     ]).required().default_value(PROCESS3D_EXAMPLE_TIMBER),
                 ])
                 .action_args("exportModel", vec![

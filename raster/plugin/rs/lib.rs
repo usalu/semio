@@ -293,6 +293,7 @@ fn raster_action_labels(is_de: bool) -> HashMap<String, String> {
     const ENTRIES: &[(&str, &str, &str)] = &[
         ("addLayer", "Add Layer", "Ebene hinzufuegen"),
         ("setDocument", "Set Document", "Dokument festlegen"),
+        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
         ("setCamera", "Set Camera", "Kamera festlegen"),
         ("setCameraZoom", "Set Camera Zoom", "Kamerazoom festlegen"),
         ("setLayerVisible", "Set Layer Visible", "Ebenensichtbarkeit festlegen"),
@@ -763,6 +764,16 @@ impl DocumentApp for RasterApp {
                 ActionEmit::default()
             }
             // ✏️ Operations — dispatched as VCS operations with a true inverse.
+            "setActiveExample" => {
+                let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
+                let replacement = if example_id == "semio" {
+                    serde_json::from_str::<RasterDocument>(SEMIO_EXAMPLE_JSON).unwrap_or_else(|_| empty_raster_document())
+                } else {
+                    empty_raster_document()
+                };
+                self.runtime.selected_ids.clear();
+                ActionEmit::ops(vec![RasterOp::ReplaceDocument { document: replacement }])
+            }
             "setDocument" => match args.and_then(|value| value.get("document")).and_then(|value| serde_json::from_value::<RasterDocument>(value.clone()).ok()) {
                 Some(replacement) => ActionEmit::ops(vec![RasterOp::ReplaceDocument { document: replacement }]),
                 None => ActionEmit::default(),
@@ -907,7 +918,6 @@ impl DocumentApp for RasterApp {
             action_labels: raster_action_labels(is_de),
             utility_labels: raster_utility_labels(is_de),
             example_labels: HashMap::from([
-                ("empty".to_string(), (if is_de { "Leer" } else { "Empty" }).to_string()),
                 ("semio".to_string(), "Semio".to_string()),
             ]),
             action_arg_labels: HashMap::new(),
@@ -967,6 +977,7 @@ fn create_raster_app() -> App {
             // ✏️ Palette-visible content operations.
             .operation("addLayer", "Add Layer")
             .operation("setDocument", "Set Document")
+            .operation("setActiveExample", "Set Active Example")
             // 🔧 Internal content operations — layer-tree / catalogue-drop / camera / inspector bound.
             .action_with(raster_internal_action("setCamera", "Set Camera", ActionKind::Operation))
             .action_with(raster_internal_action("setCameraZoom", "Set Camera Zoom", ActionKind::Operation))
@@ -1006,7 +1017,6 @@ fn create_raster_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("empty", "Empty", serde_json::to_string(&empty_raster_document()).unwrap())
     .example("semio", "Semio", SEMIO_EXAMPLE_JSON)
     .program("raster", "Raster", "2d.raster")
 }

@@ -827,7 +827,6 @@ pub mod app_wires {
             overlay.action_labels = wires_action_labels(is_de);
             overlay.utility_labels = std::collections::HashMap::new();
             overlay.example_labels = std::collections::HashMap::from([
-                ("empty".to_string(), (if is_de { "Leer" } else { "Empty" }).to_string()),
                 (WIRES_PLAY_EXAMPLE_METABOLISM_ID.to_string(), "Metabolism".to_string()),
             ]);
             overlay
@@ -888,7 +887,6 @@ pub mod app_wires {
                 .view_action("canvasPointerDown", "Canvas Pointer Down")
                 .view_action("canvasPointerUp", "Canvas Pointer Up"),
         )
-        .example("empty", "Empty", serde_json::to_string(&empty_mindmap_wires_document()).unwrap())
         .example(
             WIRES_PLAY_EXAMPLE_METABOLISM_ID,
             "Metabolism",

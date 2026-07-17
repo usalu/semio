@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, Suspense, type ComponentProps } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, Suspense, type ComponentProps, type DragEvent } from "react";
 import { Box3, BufferAttribute, BufferGeometry, Color, DoubleSide, EdgesGeometry, Group, LineBasicMaterial, LineSegments, Mesh, MeshStandardMaterial, Object3D, PointsMaterial, Quaternion, TextureLoader, Vector3, type ThreeEvent } from "three";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -22,7 +22,9 @@ import {
 import {
   IconShotFrame,
   UnifiedGumball,
+  CATALOGUE_DRAG_MIME,
   ContextMenuController,
+  getActiveCatalogueDragPayload,
   marqueeCoverageFromGesture,
   marqueeModeFromModifiers,
   menuListItemClassName,
@@ -564,9 +566,9 @@ export function worldInstancePickBlocked(activeUtility: string | undefined): boo
   return activeUtility === "fill" || activeUtility === "brush";
 }
 
-/** @emoji 🖱️ In brush mode or vertex selection mode, pointer-down on a vortex persists it as the brush target/selection (`worldVortexSelect`); outside these modes it starts a drag-to-connect gesture instead. */
-export function resolveVortexPointerDownIntent(brushMode: boolean, selectionMode?: string): "select" | "connect-drag" {
-  return (brushMode || selectionMode === "vertex") ? "select" : "connect-drag";
+/** @emoji 🖱️ In brush mode or vertex selection mode, pointer-down on a vortex selects immediately; otherwise a click selects and a drag starts connect. */
+export function resolveVortexPointerDownIntent(brushMode: boolean, selectionMode?: string): "select" | "click-or-drag" {
+  return (brushMode || selectionMode === "vertex") ? "select" : "click-or-drag";
 }
 
 /** @emoji 🧱 Builds the `addBrushObject` action args from a parsed brush preview, or `null` if there is nothing to place yet. */
@@ -1404,7 +1406,9 @@ function WorldVortexMarkers({
   onHover,
   onVortexSelect,
   onBrushPlace,
-  onConnectDragStart,
+  onVortexPointerArm,
+  onVortexPointerMove,
+  onVortexPointerUp,
   onConnectDragHover,
   onConnectDragDrop,
 }: {
@@ -1416,7 +1420,9 @@ function WorldVortexMarkers({
   readonly onHover: (fullId: string | null) => void;
   readonly onVortexSelect: (fullId: string, event?: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => void;
   readonly onBrushPlace: () => void;
-  readonly onConnectDragStart: (fullId: string, position: readonly [number, number, number]) => void;
+  readonly onVortexPointerArm: (args: { readonly fullId: string; readonly position: readonly [number, number, number]; readonly clientX: number; readonly clientY: number; readonly event: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean } }) => void;
+  readonly onVortexPointerMove: (fullId: string, clientX: number, clientY: number) => void;
+  readonly onVortexPointerUp: (fullId: string, event?: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => void;
   readonly onConnectDragHover: (position: readonly [number, number, number]) => void;
   readonly onConnectDragDrop: (fullId: string, event?: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => void;
 }) {
@@ -1447,12 +1453,29 @@ function WorldVortexMarkers({
                 onVortexSelect(vortex.fullId, event);
                 return;
               }
-              onConnectDragStart(vortex.fullId, vortex.position);
+              onVortexPointerArm({
+                fullId: vortex.fullId,
+                position: vortex.position,
+                clientX: event.clientX,
+                clientY: event.clientY,
+                event,
+              });
+            }}
+            onPointerMove={(event) => {
+              if (brushMode) return;
+              event.stopPropagation();
+              onVortexPointerMove(vortex.fullId, event.clientX, event.clientY);
+              if (connectSourceFullId) onConnectDragHover(vortex.position);
             }}
             onPointerUp={(event) => {
-              if (brushMode || !connectSourceFullId) return;
+              if (brushMode) return;
+              if (connectSourceFullId) {
+                event.stopPropagation();
+                onConnectDragDrop(vortex.fullId, event);
+                return;
+              }
               event.stopPropagation();
-              onConnectDragDrop(vortex.fullId, event);
+              onVortexPointerUp(vortex.fullId, event);
             }}
             onClick={(event) => {
               event.stopPropagation();
@@ -1922,6 +1945,83 @@ function raycastGroundPoint(clientX: number, clientY: number, hostRect: DOMRect,
   return [hit.x, hit.y, hit.z];
 }
 
+//#region CatalogueDrop
+type Puzzle3dCatalogueDropPayload = {
+  readonly objectKind: string;
+  readonly meshUrl?: string;
+};
+
+type Puzzle3dCatalogueDropPreview = Puzzle3dCatalogueDropPayload & {
+  readonly origin: readonly [number, number, number];
+};
+
+export function parsePuzzle3dCatalogueDragPayload(encoded: string | null | undefined): Puzzle3dCatalogueDropPayload | null {
+  if (!encoded) return null;
+  try {
+    const parsed = JSON.parse(encoded) as Partial<Puzzle3dCatalogueDropPayload>;
+    if (typeof parsed.objectKind !== "string" || !parsed.objectKind) return null;
+    return {
+      objectKind: parsed.objectKind,
+      meshUrl: typeof parsed.meshUrl === "string" && parsed.meshUrl ? parsed.meshUrl : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function snapWorldPointToGrid(point: readonly [number, number, number], gridSnapEnabled: boolean, gridFactor: number): [number, number, number] {
+  if (!gridSnapEnabled || gridFactor <= 0) return [point[0], point[1], point[2]];
+  const snap = (value: number) => Math.round(value / gridFactor) * gridFactor;
+  return [snap(point[0]), snap(point[1]), snap(point[2])];
+}
+
+function resolveCatalogueDropOrigin(
+  clientX: number,
+  clientY: number,
+  hostRect: DOMRect,
+  camera: import("three").Camera | null,
+  gridSnapEnabled: boolean,
+  gridFactor: number,
+): [number, number, number] | null {
+  if (!camera) return null;
+  const hit = raycastGroundPoint(clientX, clientY, hostRect, camera);
+  if (!hit) return null;
+  return snapWorldPointToGrid(hit, gridSnapEnabled, gridFactor);
+}
+
+function clientPointOverHost(clientX: number, clientY: number, hostRect: DOMRect): boolean {
+  return clientX >= hostRect.left && clientX <= hostRect.right && clientY >= hostRect.top && clientY <= hostRect.bottom;
+}
+
+function CatalogueDropGhost({
+  preview,
+  meshes,
+  palette,
+}: {
+  readonly preview: Puzzle3dCatalogueDropPreview;
+  readonly meshes: readonly WorldMeshRecord[];
+  readonly palette: MeshStylePalette;
+}) {
+  const style = palette.highlighted;
+  const meshRecord = preview.meshUrl ? meshes.find((mesh) => mesh.url === preview.meshUrl) : undefined;
+  const url = meshRecord?.url ?? preview.meshUrl;
+  return (
+    <group position={preview.origin as [number, number, number]} raycast={() => null}>
+      {url ? (
+        <Suspense fallback={null}>
+          <GlbInstanceMesh url={url} color={style.meshColor} emissive={style.meshColor} emissiveIntensity={0.6} opacity={0.88} borderColor={palette.neutral.lineColor} />
+        </Suspense>
+      ) : (
+        <mesh raycast={() => null}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshBasicMaterial color={style.meshColor} transparent opacity={0.42} depthWrite={false} />
+        </mesh>
+      )}
+    </group>
+  );
+}
+//#endregion CatalogueDrop
+
 /** @emoji 🖱️➡️ Signed distance along `axis` (unit vector) from `origin` to the point on that line closest to the
  * camera ray through the current pointer position — the standard closest-point-between-two-lines
  * construction, used so a face-normal drag tracks naturally instead of needing a ground/tangent-plane
@@ -1988,15 +2088,27 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   } | null>(null);
   const [connectDragSource, setConnectDragSource] = useState<{ readonly fullId: string; readonly position: readonly [number, number, number] } | null>(null);
   const [connectDragHoverPosition, setConnectDragHoverPosition] = useState<readonly [number, number, number] | null>(null);
+  const [vortexPointerArm, setVortexPointerArm] = useState<{
+    readonly fullId: string;
+    readonly position: readonly [number, number, number];
+    readonly clientX: number;
+    readonly clientY: number;
+    readonly event: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean };
+  } | null>(null);
   const [voxelHoverOrigin, setVoxelHoverOrigin] = useState<readonly [number, number, number] | null>(null);
   const [paintStrokeActive, setPaintStrokeActive] = useState(false);
+  const [catalogueDropPreview, setCatalogueDropPreview] = useState<Puzzle3dCatalogueDropPreview | null>(null);
   const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number } | null>(null);
   const cameraRef = useRef<import("three").Camera | null>(null);
+  const catalogueDragDepthRef = useRef(0);
+  const catalogueDragEncodedRef = useRef<string | null>(null);
   const wasMarqueeDragRef = useRef(false);
   const connectDropConsumedRef = useRef(false);
   const engagementPointerMoveInFlightRef = useRef(false);
   const engagementPointerMoveLastPointRef = useRef<readonly [number, number, number] | null>(null);
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
+  const gridSnapEnabled = lod.gridSnapEnabled ?? false;
+  const gridFactor = lod.gridFactor ?? interaction.gridFactor ?? DEFAULT_LOD_GRID_FACTOR;
   const marqueeDown = marqueePath.length > 0;
   const method = selection.method ?? "rectangle";
   const marqueeStart = marqueePath[0];
@@ -2213,9 +2325,41 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   );
 
   const handleConnectDragStart = useCallback((fullId: string, position: readonly [number, number, number]) => {
+    setVortexPointerArm(null);
     setConnectDragSource({ fullId, position });
     setConnectDragHoverPosition(position);
   }, []);
+
+  const handleVortexPointerArm = useCallback((arm: { readonly fullId: string; readonly position: readonly [number, number, number]; readonly clientX: number; readonly clientY: number; readonly event: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean } }) => {
+    setVortexPointerArm(arm);
+  }, []);
+
+  const handleVortexPointerMove = useCallback(
+    (fullId: string, clientX: number, clientY: number) => {
+      setVortexPointerArm((arm) => {
+        if (!arm || arm.fullId !== fullId) return arm;
+        const distance = Math.hypot(clientX - arm.clientX, clientY - arm.clientY);
+        if (distance > MARQUEE_DRAG_THRESHOLD_PX) {
+          handleConnectDragStart(arm.fullId, arm.position);
+          return null;
+        }
+        return arm;
+      });
+    },
+    [handleConnectDragStart],
+  );
+
+  const handleVortexPointerUp = useCallback(
+    (fullId: string, event?: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
+      setVortexPointerArm((arm) => {
+        if (arm && arm.fullId === fullId) {
+          handleVortexSelect(fullId, arm.event ?? event);
+        }
+        return null;
+      });
+    },
+    [handleVortexSelect],
+  );
 
   const handleConnectDragHover = useCallback((position: readonly [number, number, number]) => {
     setConnectDragHoverPosition(position);
@@ -2240,6 +2384,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   );
 
   const handleConnectDragCancel = useCallback(() => {
+    setVortexPointerArm(null);
     setConnectDragSource(null);
     setConnectDragHoverPosition(null);
   }, []);
@@ -2450,6 +2595,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         setPaintStrokeActive(false);
       }
       setMarqueePath([]);
+      setVortexPointerArm(null);
       if (connectDropConsumedRef.current) {
         connectDropConsumedRef.current = false;
       } else {
@@ -2468,6 +2614,128 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     [dispatch, paintMode, selection.engagementSessionActive, selectionMode],
   );
 
+  const clearCatalogueDrop = useCallback(() => {
+    setCatalogueDropPreview(null);
+    catalogueDragEncodedRef.current = null;
+    catalogueDragDepthRef.current = 0;
+  }, []);
+
+  const readCatalogueDragEncoded = useCallback((): string | null => {
+    return getActiveCatalogueDragPayload() ?? catalogueDragEncodedRef.current;
+  }, []);
+
+  const updateCatalogueDropPreviewAt = useCallback(
+    (clientX: number, clientY: number) => {
+      const encoded = readCatalogueDragEncoded();
+      const payload = parsePuzzle3dCatalogueDragPayload(encoded);
+      if (!payload || !hostRef.current || !cameraRef.current) {
+        setCatalogueDropPreview(null);
+        return;
+      }
+      const rect = hostRef.current.getBoundingClientRect();
+      if (!clientPointOverHost(clientX, clientY, rect)) {
+        setCatalogueDropPreview(null);
+        return;
+      }
+      const origin = resolveCatalogueDropOrigin(clientX, clientY, rect, cameraRef.current, gridSnapEnabled, gridFactor);
+      if (!origin) {
+        setCatalogueDropPreview(null);
+        return;
+      }
+      if (encoded) catalogueDragEncodedRef.current = encoded;
+      setCatalogueDropPreview({ ...payload, origin });
+    },
+    [gridFactor, gridSnapEnabled, readCatalogueDragEncoded],
+  );
+
+  const commitCatalogueDropAt = useCallback(
+    (clientX: number, clientY: number, encoded?: string | null) => {
+      const payload = parsePuzzle3dCatalogueDragPayload(encoded ?? readCatalogueDragEncoded());
+      if (!payload || !hostRef.current || !cameraRef.current) return;
+      const rect = hostRef.current.getBoundingClientRect();
+      const origin = resolveCatalogueDropOrigin(clientX, clientY, rect, cameraRef.current, gridSnapEnabled, gridFactor);
+      if (!origin) return;
+      dispatch("addObjectKind", { objectKind: payload.objectKind, origin });
+    },
+    [dispatch, gridFactor, gridSnapEnabled, readCatalogueDragEncoded],
+  );
+
+  const onCatalogueDragEnter = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (!scene) return;
+      if (!event.dataTransfer.types.includes(CATALOGUE_DRAG_MIME) && !getActiveCatalogueDragPayload()) return;
+      event.preventDefault();
+      catalogueDragDepthRef.current += 1;
+    },
+    [scene],
+  );
+
+  const onCatalogueDragLeave = useCallback(
+    (_event: DragEvent<HTMLDivElement>) => {
+      if (!scene) return;
+      catalogueDragDepthRef.current = Math.max(0, catalogueDragDepthRef.current - 1);
+      if (catalogueDragDepthRef.current === 0) clearCatalogueDrop();
+    },
+    [clearCatalogueDrop, scene],
+  );
+
+  const onCatalogueDragOver = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (!scene) return;
+      if (!event.dataTransfer.types.includes(CATALOGUE_DRAG_MIME) && !getActiveCatalogueDragPayload()) return;
+      const encoded = getActiveCatalogueDragPayload();
+      if (!parsePuzzle3dCatalogueDragPayload(encoded) && !event.dataTransfer.types.includes(CATALOGUE_DRAG_MIME)) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+      if (encoded) catalogueDragEncodedRef.current = encoded;
+      updateCatalogueDropPreviewAt(event.clientX, event.clientY);
+    },
+    [scene, updateCatalogueDropPreviewAt],
+  );
+
+  const onCatalogueDrop = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (!scene) return;
+      event.preventDefault();
+      const encoded = event.dataTransfer.getData(CATALOGUE_DRAG_MIME) || getActiveCatalogueDragPayload() || catalogueDragEncodedRef.current;
+      commitCatalogueDropAt(event.clientX, event.clientY, encoded);
+      clearCatalogueDrop();
+    },
+    [clearCatalogueDrop, commitCatalogueDropAt, scene],
+  );
+
+  useEffect(() => {
+    const onPointerMove = (event: PointerEvent) => {
+      const encoded = getActiveCatalogueDragPayload();
+      if (!encoded) return;
+      if (!parsePuzzle3dCatalogueDragPayload(encoded)) return;
+      catalogueDragEncodedRef.current = encoded;
+      updateCatalogueDropPreviewAt(event.clientX, event.clientY);
+    };
+
+    const onPointerUp = (event: PointerEvent) => {
+      const encoded = getActiveCatalogueDragPayload() ?? catalogueDragEncodedRef.current;
+      const payload = parsePuzzle3dCatalogueDragPayload(encoded);
+      if (!payload) return;
+      const host = hostRef.current;
+      if (!host) return;
+      const rect = host.getBoundingClientRect();
+      if (!clientPointOverHost(event.clientX, event.clientY, rect)) {
+        clearCatalogueDrop();
+        return;
+      }
+      commitCatalogueDropAt(event.clientX, event.clientY, encoded);
+      clearCatalogueDrop();
+    };
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp, true);
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp, true);
+    };
+  }, [clearCatalogueDrop, commitCatalogueDropAt, updateCatalogueDropPreviewAt]);
+
   if (!scene) return <div className="semio-world-3d-empty">{emptySceneLabel}</div>;
 
   return (
@@ -2475,6 +2743,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
       ref={hostRef}
       className="semio-world-3d-host relative h-full min-h-[24rem] w-full"
       data-surface-id={node.surfaceId}
+      data-puzzle3d-fixture-drag-active={catalogueDropPreview ? "" : undefined}
       onContextMenu={(event) => {
         if (event.altKey) return;
         const target = resolveWorldContextMenuTarget(interaction, selection);
@@ -2486,6 +2755,10 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onDragEnter={onCatalogueDragEnter}
+      onDragLeave={onCatalogueDragLeave}
+      onDragOver={onCatalogueDragOver}
+      onDrop={onCatalogueDrop}
     >
       <WorldCanvas
         className="h-full w-full"
@@ -2579,13 +2852,16 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
               onHover={handleVortexHover}
               onVortexSelect={handleVortexSelect}
               onBrushPlace={handleBrushPlace}
-              onConnectDragStart={handleConnectDragStart}
+              onVortexPointerArm={handleVortexPointerArm}
+              onVortexPointerMove={handleVortexPointerMove}
+              onVortexPointerUp={handleVortexPointerUp}
               onConnectDragHover={handleConnectDragHover}
               onConnectDragDrop={handleConnectDragDrop}
             />
             {connectDragSource && connectDragHoverPosition ? <WorldConnectRubberBand from={connectDragSource.position} to={connectDragHoverPosition} /> : null}
             <WorldAttractionLines attractions={attractions} />
             {brushPreview ? <BrushPreviewGhost preview={brushPreview} meshes={meshes} palette={meshStylePalette} /> : null}
+            {!brushPreview && catalogueDropPreview ? <CatalogueDropGhost preview={catalogueDropPreview} meshes={meshes} palette={meshStylePalette} /> : null}
             {engagementPreview.length > 0 ? <EngagementPreviewLayer items={engagementPreview} color={colors.hover} /> : null}
             <WorldVolumeLayer
               volumes={targetVolumes.map((volume) => ({

@@ -550,7 +550,11 @@ impl DocumentApp for SourcingCurateApp {
             }
             "setActiveExample" => {
                 let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
-                let next = if example_id == EMPTY_EXAMPLE_ID { empty_document() } else { default_document() };
+                let next = if example_id.is_empty() || example_id == EMPTY_EXAMPLE_ID {
+                    empty_document()
+                } else {
+                    default_document()
+                };
                 return ActionEmit::ops(vec![SourcingOp::SetDocument { document: next }]);
             }
             "stockFromCatalogue" => {

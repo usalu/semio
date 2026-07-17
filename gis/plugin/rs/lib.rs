@@ -1004,9 +1004,9 @@ pub mod app_2d {
                 // ✏️ Operation actions — flow through the document store with true inverses.
                 "setActiveExample" => {
                     let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
-                    let next = if example_id.is_empty() || example_id == "empty" { GisMapDocument::default() } else { default_document() };
+                    let next = if example_id.is_empty() { GisMapDocument::default() } else { default_document() };
                     self.runtime.selected_ids.clear();
-                    if !example_id.is_empty() && example_id != "empty" {
+                    if !example_id.is_empty() {
                         let mut host = map_host_from(&next, &self.runtime);
                         host.fit_world_camera();
                         self.runtime.camera_json = host.camera_json();
@@ -1200,7 +1200,6 @@ pub mod app_2d {
                 // and the registry validates the vocabulary. The arg id matches the key each handler reads.
                 .action_args("setActiveExample", vec![
                     ActionArgDef::select("exampleId", "Example", vec![
-                        ActionArgOption::new("empty", "Empty"),
                         ActionArgOption::new("reuse-map", "Reuse Map"),
                     ]).default_value("reuse-map"),
                 ])
@@ -1396,7 +1395,7 @@ pub mod app_2d {
         fn set_active_example_empty_then_reuse_round_trips_document() {
             let mut app = new_app();
             assert!(!app.projection().expect("projection").positions.is_empty());
-            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "empty" })), &ViewState::default(), &meta("local")).expect("empty");
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &meta("local")).expect("empty");
             assert!(app.projection().expect("projection").positions.is_empty());
             app.handle_action("setActiveExample", Some(&json!({ "exampleId": "reuse-map" })), &ViewState::default(), &meta("local")).expect("reuse");
             assert!(!app.projection().expect("projection").positions.is_empty());
@@ -1416,7 +1415,7 @@ pub mod app_2d {
 
             let mut app = new_app_with_registry();
             let result = app
-                .handle_action("setActiveExample", Some(&json!({ "exampleId": "empty" })), &ViewState::default(), &meta("local"))
+                .handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &meta("local"))
                 .expect("operation emits ops without tripping the kind-discipline guard");
             assert_eq!(result.operations.len(), 1, "loading an example is one document-replacing edit");
             assert!(app.projection().expect("projection").positions.is_empty(), "the empty example clears every position feature");

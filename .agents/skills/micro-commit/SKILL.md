@@ -50,6 +50,27 @@ EOF
 | `prepare` exit 0 | **Only** one fenced block with **stdout alone** (subject, timestamp, bullets, blank lines, **📊uloc** block, Signed-off-by). **No** title, **no** `##` headers, **no** `[micro-commit]` lines, **no** staged path lists, **no** prose outside the fence. |
 | exit non-zero    | Re-run `prepare` **without** `2>/dev/null` if needed; reply with **only** one ` ``` ` fence around the error text. No headers or commentary.                                                                                                             |
 
+## Message schema (script — paste verbatim)
+
+`prepare` prints a **fixed multi-line body**. You only author bullets; the script adds everything else. **Never** hand-write, shorten, or “fix” any line.
+
+| Line | Role | Pattern | Example |
+| ---- | ---- | ------- | ------- |
+| **1** | **Subject** (GitKraken summary) | `{emoji}{alias}🎆{YY}🌙{MM}☀️{DD}🚩{NNN}` | `🐙ueli🎆26🌙06☀️04🚩300` |
+| **2** | **Timestamp** (wall-clock now) | `🎆{YY}🌙{MM}☀️{DD}⏰{HH}⌚{mm}⏱️{ss}` | `🎆26🌙07☀️17⏰14⌚20⏱️03` |
+| 3… | **Bullets** | `{emoji}{description}` | `🧭Introduce semio cargo CLI…` |
+| … | **📊uloc** block | script-only | |
+| last | **Signed-off-by** | | |
+
+**Line 1 rules (critical):**
+
+- `{emoji}{alias}` = contributor (`🐙ueli`).
+- `🎆YY🌙MM☀️DD` on line 1 is the **WIP epoch** since the last bundle squash tag (`🐙ueli🎆26🌙06☀️04🚩`) — **not** today’s calendar date.
+- `🚩NNN` is a **three-digit** counter (`001`…`999`) bumped from git history. GitKraken may display only `NNN` in the panel; the prepared message still uses the **full** line 1.
+- Line 2 is always **now**; its date may differ from line 1’s epoch day.
+
+**Wrong prepare output** — re-run `prepare` (do not paste): line 1 uses **today’s** date with `🚩001` while recent commits are already numbered (`152`…`299` or `…🚩151`); or line 1 is missing `🎆YY🌙MM☀️DD🚩NNN` entirely.
+
 ### Newlines (required — GitKraken / `git commit` need them)
 
 - **One stdout line = one line in the fence.** Never collapse the message into a single paragraph or one long wrapped line.
@@ -60,8 +81,8 @@ EOF
 Example shape (each line is its own line in the fence):
 
 ```
-🐙ueli🎆26🌙06☀️02🚩081
-🎆26🌙06☀️04⏰00⌚02⏱️50
+🐙ueli🎆26🌙06☀️04🚩300
+🎆26🌙07☀️17⏰14⌚20⏱️03
 🪣First bullet from stdout
 📊uloc➕12✏️3➖1🟰16
 🟦803k
@@ -87,13 +108,13 @@ Signed-off-by: Name <email@example.com>
 
 ## Script (deterministic)
 
-Counter, timestamp line, bullets, **📊uloc** metrics (first line is **`📊uloc➕…✏️…➖…🟰…`** — staged git deltas for the whole repo, **🟰** = ➕+✏️+➖; then **every** language with repo `{loc}` plus the same delta shape, largest first), Signed-off-by, validation, GitKraken files. You only author bullets; do not hand-write the metrics block.
+Counter (from formatted `…🚩NNN` **or** numeric GitKraken subjects + WIP epoch from history/tags), timestamp line, bullets, **📊uloc** metrics (first line is **`📊uloc➕…✏️…➖…🟰…`** — staged git deltas for the whole repo, **🟰** = ➕+✏️+➖; then **every** language with repo `{loc}` plus the same delta shape, largest first), Signed-off-by, validation, GitKraken files. You only author bullets; do not hand-write the metrics block or line 1.
 
 After commit, hooks reset to an **empty** `.git/gkcommittemplate.txt` and point `commit.template` at it (GitKraken reuses the last message if that file is missing). Run `g` / `prepare` for the next change set. `bun ./script.ts setup git` installs hooks (post-commit, post-checkout, post-merge, post-rewrite, prepare-commit-msg).
 
 ## GitKraken (do not mention unless commit fails)
 
-Line 1 = `…🚩NNN`; rest = timestamp, bullets, Signed-off-by. Reopen Commit panel or **WIP** if stale.
+Line 1 = full `🐙ueli🎆26🌙06☀️04🚩300` (panel may show only `300`); line 2 = timestamp; then bullets and Signed-off-by. Reopen Commit panel or **WIP** if stale.
 
 ## Branch
 

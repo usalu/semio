@@ -2135,6 +2135,7 @@ impl DocumentApp for FormsPlayApp {
             "setActiveExample" => {
                 let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
                 let json_text = match example_id {
+                    "" => return ActionEmit::ops(replace_spec_ops(spec, &empty_forms_projection())),
                     "building-component" => BUILDING_COMPONENT_EXAMPLE_JSON,
                     "default" => DEFAULT_EXAMPLE_JSON,
                     "onboarding" => ONBOARDING_EXAMPLE_JSON,
@@ -2190,7 +2191,6 @@ impl DocumentApp for FormsPlayApp {
         overlay.action_labels = forms_action_labels(is_de);
         overlay.utility_labels = forms_utility_labels(is_de);
         overlay.example_labels = std::collections::HashMap::from([
-            ("empty".to_string(), (if is_de { "Leer" } else { "Empty" }).to_string()),
             ("default".to_string(), (if is_de { "Kontakt" } else { "Contact" }).to_string()),
             ("onboarding".to_string(), "Onboarding".to_string()),
             ("building-component".to_string(), (if is_de { "Baukomponente" } else { "Building Component" }).to_string()),
@@ -2268,7 +2268,6 @@ fn create_forms_app() -> App {
                 Some(&["Blueprint".into(), "Try".into()]),
             )),
     )
-    .example("empty", "Empty", serde_json::to_string(&empty_forms_projection()).unwrap())
     .example("default", "Contact", DEFAULT_EXAMPLE_JSON)
     .example("onboarding", "Onboarding", ONBOARDING_EXAMPLE_JSON)
     .example("building-component", "Building Component", BUILDING_COMPONENT_EXAMPLE_JSON)

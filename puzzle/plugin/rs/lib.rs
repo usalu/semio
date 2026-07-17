@@ -1663,7 +1663,7 @@ pub mod d2 {
                 }
                 "setActiveExample" => {
                     let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
-                    envelope.fixture = if example_id.is_empty() || example_id == "empty" {
+                    envelope.fixture = if example_id.is_empty() {
                         default_empty_fixture()
                     } else if example_id == PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID || example_id == "concrete" {
                         serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap_or_else(|_| default_empty_fixture())
@@ -2180,10 +2180,9 @@ pub mod d2 {
                 ])
                 .action_args("setActiveExample", vec![
                     ActionArgDef::select("exampleId", "Example", vec![
-                        ActionArgOption::new("empty", "Empty"),
                         ActionArgOption::new(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, "Concrete Forest"),
                         ActionArgOption::new(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, "Nakagin Capsule Tower"),
-                    ]).required().default_value("empty"),
+                    ]).required().default_value(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID),
                 ])
                 // 🧰 Canvas utilities — one exclusive set, active utility host-owned (never a document op). The
                 // select/brush/fill switcher is rendered by the framework toolbar for the interactive pane.
@@ -2198,8 +2197,7 @@ pub mod d2 {
                 window.options.measures = puzzle2d_window_measures(pane, &envelope, labels);
             }
         }
-        app.example("empty", "Empty", serde_json::to_string(&default_empty_fixture()).unwrap())
-            .example(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, "Concrete Forest", serde_json::to_string(&example_fixture(CONCRETE_FOREST_EXAMPLE_JSON)).unwrap())
+        app.example(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, "Concrete Forest", serde_json::to_string(&example_fixture(CONCRETE_FOREST_EXAMPLE_JSON)).unwrap())
             .example(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, "Nakagin Capsule Tower", serde_json::to_string(&example_fixture(NAKAGIN_EXAMPLE_JSON)).unwrap())
             .program("puzzle2d", "Puzzle 2D", "layout")
     }
@@ -2649,7 +2647,7 @@ pub mod d3 {
     const PUZZLE3D_EXAMPLE_NAKAGIN: &str = "nakagin-capsule-tower";
     const PUZZLE3D_FALLBACK_MESH_KIND: &str = "box";
     /// 🧰 Host-owned active utility (`view_state.active_utility_id`) when the host hasn't set one yet — the first declared window utility.
-    const PUZZLE3D_DEFAULT_UTILITY: &str = "select";
+    const PUZZLE3D_DEFAULT_UTILITY: &str = "move";
     const PUZZLE3D_FILL_COUNT_MAX: u32 = 1000;
 
     const CONCRETE_FOREST_EXAMPLE_JSON: &str = include_str!("../../3d/example/concrete-forest.3d.json");
@@ -3004,6 +3002,42 @@ pub mod d3 {
             "scale" => "scale",
             _ => "move",
         }
+    }
+
+    /// 🧭 Whether the active utility is a transform gumball mode.
+    fn puzzle3d_transform_utility_active(active_utility: &str) -> bool {
+        matches!(active_utility, "move" | "rotate" | "scale")
+    }
+
+    /// 🕹️ Whether the world gumball should render for the current selection and utility.
+    fn puzzle3d_gumball_active(runtime: &Puzzle3dRuntime, active_utility: &str) -> bool {
+        !runtime.selection.object_ids.is_empty() && puzzle3d_transform_utility_active(active_utility)
+    }
+
+    /// 🧹 Clears every selection bag.
+    fn puzzle3d_clear_selection(selection: &mut Puzzle3dSelection) {
+        *selection = Puzzle3dSelection::default();
+    }
+
+    /// 🧹 Clears every selection bag except object ids.
+    fn puzzle3d_clear_non_object_selection(selection: &mut Puzzle3dSelection) {
+        selection.vortex_ids.clear();
+        selection.attraction_ids.clear();
+        selection.target_volume_ids.clear();
+        selection.reference_ids.clear();
+    }
+
+    /// 🧹 Clears every selection bag except vortex ids.
+    fn puzzle3d_clear_non_vortex_selection(selection: &mut Puzzle3dSelection) {
+        selection.object_ids.clear();
+        selection.attraction_ids.clear();
+        selection.target_volume_ids.clear();
+        selection.reference_ids.clear();
+    }
+
+    /// 🧭 Whether the engagement HUD should mark an active session for the given utility.
+    fn puzzle3d_engagement_session_active(active_utility: &str) -> bool {
+        matches!(active_utility, "brush" | "fill" | "worldRelocate")
     }
 
     static PUZZLE3D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
@@ -3484,7 +3518,7 @@ pub mod d3 {
             if let Some(active_id) = runtime.selection.object_ids.first() {
                 object.insert("activeObjectId".into(), json!(active_id));
             }
-            let gumball_active = !runtime.selection.object_ids.is_empty();
+            let gumball_active = puzzle3d_gumball_active(runtime, &envelope.active_utility);
             object.insert("gumballActive".into(), json!(gumball_active));
             if gumball_active {
                 if let Some(target) = gumball_target_world(envelope) {
@@ -4376,7 +4410,8 @@ pub mod d3 {
 
     fn puzzle3d_object_kind_item(entry: &Value) -> UiTreeItemNode {
         let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
-        let draggable = entry.get("meshUrl").and_then(|value| value.as_str()).map(|url| !url.is_empty()).unwrap_or(false);
+        let mesh_url = entry.get("meshUrl").and_then(|value| value.as_str()).filter(|url| !url.is_empty()).map(str::to_string);
+        let draggable = mesh_url.is_some();
         UiTreeItemNode {
             loading: None,
             id: format!("puzzle3d-kind:{kind_id}"),
@@ -4390,7 +4425,13 @@ pub mod d3 {
             unhover_action: Some(puzzle3d_action("setKindHover", Some(json!({ "kindId": Value::Null })))),
             actions: None,
             draggable: draggable.then_some(true),
-            drag_data: draggable.then(|| HashMap::from([(PUZZLE3D_CATALOGUE_DRAG_MIME.to_string(), json!({ "objectKind": kind_id }).to_string())])),
+            drag_data: draggable.then(|| {
+                let mut payload = json!({ "objectKind": kind_id });
+                if let Some(url) = mesh_url {
+                    payload["meshUrl"] = json!(url);
+                }
+                HashMap::from([(PUZZLE3D_CATALOGUE_DRAG_MIME.to_string(), payload.to_string())])
+            }),
             items: Some(puzzle3d_object_kind_vortex_items(entry)),
             control: None,
             is_hidden: None,
@@ -4689,12 +4730,12 @@ pub mod d3 {
         let objects_label = labels.objects;
         let attractions_label = labels.attractions;
         WindowEngagement {
-            session_active: Some(active_utility != "select"),
+            session_active: Some(puzzle3d_engagement_session_active(active_utility)),
             options: None,
             input: Some(WindowEngagementInput {
                 id: Some("puzzle3d-engagement".into()),
                 value: Some(envelope.runtime.engagement_input.clone()),
-                placeholder: Some("select, brush, fill <n>, zoom, clear, rectangle, lasso".into()),
+                placeholder: Some("brush, fill <n>, zoom, clear, rectangle, lasso".into()),
                 disabled: None,
                 on_change: Some(puzzle3d_action("engagementInput", None)),
                 on_submit: Some(puzzle3d_action("engagementSubmit", None)),
@@ -4839,6 +4880,10 @@ pub mod d3 {
             children: vec![
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-rectangle"), icon_id: "square".into(), label: Some("Rectangle".into()), pressed: runtime.selection_method == "rectangle", text: None, on_change: puzzle3d_action("setSelectionMethod", Some(json!({ "method": "rectangle" }))) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-lasso"), icon_id: "lasso".into(), label: Some("Lasso".into()), pressed: runtime.selection_method == "lasso", text: None, on_change: puzzle3d_action("setSelectionMethod", Some(json!({ "method": "lasso" }))) },
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-mode-default"), icon_id: "cursor".into(), label: Some("Selective".into()), pressed: runtime.selection_mode_default == "default", text: None, on_change: puzzle3d_action("setSelectionModeDefault", Some(json!({ "mode": "default" }))) },
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-mode-additive"), icon_id: "plus".into(), label: Some("Additive".into()), pressed: runtime.selection_mode_default == "additive", text: None, on_change: puzzle3d_action("setSelectionModeDefault", Some(json!({ "mode": "additive" }))) },
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-mode-subtractive"), icon_id: "minus".into(), label: Some("Subtractive".into()), pressed: runtime.selection_mode_default == "subtractive", text: None, on_change: puzzle3d_action("setSelectionModeDefault", Some(json!({ "mode": "subtractive" }))) },
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-mode-invertive"), icon_id: "refresh-cw".into(), label: Some("Invertive".into()), pressed: runtime.selection_mode_default == "invertive", text: None, on_change: puzzle3d_action("setSelectionModeDefault", Some(json!({ "mode": "invertive" }))) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-objects"), icon_id: "box".into(), label: Some(labels.objects.into()), pressed: runtime.selectable_kinds.objects, text: None, on_change: puzzle3d_action("setSelectableKind", Some(json!({ "kind": "objects" }))) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-vortices"), icon_id: "circle-dot".into(), label: Some(labels.vortices.into()), pressed: runtime.selectable_kinds.vortices, text: None, on_change: puzzle3d_action("setSelectableKind", Some(json!({ "kind": "vortices" }))) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-attractions"), icon_id: "link".into(), label: Some("Attractions".into()), pressed: runtime.selectable_kinds.attractions, text: None, on_change: puzzle3d_action("setSelectableKind", Some(json!({ "kind": "attractions" }))) },
@@ -5104,7 +5149,7 @@ pub mod d3 {
                 }
                 "setActiveExample" => {
                     let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
-                    let next = if example_id.is_empty() || example_id == "empty" {
+                    let next = if example_id.is_empty() {
                         Some(empty_fixture())
                     } else if example_id == PUZZLE3D_EXAMPLE_CONCRETE_FOREST || example_id == "concrete" {
                         Some(default_fixture())
@@ -5300,31 +5345,32 @@ pub mod d3 {
                     let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
                     if args.and_then(|value| value.get("id")).map_or(true, |value| value.is_null()) {
                         if merge == "replace" {
-                            envelope.runtime.selection.object_ids.clear();
-                            envelope.runtime.selection.vortex_ids.clear();
+                            puzzle3d_clear_selection(&mut envelope.runtime.selection);
                         }
-                    }
-                    let index = args.and_then(|value| value.get("id")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
-                    if let Some(object) = envelope.fixture.objects.get(index).filter(|object| !object.locked && !object.hidden) {
-                        let id = object.id.clone();
-                        let merge_ids = if merge == "add" {
-                            let mut merged = envelope.runtime.selection.object_ids.clone();
-                            if !merged.contains(&id) {
-                                merged.push(id.clone());
-                            }
-                            merged
-                        } else if merge == "toggle" {
-                            let mut merged = envelope.runtime.selection.object_ids.clone();
-                            if let Some(pos) = merged.iter().position(|entry| entry == &id) {
-                                merged.remove(pos);
+                    } else if envelope.runtime.selectable_kinds.objects {
+                        let index = args.and_then(|value| value.get("id")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
+                        if let Some(object) = envelope.fixture.objects.get(index).filter(|object| !object.locked && !object.hidden) {
+                            let id = object.id.clone();
+                            let merge_ids = if merge == "add" {
+                                let mut merged = envelope.runtime.selection.object_ids.clone();
+                                if !merged.contains(&id) {
+                                    merged.push(id.clone());
+                                }
+                                merged
+                            } else if merge == "toggle" {
+                                let mut merged = envelope.runtime.selection.object_ids.clone();
+                                if let Some(pos) = merged.iter().position(|entry| entry == &id) {
+                                    merged.remove(pos);
+                                } else {
+                                    merged.push(id);
+                                }
+                                merged
                             } else {
-                                merged.push(id);
-                            }
-                            merged
-                        } else {
-                            vec![id]
-                        };
-                        envelope.runtime.selection.object_ids = merge_ids;
+                                puzzle3d_clear_non_object_selection(&mut envelope.runtime.selection);
+                                vec![id]
+                            };
+                            envelope.runtime.selection.object_ids = merge_ids;
+                        }
                     }
                 }
                 "worldVortexHover" => {
@@ -5334,21 +5380,25 @@ pub mod d3 {
                     }
                 }
                 "worldVortexSelect" => {
-                    if let Some(full_id) = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()) {
-                        let merge = args
-                            .and_then(|value| value.get("merge"))
-                            .and_then(|value| value.as_str())
-                            .unwrap_or(&envelope.runtime.selection_mode_default);
-                        let merge_mode = match merge {
-                            "additive" => "add",
-                            "subtractive" => "remove",
-                            "invertive" => "toggle",
-                            "default" => "replace",
-                            other => other,
-                        };
-                        envelope.runtime.selection.vortex_ids = merge_world_selection_ids(&envelope.runtime.selection.vortex_ids, &[full_id.to_string()], merge_mode);
-                        envelope.runtime.selection.object_ids.clear();
-                        drive_precompute(&mut self.precompute, &envelope);
+                    if envelope.runtime.selectable_kinds.vortices {
+                        if let Some(full_id) = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()) {
+                            let merge = args
+                                .and_then(|value| value.get("merge"))
+                                .and_then(|value| value.as_str())
+                                .unwrap_or(&envelope.runtime.selection_mode_default);
+                            let merge_mode = match merge {
+                                "additive" => "add",
+                                "subtractive" => "remove",
+                                "invertive" => "toggle",
+                                "default" => "replace",
+                                other => other,
+                            };
+                            if merge_mode == "replace" {
+                                puzzle3d_clear_non_vortex_selection(&mut envelope.runtime.selection);
+                            }
+                            envelope.runtime.selection.vortex_ids = merge_world_selection_ids(&envelope.runtime.selection.vortex_ids, &[full_id.to_string()], merge_mode);
+                            drive_precompute(&mut self.precompute, &envelope);
+                        }
                     }
                 }
                 "worldRelocate" => {
@@ -5430,7 +5480,10 @@ pub mod d3 {
                     }
                 }
                 "setSelectionModeDefault" => {
-                    if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
+                    if let Some(mode) = args
+                        .and_then(|value| value.get("mode").or_else(|| value.get("value")))
+                        .and_then(|value| value.as_str())
+                    {
                         envelope.runtime.selection_mode_default = mode.into();
                     }
                 }
@@ -5523,13 +5576,12 @@ pub mod d3 {
                         envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, count);
                     } else {
                         match raw.to_lowercase().as_str() {
-                            "select" => envelope.active_utility = "select".into(),
                             "brush" => {
                                 envelope.active_utility = "brush".into();
                                 drive_precompute(&mut self.precompute, &envelope);
                             }
                             "zoom" => apply_puzzle3d_focus_selection(&mut envelope),
-                            "clear" => envelope.runtime.selection = Puzzle3dSelection::default(),
+                            "clear" => puzzle3d_clear_selection(&mut envelope.runtime.selection),
                             "rectangle" => envelope.runtime.selection_method = "rectangle".into(),
                             "lasso" => envelope.runtime.selection_method = "lasso".into(),
                             _ => {}
@@ -5546,7 +5598,7 @@ pub mod d3 {
                 "engagementAbort" => {
                     envelope.runtime.engagement_input = String::new();
                     envelope.runtime.brush_candidate_index = 0;
-                    envelope.active_utility = "select".into();
+                    envelope.active_utility = PUZZLE3D_DEFAULT_UTILITY.into();
                 }
                 "createAttraction" => {
                     let attracting = args.and_then(|value| value.get("attracting")).and_then(|value| value.as_str()).unwrap_or("");
@@ -6033,15 +6085,14 @@ pub mod d3 {
                 .action_args("addObjectKind", vec![
                     ActionArgDef::select("objectKind", "Kind", vec![ActionArgOption::new("Object", "Object")]).default_value("Object"),
                 ])
-                // 🧰 Flat per-window utility set (host-owned `view_state.active_utility_id`); `select` is the default.
-                .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "cursor") })
+                // 🧰 Flat per-window utility set (host-owned `view_state.active_utility_id`); `move` is the default.
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })
                 .utility(UtilityDefinition::new("brush", "Brush", "brush"))
                 .utility(UtilityDefinition::new("fill", "Fill", "fill"))
                 .utility(UtilityDefinition::new("worldRelocate", "Relocate", "move-3d"))
-                .window_kind_utilities(PUZZLE3D_PLAY_WINDOW_MAIN, vec!["select".into(), "move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()])
+                .window_kind_utilities(PUZZLE3D_PLAY_WINDOW_MAIN, vec!["move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()])
                 // 🎓 Reference introduction (proof of the framework's Introduction mechanism, see
                 // `IntroductionDefinition` in `framework/core/rs/lib.rs`): a short first-run walkthrough
                 // of the viewport, the Move utility, the catalogue panel, and adding an object.
@@ -6096,7 +6147,6 @@ pub mod d3 {
                         .submit_label("Add"),
                 ),
         )
-        .example("empty", "Empty", &serde_json::to_string(&empty_fixture()).unwrap())
         .example(PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON)
         .example(PUZZLE3D_EXAMPLE_NAKAGIN, "Nakagin Capsule Tower", NAKAGIN_EXAMPLE_JSON)
         .program("puzzle3d", "Puzzle 3D", "model")
@@ -6223,7 +6273,7 @@ pub mod d3 {
             let mut app = new_app();
             let loaded = object_count(&app);
             assert!(loaded > 0);
-            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "empty" })), &ViewState::default(), &meta("local")).expect("empty");
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &meta("local")).expect("empty");
             assert_eq!(object_count(&app), 0, "empty example clears the objects");
             app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
             assert_eq!(object_count(&app), loaded, "undo restores the concrete-forest objects");
@@ -6279,6 +6329,10 @@ pub mod d3 {
 
         fn interaction_of(node: &Value) -> Value {
             node.pointer("/world3d/interactionJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or(Value::Null)
+        }
+
+        fn selection_of(node: &Value) -> Value {
+            node.pointer("/world3d/selectionJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or(Value::Null)
         }
 
         /// 🔍 Depth-first search for a [`WindowMeasure::Slider`]'s value by id, descending into groups (the
@@ -6495,11 +6549,43 @@ pub mod d3 {
 
         //#region 🧰 Window Actions & Utilities contract
         #[test]
+        fn kinds_tree_object_drag_data_carries_object_kind_and_mesh_url() {
+            let envelope = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
+            let labels = puzzle3d_labels(&ViewState::default());
+            let node = build_kinds_tree(&envelope, &labels);
+            let tree = match node {
+                UiNode::Tree(tree) => tree,
+                _ => panic!("expected kinds tree"),
+            };
+            let objects = tree.sections.iter().find(|section| section.id == "puzzle3d-play-kinds.objects").expect("objects section");
+            let draggable = objects.items.iter().find(|item| item.draggable == Some(true)).expect("draggable object kind");
+            let drag_data = draggable.drag_data.as_ref().expect("drag data");
+            let encoded = drag_data.get(PUZZLE3D_CATALOGUE_DRAG_MIME).expect("catalogue mime");
+            let payload: Value = serde_json::from_str(encoded).expect("drag payload json");
+            assert!(payload.get("objectKind").and_then(Value::as_str).is_some(), "drag payload must carry objectKind");
+            assert!(payload.get("meshUrl").and_then(Value::as_str).filter(|url| !url.is_empty()).is_some(), "drag payload must carry meshUrl for preview");
+        }
+
+        #[test]
+        fn add_object_kind_honors_drop_origin() {
+            let mut app = new_app();
+            let before = object_count(&app);
+            app.handle_action("addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [2.5, 3.5, 0.0] })), &ViewState::default(), &meta("local")).expect("addObjectKind");
+            assert_eq!(object_count(&app), before + 1);
+            let projection = app.projection().expect("projection");
+            let object = projection.get("objects").and_then(Value::as_array).and_then(|objects| objects.last()).expect("added object");
+            let origin = object.get("origin").and_then(Value::as_array).expect("origin array");
+            assert_eq!(origin.first().and_then(Value::as_f64), Some(2.5));
+            assert_eq!(origin.get(1).and_then(Value::as_f64), Some(3.5));
+            assert_eq!(origin.get(2).and_then(Value::as_f64), Some(0.0));
+        }
+
+        #[test]
         fn add_object_kind_materializes_the_declared_kind_default() {
             // 📝 P1 arg form: firing addObjectKind with no args must materialize the declared `objectKind`
             // default and emit the object-add op under registry enforcement.
             let mut app = new_app_with_registry();
-            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "empty" })), &ViewState::default(), &meta("local")).expect("empty");
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &meta("local")).expect("empty");
             let before = object_count(&app);
             let result = app.handle_action("addObjectKind", None, &ViewState::default(), &meta("local")).expect("addObjectKind");
             assert!(!result.operations.is_empty(), "addObjectKind is an Operation that emits ops");
@@ -6532,10 +6618,77 @@ pub mod d3 {
         }
 
         #[test]
+        fn main_window_utilities_default_to_move_without_select_tool() {
+            let definition = create_puzzle3d_app().definition;
+            let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
+            assert!(!utility_ids.contains(&"select"), "puzzle 3d must not declare a select utility");
+            let main = definition.window_kinds.iter().find(|window| window.id == PUZZLE3D_PLAY_WINDOW_MAIN).expect("main window");
+            let main_utilities: Vec<&str> = main.utilities.iter().map(|utility| utility.as_str()).collect();
+            assert_eq!(main_utilities.first().copied(), Some("move"));
+            assert!(!main_utilities.contains(&"select"));
+            assert_eq!(PUZZLE3D_DEFAULT_UTILITY, "move");
+        }
+
+        #[test]
+        fn world_pick_null_clears_without_reselecting_first_object() {
+            let mut app = new_app();
+            app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &meta("local")).expect("pick");
+            let selected_before_clear = selection_of(&render_composite(&mut app));
+            assert!(selected_before_clear.get("ids").and_then(Value::as_array).is_some_and(|ids| !ids.is_empty()));
+            app.handle_action("worldPick", Some(&json!({ "id": null, "merge": "replace" })), &ViewState::default(), &meta("local")).expect("clear");
+            let selected_after_clear = selection_of(&render_composite(&mut app));
+            assert_eq!(selected_after_clear.get("ids").and_then(Value::as_array).map(Vec::len), Some(0));
+        }
+
+        #[test]
+        fn world_pick_object_replaces_vortex_selection() {
+            let mut app = new_app();
+            let vortex = first_vortex_full_id(&app);
+            app.handle_action("worldVortexSelect", Some(&json!({ "fullId": vortex, "merge": "default" })), &ViewState::default(), &meta("local")).expect("select vortex");
+            app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &meta("local")).expect("pick object");
+            let node = render_composite(&mut app);
+            let selection = selection_of(&node);
+            assert!(selection.get("ids").and_then(Value::as_array).is_some_and(|ids| !ids.is_empty()));
+            let vortices = node.pointer("/world3d/vorticesJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok()).unwrap_or_default();
+            assert!(!vortices.iter().any(|entry| entry.get("selected").and_then(Value::as_bool) == Some(true)));
+        }
+
+        #[test]
+        fn world_vortex_select_clears_object_selection() {
+            let mut app = new_app();
+            app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &meta("local")).expect("pick object");
+            let vortex = first_vortex_full_id(&app);
+            app.handle_action("worldVortexSelect", Some(&json!({ "fullId": vortex, "merge": "default" })), &ViewState::default(), &meta("local")).expect("select vortex");
+            let selection = selection_of(&render_composite(&mut app));
+            assert_eq!(selection.get("ids").and_then(Value::as_array).map(Vec::len), Some(0));
+            let vortices = render_composite(&mut app).pointer("/world3d/vorticesJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok()).unwrap_or_default();
+            assert!(vortices.iter().any(|entry| entry.get("fullId").and_then(Value::as_str) == Some(vortex.as_str()) && entry.get("selected").and_then(Value::as_bool) == Some(true)));
+        }
+
+        #[test]
+        fn gumball_active_only_for_transform_utilities_with_object_selection() {
+            let mut app = new_app();
+            app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &meta("local")).expect("pick");
+            let move_view = ViewState { active_utility_id: Some("move".into()), ..ViewState::default() };
+            let move_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &move_view).expect("render")).unwrap());
+            assert_eq!(move_selection.get("gumballActive").and_then(Value::as_bool), Some(true));
+            let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
+            let brush_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &brush_view).expect("render")).unwrap());
+            assert_eq!(brush_selection.get("gumballActive").and_then(Value::as_bool), Some(false));
+        }
+
+        #[test]
+        fn transform_engagement_does_not_block_background_deselect() {
+            let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: "move".into() };
+            let engagement = puzzle3d_engagement(&scene, &PUZZLE3D_LABELS_NATIVE_EN);
+            assert_eq!(engagement.session_active, Some(false));
+        }
+
+        #[test]
         fn gumball_translate_drag_coalesces_into_one_edit() {
             // 🌀 Coalescing regression: three translate ticks with the same key are ONE undoable edit.
             let mut app = new_app();
-            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "empty" })), &ViewState::default(), &meta("local")).expect("empty");
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &meta("local")).expect("empty");
             app.handle_action("addObjectKind", Some(&json!({ "objectKind": "Object" })), &ViewState::default(), &meta("local")).expect("add object");
             let object_id = app.projection().expect("projection").get("objects").and_then(Value::as_array).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(Value::as_str).expect("object id").to_string();
             let origin_before = |app: &VcsDocumentApp<Puzzle3dPlayApp>| -> Vec<f64> {
@@ -7034,6 +7187,41 @@ pub mod d5 {
             "rotate" => "rotate",
             "scale" => "scale",
             _ => "move",
+        }
+    }
+
+    /// 🧭 Whether the active utility is a transform gumball mode.
+    fn puzzle5d_transform_utility_active(active_utility: &str) -> bool {
+        matches!(active_utility, "move" | "rotate" | "scale")
+    }
+
+    /// 🕹️ Whether the world gumball should render for the current selection and utility.
+    fn puzzle5d_gumball_active(runtime: &Puzzle5dRuntime, active_utility: &str) -> bool {
+        !runtime.selection.part_ids.is_empty() && puzzle5d_transform_utility_active(active_utility)
+    }
+
+    /// 🧹 Clears every selection bag.
+    fn puzzle5d_clear_selection(selection: &mut Puzzle5dSelection) {
+        *selection = Puzzle5dSelection::default();
+    }
+
+    /// 🧹 Clears every selection bag except part ids.
+    fn puzzle5d_clear_non_part_selection(selection: &mut Puzzle5dSelection) {
+        selection.grip_ids.clear();
+        selection.fastener_ids.clear();
+    }
+
+    /// 🧹 Clears every selection bag except grip ids.
+    fn puzzle5d_clear_non_grip_selection(selection: &mut Puzzle5dSelection) {
+        selection.part_ids.clear();
+        selection.fastener_ids.clear();
+    }
+
+    /// 🧭 Whether the engagement HUD should mark an active session for the given window utility.
+    fn puzzle5d_engagement_session_active(window: &str, active_utility: &str) -> bool {
+        match window {
+            PUZZLE5D_PLAY_WINDOW_3D => matches!(active_utility, "brush" | "fill" | "worldRelocate"),
+            _ => active_utility != "select",
         }
     }
 
@@ -7718,7 +7906,7 @@ pub mod d5 {
             if let Some(active_id) = runtime.selection.part_ids.first() {
                 object.insert("activeObjectId".into(), json!(active_id));
             }
-            let gumball_active = !runtime.selection.part_ids.is_empty();
+            let gumball_active = puzzle5d_gumball_active(runtime, &envelope.active_utility);
             object.insert("gumballActive".into(), json!(gumball_active));
             if gumball_active {
                 if let Some(target) = gumball_target_world(envelope) {
@@ -7798,7 +7986,7 @@ pub mod d5 {
             _ => "select, brush, fill, clear",
         };
         WindowEngagement {
-            session_active: Some(active_utility != "select"),
+            session_active: Some(puzzle5d_engagement_session_active(window, active_utility)),
             input: Some(WindowEngagementInput {
                 id: Some(format!("puzzle5d-engagement-{window}")),
                 value: Some(input_value),
@@ -8446,7 +8634,7 @@ pub mod d5 {
                 }
                 "setActiveExample" => {
                     let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
-                    let next = if example_id.is_empty() || example_id == "empty" {
+                    let next = if example_id.is_empty() {
                         Some(empty_document())
                     } else if example_id == PUZZLE5D_EXAMPLE_CONCRETE_FOREST || example_id == "concrete" {
                         Some(default_document())
@@ -8571,13 +8759,14 @@ pub mod d5 {
                     let window = args.and_then(|value| value.get("window")).and_then(|value| value.as_str()).unwrap_or(PUZZLE5D_PLAY_WINDOW_2D).to_string();
                     let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).map(str::trim).unwrap_or("").to_lowercase();
                     match value.as_str() {
+                        "select" if window == PUZZLE5D_PLAY_WINDOW_3D => envelope.active_utility = "move".into(),
                         "select" | "brush" | "fill" => {
-                            envelope.active_utility = value;
+                            envelope.active_utility = if value == "select" { "select".into() } else { value };
                             if envelope.active_utility != "select" {
                                 self.drive_precompute(&envelope);
                             }
                         }
-                        "clear" => envelope.runtime.selection = Puzzle5dSelection::default(),
+                        "clear" => puzzle5d_clear_selection(&mut envelope.runtime.selection),
                         "rectangle" | "lasso" => envelope.runtime.selection_method = value,
                         _ => {}
                     }
@@ -8591,7 +8780,8 @@ pub mod d5 {
                             envelope.runtime.engagement_input_by_window.insert(window.to_string(), String::new());
                         }
                     }
-                    envelope.active_utility = "select".into();
+                    let window = args.and_then(|value| value.get("window")).and_then(|value| value.as_str()).unwrap_or(PUZZLE5D_PLAY_WINDOW_2D);
+                    envelope.active_utility = if window == PUZZLE5D_PLAY_WINDOW_3D { "move".into() } else { "select".into() };
                 }
                 "engagementControlSelect" => {
                     let candidate_id = args.and_then(|value| value.get("id").or_else(|| value.get("value"))).and_then(|value| value.as_str()).unwrap_or("");
@@ -8832,31 +9022,35 @@ pub mod d5 {
                     let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
                     if args.and_then(|value| value.get("id")).is_none_or(|value| value.is_null()) {
                         if merge == "replace" {
-                            envelope.runtime.selection.part_ids.clear();
+                            puzzle5d_clear_selection(&mut envelope.runtime.selection);
                         }
-                    }
-                    let index = args.and_then(|value| value.get("id")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
-                    if let Some(part) = envelope.document.parts.get(index) {
-                        let id = part.id.clone();
-                        envelope.runtime.selection.part_ids = match merge {
-                            "add" => {
-                                let mut merged = envelope.runtime.selection.part_ids.clone();
-                                if !merged.contains(&id) {
-                                    merged.push(id);
+                    } else {
+                        let index = args.and_then(|value| value.get("id")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
+                        if let Some(part) = envelope.document.parts.get(index) {
+                            let id = part.id.clone();
+                            envelope.runtime.selection.part_ids = match merge {
+                                "add" => {
+                                    let mut merged = envelope.runtime.selection.part_ids.clone();
+                                    if !merged.contains(&id) {
+                                        merged.push(id);
+                                    }
+                                    merged
                                 }
-                                merged
-                            }
-                            "toggle" => {
-                                let mut merged = envelope.runtime.selection.part_ids.clone();
-                                if let Some(position) = merged.iter().position(|entry| entry == &id) {
-                                    merged.remove(position);
-                                } else {
-                                    merged.push(id);
+                                "toggle" => {
+                                    let mut merged = envelope.runtime.selection.part_ids.clone();
+                                    if let Some(position) = merged.iter().position(|entry| entry == &id) {
+                                        merged.remove(position);
+                                    } else {
+                                        merged.push(id);
+                                    }
+                                    merged
                                 }
-                                merged
-                            }
-                            _ => vec![id],
-                        };
+                                _ => {
+                                    puzzle5d_clear_non_part_selection(&mut envelope.runtime.selection);
+                                    vec![id]
+                                }
+                            };
+                        }
                     }
                 }
                 "worldHover" => {
@@ -8873,8 +9067,8 @@ pub mod d5 {
                 }
                 "worldVortexSelect" => {
                     if let Some(full_id) = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()) {
+                        puzzle5d_clear_non_grip_selection(&mut envelope.runtime.selection);
                         envelope.runtime.selection.grip_ids = vec![full_id.to_string()];
-                        envelope.runtime.selection.part_ids.clear();
                         self.drive_precompute(&envelope);
                     }
                 }
@@ -9203,7 +9397,7 @@ pub mod d5 {
                 .utility(UtilityDefinition::new("fill", "Fill", "fill"))
                 .utility(UtilityDefinition::new("worldRelocate", "Relocate", "move-3d"))
                 .window_kind_utilities(PUZZLE5D_PLAY_WINDOW_2D, vec!["select".into(), "brush".into(), "fill".into()])
-                .window_kind_utilities(PUZZLE5D_PLAY_WINDOW_3D, vec!["select".into(), "move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()])
+                .window_kind_utilities(PUZZLE5D_PLAY_WINDOW_3D, vec!["move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()])
                 // 📇 Per-window action scoping — the 3D window (World3d) owns the transform-gumball ops
                 // (move/rotate/scale/relocate utilities are 3D-only) plus its own camera; the 2D window
                 // (Puzzle2dBoard) owns board-event dispatch and its own camera. Select/brush/fill create
@@ -9222,8 +9416,7 @@ pub mod d5 {
                 window_kind.options.measures = puzzle5d_window_measures(window, &envelope, &precompute, manifest_labels);
             }
         }
-        app.example("empty", "Empty", serde_json::to_string(&empty_document()).unwrap())
-            .example(PUZZLE5D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON)
+        app.example(PUZZLE5D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON)
             .example(PUZZLE5D_EXAMPLE_NAKAGIN, "Nakagin Capsule Tower", NAKAGIN_EXAMPLE_JSON)
             .program("puzzle5d", "Puzzle 5D", "model")
     }
@@ -9289,7 +9482,7 @@ pub mod d5 {
             let mut app = new_app();
             let loaded = part_count(&app);
             assert!(loaded > 0);
-            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "empty" })), &ViewState::default(), &meta("local")).expect("empty");
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &meta("local")).expect("empty");
             assert_eq!(part_count(&app), 0, "empty example clears the parts");
             app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
             assert_eq!(part_count(&app), loaded, "undo restores the concrete-forest parts");
@@ -9347,7 +9540,7 @@ pub mod d5 {
         fn add_part_kind_materializes_the_declared_kind_default() {
             // 📝 P1 arg form: addPartKind with no args materializes the declared `partKind` default and adds a part.
             let mut app = new_app_with_registry();
-            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "empty" })), &ViewState::default(), &meta("local")).expect("empty");
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &meta("local")).expect("empty");
             let before = part_count(&app);
             let result = app.handle_action("addPartKind", None, &ViewState::default(), &meta("local")).expect("addPartKind");
             assert!(!result.operations.is_empty(), "addPartKind is an Operation that emits ops");

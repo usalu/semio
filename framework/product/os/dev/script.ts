@@ -19,6 +19,7 @@ import {
   runVitest,
   runViteBunxDev,
   frameworkOsPlaygroundDefaultPort,
+  frameworkOsLockedPrefsEnv,
 } from "../../../../repo/lib/js/index.ts";
 import { BACKBONE_ENDPOINT_PATH, backboneKindFromUri } from "@semio-tech/framework-os-core";
 import { generatePluginRegistry, isStudioPluginFilter, type PluginRegistryEntry } from "../../../plugin/registry/script.ts";
@@ -739,6 +740,7 @@ class DevScript extends BundleScript {
         VITE_SEMIO_RENDERER: renderer,
         VITE_SEMIO_PLUGIN: resolvedFilter.pluginId,
         ...(resolvedFilter.appId ? { VITE_SEMIO_APP_ID: resolvedFilter.appId } : {}),
+        ...frameworkOsLockedPrefsEnv(),
       },
     });
   }

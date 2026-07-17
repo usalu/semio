@@ -1531,7 +1531,7 @@ impl DocumentApp for WriterApp {
                 ActionEmit::default()
             }
             "setActiveExample" => {
-                let example_id = str_arg("exampleId").unwrap_or("empty");
+                let example_id = str_arg("exampleId").unwrap_or("");
                 let document = match example_id {
                     "jack" => serde_json::from_str::<WriterProjection>(JACK_EXAMPLE_JSON).unwrap_or_else(|_| empty_writer_projection()),
                     "dag.jack" => serde_json::from_str::<WriterProjection>(DAG_JACK_EXAMPLE_JSON).unwrap_or_else(|_| empty_writer_projection()),
@@ -1934,7 +1934,6 @@ fn create_writer_app() -> App {
                 ActionArgDef::select("exampleId", "Example", vec![
                     ActionArgOption::new("jack", "Jack"),
                     ActionArgOption::new("dag.jack", "Dag Jack"),
-                    ActionArgOption::new("empty", "Empty"),
                 ]).default_value("jack"),
             ])
             .action_args("setDocumentJson", vec![ActionArgDef::text("json", "Document JSON")])
@@ -1942,7 +1941,6 @@ fn create_writer_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("empty", "Empty", serde_json::to_string(&empty_writer_projection()).unwrap())
     .example("jack", "Jack", JACK_EXAMPLE_JSON)
     .example("dag.jack", "Dag Jack", DAG_JACK_EXAMPLE_JSON)
     .program("writer", "Writer", "text.document")
@@ -2326,7 +2324,7 @@ mod tests {
     #[test]
     fn set_active_example_falls_back_to_empty_document() {
         let mut app = app_with_jack();
-        let result = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "empty" })), &ViewState::default(), &meta()).expect("load");
+        let result = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &meta()).expect("load");
         assert_eq!(result.operations.len(), 1);
         let projection = app.projection().expect("projection");
         assert_eq!(projection.id, "empty");

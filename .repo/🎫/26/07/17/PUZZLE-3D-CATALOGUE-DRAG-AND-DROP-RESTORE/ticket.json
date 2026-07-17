@@ -1,0 +1,13 @@
+{
+  "title": "Puzzle 3D Catalogue Drag and Drop Restore",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Restore Puzzle 3D catalogue→viewport drag-and-drop with live mesh preview, grid-snapped placement, and dual HTML5/pointer transport on World3dHost + catalogue MIME stack.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2025"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪6fac0072440e4a279f4d9e34aab3b360"
+  ]
+}

@@ -1068,6 +1068,36 @@ export function playgroundLockedExampleIdFromEnv(env: NodeJS.ProcessEnv = proces
   return raw || undefined;
 }
 
+//#region 🔒FrameworkOsLocks
+/** @emoji 🔒 Process env vars locking one shell preference to a single boot-time value. */
+export const SEMIO_LOCKED_LOCALE_ENV = "SEMIO_LOCKED_LOCALE";
+export const SEMIO_LOCKED_TERMINOLOGY_ENV = "SEMIO_LOCKED_TERMINOLOGY";
+export const SEMIO_LOCKED_THEME_ENV = "SEMIO_LOCKED_THEME";
+export const SEMIO_LOCKED_APPEARANCE_ENV = "SEMIO_LOCKED_APPEARANCE";
+
+/**
+ * @emoji 🔌 `VITE_`-prefixed env for every set `SEMIO_LOCKED_*`/`PLAYGROUND_LOCKED_EXAMPLE_ID` var, so
+ * vite exposes it on `import.meta.env` with no `define` needed. Values are forwarded verbatim — the
+ * browser-side `resolveShellLocks` is the single validation authority, so CLI and direct-vite launches
+ * behave identically.
+ */
+export function frameworkOsLockedPrefsEnv(env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+  const pairs: [string, string][] = [
+    ["VITE_SEMIO_LOCKED_EXAMPLE", PLAYGROUND_LOCKED_EXAMPLE_ENV],
+    ["VITE_SEMIO_LOCKED_LOCALE", SEMIO_LOCKED_LOCALE_ENV],
+    ["VITE_SEMIO_LOCKED_TERMINOLOGY", SEMIO_LOCKED_TERMINOLOGY_ENV],
+    ["VITE_SEMIO_LOCKED_THEME", SEMIO_LOCKED_THEME_ENV],
+    ["VITE_SEMIO_LOCKED_APPEARANCE", SEMIO_LOCKED_APPEARANCE_ENV],
+  ];
+  const out: NodeJS.ProcessEnv = {};
+  for (const [viteKey, sourceKey] of pairs) {
+    const raw = env[sourceKey]?.trim();
+    if (raw) out[viteKey] = raw;
+  }
+  return out;
+}
+//#endregion 🔒FrameworkOsLocks
+
 /** @emoji 🔌 Vite `define` entries for playground play bundles. */
 export function playgroundPlayViteDefine(extra: Record<string, string> = {}): Record<string, string> {
   return {
@@ -2142,6 +2172,8 @@ export type MicroCommitLevel = "prepare-only" | "prepare-and-commit" | "prepare-
 type Contributor = { alias: string; emoji: string; name: string; email: string; emails?: string[] };
 
 const COUNTER_RE = /^(.+🎆\d{2}🌙\d{2}☀️\d{2})🚩(\d+)$/;
+const BUNDLE_TAG_RE = /^(.+🎆\d{2}🌙\d{2}☀️\d{2})🚩$/;
+const NUMERIC_COUNTER_RE = /^(\d+)$/;
 const TICKET_JSON_RE = /^\.repo\/🎫\/.+\/ticket\.json$/;
 export function digestMicroCommitMessage(message: string): string {
   return createHash("sha256").update(message.replace(/\r\n/g, "\n").trimEnd()).digest("hex");
@@ -2240,8 +2272,43 @@ export function extractCounterFromSubject(subject: string): { nnn: number; line1
   return { nnn: Number.parseInt(formatted[2], 10), line1Base: formatted[1] };
 }
 
-/** 🎆Bumps counter from recent `…🚩NNN` subjects (newest first). */
-export function bumpCounterFromHistory(subjectsNewestFirst: string[], contributor: Contributor, now = new Date()): { line1Base: string; nnn: string } {
+/** 🔢Reads GitKraken numeric-only subjects (`152`, `299`, …). */
+export function extractNumericCounterFromSubject(subject: string): number | null {
+  const m = NUMERIC_COUNTER_RE.exec(subject.trim());
+  if (!m) return null;
+  const n = Number.parseInt(m[1]!, 10);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/** 🏷️Reads WIP epoch base from a bundle squash tag (`…🎆YY🌙MM☀️DD🚩`). */
+export function line1BaseFromBundleTag(tag: string): string | null {
+  const m = BUNDLE_TAG_RE.exec(tag.trim());
+  return m ? m[1]! : null;
+}
+
+/** 🎆Resolves the persisted WIP epoch for line 1 from formatted history or the latest bundle tag. */
+export function contributorWipLine1Base(root: string, contributor: Contributor): string | null {
+  const prefix = `${contributor.emoji}${contributor.alias}`;
+  const log = git(root, ["log", "--format=%s", "-1000"]).out;
+  for (const subject of log ? log.split("\n") : []) {
+    const hit = extractCounterFromSubject(subject);
+    if (hit?.line1Base.startsWith(prefix)) return hit.line1Base;
+  }
+  const tags = git(root, ["tag", "-l", `${prefix}*`, "--sort=-creatordate"]).out;
+  for (const tag of tags ? tags.split("\n") : []) {
+    const base = line1BaseFromBundleTag(tag);
+    if (base?.startsWith(prefix)) return base;
+  }
+  return null;
+}
+
+/** 🎆Bumps counter from recent `…🚩NNN` or numeric GitKraken subjects (newest first). */
+export function bumpCounterFromHistory(
+  subjectsNewestFirst: string[],
+  contributor: Contributor,
+  now = new Date(),
+  wipLine1Base: string | null = null,
+): { line1Base: string; nnn: string } {
   const yy = pad2(now.getFullYear() % 100);
   const mm = pad2(now.getMonth() + 1);
   const dd = pad2(now.getDate());
@@ -2250,12 +2317,17 @@ export function bumpCounterFromHistory(subjectsNewestFirst: string[], contributo
   let line1Base: string | null = null;
   for (const subject of subjectsNewestFirst) {
     const hit = extractCounterFromSubject(subject);
-    if (!hit) continue;
-    max = Math.max(max, hit.nnn);
-    if (!line1Base) line1Base = hit.line1Base;
+    if (hit) {
+      max = Math.max(max, hit.nnn);
+      if (!line1Base) line1Base = hit.line1Base;
+      continue;
+    }
+    const numeric = extractNumericCounterFromSubject(subject);
+    if (numeric !== null) max = Math.max(max, numeric);
   }
-  if (max > 0) return { line1Base: line1Base ?? fresh, nnn: pad3(max + 1) };
-  return { line1Base: fresh, nnn: "001" };
+  const epoch = line1Base ?? wipLine1Base ?? fresh;
+  if (max > 0) return { line1Base: epoch, nnn: pad3(max + 1) };
+  return { line1Base: epoch, nnn: "001" };
 }
 
 export function bumpCounterFromSubject(subject: string, contributor: Contributor, now = new Date()): { line1Base: string; nnn: string } {
@@ -2265,7 +2337,7 @@ export function bumpCounterFromSubject(subject: string, contributor: Contributor
 function nextCounter(root: string, contributor: Contributor): { line1Base: string; nnn: string } {
   const log = git(root, ["log", "--format=%s", `-${COUNTER_LOG_DEPTH}`]).out;
   const subjects = log ? log.split("\n").filter(Boolean) : [];
-  return bumpCounterFromHistory(subjects, contributor);
+  return bumpCounterFromHistory(subjects, contributor, new Date(), contributorWipLine1Base(root, contributor));
 }
 
 function formatSecond(now: Date): string {

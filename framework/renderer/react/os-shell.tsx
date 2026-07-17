@@ -365,7 +365,69 @@ export type FrameworkOsBootOptions = {
   readonly plugin?: string;
   readonly plugins?: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
   readonly appId?: string;
+  readonly locks?: FrameworkOsLocks;
 };
+
+//#region 🔒FrameworkOsLocks
+/** 🔒 Raw boot-time lock values from env, before validation (any of the five may be unset). */
+export type FrameworkOsLocks = {
+  readonly exampleId?: string;
+  readonly locale?: string;
+  readonly terminology?: string;
+  readonly themeId?: string;
+  readonly appearance?: string;
+};
+
+/** 🔒 Validated locks: unknown values warn and fall back to a safe default while staying locked. */
+export type ResolvedShellLocks = {
+  readonly exampleId?: string;
+  readonly locale?: UiLocale;
+  readonly terminology?: string;
+  readonly themeId?: string;
+  readonly appearance?: ElementsSurfaceAppearance;
+};
+
+/**
+ * 🔒 Validates raw `FrameworkOsLocks` against what the shell can actually apply at boot. A locked
+ * session stays locked even on an invalid value (falls back to a default) rather than silently
+ * degrading to switchable — the CLI asked for no in-app switching, so a typo must not remove that.
+ */
+export function resolveShellLocks(locks: FrameworkOsLocks | undefined): ResolvedShellLocks {
+  if (!locks) return {};
+  const resolved: { -readonly [K in keyof ResolvedShellLocks]?: ResolvedShellLocks[K] } = {};
+  if (locks.exampleId) resolved.exampleId = locks.exampleId;
+  if (locks.locale !== undefined) {
+    if (locks.locale === "en" || locks.locale === "de") {
+      resolved.locale = locks.locale;
+    } else {
+      console.warn(`[os] invalid SEMIO_LOCKED_LOCALE ${JSON.stringify(locks.locale)}, falling back to "en"`);
+      resolved.locale = "en";
+    }
+  }
+  if (locks.terminology) resolved.terminology = locks.terminology;
+  if (locks.themeId !== undefined) {
+    const known = new Set([...builtinUiThemes().map((t) => t.id), ...Object.keys(readStoredUiCustomThemes())]);
+    if (known.has(locks.themeId)) {
+      resolved.themeId = locks.themeId;
+    } else {
+      console.warn(`[os] invalid SEMIO_LOCKED_THEME ${JSON.stringify(locks.themeId)}, falling back to "semio"`);
+      resolved.themeId = "semio";
+    }
+  }
+  if (locks.appearance !== undefined) {
+    if (locks.appearance === "light" || locks.appearance === "dark") {
+      resolved.appearance = locks.appearance;
+    } else {
+      console.warn(`[os] invalid SEMIO_LOCKED_APPEARANCE ${JSON.stringify(locks.appearance)}, falling back to "system"`);
+      resolved.appearance = "system";
+    }
+  }
+  return resolved;
+}
+
+/** 🔒 Stable empty-locks reference so an omitted `locks` prop never busts memo dependency arrays. */
+const EMPTY_SHELL_LOCKS: ResolvedShellLocks = {};
+//#endregion 🔒FrameworkOsLocks
 
 type SyncCardKind = "file" | "folder" | "remote";
 
@@ -773,7 +835,12 @@ export const selectUiDevice = (state: ShellState, mobile: boolean): ElementsSurf
 //#endregion selectors
 
 /** 🌱 Builds the starting `ShellState` for `FrameworkOsShell`, mirroring exactly what each migrated `useState` used to initialize to (including reads from local storage for UI prefs). */
-export function initialShellState(_props: { readonly pluginFilter?: string; readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[] }): ShellState {
+export function initialShellState(_props: {
+  readonly pluginFilter?: string;
+  readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
+  readonly locks?: ResolvedShellLocks;
+}): ShellState {
+  const locks = _props.locks ?? {};
   return {
     pluginRuntime: { loadedPlugins: [], session: null, error: null },
     windowUi: { windowUiByKind: {}, windowEngagementsByKind: {}, windowMeasuresByKind: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
@@ -787,19 +854,19 @@ export function initialShellState(_props: { readonly pluginFilter?: string; read
       treeOpenStates: {},
       activeWindowId: null,
       shellLayout: null,
-      activeExampleId: "",
+      activeExampleId: locks.exampleId ?? "",
       mobilePanelPath: [],
       extraWindowInstances: [],
     },
     overlays: { searchOpen: false, findOpen: false, introductionStepIndex: null, dialog: null },
     uiPrefs: {
-      uiAppearance: readStoredUiChromeAppearance(),
+      uiAppearance: locks.appearance ?? readStoredUiChromeAppearance(),
       uiLayout: readStoredUiChromeLayout(),
       uiCompact: readStoredUiChromeCompact(),
       uiExpertise: readStoredUiChromeExpertise(),
-      uiLocale: readStoredUiChromeLocale() ?? (uiI18n.resolvedLanguage?.toLowerCase().startsWith("de") ? "de" : "en"),
-      uiTerminology: readStoredUiChromeTerminology(),
-      uiThemeId: readStoredUiChromeThemeId() ?? "semio",
+      uiLocale: locks.locale ?? readStoredUiChromeLocale() ?? (uiI18n.resolvedLanguage?.toLowerCase().startsWith("de") ? "de" : "en"),
+      uiTerminology: locks.terminology ?? readStoredUiChromeTerminology(),
+      uiThemeId: locks.themeId ?? readStoredUiChromeThemeId() ?? "semio",
       uiCustomThemes: readStoredUiCustomThemes(),
       uiThemeDraft: null,
     },
@@ -1978,7 +2045,13 @@ function selectCommandArg(id: string, label: string, options: readonly { readonl
  * locally by the shell (never routed to a plugin). Rebuilt via `useMemo` since the theme and
  * terminology option lists are live state.
  */
-export function buildOsCommands(themeList: readonly UiTheme[], terminologies: readonly string[], hasIntroduction: boolean): CommandDefinition[] {
+export function buildOsCommands(themeList: readonly UiTheme[], terminologies: readonly string[], hasIntroduction: boolean, locks: ResolvedShellLocks = EMPTY_SHELL_LOCKS): CommandDefinition[] {
+  const lockedCommandIds = new Set<string>([
+    ...(locks.appearance ? ["os.setAppearance"] : []),
+    ...(locks.themeId ? ["os.setThemeId"] : []),
+    ...(locks.locale ? ["os.setLocale"] : []),
+    ...(locks.terminology ? ["os.setTerminology"] : []),
+  ]);
   return [
     ...(hasIntroduction
       ? [{ id: "os.introduceApp", label: shellLabel("ui.command.introduceApp"), scope: "os" as const, category: "app", inPalette: true, args: [] }]
@@ -2067,19 +2140,28 @@ export function buildOsCommands(themeList: readonly UiTheme[], terminologies: re
         ]),
       ],
     },
-  ];
+  ].filter((command) => !lockedCommandIds.has(command.id));
 }
 
 /** 🎛 Os-scope command ids that are handled locally by the shell — mirrors {@link buildOsCommands}. */
-export function dispatchOsCommand(commandId: string, args: Record<string, unknown> | undefined, dispatch: (action: ShellAction) => void, dockLayoutStore: DockLayoutStore, dockUiStateStore: DockUiStateStore): void {
+export function dispatchOsCommand(
+  commandId: string,
+  args: Record<string, unknown> | undefined,
+  dispatch: (action: ShellAction) => void,
+  dockLayoutStore: DockLayoutStore,
+  dockUiStateStore: DockUiStateStore,
+  locks: ResolvedShellLocks = EMPTY_SHELL_LOCKS,
+): void {
   switch (commandId) {
     case "os.introduceApp":
       dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
       return;
     case "os.setAppearance":
+      if (locks.appearance) return;
       dispatch({ type: "SET_UI_APPEARANCE", value: (args?.appearance as ElementsSurfaceAppearance) ?? "system" });
       return;
     case "os.setThemeId":
+      if (locks.themeId) return;
       if (typeof args?.themeId === "string") dispatch({ type: "SET_UI_THEME_ID", value: args.themeId });
       return;
     case "os.setLayout":
@@ -2094,12 +2176,14 @@ export function dispatchOsCommand(commandId: string, args: Record<string, unknow
       dockUiStateStore.reset();
       return;
     case "os.setLocale":
+      if (locks.locale) return;
       if (typeof args?.locale === "string") {
         setUiLocale(args.locale as UiLocale);
         dispatch({ type: "SET_UI_LOCALE", value: args.locale as UiLocale });
       }
       return;
     case "os.setTerminology":
+      if (locks.terminology) return;
       if (typeof args?.terminology === "string") dispatch({ type: "SET_UI_TERMINOLOGY", value: args.terminology });
       return;
     case "os.setExpertise":
@@ -2345,8 +2429,9 @@ export function applyUiRefreshResponseToCache(cache: UiRefreshCache, response: P
 export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Promise<void> {
   const root = document.getElementById(options.rootId ?? "root");
   if (!root) throw new Error("missing #root");
-  bootstrapElementsSurfaceChromeDocument(readStoredUiChromeAppearance());
-  createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? DEFAULT_PLUGIN_REGISTRY} appId={options.appId} />);
+  const locks = resolveShellLocks(options.locks);
+  bootstrapElementsSurfaceChromeDocument(locks.appearance ?? readStoredUiChromeAppearance());
+  createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? DEFAULT_PLUGIN_REGISTRY} appId={options.appId} locks={locks} />);
 }
 //#endregion Boot
 
@@ -2375,10 +2460,21 @@ class ShellRenderErrorBoundary extends Component<{ readonly children: ReactNode 
 //#endregion ErrorBoundary
 
 //#region FrameworkOsShell
-export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pluginFilter?: string; readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[]; readonly appId?: string }) {
+export function FrameworkOsShell({
+  pluginFilter,
+  plugins,
+  appId,
+  locks: locksProp,
+}: {
+  readonly pluginFilter?: string;
+  readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
+  readonly appId?: string;
+  readonly locks?: ResolvedShellLocks;
+}) {
   const studioMode = isStudioMode(pluginFilter);
   const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
-  const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins }));
+  const locks = locksProp ?? EMPTY_SHELL_LOCKS;
+  const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks }));
   const { loadedPlugins, session, error } = shellState.pluginRuntime;
   const { windowUiByKind, windowEngagementsByKind, windowMeasuresByKind, panelUiByKey, appLabelsOverlay } = shellState.windowUi;
   const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
@@ -3338,20 +3434,22 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
 
   useElementsSurfaceChrome({ appearance: uiAppearance, device: uiDevice, expertise: uiExpertise, compact: uiCompact });
 
-  //#region 💾 uiPrefs persistence
+  //#region 💾 uiPrefs persistence (skips localStorage writes for any locked preference)
   useEffect(() => {
-    writeStoredUiChromeAppearance(uiAppearance);
+    if (!locks.appearance) writeStoredUiChromeAppearance(uiAppearance);
     writeStoredUiChromeLayout(uiLayout);
     writeStoredUiChromeCompact(uiCompact);
     writeStoredUiChromeExpertise(uiExpertise);
-    writeStoredUiChromeLocale(uiLocale);
+    if (!locks.locale) writeStoredUiChromeLocale(uiLocale);
     void setUiLocale(uiLocale);
-    writeStoredUiChromeTerminology(uiTerminology);
+    if (!locks.terminology) writeStoredUiChromeTerminology(uiTerminology);
     setActiveUiTheme(uiTheme);
-    writeStoredUiChromeThemeSnapshot(uiTheme);
-    writeStoredUiChromeThemeId(uiThemeId);
+    if (!locks.themeId) {
+      writeStoredUiChromeThemeSnapshot(uiTheme);
+      writeStoredUiChromeThemeId(uiThemeId);
+    }
     writeStoredUiCustomThemes(uiCustomThemes);
-  }, [uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiTheme, uiThemeId, uiCustomThemes]);
+  }, [uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiTheme, uiThemeId, uiCustomThemes, locks]);
   //#endregion
 
   useActionHotkey(
@@ -3467,8 +3565,8 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const uiThemeDirty = uiThemeDraft !== null;
   const uiThemeList = useMemo((): readonly UiTheme[] => [...builtinUiThemes(), ...Object.values(uiCustomThemes)], [uiCustomThemes]);
   const osCommands = useMemo(
-    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])], session?.app.introduction != null),
-    [uiThemeList, session?.app.terminologies, session?.app.introduction, uiLocale, uiTerminology],
+    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])], session?.app.introduction != null, locks),
+    [uiThemeList, session?.app.terminologies, session?.app.introduction, uiLocale, uiTerminology, locks],
   );
 
   const draftThemePatch = useCallback(
@@ -3641,6 +3739,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       importTheme,
       themeSaveLabel,
       setThemeSaveLabel,
+      locks,
     }),
     [
       session,
@@ -3656,6 +3755,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       uiThemeId,
       uiThemeDirty,
       uiThemeList,
+      locks,
       setThemeId,
       setThemeColor,
       setThemeSpacing,
@@ -3858,7 +3958,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
   const onCommand = useCallback(
     (source: ResolvedCommand["source"], commandId: string, args?: Record<string, unknown>) => {
       if (source.kind === "os") {
-        dispatchOsCommand(commandId, args, dispatch, dockLayoutStore, dockUiStateStore);
+        dispatchOsCommand(commandId, args, dispatch, dockLayoutStore, dockUiStateStore, locks);
         return;
       }
       if (!session) return;
@@ -3872,7 +3972,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           console.error("[DEBUG] command failed", commandError);
         });
     },
-    [applyHostEffects, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session],
+    [applyHostEffects, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session, locks],
   );
 
   const commandCategoryTabs = useMemo(() => buildCommandCategoryTabs(resolvedCommands, commandCategoryList, expandedCommandIdRef, commandStagedArgsByCommandIdRef, onCommand, dispatch), [resolvedCommands, commandCategoryList, onCommand]);
@@ -4177,7 +4277,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         </span>
       </div>,
     ];
-    if (exampleOptions.length > 0 && (!studioMode || session.app.id !== S_HOME_APP_ID)) {
+    if (exampleOptions.length > 0 && !locks.exampleId && (!studioMode || session.app.id !== S_HOME_APP_ID)) {
       centerContent.push(
         <NavbarExampleSelect
           key="fixture"
@@ -4186,7 +4286,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           options={exampleOptions}
           onValueChange={(exampleId) => {
             dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
-            onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId } });
+            onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: exampleId || "" } });
           }}
         />,
       );
@@ -4216,7 +4316,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       items.push({ key: "workbenchToggle", content: <PanelToggleGroup items={workbenchToggleItems} /> });
     }
     return items;
-  }, [activeExampleId, activeModeId, appLabelsOverlay, applyModeChange, exampleOptions, onAction, session, workbenchToggleItems]);
+  }, [activeExampleId, activeModeId, appLabelsOverlay, applyModeChange, exampleOptions, locks.exampleId, onAction, session, workbenchToggleItems]);
 
   const searchItems = useMemo(() => {
     if (!session) return [];
@@ -5951,6 +6051,7 @@ export type SettingsHostApi = {
   readonly importTheme: () => void;
   readonly themeSaveLabel: string;
   readonly setThemeSaveLabel: (value: string) => void;
+  readonly locks: ResolvedShellLocks;
 };
 
 function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
@@ -5976,22 +6077,26 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
         label: shellLabel("ui.settings.tab.general"),
         defaultOpen: true,
         items: [
-          {
-            id: "framework.settings.appearance",
-            label: shellLabel("ui.settings.tab.appearance"),
-            control: (
-              <Select value={host.appearance} onValueChange={(value) => host.setAppearance(value)}>
-                <SelectTrigger id="framework.settings.appearance" className="h-small w-32" size="sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="system">{shellLabel("ui.settings.appearance.system")}</SelectItem>
-                  <SelectItem value="light">{shellLabel("ui.settings.appearance.light")}</SelectItem>
-                  <SelectItem value="dark">{shellLabel("ui.settings.appearance.dark")}</SelectItem>
-                </SelectContent>
-              </Select>
-            ),
-          },
+          ...(host.locks.appearance
+            ? []
+            : [
+                {
+                  id: "framework.settings.appearance",
+                  label: shellLabel("ui.settings.tab.appearance"),
+                  control: (
+                    <Select value={host.appearance} onValueChange={(value) => host.setAppearance(value)}>
+                      <SelectTrigger id="framework.settings.appearance" className="h-small w-32" size="sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="system">{shellLabel("ui.settings.appearance.system")}</SelectItem>
+                        <SelectItem value="light">{shellLabel("ui.settings.appearance.light")}</SelectItem>
+                        <SelectItem value="dark">{shellLabel("ui.settings.appearance.dark")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ),
+                },
+              ]),
           {
             id: "framework.settings.layout",
             label: shellLabel("ui.settings.tab.layout"),
@@ -6030,39 +6135,47 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
               </Select>
             ),
           },
-          {
-            id: "framework.settings.language",
-            label: shellLabel("ui.settings.tab.language"),
-            control: (
-              <Select value={host.locale} onValueChange={(value) => host.setLocale(value === "de" ? "de" : "en")}>
-                <SelectTrigger id="framework.settings.language" className="h-small w-32" size="sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="en">{shellLabel("ui.settings.language.en")}</SelectItem>
-                  <SelectItem value="de">{shellLabel("ui.settings.language.de")}</SelectItem>
-                </SelectContent>
-              </Select>
-            ),
-          },
-          {
-            id: "framework.settings.terminology",
-            label: shellLabel("ui.settings.tab.terminology"),
-            control: (
-              <Select value={host.terminology} onValueChange={(value) => host.setTerminology(value)}>
-                <SelectTrigger id="framework.settings.terminology" className="h-small w-32" size="sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {host.terminologies.map((id) => (
-                    <SelectItem key={id} value={id}>
-                      {shellTerminologyLabel(id)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ),
-          },
+          ...(host.locks.locale
+            ? []
+            : [
+                {
+                  id: "framework.settings.language",
+                  label: shellLabel("ui.settings.tab.language"),
+                  control: (
+                    <Select value={host.locale} onValueChange={(value) => host.setLocale(value === "de" ? "de" : "en")}>
+                      <SelectTrigger id="framework.settings.language" className="h-small w-32" size="sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="en">{shellLabel("ui.settings.language.en")}</SelectItem>
+                        <SelectItem value="de">{shellLabel("ui.settings.language.de")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ),
+                },
+              ]),
+          ...(host.locks.terminology
+            ? []
+            : [
+                {
+                  id: "framework.settings.terminology",
+                  label: shellLabel("ui.settings.tab.terminology"),
+                  control: (
+                    <Select value={host.terminology} onValueChange={(value) => host.setTerminology(value)}>
+                      <SelectTrigger id="framework.settings.terminology" className="h-small w-32" size="sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {host.terminologies.map((id) => (
+                          <SelectItem key={id} value={id}>
+                            {shellTerminologyLabel(id)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ),
+                },
+              ]),
           ...(host.onResetDock
             ? [
                 {
@@ -6317,18 +6430,24 @@ export function createFrameworkSettingsPanelTabs(getHost: () => SettingsHostApi 
         },
       },
     }),
-    singleTreeLeaf({
-      id: FRAMEWORK_SETTINGS_THEME_TAB_ID,
-      icon: shellTabIcon("paintbrush"),
-      name: shellLabel("ui.settings.tab.theme"),
-      order: -97,
-      tree: {
-        resolveTree: () => {
-          const host = getHost();
-          return host ? buildSettingsThemeTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.settings.unavailable") }] }] };
-        },
-      },
-    }),
+    // 🔒 A locked theme means no theme editing/saving either — drop the whole tab (its footer toggle
+    // in `settingsToggleItems` derives from `settingsRightTabs`, so it disappears for free).
+    ...(getHost()?.locks.themeId
+      ? []
+      : [
+          singleTreeLeaf({
+            id: FRAMEWORK_SETTINGS_THEME_TAB_ID,
+            icon: shellTabIcon("paintbrush"),
+            name: shellLabel("ui.settings.tab.theme"),
+            order: -97,
+            tree: {
+              resolveTree: () => {
+                const host = getHost();
+                return host ? buildSettingsThemeTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.settings.unavailable") }] }] };
+              },
+            },
+          }),
+        ]),
   ];
 }
 

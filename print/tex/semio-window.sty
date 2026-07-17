@@ -10,6 +10,7 @@
 \RequirePackage{semio-table}
 \RequirePackage{fancyhdr}
 \RequirePackage{graphicx}
+\RequirePackage{needspace}
 \RequirePackage{tcolorbox}
 \RequirePackage{eso-pic}
 \RequirePackage{tikz}
@@ -428,12 +429,31 @@
   }
 }
 
+%region WindowHeaderKeep
+% 🧲 Keeps the complete title bar attached to the first visible body line.
+\cs_new_protected:Npn \semio_window_header_keep_with_body: {
+  \bool_if:NF \l_semio_window_in_item_bool {
+    \group_begin:
+    \ExplSyntaxOff
+    \Needspace{\dimexpr
+      \semio@chrome@titlebar@height
+      + 2\semio@chrome@padding
+      + 2\semio@chrome@font@body
+      + 2\semio@stroke@hairline
+    \relax}
+    \ExplSyntaxOn
+    \group_end:
+  }
+}
+%endregion WindowHeaderKeep
+
 \cs_new_protected:Npn \semio_register_list_header_open:n #1 {
   \tl_set:Nn \l_semio_window_kind_title_tl {#1}
   \tl_set:Nx \l_semio_window_kind_title_tl { \tl_use:N \l_semio_window_kind_title_tl }
   \tl_clear:N \l_semio_window_number_tl
   \semio_window_header_store:
   \semio_block_sep_before:
+  \semio_window_header_keep_with_body:
   \semio_window_header_muted_use:
   \semio_window_vskip_stroke_hairline:
 }
@@ -1130,6 +1150,7 @@
   }
   \semio_window_header_store:
   \semio_block_sep_before:
+  \semio_window_header_keep_with_body:
   \semio_window_header_muted_use:
   \semio_window_vskip_stroke_hairline:
   \noindent
@@ -1321,6 +1342,30 @@
   \semio@image@graphics@w { \semio@image@target@w@plain } {#1}
 }
 
+% 🖼 Renders width-only (see \semio_image_typeset:n's "contain" branch for
+% why a WindowItem image can never let the box's own fixed height reach the
+% *sizing* of the graphic), then clips the result to that height via a
+% TikZ path — a value used only as a clip boundary on an already-rendered
+% box, never as an input to how large the graphic itself is drawn. Without
+% this, a portrait photo in a short item column would render at its full
+% (width-bound) height and spill into whatever follows it in the layout.
+\newsavebox{\semio@image@itemclip@box}
+\cs_new_protected:Npn \semio_image_graphics_itemclip:n #1 {
+  \exp_args:Nx \semio_image_target_w_sync:n { \dim_use:N \l_semio_image_target_w_dim }
+  \sbox{\semio@image@itemclip@box}{\semio@image@graphics@w{\semio@image@target@w@plain}{#1}}
+  \dim_compare:nNnTF {
+    \dim_eval:n { \ht\semio@image@itemclip@box + \dp\semio@image@itemclip@box }
+  } > { \l_semio_image_target_h_dim } {
+    \leavevmode
+    \begin{tikzpicture}[baseline=0pt]
+      \path[clip] (0,0) rectangle (\the\wd\semio@image@itemclip@box, \dim_use:N \l_semio_image_target_h_dim);
+      \pgftext[left,top,x=0pt,y=\dim_use:N \l_semio_image_target_h_dim]{\usebox{\semio@image@itemclip@box}}
+    \end{tikzpicture}
+  } {
+    \usebox{\semio@image@itemclip@box}
+  }
+}
+
 \cs_new_protected:Npn \semio_image_target_w_sync:n #1 {
   \xdef\semio@image@target@w@plain{#1}
 }
@@ -1388,16 +1433,18 @@
       % reachable via WindowArrangement — introduced this session for the
       % Projekte Katalog), makes tcolorbox typeset the box body twice —
       % confirmed by counting \includegraphics invocations via debug
-      % \typeout in isolation, and confirmed to depend specifically on the
-      % *height*-derived value reaching the draw call (width-only draws,
-      % including a plain \includegraphics with a literal fixed width, and
-      % non-graphic content of the same rendered size, never showed it).
-      % Falling back to the width-only path here means a very tall/portrait
-      % photo in a short item column can overflow past the box instead of
-      % being height-clipped — an acceptable trade-off against a confirmed,
-      % silent content-doubling bug.
+      % \typeout in isolation, and confirmed to depend specifically on
+      % whether the *height*-derived value feeds into how large the graphic
+      % itself is drawn (width+height keys, an equivalent \scalebox
+      % transform, even a heavily-downscaled one, all showed it). Using
+      % that same value only as a clip boundary on an already width-sized
+      % box (\semio_image_graphics_itemclip:n) does not.
       \bool_if:NTF \l_semio_window_in_item_bool {
-        \semio_image_graphics:n {#1}
+        \bool_if:NTF \g_semio_image_target_h_set_bool {
+          \semio_image_graphics_itemclip:n {#1}
+        } {
+          \semio_image_graphics:n {#1}
+        }
       } {
         \bool_if:NTF \g_semio_image_target_h_set_bool {
           \semio_image_graphics_wh:n {#1}
@@ -1408,7 +1455,11 @@
     }
   } {
     \bool_if:NTF \l_semio_window_in_item_bool {
-      \semio_image_graphics:n {#1}
+      \bool_if:NTF \g_semio_image_target_h_set_bool {
+        \semio_image_graphics_itemclip:n {#1}
+      } {
+        \semio_image_graphics:n {#1}
+      }
     } {
       \bool_if:NTF \g_semio_image_target_h_set_bool {
         \semio_image_graphics_wh:n {#1}
@@ -1684,6 +1735,7 @@
   \bool_if:NF \l_semio_window_in_item_bool { \semio_block_sep_before: }
   \tl_clear:N \l_semio_window_number_tl
   \semio_window_header_store:
+  \semio_window_header_keep_with_body:
   \semio_window_header_muted_use:
   \semio_window_vskip_stroke_hairline:
   \bool_if:NTF \l_semio_window_in_item_bool {

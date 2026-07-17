@@ -679,8 +679,8 @@ pub mod ansi {
                 b'<' if self.params.is_empty() && !self.has_current => self.private = Some(b'<'),
                 _ => {
                     self.push_param();
-                    self.finish_csi(b, out);
                     self.state = ParserState::Ground;
+                    self.finish_csi(b, out);
                 }
             }
         }
@@ -2078,6 +2078,10 @@ pub mod engine {
 
         /// 🎬 Solves layout if dirty, repaints, diffs against the last frame, and emits a patch.
         pub fn render(&mut self) -> AnsiPatch {
+            let root_dirty = self.scene.take_dirty(self.scene.root()) != 0;
+            if !root_dirty && !self.full_redraw {
+                return AnsiPatch::default();
+            }
             crate::layout::solve(&mut self.scene, crate::geometry::Rect::new(0, 0, self.size.width, self.size.height));
             self.paint();
             let mut patch = AnsiPatch::default();
@@ -2140,7 +2144,7 @@ pub mod backend {
     mod native_unix {
         use super::*;
         use crate::ansi::{setup_sequence, teardown_sequence, AnsiParser};
-        use std::io::{Read, Write};
+        use std::io::Write;
         use std::os::unix::io::RawFd;
 
         fn err(message: impl Into<String>) -> BackendError {
@@ -2465,7 +2469,7 @@ mod tests {
     use crate::geometry::{Rect, Size};
     use crate::layout::{
         create_default_layout, solve, solve_window_layout, Constraint, Dimension, Direction, WindowLayout,
-        WindowLayoutAxisNode, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
+        WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
     };
     use crate::scene::{Node, NodeContent, Scene};
     use crate::text::{display_width, truncate_to};

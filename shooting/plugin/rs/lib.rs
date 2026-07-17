@@ -1119,7 +1119,7 @@ impl DocumentApp for ShootingPlayApp {
                     .or_else(|| args.and_then(|value| value.get("exampleId")))
                     .and_then(|value| value.as_str())
                     .unwrap_or("");
-                let next = if example_id.is_empty() || example_id == "empty" {
+                let next = if example_id.is_empty() {
                     Some(empty_shooting_fixture())
                 } else if example_id == SHOOTING_EXAMPLE_DEFAULT_ID || example_id == "base" {
                     Some(default_fixture())
@@ -1651,7 +1651,6 @@ fn create_shooting_app() -> App {
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", "Example", vec![
                     ActionArgOption::new(SHOOTING_EXAMPLE_DEFAULT_ID, "Default Base Icon"),
-                    ActionArgOption::new("empty", "Empty"),
                 ]).required(),
             ])
             // 🧰 Transform gumball — an exclusive utility group scoped to the scene window (active utility is host-owned).

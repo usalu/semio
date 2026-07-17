@@ -40,7 +40,7 @@ import { RasterHost } from "./components/raster-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
 import { VcsHistoryHost } from "./components/vcs-history-host.tsx";
 import { TextEditorHost, buildTextEditorContextMenuItems, lineRangeAt, multiSpanReplace } from "./components/text-editor-host.tsx";
-import { World3dHost, brushObjectPlacementArgs, resolveMeshStyle, resolveVortexPointerDownIntent, resolveWorldContextMenuTarget, worldInstancePickBlocked } from "./components/world-3d-host.tsx";
+import { World3dHost, brushObjectPlacementArgs, parsePuzzle3dCatalogueDragPayload, resolveMeshStyle, resolveVortexPointerDownIntent, resolveWorldContextMenuTarget, snapWorldPointToGrid, worldInstancePickBlocked } from "./components/world-3d-host.tsx";
 import { parseWorldTerrainStyle } from "./components/world-terrain-layer.tsx";
 import {
   NoteCanvasHost,
@@ -1264,6 +1264,14 @@ describe("framework renderer hosts", () => {
     expect(parsePuzzle2dCatalogueDragPayload(null)).toBeNull();
   });
 
+  it("parses a puzzle 3d catalogue drag payload and snaps drop origins to the grid", () => {
+    const encoded = JSON.stringify({ objectKind: "Capsule", meshUrl: "puzzle3d://capsule" });
+    expect(parsePuzzle3dCatalogueDragPayload(encoded)).toEqual({ objectKind: "Capsule", meshUrl: "puzzle3d://capsule" });
+    expect(snapWorldPointToGrid([1.2, 2.7, 0.0], true, 1)).toEqual([1, 3, 0]);
+    expect(snapWorldPointToGrid([1.2, 2.7, 0.0], false, 1)).toEqual([1.2, 2.7, 0]);
+    expect(parsePuzzle3dCatalogueDragPayload(JSON.stringify({ meshUrl: "puzzle3d://capsule" }))).toBeNull();
+  });
+
   it("inverts the canonical screen-to-world transform for a fixture drop", () => {
     const cameraJson = JSON.stringify({ x: 120, y: 80, zoom: 2 });
     const world = puzzle2dScreenToWorld(cameraJson, { w: 800, h: 600 }, { x: 400, y: 300 });
@@ -1355,16 +1363,18 @@ describe("framework renderer hosts", () => {
     });
   });
 
-  it("blocks instance picking for fill and brush engagements but not select", () => {
+  it("blocks instance picking for fill and brush engagements but not move", () => {
     expect(worldInstancePickBlocked("brush")).toBe(true);
     expect(worldInstancePickBlocked("fill")).toBe(true);
-    expect(worldInstancePickBlocked("select")).toBe(false);
+    expect(worldInstancePickBlocked("move")).toBe(false);
     expect(worldInstancePickBlocked(undefined)).toBe(false);
   });
 
-  it("resolves vortex pointer-down to select in brush mode and connect-drag otherwise", () => {
+  it("resolves vortex pointer-down to select in brush or vertex mode and click-or-drag otherwise", () => {
     expect(resolveVortexPointerDownIntent(true)).toBe("select");
-    expect(resolveVortexPointerDownIntent(false)).toBe("connect-drag");
+    expect(resolveVortexPointerDownIntent(false, "vertex")).toBe("select");
+    expect(resolveVortexPointerDownIntent(false)).toBe("click-or-drag");
+    expect(resolveVortexPointerDownIntent(false, "mesh")).toBe("click-or-drag");
   });
 
   it("resolves mesh style by premigration priority: disabled > selected > highlighted > hovered > neutral", () => {

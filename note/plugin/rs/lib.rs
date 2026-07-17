@@ -1972,7 +1972,7 @@ impl DocumentApp for NoteApp {
                 let example_id = args
                     .and_then(|value| value.get("exampleId"))
                     .and_then(|value| value.as_str())
-                    .unwrap_or("empty");
+                    .unwrap_or("");
                 let document = if example_id == "semio" {
                     serde_json::from_str::<NoteDocument>(SEMIO_EXAMPLE_JSON).unwrap_or_else(|_| empty_note_document())
                 } else {
@@ -2488,9 +2488,8 @@ fn create_note_app() -> App {
             ])
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", "Example", vec![
-                    ActionArgOption::new("empty", "Empty"),
                     ActionArgOption::new("semio", "Semio"),
-                ]).required().default_value("empty"),
+                ]).required().default_value("semio"),
             ])
             .action_args("setFixtureJson", vec![ActionArgDef::text("json", "Document JSON").required()])
             // 🧰 Canvas utilities — one exclusive set per window, active utility host-owned (never a document op).
@@ -2533,8 +2532,7 @@ fn create_note_app() -> App {
             window.options.measures = note_navigator_measures(&document, &NOTE_LABELS_NATIVE_EN);
         }
     }
-    app.example("empty", "Empty", serde_json::to_string(&empty_note_document()).unwrap())
-        .example("semio", "Semio", SEMIO_EXAMPLE_JSON)
+    app.example("semio", "Semio", SEMIO_EXAMPLE_JSON)
         .program("note", "Note", "document")
 }
 
@@ -2919,7 +2917,7 @@ mod tests {
             .expect("semio");
         assert_eq!(app.projection().expect("projection").blocks.len(), 3);
 
-        app.handle_action("setActiveExample", Some(&json!({ "exampleId": "empty" })), &ViewState::default(), &meta())
+        app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &meta())
             .expect("empty");
         assert!(app.projection().expect("projection").blocks.is_empty());
     }
