@@ -40,6 +40,7 @@ export default defineConfig({
       "./infinite/world/r3f/vitest.config.ts",
       "./kernel/2d/js/vitest.config.ts",
       "./kernel/3d/brep/js/vitest.config.ts",
+      "./mathematical/graph/dsl/core/js/vitest.config.ts",
       "./ui/js/react/vitest.config.ts",
     ],
   },

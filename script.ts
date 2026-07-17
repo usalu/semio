@@ -572,6 +572,10 @@ export class FormatScript extends Script {
 //#region 🔖TestScript
 export class TestScript extends Script {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "e2e") {
+      await this.runE2e();
+      return;
+    }
     if (segments[0] === "storybook") {
       await this.runStorybookPlaywright();
       return;
@@ -591,7 +595,12 @@ export class TestScript extends Script {
     runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-js", "@semio-tech/compose-react"], { cwd: this.root });
     runCmd("bun", ["nx", "run", "compose/graphql:build"], { cwd: this.root });
     runCmd("bun", ["nx", "run-many", "-t", "test", "--all", "--exclude", "workspace"], { cwd: this.root });
-    runCmd("bun", ["nx", "run", "workspace:test-storybook"], { cwd: this.root });
+  }
+
+  /** 🎭Runs every opt-in `test-e2e` target (Postgres containers, VSCode extension host, sketchpad Playwright, …) plus the Storybook board e2e — excluded from the default ≤30s `test` budget. */
+  private async runE2e(): Promise<void> {
+    runCmd("bun", ["nx", "run-many", "-t", "test-e2e", "--all", "--exclude", "workspace"], { cwd: this.root });
+    await this.runStorybookPlaywright();
   }
 
   private async waitForUrl(url: string, timeoutMs: number): Promise<void> {

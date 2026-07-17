@@ -18,8 +18,6 @@ export default defineConfig({
     name: "@semio-tech/framework-core",
     mode: "test",
     environment: "node",
-    fileParallelism: false,
-    maxConcurrency: 1,
     include: ["index.ts"],
     includeSource: ["index.ts"],
     passWithNoTests: false,

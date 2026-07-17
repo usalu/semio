@@ -1,11 +1,10 @@
 #!/usr/bin/env bun
 /** 🦀 `kernel/2d/rs` router: `bun ./script.ts test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted } from "../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
-  run(): void {
-    const result = Bun.spawnSync(["cargo", "test", "-p", "geometry_drawing_rs"], { cwd: this.root, stdio: ["inherit", "inherit", "inherit"] });
-    if (result.exitCode !== 0) throw new Error(`cargo test failed with exit code ${result.exitCode}`);
+  run(segments: string[]): void {
+    runCargoTestBudgeted(["kernel_2d_rs"], this.repoRoot, segments);
   }
 }
 

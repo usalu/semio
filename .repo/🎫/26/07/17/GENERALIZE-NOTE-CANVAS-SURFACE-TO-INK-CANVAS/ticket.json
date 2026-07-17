@@ -1,0 +1,13 @@
+{
+  "title": "Generalize NoteCanvas Surface to InkCanvas",
+  "emoji": "🖊️",
+  "status": "open",
+  "description": "Rename the framework SurfaceKind::NoteCanvas variant (wire \"note-canvas\") to SurfaceKind::InkCanvas (wire \"ink-canvas\"), and NoteCanvasScene -\u003e InkCanvasScene, across ui/wgpu/rs/lib.rs, framework/core/js/index.ts, framework/renderer/react/ui-interpreter.tsx + its note-canvas-host.tsx (renamed to ink-canvas-host.tsx), framework/renderer/wgpu/rs/lib.rs native renderer, and the owning note/plugin/rs/lib.rs call sites. Framework-purity fix: SurfaceKind must not encode app identity. Update the UiComponentSceneNode field noteCanvas -\u003e inkCanvas to match convention. Define a generic ink-canvas action vocabulary (inkCanvasActions, modeled after nodeGraphActions/textEditorActions) replacing the note-specific \"applyNoteEvents\" action name the host dispatches. Inline test updates in framework/renderer/react/index.test.ts. Flag anything that can't be cleanly generalized (e.g. the rich text/table/math/group block schema mirrored from the note app's own document model) for later architecture audit. Part of a sequential wave of surface-generalization tickets under GENERALIZE-APPS-ONTO-FRAMEWORK-PRIMITIVES (parent ticket not yet materialized at ticket_open time, per sibling ticket GENERALIZE-RASTER-SURFACE-KIND-TO-PAINT2D precedent).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2036"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪12ba4bc55a7e40fca10691f35f8d9629"
+  ]
+}

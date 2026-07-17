@@ -36,14 +36,14 @@ import {
 } from "./components/puzzle-2d-board-host.tsx";
 import { NodeGraphHost, catalogueGhostDescriptorJson, computeDagMarqueeOverlay, nodeGraphViewportActionArgs, parseCatalogueAppDragPayload, parseDagSliderOverlays, resolveFixtureWidgetInstanceId } from "./components/node-graph-host.tsx";
 import { SelectionMarquee } from "@semio-tech/ui-react";
-import { RasterHost } from "./components/raster-host.tsx";
+import { Paint2dHost } from "./components/paint-2d-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
 import { GraphTimelineHost } from "./components/graph-timeline-host.tsx";
 import { TextEditorHost, buildTextEditorContextMenuItems, lineRangeAt, multiSpanReplace } from "./components/text-editor-host.tsx";
 import { World3dHost, brushObjectPlacementArgs, parsePuzzle3dCatalogueDragPayload, resolveMeshStyle, resolveVortexPointerDownIntent, resolveWorldContextMenuTarget, snapWorldPointToGrid, worldInstancePickBlocked } from "./components/world-3d-host.tsx";
 import { parseWorldTerrainStyle } from "./components/world-terrain-layer.tsx";
 import {
-  NoteCanvasHost,
+  InkCanvasHost,
   noteBlockBounds,
   noteEraseInkPointsInBlock,
   noteHtmlToParagraphs,
@@ -56,7 +56,7 @@ import {
   worldToScreen,
   type NoteDocument,
   type NoteInkBlock,
-} from "./components/note-canvas-host.tsx";
+} from "./components/ink-canvas-host.tsx";
 import {
   appDocumentLabel,
   appWindowDocumentLabel,
@@ -1616,15 +1616,15 @@ describe("framework renderer hosts", () => {
     expect(markup).toContain("feature-b");
   });
 
-  it("renders raster host canvas surface from document sync scene", () => {
+  it("renders paint-2d host canvas surface from document sync scene", () => {
     const markup = renderToStaticMarkup(
-      createElement(RasterHost, {
+      createElement(Paint2dHost, {
         node: {
           type: "componentScene",
           surfaceId: "raster.play.viewport",
           controllerId: "raster-play",
-          componentKind: "raster",
-          raster: {
+          componentKind: "paint-2d",
+          paint2d: {
             documentSyncJson: '{"schema":"raster.document","id":"raster","layers":[]}',
             assetsJson: "{}",
             cameraJson: '{"x":0,"y":0,"zoom":1}',
@@ -1638,20 +1638,20 @@ describe("framework renderer hosts", () => {
         onAction: noopAction,
       }),
     );
-    expect(markup).toContain("semio-raster-canvas-surface");
+    expect(markup).toContain("semio-paint-2d-canvas-surface");
     expect(markup).toContain('data-surface-id="raster.play.viewport"');
     expect(markup).toContain('data-view-mode="composite"');
   });
 
-  it("renders raster navigator host with the composite viewport overlay channel", () => {
+  it("renders paint-2d navigator host with the composite viewport overlay channel", () => {
     const markup = renderToStaticMarkup(
-      createElement(RasterHost, {
+      createElement(Paint2dHost, {
         node: {
           type: "componentScene",
           surfaceId: "raster.play.navigator",
           controllerId: "raster-play",
-          componentKind: "raster",
-          raster: {
+          componentKind: "paint-2d",
+          paint2d: {
             documentSyncJson: '{"schema":"raster.document","id":"raster","layers":[]}',
             assetsJson: "{}",
             cameraJson: '{"x":0,"y":0,"zoom":1}',
@@ -1666,23 +1666,23 @@ describe("framework renderer hosts", () => {
         onAction: noopAction,
       }),
     );
-    expect(markup).toContain("semio-raster-canvas-surface");
+    expect(markup).toContain("semio-paint-2d-canvas-surface");
     expect(markup).toContain('data-view-mode="navigator"');
   });
 
-  it("renders raster host empty fallback without a scene", () => {
+  it("renders paint-2d host empty fallback without a scene", () => {
     const markup = renderToStaticMarkup(
-      createElement(RasterHost, {
+      createElement(Paint2dHost, {
         node: {
           type: "componentScene",
           surfaceId: "raster.play.composite",
           controllerId: "raster-play",
-          componentKind: "raster",
+          componentKind: "paint-2d",
         },
         onAction: noopAction,
       }),
     );
-    expect(markup).toContain("semio-raster-empty");
+    expect(markup).toContain("semio-paint-2d-empty");
   });
 
   it("interprets virtual file system component scenes", () => {
@@ -1833,13 +1833,13 @@ describe("note canvas host", () => {
 
   it("renders the semio example composite scene with rich text, table, and math fallback", () => {
     const markup = renderToStaticMarkup(
-      createElement(NoteCanvasHost, {
+      createElement(InkCanvasHost, {
         node: {
           type: "componentScene",
           surfaceId: "note.play.composite",
           controllerId: "note-play",
-          componentKind: "note-canvas",
-          noteCanvas: {
+          componentKind: "ink-canvas",
+          inkCanvas: {
             documentJson: JSON.stringify(semioNoteDocument),
             selectionJson: "[]",
             activeUtility: "selectDirect",
@@ -1861,19 +1861,19 @@ describe("note canvas host", () => {
       type: "componentScene" as const,
       surfaceId: "note.play.composite",
       controllerId: "note-play",
-      componentKind: "note-canvas",
+      componentKind: "ink-canvas",
     };
     const compositeMarkup = renderToStaticMarkup(
-      createElement(NoteCanvasHost, {
-        node: { ...baseNode, noteCanvas: { documentJson: JSON.stringify(semioNoteDocument), selectionJson: "[]", activeUtility: "selectDirect", viewMode: "composite", interactive: true } },
+      createElement(InkCanvasHost, {
+        node: { ...baseNode, inkCanvas: { documentJson: JSON.stringify(semioNoteDocument), selectionJson: "[]", activeUtility: "selectDirect", viewMode: "composite", interactive: true } },
         onAction: noopAction,
       }) as ReactElement,
     );
     expect(compositeMarkup).toContain("note-viewport-grid");
 
     const navigatorMarkup = renderToStaticMarkup(
-      createElement(NoteCanvasHost, {
-        node: { ...baseNode, noteCanvas: { documentJson: JSON.stringify(semioNoteDocument), selectionJson: "[]", activeUtility: "selectDirect", viewMode: "navigator", interactive: false } },
+      createElement(InkCanvasHost, {
+        node: { ...baseNode, inkCanvas: { documentJson: JSON.stringify(semioNoteDocument), selectionJson: "[]", activeUtility: "selectDirect", viewMode: "navigator", interactive: false } },
         onAction: noopAction,
       }) as ReactElement,
     );
@@ -2078,7 +2078,7 @@ describe("partitionWindowMeasures", () => {
   });
 
   it("wires a utility-scoped group into spawnedWindowChromeForKind's utilityOptions slot only when its utility is active", () => {
-    const kind = { id: "w", label: "W", bodyKey: "b", surfaceKind: "raster", options: { engagement: { kind: "none" as const }, measures: [] } } as unknown as AppWindowKindDefinition;
+    const kind = { id: "w", label: "W", bodyKey: "b", surfaceKind: "paint-2d", options: { engagement: { kind: "none" as const }, measures: [] } } as unknown as AppWindowKindDefinition;
     const brushGroup: WindowMeasure = {
       kind: "group",
       id: "brush-params",

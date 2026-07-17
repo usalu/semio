@@ -45,9 +45,6 @@ export default defineConfig({
     name: "@semio-tech/cad-js-renderer",
     mode: "test",
     environment: "jsdom",
-    testTimeout: 120_000,
-    fileParallelism: false,
-    maxConcurrency: 1,
     include: ["index.tsx", "play/index.tsx", "play/fixture-slugs.ts"],
     server: {
       deps: {

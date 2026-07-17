@@ -1227,125 +1227,81 @@
   }
 }
 
-\cs_new_protected:Npn \semio_image_nat_measure:n #1 {
-  \semio@image@measure {#1}
-  \dim_set:Nn \l_semio_image_nat_w_dim { \semio@image@nat@w@value }
-  \dim_set:Nn \l_semio_image_nat_h_dim { \semio@image@nat@h@value }
-}
-
-% 🎯 Distributes a symmetric trim amount across the two edges of one axis
-% according to a CSS object-position-style keyword, so cover crops toward
-% the anchor instead of always centering: #1 = the resolved align value
-% (halign for the horizontal axis, valign for the vertical), #2 = the
-% keyword that keeps the leading edge (trim goes entirely to slot b), #3 =
-% the keyword that keeps the trailing edge (trim goes entirely to slot a);
-% anything else (center, justify) splits the trim half/half.
-\cs_new_protected:Npn \semio_image_cover_trim_distribute:nnn #1#2#3 {
+% 🎯 Distributes a crop-scaled image's overflow into an offset from its
+% kept edge, per a CSS object-position-style keyword: #1 = resolved align
+% value, #2 = keyword that keeps the leading edge (offset stays 0), #3 =
+% keyword that keeps the trailing edge (offset becomes the full excess);
+% anything else (center, justify) splits the excess in half.
+\cs_new_protected:Npn \semio_image_cover_offset_distribute:nnn #1#2#3 {
   \str_case:nnF {#1} {
-    {#2} {
-      \dim_zero:N \l_semio_image_trim_a_dim
-      \dim_set_eq:NN \l_semio_image_trim_b_dim \l_semio_image_trim_dim
-    }
-    {#3} {
-      \dim_set_eq:NN \l_semio_image_trim_a_dim \l_semio_image_trim_dim
-      \dim_zero:N \l_semio_image_trim_b_dim
-    }
+    {#2} { \dim_zero:N \l_semio_image_cover_offset_dim }
+    {#3} { \dim_set_eq:NN \l_semio_image_cover_offset_dim \l_semio_image_cover_excess_dim }
   } {
-    \dim_set_eq:NN \l_semio_image_trim_a_dim \l_semio_image_trim_half_dim
-    \dim_set_eq:NN \l_semio_image_trim_b_dim \l_semio_image_trim_half_dim
+    \dim_set:Nn \l_semio_image_cover_offset_dim {
+      \dim_eval:n { \l_semio_image_cover_excess_dim / 2 }
+    }
   }
 }
 
+% 🎯 Renders cover by scaling to ONE dimension into a savebox, then
+% TikZ-clips a target-sized window out of it at an anchor-driven offset,
+% mirroring \semio_image_graphics_itemclip:n's structure. Deliberately
+% avoids \includegraphics's own trim=/clip=true: that combination
+% silently double-paints the image with this driver (confirmed via an
+% independent PDFKit render showing the duplicate baked into the PDF
+% content stream, not a poppler artifact).
+%
+% ⚠️ KNOWN UNRESOLVED BUG (pre-existing, not introduced here): the
+% double-paint reproduces with THIS savebox+TikZ-clip technique too,
+% and even with \semio_image_graphics_itemclip:n's shipped contain-mode
+% version, whenever the box is narrower than its window — confirmed via
+% an independent PDFKit render, a single-pass (reruns=0) compile (rules
+% out aux-file/rerun state), and minimal reproductions outside any
+% window (no duplicate) vs. inside a semio window/tcolorbox (duplicates)
+% — so the trigger is specific to typesetting a savebox-measured graphic
+% inside this package's tcolorbox body (enhanced + custom overlays),
+% independent of breakable. Root cause not yet found; anchor cropping
+% and the crop math above are correct, but any cover (or contain,
+% via itemclip) image narrower than its window may still visibly
+% double-render until this is fixed. See ticket 26/07/17/FIX-IMAGE-COVER-ANCHOR-MECHANISM.
+\newsavebox{\semio@image@cover@box}
 \cs_new_protected:Npn \semio_image_typeset_cover:n #1 {
-  \typeout{[DEBUG]~semio_image_typeset_cover~called~for~#1}
-  \semio_image_nat_measure:n {#1}
-  \exp_args:Nxx \semio_image_target_wh_sync:nn
-    { \dim_use:N \l_semio_image_target_w_dim }
-    { \dim_use:N \l_semio_image_target_h_dim }
-  \fp_compare:nNnTF
-    {
-      \dim_to_decimal:n { \l_semio_image_nat_w_dim } / \dim_to_decimal:n { \l_semio_image_nat_h_dim }
-    }
-    >
-    {
-      \dim_to_decimal:n { \l_semio_image_target_w_dim } / \dim_to_decimal:n { \l_semio_image_target_h_dim }
-    } {
-    \dim_set:Nn \l_semio_image_trim_dim {
-      \dim_eval:n {
-        \fp_eval:n {
-          \dim_to_decimal:n { \l_semio_image_nat_w_dim }
-          - \dim_to_decimal:n { \l_semio_image_target_w_dim }
-            * \dim_to_decimal:n { \l_semio_image_nat_h_dim }
-            / \dim_to_decimal:n { \l_semio_image_target_h_dim }
-        } pt
-      }
-    }
-    \dim_set:Nn \l_semio_image_trim_half_dim {
-      \dim_eval:n { \dim_use:N \l_semio_image_trim_dim / 2 }
+  \sbox{\semio@image@cover@box}{\includegraphics[height=\l_semio_image_target_h_dim]{#1}}
+  \dim_compare:nNnTF { \wd \semio@image@cover@box } > { \l_semio_image_target_w_dim } {
+    \dim_set:Nn \l_semio_image_cover_excess_dim {
+      \dim_eval:n { \wd \semio@image@cover@box - \l_semio_image_target_w_dim }
     }
     % 🎯 Horizontal crop: keeps the left edge when halign=left, the right
     % edge when halign=right, else centers — matches CSS object-position.
-    \exp_args:Nx \semio_image_cover_trim_distribute:nnn
+    \exp_args:Nx \semio_image_cover_offset_distribute:nnn
       { \semio@window@halign } { left } { right }
-    \exp_args:Nxx \semio_image_cover_dims_sync:wwn
-      { \dim_use:N \l_semio_image_trim_a_dim }
-      { \dim_use:N \l_semio_image_trim_b_dim }
-      { \dim_use:N \l_semio_image_target_w_dim }
-    \semio_image_cover_render_hcrop:n {#1}
+    \dim_set:Nn \l_semio_image_cover_offset_neg_dim { - \l_semio_image_cover_offset_dim }
+    \leavevmode
+    \begin{tikzpicture}[baseline=0pt]
+      \path[clip] (0,0) rectangle (\dim_use:N \l_semio_image_target_w_dim, \dim_use:N \l_semio_image_target_h_dim);
+      \pgftext[left,top,x=\dim_use:N \l_semio_image_cover_offset_neg_dim,y=\dim_use:N \l_semio_image_target_h_dim]{\usebox{\semio@image@cover@box}}
+    \end{tikzpicture}
   } {
-    \dim_set:Nn \l_semio_image_trim_dim {
+    \sbox{\semio@image@cover@box}{\includegraphics[width=\l_semio_image_target_w_dim]{#1}}
+    \dim_set:Nn \l_semio_image_cover_excess_dim {
       \dim_eval:n {
-        \fp_eval:n {
-          \dim_to_decimal:n { \l_semio_image_nat_h_dim }
-          - \dim_to_decimal:n { \l_semio_image_target_h_dim }
-            * \dim_to_decimal:n { \l_semio_image_nat_w_dim }
-            / \dim_to_decimal:n { \l_semio_image_target_w_dim }
-        } pt
+        \dimexpr \ht \semio@image@cover@box + \dp \semio@image@cover@box \relax
+        - \l_semio_image_target_h_dim
       }
-    }
-    \dim_set:Nn \l_semio_image_trim_half_dim {
-      \dim_eval:n { \dim_use:N \l_semio_image_trim_dim / 2 }
     }
     % 🎯 Vertical crop: keeps the top edge when valign=top, the bottom edge
     % when valign=bottom, else centers — matches CSS object-position.
-    \exp_args:Nx \semio_image_cover_trim_distribute:nnn
+    \exp_args:Nx \semio_image_cover_offset_distribute:nnn
       { \semio@window@valign } { bottom } { top }
-    \exp_args:Nxx \semio_image_cover_dims_sync:wwn
-      { \dim_use:N \l_semio_image_trim_a_dim }
-      { \dim_use:N \l_semio_image_trim_b_dim }
-      { \dim_use:N \l_semio_image_target_w_dim }
-    \semio_image_cover_render_vcrop:n {#1}
+    \dim_set:Nn \l_semio_image_cover_ypos_dim {
+      \dim_eval:n { \l_semio_image_target_h_dim + \l_semio_image_cover_offset_dim }
+    }
+    \leavevmode
+    \begin{tikzpicture}[baseline=0pt]
+      \path[clip] (0,0) rectangle (\dim_use:N \l_semio_image_target_w_dim, \dim_use:N \l_semio_image_target_h_dim);
+      \pgftext[left,top,x=0pt,y=\dim_use:N \l_semio_image_cover_ypos_dim]{\usebox{\semio@image@cover@box}}
+    \end{tikzpicture}
   }
-}
-
-\cs_new_protected:Npn \semio_image_cover_dims_sync:wwn #1#2#3 {
-  \xdef\semio@image@cover@trim@a{#1}
-  \xdef\semio@image@cover@trim@b{#2}
-  \xdef\semio@image@cover@target@dim{#3}
-}
-
-% 🎯 Both crop directions size by width only (never height) — the trimmed
-% bounding box already has exactly the target aspect ratio, so width=target
-% alone yields rendered height == target too. Staying width-only keeps cover
-% outside the tcolorbox double-typeset trigger set documented at
-% \semio_image_typeset:n's "contain" branch, so it renders correctly inside
-% a fixed-height WindowItem without an itemclip wrapper.
-\cs_new_protected:Npn \semio_image_cover_render_hcrop:n #1 {
-  \typeout{[DEBUG]~render_hcrop~a=\semio@image@cover@trim@a~b=\semio@image@cover@trim@b~target=\semio@image@cover@target@dim}
-  \semio@image@graphics@cover@h
-    { \semio@image@cover@trim@a }
-    { \semio@image@cover@trim@b }
-    { \semio@image@cover@target@dim }
-    {#1}
-}
-
-\cs_new_protected:Npn \semio_image_cover_render_vcrop:n #1 {
-  \typeout{[DEBUG]~render_vcrop~a=\semio@image@cover@trim@a~b=\semio@image@cover@trim@b~target=\semio@image@cover@target@dim}
-  \semio@image@graphics@cover@w
-    { \semio@image@cover@trim@a }
-    { \semio@image@cover@trim@b }
-    { \semio@image@cover@target@dim }
-    {#1}
 }
 
 \cs_new_protected:Npn \semio_image_default_width_resolve: {
@@ -1445,10 +1401,11 @@
     }
     { cover } {
       % 🎯 Unlike contain below, cover never needs the in-item/itemclip
-      % split: \semio_image_typeset_cover:n always sizes by width (the
-      % post-trim box already has the target aspect ratio), so it never
-      % feeds a height-derived value into the graphic's sizing and stays
-      % outside the tcolorbox double-typeset trigger described below.
+      % split: \semio_image_typeset_cover:n always sizes \includegraphics
+      % by a single dimension into a savebox, then TikZ-clips the target
+      % window out of it — it never feeds a height-derived value into the
+      % graphic's own sizing, so it stays outside the tcolorbox
+      % double-typeset trigger described below.
       \semio_image_bounded_height_required:n { cover }
       \semio_image_typeset_cover:n {#1}
     }
@@ -2618,42 +2575,12 @@
 \gdef\semio@window@valign{top}
 \gdef\semio@window@halign{justify}
 \newcommand{\semio@window@height@dim}{}
-\newcommand{\semio@image@cover@trim@a}{0pt}
-\newcommand{\semio@image@cover@trim@b}{0pt}
-\newcommand{\semio@image@cover@target@dim}{0pt}
 \newcommand{\semio@image@target@w@plain}{0pt}
 \newcommand{\semio@image@target@h@plain}{0pt}
-% 🎯 Measures into a dedicated savebox rather than \settowidth/
-% \settototalheight, which stage their content through the shared
-% \@tempboxa register — clobbering it while cover's measurement runs
-% inside a tcolorbox body corrupts tcolorbox's own box bookkeeping and
-% makes it paint the box twice (confirmed: reproduces for any
-% narrower-than-window cover image, contain is unaffected since it never
-% measures via \@tempboxa-based commands).
-\newsavebox{\semio@image@measure@box}
-\newcommand{\semio@image@measure}[1]{%
-  \sbox{\semio@image@measure@box}{\includegraphics{#1}}%
-  \xdef\semio@image@nat@w@value{\the\wd\semio@image@measure@box}%
-  \xdef\semio@image@nat@h@value{\the\dimexpr\ht\semio@image@measure@box+\dp\semio@image@measure@box\relax}%
-}
 \newcommand{\semio@image@graphics@none}[1]{\leavevmode\includegraphics{#1}}
 \newcommand{\semio@image@graphics@w}[2]{\leavevmode\includegraphics[width=#1, keepaspectratio=true]{#2}}
 \newcommand{\semio@image@graphics@wh}[3]{\leavevmode\includegraphics[width=#1, height=#2, keepaspectratio=true]{#3}}
 \newcommand{\semio@image@graphics@fill}[3]{\leavevmode\includegraphics[width=#1, height=#2, keepaspectratio=false]{#3}}
-\newcommand{\semio@image@graphics@cover@h}[4]{%
-  \edef\semio@image@cover@opts{trim=#1 0pt #2 0pt, clip=true, width=#3}%
-  \leavevmode\expandafter\includegraphics\expandafter[\semio@image@cover@opts]{#4}%
-}
-\newcommand{\semio@image@graphics@cover@w}[4]{%
-  \edef\semio@image@cover@opts{trim=0pt #1 0pt #2, clip=true, width=#3}%
-  \leavevmode\expandafter\includegraphics\expandafter[\semio@image@cover@opts]{#4}%
-}
-\newlength{\semio@image@target@h@dim}
-\newlength{\semio@image@target@w@dim}
-\newlength{\semio@image@nat@w}
-\newlength{\semio@image@nat@h}
-\newlength{\semio@image@trim@dim}
-\newlength{\semio@image@trim@half}
 \def\semio@tcb@variant@table{table}
 \def\semio@tcb@variant@row{row}
 \def\semio@tcb@variant@fit{fit}

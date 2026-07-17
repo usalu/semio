@@ -3496,7 +3496,7 @@ mod tests {
             gis_map: None,
             puzzle2d_board: None,
             icon_render: None,
-            note_canvas: None,
+            ink_canvas: None,
             graph_timeline: None,
             block_list: None,
         }

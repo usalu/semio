@@ -18,6 +18,14 @@
         "forwardAllArgs": true
       }
     },
+    "test-e2e": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "repo/client/vscode",
+        "command": "bun ./script.ts test-e2e",
+        "forwardAllArgs": true
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "options": {

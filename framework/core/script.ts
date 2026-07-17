@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-/** 🦀 `@semio-tech/framework-core` task router: `bun ./script.ts test|generate|check`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../repo/lib/js/index.ts";
+/** 🦀 `@semio-tech/framework-core` task router: `bun ./script.ts test|generate|check|lint`. */
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoLint, runVitest } from "../../repo/lib/js/index.ts";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -14,6 +14,13 @@ class TestScript extends BundleScript {
     });
     if (result.status !== 0) process.exit(result.status ?? 1);
     runVitest(this.root, segments, "js/vitest.config.ts");
+  }
+}
+
+/** 🧹Zero-warning clippy gate: `cargo clippy -p semio-framework-core --all-targets -- -D warnings`. */
+class LintScript extends BundleScript {
+  run(segments: string[]): void {
+    runCargoLint(["semio-framework-core"], join(this.root, "rs"), segments);
   }
 }
 
@@ -108,6 +115,6 @@ class CheckScript extends BundleScript {
 }
 //#endregion 🔖Typegen
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("generate", GenerateScript).register("check", CheckScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("generate", GenerateScript).register("check", CheckScript).register("lint", LintScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

@@ -1,0 +1,13 @@
+{
+  "title": "Generalize VcsHistory/ProtocolList Surfaces to GraphTimeline/BlockList",
+  "emoji": "🧭",
+  "status": "open",
+  "description": "Rename the app-named SurfaceKind variants VcsHistory -\u003e GraphTimeline (wire \"vcs-history\" -\u003e \"graph-timeline\") and ProtocolList -\u003e BlockList (wire \"protocol-list\" -\u003e \"block-list\") across ui/wgpu/rs/lib.rs, framework/core/js/index.ts, framework/renderer/react/ui-interpreter.tsx (+ host component file rename), framework/renderer/wgpu/rs/lib.rs, and fix all call sites across the repo (including owning app's plugin crate and any shared files touched minimally). Rename scene structs VcsHistoryScene/HistoryColumn and ProtocolListScene/ProtocolPaletteEntry-\u003eBlockPaletteEntry accordingly. Part of the SurfaceKind framework-purity generalization series (sequential stage, shared files may already have prior renames from earlier stages). Parent ticket not yet materialized at ticket_open time (see GENERALIZE-APPS-ONTO-FRAMEWORK-PRIMITIVES).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2037"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪94aba9eb5ebd42b2b7a4cb0568dffdb4"
+  ]
+}

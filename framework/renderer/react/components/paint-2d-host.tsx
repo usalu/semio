@@ -14,18 +14,18 @@ import {
   type SelectionMergeMode,
 } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import type { ActionDescriptor, ComponentSceneHostProps, RasterScene, UiComponentSceneNode } from "@semio-tech/framework-core";
+import type { ActionDescriptor, ComponentSceneHostProps, Paint2dScene, UiComponentSceneNode } from "@semio-tech/framework-core";
 import { createRasterSession, type RasterWasmSession } from "../os-shell.tsx";
 import { wheelCameraAtScreen, type CanvasCamera } from "./canvas-2d-host.tsx";
 
-//#region RasterParsing
-const RASTER_MARQUEE_THRESHOLD_PX = 4;
+//#region Paint2dParsing
+const PAINT_2D_MARQUEE_THRESHOLD_PX = 4;
 
-type RasterViewportSize = { readonly width: number; readonly height: number };
-type RasterScreenRect = { readonly x: number; readonly y: number; readonly width: number; readonly height: number };
-type RasterPickTarget = { readonly domain: string; readonly id: string; readonly generality: number };
+type Paint2dViewportSize = { readonly width: number; readonly height: number };
+type Paint2dScreenRect = { readonly x: number; readonly y: number; readonly width: number; readonly height: number };
+type Paint2dPickTarget = { readonly domain: string; readonly id: string; readonly generality: number };
 
-function parseRasterCameraJson(json: string | undefined): CanvasCamera {
+function parsePaint2dCameraJson(json: string | undefined): CanvasCamera {
   try {
     const parsed = JSON.parse(json ?? "{}") as Partial<CanvasCamera>;
     return { x: Number(parsed.x ?? 0), y: Number(parsed.y ?? 0), zoom: Number(parsed.zoom ?? 1) };
@@ -34,14 +34,14 @@ function parseRasterCameraJson(json: string | undefined): CanvasCamera {
   }
 }
 
-function rasterCameraEqual(a: CanvasCamera, b: CanvasCamera): boolean {
+function paint2dCameraEqual(a: CanvasCamera, b: CanvasCamera): boolean {
   return a.x === b.x && a.y === b.y && a.zoom === b.zoom;
 }
 
-function parseRasterViewport(json: string | undefined): RasterViewportSize | null {
+function parsePaint2dViewport(json: string | undefined): Paint2dViewportSize | null {
   if (!json) return null;
   try {
-    const parsed = JSON.parse(json) as Partial<RasterViewportSize>;
+    const parsed = JSON.parse(json) as Partial<Paint2dViewportSize>;
     if (parsed.width == null || parsed.height == null) return null;
     return { width: Number(parsed.width), height: Number(parsed.height) };
   } catch {
@@ -49,7 +49,7 @@ function parseRasterViewport(json: string | undefined): RasterViewportSize | nul
   }
 }
 
-function parseRasterSelection(json: string | undefined): string[] {
+function parsePaint2dSelection(json: string | undefined): string[] {
   try {
     const parsed = JSON.parse(json ?? "[]") as unknown;
     return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === "string") : [];
@@ -58,11 +58,11 @@ function parseRasterSelection(json: string | undefined): string[] {
   }
 }
 
-type RasterAssetRecord = { readonly mime?: string; readonly data: string };
+type Paint2dAssetRecord = { readonly mime?: string; readonly data: string };
 
-function parseRasterAssets(json: string | undefined): Record<string, RasterAssetRecord> {
+function parsePaint2dAssets(json: string | undefined): Record<string, Paint2dAssetRecord> {
   try {
-    return JSON.parse(json ?? "{}") as Record<string, RasterAssetRecord>;
+    return JSON.parse(json ?? "{}") as Record<string, Paint2dAssetRecord>;
   } catch {
     return {};
   }
@@ -75,19 +75,19 @@ function base64ToBytes(base64: string): Uint8Array {
   return bytes;
 }
 
-function rasterSelectionMethod(activeUtility: string): SelectionMarqueeMethod | null {
+function paint2dSelectionMethod(activeUtility: string): SelectionMarqueeMethod | null {
   if (activeUtility === "selectMarquee") return "rectangle";
   if (activeUtility === "selectLasso") return "lasso";
   return null;
 }
 
-function isRasterSelectionUtility(activeUtility: string): boolean {
+function isPaint2dSelectionUtility(activeUtility: string): boolean {
   return activeUtility === "selectMarquee" || activeUtility === "selectLasso" || activeUtility === "selectWand";
 }
-//#endregion RasterParsing
+//#endregion Paint2dParsing
 
-//#region RasterNoopSession
-function noopRasterSession(): RasterWasmSession {
+//#region Paint2dNoopSession
+function noopPaint2dSession(): RasterWasmSession {
   return {
     gpuReady: () => false,
     attachCanvas: async () => undefined,
@@ -116,16 +116,16 @@ function noopRasterSession(): RasterWasmSession {
     free: () => {},
   };
 }
-//#endregion RasterNoopSession
+//#endregion Paint2dNoopSession
 
-//#region RasterMarqueeOverlay
-type RasterMarqueeOverlay =
-  | { readonly coverage: SelectionMarqueeCoverage; readonly shape: "rect"; readonly rect: RasterScreenRect }
+//#region Paint2dMarqueeOverlay
+type Paint2dMarqueeOverlay =
+  | { readonly coverage: SelectionMarqueeCoverage; readonly shape: "rect"; readonly rect: Paint2dScreenRect }
   | { readonly coverage: SelectionMarqueeCoverage; readonly shape: "polygon"; readonly points: readonly { readonly x: number; readonly y: number }[] };
-//#endregion RasterMarqueeOverlay
+//#endregion Paint2dMarqueeOverlay
 
-//#region RasterCanvasSurface
-function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiComponentSceneNode; readonly scene: RasterScene; readonly onAction: (action: ActionDescriptor) => void }) {
+//#region Paint2dCanvasSurface
+function Paint2dCanvasSurface({ node, scene, onAction }: { readonly node: UiComponentSceneNode; readonly scene: Paint2dScene; readonly onAction: (action: ActionDescriptor) => void }) {
   const isNavigator = scene.viewMode === "navigator";
   const containerRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<RasterWasmSession | null>(null);
@@ -142,8 +142,8 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
 
   const [wasmSession, setWasmSession] = useState<RasterWasmSession | null>(null);
   const [attachError, setAttachError] = useState<string | null>(null);
-  const [marqueeOverlay, setMarqueeOverlay] = useState<RasterMarqueeOverlay | null>(null);
-  const [overlayRect, setOverlayRect] = useState<RasterScreenRect | null>(null);
+  const [marqueeOverlay, setMarqueeOverlay] = useState<Paint2dMarqueeOverlay | null>(null);
+  const [overlayRect, setOverlayRect] = useState<Paint2dScreenRect | null>(null);
   const canvasUnavailableLabel = useLabel("ui.host.canvasUnavailable");
 
   const dispatch = useCallback(
@@ -184,7 +184,7 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
       documentSyncRef.current = scene.documentSyncJson;
     }
     if (assetsRef.current !== scene.assetsJson) {
-      const assets = parseRasterAssets(scene.assetsJson);
+      const assets = parsePaint2dAssets(scene.assetsJson);
       for (const [key, asset] of Object.entries(assets)) {
         try {
           session.uploadRasterImageKey(key, base64ToBytes(asset.data));
@@ -204,12 +204,12 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
       const rect = containerRef.current?.getBoundingClientRect();
       const width = rect?.width || 1;
       const height = rect?.height || 1;
-      const fit = parseRasterCameraJson(session.navigatorFitCameraJson(width, height));
+      const fit = parsePaint2dCameraJson(session.navigatorFitCameraJson(width, height));
       session.setCamera(fit.x, fit.y, fit.zoom);
       cameraRef.current = fit;
       if (scene.compositeViewportJson) {
         try {
-          setOverlayRect(JSON.parse(session.navigatorViewportOverlayJson(scene.cameraJson, scene.compositeViewportJson)) as RasterScreenRect);
+          setOverlayRect(JSON.parse(session.navigatorViewportOverlayJson(scene.cameraJson, scene.compositeViewportJson)) as Paint2dScreenRect);
         } catch {
           setOverlayRect(null);
         }
@@ -217,8 +217,8 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
         setOverlayRect(null);
       }
     } else {
-      const sceneCamera = parseRasterCameraJson(scene.cameraJson);
-      if (!rasterCameraEqual(sceneCamera, cameraRef.current)) {
+      const sceneCamera = parsePaint2dCameraJson(scene.cameraJson);
+      if (!paint2dCameraEqual(sceneCamera, cameraRef.current)) {
         session.setCamera(sceneCamera.x, sceneCamera.y, sceneCamera.zoom);
         cameraRef.current = sceneCamera;
       }
@@ -244,7 +244,7 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
     [syncAll],
   );
 
-  const sessionFactory = useCallback((): RasterWasmSession => wasmSession ?? noopRasterSession(), [wasmSession]);
+  const sessionFactory = useCallback((): RasterWasmSession => wasmSession ?? noopPaint2dSession(), [wasmSession]);
   //#endregion Session lifecycle
 
   //#region CompositeViewportReporting
@@ -252,7 +252,7 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
     if (isNavigator) return;
     const container = containerRef.current;
     if (!container) return;
-    let last: RasterViewportSize = { width: 0, height: 0 };
+    let last: Paint2dViewportSize = { width: 0, height: 0 };
     const report = () => {
       const rect = container.getBoundingClientRect();
       const width = Math.round(rect.width);
@@ -282,7 +282,7 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
       const rect = container.getBoundingClientRect();
       const point = { x: client.x - rect.left, y: client.y - rect.top };
       try {
-        const targets = JSON.parse(session.pickTargetsAtScreenJson(point.x, point.y)) as RasterPickTarget[];
+        const targets = JSON.parse(session.pickTargetsAtScreenJson(point.x, point.y)) as Paint2dPickTarget[];
         return targets.map((target) => ({ ...target, label: target.id }));
       } catch {
         return [];
@@ -302,13 +302,13 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
         ctrlKey: request.modifiers?.ctrl === true,
         metaKey: request.modifiers?.meta === true,
       });
-      dispatch("setSelection", { ids: selectionMergeIds(mergeMode, parseRasterSelection(scene.selectionJson), [target.id]) });
+      dispatch("setSelection", { ids: selectionMergeIds(mergeMode, parsePaint2dSelection(scene.selectionJson), [target.id]) });
     },
   });
   //#endregion PickInteraction
 
   //#region Marquee
-  const selectionMethod = rasterSelectionMethod(scene.activeUtility);
+  const selectionMethod = paint2dSelectionMethod(scene.activeUtility);
 
   const updateMarqueeOverlay = useCallback(
     (point: { readonly x: number; readonly y: number }) => {
@@ -336,7 +336,7 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
       const coverage = marqueeCoverageFromGesture({ method: selectionMethod ?? "rectangle", startX: marquee.start.x, endX: point.x, path: points });
       try {
         const hits = JSON.parse(session.marqueeHitsJson(JSON.stringify({ points, crossing: coverage === "partial" }))) as string[];
-        dispatch("setSelection", { ids: selectionMergeIds(mergeMode, parseRasterSelection(scene.selectionJson), hits) });
+        dispatch("setSelection", { ids: selectionMergeIds(mergeMode, parsePaint2dSelection(scene.selectionJson), hits) });
       } catch {
         /* marquee hit test failed */
       }
@@ -357,7 +357,7 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
         return;
       }
       if (isNavigator || !session) return;
-      if (isRasterSelectionUtility(scene.activeUtility)) {
+      if (isPaint2dSelectionUtility(scene.activeUtility)) {
         pickInteraction.onCanvasPointerDown({ x: event.clientX, y: event.clientY });
         if (selectionMethod) marqueeRef.current = { tracking: true, active: false, start: point, points: [point] };
         return;
@@ -375,7 +375,7 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
       const pan = panRef.current;
       if (pan) {
         if (isNavigator) {
-          const contentCamera = parseRasterCameraJson(scene.cameraJson);
+          const contentCamera = parsePaint2dCameraJson(scene.cameraJson);
           const next = {
             x: contentCamera.x - (point.x - pan.last.x) / contentCamera.zoom,
             y: contentCamera.y - (point.y - pan.last.y) / contentCamera.zoom,
@@ -390,19 +390,19 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
       const marquee = marqueeRef.current;
       if (marquee.tracking) {
         const distance = Math.hypot(point.x - marquee.start.x, point.y - marquee.start.y);
-        if (!marquee.active && distance >= RASTER_MARQUEE_THRESHOLD_PX) marquee.active = true;
+        if (!marquee.active && distance >= PAINT_2D_MARQUEE_THRESHOLD_PX) marquee.active = true;
         if (marquee.active) {
           if (selectionMethod === "lasso") marquee.points = [...marquee.points, point];
           updateMarqueeOverlay(point);
         }
       }
-      if (isRasterSelectionUtility(scene.activeUtility) && !pickInteraction.pickMenuOpen) {
+      if (isPaint2dSelectionUtility(scene.activeUtility) && !pickInteraction.pickMenuOpen) {
         pickInteraction.onCanvasPointerMove({ x: event.clientX, y: event.clientY });
         return;
       }
       session.pointerMoveScreen(point.x, point.y);
-      const nextCamera = parseRasterCameraJson(session.cameraJson());
-      if (!rasterCameraEqual(nextCamera, cameraRef.current)) {
+      const nextCamera = parsePaint2dCameraJson(session.cameraJson());
+      if (!paint2dCameraEqual(nextCamera, cameraRef.current)) {
         cameraRef.current = nextCamera;
         dispatch("setCamera", { camera: nextCamera });
       }
@@ -430,7 +430,7 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
         marqueeRef.current = { tracking: false, active: false, start: point, points: [] };
         setMarqueeOverlay(null);
       }
-      if (isRasterSelectionUtility(scene.activeUtility)) {
+      if (isPaint2dSelectionUtility(scene.activeUtility)) {
         pickInteraction.onCanvasPointerUp({ x: event.clientX, y: event.clientY }, { shift: event.shiftKey, ctrl: event.ctrlKey, meta: event.metaKey, alt: event.altKey });
         return;
       }
@@ -446,15 +446,15 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
       const point = clientPoint(event);
       const session = sessionRef.current;
       if (isNavigator) {
-        const contentCamera = parseRasterCameraJson(scene.cameraJson);
-        const contentViewport = parseRasterViewport(scene.compositeViewportJson) ?? { width: 800, height: 600 };
+        const contentCamera = parsePaint2dCameraJson(scene.cameraJson);
+        const contentViewport = parsePaint2dViewport(scene.compositeViewportJson) ?? { width: 800, height: 600 };
         const next = wheelCameraAtScreen(contentCamera, point.x, point.y, event.deltaY, contentViewport.width, contentViewport.height);
         dispatch("setCamera", { camera: next });
         return;
       }
       if (!session) return;
       session.wheelScreen(point.x, point.y, event.deltaY);
-      const nextCamera = parseRasterCameraJson(session.cameraJson());
+      const nextCamera = parsePaint2dCameraJson(session.cameraJson());
       cameraRef.current = nextCamera;
       session.renderFrame();
       dispatch("setCamera", { camera: nextCamera });
@@ -464,8 +464,8 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
   //#endregion Pointer
 
   return (
-    <div ref={containerRef} className="semio-raster-canvas-surface relative h-full min-h-[24rem] w-full bg-canvas" data-controller-id={node.controllerId} data-surface-id={node.surfaceId} data-view-mode={scene.viewMode}>
-      <RasterWasmCanvas sessionFactory={sessionFactory} onSessionReady={onSessionReady} />
+    <div ref={containerRef} className="semio-paint-2d-canvas-surface relative h-full min-h-[24rem] w-full bg-canvas" data-controller-id={node.controllerId} data-surface-id={node.surfaceId} data-view-mode={scene.viewMode}>
+      <Paint2dWasmCanvas sessionFactory={sessionFactory} onSessionReady={onSessionReady} />
       {attachError ? (
         <div className="absolute inset-0 flex items-center justify-center bg-canvas text-xs text-muted-foreground">
           {canvasUnavailableLabel}: {attachError}
@@ -489,11 +489,11 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
     </div>
   );
 }
-//#endregion RasterCanvasSurface
+//#endregion Paint2dCanvasSurface
 
-//#region RasterWasmCanvas
-/** 🖼️ Minimal canvas-attach wrapper (no pointer forwarding — {@link RasterCanvasSurface} owns pointer/wheel routing). */
-function RasterWasmCanvas({ sessionFactory, onSessionReady }: { readonly sessionFactory: () => RasterWasmSession; readonly onSessionReady: (session: RasterWasmSession) => void }) {
+//#region Paint2dWasmCanvas
+/** 🖼️ Minimal canvas-attach wrapper (no pointer forwarding — {@link Paint2dCanvasSurface} owns pointer/wheel routing). */
+function Paint2dWasmCanvas({ sessionFactory, onSessionReady }: { readonly sessionFactory: () => RasterWasmSession; readonly onSessionReady: (session: RasterWasmSession) => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number | null>(null);
@@ -541,7 +541,7 @@ function RasterWasmCanvas({ sessionFactory, onSessionReady }: { readonly session
         rafRef.current = requestAnimationFrame(tick);
       })
       .catch(() => {
-        /* attach failed — surfaced via session.gpuReady() polling in RasterCanvasSurface */
+        /* attach failed — surfaced via session.gpuReady() polling in Paint2dCanvasSurface */
       });
     return () => {
       disposed = true;
@@ -557,13 +557,13 @@ function RasterWasmCanvas({ sessionFactory, onSessionReady }: { readonly session
     </div>
   );
 }
-//#endregion RasterWasmCanvas
+//#endregion Paint2dWasmCanvas
 
-//#region RasterHost
-export function RasterHost({ node, onAction }: ComponentSceneHostProps) {
-  const scene = node.raster;
+//#region Paint2dHost
+export function Paint2dHost({ node, onAction }: ComponentSceneHostProps) {
+  const scene = node.paint2d;
   const emptySceneLabel = useLabel("ui.host.emptyScene");
-  if (!scene) return <div className="semio-raster-empty">{emptySceneLabel}</div>;
-  return <RasterCanvasSurface node={node} scene={scene} onAction={onAction} />;
+  if (!scene) return <div className="semio-paint-2d-empty">{emptySceneLabel}</div>;
+  return <Paint2dCanvasSurface node={node} scene={scene} onAction={onAction} />;
 }
-//#endregion RasterHost
+//#endregion Paint2dHost

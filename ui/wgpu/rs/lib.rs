@@ -1939,8 +1939,8 @@ pub enum SurfaceKind {
     TextEditor,
     #[serde(rename = "table")]
     Table,
-    #[serde(rename = "raster")]
-    Raster,
+    #[serde(rename = "paint-2d")]
+    Paint2d,
     #[serde(rename = "virtualFileSystem")]
     VirtualFileSystem,
     #[serde(rename = "gis2d-map")]
@@ -1949,8 +1949,8 @@ pub enum SurfaceKind {
     Puzzle2dBoard,
     #[serde(rename = "icon-render")]
     IconRender,
-    #[serde(rename = "note-canvas")]
-    NoteCanvas,
+    #[serde(rename = "ink-canvas")]
+    InkCanvas,
     #[serde(rename = "graph-timeline")]
     GraphTimeline,
     #[serde(rename = "block-list")]
@@ -1965,12 +1965,12 @@ impl SurfaceKind {
             Self::NodeGraph => "node-graph",
             Self::TextEditor => "text-editor",
             Self::Table => "table",
-            Self::Raster => "raster",
+            Self::Paint2d => "paint-2d",
             Self::VirtualFileSystem => "virtualFileSystem",
             Self::GisMap => "gis2d-map",
             Self::Puzzle2dBoard => "puzzle2d-board",
             Self::IconRender => "icon-render",
-            Self::NoteCanvas => "note-canvas",
+            Self::InkCanvas => "ink-canvas",
             Self::GraphTimeline => "graph-timeline",
             Self::BlockList => "block-list",
         }
@@ -1979,7 +1979,7 @@ impl SurfaceKind {
     pub fn is_viewport(self) -> bool {
         matches!(
             self,
-            Self::World3d | Self::NodeGraph | Self::Canvas2d | Self::Puzzle2dBoard | Self::NoteCanvas
+            Self::World3d | Self::NodeGraph | Self::Canvas2d | Self::Puzzle2dBoard | Self::InkCanvas
         )
     }
 }
@@ -2269,10 +2269,10 @@ pub fn table_row_json(
 }
 //#endregion 🔖TableCells
 
-/** @emoji 🖼️ Raster scene: WASM `RasterSession` sync channels for the composite/navigator windows, see raster/rs/lib.rs. */
+/** @emoji 🖼️ Paint-2d scene: WASM `RasterSession` sync channels for the composite/navigator windows, see raster/rs/lib.rs. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct RasterScene {
+pub struct Paint2dScene {
     pub document_sync_json: String,
     pub assets_json: String,
     pub camera_json: String,
@@ -2493,9 +2493,9 @@ impl Puzzle2dBoardScene {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct NoteCanvasScene {
+pub struct InkCanvasScene {
     pub document_json: String,
-    #[serde(default = "note_canvas_default_selection_json")]
+    #[serde(default = "ink_canvas_default_selection_json")]
     pub selection_json: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hovered_id: Option<String>,
@@ -2505,16 +2505,16 @@ pub struct NoteCanvasScene {
     pub interactive: bool,
 }
 
-pub fn note_canvas_default_selection_json() -> String {
+pub fn ink_canvas_default_selection_json() -> String {
     "[]".into()
 }
 
-impl NoteCanvasScene {
-    /** @emoji 📝 Builds a note canvas scene with the default empty selection. */
+impl InkCanvasScene {
+    /** @emoji 🖊️ Builds an ink canvas scene with the default empty selection. */
     pub fn base(document_json: String, active_utility: String, view_mode: String, interactive: bool) -> Self {
         Self {
             document_json,
-            selection_json: note_canvas_default_selection_json(),
+            selection_json: ink_canvas_default_selection_json(),
             hovered_id: None,
             active_utility,
             view_mode,
@@ -2585,7 +2585,7 @@ pub struct UiComponentSceneNode {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub table: Option<TableScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub raster: Option<RasterScene>,
+    pub paint_2d: Option<Paint2dScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub virtual_file_system: Option<VirtualFileSystemScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2595,7 +2595,7 @@ pub struct UiComponentSceneNode {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon_render: Option<IconRenderScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub note_canvas: Option<NoteCanvasScene>,
+    pub ink_canvas: Option<InkCanvasScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub graph_timeline: Option<GraphTimelineScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2703,9 +2703,9 @@ pub mod puzzle2d_board_actions {
     pub const APPLY_BOARD_EVENTS: &str = "applyBoardEvents";
 }
 
-/** @emoji 📝 Renderer-to-plugin action names for note canvas surfaces. */
-pub mod note_canvas_actions {
-    pub const APPLY_NOTE_EVENTS: &str = "applyNoteEvents";
+/** @emoji 🖊️ Renderer-to-plugin action names for ink canvas surfaces. */
+pub mod ink_canvas_actions {
+    pub const APPLY_EVENTS: &str = "inkApplyEvents";
 }
 
 pub mod gis_map_actions {
@@ -2820,7 +2820,7 @@ fn component_scene(
     node_graph: Option<NodeGraphScene>,
     text_editor: Option<TextEditorScene>,
     table: Option<TableScene>,
-    raster: Option<RasterScene>,
+    paint_2d: Option<Paint2dScene>,
     virtual_file_system: Option<VirtualFileSystemScene>,
     gis_map: Option<GisMapScene>,
     puzzle2d_board: Option<Puzzle2dBoardScene>,
@@ -2836,12 +2836,12 @@ fn component_scene(
         node_graph,
         text_editor,
         table,
-        raster,
+        paint_2d,
         virtual_file_system,
         gis_map,
         puzzle2d_board,
         icon_render: None,
-        note_canvas: None,
+        ink_canvas: None,
         graph_timeline: None,
         block_list: None,
     })
@@ -3004,15 +3004,15 @@ pub fn build_table_scene(
     )
 }
 
-pub fn build_raster_scene(
+pub fn build_paint_2d_scene(
     surface_id: impl Into<String>,
     controller_id: impl Into<String>,
-    scene: RasterScene,
+    scene: Paint2dScene,
 ) -> UiNode {
     component_scene(
         surface_id,
         controller_id,
-        SurfaceKind::Raster,
+        SurfaceKind::Paint2d,
         None,
         None,
         None,
@@ -3127,15 +3127,15 @@ pub fn build_icon_render_scene(
     })
 }
 
-pub fn build_note_canvas_scene(
+pub fn build_ink_canvas_scene(
     surface_id: impl Into<String>,
     controller_id: impl Into<String>,
-    scene: NoteCanvasScene,
+    scene: InkCanvasScene,
 ) -> UiNode {
     let UiNode::ComponentScene(node) = component_scene(
         surface_id,
         controller_id,
-        SurfaceKind::NoteCanvas,
+        SurfaceKind::InkCanvas,
         None,
         None,
         None,
@@ -3151,7 +3151,7 @@ pub fn build_note_canvas_scene(
         unreachable!()
     };
     UiNode::ComponentScene(UiComponentSceneNode {
-        note_canvas: Some(scene),
+        ink_canvas: Some(scene),
         ..node
     })
 }
@@ -3368,7 +3368,7 @@ mod ui_node_wire_format_tests {
                     gis_map: None,
                     puzzle2d_board: None,
                     icon_render: None,
-                    note_canvas: None,
+                    ink_canvas: None,
                     graph_timeline: None,
                     block_list: None,
                 }),
@@ -3410,7 +3410,7 @@ mod ui_node_wire_format_tests {
         assert_eq!(roundtripped, loading);
     }
 
-    const GOLDEN_SURFACE_KIND_JSON: &str = "[\"canvas-2d\",\"world-3d\",\"node-graph\",\"text-editor\",\"table\",\"raster\",\"virtualFileSystem\",\"gis2d-map\",\"puzzle2d-board\",\"icon-render\",\"note-canvas\",\"graph-timeline\"]";
+    const GOLDEN_SURFACE_KIND_JSON: &str = "[\"canvas-2d\",\"world-3d\",\"node-graph\",\"text-editor\",\"table\",\"paint-2d\",\"virtualFileSystem\",\"gis2d-map\",\"puzzle2d-board\",\"icon-render\",\"ink-canvas\",\"graph-timeline\"]";
 
     #[test]
     fn surface_kind_serializes_to_golden_json() {
@@ -3420,12 +3420,12 @@ mod ui_node_wire_format_tests {
             SurfaceKind::NodeGraph,
             SurfaceKind::TextEditor,
             SurfaceKind::Table,
-            SurfaceKind::Raster,
+            SurfaceKind::Paint2d,
             SurfaceKind::VirtualFileSystem,
             SurfaceKind::GisMap,
             SurfaceKind::Puzzle2dBoard,
             SurfaceKind::IconRender,
-            SurfaceKind::NoteCanvas,
+            SurfaceKind::InkCanvas,
             SurfaceKind::GraphTimeline,
         ];
         let json = serde_json::to_string(&kinds).unwrap();
@@ -3441,7 +3441,7 @@ mod ui_node_wire_format_tests {
         let scenes = (
             Canvas2dScene { camera_x: 1.0, camera_y: 2.0, zoom: 1.5, layers_json: "[]".into() },
             TableScene::base("[]", "[]"),
-            RasterScene {
+            Paint2dScene {
                 document_sync_json: "{}".into(),
                 assets_json: "[]".into(),
                 camera_json: "{}".into(),
@@ -3464,7 +3464,7 @@ mod ui_node_wire_format_tests {
             },
             GisMapScene::base("{}".into(), "{}".into()),
             Puzzle2dBoardScene::base("{}".into(), "{}".into(), true),
-            NoteCanvasScene::base("{}".into(), "select".into(), "edit".into(), true),
+            InkCanvasScene::base("{}".into(), "select".into(), "edit".into(), true),
             GraphTimelineScene { columns_json: "[]".into() },
             NodeGraphScene::base("[]".into(), "[]".into(), "{}".into()),
             TextEditorScene::base("buf".into(), Some("rust".into()), None),
@@ -3475,12 +3475,12 @@ mod ui_node_wire_format_tests {
         let roundtripped: (
             Canvas2dScene,
             TableScene,
-            RasterScene,
+            Paint2dScene,
             IconRenderScene,
             VirtualFileSystemScene,
             GisMapScene,
             Puzzle2dBoardScene,
-            NoteCanvasScene,
+            InkCanvasScene,
             GraphTimelineScene,
             NodeGraphScene,
             TextEditorScene,
@@ -11712,7 +11712,7 @@ mod tests {
             gis_map: None,
             puzzle2d_board: None,
             icon_render: None,
-            note_canvas: None,
+            ink_canvas: None,
             graph_timeline: None,
             block_list: None,
         })

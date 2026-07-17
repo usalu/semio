@@ -24,9 +24,6 @@ export default defineConfig({
     name: "@semio-tech/cad-js-machine-stately",
     mode: "test",
     environment: "node",
-    testTimeout: 120_000,
-    fileParallelism: false,
-    maxConcurrency: 1,
     includeSource: ["index.ts"],
   },
 });

@@ -18,9 +18,6 @@ export default defineConfig({
     name: "@semio-tech/kernel-3d-js",
     mode: "test",
     environment: "node",
-    testTimeout: 120_000,
-    fileParallelism: false,
-    maxConcurrency: 1,
     include: ["index.ts"],
   },
 });

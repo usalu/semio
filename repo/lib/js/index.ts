@@ -881,6 +881,47 @@ export function runCmd(cmd: string, args: string[], opts: { cwd?: string; env?: 
   });
 }
 
+//#region ⏱️TestBudget
+/** ⏱️Default hard wall-clock budget (ms) for a project's default `test` target. */
+export const DEFAULT_TEST_BUDGET_MS = 30_000;
+
+/** ⏱️Runs a command under a hard wall-clock budget; SIGKILLs and fails loudly past it. */
+export function runTestBudgeted(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; budgetMs?: number } = {}): void {
+  const budgetMs = opts.budgetMs ?? Number(process.env.SEMIO_TEST_BUDGET_MS ?? DEFAULT_TEST_BUDGET_MS);
+  try {
+    execFileSync(cmd, args, { stdio: "inherit", cwd: opts.cwd, env: opts.env ?? process.env, timeout: budgetMs, killSignal: "SIGKILL" });
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException & { signal?: string };
+    if (err.signal === "SIGKILL" || err.code === "ETIMEDOUT") {
+      console.error(`[test-budget] ${cmd} ${args.join(" ")} exceeded ${budgetMs}ms — killed. Trim tests or move them to a test-e2e target.`);
+      process.exit(1);
+    }
+    throw error;
+  }
+}
+
+/** 🦀Warm-builds test binaries (un-budgeted) then runs `cargo test` under the budget — Rust compile time isn't part of the test budget. */
+export function runCargoTestBudgeted(packages: string[], cwd: string, extraArgs: string[] = [], env: NodeJS.ProcessEnv = process.env): void {
+  const packageArgs = packages.flatMap((pkg) => ["-p", pkg]);
+  runCmd("cargo", ["build", "--tests", ...packageArgs], { cwd, env });
+  runTestBudgeted("cargo", ["test", ...packageArgs, ...extraArgs], { cwd, env });
+}
+//#endregion ⏱️TestBudget
+
+//#region 🧹CargoLint
+/**
+ * 🧹Zero-warning gate for a crate: `cargo clippy -p <pkg> --all-targets -- -D warnings`.
+ * Deny-on-warnings lives ONLY in this trailing clippy arg — never in RUSTFLAGS, which
+ * would replace (not merge with) `.cargo/config.toml`'s rustflags (`-Z threads=8`, the
+ * wasm32 `getrandom_backend` cfg, mold) and break every wasm build. See
+ * `[workspace.lints]` in the root `Cargo.toml` for the shared lint baseline this checks.
+ */
+export function runCargoLint(packages: string[], cwd: string, extraArgs: string[] = [], env: NodeJS.ProcessEnv = process.env): void {
+  const packageArgs = packages.flatMap((pkg) => ["-p", pkg]);
+  runCmd("cargo", ["clippy", ...packageArgs, "--all-targets", ...extraArgs, "--", "-D", "warnings"], { cwd, env });
+}
+//#endregion 🧹CargoLint
+
 /** 🏃Like `runCmd` but ignores failures. */
 export function tryRun(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv } = {}): void {
   try {
@@ -949,9 +990,9 @@ export function runViteBuild(bundleRoot: string, segments: string[], config: str
   runBun(["run", "vite", "build", "--config", config, ...segments], bundleRoot, devToolingEnv());
 }
 
-/** ▶️Vitest run in bundle directory. */
+/** ▶️Vitest run in bundle directory, under the [[runTestBudgeted]] wall-clock budget. */
 export function runVitest(bundleRoot: string, segments: string[], config = "vitest.config.ts"): void {
-  runBunx(["vitest", "run", "--config", config, "--passWithNoTests", ...segments], bundleRoot, devToolingEnv());
+  runTestBudgeted(process.execPath, ["x", "vitest", "run", "--config", config, "--passWithNoTests", ...segments], { cwd: bundleRoot, env: devToolingEnv() });
 }
 
 //#region 🔌PlaygroundDevPorts

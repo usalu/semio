@@ -5099,8 +5099,8 @@ export function panelAnchorTabBarClass(direction: "up" | "down"): string {
 /** @emoji 📑 Panel tab button padding. */
 export const panelAnchorTabButtonClass = cn(panelTabButtonClass, "px-tiny");
 
-/** @emoji 📑 Framed root-row strip for a chrome-hosted anchor's tabs (see {@link PanelChromeTabBar}) — a bordered `h-medium` group living inline in the navbar/footer instead of on the floating panel. */
-export const panelChromeTabBarClass = cn(panelTabBarBaseClass, "h-medium border", borderNormalClass);
+/** @emoji 📑 Framed root-row strip for a chrome-hosted anchor's tabs (see {@link PanelChromeTabBar}) — frosted panel chrome living inline in the navbar/footer instead of on the floating panel. */
+export const panelChromeTabBarClass = cn(panelTabBarBaseClass, "h-medium border rounded-sm", borderNormalClass, panelGlassFillClass);
 
 //#region 🫳DragAffordance
 
@@ -6147,16 +6147,20 @@ export const PanelChromeTabBar: React.FC<PanelChromeTabBarProps> = ({ anchor, cl
   if (tabs.length === 0) {
     if (!dock?.dragTabId) return null;
     return (
-      <GhostRegionShell data-slot="panel-chrome-tab-bar" data-anchor={anchor} className={cn("flex shrink-0 items-center", className)}>
-        <PanelEmptyDockZone anchor={anchor} />
-      </GhostRegionShell>
+      <LevelProvider level="panel">
+        <GhostRegionShell data-level="panel" data-slot="panel-chrome-tab-bar" data-anchor={anchor} className={cn("flex shrink-0 items-center", className)}>
+          <PanelEmptyDockZone anchor={anchor} />
+        </GhostRegionShell>
+      </LevelProvider>
     );
   }
 
   return (
-    <GhostRegionShell data-slot="panel-chrome-tab-bar" data-anchor={anchor} className={cn("flex shrink-0 items-center", className)}>
-      <PanelTabBar variant="chrome" anchor={anchor} tabs={tabs} activePath={resolvedPath} onActivePathChange={handlePathChange} maxRows={1} showActiveColor={visible} />
-    </GhostRegionShell>
+    <LevelProvider level="panel">
+      <GhostRegionShell data-level="panel" data-slot="panel-chrome-tab-bar" data-anchor={anchor} className={cn("flex shrink-0 items-center", className)}>
+        <PanelTabBar variant="chrome" anchor={anchor} tabs={tabs} activePath={resolvedPath} onActivePathChange={handlePathChange} maxRows={1} showActiveColor={visible} />
+      </GhostRegionShell>
+    </LevelProvider>
   );
 };
 
@@ -11318,23 +11322,25 @@ export function navbarFillItem(key = "navbarFill"): NavbarItem {
 export const ZUKUNFT_BAU_PROJECT_URL = "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506";
 
 /**
- * @emoji 🏛️ A plain (non-margined) footer item — the caller controls right-alignment by pairing it with
- * {@link navbarFillItem} (or its own trailing group), e.g. alongside a {@link PanelChromeTabBar}. It never
- * claims `ms-auto` itself so it composes with whatever else shares the footer's trailing edge.
+ * @emoji 🏛️ A plain (non-margined) footer item — the caller sits it between the bottom-middle command palette and
+ * the bottom-right corner toggle by bracketing it with two {@link navbarFillItem} spacers, so it never claims the
+ * exact corner pixel a floating corner `Panel` also anchors to. `relative z-40` matches `panel-tabs`' z-index so it
+ * never disappears behind an anchored panel's own chrome. Rendered as a real `<button>` (not a link) so it reads as
+ * chrome rather than page content; the click opens the funded project page in a new tab.
  **/
 export function fundedByZukunftBauFooterItem(key = "fundedByZukunftBau"): NavbarItem {
   return {
     key,
+    className: "relative z-40",
     content: (
-      <a
-        href={ZUKUNFT_BAU_PROJECT_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-tiny rounded-sm px-single py-half text-2xs text-muted-foreground hover:text-foreground hover:bg-hover-window transition-colors"
+      <button
+        type="button"
+        onClick={() => window.open(ZUKUNFT_BAU_PROJECT_URL, "_blank", "noopener,noreferrer")}
+        className="inline-flex items-center gap-tiny rounded-sm px-single py-half text-2xs text-muted-foreground hover:text-foreground hover:bg-hover-window transition-colors cursor-pointer"
       >
+        <span className="whitespace-nowrap">Funded by</span>
         <ZukunftBauLogo className="h-tiny w-auto shrink-0" />
-        <span className="whitespace-nowrap">Funded by Zukunft Bau</span>
-      </a>
+      </button>
     ),
   };
 }
@@ -24181,6 +24187,22 @@ if (import.meta.vitest) {
       expect(screen.getByText("Leaf B")).toBeTruthy();
     });
 
+    it("Panel with tabBarHost=\"chrome\" at top-middle and bottom-middle expands with glass panel level and nested rows", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [
+        { kind: "branch", id: "root", icon: StubIcon, name: "Command", children: [singleTreeLeaf({ id: "leaf", icon: StubIcon, name: "Palette", tree: { sections: [] } })] },
+      ];
+      for (const anchor of ["top-middle", "bottom-middle"] as const) {
+        const { container, unmount } = render(<Panel anchor={anchor} tabBarHost="chrome" visible tabs={tabs} activeTabPath={["root", "leaf"]} size={360} />);
+        const panel = container.querySelector('[data-slot="panel"]');
+        expect(panel?.getAttribute("data-level")).toBe("panel");
+        expect(panel?.querySelector(".ui-glass-panel")).toBeTruthy();
+        expect(screen.getByText("Palette")).toBeTruthy();
+        expect(screen.queryByText("Command")).toBeNull();
+        unmount();
+      }
+    });
+
     it("flowFromAnchor mirrors right anchors inline and bottom anchors in block; middle anchors never mirror", () => {
       expect(flowFromAnchor("top-left")).toEqual({ inline: "ltr", block: "down" });
       expect(flowFromAnchor("top-right")).toEqual({ inline: "rtl", block: "down" });
@@ -27943,7 +27965,8 @@ if (treeVitest) {
       expect(markup).not.toContain("data-missing-icon");
     });
 
-    it("PanelChromeTabBar renders only the root row for a nested tree, and a press on a closed host opens it without changing the active path", () => {
+    it("PanelChromeTabBar renders only the root row for a nested tree, and a press on a closed host opens it without changing the active path", async () => {
+      const { render, screen, fireEvent } = await import("@testing-library/react");
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [
         {
@@ -27965,6 +27988,16 @@ if (treeVitest) {
       fireEvent.click(screen.getByText("Workbench"));
       expect(visible).toBe(true);
       expect(path).toEqual(["framework.category.workbench", "framework.panel.document"]);
+    });
+
+    it("PanelChromeTabBar at middle anchors uses panel level and glass chrome styling", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "search", icon: StubIcon, name: "Search", tree: { sections: [] } })];
+      for (const anchor of ["top-middle", "bottom-middle"] as const) {
+        const markup = renderToStaticMarkup(<PanelChromeTabBar anchor={anchor} tabs={tabs} visible={false} />);
+        expect(markup).toContain('data-level="panel"');
+        expect(markup).toContain("ui-glass-panel");
+      }
     });
 
     it("exposes navbar fill helper for trailing chrome alignment", () => {
@@ -28175,9 +28208,11 @@ if (treeVitest) {
       const footerMarkup = renderToStaticMarkup(<Footer items={[{ key: "a", content: "Footer" }]} />);
       expect(footerMarkup).toContain(borderNormalTopClass);
       expect(footerMarkup).not.toContain("border-emphasized");
-      const fundedByMarkup = renderToStaticMarkup(<Footer items={[navbarFillItem("fill"), fundedByZukunftBauFooterItem()]} />);
-      expect(fundedByMarkup).toContain(ZUKUNFT_BAU_PROJECT_URL);
-      expect(fundedByMarkup).toContain("Funded by Zukunft Bau");
+      const fundedByMarkup = renderToStaticMarkup(<Footer items={[navbarFillItem("fillLeft"), fundedByZukunftBauFooterItem(), navbarFillItem("fillRight")]} />);
+      expect(fundedByMarkup).toContain("<button");
+      expect(fundedByMarkup).toContain("Funded by");
+      expect(fundedByMarkup).toContain("z-40");
+      expect(ZUKUNFT_BAU_PROJECT_URL).toMatch(/^https:\/\/www\.zukunftbau\.de\//);
       const breadcrumbMarkup = renderToStaticMarkup(<Breadcrumb items={[{ content: "Home" }, { content: "Project" }]} />);
       expect(breadcrumbMarkup).toContain(borderNormalClass);
       expect(breadcrumbMarkup).not.toContain("border-emphasized");
@@ -28537,6 +28572,25 @@ if (treeVitest) {
       expect(midDrag).toContain('data-slot="panel-empty-drop-zone"');
       expect(midDrag).toContain('data-panel-empty="true"');
       expect(midDrag).toContain("border-accent");
+    });
+
+    it("PanelChromeTabBar owns the empty-anchor drop zone for chrome-hosted middle anchors", () => {
+      const contextValue: PanelDockContextValue = {
+        dragTabId: "tab-a",
+        draggedSubtreeIds: null,
+        dropTarget: { kind: "insert", anchor: "bottom-middle", parentPath: [], index: 0 },
+        startTabDrag: () => {},
+        registerTabRowDropTarget: () => {},
+        onTreeUnitDockDrop: () => {},
+      };
+      expect(renderToStaticMarkup(<PanelChromeTabBar anchor="bottom-middle" tabs={[]} visible={false} />)).toBe("");
+      const midDrag = renderToStaticMarkup(
+        <PanelDockContext.Provider value={contextValue}>
+          <PanelChromeTabBar anchor="bottom-middle" tabs={[]} visible={false} />
+        </PanelDockContext.Provider>,
+      );
+      expect(midDrag).toContain('data-slot="panel-empty-drop-zone"');
+      expect(midDrag).toContain('data-anchor="bottom-middle"');
     });
 
     it("Panel's middle anchor centers with translateX(-50%), grows both ways, and gets two independent resize handles", async () => {

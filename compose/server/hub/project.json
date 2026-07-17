@@ -23,6 +23,13 @@
         "cwd": "compose/server/hub",
         "command": "bun ./script.ts test"
       }
+    },
+    "test-e2e": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/server/hub",
+        "command": "bun ./script.ts test-e2e"
+      }
     }
   }
 }

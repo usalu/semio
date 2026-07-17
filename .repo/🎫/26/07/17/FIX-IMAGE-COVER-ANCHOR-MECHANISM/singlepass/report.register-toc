@@ -1,0 +1,14 @@
+\SemioTocAuxLine {1}{Introduction}{semio-toc-chapter-1-1}
+\SemioTocAuxLine {1.1}{Architecture}{semio-toc-section-1.1-2}
+\SemioTocAuxLine {1.1.1}{Chrome Themes}{semio-toc-subsection-1.1.1-3}
+\SemioTocAuxLine {1.1.1.1}{Token Pipeline}{semio-toc-paragraph-1.1.1.1-4}
+\SemioTocAuxLine {2}{Results}{semio-toc-chapter-2-5}
+\SemioTocAuxLine {2.0.1}{Debug Raw Isolation A: bare usebox, no tikz}{semio-toc-subsection-2.0.1-6}
+\SemioTocAuxLine {2.0.2}{Debug Raw Isolation B: tikz pgftext, no clip}{semio-toc-subsection-2.0.2-7}
+\SemioTocAuxLine {2.0.3}{Debug Raw Isolation C: tikz pgftext with clip, image content}{semio-toc-subsection-2.0.3-8}
+\SemioTocAuxLine {2.0.4}{Debug Raw Isolation D: tikz pgftext with clip, text content}{semio-toc-subsection-2.0.4-9}
+\SemioTocAuxLine {2.0.5}{Debug Raw Isolation E: plain tcolorbox, height+valign+halign, tikz clip image}{semio-toc-subsection-2.0.5-10}
+\SemioTocAuxLine {2.0.6}{Debug Raw Isolation F: plain tcolorbox, height only, tikz clip image}{semio-toc-subsection-2.0.6-11}
+\SemioTocAuxLine {3}{Conclusion}{semio-toc-chapter-3-12}
+\SemioTocAuxLine {MD}{Messdaten}{semio-toc-chapter-MD-13}
+\SemioTocAuxLine {B}{Verzeichnisse}{semio-toc-chapter-B-14}

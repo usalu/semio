@@ -28,7 +28,6 @@ export default defineConfig({
     name: "@semio-tech/compose-algorithm",
     environment: "node",
     globals: true,
-    testTimeout: 120_000,
     include: ["index.ts"],
     passWithNoTests: false,
     exclude: ["**/node_modules/**", "**/dist/**", "**/.storybook/**"],

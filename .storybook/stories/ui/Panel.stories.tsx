@@ -11,7 +11,7 @@
 
 // #endregion 🧲Header
 
-import { Panel, singleTreeLeaf } from "@semio-tech/ui-react";
+import { Panel, PanelChromeTabBar, singleTreeLeaf } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ComponentType } from "react";
@@ -178,6 +178,56 @@ export const PanelBottomMiddle: Story = {
       </div>
     );
   },
+};
+
+function ChromeHostedPanelDemo({ anchor }: { readonly anchor: "top-left" | "top-middle" | "top-right" | "bottom-left" | "bottom-middle" | "bottom-right" }) {
+  const [size, setSize] = useState(320);
+  const [visible, setVisible] = useState(false);
+  const [activeTabPath, setActiveTabPath] = useState<readonly string[]>([]);
+  const tabs: Parameters<typeof Panel>[0]["tabs"] = [
+    {
+      kind: "branch",
+      id: "category",
+      icon: Layers,
+      name: "Category",
+      order: 0,
+      children: [leafTab("document", Info, "Document", 0, "Document body"), leafTab("catalogue", Layers, "Catalogue", 1, "Catalogue body")],
+    },
+    leafTab("settings", Settings, "Settings", 1, "Settings body"),
+  ];
+  const selection = { tabs, visible, onVisibleChange: setVisible, activeTabPath, onActiveTabPathChange: setActiveTabPath };
+  const chromeBar = <PanelChromeTabBar anchor={anchor} {...selection} />;
+  return (
+    <div className="relative flex h-[420px] w-[720px] flex-col border bg-window">
+      {(anchor === "top-left" || anchor === "top-middle" || anchor === "top-right") && (
+        <div className="flex h-large shrink-0 items-center gap-single border-b bg-window p-single">
+          {anchor === "top-left" ? chromeBar : <span className="text-xs text-muted-foreground">Navbar</span>}
+          {anchor === "top-middle" ? <div className="mx-auto">{chromeBar}</div> : null}
+          {anchor === "top-right" ? <div className="ms-auto">{chromeBar}</div> : null}
+        </div>
+      )}
+      <div className="relative min-h-0 flex-1 bg-canvas">
+        <Panel anchor={anchor} tabBarHost="chrome" size={size} onSizeChange={setSize} {...selection} />
+      </div>
+      {(anchor === "bottom-left" || anchor === "bottom-middle" || anchor === "bottom-right") && (
+        <div className="flex h-large shrink-0 items-center gap-single border-t bg-window p-single">
+          {anchor === "bottom-left" ? chromeBar : null}
+          {anchor === "bottom-middle" ? <div className="mx-auto">{chromeBar}</div> : null}
+          {anchor === "bottom-right" ? <div className="ms-auto">{chromeBar}</div> : null}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export const PanelChromeHostedTopMiddle: Story = {
+  name: "Panel — Chrome Hosted Top Middle",
+  render: () => <ChromeHostedPanelDemo anchor="top-middle" />,
+};
+
+export const PanelChromeHostedBottomMiddle: Story = {
+  name: "Panel — Chrome Hosted Bottom Middle (nested tabs)",
+  render: () => <ChromeHostedPanelDemo anchor="bottom-middle" />,
 };
 
 // #endregion 🧭Panel

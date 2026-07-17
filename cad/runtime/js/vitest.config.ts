@@ -23,8 +23,6 @@ export default defineConfig({
     name: "@semio-tech/cad-js-runtime",
     mode: "test",
     environment: "node",
-    fileParallelism: false,
-    maxConcurrency: 1,
     include: ["index.ts"],
     includeSource: ["index.ts"],
   },

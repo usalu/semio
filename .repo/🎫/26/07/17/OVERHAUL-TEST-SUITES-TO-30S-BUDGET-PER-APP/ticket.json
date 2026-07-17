@@ -1,0 +1,13 @@
+{
+  "title": "Overhaul Test Suites to 30s Budget Per App",
+  "emoji": "🧪",
+  "status": "open",
+  "description": "Every project's default `test` nx target must finish in ≤30s (Rust measured as warm-cache test execution, compile excluded). Structurally slow suites (Storybook/Playwright e2e, Postgres testcontainer tests in compose/server/hub/rs/bin.rs, VSCode extension-host suite) move to a separate opt-in `test-e2e` target excluded from the default test run. Add a central hard wall-clock guard in repo/lib/js/index.ts so runner helpers (vitest, cargo, pytest, go, dotnet, bun test) enforce the budget and fail loudly on regression. Trim tests across all ~90 projects to keep only complicated-feature coverage (algorithms, geometry, protocol, interaction/reducer logic) and delete trivial tests (export-exists checks, getter identity, CSS-substring matching, serde round-trip padding). Execute via a fleet of parallel agents, one per project, each measuring baseline, trimming, migrating to the budgeted helper, and verifying ≤30s.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2038"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪53cced14f5e244d094a644940bda4534"
+  ]
+}

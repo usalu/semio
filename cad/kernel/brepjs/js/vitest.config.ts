@@ -24,9 +24,6 @@ export default defineConfig({
     name: "@semio-tech/cad-js-kernel-brepjs",
     mode: "test",
     environment: "node",
-    testTimeout: 120_000,
-    fileParallelism: false,
-    maxConcurrency: 1,
     include: ["index.ts"],
   },
 });

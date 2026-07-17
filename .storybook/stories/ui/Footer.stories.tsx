@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Footer, createIconComponent, fundedByZukunftBauFooterItem } from "@semio-tech/ui-react";
+import { Footer, createIconComponent, fundedByZukunftBauFooterItem, navbarFillItem } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 🔷#region 🎮Footer
@@ -43,7 +43,10 @@ export const Default: Story = {
       { key: "cursor", content: "Ln 1, Col 1" },
       { key: "encoding", content: "UTF-8" },
       { key: "language", content: "TypeScript" },
+      navbarFillItem("fillLeft"),
       fundedByZukunftBauFooterItem(),
+      navbarFillItem("fillRight"),
+      { key: "settings", content: <span>Settings</span> },
     ],
   },
 };

@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 /** @emoji ⚙️ Builds/tests the `repo_cli` crate and execs the `semio` binary (nx bridge for `repo/cli/rs`). */
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../repo/lib/js/index.ts";
 
@@ -17,14 +16,16 @@ class TestScript extends BundleScript {
   }
 }
 
-/** ▶️ Builds `semio` if needed, then execs it with forwarded argv and inherited stdio. */
+/**
+ * ▶️ Builds `semio` (always — cargo's own incremental cache makes a no-op rebuild fast, and skipping
+ * the build whenever the binary happened to already exist silently ran a stale binary after any
+ * source edit) then execs it with forwarded argv and inherited stdio.
+ */
 class RunScript extends BundleScript {
   run(segments: string[]): void {
+    runCmd("cargo", ["build", "-p", "repo_cli", "--release"], { cwd: this.repoRoot });
     const binName = process.platform === "win32" ? "semio.exe" : "semio";
     const bin = join(this.repoRoot, "target", "release", binName);
-    if (!existsSync(bin)) {
-      runCmd("cargo", ["build", "-p", "repo_cli", "--release"], { cwd: this.repoRoot });
-    }
     const result = spawnSync(bin, segments, { stdio: "inherit", cwd: this.repoRoot });
     process.exit(result.status ?? 1);
   }

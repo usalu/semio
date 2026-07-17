@@ -5192,6 +5192,7 @@ mod tests {
             std::process::Command::new("docker").arg("info").output().map(|o| o.status.success()).unwrap_or(false)
         }
 
+        #[ignore = "🐘 needs docker; run via test-e2e"]
         #[tokio::test]
         async fn e2e_session_lifecycle_with_postgres() {
             if !docker_available() {
@@ -5229,6 +5230,7 @@ mod tests {
             assert_eq!(state.domain_version, 0);
         }
 
+        #[ignore = "🐘 needs docker; run via test-e2e"]
         #[tokio::test]
         async fn e2e_domain_commands_and_history() {
             if !docker_available() {
@@ -5298,6 +5300,7 @@ mod tests {
             drop(cmd_tx);
         }
 
+        #[ignore = "🐘 needs docker; run via test-e2e"]
         #[tokio::test]
         async fn e2e_http_api_with_postgres() {
             if !docker_available() {
@@ -5385,6 +5388,7 @@ mod tests {
             assert_eq!(resp.status(), 200);
         }
 
+        #[ignore = "🐘 needs docker; run via test-e2e"]
         #[tokio::test]
         async fn e2e_metabolism_full_kit_history() {
             if !docker_available() {
@@ -5447,6 +5451,7 @@ mod tests {
             drop(cmd_tx);
         }
 
+        #[ignore = "🐘 needs docker; run via test-e2e"]
         #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
         async fn e2e_multi_frontend_websocket() {
             if !docker_available() {
@@ -5516,6 +5521,7 @@ mod tests {
             assert!(msg2.is_ok(), "ws2 should receive event");
         }
 
+        #[ignore = "🐘 needs docker; run via test-e2e"]
         #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
         async fn e2e_snapshot_and_piece_patch_roundtrip() {
             if !docker_available() {
@@ -5608,6 +5614,7 @@ mod tests {
             assert_eq!(snapshot["kit"]["designs"][0]["pieces"][0]["center"]["v"].as_f64().unwrap(), -4.25);
         }
 
+        #[ignore = "🐘 needs docker; run via test-e2e"]
         #[tokio::test]
         async fn e2e_auth_forbidden_without_token() {
             if !docker_available() {
@@ -5710,6 +5717,7 @@ mod tests {
             assert_eq!(resp.status(), 403);
         }
 
+        #[ignore = "🐘 needs docker; run via test-e2e"]
         #[tokio::test]
         async fn e2e_share_token_flow() {
             if !docker_available() {
@@ -5907,6 +5915,7 @@ mod tests {
             assert_eq!(handle.active_connections.load(AtomicOrdering::Relaxed), 2);
         }
 
+        #[ignore = "🐘 needs docker; run via test-e2e"]
         #[tokio::test]
         async fn e2e_admin_endpoints_with_postgres() {
             // Specs: Full round-trip against the embedded admin router: overview, session list, kit list, share-token list, session detail, compaction config read/write, and auth boundary.

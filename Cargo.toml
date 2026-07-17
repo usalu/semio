@@ -105,6 +105,23 @@ members = [
     "imperative/module/text/rs",
     "cad/rs",
     "cad/plugin/rs",
+
+    # 🧹 Adopted 2026-07-18 (RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN): these crates lived
+    # inside the workspace dir but were neither members nor excluded, so they could
+    # not run any cargo command standalone. Adoption fixes real breakage.
+    "fsm/rs",
+    "fsm/macros/rs",
+    "framework/hlc/rs",
+    "framework/schema/rs",
+    "kernel/3d/spatial/rs",
+    "framework/product/os/hub/rs",
+    "framework/product/os/hub/storage/rs",
+    "framework/product/os/hub/storage/postgres/rs",
+    "framework/product/os/hub/storage/neo4j/rs",
+    "framework/product/os/hub/storage/sqlite/rs",
+    "compose/client/lib/rs",
+    "compose/client/lib/query/rs",
+    "compose/client/bin/store/rs",
 ]
 
 resolver = "2"
@@ -119,3 +136,25 @@ opt-level = 3
 
 [profile.release]
 strip = "debuginfo"
+
+# 🧹 RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN baseline. Kept at "warn" (never "deny") in
+# the manifest so live concurrent edits never hard-break; zero-warning is enforced
+# at verification gates via `cargo clippy -- -D warnings`. NEVER set RUSTFLAGS to
+# add -D warnings — it replaces (not merges) .cargo/config.toml's rustflags.
+[workspace.lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"
+# phase B (enable after the T2/T3 waves land): unwrap_used = "warn"

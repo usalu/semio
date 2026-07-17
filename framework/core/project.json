@@ -9,6 +9,14 @@
         "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "framework/core",
+        "command": "bun ./script.ts lint",
+        "forwardAllArgs": true
+      }
     }
   }
 }

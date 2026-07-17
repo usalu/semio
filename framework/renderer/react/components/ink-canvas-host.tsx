@@ -927,9 +927,9 @@ type NoteTableEditState = { readonly blockId: string; readonly row: number; read
 const NOTE_MARQUEE_THRESHOLD_PX = 4;
 //#endregion DragState
 
-//#region NoteCanvasHost
-export function NoteCanvasHost({ node, onAction }: ComponentSceneHostProps) {
-  const scene = node.noteCanvas;
+//#region InkCanvasHost
+export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
+  const scene = node.inkCanvas;
   const rootRef = useRef<HTMLDivElement | null>(null);
   const gestureActiveRef = useRef(false);
   const rafRef = useRef<number | null>(null);
@@ -1482,4 +1482,4 @@ export function NoteCanvasHost({ node, onAction }: ComponentSceneHostProps) {
     </div>
   );
 }
-//#endregion NoteCanvasHost
+//#endregion InkCanvasHost

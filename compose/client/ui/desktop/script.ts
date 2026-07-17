@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 Desktop app router: `bun ./script.ts test` (integration test runner). */
+/** 🧭 Desktop app router: `bun ./script.ts <test|test-e2e>` (integration test runner). */
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -51,12 +51,20 @@ export async function runTests(
   });
 }
 
+/** ⏱️The Electron integration suite (`test/suite/index.mjs`) boots a real `electron-forge` app and loads a >200-file fixture kit — genuinely e2e, no fast in-repo unit split exists. See `test-e2e`. */
 class TestScript extends BundleScript {
+  run(): void {
+    console.log("[test] @semio-tech/compose-desktop has no fast unit suite — run `test-e2e` for the Electron integration suite.");
+  }
+}
+
+/** 🖥️Full Electron integration suite; excluded from the default ≤30s `test` budget. */
+class TestE2eScript extends BundleScript {
   async run(): Promise<void> {
     await runTests();
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-e2e", TestE2eScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

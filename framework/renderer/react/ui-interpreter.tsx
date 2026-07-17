@@ -53,11 +53,11 @@ const COMPONENT_SCENE_HOSTS: Record<ComponentKind, LazyExoticComponent<Component
   "node-graph": lazyHost(() => import("./components/node-graph-host.tsx"), "NodeGraphHost"),
   "text-editor": lazyHost(() => import("./components/text-editor-host.tsx"), "TextEditorHost"),
   table: lazyHost(() => import("./components/table-host.tsx"), "TableHost"),
-  raster: lazyHost(() => import("./components/raster-host.tsx"), "RasterHost"),
+  "paint-2d": lazyHost(() => import("./components/paint-2d-host.tsx"), "Paint2dHost"),
   "gis2d-map": lazyHost(() => import("./components/gis-map-host.tsx"), "GisMapHost"),
   "puzzle2d-board": lazyHost(() => import("./components/puzzle-2d-board-host.tsx"), "Puzzle2dBoardHost"),
   "icon-render": lazyHost(() => import("./components/icon-render-host.tsx"), "IconRenderHost"),
-  "note-canvas": lazyHost(() => import("./components/note-canvas-host.tsx"), "NoteCanvasHost"),
+  "ink-canvas": lazyHost(() => import("./components/ink-canvas-host.tsx"), "InkCanvasHost"),
   "graph-timeline": lazyHost(() => import("./components/graph-timeline-host.tsx"), "GraphTimelineHost"),
   "block-list": lazyHost(() => import("./components/block-list-host.tsx"), "BlockListHost"),
 };

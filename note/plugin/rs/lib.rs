@@ -1,9 +1,9 @@
 //! 📝 Note plugin — infinite canvas note board bundled as a hot-swappable WASM component.
 
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
-    build_note_canvas_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
+    build_ink_canvas_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_stack_vertical, ui_text, App,
-    NoteCanvasScene, ActionDescriptor, ActionEmit, AppLabelsOverlay, DocumentApp, DocumentView, DwgDrawing, DwgGeometry,
+    InkCanvasScene, ActionDescriptor, ActionEmit, AppLabelsOverlay, DocumentApp, DocumentView, DwgDrawing, DwgGeometry,
     HostEffect, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiSectionNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -1335,10 +1335,10 @@ fn render_canvas_scene(
 ) -> UiNode {
     let document_json = serde_json::to_string(document).unwrap_or_else(|_| "{}".into());
     let selection_json = serde_json::to_string(selected_ids).unwrap_or_else(|_| "[]".into());
-    build_note_canvas_scene(
+    build_ink_canvas_scene(
         surface_id,
         NOTE_PLAY_CONTROLLER_ID,
-        NoteCanvasScene {
+        InkCanvasScene {
             document_json,
             selection_json,
             hovered_id: hovered_id.map(str::to_string),
@@ -2400,8 +2400,8 @@ fn create_note_app() -> App {
             .icon_id("note")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind_with_engagement(NOTE_PLAY_WINDOW_COMPOSITE, "Canvas", NOTE_PLAY_BODY_COMPOSITE, SurfaceKind::NoteCanvas, note_canvas_engagement(&document, &[], ""))
-            .window_kind_with_engagement(NOTE_PLAY_WINDOW_NAVIGATOR, "Navigator", NOTE_PLAY_BODY_NAVIGATOR, SurfaceKind::NoteCanvas, note_navigator_engagement("selectDirect"))
+            .window_kind_with_engagement(NOTE_PLAY_WINDOW_COMPOSITE, "Canvas", NOTE_PLAY_BODY_COMPOSITE, SurfaceKind::InkCanvas, note_canvas_engagement(&document, &[], ""))
+            .window_kind_with_engagement(NOTE_PLAY_WINDOW_NAVIGATOR, "Navigator", NOTE_PLAY_BODY_NAVIGATOR, SurfaceKind::InkCanvas, note_navigator_engagement("selectDirect"))
             .default_layout(create_default_layout(
                 &[NOTE_PLAY_WINDOW_COMPOSITE.into(), NOTE_PLAY_WINDOW_NAVIGATOR.into()],
                 "row",
@@ -2562,7 +2562,7 @@ mod tests {
         let mut app = new_app();
         let node = app.render(NOTE_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("note-canvas"));
+        assert!(json.contains("ink-canvas"));
         assert!(json.contains("documentJson"));
     }
 
@@ -2571,7 +2571,7 @@ mod tests {
         let mut app = new_app();
         let node = app.render(NOTE_PLAY_BODY_NAVIGATOR, Some(SEMIO_EXAMPLE_JSON), &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("note-canvas"));
+        assert!(json.contains("ink-canvas"));
         assert!(json.contains("\"viewMode\":\"navigator\""));
     }
 

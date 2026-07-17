@@ -4544,14 +4544,14 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
         check_optional_json_payload(&format!("{scene_label} table.selection"), &table.selection_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} table.sort"), &table.sort_json, limits)?;
     }
-    if let Some(raster) = &scene.raster {
-        check_json_payload(&format!("{scene_label} raster.documentSync"), &raster.document_sync_json, limits)?;
-        check_json_payload(&format!("{scene_label} raster.assets"), &raster.assets_json, limits)?;
-        check_json_payload(&format!("{scene_label} raster.camera"), &raster.camera_json, limits)?;
-        check_json_payload(&format!("{scene_label} raster.selection"), &raster.selection_json, limits)?;
+    if let Some(paint_2d) = &scene.paint_2d {
+        check_json_payload(&format!("{scene_label} paint2d.documentSync"), &paint_2d.document_sync_json, limits)?;
+        check_json_payload(&format!("{scene_label} paint2d.assets"), &paint_2d.assets_json, limits)?;
+        check_json_payload(&format!("{scene_label} paint2d.camera"), &paint_2d.camera_json, limits)?;
+        check_json_payload(&format!("{scene_label} paint2d.selection"), &paint_2d.selection_json, limits)?;
         check_optional_json_payload(
-            &format!("{scene_label} raster.compositeViewport"),
-            &raster.composite_viewport_json,
+            &format!("{scene_label} paint2d.compositeViewport"),
+            &paint_2d.composite_viewport_json,
             limits,
         )?;
     }
@@ -6081,9 +6081,9 @@ pub fn handle_scene_wheel(
             });
             Vec::new()
         }
-        SurfaceKind::Raster => {
-            if let Some(raster) = &scene.raster {
-                let doc: RasterDocSyncJson = serde_json::from_str(&raster.document_sync_json).unwrap_or_default();
+        SurfaceKind::Paint2d => {
+            if let Some(paint_2d) = &scene.paint_2d {
+                let doc: Paint2dDocSyncJson = serde_json::from_str(&paint_2d.document_sync_json).unwrap_or_default();
                 mutate_scene_state(&scene.surface_id, |state| {
                     if state.viewport.zoom <= 0.0 {
                         state.viewport = Viewport {
@@ -6116,7 +6116,7 @@ pub fn handle_scene_wheel(
             delta,
             ctrl,
         ),
-        SurfaceKind::NoteCanvas => note_wheel(scene, inner, x, y, delta),
+        SurfaceKind::InkCanvas => note_wheel(scene, inner, x, y, delta),
         SurfaceKind::GraphTimeline => {
             let current = scroll_offset(&scene.surface_id, "history");
             set_scroll_offset(&scene.surface_id, "history", current + delta * 0.5);
@@ -6194,7 +6194,7 @@ pub fn handle_scene_pointer_move(
                     let dx = (x - start_x) as f64 / camera.zoom.max(0.0001);
                     let dy = (y - start_y) as f64 / camera.zoom.max(0.0001);
                     let doc: NoteDocumentJson = scene
-                        .note_canvas
+                        .ink_canvas
                         .as_ref()
                         .map(|n| serde_json::from_str(&n.document_json).unwrap_or_default())
                         .unwrap_or_default();
@@ -6222,7 +6222,7 @@ pub fn handle_scene_pointer_move(
                     let dy = (y - start_y) as f64 / camera.zoom.max(0.0001);
                     let to = note_resize_bounds(*from, handle, dx, dy, 8.0);
                     let doc: NoteDocumentJson = scene
-                        .note_canvas
+                        .ink_canvas
                         .as_ref()
                         .map(|n| serde_json::from_str(&n.document_json).unwrap_or_default())
                         .unwrap_or_default();
@@ -6248,7 +6248,7 @@ pub fn handle_scene_pointer_move(
                     let camera = note_current_camera(scene);
                     let (world_x, world_y) = note_screen_to_world(camera, inner, x, y);
                     let doc: NoteDocumentJson = scene
-                        .note_canvas
+                        .ink_canvas
                         .as_ref()
                         .map(|n| serde_json::from_str(&n.document_json).unwrap_or_default())
                         .unwrap_or_default();
@@ -6282,7 +6282,7 @@ pub fn handle_scene_pointer_move(
                     let camera = note_current_camera(scene);
                     let (world_x, world_y) = note_screen_to_world(camera, inner, x, y);
                     let doc: NoteDocumentJson = scene
-                        .note_canvas
+                        .ink_canvas
                         .as_ref()
                         .map(|n| serde_json::from_str(&n.document_json).unwrap_or_default())
                         .unwrap_or_default();
@@ -6304,7 +6304,7 @@ pub fn handle_scene_pointer_move(
         }
     }
     match scene.component_kind {
-        SurfaceKind::NoteCanvas if !down => {
+        SurfaceKind::InkCanvas if !down => {
             actions.extend(note_hover_move(scene, inner, x, y));
         }
         SurfaceKind::Canvas2d if down => {
@@ -6403,10 +6403,10 @@ pub fn handle_scene_pointer_button(
                     });
                 }
             }
-            SurfaceKind::Raster => {
+            SurfaceKind::Paint2d => {
                 if button == 1 || button == 2 {
-                    if let Some(raster) = &scene.raster {
-                        let doc: RasterDocSyncJson = serde_json::from_str(&raster.document_sync_json).unwrap_or_default();
+                    if let Some(paint_2d) = &scene.paint_2d {
+                        let doc: Paint2dDocSyncJson = serde_json::from_str(&paint_2d.document_sync_json).unwrap_or_default();
                         mutate_scene_state(&scene.surface_id, |state| {
                             if state.viewport.zoom <= 0.0 {
                                 state.viewport = Viewport {
@@ -6440,14 +6440,14 @@ pub fn handle_scene_pointer_button(
             SurfaceKind::TextEditor => {
                 actions.extend(engine_canvas::text_editor_pointer_down(scene, inner, x, y, button));
             }
-            SurfaceKind::NoteCanvas => {
+            SurfaceKind::InkCanvas => {
                 actions.extend(note_pointer_down(scene, inner, x, y, button, shift));
             }
             _ => {}
         }
     } else {
         match scene.component_kind {
-            SurfaceKind::NoteCanvas => {
+            SurfaceKind::InkCanvas => {
                 actions.extend(note_pointer_up(scene, inner, x, y));
             }
             SurfaceKind::Canvas2d => {
@@ -6609,14 +6609,14 @@ pub fn render_component_scene(
         theme.border_radius,
     );
     match scene.component_kind {
-        SurfaceKind::Raster => render_raster(scene, bounds, ctx, gpu),
+        SurfaceKind::Paint2d => render_paint_2d(scene, bounds, ctx, gpu),
         SurfaceKind::Table => render_table(scene, bounds, ctx),
         SurfaceKind::Canvas2d => render_canvas_2d(scene, bounds, ctx),
         SurfaceKind::NodeGraph => render_node_graph(scene, bounds, ctx, gpu, node_graph_states),
         SurfaceKind::GisMap => render_gis_map(scene, bounds, ctx, gpu, gis_map_states),
         SurfaceKind::VirtualFileSystem => render_vfs(scene, bounds, ctx),
         SurfaceKind::TextEditor => render_text_editor(scene, bounds, ctx, gpu),
-        SurfaceKind::NoteCanvas => render_note_canvas(scene, bounds, ctx, gpu),
+        SurfaceKind::InkCanvas => render_note_canvas(scene, bounds, ctx, gpu),
         SurfaceKind::World3d => {
             let state = world3d_states
                 .entry(scene.surface_id.clone())
@@ -6658,18 +6658,18 @@ fn render_placeholder(kind: &str, bounds: Rect, ctx: &mut FrameworkWidgetContext
     );
 }
 
-//#region Raster
+//#region Paint2d
 #[derive(Deserialize, Clone, Copy)]
-struct RasterCameraFields {
+struct Paint2dCameraFields {
     #[serde(default)]
     x: f64,
     #[serde(default)]
     y: f64,
-    #[serde(default = "raster_default_one")]
+    #[serde(default = "paint2d_default_one")]
     zoom: f64,
 }
 
-impl Default for RasterCameraFields {
+impl Default for Paint2dCameraFields {
     fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
@@ -6677,61 +6677,61 @@ impl Default for RasterCameraFields {
 
 #[derive(Deserialize, Clone, Copy)]
 #[serde(rename_all = "camelCase")]
-struct RasterTransformFields {
+struct Paint2dTransformFields {
     #[serde(default)]
     x: f64,
     #[serde(default)]
     y: f64,
-    #[serde(default = "raster_default_one")]
+    #[serde(default = "paint2d_default_one")]
     scale_x: f64,
-    #[serde(default = "raster_default_one")]
+    #[serde(default = "paint2d_default_one")]
     scale_y: f64,
 }
 
-impl Default for RasterTransformFields {
+impl Default for Paint2dTransformFields {
     fn default() -> Self {
         Self { x: 0.0, y: 0.0, scale_x: 1.0, scale_y: 1.0 }
     }
 }
 
-fn raster_default_one() -> f64 {
+fn paint2d_default_one() -> f64 {
     1.0
 }
 
-fn raster_default_true() -> bool {
+fn paint2d_default_true() -> bool {
     true
 }
 
-fn raster_default_opacity() -> f32 {
+fn paint2d_default_opacity() -> f32 {
     1.0
 }
 
 #[derive(Deserialize, Clone)]
 #[serde(tag = "kind", rename_all = "camelCase")]
-enum RasterLayerJson {
+enum Paint2dLayerJson {
     #[serde(rename = "pixel", rename_all = "camelCase")]
     Pixel {
         id: String,
-        #[serde(default = "raster_default_true")]
+        #[serde(default = "paint2d_default_true")]
         visible: bool,
-        #[serde(default = "raster_default_opacity")]
+        #[serde(default = "paint2d_default_opacity")]
         opacity: f32,
         #[serde(default)]
-        transform: RasterTransformFields,
+        transform: Paint2dTransformFields,
         width: Option<u32>,
         height: Option<u32>,
         image_key: Option<String>,
     },
     #[serde(rename = "group", rename_all = "camelCase")]
     Group {
-        #[serde(default = "raster_default_true")]
+        #[serde(default = "paint2d_default_true")]
         visible: bool,
-        #[serde(default = "raster_default_opacity")]
+        #[serde(default = "paint2d_default_opacity")]
         opacity: f32,
         #[serde(default)]
-        transform: RasterTransformFields,
+        transform: Paint2dTransformFields,
         #[serde(default)]
-        children: Vec<RasterLayerJson>,
+        children: Vec<Paint2dLayerJson>,
     },
     #[serde(rename = "adjustment", rename_all = "camelCase")]
     Adjustment {},
@@ -6739,20 +6739,20 @@ enum RasterLayerJson {
 
 #[derive(Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
-struct RasterDocSyncJson {
+struct Paint2dDocSyncJson {
     #[serde(default)]
-    camera: RasterCameraFields,
+    camera: Paint2dCameraFields,
     #[serde(default)]
-    layers: Vec<RasterLayerJson>,
+    layers: Vec<Paint2dLayerJson>,
 }
 
 #[derive(Deserialize)]
-struct RasterAssetJson {
+struct Paint2dAssetJson {
     mime: String,
     data: String,
 }
 
-struct RasterFlatLayer {
+struct Paint2dFlatLayer {
     id: String,
     image_key: String,
     x: f64,
@@ -6764,25 +6764,25 @@ struct RasterFlatLayer {
     height: u32,
 }
 
-fn collect_raster_pixel_layers(
-    layers: &[RasterLayerJson],
+fn collect_paint2d_pixel_layers(
+    layers: &[Paint2dLayerJson],
     parent_x: f64,
     parent_y: f64,
     parent_sx: f64,
     parent_sy: f64,
     parent_opacity: f32,
-    out: &mut Vec<RasterFlatLayer>,
+    out: &mut Vec<Paint2dFlatLayer>,
 ) {
     for layer in layers {
         match layer {
-            RasterLayerJson::Pixel { id, visible, opacity, transform, width, height, image_key } => {
+            Paint2dLayerJson::Pixel { id, visible, opacity, transform, width, height, image_key } => {
                 if !*visible {
                     continue;
                 }
                 let Some(image_key) = image_key else {
                     continue;
                 };
-                out.push(RasterFlatLayer {
+                out.push(Paint2dFlatLayer {
                     id: id.clone(),
                     image_key: image_key.clone(),
                     x: parent_x + transform.x * parent_sx,
@@ -6794,11 +6794,11 @@ fn collect_raster_pixel_layers(
                     height: height.unwrap_or(0),
                 });
             }
-            RasterLayerJson::Group { visible, opacity, transform, children } => {
+            Paint2dLayerJson::Group { visible, opacity, transform, children } => {
                 if !*visible {
                     continue;
                 }
-                collect_raster_pixel_layers(
+                collect_paint2d_pixel_layers(
                     children,
                     parent_x + transform.x * parent_sx,
                     parent_y + transform.y * parent_sy,
@@ -6808,28 +6808,28 @@ fn collect_raster_pixel_layers(
                     out,
                 );
             }
-            RasterLayerJson::Adjustment { .. } => {}
+            Paint2dLayerJson::Adjustment { .. } => {}
         }
     }
 }
 
-/** 🖼️ Composites raster document layers as textured quads; blend modes, masks and adjustment layers are not yet applied (see FIX-LOWPOLY-DEV-BOOT sibling ticket 26/07/11/WGPU-RENDERER-FULL-PARITY for follow-up scope). */
-fn render_raster(
+/** 🖼️ Composites paint-2d document layers as textured quads; blend modes, masks and adjustment layers are not yet applied (see FIX-LOWPOLY-DEV-BOOT sibling ticket 26/07/11/WGPU-RENDERER-FULL-PARITY for follow-up scope). */
+fn render_paint_2d(
     scene: &UiComponentSceneNode,
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
     gpu: &mut ui_wgpu::GpuContext,
 ) {
     let theme = ctx.theme;
-    let Some(raster) = &scene.raster else {
-        return render_placeholder("raster", bounds, ctx);
+    let Some(paint_2d) = &scene.paint_2d else {
+        return render_placeholder("paint-2d", bounds, ctx);
     };
     let _ = gpu;
     let inner = bounds;
     ctx.draw
         .push_solid([inner.x, inner.y, inner.w, inner.h], theme.canvas_clear);
-    let doc: RasterDocSyncJson = serde_json::from_str(&raster.document_sync_json).unwrap_or_default();
-    let assets: HashMap<String, RasterAssetJson> = serde_json::from_str(&raster.assets_json).unwrap_or_default();
+    let doc: Paint2dDocSyncJson = serde_json::from_str(&paint_2d.document_sync_json).unwrap_or_default();
+    let assets: HashMap<String, Paint2dAssetJson> = serde_json::from_str(&paint_2d.assets_json).unwrap_or_default();
     let mut viewport = Viewport {
         x: doc.camera.x as f32,
         y: doc.camera.y as f32,
@@ -6841,9 +6841,9 @@ fn render_raster(
     }
     draw_checkerboard(ctx.draw, &viewport, inner, theme, 4096.0);
     let mut flat = Vec::new();
-    collect_raster_pixel_layers(&doc.layers, 0.0, 0.0, 1.0, 1.0, 1.0, &mut flat);
+    collect_paint2d_pixel_layers(&doc.layers, 0.0, 0.0, 1.0, 1.0, 1.0, &mut flat);
     if flat.is_empty() {
-        draw_text(ctx, "Empty raster document", inner.x + 8.0, inner.y + 20.0, theme.font_size_small, theme.text_muted);
+        draw_text(ctx, "Empty paint-2d document", inner.x + 8.0, inner.y + 20.0, theme.font_size_small, theme.text_muted);
     }
     for layer in &flat {
         let Some(asset) = assets.get(&layer.image_key) else {
@@ -6861,14 +6861,14 @@ fn render_raster(
     }
     ctx.input.register_hit(HitTarget {
         rect: inner,
-        event: Some(scene_action(scene, "rasterClick", surface_args(scene))),
+        event: Some(scene_action(scene, "paint2dClick", surface_args(scene))),
         control_id: Some(scene.surface_id.clone()),
         kind: HitKind::Generic,
         drag_axis: None,
         drag_data: None,
     });
 }
-//#endregion Raster
+//#endregion Paint2d
 
 //#region Table
 #[derive(Deserialize)]
@@ -7429,7 +7429,7 @@ fn decode_canvas_image(data_url: &str) -> Option<(Vec<u8>, u32, u32)> {
 
 /** Hashes the raw (still-encoded) `data_url` before touching base64/PNG decode, so an unchanged
  * image layer costs one cheap byte-hash per frame instead of a full decode — decode only runs when
- * the source string actually changes. Continuous rAF renderers (e.g. raster) would otherwise redo
+ * the source string actually changes. Continuous rAF renderers (e.g. paint-2d) would otherwise redo
  * base64+PNG decode every frame for every image layer regardless of whether anything changed. */
 pub(crate) fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_url: &str) -> Option<String> {
     let key = format!("canvas-image:{surface_id}:{layer_id}");
@@ -7463,7 +7463,7 @@ pub(crate) fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_u
 
 /** Clamps checkerboard cell iteration to the world-space rect actually visible through `inner`
  * (intersected with the full `±extent/2` grid) instead of always walking the whole grid — a
- * continuously-rendering surface (raster) was pushing up to `(extent/cell)^2` solid quads every
+ * continuously-rendering surface (paint-2d) was pushing up to `(extent/cell)^2` solid quads every
  * single frame regardless of zoom/pan, which starves headless WebGPU frame pacing. */
 fn draw_checkerboard(
     draw: &mut ui_wgpu::DrawList,
@@ -8166,7 +8166,7 @@ fn note_current_camera(scene: &UiComponentSceneNode) -> NoteCameraF {
         return NoteCameraF { x, y, zoom };
     }
     scene
-        .note_canvas
+        .ink_canvas
         .as_ref()
         .and_then(|note| serde_json::from_str::<NoteDocumentJson>(&note.document_json).ok())
         .map(|doc| NoteCameraF::from(doc.camera))
@@ -8243,7 +8243,7 @@ fn note_resize_handle_at(bounds: NoteBoundsF, camera: NoteCameraF, inner: Rect, 
 
 /** @emoji 📝 Pointer-down entry point for note-canvas: mirrors handlePointerDown in note-canvas-host.tsx. */
 fn note_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, button: i16, shift: bool) -> Vec<ActionDescriptor> {
-    let Some(note) = &scene.note_canvas else {
+    let Some(note) = &scene.ink_canvas else {
         return Vec::new();
     };
     if note.view_mode == "navigator" || !note.interactive {
@@ -8385,7 +8385,7 @@ fn note_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) ->
         return actions;
     };
     let doc: NoteDocumentJson = scene
-        .note_canvas
+        .ink_canvas
         .as_ref()
         .map(|n| serde_json::from_str(&n.document_json).unwrap_or_default())
         .unwrap_or_default();
@@ -8450,7 +8450,7 @@ fn note_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) ->
 
 /** @emoji 📝 Pointer-move hover entry point for note-canvas: mirrors the `!dragState` hover branch of handlePointerMove. */
 fn note_hover_move(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<ActionDescriptor> {
-    let Some(note) = &scene.note_canvas else {
+    let Some(note) = &scene.ink_canvas else {
         return Vec::new();
     };
     if note.view_mode == "navigator" || !note.interactive {
@@ -8470,7 +8470,7 @@ fn note_hover_move(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) ->
 
 /** @emoji 📝 Wheel entry point for note-canvas: zoom-at-cursor, mirrors handleWheel in note-canvas-host.tsx. */
 fn note_wheel(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: f32) -> Vec<ActionDescriptor> {
-    let Some(note) = &scene.note_canvas else {
+    let Some(note) = &scene.ink_canvas else {
         return Vec::new();
     };
     if note.view_mode == "navigator" {
@@ -8690,7 +8690,7 @@ fn note_draw_selection_chrome(draw: &mut ui_wgpu::DrawList, theme: &Theme, camer
 fn render_note_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::GpuContext) {
     let _ = gpu;
     let theme = ctx.theme;
-    let Some(note) = &scene.note_canvas else {
+    let Some(note) = &scene.ink_canvas else {
         return render_placeholder("note-canvas", bounds, ctx);
     };
     let doc: NoteDocumentJson = serde_json::from_str(&note.document_json).unwrap_or_default();
@@ -9724,12 +9724,12 @@ fn render_icon_render(
         node_graph: None,
         text_editor: None,
         table: None,
-        raster: None,
+        paint_2d: None,
         virtual_file_system: None,
         gis_map: None,
         puzzle2d_board: None,
         icon_render: None,
-        note_canvas: None,
+        ink_canvas: None,
         graph_timeline: None,
         block_list: None,
     };

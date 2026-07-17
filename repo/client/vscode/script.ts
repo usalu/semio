@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 `@semio-tech/repo-vscode` router: `bun ./script.ts <dev|test|build|lint|build-vsix>`. */
+/** 🧭 `@semio-tech/repo-vscode` router: `bun ./script.ts <dev|test|test-e2e|build|lint|build-vsix>`. */
 import { BundleScript, ScriptRouter, runBunx, runBundleScriptMain } from "../../lib/js/index.ts";
 
 class DevScript extends BundleScript {
@@ -8,7 +8,15 @@ class DevScript extends BundleScript {
   }
 }
 
+/** ⏱️The extension-host Mocha suite (`js/extension.test.ts`) can only run inside the VSCode test harness — no fast in-repo unit split without a second test file (disallowed). See `test-e2e`. */
 class TestScript extends BundleScript {
+  run(): void {
+    console.log("[test] @semio-tech/repo-vscode has no fast unit suite — run `test-e2e` for the extension-host suite.");
+  }
+}
+
+/** 🖥️Full extension-host Mocha suite; excluded from the default ≤30s `test` budget. */
+class TestE2eScript extends BundleScript {
   run(): void {
     runBunx(["vscode-test"], this.root);
   }
@@ -34,6 +42,12 @@ class BuildVsixScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("test", TestScript).register("build", BuildScript).register("lint", LintScript).register("build-vsix", BuildVsixScript);
+const router = new ScriptRouter(import.meta.dir)
+  .register("dev", DevScript)
+  .register("test", TestScript)
+  .register("test-e2e", TestE2eScript)
+  .register("build", BuildScript)
+  .register("lint", LintScript)
+  .register("build-vsix", BuildVsixScript);
 
 await runBundleScriptMain(router, import.meta.url);

@@ -307,6 +307,8 @@ export function wireNodeIdAtOffset(text: string, offset: number | null): string 
   while (end < text.length && /[A-Za-z0-9_-]/.test(text[end]!)) end += 1;
   const id = text.slice(start, end);
   if (!id || text[end] !== ":") return null;
+  const before = start > 0 ? text[start - 1] : undefined;
+  if (before !== undefined && before !== "\n" && before !== "\r" && before !== ">" && before !== "-") return null;
   return id;
 }
 
@@ -399,11 +401,11 @@ if (import.meta.vitest) {
     it("collects all node id occurrences in wire text", () => {
       expect(wireNodeOccurrences(sample, "slider")).toEqual([
         { start: 0, end: 6 },
-        { start: 38, end: 44 },
+        { start: 42, end: 48 },
       ]);
       expect(wireNodeOccurrences(sample, "add")).toEqual([
-        { start: 30, end: 33 },
-        { start: 59, end: 62 },
+        { start: 29, end: 32 },
+        { start: 69, end: 72 },
       ]);
     });
 

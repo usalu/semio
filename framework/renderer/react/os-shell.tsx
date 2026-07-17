@@ -224,8 +224,8 @@ import {
   type PluginWasmHandle as CorePluginWasmHandle,
   type PresencePeer,
   type UiDirtyScope,
+  type Paint2dScene,
   type Puzzle2dBoardScene,
-  type RasterScene,
   type StyleSpec,
   type TableScene,
   type TextEditorScene,
@@ -904,8 +904,15 @@ const FRAMEWORK_CATEGORY_DISPLAY_ID = "framework.category.display";
 /** @emoji 🎛 Root category id bundling every command-category leaf under one expandable Command toggle on bottom-middle (mirrors Display on bottom-left). */
 const FRAMEWORK_CATEGORY_COMMAND_ID = "framework.category.command";
 
-/** @emoji 🎛️ Which anchors' root tab row renders inline in navbar/footer chrome (via {@link PanelChromeTabBar}) instead of on their own floating panel — the single source of truth `buildPanelSelectionProps`/`buildPanelProps` key off of. */
-const PANEL_TAB_BAR_HOSTS: Partial<Record<PanelAnchor, "navbar" | "footer">> = { "top-left": "navbar", "bottom-right": "footer" };
+/** @emoji 🎛️ Every anchor's root tab row renders inline in navbar/footer chrome (via {@link PanelChromeTabBar}) instead of on the floating panel — the single source of truth `buildPanelSelectionProps`/`buildPanelProps` key off of. */
+const PANEL_TAB_BAR_HOSTS: Record<PanelAnchor, "navbar" | "footer"> = {
+  "top-left": "navbar",
+  "top-middle": "navbar",
+  "top-right": "navbar",
+  "bottom-left": "footer",
+  "bottom-middle": "footer",
+  "bottom-right": "footer",
+};
 const APP_DOCUMENT_SEPARATOR = " · ";
 
 const PRESENCE_CLIENT_STORAGE_KEY = "semio.presence.client";
@@ -4331,10 +4338,21 @@ export function FrameworkOsShell({
         </ButtonGroup>,
       );
     }
-    const items: NavbarItem[] = [{ key: "center", centered: true, content: <div className="flex min-w-0 items-center gap-double">{centerContent}</div> }];
-    // 🎛️ Document/Catalogue's root tab row — PanelChromeTabBar self-hides once top-left has no tabs (and no drag in flight).
-    items.push({ key: "topLeftPanelTabs", content: <PanelChromeTabBar anchor="top-left" {...buildPanelSelectionProps("top-left")} /> });
-    return items;
+    return [
+      { key: "topLeftPanelTabs", content: <PanelChromeTabBar anchor="top-left" {...buildPanelSelectionProps("top-left")} /> },
+      navbarFillItem("navbarTrailingFill"),
+      { key: "topRightPanelTabs", content: <PanelChromeTabBar anchor="top-right" {...buildPanelSelectionProps("top-right")} /> },
+      {
+        key: "center",
+        centered: true,
+        content: (
+          <div className="flex min-w-0 items-center gap-double">
+            {centerContent}
+            <PanelChromeTabBar anchor="top-middle" {...buildPanelSelectionProps("top-middle")} />
+          </div>
+        ),
+      },
+    ];
   }, [activeExampleId, activeModeId, appLabelsOverlay, applyModeChange, buildPanelSelectionProps, exampleOptions, locks.exampleId, onAction, session, uiTerminology]);
 
   const searchItems = useMemo(() => {
@@ -4678,13 +4696,25 @@ export function FrameworkOsShell({
     );
   }, [activeWindowId, effectiveModeLayout, error, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateHistory, onAction, panel, session, studioMode, uiLocale, uiTerminology, updateStudioPanel]);
 
+  const footerItems = useMemo(
+    (): NavbarItem[] => [
+      { key: "bottomLeftPanelTabs", content: <PanelChromeTabBar anchor="bottom-left" {...buildPanelSelectionProps("bottom-left")} /> },
+      { key: "bottomMiddlePanelTabs", centered: true, content: <PanelChromeTabBar anchor="bottom-middle" {...buildPanelSelectionProps("bottom-middle")} /> },
+      // 🏛️ Bracketed by fill spacers on both sides so the funding credit floats between the command palette and the
+      // bottom-right corner toggle, with breathing room on both sides — not flush against either.
+      navbarFillItem("footerLeadingFill"),
+      fundedByZukunftBauFooterItem(),
+      navbarFillItem("footerTrailingFill"),
+      { key: "bottomRightPanelTabs", content: <PanelChromeTabBar anchor="bottom-right" {...buildPanelSelectionProps("bottom-right")} /> },
+    ],
+    [buildPanelSelectionProps],
+  );
+
   const buildPanelProps = useCallback(
     (anchor: PanelAnchor) => ({
       ...buildPanelSelectionProps(anchor),
       size: panels[anchor].size,
       onSizeChange: (value: number) => dispatch({ type: "SET_PANEL_SIZE", anchor, value }),
-      // 🎛️ Document/Catalogue and Theme/Settings' root row lives in a sibling PanelChromeTabBar (see
-      // PANEL_TAB_BAR_HOSTS + the navbar/footer wiring below) instead of on this floating panel.
       tabBarHost: (PANEL_TAB_BAR_HOSTS[anchor] ? "chrome" : "panel") as "panel" | "chrome",
       treeOpenStates,
       onTreeOpenStateChange: (id: string, open: boolean) => dispatch({ type: "SET_TREE_OPEN_STATE", id, open }),
@@ -4701,16 +4731,7 @@ export function FrameworkOsShell({
               mobile={mobile}
               mobilePanel={mobilePanel}
               navbar={<Navbar items={navbarItems} showFullscreenToggle />}
-              footer={
-                <Footer
-                  items={[
-                    // 🏛️ Fill spacer keeps the funding credit and Theme/Settings' root tab row grouped together at the trailing edge.
-                    navbarFillItem("footerTrailingFill"),
-                    fundedByZukunftBauFooterItem(),
-                    { key: "bottomRightPanelTabs", content: <PanelChromeTabBar anchor="bottom-right" {...buildPanelSelectionProps("bottom-right")} /> },
-                  ]}
-                />
-              }
+              footer={<Footer items={footerItems} />}
               panels={{
                 "top-left": buildPanelProps("top-left"),
                 "top-middle": buildPanelProps("top-middle"),

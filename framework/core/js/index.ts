@@ -546,8 +546,8 @@ export type TableScene = {
   readonly sortJson?: string;
 };
 
-/** 🖌️ A raster/paint surface scene payload — mirrors the wasm `componentScene` node's `raster` field. */
-export type RasterScene = {
+/** 🖌️ A 2D paint surface scene payload — mirrors the wasm `componentScene` node's `paint2d` field. */
+export type Paint2dScene = {
   readonly documentSyncJson: string;
   readonly assetsJson: string;
   readonly cameraJson: string;
@@ -613,8 +613,8 @@ export type Puzzle2dBoardScene = {
   readonly lodMode: string;
 };
 
-/** 🗒️ A note-canvas surface scene payload — mirrors the wasm `componentScene` node's `noteCanvas` field. */
-export type NoteCanvasScene = {
+/** 🖊️ An ink-canvas surface scene payload — mirrors the wasm `componentScene` node's `inkCanvas` field. */
+export type InkCanvasScene = {
   readonly documentJson: string;
   readonly selectionJson: string;
   readonly hoveredId?: string;
@@ -622,6 +622,14 @@ export type NoteCanvasScene = {
   readonly viewMode: string;
   readonly interactive: boolean;
 };
+
+/** 🖊️ Renderer-to-plugin action names for ink-canvas surfaces (modeled after {@link nodeGraphActions}/{@link textEditorActions}). */
+export const inkCanvasActions = {
+  applyEvents: "inkApplyEvents",
+  setSelection: "setSelection",
+  setCamera: "setCamera",
+  setHover: "setHover",
+} as const;
 
 /** 🗄️ A checkpoint ancestor-graph history view. `columnsJson` is a `HistoryColumn[]` array, newest checkpoint first. */
 export type GraphTimelineScene = {
@@ -653,7 +661,7 @@ export type UiExternalSlotNode = {
 };
 
 /** 🧭 The dispatch key on {@link UiComponentSceneNode} — matches the lazy-loaded host component per `framework/renderer/react/components/*-host.tsx`. */
-export type ComponentKind = "canvas-2d" | "world-3d" | "node-graph" | "text-editor" | "table" | "raster" | "gis2d-map" | "puzzle2d-board" | "icon-render" | "note-canvas" | "graph-timeline" | "block-list";
+export type ComponentKind = "canvas-2d" | "world-3d" | "node-graph" | "text-editor" | "table" | "paint-2d" | "gis2d-map" | "puzzle2d-board" | "icon-render" | "ink-canvas" | "graph-timeline" | "block-list";
 
 /** 🖥️ A native (non-declarative) rendering surface — mirrors the wasm `componentScene` node; the active `componentKind` selects which optional scene field is populated. */
 export type UiComponentSceneNode = {
@@ -668,12 +676,12 @@ export type UiComponentSceneNode = {
   readonly nodeGraph?: NodeGraphScene;
   readonly textEditor?: TextEditorScene;
   readonly table?: TableScene;
-  readonly raster?: RasterScene;
+  readonly paint2d?: Paint2dScene;
   readonly virtualFileSystem?: VirtualFileSystemScene;
   readonly gisMap?: GisMapScene;
   readonly puzzle2dBoard?: Puzzle2dBoardScene;
   readonly iconRender?: IconRenderScene;
-  readonly noteCanvas?: NoteCanvasScene;
+  readonly inkCanvas?: InkCanvasScene;
   readonly graphTimeline?: GraphTimelineScene;
   readonly blockList?: BlockListScene;
 };
