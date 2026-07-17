@@ -58,7 +58,7 @@
     {
       "name": "shooting-react-dev",
       "runtimeExecutable": "bun",
-      "runtimeArgs": ["run", "dev:shooting:base-icon"],
+      "runtimeArgs": ["run", "dev:shooting"],
       "env": {
         "SHOOTING_PLAY_PORT": "6119",
         "S_OS_PORT": "6119",
@@ -122,7 +122,7 @@
     {
       "name": "shooting-wgpu-dev",
       "runtimeExecutable": "bun",
-      "runtimeArgs": ["run", "dev:shooting:base-icon"],
+      "runtimeArgs": ["run", "dev:shooting"],
       "env": {
         "SHOOTING_PLAY_PORT": "6120",
         "S_OS_PORT": "6120",

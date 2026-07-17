@@ -16,9 +16,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Winterthur / Schweiz & 2021 & Gebaut & Ausgeführt & \cite{in-situ-k-118-kopfbau-halle-118}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Winterthur / Schweiz & 2021 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -44,9 +44,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{London / Vereinigtes Königreich & 2002 & Gebaut & Ausgeführt & \cite{bioregional-bedzed}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{London / Vereinigtes Königreich & 2002 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -70,9 +70,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Leiden–Oegstgeest / Niederlande & 2021 & Gebaut & Ausgeführt & \cite{leiden-bio-science-park-circularity-biopartner-5}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Leiden–Oegstgeest / Niederlande & 2021 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -95,9 +95,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Oslo / Norwegen & 2021 & Gebaut & Ausgeführt & \cite{futurebuilt-kristian-augusts-gate-13}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Oslo / Norwegen & 2021 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -121,9 +121,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Anderlecht / Belgien & 2024 & Gebaut & Ausgeführt & \cite{rotor-recypark-anderlecht}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Anderlecht / Belgien & 2024 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -146,9 +146,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Gladsaxe / Dänemark & 2022 & Gebaut & Ausgeführt & \cite{lendager-the-swan}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Gladsaxe / Dänemark & 2022 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -177,9 +177,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Enschede / Niederlande & 2009 & Gebaut & Ausgeführt & \cite{superuse-studios-villa-welpeloo}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Enschede / Niederlande & 2009 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -202,9 +202,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{London / Vereinigtes Königreich & 2023 & Gebaut & Ausgeführt & \cite{grosvenor-holbein-gardens-salvaged-steel}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{London / Vereinigtes Königreich & 2023 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -227,9 +227,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Zürich / Schweiz & 2025 & Gebaut & Ausgeführt & \cite{in-situ-werkhof-29}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Zürich / Schweiz & 2025 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -253,9 +253,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Mühlhausen / Deutschland & 2008 & Gebaut & Ausgeführt & \cite{epfl-atlas-of-reused-concrete}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Mühlhausen / Deutschland & 2008 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -278,9 +278,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Mehrow / Deutschland & 2005 & Gebaut & Ausgeführt & \cite{epfl-atlas-of-reused-concrete}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Mehrow / Deutschland & 2005 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -304,9 +304,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Hoyerswerda / Deutschland & — & Gebaut & Ausgeführt & \cite{epfl-atlas-of-reused-concrete}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Hoyerswerda / Deutschland & — & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -330,9 +330,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Berlin / Deutschland & 2023 & Gebaut & Ausgeführt & \cite{zrs-architekten-crclr-house}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Berlin / Deutschland & 2023 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -355,9 +355,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Hannover / Deutschland & 2019 & Gebaut & Ausgeführt & \cite{cityforster-recyclinghaus-hannover}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Hannover / Deutschland & 2019 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -382,9 +382,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Kopenhagen / Dänemark & 2025 & Gebaut & Ausgeführt & \cite{thoravej-29-sustainability}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Kopenhagen / Dänemark & 2025 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -412,9 +412,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{London / Vereinigtes Königreich & 2026 & Gebaut & Ausgeführt & \cite{landsec-timber-square}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{London / Vereinigtes Königreich & 2026 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -437,9 +437,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{London / Vereinigtes Königreich & 2025 & Gebaut & Ausgeführt & \cite{tbc-london-steel-saved}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{London / Vereinigtes Königreich & 2025 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -462,9 +462,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{London / Vereinigtes Königreich & 2026* & Im Bau & Unbestätigt & \cite{hawkinsbrown-55-great-suffolk-street}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{London / Vereinigtes Königreich & 2026* & Im Bau & Unbestätigt}
       \end{SemioTable}
       \end{Table}
     }
@@ -488,9 +488,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{London / Vereinigtes Königreich & 2023 & Gebaut & Ausgeführt & \cite{new-london-architecture-brent-cross-town-electrical-substation}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{London / Vereinigtes Königreich & 2023 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -513,9 +513,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Boulder / USA & 2024 & Gebaut & Ausgeführt & \cite{city-of-boulder-new-fire-station-3}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Boulder / USA & 2024 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -538,9 +538,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Lexington / USA & 2006 & Gebaut & Ausgeführt & \cite{project-architecture-big-dig-house}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Lexington / USA & 2006 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -564,9 +564,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Paso Robles / USA & 2018 & Gebaut & Ausgeführt & \cite{archdaily-saxum-vineyard-equipment-barn}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Paso Robles / USA & 2018 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -589,9 +589,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Brüssel / Belgien & 2016 & Gebaut & Ausgeführt & \cite{council-of-the-european-union-europa-building}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Brüssel / Belgien & 2016 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -614,9 +614,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Basel / Schweiz & 2021 & Gebaut & Ausgeführt & \cite{zirkular-elys-kultur-gewerbehaus}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Basel / Schweiz & 2021 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -641,9 +641,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Luxemburg / Luxemburg & 2021 & Gebaut & Ausgeführt & \cite{opalis-lycee-michel-lucius}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Luxemburg / Luxemburg & 2021 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -666,9 +666,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Kloetinge / Niederlande & 2019 & Gebaut & Ausgeführt & \cite{innax-emergis-opent-eerste-circulaire}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Kloetinge / Niederlande & 2019 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -697,9 +697,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Gent / Belgien & 2015 & Gebaut & Ausgeführt & \cite{archdaily-gjg-house}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Gent / Belgien & 2015 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -722,9 +722,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Asse / Belgien & 2013 & Gebaut & Ausgeführt & \cite{opalis-maison-dna}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Asse / Belgien & 2013 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -747,9 +747,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Gröditz / Deutschland & 2007 & Gebaut & Ausgeführt & \cite{epfl-atlas-of-reused-concrete}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Gröditz / Deutschland & 2007 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -772,9 +772,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Plauen / Deutschland & 2007 & Gebaut & Ausgeführt & \cite{epfl-atlas-of-reused-concrete}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Plauen / Deutschland & 2007 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -797,9 +797,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Schildow / Deutschland & 2005 & Gebaut & Ausgeführt & \cite{epfl-atlas-of-reused-concrete}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Schildow / Deutschland & 2005 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -822,9 +822,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Heerde / Niederlande & — & Geplant & Geplant & \cite{circulair-centrum-nederland-where-circular-centre-nederland-stands}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Heerde / Niederlande & — & Geplant & Geplant}
       \end{SemioTable}
       \end{Table}
     }
@@ -850,9 +850,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Zürich / Schweiz & 2027* & Geplant & Geplant & \cite{stadt-zurich-recyclingzentrum-juch-areal}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Zürich / Schweiz & 2027* & Geplant & Geplant}
       \end{SemioTable}
       \end{Table}
     }
@@ -878,9 +878,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Helsinki / Finnland & 2027* & Im Bau & Teilweise eingebaut & \cite{yit-melkinlaituri-elementary-school-and}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Helsinki / Finnland & 2027* & Im Bau & Teilweise eingebaut}
       \end{SemioTable}
       \end{Table}
     }
@@ -903,9 +903,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Tampere / Finnland & 2024 & Gebaut & Ausgeführt & \cite{recreate-harmalanranta-mini-pilot}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Tampere / Finnland & 2024 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -928,9 +928,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Tampere / Finnland & 2025 & Gebaut & Ausgeführt & \cite{recreate-lokomotion-mini-pilot}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Tampere / Finnland & 2025 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -953,9 +953,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Colombelles / Frankreich & 2019 & Gebaut & Ausgeführt & \cite{fcrbe-grande-halle-de-colombelles}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Colombelles / Frankreich & 2019 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -982,9 +982,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Paris / Frankreich & 2019 & Gebaut & Ausgeführt & \cite{world-architects-the-railway-farm}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Paris / Frankreich & 2019 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1009,9 +1009,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Stains / Frankreich & 2020 & Gebaut & Ausgeführt & \cite{socotec-resilience-la-ferme-des-possibles}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Stains / Frankreich & 2020 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1039,9 +1039,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Auderghem / Belgien & 2020 & Gebaut & Ausgeführt & \cite{opalis-maison-vignette}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Auderghem / Belgien & 2020 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1067,9 +1067,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Brüssel / Belgien & 2024 & Gebaut & Ausgeführt & \cite{conix-rdbm-architects-multi}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Brüssel / Belgien & 2024 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1093,9 +1093,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Mouscron / Belgien & 2018 & Gebaut & Ausgeführt & \cite{v-folklore-museum}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Mouscron / Belgien & 2018 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1118,9 +1118,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Lo-Reninge / Belgien & — & Gebaut & Ausgeführt & \cite{noaarchitecten-lo-reninge-town-hall}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Lo-Reninge / Belgien & — & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1143,9 +1143,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Lüttich / Belgien & — & Gebaut & Ausgeführt & \cite{construction21-institut-de-botanique-ulg}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Lüttich / Belgien & — & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1168,9 +1168,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Dilbeek / Belgien & — & Gebaut & Ausgeführt & \cite{rotor-chiro-d-itterbeek}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Dilbeek / Belgien & — & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1197,9 +1197,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Brüssel / Belgien & 2020 & Gebaut & Ausgeführt & \cite{agwa-1718-verbiest,brussels-architecture-prize-esp-karreveld}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Brüssel / Belgien & 2020 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1229,9 +1229,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Brüssel / Belgien & — & Gebaut & Ausgeführt & \cite{rotor-zinneke-feder-masui4ever}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Brüssel / Belgien & — & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1258,9 +1258,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Duiven / Niederlande & 2015 & Gebaut & Ausgeführt & \cite{archdaily-alliander-hq}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Duiven / Niederlande & 2015 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1287,9 +1287,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Utrecht / Niederlande & 2017 & Temporär & Ausgeführt & \cite{cepezed-the-green-house}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Utrecht / Niederlande & 2017 & Temporär & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1314,9 +1314,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Kopenhagen / Dänemark & 2019 & Gebaut & Ausgeführt & \cite{lendager-resource-rows}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Kopenhagen / Dänemark & 2019 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1339,9 +1339,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Kopenhagen / Dänemark & 2018 & Gebaut & Ausgeführt & \cite{lendager-upcycle-studios}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Kopenhagen / Dänemark & 2018 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1366,9 +1366,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Aarhus / Dänemark & 2025 & Gebaut & Ausgeführt & \cite{lendager-trae}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Aarhus / Dänemark & 2025 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1393,9 +1393,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{’s-Hertogenbosch / Niederlande & 2022 & Gebaut & Ausgeführt & \cite{superuse-studios-woongroep-boschgaard}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{’s-Hertogenbosch / Niederlande & 2022 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1418,9 +1418,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Zürich / Schweiz & 2023 & Gebaut & Ausgeführt & \cite{stadt-zurich-kindergarten-mooslistrasse}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Zürich / Schweiz & 2023 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1448,9 +1448,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Brighton / Vereinigtes Königreich & 2014 & Prototyp & Ausgeführt & \cite{university-of-brighton-brighton-waste-house}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Brighton / Vereinigtes Königreich & 2014 & Prototyp & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1476,9 +1476,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Hastings / Vereinigtes Königreich & 2017 & Gebaut & Ausgeführt & \cite{drmm-reclaimed-timber-at-hastings-pier}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Hastings / Vereinigtes Königreich & 2017 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1502,9 +1502,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Kamikatsu / Japan & 2020 & Gebaut & Ausgeführt & \cite{hiroshi-nakamura-nap-kamikatsu-zero-waste-center}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Kamikatsu / Japan & 2020 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1530,9 +1530,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Eindhoven / Niederlande & 2017 & Temporär & Ausgeführt & \cite{bureau-sla-people-s-pavilion}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Eindhoven / Niederlande & 2017 & Temporär & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1558,9 +1558,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Paris / Frankreich & 2015 & Temporär & Ausgeführt & \cite{encore-heureux-pavillon-circulaire}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Paris / Frankreich & 2015 & Temporär & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1587,9 +1587,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Volkenroda / Deutschland & 2001 & Gebaut & Ausgeführt & \cite{gmp-christ-pavilion}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Volkenroda / Deutschland & 2001 & Gebaut & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1612,9 +1612,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Berlin / Deutschland & 2010 & Temporär & Ausgeführt & \cite{epfl-atlas-of-reused-concrete}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Berlin / Deutschland & 2010 & Temporär & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1638,9 +1638,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Berlin / Deutschland & 2009 & Prototyp & Ausgeführt & \cite{baunetzwissen-plattenpalast}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Berlin / Deutschland & 2009 & Prototyp & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1664,9 +1664,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Kerkrade / Niederlande & 2019 & Prototyp & Ausgeführt & \cite{superlocal-expogebouw}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Kerkrade / Niederlande & 2019 & Prototyp & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1689,9 +1689,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{London / Vereinigtes Königreich & 2024 & Prototyp & Ausgeführt & \cite{ucl-circular-economy-lab-cascadeup}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{London / Vereinigtes Königreich & 2024 & Prototyp & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1715,9 +1715,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Lausanne / Schweiz & 2021 & Prototyp & Ausgeführt & \cite{epfl-re-crete}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Lausanne / Schweiz & 2021 & Prototyp & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1740,9 +1740,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{München / Deutschland & 2008 & Prototyp & Ausgeführt & \cite{sciencedirect-structural-component-reuse-case-studies}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{München / Deutschland & 2008 & Prototyp & Ausgeführt}
       \end{SemioTable}
       \end{Table}
     }
@@ -1765,9 +1765,9 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
     }
     \WindowItem[0.7]{
       \begin{Table}[title=Allgemein]
-      \begin{SemioTable}{lllll}
-      \SemioTableHeaderRow{Ort & Jahr & Typ & Status & Quelle}
-      \SemioTableRow{Maassluis / Niederlande & 2027* & Im Bau & Vorgeschlagen & \cite{gemeente-maassluis-montessori-construction-start}}
+      \begin{SemioTable}{llll}
+      \SemioTableHeaderRow{Ort & Jahr & Typ & Status}
+      \SemioTableRow{Maassluis / Niederlande & 2027* & Im Bau & Vorgeschlagen}
       \end{SemioTable}
       \end{Table}
     }
@@ -1778,3 +1778,71 @@ Katalog realisierter und geplanter ReUse-Projekte mit wiederverwendeten Bauteile
   \SemioTableRow{Hohlkörperdecke & Beton & — & Ex situ & Tragwerk & Direkte Wiederverwendung}
   \SemioTableRow{— & — & Ehemaliges Montessori-Schulgebäude (am Standort rückgewonnen) & Am Standort & Außenraum & Direkte Wiederverwendung}
 }
+
+\appendixsection[Q]{Quellen}
+
+\SemioTableLong[text-size=8pt]{Quellen}{0.08,0.62,0.30}{Quelle-ID & Herausgeber \textperiodcentered\ Titel & Zugeordnete Ereignisse}{%
+  \SemioTableRow{S002 & in situ \textperiodcentered\ in situ — K.118 / Kopfbau Halle 118\\{\footnotesize\url{https://www.insitu.ch/projekte/196-k118-kopfbau-halle-118}} & \ref{proj:01}-E01–E04}
+  \SemioTableRow{S003 & Bioregional \textperiodcentered\ Bioregional — BedZED\\{\footnotesize\url{https://www.bioregional.com/projects-and-services/case-studies/bedzed-the-uks-first-large-scale-eco-village}} & \ref{proj:02}-E01–E02}
+  \SemioTableRow{S004 & Leiden Bio Science Park \textperiodcentered\ Leiden Bio Science Park — Circularity / BioPartner 5\\{\footnotesize\url{https://leidenbioscienceparkprojects.nl/en/sustainability/circulariteit}} & \ref{proj:03}-E01}
+  \SemioTableRow{S005 & FutureBuilt \textperiodcentered\ FutureBuilt — Kristian Augusts gate 13\\{\footnotesize\url{https://www.futurebuilt.no/forbildeprosjekter/kristian-augusts-gate-13-oslo}} & \ref{proj:04}-E01–E02}
+  \SemioTableRow{S006 & Rotor \textperiodcentered\ Rotor — Recypark Anderlecht\\{\footnotesize\url{https://rotordb.org/en/projects/recypark-anderlecht}} & \ref{proj:05}-E01}
+  \SemioTableRow{S007 & Lendager \textperiodcentered\ Lendager — The Swan\\{\footnotesize\url{https://lendager.com/project/the-swan/}} & \ref{proj:06}-E01–E07}
+  \SemioTableRow{S008 & Superuse Studios \textperiodcentered\ Superuse Studios — Villa Welpeloo\\{\footnotesize\url{https://www.superuse-studios.com/projectplus/villa-welpeloo/}} & \ref{proj:07}-E01}
+  \SemioTableRow{S009 & Grosvenor \textperiodcentered\ Grosvenor — Holbein Gardens salvaged steel\\{\footnotesize\url{https://www.grosvenor.com/news-insights/some-of-uk’s-first-salvaged-steelwork-reused-in-holbein-gardens-retrofit}} & \ref{proj:08}-E01}
+  \SemioTableRow{S010 & in situ \textperiodcentered\ in situ — Werkhof 29\\{\footnotesize\url{https://insitu.ch/projekte/351-werkhof-29-aufstockung-grubenstrasse}} & \ref{proj:09}-E01–E02}
+  \SemioTableRow{S011 & EPFL \textperiodcentered\ EPFL — Atlas of Reused Concrete\\{\footnotesize\url{https://concrete-reuse.epfl.ch/list?view=list}} & \ref{proj:10}-E01, \ref{proj:11}-E01–E02, \ref{proj:12}-E01–E02, \ref{proj:29}-E01, \ref{proj:30}-E01, \ref{proj:31}-E01, \ref{proj:61}-E01–E02}
+  \SemioTableRow{S012 & ZRS Architekten \textperiodcentered\ ZRS Architekten — CRCLR House\\{\footnotesize\url{https://www.zrs.berlin/en/project/crclr-house-2/}} & \ref{proj:13}-E01}
+  \SemioTableRow{S013 & Cityförster \textperiodcentered\ Cityförster — Recyclinghaus Hannover\\{\footnotesize\url{https://www.cityfoerster.net/projects/recyclinghaus_hanover-218-2.html}} & \ref{proj:14}-E01–E03}
+  \SemioTableRow{S014 & Thoravej 29 \textperiodcentered\ Thoravej 29 — Sustainability\\{\footnotesize\url{https://www.thoravej29.dk/en/sustainability}} & \ref{proj:15}-E01–E06}
+  \SemioTableRow{S015 & Landsec \textperiodcentered\ Landsec — Timber Square\\{\footnotesize\url{https://www.landsec.com/en/media-insights/press-releases/landsec-leases-54-percent-of-timber-square-to-bp}} & \ref{proj:16}-E01}
+  \SemioTableRow{S017 & TBC.London \textperiodcentered\ TBC.London — Steel Saved\\{\footnotesize\url{https://tbc.london/c/news/steelsaved.php}} & \ref{proj:17}-E01}
+  \SemioTableRow{S021 & Project : Architecture \textperiodcentered\ Project : Architecture — Big Dig House\\{\footnotesize\url{https://projectarchitecture.com/big-dig-house/}} & \ref{proj:21}-E01–E02}
+  \SemioTableRow{S022 & ArchDaily \textperiodcentered\ ArchDaily — Saxum Vineyard Equipment Barn\\{\footnotesize\url{https://www.archdaily.com/932817/saxum-vineyard-equipment-barn-clayton-and-little}} & \ref{proj:22}-E01}
+  \SemioTableRow{S023 & Council of the European Union \textperiodcentered\ Council of the European Union — Europa Building\\{\footnotesize\url{https://www.consilium.europa.eu/en/contact/address/council-buildings/europa-building/}} & \ref{proj:23}-E01}
+  \SemioTableRow{S024 & Zirkular \textperiodcentered\ Zirkular — ELYS Kultur- \& Gewerbehaus\\{\footnotesize\url{https://zirkular.net/en/project/culture-commercial-center-elys/}} & \ref{proj:24}-E01–E03}
+  \SemioTableRow{S025 & Opalis \textperiodcentered\ Opalis — Lycée Michel Lucius\\{\footnotesize\url{https://opalis.eu/en/projects/conversion-two-wings-lycee-michel-lucius}} & \ref{proj:25}-E01}
+  \SemioTableRow{S026 & ArchDaily \textperiodcentered\ ArchDaily — gjG House\\{\footnotesize\url{https://www.archdaily.com/951845/gjg-house-blaf-architecten}} & \ref{proj:27}-E01}
+  \SemioTableRow{S027 & Opalis \textperiodcentered\ Opalis — Maison DnA\\{\footnotesize\url{https://opalis.eu/fr/projets/maison-dna-blaf-architecten}} & \ref{proj:28}-E01}
+  \SemioTableRow{S029 & Stadt Zürich \textperiodcentered\ Stadt Zürich — Recyclingzentrum Juch-Areal\\{\footnotesize\url{https://www.stadt-zuerich.ch/de/planen-und-bauen/projekte-und-ausschreibungen/hochbauvorhaben/planung-ausfuehrung/recyclingzentrum-juch-areal.html}} & \ref{proj:33}-E01–E04}
+  \SemioTableRow{S031 & ReCreate \textperiodcentered\ ReCreate — Härmälänranta mini-pilot\\{\footnotesize\url{https://recreate-project.eu/2025/02/13/first-elements-reclaimed-by-the-finnish-cluster-reused-in-a-real-life-mini-pilot/}} & \ref{proj:35}-E01}
+  \SemioTableRow{S032 & ReCreate \textperiodcentered\ ReCreate — Lokomotion mini-pilot\\{\footnotesize\url{https://recreate-project.eu/2026/02/24/second-reuse-mini-pilot-successful-in-finland/}} & \ref{proj:36}-E01}
+  \SemioTableRow{S033 & FCRBE \textperiodcentered\ FCRBE — Grande Halle de Colombelles\\{\footnotesize\url{https://vb.nweurope.eu/media/21155/fcrbe_cashallecolombelle_final18oct2023_en.pdf}} & \ref{proj:37}-E01–E05}
+  \SemioTableRow{S035 & SOCOTEC \textperiodcentered\ SOCOTEC — Résilience / La Ferme des Possibles\\{\footnotesize\url{https://www.socotec.com/media/client-projects/reused-materials-novaedia}} & \ref{proj:39}-E01–E06}
+  \SemioTableRow{S036 & Opalis \textperiodcentered\ Opalis — Maison Vignette\\{\footnotesize\url{https://opalis.eu/fr/projets/maison-vignette}} & \ref{proj:40}-E01–E04}
+  \SemioTableRow{S037 & noAarchitecten \textperiodcentered\ noAarchitecten / Divisare — Lo-Reninge Town Hall\\{\footnotesize\url{https://divisare.com/projects/391079-noaarchitecten-filip-dujardin-046-town-hall-lo-reninge}} & \ref{proj:43}-E01}
+  \SemioTableRow{S038 & Construction21 \textperiodcentered\ Construction21 — Institut de Botanique ULg\\{\footnotesize\url{https://www.construction21.org/belgique/case-studies/h/institute-of-botany-of-uliege-building-b22-en.html}} & \ref{proj:44}-E01}
+  \SemioTableRow{S039 & Rotor \textperiodcentered\ Rotor — Chiro d’Itterbeek\\{\footnotesize\url{https://rotordb.org/en/projects/sanitary-block-itterbeek-chiro}} & \ref{proj:45}-E01–E05}
+  \SemioTableRow{S040 & Rotor \textperiodcentered\ Rotor — Zinneke / FEDER Masui4ever\\{\footnotesize\url{https://rotordb.org/en/projects/zinneke-feder-masui4ever}} & \ref{proj:47}-E01–E05}
+  \SemioTableRow{S041 & ArchDaily \textperiodcentered\ ArchDaily — Alliander HQ\\{\footnotesize\url{https://www.archdaily.com/777783/alliander-hq-rau-architects}} & \ref{proj:48}-E01–E05}
+  \SemioTableRow{S042 & cepezed \textperiodcentered\ cepezed — The Green House\\{\footnotesize\url{https://www.cepezed.com/projects/the-green-house/}} & \ref{proj:49}-E01–E03}
+  \SemioTableRow{S043 & Lendager \textperiodcentered\ Lendager — Resource Rows\\{\footnotesize\url{https://lendager.com/project/resource-rows/}} & \ref{proj:50}-E01}
+  \SemioTableRow{S044 & Lendager \textperiodcentered\ Lendager — Upcycle Studios\\{\footnotesize\url{https://lendager.com/project/upcycle-studios/}} & \ref{proj:51}-E01–E03}
+  \SemioTableRow{S045 & Lendager \textperiodcentered\ Lendager — TRÆ\\{\footnotesize\url{https://lendager.com/project/trae/}} & \ref{proj:52}-E01–E03}
+  \SemioTableRow{S046 & Superuse Studios \textperiodcentered\ Superuse Studios — Woongroep Boschgaard\\{\footnotesize\url{https://www.superuse-studios.com/projectplus/woongroep-boschgaard/}} & \ref{proj:53}-E01}
+  \SemioTableRow{S047 & Stadt Zürich \textperiodcentered\ Stadt Zürich — Kindergarten Mööslistrasse\\{\footnotesize\url{https://www.stadt-zuerich.ch/de/planen-und-bauen/portfolio/bauten-anlagen/schulbauten/kindergarten-moeoeslistrasse.html}} & \ref{proj:54}-E01–E06}
+  \SemioTableRow{S048 & University of Brighton \textperiodcentered\ University of Brighton — Brighton Waste House\\{\footnotesize\url{https://www.brighton.ac.uk/research/research-news/feature/brighton-waste-house.aspx}} & \ref{proj:55}-E01–E04}
+  \SemioTableRow{S049 & dRMM \textperiodcentered\ dRMM — Reclaimed timber at Hastings Pier\\{\footnotesize\url{https://drmmstudio.com/insight/reclaimed-timber-at-hastings-pier/}} & \ref{proj:56}-E01–E02}
+  \SemioTableRow{S050 & Hiroshi Nakamura \& NAP \textperiodcentered\ Hiroshi Nakamura \& NAP — Kamikatsu Zero Waste Center\\{\footnotesize\url{https://www.nakam.info/en/works/kamikatsu0/}} & \ref{proj:57}-E01–E04}
+  \SemioTableRow{S051 & bureau SLA \textperiodcentered\ bureau SLA — People’s Pavilion\\{\footnotesize\url{https://bureausla.nl/projects/peoples-pavilion/}} & \ref{proj:58}-E01–E04}
+  \SemioTableRow{S052 & Encore Heureux \textperiodcentered\ Encore Heureux — Pavillon Circulaire\\{\footnotesize\url{https://encoreheureux.org/fr/projets/pavillon-circulaire}} & \ref{proj:59}-E01–E05}
+  \SemioTableRow{S053 & gmp \textperiodcentered\ gmp — Christ Pavilion\\{\footnotesize\url{https://www.gmp.de/en/projects/415/christ-pavilion-expo-2000}} & \ref{proj:60}-E01}
+  \SemioTableRow{S055 & Baunetzwissen \textperiodcentered\ Baunetzwissen — Plattenpalast\\{\footnotesize\url{https://www.baunetzwissen.de/beton/objekte/sonderbauten/plattenpalast-in-berlin-841145}} & \ref{proj:62}-E01–E02}
+  \SemioTableRow{S056 & SUPERLOCAL \textperiodcentered\ SUPERLOCAL — Expogebouw\\{\footnotesize\url{https://www.superlocal.eu/sce-en/}} & \ref{proj:63}-E01}
+  \SemioTableRow{S058 & UCL Circular Economy Lab \textperiodcentered\ UCL Circular Economy Lab — CascadeUp\\{\footnotesize\url{https://www.ucl.ac.uk/circular-economy-lab/research/reusing-wood-demolition-mass-timber-products}} & \ref{proj:64}-E01–E02}
+  \SemioTableRow{S059 & EPFL \textperiodcentered\ EPFL — RE:CRETE\\{\footnotesize\url{https://www.epfl.ch/schools/enac/recrete/}} & \ref{proj:65}-E01}
+  \SemioTableRow{S061 & Gemeente Maassluis \textperiodcentered\ Gemeente Maassluis — Montessori construction start\\{\footnotesize\url{https://www.maassluis.nl/eerste-paal-geslagen-voor-nieuwe-montessorischool-maassluis}} & \ref{proj:67}-E01–E02}
+  \SemioTableRow{S062 & City of Boulder \textperiodcentered\ New Fire Station 3\\{\footnotesize\url{https://bouldercolorado.gov/projects/new-fire-station-3}} & \ref{proj:20}-E01}
+  \SemioTableRow{S063 & YIT \textperiodcentered\ Melkinlaituri elementary school and daycare centre\\{\footnotesize\url{https://www.yit.fi/en/projects/melkinlaituri-elementary-school-and-daycare-centre-helsinki}} & \ref{proj:34}-E01}
+  \SemioTableRow{S064 & AgwA \textperiodcentered\ 1718\_VERBIEST\\{\footnotesize\url{https://www.agwa.be/en/projects/1718_verbiest/201/}} & \ref{proj:46}-E01–E07}
+  \SemioTableRow{S065 & Brussels Architecture Prize \textperiodcentered\ ESP KARREVELD\\{\footnotesize\url{https://brusselsarchitectureprize.be/en/project/esp-karreveld/}} & \ref{proj:46}-E08}
+  \SemioTableRow{S067 & INNAX \textperiodcentered\ Emergis opent eerste circulaire zorgkliniek van Nederland\\{\footnotesize\url{https://www.innax.nl/kennisbank/toekomstvast-bouwen/emergis}} & \ref{proj:26}-E01–E07}
+  \SemioTableRow{S071 & Environmental assessment of structural component reuse case studies \textperiodcentered\ Environmental assessment of structural component reuse case studies\\{\footnotesize\url{https://www.sciencedirect.com/science/article/pii/S0959652622048090}} & \ref{proj:66}-E01}
+  \SemioTableRow{S072 & Circulair Centrum Nederland \textperiodcentered\ Where Circular Centre Nederland stands\\{\footnotesize\url{https://ccn.nl/over-ccn/waar-staat-ccn/}} & \ref{proj:32}-E01–E04}
+  \SemioTableRow{S073 & HawkinsBrown \textperiodcentered\ 55 Great Suffolk Street\\{\footnotesize\url{https://www.hawkinsbrown.com/projects/55-great-suffolk-street/}} & \ref{proj:18}-E01–E02}
+  \SemioTableRow{S075 & New London Architecture \textperiodcentered\ Brent Cross Town Electrical Substation\\{\footnotesize\url{https://nla.london/projects/brent-cross-town-electrical-substation}} & \ref{proj:19}-E01}
+  \SemioTableRow{S076 & World-Architects \textperiodcentered\ The Railway Farm\\{\footnotesize\url{https://world-architects.com/en/grand-huit-paris/project/the-railway-farm}} & \ref{proj:38}-E01–E03}
+  \SemioTableRow{S077 & CONIX RDBM Architects \textperiodcentered\ Multi\\{\footnotesize\url{https://www.conixrdbm.com/project/multi/}} & \ref{proj:41}-E01–E02}
+  \SemioTableRow{S078 & V+ \textperiodcentered\ Folklore Museum\\{\footnotesize\url{https://www.vplus.org/folklore-museum}} & \ref{proj:42}-E01}
+}
+

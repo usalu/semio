@@ -5892,7 +5892,6 @@ pub mod d3 {
                 window_kind_labels: std::collections::HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string())]),
                 panel_tab_labels: std::collections::HashMap::from([
                     ("puzzle3d.panel.settings".to_string(), (if is_de { "Einstellungen" } else { "Settings" }).to_string()),
-                    ("puzzle3d.panel.jack".to_string(), "Jack".to_string()),
                 ]),
                 mode_labels: std::collections::HashMap::new(),
                 action_labels: puzzle3d_action_labels(is_de),
@@ -6014,7 +6013,6 @@ pub mod d3 {
                 .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE3D_PLAY_BODY_KINDS)
                 .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PUZZLE3D_PLAY_BODY_INSPECTOR)
                 .panel_tab("puzzle3d.panel.settings", "Settings", PanelGroup::Settings, PUZZLE3D_PLAY_BODY_SETTINGS)
-                .panel_tab("puzzle3d.panel.jack", "Jack", PanelGroup::Workbench, PUZZLE3D_PLAY_BODY_JACK)
                 .keybinding("mod+a", "selectAll")
                 .keybinding("escape", "engagementAbort")
                 .keybinding("delete", "deleteSelection")

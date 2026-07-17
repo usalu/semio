@@ -1136,6 +1136,7 @@ fn layer_tree_item(doc: &DrawDocument, layer: &draw::DrawLayerNode) -> UiTreeIte
         items: nested_items,
         control: None,
         is_hidden: if base.visible { None } else { Some(true) },
+        loading: None,
     }
 }
 
@@ -1158,6 +1159,7 @@ fn boolean_child_item(doc: &DrawDocument, boolean_id: &str, child_id: &str) -> U
             items: None,
             control: None,
             is_hidden: None,
+            loading: None,
         };
     }
     UiTreeItemNode {
@@ -1176,6 +1178,7 @@ fn boolean_child_item(doc: &DrawDocument, boolean_id: &str, child_id: &str) -> U
         items: None,
         control: None,
         is_hidden: None,
+        loading: None,
     }
 }
 
@@ -1204,6 +1207,7 @@ fn render_layers_panel(document: &DrawDocument, interaction: &DrawInteractionSta
             items: None,
             control: None,
             is_hidden: None,
+            loading: None,
         }]
     } else {
         document.layers.iter().map(|layer| layer_tree_item(document, layer)).collect()
@@ -1225,7 +1229,9 @@ fn render_layers_panel(document: &DrawDocument, interaction: &DrawInteractionSta
             label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
             default_open: Some(true),
             items: toolbar_items.into_iter().chain(layer_items).collect(),
+            loading: None,
         }],
+        loading: None,
         selected_ids: Some(selected_tree_ids),
         highlighted_ids: if highlighted_ids.is_empty() { None } else { Some(highlighted_ids) },
         selection_change: Some(draw_play_action("setSelection", None)),
@@ -1250,6 +1256,7 @@ fn tree_button(id: &str, label: &str, icon: &str, action: &str, args: Value) -> 
         items: None,
         control: None,
         is_hidden: None,
+        loading: None,
     }
 }
 //#endregion 🔖LayersPanel
@@ -1289,6 +1296,7 @@ fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawInteractio
                 items: None,
                 control: None,
                 is_hidden: None,
+                loading: None,
             }
         })
         .collect();
@@ -1312,6 +1320,7 @@ fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawInteractio
             items: None,
             control: None,
             is_hidden: None,
+            loading: None,
         });
     }
     UiNode::Tree(UiTreeNode {
@@ -1320,7 +1329,9 @@ fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawInteractio
             label: Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()),
             default_open: Some(true),
             items,
+            loading: None,
         }],
+        loading: None,
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,

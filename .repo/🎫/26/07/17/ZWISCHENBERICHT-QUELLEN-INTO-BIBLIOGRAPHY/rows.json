@@ -1,0 +1,566 @@
+[
+  {
+    "id": "S002",
+    "herausgeber": "in situ",
+    "title": "in situ — K.118 / Kopfbau Halle 118",
+    "url": "https://www.insitu.ch/projekte/196-k118-kopfbau-halle-118",
+    "projs": [
+      "01"
+    ]
+  },
+  {
+    "id": "S003",
+    "herausgeber": "Bioregional",
+    "title": "Bioregional — BedZED",
+    "url": "https://www.bioregional.com/projects-and-services/case-studies/bedzed-the-uks-first-large-scale-eco-village",
+    "projs": [
+      "02"
+    ]
+  },
+  {
+    "id": "S004",
+    "herausgeber": "Leiden Bio Science Park",
+    "title": "Leiden Bio Science Park — Circularity / BioPartner 5",
+    "url": "https://leidenbioscienceparkprojects.nl/en/sustainability/circulariteit",
+    "projs": [
+      "03"
+    ]
+  },
+  {
+    "id": "S005",
+    "herausgeber": "FutureBuilt",
+    "title": "FutureBuilt — Kristian Augusts gate 13",
+    "url": "https://www.futurebuilt.no/forbildeprosjekter/kristian-augusts-gate-13-oslo",
+    "projs": [
+      "04"
+    ]
+  },
+  {
+    "id": "S006",
+    "herausgeber": "Rotor",
+    "title": "Rotor — Recypark Anderlecht",
+    "url": "https://rotordb.org/en/projects/recypark-anderlecht",
+    "projs": [
+      "05"
+    ]
+  },
+  {
+    "id": "S007",
+    "herausgeber": "Lendager",
+    "title": "Lendager — The Swan",
+    "url": "https://lendager.com/project/the-swan/",
+    "projs": [
+      "06"
+    ]
+  },
+  {
+    "id": "S008",
+    "herausgeber": "Superuse Studios",
+    "title": "Superuse Studios — Villa Welpeloo",
+    "url": "https://www.superuse-studios.com/projectplus/villa-welpeloo/",
+    "projs": [
+      "07"
+    ]
+  },
+  {
+    "id": "S009",
+    "herausgeber": "Grosvenor",
+    "title": "Grosvenor — Holbein Gardens salvaged steel",
+    "url": "https://www.grosvenor.com/news-insights/some-of-uk’s-first-salvaged-steelwork-reused-in-holbein-gardens-retrofit",
+    "projs": [
+      "08"
+    ]
+  },
+  {
+    "id": "S010",
+    "herausgeber": "in situ",
+    "title": "in situ — Werkhof 29",
+    "url": "https://insitu.ch/projekte/351-werkhof-29-aufstockung-grubenstrasse",
+    "projs": [
+      "09"
+    ]
+  },
+  {
+    "id": "S011",
+    "herausgeber": "EPFL",
+    "title": "EPFL — Atlas of Reused Concrete",
+    "url": "https://concrete-reuse.epfl.ch/list?view=list",
+    "projs": [
+      "10",
+      "11",
+      "12",
+      "29",
+      "30",
+      "31",
+      "61"
+    ]
+  },
+  {
+    "id": "S012",
+    "herausgeber": "ZRS Architekten",
+    "title": "ZRS Architekten — CRCLR House",
+    "url": "https://www.zrs.berlin/en/project/crclr-house-2/",
+    "projs": [
+      "13"
+    ]
+  },
+  {
+    "id": "S013",
+    "herausgeber": "Cityförster",
+    "title": "Cityförster — Recyclinghaus Hannover",
+    "url": "https://www.cityfoerster.net/projects/recyclinghaus_hanover-218-2.html",
+    "projs": [
+      "14"
+    ]
+  },
+  {
+    "id": "S014",
+    "herausgeber": "Thoravej 29",
+    "title": "Thoravej 29 — Sustainability",
+    "url": "https://www.thoravej29.dk/en/sustainability",
+    "projs": [
+      "15"
+    ]
+  },
+  {
+    "id": "S015",
+    "herausgeber": "Landsec",
+    "title": "Landsec — Timber Square",
+    "url": "https://www.landsec.com/en/media-insights/press-releases/landsec-leases-54-percent-of-timber-square-to-bp",
+    "projs": [
+      "16"
+    ]
+  },
+  {
+    "id": "S017",
+    "herausgeber": "TBC.London",
+    "title": "TBC.London — Steel Saved",
+    "url": "https://tbc.london/c/news/steelsaved.php",
+    "projs": [
+      "17"
+    ]
+  },
+  {
+    "id": "S021",
+    "herausgeber": "Project : Architecture",
+    "title": "Project : Architecture — Big Dig House",
+    "url": "https://projectarchitecture.com/big-dig-house/",
+    "projs": [
+      "21"
+    ]
+  },
+  {
+    "id": "S022",
+    "herausgeber": "ArchDaily",
+    "title": "ArchDaily — Saxum Vineyard Equipment Barn",
+    "url": "https://www.archdaily.com/932817/saxum-vineyard-equipment-barn-clayton-and-little",
+    "projs": [
+      "22"
+    ]
+  },
+  {
+    "id": "S023",
+    "herausgeber": "Council of the European Union",
+    "title": "Council of the European Union — Europa Building",
+    "url": "https://www.consilium.europa.eu/en/contact/address/council-buildings/europa-building/",
+    "projs": [
+      "23"
+    ]
+  },
+  {
+    "id": "S024",
+    "herausgeber": "Zirkular",
+    "title": "Zirkular — ELYS Kultur- \\& Gewerbehaus",
+    "url": "https://zirkular.net/en/project/culture-commercial-center-elys/",
+    "projs": [
+      "24"
+    ]
+  },
+  {
+    "id": "S025",
+    "herausgeber": "Opalis",
+    "title": "Opalis — Lycée Michel Lucius",
+    "url": "https://opalis.eu/en/projects/conversion-two-wings-lycee-michel-lucius",
+    "projs": [
+      "25"
+    ]
+  },
+  {
+    "id": "S026",
+    "herausgeber": "ArchDaily",
+    "title": "ArchDaily — gjG House",
+    "url": "https://www.archdaily.com/951845/gjg-house-blaf-architecten",
+    "projs": [
+      "27"
+    ]
+  },
+  {
+    "id": "S027",
+    "herausgeber": "Opalis",
+    "title": "Opalis — Maison DnA",
+    "url": "https://opalis.eu/fr/projets/maison-dna-blaf-architecten",
+    "projs": [
+      "28"
+    ]
+  },
+  {
+    "id": "S029",
+    "herausgeber": "Stadt Zürich",
+    "title": "Stadt Zürich — Recyclingzentrum Juch-Areal",
+    "url": "https://www.stadt-zuerich.ch/de/planen-und-bauen/projekte-und-ausschreibungen/hochbauvorhaben/planung-ausfuehrung/recyclingzentrum-juch-areal.html",
+    "projs": [
+      "33"
+    ]
+  },
+  {
+    "id": "S031",
+    "herausgeber": "ReCreate",
+    "title": "ReCreate — Härmälänranta mini-pilot",
+    "url": "https://recreate-project.eu/2025/02/13/first-elements-reclaimed-by-the-finnish-cluster-reused-in-a-real-life-mini-pilot/",
+    "projs": [
+      "35"
+    ]
+  },
+  {
+    "id": "S032",
+    "herausgeber": "ReCreate",
+    "title": "ReCreate — Lokomotion mini-pilot",
+    "url": "https://recreate-project.eu/2026/02/24/second-reuse-mini-pilot-successful-in-finland/",
+    "projs": [
+      "36"
+    ]
+  },
+  {
+    "id": "S033",
+    "herausgeber": "FCRBE",
+    "title": "FCRBE — Grande Halle de Colombelles",
+    "url": "https://vb.nweurope.eu/media/21155/fcrbe_cashallecolombelle_final18oct2023_en.pdf",
+    "projs": [
+      "37"
+    ]
+  },
+  {
+    "id": "S035",
+    "herausgeber": "SOCOTEC",
+    "title": "SOCOTEC — Résilience / La Ferme des Possibles",
+    "url": "https://www.socotec.com/media/client-projects/reused-materials-novaedia",
+    "projs": [
+      "39"
+    ]
+  },
+  {
+    "id": "S036",
+    "herausgeber": "Opalis",
+    "title": "Opalis — Maison Vignette",
+    "url": "https://opalis.eu/fr/projets/maison-vignette",
+    "projs": [
+      "40"
+    ]
+  },
+  {
+    "id": "S037",
+    "herausgeber": "noAarchitecten",
+    "title": "noAarchitecten / Divisare — Lo-Reninge Town Hall",
+    "url": "https://divisare.com/projects/391079-noaarchitecten-filip-dujardin-046-town-hall-lo-reninge",
+    "projs": [
+      "43"
+    ]
+  },
+  {
+    "id": "S038",
+    "herausgeber": "Construction21",
+    "title": "Construction21 — Institut de Botanique ULg",
+    "url": "https://www.construction21.org/belgique/case-studies/h/institute-of-botany-of-uliege-building-b22-en.html",
+    "projs": [
+      "44"
+    ]
+  },
+  {
+    "id": "S039",
+    "herausgeber": "Rotor",
+    "title": "Rotor — Chiro d’Itterbeek",
+    "url": "https://rotordb.org/en/projects/sanitary-block-itterbeek-chiro",
+    "projs": [
+      "45"
+    ]
+  },
+  {
+    "id": "S040",
+    "herausgeber": "Rotor",
+    "title": "Rotor — Zinneke / FEDER Masui4ever",
+    "url": "https://rotordb.org/en/projects/zinneke-feder-masui4ever",
+    "projs": [
+      "47"
+    ]
+  },
+  {
+    "id": "S041",
+    "herausgeber": "ArchDaily",
+    "title": "ArchDaily — Alliander HQ",
+    "url": "https://www.archdaily.com/777783/alliander-hq-rau-architects",
+    "projs": [
+      "48"
+    ]
+  },
+  {
+    "id": "S042",
+    "herausgeber": "cepezed",
+    "title": "cepezed — The Green House",
+    "url": "https://www.cepezed.com/projects/the-green-house/",
+    "projs": [
+      "49"
+    ]
+  },
+  {
+    "id": "S043",
+    "herausgeber": "Lendager",
+    "title": "Lendager — Resource Rows",
+    "url": "https://lendager.com/project/resource-rows/",
+    "projs": [
+      "50"
+    ]
+  },
+  {
+    "id": "S044",
+    "herausgeber": "Lendager",
+    "title": "Lendager — Upcycle Studios",
+    "url": "https://lendager.com/project/upcycle-studios/",
+    "projs": [
+      "51"
+    ]
+  },
+  {
+    "id": "S045",
+    "herausgeber": "Lendager",
+    "title": "Lendager — TRÆ",
+    "url": "https://lendager.com/project/trae/",
+    "projs": [
+      "52"
+    ]
+  },
+  {
+    "id": "S046",
+    "herausgeber": "Superuse Studios",
+    "title": "Superuse Studios — Woongroep Boschgaard",
+    "url": "https://www.superuse-studios.com/projectplus/woongroep-boschgaard/",
+    "projs": [
+      "53"
+    ]
+  },
+  {
+    "id": "S047",
+    "herausgeber": "Stadt Zürich",
+    "title": "Stadt Zürich — Kindergarten Mööslistrasse",
+    "url": "https://www.stadt-zuerich.ch/de/planen-und-bauen/portfolio/bauten-anlagen/schulbauten/kindergarten-moeoeslistrasse.html",
+    "projs": [
+      "54"
+    ]
+  },
+  {
+    "id": "S048",
+    "herausgeber": "University of Brighton",
+    "title": "University of Brighton — Brighton Waste House",
+    "url": "https://www.brighton.ac.uk/research/research-news/feature/brighton-waste-house.aspx",
+    "projs": [
+      "55"
+    ]
+  },
+  {
+    "id": "S049",
+    "herausgeber": "dRMM",
+    "title": "dRMM — Reclaimed timber at Hastings Pier",
+    "url": "https://drmmstudio.com/insight/reclaimed-timber-at-hastings-pier/",
+    "projs": [
+      "56"
+    ]
+  },
+  {
+    "id": "S050",
+    "herausgeber": "Hiroshi Nakamura \\& NAP",
+    "title": "Hiroshi Nakamura \\& NAP — Kamikatsu Zero Waste Center",
+    "url": "https://www.nakam.info/en/works/kamikatsu0/",
+    "projs": [
+      "57"
+    ]
+  },
+  {
+    "id": "S051",
+    "herausgeber": "bureau SLA",
+    "title": "bureau SLA — People’s Pavilion",
+    "url": "https://bureausla.nl/projects/peoples-pavilion/",
+    "projs": [
+      "58"
+    ]
+  },
+  {
+    "id": "S052",
+    "herausgeber": "Encore Heureux",
+    "title": "Encore Heureux — Pavillon Circulaire",
+    "url": "https://encoreheureux.org/fr/projets/pavillon-circulaire",
+    "projs": [
+      "59"
+    ]
+  },
+  {
+    "id": "S053",
+    "herausgeber": "gmp",
+    "title": "gmp — Christ Pavilion",
+    "url": "https://www.gmp.de/en/projects/415/christ-pavilion-expo-2000",
+    "projs": [
+      "60"
+    ]
+  },
+  {
+    "id": "S055",
+    "herausgeber": "Baunetzwissen",
+    "title": "Baunetzwissen — Plattenpalast",
+    "url": "https://www.baunetzwissen.de/beton/objekte/sonderbauten/plattenpalast-in-berlin-841145",
+    "projs": [
+      "62"
+    ]
+  },
+  {
+    "id": "S056",
+    "herausgeber": "SUPERLOCAL",
+    "title": "SUPERLOCAL — Expogebouw",
+    "url": "https://www.superlocal.eu/sce-en/",
+    "projs": [
+      "63"
+    ]
+  },
+  {
+    "id": "S058",
+    "herausgeber": "UCL Circular Economy Lab",
+    "title": "UCL Circular Economy Lab — CascadeUp",
+    "url": "https://www.ucl.ac.uk/circular-economy-lab/research/reusing-wood-demolition-mass-timber-products",
+    "projs": [
+      "64"
+    ]
+  },
+  {
+    "id": "S059",
+    "herausgeber": "EPFL",
+    "title": "EPFL — RE:CRETE",
+    "url": "https://www.epfl.ch/schools/enac/recrete/",
+    "projs": [
+      "65"
+    ]
+  },
+  {
+    "id": "S061",
+    "herausgeber": "Gemeente Maassluis",
+    "title": "Gemeente Maassluis — Montessori construction start",
+    "url": "https://www.maassluis.nl/eerste-paal-geslagen-voor-nieuwe-montessorischool-maassluis",
+    "projs": [
+      "67"
+    ]
+  },
+  {
+    "id": "S062",
+    "herausgeber": "City of Boulder",
+    "title": "New Fire Station 3",
+    "url": "https://bouldercolorado.gov/projects/new-fire-station-3",
+    "projs": [
+      "20"
+    ]
+  },
+  {
+    "id": "S063",
+    "herausgeber": "YIT",
+    "title": "Melkinlaituri elementary school and daycare centre",
+    "url": "https://www.yit.fi/en/projects/melkinlaituri-elementary-school-and-daycare-centre-helsinki",
+    "projs": [
+      "34"
+    ]
+  },
+  {
+    "id": "S064",
+    "herausgeber": "AgwA",
+    "title": "1718\\_VERBIEST",
+    "url": "https://www.agwa.be/en/projects/1718_verbiest/201/",
+    "projs": [
+      "46"
+    ]
+  },
+  {
+    "id": "S065",
+    "herausgeber": "Brussels Architecture Prize",
+    "title": "ESP KARREVELD",
+    "url": "https://brusselsarchitectureprize.be/en/project/esp-karreveld/",
+    "projs": [
+      "46"
+    ]
+  },
+  {
+    "id": "S067",
+    "herausgeber": "INNAX",
+    "title": "Emergis opent eerste circulaire zorgkliniek van Nederland",
+    "url": "https://www.innax.nl/kennisbank/toekomstvast-bouwen/emergis",
+    "projs": [
+      "26"
+    ]
+  },
+  {
+    "id": "S071",
+    "herausgeber": "Environmental assessment of structural component reuse case studies",
+    "title": "Environmental assessment of structural component reuse case studies",
+    "url": "https://www.sciencedirect.com/science/article/pii/S0959652622048090",
+    "projs": [
+      "66"
+    ]
+  },
+  {
+    "id": "S072",
+    "herausgeber": "Circulair Centrum Nederland",
+    "title": "Where Circular Centre Nederland stands",
+    "url": "https://ccn.nl/over-ccn/waar-staat-ccn/",
+    "projs": [
+      "32"
+    ]
+  },
+  {
+    "id": "S073",
+    "herausgeber": "HawkinsBrown",
+    "title": "55 Great Suffolk Street",
+    "url": "https://www.hawkinsbrown.com/projects/55-great-suffolk-street/",
+    "projs": [
+      "18"
+    ]
+  },
+  {
+    "id": "S075",
+    "herausgeber": "New London Architecture",
+    "title": "Brent Cross Town Electrical Substation",
+    "url": "https://nla.london/projects/brent-cross-town-electrical-substation",
+    "projs": [
+      "19"
+    ]
+  },
+  {
+    "id": "S076",
+    "herausgeber": "World-Architects",
+    "title": "The Railway Farm",
+    "url": "https://world-architects.com/en/grand-huit-paris/project/the-railway-farm",
+    "projs": [
+      "38"
+    ]
+  },
+  {
+    "id": "S077",
+    "herausgeber": "CONIX RDBM Architects",
+    "title": "Multi",
+    "url": "https://www.conixrdbm.com/project/multi/",
+    "projs": [
+      "41"
+    ]
+  },
+  {
+    "id": "S078",
+    "herausgeber": "V+",
+    "title": "Folklore Museum",
+    "url": "https://www.vplus.org/folklore-museum",
+    "projs": [
+      "42"
+    ]
+  }
+]

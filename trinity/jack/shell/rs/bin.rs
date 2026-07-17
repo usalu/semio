@@ -15,7 +15,7 @@ fn main() {
 
 fn run_main() -> Result<(), String> {
     let args: Vec<String> = env::args().collect();
-    let fixture_path = args.get(1).map(String::as_str).unwrap_or("trinity/fixture/nakagin-capsule-tower.trinity.json");
+    let fixture_path = args.get(1).map(String::as_str).unwrap_or("trinity/example/nakagin-capsule-tower.trinity.json");
     let json = fs::read_to_string(fixture_path).map_err(|e| format!("read {fixture_path}: {e}"))?;
     let mut graph = Graph::load_json(&json)?;
     graph.recompute_derived();

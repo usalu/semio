@@ -1,0 +1,13 @@
+{
+  "title": "Zwischenbericht Quellen Into Bibliography",
+  "emoji": "📚",
+  "status": "open",
+  "description": "Remove the explicit Quellen tables from the mit-bestand Zwischenbericht (P.Q in anhang/projekte.tex and SB.Q in anhang/sekundaerbefunde.tex) and replace them with a proper biblatex bibliography: new references.bib, \\cite in each project's Allgemein table and in the SB appendix intro, \\SemioReferences rendered in the V Verzeichnisse appendix chapter. Also extend the shared semio-window.sty reference row to show the source URL and fix a suspected \\citefield argument-order bug, verified against a rebuilt zukunftbau template.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2013"
+  },
+  "goal": "🎯r2602🎯updateddocs",
+  "sessions": [
+    "⚪428d2702019347429ba81966155767b9"
+  ]
+}
