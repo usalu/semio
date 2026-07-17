@@ -59,6 +59,7 @@ pub struct FlowModuleSetting {
 }
 
 /// 📦 Builds a `flow.module` JSON manifest from registry catalogue metadata.
+#[allow(clippy::too_many_arguments, reason = "manifest needs id+name+version+registry+activation_events+widgets+commands+settings together; a params struct would ripple into every flow/module/*/rs call site outside this ticket's scope")]
 pub fn build_manifest_json(id: &str, name: &str, version: &str, registry: &Registry, activation_events: Vec<String>, widgets: Vec<FlowModuleWidget>, commands: Vec<FlowModuleCommand>, settings: Vec<FlowModuleSetting>) -> String {
     let manifest = FlowModuleManifest {
         schema: "flow.module".into(),

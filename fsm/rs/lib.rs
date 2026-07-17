@@ -2090,12 +2090,24 @@ mod testing {
 
     //#endregion 🔖Coverage
 
+    //#region ⚠️ Errors
+
+    /// ⚠️ Why an [`Invariant`] check or [`run_conformance`] fixture failed.
+    #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+    pub enum FsmError {
+        /// 🧭 A model-checked invariant or conformance step reported a violation.
+        #[error("{0}")]
+        Violation(String),
+    }
+
+    //#endregion ⚠️ Errors
+
     //#region 🔖Invariants
 
     /// 🧭 A named property that must hold of every [`Snapshot`] visited during exploration.
     pub struct Invariant<M: Machine> {
         pub name: &'static str,
-        pub check: fn(&Snapshot<M>) -> Result<(), String>,
+        pub check: fn(&Snapshot<M>) -> Result<(), FsmError>,
     }
 
     /// 🧭 Runs every invariant against `snapshot`, returning one formatted message per violation.
@@ -2116,7 +2128,7 @@ mod testing {
 
     /// 🧭 Runs `steps` against a freshly-initialized machine, failing fast with a
     /// descriptive message naming the offending step and the actual active configuration.
-    pub fn run_conformance<M: Machine>(input: M::Input, steps: &[ConformanceStep<M>]) -> Result<(), String> {
+    pub fn run_conformance<M: Machine>(input: M::Input, steps: &[ConformanceStep<M>]) -> Result<(), FsmError> {
         let mut sink: Vec<Command<M>> = Vec::new();
         let mut snapshot = init::<M>(input, &mut sink);
         for (index, step) in steps.iter().enumerate() {
@@ -2124,10 +2136,10 @@ mod testing {
             macrostep(&mut snapshot, step.event.clone(), &mut sink, &mut inspector);
             for expected in step.expect_active {
                 if !snapshot.matches(expected) {
-                    return Err(format!(
+                    return Err(FsmError::Violation(format!(
                         "conformance step {index}: expected active state '{expected}', got {:?}",
                         active_stable_ids(&snapshot)
-                    ));
+                    )));
                 }
             }
         }
@@ -2305,7 +2317,7 @@ mod testing {
                 event: UnitToggleEvent::Flip,
                 expect_active: &["off"],
             }];
-            let err = run_conformance::<UnitToggleMachine>((), &steps).unwrap_err();
+            let err = run_conformance::<UnitToggleMachine>((), &steps).unwrap_err().to_string();
             assert!(err.contains("step 0"));
             assert!(err.contains("off"));
         }
@@ -2316,7 +2328,7 @@ mod testing {
             let snapshot = init::<UnitToggleMachine>((), &mut sink);
             let invariants = [Invariant {
                 name: "never off",
-                check: |s: &Snapshot<UnitToggleMachine>| if s.matches("off") { Err("was off".to_string()) } else { Ok(()) },
+                check: |s: &Snapshot<UnitToggleMachine>| if s.matches("off") { Err(FsmError::Violation("was off".to_string())) } else { Ok(()) },
             }];
             let violations = check_invariants(&snapshot, &invariants);
             assert_eq!(violations, vec!["never off: was off".to_string()]);
@@ -2519,7 +2531,7 @@ pub use persist::{persist, restore, Migration, PersistedSnapshot, RestoreError};
 pub use runtime::{route_command, ActorLogic, ActorSystem, MachineLogic};
 
 #[cfg(any(test, feature = "testing"))]
-pub use testing::{check_invariants, explore, run_conformance, ConformanceStep, Coverage, Invariant, Model};
+pub use testing::{check_invariants, explore, run_conformance, ConformanceStep, Coverage, FsmError, Invariant, Model};
 
 // 🪄 `StatechartEvent` here re-exports the derive macro — it shares its name with the
 // `StatechartEvent` trait above without conflict since macros and traits live in

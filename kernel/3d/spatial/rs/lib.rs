@@ -105,14 +105,17 @@ impl<T> Bvh<T> {
             return None;
         }
         if items.len() == 1 {
+            // 🛡️ len == 1 was just checked above, so `next()` structurally cannot be `None`.
             let (aabb, item) = items.into_iter().next().expect("checked len == 1");
             return Some(Node::Leaf { aabb, item });
         }
+        // 🛡️ items.is_empty() and items.len() == 1 were both ruled out above, so len >= 2 and `reduce` over a non-empty iterator cannot be `None`.
         let bounds = items.iter().map(|(aabb, _)| aabb.clone()).reduce(|a, b| aabb_union(&a, &b)).expect("checked non-empty");
         let axis = aabb_longest_axis(&bounds);
         items.sort_by(|(a, _), (b, _)| aabb_center(a)[axis].partial_cmp(&aabb_center(b)[axis]).unwrap_or(std::cmp::Ordering::Equal));
         let mid = items.len() / 2;
         let right_items = items.split_off(mid);
+        // 🛡️ len >= 2 here implies mid = len/2 is in 1..=len-1, so both the retained `items` (left, len == mid) and `right_items` (len - mid) are non-empty — `build_node` only returns `None` for an empty input.
         let left = Self::build_node(items).expect("checked non-empty left partition");
         let right = Self::build_node(right_items).expect("checked non-empty right partition");
         Some(Node::Branch { aabb: bounds, left: Box::new(left), right: Box::new(right) })

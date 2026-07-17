@@ -1,0 +1,11 @@
+{
+  "title": "Energy",
+  "description": "Headless Rust building energy model engine: EnergyPlus-class transient simulation via typed Rust API for building energy demand computation.",
+  "prompt": "Build energy technology — energy/engine/rs (energy_engine) — full BEM subsystem tree end-to-end with native EPW weather ingest, no IDF/epJSON or legacy APIs.",
+  "status": "open",
+  "dates": {
+    "due": "2026-12-31"
+  },
+  "client": "cursor-chat",
+  "llm": "sonnet-5"
+}

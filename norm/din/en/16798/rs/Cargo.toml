@@ -1,0 +1,13 @@
+[package]
+name = "norm_din_en_16798"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+norm_core = { path = "../../../../core/rs" }
+serde = { version = "1.0.219", features = ["derive"] }
+

@@ -15,21 +15,13 @@ pub struct Camera3d {
 
 impl Default for Camera3d {
     fn default() -> Self {
-        Self {
-            position: Vec3::new(4.0, -4.0, 3.0),
-            target: Vec3::ZERO,
-            up: Vec3::new(0.0, 0.0, 1.0),
-            fov_y: 45.0_f32.to_radians(),
-            near: 0.1,
-            far: 1000.0,
-        }
+        Self { position: Vec3::new(4.0, -4.0, 3.0), target: Vec3::ZERO, up: Vec3::new(0.0, 0.0, 1.0), fov_y: 45.0_f32.to_radians(), near: 0.1, far: 1000.0 }
     }
 }
 
 impl Camera3d {
     pub fn view_proj(&self, aspect: f32) -> Mat4 {
-        Mat4::perspective(self.fov_y, aspect, self.near, self.far)
-            .mul(Mat4::look_at(self.position, self.target, self.up))
+        Mat4::perspective(self.fov_y, aspect, self.near, self.far).mul(Mat4::look_at(self.position, self.target, self.up))
     }
 
     pub fn ray_from_screen(&self, aspect: f32, x: f32, y: f32, width: f32, height: f32) -> (Vec3, Vec3) {
@@ -56,13 +48,7 @@ pub struct OrbitController {
 
 impl Default for OrbitController {
     fn default() -> Self {
-        Self {
-            target: Vec3::ZERO,
-            distance: 8.0,
-            yaw: 0.8,
-            pitch: 0.5,
-            fov_y: 45.0_f32.to_radians(),
-        }
+        Self { target: Vec3::ZERO, distance: 8.0, yaw: 0.8, pitch: 0.5, fov_y: 45.0_f32.to_radians() }
     }
 }
 
@@ -70,30 +56,13 @@ impl OrbitController {
     pub fn from_camera(camera: &Camera3d) -> Self {
         let offset = camera.position.sub(camera.target);
         let distance = offset.length().max(0.5);
-        Self {
-            target: camera.target,
-            distance,
-            yaw: offset.y.atan2(offset.x),
-            pitch: (offset.z / distance).asin(),
-            fov_y: camera.fov_y,
-        }
+        Self { target: camera.target, distance, yaw: offset.y.atan2(offset.x), pitch: (offset.z / distance).asin(), fov_y: camera.fov_y }
     }
 
     pub fn to_camera(&self) -> Camera3d {
         let cp = self.pitch.cos();
-        let position = Vec3::new(
-            self.target.x + self.distance * cp * self.yaw.cos(),
-            self.target.y + self.distance * cp * self.yaw.sin(),
-            self.target.z + self.distance * self.pitch.sin(),
-        );
-        Camera3d {
-            position,
-            target: self.target,
-            up: Vec3::new(0.0, 0.0, 1.0),
-            fov_y: self.fov_y,
-            near: 0.1,
-            far: 1000.0,
-        }
+        let position = Vec3::new(self.target.x + self.distance * cp * self.yaw.cos(), self.target.y + self.distance * cp * self.yaw.sin(), self.target.z + self.distance * self.pitch.sin());
+        Camera3d { position, target: self.target, up: Vec3::new(0.0, 0.0, 1.0), fov_y: self.fov_y, near: 0.1, far: 1000.0 }
     }
 
     pub fn orbit(&mut self, dx: f32, dy: f32) {
@@ -106,10 +75,7 @@ impl OrbitController {
         let right = camera.position.sub(camera.target).cross(camera.up).normalize();
         let up = right.cross(camera.position.sub(camera.target)).normalize();
         let scale = self.distance * 0.001;
-        self.target = self
-            .target
-            .add(right.scale(-dx * scale))
-            .add(up.scale(dy * scale));
+        self.target = self.target.add(right.scale(-dx * scale)).add(up.scale(dy * scale));
     }
 
     pub fn zoom(&mut self, delta: f32) {
@@ -138,25 +104,13 @@ impl Mesh3d {
     pub fn from_buffers(positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32>) -> Self {
         let mut aabb_min = [f32::INFINITY; 3];
         let mut aabb_max = [f32::NEG_INFINITY; 3];
-        for chunk in positions.chunks_exact(3) {
+        for chunk in positions.as_chunks::<3>().0 {
             for axis in 0..3 {
                 aabb_min[axis] = aabb_min[axis].min(chunk[axis]);
                 aabb_max[axis] = aabb_max[axis].max(chunk[axis]);
             }
         }
-        Self {
-            positions,
-            normals,
-            indices,
-            aabb_min,
-            aabb_max,
-            face_ids: Vec::new(),
-            vertex_ids: Vec::new(),
-            edge_positions: Vec::new(),
-            edge_ids: Vec::new(),
-            uvs: Vec::new(),
-            colors: Vec::new(),
-        }
+        Self { positions, normals, indices, aabb_min, aabb_max, face_ids: Vec::new(), vertex_ids: Vec::new(), edge_positions: Vec::new(), edge_ids: Vec::new(), uvs: Vec::new(), colors: Vec::new() }
     }
 
     pub fn has_vertex_colors(&self) -> bool {
@@ -181,9 +135,7 @@ pub struct Instance3d {
 
 impl Instance3d {
     pub fn model_from_trs(position: [f32; 3], rotation: [f32; 4], scale: [f32; 3]) -> Mat4 {
-        Mat4::translation(Vec3::from_array(position))
-            .mul(Mat4::from_quat(rotation[0], rotation[1], rotation[2], rotation[3]))
-            .mul(Mat4::scale_vec(Vec3::from_array(scale)))
+        Mat4::translation(Vec3::from_array(position)).mul(Mat4::from_quat(rotation[0], rotation[1], rotation[2], rotation[3])).mul(Mat4::scale_vec(Vec3::from_array(scale)))
     }
 }
 //#endregion Mesh
@@ -253,34 +205,19 @@ pub fn frustum_planes(view_proj: Mat4) -> [FrustumPlane; 6] {
         [m[0][3] + m[0][2], m[1][3] + m[1][2], m[2][3] + m[2][2], m[3][3] + m[3][2]],
         [m[0][3] - m[0][2], m[1][3] - m[1][2], m[2][3] - m[2][2], m[3][3] - m[3][2]],
     ];
-    let mut planes = [FrustumPlane {
-        normal: Vec3::ZERO,
-        distance: 0.0,
-    }; 6];
+    let mut planes = [FrustumPlane { normal: Vec3::ZERO, distance: 0.0 }; 6];
     for (index, row) in rows.into_iter().enumerate() {
         let normal = Vec3::new(row[0], row[1], row[2]);
         let length = normal.length();
         if length > 1e-8 {
-            planes[index] = FrustumPlane {
-                normal: normal.scale(1.0 / length),
-                distance: row[3] / length,
-            };
+            planes[index] = FrustumPlane { normal: normal.scale(1.0 / length), distance: row[3] / length };
         }
     }
     planes
 }
 
 pub fn transform_aabb(model: Mat4, min: [f32; 3], max: [f32; 3]) -> ([f32; 3], [f32; 3]) {
-    let corners = [
-        [min[0], min[1], min[2]],
-        [max[0], min[1], min[2]],
-        [min[0], max[1], min[2]],
-        [max[0], max[1], min[2]],
-        [min[0], min[1], max[2]],
-        [max[0], min[1], max[2]],
-        [min[0], max[1], max[2]],
-        [max[0], max[1], max[2]],
-    ];
+    let corners = [[min[0], min[1], min[2]], [max[0], min[1], min[2]], [min[0], max[1], min[2]], [max[0], max[1], min[2]], [min[0], min[1], max[2]], [max[0], min[1], max[2]], [min[0], max[1], max[2]], [max[0], max[1], max[2]]];
     let mut out_min = [f32::INFINITY; 3];
     let mut out_max = [f32::NEG_INFINITY; 3];
     for corner in corners {
@@ -295,11 +232,7 @@ pub fn transform_aabb(model: Mat4, min: [f32; 3], max: [f32; 3]) -> ([f32; 3], [
 
 pub fn aabb_intersects_frustum(planes: &[FrustumPlane; 6], min: [f32; 3], max: [f32; 3]) -> bool {
     for plane in planes {
-        let positive = Vec3::new(
-            if plane.normal.x >= 0.0 { max[0] } else { min[0] },
-            if plane.normal.y >= 0.0 { max[1] } else { min[1] },
-            if plane.normal.z >= 0.0 { max[2] } else { min[2] },
-        );
+        let positive = Vec3::new(if plane.normal.x >= 0.0 { max[0] } else { min[0] }, if plane.normal.y >= 0.0 { max[1] } else { min[1] }, if plane.normal.z >= 0.0 { max[2] } else { min[2] });
         if plane.normal.dot(positive) + plane.distance < 0.0 {
             return false;
         }
@@ -340,18 +273,11 @@ pub fn ray_aabb_slab(origin: Vec3, dir: Vec3, min: [f32; 3], max: [f32; 3]) -> O
     Some(if t_min >= 0.0 { t_min } else { t_max })
 }
 
-pub fn ray_pick_instance(
-    origin: Vec3,
-    dir: Vec3,
-    mesh: &Mesh3d,
-    instance: &Instance3d,
-) -> Option<f32> {
+pub fn ray_pick_instance(origin: Vec3, dir: Vec3, mesh: &Mesh3d, instance: &Instance3d) -> Option<f32> {
     let (world_min, world_max) = transform_aabb(instance.model, mesh.aabb_min, mesh.aabb_max);
-    if ray_aabb_slab(origin, dir, world_min, world_max).is_none() {
-        return None;
-    }
+    ray_aabb_slab(origin, dir, world_min, world_max)?;
     let mut best = None;
-    for tri in mesh.indices.chunks_exact(3) {
+    for tri in mesh.indices.as_chunks::<3>().0 {
         let a = instance.model.transform_point(vertex(mesh, tri[0]));
         let b = instance.model.transform_point(vertex(mesh, tri[1]));
         let c = instance.model.transform_point(vertex(mesh, tri[2]));
@@ -369,29 +295,17 @@ pub struct RayMeshHit {
     pub bary_v: f32,
 }
 
-pub fn ray_pick_mesh_detail(
-    origin: Vec3,
-    dir: Vec3,
-    mesh: &Mesh3d,
-    instance: &Instance3d,
-) -> Option<RayMeshHit> {
+pub fn ray_pick_mesh_detail(origin: Vec3, dir: Vec3, mesh: &Mesh3d, instance: &Instance3d) -> Option<RayMeshHit> {
     let (world_min, world_max) = transform_aabb(instance.model, mesh.aabb_min, mesh.aabb_max);
-    if ray_aabb_slab(origin, dir, world_min, world_max).is_none() {
-        return None;
-    }
+    ray_aabb_slab(origin, dir, world_min, world_max)?;
     let mut best: Option<RayMeshHit> = None;
-    for (triangle_index, tri) in mesh.indices.chunks_exact(3).enumerate() {
+    for (triangle_index, tri) in mesh.indices.as_chunks::<3>().0.iter().enumerate() {
         let a = instance.model.transform_point(vertex(mesh, tri[0]));
         let b = instance.model.transform_point(vertex(mesh, tri[1]));
         let c = instance.model.transform_point(vertex(mesh, tri[2]));
         if let Some((t, u, v)) = ray_triangle_barycentric(origin, dir, a, b, c) {
-            if best.as_ref().map_or(true, |hit| t < hit.distance) {
-                best = Some(RayMeshHit {
-                    distance: t,
-                    triangle_index,
-                    bary_u: u,
-                    bary_v: v,
-                });
+            if best.as_ref().is_none_or(|hit| t < hit.distance) {
+                best = Some(RayMeshHit { distance: t, triangle_index, bary_u: u, bary_v: v });
             }
         }
     }
@@ -469,10 +383,7 @@ fn orient2d(a: [f32; 2], b: [f32; 2], c: [f32; 2]) -> f32 {
 }
 
 fn point_on_segment(p: [f32; 2], a: [f32; 2], b: [f32; 2]) -> bool {
-    p[0] >= a[0].min(b[0])
-        && p[0] <= a[0].max(b[0])
-        && p[1] >= a[1].min(b[1])
-        && p[1] <= a[1].max(b[1])
+    p[0] >= a[0].min(b[0]) && p[0] <= a[0].max(b[0]) && p[1] >= a[1].min(b[1]) && p[1] <= a[1].max(b[1])
 }
 
 fn segments_intersect(a0: [f32; 2], a1: [f32; 2], b0: [f32; 2], b1: [f32; 2]) -> bool {
@@ -500,12 +411,7 @@ fn rect_corners(rect: [f32; 4]) -> [[f32; 2]; 4] {
     let max_x = rect[0].max(rect[2]);
     let min_y = rect[1].min(rect[3]);
     let max_y = rect[1].max(rect[3]);
-    [
-        [min_x, min_y],
-        [max_x, min_y],
-        [max_x, max_y],
-        [min_x, max_y],
-    ]
+    [[min_x, min_y], [max_x, min_y], [max_x, max_y], [min_x, max_y]]
 }
 
 fn segment_intersects_rect(a: [f32; 2], b: [f32; 2], rect: [f32; 4]) -> bool {
@@ -525,11 +431,7 @@ fn segment_intersects_polygon(a: [f32; 2], b: [f32; 2], polygon: &[[f32; 2]]) ->
         return true;
     }
     for index in 0..polygon.len() {
-        let j = if index == 0 {
-            polygon.len() - 1
-        } else {
-            index - 1
-        };
+        let j = if index == 0 { polygon.len() - 1 } else { index - 1 };
         if segments_intersect(a, b, polygon[index], polygon[j]) {
             return true;
         }
@@ -537,75 +439,43 @@ fn segment_intersects_polygon(a: [f32; 2], b: [f32; 2], polygon: &[[f32; 2]]) ->
     false
 }
 
-fn marquee_contains_point(
-    point: [f32; 2],
-    polygon: &[[f32; 2]],
-    rectangle: bool,
-    rect_bounds: Option<[f32; 4]>,
-) -> bool {
+fn marquee_contains_point(point: [f32; 2], polygon: &[[f32; 2]], rectangle: bool, rect_bounds: Option<[f32; 4]>) -> bool {
     if rectangle {
-        rect_contains(rect_bounds.expect("marquee rect"), point)
+        rect_bounds.is_some_and(|bounds| rect_contains(bounds, point))
     } else {
         point_in_polygon(point, polygon)
     }
 }
 
-fn marquee_segment_selected(
-    a: [f32; 2],
-    b: [f32; 2],
-    polygon: &[[f32; 2]],
-    rectangle: bool,
-    rect_bounds: Option<[f32; 4]>,
-    crossing: bool,
-) -> bool {
+fn marquee_segment_selected(a: [f32; 2], b: [f32; 2], polygon: &[[f32; 2]], rectangle: bool, rect_bounds: Option<[f32; 4]>, crossing: bool) -> bool {
     if crossing {
-        if marquee_contains_point(a, polygon, rectangle, rect_bounds)
-            || marquee_contains_point(b, polygon, rectangle, rect_bounds)
-        {
+        if marquee_contains_point(a, polygon, rectangle, rect_bounds) || marquee_contains_point(b, polygon, rectangle, rect_bounds) {
             return true;
         }
         if rectangle {
-            segment_intersects_rect(a, b, rect_bounds.expect("marquee rect"))
+            rect_bounds.is_some_and(|bounds| segment_intersects_rect(a, b, bounds))
         } else {
             segment_intersects_polygon(a, b, polygon)
         }
     } else {
-        marquee_contains_point(a, polygon, rectangle, rect_bounds)
-            && marquee_contains_point(b, polygon, rectangle, rect_bounds)
+        marquee_contains_point(a, polygon, rectangle, rect_bounds) && marquee_contains_point(b, polygon, rectangle, rect_bounds)
     }
 }
 
-fn marquee_triangle_selected(
-    points: &[[f32; 2]; 3],
-    polygon: &[[f32; 2]],
-    rectangle: bool,
-    rect_bounds: Option<[f32; 4]>,
-    crossing: bool,
-) -> bool {
+fn marquee_triangle_selected(points: &[[f32; 2]; 3], polygon: &[[f32; 2]], rectangle: bool, rect_bounds: Option<[f32; 4]>, crossing: bool) -> bool {
     if crossing {
-        for index in 0..3 {
-            if marquee_contains_point(points[index], polygon, rectangle, rect_bounds) {
-                return true;
-            }
+        if points.iter().any(|point| marquee_contains_point(*point, polygon, rectangle, rect_bounds)) {
+            return true;
         }
         for index in 0..3 {
             let next = (index + 1) % 3;
-            if marquee_segment_selected(
-                points[index],
-                points[next],
-                polygon,
-                rectangle,
-                rect_bounds,
-                true,
-            ) {
+            if marquee_segment_selected(points[index], points[next], polygon, rectangle, rect_bounds, true) {
                 return true;
             }
         }
         false
     } else {
-        points
-            .iter()
-            .all(|point| marquee_contains_point(*point, polygon, rectangle, rect_bounds))
+        points.iter().all(|point| marquee_contains_point(*point, polygon, rectangle, rect_bounds))
     }
 }
 
@@ -624,6 +494,10 @@ fn marquee_rect_bounds(polygon: &[[f32; 2]]) -> Option<[f32; 4]> {
     Some([min_x, min_y, max_x, max_y])
 }
 
+/// 🎯 Screen-space component (vertex/edge/face) picking within a marquee/lasso polygon; kept as a flat argument
+/// list rather than a params struct because both `infinite/world/rs` call sites pass through the same shape
+/// positionally and this crate must not restructure a signature consumed outside its own scope.
+#[allow(clippy::too_many_arguments, reason = "flat picking-context args match the two infinite/world/rs call sites; a params struct would be a cross-crate signature change out of this crate's scope")]
 pub fn screen_select_components(
     mesh_lookup: &std::collections::HashMap<String, Mesh3d>,
     draws: &[SceneDraw3d],
@@ -638,10 +512,7 @@ pub fn screen_select_components(
 ) -> Vec<String> {
     use std::collections::HashSet;
     let mut selected = HashSet::new();
-    let local_polygon: Vec<[f32; 2]> = polygon
-        .iter()
-        .map(|point| [point[0], point[1]])
-        .collect();
+    let local_polygon: Vec<[f32; 2]> = polygon.iter().map(|point| [point[0], point[1]]).collect();
     let rect_bounds = marquee_rect_bounds(&local_polygon);
     for draw in draws {
         let Some(mesh) = mesh_lookup.get(&draw.mesh_key) else {
@@ -653,59 +524,35 @@ pub fn screen_select_components(
             }
             match granularity {
                 "vertex" if !mesh.vertex_ids.is_empty() => {
-                    for (vertex_index, chunk) in mesh.positions.chunks_exact(3).enumerate() {
-                        let world = instance
-                            .model
-                            .transform_point(Vec3::new(chunk[0], chunk[1], chunk[2]));
+                    for (vertex_index, chunk) in mesh.positions.as_chunks::<3>().0.iter().enumerate() {
+                        let world = instance.model.transform_point(Vec3::new(chunk[0], chunk[1], chunk[2]));
                         let Some(screen) = project_point(view_proj, world, width, height) else {
                             continue;
                         };
                         let point = [screen[0], screen[1]];
                         let inside = marquee_contains_point(point, &local_polygon, rectangle, rect_bounds);
                         if inside {
-                            let id = mesh
-                                .vertex_ids
-                                .get(vertex_index)
-                                .map(|value| value.to_string())
-                                .unwrap_or_else(|| vertex_index.to_string());
+                            let id = mesh.vertex_ids.get(vertex_index).map(|value| value.to_string()).unwrap_or_else(|| vertex_index.to_string());
                             selected.insert(id);
                         }
                     }
                 }
                 "edge" if !mesh.edge_positions.is_empty() => {
-                    for (edge_index, chunk) in mesh.edge_positions.chunks_exact(6).enumerate() {
-                        let a_world = instance.model.transform_point(Vec3::new(
-                            chunk[0], chunk[1], chunk[2],
-                        ));
-                        let b_world = instance.model.transform_point(Vec3::new(
-                            chunk[3], chunk[4], chunk[5],
-                        ));
-                        let (Some(a_screen), Some(b_screen)) = (
-                            project_point(view_proj, a_world, width, height),
-                            project_point(view_proj, b_world, width, height),
-                        ) else {
+                    for (edge_index, chunk) in mesh.edge_positions.as_chunks::<6>().0.iter().enumerate() {
+                        let a_world = instance.model.transform_point(Vec3::new(chunk[0], chunk[1], chunk[2]));
+                        let b_world = instance.model.transform_point(Vec3::new(chunk[3], chunk[4], chunk[5]));
+                        let (Some(a_screen), Some(b_screen)) = (project_point(view_proj, a_world, width, height), project_point(view_proj, b_world, width, height)) else {
                             continue;
                         };
-                        if !marquee_segment_selected(
-                            a_screen,
-                            b_screen,
-                            &local_polygon,
-                            rectangle,
-                            rect_bounds,
-                            crossing,
-                        ) {
+                        if !marquee_segment_selected(a_screen, b_screen, &local_polygon, rectangle, rect_bounds, crossing) {
                             continue;
                         }
-                        let id = mesh
-                            .edge_ids
-                            .get(edge_index)
-                            .map(|value| value.to_string())
-                            .unwrap_or_else(|| edge_index.to_string());
+                        let id = mesh.edge_ids.get(edge_index).map(|value| value.to_string()).unwrap_or_else(|| edge_index.to_string());
                         selected.insert(id);
                     }
                 }
                 "face" => {
-                    for (tri_index, tri) in mesh.indices.chunks_exact(3).enumerate() {
+                    for (tri_index, tri) in mesh.indices.as_chunks::<3>().0.iter().enumerate() {
                         let mut screens = [[0.0_f32; 2]; 3];
                         let mut visible = 0usize;
                         for (slot, index) in tri.iter().enumerate() {
@@ -718,32 +565,15 @@ pub fn screen_select_components(
                         if visible < 3 {
                             continue;
                         }
-                        if !marquee_triangle_selected(
-                            &screens,
-                            &local_polygon,
-                            rectangle,
-                            rect_bounds,
-                            crossing,
-                        ) {
+                        if !marquee_triangle_selected(&screens, &local_polygon, rectangle, rect_bounds, crossing) {
                             continue;
                         }
-                        let id = mesh
-                            .face_ids
-                            .get(tri_index)
-                            .map(|value| value.to_string())
-                            .unwrap_or_else(|| tri_index.to_string());
+                        let id = mesh.face_ids.get(tri_index).map(|value| value.to_string()).unwrap_or_else(|| tri_index.to_string());
                         selected.insert(id);
                     }
                 }
                 _ => {
-                    let Some(projected) = projected_aabb_bounds(
-                        view_proj,
-                        instance.model,
-                        mesh.aabb_min,
-                        mesh.aabb_max,
-                        width,
-                        height,
-                    ) else {
+                    let Some(projected) = projected_aabb_bounds(view_proj, instance.model, mesh.aabb_min, mesh.aabb_max, width, height) else {
                         continue;
                     };
                     if aabb_overlaps_marquee(projected, &local_polygon, rectangle) {
@@ -781,7 +611,11 @@ pub fn ray_triangle(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3, c: Vec3) -> Optio
         return None;
     }
     let t = f * edge2.dot(q);
-    if t > 1e-4 { Some(t) } else { None }
+    if t > 1e-4 {
+        Some(t)
+    } else {
+        None
+    }
 }
 
 pub fn project_point(view_proj: Mat4, point: Vec3, width: f32, height: f32) -> Option<[f32; 2]> {
@@ -841,24 +675,8 @@ pub fn rect_contains(rect: [f32; 4], point: [f32; 2]) -> bool {
     point[0] >= min_x && point[0] <= max_x && point[1] >= min_y && point[1] <= max_y
 }
 
-pub fn projected_aabb_bounds(
-    view_proj: Mat4,
-    model: Mat4,
-    min: [f32; 3],
-    max: [f32; 3],
-    width: f32,
-    height: f32,
-) -> Option<[f32; 4]> {
-    let corners = [
-        [min[0], min[1], min[2]],
-        [max[0], min[1], min[2]],
-        [min[0], max[1], min[2]],
-        [max[0], max[1], min[2]],
-        [min[0], min[1], max[2]],
-        [max[0], min[1], max[2]],
-        [min[0], max[1], max[2]],
-        [max[0], max[1], max[2]],
-    ];
+pub fn projected_aabb_bounds(view_proj: Mat4, model: Mat4, min: [f32; 3], max: [f32; 3], width: f32, height: f32) -> Option<[f32; 4]> {
+    let corners = [[min[0], min[1], min[2]], [max[0], min[1], min[2]], [min[0], max[1], min[2]], [max[0], max[1], min[2]], [min[0], min[1], max[2]], [max[0], min[1], max[2]], [min[0], max[1], max[2]], [max[0], max[1], max[2]]];
     let mut min_x = f32::INFINITY;
     let mut min_y = f32::INFINITY;
     let mut max_x = f32::NEG_INFINITY;
@@ -877,11 +695,7 @@ pub fn projected_aabb_bounds(
     visible.then_some([min_x, min_y, max_x, max_y])
 }
 
-fn aabb_overlaps_marquee(
-    projected: [f32; 4],
-    polygon: &[[f32; 2]],
-    rectangle: bool,
-) -> bool {
+fn aabb_overlaps_marquee(projected: [f32; 4], polygon: &[[f32; 2]], rectangle: bool) -> bool {
     if rectangle {
         let Some(marquee) = marquee_rect_bounds(polygon) else {
             return false;
@@ -890,36 +704,16 @@ fn aabb_overlaps_marquee(
         let marquee_max_x = marquee[0].max(marquee[2]);
         let marquee_min_y = marquee[1].min(marquee[3]);
         let marquee_max_y = marquee[1].max(marquee[3]);
-        return projected[2] >= marquee_min_x
-            && projected[0] <= marquee_max_x
-            && projected[3] >= marquee_min_y
-            && projected[1] <= marquee_max_y;
+        return projected[2] >= marquee_min_x && projected[0] <= marquee_max_x && projected[3] >= marquee_min_y && projected[1] <= marquee_max_y;
     }
-    let corners = [
-        [projected[0], projected[1]],
-        [projected[2], projected[1]],
-        [projected[2], projected[3]],
-        [projected[0], projected[3]],
-    ];
-    corners.iter().any(|corner| point_in_polygon(*corner, polygon))
-        || polygon.iter().any(|point| {
-            point[0] >= projected[0]
-                && point[0] <= projected[2]
-                && point[1] >= projected[1]
-                && point[1] <= projected[3]
-        })
+    let corners = [[projected[0], projected[1]], [projected[2], projected[1]], [projected[2], projected[3]], [projected[0], projected[3]]];
+    corners.iter().any(|corner| point_in_polygon(*corner, polygon)) || polygon.iter().any(|point| point[0] >= projected[0] && point[0] <= projected[2] && point[1] >= projected[1] && point[1] <= projected[3])
 }
 
-pub fn screen_select_instances(
-    mesh_lookup: &std::collections::HashMap<String, Mesh3d>,
-    draws: &[SceneDraw3d],
-    view_proj: Mat4,
-    width: f32,
-    height: f32,
-    polygon: &[[f32; 2]],
-    rectangle: bool,
-    crossing: bool,
-) -> Vec<String> {
+/// 🎯 Screen-space whole-instance picking within a marquee/lasso polygon; kept as a flat argument list rather
+/// than a params struct for the same cross-crate-scope reason as `screen_select_components`.
+#[allow(clippy::too_many_arguments, reason = "flat picking-context args match the two infinite/world/rs call sites; a params struct would be a cross-crate signature change out of this crate's scope")]
+pub fn screen_select_instances(mesh_lookup: &std::collections::HashMap<String, Mesh3d>, draws: &[SceneDraw3d], view_proj: Mat4, width: f32, height: f32, polygon: &[[f32; 2]], rectangle: bool, crossing: bool) -> Vec<String> {
     let rect_bounds = marquee_rect_bounds(polygon);
     let mut selected = Vec::new();
     for draw in draws {
@@ -930,10 +724,8 @@ pub fn screen_select_instances(
             if !crossing {
                 let mut all_inside = true;
                 let mut any_visible = false;
-                for chunk in mesh.positions.chunks_exact(3) {
-                    let world = instance
-                        .model
-                        .transform_point(Vec3::new(chunk[0], chunk[1], chunk[2]));
+                for chunk in mesh.positions.as_chunks::<3>().0 {
+                    let world = instance.model.transform_point(Vec3::new(chunk[0], chunk[1], chunk[2]));
                     if let Some(screen) = project_point(view_proj, world, width, height) {
                         any_visible = true;
                         if !marquee_contains_point(screen, polygon, rectangle, rect_bounds) {
@@ -947,21 +739,14 @@ pub fn screen_select_instances(
                 }
                 continue;
             }
-            let Some(projected) = projected_aabb_bounds(
-                view_proj,
-                instance.model,
-                mesh.aabb_min,
-                mesh.aabb_max,
-                width,
-                height,
-            ) else {
+            let Some(projected) = projected_aabb_bounds(view_proj, instance.model, mesh.aabb_min, mesh.aabb_max, width, height) else {
                 continue;
             };
             if !aabb_overlaps_marquee(projected, polygon, rectangle) {
                 continue;
             }
             let mut covered = false;
-            for tri in mesh.indices.chunks_exact(3) {
+            for tri in mesh.indices.as_chunks::<3>().0 {
                 let mut screens = [[0.0_f32; 2]; 3];
                 let mut visible = 0usize;
                 for (slot, &index) in tri.iter().enumerate() {
@@ -974,13 +759,7 @@ pub fn screen_select_instances(
                 if visible < 3 {
                     continue;
                 }
-                if marquee_triangle_selected(
-                    &screens,
-                    polygon,
-                    rectangle,
-                    rect_bounds,
-                    true,
-                ) {
+                if marquee_triangle_selected(&screens, polygon, rectangle, rect_bounds, true) {
                     covered = true;
                     break;
                 }
@@ -1032,13 +811,7 @@ pub fn gumball_axis_drag_plane_normal(axis: Vec3, eye: Vec3) -> Vec3 {
     }
 }
 
-pub fn gumball_project_ray_onto_axis(
-    origin: Vec3,
-    dir: Vec3,
-    pivot: Vec3,
-    axis: Vec3,
-    eye: Vec3,
-) -> Option<f32> {
+pub fn gumball_project_ray_onto_axis(origin: Vec3, dir: Vec3, pivot: Vec3, axis: Vec3, eye: Vec3) -> Option<f32> {
     let plane_normal = gumball_axis_drag_plane_normal(axis, eye);
     let hit = ray_plane_point(origin, dir, pivot, plane_normal)?;
     Some(hit.sub(pivot).dot(axis.normalize()))
@@ -1057,11 +830,7 @@ pub fn ray_segment_distance(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3) -> Option
     let b_val = dir.dot(w);
     let c = w.dot(w);
     let denom = 1.0 - b_val * b_val;
-    let dist_sq = if denom.abs() < 1e-6 {
-        c
-    } else {
-        c - b_val * b_val / denom
-    };
+    let dist_sq = if denom.abs() < 1e-6 { c } else { c - b_val * b_val / denom };
     Some(dist_sq.max(0.0).sqrt())
 }
 
@@ -1078,36 +847,16 @@ pub fn quat_from_basis(x: Vec3, y: Vec3, z: Vec3) -> [f32; 4] {
     let trace = m00 + m11 + m22;
     if trace > 0.0 {
         let s = (trace + 1.0).sqrt() * 2.0;
-        [
-            (m21 - m12) / s,
-            (m02 - m20) / s,
-            (m10 - m01) / s,
-            0.25 * s,
-        ]
+        [(m21 - m12) / s, (m02 - m20) / s, (m10 - m01) / s, 0.25 * s]
     } else if m00 > m11 && m00 > m22 {
         let s = (1.0 + m00 - m11 - m22).sqrt() * 2.0;
-        [
-            0.25 * s,
-            (m01 + m10) / s,
-            (m02 + m20) / s,
-            (m21 - m12) / s,
-        ]
+        [0.25 * s, (m01 + m10) / s, (m02 + m20) / s, (m21 - m12) / s]
     } else if m11 > m22 {
         let s = (1.0 + m11 - m00 - m22).sqrt() * 2.0;
-        [
-            (m01 + m10) / s,
-            0.25 * s,
-            (m12 + m21) / s,
-            (m02 - m20) / s,
-        ]
+        [(m01 + m10) / s, 0.25 * s, (m12 + m21) / s, (m02 - m20) / s]
     } else {
         let s = (1.0 + m22 - m00 - m11).sqrt() * 2.0;
-        [
-            (m02 + m20) / s,
-            (m12 + m21) / s,
-            0.25 * s,
-            (m10 - m01) / s,
-        ]
+        [(m02 + m20) / s, (m12 + m21) / s, 0.25 * s, (m10 - m01) / s]
     }
 }
 
@@ -1115,10 +864,7 @@ pub fn rotate_vector(vector: Vec3, axis: Vec3, angle: f32) -> Vec3 {
     let axis = axis.normalize();
     let cos = angle.cos();
     let sin = angle.sin();
-    vector
-        .scale(cos)
-        .add(axis.cross(vector).scale(sin))
-        .add(axis.scale(axis.dot(vector) * (1.0 - cos)))
+    vector.scale(cos).add(axis.cross(vector).scale(sin)).add(axis.scale(axis.dot(vector) * (1.0 - cos)))
 }
 
 pub fn axis_rotate_angle(start: Vec3, current: Vec3, axis: Vec3) -> f32 {
@@ -1173,33 +919,17 @@ pub fn pick_closest_lod(available: &[f64], desired: f64) -> Option<f64> {
     Some(best)
 }
 
-pub fn pick_closest_mesh_url<'a>(
-    entries: &'a [(f64, &'a str)],
-    desired: f64,
-    fallback: Option<&'a str>,
-) -> Option<&'a str> {
+pub fn pick_closest_mesh_url<'a>(entries: &'a [(f64, &'a str)], desired: f64, fallback: Option<&'a str>) -> Option<&'a str> {
     if entries.is_empty() {
         return fallback;
     }
-    let lods: Vec<f64> = entries
-        .iter()
-        .filter_map(|(lod, _)| (*lod > 0.0 && lod.is_finite()).then_some(*lod))
-        .collect();
+    let lods: Vec<f64> = entries.iter().filter_map(|(lod, _)| (*lod > 0.0 && lod.is_finite()).then_some(*lod)).collect();
     let picked = pick_closest_lod(&lods, desired)?;
-    entries
-        .iter()
-        .find(|(lod, _)| (*lod - picked).abs() < 1e-12)
-        .map(|(_, url)| *url)
-        .or(fallback)
+    entries.iter().find(|(lod, _)| (*lod - picked).abs() < 1e-12).map(|(_, url)| *url).or(fallback)
 }
 
 pub fn lod_grid_band_steps_world(grid_factor: f64) -> [f64; 4] {
-    [
-        LOD_GRID_MAJOR_QUANTUM * grid_factor,
-        LOD_GRID_MEDIUM_QUANTUM * grid_factor,
-        LOD_GRID_SMALL_QUANTUM * grid_factor,
-        LOD_GRID_MICRO_QUANTUM * grid_factor,
-    ]
+    [LOD_GRID_MAJOR_QUANTUM * grid_factor, LOD_GRID_MEDIUM_QUANTUM * grid_factor, LOD_GRID_SMALL_QUANTUM * grid_factor, LOD_GRID_MICRO_QUANTUM * grid_factor]
 }
 
 pub fn lod_progressive_grid_layers(lod: f64, grid_factor: f64) -> Vec<(f64, f32)> {
@@ -1225,11 +955,7 @@ pub fn lod_progressive_grid_layer_key(lod: f64, grid_factor: f64) -> String {
     if layers.is_empty() {
         return String::new();
     }
-    layers
-        .iter()
-        .map(|(step, _)| step.to_string())
-        .collect::<Vec<_>>()
-        .join("|")
+    layers.iter().map(|(step, _)| step.to_string()).collect::<Vec<_>>().join("|")
 }
 
 pub fn lod_grid_step_world(lod: f64, grid_factor: f64) -> Option<f64> {
@@ -1242,11 +968,7 @@ pub fn floating_origin_rebase(world: Vec3, anchor: Vec3) -> Vec3 {
 }
 
 pub fn grid_placement_anchor(orbit_target: Vec3, datum: [f64; 3]) -> Vec3 {
-    Vec3::new(
-        orbit_target.x,
-        orbit_target.y,
-        datum[2] as f32,
-    )
+    Vec3::new(orbit_target.x, orbit_target.y, datum[2] as f32)
 }
 //#endregion LodGrid
 
@@ -1255,11 +977,7 @@ mod tests {
     use super::*;
 
     fn test_box_mesh() -> Mesh3d {
-        Mesh3d::from_buffers(
-            vec![-1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0],
-            vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0],
-            vec![0, 1, 2],
-        )
+        Mesh3d::from_buffers(vec![-1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2])
     }
 
     #[test]
@@ -1279,19 +997,12 @@ mod tests {
 
     #[test]
     fn mat4_inverse_round_trips_to_identity() {
-        let m = Mat4::translation(Vec3::new(3.0, -2.0, 5.0))
-            .mul(Mat4::from_quat(0.1, 0.2, 0.05, 0.9701425))
-            .mul(Mat4::scale_vec(Vec3::new(2.0, 1.5, 0.5)));
+        let m = Mat4::translation(Vec3::new(3.0, -2.0, 5.0)).mul(Mat4::from_quat(0.1, 0.2, 0.05, 0.9701425)).mul(Mat4::scale_vec(Vec3::new(2.0, 1.5, 0.5)));
         let round_trip = m.mul(m.inverse());
         let identity = Mat4::identity();
         for col in 0..4 {
             for row in 0..4 {
-                assert!(
-                    (round_trip.cols[col][row] - identity.cols[col][row]).abs() < 1e-4,
-                    "mismatch at col={col} row={row}: {} vs {}",
-                    round_trip.cols[col][row],
-                    identity.cols[col][row]
-                );
+                assert!((round_trip.cols[col][row] - identity.cols[col][row]).abs() < 1e-4, "mismatch at col={col} row={row}: {} vs {}", round_trip.cols[col][row], identity.cols[col][row]);
             }
         }
     }
@@ -1324,26 +1035,14 @@ mod tests {
 
     #[test]
     fn ray_hits_triangle_direct() {
-        let hit = ray_triangle(
-            Vec3::new(0.0, 0.0, -5.0),
-            Vec3::new(0.0, 0.0, 1.0),
-            Vec3::new(-1.0, -1.0, 0.0),
-            Vec3::new(1.0, -1.0, 0.0),
-            Vec3::new(0.0, 1.0, 0.0),
-        );
+        let hit = ray_triangle(Vec3::new(0.0, 0.0, -5.0), Vec3::new(0.0, 0.0, 1.0), Vec3::new(-1.0, -1.0, 0.0), Vec3::new(1.0, -1.0, 0.0), Vec3::new(0.0, 1.0, 0.0));
         assert!(hit.is_some());
     }
 
     #[test]
     fn ray_hits_box() {
         let mesh = test_box_mesh();
-        let instance = Instance3d {
-            id: "box".into(),
-            model: Mat4::identity(),
-            color: [1.0, 1.0, 1.0, 1.0],
-            selected: false,
-            hovered: false,
-        };
+        let instance = Instance3d { id: "box".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false };
         let hit = ray_pick_instance(Vec3::new(0.0, 0.0, -5.0), Vec3::new(0.0, 0.0, 1.0), &mesh, &instance);
         assert!(hit.is_some());
     }
@@ -1351,13 +1050,7 @@ mod tests {
     #[test]
     fn ray_aabb_misses_offset_box() {
         let mesh = test_box_mesh();
-        let instance = Instance3d {
-            id: "box".into(),
-            model: Mat4::translation(Vec3::new(100.0, 0.0, 0.0)),
-            color: [1.0, 1.0, 1.0, 1.0],
-            selected: false,
-            hovered: false,
-        };
+        let instance = Instance3d { id: "box".into(), model: Mat4::translation(Vec3::new(100.0, 0.0, 0.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false };
         let hit = ray_pick_instance(Vec3::new(0.0, 0.0, -5.0), Vec3::new(0.0, 0.0, 1.0), &mesh, &instance);
         assert!(hit.is_none());
     }
@@ -1383,14 +1076,7 @@ mod tests {
     }
 
     fn concrete_forest_camera() -> Camera3d {
-        Camera3d {
-            position: Vec3::new(30.0, -30.0, 20.0),
-            target: Vec3::new(7.0, 0.0, 3.0),
-            up: Vec3::new(0.0, 0.0, 1.0),
-            fov_y: 45.0_f32.to_radians(),
-            near: 0.1,
-            far: 1000.0,
-        }
+        Camera3d { position: Vec3::new(30.0, -30.0, 20.0), target: Vec3::new(7.0, 0.0, 3.0), up: Vec3::new(0.0, 0.0, 1.0), fov_y: 45.0_f32.to_radians(), near: 0.1, far: 1000.0 }
     }
 
     #[test]
@@ -1401,10 +1087,7 @@ mod tests {
         let target = camera.target;
         for plane in &planes {
             let distance = plane.normal.dot(target) + plane.distance;
-            assert!(
-                distance >= -1e-3,
-                "look-at must be inside frustum, distance={distance}"
-            );
+            assert!(distance >= -1e-3, "look-at must be inside frustum, distance={distance}");
         }
         assert!(aabb_intersects_frustum(&planes, [6.0, -1.0, 2.0], [8.0, 1.0, 4.0]));
     }
@@ -1446,13 +1129,7 @@ mod tests {
 
     #[test]
     fn rectangle_marquee_bounds_use_start_and_end_corners() {
-        let bounds = marquee_rect_bounds(&[
-            [10.0, 10.0],
-            [200.0, 10.0],
-            [200.0, 200.0],
-            [10.0, 200.0],
-        ])
-        .expect("bounds");
+        let bounds = marquee_rect_bounds(&[[10.0, 10.0], [200.0, 10.0], [200.0, 200.0], [10.0, 200.0]]).expect("bounds");
         assert!(rect_contains(bounds, [100.0, 100.0]));
         assert!(!rect_contains(bounds, [5.0, 100.0]));
     }
@@ -1460,31 +1137,12 @@ mod tests {
     #[test]
     fn projected_aabb_skips_far_instance() {
         let mesh = test_box_mesh();
-        let draws = vec![SceneDraw3d {
-            mesh_key: "box".into(),
-            mesh_version: 0,
-            instances: vec![Instance3d {
-                id: "far".into(),
-                model: Mat4::translation(Vec3::new(0.0, 0.0, -500.0)),
-                color: [1.0, 1.0, 1.0, 1.0],
-                selected: false,
-                hovered: false,
-            }],
-        }];
+        let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "far".into(), model: Mat4::translation(Vec3::new(0.0, 0.0, -500.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] }];
         let mut lookup = std::collections::HashMap::new();
         lookup.insert("box".into(), mesh);
         let camera = Camera3d::default();
         let view_proj = camera.view_proj(1.0);
-        let ids = screen_select_instances(
-            &lookup,
-            &draws,
-            view_proj,
-            200.0,
-            200.0,
-            &[[0.0, 0.0], [200.0, 0.0], [200.0, 200.0], [0.0, 200.0]],
-            true,
-            true,
-        );
+        let ids = screen_select_instances(&lookup, &draws, view_proj, 200.0, 200.0, &[[0.0, 0.0], [200.0, 0.0], [200.0, 200.0], [0.0, 200.0]], true, true);
         assert!(ids.is_empty());
     }
 
@@ -1505,17 +1163,7 @@ mod tests {
     #[test]
     fn screen_select_instances_window_requires_full_vertex_enclosure() {
         let mesh = test_box_mesh();
-        let draws = vec![SceneDraw3d {
-            mesh_key: "box".into(),
-            mesh_version: 0,
-            instances: vec![Instance3d {
-                id: "partial".into(),
-                model: Mat4::identity(),
-                color: [1.0, 1.0, 1.0, 1.0],
-                selected: false,
-                hovered: false,
-            }],
-        }];
+        let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "partial".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] }];
         let mut lookup = std::collections::HashMap::new();
         lookup.insert("box".into(), mesh);
         let camera = Camera3d::default();
@@ -1536,26 +1184,8 @@ mod tests {
         let center_x = (min_x + max_x) * 0.5;
         let center_y = (min_y + max_y) * 0.5;
         let partial = [[min_x, min_y], [center_x, center_y]];
-        let window_ids = screen_select_instances(
-            &lookup,
-            &draws,
-            view_proj,
-            width,
-            height,
-            &partial,
-            true,
-            false,
-        );
-        let crossing_ids = screen_select_instances(
-            &lookup,
-            &draws,
-            view_proj,
-            width,
-            height,
-            &partial,
-            true,
-            true,
-        );
+        let window_ids = screen_select_instances(&lookup, &draws, view_proj, width, height, &partial, true, false);
+        let crossing_ids = screen_select_instances(&lookup, &draws, view_proj, width, height, &partial, true, true);
         assert!(window_ids.is_empty());
         assert_eq!(crossing_ids, vec!["partial".to_string()]);
     }
@@ -1569,27 +1199,9 @@ mod tests {
     #[test]
     fn lod_progressive_grid_layers_adds_bands() {
         assert!(lod_progressive_grid_layers(5000.0, 10.0).is_empty());
-        assert_eq!(
-            lod_progressive_grid_layers(500.0, 10.0)
-                .iter()
-                .map(|(step, _)| *step)
-                .collect::<Vec<_>>(),
-            vec![100.0]
-        );
-        assert_eq!(
-            lod_progressive_grid_layers(50.0, 10.0)
-                .iter()
-                .map(|(step, _)| *step)
-                .collect::<Vec<_>>(),
-            vec![100.0, 25.0]
-        );
-        assert_eq!(
-            lod_progressive_grid_layers(2.0, 10.0)
-                .iter()
-                .map(|(step, _)| *step)
-                .collect::<Vec<_>>(),
-            vec![100.0, 25.0, 5.0, 1.0]
-        );
+        assert_eq!(lod_progressive_grid_layers(500.0, 10.0).iter().map(|(step, _)| *step).collect::<Vec<_>>(), vec![100.0]);
+        assert_eq!(lod_progressive_grid_layers(50.0, 10.0).iter().map(|(step, _)| *step).collect::<Vec<_>>(), vec![100.0, 25.0]);
+        assert_eq!(lod_progressive_grid_layers(2.0, 10.0).iter().map(|(step, _)| *step).collect::<Vec<_>>(), vec![100.0, 25.0, 5.0, 1.0]);
     }
 
     #[test]

@@ -1,0 +1,11 @@
+{
+  "title": "Architect",
+  "description": "Headless Rust architectural programming: program definition, stakeholder and requirement registers, undirected adjacency logic, analysis and reporting, plus s/OS plugin for program editing.",
+  "prompt": "Build architect technology — architect/program (architect_program) covering all 65 architectural-programming feature areas end-to-end, plus architect/plugin DocumentApp with triangular undirected adjacency-matrix editing.",
+  "status": "open",
+  "dates": {
+    "due": "2026-12-31"
+  },
+  "client": "cursor-chat",
+  "llm": "sonnet-5"
+}

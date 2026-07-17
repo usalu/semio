@@ -1,0 +1,28 @@
+{
+  "nodes": [
+    { "id": "n1", "x": 0.0, "y": 0.0, "z": 0.0 },
+    { "id": "n2", "x": 3.0, "y": 0.0, "z": 0.0 }
+  ],
+  "elements": [
+    { "kind": "frame", "id": "e1", "start": "n1", "end": "n2", "materialId": "steel", "sectionId": "hea200", "roll": 0.0 }
+  ],
+  "materials": [
+    { "id": "steel", "name": "Steel S235", "e": 210000000000.0, "g": 80770000000.0 }
+  ],
+  "sections": [
+    { "id": "hea200", "name": "HEA 200", "area": 0.00538, "iy": 0.0000369, "iz": 0.0000133, "j": 0.0000006 }
+  ],
+  "supports": [
+    { "id": "s1", "nodeId": "n1", "fixed": ["Tx", "Ty", "Tz", "Rx", "Ry", "Rz"] }
+  ],
+  "loadCases": [
+    {
+      "id": "point",
+      "name": "Point Load",
+      "loads": [
+        { "id": "l1", "nodeId": "n2", "dof": "Tz", "value": -5000.0 }
+      ]
+    }
+  ],
+  "camera": { "json": "{}" }
+}

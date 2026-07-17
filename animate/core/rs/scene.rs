@@ -111,7 +111,7 @@ impl SceneRunner {
 mod tests {
     use super::*;
     use crate::sobject::{Mobility, PaintStyle, SobjectShape, StrokeStyle};
-    use mathematical_geometry::{Circle, Point};
+    use mathematical_geometry::Point;
 
     struct FadeCircleScene;
 

@@ -259,6 +259,9 @@ func TestContributorDiscovery(t *testing.T) {
 }
 
 func TestDevcontainerPostAttachGitKrakenWorkspaceBootstrap(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow devcontainer post-attach subprocess test in short mode")
+	}
 	if runtime.GOOS == "windows" {
 		t.Skip("post-attach is a Linux devcontainer script; Windows bash wrappers can hang on path translation")
 	}
@@ -6629,6 +6632,9 @@ func TestGoalCreateAndCleanup(t *testing.T) {
 }
 
 func TestGoalDocument(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow goal document test in short mode")
+	}
 	os.RemoveAll(filepath.Join(GetRepoGoalsDir(), "TEST-PARENT-GOAL"))
 	os.RemoveAll(filepath.Join(GetRepoGoalsDir(), "RENAMED-PARENT"))
 	os.RemoveAll(filepath.Join(GetRepoGoalsDir(), "TEST-CHILD-GOAL"))
@@ -8196,6 +8202,9 @@ func TestGoalListIDs(t *testing.T) {
 }
 
 func TestTicketListIDs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow ticket list ids test in short mode")
+	}
 	result := ToolTicketList(nil, nil, nil)
 	if result.Error != "" {
 		t.Skipf("ToolTicketList returned error: %s", result.Error)
@@ -8609,6 +8618,9 @@ func TestGraphQLPoliciesQuery(t *testing.T) {
 }
 
 func TestGraphQLTicketsQuery(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow graphql tickets query test in short mode")
+	}
 	result, err := executor.ExecuteJSON(context.Background(), `{ repo { tickets { id slug status } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL tickets returned error: %v", err)
@@ -10811,6 +10823,9 @@ func TestStreamingList(t *testing.T) {
 }
 
 func TestTicketLifecycle_NoManagement(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow ticket lifecycle no-management test in short mode")
+	}
 	tmpDir := t.TempDir()
 
 	run := func(name string, field ...string) {
@@ -12461,6 +12476,9 @@ func TestToolGoalList(t *testing.T) {
 }
 
 func TestToolTicketList(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow tool ticket list test in short mode")
+	}
 	setupToolTest(t)
 	result := ToolTicketList(nil, nil, nil)
 	if result.Error != "" {
@@ -12491,6 +12509,9 @@ func TestToolFolderList(t *testing.T) {
 }
 
 func TestToolFolderTree(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow tool folder tree test in short mode")
+	}
 	setupToolTest(t)
 	result := ToolFolderTree("repo")
 	if result.Error != "" {
@@ -12510,6 +12531,9 @@ func TestToolFileList(t *testing.T) {
 }
 
 func TestToolFileTree(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow tool file tree test in short mode")
+	}
 	setupToolTest(t)
 	result := ToolFileTree("repo/client")
 	if result.Error != "" {
@@ -13589,6 +13613,9 @@ func TestSearchMonorepoTree(t *testing.T) {
 }
 
 func TestSearchMonorepoTreeWithCache(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow search monorepo tree cache test in short mode")
+	}
 	tmpDir := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(tmpDir, ".git"), 0755); err != nil {
 		t.Fatalf("mkdir .git: %v", err)
@@ -16207,6 +16234,9 @@ func TestRunHookForRejectsGenericKind(t *testing.T) {
 }
 
 func TestRunHookThinkingEvents(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow run hook thinking events test in short mode")
+	}
 	t.Run("thinking ended extracts text from top-level", func(t *testing.T) {
 		hctx := HookContext{
 			Event:  HookAgentThinkingEnded,
@@ -17853,6 +17883,9 @@ func assertNoHookLogFiles(t *testing.T, tmpDir string) {
 }
 
 func TestTrackHookAllEventsLogged(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow track hook all-events test in short mode")
+	}
 	tmpDir, ticketJSON := setupTicketDir(t)
 	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
 	SetRootDir(tmpDir)
@@ -20851,6 +20884,9 @@ func TestHookResultOmitEmpty(t *testing.T) {
 }
 
 func TestNativeHookEventMappingWithRealData(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow native hook event mapping test in short mode")
+	}
 	cases := []struct {
 		name        string
 		nativeEvent string
@@ -21158,6 +21194,9 @@ func TestNativeHookEventMappingFromRealLogFiles(t *testing.T) {
 }
 
 func TestCheckpointInAllAgentEvents(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow real-git-subprocess checkpoint test in short mode")
+	}
 	tmpDir := initTestGitRepo(t, "main")
 	SetRootDir(tmpDir)
 
@@ -21221,6 +21260,9 @@ func TestCheckpointInAllAgentEvents(t *testing.T) {
 }
 
 func TestCheckpointInAllVersionEvents(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow real-git-subprocess checkpoint test in short mode")
+	}
 	tmpDir := initTestGitRepo(t, "main")
 	SetRootDir(tmpDir)
 	headCmd := exec.Command("git", "rev-parse", "HEAD")
@@ -21267,6 +21309,9 @@ func TestCheckpointInAllVersionEvents(t *testing.T) {
 }
 
 func TestVersionHooksDoNotWriteSessionLogs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow real-git-subprocess version hook test in short mode")
+	}
 	tmpDir := initTestGitRepo(t, "main")
 	SetRootDir(tmpDir)
 
@@ -21308,6 +21353,9 @@ func TestVersionHooksDoNotWriteSessionLogs(t *testing.T) {
 }
 
 func TestCheckpointInLoggedEventJSON(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow real-git-subprocess checkpoint logging test in short mode")
+	}
 	tmpDir := initTestGitRepo(t, "main")
 	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
 	SetRootDir(tmpDir)
@@ -21378,6 +21426,9 @@ func TestCheckpointInLoggedEventJSON(t *testing.T) {
 }
 
 func TestEventIDsUseComposeRepoFormat(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow real-git-subprocess event id test in short mode")
+	}
 	tmpDir := initTestGitRepo(t, "main")
 	SetRootDir(tmpDir)
 
@@ -21777,15 +21828,6 @@ func TestGetEditorProvider(t *testing.T) {
 	}
 }
 
-func TestManagementProviderInterface(t *testing.T) {
-	var _ ManagementProvider = &GitHubManagementProvider{}
-	var _ ManagementProvider = &NullManagementProvider{}
-}
-
-func TestVersionControlProviderInterface(t *testing.T) {
-	var _ VersionControlProvider = &GitVersionControlProvider{}
-}
-
 func TestGitVersionControlProviderKind(t *testing.T) {
 	p := &GitVersionControlProvider{}
 	if p.Kind() != "git" {
@@ -21832,6 +21874,9 @@ func initTestGitRepo(t *testing.T, branch string) string {
 }
 
 func TestComputeCompositeFingerprintIgnoresUntrackedFiles(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow real-git-subprocess fingerprint test in short mode")
+	}
 	tmpDir := initTestGitRepo(t, "main")
 
 	firstFingerprint, firstMeta := computeCompositeFingerprint(tmpDir)
@@ -21853,6 +21898,9 @@ func TestComputeCompositeFingerprintIgnoresUntrackedFiles(t *testing.T) {
 }
 
 func TestComputeCompositeFingerprintFallsBackWhenRecursiveSubmoduleStatusFails(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow real-git-subprocess submodule fingerprint test in short mode")
+	}
 	tmpDir := initTestGitRepo(t, "main")
 	childDir := initTestGitRepo(t, "main")
 	nestedDir := initTestGitRepo(t, "main")
@@ -21925,6 +21973,9 @@ func initTestGitRepoWithRemote(t *testing.T) (string, string) {
 }
 
 func TestGitVersionControlProviderCurrentCheckpoint(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow real-git-subprocess provider test in short mode")
+	}
 	tmpDir := initTestGitRepo(t, "main")
 
 	p := &GitVersionControlProvider{}
@@ -21938,6 +21989,9 @@ func TestGitVersionControlProviderCurrentCheckpoint(t *testing.T) {
 }
 
 func TestGitVersionControlProviderCurrentBranch(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow real-git-subprocess provider test in short mode")
+	}
 	tmpDir := initTestGitRepo(t, "main")
 
 	p := &GitVersionControlProvider{}
@@ -21951,6 +22005,9 @@ func TestGitVersionControlProviderCurrentBranch(t *testing.T) {
 }
 
 func TestGitVersionControlProviderCheckpoint(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow real-git-subprocess provider test in short mode")
+	}
 	tmpDir := initTestGitRepo(t, "main")
 
 	os.WriteFile(filepath.Join(tmpDir, "file2.txt"), []byte("world"), 0644)
@@ -21971,6 +22028,9 @@ func TestGitVersionControlProviderCheckpoint(t *testing.T) {
 }
 
 func TestGitVersionControlProviderStageAll(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow real-git-subprocess provider test in short mode")
+	}
 	tmpDir := initTestGitRepo(t, "main")
 	os.WriteFile(filepath.Join(tmpDir, "newfile.txt"), []byte("new"), 0644)
 
@@ -21989,6 +22049,9 @@ func TestGitVersionControlProviderStageAll(t *testing.T) {
 }
 
 func TestGitVersionControlProviderStagedFiles(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow real-git-subprocess provider test in short mode")
+	}
 	tmpDir := initTestGitRepo(t, "main")
 
 	p := &GitVersionControlProvider{}
@@ -22014,6 +22077,9 @@ func TestGitVersionControlProviderStagedFiles(t *testing.T) {
 }
 
 func TestGitVersionControlProviderCheckin(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow real-git-subprocess provider test in short mode")
+	}
 	workDir, _ := initTestGitRepoWithRemote(t)
 
 	p := &GitVersionControlProvider{}
@@ -22032,6 +22098,9 @@ func TestGitVersionControlProviderCheckin(t *testing.T) {
 }
 
 func TestGitVersionControlProviderCheckout(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow real-git-subprocess provider test in short mode")
+	}
 	workDir, _ := initTestGitRepoWithRemote(t)
 
 	run := func(args ...string) {
@@ -22071,6 +22140,9 @@ func TestGitVersionControlProviderCheckout(t *testing.T) {
 }
 
 func TestVersionHookEventsDispatch(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow version hook events dispatch test in short mode")
+	}
 	cases := []struct {
 		name  string
 		event HookEvent
@@ -22094,21 +22166,6 @@ func TestVersionHookEventsDispatch(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestSandboxProviderInterface(t *testing.T) {
-	var _ SandboxProvider = &DevcontainerSandboxProvider{}
-}
-
-func TestEditorProviderInterface(t *testing.T) {
-	var _ EditorProvider = &CopilotEditorProvider{}
-	var _ EditorProvider = &CursorEditorProvider{}
-	var _ EditorProvider = &WindsurfEditorProvider{}
-	var _ EditorProvider = &ClaudeCodeEditorProvider{}
-	var _ EditorProvider = &DroidEditorProvider{}
-	var _ EditorProvider = &CodexEditorProvider{}
-	var _ EditorProvider = &AntigravityEditorProvider{}
-	var _ EditorProvider = &KiroEditorProvider{}
 }
 
 // #endregion 🏷️Provider

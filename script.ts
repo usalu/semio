@@ -12,6 +12,7 @@ import {
   loadFrameworkOsPlaygroundCatalog,
   resolveFrameworkOsPlaygroundPlugin,
   runCmd,
+  runTestBudgeted,
   installMicroCommitGitHooks,
   runCommit,
   runMicroCommit,
@@ -635,8 +636,9 @@ export class TestScript extends Script {
     throw new Error(`No free TCP port in ${preferred}..${preferred + span - 1}`);
   }
 
+  /** ⏱️`-short` skips the `testing.Short()`-gated real-monorepo-scan tests in `repo/client/cli/go/main_test.go` so the default budgeted `test` target stays ≤30s. */
   private runRepoGoTest(module: string, extraArgs: string[]): void {
-    runCmd("go", ["test", module, ...extraArgs], {
+    runTestBudgeted("go", ["test", module, "-short", ...extraArgs], {
       cwd: this.root,
       env: { ...process.env, GOWORK: join(this.root, "go.work") },
     });

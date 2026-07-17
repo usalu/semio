@@ -1,0 +1,13 @@
+{
+  "title": "Energy Technology Full BEM Engine",
+  "emoji": "⚡",
+  "status": "open",
+  "description": "Create the energy technology as a single headless Rust BEM crate at energy/engine/rs (energy_engine) with EnergyPlus-class simulation capability via a clean typed Rust API — no IDF/epJSON, templates, scripting, or bindings — implementing the full subsystem feature tree in one pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2058"
+  },
+  "goal": "🎯energy",
+  "sessions": [
+    "⚪e47a4dabd5e54662b3ab22f5871c1677"
+  ]
+}

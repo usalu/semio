@@ -283,6 +283,16 @@ pub use mathematical_geometry::{append_shape_to_path, geom_sel, Affine, Arc, Bez
 pub(crate) use renderer::vello_backend::usvg;
 // #endregion 🔖Renderer
 
+// #region ⚠️ Errors
+/// @emoji 🚨 SVG-parse failures raised by canvas icon/label rendering.
+#[derive(Clone, Debug, PartialEq, thiserror::Error)]
+pub enum CanvasError {
+    /// @emoji 🏷️ SVG source failed to parse into a `usvg` tree.
+    #[error("SVG parse failed: {0}")]
+    SvgParse(String),
+}
+// #endregion ⚠️ Errors
+
 pub mod theme {
 // #region theme
 //! @emoji 🎨 Default canvas paint helpers from centralized styling tokens.
@@ -656,29 +666,29 @@ pub mod svg_icon {
         render_group(scene, tree.root(), fg, bg, false);
     }
 
-    #[allow(dead_code)]
-    pub fn append_svg_str_themed(scene: &mut Scene, svg: &str, fg: Color, bg: Color) -> Result<(), String> {
-        let tree = usvg::Tree::from_str(svg, usvg_options_icons()).map_err(|e| e.to_string())?;
+    /// @emoji 🏷️ Parses SVG source and renders it themed into `scene`.
+    pub fn append_svg_str_themed(scene: &mut Scene, svg: &str, fg: Color, bg: Color) -> Result<(), crate::CanvasError> {
+        let tree = usvg::Tree::from_str(svg, usvg_options_icons()).map_err(|e| crate::CanvasError::SvgParse(e.to_string()))?;
         render_svg_tree_themed(scene, &tree, fg, bg);
         Ok(())
     }
 
-    #[allow(dead_code)]
-    pub fn append_svg_str(scene: &mut Scene, svg: &str) -> Result<(), String> {
+    /// @emoji 🏷️ Parses SVG source and renders it with the default icon theme into `scene`.
+    pub fn append_svg_str(scene: &mut Scene, svg: &str) -> Result<(), crate::CanvasError> {
         append_svg_str_themed(scene, svg, crate::theme::default_icon_fg(), crate::theme::default_icon_bg())
     }
 
     /// @emoji 📐 Parses SVG and returns visible content bounds in absolute SVG space.
-    pub fn svg_icon_content_bounds_from_str(svg: &str) -> Result<(f64, f64, f64, f64), String> {
-        let tree = usvg::Tree::from_str(svg, usvg_options_icons()).map_err(|e| e.to_string())?;
+    pub fn svg_icon_content_bounds_from_str(svg: &str) -> Result<(f64, f64, f64, f64), crate::CanvasError> {
+        let tree = usvg::Tree::from_str(svg, usvg_options_icons()).map_err(|e| crate::CanvasError::SvgParse(e.to_string()))?;
         Ok(svg_icon_content_bounds(&tree))
     }
 }
 
 impl SvgDocument {
     /// @emoji 🏷️ Parses icon SVG with bundled emoji font options.
-    pub fn parse_icons(svg: &str) -> Result<Self, String> {
-        let tree = usvg::Tree::from_str(svg, svg_icon::usvg_options_icons()).map_err(|e| e.to_string())?;
+    pub fn parse_icons(svg: &str) -> Result<Self, crate::CanvasError> {
+        let tree = usvg::Tree::from_str(svg, svg_icon::usvg_options_icons()).map_err(|e| crate::CanvasError::SvgParse(e.to_string()))?;
         Ok(Self::from_tree(tree))
     }
 
@@ -1161,6 +1171,7 @@ pub mod gpu_session {
             self.surface.is_some()
         }
 
+        /// @emoji 🖥️ WebGPU surface bring-up; returns `String` (not `CanvasError`) because every call site is a wasm-bindgen boundary fn that immediately erases the error into a `JsValue` for JS — see `render_frame` below for the same convention.
         pub async fn create_canvas_surface(canvas: HtmlCanvasElement, pw: u32, ph: u32) -> Result<(util::RenderContext, vello::Renderer, util::RenderSurface<'static>), String> {
             let mut render_ctx = util::RenderContext::new();
             let surface = render_ctx.create_surface(wgpu::SurfaceTarget::Canvas(canvas), pw, ph, wgpu::PresentMode::AutoVsync).await.map_err(|err| format!("{err:?}"))?;

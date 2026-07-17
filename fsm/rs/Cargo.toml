@@ -21,6 +21,7 @@ testing = []
 fsm_macros = { path = "../macros/rs", optional = true }
 serde = { version = "1.0.219", features = ["derive"], optional = true }
 serde_json = { version = "1.0.140", optional = true }
+thiserror = "2.0.12"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.106"

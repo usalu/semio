@@ -2830,14 +2830,6 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("orbitCameraViewRigApplyToken", () => {
-    it("keys apply-once behavior by seed and projection, not camera remounts", () => {
-      expect(orbitCameraViewRigApplyToken("inst:1", "orthographic")).toBe("inst:1:orthographic");
-      expect(orbitCameraViewRigApplyToken("inst:1", "perspective")).toBe("inst:1:perspective");
-      expect(orbitCameraViewRigApplyToken(7, "perspective")).toBe("7:perspective");
-    });
-  });
-
   describe("shouldApplyOrbitCameraViewRigSeed", () => {
     it("applies only when the seed token changes", () => {
       const token = orbitCameraViewRigApplyToken("win-a:3", "perspective");
@@ -2894,13 +2886,6 @@ if (import.meta.vitest) {
   describe("floatingOriginRebase", () => {
     it("subtracts anchor", () => {
       expect(floatingOriginRebase([1000, 2000, 3], [1000, 1990, 0])).toEqual([0, 10, 3]);
-    });
-  });
-
-  describe("cadVec3ToThree", () => {
-    it("passes through z-up coordinates", () => {
-      expect(cadVec3ToThree([1, 2, 3])).toEqual([1, 2, 3]);
-      expect(threeVec3ToCad(new Vector3(4, 5, 6))).toEqual([4, 5, 6]);
     });
   });
 

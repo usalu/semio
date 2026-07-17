@@ -123,23 +123,31 @@ fn shape_hash(shape: &SobjectShape) -> String {
             format_number_for_hash(rect.x1()),
             format_number_for_hash(rect.y1())
         ),
-        SobjectShape::RoundedRect { rect } => format!(
-            "rounded:{}/{}/{}/{}",
-            format_number_for_hash(rect.rect().x0()),
-            format_number_for_hash(rect.rect().y0()),
-            format_number_for_hash(rect.rect().x1()),
-            format_number_for_hash(rect.rect().y1())
-        ),
-        SobjectShape::Line { line } => format!("line:{}/{}", point_hash(line.from()), point_hash(line.to())),
-        SobjectShape::Arc { arc } => format!(
-            "arc:{}/{}/{}/{}/{}/{}",
-            point_hash(arc.center()),
-            format_number_for_hash(arc.radius()),
-            format_number_for_hash(arc.start_angle()),
-            format_number_for_hash(arc.sweep_angle()),
-            arc.x_rotation().to_string(),
-            arc.large_arc().to_string()
-        ),
+        SobjectShape::RoundedRect { rect } => {
+            let r = rect.to_kurbo().rect();
+            format!(
+                "rounded:{}/{}/{}/{}",
+                format_number_for_hash(r.x0),
+                format_number_for_hash(r.y0),
+                format_number_for_hash(r.x1),
+                format_number_for_hash(r.y1)
+            )
+        }
+        SobjectShape::Line { line } => {
+            let l = line.to_kurbo();
+            format!("line:{}/{}", point_hash(Point(l.p0)), point_hash(Point(l.p1)))
+        }
+        SobjectShape::Arc { arc } => {
+            let a = arc.to_kurbo();
+            format!(
+                "arc:{}/{}/{}/{}/{}",
+                point_hash(Point(a.center)),
+                format_number_for_hash(a.radii.x),
+                format_number_for_hash(a.radii.y),
+                format_number_for_hash(a.start_angle),
+                format_number_for_hash(a.sweep_angle)
+            )
+        }
         SobjectShape::Path { path } => format!("path:{}", path.elements().len()),
     }
 }

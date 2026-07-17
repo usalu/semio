@@ -1,0 +1,192 @@
+use animate_core::config::OutputFormat;
+use animate_core::AnimateConfig;
+use image::{ImageBuffer, Rgba};
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::process::Command;
+
+/// 📝 Partial-movie writer with FFmpeg concat and sidecar outputs.
+pub struct SceneFileWriter {
+    config: AnimateConfig,
+    partial_root: PathBuf,
+    partial_paths: Vec<PathBuf>,
+    png_sequence_dir: Option<PathBuf>,
+    frame_counter: u32,
+}
+
+impl SceneFileWriter {
+    /// 🏗️ Prepares writer directories from config.
+    pub fn new(config: &AnimateConfig) -> Result<Self, String> {
+        fs::create_dir_all(&config.output_dir).map_err(|err| format!("output dir: {err}"))?;
+        fs::create_dir_all(&config.media_dir).map_err(|err| format!("media dir: {err}"))?;
+        let partial_root = config.partial_movie_dir();
+        fs::create_dir_all(&partial_root).map_err(|err| format!("partial dir: {err}"))?;
+        let png_sequence_dir = if config.output_formats.contains(&OutputFormat::PngSequence) {
+            let dir = config.output_dir.join(format!("{}_frames", config.file_stem));
+            fs::create_dir_all(&dir).map_err(|err| format!("png dir: {err}"))?;
+            Some(dir)
+        } else {
+            None
+        };
+        Ok(Self {
+            config: config.clone(),
+            partial_root,
+            partial_paths: Vec::new(),
+            png_sequence_dir,
+            frame_counter: 0,
+        })
+    }
+
+    /// 🎬 Begins a new partial movie directory for `hash`.
+    pub fn begin_partial(&mut self, hash: &str, frame_start: u32) -> Result<PathBuf, String> {
+        let dir = self.partial_root.join(format!("{}_{frame_start}", &hash[..hash.len().min(12)]));
+        fs::create_dir_all(&dir).map_err(|err| format!("partial begin: {err}"))?;
+        Ok(dir)
+    }
+
+    /// 🖼️ Writes one RGBA frame as PNG into a partial directory.
+    pub fn write_frame_png(&mut self, partial_dir: &Path, pixels: &[u8], frame_index: u32) -> Result<(), String> {
+        let path = partial_dir.join(format!("{frame_index:06}.png"));
+        write_png_file(&path, pixels, self.config.pixel_width, self.config.pixel_height)?;
+        if let Some(dir) = &self.png_sequence_dir {
+            let global = dir.join(format!("{frame_index:06}.png"));
+            fs::copy(&path, &global).map_err(|err| format!("png copy: {err}"))?;
+        }
+        self.frame_counter = self.frame_counter.max(frame_index + 1);
+        Ok(())
+    }
+
+    /// ✅ Encodes a partial PNG directory to mp4 and tracks it for concat.
+    pub fn finalize_partial(&mut self, partial_dir: &Path) -> Result<PathBuf, String> {
+        let partial_mp4 = partial_dir.with_extension("mp4");
+        run_ffmpeg(&[
+            "-y",
+            "-framerate",
+            &format_number(self.config.frame_rate),
+            "-i",
+            &partial_dir.join("%06d.png").display().to_string(),
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            if self.config.transparent { "yuva420p" } else { "yuv420p" },
+            &partial_mp4.display().to_string(),
+        ])?;
+        self.partial_paths.push(partial_mp4.clone());
+        Ok(partial_mp4)
+    }
+
+    /// ♻️ Reuses a cached partial without re-encoding.
+    pub fn register_cached_partial(&mut self, path: &Path) {
+        if path.exists() {
+            self.partial_paths.push(path.to_path_buf());
+        }
+    }
+
+    /// 🎞️ Concatenates partial movies and emits configured sidecar outputs.
+    pub fn encode_outputs(&self, last_frame: Option<&[u8]>) -> Result<super::render::OutputPaths, String> {
+        let mut outputs = super::render::OutputPaths::default();
+        if self.config.output_formats.contains(&OutputFormat::Mp4) && !self.partial_paths.is_empty() {
+            let mp4 = self.config.output_dir.join(format!("{}.mp4", self.config.file_stem));
+            concat_partials(&self.partial_paths, &mp4)?;
+            outputs.mp4 = Some(mp4);
+        }
+        if self.config.output_formats.contains(&OutputFormat::Gif) {
+            if let Some(mp4) = &outputs.mp4 {
+                let gif = self.config.output_dir.join(format!("{}.gif", self.config.file_stem));
+                run_ffmpeg(&[
+                    "-y",
+                    "-i",
+                    &mp4.display().to_string(),
+                    "-vf",
+                    "fps=15,scale=640:-1:flags=lanczos",
+                    &gif.display().to_string(),
+                ])?;
+                outputs.gif = Some(gif);
+            }
+        }
+        if self.config.output_formats.contains(&OutputFormat::LastFrame) {
+            if let Some(pixels) = last_frame {
+                let png = self.config.output_dir.join(format!("{}.png", self.config.file_stem));
+                write_png_file(&png, pixels, self.config.pixel_width, self.config.pixel_height)?;
+                outputs.last_frame = Some(png);
+            }
+        }
+        outputs.png_dir = self.png_sequence_dir.clone();
+        Ok(outputs)
+    }
+}
+
+fn format_number(value: f64) -> String {
+    semio_framework_hash::format_number_for_hash(value)
+}
+
+fn write_png_file(path: &Path, pixels: &[u8], width: u32, height: u32) -> Result<(), String> {
+    let image: ImageBuffer<Rgba<u8>, Vec<u8>> =
+        ImageBuffer::from_raw(width, height, pixels.to_vec()).ok_or_else(|| "invalid rgba buffer".to_string())?;
+    image.save(path).map_err(|err| format!("png write: {err}"))
+}
+
+fn concat_partials(partials: &[PathBuf], output: &Path) -> Result<(), String> {
+    if partials.len() == 1 {
+        fs::copy(&partials[0], output).map_err(|err| format!("copy partial: {err}"))?;
+        return Ok(());
+    }
+    let list_path = output.with_extension("txt");
+    let mut list = String::new();
+    for partial in partials {
+        list.push_str(&format!("file '{}'\n", partial.display()));
+    }
+    fs::write(&list_path, list).map_err(|err| format!("concat list: {err}"))?;
+    run_ffmpeg(&[
+        "-y",
+        "-f",
+        "concat",
+        "-safe",
+        "0",
+        "-i",
+        &list_path.display().to_string(),
+        "-c",
+        "copy",
+        &output.display().to_string(),
+    ])
+}
+
+fn run_ffmpeg(args: &[&str]) -> Result<(), String> {
+    let status = Command::new("ffmpeg").args(args).status().map_err(|err| format!("ffmpeg spawn: {err}"))?;
+    if status.success() {
+        Ok(())
+    } else {
+        Err(format!("ffmpeg failed with status {status}"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn temp_config() -> AnimateConfig {
+        let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let dir = std::env::temp_dir().join(format!("animate_video_test_{stamp}"));
+        AnimateConfig {
+            pixel_width: 16,
+            pixel_height: 16,
+            frame_rate: 15.0,
+            output_dir: dir.clone(),
+            media_dir: dir.join("media"),
+            file_stem: "test".into(),
+            output_formats: vec![OutputFormat::LastFrame],
+            ..AnimateConfig::default()
+        }
+    }
+
+    #[test]
+    fn writer_writes_png_frame() {
+        let config = temp_config();
+        let mut writer = SceneFileWriter::new(&config).expect("writer");
+        let partial = writer.begin_partial("hash", 0).expect("partial");
+        let pixels = vec![255u8; 16 * 16 * 4];
+        writer.write_frame_png(&partial, &pixels, 0).expect("frame");
+        assert!(partial.join("000000.png").exists());
+    }
+}

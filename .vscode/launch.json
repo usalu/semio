@@ -2423,6 +2423,17 @@
       }
     },
     {
+      "name": "🧪test⚡energy-engine",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/energy-engine:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.5
+      }
+    },
+    {
       "name": "🛠️dev🏗️fem🩻2d⚛️react",
       "type": "node-terminal",
       "request": "launch",

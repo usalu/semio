@@ -1,0 +1,38 @@
+{
+  "name": "@semio-tech/animate-video-rs",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/Cargo.toml",
+        "{projectRoot}/lib.rs",
+        "{projectRoot}/script.ts",
+        "{workspaceRoot}/animate/core/rs/**",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "options": {
+        "cwd": "animate/video/rs",
+        "command": "bun ./script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "render": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/Cargo.toml",
+        "{projectRoot}/lib.rs",
+        "{projectRoot}/script.ts",
+        "{workspaceRoot}/animate/core/rs/**",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "options": {
+        "cwd": "animate/video/rs",
+        "command": "bun ./script.ts render",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

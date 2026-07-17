@@ -105,6 +105,7 @@ members = [
     "imperative/module/text/rs",
     "cad/rs",
     "cad/plugin/rs",
+    "animate/core/rs",
 
     # 🧹 Adopted 2026-07-18 (RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN): these crates lived
     # inside the workspace dir but were neither members nor excluded, so they could
@@ -122,6 +123,23 @@ members = [
     "compose/client/lib/rs",
     "compose/client/lib/query/rs",
     "compose/client/bin/store/rs",
+    "animate/core/rs",
+    "animate/video/rs",
+    "norm/core/rs",
+    "norm/din/4108/rs",
+    "norm/din/en/16798/rs",
+    "norm/din/v/18599/rs",
+    "norm/en/1990/rs",
+    "norm/en/1991/rs",
+    "norm/en/1992/rs",
+    "norm/en/1993/rs",
+    "norm/en/1994/rs",
+    "norm/en/1995/rs",
+    "norm/en/1996/rs",
+    "norm/en/1997/rs",
+    "norm/en/1998/rs",
+    "norm/en/1999/rs",
+    "energy/engine/rs",
 ]
 
 resolver = "2"

@@ -11,6 +11,19 @@ pub use generated::*;
 
 pub use crate::Manifest as GraphManifest;
 
+//#region ⚠️ Errors
+/// 🚨 Compile-time `valueType` parsing failures.
+#[derive(Clone, Debug, PartialEq, thiserror::Error)]
+pub enum GraphManifestError {
+    /// 📦 A single-key `valueType` object didn't carry a recognized `schema` key.
+    #[error("unsupported valueType object {0}")]
+    UnsupportedValueTypeObject(serde_json::Value),
+    /// 🔍 A `valueType` value wasn't a string or a `{schema}` object.
+    #[error("unsupported valueType {0}")]
+    UnsupportedValueType(serde_json::Value),
+}
+//#endregion ⚠️ Errors
+
 // #region 🔖Property
 /// 📊 Runtime property value for graph instances.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -76,7 +89,7 @@ where
     value.serialize(serializer)
 }
 
-fn parse_value_type_value(raw: &serde_json::Value) -> Result<ValueType, String> {
+fn parse_value_type_value(raw: &serde_json::Value) -> Result<ValueType, GraphManifestError> {
     if let Ok(vt) = serde_json::from_value::<ValueType>(raw.clone()) {
         return Ok(vt);
     }
@@ -93,9 +106,9 @@ fn parse_value_type_value(raw: &serde_json::Value) -> Result<ValueType, String> 
             if let Some(schema) = map.get("schema").and_then(|v| v.as_str()) {
                 return Ok(ValueType::Schema(schema.into()));
             }
-            Err(format!("unsupported valueType object {raw}"))
+            Err(GraphManifestError::UnsupportedValueTypeObject(raw.clone()))
         }
-        other => Err(format!("unsupported valueType {other}")),
+        other => Err(GraphManifestError::UnsupportedValueType(other.clone())),
     }
 }
 

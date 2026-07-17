@@ -3,6 +3,7 @@
 use crate::color::Color;
 use crate::geometry::{circle, line, rectangle};
 use crate::sobject::{Group, Sobject, VSobject};
+use mathematical_geometry::Point;
 
 /// 📦 Base 3D Sobject with yaw/pitch and projection scale.
 #[derive(Clone, Debug)]

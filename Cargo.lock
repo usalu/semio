@@ -99,6 +99,42 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b46cbb362ab8752921c97e041f5e366ee6297bd428a31275b9fcf1e380f7299"
 
 [[package]]
+name = "animate_core"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "comemo",
+ "ecow",
+ "fontdb",
+ "image",
+ "kurbo 0.13.1",
+ "mathematical_geometry",
+ "semio-framework-hash",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "typst",
+ "typst-assets",
+ "typst-svg",
+]
+
+[[package]]
+name = "animate_video"
+version = "0.1.0"
+dependencies = [
+ "animate_core",
+ "image",
+ "infinite_cavas",
+ "mathematical_geometry",
+ "pollster",
+ "semio-framework-hash",
+ "serde",
+ "serde_json",
+ "vello",
+ "wgpu",
+]
+
+[[package]]
 name = "anstyle"
 version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2202,6 +2238,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "66b7e2430c6dff6a955451e2cfc438f09cea1965a9d6f87f7e3b90decc014099"
 
 [[package]]
+name = "energy_engine"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_geometry",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "enum-ordinalize"
 version = "4.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2403,6 +2449,7 @@ name = "fem_3d"
 version = "0.1.0"
 dependencies = [
  "fem_core",
+ "mathematical_algebra",
  "serde",
  "serde_json",
  "vcs",
@@ -2893,6 +2940,7 @@ dependencies = [
  "js-sys",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "wasm-bindgen",
 ]
 
@@ -4418,6 +4466,7 @@ dependencies = [
  "mathematical_geometry",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "typst",
  "typst-assets",
  "typst-svg",
@@ -5131,6 +5180,7 @@ dependencies = [
  "neural_engine",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -5487,6 +5537,153 @@ checksum = "d273983c5a657a70a3e8f2a01329822f3b8c8172b73826411a55751e404a0a4a"
 dependencies = [
  "memchr",
  "minimal-lexical",
+]
+
+[[package]]
+name = "norm_core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "norm_din_4108"
+version = "0.1.0"
+dependencies = [
+ "norm_core",
+ "serde",
+]
+
+[[package]]
+name = "norm_din_en_16798"
+version = "0.1.0"
+dependencies = [
+ "norm_core",
+ "serde",
+]
+
+[[package]]
+name = "norm_din_v_18599"
+version = "0.1.0"
+dependencies = [
+ "norm_core",
+ "serde",
+]
+
+[[package]]
+name = "norm_en_1990"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "norm_core",
+ "serde",
+]
+
+[[package]]
+name = "norm_en_1991"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "norm_core",
+ "norm_en_1990",
+ "serde",
+]
+
+[[package]]
+name = "norm_en_1992"
+version = "0.1.0"
+dependencies = [
+ "fem_core",
+ "mathematical_algebra",
+ "norm_core",
+ "norm_en_1990",
+ "norm_en_1991",
+ "serde",
+]
+
+[[package]]
+name = "norm_en_1993"
+version = "0.1.0"
+dependencies = [
+ "fem_core",
+ "mathematical_algebra",
+ "norm_core",
+ "norm_en_1990",
+ "norm_en_1991",
+ "serde",
+]
+
+[[package]]
+name = "norm_en_1994"
+version = "0.1.0"
+dependencies = [
+ "fem_core",
+ "mathematical_algebra",
+ "norm_core",
+ "norm_en_1990",
+ "norm_en_1991",
+ "serde",
+]
+
+[[package]]
+name = "norm_en_1995"
+version = "0.1.0"
+dependencies = [
+ "fem_core",
+ "mathematical_algebra",
+ "norm_core",
+ "norm_en_1990",
+ "norm_en_1991",
+ "serde",
+]
+
+[[package]]
+name = "norm_en_1996"
+version = "0.1.0"
+dependencies = [
+ "fem_core",
+ "mathematical_algebra",
+ "norm_core",
+ "norm_en_1990",
+ "norm_en_1991",
+ "serde",
+]
+
+[[package]]
+name = "norm_en_1997"
+version = "0.1.0"
+dependencies = [
+ "fem_core",
+ "mathematical_algebra",
+ "norm_core",
+ "norm_en_1990",
+ "norm_en_1991",
+ "serde",
+]
+
+[[package]]
+name = "norm_en_1998"
+version = "0.1.0"
+dependencies = [
+ "fem_core",
+ "mathematical_algebra",
+ "norm_core",
+ "norm_en_1990",
+ "norm_en_1991",
+ "serde",
+]
+
+[[package]]
+name = "norm_en_1999"
+version = "0.1.0"
+dependencies = [
+ "fem_core",
+ "mathematical_algebra",
+ "norm_core",
+ "norm_en_1990",
+ "norm_en_1991",
+ "serde",
 ]
 
 [[package]]

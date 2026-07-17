@@ -1,0 +1,11 @@
+{
+  "title": "Norm",
+  "description": "Headless Rust norm compliance computation: DIN thermal/energy standards and Eurocode structural design families with German national annex.",
+  "prompt": "Build norm technology — norm/core plus family crates norm/din/v/18599, norm/din/4108, norm/din/en/16798, norm/en/1990 through norm/en/1999 — full part coverage end-to-end.",
+  "status": "open",
+  "dates": {
+    "due": "2026-12-31"
+  },
+  "client": "cursor-chat",
+  "llm": "composer-2.5"
+}

@@ -1,0 +1,14 @@
+[package]
+name = "norm_en_1991"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+norm_core = { path = "../../../core/rs" }
+serde = { version = "1.0.219", features = ["derive"] }
+mathematical_algebra = { path = "../../../../mathematical/algebra/rs" }
+norm_en_1990 = { path = "../../1990/rs" }

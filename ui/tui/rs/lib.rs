@@ -1807,15 +1807,16 @@ pub mod chrome {
             }
         }
 
-        /// 🖱️ Resolves a click on a window's close/maximize overlay, if any (top-border-row hit only).
+        /// 🖱️ Resolves a click on a window's close/maximize tab, if any (tab text-row hit only).
         pub fn window_control_at(&self, rect: Rect, pos: Pos) -> Option<crate::widget::WidgetSignal> {
             let ChromeState::Window(w) = self else { return None };
-            if pos.y != rect.y {
+            let layout = window_chip_layout(w, rect);
+            if !layout.has_tabs || pos.y != rect.y + 1 {
                 return None;
             }
-            let controls = window_chip_layout(w, rect).controls?;
-            let maximize_x = controls.x + WINDOW_CONTROLS_MAXIMIZE_OFFSET;
-            let close_x = controls.x + WINDOW_CONTROLS_CLOSE_OFFSET;
+            let controls = layout.controls?;
+            let maximize_x = controls.x + 1 + WINDOW_CONTROLS_MAXIMIZE_OFFSET;
+            let close_x = controls.x + 1 + WINDOW_CONTROLS_CLOSE_OFFSET;
             if pos.x == close_x && w.closable {
                 Some(crate::widget::WidgetSignal::WindowClose)
             } else if pos.x == maximize_x && w.maximizable {
@@ -1867,44 +1868,71 @@ pub mod chrome {
         buf.put_str(Pos { x: status_x, y: content.y }, status, theme.role(Role::MutedForeground), bg, 0, content);
     }
 
-    /// 🔘 The controls overlay content: enlarge glyph then close glyph, padded to one cell each.
+    /// 🔘 The controls tab's interior content: enlarge glyph then close glyph, padded to one cell each.
     const WINDOW_CONTROLS_INTERIOR: &str = " \u{2922} \u{2715} ";
     const WINDOW_CONTROLS_MAXIMIZE_OFFSET: u16 = 1;
     const WINDOW_CONTROLS_CLOSE_OFFSET: u16 = 3;
 
-    /// 🪟 One overlay painted directly on the window's own (already-continuous) top border row.
+    /// 🪟 One 2-row tab recessed into a top corner of the window: `x` is its own left-wall column,
+    /// `interior` is the padded text between its walls (the tab is `interior_width + 2` cells wide).
     struct WindowTab {
         x: u16,
         interior: String,
+        interior_width: u16,
     }
 
     struct WindowChipLayout {
+        has_tabs: bool,
         title: WindowTab,
         controls: Option<WindowTab>,
     }
 
-    /// 📐 Shared by paint and click hit-testing so the two can never drift apart: the title overlay
-    /// starts right after the left corner, the close/maximize overlay (if it fits) ends right before
-    /// the right corner — both sit on the border's own row, not a separate row above it.
+    /// 📐 Shared by paint and click hit-testing so the two can never drift apart. The title tab's own
+    /// left wall is the window's left wall; the controls tab's own right wall is the window's right
+    /// wall — both 2 rows tall, each bending down into the main body's top edge one row below.
     fn window_chip_layout(w: &WindowState, rect: Rect) -> WindowChipLayout {
-        let controls_width = display_width(WINDOW_CONTROLS_INTERIOR);
-        let show_controls = (w.closable || w.maximizable) && rect.width > controls_width * 2 + 4;
-        let reserved_right = if show_controls { controls_width + 1 } else { 0 };
+        let controls_interior_width = display_width(WINDOW_CONTROLS_INTERIOR);
+        let controls_width = controls_interior_width + 2;
         let number_prefix = w.number.as_ref().map(|n| format!("{n} ")).unwrap_or_default();
-        let title_full = format!(" {number_prefix}{} ", w.title);
-        let title_max = rect.width.saturating_sub(2 + reserved_right);
-        let (title_text, _) = truncate_to(&title_full, title_max);
-        let controls = show_controls.then(|| {
-            let x = rect.x + rect.width - 1 - controls_width;
-            WindowTab { x, interior: WINDOW_CONTROLS_INTERIOR.to_string() }
+        let title_interior_full = format!(" {number_prefix}{} ", w.title);
+        let show_controls = w.closable || w.maximizable;
+        let title_room = rect.width.saturating_sub(2 + if show_controls { controls_width + 1 } else { 0 });
+        let (title_interior, title_interior_width) = truncate_to(&title_interior_full, title_room);
+        let title_width = title_interior_width + 2;
+        let has_tabs = rect.height >= 4 && title_width >= 3 && rect.width >= title_width + 2;
+        let controls_fits = show_controls && rect.width >= title_width + controls_width + 3;
+        let controls = controls_fits.then(|| WindowTab {
+            x: rect.x + rect.width - controls_width,
+            interior: WINDOW_CONTROLS_INTERIOR.to_string(),
+            interior_width: controls_interior_width,
         });
-        WindowChipLayout { title: WindowTab { x: rect.x + 1, interior: title_text.to_string() }, controls }
+        WindowChipLayout { has_tabs, title: WindowTab { x: rect.x, interior: title_interior.to_string(), interior_width: title_interior_width }, controls }
     }
 
-    /// 🖌️ Paints a window with a fully continuous border first — every corner, side, top and bottom
-    /// hairline cell, unmodified — then overlays the title/control chips directly on top of the
-    /// already-drawn top row. The border is never cut, notched, or interrupted; the chip text simply
-    /// flows on top of it, the same as it flows over the rest of the window's own surface.
+    /// 🪟 Paints one 2-row corner tab: a normal `┌─┐ / │text│` box, then bends its *short* wall (the
+    /// one that is not also the window's own permanent side wall) down one row into the main body's
+    /// top hairline — `└` when the short wall is on the right (title tab), `┘` when on the left
+    /// (controls tab).
+    fn paint_corner_tab(buf: &mut CellBuffer, y: u16, tab: &WindowTab, short_wall_is_left: bool, text_fg: [u8; 3], bg: [u8; 3], border: [u8; 3]) {
+        let width = tab.interior_width + 2;
+        buf.put(tab.x, y, Cell { ch: '\u{250c}', fg: border, bg, attrs: 0, width: 1 });
+        buf.hline(Pos { x: tab.x + 1, y }, width.saturating_sub(2), '\u{2500}', border, bg);
+        buf.put(tab.x + width - 1, y, Cell { ch: '\u{2510}', fg: border, bg, attrs: 0, width: 1 });
+        buf.put(tab.x, y + 1, Cell { ch: '\u{2502}', fg: border, bg, attrs: 0, width: 1 });
+        buf.put_str(Pos { x: tab.x + 1, y: y + 1 }, &tab.interior, text_fg, bg, 0, Rect::new(tab.x + 1, y + 1, tab.interior_width, 1));
+        buf.put(tab.x + width - 1, y + 1, Cell { ch: '\u{2502}', fg: border, bg, attrs: 0, width: 1 });
+        if short_wall_is_left {
+            buf.put(tab.x, y + 2, Cell { ch: '\u{2518}', fg: border, bg, attrs: 0, width: 1 });
+        } else {
+            buf.put(tab.x + width - 1, y + 2, Cell { ch: '\u{2514}', fg: border, bg, attrs: 0, width: 1 });
+        }
+    }
+
+    /// 🖌️ Paints a window whose title/control tabs are recessed into its top corners: each is a real
+    /// 2-row box sharing the window's own left/right wall, with its short inner wall bending down
+    /// into the main body's top edge — the semio-window.sty "flowing" tab look, not text cut into a
+    /// flat border line. A side with no tab (controls not wanted, or too narrow to fit) simply stays
+    /// flat, its corner sitting at the main body's top row instead of rising two rows like a tab.
     fn paint_window(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
         if rect.width < 2 || rect.height < 2 {
             return;
@@ -1913,19 +1941,52 @@ pub mod chrome {
         let border = if w.focused { theme.role(Role::BorderEmphasized) } else { theme.role(Role::BorderNormal) };
         let fg = theme.role(Role::Foreground);
         buf.fill_rect(rect, Cell::blank(fg, bg));
-        buf.hline(Pos { x: rect.x + 1, y: rect.y }, rect.width - 2, '\u{2500}', border, bg);
-        buf.hline(Pos { x: rect.x + 1, y: rect.y + rect.height - 1 }, rect.width - 2, '\u{2500}', border, bg);
-        buf.vline(Pos { x: rect.x, y: rect.y + 1 }, rect.height.saturating_sub(2), '\u{2502}', border, bg);
-        buf.vline(Pos { x: rect.x + rect.width - 1, y: rect.y + 1 }, rect.height.saturating_sub(2), '\u{2502}', border, bg);
-        buf.put(rect.x, rect.y, Cell { ch: '\u{250c}', fg: border, bg, attrs: 0, width: 1 });
-        buf.put(rect.x + rect.width - 1, rect.y, Cell { ch: '\u{2510}', fg: border, bg, attrs: 0, width: 1 });
-        buf.put(rect.x, rect.y + rect.height - 1, Cell { ch: '\u{2514}', fg: border, bg, attrs: 0, width: 1 });
-        buf.put(rect.x + rect.width - 1, rect.y + rect.height - 1, Cell { ch: '\u{2518}', fg: border, bg, attrs: 0, width: 1 });
 
+        let bottom_y = rect.y + rect.height - 1;
+        let right_x = rect.x + rect.width - 1;
         let layout = window_chip_layout(w, rect);
-        buf.put_str(Pos { x: layout.title.x, y: rect.y }, &layout.title.interior, theme.role(Role::AccentForeground), theme.role(Role::Accent), 0, rect);
-        if let Some(controls) = &layout.controls {
-            buf.put_str(Pos { x: controls.x, y: rect.y }, &controls.interior, theme.role(Role::MutedForeground), bg, 0, rect);
+
+        if !layout.has_tabs {
+            buf.hline(Pos { x: rect.x + 1, y: rect.y }, rect.width.saturating_sub(2), '\u{2500}', border, bg);
+            buf.hline(Pos { x: rect.x + 1, y: bottom_y }, rect.width.saturating_sub(2), '\u{2500}', border, bg);
+            buf.vline(Pos { x: rect.x, y: rect.y + 1 }, bottom_y.saturating_sub(rect.y + 1), '\u{2502}', border, bg);
+            buf.vline(Pos { x: right_x, y: rect.y + 1 }, bottom_y.saturating_sub(rect.y + 1), '\u{2502}', border, bg);
+            buf.put(rect.x, rect.y, Cell { ch: '\u{250c}', fg: border, bg, attrs: 0, width: 1 });
+            buf.put(right_x, rect.y, Cell { ch: '\u{2510}', fg: border, bg, attrs: 0, width: 1 });
+            buf.put(rect.x, bottom_y, Cell { ch: '\u{2514}', fg: border, bg, attrs: 0, width: 1 });
+            buf.put(right_x, bottom_y, Cell { ch: '\u{2518}', fg: border, bg, attrs: 0, width: 1 });
+            return;
+        }
+
+        let top_y = rect.y + 2;
+
+        // bottom edge: always flat, full width
+        buf.hline(Pos { x: rect.x + 1, y: bottom_y }, rect.width.saturating_sub(2), '\u{2500}', border, bg);
+        buf.put(rect.x, bottom_y, Cell { ch: '\u{2514}', fg: border, bg, attrs: 0, width: 1 });
+        buf.put(right_x, bottom_y, Cell { ch: '\u{2518}', fg: border, bg, attrs: 0, width: 1 });
+
+        // left side: always a raised title tab
+        buf.vline(Pos { x: rect.x, y: rect.y + 1 }, bottom_y.saturating_sub(rect.y + 1), '\u{2502}', border, bg);
+        paint_corner_tab(buf, rect.y, &layout.title, false, theme.role(Role::Accent), bg, border);
+
+        // right side: a raised controls tab, or — when absent — a plain flat corner at the body's top
+        let body_right_x = match &layout.controls {
+            Some(controls) => {
+                buf.vline(Pos { x: right_x, y: rect.y + 1 }, bottom_y.saturating_sub(rect.y + 1), '\u{2502}', border, bg);
+                paint_corner_tab(buf, rect.y, controls, true, theme.role(Role::MutedForeground), bg, border);
+                controls.x
+            }
+            None => {
+                buf.vline(Pos { x: right_x, y: top_y + 1 }, bottom_y.saturating_sub(top_y + 1), '\u{2502}', border, bg);
+                buf.put(right_x, top_y, Cell { ch: '\u{2510}', fg: border, bg, attrs: 0, width: 1 });
+                right_x
+            }
+        };
+
+        // main body's top edge: from the title tab's bend to the right side's bend/corner
+        let body_left_x = layout.title.x + layout.title.interior_width + 2;
+        if body_right_x > body_left_x {
+            buf.hline(Pos { x: body_left_x, y: top_y }, body_right_x - body_left_x, '\u{2500}', border, bg);
         }
     }
 
@@ -2631,68 +2692,78 @@ mod tests {
     }
 
     #[test]
-    fn window_chrome_border_is_continuous_with_chips_overlaid_on_top() {
+    fn window_chrome_recesses_tabs_into_the_top_corners_of_a_closed_shape() {
         let theme = Theme::new(AppearanceName::Dark);
-        let rect = Rect::new(0, 0, 40, 10);
-        let mut buf = CellBuffer::new(Size { width: 40, height: 10 }, Cell::blank([0, 0, 0], [0, 0, 0]));
-        let mut w = WindowState::new("Plugins");
+        let rect = Rect::new(0, 0, 40, 5);
+        let mut buf = CellBuffer::new(Size { width: 40, height: 5 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+        let mut w = WindowState::new("Puzzle 3D");
         w.focused = true;
         ChromeState::Window(w).paint(&theme, rect, &mut buf);
 
-        // the border is one continuous rectangle drawn on a single top row — every corner, side, and
-        // the full bottom hairline intact, at the window's actual last row (no row consumed by a chip)
-        assert_eq!(buf.get(0, 0).unwrap().ch, '\u{250c}', "top-left corner missing");
-        assert_eq!(buf.get(39, 0).unwrap().ch, '\u{2510}', "top-right corner missing");
-        assert_eq!(buf.get(0, 9).unwrap().ch, '\u{2514}', "bottom-left corner missing");
-        assert_eq!(buf.get(39, 9).unwrap().ch, '\u{2518}', "bottom-right corner missing");
-        for y in 1..9 {
-            assert_eq!(buf.get(0, y).unwrap().ch, '\u{2502}', "left border broken at row {y}");
-            assert_eq!(buf.get(39, y).unwrap().ch, '\u{2502}', "right border broken at row {y}");
-        }
-        for x in 1..39 {
-            assert_eq!(buf.get(x, 9).unwrap().ch, '\u{2500}', "bottom border broken at col {x}");
-        }
+        // exact shape: both tabs are real 2-row boxes sharing the window's own left/right wall, each
+        // bending its short inner wall down into the main body's top edge one row below
+        assert_eq!(row_text(&buf, 0), "┌───────────┐                    ┌─────┐");
+        assert_eq!(row_text(&buf, 1), "│ Puzzle 3D │                    │ ⤢ ✕ │");
+        assert_eq!(row_text(&buf, 2), "│           └────────────────────┘     │");
+        assert_eq!(row_text(&buf, 3), "│                                      │");
+        assert_eq!(row_text(&buf, 4), "└──────────────────────────────────────┘");
 
-        // the title chip is painted directly on top of the top border row (not a separate row above
-        // it, not spliced into the border's own character sequence via corner/bracket glyphs)
-        let top_row = row_text(&buf, 0);
-        assert!(top_row.contains("Plugins"), "title chip missing from the top border row: {top_row:?}");
-        assert!(top_row.contains('\u{2922}'), "maximize glyph missing from the top border row: {top_row:?}");
-        assert!(top_row.contains('\u{2715}'), "close glyph missing from the top border row: {top_row:?}");
-        let title_x = (0..40).find(|&x| buf.get(x, 0).unwrap().ch == 'P').expect("title text rendered");
-        assert_eq!(buf.get(title_x, 0).unwrap().bg, theme.role(Role::Accent), "title chip should be a filled accent overlay");
-        assert_eq!(buf.get(title_x, 0).unwrap().fg, theme.role(Role::AccentForeground));
+        let title_x = (0..40).find(|&x| buf.get(x, 1).unwrap().ch == 'P').expect("title text rendered");
+        assert_eq!(buf.get(title_x, 1).unwrap().fg, theme.role(Role::Accent));
     }
 
     #[test]
-    fn window_chrome_hides_control_chip_when_too_narrow_for_it() {
+    fn window_chrome_flattens_the_right_side_when_no_controls_tab_is_wanted() {
+        let theme = Theme::new(AppearanceName::Dark);
+        let rect = Rect::new(0, 0, 40, 6);
+        let mut buf = CellBuffer::new(Size { width: 40, height: 6 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+        let mut w = WindowState::new("Log");
+        w.closable = false;
+        w.maximizable = false;
+        ChromeState::Window(w).paint(&theme, rect, &mut buf);
+
+        // the title tab still rises, but the right side has no tab: its corner sits flat at the
+        // main body's top row instead of rising — the window stays one closed shape either way
+        assert_eq!(row_text(&buf, 0), "\u{250c}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2510}                                 ");
+        assert_eq!(row_text(&buf, 1), "\u{2502} Log \u{2502}                                 ");
+        assert_eq!(row_text(&buf, 2), "\u{2502}     \u{2514}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2510}");
+        assert_eq!(row_text(&buf, 3), "\u{2502}                                      \u{2502}");
+        assert_eq!(row_text(&buf, 4), "\u{2502}                                      \u{2502}");
+        assert_eq!(row_text(&buf, 5), "\u{2514}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2518}");
+        assert!(!row_text(&buf, 0).contains('\u{2922}') && !row_text(&buf, 1).contains('\u{2922}'), "no controls tab was requested");
+    }
+
+    #[test]
+    fn window_chrome_hides_both_tabs_when_too_narrow_for_even_the_title() {
         let theme = Theme::new(AppearanceName::Dark);
         let rect = Rect::new(0, 0, 10, 5);
         let mut buf = CellBuffer::new(Size { width: 10, height: 5 }, Cell::blank([0, 0, 0], [0, 0, 0]));
         let window = ChromeState::Window(WindowState::new("X"));
         window.paint(&theme, rect, &mut buf);
-        let top = row_text(&buf, 0);
-        assert!(!top.contains('\u{2922}') && !top.contains('\u{2715}'), "controls should not fit in a 10-wide window: {top:?}");
+        // plain flat box: a single top row, no raised tabs at all
+        assert_eq!(row_text(&buf, 0), "\u{250c}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2510}");
         assert_eq!(window.window_control_at(rect, Pos { x: 5, y: 0 }), None);
+        assert_eq!(window.window_control_at(rect, Pos { x: 5, y: 1 }), None);
     }
 
     #[test]
     fn window_control_clicks_resolve_to_close_and_maximize_signals() {
         let theme = Theme::new(AppearanceName::Dark);
-        let rect = Rect::new(0, 0, 40, 10);
-        let mut buf = CellBuffer::new(Size { width: 40, height: 10 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+        let rect = Rect::new(0, 0, 40, 5);
+        let mut buf = CellBuffer::new(Size { width: 40, height: 5 }, Cell::blank([0, 0, 0], [0, 0, 0]));
         let window = ChromeState::Window(WindowState::new("Plugins"));
         window.paint(&theme, rect, &mut buf);
-        let maximize_x = (0..40).find(|&x| buf.get(x, 0).unwrap().ch == '\u{2922}').expect("maximize glyph rendered");
-        let close_x = (0..40).find(|&x| buf.get(x, 0).unwrap().ch == '\u{2715}').expect("close glyph rendered");
-        assert_eq!(window.window_control_at(rect, Pos { x: maximize_x, y: 0 }), Some(WidgetSignal::WindowMaximize));
-        assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 0 }), Some(WidgetSignal::WindowClose));
-        assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 1 }), None, "clicks below the title row must not trigger a control");
+        let maximize_x = (0..40).find(|&x| buf.get(x, 1).unwrap().ch == '\u{2922}').expect("maximize glyph rendered");
+        let close_x = (0..40).find(|&x| buf.get(x, 1).unwrap().ch == '\u{2715}').expect("close glyph rendered");
+        assert_eq!(window.window_control_at(rect, Pos { x: maximize_x, y: 1 }), Some(WidgetSignal::WindowMaximize));
+        assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 1 }), Some(WidgetSignal::WindowClose));
+        assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 0 }), None, "clicks on the tab's own top edge must not trigger a control");
+        assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 2 }), None, "clicks below the tab row must not trigger a control");
     }
 
     #[test]
     fn tui_dispatch_emits_window_close_signal_on_click() {
-        let mut tui = crate::engine::Tui::new(Size { width: 40, height: 10 }, Theme::new(AppearanceName::Dark));
+        let mut tui = crate::engine::Tui::new(Size { width: 40, height: 12 }, Theme::new(AppearanceName::Dark));
         let navbar = NavbarState { left: vec![], center: vec![], right: vec![] };
         let footer = FooterState { hints: vec![], status: String::new() };
         let layout = even_window_layout(&["plugins".to_string()]);
@@ -2700,10 +2771,10 @@ mod tests {
         tui.render_full();
         let (_, window_id) = built.windows[0].clone();
         let rect = tui.scene.rect(window_id);
-        let mut buf = CellBuffer::new(Size { width: 40, height: 10 }, Cell::blank([0, 0, 0], [0, 0, 0]));
-        ChromeState::Window(WindowState::new("plugins")).paint(&Theme::new(AppearanceName::Dark), rect, &mut buf);
-        let close_x = (rect.x..rect.x + rect.width).find(|&x| buf.get(x, rect.y).unwrap().ch == '\u{2715}').expect("close glyph rendered");
-        let signals = tui.dispatch(&Event::Mouse(MouseEvent { kind: MouseKind::Down(0), pos: Pos { x: close_x, y: rect.y }, mods: 0 }));
+        let mut buf = CellBuffer::new(Size { width: rect.width, height: rect.height }, Cell::blank([0, 0, 0], [0, 0, 0]));
+        ChromeState::Window(WindowState::new("plugins")).paint(&Theme::new(AppearanceName::Dark), Rect::new(0, 0, rect.width, rect.height), &mut buf);
+        let close_x = (0..rect.width).find(|&x| buf.get(x, 1).unwrap().ch == '\u{2715}').expect("close glyph rendered");
+        let signals = tui.dispatch(&Event::Mouse(MouseEvent { kind: MouseKind::Down(0), pos: Pos { x: rect.x + close_x, y: rect.y + 1 }, mods: 0 }));
         assert_eq!(signals, vec![(window_id, WidgetSignal::WindowClose)]);
     }
 

@@ -1,11 +1,12 @@
 //! 🔧 Includes codegen output from `bun ./script.ts generate`.
 
 use std::env;
+use std::error::Error;
 use std::fs;
 use std::path::PathBuf;
 
-fn main() {
-    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR"));
+fn main() -> Result<(), Box<dyn Error>> {
+    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?);
     let generated = manifest_dir.join("../generated/registry.rs");
     println!("cargo:rerun-if-changed={}", generated.display());
     println!("cargo:rerun-if-changed={}", manifest_dir.join("script.ts").display());
@@ -46,9 +47,7 @@ fn main() {
         }
     }
     if !generated.is_file() {
-        panic!(
-            "missing {} — run `bun nx run @semio-tech/graph-manifest:generate` first",
-            generated.display()
-        );
+        return Err(format!("missing {} — run `bun nx run @semio-tech/graph-manifest:generate` first", generated.display()).into());
     }
+    Ok(())
 }

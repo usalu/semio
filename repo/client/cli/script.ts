@@ -2,7 +2,7 @@
 /** 🧭 Repo CLI task router. */
 import { join } from "node:path";
 import type { FileLinter } from "../../lib/js/index.ts";
-import { BundleScript, ScriptRouter, defineLint, runBundleScriptMain, runCmd } from "../../lib/js/index.ts";
+import { BundleScript, ScriptRouter, defineLint, runBundleScriptMain, runCmd, runTestBudgeted } from "../../lib/js/index.ts";
 
 export const policyFile = "main.go";
 
@@ -41,9 +41,10 @@ class BuildScript extends BundleScript {
   }
 }
 
+/** ⏱️Default `test` MUST stay ≤30s — `-short` skips the `testing.Short()`-gated real-monorepo-scan tests in `main_test.go`; run `bun ./script.ts test -- -run TestX` or drop `-short` for the full suite. */
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCmd("go", ["test", "./repo/client/cli/go", ...segments], {
+    runTestBudgeted("go", ["test", "./repo/client/cli/go", "-short", ...segments], {
       cwd: this.repoRoot,
       env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },
     });

@@ -1,0 +1,13 @@
+{
+  "title": "Energy Engine Hvac Physics Modules",
+  "emoji": "✨",
+  "status": "open",
+  "description": "Create 10 Rust HVAC physics source files for energy_engine: hvac_topo, ideal_hvac, zone_hvac, terminal, air_system, fans, coils, evaporative, humidity_eq, heat_recovery with real physics, emoji docstrings, regions, and tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2060"
+  },
+  "goal": "🎯energy",
+  "sessions": [
+    "⚪0fc864c4f669488b80590d5927ad6380"
+  ]
+}

@@ -653,15 +653,13 @@ impl<'a> AnimateBuilder<'a> {
 }
 
 /// 🪄 Extension trait for `.animate()` on Sobjects.
-pub trait AnimateExt {
-    fn animate(&mut self, run_time: f64) -> AnimateBuilder<'_>;
-}
-
-impl AnimateExt for dyn Sobject {
+pub trait AnimateExt: Sobject {
     fn animate(&mut self, run_time: f64) -> AnimateBuilder<'_> {
         AnimateBuilder::new(self, run_time)
     }
 }
+
+impl<T: Sobject + ?Sized> AnimateExt for T {}
 
 /// 🧮 Apply parent opacity recursively to an Sobject tree (Manim parity).
 pub fn apply_parent_opacity_tree(root: &mut dyn Sobject, parent_opacity: f64) {

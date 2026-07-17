@@ -1,0 +1,16 @@
+[package]
+name = "energy_engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+mathematical_algebra = { path = "../../../mathematical/algebra/rs" }
+mathematical_geometry = { path = "../../../mathematical/geometry/rs" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+serde_json = "1.0.140"

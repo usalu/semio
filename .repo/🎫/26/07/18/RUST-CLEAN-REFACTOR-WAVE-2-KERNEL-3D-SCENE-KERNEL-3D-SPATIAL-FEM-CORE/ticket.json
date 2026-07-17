@@ -1,0 +1,13 @@
+{
+  "title": "Rust Clean Refactor Wave 2 — Kernel 3D Scene, Kernel 3D Spatial, Fem Core",
+  "emoji": "🧹",
+  "status": "open",
+  "description": "Wave 2 of repo-wide Rust cleanup campaign (zero rustc/clippy warnings, Result\u003c_,String\u003e migrated to thiserror, non-test panics reduced) for exactly these crates in order: kernel/3d/scene/rs, kernel/3d/spatial/rs, fem/core/rs. Apply tiers T1 (mechanical warnings/dead-code/allow-cleanup), T2 (thiserror error enums, \u0026Vec\u003cT\u003e -\u003e \u0026[T]), T3 (panic reduction) in order per crate; T4 clones are report-only for this batch. Coordinate via campaign folder LOCKS/API-CHANGELOG/CONFLICTS/BLOCKERS files at /private/tmp/claude-501/-Users-ueli-Documents-semio/ed30c89d-3941-44d3-ae21-abf565db2f2f/scratchpad/rust-clean-refactor-campaign, verify each crate with cargo clippy -D warnings and cargo test before moving on.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2057"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪4f74e86702384b5b811f92711b65780a"
+  ]
+}

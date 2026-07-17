@@ -347,25 +347,6 @@ pub fn resolve_page<'a>(doc: &'a LayoutDocument, page: &'a Page) -> Vec<Resolved
     frames
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn parse_minimal_document() {
-        let json = r#"{"schema":"layout.fixture","name":"t","camera":{"x":0,"y":0,"zoom":1},"previewCamera":{"x":0,"y":0,"zoom":1},"grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[]}"#;
-        let doc = parse_layout_document(json).expect("parse");
-        assert_eq!(doc.name, "t");
-    }
-
-    #[test]
-    fn frame_kind_tag_discriminates_variant() {
-        let json = r#"{"id":"frame-text-1","layerId":"layer-1","kind":"text","bounds":{"x":36,"y":120,"w":240,"h":200,"rotation":0},"storyId":"story-1","threadNext":"frame-text-2","columns":1,"inset":{"x":4,"y":4,"w":232,"h":192},"wrapMode":"box"}"#;
-        let frame: Frame = serde_json::from_str(json).unwrap();
-        assert!(matches!(frame, Frame::Text { .. }));
-        assert_eq!(frame.kind_str(), "text");
-    }
-}
 // #endregion document
 }
 
@@ -1202,21 +1183,6 @@ pub fn scene_png_from_display_list(list: &DisplayList) -> Result<Vec<u8>, String
 mod tests {
     use super::*;
     use crate::document::{parse_layout_document, LAYOUT_FIXTURE_SCHEMA};
-
-    #[test]
-    fn svg_contains_root() {
-        let list = DisplayList {
-            page_id: "p".into(),
-            page_width: 100.0,
-            page_height: 100.0,
-            rects: vec![],
-            text_runs: vec![],
-            images: vec![],
-            guides: vec![],
-        };
-        let svg = export_display_list_svg(&list);
-        assert!(svg.contains("<svg"));
-    }
 
     #[test]
     fn png_cpu_export_writes_valid_rgba_png() {

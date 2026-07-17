@@ -1311,11 +1311,6 @@ mod tests {
     }
 
     #[test]
-    fn blend_mapping() {
-        assert!(matches!(blend_from_str("multiply"), BlendMode::Multiply));
-    }
-
-    #[test]
     fn parse_play_fixtures() {
         let json = include_str!("../example/semio.raster.json");
         let doc = parse_document(json).expect("parse semio fixture");

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 📄 `@semio-tech/layout-rs` router: `bun ./script.ts wasm|test`. */
-import { BundleScript, ScriptRouter, playPollingEnv, runBundleScriptMain, runCargo, runWasmPackWebBuild } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, playPollingEnv, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../repo/lib/js/index.ts";
 
 class WasmScript extends BundleScript {
   run(): void {
@@ -22,7 +22,7 @@ class WasmScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCargo(["test", "-p", "layout_rs", ...segments], this.repoRoot, playPollingEnv());
+    runCargoTestBudgeted(["layout_rs"], this.repoRoot, segments, playPollingEnv());
   }
 }
 

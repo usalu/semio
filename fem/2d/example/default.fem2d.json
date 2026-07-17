@@ -1,0 +1,29 @@
+{
+  "nodes": [
+    { "id": "n1", "x": 0.0, "y": 0.0 },
+    { "id": "n2", "x": 6.0, "y": 0.0 }
+  ],
+  "elements": [
+    { "kind": "beam", "id": "e1", "start": "n1", "end": "n2", "materialId": "steel", "sectionId": "ipe300" }
+  ],
+  "materials": [
+    { "id": "steel", "name": "Steel S235", "e": 210000000000.0 }
+  ],
+  "sections": [
+    { "id": "ipe300", "name": "IPE 300", "area": 0.005381, "iy": 0.00008356 }
+  ],
+  "supports": [
+    { "id": "s1", "nodeId": "n1", "fixed": ["Tx", "Ty"] },
+    { "id": "s2", "nodeId": "n2", "fixed": ["Ty"] }
+  ],
+  "loadCases": [
+    {
+      "id": "dead",
+      "name": "Dead Load",
+      "loads": [
+        { "kind": "memberUdl", "id": "l1", "elementId": "e1", "wx": 0.0, "wy": -10000.0 }
+      ]
+    }
+  ],
+  "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }
+}
