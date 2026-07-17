@@ -117,6 +117,7 @@ import {
   readStoredIntroductionSeen,
   writeStoredIntroductionSeen,
   fundedByZukunftBauFooterItem,
+  navbarFillItem,
   type ElementsSurfaceAppearance,
   type ElementsSurfaceDevice,
   type EngagementControl,
@@ -4604,8 +4605,12 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
               footer={
                 <Footer
                   items={[
-                    ...(settingsToggleItems.length > 0 ? [{ key: "settingsToggle", content: <PanelToggleGroup items={settingsToggleItems} /> }] : []),
+                    // 🏛️ Fill spacer keeps the funding credit and the Settings corner toggle grouped together at the
+                    // right edge (between the centered command palette and the true corner) instead of each fighting
+                    // ms-auto for the same pixel where the floating bottom-right Panel also anchors.
+                    navbarFillItem("footerTrailingFill"),
                     fundedByZukunftBauFooterItem(),
+                    ...(settingsToggleItems.length > 0 ? [{ key: "settingsToggle", content: <PanelToggleGroup items={settingsToggleItems} /> }] : []),
                   ]}
                 />
               }

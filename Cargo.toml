@@ -40,6 +40,7 @@ members = [
     "neural/engine/rs",
     "ui/styling/rs",
     "ui/wgpu/rs",
+    "ui/tui/rs",
     "reasoning/mindmap/rs",
     "gis/2d/rs",
     "gis/3d/rs",

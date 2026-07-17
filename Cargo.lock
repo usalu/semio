@@ -7456,6 +7456,17 @@ name = "ui_styling"
 version = "0.1.0"
 
 [[package]]
+name = "ui_tui"
+version = "0.1.0"
+dependencies = [
+ "libc",
+ "ui_styling",
+ "unicode-width",
+ "wasm-bindgen",
+ "windows-sys 0.60.2",
+]
+
+[[package]]
 name = "ui_wgpu"
 version = "0.1.0"
 dependencies = [

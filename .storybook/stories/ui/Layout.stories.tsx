@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Canvas, Panel, Footer, HorizontalWindows, Layout, Navbar, Page, singleTreeLeaf, Window } from "@semio-tech/ui-react";
+import { Canvas, Panel, Footer, HorizontalWindows, Layout, Navbar, Page, PanelToggleGroup, singleTreeLeaf, Window, fundedByZukunftBauFooterItem, navbarFillItem } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ComponentType } from "react";
@@ -65,10 +65,27 @@ export const Default: Story = {
               { content: "Ready", key: "status" },
               { content: "Ln 1, Col 1", key: "cursor" },
               { content: "UTF-8", key: "selection" },
+              navbarFillItem("footerTrailingFill"),
+              fundedByZukunftBauFooterItem(),
+              {
+                key: "settingsToggle",
+                content: (
+                  <PanelToggleGroup
+                    items={[{ id: "settings", icon: <Settings size={16} />, text: "Settings", pressed: false, onPressedChange: () => {} }]}
+                  />
+                ),
+              },
             ]}
           />
         }
         panels={{
+          "bottom-right": {
+            visible: false,
+            hideTabBar: true,
+            size: 300,
+            onSizeChange: () => {},
+            tabs: [layoutPanelLeafTab("settings", Settings, "Settings", 0, "Settings panel content")],
+          },
           "top-left": {
             visible: true,
             size: topLeftSize,

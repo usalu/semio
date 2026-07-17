@@ -11218,11 +11218,17 @@ export function navbarFillItem(key = "navbarFill"): NavbarItem {
 /** @emoji 🏛️ Footer credit for the Zukunft Bau (BBSR) research funding programme, linking out to the funded project page. */
 export const ZUKUNFT_BAU_PROJECT_URL = "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506";
 
-/** @emoji 🏛️ Right-aligned footer item (`ms-auto` pushes it toward the right corner, after any centered item) crediting Zukunft Bau. */
+/**
+ * @emoji 🏛️ A plain (non-margined) footer item — the caller controls right-alignment by pairing it with
+ * {@link navbarFillItem} (or its own trailing group), the same way `workbenchToggleItems`/`settingsToggleItems`
+ * do. It never claims `ms-auto` itself so it can sit immediately beside a corner panel toggle (e.g. Settings)
+ * instead of both competing for the exact same corner pixel where the floating `Panel` for that anchor renders.
+ * `relative z-40` matches `panel-tabs`' z-index so it never disappears behind an anchored panel's own chrome.
+ **/
 export function fundedByZukunftBauFooterItem(key = "fundedByZukunftBau"): NavbarItem {
   return {
     key,
-    className: "ms-auto",
+    className: "relative z-40",
     content: (
       <a
         href={ZUKUNFT_BAU_PROJECT_URL}
@@ -28090,10 +28096,10 @@ if (treeVitest) {
       const footerMarkup = renderToStaticMarkup(<Footer items={[{ key: "a", content: "Footer" }]} />);
       expect(footerMarkup).toContain(borderNormalTopClass);
       expect(footerMarkup).not.toContain("border-emphasized");
-      const fundedByMarkup = renderToStaticMarkup(<Footer items={[fundedByZukunftBauFooterItem()]} />);
+      const fundedByMarkup = renderToStaticMarkup(<Footer items={[navbarFillItem("fill"), fundedByZukunftBauFooterItem()]} />);
       expect(fundedByMarkup).toContain(ZUKUNFT_BAU_PROJECT_URL);
       expect(fundedByMarkup).toContain("Funded by Zukunft Bau");
-      expect(fundedByMarkup).toContain("ms-auto");
+      expect(fundedByMarkup).toContain("z-40");
       const breadcrumbMarkup = renderToStaticMarkup(<Breadcrumb items={[{ content: "Home" }, { content: "Project" }]} />);
       expect(breadcrumbMarkup).toContain(borderNormalClass);
       expect(breadcrumbMarkup).not.toContain("border-emphasized");
