@@ -8,6 +8,7 @@ import {
   selectionMergeIds,
   useCanvasPickInteraction,
   useCanvasAppearanceSync,
+  useLabel,
   type SelectionMarqueeCoverage,
   type SelectionMarqueeMethod,
   type SelectionMergeMode,
@@ -143,6 +144,7 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
   const [attachError, setAttachError] = useState<string | null>(null);
   const [marqueeOverlay, setMarqueeOverlay] = useState<RasterMarqueeOverlay | null>(null);
   const [overlayRect, setOverlayRect] = useState<RasterScreenRect | null>(null);
+  const canvasUnavailableLabel = useLabel("ui.host.canvasUnavailable");
 
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -464,7 +466,11 @@ function RasterCanvasSurface({ node, scene, onAction }: { readonly node: UiCompo
   return (
     <div ref={containerRef} className="semio-raster-canvas-surface relative h-full min-h-[24rem] w-full bg-canvas" data-controller-id={node.controllerId} data-surface-id={node.surfaceId} data-view-mode={scene.viewMode}>
       <RasterWasmCanvas sessionFactory={sessionFactory} onSessionReady={onSessionReady} />
-      {attachError ? <div className="absolute inset-0 flex items-center justify-center bg-canvas text-xs text-muted-foreground">Canvas unavailable: {attachError}</div> : null}
+      {attachError ? (
+        <div className="absolute inset-0 flex items-center justify-center bg-canvas text-xs text-muted-foreground">
+          {canvasUnavailableLabel}: {attachError}
+        </div>
+      ) : null}
       {marqueeOverlay?.shape === "rect" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} /> : null}
       {marqueeOverlay?.shape === "polygon" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} /> : null}
       {isNavigator && overlayRect ? <div className="pointer-events-none absolute z-20 border-2 border-accent" style={{ left: overlayRect.x, top: overlayRect.y, width: overlayRect.width, height: overlayRect.height }} /> : null}
@@ -556,7 +562,8 @@ function RasterWasmCanvas({ sessionFactory, onSessionReady }: { readonly session
 //#region RasterHost
 export function RasterHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.raster;
-  if (!scene) return <div className="semio-raster-empty">No raster scene</div>;
+  const emptySceneLabel = useLabel("ui.host.emptyScene");
+  if (!scene) return <div className="semio-raster-empty">{emptySceneLabel}</div>;
   return <RasterCanvasSurface node={node} scene={scene} onAction={onAction} />;
 }
 //#endregion RasterHost

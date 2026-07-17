@@ -36,6 +36,7 @@ import {
   type SelectionMarqueeMethod,
   type SelectionMarqueePoint,
   useCanvasAppearanceSync,
+  useLabel,
 } from "@semio-tech/ui-react";
 import { clearColorResolveCache, resolveColorHex, semanticVar, themeColorVar, tokenVar } from "@semio-tech/ui-styling";
 import type { ComponentSceneHostProps } from "@semio-tech/framework-core";
@@ -1632,6 +1633,8 @@ function WorldSuggestionMenu({
   readonly onClose: () => void;
 }) {
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const checkingPlacementLabel = useLabel("ui.host.checkingPlacement");
+  const noPlacementLabel = useLabel("ui.host.noPlacement");
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
       if (rootRef.current && !rootRef.current.contains(event.target as Node)) onClose();
@@ -1664,9 +1667,9 @@ function WorldSuggestionMenu({
       }}
     >
       {menu.pending ? (
-        <div style={{ padding: "0.375rem 0.75rem", fontSize: "0.8125rem", opacity: 0.7 }}>Checking collision-free placements…</div>
+        <div style={{ padding: "0.375rem 0.75rem", fontSize: "0.8125rem", opacity: 0.7 }}>{checkingPlacementLabel}</div>
       ) : menu.candidates.length === 0 ? (
-        <div style={{ padding: "0.375rem 0.75rem", fontSize: "0.8125rem", opacity: 0.7 }}>No collision-free placement at this connector</div>
+        <div style={{ padding: "0.375rem 0.75rem", fontSize: "0.8125rem", opacity: 0.7 }}>{noPlacementLabel}</div>
       ) : (
         menu.candidates.map((candidate) => (
           <div
@@ -1944,6 +1947,7 @@ function axisDragParam(clientX: number, clientY: number, hostRect: DOMRect, came
 //#region World3dHost
 export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.world3d;
+  const emptySceneLabel = useLabel("ui.host.emptyScene");
   const meshStylePalette = useMeshStylePalette();
   const colors = useMemo(() => semanticColorsFromPalette(meshStylePalette), [meshStylePalette]);
   const parsedCamera = useMemo(() => parseCameraState(scene?.cameraJson ?? "{}"), [scene?.cameraJson]);
@@ -2464,7 +2468,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     [dispatch, paintMode, selection.engagementSessionActive, selectionMode],
   );
 
-  if (!scene) return <div className="semio-world-3d-empty">No world scene</div>;
+  if (!scene) return <div className="semio-world-3d-empty">{emptySceneLabel}</div>;
 
   return (
     <div

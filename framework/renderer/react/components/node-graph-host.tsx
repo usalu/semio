@@ -11,6 +11,7 @@ import {
   Slider,
   useCanvasPickInteraction,
   useCanvasAppearanceSync,
+  useLabel,
   type CanvasPickTarget,
   type Edge,
   type Node,
@@ -724,6 +725,7 @@ export function NodeGraphHost({ node, onAction }: ComponentSceneHostProps) {
   const contextMenuItems = useMemo(() => parseJsonArray<GraphContextMenuItem>(scene?.contextMenuJson), [scene?.contextMenuJson]);
   const presencePeers = useMemo(() => parseJsonArray<PresencePeer>(scene?.presencePeersJson), [scene?.presencePeersJson]);
   const isClient = useClient();
+  const emptySceneLabel = useLabel("ui.host.emptyScene");
 
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -752,7 +754,7 @@ export function NodeGraphHost({ node, onAction }: ComponentSceneHostProps) {
     return () => findContext.setOnFindItem?.(undefined);
   }, [findContext?.setOnFindItem, findItems.length]);
 
-  if (!scene) return <div className="semio-node-graph-empty">No graph scene</div>;
+  if (!scene) return <div className="semio-node-graph-empty">{emptySceneLabel}</div>;
 
   const useFlowEngine = isFlowGraphScene(scene.capabilitiesJson) || Boolean(scene.fixtureJson);
 
@@ -1334,10 +1336,11 @@ function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScen
 
 //#region Spotlight
 function SpotlightOverlay({ previewText, onCommit, onDismiss }: { readonly previewText: string; readonly onCommit: () => void; readonly onDismiss: () => void }) {
+  const previewLabel = useLabel("ui.host.preview");
   if (!previewText.trim()) return null;
   return (
     <div className="pointer-events-auto absolute inset-x-4 bottom-4 z-60 rounded border border-border bg-panel p-3 shadow-lg">
-      <div className="mb-2 text-xs font-medium text-muted-foreground">Preview</div>
+      <div className="mb-2 text-xs font-medium text-muted-foreground">{previewLabel}</div>
       <pre className="max-h-40 overflow-auto whitespace-pre-wrap font-mono text-xs text-foreground">{previewText}</pre>
       <div className="mt-2 flex justify-end gap-2">
         <button type="button" className="rounded px-2 py-1 text-xs hover:bg-active-base" onClick={onDismiss}>

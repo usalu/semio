@@ -903,6 +903,28 @@ struct NoteLabels {
     add_group: &'static str,
     window_composite: &'static str,
     window_navigator: &'static str,
+    // inspector field labels
+    field_name: &'static str,
+    field_x: &'static str,
+    field_y: &'static str,
+    field_width: &'static str,
+    field_height: &'static str,
+    field_visible: &'static str,
+    field_locked: &'static str,
+    // measures
+    measure_camera: &'static str,
+    measure_zoom: &'static str,
+    measure_grid: &'static str,
+    measure_show_grid: &'static str,
+    measure_spacing: &'static str,
+    measure_subdivisions: &'static str,
+    measure_opacity: &'static str,
+    measure_snap: &'static str,
+    measure_snap_to_grid: &'static str,
+    measure_snap_spacing: &'static str,
+    measure_drawing: &'static str,
+    measure_pencil_width: &'static str,
+    measure_eraser_radius: &'static str,
 }
 
 const NOTE_LABELS_NATIVE_EN: NoteLabels = NoteLabels {
@@ -922,6 +944,26 @@ const NOTE_LABELS_NATIVE_EN: NoteLabels = NoteLabels {
     add_group: "Add Group",
     window_composite: "Canvas",
     window_navigator: "Navigator",
+    field_name: "Name",
+    field_x: "X",
+    field_y: "Y",
+    field_width: "Width",
+    field_height: "Height",
+    field_visible: "Visible",
+    field_locked: "Locked",
+    measure_camera: "Camera",
+    measure_zoom: "Zoom",
+    measure_grid: "Grid",
+    measure_show_grid: "Show grid",
+    measure_spacing: "Spacing",
+    measure_subdivisions: "Subdivisions",
+    measure_opacity: "Opacity",
+    measure_snap: "Snap",
+    measure_snap_to_grid: "Snap to grid",
+    measure_snap_spacing: "Snap spacing",
+    measure_drawing: "Drawing",
+    measure_pencil_width: "Pencil width",
+    measure_eraser_radius: "Eraser radius",
 };
 
 const NOTE_LABELS_NATIVE_DE: NoteLabels = NoteLabels {
@@ -941,6 +983,26 @@ const NOTE_LABELS_NATIVE_DE: NoteLabels = NoteLabels {
     add_group: "Gruppe hinzufügen",
     window_composite: "Leinwand",
     window_navigator: "Navigator",
+    field_name: "Name",
+    field_x: "X",
+    field_y: "Y",
+    field_width: "Breite",
+    field_height: "Hoehe",
+    field_visible: "Sichtbar",
+    field_locked: "Gesperrt",
+    measure_camera: "Kamera",
+    measure_zoom: "Zoom",
+    measure_grid: "Raster",
+    measure_show_grid: "Raster anzeigen",
+    measure_spacing: "Abstand",
+    measure_subdivisions: "Unterteilungen",
+    measure_opacity: "Deckkraft",
+    measure_snap: "Fangen",
+    measure_snap_to_grid: "Am Raster einrasten",
+    measure_snap_spacing: "Rasterabstand",
+    measure_drawing: "Zeichnen",
+    measure_pencil_width: "Stiftbreite",
+    measure_eraser_radius: "Radiergummi-Radius",
 };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; note has no terminology axis, only language.
@@ -1224,14 +1286,14 @@ fn render_properties_panel(document: &NoteDocument, selected_ids: &[String], vie
         label: labels.inspector_block.into(),
         default_open: Some(true),
         fields: vec![
-            inspector_text_field(&block_ids, "note-properties.name", "Name", &names, "name"),
-            inspector_number_field(&block_ids, "note-properties.x", "X", &xs, "x"),
-            inspector_number_field(&block_ids, "note-properties.y", "Y", &ys, "y"),
-            inspector_number_field(&block_ids, "note-properties.width", "Width", &widths, "width"),
-            inspector_number_field(&block_ids, "note-properties.height", "Height", &heights, "height"),
+            inspector_text_field(&block_ids, "note-properties.name", labels.field_name, &names, "name"),
+            inspector_number_field(&block_ids, "note-properties.x", labels.field_x, &xs, "x"),
+            inspector_number_field(&block_ids, "note-properties.y", labels.field_y, &ys, "y"),
+            inspector_number_field(&block_ids, "note-properties.width", labels.field_width, &widths, "width"),
+            inspector_number_field(&block_ids, "note-properties.height", labels.field_height, &heights, "height"),
             UiNode::Field(UiFieldNode {
                 id: "note-properties.visible".into(),
-                label: "Visible".into(),
+                label: labels.field_visible.into(),
                 description: None,
                 required: None,
                 error: None,
@@ -1245,7 +1307,7 @@ fn render_properties_panel(document: &NoteDocument, selected_ids: &[String], vie
             }),
             UiNode::Field(UiFieldNode {
                 id: "note-properties.locked".into(),
-                label: "Locked".into(),
+                label: labels.field_locked.into(),
                 description: None,
                 required: None,
                 error: None,
@@ -1359,16 +1421,16 @@ fn note_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     play_action(NOTE_PLAY_CONTROLLER_ID, action, args)
 }
 
-fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
+fn note_canvas_measures(document: &NoteDocument, labels: &NoteLabels) -> Vec<WindowMeasure> {
     vec![
         WindowMeasure::Group {
             id: "note-measures.camera".into(),
-            label: "Camera".into(),
+            label: labels.measure_camera.into(),
             default_open: Some(true),
             active_utility_id: None,
             children: vec![WindowMeasure::Slider {
                 id: "note-measures.zoom".into(),
-                label: Some("Zoom".into()),
+                label: Some(labels.measure_zoom.into()),
                 value: document.camera.zoom,
                 min: 0.1,
                 max: 8.0,
@@ -1378,21 +1440,21 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
         },
         WindowMeasure::Group {
             id: "note-measures.grid".into(),
-            label: "Grid".into(),
+            label: labels.measure_grid.into(),
             default_open: Some(true),
             active_utility_id: None,
             children: vec![
                 WindowMeasure::Toggle {
                     id: "note-measures.grid-visible".into(),
                     icon_id: "layout-grid".into(),
-                    label: Some("Show grid".into()),
+                    label: Some(labels.measure_show_grid.into()),
                     pressed: document.grid_visible.unwrap_or(true),
                     text: None,
                     on_change: note_action("setGridVisible", None),
                 },
                 WindowMeasure::Slider {
                     id: "note-measures.grid-spacing".into(),
-                    label: Some("Spacing".into()),
+                    label: Some(labels.measure_spacing.into()),
                     value: document.grid_spacing.unwrap_or(32.0),
                     min: 8.0,
                     max: 256.0,
@@ -1401,7 +1463,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
                 },
                 WindowMeasure::Slider {
                     id: "note-measures.grid-subdivisions".into(),
-                    label: Some("Subdivisions".into()),
+                    label: Some(labels.measure_subdivisions.into()),
                     value: document.grid_subdivisions.unwrap_or(4.0),
                     min: 1.0,
                     max: 16.0,
@@ -1410,7 +1472,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
                 },
                 WindowMeasure::Slider {
                     id: "note-measures.grid-opacity".into(),
-                    label: Some("Opacity".into()),
+                    label: Some(labels.measure_opacity.into()),
                     value: document.grid_opacity.unwrap_or(0.35),
                     min: 0.05,
                     max: 1.0,
@@ -1421,21 +1483,21 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
         },
         WindowMeasure::Group {
             id: "note-measures.snap".into(),
-            label: "Snap".into(),
+            label: labels.measure_snap.into(),
             default_open: Some(false),
             active_utility_id: None,
             children: vec![
                 WindowMeasure::Toggle {
                     id: "note-measures.snap-enabled".into(),
                     icon_id: "magnet".into(),
-                    label: Some("Snap to grid".into()),
+                    label: Some(labels.measure_snap_to_grid.into()),
                     pressed: document.snap_enabled.unwrap_or(false),
                     text: None,
                     on_change: note_action("setSnapEnabled", None),
                 },
                 WindowMeasure::Slider {
                     id: "note-measures.snap-spacing".into(),
-                    label: Some("Snap spacing".into()),
+                    label: Some(labels.measure_snap_spacing.into()),
                     value: document.snap_grid_spacing.unwrap_or(8.0),
                     min: 1.0,
                     max: 128.0,
@@ -1446,13 +1508,13 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
         },
         WindowMeasure::Group {
             id: "note-measures.drawing".into(),
-            label: "Drawing".into(),
+            label: labels.measure_drawing.into(),
             default_open: Some(false),
             active_utility_id: None,
             children: vec![
                 WindowMeasure::Slider {
                     id: "note-measures.pencil-width".into(),
-                    label: Some("Pencil width".into()),
+                    label: Some(labels.measure_pencil_width.into()),
                     value: document.pencil_width.unwrap_or(3.0),
                     min: 1.0,
                     max: 24.0,
@@ -1461,7 +1523,7 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
                 },
                 WindowMeasure::Slider {
                     id: "note-measures.eraser-radius".into(),
-                    label: Some("Eraser radius".into()),
+                    label: Some(labels.measure_eraser_radius.into()),
                     value: document.eraser_radius.unwrap_or(12.0),
                     min: 4.0,
                     max: 48.0,
@@ -1473,11 +1535,11 @@ fn note_canvas_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
     ]
 }
 
-fn note_navigator_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
+fn note_navigator_measures(document: &NoteDocument, labels: &NoteLabels) -> Vec<WindowMeasure> {
     vec![
         WindowMeasure::Slider {
             id: "note-navigator-measures.zoom".into(),
-            label: Some("Zoom".into()),
+            label: Some(labels.measure_zoom.into()),
             value: document.camera.zoom,
             min: 0.05,
             max: 2.0,
@@ -1487,7 +1549,7 @@ fn note_navigator_measures(document: &NoteDocument) -> Vec<WindowMeasure> {
         WindowMeasure::Toggle {
             id: "note-navigator-measures.grid-visible".into(),
             icon_id: "layout-grid".into(),
-            label: Some("Show grid".into()),
+            label: Some(labels.measure_show_grid.into()),
             pressed: document.grid_visible.unwrap_or(true),
             text: None,
             on_change: note_action("setGridVisible", None),
@@ -2022,15 +2084,17 @@ impl DocumentApp for NoteApp {
         ])
     }
 
-    fn window_measures(&self, doc: &DocumentView<'_, NoteDocument>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, doc: &DocumentView<'_, NoteDocument>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        let labels = note_labels(view_state);
         HashMap::from([
-            (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_measures(doc.projection)),
-            (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), note_navigator_measures(doc.projection)),
+            (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_measures(doc.projection, labels)),
+            (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), note_navigator_measures(doc.projection, labels)),
         ])
     }
 
     fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
         let labels = note_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         AppLabelsOverlay {
             app_label: None,
             window_kind_labels: HashMap::from([
@@ -2039,8 +2103,8 @@ impl DocumentApp for NoteApp {
             ]),
             panel_tab_labels: HashMap::new(),
             mode_labels: HashMap::new(),
-            action_labels: HashMap::new(),
-            utility_labels: HashMap::new(),
+            action_labels: note_action_labels(is_de),
+            utility_labels: note_utility_labels(is_de),
             example_labels: HashMap::new(),
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),
@@ -2048,6 +2112,75 @@ impl DocumentApp for NoteApp {
         }
     }
 }
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action/internal-action declared in
+/// `create_note_app`'s static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay
+/// is how the command palette and Actions rail get a translated label without threading locale through the builder.
+fn note_action_labels(is_de: bool) -> HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("selectAll", "Select All", "Alles auswaehlen"),
+        ("clearSelection", "Clear Selection", "Auswahl aufheben"),
+        ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+        ("duplicateSelection", "Duplicate Selection", "Auswahl duplizieren"),
+        ("addBlock", "Add Block", "Block hinzufuegen"),
+        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+        ("loadRequest", "Import", "Importieren"),
+        ("saveDownload", "Export", "Exportieren"),
+        ("setCamera", "Set Camera", "Kamera festlegen"),
+        ("setCameraZoom", "Set Camera Zoom", "Kamerazoom festlegen"),
+        ("setGridVisible", "Set Grid Visible", "Rastersichtbarkeit festlegen"),
+        ("toggleGrid", "Toggle Grid", "Raster umschalten"),
+        ("setGridSpacing", "Set Grid Spacing", "Rasterabstand festlegen"),
+        ("setGridSubdivisions", "Set Grid Subdivisions", "Rasterunterteilungen festlegen"),
+        ("setGridOpacity", "Set Grid Opacity", "Rasterdeckkraft festlegen"),
+        ("setSnapEnabled", "Set Snap Enabled", "Einrasten aktivieren"),
+        ("toggleSnap", "Toggle Snap", "Einrasten umschalten"),
+        ("setSnapGridSpacing", "Set Snap Grid Spacing", "Rasterabstand fuer Einrasten festlegen"),
+        ("setPencilWidth", "Set Pencil Width", "Stiftbreite festlegen"),
+        ("setEraserRadius", "Set Eraser Radius", "Radiergummi-Radius festlegen"),
+        ("dropBlockKind", "Drop Block Kind", "Blockart ablegen"),
+        ("moveBlock", "Move Block", "Block verschieben"),
+        ("deleteBlock", "Delete Block", "Block loeschen"),
+        ("duplicateBlock", "Duplicate Block", "Block duplizieren"),
+        ("patchBlocks", "Patch Blocks", "Bloecke aktualisieren"),
+        ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+        ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
+        ("applyNoteEvents", "Apply Note Events", "Notiz-Ereignisse anwenden"),
+        ("nudgeSelection", "Nudge Selection", "Auswahl verschieben"),
+        ("nudgeSelectionUp", "Nudge Selection Up", "Auswahl nach oben verschieben"),
+        ("nudgeSelectionDown", "Nudge Selection Down", "Auswahl nach unten verschieben"),
+        ("nudgeSelectionLeft", "Nudge Selection Left", "Auswahl nach links verschieben"),
+        ("nudgeSelectionRight", "Nudge Selection Right", "Auswahl nach rechts verschieben"),
+        ("nudgeSelectionUpFast", "Nudge Selection Up Fast", "Auswahl schnell nach oben verschieben"),
+        ("nudgeSelectionDownFast", "Nudge Selection Down Fast", "Auswahl schnell nach unten verschieben"),
+        ("nudgeSelectionLeftFast", "Nudge Selection Left Fast", "Auswahl schnell nach links verschieben"),
+        ("nudgeSelectionRightFast", "Nudge Selection Right Fast", "Auswahl schnell nach rechts verschieben"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+        ("setHover", "Set Hover", "Hover festlegen"),
+        ("engagementInput", "Engagement Input", "Eingabe"),
+        ("navigatorEngagementInput", "Navigator Engagement Input", "Navigator-Eingabe"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_note_app`.
+fn note_utility_labels(is_de: bool) -> HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("selectDirect", "Direct", "Direkt"),
+        ("selectMarquee", "Marquee", "Rahmenauswahl"),
+        ("text", "Text", "Text"),
+        ("image", "Image", "Bild"),
+        ("table", "Table", "Tabelle"),
+        ("math", "Math", "Mathe"),
+        ("pencil", "Pencil", "Stift"),
+        ("eraserStroke", "Stroke Eraser", "Strich-Radiergummi"),
+        ("eraserPoint", "Point Eraser", "Punkt-Radiergummi"),
+        ("pan", "Pan", "Schwenken"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+//#endregion 🔖CommandLabels
 
 /// 🔢 Reads a numeric action arg by its named key, falling back to a generic `value` (slider/measure inputs).
 fn scalar_arg(args: Option<&Value>, key: &str) -> Option<f64> {
@@ -2395,9 +2528,9 @@ fn create_note_app() -> App {
     );
     for window in app.definition.window_kinds.iter_mut() {
         if window.id == NOTE_PLAY_WINDOW_COMPOSITE {
-            window.options.measures = note_canvas_measures(&document);
+            window.options.measures = note_canvas_measures(&document, &NOTE_LABELS_NATIVE_EN);
         } else if window.id == NOTE_PLAY_WINDOW_NAVIGATOR {
-            window.options.measures = note_navigator_measures(&document);
+            window.options.measures = note_navigator_measures(&document, &NOTE_LABELS_NATIVE_EN);
         }
     }
     app.example("empty", "Empty", serde_json::to_string(&empty_note_document()).unwrap())

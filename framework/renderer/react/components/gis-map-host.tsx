@@ -6,7 +6,10 @@ import {
   Icon,
   marqueeCoverageFromGesture,
   marqueeModeFromModifiers,
+  resolveTranslationLabel,
   SelectionMarquee,
+  uiI18n,
+  useLabel,
   type ContextMenuItem,
   type IconName,
   type SelectionMarqueeCoverage,
@@ -63,6 +66,11 @@ const MAP_VELLO_THEME_FALLBACK_RGBA = {
 //#endregion Types
 
 //#region Parsing
+/** 🌐 Resolves a translation key outside of component render (e.g. `buildGisMapContextMenuItems`), mirroring `shellLabel`/`interpLabel`. */
+function hostLabel(key: string): string {
+  return resolveTranslationLabel(uiI18n.t(key as never)) ?? key;
+}
+
 function parseVisibleTilesJson(raw: string): VisibleTileRow[] {
   try {
     const rows = JSON.parse(raw) as VisibleTileRow[];
@@ -511,7 +519,7 @@ function buildGisMapContextMenuItems(scene: GisMapScene, feature: MapHoveredFeat
     const items: ContextMenuItem[] = [
       {
         id: "gis-map.ctx.select",
-        label: "Select",
+        label: hostLabel("ui.contextMenu.select"),
         onSelect: () =>
           dispatch("setFeatureSelection", {
             positions: feature.kind === "position" ? [feature.id] : [],
@@ -523,13 +531,13 @@ function buildGisMapContextMenuItems(scene: GisMapScene, feature: MapHoveredFeat
     if (selected) {
       items.push({
         id: "gis-map.ctx.deselect",
-        label: "Deselect",
+        label: hostLabel("ui.contextMenu.deselect"),
         onSelect: () => dispatch("deselect", { featureId: feature.id, featureKind: feature.kind }),
       });
     }
     items.push({
       id: "gis-map.ctx.focus",
-      label: "Focus / zoom to",
+      label: hostLabel("ui.contextMenu.focusZoom"),
       onSelect: () => dispatch("focusFeature", { featureId: feature.id, featureKind: feature.kind }),
     });
     if (feature.kind === "position") {
@@ -537,7 +545,7 @@ function buildGisMapContextMenuItems(scene: GisMapScene, feature: MapHoveredFeat
       if (meta?.sourceUrl) {
         items.push({
           id: "gis-map.ctx.source",
-          label: "Open source",
+          label: hostLabel("ui.contextMenu.openSource"),
           onSelect: () => dispatch("openSource", { featureId: feature.id }),
         });
       }
@@ -545,14 +553,14 @@ function buildGisMapContextMenuItems(scene: GisMapScene, feature: MapHoveredFeat
     return items;
   }
   return [
-    { id: "gis-map.ctx.select-all", label: "Select all", onSelect: () => dispatch("selectAll") },
+    { id: "gis-map.ctx.select-all", label: hostLabel("ui.contextMenu.selectAll"), onSelect: () => dispatch("selectAll") },
     {
       id: "gis-map.ctx.clear",
-      label: "Clear selection",
+      label: hostLabel("ui.contextMenu.clearSelection"),
       disabled: selection.positions.length + selection.routes.length === 0,
       onSelect: () => dispatch("clearSelection"),
     },
-    { id: "gis-map.ctx.fit-world", label: "Fit world", onSelect: () => dispatch("fitWorld") },
+    { id: "gis-map.ctx.fit-world", label: hostLabel("ui.contextMenu.fitWorld"), onSelect: () => dispatch("fitWorld") },
   ];
 }
 //#endregion ContextMenu
@@ -574,6 +582,8 @@ export function GisMapHost({ node, onAction }: ComponentSceneHostProps) {
     position: null,
     items: [],
   });
+  const emptySceneLabel = useLabel("ui.host.emptyScene");
+  const sourceAvailableLabel = useLabel("ui.host.sourceAvailable");
 
   const positionMetaById = useMemo(() => (scene ? parsePositionMeta(scene.mapFixtureJson) : new Map()), [scene?.mapFixtureJson]);
   const hoveredFeature = useMemo(() => (scene ? parseMapHoveredFeature(scene.hoverJson) : null), [scene?.hoverJson]);
@@ -1021,7 +1031,7 @@ export function GisMapHost({ node, onAction }: ComponentSceneHostProps) {
     };
   }, [clientToLocal, dispatch, emitFeatureSelection, mirrorSessionCameraToReact, queryFeatureHits, queryHitFeature, resetMarquee, scene, selectionMethod]);
 
-  if (!scene) return <div className="semio-gis-map-empty text-muted-foreground p-2 text-xs">No map scene</div>;
+  if (!scene) return <div className="semio-gis-map-empty text-muted-foreground p-2 text-xs">{emptySceneLabel}</div>;
 
   return (
     <div ref={containerRef} className="semio-gis-map-host absolute inset-0 box-border min-h-0 min-w-0 overflow-hidden select-none" data-surface-id={node.surfaceId} style={{ touchAction: "none" }}>
@@ -1039,7 +1049,7 @@ export function GisMapHost({ node, onAction }: ComponentSceneHostProps) {
                 {meta?.icon ? <Icon icon={meta.icon} size="small" className="mt-0.5 shrink-0" /> : null}
                 <div className="min-w-0">
                   <div className="truncate text-sm font-medium">{title}</div>
-                  {meta?.sourceUrl ? <span className="text-xs text-secondary underline-offset-2">Source available</span> : null}
+                  {meta?.sourceUrl ? <span className="text-xs text-secondary underline-offset-2">{sourceAvailableLabel}</span> : null}
                 </div>
               </div>
             );

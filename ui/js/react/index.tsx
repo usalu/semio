@@ -777,8 +777,10 @@ export { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU, canvasHoverF
 export type { CanvasHoverFocus, CanvasPickRequest, CanvasPickTarget } from "@semio-tech/framework-core";
 
 /** @emoji 🎯 Fixed DOM pick list for overlapping canvas targets (not painted on the infinite canvas). */
-export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDismiss, renderRow, title = "Select target" }: CanvasPickMenuProps): React.ReactNode {
+export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDismiss, renderRow, title }: CanvasPickMenuProps): React.ReactNode {
   const menuRef = React.useRef<HTMLDivElement | null>(null);
+  const selectTargetLabel = useLabel("ui.common.selectTarget");
+  const resolvedTitle = title ?? selectTargetLabel ?? "Select target";
 
   React.useEffect(() => {
     if (!request) return;
@@ -840,7 +842,7 @@ export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDism
       }}
       onPointerDown={(event) => event.stopPropagation()}
     >
-      <div className="text-muted-foreground px-single py-half text-2xs">{title}</div>
+      <div className="text-muted-foreground px-single py-half text-2xs">{resolvedTitle}</div>
       {body}
     </div>,
     document.body,
@@ -2694,6 +2696,53 @@ export type UiTranslationSchema = {
       readonly unfocus: UiLabelValue;
       readonly example: UiLabelValue;
       readonly noExample: UiLabelValue;
+      readonly loadingSurface: UiLabelValue;
+      readonly unknownComponent: UiLabelValue;
+      readonly select: UiLabelValue;
+      readonly commandPalette: UiLabelValue;
+      readonly searchForCommand: UiLabelValue;
+      readonly find: UiLabelValue;
+      readonly noData: UiLabelValue;
+      readonly noFileSystemNodes: UiLabelValue;
+      readonly selectTarget: UiLabelValue;
+      readonly selectOption: UiLabelValue;
+      readonly noOptionsFound: UiLabelValue;
+    };
+    readonly contextMenu: {
+      readonly select: UiLabelValue;
+      readonly deselect: UiLabelValue;
+      readonly selectAll: UiLabelValue;
+      readonly clearSelection: UiLabelValue;
+      readonly selectSameKind: UiLabelValue;
+      readonly duplicate: UiLabelValue;
+      readonly delete: UiLabelValue;
+      readonly zoomToSelection: UiLabelValue;
+      readonly focusZoom: UiLabelValue;
+      readonly openSource: UiLabelValue;
+      readonly fitWorld: UiLabelValue;
+      readonly cut: UiLabelValue;
+      readonly copy: UiLabelValue;
+      readonly paste: UiLabelValue;
+      readonly rename: UiLabelValue;
+      readonly formatDocument: UiLabelValue;
+      readonly lintDocument: UiLabelValue;
+      readonly suggestCompletions: UiLabelValue;
+      readonly selectToken: UiLabelValue;
+      readonly selectLine: UiLabelValue;
+    };
+    readonly host: {
+      readonly emptyScene: UiLabelValue;
+      readonly preview: UiLabelValue;
+      readonly sourceAvailable: UiLabelValue;
+      readonly blockImage: UiLabelValue;
+      readonly blockTable: UiLabelValue;
+      readonly blockMath: UiLabelValue;
+      readonly blockInk: UiLabelValue;
+      readonly blockGroup: UiLabelValue;
+      readonly blockText: UiLabelValue;
+      readonly checkingPlacement: UiLabelValue;
+      readonly noPlacement: UiLabelValue;
+      readonly canvasUnavailable: UiLabelValue;
     };
     readonly docs: {
       readonly navigation: {
@@ -3163,6 +3212,53 @@ export const uiChromeTranslationBundles = {
           unfocus: { label: { normal: "Fokus aufheben", beginner: "Fokus aufheben" } },
           example: { label: { normal: "Beispiel", beginner: "Beispiel" } },
           noExample: { label: { normal: "Kein Beispiel", beginner: "Kein Beispiel" } },
+          loadingSurface: { label: { normal: "Oberflaeche wird geladen…", beginner: "Oberflaeche wird geladen…" } },
+          unknownComponent: { label: { normal: "Unbekannte Komponente", beginner: "Unbekannte Komponente" } },
+          select: { label: { normal: "Auswaehlen", beginner: "Auswaehlen" } },
+          commandPalette: { label: { normal: "Befehlspalette", beginner: "Befehlspalette" } },
+          searchForCommand: { label: { normal: "Nach einem Befehl suchen…", beginner: "Nach einem Befehl suchen…" } },
+          find: { label: { normal: "Finden…", beginner: "Finden…" } },
+          noData: { label: { normal: "Keine Daten", beginner: "Keine Daten" } },
+          noFileSystemNodes: { label: { normal: "Keine Dateisystemknoten", beginner: "Keine Dateisystemknoten" } },
+          selectTarget: { label: { normal: "Ziel auswaehlen", beginner: "Ziel auswaehlen" } },
+          selectOption: { label: { normal: "Option auswaehlen…", beginner: "Option auswaehlen…" } },
+          noOptionsFound: { label: { normal: "Keine Optionen gefunden.", beginner: "Keine Optionen gefunden." } },
+        },
+        contextMenu: {
+          select: { label: { normal: "Auswaehlen", beginner: "Auswaehlen" } },
+          deselect: { label: { normal: "Abwaehlen", beginner: "Abwaehlen" } },
+          selectAll: { label: { normal: "Alles auswaehlen", beginner: "Alles auswaehlen" } },
+          clearSelection: { label: { normal: "Auswahl aufheben", beginner: "Auswahl aufheben" } },
+          selectSameKind: { label: { normal: "Gleiche Art auswaehlen", beginner: "Gleiche Art auswaehlen" } },
+          duplicate: { label: { normal: "Duplizieren", beginner: "Duplizieren" } },
+          delete: { label: { normal: "Loeschen", beginner: "Loeschen" } },
+          zoomToSelection: { label: { normal: "Auf Auswahl zoomen", beginner: "Auf Auswahl zoomen" } },
+          focusZoom: { label: { normal: "Fokus / Zoom darauf", beginner: "Fokus / Zoom darauf" } },
+          openSource: { label: { normal: "Quelle oeffnen", beginner: "Quelle oeffnen" } },
+          fitWorld: { label: { normal: "Welt einpassen", beginner: "Welt einpassen" } },
+          cut: { label: { normal: "Ausschneiden", beginner: "Ausschneiden" } },
+          copy: { label: { normal: "Kopieren", beginner: "Kopieren" } },
+          paste: { label: { normal: "Einfuegen", beginner: "Einfuegen" } },
+          rename: { label: { normal: "Umbenennen", beginner: "Umbenennen" } },
+          formatDocument: { label: { normal: "Dokument formatieren", beginner: "Dokument formatieren" } },
+          lintDocument: { label: { normal: "Dokument pruefen", beginner: "Dokument pruefen" } },
+          suggestCompletions: { label: { normal: "Vervollstaendigungen vorschlagen", beginner: "Vervollstaendigungen vorschlagen" } },
+          selectToken: { label: { normal: "Token auswaehlen", beginner: "Token auswaehlen" } },
+          selectLine: { label: { normal: "Zeile auswaehlen", beginner: "Zeile auswaehlen" } },
+        },
+        host: {
+          emptyScene: { label: { normal: "Keine Szene", beginner: "Keine Szene" } },
+          preview: { label: { normal: "Vorschau", beginner: "Vorschau" } },
+          sourceAvailable: { label: { normal: "Quelle verfuegbar", beginner: "Quelle verfuegbar" } },
+          blockImage: { label: { normal: "Bild", beginner: "Bild" } },
+          blockTable: { label: { normal: "Tabelle", beginner: "Tabelle" } },
+          blockMath: { label: { normal: "Mathe", beginner: "Mathe" } },
+          blockInk: { label: { normal: "Tinte", beginner: "Tinte" } },
+          blockGroup: { label: { normal: "Gruppe", beginner: "Gruppe" } },
+          blockText: { label: { normal: "Text", beginner: "Text" } },
+          checkingPlacement: { label: { normal: "Pruefe kollisionsfreie Platzierungen…", beginner: "Pruefe kollisionsfreie Platzierungen…" } },
+          noPlacement: { label: { normal: "Keine kollisionsfreie Platzierung an diesem Verbinder", beginner: "Keine kollisionsfreie Platzierung an diesem Verbinder" } },
+          canvasUnavailable: { label: { normal: "Leinwand nicht verfuegbar", beginner: "Leinwand nicht verfuegbar" } },
         },
         protocolList: {
           steps: { label: { normal: "Schritte", beginner: "Schritte" } },
@@ -3645,6 +3741,53 @@ export const uiChromeTranslationBundles = {
           unfocus: { label: { normal: "Unfocus", beginner: "Unfocus" } },
           example: { label: { normal: "Example", beginner: "Example" } },
           noExample: { label: { normal: "No example", beginner: "No example" } },
+          loadingSurface: { label: { normal: "Loading surface…", beginner: "Loading surface…" } },
+          unknownComponent: { label: { normal: "Unknown component", beginner: "Unknown component" } },
+          select: { label: { normal: "Select", beginner: "Select" } },
+          commandPalette: { label: { normal: "Command Palette", beginner: "Command Palette" } },
+          searchForCommand: { label: { normal: "Search for a command to run…", beginner: "Search for a command to run…" } },
+          find: { label: { normal: "Find…", beginner: "Find…" } },
+          noData: { label: { normal: "No data", beginner: "No data" } },
+          noFileSystemNodes: { label: { normal: "No file system nodes", beginner: "No file system nodes" } },
+          selectTarget: { label: { normal: "Select target", beginner: "Select target" } },
+          selectOption: { label: { normal: "Select option…", beginner: "Select option…" } },
+          noOptionsFound: { label: { normal: "No options found.", beginner: "No options found." } },
+        },
+        contextMenu: {
+          select: { label: { normal: "Select", beginner: "Select" } },
+          deselect: { label: { normal: "Deselect", beginner: "Deselect" } },
+          selectAll: { label: { normal: "Select all", beginner: "Select all" } },
+          clearSelection: { label: { normal: "Clear selection", beginner: "Clear selection" } },
+          selectSameKind: { label: { normal: "Select same kind", beginner: "Select same kind" } },
+          duplicate: { label: { normal: "Duplicate", beginner: "Duplicate" } },
+          delete: { label: { normal: "Delete", beginner: "Delete" } },
+          zoomToSelection: { label: { normal: "Zoom to selection", beginner: "Zoom to selection" } },
+          focusZoom: { label: { normal: "Focus / zoom to", beginner: "Focus / zoom to" } },
+          openSource: { label: { normal: "Open source", beginner: "Open source" } },
+          fitWorld: { label: { normal: "Fit world", beginner: "Fit world" } },
+          cut: { label: { normal: "Cut", beginner: "Cut" } },
+          copy: { label: { normal: "Copy", beginner: "Copy" } },
+          paste: { label: { normal: "Paste", beginner: "Paste" } },
+          rename: { label: { normal: "Rename", beginner: "Rename" } },
+          formatDocument: { label: { normal: "Format document", beginner: "Format document" } },
+          lintDocument: { label: { normal: "Lint document", beginner: "Lint document" } },
+          suggestCompletions: { label: { normal: "Suggest completions", beginner: "Suggest completions" } },
+          selectToken: { label: { normal: "Select token", beginner: "Select token" } },
+          selectLine: { label: { normal: "Select line", beginner: "Select line" } },
+        },
+        host: {
+          emptyScene: { label: { normal: "No scene", beginner: "No scene" } },
+          preview: { label: { normal: "Preview", beginner: "Preview" } },
+          sourceAvailable: { label: { normal: "Source available", beginner: "Source available" } },
+          blockImage: { label: { normal: "Image", beginner: "Image" } },
+          blockTable: { label: { normal: "Table", beginner: "Table" } },
+          blockMath: { label: { normal: "Math", beginner: "Math" } },
+          blockInk: { label: { normal: "Ink", beginner: "Ink" } },
+          blockGroup: { label: { normal: "Group", beginner: "Group" } },
+          blockText: { label: { normal: "Text", beginner: "Text" } },
+          checkingPlacement: { label: { normal: "Checking collision-free placements…", beginner: "Checking collision-free placements…" } },
+          noPlacement: { label: { normal: "No collision-free placement at this connector", beginner: "No collision-free placement at this connector" } },
+          canvasUnavailable: { label: { normal: "Canvas unavailable", beginner: "Canvas unavailable" } },
         },
         protocolList: {
           steps: { label: { normal: "Steps", beginner: "Steps" } },
@@ -6303,8 +6446,8 @@ function Command({ className, ...props }: React.ComponentProps<typeof CommandPri
  * CommandDialog holds the data fields for a CommandDialog record.
  **/
 function CommandDialog({
-  title = "Command Palette",
-  description = "Search for a command to run...",
+  title,
+  description,
   children,
   className,
   showCloseButton = true,
@@ -6318,11 +6461,15 @@ function CommandDialog({
   /** @emoji 🔍 When false, host filters items (e.g. Fuse) and cmdk must not re-filter. */
   shouldFilter?: boolean;
 }) {
+  const commandPaletteLabel = useLabel("ui.common.commandPalette");
+  const searchForCommandLabel = useLabel("ui.common.searchForCommand");
+  const resolvedTitle = title ?? commandPaletteLabel ?? "Command Palette";
+  const resolvedDescription = description ?? searchForCommandLabel ?? "Search for a command to run...";
   return (
     <Dialog {...props}>
       <DialogHeader className="sr-only">
-        <DialogTitle>{title}</DialogTitle>
-        <DialogDescription>{description}</DialogDescription>
+        <DialogTitle>{resolvedTitle}</DialogTitle>
+        <DialogDescription>{resolvedDescription}</DialogDescription>
       </DialogHeader>
       <DialogContent className={cn("overflow-hidden p-0", className)} showCloseButton={showCloseButton}>
         <Command
@@ -6443,11 +6590,15 @@ export interface ShellSearchDialogProps {
 
 /** @emoji 🔎 Prop-driven command-palette search dialog a shell renders over its own search results. */
 export const ShellSearchDialog: React.FC<ShellSearchDialogProps> = ({ open, query, onQueryChange, results, onPick, onClose }) => {
+  const titleLabel = useLabel("ui.search.title");
+  const descriptionLabel = useLabel("ui.search.description");
+  const placeholderLabel = useLabel("ui.search.placeholder");
+  const emptyLabel = useLabel("ui.search.empty");
   return (
-    <CommandDialog open={open} onOpenChange={(next) => !next && onClose()} shouldFilter={false} title="Search" description="Search for anything...">
-      <CommandInput value={query} onValueChange={onQueryChange} placeholder="Search..." />
+    <CommandDialog open={open} onOpenChange={(next) => !next && onClose()} shouldFilter={false} title={titleLabel} description={descriptionLabel}>
+      <CommandInput value={query} onValueChange={onQueryChange} placeholder={placeholderLabel} />
       <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
+        <CommandEmpty>{emptyLabel}</CommandEmpty>
         <CommandGroup>
           {results.map((result) => (
             <CommandItem key={result.id} value={result.id} onSelect={() => onPick(result.id)}>
@@ -6482,11 +6633,15 @@ export interface ShellFindDialogProps {
 
 /** @emoji 🔎 Prop-driven command-palette find dialog a shell renders over its own find-in-scene results. */
 export const ShellFindDialog: React.FC<ShellFindDialogProps> = ({ open, query, onQueryChange, results, onPick, onClose }) => {
+  const titleLabel = useLabel("ui.find.title");
+  const descriptionLabel = useLabel("ui.find.description");
+  const placeholderLabel = useLabel("ui.find.placeholder");
+  const emptyLabel = useLabel("ui.find.empty");
   return (
-    <CommandDialog open={open} onOpenChange={(next) => !next && onClose()} shouldFilter={false} title="Find" description="Find something in the scene...">
-      <CommandInput value={query} onValueChange={onQueryChange} placeholder="Find..." />
+    <CommandDialog open={open} onOpenChange={(next) => !next && onClose()} shouldFilter={false} title={titleLabel} description={descriptionLabel}>
+      <CommandInput value={query} onValueChange={onQueryChange} placeholder={placeholderLabel} />
       <CommandList>
-        <CommandEmpty>No matches found.</CommandEmpty>
+        <CommandEmpty>{emptyLabel}</CommandEmpty>
         <CommandGroup>
           {results.map((result) => (
             <CommandItem key={result.id} value={result.id} onSelect={() => onPick(result.id)}>
@@ -8183,12 +8338,18 @@ interface ComboboxProps extends ElementProps {
 /**
  * Searchable combobox dropdown with autocomplete filtering.
  **/
-export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", placeholderId, emptyMessage = "No options found.", onValueChange, className, allowClear = false, showLabel, id }) => {
+export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeholder, placeholderId, emptyMessage, onValueChange, className, allowClear = false, showLabel, id }) => {
   const transaction = useTransaction();
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
   const [open, setOpen] = reactHostPort.useState(false);
   const { t } = useTranslation();
-  const computedPlaceholder = placeholderId ? useLabel(placeholderId) : placeholder;
+  const placeholderIdLabel = useLabel(placeholderId);
+  const selectOptionLabel = useLabel("ui.common.selectOption");
+  const searchLabel = useLabel("ui.common.select");
+  const noOptionsFoundLabel = useLabel("ui.common.noOptionsFound");
+  const clearSelectionLabel = useLabel("ui.contextMenu.clearSelection");
+  const computedPlaceholder = placeholderId ? placeholderIdLabel : (placeholder ?? selectOptionLabel ?? "Select option...");
+  const resolvedEmptyMessage = emptyMessage ?? noOptionsFoundLabel ?? "No options found.";
 
   const selectedOption = options.find((option) => option.value === value);
 
@@ -8222,14 +8383,14 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeho
       </PopoverTrigger>
       <PopoverContent className="w-full" align="start">
         <Command>
-          <CommandInput placeholder="Search..." />
+          <CommandInput placeholder={searchLabel} />
           <CommandList>
-            <CommandEmpty>{emptyMessage}</CommandEmpty>
+            <CommandEmpty>{resolvedEmptyMessage}</CommandEmpty>
             <CommandGroup>
               {allowClear && value && (
                 <CommandItem value="" onSelect={() => handleSelect("")}>
                   <div className="mr-2 size-tiny" />
-                  <span className="text-muted-foreground italic">Clear selection</span>
+                  <span className="text-muted-foreground italic">{clearSelectionLabel}</span>
                 </CommandItem>
               )}
               {options.map((option) => (
@@ -15800,7 +15961,7 @@ function PanelResizeHandle({
 
 const Panel: React.FC<PanelProps> = ({
   anchor,
-  visible = true,
+  visible = false,
   onVisibleChange,
   size = 300,
   onSizeChange,
@@ -15971,7 +16132,7 @@ export interface MobilePanelProps {
  * MobilePanel is a full-width tabbed panel for mobile layouts.
  * It merges all tabs into a single non-resizable panel.
  **/
-const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, treeOpenStates, onTreeOpenStateChange, className = "", height = 260 }) => {
+const MobilePanel: React.FC<MobilePanelProps> = ({ visible = false, tabs, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, treeOpenStates, onTreeOpenStateChange, className = "", height = 260 }) => {
   const [internalActivePath, setInternalActivePath] = reactHostPort.useState<readonly string[]>(() => reconcileActivePath(tabs, [], panelTabChildren));
   const [internalMemory, setInternalMemory] = reactHostPort.useState<Readonly<Record<string, string>>>({});
   const memory = pathMemory ?? internalMemory;
@@ -20473,7 +20634,7 @@ const Table = <T,>({
   onRowMouseLeave,
   rowClassName,
   rowKey,
-  emptyMessage = "No data",
+  emptyMessage,
   className = "",
   sortColumn,
   sortDirection,
@@ -20494,6 +20655,8 @@ const Table = <T,>({
   rowDragProps,
   wrapperComponent: WrapperComponent,
 }: TableProps<T>) => {
+  const noDataLabel = useLabel("ui.common.noData");
+  const resolvedEmptyMessage = emptyMessage ?? noDataLabel ?? "No data";
   const selectedSet = selectedRows instanceof Set ? selectedRows : new Set(selectedRows || []);
   const scrollAreaRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = reactHostPort.useState<string | null>(null);
@@ -20574,7 +20737,7 @@ const Table = <T,>({
         <Scrollable ref={scrollAreaRef} className={`h-full w-full ${className}`}>
           <div className="flex flex-col">
             {data.length === 0 ? (
-              <div className="p-small text-center text-muted-foreground">{emptyMessage}</div>
+              <div className="p-small text-center text-muted-foreground">{resolvedEmptyMessage}</div>
             ) : (
               data.map((row, index) => {
                 const key = rowKey ? rowKey(row, index) : index.toString();
@@ -20614,7 +20777,7 @@ const Table = <T,>({
             {data.length === 0 ? (
               <tr>
                 <td colSpan={visibleColumns.length} className="p-small text-center text-muted-foreground">
-                  {emptyMessage}
+                  {resolvedEmptyMessage}
                 </td>
               </tr>
             ) : (
@@ -21375,12 +21538,14 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
   onRowMouseLeave,
   rowClassName,
   onToggleExpand,
-  emptyMessage = "No file system nodes",
+  emptyMessage,
   className = "",
   rowHeight = "normal",
   dragDrop,
   extraColumns = [],
 }) => {
+  const noFileSystemNodesLabel = useLabel("ui.common.noFileSystemNodes");
+  const resolvedEmptyMessage = emptyMessage ?? noFileSystemNodesLabel ?? "No file system nodes";
   const [uncontrolledSelectedRowIds, setUncontrolledSelectedRowIds] = reactHostPort.useState<Set<string>>(() => new Set(normalizeVirtualFileSystemSelectedRowIds(defaultSelectedRowIds, selectionMode)));
   const selectionAnchorRowIdRef = reactHostPort.useRef<string | undefined>(normalizeVirtualFileSystemSelectedRowIds(defaultSelectedRowIds, selectionMode)[0]);
   const orderedRowIds = reactHostPort.useMemo(() => getVirtualFileSystemOrderedRowIds(rows), [rows]);
@@ -21463,7 +21628,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
       onRowMouseEnter={onRowMouseEnter}
       onRowMouseLeave={onRowMouseLeave}
       rowClassName={rowClassName}
-      emptyMessage={emptyMessage}
+      emptyMessage={resolvedEmptyMessage}
       rowHeight={rowHeight}
       hierarchical
       dragDrop={dragDrop}

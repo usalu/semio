@@ -377,6 +377,13 @@ struct FlowPlayLabels {
     window_generations: &'static str,
     window_generate_form: &'static str,
     window_generate_preview: &'static str,
+    lod_mode: &'static str,
+    automatic: &'static str,
+    proximity_distance: &'static str,
+    value: &'static str,
+    text: &'static str,
+    kind: &'static str,
+    id: &'static str,
 }
 
 const FLOW_LABELS_NATIVE_EN: FlowPlayLabels = FlowPlayLabels {
@@ -407,6 +414,13 @@ const FLOW_LABELS_NATIVE_EN: FlowPlayLabels = FlowPlayLabels {
     window_generations: "Generations",
     window_generate_form: "Form",
     window_generate_preview: "Preview",
+    lod_mode: "LOD Mode",
+    automatic: "Automatic",
+    proximity_distance: "Proximity Distance",
+    value: "Value",
+    text: "Text",
+    kind: "Kind",
+    id: "Id",
 };
 
 const FLOW_LABELS_NATIVE_DE: FlowPlayLabels = FlowPlayLabels {
@@ -437,6 +451,13 @@ const FLOW_LABELS_NATIVE_DE: FlowPlayLabels = FlowPlayLabels {
     window_generations: "Generationen",
     window_generate_form: "Formular",
     window_generate_preview: "Vorschau",
+    lod_mode: "LOD-Modus",
+    automatic: "Automatisch",
+    proximity_distance: "Naeheabstand",
+    value: "Wert",
+    text: "Text",
+    kind: "Art",
+    id: "Id",
 };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
@@ -467,6 +488,45 @@ fn flow_extension_action_title_label(action_id: &str, title: &'static str, label
     }
 }
 //#endregion 🔖Terminology
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_flow_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+fn flow_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("addWidget", "Add Widget", "Widget hinzufuegen"),
+        ("removeWidget", "Remove Widget", "Widget entfernen"),
+        ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+        ("disconnect", "Disconnect", "Trennen"),
+        ("connectMediaPorts", "Connect Ports", "Anschluesse verbinden"),
+        ("moveMediaNode", "Move Node", "Knoten verschieben"),
+        ("reorganize", "Reorganize", "Neu anordnen"),
+        ("patchFlowWidgets", "Patch Widgets", "Widgets aktualisieren"),
+        ("renameFlowWidget", "Rename Widget", "Widget umbenennen"),
+        ("nodeGraphEdit", "Node Graph Edit", "Knotengraph bearbeiten"),
+        ("spotlightCommit", "Spotlight Commit", "Spotlight bestaetigen"),
+        ("runExtensionAction", "Run Extension Action", "Erweiterungsaktion ausfuehren"),
+        ("evaluate", "Evaluate", "Auswerten"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+        ("selectNode", "Select Node", "Knoten auswaehlen"),
+        ("nodeGraphSelect", "Node Graph Select", "Knotengraph auswaehlen"),
+        ("nodeGraphHover", "Node Graph Hover", "Knotengraph-Hover"),
+        ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
+        ("nodeGraphViewport", "Node Graph Viewport", "Knotengraph-Ansicht"),
+        ("setLodMode", "Set LOD Mode", "LOD-Modus festlegen"),
+        ("setProximityDistance", "Set Proximity Distance", "Naeheabstand festlegen"),
+        ("setCatalogueSections", "Set Catalogue Sections", "Katalogabschnitte festlegen"),
+        ("toggleExtension", "Toggle Extension", "Erweiterung umschalten"),
+        ("addGeneration", "Add Generation", "Generation hinzufuegen"),
+        ("removeGeneration", "Remove Generation", "Generation entfernen"),
+        ("selectGeneration", "Select Generation", "Generation auswaehlen"),
+        ("renameGeneration", "Rename Generation", "Generation umbenennen"),
+        ("updateGenerationValues", "Update Generation Values", "Generationswerte aktualisieren"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+//#endregion 🔖CommandLabels
 
 //#region 🔖Panels
 fn build_document_tree(fixture: &FlowFixture, selected: &[String], labels: &FlowPlayLabels) -> UiNode {
@@ -709,7 +769,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
 }
 
 fn canvas_settings_field_group(runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> UiInspectorFieldGroup {
-    let lod_items: Vec<UiSelectItem> = std::iter::once(UiSelectItem { value: FLOW_LOD_MODE_AUTOMATIC.into(), label: "Automatic".into() })
+    let lod_items: Vec<UiSelectItem> = std::iter::once(UiSelectItem { value: FLOW_LOD_MODE_AUTOMATIC.into(), label: labels.automatic.into() })
         .chain(
             serde_json::from_str::<Vec<Value>>(&dag_lod_scale_json())
                 .unwrap_or_default()
@@ -728,7 +788,7 @@ fn canvas_settings_field_group(runtime: &FlowPlayRuntime, labels: &FlowPlayLabel
         fields: vec![
             UiNode::Field(UiFieldNode {
                 id: "flow-play-inspector.lod-mode".into(),
-                label: "LOD Mode".into(),
+                label: labels.lod_mode.into(),
                 child: Box::new(UiNode::Select(UiSelectNode {
                     id: "flow-play-inspector.lod-mode.select".into(),
                     value: runtime.lod_mode.clone(),
@@ -742,7 +802,7 @@ fn canvas_settings_field_group(runtime: &FlowPlayRuntime, labels: &FlowPlayLabel
             }),
             UiNode::Field(UiFieldNode {
                 id: "flow-play-inspector.proximity-distance".into(),
-                label: "Proximity Distance".into(),
+                label: labels.proximity_distance.into(),
                 child: Box::new(UiNode::Input(UiInputNode {
                     id: "flow-play-inspector.proximity-distance.input".into(),
                     input_kind: "number".into(),
@@ -789,7 +849,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
             default_open: None,
             fields: vec![UiNode::Field(UiFieldNode {
                 id: "flow-play-inspector.slider-value".into(),
-                label: "Value".into(),
+                label: labels.value.into(),
                 child: Box::new(UiNode::Input(UiInputNode {
                     id: "flow-play-inspector.slider-value.input".into(),
                     input_kind: "number".into(),
@@ -816,7 +876,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
             default_open: None,
             fields: vec![UiNode::Field(UiFieldNode {
                 id: "flow-play-inspector.note-text".into(),
-                label: "Text".into(),
+                label: labels.text.into(),
                 child: Box::new(UiNode::Input(UiInputNode {
                     id: "flow-play-inspector.note-text.input".into(),
                     input_kind: "text".into(),
@@ -838,7 +898,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
     let kind_mixed = ui_inspector_mixed_text(&widgets.iter().map(|widget| widget_kind_label(widget).to_string()).collect::<Vec<_>>());
     let mut base_fields = vec![ui_inspector_readonly_field(
         "flow-play-inspector.kind",
-        "Kind",
+        labels.kind,
         if kind_mixed.placeholder.is_none() { widget_kind_label(widgets[0]).to_string() } else { "—".into() },
     )];
     if widget_ids.len() == 1 {
@@ -846,7 +906,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
             0,
             UiNode::Field(UiFieldNode {
                 id: "flow-play-inspector.id".into(),
-                label: "Id".into(),
+                label: labels.id.into(),
                 child: Box::new(UiNode::Input(UiInputNode {
                     id: "flow-play-inspector.id.input".into(),
                     input_kind: "text".into(),
@@ -1358,6 +1418,7 @@ impl DocumentApp for FlowPlayApp {
 
     fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
         let labels = flow_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         semio_framework_plugin::AppLabelsOverlay {
             app_label: None,
             window_kind_labels: std::collections::HashMap::from([
@@ -1368,10 +1429,15 @@ impl DocumentApp for FlowPlayApp {
                 (FLOW_PLAY_WINDOW_GENERATE_PREVIEW.to_string(), labels.window_generate_preview.to_string()),
             ]),
             panel_tab_labels: std::collections::HashMap::new(),
-            mode_labels: std::collections::HashMap::new(),
-            action_labels: HashMap::new(),
+            mode_labels: std::collections::HashMap::from([
+                ("edit".to_string(), (if is_de { "Bearbeiten" } else { "Edit" }).to_string()),
+                ("generate".to_string(), (if is_de { "Generieren" } else { "Generate" }).to_string()),
+            ]),
+            action_labels: flow_action_labels(is_de),
             utility_labels: HashMap::new(),
-            example_labels: HashMap::new(),
+            example_labels: std::collections::HashMap::from([
+                ("demo".to_string(), (if is_de { "Demo" } else { "Demo" }).to_string()),
+            ]),
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),
             introduction_labels: HashMap::new(),

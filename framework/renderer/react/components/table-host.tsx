@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Button, Icon, Input, Table, type TableColumn } from "@semio-tech/ui-react";
+import { Button, Icon, Input, Table, useLabel, type TableColumn } from "@semio-tech/ui-react";
 import { ICONS, type IconName } from "@semio-tech/ui-asset";
 import type { ActionDescriptor, ComponentSceneHostProps } from "@semio-tech/framework-core";
 
@@ -66,6 +66,7 @@ function renderTableCell(cell: TableCellRecord, onAction: (action: ActionDescrip
 //#region Component
 export function TableHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.table;
+  const emptySceneLabel = useLabel("ui.host.emptyScene");
   const columns = useMemo(() => {
     if (!scene) return [] as TableColumnRecord[];
     try {
@@ -114,7 +115,7 @@ export function TableHost({ node, onAction }: ComponentSceneHostProps) {
     [columns, onAction],
   );
 
-  if (!scene) return <div className="semio-table-empty">No table scene</div>;
+  if (!scene) return <div className="semio-table-empty">{emptySceneLabel}</div>;
 
   const rowDragMime = scene.rowDragMime;
   const dropAction = scene.dropAction;

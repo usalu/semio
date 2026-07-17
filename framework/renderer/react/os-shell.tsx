@@ -196,6 +196,9 @@ import {
   type UtilityDefinition,
   type AppPanelTabDefinition,
   type Canvas2dScene,
+  type DialogDefinition,
+  type IntroductionDefinition,
+  type IntroductionStepDefinition,
   type ComponentKind,
   type ComponentSceneHostProps,
   type GisMapScene,
@@ -1401,6 +1404,39 @@ function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKind" | "
   return map[id] ?? fallback;
 }
 
+/** @emoji 🗣️ Resolves one action-arg's label + (for `select` controls) its options' labels from the overlay's `actionArgLabels` map, keyed `"{scopeId}.{argId}"` / `"{scopeId}.{argId}.option.{value}"`. `scopeId` is an action id for staged/palette forms or a dialog id for dialog args. */
+function resolveActionArgDef(def: ActionArgDef, scopeId: string, overlay: PluginAppLabelsOverlay): ActionArgDef {
+  const label = resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}`, def.label);
+  if (def.control.kind !== "select") return label === def.label ? def : { ...def, label };
+  const options = def.control.options.map((option) => ({ ...option, label: resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}.option.${option.value}`, option.label) }));
+  return { ...def, label, control: { ...def.control, options } };
+}
+
+/** @emoji 🗣️ Resolves a `DialogDefinition`'s title/body/submitLabel/args from the overlay's `dialogLabels`/`actionArgLabels` maps, keyed by the dialog's own id. */
+function resolveDialogDefinition(dialog: DialogDefinition, overlay: PluginAppLabelsOverlay): DialogDefinition {
+  return {
+    ...dialog,
+    title: resolveAppLabel(overlay, "dialog", `${dialog.id}.title`, dialog.title),
+    body: dialog.body ? resolveAppLabel(overlay, "dialog", `${dialog.id}.body`, dialog.body) : dialog.body,
+    submitLabel: resolveAppLabel(overlay, "dialog", `${dialog.id}.submit`, dialog.submitLabel),
+    args: dialog.args.map((def) => resolveActionArgDef(def, dialog.id, overlay)),
+  };
+}
+
+/** @emoji 🗣️ Resolves an `IntroductionDefinition`'s title and every step's title/body from the overlay's `introductionLabels` map. */
+function resolveIntroductionDefinition(introduction: IntroductionDefinition, overlay: PluginAppLabelsOverlay): IntroductionDefinition {
+  return {
+    title: resolveAppLabel(overlay, "introduction", "intro.title", introduction.title),
+    steps: introduction.steps.map(
+      (step): IntroductionStepDefinition => ({
+        ...step,
+        title: resolveAppLabel(overlay, "introduction", `intro.step.${step.id}.title`, step.title),
+        body: resolveAppLabel(overlay, "introduction", `intro.step.${step.id}.body`, step.body),
+      }),
+    ),
+  };
+}
+
 /** @emoji 🗣️ Resolves a terminology id's display name; chrome-known ids get a translated label, app-declared ids fall back to their raw id. */
 function shellTerminologyLabel(id: string): string {
   const isChromeKnown = id === "native" || id === "reuse";
@@ -1826,9 +1862,22 @@ type ActionPaneSlice = Pick<ActionPaneState, "expandedByWindowId" | "stagedArgsB
  * chip never renders). Rows render disabled while an active utility gates actions
  * (`allowsActionsWhileActive === false`).
  */
-function windowActionPaneNode(app: AppDefinition, windowKind: AppWindowKindDefinition, windowId: string, actionPane: ActionPaneSlice, onAction: (action: ActionDescriptor) => void, dispatch: (action: ShellAction) => void): ReactNode {
-  const actions = resolveWindowActions(app, windowKind);
-  if (actions.length === 0) return undefined;
+function windowActionPaneNode(
+  app: AppDefinition,
+  windowKind: AppWindowKindDefinition,
+  windowId: string,
+  actionPane: ActionPaneSlice,
+  onAction: (action: ActionDescriptor) => void,
+  dispatch: (action: ShellAction) => void,
+  appLabelsOverlay: PluginAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY,
+): ReactNode {
+  const resolvedActions = resolveWindowActions(app, windowKind);
+  if (resolvedActions.length === 0) return undefined;
+  const actions = resolvedActions.map((action) => ({
+    ...action,
+    label: resolveAppLabel(appLabelsOverlay, "action", action.id, action.label),
+    args: action.args.map((def) => resolveActionArgDef(def, action.id, appLabelsOverlay)),
+  }));
   const activeUtilityId = actionPane.activeUtilityByWindowId[windowId] ?? null;
   const activeUtility = activeUtilityId ? (app.utilities ?? []).find((utility) => utility.id === activeUtilityId) : undefined;
   const disabled = Boolean(activeUtility && activeUtility.allowsActionsWhileActive === false);
@@ -2098,14 +2147,14 @@ export function buildCommandCategoryTree(
         {
           id: `command-${expanded.definition.id}-execute`,
           icon: <Icon icon="check" size="small" />,
-          text: "Execute",
+          text: shellLabel("ui.common.execute"),
           disabled: missing.length > 0,
           onClick: () => onExecute(expanded, effective),
         },
         {
           id: `command-${expanded.definition.id}-reset`,
           icon: <Icon icon="undo" size="small" />,
-          text: "Reset",
+          text: shellLabel("ui.common.reset"),
           onClick: () => onResetArgs(expanded.definition.id),
         },
       ],
@@ -3734,7 +3783,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         sections: [{ id: "framework.utilities.history.root", label: "", items: [{ id: "framework.utilities.history.tree", label: "", control: <UtilityTree id="ui.toolbar.footer.history" utilities={grouped} onAction={onAction} direction="up" /> }] }],
       },
     });
-  }, [onAction, session]);
+  }, [onAction, session, uiLocale]);
   //#endregion 🧰FooterUtilityLeaves
 
   //#region 🔄SyncLeaf — bottom-left's sync tab, replacing the old floating footer SyncAttachCard.
@@ -3776,7 +3825,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         ],
       },
     });
-  }, [attachSyncBackbone, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId]);
+  }, [attachSyncBackbone, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId, uiLocale]);
   //#endregion 🔄SyncLeaf
 
   const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
@@ -3991,8 +4040,8 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         seen.add(example.id);
         return true;
       })
-      .map((example) => ({ id: example.id, label: example.label }));
-  }, [activePluginManifest, session?.app.id]);
+      .map((example) => ({ id: example.id, label: resolveAppLabel(appLabelsOverlay, "example", example.id, example.label) }));
+  }, [activePluginManifest, session?.app.id, appLabelsOverlay]);
 
   useEffect(() => {
     if (exampleOptions.length === 0) return;
@@ -4209,7 +4258,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
             utilityOptions: chrome?.utilityOptions,
             engagement: chrome?.engagement,
             toolbar: spawnedApp && windowKind ? utilityBarNode(resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[spawned.id], spawned.id, appLabelsOverlay), spawned.id, onActionStable) : undefined,
-            actionPane: spawnedApp && windowKind ? windowActionPaneNode(spawnedApp, windowKind, spawned.id, actionPaneSlice, onActionStable, dispatch) : undefined,
+            actionPane: spawnedApp && windowKind ? windowActionPaneNode(spawnedApp, windowKind, spawned.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay) : undefined,
             actionsFolded: actionsFoldedFor(spawned.id),
             onActionsFoldedChange: onActionsFoldedFor(spawned.id),
             children: (
@@ -4230,7 +4279,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
       ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id], kind.id, onActionStable),
       engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
       toolbar: utilityBarNode(resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id, appLabelsOverlay), kind.id, onActionStable),
-      actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch),
+      actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay),
       actionsFolded: actionsFoldedFor(kind.id),
       onActionsFoldedChange: onActionsFoldedFor(kind.id),
       children: (
@@ -4251,7 +4300,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
           ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id], instance.id, onActionStable),
           engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
           toolbar: utilityBarNode(resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id, appLabelsOverlay), instance.id, onActionStable),
-          actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch),
+          actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay),
           actionsFolded: actionsFoldedFor(instance.id),
           onActionsFoldedChange: onActionsFoldedFor(instance.id),
           children: (
@@ -4441,7 +4490,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
         <UIFind open={findOpen} onOpenChange={(value) => dispatch({ type: "SET_FIND_OPEN", value })} />
         {session?.app.introduction && introductionStepIndex != null && (
           <UIIntroduction
-            introduction={session.app.introduction}
+            introduction={resolveIntroductionDefinition(session.app.introduction, appLabelsOverlay)}
             stepIndex={introductionStepIndex}
             onStepIndexChange={(value) => dispatch({ type: "SET_INTRODUCTION_STEP", value })}
             onDismiss={() => {
@@ -4457,7 +4506,7 @@ export function FrameworkOsShell({ pluginFilter, plugins, appId }: { readonly pl
             if (!dialog) return null;
             return (
               <UIDialog
-                dialog={dialog}
+                dialog={resolveDialogDefinition(dialog, appLabelsOverlay)}
                 seedArgs={overlayDialog.seedArgs}
                 renderField={(def, value, onChange) => renderStagedArgControl(def, value, onChange)}
                 onSubmit={(args) => {

@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type DragEvent, type MouseEvent } from "react";
-import { CATALOGUE_DRAG_MIME, ContextMenuController, getActiveCatalogueDragPayload, pickMostSpecificCanvasTarget, useCanvasAppearanceSync, type CanvasPickTarget } from "@semio-tech/ui-react";
+import {
+  CATALOGUE_DRAG_MIME,
+  ContextMenuController,
+  getActiveCatalogueDragPayload,
+  pickMostSpecificCanvasTarget,
+  resolveTranslationLabel,
+  uiI18n,
+  useCanvasAppearanceSync,
+  useLabel,
+  type CanvasPickTarget,
+} from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import type { ComponentSceneHostProps, Puzzle2dBoardScene } from "@semio-tech/framework-core";
 import type { Puzzle2dBoardWasmSession } from "../os-shell.tsx";
@@ -183,6 +193,11 @@ export function collectPuzzle2dLiveMirrorOps(rows: readonly BoardEventRow[]): Pu
 //#endregion BoardEvents
 
 //#region SelectionMenu
+/** 🌐 Resolves a translation key outside of component render (e.g. `buildPuzzle2dSelectionMenuItems`), mirroring `shellLabel`/`interpLabel`. */
+function hostLabel(key: string): string {
+  return resolveTranslationLabel(uiI18n.t(key as never)) ?? key;
+}
+
 function puzzle2dEntityFlag(entity: Record<string, unknown> | undefined, key: "hidden" | "locked"): boolean {
   return Boolean(entity && entity[key] === true);
 }
@@ -197,7 +212,7 @@ export function buildPuzzle2dSelectionMenuItems(fixtureJson: string, selectionJs
   }
   const selected = parseSelectionIds(selectionJson);
   if (selected.length === 0) {
-    return [{ id: "selectAll", label: "Select all", action: "selectAll" }];
+    return [{ id: "selectAll", label: hostLabel("ui.contextMenu.selectAll"), action: "selectAll" }];
   }
 
   const selectedSet = new Set(selected);
@@ -230,10 +245,10 @@ export function buildPuzzle2dSelectionMenuItems(fixtureJson: string, selectionJs
   return [
     { id: "toggleHidden", label: anyVisible ? "Hide" : "Show", action: "setSelectionFlag", args: { flag: "hidden", value: anyVisible } },
     { id: "toggleLocked", label: anyUnlocked ? "Lock" : "Unlock", action: "setSelectionFlag", args: { flag: "locked", value: anyUnlocked } },
-    { id: "duplicate", label: "Duplicate", action: "duplicateSelection", disabled: !hasSelectedNode },
+    { id: "duplicate", label: hostLabel("ui.contextMenu.duplicate"), action: "duplicateSelection", disabled: !hasSelectedNode },
     { id: "selectSameKind", label: "Select all of same kind", action: "selectSameKind" },
-    { id: "focusSelection", label: "Zoom to selection", action: "focusSelection" },
-    { id: "deleteSelection", label: "Delete", action: "deleteSelection", destructive: true },
+    { id: "focusSelection", label: hostLabel("ui.contextMenu.zoomToSelection"), action: "focusSelection" },
+    { id: "deleteSelection", label: hostLabel("ui.contextMenu.delete"), action: "deleteSelection", destructive: true },
   ];
 }
 //#endregion SelectionMenu
@@ -364,6 +379,7 @@ export function notifyPuzzle2dPeersGestureEnded(controllerId: string, surfaceId:
 //#region Puzzle2dBoardHost
 export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.puzzle2dBoard;
+  const emptySceneLabel = useLabel("ui.host.emptyScene");
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sessionRef = useRef<Puzzle2dBoardWasmSession | null>(null);
@@ -963,7 +979,7 @@ export function Puzzle2dBoardHost({ node, onAction }: ComponentSceneHostProps) {
   );
   //#endregion FixtureDropHandlers
 
-  if (!scene) return <div className="semio-puzzle2d-board-empty text-muted-foreground p-2 text-xs">No puzzle board scene</div>;
+  if (!scene) return <div className="semio-puzzle2d-board-empty text-muted-foreground p-2 text-xs">{emptySceneLabel}</div>;
 
   return (
     <div

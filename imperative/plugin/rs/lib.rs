@@ -12,7 +12,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use vcs::CollectionOp;
 
 //#region 🔖Constants
@@ -473,6 +473,7 @@ impl DocumentApp for ImperativePlayApp {
 
     fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
         let labels = imperative_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         AppLabelsOverlay {
             app_label: None,
             window_kind_labels: std::collections::HashMap::from([
@@ -481,7 +482,7 @@ impl DocumentApp for ImperativePlayApp {
             ]),
             panel_tab_labels: std::collections::HashMap::new(),
             mode_labels: std::collections::HashMap::new(),
-            action_labels: HashMap::new(),
+            action_labels: imperative_action_labels(is_de),
             utility_labels: HashMap::new(),
             example_labels: HashMap::new(),
             action_arg_labels: HashMap::new(),
@@ -514,6 +515,27 @@ fn resolve_contains(document: &ImperativeDocument, args: Option<&Value>, id: &st
     steps_at(document, &path_ref).iter().any(|step| step.id == id)
 }
 //#endregion 🔖ImperativePlayApp
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_imperative_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
+/// command palette and Actions rail get a translated label without threading locale through the builder.
+fn imperative_action_labels(is_de: bool) -> HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("addStep", "Add Step", "Schritt hinzufuegen"),
+        ("addStepAt", "Add Step At", "Schritt bei Position hinzufuegen"),
+        ("removeStep", "Remove Step", "Schritt entfernen"),
+        ("removeStepAt", "Remove Step At", "Schritt bei Position entfernen"),
+        ("moveStep", "Move Step", "Schritt verschieben"),
+        ("moveStepAt", "Move Step At", "Schritt bei Position verschieben"),
+        ("setStepParams", "Set Step Params", "Schrittparameter festlegen"),
+        ("setStepParamsAt", "Set Step Params At", "Schrittparameter bei Position festlegen"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+        ("run", "Run", "Ausfuehren"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+//#endregion 🔖CommandLabels
 
 //#region 🔖Manifest
 fn create_imperative_app() -> App {

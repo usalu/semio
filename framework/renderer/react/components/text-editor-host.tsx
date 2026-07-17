@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ContextMenuController, Textarea, type ContextMenuItem } from "@semio-tech/ui-react";
+import { ContextMenuController, resolveTranslationLabel, Textarea, uiI18n, useLabel, type ContextMenuItem } from "@semio-tech/ui-react";
 import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
 import type { ActionDescriptor, ComponentSceneHostProps, TextEditorScene } from "@semio-tech/framework-core";
 import { textEditorActions } from "../os-shell.tsx";
@@ -54,6 +54,11 @@ function HighlightedBuffer({ buffer, tokens }: { readonly buffer: string; readon
 //#endregion HighlightedBuffer
 
 //#region EditingHelpers
+/** 🌐 Resolves a translation key outside of component render (e.g. `buildTextEditorContextMenuItems`), mirroring `shellLabel`/`interpLabel`. */
+function hostLabel(key: string): string {
+  return resolveTranslationLabel(uiI18n.t(key as never)) ?? key;
+}
+
 /** ✂️ Language-agnostic multi-span rename preview: replaces every span with `nextName`, remapping spans left-to-right. */
 export function multiSpanReplace(text: string, occurrences: readonly SpanRange[], nextName: string): { readonly text: string; readonly occurrences: readonly SpanRange[] } {
   const sorted = [...occurrences].sort((a, b) => b.start - a.start);
@@ -107,33 +112,33 @@ export function buildTextEditorContextMenuItems(
 ): ContextMenuItem[] {
   const items: ContextMenuItem[] = [];
   if (input.canSuggest) {
-    items.push({ id: "writer-suggest", label: "Suggest completions", icon: "sparkles", shortcut: "Alt+Right click", onSelect: actions.suggest });
+    items.push({ id: "writer-suggest", label: hostLabel("ui.contextMenu.suggestCompletions"), icon: "sparkles", shortcut: "Alt+Right click", onSelect: actions.suggest });
     items.push({ id: "writer-suggest-sep", separator: true });
   }
   if (input.pickTargets.length > 1) {
     for (const target of input.pickTargets) {
       items.push({
         id: `writer-pick-${target.domain}-${target.id}`,
-        label: `Select ${target.domain === "token" ? target.label : target.domain}`,
+        label: `${hostLabel("ui.contextMenu.select")} ${target.domain === "token" ? target.label : target.domain}`,
         icon: target.domain === "token" ? "text-cursor" : "list-ordered",
         onSelect: () => actions.pickTarget(target),
       });
     }
     items.push({ id: "writer-pick-sep", separator: true });
   }
-  items.push({ id: "writer-select-token", label: "Select token", icon: "text-cursor", onSelect: actions.selectToken });
-  items.push({ id: "writer-select-line", label: "Select line", icon: "list-ordered", onSelect: actions.selectLine });
-  items.push({ id: "writer-select-all", label: "Select all", icon: "maximize-2", shortcut: "⌘A", onSelect: actions.selectAll });
+  items.push({ id: "writer-select-token", label: hostLabel("ui.contextMenu.selectToken"), icon: "text-cursor", onSelect: actions.selectToken });
+  items.push({ id: "writer-select-line", label: hostLabel("ui.contextMenu.selectLine"), icon: "list-ordered", onSelect: actions.selectLine });
+  items.push({ id: "writer-select-all", label: hostLabel("ui.contextMenu.selectAll"), icon: "maximize-2", shortcut: "⌘A", onSelect: actions.selectAll });
   if (input.canRename) {
-    items.push({ id: "writer-rename", label: "Rename symbol", icon: "edit-3", shortcut: "F2", onSelect: actions.rename });
+    items.push({ id: "writer-rename", label: hostLabel("ui.contextMenu.rename"), icon: "edit-3", shortcut: "F2", onSelect: actions.rename });
   }
   items.push({ id: "writer-clip-sep", separator: true });
-  items.push({ id: "writer-cut", label: "Cut", icon: "scissors", shortcut: "⌘X", disabled: !input.hasSelection, onSelect: actions.cut });
-  items.push({ id: "writer-copy", label: "Copy", icon: "copy", shortcut: "⌘C", disabled: !input.hasSelection, onSelect: actions.copy });
-  items.push({ id: "writer-paste", label: "Paste", icon: "clipboard", shortcut: "⌘V", onSelect: actions.paste });
+  items.push({ id: "writer-cut", label: hostLabel("ui.contextMenu.cut"), icon: "scissors", shortcut: "⌘X", disabled: !input.hasSelection, onSelect: actions.cut });
+  items.push({ id: "writer-copy", label: hostLabel("ui.contextMenu.copy"), icon: "copy", shortcut: "⌘C", disabled: !input.hasSelection, onSelect: actions.copy });
+  items.push({ id: "writer-paste", label: hostLabel("ui.contextMenu.paste"), icon: "clipboard", shortcut: "⌘V", onSelect: actions.paste });
   items.push({ id: "writer-format-sep", separator: true });
-  items.push({ id: "writer-format", label: "Format document", icon: "align-left", shortcut: "⇧⌘F", onSelect: actions.format });
-  items.push({ id: "writer-lint", label: "Lint document", icon: "alert-circle", onSelect: actions.lint });
+  items.push({ id: "writer-format", label: hostLabel("ui.contextMenu.formatDocument"), icon: "align-left", shortcut: "⇧⌘F", onSelect: actions.format });
+  items.push({ id: "writer-lint", label: hostLabel("ui.contextMenu.lintDocument"), icon: "alert-circle", onSelect: actions.lint });
   return items;
 }
 //#endregion EditingHelpers
@@ -695,8 +700,9 @@ export function TextEditorHost({ node, onAction }: ComponentSceneHostProps) {
       return [];
     }
   }, [scene?.diagnosticsJson]);
+  const emptySceneLabel = useLabel("ui.host.emptyScene");
 
-  if (!scene) return <div className="semio-text-editor-empty">No editor scene</div>;
+  if (!scene) return <div className="semio-text-editor-empty">{emptySceneLabel}</div>;
 
   return (
     <div className="semio-text-editor-host flex h-full min-h-[16rem] w-full flex-col bg-canvas" data-surface-id={node.surfaceId}>

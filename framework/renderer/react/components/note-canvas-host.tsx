@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { cn, SelectionMarquee, marqueeCoverageFromGesture, screenRectFromPoints, type SelectionMarqueePoint } from "@semio-tech/ui-react";
+import { cn, resolveTranslationLabel, SelectionMarquee, marqueeCoverageFromGesture, screenRectFromPoints, uiI18n, useLabel, type SelectionMarqueePoint } from "@semio-tech/ui-react";
 import { resolveSemanticColorHex } from "@semio-tech/ui-styling";
 import type { ComponentSceneHostProps } from "@semio-tech/framework-core";
 
@@ -142,6 +142,11 @@ function parseSelectionIds(json: string | undefined): readonly string[] {
 //#endregion Types
 
 //#region GeometryHelpers
+/** 🌐 Resolves a translation key outside of component render (e.g. `createNoteBlockByKind`), mirroring `shellLabel`/`interpLabel`. */
+function hostLabel(key: string): string {
+  return resolveTranslationLabel(uiI18n.t(key as never)) ?? key;
+}
+
 let noteHostIdCounter = 0;
 
 /** @emoji 🆔 Host-generated ids only need to be unique client-side (Rust re-derives its own on the next round-trip). */
@@ -494,22 +499,22 @@ const NOTE_BLOCK_DEFAULT_SIZE: Record<NoteBlockKind, { readonly width: number; r
 export function createNoteBlockByKind(kind: NoteBlockKind, x: number, y: number): NoteBlockNode {
   const size = NOTE_BLOCK_DEFAULT_SIZE[kind];
   const base = { id: createNoteHostId(kind), x, y, width: size.width, height: size.height, rotation: 0, visible: true, locked: false };
-  if (kind === "image") return { ...base, kind, name: "Image", imageKey: "placeholder" };
+  if (kind === "image") return { ...base, kind, name: hostLabel("ui.host.blockImage"), imageKey: "placeholder" };
   if (kind === "table")
     return {
       ...base,
       kind,
-      name: "Table",
+      name: hostLabel("ui.host.blockTable"),
       columns: ["A", "B", "C"],
       rows: [
         [{ content: "" }, { content: "" }, { content: "" }],
         [{ content: "" }, { content: "" }, { content: "" }],
       ],
     };
-  if (kind === "math") return { ...base, kind, name: "Math", tex: "E = mc^2", displayMode: true };
-  if (kind === "ink") return { ...base, kind, name: "Ink", points: [], strokeWidth: 3, color: [0, 0, 0, 1] };
-  if (kind === "group") return { ...base, kind, name: "Group", children: [] };
-  return { ...base, kind: "text", name: "Text", paragraphs: [{ runs: [{ text: "" }] }], fontSize: 18, fontWeight: "normal", align: "left" };
+  if (kind === "math") return { ...base, kind, name: hostLabel("ui.host.blockMath"), tex: "E = mc^2", displayMode: true };
+  if (kind === "ink") return { ...base, kind, name: hostLabel("ui.host.blockInk"), points: [], strokeWidth: 3, color: [0, 0, 0, 1] };
+  if (kind === "group") return { ...base, kind, name: hostLabel("ui.host.blockGroup"), children: [] };
+  return { ...base, kind: "text", name: hostLabel("ui.host.blockText"), paragraphs: [{ runs: [{ text: "" }] }], fontSize: 18, fontWeight: "normal", align: "left" };
 }
 
 /** @emoji 🖊️ Local pure application of the applyNoteEvents op vocabulary — mirrors note/plugin/rs/lib.rs `apply_note_canvas_event` for optimistic in-gesture rendering. */
@@ -643,6 +648,7 @@ function NoteBlockView({
   readonly hidden: boolean;
   readonly onPointerDown: (event: React.PointerEvent, blockId: string) => void;
 }) {
+  const groupLabel = useLabel("ui.host.blockGroup");
   if (!block.visible) return null;
   const bounds = noteBlockBounds(block);
   const common = {
@@ -722,7 +728,9 @@ function NoteBlockView({
   if (block.kind === "group") {
     return (
       <div {...common}>
-        <div className="text-muted-foreground p-1 text-xs">Group · {block.children.length} children</div>
+        <div className="text-muted-foreground p-1 text-xs">
+          {groupLabel} · {block.children.length} children
+        </div>
       </div>
     );
   }
@@ -931,6 +939,7 @@ export function NoteCanvasHost({ node, onAction }: ComponentSceneHostProps) {
   const [marqueePoints, setMarqueePoints] = useState<readonly SelectionMarqueePoint[]>([]);
   const [textEdit, setTextEdit] = useState<NoteTextEditState | null>(null);
   const [tableEdit, setTableEdit] = useState<NoteTableEditState | null>(null);
+  const emptySceneLabel = useLabel("ui.host.emptyScene");
 
   const sceneDoc = useMemo(() => parseNoteScene(scene?.documentJson), [scene?.documentJson]);
   const doc = draftDoc ?? sceneDoc;
@@ -1394,7 +1403,7 @@ export function NoteCanvasHost({ node, onAction }: ComponentSceneHostProps) {
     [atomicGesture, doc, pasteImageAsset, textEdit],
   );
 
-  if (!scene || !doc) return <div className="text-muted-foreground p-2 text-xs">No note scene</div>;
+  if (!scene || !doc) return <div className="text-muted-foreground p-2 text-xs">{emptySceneLabel}</div>;
 
   const camera = doc.camera;
   const visibleBlocks = flattenNoteBlocks(doc.blocks);

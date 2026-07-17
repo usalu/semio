@@ -232,6 +232,11 @@ struct RasterLabels {
     catalogue_adjustment: &'static str,
     window_composite: &'static str,
     window_navigator: &'static str,
+    name: &'static str,
+    opacity: &'static str,
+    mixed: &'static str,
+    schema_prefix: &'static str,
+    brush_prefix: &'static str,
 }
 
 const RASTER_LABELS_NATIVE_EN: RasterLabels = RasterLabels {
@@ -247,6 +252,11 @@ const RASTER_LABELS_NATIVE_EN: RasterLabels = RasterLabels {
     catalogue_adjustment: "adjustment — non-destructive filter",
     window_composite: "Composite",
     window_navigator: "Navigator",
+    name: "Name",
+    opacity: "Opacity",
+    mixed: "Mixed",
+    schema_prefix: "Schema",
+    brush_prefix: "Brush",
 };
 
 const RASTER_LABELS_NATIVE_DE: RasterLabels = RasterLabels {
@@ -262,6 +272,11 @@ const RASTER_LABELS_NATIVE_DE: RasterLabels = RasterLabels {
     catalogue_adjustment: "adjustment — zerstörungsfreier Filter",
     window_composite: "Komposit",
     window_navigator: "Navigator",
+    name: "Name",
+    opacity: "Deckkraft",
+    mixed: "Gemischt",
+    schema_prefix: "Schema",
+    brush_prefix: "Pinsel",
 };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
@@ -269,6 +284,45 @@ fn raster_labels(view_state: &ViewState) -> &'static RasterLabels {
     let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
     if is_de { &RASTER_LABELS_NATIVE_DE } else { &RASTER_LABELS_NATIVE_EN }
 }
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_raster_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
+/// command palette and Actions rail get a translated label without threading locale through the builder chain.
+fn raster_action_labels(is_de: bool) -> HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("addLayer", "Add Layer", "Ebene hinzufuegen"),
+        ("setDocument", "Set Document", "Dokument festlegen"),
+        ("setCamera", "Set Camera", "Kamera festlegen"),
+        ("setCameraZoom", "Set Camera Zoom", "Kamerazoom festlegen"),
+        ("setLayerVisible", "Set Layer Visible", "Ebenensichtbarkeit festlegen"),
+        ("toggleLayerVisible", "Toggle Layer Visible", "Ebenensichtbarkeit umschalten"),
+        ("dropLayerKind", "Drop Layer Kind", "Ebenenart ablegen"),
+        ("deleteLayer", "Delete Layer", "Ebene loeschen"),
+        ("duplicateLayer", "Duplicate Layer", "Ebene duplizieren"),
+        ("patchLayer", "Patch Layer", "Ebene aktualisieren"),
+        ("patchLayers", "Patch Layers", "Ebenen aktualisieren"),
+        ("moveLayer", "Move Layer", "Ebene verschieben"),
+        ("selectAll", "Select All", "Alles auswaehlen"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+        ("setHover", "Set Hover", "Hover festlegen"),
+        ("setBrushSize", "Set Brush Size", "Pinselgroesse festlegen"),
+        ("setBrushOpacity", "Set Brush Opacity", "Pinseldeckkraft festlegen"),
+        ("setCompositeViewport", "Set Composite Viewport", "Komposit-Ansichtsfenster festlegen"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_raster_app`.
+fn raster_utility_labels(is_de: bool) -> HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("selectMarquee", "Marquee Select", "Rahmenauswahl"),
+        ("paintBrush", "Brush", "Pinsel"),
+        ("paintEraser", "Eraser", "Radiergummi"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+//#endregion 🔖CommandLabels
 //#endregion 🔖Terminology
 
 //#region 🔖Panels
@@ -527,8 +581,8 @@ fn render_properties_panel(document: &RasterDocument, runtime: &RasterPlayRuntim
         .collect();
     if layers.is_empty() {
         return ui_stack_vertical(vec![
-            ui_text(format!("Schema: {}", document.schema)),
-            ui_text(format!("Brush: {} @ {}", runtime.brush_size, runtime.brush_opacity)),
+            ui_text(format!("{}: {}", labels.schema_prefix, document.schema)),
+            ui_text(format!("{}: {} @ {}", labels.brush_prefix, runtime.brush_size, runtime.brush_opacity)),
         ]);
     }
     let names: Vec<String> = layers.iter().map(|layer| layer_name(*layer).into()).collect();
@@ -542,16 +596,16 @@ fn render_properties_panel(document: &RasterDocument, runtime: &RasterPlayRuntim
         fields: vec![
             ui_inspector_readonly_field(
                 "raster-properties.name",
-                "Name",
+                labels.name,
                 mixed_name.placeholder.unwrap_or(mixed_name.value),
             ),
             ui_inspector_readonly_field(
                 "raster-properties.opacity",
-                "Opacity",
+                labels.opacity,
                 if mixed_opacity.uniform {
                     mixed_opacity.value.to_string()
                 } else {
-                    "Mixed".into()
+                    labels.mixed.to_string()
                 },
             ),
         ],
@@ -837,17 +891,25 @@ impl DocumentApp for RasterApp {
 
     fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
         let labels = raster_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         AppLabelsOverlay {
             app_label: None,
             window_kind_labels: HashMap::from([
                 (RASTER_PLAY_WINDOW_COMPOSITE.to_string(), labels.window_composite.to_string()),
                 (RASTER_PLAY_WINDOW_NAVIGATOR.to_string(), labels.window_navigator.to_string()),
             ]),
-            panel_tab_labels: HashMap::new(),
-            mode_labels: HashMap::new(),
-            action_labels: HashMap::new(),
-            utility_labels: HashMap::new(),
-            example_labels: HashMap::new(),
+            panel_tab_labels: HashMap::from([
+                (RASTER_PLAY_MASKS_TAB_ID.to_string(), labels.masks.to_string()),
+            ]),
+            mode_labels: HashMap::from([
+                ("edit".to_string(), (if is_de { "Bearbeiten" } else { "Edit" }).to_string()),
+            ]),
+            action_labels: raster_action_labels(is_de),
+            utility_labels: raster_utility_labels(is_de),
+            example_labels: HashMap::from([
+                ("empty".to_string(), (if is_de { "Leer" } else { "Empty" }).to_string()),
+                ("semio".to_string(), "Semio".to_string()),
+            ]),
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),
             introduction_labels: HashMap::new(),

@@ -1,10 +1,11 @@
 import { useMemo } from "react";
-import { HistoryTable, type HistoryColumn } from "@semio-tech/ui-react";
+import { HistoryTable, useLabel, type HistoryColumn } from "@semio-tech/ui-react";
 import type { ComponentSceneHostProps } from "@semio-tech/framework-core";
 
 //#region VcsHistoryHost
 export function VcsHistoryHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.vcsHistory;
+  const emptySceneLabel = useLabel("ui.host.emptyScene");
   const columns = useMemo(() => {
     if (!scene) return [] as HistoryColumn[];
     try {
@@ -14,7 +15,7 @@ export function VcsHistoryHost({ node, onAction }: ComponentSceneHostProps) {
     }
   }, [scene]);
 
-  if (!scene) return <div className="semio-vcs-history-empty">No history scene</div>;
+  if (!scene) return <div className="semio-vcs-history-empty">{emptySceneLabel}</div>;
 
   return (
     <div className="semio-vcs-history-host h-full min-h-0 w-full overflow-auto p-single" data-surface-id={node.surfaceId}>

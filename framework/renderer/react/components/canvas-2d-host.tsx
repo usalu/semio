@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, type DragEvent } from "react";
 import { GraphWasmCanvas, type CanvasInputModifiers, type GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
-import { CATALOGUE_DRAG_MIME } from "@semio-tech/ui-react";
+import { CATALOGUE_DRAG_MIME, useLabel } from "@semio-tech/ui-react";
 import type { ComponentSceneHostProps } from "@semio-tech/framework-core";
 
 //#region CanvasCameraMath
@@ -560,6 +560,7 @@ const DRAG_OVER_THROTTLE_DISTANCE = 4;
 
 export function Canvas2dHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.canvas2d;
+  const emptySceneLabel = useLabel("ui.host.emptyScene");
   const initialCamera = useMemo(() => ({ x: scene?.cameraX ?? 0, y: scene?.cameraY ?? 0, zoom: scene?.zoom ?? 1 }), [scene?.cameraX, scene?.cameraY, scene?.zoom]);
   const cameraRef = useRef<CanvasCamera>(initialCamera);
   cameraRef.current = initialCamera;
@@ -638,7 +639,7 @@ export function Canvas2dHost({ node, onAction }: ComponentSceneHostProps) {
     [dispatch],
   );
 
-  if (!scene) return <div className="semio-canvas-2d-empty">No canvas scene</div>;
+  if (!scene) return <div className="semio-canvas-2d-empty">{emptySceneLabel}</div>;
 
   return (
     <div ref={containerRef} className="semio-canvas-2d-host h-full min-h-[24rem] w-full bg-canvas" data-controller-id={node.controllerId} data-surface-id={node.surfaceId} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>

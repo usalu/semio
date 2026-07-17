@@ -1,0 +1,13 @@
+{
+  "title": "Fix Remaining Hardcoded Strings In Compose Sketchpad And Coda Desktop",
+  "emoji": "🌐",
+  "status": "open",
+  "description": "Close remaining i18n gaps in two TS products that already have working i18n foundations: compose/client/lib/sketchpad/js/index.ts (~53 hardcoded label/title literals around the kit/design/wires/scene panel and field labels) and coda/client/ui/desktop/js/renderer.tsx (hardcoded page/card titles, section headers, WelcomePage strings, spinner labels, empty-state messages, title/placeholder attributes). Wire each site to an existing or newly added coda.*/compose.* translation key (en+de) following the established patterns (sketpadKitVirtualFileSystemSchemaModel-style locale resolver for non-hook call sites in compose; useLabel + hoisted-to-top-of-component pattern like CodaNavButton/McpPanelButton in coda). Verify with tsc that no new errors are introduced on touched lines.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2016"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪79f62918b62e4c02b815165115aa2ac4"
+  ]
+}

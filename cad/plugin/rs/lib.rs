@@ -3237,6 +3237,28 @@ struct CadLabels {
     unlock: &'static str,
     duplicate: &'static str,
     delete: &'static str,
+    // inspector field chrome
+    label: &'static str,
+    typology: &'static str,
+    hidden: &'static str,
+    locked: &'static str,
+    position: &'static str,
+    scale: &'static str,
+    rotation: &'static str,
+    slot: &'static str,
+    kind: &'static str,
+    id: &'static str,
+    source: &'static str,
+    width_world: &'static str,
+    // catalogue / tree chrome
+    none_placeholder: &'static str,
+    // properties fallback + engagement chrome
+    schema: &'static str,
+    utility: &'static str,
+    action_placeholder: &'static str,
+    ok: &'static str,
+    selected: &'static str,
+    step: &'static str,
 }
 
 const CAD_LABELS_NATIVE_EN: CadLabels = CadLabels {
@@ -3264,6 +3286,25 @@ const CAD_LABELS_NATIVE_EN: CadLabels = CadLabels {
     unlock: "Unlock",
     duplicate: "Duplicate",
     delete: "Delete",
+    label: "Label",
+    typology: "Typology",
+    hidden: "Hidden",
+    locked: "Locked",
+    position: "Position",
+    scale: "Scale",
+    rotation: "Rotation",
+    slot: "Slot",
+    kind: "Kind",
+    id: "Id",
+    source: "Source",
+    width_world: "Width (world)",
+    none_placeholder: "(none)",
+    schema: "Schema",
+    utility: "Utility",
+    action_placeholder: "Action",
+    ok: "OK",
+    selected: "selected",
+    step: "Step",
 };
 
 const CAD_LABELS_NATIVE_DE: CadLabels = CadLabels {
@@ -3291,6 +3332,25 @@ const CAD_LABELS_NATIVE_DE: CadLabels = CadLabels {
     unlock: "Entsperren",
     duplicate: "Duplizieren",
     delete: "Löschen",
+    label: "Bezeichnung",
+    typology: "Typologie",
+    hidden: "Ausgeblendet",
+    locked: "Gesperrt",
+    position: "Position",
+    scale: "Skalierung",
+    rotation: "Rotation",
+    slot: "Steckplatz",
+    kind: "Art",
+    id: "Id",
+    source: "Quelle",
+    width_world: "Breite (Welt)",
+    none_placeholder: "(keine)",
+    schema: "Schema",
+    utility: "Werkzeug",
+    action_placeholder: "Aktion",
+    ok: "OK",
+    selected: "ausgewaehlt",
+    step: "Schritt",
 };
 
 const CAD_LABELS_REUSE_EN: CadLabels = CadLabels {
@@ -3500,7 +3560,7 @@ fn references_section(model_definition_id: &str, references: &[CadReference], la
         items: if references.is_empty() {
             vec![tree_item_with_action(
                 format!("cad-play-document.references.{model_definition_id}.empty"),
-                "(none)",
+                labels.none_placeholder,
                 None,
                 cad_action("noop", None),
             )]
@@ -3742,9 +3802,9 @@ fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_uti
         }
     }
     ui_stack_vertical(vec![
-        ui_text(format!("Schema: {}", envelope.document.schema)),
-        ui_text(format!("Utility: {active_utility}")),
-        ui_text(format!("Objects: {}", envelope.document.objects.len())),
+        ui_text(format!("{}: {}", labels.schema, envelope.document.schema)),
+        ui_text(format!("{}: {active_utility}", labels.utility)),
+        ui_text(format!("{}: {}", labels.objects, envelope.document.objects.len())),
     ])
 }
 
@@ -3851,7 +3911,7 @@ fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> Ui
         fields: vec![
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.object.label".into(),
-                label: "Label".into(),
+                label: term_labels.label.into(),
                 child: Box::new(UiNode::Input(UiInputNode {
                     id: "cad-play-inspector.object.label.input".into(),
                     input_kind: "text".into(),
@@ -3873,7 +3933,7 @@ fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> Ui
             }),
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.object.typology".into(),
-                label: "Typology".into(),
+                label: term_labels.typology.into(),
                 child: Box::new(UiNode::Select(UiSelectNode {
                     id: "cad-play-inspector.object.typology.select".into(),
                     value: typology_mixed.value.clone(),
@@ -3896,7 +3956,7 @@ fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> Ui
             }),
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.object.hidden".into(),
-                label: "Hidden".into(),
+                label: term_labels.hidden.into(),
                 child: Box::new(UiNode::Toggle(semio_framework_plugin::UiToggleNode {
                     id: "cad-play-inspector.object.hidden.toggle".into(),
                     icon_id: "eye-off".into(),
@@ -3913,7 +3973,7 @@ fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> Ui
             }),
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.object.locked".into(),
-                label: "Locked".into(),
+                label: term_labels.locked.into(),
                 child: Box::new(UiNode::Toggle(semio_framework_plugin::UiToggleNode {
                     id: "cad-play-inspector.object.locked.toggle".into(),
                     icon_id: "lock".into(),
@@ -3930,21 +3990,21 @@ fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> Ui
             }),
             inspector_vec3_field(
                 "cad-play-inspector.object.origin",
-                "Position",
+                term_labels.position,
                 &origins,
                 &object_ids,
                 "origin",
             ),
             inspector_vec3_field(
                 "cad-play-inspector.object.scale",
-                "Scale",
+                term_labels.scale,
                 &scales,
                 &object_ids,
                 "scale",
             ),
             inspector_quat_field(
                 "cad-play-inspector.object.orientation",
-                "Rotation",
+                term_labels.rotation,
                 &orientations,
                 &object_ids,
             ),
@@ -3965,9 +4025,9 @@ fn primitive_inspector_group(object: &CadObject, labels: &CadLabels, primitive_i
         default_open: None,
         fields: vec![
             ui_inspector_readonly_field("cad-play-inspector.primitive.object", labels.object, &object.label),
-            ui_inspector_readonly_field("cad-play-inspector.primitive.slot", "Slot", slot),
-            ui_inspector_readonly_field("cad-play-inspector.primitive.kind", "Kind", kind),
-            ui_inspector_readonly_field("cad-play-inspector.primitive.id", "Id", primitive_id),
+            ui_inspector_readonly_field("cad-play-inspector.primitive.slot", labels.slot, slot),
+            ui_inspector_readonly_field("cad-play-inspector.primitive.kind", labels.kind, kind),
+            ui_inspector_readonly_field("cad-play-inspector.primitive.id", labels.id, primitive_id),
         ],
     }
 }
@@ -4013,15 +4073,15 @@ fn reference_inspector_group(model_definition_id: &str, reference: &CadReference
         label: labels.reference.into(),
         default_open: None,
         fields: vec![
-            ui_inspector_readonly_field("cad-play-inspector.reference.id", "Id", &reference.id),
+            ui_inspector_readonly_field("cad-play-inspector.reference.id", labels.id, &reference.id),
             ui_inspector_readonly_field(
                 "cad-play-inspector.reference.source",
-                "Source",
+                labels.source,
                 &reference.source_url,
             ),
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.reference.widthWorld".into(),
-                label: "Width (world)".into(),
+                label: labels.width_world.into(),
                 child: Box::new(UiNode::Input(UiInputNode {
                     id: "cad-play-inspector.reference.widthWorld.input".into(),
                     input_kind: "number".into(),
@@ -4047,7 +4107,7 @@ fn reference_inspector_group(model_definition_id: &str, reference: &CadReference
             }),
             inspector_vec3_field(
                 "cad-play-inspector.reference.origin",
-                "Position",
+                labels.position,
                 &[reference.origin],
                 &[reference.id.clone()],
                 "origin",
@@ -4064,7 +4124,7 @@ fn node_inspector_group(node: &CadNode, labels: &CadLabels) -> UiInspectorFieldG
         fields: vec![
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.node.label".into(),
-                label: "Label".into(),
+                label: labels.label.into(),
                 child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
                     id: "cad-play-inspector.node.label.input".into(),
                     input_kind: "text".into(),
@@ -4084,12 +4144,12 @@ fn node_inspector_group(node: &CadNode, labels: &CadLabels) -> UiInspectorFieldG
                 required: None,
                 error: None,
             }),
-            ui_inspector_readonly_field("cad-play-inspector.node.kind", "Kind", &node.kind),
+            ui_inspector_readonly_field("cad-play-inspector.node.kind", labels.kind, &node.kind),
         ],
     }
 }
 
-fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId) -> WindowEngagement {
+fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &CadLabels) -> WindowEngagement {
     let selected_count = envelope.runtime.selected_object_ids.len();
     let model_definition_id = pane.model_definition_id();
     let session_active = envelope.runtime.engagement_session.is_some();
@@ -4139,7 +4199,7 @@ fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId) -> WindowEngag
         input: Some(WindowEngagementInput {
             id: Some("engagement-input".into()),
             value: Some(envelope.runtime.engagement_input.clone()),
-            placeholder: Some("Action".into()),
+            placeholder: Some(labels.action_placeholder.into()),
             disabled: None,
             on_change: Some(cad_action(
                 "engagementInput",
@@ -4163,11 +4223,11 @@ fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId) -> WindowEngag
         status: Some(vec![
             WindowEngagementStatus {
                 id: "cad-status".into(),
-                text: format!("{selected_count} selected"),
+                text: format!("{selected_count} {}", labels.selected),
             },
             WindowEngagementStatus {
                 id: "cad-step".into(),
-                text: format!("Step: {step_text}"),
+                text: format!("{}: {step_text}", labels.step),
             },
             WindowEngagementStatus {
                 id: "cad-response".into(),
@@ -4176,7 +4236,7 @@ fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId) -> WindowEngag
                     .engagement_session
                     .as_ref()
                     .and_then(|session| session.last_response.clone())
-                    .unwrap_or_else(|| "OK".into()),
+                    .unwrap_or_else(|| labels.ok.into()),
             },
         ]),
         possible_engagements: Some(possible_engagements),
@@ -5008,24 +5068,25 @@ impl DocumentApp for CadApp {
         }
     }
 
-    fn window_engagements(&self, doc: &DocumentView<'_, CadScene>, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(&self, doc: &DocumentView<'_, CadScene>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let view = CadPlayView { document: doc.projection.clone(), runtime: self.runtime.clone() };
+        let labels = cad_labels(view_state);
         HashMap::from([
             (
                 CAD_PLAY_WINDOW_SHAPE.to_string(),
-                cad_window_engagement(&view, CadPaneId::Shape),
+                cad_window_engagement(&view, CadPaneId::Shape, labels),
             ),
             (
                 CAD_PLAY_WINDOW_BUILDING.to_string(),
-                cad_window_engagement(&view, CadPaneId::Building),
+                cad_window_engagement(&view, CadPaneId::Building, labels),
             ),
             (
                 CAD_PLAY_WINDOW_ENERGY.to_string(),
-                cad_window_engagement(&view, CadPaneId::Energy),
+                cad_window_engagement(&view, CadPaneId::Energy, labels),
             ),
             (
                 CAD_PLAY_WINDOW_STRUCTURE_CLASSIC.to_string(),
-                cad_window_engagement(&view, CadPaneId::StructureClassic),
+                cad_window_engagement(&view, CadPaneId::StructureClassic, labels),
             ),
         ])
     }
@@ -5051,10 +5112,13 @@ impl DocumentApp for CadApp {
                 (CAD_PLAY_WINDOW_STRUCTURE_CLASSIC.to_string(), labels.pane_structure_classic.to_string()),
             ]),
             panel_tab_labels: std::collections::HashMap::new(),
-            mode_labels: std::collections::HashMap::new(),
-            action_labels: HashMap::new(),
-            utility_labels: HashMap::new(),
-            example_labels: HashMap::new(),
+            mode_labels: std::collections::HashMap::from([("edit".to_string(), (if is_de { "Bearbeiten" } else { "Edit" }).to_string())]),
+            action_labels: cad_action_labels(is_de),
+            utility_labels: cad_utility_labels(is_de),
+            example_labels: std::collections::HashMap::from([
+                ("default".to_string(), (if is_de { "Standard" } else { "Default" }).to_string()),
+                (CAD_EXAMPLE_FOREST_LEFT.to_string(), (if is_de { "Sechseckig Geschnittener Betonwald Links" } else { "Hexagonal Cut Concrete Forest Left" }).to_string()),
+            ]),
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),
             introduction_labels: HashMap::new(),
@@ -5062,6 +5126,69 @@ impl DocumentApp for CadApp {
     }
 }
 //#endregion 🔖CadApp
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_cad_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+fn cad_action_labels(is_de: bool) -> HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("addObject", "Add Object", "Objekt hinzufuegen"),
+        ("patchObject", "Patch Object", "Objekt aktualisieren"),
+        ("patchSelection", "Patch Selection", "Auswahl aktualisieren"),
+        ("deleteObject", "Delete Object", "Objekt loeschen"),
+        ("duplicateObject", "Duplicate Object", "Objekt duplizieren"),
+        ("addNode", "Add Node", "Knoten hinzufuegen"),
+        ("renameNode", "Rename Node", "Knoten umbenennen"),
+        ("translateSelection", "Translate Selection", "Auswahl verschieben"),
+        ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
+        ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
+        ("applyTransformation", "Apply Transformation", "Transformation anwenden"),
+        ("importCadFile", "Import CAD File", "CAD-Datei importieren"),
+        ("patchCadPlayReference", "Patch Reference", "Referenz aktualisieren"),
+        ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+        ("setCamera", "Set Camera", "Kamera festlegen"),
+        ("focusModelDefinition", "Focus Model Definition", "Modelldefinition fokussieren"),
+        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+        ("setNodeSelection", "Set Node Selection", "Knotenauswahl festlegen"),
+        ("worldSelect", "World Select", "Welt auswaehlen"),
+        ("worldHover", "World Hover", "Welt-Hover"),
+        ("setHover", "Set Hover", "Hover festlegen"),
+        ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
+        ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
+        ("setReferenceSelection", "Set Reference Selection", "Referenzauswahl festlegen"),
+        ("referenceHover", "Reference Hover", "Referenz-Hover"),
+        ("engagementInput", "Engagement Input", "Eingabe"),
+        ("engagementPossibleSelect", "Engagement Possible Select", "Eingabeoption auswaehlen"),
+        ("engagementRepeatLast", "Engagement Repeat Last", "Letzte Eingabe wiederholen"),
+        ("engagementAbort", "Engagement Abort", "Eingabe abbrechen"),
+        ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrueckt"),
+        ("worldPointerMove", "World Pointer Move", "Welt-Zeiger bewegt"),
+        ("engagementPointerDown", "Engagement Pointer Down", "Eingabe-Zeiger gedrueckt"),
+        ("setPrimitiveSelection", "Set Primitive Selection", "Primitivauswahl festlegen"),
+        ("toggleSun", "Toggle Sun", "Sonne umschalten"),
+        ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
+        ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
+        ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
+        ("saveSelected", "Save Selected", "Auswahl speichern"),
+        ("saveInPlay", "Save In Play", "Im Play speichern"),
+        ("saveCurrent", "Save Current", "Aktuelles speichern"),
+        ("loadRawRequest", "Load Raw Request", "Rohanfrage laden"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_cad_app`.
+fn cad_utility_labels(is_de: bool) -> HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("move", "Move", "Verschieben"),
+        ("rotate", "Rotate", "Drehen"),
+        ("scale", "Scale", "Skalieren"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+//#endregion 🔖CommandLabels
 
 //#region 🔖Manifest
 /// @emoji 🪟 One quadrant of the quad layout: a stack holding a single window kind.

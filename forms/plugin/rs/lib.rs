@@ -831,6 +831,53 @@ fn forms_labels(view_state: &ViewState) -> &'static FormsLabels {
 }
 //#endregion 🔖Terminology
 
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_forms_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+fn forms_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("addStep", "Add Step", "Schritt hinzufuegen"),
+        ("addQuestion", "Add Question", "Frage hinzufuegen"),
+        ("removeQuestion", "Remove Question", "Frage entfernen"),
+        ("patchQuestions", "Patch Questions", "Fragen aktualisieren"),
+        ("patchQuestionOptions", "Patch Question Options", "Fragenoptionen aktualisieren"),
+        ("addQuestionOption", "Add Question Option", "Fragenoption hinzufuegen"),
+        ("removeQuestionOption", "Remove Question Option", "Fragenoption entfernen"),
+        ("patchVectorField", "Patch Vector Field", "Vektorfeld aktualisieren"),
+        ("addVectorField", "Add Vector Field", "Vektorfeld hinzufuegen"),
+        ("removeVectorField", "Remove Vector Field", "Vektorfeld entfernen"),
+        ("moveQuestion", "Move Question", "Frage verschieben"),
+        ("moveStep", "Move Step", "Schritt verschieben"),
+        ("removeStep", "Remove Step", "Schritt entfernen"),
+        ("patchStep", "Patch Step", "Schritt aktualisieren"),
+        ("updateForm", "Update Form", "Formular aktualisieren"),
+        ("updateProtocol", "Update Protocol", "Protokoll aktualisieren"),
+        ("dropQuestionKind", "Drop Question Kind", "Frageart ablegen"),
+        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+        ("setSpecJson", "Set Spec JSON", "Spezifikations-JSON festlegen"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+        ("setTryValue", "Set Try Value", "Testwert festlegen"),
+        ("setTryValues", "Set Try Values", "Testwerte festlegen"),
+        ("resetTry", "Reset Try", "Test zuruecksetzen"),
+        ("previousStep", "Previous Step", "Vorheriger Schritt"),
+        ("nextStep", "Next Step", "Naechster Schritt"),
+        ("submit", "Submit", "Absenden"),
+        ("editEngagementInput", "Edit Engagement Input", "Bearbeitungseingabe"),
+        ("tryEngagementInput", "Try Engagement Input", "Testeingabe"),
+        ("exportFixture", "Export Fixture", "Fixture exportieren"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_forms_app`.
+/// The forms manifest declares no toolbar utilities, so this always resolves empty; kept for parity with the
+/// other play apps' terminology plumbing.
+fn forms_utility_labels(_is_de: bool) -> std::collections::HashMap<String, String> {
+    std::collections::HashMap::new()
+}
+//#endregion 🔖CommandLabels
+
 //#region 🔖Builder
 fn forms_protocol_builder_config() -> semio_framework_plugin::ProtocolBuilderConfig {
     semio_framework_plugin::ProtocolBuilderConfig {
@@ -2130,21 +2177,25 @@ impl DocumentApp for FormsPlayApp {
 
     fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
         let labels = forms_labels(view_state);
-        semio_framework_plugin::AppLabelsOverlay {
-            app_label: None,
-            window_kind_labels: std::collections::HashMap::from([
-                (FORMS_PLAY_WINDOW_BLUEPRINT.to_string(), labels.window_blueprint.to_string()),
-                (FORMS_PLAY_WINDOW_TRY.to_string(), labels.window_try.to_string()),
-            ]),
-            panel_tab_labels: std::collections::HashMap::new(),
-            mode_labels: std::collections::HashMap::new(),
-            action_labels: HashMap::new(),
-            utility_labels: HashMap::new(),
-            example_labels: HashMap::new(),
-            action_arg_labels: HashMap::new(),
-            dialog_labels: HashMap::new(),
-            introduction_labels: HashMap::new(),
-        }
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+        let mut overlay = semio_framework_plugin::AppLabelsOverlay::with_framework_panel_tabs(
+            ["framework.panel.document", "framework.panel.catalogue", "framework.panel.inspection"],
+            is_de,
+        );
+        overlay.window_kind_labels = std::collections::HashMap::from([
+            (FORMS_PLAY_WINDOW_BLUEPRINT.to_string(), labels.window_blueprint.to_string()),
+            (FORMS_PLAY_WINDOW_TRY.to_string(), labels.window_try.to_string()),
+        ]);
+        overlay.mode_labels = std::collections::HashMap::from([("blueprint".to_string(), labels.window_blueprint.to_string())]);
+        overlay.action_labels = forms_action_labels(is_de);
+        overlay.utility_labels = forms_utility_labels(is_de);
+        overlay.example_labels = std::collections::HashMap::from([
+            ("empty".to_string(), (if is_de { "Leer" } else { "Empty" }).to_string()),
+            ("default".to_string(), (if is_de { "Kontakt" } else { "Contact" }).to_string()),
+            ("onboarding".to_string(), "Onboarding".to_string()),
+            ("building-component".to_string(), (if is_de { "Baukomponente" } else { "Building Component" }).to_string()),
+        ]);
+        overlay
     }
 }
 //#endregion 🔖FormsPlayApp

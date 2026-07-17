@@ -27,6 +27,9 @@ import {
   loadingBorderClass,
   loadingBorderElementClass,
   renderControlIcon,
+  resolveTranslationLabel,
+  uiI18n,
+  useLabel,
   type TreeDataItem,
   type TreeDataSection,
   type TreeDragAndDropController,
@@ -60,10 +63,16 @@ const COMPONENT_SCENE_HOSTS: Record<ComponentKind, LazyExoticComponent<Component
 };
 //#endregion ComponentSceneHostRegistry
 
+/** @emoji 🗣️ Resolves a chrome translation key outside hook context (plain node-builder functions run there). */
+function interpLabel(key: string): string {
+  return resolveTranslationLabel(uiI18n.t(key as never)) ?? key;
+}
+
 function ComponentSceneFallback() {
+  const loadingSurfaceLabel = useLabel("ui.common.loadingSurface");
   return (
     <p className={cn("text-muted-foreground p-2 text-xs", loadingBorderClass)} role="status">
-      Loading surface…
+      {loadingSurfaceLabel}
     </p>
   );
 }
@@ -74,7 +83,11 @@ function renderComponentSceneHost(node: Extract<UiNode, { type: "componentScene"
   }
   const Host = COMPONENT_SCENE_HOSTS[node.componentKind as ComponentKind];
   if (!Host) {
-    return <p className="text-muted-foreground text-xs">Unknown component: {node.componentKind}</p>;
+    return (
+      <p className="text-muted-foreground text-xs">
+        {interpLabel("ui.common.unknownComponent")}: {node.componentKind}
+      </p>
+    );
   }
   return (
     <Suspense fallback={<ComponentSceneFallback />}>
@@ -166,7 +179,7 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
       return (
         <Select value={control.value || undefined} onValueChange={(value) => dispatchUiAction(onAction, control.onChange, { value })}>
           <SelectTrigger id={control.id} className="h-medium w-full min-w-0" size="sm">
-            <SelectValue placeholder={control.placeholder ?? "Select"} />
+            <SelectValue placeholder={control.placeholder ?? interpLabel("ui.common.select")} />
           </SelectTrigger>
           <SelectContent>
             {control.items.map((item, index) => (

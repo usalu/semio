@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { IconShotFrame, iconRenderPort, type IconRenderRequest } from "@semio-tech/ui-react";
+import { IconShotFrame, iconRenderPort, useLabel, type IconRenderRequest } from "@semio-tech/ui-react";
 import type { ComponentSceneHostProps } from "@semio-tech/framework-core";
 
 //#region IconRenderHost
@@ -17,6 +17,7 @@ export function IconRenderHost({ node }: ComponentSceneHostProps) {
   }, [requestJson]);
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const emptySceneLabel = useLabel("ui.host.emptyScene");
   useEffect(() => {
     setPreview(null);
     setError(null);
@@ -35,7 +36,7 @@ export function IconRenderHost({ node }: ComponentSceneHostProps) {
     };
   }, [request]);
   if (!scene || !request) {
-    return <div className="flex h-full items-center justify-center text-sm opacity-60">No shot</div>;
+    return <div className="flex h-full items-center justify-center text-sm opacity-60">{emptySceneLabel}</div>;
   }
   const content = error ? (
     <div className="flex h-full items-center justify-center p-4 text-sm text-destructive">{error}</div>
