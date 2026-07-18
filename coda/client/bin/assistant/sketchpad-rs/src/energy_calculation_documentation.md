@@ -299,36 +299,46 @@ The engine computes `net_daily_gain_wh` by balancing sources and sinks based on 
 
 **1. Standard Profile Calculation:**
 Uses `StandardGainProfile` values derived from DIN V 18599-10 ($q_{i,combined}, q_{i,p}, q_{i,app}, q_{i,sink,app}$):
+
 * **Residential:** Uses a flat combined heat rate ($q_{i,combined} = 3.75 \text{ W/m}^2$).
+
   $$
   \text{gain}_{res} = (q_{i,combined} \cdot A_{ngf}) \cdot t_{nutz}
   $$
 * **Non-Residential (Split):** Separates humans and appliances.
+
   $$
   \text{gain}_{non\_res} = (q_{i,p} \cdot A_{ngf} \cdot t_{nutz}) + (q_{i,app} \cdot A_{ngf} \cdot t_{nutz})
   $$
+
   $$
   \text{sink}_{app} = q_{i,sink,app} \cdot A_{ngf} \cdot t_{nutz}
   $$
 
 **2. Custom Profile Calculation:**
 Calculates precise sensible heat output from a specific `CustomInventoryProfile`.
+
 $$
 \text{gain}_{custom} = \Big( (\text{num\_people} \cdot \text{metabolic\_rate}) + \text{equipment\_watts\_active} \Big) \cdot t_{nutz}
 $$
 
 **Additional Sources and Sinks:**
+
 * **Lighting Heat Gain:** Based on the room load factor ($\mu_L$), which is determined by the `LightingExhaustType`:
+
   * `Standard` $\implies \mu_L = 1.0$
   * `CeilingCavity` $\implies \mu_L = 0.75$
   * `AirDucts` $\implies \mu_L = 0.65$
+
   $$
   \text{gain}_{light} = \mu_L \cdot q_{l,f,daily}
   $$
 * **Material Transport (`MaterialTransport`):** Heat dumped or absorbed by goods entering/leaving. Uses 24h as the daily standard time $t$.
+
   $$
   \text{gain/sink}_{mat} = c_p \cdot \dot{m} \cdot |\theta_{in} - \theta_{out}| \cdot t
   $$
+
   * If $\theta_{in} > \theta_{out}$ it acts as a heat source.
   * If $\theta_{in} < \theta_{out}$ it acts as a heat sink.
 
@@ -346,39 +356,53 @@ Computed via the `solar_gains::SolarGainsEngine`. This module splits the calcula
   $$
 
 #### 7.2.1 Transparent Components (Windows)
+
 Windows act purely as solar gain sources.
+
 1. **Effective Collecting Area ($A_{eff}$):**
+
    $$
    A_{eff} = A_w \cdot (1 - F_F) \cdot F_w \cdot g \cdot f_c \cdot f_s
    $$
+
    * **$F_F$ (Frame Fraction):** `Standard` = 0.30, `VeryLarge` = 0.20, `SmallDivided` = 0.40
    * **$F_w$ (Non-perpendicular Radiation):** Standard $0.90$
    * **$g$ (Glazing Transmittance):** `Single` = 0.85, `DoubleStandard` = 0.75, `TripleLowE` = 0.50, `SolarControl` = 0.35
    * **$f_c$ (Shading Reduction):** `None` = 1.0, `InteriorLight` = 0.80, `ExteriorBlinds` = 0.25, `ExteriorAwnings` = 0.40
    * **$f_s$ (Surroundings Shading):** Usually ~0.90
 2. **Gain Calculation:**
+
    $$
    Q_{gain,transparent} = I_s \cdot A_{eff}
    $$
+
    *(where $I_s$ is the seasonal irradiation in Wh/m²)*
 
 #### 7.2.2 Opaque Components (Walls & Roofs)
+
 Opaque surfaces absorb solar radiation but also constantly radiate heat to the cold sky ($\Delta\theta_{ER} = 11.0 \text{ K}$).
+
 1. **Absorbed Solar Radiation:**
+
    $$
    Q_{abs} = \alpha \cdot I_s
    $$
+
    * **$\alpha$ (Solar Absorptance):** `Light` = 0.30, `Medium` = 0.60, `Dark` = 0.90
 2. **Sky Radiation Loss:**
+
    $$
    Q_{sky} = f_{sky} \cdot h_{r} \cdot \Delta\theta_{ER} \cdot t_{hours}
    $$
+
    * **$f_{sky}$ (Sky View Factor):** $1.0$ for Roofs, $0.5$ for Walls
    * **$h_{r}$ (Radiative Transfer):** Standard $5.0 \text{ W/m}^2\text{K}$
 3. **Net Heat Transfer into Building:**
+
    $$
    Q_{net,opaque} = A_{op} \cdot U_{value} \cdot R_{se} \cdot (Q_{abs} - Q_{sky})
    $$
+
    * **$R_{se}$ (External Resistance):** Standard $0.04 \text{ m}^2\text{K/W}$
    * If $Q_{net} > 0$, it acts as a solar source ($Q_{sol\_sources\_wh}$). If $Q_{net} < 0$, it acts as a sky sink ($Q_{sol\_sinks\_wh}$).
 
@@ -685,59 +709,18 @@ $$
     \text{Total Electricity} = W_{h,total}
     $$
 
-## 10. Primary Calculation: Final Heating Demand (`q_final_heating`)
+## 10. Lighting Energy ($Q_{l,f}$)
 
 **Concept & Formula:**
-In the primary energy calculation flow within `lib.rs` (around the `calculate_energy` function), the final delivered energy for heating (`q_final_heating`) is computed using a simplified approach based on the TABULA Equation 20. This calculates the actual energy billed by the utility, factoring in the specific heating system's efficiency and distribution/storage losses.
+Calculates the final annual electrical energy demand for artificial lighting according to **DIN V 18599-10**.
 
-**Formulas (`lib.rs`):**
+The engine uses categorical inputs to derive precise physical properties such as required illuminance ($E_m$), luminous efficacy ($k_L$), and presence control factors ($C_{pra}$).
 
-1. **Total Absolute Losses:**
+**Source Mapping (`calculate_energy`):**
 
-   $$
-   Q_{d,h,total} = q_{d,h,spec} \cdot A_{floor\_total}
-   $$
+The engine dynamically calculates the installed electrical power and daily energy demand by mapping user-friendly strings to the specific `lighting` module enums.
 
-   $$
-   Q_{s,h,total} = q_{s,h,spec} \cdot A_{floor\_total}
-   $$
-2. **Heat Output of Generator ($Q_{g,h,out}$):**
-
-   $$
-   Q_{g,h,out} = Q_{H,nd} + Q_{d,h,total} + Q_{s,h,total}
-   $$
-3. **Delivered Energy ($Q_{del,h}$ or `q_final_heating`):**
-
-   $$
-   q_{final\_heating} = Q_{g,h,out} \cdot e_{g,h}
-   $$
-
-**Source Mappings (`lib.rs` variables):**
-
-* **`q_final_heating`**: The total final energy demand for space heating in kWh/a.
-* **`q_h_nd` ($Q_{H,nd}$)**: The Net Heating Demand calculated previously (converted from Wh to kWh).
-* **`a_floor_total` ($A_{floor\_total}$)**: The total net floor area of the building, calculated by aggregating the floor areas of all zones or taking `geometry.total_floor_area`.
-* **System Properties (`e_g_h`, `q_d_h_spec`, `q_s_h_spec`)**: These values are determined entirely by the `state.params.heating_system` string matched in `lib.rs`:
-  * `"Gas Condensing Boiler"` $\implies e_{g,h} = 1.05, q_{d,h,spec} = 15.0, q_{s,h,spec} = 0.0$
-  * `"Gas Non-Condensing Boiler"` $\implies e_{g,h} = 1.18, q_{d,h,spec} = 15.0, q_{s,h,spec} = 5.0$
-  * `"Air Source Heat Pump"` $\implies e_{g,h} = 0.35, q_{d,h,spec} = 10.0, q_{s,h,spec} = 5.0$
-  * `"Biomass Pellet Boiler"` $\implies e_{g,h} = 1.25, q_{d,h,spec} = 15.0, q_{s,h,spec} = 10.0$
-  * `"Direct Electric Heating"` $\implies e_{g,h} = 1.00, q_{d,h,spec} = 0.0, q_{s,h,spec} = 0.0$
-  * *Default Fallback* $\implies e_{g,h} = 1.10, q_{d,h,spec} = 15.0, q_{s,h,spec} = 0.0$
-* **`q_d_h_total` ($Q_{d,h,total}$)**: The total heat loss from the distribution system (pipes), calculated by multiplying the specific loss (`q_d_h_spec`) by the total floor area.
-* **`q_s_h_total` ($Q_{s,h,total}$)**: The total heat loss from the storage system (buffer tanks), calculated by multiplying the specific loss (`q_s_h_spec`) by the total floor area.
-* **`q_g_h_out` ($Q_{g,h,out}$)**: The total thermal energy the generator must produce to satisfy the net heating demand plus all distribution and storage losses.
-
-## 12. Lighting Energy ($Q_{l,f}$)
-
-**Concept & Formula:**
-Calculates the final annual electrical energy demand for artificial lighting according to DIN V 18599-4. It divides the room into daylight-supplied ($A_{TL}$) and non-daylight-supplied ($A_{kTL}$) zones, and evaluates the installed power density ($p_j$) alongside factors for daylight and presence control.
-
-**Source Mapping:**
-
-* **Engine:** Calculated dynamically inside `lighting::LightingEngine::calculate_annual_final_energy_kwh`.
-
-### 12.1 Room Geometry & Daylight Zones
+### 10.1 Room Geometry & Daylight Zones
 
 The `RoomGeometry` struct evaluates the physical space.
 
@@ -750,29 +733,42 @@ The `RoomGeometry` struct evaluates the physical space.
 
   The floor area is divided into $A_{TL}$ (Daylight Zone) and $A_{kTL}$ (Artificial Only Zone).
 
-### 12.2 Installed Power Density ($p_j$)
+### 10.2 Installed Power Density ($p_j$)
 
-Calculated in `calculate_installed_power_density()`.
+Calculated dynamically in W/m² using the standard approximation:
 
 $$
-p_j = p_{j,lx} \cdot E_m \cdot k_{WF} \cdot k_A \cdot k_L
+p_j = 0.03 \cdot E_m \cdot k_L
 $$
 
-* **Base Power per Lux ($p_{j,lx}$):** Extracted via `calculate_base_power_per_lux()`, depending on `LightingType` (e.g., `Direct`, `Indirect`) and the Room Index ($k$).
-* **Required Lux ($E_m$):** The required illuminance from the `LightingRequirement` struct (linked to the massive `RoomUsage` enum, e.g., `WritingTypingReadingDataProc` $\implies 500 \text{ lx}$).
-* **Maintenance Factor ($k_{WF}$):** Constant multiplier (`K_WF_DEFAULT = 0.80 / 0.67`).
-* **Task Area Reduction ($k_A$):** Hardcoded to $0.85$.
-* **Lamp Technology Factor ($k_L$):** Determined by `LampTechnology` (e.g., `LEDLuminaire` $\implies 0.49$, `Halogen` $\implies 5.0$).
+* **Required Lux ($E_m$) via `lighting_room_usage`:** Maps to the `RoomUsage` enum based on DIN V 18599-10 standard room profiles.
+  * `Office` $\implies$ `lighting::RoomUsage::WritingTypingReadingDataProc` ($E_m = 500 \text{ lx}$)
+  * `Classroom` $\implies$ `lighting::RoomUsage::ClassroomsTutorialRooms` ($E_m = 300 \text{ lx}$)
+  * `Corridor` $\implies$ `lighting::RoomUsage::CirculationAreasAndCorridors` ($E_m = 100 \text{ lx}$)
+  * `Warehouse` $\implies$ `lighting::RoomUsage::StoreAndStockroomsManned` ($E_m = 200 \text{ lx}$)
+  * `Residential` $\implies$ `lighting::RoomUsage::LoungesWaitingAreas` ($E_m = 200 \text{ lx}$)
+* **Lamp Technology Factor ($k_L$) via `lighting_lamp_technology`:** Maps to the `LampTechnology` enum.
+  * `LED` $\implies$ `lighting::LampTechnology::LEDLuminaire` ($0.49$)
+  * `Fluorescent` $\implies$ `lighting::LampTechnology::FluorescentEVG` ($1.0$)
+  * `Halogen` $\implies$ `lighting::LampTechnology::Halogen` ($5.0$)
+  * `Incandescent` $\implies$ `lighting::LampTechnology::Incandescent` ($6.0$)
 
-### 12.3 Control Factors
+### 10.3 Control Factors
 
-* **Presence Factor ($F_{Prä}$):** Calculated in `calculate_f_pra()` based on `PresenceControl` (e.g., `MotionDetector` $\implies c_{prä,kon} = 0.95$) and the relative absence fraction ($C_A$).
-  $$
-  F_{Prä} = 1.0 - (C_A \cdot c_{prä,kon})
-  $$
-* **Daylight Factor ($F_{TL}$):** Calculated in `calculate_f_tl()`. Determines how much artificial light is saved by natural daylight, depending on `DaylightControl` (e.g., `DimmedAutoOnOff`, `Manual`).
+* **Presence Factor ($c_{pra,kon}$) via `lighting_control`:** Maps to the `PresenceControl` enum.
+  * `Manual` $\implies$ `lighting::PresenceControl::Manual` ($0.50$)
+  * `MotionDetector` $\implies$ `lighting::PresenceControl::MotionDetector` ($0.95$)
+* **Daylight Factor ($F_{TL}$):** Determines how much artificial light is saved by natural daylight, depending on `DaylightControl`.
 
-### 12.4 Final Annual Demand
+### 10.4 Final Annual Demand
+
+The daily energy demand ($Q_{l,f,daily}$) is then computed using standardized operational hours (e.g. 12 hours) and the presence control factor:
+
+$$
+Q_{l,f,daily} = p_j \cdot A_{NGF} \cdot 12.0 \cdot c_{pra,kon} \text{ / 1000.0 [kWh/day]}
+$$
+
+### 10.4 Final Annual Demand
 
 The engine combines the effective lighting hours during the day ($t_{day}$) and night ($t_{night}$) across both daylight zones.
 
@@ -780,32 +776,44 @@ $$
 Q_{l,f} = \frac{p_j}{1000} \cdot \Big(A_{TL} \cdot (t_{eff,day,TL} + t_{eff,night}) + A_{kTL} \cdot (t_{eff,day,kTL} + t_{eff,night})\Big)
 $$
 
-## 13. Domestic Hot Water (DHW) Engine
+## 11. Domestic Hot Water (DHW) Engine
 
 **Concept & Formula:**
 This module calculates the Final Energy Demand for Domestic Hot Water ($Q_{w,f}$) and the Auxiliary Electrical Energy ($W_w$) according to DIN V 18599-8. It follows the thermal chain from base demand through distribution, storage, and generation.
 
-### 13.1 Base Demand & Heat Recovery
+### 11.1 Base Demand & Heat Recovery
 
-The required hot water demand ($q_{w,b}$) is determined by the specific building profile and usage.
+The required hot water demand ($q_{w,b}$) is determined by mapping a user-friendly **Consumption Profile** to physical values based on **DIN EN 12831-3**.
 
-**Source Mapping (`DHWEngine::calculate_final_energy`):**
+**Source Mapping (`dhw_system::DHWEngine::calculate_final_energy`):**
 
-* **Base Thermal Demand:** Passed in as $q_{w,b\_annual}$. For standard systems, it is derived from liters per day.
+* **Consumption Profile (`dhw_consumption_profile`):**
+  * `Eco` $\implies 25.0 \text{ L/person/day}$
+  * `Standard` $\implies 40.0 \text{ L/person/day}$
+  * `Comfort` $\implies 60.0 \text{ L/person/day}$
+* **Base Thermal Demand:** The daily liters are multiplied by an estimated occupant count ($A_{NGF} / 35.0$).
+  $$
+  Q_{w,b\_annual} = \text{daily\_liters} \cdot 365 \cdot 0.058 \text{ kWh/L}
+  $$
 * **Shower Demand:** Estimated as $60\%$ of total demand.
   $$
   q_{w,shower} = q_{w,b} \cdot 0.60
   $$
-* **Wastewater Heat Recovery (WRG):**
+* **Wastewater Heat Recovery (WRG) (`dhw_wrg_technology`):**
+  Based on **Passivhaus Institut (PHI)** component certifications:
+  * `None` $\implies 0\%$ recovery
+  * `ModernDrain` $\implies 30\%$ recovery
+  * `ActiveHighTech` $\implies 50\%$ recovery
+
   $$
-  q_{w,wrg} = q_{w,shower} \cdot \text{wastewater\_heat\_recovery}
+  q_{w,wrg} = q_{w,shower} \cdot \text{WRG\_efficiency}
   $$
 * **Reduced Demand:**
   $$
   q_{w,b,reduced} = \max(0.0,\; q_{w,b} - q_{w,wrg})
   $$
 
-### 13.2 Subsystem 1: Distribution (Verteilung)
+### 11.2 Subsystem 1: Distribution (Verteilung)
 
 Calculates pipe losses for tapping lines and circulation loops.
 
@@ -838,7 +846,15 @@ $$
   * `Residential1_2Family` / `OfficesCommercial` $\implies 420.0\text{ h/month}$
   * `ResidentialMultiFamily` / `HospitalsHotels` $\implies 744.0\text{ h/month}$
 
-### 13.3 Subsystem 2: Storage (Speicherung)
+### 11.3 Subsystem 2: Storage (Speicherung)
+
+Tank sizes are mapped categorically based on **DIN 4708** (Standard NL / capacity calculations for building scales):
+
+* **System Scale (`dhw_system_scale`):**
+  * `PointOfUse` $\implies 0.0\text{ Liters}$
+  * `Apartment` $\implies 80.0\text{ Liters}$
+  * `StandardSFH` $\implies 200.0\text{ Liters}$
+  * `LargeMFH` $\implies 500.0\text{ Liters}$
 
 Accounts for hot water tank heat loss based on insulation quality.
 
@@ -857,7 +873,7 @@ $$
   * `TankInsulationDHW::None` $\implies 0.0$
 * **Temperatures:** $\theta_{w,s,av} = 60.0^\circ\text{C}$, $\theta_{amb} = 20.0^\circ\text{C}$.
 
-### 13.4 Subsystem 3: Generation (Wärmeerzeugung)
+### 11.4 Subsystem 3: Generation (Wärmeerzeugung)
 
 Calculates the final energy demand by applying the expenditure factor ($e_{g,w}$) to the total required heat output.
 
@@ -886,7 +902,7 @@ $$
 * `DistrictHeating` $\implies 1.02$
 * `HeatPumpAirWater` $\implies$ Calculates COP using $\eta_{carnot} = 0.38$, $\theta_{source} = 5.0^\circ\text{C}$, $\theta_{sink} = 55.0^\circ\text{C}$. $e_{g,w} = 1 / \text{COP}$.
 
-### 13.5 Auxiliary Electricity ($W_w$)
+### 11.5 Auxiliary Electricity ($W_w$)
 
 Sum of electricity required for pumps and generation controls.
 
@@ -900,7 +916,38 @@ $$
 
 If the generator is electrically driven (e.g. Heat Pump, Electric Instantaneous), the Final Electricity Demand is $Q_{w,f} + W_w$. Otherwise, Fuel Demand is $Q_{w,f}$ and Electricity Demand is just $W_w$.
 
-## 14. Primary Energy & Consumption Balancing (DIN V 18599-1)
+## 12. Primary Calculation: Final Heating Demand (`q_final_heating`)
+
+**Concept & Formula:**
+In the primary energy calculation flow within `lib.rs` (around the `calculate_energy` function), the final delivered energy for heating (`q_final_heating`) and auxiliary electricity (`w_final_heating`) are now computed exactly using the detailed physical **Heating System Engine** described in Sections 8 and 9 (based on **DIN V 18599-5**). 
+
+The old simplified **TABULA** estimation is still calculated in parallel as a reference value, allowing users to compare the exact physical results with the European statistical average.
+
+**Source Mappings (`lib.rs` variables):**
+
+* **Exact Calculation (`HeatingSystemEngine`):**
+  The `Parameters` struct injects granular physical configurations into the engine:
+  * `heating_emission_type` (e.g. `Radiator`, `UnderfloorHeating`)
+  * `heating_emission_control` (e.g. `ElectronicPI`)
+  * `heating_pipe_insulation` (e.g. `EnEV100`)
+  * `heating_pump_control` (e.g. `RegulatedDeltaPV`)
+  * `heating_buffer_tank` (e.g. `HighEffHeated`)
+  * `heating_system` (Generator, e.g. `Gas Condensing Boiler`, `Air Source Heat Pump`)
+
+  The engine returns `heating_res.q_del_h` (assigned to `q_final_heating`) and `heating_res.w_h_total` (assigned to `w_final_heating`).
+
+* **TABULA Reference Estimate:**
+  The engine continues to run the simplified TABULA Equation 20 in the background for comparison:
+  * `"Gas Condensing Boiler"` $\implies e_{g,h} = 1.05, q_{d,h,spec} = 15.0, q_{s,h,spec} = 0.0$
+  * `"Gas Non-Condensing Boiler"` $\implies e_{g,h} = 1.18, q_{d,h,spec} = 15.0, q_{s,h,spec} = 5.0$
+  * `"Air Source Heat Pump"` $\implies e_{g,h} = 0.35, q_{d,h,spec} = 10.0, q_{s,h,spec} = 5.0$
+  * `"Biomass Pellet Boiler"` $\implies e_{g,h} = 1.25, q_{d,h,spec} = 15.0, q_{s,h,spec} = 10.0$
+  * `"Direct Electric Heating"` $\implies e_{g,h} = 1.00, q_{d,h,spec} = 0.0, q_{s,h,spec} = 0.0$
+  * *Default Fallback* $\implies e_{g,h} = 1.10, q_{d,h,spec} = 15.0, q_{s,h,spec} = 0.0$
+  
+  This produces `q_final_heating_tabula_estimate`, which is appended to the final JSON output but is **not** passed into the Primary Energy balancing.
+
+## 13. Primary Energy & Consumption Balancing (DIN V 18599-1)
 
 **Concept & Formula:**
 This module calculates the Total Primary Energy Demand ($Q_p$) of the building by aggregating final energy demands across all systems (Heating, Cooling, DHW, Ventilation, Lighting) and multiplying them by specific Primary Energy Factors ($f_{p,i}$) for each energy carrier. It also includes methods for consumption balancing against measured utility bills (Beiblatt 1).
@@ -908,7 +955,7 @@ This module calculates the Total Primary Energy Demand ($Q_p$) of the building b
 **Source Mapping (`primary_energy::PrimaryEnergyEngine`):**
 The `EnergyCarrier` enum models all fuel sources (e.g., `GridElectricity`, `NaturalGas`, `DistrictHeating`).
 
-### 14.1 Primary Energy Calculation
+### 13.1 Primary Energy Calculation
 
 * **Formula (`calculate_primary_energy`):**
 
@@ -938,23 +985,25 @@ In the main `calculate_energy` function, the total primary energy is computed by
 
 *Note: While the theoretical modules for Lighting and complex Auxiliary Electricity exist in the codebase, they are not yet fully aggregated into the `energy_demands` vector in the top-level `lib.rs` function.*
 
-* **Exact Values Implemented in `EnergyCarrier`:**| Energy Carrier               | Non-Renewable Factor ($f_{p,nren}$) | Total Factor ($f_{p,tot}$) |
-  | :--------------------------- | :------------------------------------ | :--------------------------- |
-  | `GridElectricity`          | 1.80                                  | 2.80                         |
-  | `NaturalGas`               | 1.10                                  | 1.10                         |
-  | `Biogas`                   | 0.50                                  | 1.50                         |
-  | `LiquidGas`                | 1.10                                  | 1.10                         |
-  | `FuelOil`                  | 1.10                                  | 1.10                         |
-  | `BioOil`                   | 0.50                                  | 1.50                         |
-  | `HardCoal`                 | 1.10                                  | 1.10                         |
-  | `Lignite`                  | 1.20                                  | 1.20                         |
-  | `WoodPellets`              | 0.20                                  | 1.20                         |
-  | `LogWood`                  | 0.20                                  | 1.20                         |
-  | `DistrictHeatingFossil`    | 0.70                                  | 0.70                         |
-  | `DistrictHeatingRenewable` | 0.00                                  | 1.00                         |
-  | `EnvironmentalEnergy`      | 0.00                                  | 1.00                         |
+* **Exact Values Implemented in `EnergyCarrier`:**
 
-## 15. Input-to-Output Data Flow Summary (`lib.rs`)
+| Energy Carrier               | Non-Renewable Factor ($f_{p,nren}$) | Total Factor ($f_{p,tot}$) |
+| :--------------------------- | :------------------------------------ | :--------------------------- |
+| `GridElectricity`          | 1.80                                  | 2.80                         |
+| `NaturalGas`               | 1.10                                  | 1.10                         |
+| `Biogas`                   | 0.50                                  | 1.50                         |
+| `LiquidGas`                | 1.10                                  | 1.10                         |
+| `FuelOil`                  | 1.10                                  | 1.10                         |
+| `BioOil`                   | 0.50                                  | 1.50                         |
+| `HardCoal`                 | 1.10                                  | 1.10                         |
+| `Lignite`                  | 1.20                                  | 1.20                         |
+| `WoodPellets`              | 0.20                                  | 1.20                         |
+| `LogWood`                  | 0.20                                  | 1.20                         |
+| `DistrictHeatingFossil`    | 0.70                                  | 0.70                         |
+| `DistrictHeatingRenewable` | 0.00                                  | 1.00                         |
+| `EnvironmentalEnergy`      | 0.00                                  | 1.00                         |
+
+## 14. Input-to-Output Data Flow Summary (`lib.rs`)
 
 Based strictly on the data structures handled in `lib.rs`, the following diagrams detail the exact mathematical transformations from raw user inputs to physical outputs for each building module according to the DIN V 18599 standard.
 
