@@ -1,7 +1,6 @@
 //! 📐 FEM 2D document model and element library on `vcs`.
 
-use fem_core::{Dof, Element, ElementContext, ElementResult, MemberUdl, Model, NodalLoad, Node, Support};
-use mathematical_algebra::{MatD, VecD};
+use fem_core::{Bar2, BeamEb2, Dof, Element, ElementResult, MemberUdl, Model, NodalLoad, Node, Support};
 use serde::{Deserialize, Serialize};
 use vcs::{create_document_vcs_envelope, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 
@@ -21,7 +20,9 @@ pub struct FemNode {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum FemElement {
+    #[serde(rename_all = "camelCase")]
     Bar { id: String, start: String, end: String, material_id: String, section_id: String },
+    #[serde(rename_all = "camelCase")]
     Beam { id: String, start: String, end: String, material_id: String, section_id: String },
 }
 
@@ -64,7 +65,9 @@ pub struct FemSupport {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum FemLoad {
+    #[serde(rename_all = "camelCase")]
     Nodal { id: String, node_id: String, dof: Dof, value: f64 },
+    #[serde(rename_all = "camelCase")]
     MemberUdl { id: String, element_id: String, wx: f64, wy: f64 },
 }
 
@@ -362,191 +365,6 @@ pub fn empty_fem2d_projection() -> Fem2dDocument {
 }
 // #endregion 🔖Ops
 
-// #region 🔖Elements
-fn segment_geometry(ctx: &ElementContext) -> (f64, f64, f64) {
-    let p1 = ctx.positions[0];
-    let p2 = ctx.positions[1];
-    let dx = p2[0] - p1[0];
-    let dy = p2[1] - p1[1];
-    let l = (dx * dx + dy * dy).sqrt();
-    (l, dx / l, dy / l)
-}
-
-/// 🪢 2-node axial truss element — DOFs `[Tx, Ty]` per node.
-pub struct Bar2 {
-    pub id: String,
-    pub start: String,
-    pub end: String,
-    pub e: f64,
-    pub area: f64,
-}
-
-impl Element for Bar2 {
-    fn id(&self) -> &str {
-        &self.id
-    }
-
-    fn node_ids(&self) -> Vec<String> {
-        vec![self.start.clone(), self.end.clone()]
-    }
-
-    fn dofs_per_node(&self) -> &[Dof] {
-        &[Dof::Tx, Dof::Ty]
-    }
-
-    fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
-        let (l, cx, cy) = segment_geometry(ctx);
-        let k = self.e * self.area / l;
-        let mut m = MatD::zeros(4, 4);
-        let terms = [[cx * cx, cx * cy, -cx * cx, -cx * cy], [cx * cy, cy * cy, -cx * cy, -cy * cy]];
-        for row in 0..2 {
-            for col in 0..4 {
-                m.set(row, col, k * terms[row][col]);
-                m.set(row + 2, col, if col < 2 { -k * terms[row][col] } else { k * terms[row][col - 2] });
-            }
-        }
-        m
-    }
-
-    fn recover(&self, ctx: &ElementContext, u_local: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
-        let (l, cx, cy) = segment_geometry(ctx);
-        let k = self.e * self.area / l;
-        let n = k * ((u_local.get(2) - u_local.get(0)) * cx + (u_local.get(3) - u_local.get(1)) * cy);
-        ElementResult::Bar { n }
-    }
-}
-
-/// 🧭 2D frame transformation matrix — block-diagonal 3 copies of the planar rotation, mapping
-/// GLOBAL `[u1,v1,θ1,u2,v2,θ2]` to LOCAL coordinates.
-fn beam_transform(c: f64, s: f64) -> MatD {
-    let mut t = MatD::zeros(6, 6);
-    for block in 0..2 {
-        let o = block * 3;
-        t.set(o, o, c);
-        t.set(o, o + 1, s);
-        t.set(o + 1, o, -s);
-        t.set(o + 1, o + 1, c);
-        t.set(o + 2, o + 2, 1.0);
-    }
-    t
-}
-
-/// 🧮 Local 6x6 Euler-Bernoulli beam stiffness, dof order `[u1,v1,θ1,u2,v2,θ2]`.
-fn beam_local_stiffness(l: f64, axial_k: f64, bend_k: f64) -> MatD {
-    let mut k = MatD::zeros(6, 6);
-    k.set(0, 0, axial_k);
-    k.set(0, 3, -axial_k);
-    k.set(3, 0, -axial_k);
-    k.set(3, 3, axial_k);
-
-    let l2 = l * l;
-    let bending = [
-        (1, 1, 12.0 * bend_k / l2),
-        (1, 2, 6.0 * bend_k / l),
-        (1, 4, -12.0 * bend_k / l2),
-        (1, 5, 6.0 * bend_k / l),
-        (2, 1, 6.0 * bend_k / l),
-        (2, 2, 4.0 * bend_k),
-        (2, 4, -6.0 * bend_k / l),
-        (2, 5, 2.0 * bend_k),
-        (4, 1, -12.0 * bend_k / l2),
-        (4, 2, -6.0 * bend_k / l),
-        (4, 4, 12.0 * bend_k / l2),
-        (4, 5, -6.0 * bend_k / l),
-        (5, 1, 6.0 * bend_k / l),
-        (5, 2, 2.0 * bend_k),
-        (5, 4, -6.0 * bend_k / l),
-        (5, 5, 4.0 * bend_k),
-    ];
-    for (row, col, value) in bending {
-        k.set(row, col, value);
-    }
-    k
-}
-
-/// 🌬️ Local fixed-end load vector `[u1,v1,θ1,u2,v2,θ2]` for a local-frame UDL `(wx_local, wy_local)`.
-fn beam_local_udl(l: f64, wx_local: f64, wy_local: f64) -> VecD {
-    VecD::from_vec(vec![
-        wx_local * l / 2.0,
-        wy_local * l / 2.0,
-        wy_local * l * l / 12.0,
-        wx_local * l / 2.0,
-        wy_local * l / 2.0,
-        -wy_local * l * l / 12.0,
-    ])
-}
-
-/// 🏗️ 2-node Euler-Bernoulli frame element — DOFs `[Tx, Ty, Rz]` per node.
-pub struct BeamEb2 {
-    pub id: String,
-    pub start: String,
-    pub end: String,
-    pub e: f64,
-    pub area: f64,
-    pub iy: f64,
-}
-
-impl Element for BeamEb2 {
-    fn id(&self) -> &str {
-        &self.id
-    }
-
-    fn node_ids(&self) -> Vec<String> {
-        vec![self.start.clone(), self.end.clone()]
-    }
-
-    fn dofs_per_node(&self) -> &[Dof] {
-        &[Dof::Tx, Dof::Ty, Dof::Rz]
-    }
-
-    fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
-        let (l, c, s) = segment_geometry(ctx);
-        let axial_k = self.e * self.area / l;
-        let bend_k = self.e * self.iy / l;
-        let k_local = beam_local_stiffness(l, axial_k, bend_k);
-        let t = beam_transform(c, s);
-        t.transpose().matmul(&k_local).matmul(&t)
-    }
-
-    fn equivalent_nodal_loads(&self, ctx: &ElementContext, udl: &MemberUdl) -> Option<VecD> {
-        let (l, c, s) = segment_geometry(ctx);
-        let wx_local = udl.wx * c + udl.wy * s;
-        let wy_local = -udl.wx * s + udl.wy * c;
-        let f_local = beam_local_udl(l, wx_local, wy_local);
-        let t = beam_transform(c, s);
-        Some(t.transpose().mul_vec(&f_local))
-    }
-
-    fn recover(&self, ctx: &ElementContext, u_local: &VecD, udl: Option<&MemberUdl>) -> ElementResult {
-        let (l, c, s) = segment_geometry(ctx);
-        let axial_k = self.e * self.area / l;
-        let bend_k = self.e * self.iy / l;
-        let t = beam_transform(c, s);
-        let u_loc = t.mul_vec(u_local);
-        let k_local = beam_local_stiffness(l, axial_k, bend_k);
-
-        let (wx_local, wy_local) = match udl {
-            Some(u) => (u.wx * c + u.wy * s, -u.wx * s + u.wy * c),
-            None => (0.0, 0.0),
-        };
-        let f_udl_local = beam_local_udl(l, wx_local, wy_local);
-        let f_end = k_local.mul_vec(&u_loc).sub(&f_udl_local);
-
-        let n1 = f_end.get(0);
-        let v1 = f_end.get(1);
-        let m1 = f_end.get(2);
-
-        let stations = (0..11)
-            .map(|i| {
-                let x = l * (i as f64) / 10.0;
-                fem_core::BeamStation { x, n: -n1, v: v1 - wy_local * x, m: m1 + v1 * x - wy_local * x * x / 2.0 }
-            })
-            .collect();
-        ElementResult::Beam { stations }
-    }
-}
-// #endregion 🔖Elements
-
 // #region 🔖Bridge
 /// 🌉 Resolves a `Fem2dDocument` plus a named load case into a `fem_core::Model`, erroring
 /// descriptively on any dangling material/section/node reference.
@@ -740,12 +558,15 @@ mod tests {
             sections: vec![FemSection { id: "rod".into(), name: "rod".into(), area: 0.001, iy: 0.0 }],
             supports: vec![
                 FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![Dof::Tx, Dof::Ty] },
-                FemSupport { id: "s2".into(), node_id: "n2".into(), fixed: vec![Dof::Ty] },
+                FemSupport { id: "s2".into(), node_id: "n2".into(), fixed: vec![Dof::Tx, Dof::Ty] },
             ],
             load_cases: vec![FemLoadCase {
                 id: "dead".into(),
                 name: "dead".into(),
-                loads: vec![FemLoad::Nodal { id: "l1".into(), node_id: "n3".into(), dof: Dof::Ty, value: -1000.0 }],
+                loads: vec![
+                    FemLoad::Nodal { id: "l1".into(), node_id: "n3".into(), dof: Dof::Ty, value: -1000.0 },
+                    FemLoad::Nodal { id: "l2".into(), node_id: "n3".into(), dof: Dof::Tx, value: -500.0 },
+                ],
             }],
             camera: FemCamera::default(),
         }
@@ -847,8 +668,11 @@ mod tests {
         let doc = simply_supported_beam_doc();
         let result = fem2d_solve(&doc, "dead").expect("solves");
 
-        for reaction in &result.reactions {
-            assert!((reaction.value - 30000.0).abs() < 1.0, "reaction {reaction:?} not near 30000N");
+        for reaction in result.reactions.iter().filter(|r| r.dof == Dof::Tx) {
+            assert!(reaction.value.abs() < 1e-6, "horizontal reaction {reaction:?} should be ~0 (no horizontal load)");
+        }
+        for reaction in result.reactions.iter().filter(|r| r.dof == Dof::Ty) {
+            assert!((reaction.value - 30000.0).abs() < 1.0, "vertical reaction {reaction:?} not near 30000N");
         }
 
         let (_, ElementResult::Beam { stations }) = &result.elements[0] else { panic!("expected beam result") };
@@ -861,8 +685,11 @@ mod tests {
         let doc = simply_supported_beam_two_span_doc();
         let result = fem2d_solve(&doc, "dead").expect("solves");
 
-        for reaction in &result.reactions {
-            assert!((reaction.value - 30000.0).abs() < 1.0, "reaction {reaction:?} not near 30000N");
+        for reaction in result.reactions.iter().filter(|r| r.dof == Dof::Tx) {
+            assert!(reaction.value.abs() < 1e-6, "horizontal reaction {reaction:?} should be ~0 (no horizontal load)");
+        }
+        for reaction in result.reactions.iter().filter(|r| r.dof == Dof::Ty) {
+            assert!((reaction.value - 30000.0).abs() < 1.0, "vertical reaction {reaction:?} not near 30000N");
         }
 
         let midspan_disp = result.displacements.iter().find(|d| d.node_id == "n2").unwrap();
@@ -899,5 +726,17 @@ mod tests {
         assert!(err.contains("load case not found"), "unexpected error: {err}");
     }
     // #endregion 🔖UnknownCase
+
+    // #region 🔖ExampleFixture
+    #[test]
+    fn example_fixture_parses_and_solves() {
+        let json = include_str!("../example/default.fem2d.json");
+        let doc: Fem2dDocument = serde_json::from_str(json).expect("example fixture parses");
+        assert_eq!(doc.nodes.len(), 2);
+        assert_eq!(doc.elements.len(), 1);
+        let result = fem2d_solve(&doc, "dead").expect("example fixture solves");
+        assert!(result.checks.residual_norm < 1e-6);
+    }
+    // #endregion 🔖ExampleFixture
 }
 // #endregion 🔖Tests

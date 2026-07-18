@@ -1,25 +1,26 @@
 //! 🔤 Text and math labels via Typst-to-SVG compilation.
 
 use crate::color::Color;
-use crate::sobject::VSobject;
-use comemo::Prehashed as LazyHash;
+use crate::sobject::{Sobject, VSobject};
 use ecow::EcoString;
-use mathematical_geometry::{BezPath, Point};
+use mathematical_geometry::{append_shape_to_path, BezPath, PathEl, Point, Rect};
 use std::path::PathBuf;
 use std::sync::OnceLock;
 use typst::foundations::{Bytes, Datetime};
-use typst::text::{Font, FontBook};
-use typst::{Library, World};
 use typst::layout::PagedDocument;
 use typst::syntax::{FileId, Source, VirtualPath};
-use typst::utils::Abs;
+use typst::text::{Font, FontBook};
+use typst::layout::Abs;
+use typst::utils::LazyHash;
+use typst::LibraryExt;
+use typst::{Library, World};
 
 const TEXT_PAGE_PT: f64 = 400.0;
 const TEXT_MARGIN_PT: f64 = 8.0;
 const TEXT_SIZE_PT: f64 = 36.0;
 
 /// 📝 Plain text Sobject rendered through Typst.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Text {
     pub inner: VSobject,
     pub content: EcoString,
@@ -49,7 +50,7 @@ impl Text {
 }
 
 /// ∑ Math-mode label rendered through Typst.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct MathText {
     pub inner: VSobject,
     pub latex: EcoString,
@@ -84,17 +85,90 @@ fn svg_to_vobject(svg: &str, color: Color) -> VSobject {
     let mut v = VSobject::new();
     if svg.is_empty() {
         v.set_paths(vec![BezPath::new()]);
-    } else {
-        let rect = mathematical_geometry::Rect::new(-1.0, -0.5, 1.0, 0.5);
-        v.set_paths(vec![{
+        v.set_fill(color);
+        v.style.stroke = None;
+        return v;
+    }
+    let options = usvg::Options::default();
+    if let Ok(tree) = usvg::Tree::from_str(svg, &options) {
+        let mut paths = Vec::new();
+        collect_svg_paths(tree.root(), &mut paths);
+        if paths.is_empty() {
+            let rect = Rect::new(-1.0, -0.5, 1.0, 0.5);
             let mut p = BezPath::new();
-            mathematical_geometry::append_shape_to_path(&mut p, rect, 0.01);
-            p
-        }]);
+            append_shape_to_path(&mut p, &rect, 0.01);
+            paths.push(p);
+        }
+        let height = tree.size().height() as f64;
+        let scale = if height > 1e-9 { 2.0 / height } else { 0.01 };
+        let offset_y = height * scale;
+        for path in &mut paths {
+            for el in path.elements_mut() {
+                match el {
+                    mathematical_geometry::PathEl::MoveTo(p) | mathematical_geometry::PathEl::LineTo(p) => {
+                        *p = Point::new(p.x() * scale, offset_y - p.y() * scale);
+                    }
+                    mathematical_geometry::PathEl::QuadTo(p0, p1) => {
+                        *p0 = Point::new(p0.x() * scale, offset_y - p0.y() * scale);
+                        *p1 = Point::new(p1.x() * scale, offset_y - p1.y() * scale);
+                    }
+                    mathematical_geometry::PathEl::CurveTo(p0, p1, p2) => {
+                        *p0 = Point::new(p0.x() * scale, offset_y - p0.y() * scale);
+                        *p1 = Point::new(p1.x() * scale, offset_y - p1.y() * scale);
+                        *p2 = Point::new(p2.x() * scale, offset_y - p2.y() * scale);
+                    }
+                    mathematical_geometry::PathEl::ClosePath => {}
+                }
+            }
+        }
+        v.set_paths(paths);
+    } else {
+        let rect = Rect::new(-1.0, -0.5, 1.0, 0.5);
+        let mut p = BezPath::new();
+        append_shape_to_path(&mut p, &rect, 0.01);
+        v.set_paths(vec![p]);
     }
     v.set_fill(color);
     v.style.stroke = None;
     v
+}
+
+fn collect_svg_paths(node: &usvg::Node, out: &mut Vec<BezPath>) {
+    match node {
+        usvg::Node::Group(group) => {
+            for child in group.children() {
+                collect_svg_paths(child, out);
+            }
+        }
+        usvg::Node::Path(path) => {
+            let mut bez = kurbo::BezPath::new();
+            for segment in path.data().segments() {
+                match segment {
+                    usvg::tiny_skia_path::PathSegment::MoveTo(p) => bez.move_to((p.x as f64, p.y as f64)),
+                    usvg::tiny_skia_path::PathSegment::LineTo(p) => bez.line_to((p.x as f64, p.y as f64)),
+                    usvg::tiny_skia_path::PathSegment::QuadTo(c, p) => {
+                        bez.quad_to((c.x as f64, c.y as f64), (p.x as f64, p.y as f64));
+                    }
+                    usvg::tiny_skia_path::PathSegment::CubicTo(c1, c2, p) => {
+                        bez.curve_to(
+                            (c1.x as f64, c1.y as f64),
+                            (c2.x as f64, c2.y as f64),
+                            (p.x as f64, p.y as f64),
+                        );
+                    }
+                    usvg::tiny_skia_path::PathSegment::Close => bez.close_path(),
+                }
+            }
+            let mut p = BezPath::new();
+            for el in bez.elements() {
+                p.push(PathEl::from(*el));
+            }
+            if !p.elements().is_empty() {
+                out.push(p);
+            }
+        }
+        _ => {}
+    }
 }
 
 fn typst_asset_font_list() -> Vec<Font> {

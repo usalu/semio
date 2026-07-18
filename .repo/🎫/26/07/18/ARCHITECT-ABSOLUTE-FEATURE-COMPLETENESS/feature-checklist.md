@@ -1,0 +1,67 @@
+# Architect Program — Feature Checklist (65 areas)
+
+- [x] 1 Project Definition
+- [x] 2 Stakeholder Management
+- [x] 3 User Research
+- [x] 4 Activity Definition
+- [x] 5 Functional Requirements
+- [x] 6 Program Element Definition
+- [x] 7 Quantitative Requirements
+- [x] 8 Relationship Management
+- [x] 9 Adjacency Logic
+- [x] 10 Process and Workflow Analysis
+- [x] 11 Movement and Flow Requirements
+- [x] 12 Access and Permission Logic
+- [x] 13 Operational Requirements
+- [x] 14 Equipment Requirements
+- [x] 15 Furniture and Resource Requirements
+- [x] 16 Storage Programming
+- [x] 17 Environmental Performance Requirements
+- [x] 18 Human-Factor Requirements
+- [x] 19 Accessibility and Inclusion
+- [x] 20 Privacy Requirements
+- [x] 21 Safety Requirements
+- [x] 22 Security Requirements
+- [x] 23 Regulatory and Policy Requirements
+- [x] 24 Site and Context Requirements
+- [x] 25 Organizational Requirements
+- [x] 26 Service Requirements
+- [x] 27 Technical and Infrastructure Requirements
+- [x] 28 Information Requirements
+- [x] 29 Communication Requirements
+- [x] 30 Wayfinding and Orientation Requirements
+- [x] 31 Scheduling and Temporal Requirements
+- [x] 32 Flexibility and Adaptability
+- [x] 33 Growth and Future Planning
+- [x] 34 Sustainability Requirements
+- [x] 35 Resilience and Continuity
+- [x] 36 Cost and Resource Control
+- [x] 37 Time and Delivery Constraints
+- [x] 38 Risk Management
+- [x] 39 Conflict and Trade-Off Management
+- [x] 40 Requirement Management
+- [x] 41 Priority Management
+- [x] 42 Scenario Development
+- [x] 43 Option Evaluation
+- [x] 44 Decision Management
+- [x] 45 Validation and Verification
+- [x] 46 Performance Criteria
+- [x] 47 Quality Management
+- [x] 48 Documentation
+- [x] 49 Version and Change Control
+- [x] 50 Collaboration Features
+- [x] 51 Analysis Features
+- [x] 52 Reporting Features
+- [x] 53 Search and Information Retrieval
+- [x] 54 Traceability Features
+- [x] 55 Status Management
+- [x] 56 Governance
+- [x] 57 Workshop and Consultation Support
+- [x] 58 Survey and Interview Support
+- [x] 59 Issue Management
+- [x] 60 Audit and Accountability
+- [x] 61 Data Exchange
+- [x] 62 Template and Standardization Features
+- [x] 63 Knowledge Management
+- [x] 64 Benchmarking
+- [x] 65 Abstract Output Types

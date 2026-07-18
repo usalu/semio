@@ -9,7 +9,6 @@ path = "lib.rs"
 
 [dependencies]
 mathematical_algebra = { path = "../../../mathematical/algebra/rs" }
-mathematical_geometry = { path = "../../../mathematical/geometry/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]

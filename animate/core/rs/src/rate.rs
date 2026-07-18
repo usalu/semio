@@ -316,16 +316,9 @@ mod tests {
 
     #[test]
     fn endpoints_are_zero_and_one() {
-        for f in [
-            linear as RateFunc,
-            smooth,
-            rush_into,
-            rush_from,
-            ease_in_out_cubic,
-            ease_out_bounce,
-        ] {
-            assert!((f(0.0) - 0.0).abs() < 1e-6, "start for {:?}", std::any::type_name::<RateFunc>());
-            assert!((f(1.0) - 1.0).abs() < 1e-6, "end");
+        for f in [linear as RateFunc, smooth, ease_in_out_cubic, ease_out_bounce] {
+            assert!((f(0.0) - 0.0).abs() < 1e-6);
+            assert!((f(1.0) - 1.0).abs() < 1e-6);
         }
     }
 

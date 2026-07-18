@@ -8,11 +8,12 @@ use layout_rs::{
 };
 use semio_framework_core::kernel::HostEffect;
 use semio_framework_plugin::{SurfaceKind,
-    build_canvas_2d_scene, create_default_layout, engagement_token_matches, ui_declarative_sections_to_tree,
+    build_canvas_2d_scene, create_default_layout, engagement_token_matches, selection_ids, tree_item_desc, tree_item_with_action,
+    tree_item_with_action_draggable, ui_declarative_sections_to_tree,
     ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef,
     ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App,
-    Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView, PanelGroup, UiFieldNode,
-    UiInputNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode,
+    Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView, OsMediaCapability, PanelGroup, PanelTreeBuilder, ResourceKindSpec,
+    UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -767,34 +768,27 @@ fn preflight_msg(template: &str, args: &[&str]) -> String {
 //#endregion 🔖Terminology
 
 //#region 🔖Panels
-fn tree_item(
+/// 🌳 Layout's row shape (id/label/description/icon/optional-action) over the SDK's
+/// `tree_item_desc`/`tree_item_with_action` — the icon assignment is the only bit the SDK helpers
+/// don't cover, since not every plugin's rows carry one.
+fn layout_tree_item(
     id: impl Into<String>,
     label: impl Into<String>,
     description: Option<String>,
     icon_id: Option<String>,
     action: Option<ActionDescriptor>,
 ) -> UiTreeItemNode {
-    UiTreeItemNode {
-        id: id.into(),
-        label: label.into(),
-        description,
-        icon_id,
-        selected: None,
-        default_open: None,
-        hover_action: None,
-        unhover_action: None,
-        actions: None,
-        action,
-        draggable: None,
-        drag_data: None,
-        items: None,
-        control: None,
-        is_hidden: None,
-        loading: None,
-    }
+    let mut item = match action {
+        Some(action) => tree_item_with_action(id, label, description, action),
+        None => tree_item_desc(id, label, description),
+    };
+    item.icon_id = icon_id;
+    item
 }
 
-fn tree_item_hoverable(
+/// 🌳 A `layout_tree_item` that additionally dispatches `setHover`/clear-hover on hover/unhover —
+/// used by the document tree's page and frame rows to drive canvas hover highlighting.
+fn layout_tree_item_hoverable(
     id: impl Into<String>,
     label: impl Into<String>,
     description: Option<String>,
@@ -802,7 +796,7 @@ fn tree_item_hoverable(
     action: Option<ActionDescriptor>,
     hover_id: &str,
 ) -> UiTreeItemNode {
-    let mut item = tree_item(id, label, description, icon_id, action);
+    let mut item = layout_tree_item(id, label, description, icon_id, action);
     item.hover_action = Some(layout_action("setHover", Some(json!({ "id": hover_id }))));
     item.unhover_action = Some(layout_action("setHover", Some(json!({ "id": Value::Null }))));
     item
@@ -813,14 +807,14 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
     let spread_items: Vec<UiTreeItemNode> = doc
         .spreads
         .iter()
-        .map(|spread| tree_item(spread_row_id(&spread.id), spread.name.clone(), Some(spread.page_ids.join(", ")), Some("layout".into()), None))
+        .map(|spread| layout_tree_item(spread_row_id(&spread.id), spread.name.clone(), Some(spread.page_ids.join(", ")), Some("layout".into()), None))
         .collect();
 
     let page_items: Vec<UiTreeItemNode> = doc
         .pages
         .iter()
         .map(|page| {
-            tree_item_hoverable(
+            layout_tree_item_hoverable(
                 page_row_id(&page.id),
                 page.name.clone(),
                 page.parent_page_id.as_ref().map(|parent_id| format!("{}: {parent_id}", labels.parent)),
@@ -836,7 +830,7 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
         .iter()
         .flat_map(|page| {
             page.frames.iter().map(move |frame| {
-                tree_item_hoverable(
+                layout_tree_item_hoverable(
                     frame_row_id(frame.id()),
                     frame.id(),
                     Some(format!("{} · {}", page.name, frame.kind_str())),
@@ -848,7 +842,7 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
         })
         .collect();
     let frame_items = if frame_items.is_empty() {
-        vec![tree_item("layout-document.frames.empty", labels.drop_here, None, Some("inbox".into()), None)]
+        vec![layout_tree_item("layout-document.frames.empty", labels.drop_here, None, Some("inbox".into()), None)]
     } else {
         frame_items
     };
@@ -857,7 +851,7 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
         .parent_pages
         .iter()
         .map(|parent| {
-            tree_item(
+            layout_tree_item(
                 parent_page_row_id(&parent.id),
                 parent.name.clone(),
                 Some(format!("{}×{}", parent.width as i64, parent.height as i64)),
@@ -872,7 +866,7 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
         .iter()
         .flat_map(|page| {
             page.layers.iter().map(move |layer| {
-                tree_item(
+                layout_tree_item(
                     layer_row_id(&page.id, &layer.id),
                     format!("{} · {}", page.name, layer.name),
                     Some(format!("{} {}", layer.object_ids.len(), labels.objects)),
@@ -886,7 +880,7 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
     let story_items: Vec<UiTreeItemNode> = doc
         .stories
         .iter()
-        .map(|story| tree_item(story_row_id(&story.id), story.id.clone(), Some(format!("{} {}", story.content.chars().count(), labels.chars)), Some("file-text".into()), None))
+        .map(|story| layout_tree_item(story_row_id(&story.id), story.id.clone(), Some(format!("{} {}", story.content.chars().count(), labels.chars)), Some("file-text".into()), None))
         .collect();
 
     let link_items: Vec<UiTreeItemNode> = doc
@@ -902,7 +896,7 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
                     _ => None,
                 })
                 .collect();
-            tree_item(
+            layout_tree_item(
                 link_row_id(&link.id),
                 link.path.clone(),
                 Some(link.state.clone().unwrap_or_else(|| "ok".into())),
@@ -916,7 +910,7 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
         .paragraph_styles
         .iter()
         .map(|style| {
-            tree_item(
+            layout_tree_item(
                 style_row_id(&style.id),
                 style.name.clone(),
                 Some(format!("{} · {}pt", style.font_family, style.font_size as i64)),
@@ -933,7 +927,7 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
             Some(size) => format!("{font_family} · {}pt", size as i64),
             None => font_family.to_string(),
         };
-        tree_item(style_row_id(&id), name, Some(description), Some("type".into()), None)
+        layout_tree_item(style_row_id(&id), name, Some(description), Some("type".into()), None)
     }));
 
     let highlighted_ids: Vec<String> = runtime
@@ -941,78 +935,46 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
         .as_ref()
         .map(|id| vec![page_row_id(id), frame_row_id(id)])
         .unwrap_or_default();
-    UiNode::Tree(UiTreeNode {
-        sections: vec![
-            UiTreeSectionNode {
-                id: "layout-document.document".into(),
-                label: Some(labels.document.into()),
-                default_open: Some(true),
-                loading: None,
-                items: vec![tree_item(
-                    "layout-document.document.root",
-                    doc.name.clone(),
-                    Some(LAYOUT_FIXTURE_SCHEMA.into()),
-                    Some("file-text".into()),
-                    None,
-                )],
-            },
-            UiTreeSectionNode { id: "layout-document.spreads".into(), label: Some(labels.spreads.into()), default_open: Some(false), loading: None, items:spread_items },
-            UiTreeSectionNode {
-                id: "layout-document.pages".into(),
-                label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
-                default_open: Some(true),
-                loading: None,
-                items: page_items,
-            },
-            UiTreeSectionNode { id: "layout-document.frames".into(), label: Some(labels.frames.into()), default_open: Some(true), loading: None, items: frame_items },
-            UiTreeSectionNode { id: "layout-document.parentPages".into(), label: Some(labels.parent_pages.into()), default_open: Some(false), loading: None, items:parent_page_items },
-            UiTreeSectionNode { id: "layout-document.layers".into(), label: Some(labels.layers.into()), default_open: Some(false), loading: None, items:layer_items },
-            UiTreeSectionNode { id: "layout-document.stories".into(), label: Some(labels.stories.into()), default_open: Some(false), loading: None, items:story_items },
-            UiTreeSectionNode { id: "layout-document.links".into(), label: Some(labels.links.into()), default_open: Some(false), loading: None, items:link_items },
-            UiTreeSectionNode { id: "layout-document.styles".into(), label: Some(labels.styles.into()), default_open: Some(false), loading: None, items:style_items },
-        ],
-        selected_ids: Some(
-            runtime
-                .selected_ids
-                .iter()
-                .flat_map(|id| vec![page_row_id(id), frame_row_id(id), layer_row_id(&runtime.active_page_id, id)])
-                .collect(),
-        ),
-        highlighted_ids: if highlighted_ids.is_empty() { None } else { Some(highlighted_ids) },
-        selection_change: Some(layout_action("setSelection", None)),
-        drop_action: None,
-        loading: None,
-    })
+    let mut builder = PanelTreeBuilder::new("layout-document")
+        .section(
+            "layout-document.document",
+            Some(labels.document.into()),
+            true,
+            vec![layout_tree_item("layout-document.document.root", doc.name.clone(), Some(LAYOUT_FIXTURE_SCHEMA.into()), Some("file-text".into()), None)],
+        )
+        .section("layout-document.spreads", Some(labels.spreads.into()), false, spread_items)
+        .section("layout-document.pages", Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()), true, page_items)
+        .section("layout-document.frames", Some(labels.frames.into()), true, frame_items)
+        .section("layout-document.parentPages", Some(labels.parent_pages.into()), false, parent_page_items)
+        .section("layout-document.layers", Some(labels.layers.into()), false, layer_items)
+        .section("layout-document.stories", Some(labels.stories.into()), false, story_items)
+        .section("layout-document.links", Some(labels.links.into()), false, link_items)
+        .section("layout-document.styles", Some(labels.styles.into()), false, style_items)
+        .selected(runtime.selected_ids.iter().flat_map(|id| vec![page_row_id(id), frame_row_id(id), layer_row_id(&runtime.active_page_id, id)]).collect())
+        .selection_change(layout_action("setSelection", None));
+    if !highlighted_ids.is_empty() {
+        builder = builder.highlighted(highlighted_ids);
+    }
+    builder.build()
 }
 
 fn catalogue_tree_item(kind: &str, label: &str, icon: &str) -> UiTreeItemNode {
     let action = if kind == "page" { layout_action("addPage", None) } else { layout_action("addFrame", Some(json!({ "kind": kind }))) };
-    let mut drag_data = HashMap::new();
-    drag_data.insert(LAYOUT_CATALOGUE_DRAG_MIME.to_string(), json!({ "kind": kind }).to_string());
-    drag_data.insert(format!("{LAYOUT_CATALOGUE_KIND_MIME_PREFIX}{kind}"), String::new());
-    let mut item = tree_item(format!("layout-catalogue.{kind}"), label, Some(kind.into()), Some(icon.into()), Some(action));
-    item.draggable = Some(true);
-    item.drag_data = Some(drag_data);
+    let drag_data = json!({
+        LAYOUT_CATALOGUE_DRAG_MIME: json!({ "kind": kind }).to_string(),
+        format!("{LAYOUT_CATALOGUE_KIND_MIME_PREFIX}{kind}"): "",
+    });
+    let mut item = tree_item_with_action_draggable(format!("layout-catalogue.{kind}"), label, Some(kind.into()), action, &drag_data);
+    item.icon_id = Some(icon.into());
     item
 }
 
 fn build_catalogue_tree(labels: &LayoutLabels) -> UiNode {
     let mut items = vec![catalogue_tree_item("page", labels.catalogue_page, "file")];
     items.extend(LAYOUT_CATALOGUE_KINDS.iter().map(|(kind, icon)| catalogue_tree_item(kind, catalogue_kind_label(kind, labels), icon)));
-    UiNode::Tree(UiTreeNode {
-        sections: vec![UiTreeSectionNode {
-            id: "layout-catalogue.kinds".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()),
-            default_open: Some(true),
-            loading: None,
-            items,
-        }],
-        selected_ids: None,
-        highlighted_ids: None,
-        selection_change: None,
-        drop_action: None,
-        loading: None,
-    })
+    PanelTreeBuilder::new("layout-catalogue")
+        .section("layout-catalogue.kinds", Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()), true, items)
+        .build()
 }
 
 fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels: &LayoutLabels) -> UiNode {
@@ -1283,12 +1245,12 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
 fn build_preflight_tree(doc: &LayoutDocument, labels: &LayoutLabels) -> UiNode {
     let issues = run_layout_preflight(doc, labels);
     let items: Vec<UiTreeItemNode> = if issues.is_empty() {
-        vec![tree_item("layout-preflight.empty", labels.no_issues, None, Some("check-circle".into()), None)]
+        vec![layout_tree_item("layout-preflight.empty", labels.no_issues, None, Some("check-circle".into()), None)]
     } else {
         issues
             .iter()
             .map(|issue| {
-                tree_item(
+                layout_tree_item(
                     format!(
                         "layout-preflight.{}.{}",
                         issue.code,
@@ -1920,6 +1882,14 @@ fn layout_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefi
 fn create_layout_app() -> App {
     App::from_builder(
         App::builder(LAYOUT_PLAY_APP_ID, "Layout").document(["semio", "layout"])
+            .resource_kind(ResourceKindSpec {
+                id: "2d.layout".into(),
+                name: "Layout".into(),
+                source_format: "layout.fixture".into(),
+                component_kind: "layout".into(),
+                dimension: "2d".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+            })
             .icon_id("layout")
             .mode("edit", "Edit")
             .default_mode_id("edit")

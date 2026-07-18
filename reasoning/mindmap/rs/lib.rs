@@ -286,14 +286,6 @@ mod tests {
     use serde_json::json;
     use vcs::{apply_operation, create_document_vcs_envelope, DocumentVcsCommand};
 
-    #[test]
-    fn topic_is_node_id() {
-        let id: TopicId = 42;
-        let mut ext = DefaultMindmapExtension::default();
-        ext.topics.insert(id, "Semantics".into());
-        assert_eq!(ext.topic_label(id), Some("Semantics"));
-    }
-
     fn node(id: &str, text: &str) -> Value {
         json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": text, "handles": [] })
     }

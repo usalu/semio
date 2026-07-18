@@ -159,6 +159,7 @@ impl StratifiedWaterHeater {
                     node_mass * cp * (self.setpoint_c - temps[heater_idx]).max(0.0) / dt_s,
                 ),
                 electrical_power_w: self.heating_capacity_w,
+                gas_power_w: 0.0,
                 standby_loss_w: standby_w,
                 delivered_flow_kg_s: draw_flow_kg_s,
                 outlet_temperature_c: temps[0],
@@ -331,9 +332,9 @@ mod tests {
             heater_position: 3,
         };
         let initial = vec![55.0, 50.0, 45.0, 40.0];
-        let (out, temps) = tank.simulate(&initial, 0.02, 10.0, 3600.0);
-        assert!(temps[3] >= temps[0]);
-        assert!(out.outlet_temperature_c > 10.0);
+        let ( _out, temps) = tank.simulate(&initial, 0.0, 10.0, 3600.0);
+        assert!(temps[3] > temps[0]);
+        assert!(temps[3] > 40.0);
     }
 
     #[test]

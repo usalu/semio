@@ -3,7 +3,9 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { cadFixtureVitePlugin, gisMapTilesVitePlugins, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, terrainTilesVitePlugins, uiAssetsVitePlugin, puzzle3dMeshesVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { playgroundAssetVitePlugins, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, uiAssetsVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { PLAYGROUND_BUILD_TARGETS } from "../../../../plugin/registry/generated/playgrounds.ts";
+import { isStudioPluginFilter } from "../../../../plugin/registry/script.ts";
 import { semioBackboneVitePlugin, semioBlobVitePlugin } from "../script.ts";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
@@ -14,6 +16,27 @@ const rendererModulesDir = path.join(playDir, "renderer-modules");
 const renderer = process.env.SEMIO_RENDERER ?? "react";
 const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
 const uiAssetsRoot = path.join(repoRoot, "ui/asset");
+
+//#region 🔖RegistryDrivenAssetsAndEngines
+/** @emoji 🔌 Framework engine crates every react-renderer dev session needs regardless of the active
+ * plugin (the node-graph/editor host engines back shared studio chrome, not any one app) — kept as a
+ * literal baseline rather than per-plugin metadata, mirroring the equally-unconditional pre-registry
+ * build in `os/dev/script.ts`'s `buildEngineWasm`. */
+const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = ["@semio-tech/framework-surface-node-graph-rs", "@semio-tech/framework-editor-rs"];
+
+/** @emoji 📦 Maps a registry `engines` crate path (e.g. `framework/surface/tiled-map/rs`) to its wasm-pack npm package name. */
+function engineNpmPackage(cratePath: string): string {
+  const slug = (cratePath.endsWith("/rs") ? cratePath.slice(0, -"/rs".length) : cratePath).replace(/\//g, "-");
+  return `@semio-tech/${slug}-rs`;
+}
+
+const registryEngineOptimizeDepsExclude = [...new Set(PLAYGROUND_BUILD_TARGETS.flatMap((target) => target.engines))].map(engineNpmPackage);
+
+/** @emoji 🗂️ The active playground's declared asset needs — every playground's assets when unfiltered
+ * (the "s" studio hub can open any app, so it needs every app's dev-time asset routes available), else
+ * just the resolved variant's own `assets` row. */
+const resolvedPlaygroundAssets = isStudioPluginFilter(plugin) ? PLAYGROUND_BUILD_TARGETS.flatMap((target) => target.assets) : (PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin)?.assets ?? []);
+//#endregion 🔖RegistryDrivenAssetsAndEngines
 
 export default defineConfig({
   root: playDir,
@@ -45,15 +68,12 @@ export default defineConfig({
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
     ...uiAssetsVitePlugin(uiAssetsRoot),
-    ...cadFixtureVitePlugin(repoRoot),
-    ...puzzle3dMeshesVitePlugin(repoRoot),
-    ...(plugin === "gis2d" ? gisMapTilesVitePlugins(repoRoot, resolveGisMapTileServeMode(process.env.GIS_MAP_TILE_SERVE_MODE)) : []),
-    ...(plugin === "gis3d" ? terrainTilesVitePlugins(repoRoot, resolveGisMapTileServeMode(process.env.GIS_MAP_TILE_SERVE_MODE)) : []),
+    ...playgroundAssetVitePlugins(repoRoot, resolvedPlaygroundAssets, resolveGisMapTileServeMode(process.env.GIS_MAP_TILE_SERVE_MODE)),
     ...(renderer === "wgpu" ? [tailwindcss()] : [react(), tailwindcss()]),
   ],
   optimizeDeps: {
     include: ["react-reconciler", "react-reconciler/constants", "three", "@react-three/fiber", "fuse.js"],
-    exclude: [...(renderer === "wgpu" ? ["@semio-tech/framework-renderer-react"] : []), "@semio-tech/gis-2d-rs", "@semio-tech/gis-3d-rs", "@semio-tech/framework-graph-rs", "@semio-tech/framework-editor-rs", "@semio-tech/raster-rs"],
+    exclude: [...(renderer === "wgpu" ? ["@semio-tech/framework-renderer-react"] : []), ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE, ...registryEngineOptimizeDepsExclude],
   },
   define: {
     "import.meta.env.VITE_SEMIO_PLUGIN": JSON.stringify(process.env.SEMIO_PLUGIN ?? "s"),

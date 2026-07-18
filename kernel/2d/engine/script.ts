@@ -1,11 +1,10 @@
 #!/usr/bin/env bun
 /** 🦀 `kernel/2d/engine` router: `bun ./script.ts test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/index.ts";
-import { join } from "node:path";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted } from "../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
-  run(): void {
-    Bun.spawnSync(["cargo", "test", "-p", "geometry_drawing_engine"], { cwd: join(this.root, "rs"), stdio: "inherit" });
+  run(segments: string[]): void {
+    runCargoTestBudgeted(["kernel_2d_engine"], this.repoRoot, segments);
   }
 }
 

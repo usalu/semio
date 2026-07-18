@@ -4,8 +4,6 @@ members = [
     "framework/hash/rs",
     "framework/plugin/rs",
     "framework/product/os/core/rs",
-    "framework/product/presentation/rs",
-    "framework/product/presentation/plugin/rs",
     "puzzle/plugin/rs",
     "puzzle/2d/rs",
     "puzzle/3d/rs",
@@ -43,8 +41,8 @@ members = [
     "ui/tui/rs",
     "repo/cli/rs",
     "reasoning/mindmap/rs",
-    "gis/2d/rs",
-    "gis/3d/rs",
+    "framework/surface/tiled-map/rs",
+    "framework/surface/terrain/rs",
     "gis/plugin/rs",
     "flow/core/rs",
     "flow/plugin/rs",
@@ -72,7 +70,7 @@ members = [
     "trinity/jack/lsp/rs",
     "trinity/ram/rs",
     "trinity/plugin/rs",
-    "framework/graph/rs",
+    "framework/surface/node-graph/rs",
     "reasoning/mindmap/wires/rs",
     "reasoning/mindmap/plugin/rs",
     "s/plugin/rs",
@@ -82,7 +80,7 @@ members = [
     "framework/renderer/wgpu/rs",
     "shooting/rs",
     "shooting/plugin/rs",
-    "raster/rs",
+    "framework/surface/paint/rs",
     "raster/plugin/rs",
     "lowpoly/core/rs",
     "lowpoly/plugin/rs",
@@ -105,8 +103,6 @@ members = [
     "imperative/module/text/rs",
     "cad/rs",
     "cad/plugin/rs",
-    "animate/core/rs",
-
     # 🧹 Adopted 2026-07-18 (RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN): these crates lived
     # inside the workspace dir but were neither members nor excluded, so they could
     # not run any cargo command standalone. Adoption fixes real breakage.
@@ -125,6 +121,8 @@ members = [
     "compose/client/bin/store/rs",
     "animate/core/rs",
     "animate/video/rs",
+    "animate/present/rs",
+    "animate/plugin/rs",
     "norm/core/rs",
     "norm/din/4108/rs",
     "norm/din/en/16798/rs",
@@ -140,6 +138,8 @@ members = [
     "norm/en/1998/rs",
     "norm/en/1999/rs",
     "energy/engine/rs",
+    "architect/program/rs",
+    "architect/plugin/rs",
 ]
 
 resolver = "2"

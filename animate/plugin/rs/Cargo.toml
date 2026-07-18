@@ -1,0 +1,27 @@
+[package]
+name = "animate-plugin"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[package.metadata.component]
+package = "semio:animate"
+
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "animate"
+ports = { react = 6051, wgpu = 6151 }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "lib.rs"
+
+[dependencies]
+animate_present = { path = "../../present/rs" }
+vcs = { path = "../../../vcs/rs" }
+semio-framework-core = { path = "../../../framework/core/rs" }
+semio-framework-os = { path = "../../../framework/product/os/core/rs" }
+semio-framework-plugin = { path = "../../../framework/plugin/rs" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

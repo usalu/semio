@@ -136,7 +136,7 @@ pub mod force {
             }
             if positions[i].hypot() < 1e-9 {
                 let t = i as f64;
-                let ang = t * 2.39996322972865332;
+                let ang = t * 2.399_963_229_728_653_5;
                 let r = 10.0 + t.sqrt() * 22.0;
                 let jx = (rand_unit_interval(&mut rng) - 0.5) * 6.0;
                 let jy = (rand_unit_interval(&mut rng) - 0.5) * 6.0;
@@ -274,11 +274,11 @@ pub mod tidy_tree {
             };
             nodes[i].parent = Some(pidx);
         }
-        for p in 0..=super_idx {
-            nodes[p].children.clear();
+        for node in nodes.iter_mut() {
+            node.children.clear();
         }
         for i in 0..super_idx {
-            let pi = nodes[i].parent.unwrap();
+            let pi = nodes[i].parent.expect("parent set for every non-super node in the loop above");
             nodes[pi].children.push(i);
         }
         for p in 0..=super_idx {
@@ -384,7 +384,6 @@ pub mod tidy_tree {
     }
 
     fn buchheim_apportion(nodes: &mut [BuchheimNode], v: usize, default_ancestor: usize, distance: f64) -> usize {
-        let mut default_ancestor = default_ancestor;
         let w = match buchheim_left_brother(nodes, v) {
             Some(w) => w,
             None => return default_ancestor,
@@ -394,36 +393,30 @@ pub mod tidy_tree {
         let mut vol = buchheim_leftmost_sibling(nodes, v).unwrap_or(v);
         let mut vor = v;
         let mut sir = nodes[v].mod_;
-        let mut sor = nodes[v].mod_;
         let mut sil = nodes[vil].mod_;
-        let mut sol = nodes[vol].mod_;
         loop {
             let vil_r = buchheim_next_right(nodes, vil);
             let vir_l = buchheim_next_left(nodes, vir);
             if vil_r.is_none() || vir_l.is_none() {
                 break;
             }
-            vil = vil_r.unwrap();
-            vir = vir_l.unwrap();
+            vil = vil_r.expect("checked Some above");
+            vir = vir_l.expect("checked Some above");
             let vol_l = buchheim_next_left(nodes, vol);
             let vor_r = buchheim_next_right(nodes, vor);
             if vol_l.is_none() || vor_r.is_none() {
                 break;
             }
-            vol = vol_l.unwrap();
-            vor = vor_r.unwrap();
+            vol = vol_l.expect("checked Some above");
+            vor = vor_r.expect("checked Some above");
             nodes[vor].ancestor = v;
             let shift = (nodes[vil].x + sil) - (nodes[vir].x + sir) + distance;
             if shift > 0.0 {
-                let a = default_ancestor;
-                buchheim_move_subtree(nodes, a, v, shift);
+                buchheim_move_subtree(nodes, default_ancestor, v, shift);
                 sir += shift;
-                sor += shift;
             }
             sil += nodes[vil].mod_;
             sir += nodes[vir].mod_;
-            sol += nodes[vol].mod_;
-            sor += nodes[vor].mod_;
         }
         default_ancestor
     }
@@ -444,7 +437,7 @@ pub mod tidy_tree {
         }
         buchheim_execute_shifts(nodes, v);
         let c0 = nodes[v].children[0];
-        let c1 = *nodes[v].children.last().unwrap();
+        let c1 = *nodes[v].children.last().expect("children non-empty per the is_empty check above");
         let mid = (nodes[c0].x + nodes[c1].x) * 0.5;
         if let Some(w) = buchheim_left_brother(nodes, v) {
             nodes[v].x = nodes[w].x + distance;
@@ -495,8 +488,8 @@ pub mod tidy_tree {
 
 // #region 📐Routing
 pub mod routing {
-    use mathematical_geometry::{append_shape_to_path, distance_between, normalize_or_zero, ray_from_origin_to_axis_aligned_rectangle_edge, Arc, BezPath, Circle, CubicBez, Point, Rect, Vec2};
     use mathematical_geometry::clamp_f64;
+    use mathematical_geometry::{append_shape_to_path, distance_between, normalize_or_zero, ray_from_origin_to_axis_aligned_rectangle_edge, Arc, BezPath, Circle, CubicBez, Point, Rect, Vec2};
     use mathematical_graph::NodeShape;
 
     /// 🕳️ Even-odd clip path: local outer bounds minus the parent node body (keeps handle paint outside transparent nodes).
@@ -519,7 +512,7 @@ pub mod routing {
     }
 
     /// 🧭 Outward normal for a handle on a node rim: edge-normal on rectangles, radial on circles.
-    pub fn handle_outward_at_node_rim(handle: Point, node_center: Point, node_shape: NodeShape, node_radius: f64, node_width: f64, node_height: f64) -> Option<Vec2> {
+    pub fn handle_outward_at_node_rim(handle: Point, node_center: Point, node_shape: NodeShape, _node_radius: f64, node_width: f64, node_height: f64) -> Option<Vec2> {
         match node_shape {
             NodeShape::Circle => {
                 let outward = normalize_or_zero(handle - node_center);
@@ -597,7 +590,6 @@ pub mod routing {
     }
 
     /// 🧭 Rectangle handle `angle` is **0 at top edge center (north)**, increasing **counter‑clockwise** in board space (`y` down): `π/4` NW corner, `π/2` west midpoint, `π` south, `3π/2` east; circles keep **east‑zero** `atan2(dy,dx)` convention.
-    #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
     pub fn handle_position_on_rectangle(center: Point, width: f64, height: f64, angle: f64) -> Point {
         let hw = width / 2.0;
         let hh = height / 2.0;

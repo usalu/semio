@@ -17,6 +17,7 @@ use brepkit_math::nurbs::surface::NurbsSurface;
 use brepkit_math::nurbs::surface_fitting::interpolate_surface;
 use brepkit_math::surfaces::{ConicalSurface, CylindricalSurface, SphericalSurface, ToroidalSurface};
 use brepkit_math::vec::{Point3, Vec3 as BkVec3};
+use brepkit_operations::blend_ops::fillet_v2;
 use brepkit_operations::boolean::{boolean, compound_cut, BooleanOp};
 use brepkit_operations::chamfer::{chamfer, chamfer_asymmetric};
 use brepkit_operations::copy::copy_solid;
@@ -24,7 +25,7 @@ use brepkit_operations::defeature::defeature;
 use brepkit_operations::draft::draft;
 use brepkit_operations::extrude::extrude;
 use brepkit_operations::fill_face::fill_coons_patch;
-use brepkit_operations::fillet::{fillet_rolling_ball, fillet_variable, FilletRadiusLaw};
+use brepkit_operations::fillet::{fillet_variable, FilletRadiusLaw};
 use brepkit_operations::helix::{helical_sweep, make_helix_curve};
 use brepkit_operations::loft::{loft, loft_smooth};
 use brepkit_operations::measure;
@@ -49,7 +50,6 @@ use brepkit_topology::compound::CompoundId;
 use brepkit_topology::edge::{Edge, EdgeCurve, EdgeId};
 use brepkit_topology::explorer;
 use brepkit_topology::face::{FaceId, FaceSurface};
-use brepkit_topology::shell::ShellId;
 use brepkit_topology::solid::SolidId;
 use brepkit_topology::vertex::{Vertex, VertexId};
 use brepkit_topology::wire::{OrientedEdge, Wire, WireId};
@@ -100,7 +100,6 @@ enum Entity {
     Edge(EdgeId),
     Wire(WireId),
     Face(FaceId),
-    Shell(ShellId),
     Solid(SolidId),
     Compound(CompoundId),
     Curve(KernelCurve),
@@ -195,13 +194,6 @@ impl BrepkitKernel {
         }
     }
 
-    fn compound_id(&self, handle: &GeometryHandle) -> Result<CompoundId, BrepError> {
-        match &self.entry(handle)?.entity {
-            Entity::Compound(id) => Ok(*id),
-            _ => Err(BrepError::InvalidInput(format!("{} is not a compound", handle.as_str()))),
-        }
-    }
-
     fn solid_ids_from_handle(&self, handle: &GeometryHandle) -> Result<Vec<SolidId>, BrepError> {
         match &self.entry(handle)?.entity {
             Entity::Solid(id) => Ok(vec![*id]),
@@ -289,8 +281,8 @@ impl BrepkitKernel {
     fn edge_lines_flat(edges: &brepkit_operations::tessellate::EdgeLines) -> Vec<f32> {
         let mut flat = Vec::new();
         for index in 0..edges.offsets.len() {
-            let start = edges.offsets[index] as usize;
-            let end = edges.offsets.get(index + 1).copied().unwrap_or(edges.positions.len()) as usize;
+            let start = edges.offsets[index];
+            let end = edges.offsets.get(index + 1).copied().unwrap_or(edges.positions.len());
             let segment = &edges.positions[start..end];
             for pair in segment.windows(2) {
                 let a = &pair[0];
@@ -755,6 +747,7 @@ impl BrepkitKernel {
         Ok(self.register_entity(GeometryKind::Compound, Entity::Compound(compound)))
     }
 
+    #[allow(clippy::too_many_arguments, reason = "mirrors kernel_3d_engine::BrepKernel::grid_pattern's shape 1:1 (that trait is out of this crate's scope to restructure)")]
     pub fn grid_pattern_sync(&mut self, shape: &GeometryHandle, dir_x: Vec3, dir_y: Vec3, spacing_x: f64, spacing_y: f64, count_x: usize, count_y: usize) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let compound = grid_pattern(&mut self.topo, solid, v3(dir_x), v3(dir_y), spacing_x, spacing_y, count_x, count_y).map_err(Self::map_err)?;
@@ -764,7 +757,7 @@ impl BrepkitKernel {
     pub fn fillet_sync(&mut self, shape: &GeometryHandle, radius: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let edges = explorer::solid_edges(&self.topo, solid).map_err(Self::map_topo_err)?;
-        let solid = fillet_rolling_ball(&mut self.topo, solid, &edges, radius).map_err(Self::map_err)?;
+        let solid = fillet_v2(&mut self.topo, solid, &edges, radius).map_err(Self::map_err)?.solid;
         Ok(self.register_solid(solid))
     }
 
@@ -784,12 +777,12 @@ impl BrepkitKernel {
     }
 
     /// 🎯 Fillets only `edges` instead of every edge of the solid — brepkit's
-    /// `fillet_rolling_ball` already accepts an explicit edge list, `fillet_sync` just always
+    /// `fillet_v2` already accepts an explicit edge list, `fillet_sync` just always
     /// passes every edge; this exposes the selective-edge case directly.
     pub fn fillet_edges_sync(&mut self, shape: &GeometryHandle, edges: &[GeometryHandle], radius: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let edge_ids: Vec<EdgeId> = edges.iter().map(|handle| self.edge_id(handle)).collect::<Result<_, _>>()?;
-        let solid = fillet_rolling_ball(&mut self.topo, solid, &edge_ids, radius).map_err(Self::map_err)?;
+        let solid = fillet_v2(&mut self.topo, solid, &edge_ids, radius).map_err(Self::map_err)?.solid;
         Ok(self.register_solid(solid))
     }
 
@@ -1358,8 +1351,8 @@ impl BrepkitKernel {
     /// 🌉 GLB import standardized on the hand-rolled `GlbImporter` codec, converted into a solid the same way `import_dwg_sync`/`import_stl_sync` do.
     pub fn import_glb_sync(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
         let mesh = semio_framework_core::GlbImporter.import(data).map_err(BrepError::Operation)?;
-        let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.chunks_exact(3).map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
-        let normals: Vec<brepkit_math::vec::Vec3> = mesh.normals.chunks_exact(3).map(|c| brepkit_math::vec::Vec3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+        let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+        let normals: Vec<brepkit_math::vec::Vec3> = mesh.normals.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Vec3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
         let triangle_mesh = brepkit_operations::tessellate::TriangleMesh { positions, normals, indices: mesh.indices.clone() };
         let solid = import_mesh(&mut self.topo, &triangle_mesh, tolerance).map_err(Self::map_io_err)?;
         Ok(self.register_solid(solid))
@@ -1401,8 +1394,8 @@ impl BrepkitKernel {
     pub fn import_dwg_sync(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
         let drawing = semio_framework_core::dwg_from_bytes(data).map_err(BrepError::Operation)?;
         let mesh = semio_framework_core::dwg_drawing_to_mesh(&drawing);
-        let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.chunks_exact(3).map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
-        let normals: Vec<brepkit_math::vec::Vec3> = mesh.normals.chunks_exact(3).map(|c| brepkit_math::vec::Vec3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+        let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+        let normals: Vec<brepkit_math::vec::Vec3> = mesh.normals.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Vec3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
         let triangle_mesh = brepkit_operations::tessellate::TriangleMesh { positions, normals, indices: mesh.indices.clone() };
         let solid = import_mesh(&mut self.topo, &triangle_mesh, tolerance).map_err(Self::map_io_err)?;
         Ok(self.register_solid(solid))
@@ -1420,10 +1413,7 @@ impl BrepkitKernel {
                 // 🧵 Tessellate each face in parallel (faces are independent); the triangle-index
                 // merge below stays sequential since index offsets depend on prior faces' output.
                 let faces = explorer::solid_faces(&self.topo, *solid).map_err(Self::map_topo_err)?;
-                let face_meshes: Result<Vec<_>, BrepError> = faces
-                    .par_iter()
-                    .map(|&face| tessellate_with_tolerance(&self.topo, face, tol, 0.2).map_err(Self::map_err).map(|mesh| (face, mesh)))
-                    .collect();
+                let face_meshes: Result<Vec<_>, BrepError> = faces.par_iter().map(|&face| tessellate_with_tolerance(&self.topo, face, tol, 0.2).map_err(Self::map_err).map(|mesh| (face, mesh))).collect();
                 let mut transfer = MeshTransfer { position: Vec::new(), normal: Vec::new(), index: Vec::new(), edges: Vec::new(), points: Vec::new(), face_groups: Vec::new() };
                 for (face, mesh) in face_meshes? {
                     let base = transfer.position.len() / 3;
@@ -1528,7 +1518,6 @@ impl BrepkitKernel {
                 let triangle_count = index.len() as u32;
                 Ok(MeshTransfer { position, normal, index, edges: Vec::new(), points: Vec::new(), face_groups: vec![FaceGroup { start: 0, count: triangle_count, entity_id: handle.as_str().to_string() }] })
             }
-            Entity::Shell(_) => Ok(MeshTransfer::default()),
         }
     }
 
@@ -1845,11 +1834,7 @@ impl BrepKernel for BrepkitKernel {
 // #region 🔖MeshInterop
 /// 🌉 Flattens a kernel `MeshTransfer` (position/normal/index/face_groups) into framework-core `MeshData`, reusing `mesh_from_indexed_with_face_groups` so picked triangles still resolve back to their B-Rep face id.
 pub fn mesh_data_from_mesh_transfer(transfer: &MeshTransfer) -> semio_framework_core::MeshData {
-    let face_groups: Vec<(u32, u32, u32)> = transfer
-        .face_groups
-        .iter()
-        .map(|group| (group.entity_id.parse().unwrap_or(0), group.start, group.count))
-        .collect();
+    let face_groups: Vec<(u32, u32, u32)> = transfer.face_groups.iter().map(|group| (group.entity_id.parse().unwrap_or(0), group.start, group.count)).collect();
     semio_framework_core::mesh_from_indexed_with_face_groups(&transfer.position, &transfer.normal, &transfer.index, &face_groups)
 }
 
@@ -2039,6 +2024,8 @@ mod tests {
         assert_eq!(mesh.face_ids.len(), mesh.triangle_count());
     }
 
+    type SolidCodec = (Box<dyn SolidExporter>, Box<dyn SolidImporter>, f64);
+
     #[test]
     fn solid_exporters_and_importers_round_trip_a_box_per_format() {
         let mut kernel = BrepkitKernel::new();
@@ -2046,7 +2033,7 @@ mod tests {
         let original_volume = kernel.volume_sync(&solid).unwrap();
         // 🔩 STEP is exact NURBS round-trip; STL/OBJ/GLB reimport a re-tessellated mesh, so allow a
         // small deflection-driven volume error instead of an exact match.
-        let codecs: Vec<(Box<dyn SolidExporter>, Box<dyn SolidImporter>, f64)> = vec![
+        let codecs: Vec<SolidCodec> = vec![
             (Box::new(StepSolidExporter), Box::new(StepSolidImporter), 1e-6),
             (Box::new(StlSolidExporter), Box::new(StlSolidImporter), 0.05),
             (Box::new(ObjSolidExporter), Box::new(ObjSolidImporter), 0.05),
@@ -2055,7 +2042,7 @@ mod tests {
         for (exporter, importer, tolerance) in codecs {
             let format = exporter.format();
             assert_eq!(format, importer.format());
-            let bytes = exporter.export(&kernel, &[solid.clone()], 0.1).expect("export");
+            let bytes = exporter.export(&kernel, std::slice::from_ref(&solid), 0.1).expect("export");
             assert!(!bytes.is_empty(), "{format:?} export must not be empty");
             let imported = importer.import(&mut kernel, &bytes, 0.1).expect("import");
             assert!(!imported.is_empty(), "{format:?} import must yield at least one solid");
@@ -2063,10 +2050,7 @@ mod tests {
             for handle in &imported {
                 imported_volume += kernel.volume_sync(handle).unwrap();
             }
-            assert!(
-                (imported_volume - original_volume).abs() < original_volume * tolerance,
-                "{format:?} round trip should preserve volume: original={original_volume} imported={imported_volume}"
-            );
+            assert!((imported_volume - original_volume).abs() < original_volume * tolerance, "{format:?} round trip should preserve volume: original={original_volume} imported={imported_volume}");
             for handle in &imported {
                 let mesh = kernel.tessellate_sync(handle, 0.1).unwrap();
                 assert!(!mesh.position.is_empty(), "{format:?} round-tripped solid must still tessellate to a non-empty mesh");
@@ -2202,7 +2186,7 @@ mod tests {
     fn step_export_import_roundtrip_stub() {
         let mut kernel = BrepkitKernel::new();
         let solid = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
-        let step = kernel.export_step_sync(&[solid.clone()]).unwrap();
+        let step = kernel.export_step_sync(std::slice::from_ref(&solid)).unwrap();
         assert!(step.contains("ISO-10303"));
         let imported = kernel.import_step_sync(&step).unwrap();
         assert_eq!(imported.len(), 1);
@@ -2220,9 +2204,7 @@ mod tests {
     #[test]
     fn sweep_wire_profile_produces_tube_mesh() {
         let mut kernel = BrepkitKernel::new();
-        let path_wire = kernel
-            .polyline_wire_sync(&[[0.0, 0.0, 0.0], [4.0, 0.0, 0.0]])
-            .unwrap();
+        let path_wire = kernel.polyline_wire_sync(&[[0.0, 0.0, 0.0], [4.0, 0.0, 0.0]]).unwrap();
         let profile_wire = kernel.regular_polygon_wire_sync(0.08, 8).unwrap();
         let profile_face = kernel.planar_face_from_wire_sync(&profile_wire).unwrap();
         let solid = kernel.sweep_sync(&profile_face, &path_wire).unwrap();

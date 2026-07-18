@@ -14,12 +14,35 @@ variant = "gis2d"
 aliases = ["gis 2d"]
 app = "gis2d"
 ports = { react = 6040, wgpu = 6140 }
+engines = ["framework/surface/tiled-map/rs"]
 
 [[package.metadata.semio.playground]]
 variant = "gis3d"
 aliases = ["gis 3d"]
 app = "gis3d"
 ports = { react = 6083, wgpu = 6183 }
+engines = ["framework/surface/terrain/rs"]
+
+[[package.metadata.semio.assets]]
+kind = "tile-proxy"
+route = "/osm"
+app = "gis2d"
+upstream = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+cache = "osm-tiles"
+
+[[package.metadata.semio.assets]]
+kind = "tile-proxy"
+route = "/vt"
+app = "gis2d"
+upstream = "https://tiles.openfreemap.org/planet"
+cache = "openfreemap-vt"
+
+[[package.metadata.semio.assets]]
+kind = "tile-proxy"
+route = "/dem"
+app = "gis3d"
+upstream = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
+cache = "terrarium-dem"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -28,9 +51,13 @@ path = "lib.rs"
 [dependencies]
 semio-framework-os = { path = "../../../framework/product/os/core/rs" }
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }
-gis_2d = { path = "../../2d/rs" }
-gis_3d = { path = "../../3d/rs" }
+framework_surface_tiled_map = { path = "../../../framework/surface/tiled-map/rs" }
+framework_surface_terrain = { path = "../../../framework/surface/terrain/rs" }
 vcs = { path = "../../../vcs/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.106"
+web-sys = { version = "0.3.98", features = ["Window"] }
 

@@ -1,19 +1,13 @@
 //! 🔗 Sequence plugin — declarative sequence play app bundled as a hot-swappable WASM component.
 
 use infinite_board_port_directed_dag::{DagFixture, DagLayoutOptions, DagLayoutOrientation};
-use sequence_core::{
-    default_fixture, sequence_fixture_ops, SequenceFixture, SequenceHost, SequenceOp, SequenceStep, SlotRef,
-    SEQUENCE_FIXTURE_SCHEMA,
+use semio_framework_plugin::{
+    app_labels, build_node_graph_scene, build_text_editor_scene, create_default_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids as sdk_selection_ids, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree,
+    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, NodeGraphScene, OsMediaCapability, PanelGroup,
+    PanelTreeBuilder, ResourceKindSpec, SurfaceKind, TextEditorScene, UiControlNode, UiInspectorFieldGroup, UiNode, UiToggleNode, UiTreeItemNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-use semio_framework_plugin::{SurfaceKind, PanelGroup,
-    build_node_graph_scene, build_text_editor_scene, create_default_layout,
-    ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text,
-    ActionArgDef, ActionArgOption, ActionEmit, App, ActionDescriptor, AppLabelsOverlay, DocumentApp, DocumentView, NodeGraphScene, TextEditorScene,
-    UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiToggleNode,
-    UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+use sequence_core::{default_fixture, sequence_fixture_ops, SequenceFixture, SequenceHost, SequenceOp, SequenceStep, SlotRef, SEQUENCE_FIXTURE_SCHEMA};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -80,11 +74,7 @@ struct MediaGraphEdgeRecord {
 
 //#region 🔖DocumentHelpers
 fn sequence_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: SEQUENCE_PLAY_APP_ID.into(),
-        action: action.into(),
-        args,
-    }
+    ActionDescriptor { controller_id: SEQUENCE_PLAY_APP_ID.into(), action: action.into(), args }
 }
 
 /// 🧰 Builds a {@link SequenceHost} seeded from a projection so an action can mutate it (with all the
@@ -94,10 +84,7 @@ fn host_from_fixture(fixture: &SequenceFixture) -> SequenceHost {
 }
 
 fn split_endpoint(endpoint: &str) -> (String, String) {
-    endpoint
-        .split_once(':')
-        .map(|(node, port)| (node.to_string(), port.to_string()))
-        .unwrap_or_else(|| (endpoint.to_string(), "next".into()))
+    endpoint.split_once(':').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), "next".into()))
 }
 
 fn fixture_to_media_graph(fixture: &DagFixture) -> (String, String) {
@@ -111,24 +98,8 @@ fn fixture_to_media_graph(fixture: &DagFixture) -> (String, String) {
             y: node.y,
             width: node.width,
             height: node.height,
-            inputs: node
-                .inputs()
-                .iter()
-                .filter(|port| port.visible)
-                .map(|port| MediaGraphPortRecord {
-                    id: format!("{}:{}", node.id, port.id),
-                    label: Some(port.label.clone()),
-                })
-                .collect(),
-            outputs: node
-                .outputs()
-                .iter()
-                .filter(|port| port.visible)
-                .map(|port| MediaGraphPortRecord {
-                    id: format!("{}:{}", node.id, port.id),
-                    label: Some(port.label.clone()),
-                })
-                .collect(),
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| MediaGraphPortRecord { id: format!("{}:{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| MediaGraphPortRecord { id: format!("{}:{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
         })
         .collect();
     let edges: Vec<MediaGraphEdgeRecord> = fixture
@@ -137,62 +108,12 @@ fn fixture_to_media_graph(fixture: &DagFixture) -> (String, String) {
         .map(|edge| {
             let (source_node_id, source_port_id) = split_endpoint(&edge.source);
             let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-            MediaGraphEdgeRecord {
-                id: edge.id.clone(),
-                source_node_id,
-                source_port_id,
-                target_node_id,
-                target_port_id,
-            }
+            MediaGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id }
         })
         .collect();
-    (
-        serde_json::to_string(&nodes).unwrap_or_else(|_| "[]".into()),
-        serde_json::to_string(&edges).unwrap_or_else(|_| "[]".into()),
-    )
-}
-//#endregion 🔖DocumentHelpers
-
-//#region 🔖TreeHelpers
-fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
-    UiTreeItemNode {
-        id: id.into(),
-        label: label.into(),
-        description: None,
-        icon_id: None,
-        selected: None,
-        default_open: None,
-        action: None,
-        hover_action: None,
-        unhover_action: None,
-        actions: None,
-        draggable: None,
-        drag_data: None,
-        items: None,
-        control: None,
-        is_hidden: None,
-    }
+    (serde_json::to_string(&nodes).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&edges).unwrap_or_else(|_| "[]".into()))
 }
 
-fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
-    UiTreeItemNode {
-        id: id.into(),
-        label: label.into(),
-        description,
-        icon_id: None,
-        selected: None,
-        default_open: None,
-        action: Some(action),
-        hover_action: None,
-        unhover_action: None,
-        actions: None,
-        draggable: None,
-        drag_data: None,
-        items: None,
-        control: None,
-        is_hidden: None,
-    }
-}
 fn is_control_kind(kind: &str) -> bool {
     matches!(kind, "control.if" | "control.while" | "control.repeat")
 }
@@ -216,12 +137,7 @@ fn slot_label<'a>(slot_name: &'a str, labels: &'a SequenceLabels) -> &'a str {
 }
 
 fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: &SequenceLabels) -> UiTreeItemNode {
-    let mut item = tree_item_with_action(
-        format!("sequence-play-document.step.{}", step.id),
-        format!("{} ({})", step.id, step.kind),
-        Some(step.kind.clone()),
-        sequence_action("setSelection", Some(json!({ "ids": [step.id.clone()] }))),
-    );
+    let mut item = tree_item_with_action(format!("sequence-play-document.step.{}", step.id), format!("{} ({})", step.id, step.kind), Some(step.kind.clone()), sequence_action("setSelection", Some(json!({ "ids": [step.id.clone()] }))));
     if is_control_kind(&step.kind) {
         item.control = Some(UiControlNode::Toggle(UiToggleNode {
             id: format!("sequence-play-document.collapse.{}", step.id),
@@ -233,14 +149,7 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
         let slot_items: Vec<UiTreeItemNode> = control_slots(&step.kind)
             .iter()
             .map(|slot_name| {
-                let nested: Vec<UiTreeItemNode> = fixture
-                    .steps
-                    .iter()
-                    .filter(|entry| {
-                        entry.slot.as_ref().is_some_and(|slot| slot.owner == step.id && slot.name == *slot_name)
-                    })
-                    .map(|entry| build_step_tree_item(entry, fixture, labels))
-                    .collect();
+                let nested: Vec<UiTreeItemNode> = fixture.steps.iter().filter(|entry| entry.slot.as_ref().is_some_and(|slot| slot.owner == step.id && slot.name == *slot_name)).map(|entry| build_step_tree_item(entry, fixture, labels)).collect();
                 UiTreeItemNode {
                     id: format!("sequence-play-document.slot.{}.{}", step.id, slot_name),
                     label: slot_label(slot_name, labels).into(),
@@ -267,107 +176,41 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
     }
     item
 }
-//#endregion 🔖TreeHelpers
+//#endregion 🔖DocumentHelpers
 
 //#region 🔖Terminology
 /// 🗣️ Complete UI label set for the sequence app; one field per label makes every locale combination compile-checked.
-struct SequenceLabels {
-    steps: &'static str,
-    flow_edges: &'static str,
-    select_prompt: &'static str,
-    step_not_found: &'static str,
-    kind: &'static str,
-    params: &'static str,
-    id: &'static str,
-    step: &'static str,
-    action_set_state: &'static str,
-    action_log_print: &'static str,
-    action_if: &'static str,
-    action_while: &'static str,
-    action_add: &'static str,
-    add_to: &'static str,
-    run: &'static str,
-    stop: &'static str,
-    reorganize: &'static str,
-    layout: &'static str,
-    left_to_right: &'static str,
-    top_to_bottom: &'static str,
-    window_main: &'static str,
-    window_script: &'static str,
-    window_compiled: &'static str,
-    none: &'static str,
-    slot: &'static str,
-    slot_then: &'static str,
-    slot_else: &'static str,
-    slot_body: &'static str,
-}
-
-const SEQUENCE_LABELS_NATIVE_EN: SequenceLabels = SequenceLabels {
-    steps: "Steps",
-    flow_edges: "Flow edges",
-    select_prompt: "Select a step in the canvas or document.",
-    step_not_found: "Step not found",
-    kind: "Kind",
-    params: "Params",
-    id: "Id",
-    step: "Step",
-    action_set_state: "Set state",
-    action_log_print: "Print log",
-    action_if: "If",
-    action_while: "While",
-    action_add: "Add",
-    add_to: "Add to",
-    run: "Run",
-    stop: "Stop",
-    reorganize: "Reorganize",
-    layout: "Layout",
-    left_to_right: "Left to right",
-    top_to_bottom: "Top to bottom",
-    window_main: "Sequence",
-    window_script: "Script",
-    window_compiled: "DSL",
-    none: "(none)",
-    slot: "slot",
-    slot_then: "Then",
-    slot_else: "Else",
-    slot_body: "Body",
-};
-
-const SEQUENCE_LABELS_NATIVE_DE: SequenceLabels = SequenceLabels {
-    steps: "Schritte",
-    flow_edges: "Ablaufkanten",
-    select_prompt: "Wähle einen Schritt in der Zeichenfläche oder im Dokument aus.",
-    step_not_found: "Schritt nicht gefunden",
-    kind: "Art",
-    params: "Parameter",
-    id: "ID",
-    step: "Schritt",
-    action_set_state: "Zustand setzen",
-    action_log_print: "Log ausgeben",
-    action_if: "Wenn",
-    action_while: "Solange",
-    action_add: "Addieren",
-    add_to: "Hinzufügen zu",
-    run: "Ausführen",
-    stop: "Stopp",
-    reorganize: "Neu anordnen",
-    layout: "Layout",
-    left_to_right: "Links nach rechts",
-    top_to_bottom: "Oben nach unten",
-    window_main: "Sequenz",
-    window_script: "Skript",
-    window_compiled: "DSL",
-    none: "(keine)",
-    slot: "Slot",
-    slot_then: "Dann",
-    slot_else: "Sonst",
-    slot_body: "Rumpf",
-};
-
-/// 🗣️ Resolves the active label set from the shell-provided locale; this app has no terminology variants.
-fn sequence_labels(view_state: &ViewState) -> &'static SequenceLabels {
-    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-    if is_de { &SEQUENCE_LABELS_NATIVE_DE } else { &SEQUENCE_LABELS_NATIVE_EN }
+app_labels! {
+    struct SequenceLabels {
+        steps: &'static str = en: "Steps", de: "Schritte";
+        flow_edges: &'static str = en: "Flow edges", de: "Ablaufkanten";
+        select_prompt: &'static str = en: "Select a step in the canvas or document.", de: "Wähle einen Schritt in der Zeichenfläche oder im Dokument aus.";
+        step_not_found: &'static str = en: "Step not found", de: "Schritt nicht gefunden";
+        kind: &'static str = en: "Kind", de: "Art";
+        params: &'static str = en: "Params", de: "Parameter";
+        id: &'static str = en: "Id", de: "ID";
+        step: &'static str = en: "Step", de: "Schritt";
+        action_set_state: &'static str = en: "Set state", de: "Zustand setzen";
+        action_log_print: &'static str = en: "Print log", de: "Log ausgeben";
+        action_if: &'static str = en: "If", de: "Wenn";
+        action_while: &'static str = en: "While", de: "Solange";
+        action_add: &'static str = en: "Add", de: "Addieren";
+        add_to: &'static str = en: "Add to", de: "Hinzufügen zu";
+        run: &'static str = en: "Run", de: "Ausführen";
+        stop: &'static str = en: "Stop", de: "Stopp";
+        reorganize: &'static str = en: "Reorganize", de: "Neu anordnen";
+        layout: &'static str = en: "Layout", de: "Layout";
+        left_to_right: &'static str = en: "Left to right", de: "Links nach rechts";
+        top_to_bottom: &'static str = en: "Top to bottom", de: "Oben nach unten";
+        window_main: &'static str = en: "Sequence", de: "Sequenz";
+        window_script: &'static str = en: "Script", de: "Skript";
+        window_compiled: &'static str = en: "DSL", de: "DSL";
+        none: &'static str = en: "(none)", de: "(keine)";
+        slot: &'static str = en: "slot", de: "Slot";
+        slot_then: &'static str = en: "Then", de: "Dann";
+        slot_else: &'static str = en: "Else", de: "Sonst";
+        slot_body: &'static str = en: "Body", de: "Rumpf";
+    }
 }
 //#endregion 🔖Terminology
 
@@ -376,30 +219,32 @@ fn sequence_labels(view_state: &ViewState) -> &'static SequenceLabels {
 /// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
 /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
 fn sequence_action_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("addStep", "Add Step", "Schritt hinzufuegen"),
-        ("addStepToSlot", "Add Step To Slot", "Schritt zu Slot hinzufuegen"),
-        ("addStepDropped", "Add Step Dropped", "Schritt per Ablegen hinzufuegen"),
-        ("removeStep", "Remove Step", "Schritt entfernen"),
-        ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
-        ("moveMediaNode", "Move Step", "Schritt verschieben"),
-        ("connectMediaPorts", "Connect Steps", "Schritte verbinden"),
-        ("disconnectSteps", "Disconnect Steps", "Schritte trennen"),
-        ("setStepParams", "Set Step Params", "Schrittparameter festlegen"),
-        ("setStepCollapsed", "Set Step Collapsed", "Schritt einklappen"),
-        ("reorganize", "Reorganize", "Neu anordnen"),
-        ("nodeGraphEdit", "Node Graph Edit", "Knotengraph bearbeiten"),
-        ("nodeGraphViewport", "Node Graph Viewport", "Knotengraph-Ansicht"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("selectNode", "Select Node", "Knoten auswaehlen"),
-        ("nodeGraphSelect", "Node Graph Select", "Knotengraph-Auswahl"),
-        ("nodeGraphHover", "Node Graph Hover", "Knotengraph-Hover"),
-        ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
-        ("setOrientation", "Set Orientation", "Ausrichtung festlegen"),
-        ("run", "Run", "Ausfuehren"),
-        ("stop", "Stop", "Stopp"),
-    ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    localized_label_map(
+        is_de,
+        &[
+            ("addStep", "Add Step", "Schritt hinzufuegen"),
+            ("addStepToSlot", "Add Step To Slot", "Schritt zu Slot hinzufuegen"),
+            ("addStepDropped", "Add Step Dropped", "Schritt per Ablegen hinzufuegen"),
+            ("removeStep", "Remove Step", "Schritt entfernen"),
+            ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+            ("moveMediaNode", "Move Step", "Schritt verschieben"),
+            ("connectMediaPorts", "Connect Steps", "Schritte verbinden"),
+            ("disconnectSteps", "Disconnect Steps", "Schritte trennen"),
+            ("setStepParams", "Set Step Params", "Schrittparameter festlegen"),
+            ("setStepCollapsed", "Set Step Collapsed", "Schritt einklappen"),
+            ("reorganize", "Reorganize", "Neu anordnen"),
+            ("nodeGraphEdit", "Node Graph Edit", "Knotengraph bearbeiten"),
+            ("nodeGraphViewport", "Node Graph Viewport", "Knotengraph-Ansicht"),
+            ("setSelection", "Set Selection", "Auswahl festlegen"),
+            ("selectNode", "Select Node", "Knoten auswaehlen"),
+            ("nodeGraphSelect", "Node Graph Select", "Knotengraph-Auswahl"),
+            ("nodeGraphHover", "Node Graph Hover", "Knotengraph-Hover"),
+            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
+            ("setOrientation", "Set Orientation", "Ausrichtung festlegen"),
+            ("run", "Run", "Ausfuehren"),
+            ("stop", "Stop", "Stopp"),
+        ],
+    )
 }
 
 /// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_sequence_app`;
@@ -411,84 +256,18 @@ fn sequence_utility_labels(_is_de: bool) -> HashMap<String, String> {
 
 //#region 🔖Panels
 fn build_document_tree(fixture: &SequenceFixture, selected: &[String], labels: &SequenceLabels) -> UiNode {
-    let step_items: Vec<UiTreeItemNode> = fixture
-        .steps
-        .iter()
-        .filter(|step| step.slot.is_none())
-        .map(|step| build_step_tree_item(step, fixture, labels))
-        .collect();
-    let edge_items: Vec<UiTreeItemNode> = fixture
-        .edges
-        .iter()
-        .map(|edge| {
-            UiTreeItemNode {
-                id: format!("sequence-play-document.edge.{}", edge.id),
-                label: format!("{} → {}", edge.from, edge.to),
-                description: Some(edge.id.clone()),
-                icon_id: None,
-                selected: None,
-                default_open: None,
-                action: None,
-        hover_action: None,
-        unhover_action: None,
-        actions: None,
-                draggable: None,
-                drag_data: None,
-                items: None,
-                control: None,
-                is_hidden: None,
-            }
-        })
-        .collect();
-    UiNode::Tree(UiTreeNode {
-        sections: vec![
-            UiTreeSectionNode {
-                id: "sequence-play-document.steps".into(),
-                label: Some(labels.steps.into()),
-                default_open: Some(true),
-                items: if step_items.is_empty() {
-                    vec![tree_item("sequence-play-document.steps.empty", labels.none)]
-                } else {
-                    step_items
-                },
-            },
-            UiTreeSectionNode {
-                id: "sequence-play-document.edges".into(),
-                label: Some(labels.flow_edges.into()),
-                default_open: Some(false),
-                items: if edge_items.is_empty() {
-                    vec![tree_item("sequence-play-document.edges.empty", labels.none)]
-                } else {
-                    edge_items
-                },
-            },
-        ],
-        selected_ids: Some(selected.iter().map(|id| format!("sequence-play-document.step.{id}")).collect()),
-        highlighted_ids: None,
-        selection_change: None,
-        drop_action: None,
-    })
+    let step_items: Vec<UiTreeItemNode> = fixture.steps.iter().filter(|step| step.slot.is_none()).map(|step| build_step_tree_item(step, fixture, labels)).collect();
+    let edge_items: Vec<UiTreeItemNode> = fixture.edges.iter().map(|edge| tree_item_desc(format!("sequence-play-document.edge.{}", edge.id), format!("{} → {}", edge.from, edge.to), Some(edge.id.clone()))).collect();
+    PanelTreeBuilder::new("sequence-play-document")
+        .section_or_placeholder("sequence-play-document.steps", Some(labels.steps.into()), true, step_items, labels.none)
+        .section_or_placeholder("sequence-play-document.edges", Some(labels.flow_edges.into()), false, edge_items, labels.none)
+        .selected(selected.iter().map(|id| format!("sequence-play-document.step.{id}")).collect())
+        .build()
 }
 
 fn build_catalogue_tree(fixture: &SequenceFixture, labels: &SequenceLabels) -> UiNode {
-    let actions = [
-        ("state.set", labels.action_set_state),
-        ("log.print", labels.action_log_print),
-        ("control.if", labels.action_if),
-        ("control.while", labels.action_while),
-        ("math.add", labels.action_add),
-    ];
-    let mut items: Vec<UiTreeItemNode> = actions
-        .iter()
-        .map(|(kind, label)| {
-            tree_item_with_action(
-                format!("sequence-play-catalogue.action.{kind}"),
-                *label,
-                Some((*kind).into()),
-                sequence_action("addStep", Some(json!({ "kind": kind }))),
-            )
-        })
-        .collect();
+    let actions = [("state.set", labels.action_set_state), ("log.print", labels.action_log_print), ("control.if", labels.action_if), ("control.while", labels.action_while), ("math.add", labels.action_add)];
+    let mut items: Vec<UiTreeItemNode> = actions.iter().map(|(kind, label)| tree_item_with_action(format!("sequence-play-catalogue.action.{kind}"), *label, Some((*kind).into()), sequence_action("addStep", Some(json!({ "kind": kind }))))).collect();
     for owner in fixture.steps.iter().filter(|step| is_control_kind(&step.kind)) {
         for slot_name in control_slots(&owner.kind) {
             items.push(tree_item_with_action(
@@ -506,18 +285,7 @@ fn build_catalogue_tree(fixture: &SequenceFixture, labels: &SequenceLabels) -> U
             ));
         }
     }
-    UiNode::Tree(UiTreeNode {
-        sections: vec![UiTreeSectionNode {
-            id: "sequence-play-catalogue.actions".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()),
-            default_open: Some(true),
-            items,
-        }],
-        selected_ids: Some(vec![]),
-        highlighted_ids: None,
-        selection_change: None,
-        drop_action: None,
-    })
+    PanelTreeBuilder::new("sequence-play-catalogue").section("sequence-play-catalogue.actions", Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()), true, items).selected(vec![]).build()
 }
 
 fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String], labels: &SequenceLabels) -> UiNode {
@@ -529,10 +297,7 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String], labels: 
             children: vec![ui_text(labels.select_prompt)],
         }]);
     }
-    let steps: Vec<&SequenceStep> = selected
-        .iter()
-        .filter_map(|id| fixture.steps.iter().find(|step| &step.id == id))
-        .collect();
+    let steps: Vec<&SequenceStep> = selected.iter().filter_map(|id| fixture.steps.iter().find(|step| &step.id == id)).collect();
     if steps.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "sequence-play-inspector.missing".into(),
@@ -544,24 +309,12 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String], labels: 
     let step_ids: Vec<String> = steps.iter().map(|step| step.id.clone()).collect();
     let mut fields = vec![
         ui_inspector_readonly_field("sequence-play-inspector.kind", labels.kind, steps[0].kind.clone()),
-        ui_inspector_readonly_field(
-            "sequence-play-inspector.params",
-            labels.params,
-            serde_json::to_string(&steps[0].params).unwrap_or_else(|_| "{}".into()),
-        ),
+        ui_inspector_readonly_field("sequence-play-inspector.params", labels.params, serde_json::to_string(&steps[0].params).unwrap_or_else(|_| "{}".into())),
     ];
     if step_ids.len() == 1 {
-        fields.insert(
-            0,
-            ui_inspector_readonly_field("sequence-play-inspector.id", labels.id, step_ids[0].clone()),
-        );
+        fields.insert(0, ui_inspector_readonly_field("sequence-play-inspector.id", labels.id, step_ids[0].clone()));
     }
-    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
-        id: "sequence-play-inspector.step".into(),
-        label: labels.step.into(),
-        default_open: None,
-        fields,
-    }])
+    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "sequence-play-inspector.step".into(), label: labels.step.into(), default_open: None, fields }])
 }
 //#endregion 🔖Panels
 
@@ -571,20 +324,14 @@ fn render_main_graph(fixture: &SequenceFixture, runtime: &SequencePlayRuntime) -
     host.layout_expanded_slots();
     let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
     let viewport_json = serde_json::to_string(&fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
-    let selection_json = if runtime.selected_step_ids.is_empty() {
-        None
-    } else {
-        serde_json::to_string(&runtime.selected_step_ids).ok()
-    };
+    let selection_json = if runtime.selected_step_ids.is_empty() { None } else { serde_json::to_string(&runtime.selected_step_ids).ok() };
     build_node_graph_scene(
         SEQUENCE_PLAY_SURFACE_MAIN,
         SEQUENCE_PLAY_APP_ID,
         NodeGraphScene {
             editable: Some(true),
             selection_json,
-            context_menu_json: Some(
-                r#"[{"id":"delete-selection","label":"Delete selection","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
-            ),
+            context_menu_json: Some(r#"[{"id":"delete-selection","label":"Delete selection","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into()),
             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
         },
     )
@@ -597,20 +344,12 @@ fn render_script(fixture: &SequenceFixture, runtime: &SequencePlayRuntime) -> Ui
         text.push_str("\n\n# run result\n");
         text.push_str(&runtime.last_run_json);
     }
-    build_text_editor_scene(
-        SEQUENCE_PLAY_SURFACE_SCRIPT,
-        SEQUENCE_PLAY_APP_ID,
-        TextEditorScene::base(text, Some("imperative".into()), None),
-    )
+    build_text_editor_scene(SEQUENCE_PLAY_SURFACE_SCRIPT, SEQUENCE_PLAY_APP_ID, TextEditorScene::base(text, Some("imperative".into()), None))
 }
 
 fn render_compiled_dag(fixture: &SequenceFixture) -> UiNode {
     let host = host_from_fixture(fixture);
-    build_text_editor_scene(
-        SEQUENCE_PLAY_SURFACE_COMPILED,
-        SEQUENCE_PLAY_APP_ID,
-        TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None),
-    )
+    build_text_editor_scene(SEQUENCE_PLAY_SURFACE_COMPILED, SEQUENCE_PLAY_APP_ID, TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None))
 }
 //#endregion 🔖Render
 
@@ -622,11 +361,7 @@ struct SequencePlayApp {
 
 impl SequencePlayApp {
     /// 🔀 Runs a host mutation seeded from the current projection and diffs the result into typed ops.
-    fn ops_from_host_mutation(
-        &self,
-        fixture: &SequenceFixture,
-        mutate: impl FnOnce(&mut SequenceHost),
-    ) -> Vec<SequenceOp> {
+    fn ops_from_host_mutation(&self, fixture: &SequenceFixture, mutate: impl FnOnce(&mut SequenceHost)) -> Vec<SequenceOp> {
         let mut host = host_from_fixture(fixture);
         mutate(&mut host);
         sequence_fixture_ops(fixture, &host.fixture)
@@ -649,13 +384,7 @@ impl DocumentApp for SequencePlayApp {
         default_fixture()
     }
 
-    fn handle_action(
-        &mut self,
-        action: &str,
-        args: Option<&Value>,
-        doc: &DocumentView<'_, SequenceFixture>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<SequenceOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, SequenceFixture>, _view_state: &ViewState) -> ActionEmit<SequenceOp> {
         let fixture = doc.projection;
         match action {
             // 👁️ View actions — mutate ephemeral runtime, emit no ops.
@@ -688,11 +417,7 @@ impl DocumentApp for SequencePlayApp {
             }
             // 📷 Camera — a coalesced scalar op so a pan/zoom gesture is one undo step.
             "nodeGraphViewport" => {
-                if let Some(camera) = args
-                    .and_then(|value| value.get("viewportJson"))
-                    .and_then(|value| value.as_str())
-                    .and_then(|json| serde_json::from_str(json).ok())
-                {
+                if let Some(camera) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()).and_then(|json| serde_json::from_str(json).ok()) {
                     return ActionEmit::amend(vec![SequenceOp::SetCamera { camera }], "camera");
                 }
                 ActionEmit::default()
@@ -711,11 +436,7 @@ impl DocumentApp for SequencePlayApp {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print").to_string();
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
-                let picked = args
-                    .and_then(|value| value.get("pickedStepId"))
-                    .or_else(|| args.and_then(|value| value.get("owner")))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string);
+                let picked = args.and_then(|value| value.get("pickedStepId")).or_else(|| args.and_then(|value| value.get("owner"))).and_then(|value| value.as_str()).map(str::to_string);
                 let owner = args.and_then(|value| value.get("owner")).and_then(|value| value.as_str()).map(str::to_string);
                 let slot = args.and_then(|value| value.get("slotName")).and_then(|value| value.as_str()).map(str::to_string);
                 let is_slot = action == "addStepToSlot";
@@ -732,11 +453,7 @@ impl DocumentApp for SequencePlayApp {
                 ActionEmit::ops(sequence_fixture_ops(fixture, &host.fixture))
             }
             "removeStep" => {
-                let step_id = args
-                    .and_then(|value| value.get("id"))
-                    .or_else(|| args.and_then(|value| value.get("stepId")))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string);
+                let step_id = args.and_then(|value| value.get("id")).or_else(|| args.and_then(|value| value.get("stepId"))).and_then(|value| value.as_str()).map(str::to_string);
                 let Some(step_id) = step_id else { return ActionEmit::default() };
                 self.runtime.selected_step_ids.retain(|id| id != &step_id);
                 ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
@@ -795,11 +512,7 @@ impl DocumentApp for SequencePlayApp {
                 ActionEmit::default()
             }
             "setStepParams" => {
-                let step_id = args
-                    .and_then(|value| value.get("id"))
-                    .or_else(|| args.and_then(|value| value.get("stepId")))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string);
+                let step_id = args.and_then(|value| value.get("id")).or_else(|| args.and_then(|value| value.get("stepId"))).and_then(|value| value.as_str()).map(str::to_string);
                 let params = args.and_then(|value| value.get("params")).map(|value| value.to_string());
                 if let (Some(step_id), Some(params)) = (step_id, params) {
                     return ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
@@ -811,12 +524,7 @@ impl DocumentApp for SequencePlayApp {
             "setStepCollapsed" => {
                 let step_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
                 let Some(step_id) = step_id else { return ActionEmit::default() };
-                let collapsed = fixture
-                    .steps
-                    .iter()
-                    .find(|step| step.id == step_id)
-                    .map(|step| !step.collapsed)
-                    .unwrap_or(true);
+                let collapsed = fixture.steps.iter().find(|step| step.id == step_id).map(|step| !step.collapsed).unwrap_or(true);
                 ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
                     host.set_step_collapsed(&step_id, collapsed);
                 }))
@@ -829,22 +537,14 @@ impl DocumentApp for SequencePlayApp {
                 }))
             }
             "nodeGraphEdit" => {
-                let sub_ops = args
-                    .and_then(|value| value.get("ops"))
-                    .and_then(|value| value.as_array())
-                    .cloned()
-                    .unwrap_or_default();
+                let sub_ops = args.and_then(|value| value.get("ops")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
                 let selected = self.runtime.selected_step_ids.clone();
                 let mut cleared = false;
                 let ops = self.ops_from_host_mutation(fixture, |host| {
                     for op in &sub_ops {
                         match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
                             "setFixture" => {
-                                if let Some(fixture) = op
-                                    .get("fixtureJson")
-                                    .and_then(|value| value.as_str())
-                                    .and_then(|json| serde_json::from_str::<SequenceFixture>(json).ok())
-                                {
+                                if let Some(fixture) = op.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| serde_json::from_str::<SequenceFixture>(json).ok()) {
                                     let _ = host.replace_fixture(fixture);
                                 }
                             }
@@ -877,7 +577,7 @@ impl DocumentApp for SequencePlayApp {
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, SequenceFixture>, view_state: &ViewState) -> UiNode {
         let fixture = doc.projection;
-        let labels = sequence_labels(view_state);
+        let labels = resolve_labels::<SequenceLabels>(view_state);
         match body_key {
             SEQUENCE_PLAY_BODY_MAIN => render_main_graph(fixture, &self.runtime),
             SEQUENCE_PLAY_BODY_SCRIPT => render_script(fixture, &self.runtime),
@@ -890,41 +590,29 @@ impl DocumentApp for SequencePlayApp {
     }
 
     fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = sequence_labels(view_state);
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        AppLabelsOverlay {
-            window_kind_labels: HashMap::from([
-                (SEQUENCE_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()),
-                (SEQUENCE_PLAY_WINDOW_SCRIPT.to_string(), labels.window_script.to_string()),
-                (SEQUENCE_PLAY_WINDOW_COMPILED.to_string(), labels.window_compiled.to_string()),
-            ]),
-            panel_tab_labels: HashMap::new(),
-            mode_labels: HashMap::new(),
-            action_labels: sequence_action_labels(is_de),
-            utility_labels: sequence_utility_labels(is_de),
-            example_labels: HashMap::new(),
-            action_arg_labels: HashMap::new(),
-            dialog_labels: HashMap::new(),
-            introduction_labels: HashMap::new(),
-        }
+        let labels = resolve_labels::<SequenceLabels>(view_state);
+        let is_de = is_de_locale(view_state);
+        AppLabelsOverlay::default()
+            .window_kind_label(SEQUENCE_PLAY_WINDOW_MAIN, labels.window_main)
+            .window_kind_label(SEQUENCE_PLAY_WINDOW_SCRIPT, labels.window_script)
+            .window_kind_label(SEQUENCE_PLAY_WINDOW_COMPILED, labels.window_compiled)
+            .action_labels(sequence_action_labels(is_de))
+            .utility_labels(sequence_utility_labels(is_de))
     }
 }
 
 fn node_graph_selection_ids(args: Option<&Value>) -> Vec<String> {
-    args.and_then(|value| value.get("nodeIds"))
-        .and_then(|value| serde_json::from_value(value.clone()).ok())
-        .unwrap_or_else(|| selection_ids(args))
+    args.and_then(|value| value.get("nodeIds")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_else(|| selection_ids(args))
 }
 
+/// 🎯 Falls back to a singular `nodeId` key when the SDK's `ids`-array parsing comes up empty — this
+/// app's node-graph pointer actions address a step by `nodeId`, not `ids`.
 fn selection_ids(args: Option<&Value>) -> Vec<String> {
-    args.and_then(|value| value.get("ids"))
-        .and_then(|value| serde_json::from_value(value.clone()).ok())
-        .or_else(|| {
-            args.and_then(|value| value.get("nodeId"))
-                .and_then(|value| value.as_str())
-                .map(|id| vec![id.to_string()])
-        })
-        .unwrap_or_default()
+    let ids = sdk_selection_ids(args);
+    if !ids.is_empty() {
+        return ids;
+    }
+    args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).map(|id| vec![id.to_string()]).unwrap_or_default()
 }
 //#endregion 🔖SequencePlayApp
 
@@ -932,6 +620,14 @@ fn selection_ids(args: Option<&Value>) -> Vec<String> {
 fn create_sequence_app() -> App {
     App::from_builder(
         App::builder(SEQUENCE_PLAY_APP_ID, "Sequence").document(["semio", "sequence"])
+            .resource_kind(ResourceKindSpec {
+                id: "computation.sequence".into(),
+                name: "Sequence".into(),
+                source_format: "sequence.fixture".into(),
+                component_kind: "sequence".into(),
+                dimension: "graph".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+            })
             .icon_id("sequence")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -1023,18 +719,14 @@ semio_framework_plugin::semio_plugin! {
 }
 //#endregion 🔖Manifest
 
+//#region 🧪Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
-    use vcs::{Backbone, BackboneMessage, MemoryBackbone};
-
-    fn meta(actor: &str) -> ActionMeta {
-        ActionMeta { actor: actor.into(), instance_id: 1 }
-    }
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
 
     fn new_app() -> VcsDocumentApp<SequencePlayApp> {
-        VcsDocumentApp::new(SequencePlayApp::default())
+        testkit::new_app::<SequencePlayApp>()
     }
 
     #[test]
@@ -1059,14 +751,14 @@ mod tests {
     #[test]
     fn add_step_action_appends_step() {
         let mut app = new_app();
-        app.handle_action("addStep", Some(&json!({ "kind": "log.print" })), &ViewState::default(), &meta("local")).expect("add");
+        app.handle_action("addStep", Some(&json!({ "kind": "log.print" })), &ViewState::default(), &testkit::meta("local")).expect("add");
         assert!(app.projection().expect("projection").steps.len() > 2);
     }
 
     #[test]
     fn run_stores_result_and_renders_in_script() {
         let mut app = new_app();
-        let result = app.handle_action("run", None, &ViewState::default(), &meta("local")).expect("run");
+        let result = app.handle_action("run", None, &ViewState::default(), &testkit::meta("local")).expect("run");
         assert!(result.operations.is_empty(), "run is a view action and emits no ops");
         let node = app.render(SEQUENCE_PLAY_BODY_SCRIPT, None, &ViewState::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("run result"));
@@ -1076,7 +768,7 @@ mod tests {
     fn remove_step_action_deletes_step() {
         let mut app = new_app();
         let step_id = app.projection().expect("projection").steps[0].id.clone();
-        app.handle_action("removeStep", Some(&json!({ "id": step_id })), &ViewState::default(), &meta("local")).expect("remove");
+        app.handle_action("removeStep", Some(&json!({ "id": step_id })), &ViewState::default(), &testkit::meta("local")).expect("remove");
         assert!(app.projection().expect("projection").steps.iter().all(|step| step.id != step_id));
     }
 
@@ -1092,14 +784,9 @@ mod tests {
     #[test]
     fn set_orientation_action_flips_toggle_state() {
         let mut app = new_app();
-        app.handle_action("setOrientation", Some(&json!({ "orientation": "topBottom" })), &ViewState::default(), &meta("local")).expect("orientation");
+        app.handle_action("setOrientation", Some(&json!({ "orientation": "topBottom" })), &ViewState::default(), &testkit::meta("local")).expect("orientation");
         let tools_json = serde_json::to_string(&app.tools(&ViewState::default())).unwrap();
-        let tb_pressed = tools_json
-            .split(r#""id":"sequence-tools-orientation-tb""#)
-            .nth(1)
-            .and_then(|rest| rest.split_once("\"pressed\":"))
-            .map(|(_, rest)| rest.starts_with("true"))
-            .unwrap_or(false);
+        let tb_pressed = tools_json.split(r#""id":"sequence-tools-orientation-tb""#).nth(1).and_then(|rest| rest.split_once("\"pressed\":")).map(|(_, rest)| rest.starts_with("true")).unwrap_or(false);
         assert!(tb_pressed, "top-to-bottom toggle should be pressed, got {tools_json}");
     }
 
@@ -1109,9 +796,9 @@ mod tests {
         // Collapse both steps onto the origin, then reorganize.
         let ids: Vec<String> = app.projection().expect("projection").steps.iter().map(|step| step.id.clone()).collect();
         for id in &ids {
-            app.handle_action("moveMediaNode", Some(&json!({ "nodeId": id, "x": 0.0, "y": 0.0 })), &ViewState::default(), &meta("local")).expect("move");
+            app.handle_action("moveMediaNode", Some(&json!({ "nodeId": id, "x": 0.0, "y": 0.0 })), &ViewState::default(), &testkit::meta("local")).expect("move");
         }
-        app.handle_action("reorganize", None, &ViewState::default(), &meta("local")).expect("reorganize");
+        app.handle_action("reorganize", None, &ViewState::default(), &testkit::meta("local")).expect("reorganize");
         let xs: Vec<f64> = app.projection().expect("projection").steps.iter().map(|step| step.x).collect();
         assert!(xs.iter().any(|x| *x != 0.0), "reorganize should spread steps apart, got {xs:?}");
     }
@@ -1119,8 +806,8 @@ mod tests {
     #[test]
     fn stop_action_clears_last_run_result() {
         let mut app = new_app();
-        app.handle_action("run", None, &ViewState::default(), &meta("local")).expect("run");
-        app.handle_action("stop", None, &ViewState::default(), &meta("local")).expect("stop");
+        app.handle_action("run", None, &ViewState::default(), &testkit::meta("local")).expect("run");
+        app.handle_action("stop", None, &ViewState::default(), &testkit::meta("local")).expect("stop");
         let node = app.render(SEQUENCE_PLAY_BODY_SCRIPT, None, &ViewState::default()).expect("render");
         assert!(!serde_json::to_string(&node).unwrap().contains("run result"));
     }
@@ -1128,63 +815,25 @@ mod tests {
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = new_app();
-        app.handle_action("addStep", Some(&json!({ "kind": "log.print" })), &ViewState::default(), &meta("local")).expect("add");
-        assert_eq!(app.projection().expect("projection").steps.len(), 3);
-        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
-        assert_eq!(app.projection().expect("projection").steps.len(), 2);
-        app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
-        assert_eq!(app.projection().expect("projection").steps.len(), 3);
+        testkit::assert_undo_redo_round_trip(&mut app, "addStep", Some(&json!({ "kind": "log.print" })), |app| app.projection().expect("projection").steps.len(), 2, 3);
     }
 
+    /// 🧪 The definitional regression proof: two independent instances start from the same fixture,
+    /// apply DISJOINT edits (A moves step-1, B moves step-2), and exchanging ops over a `MemoryBackbone`
+    /// converges both sides onto an identical projection.
     #[test]
     fn two_instances_converge_disjoint_edits_via_backbone() {
-        let mut instance_a = new_app();
-        let mut instance_b = new_app();
-        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://sequence-convergence", "mem://sequence-convergence");
-        instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
-        instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
-
-        // A moves step-1; B moves step-2 — disjoint step patches.
-        instance_a
-            .handle_action("moveMediaNode", Some(&json!({ "nodeId": "step-1", "x": 111.0, "y": 0.0 })), &ViewState::default(), &meta("actor-a"))
-            .expect("a moves step-1");
-        instance_b
-            .handle_action("moveMediaNode", Some(&json!({ "nodeId": "step-2", "x": 222.0, "y": 0.0 })), &ViewState::default(), &meta("actor-b"))
-            .expect("b moves step-2");
-
-        instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
-        instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
-
-        let projection_a = instance_a.projection().expect("projection a");
-        let projection_b = instance_b.projection().expect("projection b");
-        let x_of = |fixture: &SequenceFixture, id: &str| fixture.steps.iter().find(|step| step.id == id).map(|step| step.x).unwrap();
-        assert_eq!(x_of(&projection_a, "step-1"), 111.0, "A keeps its own edit");
-        assert_eq!(x_of(&projection_a, "step-2"), 222.0, "A converges on B's edit");
-        assert_eq!(x_of(&projection_b, "step-1"), 111.0, "B converges on A's edit");
-        assert_eq!(x_of(&projection_b, "step-2"), 222.0, "B keeps its own edit");
+        testkit::assert_two_instances_converge::<SequencePlayApp, _>(
+            "mem://sequence-convergence",
+            ("moveMediaNode", Some(&json!({ "nodeId": "step-1", "x": 111.0, "y": 0.0 }))),
+            ("moveMediaNode", Some(&json!({ "nodeId": "step-2", "x": 222.0, "y": 0.0 }))),
+            |app| app.projection().expect("projection"),
+        );
     }
 
     #[test]
     fn ingest_operations_is_idempotent() {
-        let mut sender = new_app();
-        let (near, mut far) = MemoryBackbone::pair("mem://sequence-doc", "mem://sequence-doc");
-        sender.attach_backbone(Box::new(near)).expect("attach");
-        sender
-            .handle_action("moveMediaNode", Some(&json!({ "nodeId": "step-1", "x": 99.0, "y": 0.0 })), &ViewState::default(), &meta("local"))
-            .expect("move");
-        let mut envelopes = Vec::new();
-        for message in far.receive().expect("receive") {
-            if let BackboneMessage::Ops { envelopes: ops } = message {
-                envelopes.extend(ops);
-            }
-        }
-        assert!(!envelopes.is_empty(), "expected the applied op on the channel");
-        let operations_json = serde_json::to_string(&envelopes).expect("serialize");
-        let mut receiver = new_app();
-        receiver.ingest_operations(&operations_json).expect("ingest once");
-        receiver.ingest_operations(&operations_json).expect("ingest twice");
-        let step_x = receiver.projection().expect("projection").steps.iter().find(|step| step.id == "step-1").unwrap().x;
-        assert_eq!(step_x, 99.0, "feeding the same op twice must not double-apply");
+        testkit::assert_ingest_idempotent::<SequencePlayApp, _>("moveMediaNode", Some(&json!({ "nodeId": "step-1", "x": 99.0, "y": 0.0 })), |app| app.projection().expect("projection").steps.iter().find(|step| step.id == "step-1").unwrap().x);
     }
 
     #[test]
@@ -1213,3 +862,4 @@ mod tests {
         }
     }
 }
+//#endregion 🧪Tests

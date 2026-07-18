@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn, resolveTranslationLabel, SelectionMarquee, marqueeCoverageFromGesture, screenRectFromPoints, uiI18n, useLabel, type SelectionMarqueePoint } from "@semio-tech/ui-react";
 import { resolveSemanticColorHex } from "@semio-tech/ui-styling";
-import type { ComponentSceneHostProps } from "@semio-tech/framework-core";
+import { inkCanvasActions, type ComponentSceneHostProps } from "@semio-tech/framework-core";
 
 //#region Types
 export type Vec2 = readonly [number, number];
 
-export type NoteCamera = { readonly x: number; readonly y: number; readonly zoom: number };
+export type InkCamera = { readonly x: number; readonly y: number; readonly zoom: number };
 
-export interface NoteTextRun {
+export interface InkTextRun {
   readonly text: string;
   readonly bold?: boolean;
   readonly italic?: boolean;
@@ -16,11 +16,11 @@ export interface NoteTextRun {
   readonly link?: string;
 }
 
-export interface NoteTextParagraph {
-  readonly runs: readonly NoteTextRun[];
+export interface InkTextParagraph {
+  readonly runs: readonly InkTextRun[];
 }
 
-export interface NoteBlockBase {
+export interface InkItemBase {
   readonly id: string;
   readonly name: string;
   readonly x: number;
@@ -32,64 +32,64 @@ export interface NoteBlockBase {
   readonly locked: boolean;
 }
 
-export interface NoteTextBlock extends NoteBlockBase {
+export interface InkTextItem extends InkItemBase {
   readonly kind: "text";
-  readonly paragraphs: readonly NoteTextParagraph[];
+  readonly paragraphs: readonly InkTextParagraph[];
   readonly fontSize: number;
   readonly fontWeight: "normal" | "bold";
   readonly align: "left" | "center" | "right";
 }
 
-export interface NoteImageAsset {
+export interface InkImageAsset {
   readonly mime: string;
   readonly data: string;
   readonly width?: number;
   readonly height?: number;
 }
 
-export interface NoteImageBlock extends NoteBlockBase {
+export interface InkImageItem extends InkItemBase {
   readonly kind: "image";
   readonly imageKey: string;
 }
 
-export interface NoteTableCell {
+export interface InkTableCell {
   readonly content: string;
 }
 
-export interface NoteTableBlock extends NoteBlockBase {
+export interface InkTableItem extends InkItemBase {
   readonly kind: "table";
   readonly columns: readonly string[];
-  readonly rows: readonly (readonly NoteTableCell[])[];
+  readonly rows: readonly (readonly InkTableCell[])[];
 }
 
-export interface NoteMathBlock extends NoteBlockBase {
+export interface InkMathItem extends InkItemBase {
   readonly kind: "math";
   readonly tex: string;
   readonly displayMode: boolean;
 }
 
-export interface NoteInkBlock extends NoteBlockBase {
-  readonly kind: "ink";
+export interface InkStrokeItem extends InkItemBase {
+  readonly kind: "stroke";
   readonly points: readonly Vec2[];
   readonly strokeWidth: number;
   readonly color: readonly [number, number, number, number];
 }
 
-export interface NoteGroupBlock extends NoteBlockBase {
+export interface InkGroupItem extends InkItemBase {
   readonly kind: "group";
-  readonly children: readonly NoteBlockNode[];
+  readonly children: readonly InkItem[];
 }
 
-export type NoteBlockNode = NoteTextBlock | NoteImageBlock | NoteTableBlock | NoteMathBlock | NoteInkBlock | NoteGroupBlock;
-export type NoteBlockKind = NoteBlockNode["kind"];
+export type InkItem = InkTextItem | InkImageItem | InkTableItem | InkMathItem | InkStrokeItem | InkGroupItem;
+export type InkItemKind = InkItem["kind"];
 
-export interface NoteDocument {
-  readonly schema: "note.document";
+export interface InkDocument {
+  readonly schema: "ink.document";
   readonly id: string;
   readonly title?: string;
-  readonly camera: NoteCamera;
-  readonly blocks: readonly NoteBlockNode[];
-  readonly assets?: Readonly<Record<string, NoteImageAsset>>;
+  readonly camera: InkCamera;
+  readonly blocks: readonly InkItem[];
+  readonly assets?: Readonly<Record<string, InkImageAsset>>;
   readonly activeUtility?: string;
   readonly gridVisible?: boolean;
   readonly gridSpacing?: number;
@@ -101,30 +101,30 @@ export interface NoteDocument {
   readonly eraserRadius?: number;
 }
 
-export type NoteResizeHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
+export type InkResizeHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
 
-export interface NoteBounds {
+export interface InkBounds {
   readonly x: number;
   readonly y: number;
   readonly width: number;
   readonly height: number;
 }
 
-export type NoteCanvasEvent =
-  | { readonly op: "addBlock"; readonly block: NoteBlockNode; readonly parentId?: string | null; readonly index?: number | null }
-  | { readonly op: "updateBlock"; readonly blockId: string; readonly block: NoteBlockNode }
+export type InkCanvasEvent =
+  | { readonly op: "addBlock"; readonly block: InkItem; readonly parentId?: string | null; readonly index?: number | null }
+  | { readonly op: "updateBlock"; readonly blockId: string; readonly block: InkItem }
   | { readonly op: "removeBlock"; readonly blockId: string }
-  | { readonly op: "putAsset"; readonly key: string; readonly asset: NoteImageAsset }
-  | { readonly op: "setCamera"; readonly camera: NoteCamera };
+  | { readonly op: "putAsset"; readonly key: string; readonly asset: InkImageAsset }
+  | { readonly op: "setCamera"; readonly camera: InkCamera };
 
-type NoteGesturePhase = "begin" | "live" | "commit" | "atomic";
+type InkGesturePhase = "begin" | "live" | "commit" | "atomic";
 
-function parseNoteScene(documentJson: string | undefined): NoteDocument | null {
+function parseInkScene(documentJson: string | undefined): InkDocument | null {
   if (!documentJson) return null;
   try {
-    const parsed = JSON.parse(documentJson) as Partial<NoteDocument>;
-    if (parsed.schema !== "note.document" || !Array.isArray(parsed.blocks)) return null;
-    return parsed as NoteDocument;
+    const parsed = JSON.parse(documentJson) as Partial<InkDocument>;
+    if (parsed.schema !== "ink.document" || !Array.isArray(parsed.blocks)) return null;
+    return parsed as InkDocument;
   } catch {
     return null;
   }
@@ -142,48 +142,48 @@ function parseSelectionIds(json: string | undefined): readonly string[] {
 //#endregion Types
 
 //#region GeometryHelpers
-/** 🌐 Resolves a translation key outside of component render (e.g. `createNoteBlockByKind`), mirroring `shellLabel`/`interpLabel`. */
+/** 🌐 Resolves a translation key outside of component render (e.g. `createInkItemByKind`), mirroring `shellLabel`/`interpLabel`. */
 function hostLabel(key: string): string {
   return resolveTranslationLabel(uiI18n.t(key as never)) ?? key;
 }
 
-let noteHostIdCounter = 0;
+let inkHostIdCounter = 0;
 
 /** @emoji 🆔 Host-generated ids only need to be unique client-side (Rust re-derives its own on the next round-trip). */
-export function createNoteHostId(prefix: string): string {
-  noteHostIdCounter += 1;
-  return `${prefix}-host-${noteHostIdCounter}`;
+export function createInkHostId(prefix: string): string {
+  inkHostIdCounter += 1;
+  return `${prefix}-host-${inkHostIdCounter}`;
 }
 
-export function notePositiveMod(value: number, modulus: number): number {
+export function inkPositiveMod(value: number, modulus: number): number {
   if (modulus <= 0) return 0;
   return ((value % modulus) + modulus) % modulus;
 }
 
-export function noteSnapWorldCoordinate(value: number, spacing: number): number {
+export function inkSnapWorldCoordinate(value: number, spacing: number): number {
   if (spacing <= 0) return value;
   return Math.round(value / spacing) * spacing;
 }
 
-export function noteSnapWorldPoint(x: number, y: number, spacing: number): Vec2 {
-  return [noteSnapWorldCoordinate(x, spacing), noteSnapWorldCoordinate(y, spacing)];
+export function inkSnapWorldPoint(x: number, y: number, spacing: number): Vec2 {
+  return [inkSnapWorldCoordinate(x, spacing), inkSnapWorldCoordinate(y, spacing)];
 }
 
-function noteMaybeSnapWorldPoint(doc: NoteDocument, x: number, y: number): Vec2 {
+function inkMaybeSnapWorldPoint(doc: InkDocument, x: number, y: number): Vec2 {
   if (!doc.snapEnabled) return [x, y];
-  return noteSnapWorldPoint(x, y, doc.snapGridSpacing ?? 8);
+  return inkSnapWorldPoint(x, y, doc.snapGridSpacing ?? 8);
 }
 
-export function screenToWorld(camera: NoteCamera, screenX: number, screenY: number): Vec2 {
+export function screenToWorld(camera: InkCamera, screenX: number, screenY: number): Vec2 {
   return [(screenX - camera.x) / camera.zoom, (screenY - camera.y) / camera.zoom];
 }
 
-export function worldToScreen(camera: NoteCamera, worldX: number, worldY: number): { readonly x: number; readonly y: number } {
+export function worldToScreen(camera: InkCamera, worldX: number, worldY: number): { readonly x: number; readonly y: number } {
   return { x: worldX * camera.zoom + camera.x, y: worldY * camera.zoom + camera.y };
 }
 
-export function noteBlockBounds(block: NoteBlockNode): NoteBounds {
-  if (block.kind === "ink" && block.points.length > 0) {
+export function inkItemBounds(block: InkItem): InkBounds {
+  if (block.kind === "stroke" && block.points.length > 0) {
     let minX = block.points[0]![0];
     let minY = block.points[0]![1];
     let maxX = minX;
@@ -199,17 +199,17 @@ export function noteBlockBounds(block: NoteBlockNode): NoteBounds {
   return { x: block.x, y: block.y, width: block.width, height: block.height };
 }
 
-export function flattenNoteBlocks(blocks: readonly NoteBlockNode[]): NoteBlockNode[] {
-  const out: NoteBlockNode[] = [];
+export function flattenInkItems(blocks: readonly InkItem[]): InkItem[] {
+  const out: InkItem[] = [];
   for (const block of blocks) {
     out.push(block);
-    if (block.kind === "group") out.push(...flattenNoteBlocks(block.children));
+    if (block.kind === "group") out.push(...flattenInkItems(block.children));
   }
   return out;
 }
 
-export function findNoteBlock(doc: NoteDocument, blockId: string): NoteBlockNode | null {
-  function visit(node: NoteBlockNode): NoteBlockNode | null {
+export function findInkItem(doc: InkDocument, blockId: string): InkItem | null {
+  function visit(node: InkItem): InkItem | null {
     if (node.id === blockId) return node;
     if (node.kind === "group") {
       for (const child of node.children) {
@@ -226,16 +226,16 @@ export function findNoteBlock(doc: NoteDocument, blockId: string): NoteBlockNode
   return null;
 }
 
-export function noteSelectionBounds(blocks: readonly NoteBlockNode[], ids: readonly string[]): NoteBounds | null {
+export function inkSelectionBounds(blocks: readonly InkItem[], ids: readonly string[]): InkBounds | null {
   const idSet = new Set(ids);
-  const selected = flattenNoteBlocks(blocks).filter((block) => idSet.has(block.id));
+  const selected = flattenInkItems(blocks).filter((block) => idSet.has(block.id));
   if (!selected.length) return null;
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
   for (const block of selected) {
-    const bounds = noteBlockBounds(block);
+    const bounds = inkItemBounds(block);
     minX = Math.min(minX, bounds.x);
     minY = Math.min(minY, bounds.y);
     maxX = Math.max(maxX, bounds.x + bounds.width);
@@ -249,25 +249,25 @@ function scaleValue(value: number, fromMin: number, fromSize: number, toMin: num
   return toMin + ((value - fromMin) / fromSize) * toSize;
 }
 
-export function noteScaleBlockWithinGroup(block: NoteBlockNode, fromBounds: NoteBounds, toBounds: NoteBounds): NoteBlockNode {
-  const bounds = noteBlockBounds(block);
+export function inkScaleItemWithinGroup(block: InkItem, fromBounds: InkBounds, toBounds: InkBounds): InkItem {
+  const bounds = inkItemBounds(block);
   const nextX = scaleValue(bounds.x, fromBounds.x, fromBounds.width, toBounds.x, toBounds.width);
   const nextY = scaleValue(bounds.y, fromBounds.y, fromBounds.height, toBounds.y, toBounds.height);
   const nextWidth = Math.max(8, scaleValue(bounds.x + bounds.width, fromBounds.x, fromBounds.width, toBounds.x, toBounds.width) - nextX);
   const nextHeight = Math.max(8, scaleValue(bounds.y + bounds.height, fromBounds.y, fromBounds.height, toBounds.y, toBounds.height) - nextY);
-  if (block.kind === "ink") {
+  if (block.kind === "stroke") {
     const scaleX = fromBounds.width > 0 ? toBounds.width / fromBounds.width : 1;
     const scaleY = fromBounds.height > 0 ? toBounds.height / fromBounds.height : 1;
     const points = block.points.map(([px, py]) => [px * scaleX, py * scaleY] as Vec2);
     return { ...block, x: nextX, y: nextY, width: nextWidth, height: nextHeight, points };
   }
   if (block.kind === "group") {
-    return { ...block, x: nextX, y: nextY, width: nextWidth, height: nextHeight, children: block.children.map((child) => noteScaleBlockWithinGroup(child, fromBounds, toBounds)) };
+    return { ...block, x: nextX, y: nextY, width: nextWidth, height: nextHeight, children: block.children.map((child) => inkScaleItemWithinGroup(child, fromBounds, toBounds)) };
   }
   return { ...block, x: nextX, y: nextY, width: nextWidth, height: nextHeight };
 }
 
-export function noteResizeBounds(fromBounds: NoteBounds, handle: NoteResizeHandle, dx: number, dy: number, minSize = 8): NoteBounds {
+export function inkResizeBounds(fromBounds: InkBounds, handle: InkResizeHandle, dx: number, dy: number, minSize = 8): InkBounds {
   let { x, y, width, height } = fromBounds;
   if (handle.includes("e")) width = Math.max(minSize, width + dx);
   if (handle.includes("w")) {
@@ -284,26 +284,26 @@ export function noteResizeBounds(fromBounds: NoteBounds, handle: NoteResizeHandl
   return { x, y, width, height };
 }
 
-export function noteBlocksAtPoint(blocks: readonly NoteBlockNode[], x: number, y: number): NoteBlockNode[] {
-  const hits: NoteBlockNode[] = [];
-  for (const block of [...flattenNoteBlocks(blocks)].reverse()) {
-    const bounds = noteBlockBounds(block);
+export function inkItemsAtPoint(blocks: readonly InkItem[], x: number, y: number): InkItem[] {
+  const hits: InkItem[] = [];
+  for (const block of [...flattenInkItems(blocks)].reverse()) {
+    const bounds = inkItemBounds(block);
     if (x >= bounds.x && x <= bounds.x + bounds.width && y >= bounds.y && y <= bounds.y + bounds.height) hits.push(block);
   }
   return hits;
 }
 
-export function noteBlocksIntersectingRect(blocks: readonly NoteBlockNode[], rect: NoteBounds): string[] {
+export function inkItemsIntersectingRect(blocks: readonly InkItem[], rect: InkBounds): string[] {
   const hits: string[] = [];
-  for (const block of flattenNoteBlocks(blocks)) {
-    const bounds = noteBlockBounds(block);
+  for (const block of flattenInkItems(blocks)) {
+    const bounds = inkItemBounds(block);
     const intersects = bounds.x < rect.x + rect.width && bounds.x + bounds.width > rect.x && bounds.y < rect.y + rect.height && bounds.y + bounds.height > rect.y;
     if (intersects) hits.push(block.id);
   }
   return hits;
 }
 
-export function noteTableCellAtPoint(block: NoteTableBlock, localX: number, localY: number): { readonly row: number; readonly col: number } | null {
+export function inkTableCellAtPoint(block: InkTableItem, localX: number, localY: number): { readonly row: number; readonly col: number } | null {
   const rowCount = block.rows.length + 1;
   const colCount = block.columns.length;
   if (rowCount <= 0 || colCount <= 0) return null;
@@ -323,11 +323,11 @@ function pointToSegmentDistance(px: number, py: number, x1: number, y1: number, 
   return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
 }
 
-function inkWorldPoints(block: NoteInkBlock): Vec2[] {
+function inkWorldPoints(block: InkStrokeItem): Vec2[] {
   return block.points.map(([px, py]) => [block.x + px, block.y + py] as Vec2);
 }
 
-function inkHitsPoint(block: NoteInkBlock, x: number, y: number, threshold: number): boolean {
+function inkHitsPoint(block: InkStrokeItem, x: number, y: number, threshold: number): boolean {
   const points = inkWorldPoints(block);
   if (points.length < 2) {
     if (!points[0]) return false;
@@ -342,13 +342,13 @@ function inkHitsPoint(block: NoteInkBlock, x: number, y: number, threshold: numb
 }
 
 /** @emoji 🧹 Whole-stroke eraser: returns removeBlock events for every ink stroke under the point. */
-export function noteEraseInkStrokeEventsAtPoint(doc: NoteDocument, x: number, y: number, threshold = 8): readonly NoteCanvasEvent[] {
-  const hits = flattenNoteBlocks(doc.blocks).filter((block): block is NoteInkBlock => block.kind === "ink" && inkHitsPoint(block, x, y, threshold));
+export function eraseInkStrokeEventsAtPoint(doc: InkDocument, x: number, y: number, threshold = 8): readonly InkCanvasEvent[] {
+  const hits = flattenInkItems(doc.blocks).filter((block): block is InkStrokeItem => block.kind === "stroke" && inkHitsPoint(block, x, y, threshold));
   return hits.map((block) => ({ op: "removeBlock", blockId: block.id }));
 }
 
 /** @emoji ✂️ Splits an ink stroke into surviving point-runs after removing points within `radius` of (x, y). */
-export function noteEraseInkPointsInBlock(block: NoteInkBlock, x: number, y: number, radius: number): NoteInkBlock[] {
+export function eraseInkStrokePointsInItem(block: InkStrokeItem, x: number, y: number, radius: number): InkStrokeItem[] {
   const keptIndices: number[] = [];
   for (let index = 0; index < block.points.length; index += 1) {
     const point = block.points[index]!;
@@ -367,15 +367,15 @@ export function noteEraseInkPointsInBlock(block: NoteInkBlock, x: number, y: num
     }
   }
   if (current.length >= 2) runs.push(current);
-  return runs.map((points, index) => ({ ...block, id: index === 0 ? block.id : createNoteHostId("ink"), name: index === 0 ? block.name : `${block.name} fragment`, points }));
+  return runs.map((points, index) => ({ ...block, id: index === 0 ? block.id : createInkHostId("stroke"), name: index === 0 ? block.name : `${block.name} fragment`, points }));
 }
 
 /** @emoji ✂️ Point-eraser events: removeBlock for the original stroke, addBlock for each surviving fragment (skipped if untouched). */
-export function noteEraseInkPointEventsNearPoint(doc: NoteDocument, x: number, y: number, radius: number): readonly NoteCanvasEvent[] {
-  const events: NoteCanvasEvent[] = [];
-  const inkBlocks = flattenNoteBlocks(doc.blocks).filter((block): block is NoteInkBlock => block.kind === "ink");
+export function eraseInkStrokePointEventsNearPoint(doc: InkDocument, x: number, y: number, radius: number): readonly InkCanvasEvent[] {
+  const events: InkCanvasEvent[] = [];
+  const inkBlocks = flattenInkItems(doc.blocks).filter((block): block is InkStrokeItem => block.kind === "stroke");
   for (const block of inkBlocks) {
-    const fragments = noteEraseInkPointsInBlock(block, x, y, radius);
+    const fragments = eraseInkStrokePointsInItem(block, x, y, radius);
     if (fragments.length === 1 && fragments[0] === block) continue;
     events.push({ op: "removeBlock", blockId: block.id });
     for (const fragment of fragments) events.push({ op: "addBlock", block: fragment });
@@ -383,15 +383,15 @@ export function noteEraseInkPointEventsNearPoint(doc: NoteDocument, x: number, y
   return events;
 }
 
-export function noteTextParagraphsFromPlainText(text: string): readonly NoteTextParagraph[] {
+export function inkTextParagraphsFromPlainText(text: string): readonly InkTextParagraph[] {
   return text.split(/\n/).map((line) => ({ runs: [{ text: line }] }));
 }
 
-export function noteTextPlainText(paragraphs: readonly NoteTextParagraph[]): string {
+export function inkTextPlainText(paragraphs: readonly InkTextParagraph[]): string {
   return paragraphs.map((paragraph) => paragraph.runs.map((run) => run.text).join("")).join("\n");
 }
 
-export function noteParagraphsToHtml(paragraphs: readonly NoteTextParagraph[]): string {
+export function inkParagraphsToHtml(paragraphs: readonly InkTextParagraph[]): string {
   return paragraphs
     .map((paragraph) => {
       const inner = paragraph.runs
@@ -409,8 +409,8 @@ export function noteParagraphsToHtml(paragraphs: readonly NoteTextParagraph[]): 
     .join("");
 }
 
-export function noteHtmlToParagraphs(root: HTMLElement): readonly NoteTextParagraph[] {
-  const paragraphs: NoteTextParagraph[] = [];
+export function inkHtmlToParagraphs(root: HTMLElement): readonly InkTextParagraph[] {
+  const paragraphs: InkTextParagraph[] = [];
   const children = root.childNodes.length ? [...root.childNodes] : [root];
   for (const child of children) {
     if (child.nodeType === Node.TEXT_NODE) {
@@ -424,8 +424,8 @@ export function noteHtmlToParagraphs(root: HTMLElement): readonly NoteTextParagr
       paragraphs.push({ runs: [{ text: "" }] });
       continue;
     }
-    const runs: NoteTextRun[] = [];
-    const walk = (node: Node, marks: Partial<NoteTextRun>) => {
+    const runs: InkTextRun[] = [];
+    const walk = (node: Node, marks: Partial<InkTextRun>) => {
       if (node.nodeType === Node.TEXT_NODE) {
         const text = node.textContent ?? "";
         if (text) runs.push({ text, ...marks });
@@ -447,58 +447,58 @@ export function noteHtmlToParagraphs(root: HTMLElement): readonly NoteTextParagr
   return paragraphs.length ? paragraphs : [{ runs: [{ text: "" }] }];
 }
 
-export function noteImageAssetDataUrl(asset: NoteImageAsset): string {
+export function inkImageAssetDataUrl(asset: InkImageAsset): string {
   if (asset.data.startsWith("data:")) return asset.data;
   if (asset.mime === "image/svg+xml") return `data:image/svg+xml;utf8,${encodeURIComponent(asset.data)}`;
   return `data:${asset.mime};base64,${asset.data}`;
 }
 
-export interface NoteClipboardPayload {
-  readonly schema: "note.clipboard";
-  readonly blocks: readonly NoteBlockNode[];
+export interface InkClipboardPayload {
+  readonly schema: "ink.clipboard";
+  readonly blocks: readonly InkItem[];
 }
 
-export function noteClipboardPayload(blocks: readonly NoteBlockNode[]): string {
-  const payload: NoteClipboardPayload = { schema: "note.clipboard", blocks: [...blocks] };
+export function inkClipboardPayload(blocks: readonly InkItem[]): string {
+  const payload: InkClipboardPayload = { schema: "ink.clipboard", blocks: [...blocks] };
   return JSON.stringify(payload);
 }
 
-export function noteBlocksFromClipboardPayload(json: string): readonly NoteBlockNode[] | null {
+export function inkItemsFromClipboardPayload(json: string): readonly InkItem[] | null {
   try {
-    const parsed = JSON.parse(json) as NoteClipboardPayload;
-    if (parsed.schema !== "note.clipboard" || !Array.isArray(parsed.blocks)) return null;
+    const parsed = JSON.parse(json) as InkClipboardPayload;
+    if (parsed.schema !== "ink.clipboard" || !Array.isArray(parsed.blocks)) return null;
     return parsed.blocks;
   } catch {
     return null;
   }
 }
 
-function reidBlockTree(block: NoteBlockNode, renameTop: boolean): NoteBlockNode {
-  const id = createNoteHostId(block.kind);
+function reidItemTree(block: InkItem, renameTop: boolean): InkItem {
+  const id = createInkHostId(block.kind);
   const name = renameTop ? `${block.name} copy` : block.name;
-  if (block.kind === "group") return { ...block, id, name, children: block.children.map((child) => reidBlockTree(child, false)) };
+  if (block.kind === "group") return { ...block, id, name, children: block.children.map((child) => reidItemTree(child, false)) };
   return { ...block, id, name };
 }
 
-export function noteCloneBlocksWithOffset(blocks: readonly NoteBlockNode[], dx: number, dy: number): NoteBlockNode[] {
+export function cloneInkItemsWithOffset(blocks: readonly InkItem[], dx: number, dy: number): InkItem[] {
   return blocks.map((block) => {
-    const clone = reidBlockTree(block, false);
+    const clone = reidItemTree(block, false);
     return { ...clone, x: clone.x + dx, y: clone.y + dy };
   });
 }
 
-const NOTE_BLOCK_DEFAULT_SIZE: Record<NoteBlockKind, { readonly width: number; readonly height: number }> = {
+const INK_ITEM_DEFAULT_SIZE: Record<InkItemKind, { readonly width: number; readonly height: number }> = {
   text: { width: 280, height: 120 },
   image: { width: 240, height: 160 },
   table: { width: 320, height: 160 },
   math: { width: 200, height: 80 },
-  ink: { width: 1, height: 1 },
+  stroke: { width: 1, height: 1 },
   group: { width: 280, height: 120 },
 };
 
-export function createNoteBlockByKind(kind: NoteBlockKind, x: number, y: number): NoteBlockNode {
-  const size = NOTE_BLOCK_DEFAULT_SIZE[kind];
-  const base = { id: createNoteHostId(kind), x, y, width: size.width, height: size.height, rotation: 0, visible: true, locked: false };
+export function createInkItemByKind(kind: InkItemKind, x: number, y: number): InkItem {
+  const size = INK_ITEM_DEFAULT_SIZE[kind];
+  const base = { id: createInkHostId(kind), x, y, width: size.width, height: size.height, rotation: 0, visible: true, locked: false };
   if (kind === "image") return { ...base, kind, name: hostLabel("ui.host.blockImage"), imageKey: "placeholder" };
   if (kind === "table")
     return {
@@ -512,13 +512,13 @@ export function createNoteBlockByKind(kind: NoteBlockKind, x: number, y: number)
       ],
     };
   if (kind === "math") return { ...base, kind, name: hostLabel("ui.host.blockMath"), tex: "E = mc^2", displayMode: true };
-  if (kind === "ink") return { ...base, kind, name: hostLabel("ui.host.blockInk"), points: [], strokeWidth: 3, color: [0, 0, 0, 1] };
+  if (kind === "stroke") return { ...base, kind, name: hostLabel("ui.host.blockInk"), points: [], strokeWidth: 3, color: [0, 0, 0, 1] };
   if (kind === "group") return { ...base, kind, name: hostLabel("ui.host.blockGroup"), children: [] };
   return { ...base, kind: "text", name: hostLabel("ui.host.blockText"), paragraphs: [{ runs: [{ text: "" }] }], fontSize: 18, fontWeight: "normal", align: "left" };
 }
 
-/** @emoji 🖊️ Local pure application of the applyNoteEvents op vocabulary — mirrors note/plugin/rs/lib.rs `apply_note_canvas_event` for optimistic in-gesture rendering. */
-export function applyNoteCanvasEventLocal(doc: NoteDocument, event: NoteCanvasEvent): NoteDocument {
+/** @emoji 🖊️ Local pure application of the generic ink-apply-events op vocabulary — mirrors the note plugin's event-apply function for optimistic in-gesture rendering. */
+export function applyInkCanvasEventLocal(doc: InkDocument, event: InkCanvasEvent): InkDocument {
   switch (event.op) {
     case "addBlock": {
       const blocks = [...doc.blocks];
@@ -541,7 +541,7 @@ export function applyNoteCanvasEventLocal(doc: NoteDocument, event: NoteCanvasEv
   }
 }
 
-function insertIntoParent(blocks: readonly NoteBlockNode[], parentId: string, index: number, block: NoteBlockNode): NoteBlockNode[] {
+function insertIntoParent(blocks: readonly InkItem[], parentId: string, index: number, block: InkItem): InkItem[] {
   return blocks.map((node) => {
     if (node.kind !== "group") return node;
     if (node.id === parentId) {
@@ -553,7 +553,7 @@ function insertIntoParent(blocks: readonly NoteBlockNode[], parentId: string, in
   });
 }
 
-function updateInTree(blocks: readonly NoteBlockNode[], blockId: string, nextBlock: NoteBlockNode): NoteBlockNode[] {
+function updateInTree(blocks: readonly InkItem[], blockId: string, nextBlock: InkItem): InkItem[] {
   return blocks.map((block) => {
     if (block.id === blockId) return nextBlock;
     if (block.kind === "group") return { ...block, children: updateInTree(block.children, blockId, nextBlock) };
@@ -561,36 +561,36 @@ function updateInTree(blocks: readonly NoteBlockNode[], blockId: string, nextBlo
   });
 }
 
-function removeFromTree(blocks: readonly NoteBlockNode[], blockId: string): NoteBlockNode[] {
+function removeFromTree(blocks: readonly InkItem[], blockId: string): InkItem[] {
   return blocks.filter((block) => block.id !== blockId).map((block) => (block.kind === "group" ? { ...block, children: removeFromTree(block.children, blockId) } : block));
 }
 
-function applyEventsLocal(doc: NoteDocument, events: readonly NoteCanvasEvent[]): NoteDocument {
-  return events.reduce((acc, event) => applyNoteCanvasEventLocal(acc, event), doc);
+function applyEventsLocal(doc: InkDocument, events: readonly InkCanvasEvent[]): InkDocument {
+  return events.reduce((acc, event) => applyInkCanvasEventLocal(acc, event), doc);
 }
 //#endregion GeometryHelpers
 
 //#region MathRenderer
-export interface NoteMathRenderer {
+export interface InkMathRenderer {
   render(tex: string, displayMode: boolean): string;
 }
 
-let noteMathRenderer: NoteMathRenderer = {
+let inkMathRenderer: InkMathRenderer = {
   render(tex: string, displayMode: boolean) {
-    return `<span class="note-math-fallback">${displayMode ? `$$${tex}$$` : `$${tex}$`}</span>`;
+    return `<span class="ink-math-fallback">${displayMode ? `$$${tex}$$` : `$${tex}$`}</span>`;
   },
 };
 
-/** @emoji ∑ Sets the active note math renderer adapter (defaults to a plain-text fallback until KaTeX loads). */
-export function setNoteMathRenderer(renderer: NoteMathRenderer): void {
-  noteMathRenderer = renderer;
+/** @emoji ∑ Sets the active ink math renderer adapter (defaults to a plain-text fallback until KaTeX loads). */
+export function setInkMathRenderer(renderer: InkMathRenderer): void {
+  inkMathRenderer = renderer;
 }
 
 async function ensureKatexMathRenderer(): Promise<void> {
   try {
     const katex = await import("katex");
     await import("katex/dist/katex.min.css");
-    setNoteMathRenderer({
+    setInkMathRenderer({
       render(tex: string, displayMode: boolean) {
         return katex.default.renderToString(tex, { displayMode, throwOnError: false });
       },
@@ -604,28 +604,28 @@ if (typeof window !== "undefined") void ensureKatexMathRenderer();
 //#endregion MathRenderer
 
 //#region BlockViews
-function noteTextRunStyle(run: NoteTextRun): React.CSSProperties {
+function inkTextRunStyle(run: InkTextRun): React.CSSProperties {
   return { fontWeight: run.bold ? "bold" : undefined, fontStyle: run.italic ? "italic" : undefined, textDecoration: run.underline ? "underline" : undefined };
 }
 
-function NoteTextRunView({ run }: { readonly run: NoteTextRun }) {
+function InkTextRunView({ run }: { readonly run: InkTextRun }) {
   if (run.link) {
     return (
-      <a href={run.link} className="text-primary underline" style={noteTextRunStyle(run)} onPointerDown={(event) => event.stopPropagation()}>
+      <a href={run.link} className="text-primary underline" style={inkTextRunStyle(run)} onPointerDown={(event) => event.stopPropagation()}>
         {run.text}
       </a>
     );
   }
-  return <span style={noteTextRunStyle(run)}>{run.text}</span>;
+  return <span style={inkTextRunStyle(run)}>{run.text}</span>;
 }
 
-function NoteTextContentView({ block }: { readonly block: NoteTextBlock }) {
+function InkTextContentView({ block }: { readonly block: InkTextItem }) {
   return (
     <div className="text-foreground h-full w-full overflow-auto p-2 whitespace-pre-wrap" style={{ fontSize: block.fontSize, fontWeight: block.fontWeight, textAlign: block.align }}>
       {block.paragraphs.map((paragraph, paragraphIndex) => (
         <div key={paragraphIndex}>
           {paragraph.runs.map((run, runIndex) => (
-            <NoteTextRunView key={runIndex} run={run} />
+            <InkTextRunView key={runIndex} run={run} />
           ))}
         </div>
       ))}
@@ -633,7 +633,7 @@ function NoteTextContentView({ block }: { readonly block: NoteTextBlock }) {
   );
 }
 
-function NoteBlockView({
+function InkItemView({
   block,
   assets,
   selected,
@@ -641,8 +641,8 @@ function NoteBlockView({
   hidden,
   onPointerDown,
 }: {
-  readonly block: NoteBlockNode;
-  readonly assets?: Readonly<Record<string, NoteImageAsset>>;
+  readonly block: InkItem;
+  readonly assets?: Readonly<Record<string, InkImageAsset>>;
   readonly selected: boolean;
   readonly hovered: boolean;
   readonly hidden: boolean;
@@ -650,7 +650,7 @@ function NoteBlockView({
 }) {
   const groupLabel = useLabel("ui.host.blockGroup");
   if (!block.visible) return null;
-  const bounds = noteBlockBounds(block);
+  const bounds = inkItemBounds(block);
   const common = {
     className: cn("bg-background/90 absolute overflow-hidden rounded border shadow-sm", selected && "ring-primary ring-2", hovered && !selected && "ring-primary/60 ring-1", block.locked && "opacity-70", hidden && "pointer-events-none opacity-0"),
     style: {
@@ -665,15 +665,15 @@ function NoteBlockView({
   if (block.kind === "text")
     return (
       <div {...common}>
-        <NoteTextContentView block={block} />
+        <InkTextContentView block={block} />
       </div>
     );
   if (block.kind === "math") {
-    const html = noteMathRenderer.render(block.tex, block.displayMode);
+    const html = inkMathRenderer.render(block.tex, block.displayMode);
     return (
       <div {...common}>
         <div className="flex h-full w-full items-center justify-center p-2">
-          <div className="note-math" dangerouslySetInnerHTML={{ __html: html }} />
+          <div className="ink-math" dangerouslySetInnerHTML={{ __html: html }} />
         </div>
       </div>
     );
@@ -708,14 +708,14 @@ function NoteBlockView({
   }
   if (block.kind === "image") {
     const asset = assets?.[block.imageKey];
-    const src = asset ? noteImageAssetDataUrl(asset) : null;
+    const src = asset ? inkImageAssetDataUrl(asset) : null;
     return (
       <div {...common}>
         {src ? <img src={src} alt={block.name} className="h-full w-full object-contain" draggable={false} /> : <div className="bg-muted text-muted-foreground flex h-full w-full items-center justify-center text-xs">{block.imageKey}</div>}
       </div>
     );
   }
-  if (block.kind === "ink") {
+  if (block.kind === "stroke") {
     if (block.points.length < 2) return null;
     const path = block.points.map((point, index) => `${index === 0 ? "M" : "L"} ${block.x + point[0]} ${block.y + point[1]}`).join(" ");
     const [r, g, b, a] = block.color;
@@ -737,31 +737,31 @@ function NoteBlockView({
   return null;
 }
 
-const NOTE_RESIZE_HANDLES: readonly NoteResizeHandle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
-const NOTE_RESIZE_CURSOR: Record<NoteResizeHandle, string> = { nw: "nwse-resize", n: "ns-resize", ne: "nesw-resize", e: "ew-resize", se: "nwse-resize", s: "ns-resize", sw: "nesw-resize", w: "ew-resize" };
+const INK_RESIZE_HANDLES: readonly InkResizeHandle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
+const INK_RESIZE_CURSOR: Record<InkResizeHandle, string> = { nw: "nwse-resize", n: "ns-resize", ne: "nesw-resize", e: "ew-resize", se: "nwse-resize", s: "ns-resize", sw: "nesw-resize", w: "ew-resize" };
 
-function NoteSelectionChrome({ camera, bounds, onResizePointerDown }: { readonly camera: NoteCamera; readonly bounds: NoteBounds; readonly onResizePointerDown: (handle: NoteResizeHandle, event: React.PointerEvent) => void }) {
+function InkSelectionChrome({ camera, bounds, onResizePointerDown }: { readonly camera: InkCamera; readonly bounds: InkBounds; readonly onResizePointerDown: (handle: InkResizeHandle, event: React.PointerEvent) => void }) {
   const topLeft = worldToScreen(camera, bounds.x, bounds.y);
   const width = bounds.width * camera.zoom;
   const height = bounds.height * camera.zoom;
   return (
     <>
       <div className="border-primary pointer-events-none absolute z-20 border" style={{ left: topLeft.x, top: topLeft.y, width, height }} />
-      {NOTE_RESIZE_HANDLES.map((handle) => {
+      {INK_RESIZE_HANDLES.map((handle) => {
         const left = handle.includes("w") ? topLeft.x - 4 : handle.includes("e") ? topLeft.x + width - 4 : topLeft.x + width / 2 - 4;
         const top = handle.includes("n") ? topLeft.y - 4 : handle.includes("s") ? topLeft.y + height - 4 : topLeft.y + height / 2 - 4;
-        return <div key={handle} className="border-primary bg-background absolute z-30 h-2 w-2 rounded-sm border" style={{ left, top, cursor: NOTE_RESIZE_CURSOR[handle] }} onPointerDown={(event) => onResizePointerDown(handle, event)} />;
+        return <div key={handle} className="border-primary bg-background absolute z-30 h-2 w-2 rounded-sm border" style={{ left, top, cursor: INK_RESIZE_CURSOR[handle] }} onPointerDown={(event) => onResizePointerDown(handle, event)} />;
       })}
     </>
   );
 }
 
-function NoteViewportGrid({ camera, spacing, subdivisions, opacity, color }: { readonly camera: NoteCamera; readonly spacing: number; readonly subdivisions: number; readonly opacity: number; readonly color: string }) {
+function InkViewportGrid({ camera, spacing, subdivisions, opacity, color }: { readonly camera: InkCamera; readonly spacing: number; readonly subdivisions: number; readonly opacity: number; readonly color: string }) {
   const majorPx = spacing * camera.zoom;
   const minorPx = majorPx / Math.max(1, subdivisions);
-  const offsetX = notePositiveMod(camera.x, majorPx);
-  const offsetY = notePositiveMod(camera.y, majorPx);
-  const patternId = `note-viewport-grid-${spacing}-${subdivisions}`;
+  const offsetX = inkPositiveMod(camera.x, majorPx);
+  const offsetY = inkPositiveMod(camera.y, majorPx);
+  const patternId = `ink-viewport-grid-${spacing}-${subdivisions}`;
   const minorLines: React.ReactNode[] = [];
   for (let index = 1; index < subdivisions; index += 1) {
     const position = index * minorPx;
@@ -785,7 +785,7 @@ function NoteViewportGrid({ camera, spacing, subdivisions, opacity, color }: { r
 //#endregion BlockViews
 
 //#region Overlays
-function NoteTextEditorOverlay({ block, screenBounds, onCommit, onCancel }: { readonly block: NoteTextBlock; readonly screenBounds: NoteBounds; readonly onCommit: (paragraphs: readonly NoteTextParagraph[]) => void; readonly onCancel: () => void }) {
+function InkTextEditorOverlay({ block, screenBounds, onCommit, onCancel }: { readonly block: InkTextItem; readonly screenBounds: InkBounds; readonly onCommit: (paragraphs: readonly InkTextParagraph[]) => void; readonly onCancel: () => void }) {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const applyCommand = (command: string, value?: string) => {
     editorRef.current?.focus();
@@ -860,17 +860,17 @@ function NoteTextEditorOverlay({ block, screenBounds, onCommit, onCancel }: { re
         suppressContentEditableWarning
         className="text-foreground bg-background h-[calc(100%-2rem)] w-full overflow-auto rounded border p-2 outline-none"
         style={{ fontSize: block.fontSize, fontWeight: block.fontWeight, textAlign: block.align }}
-        dangerouslySetInnerHTML={{ __html: noteParagraphsToHtml(block.paragraphs) }}
+        dangerouslySetInnerHTML={{ __html: inkParagraphsToHtml(block.paragraphs) }}
         onBlur={() => {
           if (!editorRef.current) return;
-          onCommit(noteHtmlToParagraphs(editorRef.current));
+          onCommit(inkHtmlToParagraphs(editorRef.current));
         }}
       />
     </div>
   );
 }
 
-function NoteTableCellEditorOverlay({
+function InkTableCellEditorOverlay({
   block,
   row,
   col,
@@ -878,10 +878,10 @@ function NoteTableCellEditorOverlay({
   onCommit,
   onCancel,
 }: {
-  readonly block: NoteTableBlock;
+  readonly block: InkTableItem;
   readonly row: number;
   readonly col: number;
-  readonly screenBounds: NoteBounds;
+  readonly screenBounds: InkBounds;
   readonly onCommit: (content: string, advance?: boolean) => void;
   readonly onCancel: () => void;
 }) {
@@ -913,18 +913,18 @@ function NoteTableCellEditorOverlay({
 //#endregion Overlays
 
 //#region DragState
-type NoteDragState =
-  | { readonly kind: "pan"; readonly startX: number; readonly startY: number; readonly camera: NoteCamera }
+type InkDragState =
+  | { readonly kind: "pan"; readonly startX: number; readonly startY: number; readonly camera: InkCamera }
   | { readonly kind: "move"; readonly origins: Readonly<Record<string, { readonly x: number; readonly y: number }>>; readonly startX: number; readonly startY: number }
   | { readonly kind: "marquee"; readonly start: SelectionMarqueePoint }
-  | { readonly kind: "ink"; readonly blockId: string }
+  | { readonly kind: "stroke"; readonly blockId: string }
   | { readonly kind: "eraser"; readonly mode: "eraserStroke" | "eraserPoint" }
-  | { readonly kind: "resize"; readonly handle: NoteResizeHandle; readonly fromBounds: NoteBounds; readonly startX: number; readonly startY: number; readonly selectedIds: readonly string[] };
+  | { readonly kind: "resize"; readonly handle: InkResizeHandle; readonly fromBounds: InkBounds; readonly startX: number; readonly startY: number; readonly selectedIds: readonly string[] };
 
-type NoteTextEditState = { readonly blockId: string; readonly created?: boolean };
-type NoteTableEditState = { readonly blockId: string; readonly row: number; readonly col: number };
+type InkTextEditState = { readonly blockId: string; readonly created?: boolean };
+type InkTableEditState = { readonly blockId: string; readonly row: number; readonly col: number };
 
-const NOTE_MARQUEE_THRESHOLD_PX = 4;
+const INK_MARQUEE_THRESHOLD_PX = 4;
 //#endregion DragState
 
 //#region InkCanvasHost
@@ -933,15 +933,15 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const gestureActiveRef = useRef(false);
   const rafRef = useRef<number | null>(null);
-  const pendingLiveEventsRef = useRef<readonly NoteCanvasEvent[] | null>(null);
-  const [draftDoc, setDraftDoc] = useState<NoteDocument | null>(null);
-  const [dragState, setDragState] = useState<NoteDragState | null>(null);
+  const pendingLiveEventsRef = useRef<readonly InkCanvasEvent[] | null>(null);
+  const [draftDoc, setDraftDoc] = useState<InkDocument | null>(null);
+  const [dragState, setDragState] = useState<InkDragState | null>(null);
   const [marqueePoints, setMarqueePoints] = useState<readonly SelectionMarqueePoint[]>([]);
-  const [textEdit, setTextEdit] = useState<NoteTextEditState | null>(null);
-  const [tableEdit, setTableEdit] = useState<NoteTableEditState | null>(null);
+  const [textEdit, setTextEdit] = useState<InkTextEditState | null>(null);
+  const [tableEdit, setTableEdit] = useState<InkTableEditState | null>(null);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
 
-  const sceneDoc = useMemo(() => parseNoteScene(scene?.documentJson), [scene?.documentJson]);
+  const sceneDoc = useMemo(() => parseInkScene(scene?.documentJson), [scene?.documentJson]);
   const doc = draftDoc ?? sceneDoc;
   const selectedIds = useMemo(() => parseSelectionIds(scene?.selectionJson), [scene?.selectionJson]);
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
@@ -970,16 +970,16 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
   }, []);
 
   const beginGesture = useCallback(
-    (events: readonly NoteCanvasEvent[], selectIds?: readonly string[]) => {
+    (events: readonly InkCanvasEvent[], selectIds?: readonly string[]) => {
       gestureActiveRef.current = true;
-      setDraftDoc((current) => applyEventsLocal(current ?? sceneDoc ?? { schema: "note.document", id: "empty", camera: { x: 0, y: 0, zoom: 1 }, blocks: [] }, events));
-      dispatch("applyNoteEvents", { eventsJson: JSON.stringify(events), phase: "begin", ...(selectIds ? { selectIds: [...selectIds] } : {}) });
+      setDraftDoc((current) => applyEventsLocal(current ?? sceneDoc ?? { schema: "ink.document", id: "empty", camera: { x: 0, y: 0, zoom: 1 }, blocks: [] }, events));
+      dispatch(inkCanvasActions.applyEvents, { eventsJson: JSON.stringify(events), phase: "begin", ...(selectIds ? { selectIds: [...selectIds] } : {}) });
     },
     [dispatch, sceneDoc],
   );
 
   const liveGesture = useCallback(
-    (events: readonly NoteCanvasEvent[]) => {
+    (events: readonly InkCanvasEvent[]) => {
       setDraftDoc((current) => (current ? applyEventsLocal(current, events) : current));
       pendingLiveEventsRef.current = events;
       if (rafRef.current == null) {
@@ -987,7 +987,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
           rafRef.current = null;
           const pending = pendingLiveEventsRef.current;
           pendingLiveEventsRef.current = null;
-          if (pending) dispatch("applyNoteEvents", { eventsJson: JSON.stringify(pending), phase: "live" });
+          if (pending) dispatch(inkCanvasActions.applyEvents, { eventsJson: JSON.stringify(pending), phase: "live" });
         });
       }
     },
@@ -995,29 +995,29 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
   );
 
   const commitGesture = useCallback(
-    (events: readonly NoteCanvasEvent[], selectIds?: readonly string[]) => {
+    (events: readonly InkCanvasEvent[], selectIds?: readonly string[]) => {
       flushPendingLive();
       gestureActiveRef.current = false;
-      dispatch("applyNoteEvents", { eventsJson: JSON.stringify(events), phase: "commit", ...(selectIds ? { selectIds: [...selectIds] } : {}) });
+      dispatch(inkCanvasActions.applyEvents, { eventsJson: JSON.stringify(events), phase: "commit", ...(selectIds ? { selectIds: [...selectIds] } : {}) });
     },
     [dispatch, flushPendingLive],
   );
 
   const atomicGesture = useCallback(
-    (events: readonly NoteCanvasEvent[], selectIds?: readonly string[]) => {
-      dispatch("applyNoteEvents", { eventsJson: JSON.stringify(events), phase: "atomic", ...(selectIds ? { selectIds: [...selectIds] } : {}) });
+    (events: readonly InkCanvasEvent[], selectIds?: readonly string[]) => {
+      dispatch(inkCanvasActions.applyEvents, { eventsJson: JSON.stringify(events), phase: "atomic", ...(selectIds ? { selectIds: [...selectIds] } : {}) });
     },
     [dispatch],
   );
 
-  const selectionBounds = useMemo(() => (doc ? noteSelectionBounds(doc.blocks, selectedIds) : null), [doc, selectedIds]);
+  const selectionBounds = useMemo(() => (doc ? inkSelectionBounds(doc.blocks, selectedIds) : null), [doc, selectedIds]);
   const utility = doc?.activeUtility ?? "selectDirect";
   const showResizeHandles = !isNavigator && (utility === "selectDirect" || utility === "selectMarquee") && Boolean(selectionBounds) && selectedIds.length > 0;
 
   const beginMove = useCallback(
     (event: React.PointerEvent, blockId: string) => {
       if (!rootRef.current || !doc) return;
-      const block = findNoteBlock(doc, blockId);
+      const block = findInkItem(doc, blockId);
       if (!block || block.locked) return;
       const rect = rootRef.current.getBoundingClientRect();
       const screenX = event.clientX - rect.left;
@@ -1025,7 +1025,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       const moveIds = selectedSet.has(blockId) ? selectedIds : [blockId];
       const origins: Record<string, { x: number; y: number }> = {};
       for (const id of moveIds) {
-        const entry = findNoteBlock(doc, id);
+        const entry = findInkItem(doc, id);
         if (entry) origins[id] = { x: entry.x, y: entry.y };
       }
       setDragState({ kind: "move", origins, startX: screenX, startY: screenY });
@@ -1048,7 +1048,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       }
       if (utility === "eraserStroke" || utility === "eraserPoint") {
         setDragState({ kind: "eraser", mode: utility });
-        const events = utility === "eraserStroke" ? noteEraseInkStrokeEventsAtPoint(doc, worldX, worldY) : noteEraseInkPointEventsNearPoint(doc, worldX, worldY, doc.eraserRadius ?? 12);
+        const events = utility === "eraserStroke" ? eraseInkStrokeEventsAtPoint(doc, worldX, worldY) : eraseInkStrokePointEventsNearPoint(doc, worldX, worldY, doc.eraserRadius ?? 12);
         if (events.length) beginGesture(events);
         return;
       }
@@ -1058,27 +1058,27 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
         return;
       }
       if (utility === "pencil") {
-        const block = createNoteBlockByKind("ink", worldX, worldY);
+        const block = createInkItemByKind("stroke", worldX, worldY);
         beginGesture([{ op: "addBlock", block }], [block.id]);
-        setDragState({ kind: "ink", blockId: block.id });
+        setDragState({ kind: "stroke", blockId: block.id });
         return;
       }
       if (utility === "text" || utility === "image" || utility === "table" || utility === "math") {
-        const [placeX, placeY] = noteMaybeSnapWorldPoint(doc, worldX, worldY);
-        const block = createNoteBlockByKind(utility, placeX, placeY);
+        const [placeX, placeY] = inkMaybeSnapWorldPoint(doc, worldX, worldY);
+        const block = createInkItemByKind(utility, placeX, placeY);
         atomicGesture([{ op: "addBlock", block }], [block.id]);
         if (utility === "text") setTextEdit({ blockId: block.id, created: true });
         return;
       }
-      const hits = noteBlocksAtPoint(doc.blocks, worldX, worldY);
+      const hits = inkItemsAtPoint(doc.blocks, worldX, worldY);
       const top = hits[0];
       if (!top || top.locked) {
-        if (utility === "selectDirect") dispatch("setSelection", { ids: [] });
+        if (utility === "selectDirect") dispatch(inkCanvasActions.setSelection, { ids: [] });
         return;
       }
       if (utility === "selectDirect") {
         const nextSelection = event.shiftKey ? [...new Set([...selectedIds, top.id])] : [top.id];
-        dispatch("setSelection", { ids: nextSelection });
+        dispatch(inkCanvasActions.setSelection, { ids: nextSelection });
         beginMove(event, top.id);
       }
     },
@@ -1089,17 +1089,17 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
     (event: React.PointerEvent, blockId: string) => {
       event.stopPropagation();
       if (!rootRef.current || !doc || !interactive) return;
-      const block = findNoteBlock(doc, blockId);
+      const block = findInkItem(doc, blockId);
       if (!block || block.locked) return;
       const nextSelection = event.shiftKey ? [...new Set([...selectedIds, blockId])] : [blockId];
-      dispatch("setSelection", { ids: nextSelection });
+      dispatch(inkCanvasActions.setSelection, { ids: nextSelection });
       if (utility === "selectDirect" || utility === "selectMarquee") beginMove(event, blockId);
     },
     [beginMove, dispatch, doc, interactive, selectedIds, utility],
   );
 
   const handleResizePointerDown = useCallback(
-    (handle: NoteResizeHandle, event: React.PointerEvent) => {
+    (handle: InkResizeHandle, event: React.PointerEvent) => {
       event.stopPropagation();
       if (!rootRef.current || !selectionBounds) return;
       const rect = rootRef.current.getBoundingClientRect();
@@ -1118,23 +1118,23 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       const [worldX, worldY] = screenToWorld(camera, screenX, screenY);
       if (!dragState) {
         if (!interactive) return;
-        const hits = noteBlocksAtPoint(doc.blocks, worldX, worldY);
+        const hits = inkItemsAtPoint(doc.blocks, worldX, worldY);
         const top = hits[0] ?? null;
-        dispatch("setHover", { id: top?.id ?? null });
+        dispatch(inkCanvasActions.setHover, { id: top?.id ?? null });
         return;
       }
       if (dragState.kind === "pan") {
         const nextCamera = { ...dragState.camera, x: dragState.camera.x + (screenX - dragState.startX), y: dragState.camera.y + (screenY - dragState.startY) };
         setDraftDoc((current) => ({ ...(current ?? doc), camera: nextCamera }));
-        dispatch("setCamera", { camera: nextCamera });
+        dispatch(inkCanvasActions.setCamera, { camera: nextCamera });
         return;
       }
       if (dragState.kind === "move") {
         const dx = (screenX - dragState.startX) / camera.zoom;
         const dy = (screenY - dragState.startY) / camera.zoom;
-        const events: NoteCanvasEvent[] = [];
+        const events: InkCanvasEvent[] = [];
         for (const [blockId, origin] of Object.entries(dragState.origins)) {
-          const block = findNoteBlock(doc, blockId);
+          const block = findInkItem(doc, blockId);
           if (!block) continue;
           events.push({ op: "updateBlock", blockId, block: { ...block, x: origin.x + dx, y: origin.y + dy } });
         }
@@ -1145,28 +1145,28 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
         setMarqueePoints([dragState.start, { x: screenX, y: screenY }]);
         return;
       }
-      if (dragState.kind === "ink") {
-        const block = findNoteBlock(doc, dragState.blockId);
-        if (!block || block.kind !== "ink") return;
+      if (dragState.kind === "stroke") {
+        const block = findInkItem(doc, dragState.blockId);
+        if (!block || block.kind !== "stroke") return;
         const localX = worldX - block.x;
         const localY = worldY - block.y;
         liveGesture([{ op: "updateBlock", blockId: block.id, block: { ...block, points: [...block.points, [localX, localY]] } }]);
         return;
       }
       if (dragState.kind === "eraser") {
-        const events = dragState.mode === "eraserStroke" ? noteEraseInkStrokeEventsAtPoint(doc, worldX, worldY) : noteEraseInkPointEventsNearPoint(doc, worldX, worldY, doc.eraserRadius ?? 12);
+        const events = dragState.mode === "eraserStroke" ? eraseInkStrokeEventsAtPoint(doc, worldX, worldY) : eraseInkStrokePointEventsNearPoint(doc, worldX, worldY, doc.eraserRadius ?? 12);
         if (events.length) liveGesture(events);
         return;
       }
       if (dragState.kind === "resize") {
         const dx = (screenX - dragState.startX) / camera.zoom;
         const dy = (screenY - dragState.startY) / camera.zoom;
-        const toBounds = noteResizeBounds(dragState.fromBounds, dragState.handle, dx, dy);
-        const events: NoteCanvasEvent[] = [];
+        const toBounds = inkResizeBounds(dragState.fromBounds, dragState.handle, dx, dy);
+        const events: InkCanvasEvent[] = [];
         for (const blockId of dragState.selectedIds) {
-          const block = findNoteBlock(doc, blockId);
+          const block = findInkItem(doc, blockId);
           if (!block) continue;
-          events.push({ op: "updateBlock", blockId, block: noteScaleBlockWithinGroup(block, dragState.fromBounds, toBounds) });
+          events.push({ op: "updateBlock", blockId, block: inkScaleItemWithinGroup(block, dragState.fromBounds, toBounds) });
         }
         if (events.length) liveGesture(events);
       }
@@ -1181,27 +1181,27 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       return;
     }
     if (dragState?.kind === "move") {
-      const events: NoteCanvasEvent[] = [];
+      const events: InkCanvasEvent[] = [];
       for (const blockId of Object.keys(dragState.origins)) {
-        const block = findNoteBlock(doc, blockId);
+        const block = findInkItem(doc, blockId);
         if (!block) continue;
         if (doc.snapEnabled) {
           const spacing = doc.snapGridSpacing ?? 8;
-          const [x, y] = noteSnapWorldPoint(block.x, block.y, spacing);
+          const [x, y] = inkSnapWorldPoint(block.x, block.y, spacing);
           events.push({ op: "updateBlock", blockId, block: { ...block, x, y } });
         } else {
           events.push({ op: "updateBlock", blockId, block });
         }
       }
       commitGesture(events);
-    } else if (dragState?.kind === "ink") {
-      const block = findNoteBlock(doc, dragState.blockId);
+    } else if (dragState?.kind === "stroke") {
+      const block = findInkItem(doc, dragState.blockId);
       if (block) commitGesture([{ op: "updateBlock", blockId: block.id, block }]);
       else commitGesture([]);
     } else if (dragState?.kind === "resize") {
-      const events: NoteCanvasEvent[] = [];
+      const events: InkCanvasEvent[] = [];
       for (const blockId of dragState.selectedIds) {
-        const block = findNoteBlock(doc, blockId);
+        const block = findInkItem(doc, blockId);
         if (block) events.push({ op: "updateBlock", blockId, block });
       }
       commitGesture(events);
@@ -1216,7 +1216,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       if (screenRect) {
         const camera = doc.camera;
         const worldRect = { x: (screenRect.x - camera.x) / camera.zoom, y: (screenRect.y - camera.y) / camera.zoom, width: screenRect.width / camera.zoom, height: screenRect.height / camera.zoom };
-        dispatch("setSelection", { ids: noteBlocksIntersectingRect(doc.blocks, worldRect) });
+        dispatch(inkCanvasActions.setSelection, { ids: inkItemsIntersectingRect(doc.blocks, worldRect) });
       }
     }
     setDragState(null);
@@ -1237,7 +1237,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       const worldY = (screenY - camera.y) / camera.zoom;
       const nextCamera = { x: screenX - worldX * nextZoom, y: screenY - worldY * nextZoom, zoom: nextZoom };
       setDraftDoc((current) => ({ ...(current ?? doc), camera: nextCamera }));
-      dispatch("setCamera", { camera: nextCamera });
+      dispatch(inkCanvasActions.setCamera, { camera: nextCamera });
     },
     [dispatch, doc, isNavigator],
   );
@@ -1250,25 +1250,25 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       const screenX = event.clientX - rect.left;
       const screenY = event.clientY - rect.top;
       const [worldX, worldY] = screenToWorld(camera, screenX, screenY);
-      const hits = noteBlocksAtPoint(doc.blocks, worldX, worldY);
+      const hits = inkItemsAtPoint(doc.blocks, worldX, worldY);
       const top = hits[0];
       if (top?.kind === "text" && !top.locked) {
         setTableEdit(null);
         setTextEdit({ blockId: top.id });
-        dispatch("setSelection", { ids: [top.id] });
+        dispatch(inkCanvasActions.setSelection, { ids: [top.id] });
         return;
       }
       if (top?.kind === "table" && !top.locked) {
-        const cell = noteTableCellAtPoint(top, worldX - top.x, worldY - top.y);
+        const cell = inkTableCellAtPoint(top, worldX - top.x, worldY - top.y);
         if (!cell) return;
         setTextEdit(null);
         setTableEdit({ blockId: top.id, row: cell.row, col: cell.col });
-        dispatch("setSelection", { ids: [top.id] });
+        dispatch(inkCanvasActions.setSelection, { ids: [top.id] });
         return;
       }
       if (top) return;
-      const [placeX, placeY] = noteMaybeSnapWorldPoint(doc, worldX, worldY);
-      const block = createNoteBlockByKind("text", placeX, placeY);
+      const [placeX, placeY] = inkMaybeSnapWorldPoint(doc, worldX, worldY);
+      const block = createInkItemByKind("text", placeX, placeY);
       atomicGesture([{ op: "addBlock", block }], [block.id]);
       setTextEdit({ blockId: block.id, created: true });
     },
@@ -1276,20 +1276,20 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
   );
 
   const commitTextEdit = useCallback(
-    (blockId: string, paragraphs: readonly NoteTextParagraph[], created?: boolean) => {
+    (blockId: string, paragraphs: readonly InkTextParagraph[], created?: boolean) => {
       if (!doc) {
         setTextEdit(null);
         return;
       }
-      const block = findNoteBlock(doc, blockId);
+      const block = findInkItem(doc, blockId);
       if (!block || block.kind !== "text") {
         setTextEdit(null);
         return;
       }
-      const plain = noteTextPlainText(paragraphs).trim();
+      const plain = inkTextPlainText(paragraphs).trim();
       if (!plain && created) {
         atomicGesture([{ op: "removeBlock", blockId }]);
-        dispatch("setSelection", { ids: [] });
+        dispatch(inkCanvasActions.setSelection, { ids: [] });
       } else {
         atomicGesture([{ op: "updateBlock", blockId, block: { ...block, paragraphs } }]);
       }
@@ -1304,7 +1304,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
         setTableEdit(null);
         return;
       }
-      const block = findNoteBlock(doc, blockId);
+      const block = findInkItem(doc, blockId);
       if (!block || block.kind !== "table") {
         setTableEdit(null);
         return;
@@ -1325,8 +1325,8 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
 
   const pasteImageAsset = useCallback(
     (dataUrl: string, mime: string, worldX: number, worldY: number) => {
-      const assetKey = `asset-${createNoteHostId("image")}`;
-      const imageBlock = createNoteBlockByKind("image", worldX - 120, worldY - 80);
+      const assetKey = `asset-${createInkHostId("image")}`;
+      const imageBlock = createInkItemByKind("image", worldX - 120, worldY - 80);
       if (imageBlock.kind !== "image") return;
       atomicGesture(
         [
@@ -1344,10 +1344,10 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       if (!doc) return;
       if (textEdit && (event.target as HTMLElement).closest("[contenteditable]")) return;
       if (!selectedIds.length) return;
-      const blocks = selectedIds.map((id) => findNoteBlock(doc, id)).filter((block): block is NoteBlockNode => Boolean(block));
+      const blocks = selectedIds.map((id) => findInkItem(doc, id)).filter((block): block is InkItem => Boolean(block));
       if (!blocks.length) return;
       event.preventDefault();
-      event.clipboardData.setData("text/plain", noteClipboardPayload(blocks));
+      event.clipboardData.setData("text/plain", inkClipboardPayload(blocks));
     },
     [doc, selectedIds, textEdit],
   );
@@ -1358,7 +1358,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       if (textEdit && (event.target as HTMLElement).closest("[contenteditable]")) return;
       event.preventDefault();
       const rect = rootRef.current.getBoundingClientRect();
-      const [worldX, worldY] = noteMaybeSnapWorldPoint(doc, ...screenToWorld(doc.camera, rect.width / 2, rect.height / 2));
+      const [worldX, worldY] = inkMaybeSnapWorldPoint(doc, ...screenToWorld(doc.camera, rect.width / 2, rect.height / 2));
       for (const item of event.clipboardData.items) {
         if (item.type.startsWith("image/")) {
           const file = item.getAsFile();
@@ -1372,9 +1372,9 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
         }
       }
       const text = event.clipboardData.getData("text/plain");
-      const clipboardBlocks = noteBlocksFromClipboardPayload(text);
+      const clipboardBlocks = inkItemsFromClipboardPayload(text);
       if (clipboardBlocks) {
-        const clones = noteCloneBlocksWithOffset(clipboardBlocks, worldX, worldY);
+        const clones = cloneInkItemsWithOffset(clipboardBlocks, worldX, worldY);
         atomicGesture(
           clones.map((block) => ({ op: "addBlock", block }) as const),
           clones.map((block) => block.id),
@@ -1382,8 +1382,8 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
         return;
       }
       if (text.trim().startsWith("<svg")) {
-        const assetKey = `asset-${createNoteHostId("image")}`;
-        const imageBlock = createNoteBlockByKind("image", worldX - 120, worldY - 80);
+        const assetKey = `asset-${createInkHostId("image")}`;
+        const imageBlock = createInkItemByKind("image", worldX - 120, worldY - 80);
         if (imageBlock.kind !== "image") return;
         atomicGesture(
           [
@@ -1395,8 +1395,8 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
         return;
       }
       if (text.trim()) {
-        const block = createNoteBlockByKind("text", worldX, worldY);
-        const seeded: NoteTextBlock = { ...(block as NoteTextBlock), paragraphs: noteTextParagraphsFromPlainText(text.trim()) };
+        const block = createInkItemByKind("text", worldX, worldY);
+        const seeded: InkTextItem = { ...(block as InkTextItem), paragraphs: inkTextParagraphsFromPlainText(text.trim()) };
         atomicGesture([{ op: "addBlock", block: seeded }], [seeded.id]);
       }
     },
@@ -1406,14 +1406,14 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
   if (!scene || !doc) return <div className="text-muted-foreground p-2 text-xs">{emptySceneLabel}</div>;
 
   const camera = doc.camera;
-  const visibleBlocks = flattenNoteBlocks(doc.blocks);
+  const visibleBlocks = flattenInkItems(doc.blocks);
   const gridColor = resolveSemanticColorHex("border");
   const gridSpacing = doc.gridSpacing ?? 32;
   const gridSubdivisions = doc.gridSubdivisions ?? 4;
   const gridOpacity = doc.gridOpacity ?? 0.35;
   const scale = isNavigator ? Math.min(0.2, 1 / Math.max(camera.zoom, 1)) : camera.zoom;
-  const editingTextBlock = textEdit ? (findNoteBlock(doc, textEdit.blockId) as NoteTextBlock | null) : null;
-  const editingTableBlock = tableEdit ? (findNoteBlock(doc, tableEdit.blockId) as NoteTableBlock | null) : null;
+  const editingTextBlock = textEdit ? (findInkItem(doc, textEdit.blockId) as InkTextItem | null) : null;
+  const editingTableBlock = tableEdit ? (findInkItem(doc, tableEdit.blockId) as InkTableItem | null) : null;
 
   return (
     <div
@@ -1430,15 +1430,15 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       onCopy={handleCopy}
       onPaste={handlePaste}
     >
-      {doc.gridVisible !== false && !isNavigator ? <NoteViewportGrid camera={camera} spacing={gridSpacing} subdivisions={gridSubdivisions} opacity={gridOpacity} color={gridColor} /> : null}
+      {doc.gridVisible !== false && !isNavigator ? <InkViewportGrid camera={camera} spacing={gridSpacing} subdivisions={gridSubdivisions} opacity={gridOpacity} color={gridColor} /> : null}
       <div className="absolute origin-top-left" style={{ transform: `translate(${camera.x}px, ${camera.y}px) scale(${scale})`, width: isNavigator ? 4000 : undefined, height: isNavigator ? 3000 : undefined }}>
         {visibleBlocks.map((block) => (
-          <NoteBlockView key={block.id} block={block} assets={doc.assets} selected={selectedIds.includes(block.id)} hovered={hoveredId === block.id} hidden={textEdit?.blockId === block.id} onPointerDown={handleBlockPointerDown} />
+          <InkItemView key={block.id} block={block} assets={doc.assets} selected={selectedIds.includes(block.id)} hovered={hoveredId === block.id} hidden={textEdit?.blockId === block.id} onPointerDown={handleBlockPointerDown} />
         ))}
       </div>
-      {showResizeHandles && selectionBounds ? <NoteSelectionChrome camera={camera} bounds={selectionBounds} onResizePointerDown={handleResizePointerDown} /> : null}
+      {showResizeHandles && selectionBounds ? <InkSelectionChrome camera={camera} bounds={selectionBounds} onResizePointerDown={handleResizePointerDown} /> : null}
       {editingTextBlock && textEdit?.blockId === editingTextBlock.id ? (
-        <NoteTextEditorOverlay
+        <InkTextEditorOverlay
           block={editingTextBlock}
           screenBounds={{
             x: worldToScreen(camera, editingTextBlock.x, editingTextBlock.y).x,
@@ -1461,7 +1461,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
             const cellY = editingTableBlock.y + (tableEdit.row + 1) * rowHeight;
             const screen = worldToScreen(camera, cellX, cellY);
             return (
-              <NoteTableCellEditorOverlay
+              <InkTableCellEditorOverlay
                 block={editingTableBlock}
                 row={tableEdit.row}
                 col={tableEdit.col}

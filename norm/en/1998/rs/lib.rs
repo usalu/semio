@@ -52,7 +52,7 @@ pub mod part_2 {
 
 // #region 🔖Part3
 pub mod part_3 {
-    use super::part_1;
+    use super::{part_1, AnnexChoice, CheckResult};
 
     pub fn check_silos(drift: f64, limit: f64) -> CheckResult {
         part_1::check_drift(drift, limit, AnnexChoice::En)
@@ -62,19 +62,31 @@ pub mod part_3 {
 
 // #region 🔖Part4
 pub mod part_4 {
-    use super::*;
+    use super::{part_1, AnnexChoice, CheckResult};
+
+    pub fn check_silos_seismic(drift: f64, limit: f64) -> CheckResult {
+        part_1::check_drift(drift, limit, AnnexChoice::En)
+    }
 }
 // #endregion 🔖Part4
 
 // #region 🔖Part5
 pub mod part_5 {
-    use super::*;
+    use super::{part_1, AnnexChoice, CheckResult};
+
+    pub fn check_bridges_seismic(drift: f64, limit: f64) -> CheckResult {
+        part_1::check_drift(drift, limit, AnnexChoice::En)
+    }
 }
 // #endregion 🔖Part5
 
 // #region 🔖Part6
 pub mod part_6 {
-    use super::*;
+    use super::{part_1, AnnexChoice, CheckResult};
+
+    pub fn check_towers_seismic(drift: f64, limit: f64) -> CheckResult {
+        part_1::check_drift(drift, limit, AnnexChoice::De)
+    }
 }
 // #endregion 🔖Part6
 

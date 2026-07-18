@@ -1,7 +1,6 @@
 //! 🏙️ FEM 3D document model and element library on `vcs`.
 
-use fem_core::{BeamStation, Dof, Element, ElementContext, ElementResult, MemberUdl, Model, NodalLoad, Node, Support};
-use mathematical_algebra::{vec3d_cross, vec3d_length, vec3d_normalize, vec3d_sub, Mat3d, MatD, VecD};
+use fem_core::{Bar3, Dof, Element, ElementResult, Frame3, Model, NodalLoad, Node, Support};
 use serde::{Deserialize, Serialize};
 use vcs::{create_document_vcs_envelope, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 
@@ -22,7 +21,9 @@ pub struct FemNode {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum FemElement {
+    #[serde(rename_all = "camelCase")]
     Bar { id: String, start: String, end: String, material_id: String, section_id: String },
+    #[serde(rename_all = "camelCase")]
     Frame { id: String, start: String, end: String, material_id: String, section_id: String, roll: f64 },
 }
 
@@ -407,197 +408,6 @@ pub fn empty_fem3d_projection() -> Fem3dDocument {
     Fem3dDocument::default()
 }
 
-// #region 🔖Elements
-/// 🪵 Two-node 3D axial truss element — carries only translational DOFs, stiffness `k = EA/L`
-/// projected onto the member's unit direction.
-pub struct Bar3 {
-    pub id: String,
-    pub node_a: String,
-    pub node_b: String,
-    pub e: f64,
-    pub a: f64,
-}
-
-impl Element for Bar3 {
-    fn id(&self) -> &str {
-        &self.id
-    }
-
-    fn node_ids(&self) -> Vec<String> {
-        vec![self.node_a.clone(), self.node_b.clone()]
-    }
-
-    fn dofs_per_node(&self) -> &[Dof] {
-        const DOFS: [Dof; 3] = [Dof::Tx, Dof::Ty, Dof::Tz];
-        &DOFS
-    }
-
-    fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
-        let d = vec3d_sub(ctx.positions[1], ctx.positions[0]);
-        let l = vec3d_length(d);
-        let c = vec3d_normalize(d);
-        let k = self.e * self.a / l;
-        let mut ke = MatD::zeros(6, 6);
-        for i in 0..3 {
-            for j in 0..3 {
-                let v = k * c[i] * c[j];
-                ke.set(i, j, v);
-                ke.set(i, j + 3, -v);
-                ke.set(i + 3, j, -v);
-                ke.set(i + 3, j + 3, v);
-            }
-        }
-        ke
-    }
-
-    fn recover(&self, ctx: &ElementContext, u_elem: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
-        let d = vec3d_sub(ctx.positions[1], ctx.positions[0]);
-        let l = vec3d_length(d);
-        let c = vec3d_normalize(d);
-        let k = self.e * self.a / l;
-        let du = [u_elem.get(3) - u_elem.get(0), u_elem.get(4) - u_elem.get(1), u_elem.get(5) - u_elem.get(2)];
-        let n = k * (c[0] * du[0] + c[1] * du[1] + c[2] * du[2]);
-        ElementResult::Bar { n }
-    }
-}
-
-/// 🏗️ Two-node 3D Euler-Bernoulli frame element with torsion — full 6-DOF-per-node member. Local x
-/// runs node-a to node-b; local y/z are built from a reference "up" vector and rotated by `roll`
-/// (radians) about local x. `stiffness_global`/`recover` rotate the decoupled axial/torsion/biaxial
-/// bending local stiffness into global coordinates via the block-diagonal transform `T`.
-pub struct Frame3 {
-    pub id: String,
-    pub node_a: String,
-    pub node_b: String,
-    pub e: f64,
-    pub g: f64,
-    pub a: f64,
-    pub iy: f64,
-    pub iz: f64,
-    pub j: f64,
-    pub roll: f64,
-}
-
-/// 🧮 Places a 4x4 bending block into `k` at the given DOF indices (used for both the y- and z-bending
-/// planes, which are decoupled from each other and from axial/torsion).
-fn set_bend_block(k: &mut MatD, idx: [usize; 4], block: [[f64; 4]; 4]) {
-    for (bi, &gi) in idx.iter().enumerate() {
-        for (bj, &gj) in idx.iter().enumerate() {
-            k.set(gi, gj, block[bi][bj]);
-        }
-    }
-}
-
-impl Frame3 {
-    /// 🧭 Builds the member length, local 12x12 stiffness, and the 12x12 global<->local block-diagonal
-    /// rotation `T` (four `R^T` 3x3 blocks) shared by `stiffness_global` and `recover`.
-    fn local_system(&self, ctx: &ElementContext) -> (f64, MatD, MatD) {
-        let d = vec3d_sub(ctx.positions[1], ctx.positions[0]);
-        let l = vec3d_length(d);
-        let cx = vec3d_normalize(d);
-        let reference = if cx[2].abs() > 0.99 { [1.0, 0.0, 0.0] } else { [0.0, 0.0, 1.0] };
-        let y_unrot = vec3d_normalize(vec3d_cross(reference, cx));
-        let z_unrot = vec3d_cross(cx, y_unrot);
-        let (sin_r, cos_r) = self.roll.sin_cos();
-        let local_y = [
-            y_unrot[0] * cos_r + z_unrot[0] * sin_r,
-            y_unrot[1] * cos_r + z_unrot[1] * sin_r,
-            y_unrot[2] * cos_r + z_unrot[2] * sin_r,
-        ];
-        let local_z = [
-            z_unrot[0] * cos_r - y_unrot[0] * sin_r,
-            z_unrot[1] * cos_r - y_unrot[1] * sin_r,
-            z_unrot[2] * cos_r - y_unrot[2] * sin_r,
-        ];
-        let rt = Mat3d::from_axes(cx, local_y, local_z).transpose();
-        let mut t = MatD::zeros(12, 12);
-        for offset in [0usize, 3, 6, 9] {
-            for row in 0..3 {
-                for col in 0..3 {
-                    t.set(offset + row, offset + col, rt.cols[col][row]);
-                }
-            }
-        }
-        (l, self.local_stiffness(l), t)
-    }
-
-    /// 🧮 Decoupled local 12x12 stiffness: axial, torsion, and biaxial (y/z) Euler-Bernoulli bending.
-    fn local_stiffness(&self, l: f64) -> MatD {
-        let mut k = MatD::zeros(12, 12);
-        let l2 = l * l;
-        let ax = self.e * self.a / l;
-        k.set(0, 0, ax);
-        k.set(0, 6, -ax);
-        k.set(6, 0, -ax);
-        k.set(6, 6, ax);
-        let tor = self.g * self.j / l;
-        k.set(3, 3, tor);
-        k.set(3, 9, -tor);
-        k.set(9, 3, -tor);
-        k.set(9, 9, tor);
-        let bz = self.e * self.iz / l;
-        set_bend_block(
-            &mut k,
-            [1, 5, 7, 11],
-            [
-                [12.0 * bz / l2, 6.0 * bz / l, -12.0 * bz / l2, 6.0 * bz / l],
-                [6.0 * bz / l, 4.0 * bz, -6.0 * bz / l, 2.0 * bz],
-                [-12.0 * bz / l2, -6.0 * bz / l, 12.0 * bz / l2, -6.0 * bz / l],
-                [6.0 * bz / l, 2.0 * bz, -6.0 * bz / l, 4.0 * bz],
-            ],
-        );
-        let by = self.e * self.iy / l;
-        set_bend_block(
-            &mut k,
-            [2, 4, 8, 10],
-            [
-                [12.0 * by / l2, -6.0 * by / l, -12.0 * by / l2, -6.0 * by / l],
-                [-6.0 * by / l, 4.0 * by, 6.0 * by / l, 2.0 * by],
-                [-12.0 * by / l2, 6.0 * by / l, 12.0 * by / l2, 6.0 * by / l],
-                [-6.0 * by / l, 2.0 * by, 6.0 * by / l, 4.0 * by],
-            ],
-        );
-        k
-    }
-}
-
-impl Element for Frame3 {
-    fn id(&self) -> &str {
-        &self.id
-    }
-
-    fn node_ids(&self) -> Vec<String> {
-        vec![self.node_a.clone(), self.node_b.clone()]
-    }
-
-    fn dofs_per_node(&self) -> &[Dof] {
-        const DOFS: [Dof; 6] = [Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz];
-        &DOFS
-    }
-
-    fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
-        let (_l, k_local, t) = self.local_system(ctx);
-        t.transpose().matmul(&k_local).matmul(&t)
-    }
-
-    fn recover(&self, ctx: &ElementContext, u_elem: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
-        let (l, k_local, t) = self.local_system(ctx);
-        let u_loc = t.mul_vec(u_elem);
-        let f = k_local.mul_vec(&u_loc);
-        let n = -f.get(0);
-        let v1 = f.get(2);
-        let m1 = f.get(4);
-        let stations = (0..11)
-            .map(|i| {
-                let x = l * (i as f64) / 10.0;
-                BeamStation { x, n, v: v1, m: m1 + v1 * x }
-            })
-            .collect();
-        ElementResult::Beam { stations }
-    }
-}
-// #endregion 🔖Elements
-
 // #region 🔖Bridge
 /// 🌉 Resolves a `Fem3dDocument` load case into a `fem_core::Model`: nodes, `Bar3`/`Frame3` elements
 /// (materials/sections looked up by id), supports, and the named load case's nodal loads.
@@ -777,22 +587,27 @@ mod tests {
         (doc, e, iy, l, p, iz)
     }
 
+    /// 🔺 A free 3D joint needs at least 3 non-coplanar bars to be kinematically determinate — two
+    /// bars only span a plane, leaving one direction with zero stiffness (a mechanism). Hence n4/b3.
     fn truss_fixture() -> Fem3dDocument {
         Fem3dDocument {
             nodes: vec![
                 FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 },
                 FemNode { id: "n2".into(), x: 2.0, y: 0.0, z: 0.0 },
                 FemNode { id: "n3".into(), x: 1.0, y: 1.0, z: 2.0 },
+                FemNode { id: "n4".into(), x: 1.0, y: -1.0, z: 0.0 },
             ],
             elements: vec![
                 FemElement::Bar { id: "b1".into(), start: "n1".into(), end: "n3".into(), material_id: "steel".into(), section_id: "rod".into() },
                 FemElement::Bar { id: "b2".into(), start: "n2".into(), end: "n3".into(), material_id: "steel".into(), section_id: "rod".into() },
+                FemElement::Bar { id: "b3".into(), start: "n4".into(), end: "n3".into(), material_id: "steel".into(), section_id: "rod".into() },
             ],
             materials: vec![FemMaterial { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80.77e9 }],
             sections: vec![FemSection { id: "rod".into(), name: "Rod".into(), area: 0.001, iy: 1e-6, iz: 1e-6, j: 1e-6 }],
             supports: vec![
                 FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: Dof::ALL.to_vec() },
                 FemSupport { id: "s2".into(), node_id: "n2".into(), fixed: Dof::ALL.to_vec() },
+                FemSupport { id: "s3".into(), node_id: "n4".into(), fixed: Dof::ALL.to_vec() },
             ],
             load_cases: vec![FemLoadCase {
                 id: "drop".into(),

@@ -411,7 +411,7 @@ where
     operation.diff(projection).apply(projection)
 }
 
-pub fn absorb_diff<P, Op>(projection: &P, existing: &mut Op::Diff, incoming: Op::Diff)
+pub fn absorb_diff<P, Op>(_projection: &P, existing: &mut Op::Diff, incoming: Op::Diff)
 where
     Op: Operation<P>,
 {
@@ -421,7 +421,7 @@ where
 
 //#region 🔖MergeStrategy
 pub fn merge_concurrent_diffs<P, Op>(
-    projection: &P,
+    _projection: &P,
     strategy: MergeStrategyKind,
     existing: &mut Op::Diff,
     incoming: Op::Diff,
@@ -572,10 +572,10 @@ fn now_ms() -> u64 {
     #[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
     {
         use std::time::{SystemTime, UNIX_EPOCH};
-        return SystemTime::now()
+        SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map(|duration| duration.as_millis() as u64)
-            .unwrap_or(0);
+            .unwrap_or(0)
     }
     #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
     {
@@ -3253,10 +3253,14 @@ mod tests {
             .expect("transform undo removes the local edit from mid-timeline");
         assert_eq!(
             store.applied_edit_ids(),
-            &[foreign_id.clone()],
+            std::slice::from_ref(&foreign_id),
             "only the local edit is removed; the concurrent foreign edit stays applied"
         );
-        assert_eq!(store.redo_edit_ids(), &[local_edit_id.clone()], "the local edit is on the redo stack");
+        assert_eq!(
+            store.redo_edit_ids(),
+            std::slice::from_ref(&local_edit_id),
+            "the local edit is on the redo stack"
+        );
         assert_eq!(store.projection().expect("projection").n, 2, "projection re-materializes from the foreign edit alone");
 
         store.dispatch(DocumentVcsCommand::Redo).expect("redo brings the local edit back");

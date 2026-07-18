@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 /** 🗺️ `@semio-tech/reasoning-mindmap-rs` router: `bun ./script.ts <wasm|test>`. */
-import { execFileSync } from "node:child_process";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
 class WasmScript extends BundleScript {
@@ -24,7 +23,7 @@ class WasmScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    execFileSync("cargo", ["test", "-p", "reasoning_mindmap", ...segments], { stdio: "inherit", cwd: this.repoRoot });
+    runCargoTestBudgeted(["reasoning_mindmap"], this.repoRoot, segments);
   }
 }
 

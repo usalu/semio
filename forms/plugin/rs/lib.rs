@@ -10,7 +10,7 @@ use semio_framework_plugin::{SurfaceKind,
     ui_external_slot, ui_image, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
     ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption,
     ActionDefinition, ActionKind, ActionEmit, App, Contribution,
-    DocumentApp, DocumentView, HostEffect, PanelGroup, ActionDescriptor, UiButtonNode,
+    DocumentApp, DocumentView, HostEffect, OsMediaCapability, PanelGroup, ResourceKindSpec, ActionDescriptor, UiButtonNode,
     UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode,
     UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState,
@@ -2204,6 +2204,14 @@ impl DocumentApp for FormsPlayApp {
 fn create_forms_app() -> App {
     App::from_builder(
         App::builder(FORMS_PLAY_APP_ID, "Forms").document(["semio", "forms"])
+            .resource_kind(ResourceKindSpec {
+                id: "form.dictionary".into(),
+                name: "Form Dictionary".into(),
+                source_format: "forms.dictionary".into(),
+                component_kind: "forms".into(),
+                dimension: "data".into(),
+                media_capability: OsMediaCapability::Brep,
+            })
             .icon_id("forms")
             .mode("blueprint", "Blueprint")
             .default_mode_id("blueprint")

@@ -53,9 +53,12 @@ pub fn biquadratic(c: [f64; 6], x: f64, y: f64) -> f64 {
 // #endregion 🔖Polynomial
 
 // #region 🔖Integration
-/// ∫f(x)dx from a to b via Simpson's rule.
+/// ∫f(x)dx from a to b via Simpson's rule (n = even number of subintervals).
 pub fn simpson_integrate(f: impl Fn(f64) -> f64, a: f64, b: f64, n: usize) -> f64 {
-    let n = n.max(2) | 1;
+    let mut n = n.max(2);
+    if n % 2 != 0 {
+        n += 1;
+    }
     let h = (b - a) / n as f64;
     let mut sum = f(a) + f(b);
     for i in 1..n {
@@ -125,7 +128,7 @@ pub fn gauss_seidel(a: &[Vec<f64>], b: &[f64], x: &mut [f64], max_iter: usize, t
 
 // #region 🔖LookupTable
 /// 📊 Regular-grid lookup table with linear interpolation.
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct LookupTable2D {
     pub x: Vec<f64>,
     pub y: Vec<f64>,

@@ -1,0 +1,14 @@
+{
+  "title": "Animate Present TypeScript Packages",
+  "emoji": "🎞️",
+  "status": "closed",
+  "description": "Create animate/present TypeScript packages (core + renderer/react) to replace missing framework/product/presentation core and renderer. Update projektetage to use new packages.",
+  "summary": "Created animate/present TypeScript packages to replace missing framework/product/presentation core and renderer.\n\n**@semio-tech/animate-present-core** — full declarative presentation domain model (chapters/sequences/thoughts/slides, participants, embodiments, dispositions, arrangements, split/morph helpers) recovered from git history into `animate/present/core/js/internal.ts`, re-exported from `index.ts` with 112 vitest tests matching projektetage expectations.\n\n**@semio-tech/animate-present-renderer-react** — reveal.js + @semio-tech/ui-react surface chrome renderer with Expertise enum, mountPresentation, PresentationDeck, auto-animate morph support; 272 vitest tests passing.\n\n**Workspace** — `animate/present/package.json` with core + renderer/react workspaces; added to root package.json workspaces.\n\n**projektetage migration** — mit-bestand/präsentation/33.projektetage updated to depend on new packages (package.json, vite.config.ts aliases, js/index.ts imports, all 27 slide/*.ts files); 56 vitest tests passing.\n\nframework/product/presentation left untouched per instruction.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2073"
+  },
+  "goal": "🎯animate",
+  "sessions": [
+    "⚪42e5c545df9b4646bf7904b4a0732ae3"
+  ]
+}

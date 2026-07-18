@@ -2,7 +2,7 @@
 /** 📜 `@semio-tech/graph-manifest` — codegen from manifest JSON sources to Rust + TypeScript. */
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
-import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, runCargo } from "../../../repo/lib/js/index.ts";
+import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, runCargoLint, runCargoTestBudgeted } from "../../../repo/lib/js/index.ts";
 
 //#region 🔖ManifestSource
 type ManifestAxes = { portModel?: string; directedness?: string };
@@ -45,7 +45,8 @@ function findManifestFiles(root: string): string[] {
   const out: string[] = [];
   function walk(dir: string) {
     for (const name of readdirSync(dir)) {
-      if (name === "node_modules" || name === "generated" || name === "target" || name === ".git") continue;
+      // 🌳 Skip dot-directories outright — `.claude/worktrees/<agent-id>` holds a full parallel checkout of the repo (see `git worktree list`), and walking into it re-discovers every manifest.json under a second, identical id, producing duplicate `pub mod`/`MANIFEST_IDS`/match-arm entries in the generated registry.
+      if (name === "node_modules" || name === "generated" || name === "target" || name.startsWith(".")) continue;
       const path = join(dir, name);
       let st: ReturnType<typeof statSync>;
       try {
@@ -148,17 +149,21 @@ function emitRustManifest(doc: ManifestDocument): string {
   const modName = rustModName(doc.id);
   const fnName = rustFnName(doc.id);
   const json = JSON.stringify(doc);
-  let out = `// Generated from ${doc.id}.manifest.json\n\nuse serde::{Deserialize, Serialize};\nuse crate::Manifest;\n\n`;
-  out += emitRustFamily(prefix, "Node", familyRows(doc, "nodeKinds"));
-  out += emitRustFamily(prefix, "Edge", familyRows(doc, "edgeKinds"));
-  out += emitRustFamily(prefix, "Port", familyRows(doc, "portKinds"));
-  out += emitRustFamily(prefix, "Wire", familyRows(doc, "wireKinds"));
-  out += emitRustFamily(prefix, "Layer", familyRows(doc, "layerKinds"));
-  out += emitRustFamily(prefix, "Language", familyRows(doc, "languageKinds"));
-  out += emitRustFamily(prefix, "Surface", familyRows(doc, "surfaceKinds"));
-  out += emitRustFamily(prefix, "Window", familyRows(doc, "windowKinds"));
-  out += emitRustFamily(prefix, "FileNode", familyRows(doc, "fileNodeKinds"));
-  out += emitRustFamily(prefix, "Descriptor", familyRows(doc, "descriptorKinds"));
+  const families =
+    emitRustFamily(prefix, "Node", familyRows(doc, "nodeKinds")) +
+    emitRustFamily(prefix, "Edge", familyRows(doc, "edgeKinds")) +
+    emitRustFamily(prefix, "Port", familyRows(doc, "portKinds")) +
+    emitRustFamily(prefix, "Wire", familyRows(doc, "wireKinds")) +
+    emitRustFamily(prefix, "Layer", familyRows(doc, "layerKinds")) +
+    emitRustFamily(prefix, "Language", familyRows(doc, "languageKinds")) +
+    emitRustFamily(prefix, "Surface", familyRows(doc, "surfaceKinds")) +
+    emitRustFamily(prefix, "Window", familyRows(doc, "windowKinds")) +
+    emitRustFamily(prefix, "FileNode", familyRows(doc, "fileNodeKinds")) +
+    emitRustFamily(prefix, "Descriptor", familyRows(doc, "descriptorKinds"));
+  // families only reference Serialize/Deserialize when at least one recognized kind family is present — an unconditional import would leave manifests with no recognized family (e.g. note-blocks' blockKinds) with an unused import.
+  const serdeImport = families.length > 0 ? "use serde::{Deserialize, Serialize};\n" : "";
+  let out = `// Generated from ${doc.id}.manifest.json\n\n${serdeImport}use crate::Manifest;\n\n`;
+  out += families;
   out += `pub const ${prefix.toUpperCase()}_MANIFEST_JSON: &str = ${rustStr(json)};\n\n`;
   out += `pub fn ${fnName}() -> Manifest {\n    serde_json::from_str(${prefix.toUpperCase()}_MANIFEST_JSON).expect("manifest json")\n}\n`;
   return out;
@@ -305,10 +310,17 @@ class GenerateScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCargo(["test", "-p", "mathematical_graph_manifest", ...segments], this.repoRoot);
+    runCargoTestBudgeted(["mathematical_graph_manifest"], this.repoRoot, segments);
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("test", TestScript);
+/** 🧹Zero-warning clippy gate: `cargo clippy -p mathematical_graph_manifest --all-targets -- -D warnings`. */
+class LintScript extends BundleScript {
+  run(segments: string[]): void {
+    runCargoLint(["mathematical_graph_manifest"], this.repoRoot, segments);
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("test", TestScript).register("lint", LintScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" });

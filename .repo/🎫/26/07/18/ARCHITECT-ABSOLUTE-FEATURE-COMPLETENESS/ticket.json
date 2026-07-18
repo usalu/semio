@@ -1,0 +1,13 @@
+{
+  "title": "Architect Absolute Feature Completeness",
+  "emoji": "🏛️",
+  "status": "open",
+  "description": "Absolute feature completeness: bullet-level typed fields for all 65 sections, real analysis/report/search/exchange/trace behavior, full plugin CRUD for all registers.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2085"
+  },
+  "goal": "🎯architect",
+  "sessions": [
+    "⚪c36f7c4024cd44ef85a3168904d4a31e"
+  ]
+}

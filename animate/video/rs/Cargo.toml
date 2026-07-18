@@ -10,9 +10,8 @@ path = "lib.rs"
 
 [dependencies]
 animate_core = { path = "../../core/rs" }
-infinite_cavas = { path = "../../../infinite/cavas/rs" }
 mathematical_geometry = { path = "../../../mathematical/geometry/rs" }
-semio-framework-hash = { path = "../../../framework/hash/rs" }
+framework_hash = { package = "semio-framework-hash", path = "../../../framework/hash/rs" }
 vello = { version = "0.7.0", features = ["wgpu", "wgpu_default"] }
 wgpu = "27.0.1"
 pollster = "0.4.0"

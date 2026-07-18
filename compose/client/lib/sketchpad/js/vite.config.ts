@@ -26,9 +26,19 @@ import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
-import { puzzle3dMeshesVitePlugin, semioFaviconVitePlugin, uiAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { meshCollectionVitePlugin, semioFaviconVitePlugin, uiAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, type PlaygroundAssetSpec } from "../../../../../ui/styling/vite-elements-assets.ts";
 import { readInitialKitFixtureFromPath } from "../../../../fixture/script.ts";
 // #endregion 🔌Adapters
+
+/** @emoji 🧊 Kit mesh GLB serving spec for puzzle 3d world views embedded in the sketchpad app — mirrors
+ * puzzle/plugin/rs's `[[package.metadata.semio.assets]]` `mesh-collection` row (see {@link meshCollectionVitePlugin}). */
+const PUZZLE_3D_MESH_ASSET_SPEC: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }> = {
+  kind: "mesh-collection",
+  route: "/mesh",
+  roots: ["asset/metabolism/representation", "asset/abbau-aufbau"],
+  placeholder: "asset/mesh/placeholder.glb",
+  filterFromExamples: true,
+};
 
 type CjsFacadeResolveOpts = {
   shimMain: string;
@@ -295,7 +305,7 @@ export default defineConfig(async ({ mode }) => {
     plugins: [
       ...uiAssetsVitePlugin(path.resolve(workspaceRoot, "ui/asset")),
       ...semioFaviconVitePlugin(workspaceRoot),
-      ...puzzle3dMeshesVitePlugin(workspaceRoot),
+      ...meshCollectionVitePlugin(workspaceRoot, PUZZLE_3D_MESH_ASSET_SPEC),
       monorepoPlaywrightDevStubPlugin(),
       monorepoVitestDevStubPlugin(),
       monorepoWorkspaceResolvePlugin(workspaceAliases),

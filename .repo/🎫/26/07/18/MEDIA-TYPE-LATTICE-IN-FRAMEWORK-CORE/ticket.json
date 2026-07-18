@@ -1,8 +1,9 @@
 {
   "title": "Media Type Lattice in Framework Core",
   "emoji": "🎨",
-  "status": "open",
+  "status": "closed",
   "description": "Add a foundational typed-media lattice to framework/core/rs/lib.rs: new MediaClass/MediaForm/MediaType/MediaWireFormat/MediaKindDescriptor/MediaPortDirection/MediaPortSpec types plus a media_types_compatible() compatibility function, placed in a new //#region MediaType immediately after //#endregion MediaFormat (~line 945). Extend AppDefinition (~3662) with three new optional Vec fields: media_kinds, media_inputs, media_outputs (serde default + skip_serializing_if so old manifests still parse). Regenerate ts-rs bindings so framework/core/js/generated/manifest.ts picks up the new types. This is foundational plumbing for later tickets that will wire real media-type checking into the media graph (wire typing today is a weak string `resource_kind` compared by literal equality, checked nowhere). Do not touch OsMediaCapability deletions (belongs to dependent tickets 1A/1B) — just design the surface they'll consume.",
+  "summary": "Created animate/video/rs headless video engine (animate_video crate) wired to animate_core Scene/Sobject API: VelloRenderer with wgpu offscreen readback and static-layer hash cache, SceneFileWriter with partial PNG sequences + FFmpeg concat (MP4/GIF/last-frame/PNG sequence), PartialMovieCache keyed by frame hash, render_scene() with FrameRecorder timeline capture, script.ts test/render commands, nx project.json/package.json, workspace member + launch.json entries. Removed duplicate animate_core stub files that conflicted with the parallel core scaffold.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2043"
   },

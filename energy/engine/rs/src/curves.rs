@@ -135,7 +135,12 @@ pub fn validate_curve(curve: &PerformanceCurve) -> Result<(), Diagnostics> {
                 diag.push(Error::severe("quadratic curve has all-zero coefficients"));
             }
         }
-        PerformanceCurve::Cubic { coeffs } | PerformanceCurve::Quartic { coeffs } => {
+        PerformanceCurve::Cubic { coeffs } => {
+            if coeffs.iter().all(|c| c.abs() < 1e-15) {
+                diag.push(Error::severe("polynomial curve has all-zero coefficients"));
+            }
+        }
+        PerformanceCurve::Quartic { coeffs } => {
             if coeffs.iter().all(|c| c.abs() < 1e-15) {
                 diag.push(Error::severe("polynomial curve has all-zero coefficients"));
             }

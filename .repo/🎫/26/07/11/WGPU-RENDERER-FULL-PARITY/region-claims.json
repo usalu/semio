@@ -1,22 +1,37 @@
 {
-  "wave": 0,
+  "wave": 1,
+  "note": "WS-0 engine facade landed at ui/wgpu/rs/lib.rs engine region (~12083-12776, verify by grep). cargo check is clean. cargo test had 2 foreign stale-fixture bugs (raster->paint_2d) already fixed by orchestrator outside any wave-1 claim, and 2 bugs in the engine region's own test code being fixed by the w0-engine-facade agent. All wave-1 agents should use CARGO_TARGET_DIR=/private/tmp/claude-501/-Users-ueli-Documents-semio/e57c06c1-4105-4486-b074-dcbde9029be5/scratchpad/target-verify to avoid the severe shared target-dir lock contention (50-90+ concurrent cargo processes observed repo-wide).",
   "claims": [
     {
-      "agent": "w0-engine-facade",
+      "agent": "w1a-reconcile",
       "file": "ui/wgpu/rs/lib.rs",
-      "regions": ["engine (new, to be created between shell and widgets)"],
-      "reads_only": ["arena", "tree", "reconcile", "flex", "paint", "events", "scene_slots", "shell", "draw", "gpu"],
-      "must_not_touch": ["widgets", "input", "layout", "component", "theme", "re-exports", "host"]
+      "regions": ["reconcile"],
+      "may_also_touch": ["flex (only the grow/fill-semantics gap for non-Stack containers, per w0's KNOWN GAP note)"],
+      "must_not_touch": ["arena", "tree", "paint", "events", "text", "shell", "engine", "widgets", "component", "theme", "re-exports", "host", "cursor", "scene_slots"]
     },
     {
-      "agent": "w0-harness-and-reference",
-      "file": ".repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/parity-verify.ts",
-      "regions": ["whole file (harness script, not a shared source file)"],
-      "must_not_touch": ["ui/wgpu/rs/lib.rs", "framework/renderer/wgpu/rs/lib.rs"]
+      "agent": "w1b-text-stack",
+      "file": "ui/wgpu/rs/lib.rs",
+      "regions": ["text"],
+      "may_also_touch": ["gpu (only to add an RGBA emoji atlas page / sampled texture)", "shaders (only minimal text-shader branch for emoji)"],
+      "cargo_toml_wiring_request_only": true,
+      "must_not_touch": ["arena", "tree", "reconcile", "flex", "paint", "events", "shell", "engine", "widgets", "component", "theme", "re-exports", "host", "cursor", "scene_slots"]
+    },
+    {
+      "agent": "w1c-paint-parity",
+      "file": "ui/wgpu/rs/lib.rs",
+      "regions": ["paint"],
+      "must_not_touch": ["arena", "tree", "reconcile", "flex", "text", "events", "shell", "engine", "widgets (read-only reference)", "component", "theme", "re-exports", "host", "cursor", "scene_slots"]
+    },
+    {
+      "agent": "w1d-events-overlay",
+      "file": "ui/wgpu/rs/lib.rs",
+      "regions": ["events", "cursor"],
+      "must_not_touch": ["arena", "tree", "reconcile", "flex", "text", "paint", "shell", "engine", "widgets (read-only reference)", "component", "theme", "re-exports", "host", "scene_slots"]
     }
   ],
   "choke_points_reserved_for_integrator": [
     "framework/renderer/wgpu/rs/lib.rs: ShellState struct + new()/init, render_ui_node dispatch, Registry, host tail (semio_renderer_boot/run_native), Cargo.toml",
-    "ui/wgpu/rs/lib.rs: UiNode enum, UiCommand enum, theme, re-exports, host, Cargo.toml"
+    "ui/wgpu/rs/lib.rs: UiNode enum, UiCommand enum, theme, re-exports, host, Cargo.toml, engine (owned by w0-engine-facade agent, still finishing test fixes), tree, arena, shell, widgets, scene_slots, component"
   ]
 }

@@ -1,4 +1,4 @@
-import type { SlideFile } from "@semio-tech/framework-presentation-core";
+import type { SlideFile } from "@semio-tech/animate-present-core";
 
 const PARTICIPANT = "puzzle-3d";
 const EMBODIMENT = "puzzle-3d--iframe";

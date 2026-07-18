@@ -264,7 +264,13 @@ mod tests {
 
     #[test]
     fn epw_parses_minimal() {
-        let epw = "LOCATION,Test,USA,TMY3,123,45.0,-75.0,-5.0,100.0\n\
+        let epw = "LOCATION,Test,XX,USA,TMY3,123,45.0,-75.0,-5.0,100.0\n\
+DESIGN CONDITIONS,0\n\
+TYPICAL/EXTREME PERIODS,0\n\
+GROUND TEMPERATURES,0\n\
+HOLIDAYS/DAYLIGHT SAVINGS,0\n\
+COMMENTS 1,0\n\
+COMMENTS 2,0\n\
 DATA PERIODS,1,1,Data,Sunday,1/1,12/31\n\
 2026,1,1,1,0,?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9*9*9?9*9,-5.0,-10.0,50,101325,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3.0,180,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n";
         let w = EpwWeather::parse(epw).unwrap();

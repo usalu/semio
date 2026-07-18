@@ -26,21 +26,16 @@ pub enum GraphManifestError {
 
 // #region 🔖Property
 /// 📊 Runtime property value for graph instances.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum PropertyValue {
+    #[default]
     Null,
     Bool(bool),
     Number(f64),
     String(String),
     Array(Vec<PropertyValue>),
     Object(std::collections::BTreeMap<String, PropertyValue>),
-}
-
-impl Default for PropertyValue {
-    fn default() -> Self {
-        Self::Null
-    }
 }
 
 impl PropertyValue {
@@ -181,7 +176,11 @@ pub struct KindDef {
 
 impl KindDef {
     pub fn display_name(&self) -> &str {
-        if self.name.is_empty() { &self.id } else { &self.name }
+        if self.name.is_empty() {
+            &self.id
+        } else {
+            &self.name
+        }
     }
 }
 
@@ -248,23 +247,8 @@ impl Manifest {
 
     pub fn to_trinity_manifest(&self) -> TrinityManifest {
         TrinityManifest {
-            node_kinds: self
-                .node_kinds
-                .iter()
-                .map(|k| TrinityNodeKindDef {
-                    name: k.id.clone(),
-                    properties: k.properties.clone(),
-                    port_kinds: k.ports.clone(),
-                })
-                .collect(),
-            edge_kinds: self
-                .edge_kinds
-                .iter()
-                .map(|k| TrinityEdgeKindDef {
-                    name: k.id.clone(),
-                    properties: k.properties.clone(),
-                })
-                .collect(),
+            node_kinds: self.node_kinds.iter().map(|k| TrinityNodeKindDef { name: k.id.clone(), properties: k.properties.clone(), port_kinds: k.ports.clone() }).collect(),
+            edge_kinds: self.edge_kinds.iter().map(|k| TrinityEdgeKindDef { name: k.id.clone(), properties: k.properties.clone() }).collect(),
             port_kinds: self
                 .port_kinds
                 .iter()
@@ -276,11 +260,7 @@ impl Manifest {
                             _ => None,
                         })
                     })?;
-                    Some(TrinityPortKindDef {
-                        name: k.id.clone(),
-                        direction,
-                        properties: k.properties.clone(),
-                    })
+                    Some(TrinityPortKindDef { name: k.id.clone(), direction, properties: k.properties.clone() })
                 })
                 .collect(),
         }
@@ -443,10 +423,7 @@ impl<'a> ManifestValidator<'a> {
                 continue;
             };
             if !property_value_matches_type(value, &def.value_type) {
-                return Err(ManifestValidationError::new(
-                    format!("{path}/{}", def.name),
-                    format!("property type mismatch for {}", def.value_type.id()),
-                ));
+                return Err(ManifestValidationError::new(format!("{path}/{}", def.name), format!("property type mismatch for {}", def.value_type.id())));
             }
         }
         for key in bag.keys() {
@@ -459,23 +436,20 @@ impl<'a> ManifestValidator<'a> {
 
     pub fn validate_trinity_graph(&self, nodes: &[TrinityNodeRef], edges: &[TrinityEdgeRef]) -> Result<(), ManifestValidationError> {
         for node in nodes {
-            self.validate_node_kind(&node.kind)?;
-            self.validate_node_properties(&node.kind, &node.properties)?;
+            self.validate_node_kind(node.kind)?;
+            self.validate_node_properties(node.kind, node.properties)?;
             for port in node.ports {
-                self.validate_port_kind(&port.kind)?;
-                if let Some(node_def) = self.manifest.node_kind(&node.kind) {
-                    if !node_def.ports.is_empty() && !node_def.ports.iter().any(|p| p == &port.kind) {
-                        return Err(ManifestValidationError::new(
-                            format!("nodes/{}/ports/{}", node.id, port.kind),
-                            format!("port kind {} not declared on node kind {}", port.kind, node.kind),
-                        ));
+                self.validate_port_kind(port.kind)?;
+                if let Some(node_def) = self.manifest.node_kind(node.kind) {
+                    if !node_def.ports.is_empty() && !node_def.ports.iter().any(|p| p == port.kind) {
+                        return Err(ManifestValidationError::new(format!("nodes/{}/ports/{}", node.id, port.kind), format!("port kind {} not declared on node kind {}", port.kind, node.kind)));
                     }
                 }
             }
         }
         for edge in edges {
-            self.validate_edge_kind(&edge.kind)?;
-            self.validate_edge_properties(&edge.kind, &edge.properties)?;
+            self.validate_edge_kind(edge.kind)?;
+            self.validate_edge_properties(edge.kind, edge.properties)?;
         }
         Ok(())
     }

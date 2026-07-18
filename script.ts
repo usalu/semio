@@ -582,7 +582,7 @@ export class TestScript extends Script {
       return;
     }
     if (segments[0] === "repo-client") {
-      this.runRepoGoTest("./repo/client/cli/go", segments.slice(1));
+      await this.runRepoGoTest("./repo/client/cli/go", segments.slice(1));
       return;
     }
     if (segments[0] === "repo-mcp") {
@@ -590,7 +590,7 @@ export class TestScript extends Script {
       for (const pkg of ["./repo/client/mcp/go", "./repo/client/mcp/cursor/go", "./repo/client/mcp/copilot/go", "./repo/client/mcp/claude/go", "./repo/client/mcp/codex/go", "./repo/client/mcp/kiro/go"]) {
         runCmd("go", ["build", pkg], { cwd: this.root, env: { ...process.env, GOWORK: join(this.root, "go.work") } });
       }
-      this.runRepoGoTest("./repo/client/cli/go", ["-run", "Mcp|MCP|mcp", ...segments.slice(1)]);
+      await this.runRepoGoTest("./repo/client/cli/go", ["-run", "Mcp|MCP|mcp", ...segments.slice(1)]);
       return;
     }
     runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-js", "@semio-tech/compose-react"], { cwd: this.root });
@@ -637,8 +637,8 @@ export class TestScript extends Script {
   }
 
   /** ⏱️`-short` skips the `testing.Short()`-gated real-monorepo-scan tests in `repo/client/cli/go/main_test.go` so the default budgeted `test` target stays ≤30s. */
-  private runRepoGoTest(module: string, extraArgs: string[]): void {
-    runTestBudgeted("go", ["test", module, "-short", ...extraArgs], {
+  private async runRepoGoTest(module: string, extraArgs: string[]): Promise<void> {
+    await runTestBudgeted("go", ["test", module, "-short", ...extraArgs], {
       cwd: this.root,
       env: { ...process.env, GOWORK: join(this.root, "go.work") },
     });

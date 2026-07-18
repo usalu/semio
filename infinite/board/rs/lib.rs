@@ -1,16 +1,15 @@
 //! 🖼️ Interactive board engine: retained graph state, camera, selection, and hit-testing over `mathematical_graph`.
 
 pub use infinite_cavas as cavas;
+pub use mathematical_geometry::{clamp_f64, distance_between, distance_point_to_cubic_bezier, normalize_or_zero};
 pub use mathematical_graph::{
     self as graph, orient_endpoints, property_bag_from_json, property_bag_to_json, CoreEdge, Directed, Directedness, EdgeId, ElementSemantics, GraphEdge, Handle, HandleId, HandleRole, Node, NodeId, NodeShape, Normal, PortModel, Ported, Undirected,
 };
-pub use mathematical_graph_manifest::{PropertyBag, PropertyValue};
 pub use mathematical_graph_drawing::routing::{
-    circle_handle_angle_toward, compute_edge_bezier_outward, compute_edge_bezier_points, compute_edge_sharp_sz_path, handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path,
-    handle_exterior_cap_triangle_fill_path, handle_exterior_cap_triangle_peak, handle_exterior_cap_triangle_stroke_path, handle_outside_node_clip_path, handle_outward_at_node_rim, handle_position_on_circle,
-    handle_position_on_rectangle, rectangle_handle_angle_toward,
+    circle_handle_angle_toward, compute_edge_bezier_outward, compute_edge_bezier_points, compute_edge_sharp_sz_path, handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path,
+    handle_exterior_cap_triangle_peak, handle_exterior_cap_triangle_stroke_path, handle_outside_node_clip_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, rectangle_handle_angle_toward,
 };
-pub use mathematical_geometry::{clamp_f64, distance_between, distance_point_to_cubic_bezier, normalize_or_zero};
+pub use mathematical_graph_manifest::{PropertyBag, PropertyValue};
 
 pub use scene_json::{board_json_locked_option, board_json_visible_option, board_json_visible_or_true, CameraJson, NodeDescJson};
 
@@ -169,21 +168,40 @@ pub struct GraphPickTarget {
     pub generality: u32,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum InteractionMode {
-    DragNode { node_id: NodeId, offset: Vec2 },
-    DragNodes { primary_id: NodeId, offset: Vec2 },
-    DrawEdge { anchor_handle: HandleId, anchor_is_source: bool, fixed_target: Option<HandleId>, cursor: Point, reconnecting: Option<EdgeId>, snap_target: Option<HandleId> },
-    SelectionPending { start: Point, start_screen: Point },
-    AreaSelect { start: Point, start_screen: Point },
-    Pan { start_screen: Point, cam_x: f64, cam_y: f64, zoom: f64 },
+    DragNode {
+        node_id: NodeId,
+        offset: Vec2,
+    },
+    DragNodes {
+        primary_id: NodeId,
+        offset: Vec2,
+    },
+    DrawEdge {
+        anchor_handle: HandleId,
+        anchor_is_source: bool,
+        fixed_target: Option<HandleId>,
+        cursor: Point,
+        reconnecting: Option<EdgeId>,
+        snap_target: Option<HandleId>,
+    },
+    SelectionPending {
+        start: Point,
+        start_screen: Point,
+    },
+    AreaSelect {
+        start: Point,
+        start_screen: Point,
+    },
+    Pan {
+        start_screen: Point,
+        cam_x: f64,
+        cam_y: f64,
+        zoom: f64,
+    },
+    #[default]
     Idle,
-}
-
-impl Default for InteractionMode {
-    fn default() -> Self {
-        Self::Idle
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -191,6 +209,9 @@ struct ProximityConnection {
     source: HandleId,
     target: HandleId,
 }
+
+/// 🔗 Resolved wire endpoints for an edge: source/target world position, their owning nodes (if any), and cap radii.
+type WireEndpoints<'a> = (Point, Point, Option<&'a Node>, Option<&'a Node>, f64, f64);
 
 pub fn handle_position(node: &Node, handle: &Handle) -> Point {
     match node.shape {
@@ -533,41 +554,13 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
     }
 
     pub fn create_node(&mut self, id: NodeId, x: f64, y: f64, radius: f64, draggable: bool) {
-        self.nodes.insert(
-            id,
-            Node {
-                center: Point::new(x, y),
-                draggable,
-                height: radius * 2.0,
-                id,
-                radius,
-                shape: NodeShape::Circle,
-                width: radius * 2.0,
-                kind: None,
-                label: None,
-                properties: PropertyBag::new(),
-            },
-        );
+        self.nodes.insert(id, Node { center: Point::new(x, y), draggable, height: radius * 2.0, id, radius, shape: NodeShape::Circle, width: radius * 2.0, kind: None, label: None, properties: PropertyBag::new() });
     }
 
     pub fn create_rect_node(&mut self, id: NodeId, x: f64, y: f64, width: f64, height: f64, draggable: bool) {
         let hw = width * 0.5;
         let hh = height * 0.5;
-        self.nodes.insert(
-            id,
-            Node {
-                center: Point::new(x, y),
-                draggable,
-                height,
-                id,
-                radius: hw.max(hh).max(ui_styling::radii::NODE_MIN),
-                shape: NodeShape::Rectangle,
-                width,
-                kind: None,
-                label: None,
-                properties: PropertyBag::new(),
-            },
-        );
+        self.nodes.insert(id, Node { center: Point::new(x, y), draggable, height, id, radius: hw.max(hh).max(ui_styling::radii::NODE_MIN), shape: NodeShape::Rectangle, width, kind: None, label: None, properties: PropertyBag::new() });
     }
 
     pub fn update_node(&mut self, id: NodeId, x: f64, y: f64, radius: f64) {
@@ -605,18 +598,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
 
     pub fn create_handle(&mut self, id: HandleId, node_id: NodeId, angle: f64) {
         if P::HAS_PORTS {
-            self.handles.insert(
-                id,
-                Handle {
-                    angle,
-                    id,
-                    node_id,
-                    radius: ui_styling::radii::HANDLE_DEFAULT,
-                    role: HandleRole::Any,
-                    kind: None,
-                    properties: PropertyBag::new(),
-                },
-            );
+            self.handles.insert(id, Handle { angle, id, node_id, radius: ui_styling::radii::HANDLE_DEFAULT, role: HandleRole::Any, kind: None, properties: PropertyBag::new() });
         }
     }
 
@@ -831,6 +813,8 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         self.push_selection_event();
     }
 
+    /// 🖱️ Flat pointer-event fields (screen/world coords, button, modifiers) mirror this repo's shared WASM host-bridge pointer contract, matched by every sibling board/editor/layout crate's `pointer_*_screen` — not bundled into a struct, to keep the JS-callable surface a plain positional arg list.
+    #[allow(clippy::too_many_arguments, reason = "flat args mirror the shared WASM host-bridge pointer-event contract used across all `pointer_*_screen` methods in this repo")]
     pub fn pointer_down_screen(&mut self, screen_x: f64, screen_y: f64, world_x: f64, world_y: f64, button: u8, shift: bool, ctrl_or_meta: bool, _alt: bool) {
         self.proximity_connection = None;
         self.selection_preview_points.clear();
@@ -887,13 +871,8 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 self.update_hover(None);
             }
             None => {
-                if merge_from_modifiers {
-                    self.selection = Selection::default();
-                    self.push_selection_event();
-                } else {
-                    self.selection = Selection::default();
-                    self.push_selection_event();
-                }
+                self.selection = Selection::default();
+                self.push_selection_event();
                 self.update_hover(None);
                 self.interaction = InteractionMode::Idle;
             }
@@ -904,6 +883,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         self.pointer_move_screen(x, y, x, y, false, false, false);
     }
 
+    #[allow(clippy::too_many_arguments, reason = "flat args mirror the shared WASM host-bridge pointer-event contract used across all `pointer_*_screen` methods in this repo")]
     pub fn pointer_move_screen(&mut self, screen_x: f64, screen_y: f64, world_x: f64, world_y: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         let point = Point::new(world_x, world_y);
         let screen = Point::new(screen_x, screen_y);
@@ -1016,9 +996,6 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                     HitObject::Node(id) => id,
                 }));
             }
-            other => {
-                self.interaction = other;
-            }
         }
     }
 
@@ -1026,6 +1003,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         self.pointer_up_screen(x, y, x, y, false, false, false);
     }
 
+    #[allow(clippy::too_many_arguments, reason = "flat args mirror the shared WASM host-bridge pointer-event contract used across all `pointer_*_screen` methods in this repo")]
     pub fn pointer_up_screen(&mut self, screen_x: f64, screen_y: f64, world_x: f64, world_y: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         let point = Point::new(world_x, world_y);
         let screen = Point::new(screen_x, screen_y);
@@ -1241,7 +1219,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         best.map(|(_, id)| id)
     }
 
-    fn endpoint_wire_nodes(&self, edge: &GraphEdge<P::Endpoint>) -> Option<(Point, Point, Option<&Node>, Option<&Node>, f64, f64)> {
+    fn endpoint_wire_nodes(&self, edge: &GraphEdge<P::Endpoint>) -> Option<WireEndpoints<'_>> {
         if P::HAS_PORTS {
             let source_handle = self.handles.get(&P::endpoint_as_handle(edge.source)?)?;
             let target_handle = self.handles.get(&P::endpoint_as_handle(edge.target)?)?;
@@ -1264,11 +1242,6 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             self.selection.edge_ids.remove(&edge_id);
         }
         self.selection.handle_ids.remove(&id);
-    }
-
-    fn apply_pick_selection(&mut self, hit: HitObject<P::Endpoint>, extend_selection: bool) {
-        let mode = if extend_selection { "additive" } else { "replace" };
-        self.apply_pick_with_mode(hit, mode);
     }
 
     fn apply_pick_with_mode(&mut self, hit: HitObject<P::Endpoint>, mode: &str) {
@@ -1362,20 +1335,6 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             }
         }
         merge_ids_into_selection(initial, &hits, merge_mode)
-    }
-
-    fn selection_to_string_set(&self) -> BTreeSet<String> {
-        let mut set = BTreeSet::new();
-        for id in &self.selection.node_ids {
-            set.insert(id.to_string());
-        }
-        for id in &self.selection.handle_ids {
-            set.insert(id.to_string());
-        }
-        for id in &self.selection.edge_ids {
-            set.insert(id.to_string());
-        }
-        set
     }
 
     fn selection_from_string_set(&self, ids: &BTreeSet<String>) -> Selection {
@@ -1744,8 +1703,6 @@ mod tests {
 
     #[test]
     fn hit_test_pick_targets_collects_node_and_handle() {
-        use cavas::Point;
-
         let mut engine = GraphEngine::<Ported, Directed>::new();
         engine.create_rect_node(1, 0.0, 0.0, 80.0, 56.0, true);
         engine.create_handle(10, 1, 0.0);

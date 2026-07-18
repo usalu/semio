@@ -1,0 +1,13 @@
+{
+  "title": "Normalize Process Plugin Crate To Consistency Contract",
+  "emoji": "🪚",
+  "status": "open",
+  "description": "Normalize process/plugin/rs/lib.rs (Process3dPlayApp) to the wave-4 Consistency Contract: adopt SDK PanelKit (tree_item_with_action/tree_item_desc/PanelTreeBuilder) for build_document_tree/build_catalogue_tree, adopt SDK Terminology (app_labels!/LocaleLabels/resolve_labels/localized_label_map/AppLabelsOverlayExt) replacing the hand-rolled Process3dLabels struct+consts+resolver and the hand-rolled action/utility label-map functions, adopt SDK Testkit (testkit::meta/new_app/assert_undo_redo_round_trip) replacing local meta()/new_app() test scaffolding, unwrap the incorrectly-nested `pub mod app_3d { ... }` to a flat single-app crate layout (C4), rename the \"🔖Bundle\" region into a single \"🔖Manifest\" region (C2) and add a \"🧪Tests\" region marker (C3), and reorder regions into canonical order where practical. C1 app-struct naming (Process3dPlayApp) is already compliant; verify only.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2087"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪10f83e80190749a69922035720f86abe"
+  ]
+}

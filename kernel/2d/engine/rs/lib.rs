@@ -324,16 +324,5 @@ mod tests {
         let moved = Affine2D::translate(1.0, 2.0).multiply(Affine2D::identity()).transform_point(point);
         assert_eq!(moved, [4.0, 6.0]);
     }
-
-    #[test]
-    fn drawing_scene_holds_nodes() {
-        let scene = DrawingScene {
-            width: 100.0,
-            height: 50.0,
-            nodes: vec![SceneNode { transform: Affine2D::identity(), node: DrawingNode::Rect { x: 0.0, y: 0.0, width: 10.0, height: 10.0 }, fill: Some(FillStyle::Solid { color: [1.0, 0.0, 0.0, 1.0] }), stroke: None, opacity: 1.0, clip: None }],
-        };
-        assert_eq!(scene.nodes.len(), 1);
-        assert_eq!(scene.width, 100.0);
-    }
 }
 // #endregion 🔖Tests

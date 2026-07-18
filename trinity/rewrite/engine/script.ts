@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀 `@semio-tech/trinity-core` router: `bun ./script.ts wasm`. */
-import { BundleScript, ScriptRouter, playPollingEnv, runBundleScriptMain, runCargo, runWasmPackWebBuild } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, playPollingEnv, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
 class WasmScript extends BundleScript {
@@ -23,7 +23,7 @@ class WasmScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCargo(["test", "-p", "trinity_rewrite", ...segments], this.repoRoot, playPollingEnv());
+    runCargoTestBudgeted(["trinity_rewrite"], this.repoRoot, segments, playPollingEnv());
   }
 }
 

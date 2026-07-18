@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 /** 🎭 `@semio-tech/fsm-rs` router: `bun ./script.ts <wasm|test>`. */
-import { execFileSync } from "node:child_process";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../repo/lib/js/index.ts";
 
 class WasmScript extends BundleScript {
   run(): void {
@@ -23,7 +22,7 @@ class WasmScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    execFileSync("cargo", ["test", "-p", "fsm", "-p", "fsm_macros", ...segments], { stdio: "inherit", cwd: this.root });
+    runCargoTestBudgeted(["fsm", "fsm_macros"], this.root, segments);
   }
 }
 

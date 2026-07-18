@@ -1,0 +1,13 @@
+{
+  "title": "Architect Plugin DocumentApp",
+  "emoji": "🏛️",
+  "status": "open",
+  "description": "Create architect/plugin/rs/lib.rs — full WASM DocumentApp plugin for architect technology with adjacency matrix UI, graph, register, report bodies, and action handlers.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2071"
+  },
+  "goal": "🎯architect",
+  "sessions": [
+    "⚪0cfeeb4d992e4ab3acaebcbffb01d799"
+  ]
+}

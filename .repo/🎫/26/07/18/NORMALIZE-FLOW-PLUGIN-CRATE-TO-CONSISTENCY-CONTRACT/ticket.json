@@ -1,0 +1,13 @@
+{
+  "title": "Normalize Flow Plugin Crate To Consistency Contract",
+  "emoji": "🌊",
+  "status": "open",
+  "description": "Normalize flow/plugin/rs/lib.rs to the repo-wide Consistency Contract: adopt SDK PanelKit (tree_item*/PanelTreeBuilder) for build_document_tree/build_catalogue_tree, adopt SDK Terminology (app_labels!/LocaleLabels/resolve_labels/localized_label_map/AppLabelsOverlayExt) replacing the hand-rolled FlowPlayLabels struct+consts+resolver and flow_action_labels/app_labels struct-literal, adopt SDK Testkit (testkit::meta/new_app/paired_apps/assert_undo_redo_round_trip) replacing local test scaffolding, verify resource_kind() already present, verify C1 naming (FlowPlayApp already matches PascalCase(\"flow-play\")+\"App\"), fix regions (wrap tests mod in //#region 🧪Tests / //#endregion 🧪Tests; confirm canonical region order), confirm single-app crate stays flat (no app_\u003cname\u003e mod wrapping needed).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2083"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪110dd4d82eab4fa7808a44e5616ab234"
+  ]
+}

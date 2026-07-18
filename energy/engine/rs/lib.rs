@@ -2,6 +2,10 @@
 
 #![allow(clippy::too_many_arguments)]
 
+#[path = "src/calendar.rs"]
+mod calendar;
+#[path = "src/precompute.rs"]
+mod precompute;
 #[path = "src/error.rs"]
 mod error;
 #[path = "src/units.rs"]
@@ -52,7 +56,55 @@ mod electrical;
 mod water;
 #[path = "src/faults.rs"]
 mod faults;
+#[path = "src/geometry.rs"]
+mod geometry;
+#[path = "src/material.rs"]
+mod material;
+#[path = "src/envelope.rs"]
+mod envelope;
+#[path = "src/fenestration.rs"]
+mod fenestration;
+#[path = "src/solar.rs"]
+mod solar;
+#[path = "src/daylight.rs"]
+mod daylight;
+#[path = "src/zone_air.rs"]
+mod zone_air;
+#[path = "src/room_air.rs"]
+mod room_air;
+#[path = "src/gains.rs"]
+mod gains;
+#[path = "src/air_exchange.rs"]
+mod air_exchange;
+#[path = "src/airflow_network.rs"]
+mod airflow_network;
+#[path = "src/iaq.rs"]
+mod iaq;
+#[path = "src/comfort.rs"]
+mod comfort;
+#[path = "src/controls.rs"]
+mod controls;
+#[path = "src/output.rs"]
+mod output;
+#[path = "src/meters.rs"]
+mod meters;
+#[path = "src/metrics.rs"]
+mod metrics;
+#[path = "src/results.rs"]
+mod results;
+#[path = "src/economics.rs"]
+mod economics;
+#[path = "src/sizing.rs"]
+mod sizing;
+#[path = "src/dispatch.rs"]
+mod dispatch;
+#[path = "src/kernel.rs"]
+mod kernel;
+#[path = "src/sim.rs"]
+mod sim;
 
+pub use calendar::*;
+pub use precompute::*;
 pub use error::*;
 pub use units::*;
 pub use num::*;
@@ -62,7 +114,10 @@ pub use schedule::*;
 pub use site::*;
 pub use curves::*;
 pub use hvac_topo::*;
-pub use ideal_hvac::*;
+pub use ideal_hvac::{
+    ideal_loads_deliver, ideal_loads_deliver_with_controls, EconomizerControl, HumidityControl,
+    IdealLoadsConfig, IdealLoadsInput, IdealLoadsOutput, IdealLoadsRequest,
+};
 pub use zone_hvac::*;
 pub use terminal::*;
 pub use air_system::*;
@@ -78,3 +133,26 @@ pub use refrigeration::*;
 pub use electrical::*;
 pub use water::*;
 pub use faults::*;
+pub use geometry::*;
+pub use material::*;
+pub use envelope::*;
+pub use fenestration::*;
+pub use solar::*;
+pub use daylight::*;
+pub use zone_air::*;
+pub use room_air::*;
+pub use gains::*;
+pub use air_exchange::*;
+pub use airflow_network::*;
+pub use iaq::*;
+pub use comfort::*;
+pub use controls::*;
+pub use output::*;
+pub use meters::*;
+pub use metrics::*;
+pub use results::*;
+pub use economics::*;
+pub use sizing::*;
+pub use dispatch::*;
+pub use kernel::*;
+pub use sim::*;

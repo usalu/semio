@@ -32,6 +32,14 @@
         "command": "bun ./script.ts check-no-raw-colors"
       }
     },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "ui/styling",
+        "command": "bun ./script.ts test",
+        "forwardAllArgs": true
+      }
+    },
     "test-rs": {
       "executor": "nx:run-commands",
       "options": {

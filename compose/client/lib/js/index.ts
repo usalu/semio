@@ -5121,7 +5121,7 @@ export async function openSessionHttp(baseUrl: string, opts?: SessionHttpOpenOpt
 //#endregion 🚀PublicAPI
 
 //#region 🧪Tests
-if (typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_RUN_EMBEDDED_TESTS"] === "1") {
+if (typeof process !== "undefined" && !!process.env && (process.env["COMPOSE_JS_RUN_EMBEDDED_TESTS"] === "1" || process.env["COMPOSE_JS_RUN_EMBEDDED_E2E_TESTS"] === "1")) {
   const { describe, it, expect } = await import("vitest");
   const eventually = async <T>(read: () => Promise<T>, matches: (value: T) => boolean, timeoutMs = 5_000): Promise<T> => {
     const startedAt = Date.now();
@@ -5133,6 +5133,9 @@ if (typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_R
     }
     return lastValue;
   };
+
+  //#region ⚡FastUnit
+  if (process.env["COMPOSE_JS_RUN_EMBEDDED_TESTS"] === "1")
   describe("compose/js", () => {
     it("graphql wire kinds match golden operation roots", () => {
       expect(graphqlWireOperationKind("  #c\nquery X { session { __typename } }")).toBe("query");
@@ -5173,6 +5176,26 @@ if (typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_R
       expect(topoInner).toContain("hasTypes");
     });
 
+    it("graphql wire post json always carries query variables operationName", () => {
+      const raw = graphqlWirePostBodyJson({ query: "query Q { __typename }" });
+      const o = JSON.parse(raw) as Record<string, unknown>;
+      expect(Object.keys(o).sort()).toEqual(["operationName", "query", "variables"]);
+      expect(o["query"]).toBe("query Q { __typename }");
+      expect(o["variables"]).toEqual({});
+      expect(o["operationName"]).toBe(null);
+      expect(JSON.parse(graphqlWirePostBodyJson({ query: "mutation { __typename }", variables: { a: 1 }, operationName: "M" })) as Record<string, unknown>).toEqual({ query: "mutation { __typename }", variables: { a: 1 }, operationName: "M" });
+    });
+
+    it("Session.open rejects inline JSON bootstrap URI", async () => {
+      await expect(Session.open('{"id":"kit-json"}')).rejects.toThrow(/installProjection/);
+      await expect(Session.open("dev+json:eyJpZCI6IngifQ==")).rejects.toThrow(/installProjection/);
+    });
+  });
+  //#endregion ⚡FastUnit
+
+  //#region 🐘WasmE2e
+  if (process.env["COMPOSE_JS_RUN_EMBEDDED_E2E_TESTS"] === "1")
+  describe("compose/js e2e", () => {
     it("fetchComposeFileSystemChildren returns typologies at kit root after installProjection", async () => {
       const { readFile } = await import("node:fs/promises");
       const { dirname, join } = await import("node:path");
@@ -5326,89 +5349,6 @@ if (typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_R
       }
     });
 
-    it("Piece installs pathPieces and weak-geometry change subscriptions", () => {
-      expect(typeof Piece.prototype.pathPieces).toBe("function");
-      expect(typeof Piece.prototype.onPathPiecesChanged).toBe("function");
-      expect(typeof Piece.prototype.onPositionChanged).toBe("function");
-      expect(typeof Piece.prototype.onFlatPositionChanged).toBe("function");
-    });
-    it("entities install is, has, references, and referencedBy projection accessors", () => {
-      const expectFn = (proto: object, name: string) => expect(typeof (proto as Record<string, unknown>)[name]).toBe("function");
-      expectFn(Kit.prototype, "hasDesigns");
-      expectFn(Kit.prototype, "hasTypes");
-      expectFn(Kit.prototype, "hasFiles");
-      expectFn(Kit.prototype, "hasFolders");
-      expectFn(Kit.prototype, "hasFamilies");
-      expectFn(Kit.prototype, "hasTypologies");
-      expectFn(Kit.prototype, "hasPiecesTransitive");
-      expectFn(Kit.prototype, "hasConnectionsTransitive");
-      expectFn(Kit.prototype, "hasTypesTransitive");
-      expectFn(Kit.prototype, "hasDesignsTransitive");
-      expectFn(Typology.prototype, "hasTypes");
-      expectFn(Typology.prototype, "hasDesigns");
-      expectFn(Folder.prototype, "hasTypes");
-      expectFn(Folder.prototype, "hasDesigns");
-      expectFn(Type.prototype, "hasPorts");
-      expectFn(Type.prototype, "hasConnectors");
-      expectFn(Type.prototype, "hasRepresentations");
-      expectFn(Type.prototype, "referencesFiles");
-      expectFn(Type.prototype, "referencedBy");
-      expectFn(Type.prototype, "referencedByDesigns");
-      expectFn(Type.prototype, "referencedByDesignsTransitive");
-      expectFn(Design.prototype, "hasPieces");
-      expectFn(Design.prototype, "hasConnections");
-      expectFn(Design.prototype, "hasLayers");
-      expectFn(Design.prototype, "hasGroups");
-      expectFn(Design.prototype, "hasPiecesTransitive");
-      expectFn(Design.prototype, "hasConnectionsTransitive");
-      expectFn(Design.prototype, "referencesTypes");
-      expectFn(Design.prototype, "referencesDesigns");
-      expectFn(Design.prototype, "referencesFiles");
-      expectFn(Design.prototype, "referencesRepresentations");
-      expectFn(Design.prototype, "referencesTypesTransitive");
-      expectFn(Design.prototype, "referencesDesignsTransitive");
-      expectFn(Design.prototype, "referencesFilesTransitive");
-      expectFn(Design.prototype, "referencesRepresentationsTransitive");
-      expectFn(Design.prototype, "referencedBy");
-      expectFn(Design.prototype, "referencedByDesigns");
-      expectFn(Design.prototype, "referencedByDesignsTransitive");
-      expectFn(Piece.prototype, "isType");
-      expectFn(Piece.prototype, "isDesign");
-      expectFn(Piece.prototype, "isTypesTransitive");
-      expectFn(Piece.prototype, "isDesignsTransitive");
-      expectFn(Piece.prototype, "hasPieces");
-      expectFn(Piece.prototype, "hasConnections");
-      expectFn(Piece.prototype, "hasPiecesTransitive");
-      expectFn(Piece.prototype, "hasConnectionsTransitive");
-      expectFn(Connection.prototype, "hasSides");
-      expectFn(Connection.prototype, "referencesPieces");
-      expectFn(Connection.prototype, "referencesConnectors");
-      expectFn(Connection.prototype, "referencesPiecesTransitive");
-      expectFn(Connection.prototype, "referencesConnectorsTransitive");
-      expectFn(Representation.prototype, "referencedBy");
-      expectFn(Representation.prototype, "hasTypes");
-      expectFn(Representation.prototype, "referencesFiles");
-      expectFn(Representation.prototype, "referencedByDesigns");
-      expectFn(Representation.prototype, "referencedByDesignsTransitive");
-      expectFn(File.prototype, "hasRepresentations");
-      expectFn(File.prototype, "referencesTypes");
-      expectFn(File.prototype, "referencesDesigns");
-      expectFn(File.prototype, "referencesTypesTransitive");
-      expectFn(File.prototype, "referencesDesignsTransitive");
-    });
-    it("Kit and Graph install field change subscriptions", () => {
-      expect(typeof Kit.prototype.onNameChanged).toBe("function");
-      expect(typeof Graph.prototype.onAlternativesChanged).toBe("function");
-    });
-    it("graphql wire post json always carries query variables operationName", () => {
-      const raw = graphqlWirePostBodyJson({ query: "query Q { __typename }" });
-      const o = JSON.parse(raw) as Record<string, unknown>;
-      expect(Object.keys(o).sort()).toEqual(["operationName", "query", "variables"]);
-      expect(o["query"]).toBe("query Q { __typename }");
-      expect(o["variables"]).toEqual({});
-      expect(o["operationName"]).toBe(null);
-      expect(JSON.parse(graphqlWirePostBodyJson({ query: "mutation { __typename }", variables: { a: 1 }, operationName: "M" })) as Record<string, unknown>).toEqual({ query: "mutation { __typename }", variables: { a: 1 }, operationName: "M" });
-    });
     it("runs the in-memory rs graphql js pipeline", async () => {
       const session = await Session.openInMemory({ timeoutMs: 120_000 });
       try {
@@ -5515,11 +5455,6 @@ if (typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_R
       } finally {
         await session.dispose();
       }
-    });
-
-    it("Session.open rejects inline JSON bootstrap URI", async () => {
-      await expect(Session.open('{"id":"kit-json"}')).rejects.toThrow(/installProjection/);
-      await expect(Session.open("dev+json:eyJpZCI6IngifQ==")).rejects.toThrow(/installProjection/);
     });
 
     it("openInMemory does not start live subscription loop under embedded tests", async () => {
@@ -5693,6 +5628,7 @@ if (typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_R
       }
     });
   });
+  //#endregion 🐘WasmE2e
 }
 
 //#endregion 🧪Tests

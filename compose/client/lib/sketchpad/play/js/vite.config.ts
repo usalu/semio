@@ -24,7 +24,7 @@ import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
-import { createWorkspaceViteResolveConfig, playgroundIframeEmbedHeadersPlugin, puzzle3dMeshesVitePlugin, semioFaviconVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { createWorkspaceViteResolveConfig, meshCollectionVitePlugin, playgroundIframeEmbedHeadersPlugin, semioFaviconVitePlugin, type PlaygroundAssetSpec } from "../../../../../../ui/styling/vite-elements-assets.ts";
 import { readInitialKitFixtureFromPath } from "../../../../fixture/script.ts";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
@@ -40,6 +40,16 @@ const __filename = fileURLToPath(import.meta.url);
  * Path MUST be derived from __filename.
  **/
 const __dirname = path.dirname(__filename);
+
+/** @emoji 🧊 Kit mesh GLB serving spec for puzzle 3d world views embedded in the sketchpad play app —
+ * mirrors puzzle/plugin/rs's `[[package.metadata.semio.assets]]` `mesh-collection` row. */
+const PUZZLE_3D_MESH_ASSET_SPEC: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }> = {
+  kind: "mesh-collection",
+  route: "/mesh",
+  roots: ["asset/metabolism/representation", "asset/abbau-aufbau"],
+  placeholder: "asset/mesh/placeholder.glb",
+  filterFromExamples: true,
+};
 
 const PLAYWRIGHT_DEV_STUB_ID = "\0compose-sketchpad-play-playwright-dev-stub";
 const EMBEDDED_NODE_TEST_REGIONS = [/\/\/#region 🧪Tests[\s\S]*?\/\/#endregion 🧪Tests\s*/, /\/\/#region 🧪E2E[\s\S]*?\/\/#endregion 🧪E2E\s*/];
@@ -114,7 +124,7 @@ export default defineConfig(async () => {
     optimizeDeps: workspaceResolve.optimizeDeps,
     plugins: [
       ...semioFaviconVitePlugin(workspaceRoot),
-      ...puzzle3dMeshesVitePlugin(workspaceRoot),
+      ...meshCollectionVitePlugin(workspaceRoot, PUZZLE_3D_MESH_ASSET_SPEC),
       tailwind.default(),
       {
         ...mdx({

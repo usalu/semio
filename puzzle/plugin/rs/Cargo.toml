@@ -14,6 +14,7 @@ variant = "puzzle2d"
 app = "puzzle2d-play"
 aliases = ["2d"]
 ports = { react = 6012, wgpu = 6112 }
+engines = ["puzzle/2d/rs"]
 
 [[package.metadata.semio.playground]]
 variant = "puzzle3d"
@@ -26,6 +27,14 @@ variant = "puzzle5d"
 app = "puzzle5d-play"
 aliases = ["5d"]
 ports = { react = 6014, wgpu = 6114 }
+
+[[package.metadata.semio.assets]]
+kind = "mesh-collection"
+route = "/mesh"
+app = "puzzle3d-play"
+roots = ["asset/metabolism/representation", "asset/abbau-aufbau"]
+placeholder = "asset/mesh/placeholder.glb"
+filter_from_examples = true
 
 [lib]
 crate-type = ["cdylib", "rlib"]

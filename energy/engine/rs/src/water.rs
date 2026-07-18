@@ -92,7 +92,7 @@ pub struct RainwaterSystem {
 
 impl RainwaterSystem {
     /// 🌧️ Harvested volume [m³] from rainfall depth [mm] over timestep.
-    pub fn harvest_m3(&self, rainfall_mm: f64, dt_s: f64) -> f64 {
+    pub fn harvest_m3(&self, rainfall_mm: f64, _dt_s: f64) -> f64 {
         let gross_m3 = self.catchment_area_m2 * rainfall_mm / 1000.0 * self.runoff_coefficient;
         let first_flush_m3 = if rainfall_mm > 0.0 {
             (self.first_flush_l / 1000.0).min(gross_m3)

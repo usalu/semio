@@ -1,13 +1,14 @@
 //! 📸 Shooting plugin — icon studio with scene + preview windows bundled as a hot-swappable WASM component.
 
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
-    build_icon_render_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids,
+    app_labels, build_icon_render_scene, build_world_3d_scene, create_default_layout, is_de_locale,
+    localized_label_map, merge_world_selection_ids, resolve_labels,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_stack_vertical,
-    ui_text, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
+    ui_text, tree_item_with_action, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
     world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind,
-    App, ActionDescriptor, AppLabelsOverlay, DocumentApp,
-    DocumentView, IconRenderScene, MeasureSelectItem, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup,
-    UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
+    App, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp,
+    DocumentView, IconRenderScene, MeasureSelectItem, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup,
+    UiNode, UiTreeItemNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementPossible, WindowEngagementStatus, WindowMeasure, World3dScene,
     WorldSunConfig, SET_ACTIVE_UTILITY_ACTION_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -51,7 +52,7 @@ const DEFAULT_EXAMPLE_JSON: &str = include_str!("../../example/base-icon.shootin
 static SHOOTING_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖Constants
 
-//#region 🔖Runtime
+//#region 🔖Types
 /// 🎛️ Ephemeral view state (selection, camera draft) — lives in the app struct, not the document, so
 /// it never pollutes undo history. The active transform utility is host-owned (`view_state.active_utility_id`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -83,7 +84,9 @@ impl Default for ShootingPlayRuntime {
 fn default_selection_method() -> String {
     "rectangle".into()
 }
+//#endregion 🔖Types
 
+//#region 🔖DocumentHelpers
 fn default_fixture() -> ShootingFixture {
     serde_json::from_str::<ShootingFixture>(DEFAULT_EXAMPLE_JSON).unwrap_or_else(|_| empty_shooting_fixture())
 }
@@ -92,9 +95,7 @@ fn next_shooting_id(prefix: &str) -> String {
     let next = SHOOTING_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
     format!("{prefix}-{next}")
 }
-//#endregion 🔖Runtime
 
-//#region 🔖ActionHelpers
 fn shooting_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor {
         controller_id: SHOOTING_PLAY_CONTROLLER_ID.into(),
@@ -320,139 +321,116 @@ fn asset_patch_for_field(field: &str, value: &Value) -> Option<ShootingAssetPatc
         _ => None,
     }
 }
-//#endregion 🔖ActionHelpers
+//#endregion 🔖DocumentHelpers
 
 //#region 🔖Terminology
 /// 🗣️ Complete UI label set for the shooting app; one field per label makes every locale combination compile-checked.
-struct ShootingLabels {
-    shots: &'static str,
-    assets: &'static str,
-    add_shot: &'static str,
-    add_asset: &'static str,
-    svg_rectangle: &'static str,
-    png_rectangle: &'static str,
-    svg_ellipse: &'static str,
-    png_ellipse: &'static str,
-    glb_asset: &'static str,
-    shot: &'static str,
-    asset: &'static str,
-    camera_label_placeholder: &'static str,
-    load_camera: &'static str,
-    shot_label_placeholder: &'static str,
-    no_shot: &'static str,
-    format_select_label: &'static str,
-    shape_select_label: &'static str,
-    format_svg: &'static str,
-    format_png: &'static str,
-    shape_rectangle: &'static str,
-    shape_ellipse: &'static str,
-    window_scene: &'static str,
-    window_icon: &'static str,
-    measure_center_model: &'static str,
-    measure_sun: &'static str,
-    measure_sun_azimuth: &'static str,
-    measure_sun_elevation: &'static str,
-    measure_sun_intensity: &'static str,
-    measure_ambient: &'static str,
-    measure_shadow: &'static str,
-    measure_roughness: &'static str,
-    field_label: &'static str,
-    field_format: &'static str,
-    field_shape: &'static str,
-    field_width: &'static str,
-    field_height: &'static str,
-    field_name: &'static str,
-    field_url: &'static str,
-}
-
-const SHOOTING_LABELS_NATIVE_EN: ShootingLabels = ShootingLabels {
-    shots: "Shots",
-    assets: "Assets",
-    add_shot: "Add Shot",
-    add_asset: "Add Asset",
-    svg_rectangle: "SVG Rectangle",
-    png_rectangle: "PNG Rectangle",
-    svg_ellipse: "SVG Ellipse",
-    png_ellipse: "PNG Ellipse",
-    glb_asset: "GLB Asset",
-    shot: "Shot",
-    asset: "Asset",
-    camera_label_placeholder: "Camera label",
-    load_camera: "Load camera",
-    shot_label_placeholder: "Shot label",
-    no_shot: "No shot",
-    format_select_label: "Format",
-    shape_select_label: "Shape",
-    format_svg: "SVG",
-    format_png: "PNG",
-    shape_rectangle: "Rectangle",
-    shape_ellipse: "Ellipse",
-    window_scene: "Scene",
-    window_icon: "Icon",
-    measure_center_model: "Center Model",
-    measure_sun: "Sun",
-    measure_sun_azimuth: "Sun Azimuth",
-    measure_sun_elevation: "Sun Elevation",
-    measure_sun_intensity: "Sun Intensity",
-    measure_ambient: "Ambient",
-    measure_shadow: "Shadow",
-    measure_roughness: "Roughness",
-    field_label: "Label",
-    field_format: "Format",
-    field_shape: "Shape",
-    field_width: "Width",
-    field_height: "Height",
-    field_name: "Name",
-    field_url: "URL",
-};
-
-const SHOOTING_LABELS_NATIVE_DE: ShootingLabels = ShootingLabels {
-    shots: "Aufnahmen",
-    assets: "Objekte",
-    add_shot: "Aufnahme hinzufügen",
-    add_asset: "Objekt hinzufügen",
-    svg_rectangle: "SVG Rechteck",
-    png_rectangle: "PNG Rechteck",
-    svg_ellipse: "SVG Ellipse",
-    png_ellipse: "PNG Ellipse",
-    glb_asset: "GLB-Objekt",
-    shot: "Aufnahme",
-    asset: "Objekt",
-    camera_label_placeholder: "Kamera-Bezeichnung",
-    load_camera: "Kamera laden",
-    shot_label_placeholder: "Aufnahme-Bezeichnung",
-    no_shot: "Keine Aufnahme",
-    format_select_label: "Format",
-    shape_select_label: "Form",
-    format_svg: "SVG",
-    format_png: "PNG",
-    shape_rectangle: "Rechteck",
-    shape_ellipse: "Ellipse",
-    window_scene: "Szene",
-    window_icon: "Symbol",
-    measure_center_model: "Modell zentrieren",
-    measure_sun: "Sonne",
-    measure_sun_azimuth: "Sonnenazimut",
-    measure_sun_elevation: "Sonnenhoehe",
-    measure_sun_intensity: "Sonnenintensitaet",
-    measure_ambient: "Umgebungslicht",
-    measure_shadow: "Schatten",
-    measure_roughness: "Rauheit",
-    field_label: "Bezeichnung",
-    field_format: "Format",
-    field_shape: "Form",
-    field_width: "Breite",
-    field_height: "Hoehe",
-    field_name: "Name",
-    field_url: "URL",
-};
-
-/// 🗣️ Resolves the active label set from the shell-provided locale; no terminology variant exists for this app.
-fn shooting_labels(view_state: &ViewState) -> &'static ShootingLabels {
-    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-    if is_de { &SHOOTING_LABELS_NATIVE_DE } else { &SHOOTING_LABELS_NATIVE_EN }
+app_labels! {
+    struct ShootingLabels {
+        shots: &'static str = en: "Shots", de: "Aufnahmen";
+        assets: &'static str = en: "Assets", de: "Objekte";
+        add_shot: &'static str = en: "Add Shot", de: "Aufnahme hinzufügen";
+        add_asset: &'static str = en: "Add Asset", de: "Objekt hinzufügen";
+        svg_rectangle: &'static str = en: "SVG Rectangle", de: "SVG Rechteck";
+        png_rectangle: &'static str = en: "PNG Rectangle", de: "PNG Rechteck";
+        svg_ellipse: &'static str = en: "SVG Ellipse", de: "SVG Ellipse";
+        png_ellipse: &'static str = en: "PNG Ellipse", de: "PNG Ellipse";
+        glb_asset: &'static str = en: "GLB Asset", de: "GLB-Objekt";
+        shot: &'static str = en: "Shot", de: "Aufnahme";
+        asset: &'static str = en: "Asset", de: "Objekt";
+        camera_label_placeholder: &'static str = en: "Camera label", de: "Kamera-Bezeichnung";
+        load_camera: &'static str = en: "Load camera", de: "Kamera laden";
+        shot_label_placeholder: &'static str = en: "Shot label", de: "Aufnahme-Bezeichnung";
+        no_shot: &'static str = en: "No shot", de: "Keine Aufnahme";
+        format_select_label: &'static str = en: "Format", de: "Format";
+        shape_select_label: &'static str = en: "Shape", de: "Form";
+        format_svg: &'static str = en: "SVG", de: "SVG";
+        format_png: &'static str = en: "PNG", de: "PNG";
+        shape_rectangle: &'static str = en: "Rectangle", de: "Rechteck";
+        shape_ellipse: &'static str = en: "Ellipse", de: "Ellipse";
+        window_scene: &'static str = en: "Scene", de: "Szene";
+        window_icon: &'static str = en: "Icon", de: "Symbol";
+        measure_center_model: &'static str = en: "Center Model", de: "Modell zentrieren";
+        measure_sun: &'static str = en: "Sun", de: "Sonne";
+        measure_sun_azimuth: &'static str = en: "Sun Azimuth", de: "Sonnenazimut";
+        measure_sun_elevation: &'static str = en: "Sun Elevation", de: "Sonnenhoehe";
+        measure_sun_intensity: &'static str = en: "Sun Intensity", de: "Sonnenintensitaet";
+        measure_ambient: &'static str = en: "Ambient", de: "Umgebungslicht";
+        measure_shadow: &'static str = en: "Shadow", de: "Schatten";
+        measure_roughness: &'static str = en: "Roughness", de: "Rauheit";
+        field_label: &'static str = en: "Label", de: "Bezeichnung";
+        field_format: &'static str = en: "Format", de: "Format";
+        field_shape: &'static str = en: "Shape", de: "Form";
+        field_width: &'static str = en: "Width", de: "Breite";
+        field_height: &'static str = en: "Height", de: "Hoehe";
+        field_name: &'static str = en: "Name", de: "Name";
+        field_url: &'static str = en: "URL", de: "URL";
+    }
 }
 //#endregion 🔖Terminology
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_shooting_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+fn shooting_action_labels(is_de: bool) -> HashMap<String, String> {
+    localized_label_map(is_de, &[
+        ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
+        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+        ("setActiveShot", "Set Active Shot", "Aktive Aufnahme festlegen"),
+        ("setActiveAsset", "Set Active Asset", "Aktives Objekt festlegen"),
+        ("setCamera", "Set Camera", "Kamera festlegen"),
+        ("setShotCamera", "Set Shot Camera", "Aufnahmekamera festlegen"),
+        ("saveCamera", "Save Camera", "Kamera speichern"),
+        ("loadSavedCamera", "Load Saved Camera", "Gespeicherte Kamera laden"),
+        ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
+        ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
+        ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
+        ("setAmbientIntensity", "Set Ambient Intensity", "Umgebungslichtintensitaet festlegen"),
+        ("setMaterialRoughness", "Set Material Roughness", "Materialrauheit festlegen"),
+        ("setShadowEnabled", "Set Shadow Enabled", "Schatten aktivieren"),
+        ("toggleSun", "Toggle Sun", "Sonne umschalten"),
+        ("setActiveShotLabel", "Set Active Shot Label", "Bezeichnung der aktiven Aufnahme festlegen"),
+        ("setActiveShotFormat", "Set Active Shot Format", "Format der aktiven Aufnahme festlegen"),
+        ("setActiveShotShape", "Set Active Shot Shape", "Form der aktiven Aufnahme festlegen"),
+        ("patchShot", "Patch Shot", "Aufnahme aktualisieren"),
+        ("patchShots", "Patch Shots", "Aufnahmen aktualisieren"),
+        ("patchAsset", "Patch Asset", "Objekt aktualisieren"),
+        ("patchAssets", "Patch Assets", "Objekte aktualisieren"),
+        ("addShot", "Add Shot", "Aufnahme hinzufuegen"),
+        ("addAsset", "Add Asset", "Objekt hinzufuegen"),
+        ("importAsset", "Import Asset", "Objekt importieren"),
+        ("resetFixture", "Reset Fixture", "Vorgabe zuruecksetzen"),
+        ("translateSelection", "Translate Selection", "Auswahl verschieben"),
+        ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
+        ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+        ("setCameraDraftLabel", "Set Camera Draft Label", "Kamera-Entwurfsbezeichnung festlegen"),
+        ("setCenterModel", "Set Center Model", "Modellzentrierung festlegen"),
+        ("worldSelect", "World Select", "Welt auswaehlen"),
+        ("worldHover", "World Hover", "Welt-Hover"),
+        ("setHover", "Set Hover", "Hover festlegen"),
+        ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
+        ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
+        ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrueckt"),
+        ("worldPointerMove", "World Pointer Move", "Welt-Zeiger bewegt"),
+        ("saveDownload", "Save Download", "Download speichern"),
+        ("loadRequest", "Load Request", "Ladeanfrage"),
+        ("importAssetRequest", "Import Asset Request", "Objekt-Importanfrage"),
+        ("exportActiveShot", "Export Active Shot", "Aktive Aufnahme exportieren"),
+        ("exportAllShots", "Export All Shots", "Alle Aufnahmen exportieren"),
+    ])
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_shooting_app`.
+fn shooting_utility_labels(is_de: bool) -> HashMap<String, String> {
+    localized_label_map(is_de, &[
+        ("move", "Move", "Verschieben"),
+        ("rotate", "Rotate", "Drehen"),
+        ("scale", "Scale", "Skalieren"),
+    ])
+}
+//#endregion 🔖CommandLabels
 
 //#region 🔖Panels
 fn tree_item_with_action(
@@ -1000,71 +978,6 @@ fn shooting_icon_engagement(fixture: &ShootingFixture, labels: &ShootingLabels) 
 
 //#endregion 🔖Utilities
 
-//#region 🔖CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_shooting_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
-/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn shooting_action_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
-        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-        ("setActiveShot", "Set Active Shot", "Aktive Aufnahme festlegen"),
-        ("setActiveAsset", "Set Active Asset", "Aktives Objekt festlegen"),
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("setShotCamera", "Set Shot Camera", "Aufnahmekamera festlegen"),
-        ("saveCamera", "Save Camera", "Kamera speichern"),
-        ("loadSavedCamera", "Load Saved Camera", "Gespeicherte Kamera laden"),
-        ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
-        ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
-        ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
-        ("setAmbientIntensity", "Set Ambient Intensity", "Umgebungslichtintensitaet festlegen"),
-        ("setMaterialRoughness", "Set Material Roughness", "Materialrauheit festlegen"),
-        ("setShadowEnabled", "Set Shadow Enabled", "Schatten aktivieren"),
-        ("toggleSun", "Toggle Sun", "Sonne umschalten"),
-        ("setActiveShotLabel", "Set Active Shot Label", "Bezeichnung der aktiven Aufnahme festlegen"),
-        ("setActiveShotFormat", "Set Active Shot Format", "Format der aktiven Aufnahme festlegen"),
-        ("setActiveShotShape", "Set Active Shot Shape", "Form der aktiven Aufnahme festlegen"),
-        ("patchShot", "Patch Shot", "Aufnahme aktualisieren"),
-        ("patchShots", "Patch Shots", "Aufnahmen aktualisieren"),
-        ("patchAsset", "Patch Asset", "Objekt aktualisieren"),
-        ("patchAssets", "Patch Assets", "Objekte aktualisieren"),
-        ("addShot", "Add Shot", "Aufnahme hinzufuegen"),
-        ("addAsset", "Add Asset", "Objekt hinzufuegen"),
-        ("importAsset", "Import Asset", "Objekt importieren"),
-        ("resetFixture", "Reset Fixture", "Vorgabe zuruecksetzen"),
-        ("translateSelection", "Translate Selection", "Auswahl verschieben"),
-        ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
-        ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("setCameraDraftLabel", "Set Camera Draft Label", "Kamera-Entwurfsbezeichnung festlegen"),
-        ("setCenterModel", "Set Center Model", "Modellzentrierung festlegen"),
-        ("worldSelect", "World Select", "Welt auswaehlen"),
-        ("worldHover", "World Hover", "Welt-Hover"),
-        ("setHover", "Set Hover", "Hover festlegen"),
-        ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
-        ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
-        ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrueckt"),
-        ("worldPointerMove", "World Pointer Move", "Welt-Zeiger bewegt"),
-        ("saveDownload", "Save Download", "Download speichern"),
-        ("loadRequest", "Load Request", "Ladeanfrage"),
-        ("importAssetRequest", "Import Asset Request", "Objekt-Importanfrage"),
-        ("exportActiveShot", "Export Active Shot", "Aktive Aufnahme exportieren"),
-        ("exportAllShots", "Export All Shots", "Alle Aufnahmen exportieren"),
-    ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-}
-
-/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_shooting_app`.
-fn shooting_utility_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("move", "Move", "Verschieben"),
-        ("rotate", "Rotate", "Drehen"),
-        ("scale", "Scale", "Skalieren"),
-    ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-}
-//#endregion 🔖CommandLabels
-
 //#region 🔖ShootingPlayApp
 #[derive(Default)]
 struct ShootingPlayApp {
@@ -1562,6 +1475,14 @@ impl DocumentApp for ShootingPlayApp {
 fn create_shooting_app() -> App {
     App::from_builder(
         App::builder(SHOOTING_PLAY_APP_ID, "Shooting").document(["semio", "shooting"])
+            .resource_kind(ResourceKindSpec {
+                id: "2d.shooting".into(),
+                name: "2D Shooting".into(),
+                source_format: "shooting.scene".into(),
+                component_kind: "shooting".into(),
+                dimension: "2d".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+            })
             .icon_id("camera")
             .mode("edit", "Edit")
             .default_mode_id("edit")

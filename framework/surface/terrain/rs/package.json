@@ -1,0 +1,9 @@
+{
+  "name": "@semio-tech/framework-surface-terrain-rs",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./pkg/framework_surface_terrain.js",
+    "./pkg/framework_surface_terrain.js": "./pkg/framework_surface_terrain.js"
+  }
+}

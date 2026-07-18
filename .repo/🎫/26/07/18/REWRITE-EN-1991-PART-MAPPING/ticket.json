@@ -1,0 +1,13 @@
+{
+  "title": "Rewrite EN 1991 Part Mapping",
+  "emoji": "📏",
+  "status": "open",
+  "description": "Rewrite norm/en/1991/rs/lib.rs with correct Eurocode part mapping: part_1_1 through part_1_7, part_2 bridges, part_3 cranes, part_4 silos/tanks. Add na_de module with DE snow and wind zones. Add worked-example tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2090"
+  },
+  "goal": "🎯norm",
+  "sessions": [
+    "⚪9b708a5359cf43fa8719fb02d311ba39"
+  ]
+}

@@ -46,9 +46,7 @@ fn straight_path(kernel: &mut BrepkitKernel) -> GeometryHandle {
 }
 
 fn polyline_path(kernel: &mut BrepkitKernel, segments: usize) -> GeometryHandle {
-    let points: Vec<Vec3> = (0..=segments)
-        .map(|i| [0.3 * (i as f64 * 0.7).sin(), 0.3 * (i as f64 * 0.7).cos(), i as f64 * (5.0 / segments as f64)])
-        .collect();
+    let points: Vec<Vec3> = (0..=segments).map(|i| [0.3 * (i as f64 * 0.7).sin(), 0.3 * (i as f64 * 0.7).cos(), i as f64 * (5.0 / segments as f64)]).collect();
     kernel.polyline_wire_sync(&points).expect("polyline_wire_sync")
 }
 
@@ -57,9 +55,7 @@ fn point_cloud(n: usize) -> Vec<Vec3> {
 }
 
 fn surface_grid(rows: usize, cols: usize) -> Vec<Vec<Vec3>> {
-    (0..rows)
-        .map(|r| (0..cols).map(|c| [r as f64, c as f64, (r as f64 * 0.5 + c as f64 * 0.3).sin()]).collect())
-        .collect()
+    (0..rows).map(|r| (0..cols).map(|c| [r as f64, c as f64, (r as f64 * 0.5 + c as f64 * 0.3).sin()]).collect()).collect()
 }
 // #endregion 🔖Fixtures
 
@@ -133,11 +129,7 @@ fn bench_sweeps(c: &mut Criterion) {
             b.iter(|| {
                 let mut kernel = BrepkitKernel::new();
                 let profile = profile_face(&mut kernel);
-                black_box(
-                    kernel
-                        .helical_sweep_sync(&profile, [0.0, 0.0, 0.0], [0.0, 0.0, 1.0], 2.0, 0.5, turns)
-                        .expect("helical_sweep_sync"),
-                );
+                black_box(kernel.helical_sweep_sync(&profile, [0.0, 0.0, 0.0], [0.0, 0.0, 1.0], 2.0, 0.5, turns).expect("helical_sweep_sync"));
             })
         });
     }
@@ -272,24 +264,16 @@ fn bench_intersect_measure(c: &mut Criterion) {
 fn bench_tessellation(c: &mut Criterion) {
     let mut group = c.benchmark_group("tessellation");
     for &tolerance in &[0.5f64, 0.1, 0.01] {
-        group.bench_with_input(
-            BenchmarkId::new("box_tolerance", format!("{tolerance}")),
-            &tolerance,
-            |b, &tolerance| {
-                let mut kernel = BrepkitKernel::new();
-                let shape = box_solid(&mut kernel);
-                b.iter(|| black_box(kernel.tessellate_sync(&shape, tolerance).expect("tessellate_sync")))
-            },
-        );
-        group.bench_with_input(
-            BenchmarkId::new("sphere_tolerance", format!("{tolerance}")),
-            &tolerance,
-            |b, &tolerance| {
-                let mut kernel = BrepkitKernel::new();
-                let shape = sphere_solid(&mut kernel);
-                b.iter(|| black_box(kernel.tessellate_sync(&shape, tolerance).expect("tessellate_sync")))
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("box_tolerance", format!("{tolerance}")), &tolerance, |b, &tolerance| {
+            let mut kernel = BrepkitKernel::new();
+            let shape = box_solid(&mut kernel);
+            b.iter(|| black_box(kernel.tessellate_sync(&shape, tolerance).expect("tessellate_sync")))
+        });
+        group.bench_with_input(BenchmarkId::new("sphere_tolerance", format!("{tolerance}")), &tolerance, |b, &tolerance| {
+            let mut kernel = BrepkitKernel::new();
+            let shape = sphere_solid(&mut kernel);
+            b.iter(|| black_box(kernel.tessellate_sync(&shape, tolerance).expect("tessellate_sync")))
+        });
     }
     for &boxes in &[1usize, 20, 60] {
         group.bench_with_input(BenchmarkId::new("multi_box_faces", boxes), &boxes, |b, &boxes| {
@@ -325,16 +309,5 @@ fn bench_patterns(c: &mut Criterion) {
 }
 // #endregion 🔖Patterns
 
-criterion_group!(
-    kernel_benches,
-    bench_primitives,
-    bench_curves_surfaces,
-    bench_sweeps,
-    bench_booleans,
-    bench_transforms,
-    bench_features,
-    bench_intersect_measure,
-    bench_tessellation,
-    bench_patterns
-);
+criterion_group!(kernel_benches, bench_primitives, bench_curves_surfaces, bench_sweeps, bench_booleans, bench_transforms, bench_features, bench_intersect_measure, bench_tessellation, bench_patterns);
 criterion_main!(kernel_benches);

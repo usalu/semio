@@ -7,22 +7,22 @@ todos:
     status: completed
   - id: scaffold
     content: Scaffold architect/program + architect/plugin, Cargo/nx/launch/registry/AGENTS.md
-    status: in_progress
+    status: completed
   - id: kernel-document
     content: Implement kernel types + Program root with all 65-area registers and serde
-    status: pending
+    status: completed
   - id: adjacency-ops
     content: Undirected adjacency model, conflicts, ProgramOp VCS, validate/analyze/report/search/trace/exchange
-    status: pending
+    status: completed
   - id: tests-program
     content: "Co-located tests: round-trip, ops/undo, adjacency, analysis, exchange"
-    status: pending
+    status: completed
   - id: plugin-app
     content: "DocumentApp: adjacency triangle list, graph, registers, reports, panels, full actions"
-    status: pending
+    status: completed
   - id: verify-close
     content: Run architect_program tests + plugin registry/build; ticket_close
-    status: pending
+    status: completed
 isProject: false
 ---
 

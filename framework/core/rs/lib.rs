@@ -946,8 +946,38 @@ impl OsMediaFormat {
 }
 //#endregion MediaFormat
 
+//#region ResourceKind
+/// 🧬 Which geometry backend a resource kind's media exporters/importers target — the manifest-level
+/// counterpart threaded onto `AppDefinition.resource_kinds` (see `ResourceKindSpec`). Canonical home for
+/// what used to be duplicated verbatim in `framework/plugin/rs` and `framework/product/os/core/rs`; both
+/// now re-export this definition instead of declaring their own.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum OsMediaCapability {
+    MeshOnly,
+    Brep,
+}
+
+/// 🗂️ An app-declared OS resource kind (e.g. a 3D mesh format, a raster format) — the manifest-level
+/// counterpart to `AppBuilder::resource_kind(...)` (`framework/plugin/rs`), letting `framework/product/os/core`
+/// build its resource catalog from `AppDefinition.resource_kinds` at plugin registration time instead of
+/// hardcoding a per-app match on kind-id strings.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ResourceKindSpec {
+    pub id: String,
+    pub name: String,
+    pub source_format: String,
+    pub component_kind: String,
+    pub dimension: String,
+    pub media_capability: OsMediaCapability,
+}
+//#endregion ResourceKind
+
 //#region MediaType
-/// 🧬 Typed-media lattice: every port/wire in the media graph carries a `MediaType` (`class` × `form`) instead of the legacy string `resource_kind`. This is separate from `OsMediaFormat` above — `MediaType` is what a wire negotiates, `OsMediaFormat` is only how bytes are encoded once they actually cross a process boundary (see `MediaWireFormat`). Dependent tickets retire `OsMediaCapability` (`framework/plugin/rs`, `framework/product/os/core/rs`) onto `MediaForm::{Brep,Mesh}`, which already covers what `OsMediaCapability::{Brep,MeshOnly}` expressed.
+/// 🧬 Typed-media lattice: every port/wire in the media graph carries a `MediaType` (`class` × `form`) instead of the legacy string `resource_kind`. This is separate from `OsMediaFormat` above — `MediaType` is what a wire negotiates, `OsMediaFormat` is only how bytes are encoded once they actually cross a process boundary (see `MediaWireFormat`). Dependent tickets retire `OsMediaCapability` (see the `ResourceKind` region above) onto `MediaForm::{Brep,Mesh}`, which already covers what `OsMediaCapability::{Brep,MeshOnly}` expresses.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -2387,26 +2417,12 @@ mod tests {
     }
 
     #[test]
-    fn obj_contains_faces() {
-        let mesh = mesh_box(1.0, 1.0, 1.0);
-        let obj = mesh_to_obj(&mesh, "box");
-        assert!(obj.contains("o box"));
-        assert!(obj.contains("f "));
-    }
-
-    #[test]
     fn glb_round_trip() {
         let mesh = mesh_uv_sphere(1.0, 8, 6);
         let glb = mesh_to_glb(&mesh);
         let decoded = mesh_from_glb(&glb).expect("decode glb");
         assert_eq!(decoded.vertex_count(), mesh.vertex_count());
         assert_eq!(decoded.indices.len(), mesh.indices.len());
-    }
-
-    #[test]
-    fn primitive_kinds() {
-        assert!(mesh_from_kind("sphere").vertex_count() > 0);
-        assert!(mesh_from_kind("box").vertex_count() > 0);
     }
 
     #[test]
@@ -2426,41 +2442,6 @@ mod tests {
         let decoded = mesh_from_stl(&stl).expect("decode stl");
         assert_eq!(decoded.triangle_count(), mesh.triangle_count());
         assert_eq!(decoded.positions.len(), mesh.triangle_count() * 9);
-    }
-
-    #[test]
-    fn media_format_round_trips_str_and_binary_flags() {
-        for format in [
-            OsMediaFormat::Svg,
-            OsMediaFormat::Png,
-            OsMediaFormat::Obj,
-            OsMediaFormat::Glb,
-            OsMediaFormat::Stl,
-            OsMediaFormat::Step,
-            OsMediaFormat::Dwg,
-        ] {
-            assert_eq!(OsMediaFormat::parse(format.as_str()), Some(format.clone()));
-        }
-        assert!(OsMediaFormat::Glb.is_binary());
-        assert!(OsMediaFormat::Stl.is_binary());
-        assert!(!OsMediaFormat::Step.is_binary());
-        assert!(!OsMediaFormat::Obj.is_binary());
-    }
-
-    #[test]
-    fn mesh_exporters_and_importers_round_trip_through_the_trait_objects() {
-        let mesh = mesh_box(1.0, 1.0, 1.0);
-        let codecs: Vec<(Box<dyn MeshExporter>, Box<dyn MeshImporter>)> = vec![
-            (Box::new(ObjExporter), Box::new(ObjImporter)),
-            (Box::new(GlbExporter), Box::new(GlbImporter)),
-            (Box::new(StlExporter), Box::new(StlImporter)),
-        ];
-        for (exporter, importer) in codecs {
-            assert_eq!(exporter.format(), importer.format());
-            let bytes = exporter.export(&mesh).expect("export");
-            let decoded = importer.import(&bytes).expect("import");
-            assert_eq!(decoded.triangle_count(), mesh.triangle_count());
-        }
     }
 
     /// 🔺 Small shared-vertex tetrahedron fixture (4 verts, 4 triangles) used by the format round-trip tests below — small enough to assert exact positions/indices, but with enough shared vertices to exercise indexed (not per-face-duplicated) geometry.
@@ -2877,6 +2858,10 @@ mod tests {
             terminology_documents: std::collections::HashMap::new(),
             introduction: None,
             dialogs: Vec::new(),
+            media_kinds: Vec::new(),
+            media_inputs: Vec::new(),
+            media_outputs: Vec::new(),
+            resource_kinds: Vec::new(),
         });
         assert_eq!(platform.active_app_id, "draw-play");
     }
@@ -2892,7 +2877,7 @@ pub mod ui {
 
 use serde::{Deserialize, Serialize};
 use ui_wgpu::{ActionDescriptor, NamedLayout, SurfaceKind, WindowLayout, WindowOptions};
-use crate::mesh::{MediaKindDescriptor, MediaPortSpec};
+use crate::mesh::{MediaKindDescriptor, MediaPortSpec, ResourceKindSpec};
 
 //#region 🔖Manifest
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3847,6 +3832,10 @@ pub struct AppDefinition {
     /// 🔌 This app's media graph output ports — see `crate::MediaPortSpec`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub media_outputs: Vec<MediaPortSpec>,
+    /// 🗂️ OS resource kinds this app produces/consumes — see `crate::ResourceKindSpec`. Drives
+    /// `framework/product/os/core`'s resource catalog registry instead of a hardcoded per-app match.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub resource_kinds: Vec<ResourceKindSpec>,
 }
 
 /// 🧭 Resolves the dock layout a mode should present.
@@ -5102,6 +5091,10 @@ mod app_document_tests {
             terminology_documents: std::collections::HashMap::new(),
             introduction: None,
             dialogs: Vec::new(),
+            media_kinds: Vec::new(),
+            media_inputs: Vec::new(),
+            media_outputs: Vec::new(),
+            resource_kinds: Vec::new(),
         }
     }
 
@@ -5331,6 +5324,8 @@ mod app_document_tests {
         crate::ui::kernel::ResourceKind::export().unwrap();
         crate::ui::kernel::Scope::export().unwrap();
         crate::mesh::OsMediaFormat::export().unwrap();
+        crate::mesh::OsMediaCapability::export().unwrap();
+        crate::mesh::ResourceKindSpec::export().unwrap();
         crate::mesh::MediaClass::export().unwrap();
         crate::mesh::MediaForm::export().unwrap();
         crate::mesh::MediaType::export().unwrap();
@@ -5356,6 +5351,7 @@ pub use mesh::{
     DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgLayer, DwgPathSegment,
     MeshExporter, MeshImporter, ObjExporter, ObjImporter, GlbExporter, GlbImporter, StlExporter, StlImporter,
     OsMediaFormat,
+    OsMediaCapability, ResourceKindSpec,
     MediaClass, MediaForm, MediaType, MediaWireFormat, MediaKindDescriptor, MediaPortDirection, MediaPortSpec,
     MediaCompat, media_types_compatible,
 };

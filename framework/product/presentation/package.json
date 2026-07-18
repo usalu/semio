@@ -1,8 +1,0 @@
-{
-  "name": "@semio-tech/framework-presentation",
-  "private": true,
-  "workspaces": [
-    "core",
-    "renderer/react"
-  ]
-}

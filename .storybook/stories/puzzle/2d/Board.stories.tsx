@@ -182,7 +182,7 @@ function buildStorySceneNode(state: StoryPuzzle2dState, interactive: boolean): U
     board2d: {
       fixtureJson: JSON.stringify(fixture),
       cameraJson: JSON.stringify(fixture.camera),
-      kindCatalogsJson: JSON.stringify(fixture.meta?.kindCatalogs ?? {}),
+      glyphCatalogsJson: JSON.stringify(fixture.meta?.kindCatalogs ?? {}),
       selectionJson: JSON.stringify(runtime.selectedIds),
       interactive,
       activeUtility: runtime.activeUtility,
@@ -190,8 +190,8 @@ function buildStorySceneNode(state: StoryPuzzle2dState, interactive: boolean): U
       gridSnapEnabled: runtime.gridSnapEnabled,
       gridFactor: runtime.gridFactor,
       suggestionOffset: runtime.suggestionOffset,
-      brushKindWeightsJson: JSON.stringify({ nodeWeights: runtime.nodeKindWeights, handleWeights: runtime.handleKindWeights }),
-      kindCompatibilityJson: JSON.stringify(fixture.meta?.kindCompatibility ?? []),
+      brushWeightsJson: JSON.stringify({ nodeWeights: runtime.nodeKindWeights, handleWeights: runtime.handleKindWeights }),
+      placementCompatibilityJson: JSON.stringify(fixture.meta?.kindCompatibility ?? []),
       lodMode: runtime.lodMode,
     },
   };

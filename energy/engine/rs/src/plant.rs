@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖State
 /// 💧 Plant fluid stream state at a loop node.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct PlantStream {
     pub temperature_c: f64,
     pub mass_flow_kg_s: f64,
@@ -221,7 +221,10 @@ impl HeatPump {
             HeatPumpMode::Cooling => (self.rated_cooling_w, self.rated_cop_cooling, &self.cooling_curve),
         };
         let plr = curve.part_load(load_w.abs(), rated);
-        let temp_factor = (1.0 - 0.02 * (source_temp_c - 7.0).abs()).clamp(0.6, 1.1);
+        let temp_factor = match mode {
+            HeatPumpMode::Heating => (1.0 - 0.03 * (7.0 - source_temp_c).max(0.0)).clamp(0.5, 1.1),
+            HeatPumpMode::Cooling => (1.0 - 0.03 * (source_temp_c - 25.0).max(0.0)).clamp(0.5, 1.1),
+        };
         let cop = (base_cop * curve.evaluate(plr) * temp_factor).max(1.5);
         let elec_w = load_w.abs() / cop;
         let cp = water_cp_j_per_kg_k(inlet.temperature_c);
@@ -229,6 +232,7 @@ impl HeatPump {
         PlantOutput {
             thermal_power_w: load_w,
             electrical_power_w: elec_w,
+            gas_power_w: 0.0,
             outlet: PlantStream::new(inlet.temperature_c + delta_t, inlet.mass_flow_kg_s),
             heat_rejection_w: load_w.abs() + elec_w,
         }
@@ -278,6 +282,7 @@ impl CoolingTower {
         PlantOutput {
             thermal_power_w: -heat_rejection_w,
             electrical_power_w: fan_w,
+            gas_power_w: 0.0,
             outlet: PlantStream::new(outlet_t, m_dot),
             heat_rejection_w,
         }
@@ -343,10 +348,13 @@ impl Gshp {
         cumulative_ground_load_j: f64,
     ) -> PlantOutput {
         let penalty_k = (cumulative_ground_load_j / 1e9).clamp(0.0, 8.0);
-        let source_t = self.ground_temperature_c - penalty_k;
+        let source_t = match mode {
+            HeatPumpMode::Heating => self.ground_temperature_c - penalty_k,
+            HeatPumpMode::Cooling => self.ground_temperature_c + penalty_k,
+        };
         let mut out = self.heat_pump.simulate(inlet, load_w, mode, source_t);
         let bore_resistance = 0.1 / (self.grout_conductivity_w_m_k * self.borehole_count as f64).max(0.01);
-        let fluid_penalty = load_w.abs() * bore_resistance / self.borehole_depth_m.max(1.0);
+        let fluid_penalty = load_w.abs() * bore_resistance * (1.0 + penalty_k * 0.05) / self.borehole_depth_m.max(1.0);
         out.electrical_power_w += fluid_penalty;
         out
     }

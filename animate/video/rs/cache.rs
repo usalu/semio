@@ -1,4 +1,4 @@
-use semio_framework_hash::hash_bytes;
+use framework_hash::hash_bytes;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -41,11 +41,6 @@ impl PartialMovieCache {
     /// 📁 Cache root directory.
     pub fn root(&self) -> &Path {
         &self.root
-    }
-
-    /// 🪪 Stable filename for a hash.
-    pub fn path_for_hash(&self, hash: &str) -> PathBuf {
-        self.root.join(format!("{}.mp4", &hash[..hash.len().min(16)]))
     }
 
     /// 🧾 Records cache metadata on disk.

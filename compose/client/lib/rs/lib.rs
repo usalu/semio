@@ -8136,6 +8136,13 @@ pub mod vcs {
             *self.materialized_cache.write().await = None;
         }
 
+        /// @emoji 🌱 Reseed [`Graph::the_kit_snapshot_store`]'s envelope from the current [`Graph::mutable_kit`] projection. Must run after any direct kit hydration (bundle install, projection install) — otherwise [`Graph::materialized_kit_for_workspace`] replays the stale envelope from [`Graph::new`] over the freshly-hydrated baseline, clobbering it back to the default kit.
+        pub async fn reseed_kit_snapshot_store_from_mutable_kit(self: &Arc<Self>) {
+            let kit = self.mutable_kit.read().await.clone();
+            let snap = crate::kit_backbone::initial_kit_projection_value(&kit).await;
+            *self.the_kit_snapshot_store.lock().expect("kit vcs store") = kit_vcs::create_kit_snapshot_store(&self.id, snap);
+        }
+
         /// @emoji 🧾 SDL `TheKit.savedChanges` — [`ChangeConnection`](../../../schema/graphql/schema.golden.graphql) for this graph's [`TheKit`](../../../schema/graphql/schema.golden.graphql).
         pub async fn saved_change_connection_for_the_kit(self: &Arc<Self>) -> crate::gql_relay::ChangeConnection {
             self.ensure_default_checkpoint_for_the_kit().await;

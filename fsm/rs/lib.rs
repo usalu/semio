@@ -48,13 +48,7 @@ mod host {
     impl<M: Machine> NativeHost<M> {
         /// 🖥️ A fresh host whose clock starts at zero.
         pub fn new() -> Self {
-            Self {
-                start: std::time::Instant::now(),
-                effects: Vec::new(),
-                pending_timers: Vec::new(),
-                started_tasks: Vec::new(),
-                cancelled_tasks: Vec::new(),
-            }
+            Self { start: std::time::Instant::now(), effects: Vec::new(), pending_timers: Vec::new(), started_tasks: Vec::new(), cancelled_tasks: Vec::new() }
         }
 
         /// 🎇 Effects recorded so far, in emission order.
@@ -138,13 +132,7 @@ mod host {
     impl<M: Machine> TestHost<M> {
         /// 🧪 A fresh simulated host whose clock starts at zero.
         pub fn new() -> Self {
-            Self {
-                clock_ms: 0,
-                effects: Vec::new(),
-                pending_timers: Vec::new(),
-                started_tasks: Vec::new(),
-                cancelled_tasks: Vec::new(),
-            }
+            Self { clock_ms: 0, effects: Vec::new(), pending_timers: Vec::new(), started_tasks: Vec::new(), cancelled_tasks: Vec::new() }
         }
 
         /// 🎇 Effects recorded so far, in emission order.
@@ -280,10 +268,7 @@ mod inspect {
         /// 🏁 A macrostep began processing an external event or timer.
         MacrostepStart,
         /// 🔬 One microstep exited/entered the given nodes.
-        Microstep {
-            exited: &'a [NodeId],
-            entered: &'a [NodeId],
-        },
+        Microstep { exited: &'a [NodeId], entered: &'a [NodeId] },
         /// 🎇 A command was pushed to the outer sink.
         CommandIssued(&'a Command<M>),
         /// 🧊 The macrostep settled after this many microsteps.
@@ -318,20 +303,14 @@ mod inspect {
 
     impl<M: Machine> Default for TraceInspector<M> {
         fn default() -> Self {
-            Self {
-                entries: Vec::new(),
-                _marker: core::marker::PhantomData,
-            }
+            Self { entries: Vec::new(), _marker: core::marker::PhantomData }
         }
     }
 
     impl<M: Machine> Inspector<M> for TraceInspector<M> {
         fn observe(&mut self, event: InspectionEvent<'_, M>) {
             if let InspectionEvent::Microstep { exited, entered } = event {
-                self.entries.push(MicrostepTrace {
-                    exited: exited.to_vec(),
-                    entered: entered.to_vec(),
-                });
+                self.entries.push(MicrostepTrace { exited: exited.to_vec(), entered: entered.to_vec() });
             }
         }
     }
@@ -520,10 +499,7 @@ mod kernel {
         if targets.is_empty() {
             return source;
         }
-        if kind == TransitionKind::Internal
-            && is_compound_or_parallel(nodes, source)
-            && targets.iter().all(|t| is_descendant(nodes, *t, source))
-        {
+        if kind == TransitionKind::Internal && is_compound_or_parallel(nodes, source) && targets.iter().all(|t| is_descendant(nodes, *t, source)) {
             return source;
         }
         let mut anc = nodes[source.0 as usize].parent;
@@ -741,14 +717,7 @@ mod kernel {
         Timer(TimerId),
     }
 
-    fn candidates_for<M: Machine>(
-        def: &MachineDefinition<M>,
-        config: &M::Config,
-        context: &M::Context,
-        event: Option<&M::Event>,
-        selector: Selector,
-        done: &[NodeId],
-    ) -> Vec<usize> {
+    fn candidates_for<M: Machine>(def: &MachineDefinition<M>, config: &M::Config, context: &M::Context, event: Option<&M::Event>, selector: Selector, done: &[NodeId]) -> Vec<usize> {
         let mut out = Vec::new();
         for (i, t) in def.transitions.iter().enumerate() {
             if !config.contains(t.source) {
@@ -804,14 +773,7 @@ mod kernel {
         selected
     }
 
-    fn apply_transitions<M: Machine>(
-        def: &MachineDefinition<M>,
-        snapshot: &mut Snapshot<M>,
-        transitions_idx: &[usize],
-        event: Option<&M::Event>,
-        sink: &mut impl CommandSink<M>,
-        inspector: &mut impl Inspector<M>,
-    ) {
+    fn apply_transitions<M: Machine>(def: &MachineDefinition<M>, snapshot: &mut Snapshot<M>, transitions_idx: &[usize], event: Option<&M::Event>, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) {
         let nodes = def.nodes;
 
         let mut exit_ids: Vec<NodeId> = Vec::new();
@@ -824,26 +786,18 @@ mod kernel {
                 }
             }
         }
-        exit_ids.sort_by(|a, b| depth_of(nodes, *b).cmp(&depth_of(nodes, *a)));
+        exit_ids.sort_by_key(|id| core::cmp::Reverse(depth_of(nodes, *id)));
 
         for &owner in &exit_ids {
             for &child in nodes[owner.0 as usize].children {
                 match nodes[child.0 as usize].kind {
                     NodeKind::HistoryShallow => {
-                        if let Some(&active_child) = nodes[owner.0 as usize]
-                            .children
-                            .iter()
-                            .find(|c| snapshot.configuration.contains(**c) && !matches!(nodes[c.0 as usize].kind, NodeKind::HistoryShallow | NodeKind::HistoryDeep))
-                        {
+                        if let Some(&active_child) = nodes[owner.0 as usize].children.iter().find(|c| snapshot.configuration.contains(**c) && !matches!(nodes[c.0 as usize].kind, NodeKind::HistoryShallow | NodeKind::HistoryDeep)) {
                             set_history(&mut snapshot.history, child, vec![active_child]);
                         }
                     }
                     NodeKind::HistoryDeep => {
-                        let leaves: Vec<NodeId> = snapshot
-                            .configuration
-                            .iter_ones()
-                            .filter(|id| is_descendant(nodes, *id, owner) && is_leafish(nodes, *id))
-                            .collect();
+                        let leaves: Vec<NodeId> = snapshot.configuration.iter_ones().filter(|id| is_descendant(nodes, *id, owner) && is_leafish(nodes, *id)).collect();
                         set_history(&mut snapshot.history, child, leaves);
                     }
                     _ => {}
@@ -916,12 +870,7 @@ mod kernel {
         }
     }
 
-    fn run_to_completion<M: Machine>(
-        snapshot: &mut Snapshot<M>,
-        seed: Option<ActiveTrigger<M>>,
-        sink: &mut impl CommandSink<M>,
-        inspector: &mut impl Inspector<M>,
-    ) -> StepReport {
+    fn run_to_completion<M: Machine>(snapshot: &mut Snapshot<M>, seed: Option<ActiveTrigger<M>>, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) -> StepReport {
         let def = M::definition();
         inspector.observe(InspectionEvent::MacrostepStart);
         let mut queue: VecDeque<ActiveTrigger<M>> = VecDeque::new();
@@ -958,10 +907,7 @@ mod kernel {
             apply_transitions(def, snapshot, &selected, event_owned.as_ref(), &mut local, inspector);
             for command in local {
                 if let Command::Raise(ref ev) = command {
-                    queue.push_back(ActiveTrigger {
-                        selector: RaisedSelector::Event(ev.event_id()),
-                        event: Some(ev.clone()),
-                    });
+                    queue.push_back(ActiveTrigger { selector: RaisedSelector::Event(ev.event_id()), event: Some(ev.clone()) });
                 }
                 inspector.observe(InspectionEvent::CommandIssued(&command));
                 sink.push(command);
@@ -976,12 +922,7 @@ mod kernel {
     /// and settling any eventless/done transitions enabled immediately on init.
     pub fn init<M: Machine>(input: M::Input, sink: &mut impl CommandSink<M>) -> Snapshot<M> {
         let def = M::definition();
-        let mut snapshot = Snapshot {
-            configuration: <M::Config as Default>::default(),
-            context: (def.context_from_input)(input),
-            status: Status::Running,
-            history: Vec::new(),
-        };
+        let mut snapshot = Snapshot { configuration: <M::Config as Default>::default(), context: (def.context_from_input)(input), status: Status::Running, history: Vec::new() };
         let mut entry_ids: Vec<NodeId> = Vec::new();
         add_descendant_states_to_enter(def.nodes, ROOT, &snapshot.history, &mut entry_ids);
         entry_ids.sort_by_key(|id| depth_of(def.nodes, *id));
@@ -1005,20 +946,14 @@ mod kernel {
     /// 🏃 Runs one external event to completion (a "macrostep"): the triggered microstep,
     /// then every enabled eventless/`on_done` microstep, until the configuration settles.
     pub fn macrostep<M: Machine>(snapshot: &mut Snapshot<M>, event: M::Event, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) -> StepReport {
-        let seed = ActiveTrigger {
-            selector: RaisedSelector::Event(event.event_id()),
-            event: Some(event),
-        };
+        let seed = ActiveTrigger { selector: RaisedSelector::Event(event.event_id()), event: Some(event) };
         run_to_completion(snapshot, Some(seed), sink, inspector)
     }
 
     /// ⏱️ Runs an `after`-timer firing to completion — the runtime's entry point when a
     /// [`crate::Host`] reports a scheduled [`TimerId`] elapsed.
     pub fn timer_elapsed<M: Machine>(snapshot: &mut Snapshot<M>, timer: TimerId, sink: &mut impl CommandSink<M>, inspector: &mut impl Inspector<M>) -> StepReport {
-        let seed = ActiveTrigger {
-            selector: RaisedSelector::Timer(timer),
-            event: None,
-        };
+        let seed = ActiveTrigger { selector: RaisedSelector::Timer(timer), event: None };
         run_to_completion(snapshot, Some(seed), sink, inspector)
     }
 
@@ -1067,63 +1002,14 @@ mod kernel {
         }
 
         const TOGGLE_NODES: &[NodeDef] = &[
-            NodeDef {
-                stable_id: "root",
-                kind: NodeKind::Compound,
-                parent: None,
-                initial: Some(NodeId(1)),
-                children: &[NodeId(1), NodeId(2)],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 0,
-            },
-            NodeDef {
-                stable_id: "off",
-                kind: NodeKind::Atomic,
-                parent: Some(ROOT),
-                initial: None,
-                children: &[],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 1,
-            },
-            NodeDef {
-                stable_id: "on",
-                kind: NodeKind::Atomic,
-                parent: Some(ROOT),
-                initial: None,
-                children: &[],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 2,
-            },
+            NodeDef { stable_id: "root", kind: NodeKind::Compound, parent: None, initial: Some(NodeId(1)), children: &[NodeId(1), NodeId(2)], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 0 },
+            NodeDef { stable_id: "off", kind: NodeKind::Atomic, parent: Some(ROOT), initial: None, children: &[], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 1 },
+            NodeDef { stable_id: "on", kind: NodeKind::Atomic, parent: Some(ROOT), initial: None, children: &[], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 2 },
         ];
 
         const TOGGLE_TRANSITIONS: &[TransitionDef] = &[
-            TransitionDef {
-                source: NodeId(1),
-                trigger: Trigger::Event(EventId(0)),
-                guard: None,
-                targets: &[NodeId(2)],
-                kind: TransitionKind::External,
-                actions: &[ActionId(0)],
-                doc_index: 0,
-            },
-            TransitionDef {
-                source: NodeId(2),
-                trigger: Trigger::Event(EventId(0)),
-                guard: Some(GuardId(0)),
-                targets: &[NodeId(1)],
-                kind: TransitionKind::External,
-                actions: &[ActionId(0)],
-                doc_index: 1,
-            },
+            TransitionDef { source: NodeId(1), trigger: Trigger::Event(EventId(0)), guard: None, targets: &[NodeId(2)], kind: TransitionKind::External, actions: &[ActionId(0)], doc_index: 0 },
+            TransitionDef { source: NodeId(2), trigger: Trigger::Event(EventId(0)), guard: Some(GuardId(0)), targets: &[NodeId(1)], kind: TransitionKind::External, actions: &[ActionId(0)], doc_index: 1 },
         ];
 
         struct ToggleMachine;
@@ -1217,126 +1103,20 @@ mod kernel {
         struct PlayerContext;
 
         const PLAYER_NODES: &[NodeDef] = &[
-            NodeDef {
-                stable_id: "root",
-                kind: NodeKind::Compound,
-                parent: None,
-                initial: Some(NodeId(1)),
-                children: &[NodeId(1), NodeId(3)],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 0,
-            },
-            NodeDef {
-                stable_id: "closed",
-                kind: NodeKind::Atomic,
-                parent: Some(ROOT),
-                initial: None,
-                children: &[],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 1,
-            },
-            NodeDef {
-                stable_id: "playing",
-                kind: NodeKind::Atomic,
-                parent: Some(NodeId(3)),
-                initial: None,
-                children: &[],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 3,
-            },
-            NodeDef {
-                stable_id: "open",
-                kind: NodeKind::Compound,
-                parent: Some(ROOT),
-                initial: Some(NodeId(2)),
-                children: &[NodeId(2), NodeId(4), NodeId(5)],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 2,
-            },
-            NodeDef {
-                stable_id: "paused",
-                kind: NodeKind::Atomic,
-                parent: Some(NodeId(3)),
-                initial: None,
-                children: &[],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 4,
-            },
-            NodeDef {
-                stable_id: "open.history",
-                kind: NodeKind::HistoryShallow,
-                parent: Some(NodeId(3)),
-                initial: Some(NodeId(2)),
-                children: &[],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 5,
-            },
+            NodeDef { stable_id: "root", kind: NodeKind::Compound, parent: None, initial: Some(NodeId(1)), children: &[NodeId(1), NodeId(3)], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 0 },
+            NodeDef { stable_id: "closed", kind: NodeKind::Atomic, parent: Some(ROOT), initial: None, children: &[], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 1 },
+            NodeDef { stable_id: "playing", kind: NodeKind::Atomic, parent: Some(NodeId(3)), initial: None, children: &[], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 3 },
+            NodeDef { stable_id: "open", kind: NodeKind::Compound, parent: Some(ROOT), initial: Some(NodeId(2)), children: &[NodeId(2), NodeId(4), NodeId(5)], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 2 },
+            NodeDef { stable_id: "paused", kind: NodeKind::Atomic, parent: Some(NodeId(3)), initial: None, children: &[], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 4 },
+            NodeDef { stable_id: "open.history", kind: NodeKind::HistoryShallow, parent: Some(NodeId(3)), initial: Some(NodeId(2)), children: &[], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 5 },
         ];
 
         const PLAYER_TRANSITIONS: &[TransitionDef] = &[
-            TransitionDef {
-                source: NodeId(1),
-                trigger: Trigger::Event(EventId(0)),
-                guard: None,
-                targets: &[NodeId(3)],
-                kind: TransitionKind::External,
-                actions: &[],
-                doc_index: 0,
-            },
-            TransitionDef {
-                source: NodeId(2),
-                trigger: Trigger::Event(EventId(1)),
-                guard: None,
-                targets: &[NodeId(4)],
-                kind: TransitionKind::External,
-                actions: &[],
-                doc_index: 1,
-            },
-            TransitionDef {
-                source: NodeId(4),
-                trigger: Trigger::Event(EventId(2)),
-                guard: None,
-                targets: &[NodeId(2)],
-                kind: TransitionKind::External,
-                actions: &[],
-                doc_index: 2,
-            },
-            TransitionDef {
-                source: NodeId(3),
-                trigger: Trigger::Event(EventId(3)),
-                guard: None,
-                targets: &[NodeId(1)],
-                kind: TransitionKind::External,
-                actions: &[],
-                doc_index: 3,
-            },
-            TransitionDef {
-                source: NodeId(1),
-                trigger: Trigger::Event(EventId(4)),
-                guard: None,
-                targets: &[NodeId(5)],
-                kind: TransitionKind::External,
-                actions: &[],
-                doc_index: 4,
-            },
+            TransitionDef { source: NodeId(1), trigger: Trigger::Event(EventId(0)), guard: None, targets: &[NodeId(3)], kind: TransitionKind::External, actions: &[], doc_index: 0 },
+            TransitionDef { source: NodeId(2), trigger: Trigger::Event(EventId(1)), guard: None, targets: &[NodeId(4)], kind: TransitionKind::External, actions: &[], doc_index: 1 },
+            TransitionDef { source: NodeId(4), trigger: Trigger::Event(EventId(2)), guard: None, targets: &[NodeId(2)], kind: TransitionKind::External, actions: &[], doc_index: 2 },
+            TransitionDef { source: NodeId(3), trigger: Trigger::Event(EventId(3)), guard: None, targets: &[NodeId(1)], kind: TransitionKind::External, actions: &[], doc_index: 3 },
+            TransitionDef { source: NodeId(1), trigger: Trigger::Event(EventId(4)), guard: None, targets: &[NodeId(5)], kind: TransitionKind::External, actions: &[], doc_index: 4 },
         ];
 
         struct PlayerMachine;
@@ -1348,17 +1128,8 @@ mod kernel {
             type Effect = ();
             type Config = BitSet<1>;
             fn definition() -> &'static MachineDefinition<Self> {
-                static DEF: MachineDefinition<PlayerMachine> = MachineDefinition {
-                    id: "player",
-                    nodes: PLAYER_NODES,
-                    transitions: PLAYER_TRANSITIONS,
-                    context_from_input: |_| PlayerContext,
-                    make_output: None,
-                    guards: &[],
-                    actions: &[],
-                    fingerprint: 2,
-                    manifest_json: "{}",
-                };
+                static DEF: MachineDefinition<PlayerMachine> =
+                    MachineDefinition { id: "player", nodes: PLAYER_NODES, transitions: PLAYER_TRANSITIONS, context_from_input: |_| PlayerContext, make_output: None, guards: &[], actions: &[], fingerprint: 2, manifest_json: "{}" };
                 &DEF
             }
         }
@@ -1435,153 +1206,22 @@ mod kernel {
         struct RecorderContext;
 
         const RECORDER_NODES: &[NodeDef] = &[
-            NodeDef {
-                stable_id: "root",
-                kind: NodeKind::Compound,
-                parent: None,
-                initial: Some(NodeId(1)),
-                children: &[NodeId(1), NodeId(2)],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 0,
-            },
-            NodeDef {
-                stable_id: "idle",
-                kind: NodeKind::Atomic,
-                parent: Some(ROOT),
-                initial: None,
-                children: &[],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 1,
-            },
-            NodeDef {
-                stable_id: "recording",
-                kind: NodeKind::Parallel,
-                parent: Some(ROOT),
-                initial: None,
-                children: &[NodeId(3), NodeId(6)],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 2,
-            },
-            NodeDef {
-                stable_id: "audio",
-                kind: NodeKind::Compound,
-                parent: Some(NodeId(2)),
-                initial: Some(NodeId(4)),
-                children: &[NodeId(4), NodeId(5)],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 3,
-            },
-            NodeDef {
-                stable_id: "audio.capturing",
-                kind: NodeKind::Atomic,
-                parent: Some(NodeId(3)),
-                initial: None,
-                children: &[],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 4,
-            },
-            NodeDef {
-                stable_id: "audio.done",
-                kind: NodeKind::Final,
-                parent: Some(NodeId(3)),
-                initial: None,
-                children: &[],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 5,
-            },
-            NodeDef {
-                stable_id: "video",
-                kind: NodeKind::Compound,
-                parent: Some(NodeId(2)),
-                initial: Some(NodeId(7)),
-                children: &[NodeId(7), NodeId(8)],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 6,
-            },
-            NodeDef {
-                stable_id: "video.capturing",
-                kind: NodeKind::Atomic,
-                parent: Some(NodeId(6)),
-                initial: None,
-                children: &[],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 7,
-            },
-            NodeDef {
-                stable_id: "video.done",
-                kind: NodeKind::Final,
-                parent: Some(NodeId(6)),
-                initial: None,
-                children: &[],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 8,
-            },
+            NodeDef { stable_id: "root", kind: NodeKind::Compound, parent: None, initial: Some(NodeId(1)), children: &[NodeId(1), NodeId(2)], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 0 },
+            NodeDef { stable_id: "idle", kind: NodeKind::Atomic, parent: Some(ROOT), initial: None, children: &[], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 1 },
+            NodeDef { stable_id: "recording", kind: NodeKind::Parallel, parent: Some(ROOT), initial: None, children: &[NodeId(3), NodeId(6)], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 2 },
+            NodeDef { stable_id: "audio", kind: NodeKind::Compound, parent: Some(NodeId(2)), initial: Some(NodeId(4)), children: &[NodeId(4), NodeId(5)], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 3 },
+            NodeDef { stable_id: "audio.capturing", kind: NodeKind::Atomic, parent: Some(NodeId(3)), initial: None, children: &[], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 4 },
+            NodeDef { stable_id: "audio.done", kind: NodeKind::Final, parent: Some(NodeId(3)), initial: None, children: &[], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 5 },
+            NodeDef { stable_id: "video", kind: NodeKind::Compound, parent: Some(NodeId(2)), initial: Some(NodeId(7)), children: &[NodeId(7), NodeId(8)], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 6 },
+            NodeDef { stable_id: "video.capturing", kind: NodeKind::Atomic, parent: Some(NodeId(6)), initial: None, children: &[], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 7 },
+            NodeDef { stable_id: "video.done", kind: NodeKind::Final, parent: Some(NodeId(6)), initial: None, children: &[], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 8 },
         ];
 
         const RECORDER_TRANSITIONS: &[TransitionDef] = &[
-            TransitionDef {
-                source: NodeId(1),
-                trigger: Trigger::Event(EventId(0)),
-                guard: None,
-                targets: &[NodeId(2)],
-                kind: TransitionKind::External,
-                actions: &[],
-                doc_index: 0,
-            },
-            TransitionDef {
-                source: NodeId(4),
-                trigger: Trigger::Event(EventId(1)),
-                guard: None,
-                targets: &[NodeId(5)],
-                kind: TransitionKind::External,
-                actions: &[],
-                doc_index: 1,
-            },
-            TransitionDef {
-                source: NodeId(7),
-                trigger: Trigger::Event(EventId(2)),
-                guard: None,
-                targets: &[NodeId(8)],
-                kind: TransitionKind::External,
-                actions: &[],
-                doc_index: 2,
-            },
-            TransitionDef {
-                source: NodeId(2),
-                trigger: Trigger::Done(NodeId(2)),
-                guard: None,
-                targets: &[NodeId(1)],
-                kind: TransitionKind::External,
-                actions: &[],
-                doc_index: 3,
-            },
+            TransitionDef { source: NodeId(1), trigger: Trigger::Event(EventId(0)), guard: None, targets: &[NodeId(2)], kind: TransitionKind::External, actions: &[], doc_index: 0 },
+            TransitionDef { source: NodeId(4), trigger: Trigger::Event(EventId(1)), guard: None, targets: &[NodeId(5)], kind: TransitionKind::External, actions: &[], doc_index: 1 },
+            TransitionDef { source: NodeId(7), trigger: Trigger::Event(EventId(2)), guard: None, targets: &[NodeId(8)], kind: TransitionKind::External, actions: &[], doc_index: 2 },
+            TransitionDef { source: NodeId(2), trigger: Trigger::Done(NodeId(2)), guard: None, targets: &[NodeId(1)], kind: TransitionKind::External, actions: &[], doc_index: 3 },
         ];
 
         struct RecorderMachine;
@@ -1593,17 +1233,8 @@ mod kernel {
             type Effect = ();
             type Config = BitSet<1>;
             fn definition() -> &'static MachineDefinition<Self> {
-                static DEF: MachineDefinition<RecorderMachine> = MachineDefinition {
-                    id: "recorder",
-                    nodes: RECORDER_NODES,
-                    transitions: RECORDER_TRANSITIONS,
-                    context_from_input: |_| RecorderContext,
-                    make_output: None,
-                    guards: &[],
-                    actions: &[],
-                    fingerprint: 3,
-                    manifest_json: "{}",
-                };
+                static DEF: MachineDefinition<RecorderMachine> =
+                    MachineDefinition { id: "recorder", nodes: RECORDER_NODES, transitions: RECORDER_TRANSITIONS, context_from_input: |_| RecorderContext, make_output: None, guards: &[], actions: &[], fingerprint: 3, manifest_json: "{}" };
                 &DEF
             }
         }
@@ -1673,7 +1304,7 @@ mod persist {
     /// 💾 Migrates a [`PersistedSnapshot`] captured under an older machine fingerprint.
     pub trait Migration {
         /// The fingerprint this migration accepts as input.
-        fn from_version(&self) -> u64;
+        fn source_fingerprint(&self) -> u64;
         /// Produces a [`PersistedSnapshot`] valid under a newer fingerprint.
         fn migrate(&self, snapshot: PersistedSnapshot) -> PersistedSnapshot;
     }
@@ -1682,31 +1313,12 @@ mod persist {
     pub fn persist<M: Machine>(snapshot: &Snapshot<M>) -> PersistedSnapshot {
         let def = M::definition();
         let states = snapshot.configuration.iter_ones().map(|id| def.nodes[id.0 as usize].stable_id.to_string()).collect();
-        let history = snapshot
-            .history_entries()
-            .iter()
-            .map(|(owner, ids)| {
-                (
-                    def.nodes[owner.0 as usize].stable_id.to_string(),
-                    ids.iter().map(|id| def.nodes[id.0 as usize].stable_id.to_string()).collect(),
-                )
-            })
-            .collect();
-        PersistedSnapshot {
-            version: 1,
-            fingerprint: def.fingerprint,
-            states,
-            history,
-            done: matches!(snapshot.status, Status::Done(_)),
-        }
+        let history = snapshot.history_entries().iter().map(|(owner, ids)| (def.nodes[owner.0 as usize].stable_id.to_string(), ids.iter().map(|id| def.nodes[id.0 as usize].stable_id.to_string()).collect())).collect();
+        PersistedSnapshot { version: 1, fingerprint: def.fingerprint, states, history, done: matches!(snapshot.status, Status::Done(_)) }
     }
 
     fn stable_id_to_node(def_nodes: &[crate::kernel::NodeDef], stable_id: &str) -> Result<NodeId, RestoreError> {
-        def_nodes
-            .iter()
-            .position(|n| n.stable_id == stable_id)
-            .map(|idx| NodeId(idx as u16))
-            .ok_or_else(|| RestoreError::UnknownStableId(stable_id.to_string()))
+        def_nodes.iter().position(|n| n.stable_id == stable_id).map(|idx| NodeId(idx as u16)).ok_or_else(|| RestoreError::UnknownStableId(stable_id.to_string()))
     }
 
     /// 💾 Rebuilds a [`Snapshot`] from a [`PersistedSnapshot`], applying `migrations` in
@@ -1717,7 +1329,7 @@ mod persist {
         let def = M::definition();
         let mut current = persisted.clone();
         while current.fingerprint != def.fingerprint {
-            let next = migrations.iter().find(|m| m.from_version() == current.fingerprint);
+            let next = migrations.iter().find(|m| m.source_fingerprint() == current.fingerprint);
             match next {
                 Some(m) => current = m.migrate(current),
                 None => return Err(RestoreError::FingerprintMismatch),
@@ -1779,7 +1391,7 @@ mod persist {
 
         struct BumpFingerprint;
         impl Migration for BumpFingerprint {
-            fn from_version(&self) -> u64 {
+            fn source_fingerprint(&self) -> u64 {
                 9999
             }
             fn migrate(&self, mut snapshot: PersistedSnapshot) -> PersistedSnapshot {
@@ -2063,7 +1675,7 @@ mod testing {
         let mut reached_ids: Vec<&'static str> = Vec::new();
 
         while let Some(snapshot) = frontier.pop() {
-            if visited.iter().any(|c| *c == snapshot.configuration) {
+            if visited.contains(&snapshot.configuration) {
                 continue;
             }
             for stable in active_stable_ids(&snapshot) {
@@ -2082,10 +1694,7 @@ mod testing {
             }
         }
 
-        Coverage {
-            visited_configurations: visited.len(),
-            reached_stable_ids: reached_ids,
-        }
+        Coverage { visited_configurations: visited.len(), reached_stable_ids: reached_ids }
     }
 
     //#endregion 🔖Coverage
@@ -2136,10 +1745,7 @@ mod testing {
             macrostep(&mut snapshot, step.event.clone(), &mut sink, &mut inspector);
             for expected in step.expect_active {
                 if !snapshot.matches(expected) {
-                    return Err(FsmError::Violation(format!(
-                        "conformance step {index}: expected active state '{expected}', got {:?}",
-                        active_stable_ids(&snapshot)
-                    )));
+                    return Err(FsmError::Violation(format!("conformance step {index}: expected active state '{expected}', got {:?}", active_stable_ids(&snapshot))));
                 }
             }
         }
@@ -2189,63 +1795,14 @@ mod testing {
         }
 
         const NODES: &[NodeDef] = &[
-            NodeDef {
-                stable_id: "root",
-                kind: NodeKind::Compound,
-                parent: None,
-                initial: Some(crate::NodeId(1)),
-                children: &[crate::NodeId(1), crate::NodeId(2)],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 0,
-            },
-            NodeDef {
-                stable_id: "off",
-                kind: NodeKind::Atomic,
-                parent: Some(ROOT),
-                initial: None,
-                children: &[],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 1,
-            },
-            NodeDef {
-                stable_id: "on",
-                kind: NodeKind::Atomic,
-                parent: Some(ROOT),
-                initial: None,
-                children: &[],
-                entry_actions: &[],
-                exit_actions: &[],
-                invokes: &[],
-                timers: &[],
-                doc_index: 2,
-            },
+            NodeDef { stable_id: "root", kind: NodeKind::Compound, parent: None, initial: Some(crate::NodeId(1)), children: &[crate::NodeId(1), crate::NodeId(2)], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 0 },
+            NodeDef { stable_id: "off", kind: NodeKind::Atomic, parent: Some(ROOT), initial: None, children: &[], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 1 },
+            NodeDef { stable_id: "on", kind: NodeKind::Atomic, parent: Some(ROOT), initial: None, children: &[], entry_actions: &[], exit_actions: &[], invokes: &[], timers: &[], doc_index: 2 },
         ];
 
         const TRANSITIONS: &[TransitionDef] = &[
-            TransitionDef {
-                source: crate::NodeId(1),
-                trigger: Trigger::Event(EventId(0)),
-                guard: None,
-                targets: &[crate::NodeId(2)],
-                kind: TransitionKind::External,
-                actions: &[],
-                doc_index: 0,
-            },
-            TransitionDef {
-                source: crate::NodeId(2),
-                trigger: Trigger::Event(EventId(0)),
-                guard: None,
-                targets: &[crate::NodeId(1)],
-                kind: TransitionKind::External,
-                actions: &[],
-                doc_index: 1,
-            },
+            TransitionDef { source: crate::NodeId(1), trigger: Trigger::Event(EventId(0)), guard: None, targets: &[crate::NodeId(2)], kind: TransitionKind::External, actions: &[], doc_index: 0 },
+            TransitionDef { source: crate::NodeId(2), trigger: Trigger::Event(EventId(0)), guard: None, targets: &[crate::NodeId(1)], kind: TransitionKind::External, actions: &[], doc_index: 1 },
         ];
 
         pub struct UnitToggleMachine;
@@ -2258,17 +1815,8 @@ mod testing {
             type Effect = ();
             type Config = BitSet<1>;
             fn definition() -> &'static MachineDefinition<Self> {
-                static DEF: MachineDefinition<UnitToggleMachine> = MachineDefinition {
-                    id: "unit_toggle",
-                    nodes: NODES,
-                    transitions: TRANSITIONS,
-                    context_from_input: |_| UnitToggleContext::default(),
-                    make_output: None,
-                    guards: &[],
-                    actions: &[],
-                    fingerprint: 42,
-                    manifest_json: "{}",
-                };
+                static DEF: MachineDefinition<UnitToggleMachine> =
+                    MachineDefinition { id: "unit_toggle", nodes: NODES, transitions: TRANSITIONS, context_from_input: |_| UnitToggleContext::default(), make_output: None, guards: &[], actions: &[], fingerprint: 42, manifest_json: "{}" };
                 &DEF
             }
         }
@@ -2298,25 +1846,13 @@ mod testing {
 
         #[test]
         fn conformance_fixture_passes_for_matching_sequence() {
-            let steps = [
-                ConformanceStep {
-                    event: UnitToggleEvent::Flip,
-                    expect_active: &["on"],
-                },
-                ConformanceStep {
-                    event: UnitToggleEvent::Flip,
-                    expect_active: &["off"],
-                },
-            ];
+            let steps = [ConformanceStep { event: UnitToggleEvent::Flip, expect_active: &["on"] }, ConformanceStep { event: UnitToggleEvent::Flip, expect_active: &["off"] }];
             assert!(run_conformance::<UnitToggleMachine>((), &steps).is_ok());
         }
 
         #[test]
         fn conformance_fixture_fails_with_descriptive_message() {
-            let steps = [ConformanceStep {
-                event: UnitToggleEvent::Flip,
-                expect_active: &["off"],
-            }];
+            let steps = [ConformanceStep { event: UnitToggleEvent::Flip, expect_active: &["off"] }];
             let err = run_conformance::<UnitToggleMachine>((), &steps).unwrap_err().to_string();
             assert!(err.contains("step 0"));
             assert!(err.contains("off"));
@@ -2326,10 +1862,7 @@ mod testing {
         fn invariant_reports_violation_by_name() {
             let mut sink: Vec<Command<UnitToggleMachine>> = Vec::new();
             let snapshot = init::<UnitToggleMachine>((), &mut sink);
-            let invariants = [Invariant {
-                name: "never off",
-                check: |s: &Snapshot<UnitToggleMachine>| if s.matches("off") { Err(FsmError::Violation("was off".to_string())) } else { Ok(()) },
-            }];
+            let invariants = [Invariant { name: "never off", check: |s: &Snapshot<UnitToggleMachine>| if s.matches("off") { Err(FsmError::Violation("was off".to_string())) } else { Ok(()) } }];
             let violations = check_invariants(&snapshot, &invariants);
             assert_eq!(violations, vec!["never off: was off".to_string()]);
         }
@@ -2415,14 +1948,14 @@ pub trait Configuration: Clone + PartialEq + Default {
 }
 
 /// 🔁 Iterator over the active `NodeId`s of a [`Configuration`].
-pub struct ConfigurationIter<'a, C: Configuration + ?Sized> {
+pub struct ConfigurationIter<'a, C: Configuration> {
     words: &'a [u64],
     word_index: usize,
     current: u64,
     _marker: core::marker::PhantomData<C>,
 }
 
-impl<'a, C: Configuration + ?Sized> Iterator for ConfigurationIter<'a, C> {
+impl<'a, C: Configuration> Iterator for ConfigurationIter<'a, C> {
     type Item = NodeId;
 
     fn next(&mut self) -> Option<NodeId> {
@@ -2455,12 +1988,7 @@ impl<const W: usize> Configuration for BitSet<W> {
     }
 
     fn iter_ones(&self) -> ConfigurationIter<'_, Self> {
-        ConfigurationIter {
-            words: &self.words,
-            word_index: 0,
-            current: 0,
-            _marker: core::marker::PhantomData,
-        }
+        ConfigurationIter { words: &self.words, word_index: 0, current: 0, _marker: core::marker::PhantomData }
     }
 
     fn clear_all(&mut self) {
@@ -2522,11 +2050,7 @@ pub trait StatechartSchema {
 
 pub use host::{Host, NativeHost, TestHost};
 pub use inspect::{InspectionEvent, Inspector, MicrostepTrace, NullInspector, TraceInspector};
-pub use kernel::{
-    init, macrostep, timer_elapsed, ActionFn, Command, CommandSink, GuardFn, InputFn, MachineDefinition,
-    NodeDef, NodeKind, OutputFn, Snapshot, Status, StepReport, TransitionDef, TransitionKind, Trigger,
-    MICROSTEP_LIMIT, ROOT,
-};
+pub use kernel::{init, macrostep, timer_elapsed, ActionFn, Command, CommandSink, GuardFn, InputFn, MachineDefinition, NodeDef, NodeKind, OutputFn, Snapshot, Status, StepReport, TransitionDef, TransitionKind, Trigger, MICROSTEP_LIMIT, ROOT};
 pub use persist::{persist, restore, Migration, PersistedSnapshot, RestoreError};
 pub use runtime::{route_command, ActorLogic, ActorSystem, MachineLogic};
 
@@ -2564,12 +2088,7 @@ mod wasm_bridge {
     impl<M: Machine> WasmHost<M> {
         /// 🌐 A fresh host with no effect callback registered yet.
         pub fn new() -> Self {
-            Self {
-                effect_callback: None,
-                pending_timers: Vec::new(),
-                started_tasks: Vec::new(),
-                _marker: core::marker::PhantomData,
-            }
+            Self { effect_callback: None, pending_timers: Vec::new(), started_tasks: Vec::new(), _marker: core::marker::PhantomData }
         }
 
         /// 🌐 Registers the JS function invoked as `(actorId: number, effectJson: string) => void`.

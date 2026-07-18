@@ -21,7 +21,7 @@
     { "id": "text.document", "name": "Text Document", "presentation": { "sourceFormat": "writer.document", "componentKind": "writer", "dimension": "text" } },
     { "id": "form.dictionary", "name": "Form Dictionary", "presentation": { "sourceFormat": "forms.dictionary", "componentKind": "forms", "dimension": "data" } },
     { "id": "kit.compose", "name": "Compose Kit", "presentation": { "sourceFormat": "compose.kit", "componentKind": "virtualFileSystem", "dimension": "kit" } },
-    { "id": "presentation.deck", "name": "Presentation Deck", "presentation": { "sourceFormat": "presentation.deck", "componentKind": "panel", "dimension": "2d" } },
+    { "id": "animate.present.deck", "name": "Animate Present Deck", "presentation": { "sourceFormat": "animate.present.deck", "componentKind": "panel", "dimension": "2d" } },
     { "id": "3d.mesh", "name": "3D Mesh", "presentation": { "sourceFormat": "mesh.reference", "componentKind": "mesh", "dimension": "3d" } },
     { "id": "catalogue.kinds", "name": "Kind Catalogue", "presentation": { "sourceFormat": "catalogue.kinds", "componentKind": "catalogue", "dimension": "data" } },
     { "id": "3d.lowpoly", "name": "3D Lowpoly", "presentation": { "sourceFormat": "lowpoly.fixture", "componentKind": "lowpoly", "dimension": "3d" } },

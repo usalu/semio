@@ -1,0 +1,18 @@
+{
+  "title": "Animate Absolute Manim Feature Completeness",
+  "emoji": "🎬",
+  "status": "open",
+  "description": "Absolute Manim CE feature completeness: fix render blockers (point_ratio, Typst paths, frame hash), replace all 21 catalog stubs with real behavior, complete mobject/camera/3D catalogs, wire present-core scene bridge and video export. Use isolated CARGO_TARGET_DIR in ticket folder.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2053"
+  },
+  "goal": "🎯animate",
+  "plan": {
+    "client": "cursor",
+    "id": "7dc7746f",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/animate_absolute_parity_7dc7746f.plan.md"
+  },
+  "sessions": [
+    "⚪f79f95279cfb4c05beef28b56f24a070"
+  ]
+}

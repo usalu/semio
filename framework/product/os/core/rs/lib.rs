@@ -119,6 +119,7 @@ impl PluginHost {
         for program in &plugin.manifest.programs {
             self.registry.register_program(program.clone());
         }
+        crate::registry::register_resource_descriptors(&plugin.manifest);
         self.plugins.insert(plugin_id.clone(), plugin);
         self.supervisor
             .insert(plugin_id.clone(), PluginSupervisorState::Running);
@@ -183,6 +184,7 @@ impl PluginHost {
         for program in &plugin.manifest.programs {
             self.registry.register_program(program.clone());
         }
+        crate::registry::register_resource_descriptors(&plugin.manifest);
         self.plugins.insert(plugin_id.clone(), plugin);
         for (instance_id, controller_id) in controller_rebindings {
             if let Some(instance) = self.instances.get_mut(&instance_id) {
@@ -1675,6 +1677,10 @@ mod tests {
                 terminology_documents: std::collections::HashMap::new(),
                 introduction: None,
                 dialogs: Vec::new(),
+                media_kinds: Vec::new(),
+                media_inputs: Vec::new(),
+                media_outputs: Vec::new(),
+                resource_kinds: Vec::new(),
             }],
             programs: vec![],
             capabilities: vec![],
@@ -1733,6 +1739,10 @@ mod tests {
             terminology_documents: std::collections::HashMap::new(),
             introduction: None,
             dialogs: Vec::new(),
+            media_kinds: Vec::new(),
+            media_inputs: Vec::new(),
+            media_outputs: Vec::new(),
+            resource_kinds: Vec::new(),
         };
         let note_app = AppDefinition {
             id: "note-play".into(),
@@ -1774,6 +1784,10 @@ mod tests {
             terminology_documents: std::collections::HashMap::new(),
             introduction: None,
             dialogs: Vec::new(),
+            media_kinds: Vec::new(),
+            media_inputs: Vec::new(),
+            media_outputs: Vec::new(),
+            resource_kinds: Vec::new(),
         };
         host.load_plugin(LoadedPlugin {
             plugin_id: "draw".into(),
@@ -1861,6 +1875,10 @@ mod tests {
             terminology_documents: std::collections::HashMap::new(),
             introduction: None,
             dialogs: Vec::new(),
+            media_kinds: Vec::new(),
+            media_inputs: Vec::new(),
+            media_outputs: Vec::new(),
+            resource_kinds: Vec::new(),
         };
         host.load_plugin(LoadedPlugin {
             plugin_id: "draw".into(),
@@ -2002,6 +2020,10 @@ mod tests {
                 terminology_documents: std::collections::HashMap::new(),
                 introduction: None,
                 dialogs: Vec::new(),
+                media_kinds: Vec::new(),
+                media_inputs: Vec::new(),
+                media_outputs: Vec::new(),
+                resource_kinds: Vec::new(),
             }],
             programs: vec![],
             capabilities: vec![],
@@ -4079,19 +4101,11 @@ impl ProgramRegistry {
 pub use semio_framework_core::OsMediaFormat;
 
 //#region 🔖MediaCapability
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum OsMediaCapability {
-    MeshOnly,
-    Brep,
-}
-
-/// 🧬 Resolves which geometry backend a resource kind's exporters target: `cad`/`process`/`forms` sit on the real B-Rep kernel (`kernel_3d_brepkit`) and additionally require STEP; every other 3D/5D resource kind is backed by the lighter dependency-free `MeshData` representation and stops at OBJ/GLB/STL/DWG.
-pub fn os_resource_media_capability(kind: &str) -> OsMediaCapability {
-    match kind {
-        "3d.cad" | "3d.process" | "form.dictionary" => OsMediaCapability::Brep,
-        _ => OsMediaCapability::MeshOnly,
-    }
-}
+/// 🗂️ Defined in `semio_framework_core` alongside `OsMediaFormat`/`ResourceKindSpec`; re-exported here
+/// verbatim. `os_resource_media_capability` is a registry lookup (see `crate::registry`) driven by each
+/// app's declared `ResourceKindSpec.media_capability` instead of a hardcoded per-app match.
+pub use semio_framework_core::OsMediaCapability;
+pub use crate::registry::os_resource_media_capability;
 //#endregion 🔖MediaCapability
 
 #[derive(Clone, Debug, PartialEq)]
@@ -4743,6 +4757,14 @@ mod tests {
 
     #[test]
     fn vfs_inputs_folder_lists_a_dwg_import_row_for_2d_kinds() {
+        crate::registry::register_resource_descriptor(&semio_framework_core::ResourceKindSpec {
+            id: "2d.drawing".into(),
+            name: "2D Drawing".into(),
+            source_format: "draw.document".into(),
+            component_kind: "draw".into(),
+            dimension: "2d".into(),
+            media_capability: semio_framework_core::OsMediaCapability::MeshOnly,
+        });
         let mut resources = HashMap::new();
         resources.insert("draw".into(), os_baseline_resource("2d.drawing", "draw.document", "draw"));
         let platform = OsPlatformInput {
@@ -4845,42 +4867,16 @@ pub mod registry {
 //! 🗂️ Plugin manifest registry and OS program/resource catalog.
 
 use crate::instance::{media_port_id_for_spec, OsParameterFieldSpec};
-use semio_framework_core::{AppDefinition, ModeDefinition, ProgramDefinition, WindowKindDefinition};
+use semio_framework_core::{
+    AppDefinition, ModeDefinition, OsMediaCapability, PluginManifest, ProgramDefinition, ResourceKindSpec,
+    WindowKindDefinition,
+};
 use ui_wgpu::SurfaceKind;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 
 pub type OsResourceKindId = String;
-
-pub const OS_RESOURCE_KIND_IDS: &[&str] = &[
-    "2d.note",
-    "2d.drawing",
-    "2d.raster",
-    "2d.map",
-    "2d.procedural",
-    "2d.shooting",
-    "2d.puzzle",
-    "3d.puzzle",
-    "5d.puzzle",
-    "3d.procedural",
-    "3d.cad",
-    "computation.flow",
-    "graph.trinity",
-    "graph.dag",
-    "text.document",
-    "form.dictionary",
-    "kit.compose",
-    "presentation.deck",
-    "3d.mesh",
-    "catalogue.kinds",
-    "3d.lowpoly",
-    "computation.sequence",
-    "2d.layout",
-    "computation.imperative",
-    "vcs.document",
-    "parameter.value",
-];
 
 //#region 🔖ResourceDescriptors
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -4893,90 +4889,108 @@ pub struct OsResourceDescriptor {
     pub dimension: String,
 }
 
-fn descriptor_presentation(kind: &str) -> OsResourceDescriptor {
-    match kind {
-        "2d.note" => OsResourceDescriptor {
-            kind: kind.into(),
-            name: "2D Note".into(),
-            source_format: "note.document".into(),
-            component_kind: "note".into(),
-            dimension: "2d".into(),
+/// 🗂️ One registered resource kind's full catalog entry — the descriptor plus the media capability
+/// its exporters/importers target (kept alongside rather than in `OsResourceDescriptor` itself since
+/// the descriptor is also the wire-facing presentation shape).
+struct ResourceKindEntry {
+    descriptor: OsResourceDescriptor,
+    media_capability: OsMediaCapability,
+}
+
+fn resource_kind_entry_from_spec(spec: &ResourceKindSpec) -> ResourceKindEntry {
+    ResourceKindEntry {
+        descriptor: OsResourceDescriptor {
+            kind: spec.id.clone(),
+            name: spec.name.clone(),
+            source_format: spec.source_format.clone(),
+            component_kind: spec.component_kind.clone(),
+            dimension: spec.dimension.clone(),
         },
-        "2d.drawing" => OsResourceDescriptor {
-            kind: kind.into(),
-            name: "2D Drawing".into(),
-            source_format: "draw.document".into(),
-            component_kind: "draw".into(),
-            dimension: "2d".into(),
-        },
-        "2d.raster" => OsResourceDescriptor {
-            kind: kind.into(),
-            name: "2D Raster".into(),
-            source_format: "raster.document".into(),
-            component_kind: "raster".into(),
-            dimension: "2d".into(),
-        },
-        "graph.dag" => OsResourceDescriptor {
-            kind: kind.into(),
-            name: "DAG".into(),
-            source_format: "flow.dag".into(),
-            component_kind: "dag".into(),
-            dimension: "graph".into(),
-        },
-        "parameter.value" => OsResourceDescriptor {
-            kind: kind.into(),
-            name: "Parameter".into(),
-            source_format: "parameter.value".into(),
-            component_kind: "parameter".into(),
-            dimension: "data".into(),
-        },
-        "text.document" => OsResourceDescriptor {
-            kind: kind.into(),
-            name: "Text Document".into(),
-            source_format: "writer.document".into(),
-            component_kind: "writer".into(),
-            dimension: "text".into(),
-        },
-        "presentation.deck" => OsResourceDescriptor {
-            kind: kind.into(),
-            name: kind.into(),
-            source_format: kind.into(),
-            component_kind: "panel".into(),
-            dimension: "2d".into(),
-        },
-        _ => OsResourceDescriptor {
-            kind: kind.into(),
-            name: kind.into(),
-            source_format: kind.into(),
-            component_kind: "panel".into(),
-            dimension: descriptor_dimension_from_kind_prefix(kind).into(),
-        },
+        media_capability: spec.media_capability,
     }
 }
 
-fn descriptor_dimension_from_kind_prefix(kind: &str) -> &'static str {
-    if kind.starts_with("2d.") {
-        "2d"
-    } else if kind.starts_with("3d.") {
-        "3d"
-    } else if kind.starts_with("5d.") {
-        "5d"
-    } else {
-        "unknown"
+/// 🌱 `parameter.value` is not one app's document format — every app's parameter fields share it as
+/// their port resource kind (see `crate::instance::OsParameterFieldSpec`) — so it is seeded as a
+/// framework-level builtin instead of declared via any single app's `AppBuilder::resource_kind(...)`.
+fn seed_builtin_resource_kinds() -> HashMap<OsResourceKindId, ResourceKindEntry> {
+    let mut registry = HashMap::new();
+    registry.insert(
+        "parameter.value".to_string(),
+        ResourceKindEntry {
+            descriptor: OsResourceDescriptor {
+                kind: "parameter.value".into(),
+                name: "Parameter".into(),
+                source_format: "parameter.value".into(),
+                component_kind: "parameter".into(),
+                dimension: "data".into(),
+            },
+            media_capability: OsMediaCapability::MeshOnly,
+        },
+    );
+    registry
+}
+
+/// 🗂️ Manifest-driven OS resource catalog, populated at plugin registration time instead of hardcoding
+/// the app roster — mirrors the `crate::media_graph::export_handlers()` runtime-registry pattern.
+static RESOURCE_KIND_REGISTRY: LazyLock<Mutex<HashMap<OsResourceKindId, ResourceKindEntry>>> =
+    LazyLock::new(|| Mutex::new(seed_builtin_resource_kinds()));
+
+/// @emoji 📚 Registers every `ResourceKindSpec` declared by `manifest`'s apps into the OS resource
+/// catalog — call at plugin registration time (`PluginHost::load_plugin`/`hot_swap_plugin`).
+pub fn register_resource_descriptors(manifest: &PluginManifest) {
+    let mut registry = RESOURCE_KIND_REGISTRY.lock().expect("lock");
+    for app in &manifest.apps {
+        for spec in &app.resource_kinds {
+            registry.insert(spec.id.clone(), resource_kind_entry_from_spec(spec));
+        }
     }
 }
 
-/// @emoji 📚 Lists all known OS resource descriptors.
+/// @emoji 🧪 Registers one resource kind directly, for tests/fixtures that don't build a full
+/// `PluginManifest`.
+pub fn register_resource_descriptor(spec: &ResourceKindSpec) {
+    RESOURCE_KIND_REGISTRY
+        .lock()
+        .expect("lock")
+        .insert(spec.id.clone(), resource_kind_entry_from_spec(spec));
+}
+
+/// @emoji 📚 Lists all registered OS resource descriptors, sorted by kind id for a stable snapshot.
 pub fn list_os_resource_descriptors() -> Vec<OsResourceDescriptor> {
-    OS_RESOURCE_KIND_IDS
-        .iter()
-        .map(|kind| descriptor_presentation(kind))
-        .collect()
+    let registry = RESOURCE_KIND_REGISTRY.lock().expect("lock");
+    let mut descriptors: Vec<OsResourceDescriptor> = registry.values().map(|entry| entry.descriptor.clone()).collect();
+    descriptors.sort_by(|left, right| left.kind.cmp(&right.kind));
+    descriptors
 }
 
-/// @emoji 📚 Resolves presentation metadata for one resource kind.
+/// @emoji 📚 Resolves presentation metadata for one resource kind. An unregistered kind falls back to a
+/// bare placeholder built from the kind id itself — dimension is declared by the app, never inferred
+/// from an id-prefix convention.
 pub fn os_resource_descriptor(kind: &str) -> OsResourceDescriptor {
-    descriptor_presentation(kind)
+    RESOURCE_KIND_REGISTRY
+        .lock()
+        .expect("lock")
+        .get(kind)
+        .map(|entry| entry.descriptor.clone())
+        .unwrap_or_else(|| OsResourceDescriptor {
+            kind: kind.into(),
+            name: kind.into(),
+            source_format: kind.into(),
+            component_kind: "panel".into(),
+            dimension: "unknown".into(),
+        })
+}
+
+/// @emoji 🧬 Registry lookup for a resource kind's media capability; unregistered kinds default to
+/// `MeshOnly` (the lighter, dependency-free representation).
+pub fn os_resource_media_capability(kind: &str) -> OsMediaCapability {
+    RESOURCE_KIND_REGISTRY
+        .lock()
+        .expect("lock")
+        .get(kind)
+        .map(|entry| entry.media_capability)
+        .unwrap_or(OsMediaCapability::MeshOnly)
 }
 
 /// @emoji 🔗 Returns whether two resource kinds are interchangeable.
@@ -5303,6 +5317,10 @@ pub fn resolve_os_app_definition(
         terminology_documents: std::collections::HashMap::new(),
         introduction: None,
         dialogs: Vec::new(),
+        media_kinds: Vec::new(),
+        media_inputs: Vec::new(),
+        media_outputs: Vec::new(),
+        resource_kinds: Vec::new(),
     })
 }
 
@@ -5447,10 +5465,10 @@ pub use registry::{
     list_os_programs, list_os_resource_descriptors, merge_os_program_definition, os_app_primary_output_kind,
     os_app_registration, os_baseline_resource, os_in_port, os_out_port, os_program_by_id,
     os_resource_descriptor, register_os_builtin_program, register_os_program_definition,
+    register_resource_descriptor, register_resource_descriptors,
     resolve_os_app_definition, resources_compatible, seed_os_program_registry_from_resource_map,
     OsAppRegistration, OsAppResourceSpec, OsPlatformAppInput, OsPlatformInput, OsPortSpec,
     OsProgramDefinition, OsResourceDescriptor, OsResourceKindId, PluginRegistry,
-    OS_RESOURCE_KIND_IDS,
 };
 pub use semio_framework_core::*;
 pub use ui_wgpu::*;

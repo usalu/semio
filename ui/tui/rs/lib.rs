@@ -1478,6 +1478,81 @@ pub mod widget {
         pub on: bool,
     }
 
+    //#region 🔖Table
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum TableAlign {
+        Left,
+        Right,
+    }
+
+    /// 📐 One table column; `width == 0` means "flex" — split the remaining space evenly.
+    pub struct TableColumn {
+        pub label: String,
+        pub width: u16,
+        pub align: TableAlign,
+    }
+
+    impl TableColumn {
+        pub fn new(label: impl Into<String>, width: u16, align: TableAlign) -> Self {
+            Self { label: label.into(), width, align }
+        }
+    }
+
+    /// 🌳 One row, flat in display order; `level` and `has_children` express the tree — a row is
+    /// hidden whenever a preceding, still-nesting ancestor has `expanded == false`.
+    pub struct TableRow {
+        pub id: String,
+        pub cells: Vec<String>,
+        pub level: u16,
+        pub has_children: bool,
+        pub expanded: bool,
+    }
+
+    impl TableRow {
+        pub fn parent(id: impl Into<String>, cells: Vec<String>) -> Self {
+            Self { id: id.into(), cells, level: 0, has_children: true, expanded: true }
+        }
+
+        pub fn child(id: impl Into<String>, cells: Vec<String>, level: u16) -> Self {
+            Self { id: id.into(), cells, level, has_children: false, expanded: true }
+        }
+    }
+
+    /// 🗂️ A semio-styled table: bold muted header with a hairline underline, hairline row
+    /// separators, no vertical rules, no striping — mirrors `ui/js/react`'s `Table` and
+    /// `print/tex/semio-table.sty`. Tree rows are plain indented rows in the same table.
+    pub struct TableState {
+        pub columns: Vec<TableColumn>,
+        pub rows: Vec<TableRow>,
+        pub selected: usize,
+    }
+
+    impl TableState {
+        pub fn new(columns: Vec<TableColumn>, rows: Vec<TableRow>) -> Self {
+            Self { columns, rows, selected: 0 }
+        }
+
+        /// 👁️ Row indices in display order, skipping any row nested under a collapsed ancestor.
+        pub fn visible_indices(&self) -> Vec<usize> {
+            let mut out = Vec::new();
+            let mut collapsed_from: Option<u16> = None;
+            for (i, row) in self.rows.iter().enumerate() {
+                if let Some(level) = collapsed_from {
+                    if row.level > level {
+                        continue;
+                    }
+                    collapsed_from = None;
+                }
+                out.push(i);
+                if row.has_children && !row.expanded {
+                    collapsed_from = Some(row.level);
+                }
+            }
+            out
+        }
+    }
+    //#endregion 🔖Table
+
     /// 🧩 The concrete state of any core widget.
     pub enum WidgetState {
         Label(LabelState),
@@ -1488,6 +1563,7 @@ pub mod widget {
         Input(InputState),
         Divider(DividerState),
         Chip(ChipState),
+        Table(TableState),
     }
 
     impl WidgetState {
@@ -1511,6 +1587,7 @@ pub mod widget {
                 WidgetState::Select(s) => select_on_key(s, ev),
                 WidgetState::Tabs(t) => tabs_on_key(t, ev),
                 WidgetState::Input(i) => input_on_key(i, ev),
+                WidgetState::Table(t) => table_on_key(t, ev),
                 WidgetState::Log(log) => {
                     log_on_key(log, ev);
                     None
@@ -1530,6 +1607,7 @@ pub mod widget {
                 WidgetState::Input(i) => paint_input(i, theme, rect, buf, focused),
                 WidgetState::Divider(d) => paint_divider(d, theme, rect, buf),
                 WidgetState::Chip(c) => paint_chip(c, theme, rect, buf),
+                WidgetState::Table(t) => paint_table(t, theme, rect, buf, focused),
             }
         }
     }
@@ -1635,6 +1713,52 @@ pub mod widget {
         }
     }
 
+    fn table_on_key(t: &mut TableState, ev: &KeyEvent) -> Option<WidgetSignal> {
+        let visible = t.visible_indices();
+        if visible.is_empty() {
+            return None;
+        }
+        let pos = visible.iter().position(|&i| i == t.selected).unwrap_or(0);
+        match ev.key {
+            Key::Up if pos > 0 => {
+                t.selected = visible[pos - 1];
+                Some(WidgetSignal::SelectionChanged(t.selected))
+            }
+            Key::Down if pos + 1 < visible.len() => {
+                t.selected = visible[pos + 1];
+                Some(WidgetSignal::SelectionChanged(t.selected))
+            }
+            Key::Right => {
+                let row = &mut t.rows[t.selected];
+                if row.has_children && !row.expanded {
+                    row.expanded = true;
+                    Some(WidgetSignal::SelectionChanged(t.selected))
+                } else {
+                    None
+                }
+            }
+            Key::Left => {
+                let row = &mut t.rows[t.selected];
+                if row.has_children && row.expanded {
+                    row.expanded = false;
+                    Some(WidgetSignal::SelectionChanged(t.selected))
+                } else {
+                    None
+                }
+            }
+            Key::Enter => {
+                let row = &mut t.rows[t.selected];
+                if row.has_children {
+                    row.expanded = !row.expanded;
+                    Some(WidgetSignal::SelectionChanged(t.selected))
+                } else {
+                    Some(WidgetSignal::Activated(t.selected))
+                }
+            }
+            _ => None,
+        }
+    }
+
     fn paint_label(l: &LabelState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
         let bg = buf.get(rect.x, rect.y).map(|c| c.bg).unwrap_or(theme.surface(Surface::Base));
         let fg = theme.role(l.role);
@@ -1735,6 +1859,97 @@ pub mod widget {
         buf.fill_rect(rect, Cell::blank(fg, bg));
         let text = format!(" {} ", c.label);
         buf.put_str(Pos { x: rect.x, y: rect.y }, &text, fg, bg, 0, rect);
+    }
+
+    /// 📐 Resolves each column's width: fixed columns keep their `width`, `width == 0` columns
+    /// split whatever space remains evenly.
+    fn table_column_widths(columns: &[TableColumn], total_width: u16) -> Vec<u16> {
+        let fixed_total: u16 = columns.iter().filter(|c| c.width > 0).map(|c| c.width).sum();
+        let gaps = columns.len().saturating_sub(1) as u16;
+        let flex_count = columns.iter().filter(|c| c.width == 0).count() as u16;
+        let remaining = total_width.saturating_sub(fixed_total + gaps);
+        let flex_width = if flex_count > 0 { remaining / flex_count } else { 0 };
+        columns.iter().map(|c| if c.width > 0 { c.width } else { flex_width }).collect()
+    }
+
+    fn paint_table_cell(buf: &mut CellBuffer, x: u16, y: u16, width: u16, text: &str, fg: [u8; 3], bg: [u8; 3], attrs: u8, align: TableAlign, clip: Rect) {
+        let (t, tw) = truncate_to(text, width);
+        let cell_x = match align {
+            TableAlign::Left => x,
+            TableAlign::Right => x + width.saturating_sub(tw),
+        };
+        buf.put_str(Pos { x: cell_x, y }, t, fg, bg, attrs, clip);
+    }
+
+    /// 🖌️ Header (muted, bold) + hairline underline, then hairline-separated body rows; tree rows
+    /// indent by level and carry a `▾`/`▸` expand marker — no vertical rules, no striping.
+    fn paint_table(t: &TableState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
+        if rect.width == 0 || rect.height == 0 || t.columns.is_empty() {
+            return;
+        }
+        let bg = buf.get(rect.x, rect.y).map(|c| c.bg).unwrap_or(theme.surface(Surface::Window));
+        buf.fill_rect(rect, Cell::blank(theme.role(Role::MutedForeground), bg));
+
+        let widths = table_column_widths(&t.columns, rect.width);
+        let mut xs = Vec::with_capacity(widths.len());
+        let mut x = rect.x;
+        for &w in &widths {
+            xs.push(x);
+            x += w + 1;
+        }
+
+        for ((col, &cx), &w) in t.columns.iter().zip(&xs).zip(&widths) {
+            paint_table_cell(buf, cx, rect.y, w, &col.label, theme.role(Role::MutedForeground), bg, attr::BOLD, col.align, rect);
+        }
+        if rect.height == 1 {
+            return;
+        }
+        buf.hline(Pos { x: rect.x, y: rect.y + 1 }, rect.width, '\u{2500}', theme.role(Role::BorderNormal), bg);
+        if rect.height <= 2 {
+            return;
+        }
+
+        let visible = t.visible_indices();
+        if visible.is_empty() {
+            let (text, w) = truncate_to("(empty)", rect.width);
+            let cx = rect.x + rect.width.saturating_sub(w) / 2;
+            buf.put_str(Pos { x: cx, y: rect.y + 2 }, text, theme.role(Role::MutedForeground), bg, 0, rect);
+            return;
+        }
+
+        let body_height = rect.height - 2;
+        let items_fit = usize::from((body_height / 2).max(1));
+        let sel_pos = visible.iter().position(|&i| i == t.selected).unwrap_or(0);
+        let first = if visible.len() <= items_fit { 0 } else { sel_pos.saturating_sub(items_fit / 2).min(visible.len() - items_fit) };
+
+        let mut y = rect.y + 2;
+        let bottom = rect.y + rect.height;
+        for &row_idx in visible.iter().skip(first) {
+            if y >= bottom {
+                break;
+            }
+            let row = &t.rows[row_idx];
+            let selected = row_idx == t.selected;
+            let row_bg = if selected && focused { theme.role(Role::ActiveBase) } else { bg };
+            let row_fg = if selected && focused { theme.role(Role::ActiveForeground) } else { theme.role(Role::MutedForeground) };
+            buf.fill_rect(Rect::new(rect.x, y, rect.width, 1), Cell::blank(row_fg, row_bg));
+            for (ci, ((col, &cx), &w)) in t.columns.iter().zip(&xs).zip(&widths).enumerate() {
+                let text = if ci == 0 {
+                    let indent = "  ".repeat(usize::from(row.level));
+                    let marker = if !row.has_children { "  " } else if row.expanded { "\u{25be} " } else { "\u{25b8} " };
+                    format!("{indent}{marker}{}", row.cells.first().map(String::as_str).unwrap_or(""))
+                } else {
+                    row.cells.get(ci).cloned().unwrap_or_default()
+                };
+                paint_table_cell(buf, cx, y, w, &text, row_fg, row_bg, 0, col.align, rect);
+            }
+            y += 1;
+            if y >= bottom {
+                break;
+            }
+            buf.hline(Pos { x: rect.x, y }, rect.width, '\u{2500}', theme.role(Role::BorderNormal), bg);
+            y += 1;
+        }
     }
 }
 // #endregion 🔖Widget
@@ -2101,6 +2316,11 @@ pub mod engine {
                 focus: None,
                 full_redraw: true,
             }
+        }
+
+        /// 🔍 The last fully-composed frame, for hosts/tests that need to inspect the actual render.
+        pub fn frame(&self) -> &CellBuffer {
+            &self.front
         }
 
         pub fn resize(&mut self, size: Size) {
@@ -2595,9 +2815,9 @@ pub mod host {
 #[cfg(test)]
 mod tests {
     use crate::ansi::AnsiParser;
-    use crate::cell::{diff, Cell, CellBuffer};
+    use crate::cell::{attr, diff, Cell, CellBuffer};
     use crate::chrome::{shell, ChromeState, FooterState, NavbarState, WindowState};
-    use crate::event::{Event, Key, MouseEvent, MouseKind};
+    use crate::event::{Event, Key, KeyEvent, MouseEvent, MouseKind};
     use crate::geometry::{Pos, Rect, Size};
     use crate::layout::{
         create_default_layout, even_window_layout, solve, solve_window_layout, Constraint, Dimension, Direction,
@@ -2605,8 +2825,8 @@ mod tests {
     };
     use crate::scene::{Node, NodeContent, Scene};
     use crate::text::{display_width, truncate_to};
-    use crate::theme::{Role, Theme};
-    use crate::widget::WidgetSignal;
+    use crate::theme::{Role, Surface, Theme};
+    use crate::widget::{TableAlign, TableColumn, TableRow, TableState, WidgetSignal, WidgetState};
     use ui_styling::appearance::AppearanceName;
 
     fn row_text(buf: &CellBuffer, y: u16) -> String {
@@ -2776,6 +2996,103 @@ mod tests {
         let close_x = (0..rect.width).find(|&x| buf.get(x, 1).unwrap().ch == '\u{2715}').expect("close glyph rendered");
         let signals = tui.dispatch(&Event::Mouse(MouseEvent { kind: MouseKind::Down(0), pos: Pos { x: rect.x + close_x, y: rect.y + 1 }, mods: 0 }));
         assert_eq!(signals, vec![(window_id, WidgetSignal::WindowClose)]);
+    }
+
+    fn sample_table() -> TableState {
+        let columns = vec![
+            TableColumn::new("Plugin / App", 0, TableAlign::Left),
+            TableColumn::new("React", 6, TableAlign::Right),
+        ];
+        let rows = vec![
+            TableRow::parent("puzzle", vec!["puzzle".into(), "".into()]),
+            TableRow::child("puzzle2d", vec!["puzzle2d".into(), "6012".into()], 1),
+            TableRow::child("puzzle3d", vec!["puzzle3d".into(), "6013".into()], 1),
+            TableRow::parent("draw", vec!["draw".into(), "".into()]),
+            TableRow::child("draw", vec!["draw".into(), "6064".into()], 1),
+        ];
+        TableState::new(columns, rows)
+    }
+
+    #[test]
+    fn table_header_is_bold_muted_with_a_hairline_underline_and_row_separators() {
+        let theme = Theme::new(AppearanceName::Dark);
+        let table = sample_table();
+        let rect = Rect::new(0, 0, 40, 12);
+        let mut buf = CellBuffer::new(Size { width: 40, height: 12 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+        WidgetState::Table(table).paint(&theme, rect, &mut buf, false);
+
+        assert_eq!(row_text(&buf, 0).trim_end(), "Plugin / App                       React");
+        assert_eq!(buf.get(0, 0).unwrap().fg, theme.role(Role::MutedForeground));
+        assert_eq!(buf.get(0, 0).unwrap().attrs & attr::BOLD, attr::BOLD, "header must be bold");
+        assert_eq!(row_text(&buf, 1), "\u{2500}".repeat(40), "hairline underline missing below the header");
+        // no vertical rules anywhere in the header/underline rows
+        assert!(!row_text(&buf, 0).contains('\u{2502}'));
+
+        assert_eq!(row_text(&buf, 2).trim_end(), "\u{25be} puzzle");
+        assert_eq!(row_text(&buf, 3), "\u{2500}".repeat(40), "row separator missing after the first row");
+        assert_eq!(row_text(&buf, 4).trim_end(), "    puzzle2d                        6012");
+    }
+
+    #[test]
+    fn table_visible_indices_skips_children_of_a_collapsed_parent() {
+        let mut table = sample_table();
+        assert_eq!(table.visible_indices(), vec![0, 1, 2, 3, 4]);
+        table.rows[0].expanded = false;
+        assert_eq!(table.visible_indices(), vec![0, 3, 4], "puzzle's children must be hidden while collapsed");
+    }
+
+    #[test]
+    fn table_on_key_navigates_visible_rows_toggles_and_activates_leaves() {
+        let mut table = sample_table();
+        table.rows[0].expanded = false;
+        table.selected = 0;
+        let mut widget = WidgetState::Table(table);
+        // Down should skip the hidden puzzle2d/puzzle3d children and land on "draw"
+        let down = KeyEvent { key: Key::Down, mods: 0 };
+        assert_eq!(widget.on_key(&down), Some(WidgetSignal::SelectionChanged(3)));
+        let WidgetState::Table(table) = &mut widget else { unreachable!() };
+        assert_eq!(table.selected, 3);
+        table.selected = 0;
+
+        let enter = KeyEvent { key: Key::Enter, mods: 0 };
+        assert_eq!(widget.on_key(&enter), Some(WidgetSignal::SelectionChanged(0)));
+        let WidgetState::Table(table) = &mut widget else { unreachable!() };
+        assert!(table.rows[0].expanded, "Enter on a collapsed parent should expand it");
+        table.selected = 1;
+
+        assert_eq!(widget.on_key(&enter), Some(WidgetSignal::Activated(1)), "Enter on a leaf should activate it");
+    }
+
+    #[test]
+    fn table_selected_row_uses_active_base_only_when_focused() {
+        let theme = Theme::new(AppearanceName::Dark);
+        let mut table = sample_table();
+        table.selected = 1;
+        let rect = Rect::new(0, 0, 40, 12);
+
+        let mut unfocused = CellBuffer::new(Size { width: 40, height: 12 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+        WidgetState::Table(TableState::new(std::mem::take(&mut table.columns), std::mem::take(&mut table.rows))).paint(&theme, rect, &mut unfocused, false);
+        assert_ne!(unfocused.get(4, 4).unwrap().bg, theme.role(Role::ActiveBase), "unfocused selection must not fill with the accent");
+
+        let mut table2 = sample_table();
+        table2.selected = 1;
+        let mut focused = CellBuffer::new(Size { width: 40, height: 12 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+        WidgetState::Table(table2).paint(&theme, rect, &mut focused, true);
+        assert_eq!(focused.get(4, 4).unwrap().bg, theme.role(Role::ActiveBase));
+        assert_eq!(focused.get(4, 4).unwrap().fg, theme.role(Role::ActiveForeground));
+    }
+
+    #[test]
+    fn table_flex_column_fills_remaining_width_and_right_aligns_numeric_column() {
+        let theme = Theme::new(AppearanceName::Dark);
+        let table = sample_table();
+        let rect = Rect::new(0, 0, 20, 6);
+        let mut buf = CellBuffer::new(Size { width: 20, height: 6 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+        WidgetState::Table(table).paint(&theme, rect, &mut buf, false);
+        let header = row_text(&buf, 0);
+        assert_eq!(header.len(), 20);
+        assert!(header.trim_end().ends_with("React"), "the fixed-width numeric column should sit right-aligned at the row's end: {header:?}");
+        let _ = theme.surface(Surface::Window);
     }
 
     #[test]

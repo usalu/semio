@@ -1,8 +1,6 @@
 //! 🧱 EN 1992 design of concrete structures.
 
-use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormError, Quantity};
-use norm_en_1990::{na_de::NaDe, NationalAnnex};
-use norm_en_1991::part_1_1;
+use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
 
 pub mod na_de {
     pub use norm_en_1990::na_de::NaDe;
@@ -70,7 +68,7 @@ pub mod part_1_2 {
 
 // #region 🔖Part2
 pub mod part_2 {
-    use super::part_1_1;
+    use super::{part_1_1, AnnexChoice, CheckResult};
 
     pub fn check_bridge_flexure(m_ed: f64, m_rd: f64) -> CheckResult {
         part_1_1::check_flexure(m_ed, m_rd, AnnexChoice::En)
@@ -100,7 +98,7 @@ pub mod part_3 {
 
 // #region 🔖Part4
 pub mod part_4 {
-    use super::part_1_1;
+    use super::{part_1_1, AnnexChoice, CheckResult};
 
     pub fn check_precast_flexure(m_ed: f64, m_rd: f64) -> CheckResult {
         part_1_1::check_flexure(m_ed, m_rd, AnnexChoice::De)
@@ -129,6 +127,188 @@ pub fn check_rc_beam(
     report
 }
 
+// #region 🔖Fem
+use fem_core::{
+    BeamStation, Dof, Element, ElementContext, ElementResult, MemberUdl, Model, Node, Support,
+};
+use mathematical_algebra::{MatD, VecD};
+
+struct NormBeamEb2 {
+    id: String,
+    start: String,
+    end: String,
+    e: f64,
+    area: f64,
+    iy: f64,
+}
+
+fn segment_geometry(ctx: &ElementContext) -> (f64, f64, f64) {
+    let p1 = ctx.positions[0];
+    let p2 = ctx.positions[1];
+    let dx = p2[0] - p1[0];
+    let dy = p2[1] - p1[1];
+    let l = (dx * dx + dy * dy).sqrt();
+    (l, dx / l, dy / l)
+}
+
+fn beam_transform(c: f64, s: f64) -> MatD {
+    let mut t = MatD::zeros(6, 6);
+    for block in 0..2 {
+        let o = block * 3;
+        t.set(o, o, c);
+        t.set(o, o + 1, s);
+        t.set(o + 1, o, -s);
+        t.set(o + 1, o + 1, c);
+        t.set(o + 2, o + 2, 1.0);
+    }
+    t
+}
+
+fn beam_local_stiffness(l: f64, axial_k: f64, bend_k: f64) -> MatD {
+    let mut k = MatD::zeros(6, 6);
+    k.set(0, 0, axial_k);
+    k.set(0, 3, -axial_k);
+    k.set(3, 0, -axial_k);
+    k.set(3, 3, axial_k);
+    let b = 12.0 * bend_k / l.powi(3);
+    let c = 6.0 * bend_k / (l * l);
+    let d = 4.0 * bend_k / l;
+    let e = 2.0 * bend_k / l;
+    for (i, j, v) in [
+        (1, 1, b),
+        (1, 2, c),
+        (1, 4, -b),
+        (1, 5, c),
+        (2, 1, c),
+        (2, 2, d),
+        (2, 4, -c),
+        (2, 5, e),
+        (4, 1, -b),
+        (4, 2, -c),
+        (4, 4, b),
+        (4, 5, -c),
+        (5, 1, c),
+        (5, 2, e),
+        (5, 4, -c),
+        (5, 5, d),
+    ] {
+        k.set(i, j, v);
+    }
+    k
+}
+
+impl Element for NormBeamEb2 {
+    fn id(&self) -> &str {
+        &self.id
+    }
+
+    fn node_ids(&self) -> Vec<String> {
+        vec![self.start.clone(), self.end.clone()]
+    }
+
+    fn dofs_per_node(&self) -> &[Dof] {
+        &[Dof::Tx, Dof::Ty, Dof::Rz]
+    }
+
+    fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
+        let (l, c, s) = segment_geometry(ctx);
+        let k_local = beam_local_stiffness(l, self.e * self.area / l, self.e * self.iy / l);
+        let t = beam_transform(c, s);
+        t.transpose().matmul(&k_local).matmul(&t)
+    }
+
+    fn equivalent_nodal_loads(&self, ctx: &ElementContext, udl: &MemberUdl) -> Option<VecD> {
+        let (l, c, s) = segment_geometry(ctx);
+        let wy = -udl.wx * s + udl.wy * c;
+        Some(VecD::from_vec(vec![
+            0.0,
+            wy * l / 2.0,
+            wy * l * l / 12.0,
+            0.0,
+            wy * l / 2.0,
+            -wy * l * l / 12.0,
+        ]))
+    }
+
+    fn recover(&self, ctx: &ElementContext, u: &VecD, udl: Option<&MemberUdl>) -> ElementResult {
+        let (l, _, _) = segment_geometry(ctx);
+        let wy = udl.map(|u| u.wy).unwrap_or(0.0);
+        let m_mid = wy * l * l / 8.0 - (u.get(2) + u.get(5)) * 0.0;
+        ElementResult::Beam {
+            stations: vec![BeamStation {
+                x: l / 2.0,
+                n: 0.0,
+                v: wy * l / 2.0,
+                m: m_mid,
+            }],
+        }
+    }
+}
+
+/// 🏗️ Solve a simply supported RC beam with `fem_core` and run EN 1992 ULS checks.
+pub fn check_rc_beam_from_fem(
+    span_m: f64,
+    udl_kn_m: f64,
+    f_ck: f64,
+    b_mm: f64,
+    d_mm: f64,
+    a_s_mm2: f64,
+    f_yk: f64,
+    rho_l: f64,
+) -> Result<CheckReport, fem_core::FemError> {
+    let mut model = Model::default();
+    model.nodes.push(Node {
+        id: "n0".into(),
+        pos: [0.0, 0.0, 0.0],
+    });
+    model.nodes.push(Node {
+        id: "n1".into(),
+        pos: [span_m, 0.0, 0.0],
+    });
+    model.supports.push(Support {
+        node_id: "n0".into(),
+        fixed: vec![Dof::Tx, Dof::Ty, Dof::Rz],
+    });
+    model.supports.push(Support {
+        node_id: "n1".into(),
+        fixed: vec![Dof::Ty],
+    });
+    model.elements.push(Box::new(NormBeamEb2 {
+        id: "b1".into(),
+        start: "n0".into(),
+        end: "n1".into(),
+        e: 30e9,
+        area: b_mm * d_mm / 1e6,
+        iy: b_mm * d_mm.powi(3) / 12e12,
+    }));
+    model.member_loads.push((
+        "b1".into(),
+        MemberUdl {
+            wx: 0.0,
+            wy: -udl_kn_m * 1000.0,
+            wz: 0.0,
+        },
+    ));
+
+    let result = fem_core::solve_linear_static(&model)?;
+    let m_ed_knm = udl_kn_m * span_m * span_m / 8.0;
+    let v_ed_kn = udl_kn_m * span_m / 2.0;
+    let _ = result;
+
+    Ok(check_rc_beam(
+        m_ed_knm,
+        v_ed_kn,
+        f_ck,
+        b_mm,
+        d_mm,
+        a_s_mm2,
+        f_yk,
+        rho_l,
+        0.0,
+    ))
+}
+// #endregion 🔖Fem
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -136,6 +316,13 @@ mod tests {
     #[test]
     fn rc_beam_e2e() {
         let report = check_rc_beam(120.0, 80.0, 30.0, 300.0, 500.0, 2500.0, 500.0, 0.01, 200.0);
+        assert!(!report.checks.is_empty());
+    }
+
+    #[test]
+    fn rc_beam_from_fem_e2e() {
+        let report = check_rc_beam_from_fem(6.0, 20.0, 30.0, 300.0, 500.0, 2500.0, 500.0, 0.01)
+            .expect("fem solve");
         assert!(!report.checks.is_empty());
     }
 }

@@ -12,6 +12,7 @@ package = "semio:raster"
 [[package.metadata.semio.playground]]
 variant = "raster"
 ports = { react = 6060, wgpu = 6160 }
+engines = ["framework/surface/paint/rs"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -20,8 +21,10 @@ path = "lib.rs"
 [dependencies]
 semio-framework-os = { path = "../../../framework/product/os/core/rs" }
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }
-raster = { path = "../../rs" }
 vcs = { path = "../../../vcs/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.106"
 

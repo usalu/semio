@@ -1,0 +1,22 @@
+{
+  "name": "@semio-tech/animate-present-rs",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/Cargo.toml",
+        "{projectRoot}/lib.rs",
+        "{projectRoot}/present/**",
+        "{projectRoot}/script.ts",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "options": {
+        "cwd": "animate/present/rs",
+        "command": "bun ./script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

@@ -30,10 +30,8 @@ fn segments_to_multipolygon(segments: &[PathSegment]) -> Result<MultiPolygon<f64
                 coords.push(Coord { x: to[0], y: to[1] });
             }
             PathSegment::Line { to } => coords.push(Coord { x: to[0], y: to[1] }),
-            PathSegment::Close => {
-                if !coords.is_empty() {
-                    polygons.push(close_polygon(&mut coords)?);
-                }
+            PathSegment::Close if !coords.is_empty() => {
+                polygons.push(close_polygon(&mut coords)?);
             }
             _ => {}
         }
@@ -530,7 +528,7 @@ impl DrawingStore {
             if let Some(segments) = scene_node_world_segments(node) {
                 let dwg_segments: Vec<semio_framework_core::DwgPathSegment> = segments.iter().map(engine_segment_to_dwg).collect();
                 let mut sub = semio_framework_core::paths_to_dwg_drawing(&[dwg_segments]);
-                drawing.entities.extend(sub.entities.drain(..));
+                drawing.entities.append(&mut sub.entities);
             }
         }
         semio_framework_core::dwg_to_bytes(&drawing).map_err(DrawingError::InvalidInput)
@@ -555,7 +553,7 @@ impl DrawingStore {
             return Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [0.0, 0.0] }] }));
         }
         if children.len() == 1 {
-            return Ok(children.into_iter().next().unwrap());
+            return Ok(children.into_iter().next().expect("children.len() == 1 checked above"));
         }
         Ok(self.register(DrawingKind::Group, DrawingNode::Group { children: children.iter().map(|h| h.as_str().to_string()).collect() }))
     }
@@ -844,11 +842,11 @@ fn serialize_pdf(scene: &DrawingScene) -> Vec<u8> {
         pdf.push_str(object);
     }
     offsets.push(pdf.len());
-    pdf.push_str(&objects[3]);
+    pdf.push_str(objects[3]);
     pdf.push_str(std::str::from_utf8(content).unwrap_or(""));
     pdf.push_str("\nendstream\nendobj\n");
     let xref = pdf.len();
-    pdf.push_str(&format!("xref\n0 5\n0000000000 65535 f \n"));
+    pdf.push_str("xref\n0 5\n0000000000 65535 f \n");
     for offset in offsets {
         pdf.push_str(&format!("{:010} 00000 n \n", offset));
     }
@@ -1054,7 +1052,7 @@ impl DrawingStore {
         #[cfg(feature = "booleans")]
         {
             let merged = booleans::boolean_paths(&a_segments, &b_segments, op)?;
-            return Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: merged }));
+            Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: merged }))
         }
         #[cfg(not(feature = "booleans"))]
         {

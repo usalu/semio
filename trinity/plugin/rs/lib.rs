@@ -8,7 +8,7 @@ pub mod app_jack {
         text_identifier_occurrences_json,
         ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text,
         ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, AppLabelsOverlay, DocumentApp,
-        DocumentView, MeasureSelectItem, NodeGraphScene,
+        DocumentView, MeasureSelectItem, NodeGraphScene, OsMediaCapability, ResourceKindSpec,
         TableScene, TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
         UiTreeNode, UiTreeSectionNode, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild,
         WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -1160,6 +1160,14 @@ pub mod app_jack {
     pub fn create_trinity_jack_app() -> App {
         App::from_builder(
             App::builder(TRINITY_JACK_PLAY_APP_ID, "Trinity Jack").document(["semio", "trinity", "jack"])
+                .resource_kind(ResourceKindSpec {
+                    id: "graph.trinity".into(),
+                    name: "Trinity Graph".into(),
+                    source_format: "trinity.graph".into(),
+                    component_kind: "trinity".into(),
+                    dimension: "graph".into(),
+                    media_capability: OsMediaCapability::MeshOnly,
+                })
                 .icon_id("trinity")
                 .mode("explore", "Explore")
                 .default_mode_id("explore")

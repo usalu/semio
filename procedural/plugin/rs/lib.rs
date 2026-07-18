@@ -14,7 +14,7 @@ pub mod app_2d {
         build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout,
         ui_inspector_groups_to_tree, ui_inspector_readonly_field,
         ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView,
-        NodeGraphScene, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode,
+        NodeGraphScene, OsMediaCapability, ResourceKindSpec, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode,
         UiTreeSectionNode, ViewState,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
         FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -1082,6 +1082,14 @@ pub mod app_2d {
     pub fn create_procedural2d_app() -> App {
         App::from_builder(
             App::builder(PROCEDURAL2D_PLAY_APP_ID, "Procedural 2D").document(["semio", "procedural", "2d"])
+                .resource_kind(ResourceKindSpec {
+                    id: "2d.procedural".into(),
+                    name: "2D Procedural".into(),
+                    source_format: "procedural.2d".into(),
+                    component_kind: "procedural2d".into(),
+                    dimension: "2d".into(),
+                    media_capability: OsMediaCapability::MeshOnly,
+                })
                 .icon_id("procedural2d")
                 .mode("edit", "Edit")
                 .mode("generate", "Generate")
@@ -1405,7 +1413,7 @@ pub mod app_3d {
         create_named_layout, merge_world_selection_ids,
         mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
         ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, DocumentApp, DocumentView, world3d_scene, world3d_selection_json, world3d_sun_measures,
-        ActionDescriptor, MeasureSelectItem, NodeGraphScene, UtilityDefinition,
+        ActionDescriptor, MeasureSelectItem, NodeGraphScene, OsMediaCapability, ResourceKindSpec, UtilityDefinition,
         UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowMeasure, WorldSunConfig,
         SET_ACTIVE_UTILITY_ACTION_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -2992,6 +3000,14 @@ pub mod app_3d {
     pub fn create_procedural3d_app() -> App {
         App::from_builder(
             App::builder(PROCEDURAL_3D_PLAY_APP_ID, "Procedural 3D").document(["semio", "procedural", "3d"])
+                .resource_kind(ResourceKindSpec {
+                    id: "3d.procedural".into(),
+                    name: "3D Procedural".into(),
+                    source_format: "procedural.3d".into(),
+                    component_kind: "procedural3d".into(),
+                    dimension: "3d".into(),
+                    media_capability: OsMediaCapability::MeshOnly,
+                })
                 .icon_id("workflow")
                 .mode("edit", "Edit")
                 .mode("generate", "Generate")

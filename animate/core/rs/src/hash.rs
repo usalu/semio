@@ -61,12 +61,13 @@ pub fn hash_animation_timeline(children: Vec<String>) -> String {
 
 /// 🎬 Hash a scene configuration snapshot.
 pub fn hash_scene_config(frame_rate: f64, width: u32, height: u32, mobject_count: usize) -> String {
+    let rate = format_number_for_hash(frame_rate);
     hash_parts(&[
         "SceneConfig",
-        format_number_for_hash(frame_rate),
-        width.to_string(),
-        height.to_string(),
-        mobject_count.to_string(),
+        &rate,
+        &width.to_string(),
+        &height.to_string(),
+        &mobject_count.to_string(),
     ])
 }
 

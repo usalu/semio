@@ -7,8 +7,9 @@ use protocol::{
     ProtocolOp, ProtocolSpec, PROTOCOL_BUILDER_LABELS_EN, PROTOCOL_BUILTIN_KINDS, PROTOCOL_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{
-    create_default_layout, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, DocumentApp, DocumentView,
-    PluginBundle, BlockPaletteEntry, SurfaceKind, UiNode, ViewState,
+    app_labels, create_default_layout, is_de_locale, localized_label_map, resolve_labels, ui_text, ActionArgDef,
+    ActionArgOption, ActionEmit, App, AppLabelsOverlay, AppLabelsOverlayExt, BlockPaletteEntry, DocumentApp,
+    DocumentView, PluginBundle, SurfaceKind, UiNode, ViewState,
 };
 use serde_json::Value;
 
@@ -21,81 +22,7 @@ const PROTOCOL_PLAY_BODY_BUILDER: &str = "protocol.play.builder";
 const PROTOCOL_PLAY_WINDOW_BUILDER: &str = "protocol-builder";
 //#endregion 🔖Constants
 
-//#region 🔖Terminology
-/// 🗣️ Complete UI label set for the protocol-play app; one field per label makes every locale combination compile-checked.
-struct ProtocolPlayLabels {
-    mode_builder: &'static str,
-    window_builder: &'static str,
-    kind_arg: &'static str,
-}
-
-const PROTOCOL_PLAY_LABELS_EN: ProtocolPlayLabels = ProtocolPlayLabels {
-    mode_builder: "Builder",
-    window_builder: "Builder",
-    kind_arg: "Kind",
-};
-const PROTOCOL_PLAY_LABELS_DE: ProtocolPlayLabels = ProtocolPlayLabels {
-    mode_builder: "Builder",
-    window_builder: "Builder",
-    kind_arg: "Art",
-};
-
-/// 🗣️ Resolves the active label set from the shell-provided locale; native-only (no terminology variant).
-fn protocol_play_labels(view_state: &ViewState) -> &'static ProtocolPlayLabels {
-    if view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de")) {
-        &PROTOCOL_PLAY_LABELS_DE
-    } else {
-        &PROTOCOL_PLAY_LABELS_EN
-    }
-}
-//#endregion 🔖Terminology
-
-//#region 🔖CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_protocol_play_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
-/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn protocol_play_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("addStep", "Add Step", "Schritt hinzufuegen"),
-        ("removeStep", "Remove Step", "Schritt entfernen"),
-        ("moveStep", "Move Step", "Schritt verschieben"),
-        ("addBlock", "Add Block", "Baustein hinzufuegen"),
-        ("removeBlock", "Remove Block", "Baustein entfernen"),
-        ("moveBlock", "Move Block", "Baustein verschieben"),
-        ("updateProtocol", "Update Protocol", "Protokoll aktualisieren"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-    ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-}
-
-/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_protocol_play_app`.
-/// The protocol manifest declares no toolbar utilities, so this always resolves empty; kept for parity with the
-/// other play apps' terminology plumbing.
-fn protocol_play_utility_labels(_is_de: bool) -> std::collections::HashMap<String, String> {
-    std::collections::HashMap::new()
-}
-//#endregion 🔖CommandLabels
-
-//#region 🔖Builder
-fn protocol_builder_config() -> ProtocolBuilderConfig {
-    ProtocolBuilderConfig {
-        action_namespace: "protocol-builder",
-        controller_id: PROTOCOL_PLAY_CONTROLLER_ID,
-        labels: PROTOCOL_BUILDER_LABELS_EN,
-    }
-}
-
-fn builtin_palette() -> Vec<BlockPaletteEntry> {
-    PROTOCOL_BUILTIN_KINDS
-        .iter()
-        .map(|kind| BlockPaletteEntry {
-            block_kind: (*kind).into(),
-            label: (*kind).into(),
-            icon_id: "circle".into(),
-        })
-        .collect()
-}
-
+//#region 🔖DocumentHelpers
 /// 🧱 A blank block of the requested kind — every optional field defaulted, ready to be edited.
 fn default_block(id: String, kind: &str) -> ProtocolBlock {
     ProtocolBlock {
@@ -121,6 +48,56 @@ fn default_block(id: String, kind: &str) -> ProtocolBlock {
         condition: None,
     }
 }
+//#endregion 🔖DocumentHelpers
+
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the protocol-play app; one field per label makes every locale combination compile-checked.
+app_labels! {
+    struct ProtocolPlayLabels {
+        window_builder: &'static str = en: "Builder", de: "Builder";
+        mode_builder: &'static str = en: "Builder", de: "Builder";
+        kind_arg: &'static str = en: "Kind", de: "Art";
+    }
+}
+//#endregion 🔖Terminology
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_protocol_play_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+fn protocol_play_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    localized_label_map(is_de, &[
+        ("addStep", "Add Step", "Schritt hinzufuegen"),
+        ("removeStep", "Remove Step", "Schritt entfernen"),
+        ("moveStep", "Move Step", "Schritt verschieben"),
+        ("addBlock", "Add Block", "Baustein hinzufuegen"),
+        ("removeBlock", "Remove Block", "Baustein entfernen"),
+        ("moveBlock", "Move Block", "Baustein verschieben"),
+        ("updateProtocol", "Update Protocol", "Protokoll aktualisieren"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+    ])
+}
+//#endregion 🔖CommandLabels
+
+//#region 🔖Render
+fn protocol_builder_config() -> ProtocolBuilderConfig {
+    ProtocolBuilderConfig {
+        action_namespace: "protocol-builder",
+        controller_id: PROTOCOL_PLAY_CONTROLLER_ID,
+        labels: PROTOCOL_BUILDER_LABELS_EN,
+    }
+}
+
+fn builtin_palette() -> Vec<BlockPaletteEntry> {
+    PROTOCOL_BUILTIN_KINDS
+        .iter()
+        .map(|kind| BlockPaletteEntry {
+            block_kind: (*kind).into(),
+            label: (*kind).into(),
+            icon_id: "circle".into(),
+        })
+        .collect()
+}
 
 fn render_builder(spec: &ProtocolSpec, selected_id: Option<&str>) -> UiNode {
     render_protocol_builder(
@@ -131,9 +108,9 @@ fn render_builder(spec: &ProtocolSpec, selected_id: Option<&str>) -> UiNode {
         &protocol_builder_config(),
     )
 }
-//#endregion 🔖Builder
+//#endregion 🔖Render
 
-//#region 🔖App
+//#region 🔖ProtocolPlayApp
 /// 🎛️ Ephemeral view state (the current block/step selection) — lives in the app struct, never in the
 /// document, so selecting an element never pollutes undo history.
 #[derive(Default)]
@@ -242,23 +219,19 @@ impl DocumentApp for ProtocolPlayApp {
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
-        let labels = protocol_play_labels(view_state);
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        semio_framework_plugin::AppLabelsOverlay {
-            window_kind_labels: std::collections::HashMap::from([(PROTOCOL_PLAY_WINDOW_BUILDER.to_string(), labels.window_builder.to_string())]),
-            panel_tab_labels: std::collections::HashMap::new(),
-            mode_labels: std::collections::HashMap::from([("builder".to_string(), labels.mode_builder.to_string())]),
-            action_labels: protocol_play_action_labels(is_de),
-            utility_labels: protocol_play_utility_labels(is_de),
-            example_labels: std::collections::HashMap::new(),
-            action_arg_labels: std::collections::HashMap::from([("addBlock.kind".to_string(), labels.kind_arg.to_string())]),
-            dialog_labels: std::collections::HashMap::new(),
-            introduction_labels: std::collections::HashMap::new(),
-        }
+    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
+        let labels = resolve_labels::<ProtocolPlayLabels>(view_state);
+        let is_de = is_de_locale(view_state);
+        AppLabelsOverlay::default()
+            .window_kind_label(PROTOCOL_PLAY_WINDOW_BUILDER, labels.window_builder)
+            .mode_label("builder", labels.mode_builder)
+            .action_labels(protocol_play_action_labels(is_de))
+            .action_arg_label("addBlock.kind", labels.kind_arg)
     }
 }
+//#endregion 🔖ProtocolPlayApp
 
+//#region 🔖Manifest
 fn create_protocol_play_app() -> App {
     App::from_builder(
         App::builder(PROTOCOL_PLAY_APP_ID, "Protocol")
@@ -293,37 +266,21 @@ fn protocol_play_bundle() -> PluginBundle {
 }
 
 semio_framework_plugin::plugin_exports!(protocol_play_bundle);
-//#endregion 🔖App
+//#endregion 🔖Manifest
 
 //#region 🧪Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, PluginApp};
     use serde_json::json;
-    use vcs::{Backbone, MemoryBackbone};
-
-    fn meta(actor: &str) -> ActionMeta {
-        ActionMeta { actor: actor.into(), instance_id: 1 }
-    }
-
-    fn new_app() -> VcsDocumentApp<ProtocolPlayApp> {
-        VcsDocumentApp::new(ProtocolPlayApp::default())
-    }
-
-    /// 🧬 A wrapper carrying the real action registry so `addBlock`'s declared `kind` default materializes.
-    fn new_app_with_registry() -> VcsDocumentApp<ProtocolPlayApp> {
-        use semio_framework_plugin::app::AppActionRegistry;
-        let definition = create_protocol_play_app().definition;
-        VcsDocumentApp::with_registry(ProtocolPlayApp::default(), AppActionRegistry::from_definition(&definition))
-    }
 
     #[test]
     fn add_block_materializes_declared_kind_default() {
-        let mut app = new_app_with_registry();
-        app.handle_action("addStep", None, &ViewState::default(), &meta("local")).expect("add step");
+        let mut app = testkit::new_app_with_registry::<ProtocolPlayApp>(create_protocol_play_app);
+        app.handle_action("addStep", None, &ViewState::default(), &testkit::meta("local")).expect("add step");
         // addBlock fired with no args: the declared `kind` default ("text") must be materialized host-side.
-        app.handle_action("addBlock", None, &ViewState::default(), &meta("local")).expect("add block");
+        app.handle_action("addBlock", None, &ViewState::default(), &testkit::meta("local")).expect("add block");
         let projection = app.projection().expect("materialize projection");
         assert_eq!(projection.steps[0].blocks.last().unwrap().kind, "text", "kind default materialized from the registry");
     }
@@ -338,16 +295,16 @@ mod tests {
 
     #[test]
     fn add_step_action_grows_projection() {
-        let mut app = new_app();
-        app.handle_action("addStep", None, &ViewState::default(), &meta("local")).expect("add step");
+        let mut app = testkit::new_app::<ProtocolPlayApp>();
+        app.handle_action("addStep", None, &ViewState::default(), &testkit::meta("local")).expect("add step");
         assert_eq!(app.projection().expect("materialize projection").steps.len(), 2);
     }
 
     #[test]
     fn add_block_action_appends_and_selects_block() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<ProtocolPlayApp>();
         let result = app
-            .handle_action("addBlock", Some(&json!({ "kind": "text" })), &ViewState::default(), &meta("local"))
+            .handle_action("addBlock", Some(&json!({ "kind": "text" })), &ViewState::default(), &testkit::meta("local"))
             .expect("add block");
         assert_eq!(result.operations.len(), 1);
         let projection = app.projection().expect("materialize projection");
@@ -360,72 +317,59 @@ mod tests {
 
     #[test]
     fn set_selection_is_a_view_action_without_ops() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<ProtocolPlayApp>();
         let result = app
-            .handle_action("setSelection", Some(&json!({ "ids": ["block-1"] })), &ViewState::default(), &meta("local"))
+            .handle_action("setSelection", Some(&json!({ "ids": ["block-1"] })), &ViewState::default(), &testkit::meta("local"))
             .expect("set selection");
         assert!(result.operations.is_empty(), "selection is ephemeral view state, not a document op");
     }
 
     #[test]
     fn render_builder_emits_protocol_list_component_scene() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<ProtocolPlayApp>();
         let node = app.render(PROTOCOL_PLAY_BODY_BUILDER, None, &ViewState::default()).expect("render");
         assert!(matches!(node, UiNode::ComponentScene(_)));
     }
 
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
-        let mut app = new_app();
-        app.handle_action("addStep", None, &ViewState::default(), &meta("local")).expect("add step");
-        assert_eq!(app.projection().expect("materialize projection").steps.len(), 2);
-        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
-        assert_eq!(app.projection().expect("materialize projection").steps.len(), 1);
-        app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
-        assert_eq!(app.projection().expect("materialize projection").steps.len(), 2);
+        let mut app = testkit::new_app::<ProtocolPlayApp>();
+        testkit::assert_undo_redo_round_trip(
+            &mut app,
+            "addStep",
+            None,
+            |app| app.projection().expect("materialize projection").steps.len(),
+            1,
+            2,
+        );
     }
 
     #[test]
     fn update_protocol_title_coalesces_into_one_undo_step() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<ProtocolPlayApp>();
         for title in ["R", "Re", "Recipe"] {
-            app.handle_action("updateProtocol", Some(&json!({ "value": title })), &ViewState::default(), &meta("local")).expect("type title");
+            app.handle_action("updateProtocol", Some(&json!({ "value": title })), &ViewState::default(), &testkit::meta("local")).expect("type title");
         }
         assert_eq!(app.projection().expect("materialize projection").title.as_deref(), Some("Recipe"));
-        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
         assert_eq!(app.projection().expect("materialize projection").title, None, "coalesced typing is one undo step");
     }
 
     /// 🧪 The definitional proof: two independent instances start from the same document, apply
     /// DISJOINT edits (A adds a step, B adds a block to the pre-existing step), and exchanging ops over
-    /// a `MemoryBackbone` converges both sides to contain BOTH edits — impossible under whole-document
+    /// a backbone converges both sides onto the same projection — impossible under whole-document
     /// `setDocument` snapshots, where one side's write would clobber the other's.
     #[test]
     fn two_instances_converge_disjoint_edits_via_backbone() {
-        let mut instance_a = new_app();
-        let mut instance_b = new_app();
-        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://protocol-convergence", "mem://protocol-convergence");
-        instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
-        instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
-
-        instance_a.handle_action("addStep", None, &ViewState::default(), &meta("actor-a")).expect("a adds a step");
-        instance_b
-            .handle_action("addBlock", Some(&json!({ "kind": "number" })), &ViewState::default(), &meta("actor-b"))
-            .expect("b adds a block");
-
-        // A neutral history action always pumps inbound ops without touching applied_edit_ids the way
-        // undo would (ProtocolOp does not override Operation::author_id, so undo would misclassify the
-        // just-received remote edit as local).
-        instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
-        instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
-
-        let projection_a = instance_a.projection().expect("materialize projection");
-        let projection_b = instance_b.projection().expect("materialize projection");
-
-        assert_eq!(projection_a.steps.len(), 2, "instance A keeps its own added step");
-        assert_eq!(projection_b.steps.len(), 2, "instance B converges on A's remote step");
-        assert_eq!(projection_a.steps[0].blocks.len(), 1, "instance A converges on B's remote block");
-        assert_eq!(projection_b.steps[0].blocks.len(), 1, "instance B keeps its own added block");
+        testkit::assert_two_instances_converge::<ProtocolPlayApp, (usize, usize)>(
+            "mem://protocol-convergence",
+            ("addStep", None),
+            ("addBlock", Some(&json!({ "kind": "number" }))),
+            |app| {
+                let projection = app.projection().expect("materialize projection");
+                (projection.steps.len(), projection.steps[0].blocks.len())
+            },
+        );
     }
 }
 //#endregion 🧪Tests

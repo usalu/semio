@@ -835,7 +835,7 @@ export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDism
     <div
       ref={menuRef}
       role="menu"
-      className={cn("fixed z-tutorial w-layout-cad-menu-sm max-h-layout-preview-md overflow-y-auto p-single", floatingMenuSurfaceClass)}
+      className={cn("fixed z-tutorial w-layout-floating-menu-sm max-h-layout-preview-md overflow-y-auto p-single", floatingMenuSurfaceClass)}
       style={{
         left: Math.min(request.client.x + 8, window.innerWidth - 230),
         top: Math.min(request.client.y + 8, window.innerHeight - 220),
@@ -1435,9 +1435,6 @@ const NavigateForwardIcon = createIconComponent("arrow-right");
 const NavigateUpIcon = createIconComponent("arrow-up");
 const PlusIcon = createIconComponent("plus");
 const PlugIcon = createIconComponent("plug");
-const PuzzleIcon = createIconComponent("puzzle");
-const Puzzle2dIconCatalogGlyphIcon = createIconComponent("shapes");
-const Puzzle2dIconEmojiGlyphIcon = createIconComponent("smile");
 const Puzzle2dIconFileImportIcon = createIconComponent("image-plus");
 const Puzzle2dIconMathGlyphIcon = createIconComponent("sigma");
 const Puzzle2dIconRasterGlyphIcon = createIconComponent("image");
@@ -25954,7 +25951,7 @@ if (import.meta.vitest) {
       const Harness = () => {
         const [value, setValue] = reactHostPort.useState("");
         return (
-          <div className="h-layout-preview-md w-layout-cad-menu-lg">
+          <div className="h-layout-preview-md w-layout-floating-menu-lg">
             <Mode
               activeWindowId="engagement-window"
               windows={[
@@ -26139,7 +26136,7 @@ if (import.meta.vitest) {
     it("Mode Escape aborts active window engagement", async () => {
       const aborted: string[] = [];
       const Harness = () => (
-        <div className="h-layout-preview-md w-layout-cad-menu-lg">
+        <div className="h-layout-preview-md w-layout-floating-menu-lg">
           <Mode
             activeWindowId="engagement-window"
             windows={[
@@ -26778,15 +26775,6 @@ if (treeVitest) {
       expect(resolveHotkeyValue("ctrl+p")).toBe("ctrl+p");
       expect(resolveHotkeyValue({ hotkey: "ctrl+f" })).toBe("ctrl+f");
       expect(resolveHotkeyValue({ label: "Search" })).toBeUndefined();
-    });
-
-    it("exposes panel chrome toggle chords for all six anchors", () => {
-      expect(PANEL_TOGGLE_HOTKEYS["top-left"]).toBe("ctrl+b,meta+b");
-      expect(PANEL_TOGGLE_HOTKEYS["top-right"]).toBe("ctrl+shift+b,meta+shift+b");
-      expect(PANEL_TOGGLE_HOTKEYS["bottom-left"]).toBe("ctrl+alt+b,meta+alt+b");
-      expect(PANEL_TOGGLE_HOTKEYS["bottom-right"]).toBe("ctrl+alt+shift+b,meta+alt+shift+b");
-      expect(PANEL_TOGGLE_HOTKEYS["top-middle"]).toBe("ctrl+m,meta+m");
-      expect(PANEL_TOGGLE_HOTKEYS["bottom-middle"]).toBe("ctrl+alt+m,meta+alt+m");
     });
 
     it("tree highlight store notifies subscribers only when highlighted ids change", () => {
@@ -28449,13 +28437,7 @@ if (treeVitest) {
       expect(resolveControlLabelId("engagement-input")).toBe("ui.engagement.action");
     });
 
-    it("uses normal shell edges on panel frame, navbar bottom, and footer top with CSS hover emphasis", async () => {
-      const { readFileSync } = await import("node:fs");
-      const { resolve } = await import("node:path");
-      const uiCss = readFileSync(resolve(process.cwd(), "../../styling/js/ui.css"), "utf8");
-      expect(uiCss).toContain('[data-slot="panel"]:hover [data-slot="panel-chrome-frame"]');
-      expect(uiCss).toContain('[data-slot="mode-dock-stack"]:not([data-active="true"]):hover');
-      expect(uiCss).not.toContain("[data-panel]:hover [data-slot=\"panel-chrome-frame\"]");
+    it("uses normal shell edges on panel frame, navbar bottom, and footer top with CSS hover emphasis", () => {
       expect(panelChromeBorderClass).toContain("border-normal");
       expect(panelChromeBorderClass).not.toContain("border-emphasized");
       const navbarMarkup = renderToStaticMarkup(<Navbar items={[{ key: "a", content: "Nav" }]} />);

@@ -1,6 +1,5 @@
 //! 🌐 Pressure-driven multizone airflow network with stack and wind effects.
 
-use crate::num::gauss_seidel;
 use crate::props::moist_air_density;
 use crate::units::{GRAVITY, P_STD, RHO_AIR_REF};
 use serde::{Deserialize, Serialize};
@@ -86,38 +85,28 @@ impl AirflowNetwork {
         if n == 0 {
             return Some(Vec::new());
         }
-        let ref_idx = self.nodes.iter().position(|n| n.is_reference)?;
+        let ref_idx = self.nodes.iter().position(|node| node.is_reference)?;
         let mut pressures = vec![0.0; n];
         pressures[ref_idx] = 0.0;
 
-        let free: Vec<usize> = (0..n).filter(|&i| i != ref_idx).collect();
-        let nf = free.len();
-        if nf == 0 {
-            return Some(pressures);
-        }
-
-        let mut a = vec![vec![0.0; nf]; nf];
-        let mut b = vec![0.0; nf];
-        let mut x = vec![0.0; nf];
-
-        for iter in 0..max_iter {
-            build_mass_balance_matrix(self, &free, &pressures, p_atm, &mut a, &mut b);
-            x.copy_from_slice(&pressures.iter().enumerate().filter(|(i, _)| *i != ref_idx).map(|(_, &p)| p).collect::<Vec<_>>());
-            if !gauss_seidel(&a, &b, &mut x, 1, tol) {
-                for (k, &idx) in free.iter().enumerate() {
-                    pressures[idx] = x[k];
+        for _ in 0..max_iter {
+            let mut max_delta = 0.0_f64;
+            for i in 0..n {
+                if i == ref_idx {
+                    continue;
                 }
-            } else {
-                for (k, &idx) in free.iter().enumerate() {
-                    pressures[idx] = x[k];
+                let (sum_q, sum_g) = node_mass_balance(self, i, &pressures, p_atm);
+                if sum_g.abs() < 1e-12 {
+                    continue;
                 }
-                if iter > 0 {
-                    return Some(pressures);
-                }
+                let dp = -sum_q / sum_g;
+                let new_p = pressures[i] + dp;
+                max_delta = max_delta.max((new_p - pressures[i]).abs());
+                pressures[i] = new_p;
             }
-        }
-        for (k, &idx) in free.iter().enumerate() {
-            pressures[idx] = x[k];
+            if max_delta < tol {
+                return Some(pressures);
+            }
         }
         Some(pressures)
     }
@@ -165,56 +154,33 @@ fn link_conductance(link: &AfLink, dp_pa: f64, rho: f64) -> f64 {
     }
 }
 
-fn build_mass_balance_matrix(
-    network: &AirflowNetwork,
-    free: &[usize],
-    pressures: &[f64],
-    p_atm: f64,
-    a: &mut [Vec<f64>],
-    b: &mut [f64],
-) {
-    let nf = free.len();
-    for row in a.iter_mut().take(nf) {
-        for v in row.iter_mut() {
-            *v = 0.0;
-        }
-    }
-    for v in b.iter_mut().take(nf) {
-        *v = 0.0;
-    }
-
+fn node_mass_balance(network: &AirflowNetwork, node_i: usize, pressures: &[f64], p_atm: f64) -> (f64, f64) {
+    let mut sum_q = 0.0;
+    let mut sum_g = 0.0;
     for link in &network.links {
         let ia = network.node_index(link.node_a).unwrap_or(0);
         let ib = network.node_index(link.node_b).unwrap_or(0);
+        if ia != node_i && ib != node_i {
+            continue;
+        }
         let node_a = &network.nodes[ia];
-        let dp_stack = stack_pressure_pa(node_a, &network.nodes[ib], p_atm);
+        let node_b = &network.nodes[ib];
+        let dp_stack = stack_pressure_pa(node_a, node_b, p_atm);
         let dp_wind = wind_pressure_pa(link, network.wind_speed_m_s, network.wind_direction_deg);
         let dp = pressures[ia] - pressures[ib] + dp_stack + dp_wind;
         let rho = node_a.density(p_atm);
         let g = link_conductance(link, dp, rho);
         let q = power_law_flow(link, dp, rho);
-
-        for (ki, &ni) in free.iter().enumerate() {
-            if ni == ia {
-                a[ki][ki] += g;
-                b[ki] -= q - g * pressures[ia];
-            }
-            if ni == ib {
-                a[ki][ki] += g;
-                b[ki] += q - g * pressures[ib];
-            }
-            if let Some(kj) = free.iter().position(|&nj| nj == ib) {
-                if ni == ia {
-                    a[ki][kj] -= g;
-                }
-            }
-            if let Some(kj) = free.iter().position(|&nj| nj == ia) {
-                if ni == ib {
-                    a[ki][kj] -= g;
-                }
-            }
+        if node_i == ia {
+            sum_q -= q;
+            sum_g -= g;
+        }
+        if node_i == ib {
+            sum_q += q;
+            sum_g += g;
         }
     }
+    (sum_q, sum_g)
 }
 // #endregion 🔖Physics
 

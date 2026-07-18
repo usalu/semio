@@ -59,6 +59,22 @@ function parsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistr
 }
 
 //#region 🔖PlaygroundEntry
+/** @emoji 🗂️ One `[[package.metadata.semio.assets]]` row: a dev-time asset-serving need declared by a
+ * plugin crate. `app` optionally scopes the row to one playground variant of a multi-app crate (unset
+ * ⇒ every variant of the crate). Mirrors the TS discriminated union emitted for consumers as
+ * `PlaygroundAssetSpec` (see `emitPlaygroundsTypeScript`). */
+export type AssetSpecRow = {
+  readonly kind: "tile-proxy" | "static-dir" | "mesh-collection";
+  readonly route: string;
+  readonly app?: string;
+  readonly upstream?: string;
+  readonly cache?: string;
+  readonly root?: string;
+  readonly roots?: readonly string[];
+  readonly placeholder?: string;
+  readonly filterFromExamples?: boolean;
+};
+
 /** @emoji 🎮 One `[[package.metadata.semio.playground]]` row scoped to its owning plugin crate. */
 export type PlaygroundEntry = {
   readonly variant: string;
@@ -68,6 +84,10 @@ export type PlaygroundEntry = {
   readonly aliases: readonly string[];
   readonly ports: { readonly react: number; readonly wgpu: number };
   readonly examples: readonly string[];
+  /** @emoji 🔌 Crate paths whose `wasm` build target must run for this playground variant. */
+  readonly engines: readonly string[];
+  /** @emoji 🗂️ Dev-time asset-serving needs for this variant. */
+  readonly assets: readonly AssetSpecRow[];
 };
 
 function tomlBlocksAfterHeader(lines: readonly string[], headerTest: (line: string) => boolean): string[][] {
@@ -90,6 +110,10 @@ function parseTomlStringArray(block: string, key: string): string[] {
   return [...match[1].matchAll(/"([^"]*)"/g)].map((m) => m[1]);
 }
 
+function parseTomlBoolField(block: string, key: string): boolean {
+  return new RegExp(`^${key}\\s*=\\s*true\\s*$`, "m").test(block);
+}
+
 function parsePlaygroundBlock(block: string, pluginId: string, cratePath: string): PlaygroundEntry | undefined {
   const variant = block.match(/^variant\s*=\s*"([^"]+)"/m)?.[1];
   if (!variant) return undefined;
@@ -99,7 +123,44 @@ function parsePlaygroundBlock(block: string, pluginId: string, cratePath: string
   const react = portsBlock?.match(/react\s*=\s*(\d+)/)?.[1];
   const wgpu = portsBlock?.match(/wgpu\s*=\s*(\d+)/)?.[1];
   if (!react || !wgpu) return undefined;
-  return { variant, pluginId, cratePath, app, aliases, ports: { react: Number(react), wgpu: Number(wgpu) }, examples: [] };
+  const engines = parseTomlStringArray(block, "engines");
+  return { variant, pluginId, cratePath, app, aliases, ports: { react: Number(react), wgpu: Number(wgpu) }, examples: [], engines, assets: [] };
+}
+
+/** @emoji 🗂️ Parses every `[[package.metadata.semio.assets]]` row for one crate manifest. */
+function parseAssetsForCrate(manifestPath: string): AssetSpecRow[] {
+  if (!existsSync(manifestPath)) return [];
+  const text = readFileSync(manifestPath, "utf8");
+  const blocks = tomlBlocksAfterHeader(text.split("\n"), (line) => line === "[[package.metadata.semio.assets]]");
+  const rows: AssetSpecRow[] = [];
+  for (const blockLines of blocks) {
+    const block = blockLines.join("\n");
+    const kind = block.match(/^kind\s*=\s*"([^"]+)"/m)?.[1] as AssetSpecRow["kind"] | undefined;
+    const route = block.match(/^route\s*=\s*"([^"]+)"/m)?.[1];
+    if (!kind || !route) {
+      console.warn(`[DEBUG] plugin registry catalog: skipping malformed assets entry in ${manifestPath}`);
+      continue;
+    }
+    const app = block.match(/^app\s*=\s*"([^"]+)"/m)?.[1];
+    const upstream = block.match(/^upstream\s*=\s*"([^"]+)"/m)?.[1];
+    const cache = block.match(/^cache\s*=\s*"([^"]+)"/m)?.[1];
+    const root = block.match(/^root\s*=\s*"([^"]+)"/m)?.[1];
+    const roots = parseTomlStringArray(block, "roots");
+    const placeholder = block.match(/^placeholder\s*=\s*"([^"]+)"/m)?.[1];
+    const filterFromExamples = parseTomlBoolField(block, "filter_from_examples");
+    rows.push({
+      kind,
+      route,
+      ...(app ? { app } : {}),
+      ...(upstream ? { upstream } : {}),
+      ...(cache ? { cache } : {}),
+      ...(root ? { root } : {}),
+      ...(roots.length ? { roots } : {}),
+      ...(placeholder ? { placeholder } : {}),
+      ...(filterFromExamples ? { filterFromExamples: true } : {}),
+    });
+  }
+  return rows;
 }
 
 /**
@@ -149,8 +210,10 @@ export function generatePlaygroundRegistry(repoRoot = getWorkspaceRoot(), option
   const playgrounds: PlaygroundEntry[] = [];
   for (const entry of entries) {
     const manifestPath = join(repoRoot, entry.cratePath, "Cargo.toml");
+    const crateAssets = parseAssetsForCrate(manifestPath);
     for (const playground of parsePlaygroundsForCrate(manifestPath, entry.pluginId, entry.cratePath)) {
-      playgrounds.push({ ...playground, examples: discoverExamplesForPlayground(repoRoot, entry.cratePath, entry.pluginId, playground.variant) });
+      const assets = crateAssets.filter((asset) => asset.app === undefined || asset.app === playground.app);
+      playgrounds.push({ ...playground, examples: discoverExamplesForPlayground(repoRoot, entry.cratePath, entry.pluginId, playground.variant), assets });
     }
   }
   playgrounds.sort((a, b) => a.variant.localeCompare(b.variant));
@@ -256,14 +319,31 @@ export const pluginModuleUrl = (pluginId: string, fileName: string) =>
 `;
 }
 
+function emitAssetSpecTypeScript(asset: AssetSpecRow): string {
+  const fields = [`kind: ${JSON.stringify(asset.kind)}`, `route: ${JSON.stringify(asset.route)}`];
+  if (asset.upstream !== undefined) fields.push(`upstream: ${JSON.stringify(asset.upstream)}`);
+  if (asset.cache !== undefined) fields.push(`cache: ${JSON.stringify(asset.cache)}`);
+  if (asset.root !== undefined) fields.push(`root: ${JSON.stringify(asset.root)}`);
+  if (asset.roots !== undefined) fields.push(`roots: ${JSON.stringify(asset.roots)}`);
+  if (asset.placeholder !== undefined) fields.push(`placeholder: ${JSON.stringify(asset.placeholder)}`);
+  if (asset.filterFromExamples) fields.push(`filterFromExamples: true`);
+  return `{ ${fields.join(", ")} }`;
+}
+
 function emitPlaygroundsTypeScript(playgrounds: PlaygroundEntry[]): string {
   const rows = playgrounds
     .map((entry) => {
       const app = entry.app !== undefined ? `, app: ${JSON.stringify(entry.app)}` : "";
-      return `\t{ variant: ${JSON.stringify(entry.variant)}, pluginId: ${JSON.stringify(entry.pluginId)}, cratePath: ${JSON.stringify(entry.cratePath)}${app}, aliases: ${JSON.stringify(entry.aliases)}, ports: { react: ${entry.ports.react}, wgpu: ${entry.ports.wgpu} }, examples: ${JSON.stringify(entry.examples)} },`;
+      const assets = entry.assets.map(emitAssetSpecTypeScript).join(", ");
+      return `\t{ variant: ${JSON.stringify(entry.variant)}, pluginId: ${JSON.stringify(entry.pluginId)}, cratePath: ${JSON.stringify(entry.cratePath)}${app}, aliases: ${JSON.stringify(entry.aliases)}, ports: { react: ${entry.ports.react}, wgpu: ${entry.ports.wgpu} }, examples: ${JSON.stringify(entry.examples)}, engines: ${JSON.stringify(entry.engines)}, assets: [${assets}] },`;
     })
     .join("\n");
   return `/** @generated by framework/plugin/registry/script.ts — do not edit. */
+export type PlaygroundAssetSpec =
+\t| { readonly kind: "tile-proxy"; readonly route: string; readonly upstream: string; readonly cache: string }
+\t| { readonly kind: "static-dir"; readonly route: string; readonly root: string }
+\t| { readonly kind: "mesh-collection"; readonly route: string; readonly roots: readonly string[]; readonly placeholder: string; readonly filterFromExamples?: boolean };
+
 export type PlaygroundBuildTarget = {
 \treadonly variant: string;
 \treadonly pluginId: string;
@@ -272,6 +352,8 @@ export type PlaygroundBuildTarget = {
 \treadonly aliases: readonly string[];
 \treadonly ports: { readonly react: number; readonly wgpu: number };
 \treadonly examples: readonly string[];
+\treadonly engines: readonly string[];
+\treadonly assets: readonly PlaygroundAssetSpec[];
 };
 
 export const PLAYGROUND_BUILD_TARGETS: readonly PlaygroundBuildTarget[] = [

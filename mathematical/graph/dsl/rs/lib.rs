@@ -1,710 +1,661 @@
 //! 🃏 Shared Jack query language for mathematical graph frameworks.
 
+// #region ⚠️ Errors
+/// 🚧 Unified failure mode for jack parsing/execution, wire-literal parsing, and fixture ingestion.
+#[derive(Debug, thiserror::Error)]
+pub enum GraphDslError {
+    /// 🧾 Fixture or query-result JSON failed to parse or serialize.
+    #[error("invalid json: {0}")]
+    Json(#[from] serde_json::Error),
+    /// 🔤 A string literal was never closed.
+    #[error("unterminated string literal")]
+    UnterminatedString,
+    /// ❓ A byte outside the token grammar was found.
+    #[error("unexpected character '{0}'")]
+    UnexpectedChar(char),
+    /// 🔢 A numeric literal's bytes were not valid utf-8.
+    #[error("invalid number literal: {0}")]
+    NumberUtf8(#[from] std::str::Utf8Error),
+    /// 🔢 A numeric literal did not parse as a float.
+    #[error("invalid number literal: {0}")]
+    NumberFormat(#[from] std::num::ParseFloatError),
+    /// ➡️ Parser expected one token shape and found another.
+    #[error("expected {expected}, got {found}")]
+    UnexpectedToken { expected: String, found: String },
+    /// 🪝 A wire-literal edge's target endpoint was missing its `@port`.
+    #[error("edge target requires @port")]
+    EdgeTargetMissingPort,
+    /// 🕸️ A jack pattern had no nodes.
+    #[error("empty pattern")]
+    EmptyPattern,
+    /// 🚫 CREATE/DELETE/SET/MERGE are not supported on read-only queryable graphs.
+    #[error("mutating jack clauses are not supported on this graph domain")]
+    UnsupportedMutation,
+}
+// #endregion ⚠️ Errors
+
 pub mod queryable {
-// #region queryable
-//! 🔍 Queryable graph interface for Jack.
+    // #region queryable
+    //! 🔍 Queryable graph interface for Jack.
 
-use mathematical_graph_manifest::{manifest_by_id, GraphManifest, PropertyBag, PropertyValue};
-use serde_json::Value;
-use std::collections::{BTreeMap, BTreeSet};
+    use crate::GraphDslError;
+    use mathematical_graph_manifest::{manifest_by_id, GraphManifest, PropertyBag, PropertyValue};
+    use serde_json::Value;
+    use std::collections::{BTreeMap, BTreeSet};
 
-// #region 🔖QueryableEdge
-/// 🪢 Edge row exposed to Jack matching.
-#[derive(Clone, Debug, PartialEq)]
-pub struct QueryableEdge {
-    pub id: String,
-    pub kind: String,
-    pub source_node_id: String,
-    pub target_node_id: String,
-    pub source_port: Option<String>,
-    pub target_port: Option<String>,
-    pub properties: PropertyBag,
-}
-// #endregion 🔖QueryableEdge
-
-// #region 🔖QueryableGraph
-/// 🕸️ Read-only graph surface for Jack query execution.
-pub trait QueryableGraph {
-    fn manifest(&self) -> Option<&GraphManifest>;
-    fn node_ids(&self) -> Vec<String>;
-    fn node_kind(&self, id: &str) -> Option<String>;
-    fn node_name(&self, id: &str) -> Option<String>;
-    fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue>;
-    fn edges(&self) -> Vec<QueryableEdge>;
-    fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String>;
-}
-
-pub fn manifest_node_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
-    let mut kinds = BTreeSet::new();
-    for id in graph.node_ids() {
-        if let Some(kind) = graph.node_kind(id.as_str()) {
-            kinds.insert(kind);
-        }
+    // #region 🔖QueryableEdge
+    /// 🪢 Edge row exposed to Jack matching.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct QueryableEdge {
+        pub id: String,
+        pub kind: String,
+        pub source_node_id: String,
+        pub target_node_id: String,
+        pub source_port: Option<String>,
+        pub target_port: Option<String>,
+        pub properties: PropertyBag,
     }
-    if let Some(manifest) = graph.manifest() {
-        for def in &manifest.node_kinds {
-            kinds.insert(def.id.clone());
-        }
-    }
-    kinds.into_iter().collect()
-}
+    // #endregion 🔖QueryableEdge
 
-pub fn manifest_edge_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
-    let mut kinds = BTreeSet::new();
-    for edge in graph.edges() {
-        kinds.insert(edge.kind.clone());
+    // #region 🔖QueryableGraph
+    /// 🕸️ Read-only graph surface for Jack query execution.
+    pub trait QueryableGraph {
+        fn manifest(&self) -> Option<&GraphManifest>;
+        fn node_ids(&self) -> Vec<String>;
+        fn node_kind(&self, id: &str) -> Option<String>;
+        fn node_name(&self, id: &str) -> Option<String>;
+        fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue>;
+        fn edges(&self) -> Vec<QueryableEdge>;
+        fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String>;
     }
-    if let Some(manifest) = graph.manifest() {
-        for def in &manifest.edge_kinds {
-            kinds.insert(def.id.clone());
-        }
-    }
-    kinds.into_iter().collect()
-}
 
-pub fn manifest_property_names(graph: &dyn QueryableGraph) -> Vec<String> {
-    let mut props = BTreeSet::from(["id".to_string(), "name".to_string(), "kind".to_string()]);
-    for id in graph.node_ids() {
-        for key in ["label", "text"] {
-            if graph.node_property(id.as_str(), key).is_some() {
-                props.insert(key.to_string());
+    pub fn manifest_node_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
+        let mut kinds = BTreeSet::new();
+        for id in graph.node_ids() {
+            if let Some(kind) = graph.node_kind(id.as_str()) {
+                kinds.insert(kind);
             }
         }
-        if let Some(PropertyValue::Object(map)) = graph.node_property(id.as_str(), "__all") {
-            for key in map.keys() {
-                props.insert(key.clone());
+        if let Some(manifest) = graph.manifest() {
+            for def in &manifest.node_kinds {
+                kinds.insert(def.id.clone());
             }
         }
+        kinds.into_iter().collect()
     }
-    props.into_iter().collect()
-}
 
-pub fn manifest_port_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
-    let mut kinds = BTreeSet::new();
-    for edge in graph.edges() {
-        if let Some(port) = &edge.source_port {
-            kinds.insert(port.clone());
+    pub fn manifest_edge_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
+        let mut kinds = BTreeSet::new();
+        for edge in graph.edges() {
+            kinds.insert(edge.kind.clone());
         }
-        if let Some(port) = &edge.target_port {
-            kinds.insert(port.clone());
+        if let Some(manifest) = graph.manifest() {
+            for def in &manifest.edge_kinds {
+                kinds.insert(def.id.clone());
+            }
         }
+        kinds.into_iter().collect()
     }
-    if let Some(manifest) = graph.manifest() {
-        for def in &manifest.port_kinds {
-            kinds.insert(def.id.clone());
-        }
-    }
-    kinds.into_iter().collect()
-}
-// #endregion 🔖QueryableGraph
 
-// #region 🔖BoardQueryableGraph
-fn json_to_property_bag(value: &Value) -> PropertyBag {
-    serde_json::from_value(value.clone()).unwrap_or_default()
-}
-
-fn split_endpoint(endpoint: &str, handle_to_node: &BTreeMap<String, String>) -> (String, Option<String>) {
-    if let Some(node_id) = handle_to_node.get(endpoint) {
-        return (node_id.clone(), None);
-    }
-    if let Some((node, port)) = endpoint.split_once('@') {
-        let node_id = handle_to_node.get(node).cloned().unwrap_or_else(|| node.to_string());
-        return (node_id, Some(port.to_string()));
-    }
-    if let Some((node, port)) = endpoint.rsplit_once(':') {
-        let node_id = handle_to_node.get(node).cloned().unwrap_or_else(|| node.to_string());
-        return (node_id, Some(port.to_string()));
-    }
-    if let Some((node, port)) = endpoint.rsplit_once('.') {
-        if handle_to_node.contains_key(endpoint) {
-            return (handle_to_node[endpoint].clone(), None);
-        }
-        return (node.to_string(), Some(port.to_string()));
-    }
-    (endpoint.to_string(), None)
-}
-
-/// 🧩 Jack query target over board/scene fixture JSON.
-pub struct BoardQueryableGraph {
-    manifest: Option<GraphManifest>,
-    nodes: BTreeMap<String, (String, String, PropertyBag)>,
-    edges: Vec<QueryableEdge>,
-    raw_fixture: Value,
-}
-
-impl BoardQueryableGraph {
-    pub fn from_fixture_json(json: &str, manifest_id: Option<&str>) -> Result<Self, String> {
-        let raw: Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
-        let manifest = manifest_id
-            .and_then(manifest_by_id)
-            .or_else(|| raw.get("manifestId").and_then(|v| v.as_str()).and_then(manifest_by_id))
-            .or_else(|| raw.get("manifest_id").and_then(|v| v.as_str()).and_then(manifest_by_id));
-        let mut nodes = BTreeMap::new();
-        let mut handle_to_node = BTreeMap::new();
-        if let Some(rows) = raw.get("nodes").and_then(|v| v.as_array()) {
-            for row in rows {
-                let Some(obj) = row.as_object() else { continue };
-                let Some(id) = obj.get("id").and_then(|v| v.as_str()) else { continue };
-                let kind = obj
-                    .get("nodeKind")
-                    .or_else(|| obj.get("node_kind"))
-                    .or_else(|| obj.get("kind"))
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .to_string();
-                let name = obj
-                    .get("text")
-                    .or_else(|| obj.get("name"))
-                    .or_else(|| obj.get("label"))
-                    .and_then(|v| v.as_str())
-                    .unwrap_or(id)
-                    .to_string();
-                let mut properties = obj.get("userData").or_else(|| obj.get("user_data")).map(json_to_property_bag).unwrap_or_default();
-                for (key, value) in obj.iter() {
-                    if matches!(key.as_str(), "id" | "nodeKind" | "node_kind" | "kind" | "text" | "name" | "label" | "handles" | "x" | "y" | "shape" | "radius" | "width" | "height" | "userData" | "user_data") {
-                        continue;
-                    }
-                    if let Ok(prop) = serde_json::from_value::<PropertyValue>(value.clone()) {
-                        properties.insert(key.clone(), prop);
-                    }
+    pub fn manifest_property_names(graph: &dyn QueryableGraph) -> Vec<String> {
+        let mut props = BTreeSet::from(["id".to_string(), "name".to_string(), "kind".to_string()]);
+        for id in graph.node_ids() {
+            for key in ["label", "text"] {
+                if graph.node_property(id.as_str(), key).is_some() {
+                    props.insert(key.to_string());
                 }
-                nodes.insert(id.to_string(), (kind, name, properties));
-                if let Some(handles) = obj.get("handles").and_then(|v| v.as_array()) {
-                    for handle in handles {
-                        if let Some(hid) = handle.get("id").and_then(|v| v.as_str()) {
-                            handle_to_node.insert(hid.to_string(), id.to_string());
+            }
+            if let Some(PropertyValue::Object(map)) = graph.node_property(id.as_str(), "__all") {
+                for key in map.keys() {
+                    props.insert(key.clone());
+                }
+            }
+        }
+        props.into_iter().collect()
+    }
+
+    pub fn manifest_port_kinds(graph: &dyn QueryableGraph) -> Vec<String> {
+        let mut kinds = BTreeSet::new();
+        for edge in graph.edges() {
+            if let Some(port) = &edge.source_port {
+                kinds.insert(port.clone());
+            }
+            if let Some(port) = &edge.target_port {
+                kinds.insert(port.clone());
+            }
+        }
+        if let Some(manifest) = graph.manifest() {
+            for def in &manifest.port_kinds {
+                kinds.insert(def.id.clone());
+            }
+        }
+        kinds.into_iter().collect()
+    }
+    // #endregion 🔖QueryableGraph
+
+    // #region 🔖BoardQueryableGraph
+    fn json_to_property_bag(value: &Value) -> PropertyBag {
+        serde_json::from_value(value.clone()).unwrap_or_default()
+    }
+
+    fn split_endpoint(endpoint: &str, handle_to_node: &BTreeMap<String, String>) -> (String, Option<String>) {
+        if let Some(node_id) = handle_to_node.get(endpoint) {
+            return (node_id.clone(), None);
+        }
+        if let Some((node, port)) = endpoint.split_once('@') {
+            let node_id = handle_to_node.get(node).cloned().unwrap_or_else(|| node.to_string());
+            return (node_id, Some(port.to_string()));
+        }
+        if let Some((node, port)) = endpoint.rsplit_once(':') {
+            let node_id = handle_to_node.get(node).cloned().unwrap_or_else(|| node.to_string());
+            return (node_id, Some(port.to_string()));
+        }
+        if let Some((node, port)) = endpoint.rsplit_once('.') {
+            if handle_to_node.contains_key(endpoint) {
+                return (handle_to_node[endpoint].clone(), None);
+            }
+            return (node.to_string(), Some(port.to_string()));
+        }
+        (endpoint.to_string(), None)
+    }
+
+    /// 🧩 Jack query target over board/scene fixture JSON.
+    pub struct BoardQueryableGraph {
+        manifest: Option<GraphManifest>,
+        nodes: BTreeMap<String, (String, String, PropertyBag)>,
+        edges: Vec<QueryableEdge>,
+        raw_fixture: Value,
+    }
+
+    impl BoardQueryableGraph {
+        pub fn from_fixture_json(json: &str, manifest_id: Option<&str>) -> Result<Self, GraphDslError> {
+            let raw: Value = serde_json::from_str(json)?;
+            let manifest = manifest_id.and_then(manifest_by_id).or_else(|| raw.get("manifestId").and_then(|v| v.as_str()).and_then(manifest_by_id)).or_else(|| raw.get("manifest_id").and_then(|v| v.as_str()).and_then(manifest_by_id));
+            let mut nodes = BTreeMap::new();
+            let mut handle_to_node = BTreeMap::new();
+            if let Some(rows) = raw.get("nodes").and_then(|v| v.as_array()) {
+                for row in rows {
+                    let Some(obj) = row.as_object() else { continue };
+                    let Some(id) = obj.get("id").and_then(|v| v.as_str()) else { continue };
+                    let kind = obj.get("nodeKind").or_else(|| obj.get("node_kind")).or_else(|| obj.get("kind")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    let name = obj.get("text").or_else(|| obj.get("name")).or_else(|| obj.get("label")).and_then(|v| v.as_str()).unwrap_or(id).to_string();
+                    let mut properties = obj.get("userData").or_else(|| obj.get("user_data")).map(json_to_property_bag).unwrap_or_default();
+                    for (key, value) in obj.iter() {
+                        if matches!(key.as_str(), "id" | "nodeKind" | "node_kind" | "kind" | "text" | "name" | "label" | "handles" | "x" | "y" | "shape" | "radius" | "width" | "height" | "userData" | "user_data") {
+                            continue;
+                        }
+                        if let Ok(prop) = serde_json::from_value::<PropertyValue>(value.clone()) {
+                            properties.insert(key.clone(), prop);
+                        }
+                    }
+                    nodes.insert(id.to_string(), (kind, name, properties));
+                    if let Some(handles) = obj.get("handles").and_then(|v| v.as_array()) {
+                        for handle in handles {
+                            if let Some(hid) = handle.get("id").and_then(|v| v.as_str()) {
+                                handle_to_node.insert(hid.to_string(), id.to_string());
+                            }
                         }
                     }
                 }
             }
+            let mut edges = Vec::new();
+            if let Some(rows) = raw.get("edges").and_then(|v| v.as_array()) {
+                for row in rows {
+                    let Some(obj) = row.as_object() else { continue };
+                    let Some(id) = obj.get("id").and_then(|v| v.as_str()) else { continue };
+                    let Some(source) = obj.get("source").and_then(|v| v.as_str()) else { continue };
+                    let Some(target) = obj.get("target").and_then(|v| v.as_str()) else { continue };
+                    let kind = obj.get("edgeKind").or_else(|| obj.get("edge_kind")).or_else(|| obj.get("kind")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    let properties = obj.get("userData").or_else(|| obj.get("user_data")).map(json_to_property_bag).unwrap_or_default();
+                    let (source_node_id, source_port) = split_endpoint(source, &handle_to_node);
+                    let (target_node_id, target_port) = split_endpoint(target, &handle_to_node);
+                    edges.push(QueryableEdge { id: id.to_string(), kind, source_node_id, target_node_id, source_port, target_port, properties });
+                }
+            }
+            Ok(Self { manifest, nodes, edges, raw_fixture: raw })
         }
-        let mut edges = Vec::new();
-        if let Some(rows) = raw.get("edges").and_then(|v| v.as_array()) {
-            for row in rows {
-                let Some(obj) = row.as_object() else { continue };
-                let Some(id) = obj.get("id").and_then(|v| v.as_str()) else { continue };
-                let Some(source) = obj.get("source").and_then(|v| v.as_str()) else { continue };
-                let Some(target) = obj.get("target").and_then(|v| v.as_str()) else { continue };
-                let kind = obj
-                    .get("edgeKind")
-                    .or_else(|| obj.get("edge_kind"))
-                    .or_else(|| obj.get("kind"))
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .to_string();
-                let properties = obj.get("userData").or_else(|| obj.get("user_data")).map(json_to_property_bag).unwrap_or_default();
-                let (source_node_id, source_port) = split_endpoint(source, &handle_to_node);
-                let (target_node_id, target_port) = split_endpoint(target, &handle_to_node);
-                edges.push(QueryableEdge {
-                    id: id.to_string(),
-                    kind,
-                    source_node_id,
-                    target_node_id,
-                    source_port,
-                    target_port,
-                    properties,
-                });
+
+        pub fn from_dag_fixture_json(json: &str) -> Result<Self, GraphDslError> {
+            Self::from_fixture_json(json, Some("flow-dag"))
+        }
+
+        pub fn from_puzzle2d_fixture_json(json: &str) -> Result<Self, GraphDslError> {
+            Self::from_fixture_json(json, Some("puzzle2d-default"))
+        }
+
+        pub fn from_puzzle3d_fixture_json(json: &str) -> Result<Self, GraphDslError> {
+            let raw: Value = serde_json::from_str(json)?;
+            let mut fixture = raw.clone();
+            if fixture.get("nodes").and_then(|v| v.as_array()).is_none() {
+                if let Some(objects) = raw.get("objects").and_then(|v| v.as_array()) {
+                    let nodes: Vec<Value> = objects
+                        .iter()
+                        .filter_map(|row| {
+                            let obj = row.as_object()?;
+                            let id = obj.get("id").and_then(|v| v.as_str())?;
+                            let kind = obj.get("objectKind").or_else(|| obj.get("kind")).and_then(|v| v.as_str()).unwrap_or("Object");
+                            let name = obj.get("name").or_else(|| obj.get("label")).and_then(|v| v.as_str()).unwrap_or(id);
+                            Some(serde_json::json!({
+                                "id": id,
+                                "nodeKind": kind,
+                                "text": name,
+                            }))
+                        })
+                        .collect();
+                    fixture["nodes"] = Value::Array(nodes);
+                }
+            }
+            Self::from_fixture_json(&serde_json::to_string(&fixture)?, Some("puzzle3d-default"))
+        }
+
+        pub fn from_puzzle5d_fixture_json(json: &str) -> Result<Self, GraphDslError> {
+            Self::from_fixture_json(json, Some("puzzle5d-default"))
+        }
+    }
+
+    impl QueryableGraph for BoardQueryableGraph {
+        fn manifest(&self) -> Option<&GraphManifest> {
+            self.manifest.as_ref()
+        }
+
+        fn node_ids(&self) -> Vec<String> {
+            self.nodes.keys().cloned().collect()
+        }
+
+        fn node_kind(&self, id: &str) -> Option<String> {
+            self.nodes.get(id).map(|(kind, _, _)| kind.clone())
+        }
+
+        fn node_name(&self, id: &str) -> Option<String> {
+            self.nodes.get(id).map(|(_, name, _)| name.clone())
+        }
+
+        fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue> {
+            let (_, name, properties) = self.nodes.get(id)?;
+            match key {
+                "id" => Some(PropertyValue::String(id.to_string())),
+                "name" | "label" | "text" => Some(PropertyValue::String(name.clone())),
+                "kind" => self.node_kind(id).map(PropertyValue::String),
+                "__all" => Some(PropertyValue::Object(properties.clone())),
+                _ => properties.get(key).cloned(),
             }
         }
-        Ok(Self { manifest, nodes, edges, raw_fixture: raw })
-    }
 
-    pub fn from_dag_fixture_json(json: &str) -> Result<Self, String> {
-        Self::from_fixture_json(json, Some("flow-dag"))
-    }
+        fn edges(&self) -> Vec<QueryableEdge> {
+            self.edges.clone()
+        }
 
-    pub fn from_puzzle2d_fixture_json(json: &str) -> Result<Self, String> {
-        Self::from_fixture_json(json, Some("puzzle2d-default"))
-    }
-
-    pub fn from_puzzle3d_fixture_json(json: &str) -> Result<Self, String> {
-        let raw: Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
-        let mut fixture = raw.clone();
-        if fixture.get("nodes").and_then(|v| v.as_array()).is_none() {
-            if let Some(objects) = raw.get("objects").and_then(|v| v.as_array()) {
-                let nodes: Vec<Value> = objects
-                    .iter()
-                    .filter_map(|row| {
-                        let obj = row.as_object()?;
-                        let id = obj.get("id").and_then(|v| v.as_str())?;
-                        let kind = obj
-                            .get("objectKind")
-                            .or_else(|| obj.get("kind"))
-                            .and_then(|v| v.as_str())
-                            .unwrap_or("Object");
-                        let name = obj
-                            .get("name")
-                            .or_else(|| obj.get("label"))
-                            .and_then(|v| v.as_str())
-                            .unwrap_or(id);
-                        Some(serde_json::json!({
-                            "id": id,
-                            "nodeKind": kind,
-                            "text": name,
-                        }))
-                    })
-                    .collect();
-                fixture["nodes"] = Value::Array(nodes);
+        fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String> {
+            let mut fixture = self.raw_fixture.clone();
+            if let Some(nodes) = fixture.get_mut("nodes").and_then(|v| v.as_array_mut()) {
+                nodes.retain(|row| row.get("id").and_then(|v| v.as_str()).is_some_and(|id| node_ids.contains(id)));
             }
-        }
-        Self::from_fixture_json(&serde_json::to_string(&fixture).map_err(|e| e.to_string())?, Some("puzzle3d-default"))
-    }
-
-    pub fn from_puzzle5d_fixture_json(json: &str) -> Result<Self, String> {
-        Self::from_fixture_json(json, Some("puzzle5d-default"))
-    }
-}
-
-impl QueryableGraph for BoardQueryableGraph {
-    fn manifest(&self) -> Option<&GraphManifest> {
-        self.manifest.as_ref()
-    }
-
-    fn node_ids(&self) -> Vec<String> {
-        self.nodes.keys().cloned().collect()
-    }
-
-    fn node_kind(&self, id: &str) -> Option<String> {
-        self.nodes.get(id).map(|(kind, _, _)| kind.clone())
-    }
-
-    fn node_name(&self, id: &str) -> Option<String> {
-        self.nodes.get(id).map(|(_, name, _)| name.clone())
-    }
-
-    fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue> {
-        let (_, name, properties) = self.nodes.get(id)?;
-        match key {
-            "id" => Some(PropertyValue::String(id.to_string())),
-            "name" | "label" | "text" => Some(PropertyValue::String(name.clone())),
-            "kind" => self.node_kind(id).map(PropertyValue::String),
-            "__all" => Some(PropertyValue::Object(properties.clone())),
-            _ => properties.get(key).cloned(),
+            if let Some(edges) = fixture.get_mut("edges").and_then(|v| v.as_array_mut()) {
+                edges.retain(|row| row.get("id").and_then(|v| v.as_str()).is_some_and(|id| edge_ids.contains(id)));
+            }
+            serde_json::to_string(&fixture).ok()
         }
     }
-
-    fn edges(&self) -> Vec<QueryableEdge> {
-        self.edges.clone()
-    }
-
-    fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String> {
-        let mut fixture = self.raw_fixture.clone();
-        if let Some(nodes) = fixture.get_mut("nodes").and_then(|v| v.as_array_mut()) {
-            nodes.retain(|row| row.get("id").and_then(|v| v.as_str()).is_some_and(|id| node_ids.contains(id)));
-        }
-        if let Some(edges) = fixture.get_mut("edges").and_then(|v| v.as_array_mut()) {
-            edges.retain(|row| row.get("id").and_then(|v| v.as_str()).is_some_and(|id| edge_ids.contains(id)));
-        }
-        serde_json::to_string(&fixture).ok()
-    }
-}
-// #endregion 🔖BoardQueryableGraph
-// #endregion queryable
+    // #endregion 🔖BoardQueryableGraph
+    // #endregion queryable
 }
 
 pub mod wire {
-// #region wire
-//! 🔌 Wire-literal compiled DAG text notation.
+    // #region wire
+    //! 🔌 Wire-literal compiled DAG text notation.
 
-use mathematical_graph_manifest::{PropertyBag, PropertyValue};
-use std::collections::BTreeMap;
+    use crate::GraphDslError;
+    use mathematical_graph_manifest::{PropertyBag, PropertyValue};
 
-// #region 🔖WireTypes
-/// 🧩 Neutral node row for wire-literal emission.
-#[derive(Clone, Debug, PartialEq)]
-pub struct WireNode {
-    pub id: String,
-    pub kind: String,
-    pub port: Option<String>,
-    pub properties: PropertyBag,
-}
-
-/// 🪢 Neutral edge row for wire-literal emission.
-#[derive(Clone, Debug, PartialEq)]
-pub struct WireEdge {
-    pub from: String,
-    pub from_port: String,
-    pub to: String,
-    pub to_port: String,
-    pub directed: bool,
-    pub properties: PropertyBag,
-}
-// #endregion 🔖WireTypes
-
-// #region 🔖WireLiteral
-fn format_properties(properties: &PropertyBag) -> String {
-    if properties.is_empty() {
-        return String::new();
+    // #region 🔖WireTypes
+    /// 🧩 Neutral node row for wire-literal emission.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct WireNode {
+        pub id: String,
+        pub kind: String,
+        pub port: Option<String>,
+        pub properties: PropertyBag,
     }
-    let mut parts = Vec::new();
-    for (key, value) in properties.iter() {
-        parts.push(format!("{key}: {}", property_value_literal(value)));
-    }
-    format!("{{{}}}", parts.join(", "))
-}
 
-fn property_value_literal(value: &PropertyValue) -> String {
-    match value {
-        PropertyValue::String(s) => format!("'{s}'"),
-        PropertyValue::Number(n) => n.to_string(),
-        PropertyValue::Bool(b) => b.to_string(),
-        PropertyValue::Null => "null".into(),
-        PropertyValue::Object(map) => {
-            let inner = map
-                .iter()
-                .map(|(k, v)| format!("{k}: {}", property_value_literal(v)))
-                .collect::<Vec<_>>()
-                .join(", ");
-            format!("{{{inner}}}")
+    /// 🪢 Neutral edge row for wire-literal emission.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct WireEdge {
+        pub from: String,
+        pub from_port: String,
+        pub to: String,
+        pub to_port: String,
+        pub directed: bool,
+        pub properties: PropertyBag,
+    }
+    // #endregion 🔖WireTypes
+
+    // #region 🔖WireLiteral
+    fn format_properties(properties: &PropertyBag) -> String {
+        if properties.is_empty() {
+            return String::new();
         }
-        PropertyValue::Array(items) => {
-            let inner = items.iter().map(property_value_literal).collect::<Vec<_>>().join(", ");
-            format!("[{inner}]")
+        let mut parts = Vec::new();
+        for (key, value) in properties.iter() {
+            parts.push(format!("{key}: {}", property_value_literal(value)));
+        }
+        format!("{{{}}}", parts.join(", "))
+    }
+
+    fn property_value_literal(value: &PropertyValue) -> String {
+        match value {
+            PropertyValue::String(s) => format!("'{s}'"),
+            PropertyValue::Number(n) => n.to_string(),
+            PropertyValue::Bool(b) => b.to_string(),
+            PropertyValue::Null => "null".into(),
+            PropertyValue::Object(map) => {
+                let inner = map.iter().map(|(k, v)| format!("{k}: {}", property_value_literal(v))).collect::<Vec<_>>().join(", ");
+                format!("{{{inner}}}")
+            }
+            PropertyValue::Array(items) => {
+                let inner = items.iter().map(property_value_literal).collect::<Vec<_>>().join(", ");
+                format!("[{inner}]")
+            }
         }
     }
-}
 
-fn format_node_ref(id: &str, kind: &str, port: Option<&str>) -> String {
-    match port {
-        Some(port) => format!("{id}:{kind}@{port}"),
-        None => format!("{id}:{kind}"),
-    }
-}
-
-/// 📝 Render wire-literal text from neutral node/edge rows.
-pub fn wire_literal_from_dag(nodes: &[WireNode], edges: &[WireEdge]) -> String {
-    let mut lines = Vec::new();
-    for node in nodes {
-        let props = format_properties(&node.properties);
-        if props.is_empty() {
-            lines.push(format_node_ref(&node.id, &node.kind, node.port.as_deref()));
-        } else {
-            lines.push(format!("{}{}", format_node_ref(&node.id, &node.kind, node.port.as_deref()), props));
+    fn format_node_ref(id: &str, kind: &str, port: Option<&str>) -> String {
+        match port {
+            Some(port) => format!("{id}:{kind}@{port}"),
+            None => format!("{id}:{kind}"),
         }
     }
-    for edge in edges {
-        let from_kind = nodes.iter().find(|n| n.id == edge.from).map(|n| n.kind.as_str()).unwrap_or("node");
-        let to_kind = nodes.iter().find(|n| n.id == edge.to).map(|n| n.kind.as_str()).unwrap_or("node");
-        let connector = if edge.directed { "->" } else { "-" };
-        let props = format_properties(&edge.properties);
-        lines.push(format!(
-            "{}:{}@{}{}{}:{}@{}{}",
-            edge.from, from_kind, edge.from_port, connector, edge.to, to_kind, edge.to_port, props
-        ));
-    }
-    lines.join("\n")
-}
 
-#[derive(Clone, Debug, PartialEq)]
-enum WireTok {
-    Ident(String),
-    Colon,
-    At,
-    Arrow,
-    Dash,
-    LBrace,
-    RBrace,
-    Comma,
-    StringLit(String),
-    Number(f64),
-    Eof,
-}
-
-fn lex_wire(input: &str) -> Result<Vec<WireTok>, String> {
-    let mut out = Vec::new();
-    let bytes = input.as_bytes();
-    let mut i = 0;
-    while i < bytes.len() {
-        let c = bytes[i];
-        if c.is_ascii_whitespace() {
-            i += 1;
-            continue;
+    /// 📝 Render wire-literal text from neutral node/edge rows.
+    pub fn wire_literal_from_dag(nodes: &[WireNode], edges: &[WireEdge]) -> String {
+        let mut lines = Vec::new();
+        for node in nodes {
+            let props = format_properties(&node.properties);
+            if props.is_empty() {
+                lines.push(format_node_ref(&node.id, &node.kind, node.port.as_deref()));
+            } else {
+                lines.push(format!("{}{}", format_node_ref(&node.id, &node.kind, node.port.as_deref()), props));
+            }
         }
-        match c {
-            b':' => {
-                out.push(WireTok::Colon);
+        for edge in edges {
+            let from_kind = nodes.iter().find(|n| n.id == edge.from).map(|n| n.kind.as_str()).unwrap_or("node");
+            let to_kind = nodes.iter().find(|n| n.id == edge.to).map(|n| n.kind.as_str()).unwrap_or("node");
+            let connector = if edge.directed { "->" } else { "-" };
+            let props = format_properties(&edge.properties);
+            lines.push(format!("{}:{}@{}{}{}:{}@{}{}", edge.from, from_kind, edge.from_port, connector, edge.to, to_kind, edge.to_port, props));
+        }
+        lines.join("\n")
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    enum WireTok {
+        Ident(String),
+        Colon,
+        At,
+        Arrow,
+        Dash,
+        LBrace,
+        RBrace,
+        Comma,
+        StringLit(String),
+        Number(f64),
+        Eof,
+    }
+
+    fn lex_wire(input: &str) -> Result<Vec<WireTok>, GraphDslError> {
+        let mut out = Vec::new();
+        let bytes = input.as_bytes();
+        let mut i = 0;
+        while i < bytes.len() {
+            let c = bytes[i];
+            if c.is_ascii_whitespace() {
                 i += 1;
+                continue;
             }
-            b'@' => {
-                out.push(WireTok::At);
-                i += 1;
-            }
-            b'-' if i + 1 < bytes.len() && bytes[i + 1] == b'>' => {
-                out.push(WireTok::Arrow);
-                i += 2;
-            }
-            b'-' => {
-                out.push(WireTok::Dash);
-                i += 1;
-            }
-            b'{' => {
-                out.push(WireTok::LBrace);
-                i += 1;
-            }
-            b'}' => {
-                out.push(WireTok::RBrace);
-                i += 1;
-            }
-            b',' => {
-                out.push(WireTok::Comma);
-                i += 1;
-            }
-            b'\'' | b'"' => {
-                let quote = c;
-                i += 1;
-                let start = i;
-                while i < bytes.len() && bytes[i] != quote {
+            match c {
+                b':' => {
+                    out.push(WireTok::Colon);
                     i += 1;
                 }
-                if i >= bytes.len() {
-                    return Err("unterminated string".into());
-                }
-                let s = String::from_utf8_lossy(&bytes[start..i]).into_owned();
-                i += 1;
-                out.push(WireTok::StringLit(s));
-            }
-            b'0'..=b'9' => {
-                let start = i;
-                while i < bytes.len() && (bytes[i].is_ascii_digit() || bytes[i] == b'.') {
+                b'@' => {
+                    out.push(WireTok::At);
                     i += 1;
                 }
-                let n: f64 = std::str::from_utf8(&bytes[start..i])
-                    .map_err(|e| e.to_string())?
-                    .parse::<f64>()
-                    .map_err(|e| e.to_string())?;
-                out.push(WireTok::Number(n));
-            }
-            b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
-                let start = i;
-                while i < bytes.len() && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_' || bytes[i] == b'.') {
+                b'-' if i + 1 < bytes.len() && bytes[i + 1] == b'>' => {
+                    out.push(WireTok::Arrow);
+                    i += 2;
+                }
+                b'-' => {
+                    out.push(WireTok::Dash);
                     i += 1;
                 }
-                out.push(WireTok::Ident(std::str::from_utf8(&bytes[start..i]).unwrap().to_string()));
-            }
-            _ => return Err(format!("unexpected char {}", c as char)),
-        }
-    }
-    out.push(WireTok::Eof);
-    Ok(out)
-}
-
-struct WireParser {
-    tokens: Vec<WireTok>,
-    pos: usize,
-}
-
-impl WireParser {
-    fn new(tokens: Vec<WireTok>) -> Self {
-        Self { tokens, pos: 0 }
-    }
-
-    fn peek(&self) -> &WireTok {
-        self.tokens.get(self.pos).unwrap_or(&WireTok::Eof)
-    }
-
-    fn bump(&mut self) -> WireTok {
-        let t = self.peek().clone();
-        if !matches!(t, WireTok::Eof) {
-            self.pos += 1;
-        }
-        t
-    }
-
-    fn expect_ident(&mut self) -> Result<String, String> {
-        match self.bump() {
-            WireTok::Ident(s) => Ok(s),
-            other => Err(format!("expected ident, got {other:?}")),
-        }
-    }
-
-    fn parse_properties(&mut self) -> Result<PropertyBag, String> {
-        let mut bag = PropertyBag::new();
-        if !matches!(self.peek(), WireTok::LBrace) {
-            return Ok(bag);
-        }
-        self.bump();
-        while !matches!(self.peek(), WireTok::RBrace | WireTok::Eof) {
-            let key = self.expect_ident()?;
-            if !matches!(self.bump(), WireTok::Colon) {
-                return Err("expected : in property".into());
-            }
-            let value = self.parse_value()?;
-            bag.insert(key, value);
-            if matches!(self.peek(), WireTok::Comma) {
-                self.bump();
+                b'{' => {
+                    out.push(WireTok::LBrace);
+                    i += 1;
+                }
+                b'}' => {
+                    out.push(WireTok::RBrace);
+                    i += 1;
+                }
+                b',' => {
+                    out.push(WireTok::Comma);
+                    i += 1;
+                }
+                b'\'' | b'"' => {
+                    let quote = c;
+                    i += 1;
+                    let start = i;
+                    while i < bytes.len() && bytes[i] != quote {
+                        i += 1;
+                    }
+                    if i >= bytes.len() {
+                        return Err(GraphDslError::UnterminatedString);
+                    }
+                    let s = String::from_utf8_lossy(&bytes[start..i]).into_owned();
+                    i += 1;
+                    out.push(WireTok::StringLit(s));
+                }
+                b'0'..=b'9' => {
+                    let start = i;
+                    while i < bytes.len() && (bytes[i].is_ascii_digit() || bytes[i] == b'.') {
+                        i += 1;
+                    }
+                    let n: f64 = std::str::from_utf8(&bytes[start..i])?.parse::<f64>()?;
+                    out.push(WireTok::Number(n));
+                }
+                b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
+                    let start = i;
+                    while i < bytes.len() && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_' || bytes[i] == b'.') {
+                        i += 1;
+                    }
+                    // 🔒 ascii-only alphanumerics were matched byte-by-byte above, so utf-8 decoding is infallible here
+                    out.push(WireTok::Ident(std::str::from_utf8(&bytes[start..i]).expect("scanned bytes are ascii alphanumerics/underscore/dot").to_string()));
+                }
+                _ => return Err(GraphDslError::UnexpectedChar(c as char)),
             }
         }
-        if !matches!(self.bump(), WireTok::RBrace) {
-            return Err("expected }".into());
-        }
-        Ok(bag)
+        out.push(WireTok::Eof);
+        Ok(out)
     }
 
-    fn parse_value(&mut self) -> Result<PropertyValue, String> {
-        match self.bump() {
-            WireTok::StringLit(s) => Ok(PropertyValue::String(s)),
-            WireTok::Number(n) => Ok(PropertyValue::Number(n)),
-            WireTok::Ident(s) if s == "true" => Ok(PropertyValue::Bool(true)),
-            WireTok::Ident(s) if s == "false" => Ok(PropertyValue::Bool(false)),
-            WireTok::Ident(s) if s == "null" => Ok(PropertyValue::Null),
-            other => Err(format!("expected value, got {other:?}")),
-        }
+    struct WireParser {
+        tokens: Vec<WireTok>,
+        pos: usize,
     }
 
-    fn expect_port(&mut self) -> Result<String, String> {
-        match self.bump() {
-            WireTok::Ident(s) => Ok(s),
-            WireTok::Number(n) => {
-                let mut port = if (n - n.round()).abs() < 1e-9 {
-                    format!("{}", n.round() as i64)
-                } else {
-                    n.to_string()
-                };
-                if let WireTok::Ident(suffix) = self.peek() {
-                    port.push_str(suffix);
+    impl WireParser {
+        fn new(tokens: Vec<WireTok>) -> Self {
+            Self { tokens, pos: 0 }
+        }
+
+        fn peek(&self) -> &WireTok {
+            self.tokens.get(self.pos).unwrap_or(&WireTok::Eof)
+        }
+
+        fn bump(&mut self) -> WireTok {
+            let t = self.peek().clone();
+            if !matches!(t, WireTok::Eof) {
+                self.pos += 1;
+            }
+            t
+        }
+
+        fn expect_ident(&mut self) -> Result<String, GraphDslError> {
+            match self.bump() {
+                WireTok::Ident(s) => Ok(s),
+                other => Err(GraphDslError::UnexpectedToken { expected: "ident".into(), found: format!("{other:?}") }),
+            }
+        }
+
+        fn parse_properties(&mut self) -> Result<PropertyBag, GraphDslError> {
+            let mut bag = PropertyBag::new();
+            if !matches!(self.peek(), WireTok::LBrace) {
+                return Ok(bag);
+            }
+            self.bump();
+            while !matches!(self.peek(), WireTok::RBrace | WireTok::Eof) {
+                let key = self.expect_ident()?;
+                let tok = self.bump();
+                if !matches!(tok, WireTok::Colon) {
+                    return Err(GraphDslError::UnexpectedToken { expected: ":".into(), found: format!("{tok:?}") });
+                }
+                let value = self.parse_value()?;
+                bag.insert(key, value);
+                if matches!(self.peek(), WireTok::Comma) {
                     self.bump();
                 }
-                Ok(port)
             }
-            other => Err(format!("expected port, got {other:?}")),
+            let tok = self.bump();
+            if !matches!(tok, WireTok::RBrace) {
+                return Err(GraphDslError::UnexpectedToken { expected: "}".into(), found: format!("{tok:?}") });
+            }
+            Ok(bag)
         }
-    }
 
-    fn parse_node_ref(&mut self) -> Result<(String, String, Option<String>), String> {
-        let id = self.expect_ident()?;
-        if !matches!(self.bump(), WireTok::Colon) {
-            return Err("expected : after node id".into());
+        fn parse_value(&mut self) -> Result<PropertyValue, GraphDslError> {
+            match self.bump() {
+                WireTok::StringLit(s) => Ok(PropertyValue::String(s)),
+                WireTok::Number(n) => Ok(PropertyValue::Number(n)),
+                WireTok::Ident(s) if s == "true" => Ok(PropertyValue::Bool(true)),
+                WireTok::Ident(s) if s == "false" => Ok(PropertyValue::Bool(false)),
+                WireTok::Ident(s) if s == "null" => Ok(PropertyValue::Null),
+                other => Err(GraphDslError::UnexpectedToken { expected: "value".into(), found: format!("{other:?}") }),
+            }
         }
-        let kind = self.expect_ident()?;
-        let port = if matches!(self.peek(), WireTok::At) {
-            self.bump();
-            Some(self.expect_port()?)
-        } else {
-            None
-        };
-        Ok((id, kind, port))
-    }
 
-    fn parse_statement(&mut self) -> Result<(Option<WireNode>, Option<WireEdge>), String> {
-        let (id, kind, port) = self.parse_node_ref()?;
-        if let Some(from_port) = port {
-            let directed = if matches!(self.peek(), WireTok::Arrow) {
+        fn expect_port(&mut self) -> Result<String, GraphDslError> {
+            match self.bump() {
+                WireTok::Ident(s) => Ok(s),
+                WireTok::Number(n) => {
+                    let mut port = if (n - n.round()).abs() < 1e-9 { format!("{}", n.round() as i64) } else { n.to_string() };
+                    if let WireTok::Ident(suffix) = self.peek() {
+                        port.push_str(suffix);
+                        self.bump();
+                    }
+                    Ok(port)
+                }
+                other => Err(GraphDslError::UnexpectedToken { expected: "port".into(), found: format!("{other:?}") }),
+            }
+        }
+
+        fn parse_node_ref(&mut self) -> Result<(String, String, Option<String>), GraphDslError> {
+            let id = self.expect_ident()?;
+            let tok = self.bump();
+            if !matches!(tok, WireTok::Colon) {
+                return Err(GraphDslError::UnexpectedToken { expected: ":".into(), found: format!("{tok:?}") });
+            }
+            let kind = self.expect_ident()?;
+            let port = if matches!(self.peek(), WireTok::At) {
                 self.bump();
-                true
-            } else if matches!(self.peek(), WireTok::Dash) {
-                self.bump();
-                false
+                Some(self.expect_port()?)
             } else {
-                return Ok((Some(WireNode { id, kind, port: Some(from_port), properties: self.parse_properties()? }), None));
+                None
             };
-            let (to, _to_kind, to_port) = self.parse_node_ref()?;
-            let to_port = to_port.ok_or_else(|| "edge target requires @port".to_string())?;
-            let properties = self.parse_properties()?;
-            Ok((
-                None,
-                Some(WireEdge {
-                    from: id,
-                    from_port,
-                    to,
-                    to_port,
-                    directed,
-                    properties,
-                }),
-            ))
-        } else {
-            let properties = self.parse_properties()?;
-            Ok((Some(WireNode { id, kind, port: None, properties }), None))
+            Ok((id, kind, port))
+        }
+
+        fn parse_statement(&mut self) -> Result<(Option<WireNode>, Option<WireEdge>), GraphDslError> {
+            let (id, kind, port) = self.parse_node_ref()?;
+            if let Some(from_port) = port {
+                let directed = if matches!(self.peek(), WireTok::Arrow) {
+                    self.bump();
+                    true
+                } else if matches!(self.peek(), WireTok::Dash) {
+                    self.bump();
+                    false
+                } else {
+                    return Ok((Some(WireNode { id, kind, port: Some(from_port), properties: self.parse_properties()? }), None));
+                };
+                let (to, _to_kind, to_port) = self.parse_node_ref()?;
+                let to_port = to_port.ok_or(GraphDslError::EdgeTargetMissingPort)?;
+                let properties = self.parse_properties()?;
+                Ok((None, Some(WireEdge { from: id, from_port, to, to_port, directed, properties })))
+            } else {
+                let properties = self.parse_properties()?;
+                Ok((Some(WireNode { id, kind, port: None, properties }), None))
+            }
+        }
+
+        fn parse_document(&mut self) -> Result<(Vec<WireNode>, Vec<WireEdge>), GraphDslError> {
+            let mut nodes = Vec::new();
+            let mut edges = Vec::new();
+            while !matches!(self.peek(), WireTok::Eof) {
+                let (node, edge) = self.parse_statement()?;
+                if let Some(node) = node {
+                    nodes.push(node);
+                }
+                if let Some(edge) = edge {
+                    edges.push(edge);
+                }
+            }
+            Ok((nodes, edges))
         }
     }
 
-    fn parse_document(&mut self) -> Result<(Vec<WireNode>, Vec<WireEdge>), String> {
-        let mut nodes = Vec::new();
-        let mut edges = Vec::new();
-        while !matches!(self.peek(), WireTok::Eof) {
-            let (node, edge) = self.parse_statement()?;
-            if let Some(node) = node {
-                nodes.push(node);
-            }
-            if let Some(edge) = edge {
-                edges.push(edge);
-            }
+    /// 🔍 Parse wire-literal text into neutral node/edge rows.
+    pub fn dag_from_wire_literal(text: &str) -> Result<(Vec<WireNode>, Vec<WireEdge>), GraphDslError> {
+        let tokens = lex_wire(text)?;
+        WireParser::new(tokens).parse_document()
+    }
+    // #endregion 🔖WireLiteral
+
+    // #region 🔖Tests
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn wire_literal_roundtrip_simple() {
+            let nodes = vec![WireNode { id: "p".into(), kind: "Puzzle3d".into(), port: None, properties: PropertyBag::new() }];
+            let edges = vec![WireEdge { from: "p".into(), from_port: "3d".into(), to: "s".into(), to_port: "3d".into(), directed: true, properties: PropertyBag::new() }];
+            let text = wire_literal_from_dag(&nodes, &edges);
+            assert!(text.contains("p:Puzzle3d"));
+            assert!(text.contains("p:Puzzle3d@3d->s:node@3d"));
+            let parsed = dag_from_wire_literal(&text).unwrap();
+            assert_eq!(parsed.1.len(), 1);
         }
-        Ok((nodes, edges))
+
+        #[test]
+        fn wire_literal_undirected() {
+            let edges = vec![WireEdge { from: "a".into(), from_port: "out".into(), to: "b".into(), to_port: "in".into(), directed: false, properties: PropertyBag::new() }];
+            let text = wire_literal_from_dag(&[], &edges);
+            assert!(text.contains('@'));
+            assert!(text.contains('-'));
+        }
+
+        #[test]
+        fn wire_literal_with_properties() {
+            let mut props = PropertyBag::new();
+            props.insert("value".into(), PropertyValue::Number(3.0));
+            let nodes = vec![WireNode { id: "n".into(), kind: "slider".into(), port: None, properties: props }];
+            let text = wire_literal_from_dag(&nodes, &[]);
+            assert!(text.contains("{value: 3"));
+        }
     }
+    // #endregion 🔖Tests
+    // #endregion wire
 }
 
-/// 🔍 Parse wire-literal text into neutral node/edge rows.
-pub fn dag_from_wire_literal(text: &str) -> Result<(Vec<WireNode>, Vec<WireEdge>), String> {
-    let tokens = lex_wire(text)?;
-    WireParser::new(tokens).parse_document()
-}
-// #endregion 🔖WireLiteral
-
-// #region 🔖Tests
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn wire_literal_roundtrip_simple() {
-        let nodes = vec![WireNode {
-            id: "p".into(),
-            kind: "Puzzle3d".into(),
-            port: None,
-            properties: PropertyBag::new(),
-        }];
-        let edges = vec![WireEdge {
-            from: "p".into(),
-            from_port: "3d".into(),
-            to: "s".into(),
-            to_port: "3d".into(),
-            directed: true,
-            properties: PropertyBag::new(),
-        }];
-        let text = wire_literal_from_dag(&nodes, &edges);
-        assert!(text.contains("p:Puzzle3d"));
-        assert!(text.contains("p:Puzzle3d@3d->s:node@3d"));
-        let parsed = dag_from_wire_literal(&text).unwrap();
-        assert_eq!(parsed.1.len(), 1);
-    }
-
-    #[test]
-    fn wire_literal_undirected() {
-        let edges = vec![WireEdge {
-            from: "a".into(),
-            from_port: "out".into(),
-            to: "b".into(),
-            to_port: "in".into(),
-            directed: false,
-            properties: PropertyBag::new(),
-        }];
-        let text = wire_literal_from_dag(&[], &edges);
-        assert!(text.contains('@'));
-        assert!(text.contains('-'));
-    }
-
-    #[test]
-    fn wire_literal_with_properties() {
-        let mut props = PropertyBag::new();
-        props.insert("value".into(), PropertyValue::Number(3.0));
-        let nodes = vec![WireNode {
-            id: "n".into(),
-            kind: "slider".into(),
-            port: None,
-            properties: props,
-        }];
-        let text = wire_literal_from_dag(&nodes, &[]);
-        assert!(text.contains("{value: 3"));
-    }
-}
-// #endregion 🔖Tests
-// #endregion wire
-}
-
-
-pub use queryable::{
-    manifest_edge_kinds, manifest_node_kinds, manifest_port_kinds, manifest_property_names, BoardQueryableGraph, QueryableEdge, QueryableGraph,
-};
+pub use queryable::{manifest_edge_kinds, manifest_node_kinds, manifest_port_kinds, manifest_property_names, BoardQueryableGraph, QueryableEdge, QueryableGraph};
 pub use wire::{dag_from_wire_literal, wire_literal_from_dag, WireEdge, WireNode};
 
 use mathematical_graph_manifest::PropertyValue;
@@ -867,26 +818,12 @@ struct SpannedToken {
 
 fn token_class(token: &Token) -> TokenClass {
     match token {
-        Token::KwMatch
-        | Token::KwWhere
-        | Token::KwReturn
-        | Token::KwCreate
-        | Token::KwDelete
-        | Token::KwSet
-        | Token::KwMerge
-        | Token::And
-        | Token::Or => TokenClass::Keyword,
+        Token::KwMatch | Token::KwWhere | Token::KwReturn | Token::KwCreate | Token::KwDelete | Token::KwSet | Token::KwMerge | Token::And | Token::Or => TokenClass::Keyword,
         Token::Ident(_) => TokenClass::Ident,
         Token::Number(_) => TokenClass::Number,
         Token::StringLit(_) => TokenClass::String,
         Token::Eq | Token::Ne | Token::Dash | Token::Arrow | Token::At => TokenClass::Operator,
-        Token::LParen
-        | Token::RParen
-        | Token::LBracket
-        | Token::RBracket
-        | Token::Colon
-        | Token::Comma
-        | Token::Dot => TokenClass::Punctuation,
+        Token::LParen | Token::RParen | Token::LBracket | Token::RBracket | Token::Colon | Token::Comma | Token::Dot => TokenClass::Punctuation,
         Token::Eof => TokenClass::Punctuation,
     }
 }
@@ -895,7 +832,7 @@ fn push_spanned(tokens: &mut Vec<SpannedToken>, token: Token, start: usize, end:
     tokens.push(SpannedToken { token, start, end });
 }
 
-fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, String> {
+fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, GraphDslError> {
     let mut tokens = Vec::new();
     let bytes = input.as_bytes();
     let mut i = 0;
@@ -960,7 +897,7 @@ fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, String
                         push_spanned(&mut tokens, Token::StringLit(s), start, i);
                         break;
                     }
-                    return Err("unterminated string".into());
+                    return Err(GraphDslError::UnterminatedString);
                 }
                 let s = String::from_utf8_lossy(&bytes[lit_start..i]).into_owned();
                 i += 1;
@@ -985,13 +922,13 @@ fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, String
                             push_spanned(&mut tokens, Token::Ident(s.to_string()), num_start, i);
                             continue;
                         }
-                        Err(e) => return Err(e.to_string()),
+                        Err(e) => return Err(e.into()),
                     },
                     Err(_e) if forgiving => {
                         push_spanned(&mut tokens, Token::Ident(String::new()), num_start, i);
                         continue;
                     }
-                    Err(e) => return Err(e.to_string()),
+                    Err(e) => return Err(e.into()),
                 };
                 push_spanned(&mut tokens, Token::Number(num), num_start, i);
             }
@@ -1003,7 +940,8 @@ fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, String
                 while i < bytes.len() && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_') {
                     i += 1;
                 }
-                let word = std::str::from_utf8(&bytes[start..i]).unwrap().to_ascii_uppercase();
+                // 🔒 ascii-only alphanumerics/underscore were matched byte-by-byte above, so utf-8 decoding is infallible here
+                let word = std::str::from_utf8(&bytes[start..i]).expect("scanned bytes are ascii alphanumerics/underscore").to_ascii_uppercase();
                 let tok = match word.as_str() {
                     "MATCH" => Token::KwMatch,
                     "WHERE" => Token::KwWhere,
@@ -1014,7 +952,7 @@ fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, String
                     "MERGE" => Token::KwMerge,
                     "AND" => Token::And,
                     "OR" => Token::Or,
-                    _ => Token::Ident(std::str::from_utf8(&bytes[start..i]).unwrap().to_string()),
+                    _ => Token::Ident(std::str::from_utf8(&bytes[start..i]).expect("scanned bytes are ascii alphanumerics/underscore").to_string()),
                 };
                 push_spanned(&mut tokens, tok, start, i);
             }
@@ -1022,16 +960,15 @@ fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, String
                 push_spanned(&mut tokens, Token::Ident(String::from(c as char)), start, start + 1);
                 i += 1;
             }
-            _ => return Err(format!("unexpected char {}", c as char)),
+            _ => return Err(GraphDslError::UnexpectedChar(c as char)),
         }
     }
     push_spanned(&mut tokens, Token::Eof, input.len(), input.len());
     Ok(tokens)
 }
 
-fn lex(input: &str) -> Result<Vec<Token>, String> {
-    lex_spanned(input, false)
-        .map(|spanned| spanned.into_iter().map(|row| row.token).collect())
+fn lex(input: &str) -> Result<Vec<Token>, GraphDslError> {
+    lex_spanned(input, false).map(|spanned| spanned.into_iter().map(|row| row.token).collect())
 }
 
 /// 🎨 Tokenize jack source for editor highlighting (never fails).
@@ -1051,11 +988,7 @@ pub fn tokenize(input: &str) -> Vec<TokenSpan> {
                     }
                 }
             }
-            TokenSpan {
-                class,
-                start: row.start,
-                end: row.end,
-            }
+            TokenSpan { class, start: row.start, end: row.end }
         })
         .collect()
 }
@@ -1206,12 +1139,7 @@ fn filter_completions(candidates: impl IntoIterator<Item = (String, String, Opti
     let mut out = Vec::new();
     for (label, kind, detail) in candidates {
         if prefix.is_empty() || label.to_ascii_lowercase().starts_with(&prefix_lower) {
-            out.push(Completion {
-                insert: label.clone(),
-                label,
-                kind,
-                detail,
-            });
+            out.push(Completion { insert: label.clone(), label, kind, detail });
         }
     }
     out.sort_by(|a, b| a.label.cmp(&b.label));
@@ -1226,74 +1154,41 @@ pub fn complete(graph: &dyn QueryableGraph, source: &str, cursor: usize) -> Vec<
     let before = tokens_before_cursor(&tokens, cursor);
 
     if let Some(in_bracket) = after_colon_kind_context(source, cursor) {
-        let kinds = if in_bracket {
-            graph_edge_kinds(graph)
-                .into_iter()
-                .map(|name| (name, "edgeKind".into(), None))
-                .collect::<Vec<_>>()
-        } else {
-            graph_node_kinds(graph)
-                .into_iter()
-                .map(|name| (name, "nodeKind".into(), None))
-                .collect::<Vec<_>>()
-        };
+        let kinds = if in_bracket { graph_edge_kinds(graph).into_iter().map(|name| (name, "edgeKind".into(), None)).collect::<Vec<_>>() } else { graph_node_kinds(graph).into_iter().map(|name| (name, "nodeKind".into(), None)).collect::<Vec<_>>() };
         return filter_completions(kinds, &prefix);
     }
 
     if after_dot_property_context(source, cursor) {
-        let props = graph_property_names(graph)
-            .into_iter()
-            .map(|name| (name, "property".into(), None))
-            .collect::<Vec<_>>();
+        let props = graph_property_names(graph).into_iter().map(|name| (name, "property".into(), None)).collect::<Vec<_>>();
         return filter_completions(props, &prefix);
     }
 
     if after_at_port_context(source, cursor) {
-        let ports = graph_port_kinds(graph)
-            .into_iter()
-            .map(|name| (name, "portKind".into(), None))
-            .collect::<Vec<_>>();
+        let ports = graph_port_kinds(graph).into_iter().map(|name| (name, "portKind".into(), None)).collect::<Vec<_>>();
         return filter_completions(ports, &prefix);
     }
 
     if let Some(last) = before.last() {
         if matches!(last.token, Token::At) {
-            let ports = graph_port_kinds(graph)
-                .into_iter()
-                .map(|name| (name, "portKind".into(), None))
-                .collect::<Vec<_>>();
+            let ports = graph_port_kinds(graph).into_iter().map(|name| (name, "portKind".into(), None)).collect::<Vec<_>>();
             return filter_completions(ports, &prefix);
         }
         if matches!(last.token, Token::Colon) {
             let kinds = if open_bracket_kind(before) == Some('[') {
-                graph_edge_kinds(graph)
-                    .into_iter()
-                    .map(|name| (name, "edgeKind".into(), None))
-                    .collect::<Vec<_>>()
+                graph_edge_kinds(graph).into_iter().map(|name| (name, "edgeKind".into(), None)).collect::<Vec<_>>()
             } else {
-                graph_node_kinds(graph)
-                    .into_iter()
-                    .map(|name| (name, "nodeKind".into(), None))
-                    .collect::<Vec<_>>()
+                graph_node_kinds(graph).into_iter().map(|name| (name, "nodeKind".into(), None)).collect::<Vec<_>>()
             };
             return filter_completions(kinds, &prefix);
         }
         if matches!(last.token, Token::Dot) {
-            let props = graph_property_names(graph)
-                .into_iter()
-                .map(|name| (name, "property".into(), None))
-                .collect::<Vec<_>>();
+            let props = graph_property_names(graph).into_iter().map(|name| (name, "property".into(), None)).collect::<Vec<_>>();
             return filter_completions(props, &prefix);
         }
     }
 
     if in_where_clause(before) {
-        let logic = filter_completions(
-            LOGIC_KEYWORDS
-                .iter()
-                .map(|kw| (kw.to_string(), "keyword".into(), None)),
-            &prefix,
-        );
+        let logic = filter_completions(LOGIC_KEYWORDS.iter().map(|kw| (kw.to_string(), "keyword".into(), None)), &prefix);
         if !logic.is_empty() {
             return logic;
         }
@@ -1308,12 +1203,7 @@ pub fn complete(graph: &dyn QueryableGraph, source: &str, cursor: usize) -> Vec<
         }
     }
 
-    filter_completions(
-        CLAUSE_KEYWORDS
-            .iter()
-            .map(|kw| (kw.to_string(), "keyword".into(), None)),
-        &prefix,
-    )
+    filter_completions(CLAUSE_KEYWORDS.iter().map(|kw| (kw.to_string(), "keyword".into(), None)), &prefix)
 }
 // #endregion 🔖Language
 
@@ -1433,13 +1323,7 @@ fn semantic_lints(graph: &dyn QueryableGraph, query: &Query, source: &str) -> Ve
                     for node in &pattern.nodes {
                         if !node_kinds.contains(&node.kind) {
                             if let Some((start, end)) = find_kind_span(source, &node.kind) {
-                                out.push(Diagnostic {
-                                    start,
-                                    end,
-                                    severity: DiagnosticSeverity::Error,
-                                    message: format!("unknown node kind '{}'", node.kind),
-                                    code: Some("jack/unknown-node-kind".into()),
-                                });
+                                out.push(Diagnostic { start, end, severity: DiagnosticSeverity::Error, message: format!("unknown node kind '{}'", node.kind), code: Some("jack/unknown-node-kind".into()) });
                             }
                         }
                     }
@@ -1447,13 +1331,7 @@ fn semantic_lints(graph: &dyn QueryableGraph, query: &Query, source: &str) -> Ve
                         if let Some(kind) = &edge.kind {
                             if !edge_kinds.contains(kind) {
                                 if let Some((start, end)) = find_kind_span(source, kind) {
-                                    out.push(Diagnostic {
-                                        start,
-                                        end,
-                                        severity: DiagnosticSeverity::Error,
-                                        message: format!("unknown edge kind '{}'", kind),
-                                        code: Some("jack/unknown-edge-kind".into()),
-                                    });
+                                    out.push(Diagnostic { start, end, severity: DiagnosticSeverity::Error, message: format!("unknown edge kind '{}'", kind), code: Some("jack/unknown-edge-kind".into()) });
                                 }
                             }
                         }
@@ -1464,13 +1342,7 @@ fn semantic_lints(graph: &dyn QueryableGraph, query: &Query, source: &str) -> Ve
                 for node in &pattern.nodes {
                     if !node_kinds.contains(&node.kind) {
                         if let Some((start, end)) = find_kind_span(source, &node.kind) {
-                            out.push(Diagnostic {
-                                start,
-                                end,
-                                severity: DiagnosticSeverity::Error,
-                                message: format!("unknown node kind '{}'", node.kind),
-                                code: Some("jack/unknown-node-kind".into()),
-                            });
+                            out.push(Diagnostic { start, end, severity: DiagnosticSeverity::Error, message: format!("unknown node kind '{}'", node.kind), code: Some("jack/unknown-node-kind".into()) });
                         }
                     }
                 }
@@ -1481,13 +1353,7 @@ fn semantic_lints(graph: &dyn QueryableGraph, query: &Query, source: &str) -> Ve
     for (var, _, _) in collect_referenced_vars(&query.clauses) {
         if !bound.contains(&var) {
             if let Some((start, end)) = find_ident_span(source, &var) {
-                out.push(Diagnostic {
-                    start,
-                    end,
-                    severity: DiagnosticSeverity::Error,
-                    message: format!("variable '{var}' is not bound by MATCH"),
-                    code: Some("jack/unbound-variable".into()),
-                });
+                out.push(Diagnostic { start, end, severity: DiagnosticSeverity::Error, message: format!("variable '{var}' is not bound by MATCH"), code: Some("jack/unbound-variable".into()) });
             }
         }
     }
@@ -1522,26 +1388,14 @@ pub fn lint(graph: &dyn QueryableGraph, source: &str) -> Vec<Diagnostic> {
     let mut out = Vec::new();
     for span in tokenize(source) {
         if span.class == TokenClass::Error {
-            out.push(Diagnostic {
-                start: span.start,
-                end: span.end,
-                severity: DiagnosticSeverity::Error,
-                message: "unterminated string literal".into(),
-                code: Some("jack/unterminated-string".into()),
-            });
+            out.push(Diagnostic { start: span.start, end: span.end, severity: DiagnosticSeverity::Error, message: "unterminated string literal".into(), code: Some("jack/unterminated-string".into()) });
         }
     }
     match parse(source) {
         Ok(query) => out.extend(semantic_lints(graph, &query, source)),
-        Err(message) => {
+        Err(err) => {
             let end = source.len().max(1);
-            out.push(Diagnostic {
-                start: 0,
-                end,
-                severity: DiagnosticSeverity::Error,
-                message,
-                code: Some("jack/parse-error".into()),
-            });
+            out.push(Diagnostic { start: 0, end, severity: DiagnosticSeverity::Error, message: err.to_string(), code: Some("jack/parse-error".into()) });
         }
     }
     out
@@ -1584,7 +1438,7 @@ fn format_token(tok: &Token) -> String {
 }
 
 /// 🪞 Format jack source canonically (idempotent).
-pub fn format(source: &str) -> Result<String, String> {
+pub fn format(source: &str) -> Result<String, GraphDslError> {
     let tokens = lex_spanned(source, false)?;
     let mut out = String::new();
     let mut line_open = false;
@@ -1731,14 +1585,14 @@ impl Parser {
         t
     }
 
-    fn expect_ident(&mut self) -> Result<String, String> {
+    fn expect_ident(&mut self) -> Result<String, GraphDslError> {
         match self.bump() {
             Token::Ident(s) => Ok(s),
-            other => Err(format!("expected ident, got {other:?}")),
+            other => Err(GraphDslError::UnexpectedToken { expected: "ident".into(), found: format!("{other:?}") }),
         }
     }
 
-    fn parse_query(&mut self) -> Result<Query, String> {
+    fn parse_query(&mut self) -> Result<Query, GraphDslError> {
         let mut clauses = Vec::new();
         while !matches!(self.peek(), Token::Eof) {
             clauses.push(self.parse_clause()?);
@@ -1746,7 +1600,7 @@ impl Parser {
         Ok(Query { clauses })
     }
 
-    fn parse_clause(&mut self) -> Result<Clause, String> {
+    fn parse_clause(&mut self) -> Result<Clause, GraphDslError> {
         match self.peek() {
             Token::KwMatch => {
                 self.bump();
@@ -1796,11 +1650,11 @@ impl Parser {
                 self.bump();
                 Ok(Clause::Merge(self.parse_pattern()?))
             }
-            other => Err(format!("unexpected clause start {other:?}")),
+            other => Err(GraphDslError::UnexpectedToken { expected: "clause start (MATCH/WHERE/RETURN/CREATE/DELETE/SET/MERGE)".into(), found: format!("{other:?}") }),
         }
     }
 
-    fn parse_pattern(&mut self) -> Result<Pattern, String> {
+    fn parse_pattern(&mut self) -> Result<Pattern, GraphDslError> {
         self.expect(Token::LParen)?;
         let left = self.parse_pattern_node()?;
         self.expect(Token::RParen)?;
@@ -1808,11 +1662,7 @@ impl Parser {
             self.bump();
             let (edge_var, edge_kind) = if matches!(self.peek(), Token::LBracket) {
                 self.bump();
-                let edge_var = if matches!(self.peek(), Token::Ident(_)) {
-                    Some(self.expect_ident()?)
-                } else {
-                    None
-                };
+                let edge_var = if matches!(self.peek(), Token::Ident(_)) { Some(self.expect_ident()?) } else { None };
                 let edge_kind = if matches!(self.peek(), Token::Colon) {
                     self.bump();
                     Some(self.expect_ident()?)
@@ -1833,16 +1683,13 @@ impl Parser {
             self.expect(Token::LParen)?;
             let right = self.parse_pattern_node()?;
             self.expect(Token::RParen)?;
-            Ok(Pattern {
-                nodes: vec![left],
-                edge: Some(PatternEdge { var: edge_var, kind: edge_kind, directed, right }),
-            })
+            Ok(Pattern { nodes: vec![left], edge: Some(PatternEdge { var: edge_var, kind: edge_kind, directed, right }) })
         } else {
             Ok(Pattern { nodes: vec![left], edge: None })
         }
     }
 
-    fn parse_pattern_node(&mut self) -> Result<PatternNode, String> {
+    fn parse_pattern_node(&mut self) -> Result<PatternNode, GraphDslError> {
         let var = self.expect_ident()?;
         self.expect(Token::Colon)?;
         let kind = self.expect_ident()?;
@@ -1855,7 +1702,7 @@ impl Parser {
         Ok(PatternNode { var, kind, port })
     }
 
-    fn parse_return_item(&mut self) -> Result<ReturnItem, String> {
+    fn parse_return_item(&mut self) -> Result<ReturnItem, GraphDslError> {
         let var = self.expect_ident()?;
         if matches!(self.peek(), Token::Dot) {
             self.bump();
@@ -1866,7 +1713,7 @@ impl Parser {
         }
     }
 
-    fn parse_assignment(&mut self) -> Result<Assignment, String> {
+    fn parse_assignment(&mut self) -> Result<Assignment, GraphDslError> {
         let var = self.expect_ident()?;
         self.expect(Token::Dot)?;
         let prop = self.expect_ident()?;
@@ -1875,11 +1722,11 @@ impl Parser {
         Ok(Assignment { var, prop, value })
     }
 
-    fn parse_expr(&mut self) -> Result<Expr, String> {
+    fn parse_expr(&mut self) -> Result<Expr, GraphDslError> {
         self.parse_or_expr()
     }
 
-    fn parse_or_expr(&mut self) -> Result<Expr, String> {
+    fn parse_or_expr(&mut self) -> Result<Expr, GraphDslError> {
         let mut left = self.parse_and_expr()?;
         while matches!(self.peek(), Token::Or) {
             self.bump();
@@ -1889,7 +1736,7 @@ impl Parser {
         Ok(left)
     }
 
-    fn parse_and_expr(&mut self) -> Result<Expr, String> {
+    fn parse_and_expr(&mut self) -> Result<Expr, GraphDslError> {
         let mut left = self.parse_cmp_expr()?;
         while matches!(self.peek(), Token::And) {
             self.bump();
@@ -1899,40 +1746,40 @@ impl Parser {
         Ok(left)
     }
 
-    fn parse_cmp_expr(&mut self) -> Result<Expr, String> {
+    fn parse_cmp_expr(&mut self) -> Result<Expr, GraphDslError> {
         let var = self.expect_ident()?;
         self.expect(Token::Dot)?;
         let prop = self.expect_ident()?;
         match self.bump() {
             Token::Eq => Ok(Expr::Eq { var, prop, value: self.parse_value()? }),
             Token::Ne => Ok(Expr::Ne { var, prop, value: self.parse_value()? }),
-            other => Err(format!("expected = or !=, got {other:?}")),
+            other => Err(GraphDslError::UnexpectedToken { expected: "= or !=".into(), found: format!("{other:?}") }),
         }
     }
 
-    fn parse_value(&mut self) -> Result<PropertyValue, String> {
+    fn parse_value(&mut self) -> Result<PropertyValue, GraphDslError> {
         match self.bump() {
             Token::Number(n) => Ok(PropertyValue::Number(n)),
             Token::StringLit(s) => Ok(PropertyValue::String(s)),
             Token::Ident(s) if s.eq_ignore_ascii_case("true") => Ok(PropertyValue::Bool(true)),
             Token::Ident(s) if s.eq_ignore_ascii_case("false") => Ok(PropertyValue::Bool(false)),
             Token::Ident(s) if s.eq_ignore_ascii_case("null") => Ok(PropertyValue::Null),
-            other => Err(format!("expected value, got {other:?}")),
+            other => Err(GraphDslError::UnexpectedToken { expected: "value".into(), found: format!("{other:?}") }),
         }
     }
 
-    fn expect(&mut self, want: Token) -> Result<(), String> {
+    fn expect(&mut self, want: Token) -> Result<(), GraphDslError> {
         if std::mem::discriminant(self.peek()) == std::mem::discriminant(&want) {
             self.bump();
             Ok(())
         } else {
-            Err(format!("expected {want:?}, got {:?}", self.peek()))
+            Err(GraphDslError::UnexpectedToken { expected: format!("{want:?}"), found: format!("{:?}", self.peek()) })
         }
     }
 }
 
 /// 🔍 Parse a jack query string.
-pub fn parse(query: &str) -> Result<Query, String> {
+pub fn parse(query: &str) -> Result<Query, GraphDslError> {
     let tokens = lex(query)?;
     Parser::new(tokens).parse_query()
 }
@@ -1947,7 +1794,7 @@ pub struct Binding {
 }
 
 /// ▶️ Execute a read-only jack query against a queryable graph.
-pub fn execute(graph: &dyn QueryableGraph, query: &Query) -> Result<QueryResult, String> {
+pub fn execute(graph: &dyn QueryableGraph, query: &Query) -> Result<QueryResult, GraphDslError> {
     let mut bindings: Vec<Binding> = vec![Binding::default()];
     let mut return_items: Option<Vec<ReturnItem>> = None;
     for clause in &query.clauses {
@@ -1956,7 +1803,7 @@ pub fn execute(graph: &dyn QueryableGraph, query: &Query) -> Result<QueryResult,
             Clause::Where(expr) => bindings.retain(|b| eval_expr(graph, b, expr)),
             Clause::Return(items) => return_items = Some(items.clone()),
             Clause::Create(_) | Clause::Delete(_) | Clause::Set(_) | Clause::Merge(_) => {
-                return Err("mutating jack clauses are not supported on this graph domain".into());
+                return Err(GraphDslError::UnsupportedMutation);
             }
         }
     }
@@ -1967,16 +1814,16 @@ pub fn execute(graph: &dyn QueryableGraph, query: &Query) -> Result<QueryResult,
 }
 
 /// ▶️ Parse and execute jack in one step.
-pub fn run_query(graph: &dyn QueryableGraph, source: &str) -> Result<QueryResult, String> {
+pub fn run_query(graph: &dyn QueryableGraph, source: &str) -> Result<QueryResult, GraphDslError> {
     execute(graph, &parse(source)?)
 }
 
 /// ▶️ Execute jack and return JSON result.
-pub fn run_query_json(graph: &dyn QueryableGraph, source: &str) -> Result<String, String> {
-    serde_json::to_string(&run_query(graph, source)?).map_err(|e| e.to_string())
+pub fn run_query_json(graph: &dyn QueryableGraph, source: &str) -> Result<String, GraphDslError> {
+    Ok(serde_json::to_string(&run_query(graph, source)?)?)
 }
 
-fn match_patterns(graph: &dyn QueryableGraph, patterns: &[Pattern]) -> Result<Vec<Binding>, String> {
+fn match_patterns(graph: &dyn QueryableGraph, patterns: &[Pattern]) -> Result<Vec<Binding>, GraphDslError> {
     let mut bindings = vec![Binding::default()];
     for pattern in patterns {
         let mut next = Vec::new();
@@ -1988,8 +1835,8 @@ fn match_patterns(graph: &dyn QueryableGraph, patterns: &[Pattern]) -> Result<Ve
     Ok(bindings)
 }
 
-fn match_pattern(graph: &dyn QueryableGraph, pattern: &Pattern, base: &Binding) -> Result<Vec<Binding>, String> {
-    let left = pattern.nodes.first().ok_or_else(|| "empty pattern".to_string())?;
+fn match_pattern(graph: &dyn QueryableGraph, pattern: &Pattern, base: &Binding) -> Result<Vec<Binding>, GraphDslError> {
+    let left = pattern.nodes.first().ok_or(GraphDslError::EmptyPattern)?;
     if let Some(edge_pat) = &pattern.edge {
         let mut out = Vec::new();
         for node_id in graph.node_ids() {
@@ -2120,12 +1967,7 @@ fn build_return(graph: &dyn QueryableGraph, bindings: &[Binding], items: &[Retur
         let mut row = Vec::new();
         for item in items {
             let val = match item {
-                ReturnItem::Var(v) => binding
-                    .nodes
-                    .get(v)
-                    .and_then(|id| graph.node_name(id))
-                    .map(PropertyValue::String)
-                    .unwrap_or(PropertyValue::Null),
+                ReturnItem::Var(v) => binding.nodes.get(v).and_then(|id| graph.node_name(id)).map(PropertyValue::String).unwrap_or(PropertyValue::Null),
                 ReturnItem::Property { var, prop } => binding_value(graph, binding, var, prop).unwrap_or(PropertyValue::Null),
             };
             row.push(val);

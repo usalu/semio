@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 /** @emoji ⚙️ Runs `cargo test`/`cargo check --target wasm32-unknown-unknown` for the `ui_tui` crate. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runCmd } from "../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
   run(): void {
-    runCmd("cargo", ["test", "-p", "ui_tui", "--features", "terminal"], { cwd: import.meta.dir });
+    runCargoTestBudgeted(["ui_tui"], import.meta.dir, ["--features", "terminal"]);
   }
 }
 

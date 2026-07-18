@@ -8,10 +8,7 @@ use kernel_3d_engine::{Aabb, Vec3};
 
 // #region 🔖AabbHelpers
 fn aabb_union(a: &Aabb, b: &Aabb) -> Aabb {
-    Aabb {
-        min: [a.min[0].min(b.min[0]), a.min[1].min(b.min[1]), a.min[2].min(b.min[2])],
-        max: [a.max[0].max(b.max[0]), a.max[1].max(b.max[1]), a.max[2].max(b.max[2])],
-    }
+    Aabb { min: [a.min[0].min(b.min[0]), a.min[1].min(b.min[1]), a.min[2].min(b.min[2])], max: [a.max[0].max(b.max[0]), a.max[1].max(b.max[1]), a.max[2].max(b.max[2])] }
 }
 
 fn aabb_center(a: &Aabb) -> Vec3 {
@@ -32,12 +29,11 @@ fn aabb_longest_axis(a: &Aabb) -> usize {
 /// 📏 Squared distance from `point` to the closest point on `aabb` (0 if inside).
 fn aabb_point_distance_sq(aabb: &Aabb, point: Vec3) -> f64 {
     let mut d = 0.0;
-    for axis in 0..3 {
-        let v = point[axis];
-        if v < aabb.min[axis] {
-            d += (aabb.min[axis] - v).powi(2);
-        } else if v > aabb.max[axis] {
-            d += (v - aabb.max[axis]).powi(2);
+    for ((&v, &lo), &hi) in point.iter().zip(aabb.min.iter()).zip(aabb.max.iter()) {
+        if v < lo {
+            d += (lo - v).powi(2);
+        } else if v > hi {
+            d += (v - hi).powi(2);
         }
     }
     d
@@ -218,10 +214,7 @@ mod tests {
 
     #[test]
     fn nearest_point_finds_closest_leaf() {
-        let items = vec![
-            (aabb([0.0, 0.0, 0.0], [1.0, 1.0, 1.0]), "near"),
-            (aabb([10.0, 10.0, 10.0], [11.0, 11.0, 11.0]), "far"),
-        ];
+        let items = vec![(aabb([0.0, 0.0, 0.0], [1.0, 1.0, 1.0]), "near"), (aabb([10.0, 10.0, 10.0], [11.0, 11.0, 11.0]), "far")];
         let bvh = Bvh::build(items);
         assert_eq!(bvh.query_point_nearest([0.5, 0.5, 0.5]), Some(&"near"));
         assert_eq!(bvh.query_point_nearest([10.5, 10.5, 10.5]), Some(&"far"));
@@ -229,10 +222,7 @@ mod tests {
 
     #[test]
     fn ray_hits_only_crossed_leaves() {
-        let items = vec![
-            (aabb([0.0, -1.0, -1.0], [1.0, 1.0, 1.0]), "hit"),
-            (aabb([0.0, 10.0, 10.0], [1.0, 11.0, 11.0]), "miss"),
-        ];
+        let items = vec![(aabb([0.0, -1.0, -1.0], [1.0, 1.0, 1.0]), "hit"), (aabb([0.0, 10.0, 10.0], [1.0, 11.0, 11.0]), "miss")];
         let bvh = Bvh::build(items);
         let hits = bvh.query_ray([-5.0, 0.0, 0.0], [1.0, 0.0, 0.0]);
         assert_eq!(hits, vec![&"hit"]);
@@ -240,10 +230,7 @@ mod tests {
 
     #[test]
     fn aabb_overlap_finds_intersecting_leaves() {
-        let items = vec![
-            (aabb([0.0, 0.0, 0.0], [1.0, 1.0, 1.0]), "overlap"),
-            (aabb([5.0, 5.0, 5.0], [6.0, 6.0, 6.0]), "disjoint"),
-        ];
+        let items = vec![(aabb([0.0, 0.0, 0.0], [1.0, 1.0, 1.0]), "overlap"), (aabb([5.0, 5.0, 5.0], [6.0, 6.0, 6.0]), "disjoint")];
         let bvh = Bvh::build(items);
         let mut hits = bvh.query_aabb_overlap(&aabb([0.5, 0.5, 0.5], [2.0, 2.0, 2.0]));
         hits.sort();

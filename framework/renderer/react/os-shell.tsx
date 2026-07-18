@@ -147,7 +147,6 @@ import {
 import { ICONS, type IconName } from "@semio-tech/ui-asset";
 import { declarativeTreeDragController, interpretUiNode, InterpretedUiNode, uiTreeNodeToTreePanelConfig } from "./ui-interpreter.tsx";
 import {
-  DEFAULT_PLUGIN_REGISTRY,
   type InvocationResponse,
   type HostEffect,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
@@ -212,7 +211,7 @@ import {
   type IconRenderScene,
   type NamedLayout,
   type NodeGraphScene,
-  type NoteCanvasScene,
+  type InkCanvasScene,
   type PluginAppLabelsOverlay,
   type PluginHotSwapEvent,
   type PanelTabKind,
@@ -2459,7 +2458,9 @@ export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Pro
   if (!root) throw new Error("missing #root");
   const locks = resolveShellLocks(options.locks);
   bootstrapElementsSurfaceChromeDocument(locks.appearance ?? readStoredUiChromeAppearance());
-  createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? DEFAULT_PLUGIN_REGISTRY} appId={options.appId} locks={locks} />);
+  // 🐢 No hardcoded fallback app — an omitted `plugins` list boots the shell with an explicit
+  // "no plugins available" state rather than silently picking one app.
+  createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? []} appId={options.appId} locks={locks} />);
 }
 //#endregion Boot
 
@@ -4815,7 +4816,6 @@ export type PluginWasmHandle = {
 };
 
 export type { PluginRegistryEntry };
-export { DEFAULT_PLUGIN_REGISTRY };
 
 export async function loadPluginModule(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
   return adaptPluginHandle(await loadCorePluginModule(pluginId, moduleUrl));
@@ -4848,23 +4848,39 @@ function adaptPluginHandle(handle: CorePluginWasmHandle): PluginWasmHandle {
 
 //#region 🔖wasm-session-loader
 
-//#region GraphSession
-type GraphSessionModule = {
-  readonly default: (input?: unknown) => Promise<unknown>;
-  readonly GraphSession: new () => GraphWasmSession;
+//#region 🔖EngineSessionLoader
+/** 🔌 One generic lazy-loader table for every `framework/surface/*` engine crate (plus `board-2d`,
+ * still app-hosted) — each surface kind maps to its wasm-pack package; a single cached module promise
+ * per kind replaces the five near-identical hand-rolled `let xPromise…create X()` blocks this used to be. */
+type EngineSessionWasmModule = { readonly default: (input?: unknown) => Promise<unknown> } & Record<string, new () => unknown>;
+
+const ENGINE_SESSION_IMPORTERS: Record<string, () => Promise<EngineSessionWasmModule>> = {
+  "node-graph": () => import("@semio-tech/framework-surface-node-graph-rs/pkg/framework_surface_node_graph.js"),
+  "paint-2d": () => import("@semio-tech/framework-surface-paint-rs/pkg/framework_surface_paint.js"),
+  "tiled-map": () => import("@semio-tech/framework-surface-tiled-map-rs/pkg/framework_surface_tiled_map.js"),
+  terrain: () => import("@semio-tech/framework-surface-terrain-rs/pkg/framework_surface_terrain.js"),
+  "board-2d": () => import("@semio-tech/puzzle-2d-rs/pkg/puzzle_2d.js"),
 };
 
-let graphSessionPromise: Promise<GraphSessionModule> | null = null;
+const engineSessionModulePromises = new Map<string, Promise<EngineSessionWasmModule>>();
 
-export async function createGraphSession(): Promise<GraphWasmSession> {
-  if (!graphSessionPromise) {
-    graphSessionPromise = import("@semio-tech/framework-graph-rs/pkg/framework_graph.js").then(async (mod) => {
+async function createEngineSession<TSession>(engineKind: keyof typeof ENGINE_SESSION_IMPORTERS, sessionClassName: string): Promise<TSession> {
+  let modulePromise = engineSessionModulePromises.get(engineKind);
+  if (!modulePromise) {
+    modulePromise = ENGINE_SESSION_IMPORTERS[engineKind]().then(async (mod) => {
       await mod.default();
-      return mod as GraphSessionModule;
+      return mod;
     });
+    engineSessionModulePromises.set(engineKind, modulePromise);
   }
-  const mod = await graphSessionPromise;
-  return new mod.GraphSession();
+  const mod = await modulePromise;
+  return new mod[sessionClassName]() as TSession;
+}
+//#endregion 🔖EngineSessionLoader
+
+//#region GraphSession
+export async function createGraphSession(): Promise<GraphWasmSession> {
+  return createEngineSession<GraphWasmSession>("node-graph", "GraphSession");
 }
 //#endregion GraphSession
 
@@ -5029,22 +5045,8 @@ export type RasterWasmSession = {
   free(): void;
 };
 
-type RasterSessionModule = {
-  readonly default: (input?: unknown) => Promise<unknown>;
-  readonly RasterSession: new () => RasterWasmSession;
-};
-
-let rasterSessionPromise: Promise<RasterSessionModule> | null = null;
-
 export async function createRasterSession(): Promise<RasterWasmSession> {
-  if (!rasterSessionPromise) {
-    rasterSessionPromise = import("@semio-tech/raster-rs/pkg/raster.js").then(async (mod) => {
-      await mod.default();
-      return mod as RasterSessionModule;
-    });
-  }
-  const mod = await rasterSessionPromise;
-  return new mod.RasterSession();
+  return createEngineSession<RasterWasmSession>("paint-2d", "RasterSession");
 }
 //#endregion RasterSession
 
@@ -5085,23 +5087,10 @@ export type MapWasmSession = {
   free(): void;
 };
 
-type MapSessionModule = {
-  readonly default: (input?: unknown) => Promise<unknown>;
-  readonly MapSession: new () => MapWasmSession;
-};
-
-let mapSessionPromise: Promise<MapSessionModule> | null = null;
-
 export async function createMapSession(): Promise<MapWasmSession> {
-  if (!mapSessionPromise) {
-    mapSessionPromise = import("@semio-tech/gis-2d-rs/pkg/gis_2d.js").then(async (mod) => {
-      await mod.default();
-      return mod as MapSessionModule;
-    });
-  }
-  const mod = await mapSessionPromise;
-  return new mod.MapSession();
+  return createEngineSession<MapWasmSession>("tiled-map", "MapSession");
 }
+//#endregion MapSession
 
 //#region TerrainSession
 export type TerrainWasmSession = {
@@ -5113,25 +5102,12 @@ export type TerrainWasmSession = {
   terrain_tile_mesh_json(z: number, x: number, y: number): string;
 };
 
-type TerrainSessionModule = {
-  readonly default: (input?: unknown) => Promise<unknown>;
-  readonly TerrainSession: new () => TerrainWasmSession;
-};
-
-let terrainSessionPromise: Promise<TerrainSessionModule> | null = null;
-
 export async function createTerrainSession(): Promise<TerrainWasmSession> {
-  if (!terrainSessionPromise) {
-    terrainSessionPromise = import("@semio-tech/gis-3d-rs/pkg/gis_3d.js").then(async (mod) => {
-      await mod.default();
-      return mod as TerrainSessionModule;
-    });
-  }
-  const mod = await terrainSessionPromise;
-  return new mod.TerrainSession();
+  return createEngineSession<TerrainWasmSession>("terrain", "TerrainSession");
 }
 //#endregion TerrainSession
 
+//#region Board2dSession
 export type Board2dWasmSession = {
   attach_canvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown>;
   setSize(width: number, height: number, dpr: number): void;
@@ -5178,24 +5154,10 @@ export type Board2dWasmSession = {
   free(): void;
 };
 
-type Board2dSessionModule = {
-  readonly default: (input?: unknown) => Promise<unknown>;
-  readonly BoardSession: new () => Board2dWasmSession;
-};
-
-let board2dSessionPromise: Promise<Board2dSessionModule> | null = null;
-
 export async function createBoard2dSession(): Promise<Board2dWasmSession> {
-  if (!board2dSessionPromise) {
-    board2dSessionPromise = import("@semio-tech/puzzle-2d-rs/pkg/puzzle_2d.js").then(async (mod) => {
-      await mod.default();
-      return mod as Board2dSessionModule;
-    });
-  }
-  const mod = await board2dSessionPromise;
-  return new mod.BoardSession();
+  return createEngineSession<Board2dWasmSession>("board-2d", "BoardSession");
 }
-//#endregion MapSession
+//#endregion Board2dSession
 
 //#region SceneHelpers
 export function isFlowGraphScene(capabilitiesJson?: string): boolean {

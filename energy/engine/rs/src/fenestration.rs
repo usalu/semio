@@ -155,7 +155,7 @@ pub enum CondensationRisk {
 /// 💧 Assess interior surface condensation vs zone dew point.
 pub fn condensation_risk(
     interior_surface_temp_c: f64,
-    zone_air_temp_c: f64,
+    _zone_air_temp_c: f64,
     humidity_ratio: f64,
     atmospheric_pressure_pa: f64,
 ) -> CondensationRisk {
@@ -216,7 +216,13 @@ mod tests {
     #[test]
     fn double_glazing_u_below_single() {
         let win = double_glazing();
-        assert!(win.center_u_value_w_m2k() < 2.0);
+        let u_double = win.center_u_value_w_m2k();
+        let single = WindowModel {
+            glazing_layers: vec![win.glazing_layers[0]],
+            gap_resistance_m2k_w: vec![],
+            ..win.clone()
+        };
+        assert!(u_double < single.center_u_value_w_m2k());
     }
 
     #[test]

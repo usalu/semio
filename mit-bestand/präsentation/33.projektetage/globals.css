@@ -1,7 +1,7 @@
-@import "../../../ui/react/globals.css";
-@import "../../../framework/product/presentation/renderer/react/globals.css";
-@source "../../../ui/react";
-@source "../../../framework/product/presentation/renderer/react";
+@import "../../../ui/js/react/globals.css";
+@import "../../../animate/present/renderer/react/globals.css";
+@source "../../../ui/js/react";
+@source "../../../animate/present/renderer/react";
 @source ".";
 
 .reveal .slides > section > section[title="abschluss"] {

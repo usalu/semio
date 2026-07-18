@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 📽 33. Projektetage — declarative paper intro via `@semio-tech/framework-presentation`. */
+/** @emoji 📽 33. Projektetage — declarative paper intro via `@semio-tech/animate-present-core`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters
@@ -16,7 +16,7 @@ import {
   type Slide,
   type SlideFile,
   type Thought,
-} from "@semio-tech/framework-presentation-core";
+} from "@semio-tech/animate-present-core";
 import "../globals.css";
 // #endregion 🔌Adapters
 
@@ -36,7 +36,7 @@ import {
   type PresentationMeta,
   type SplitArtifacts,
   unionSourceCrops,
-} from "@semio-tech/framework-presentation-core";
+} from "@semio-tech/animate-present-core";
 // #endregion 🔌Adapters
 
 //#region 🔖Meta
@@ -491,7 +491,7 @@ export function baukomponentenGridArtifacts(): {
 //#endregion 🔖spec
 
 //#region 🔖Deck
-const slideModuleLoaders = import.meta.glob<{ default: SlideFile }>("./slide/**/*.ts");
+const slideModuleLoaders = import.meta.glob<{ default: SlideFile }>("../slide/**/*.ts");
 const slideModules = Object.fromEntries(await Promise.all(Object.entries(slideModuleLoaders).map(async ([path, loadModule]) => [path, await loadModule()] as const))) as Record<string, { readonly default: SlideFile }>;
 const sourceDeck: Presentation = loadPresentationFromSlideGlob(presentationMeta, slideModules);
 
@@ -603,7 +603,7 @@ function mount(): void {
   if (!el) {
     return;
   }
-  void import("@semio-tech/framework-presentation-renderer-react").then(({ Expertise, mountPresentation }) => {
+  void import("@semio-tech/animate-present-renderer-react").then(({ Expertise, mountPresentation }) => {
     mountPresentation(el, deck, {
       transition: "fade",
       slideNumber: false,
@@ -618,7 +618,7 @@ if (typeof document !== "undefined" && !import.meta.vitest) {
 //#endregion 🔖Deck
 
 //#region 🔖Play
-export { presentationPlayAppDefinition as projektetagePlayAppDefinition } from "@semio-tech/framework-presentation-core";
+export { presentationPlayAppDefinition as projektetagePlayAppDefinition } from "@semio-tech/animate-present-core";
 //#endregion 🔖Play
 
 //#region 🧪Tests

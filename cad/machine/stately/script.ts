@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 /** 🧭 `@semio-tech/cad-js-machine-stately` task router: `generate` | `test` | `policy`. */
 import { join, resolve } from "node:path";
-import type { FileLinter } from "../../../../repo/lib/js/index.ts";
-import { dependencyBoundaryBreachesForFile } from "../../../../repo/lib/js/index.ts";
-import { getWorkspaceRoot } from "../../../../repo/lib/js/index.ts";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../../repo/lib/js/index.ts";
-import { defineLint } from "../../../../repo/lib/js/index.ts";
+import type { FileLinter } from "../../../repo/lib/js/index.ts";
+import { dependencyBoundaryBreachesForFile } from "../../../repo/lib/js/index.ts";
+import { getWorkspaceRoot } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../repo/lib/js/index.ts";
+import { defineLint } from "../../../repo/lib/js/index.ts";
 
 export const policyFile = "index.ts";
 

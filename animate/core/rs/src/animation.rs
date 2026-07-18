@@ -1,9 +1,10 @@
 //! 🎞️ Animation trait, leaf animations, composites, and `.animate()` builder.
 
-use crate::color::Color;
+
 use crate::rate::{map_child_alpha, RateFunc};
-use crate::sobject::Sobject;
+use crate::sobject::{Sobject, VSobject};
 use mathematical_geometry::{cubic_point_at, Affine, CubicBez, Point, Vec2};
+use std::collections::HashMap;
 use std::time::Duration;
 
 /// 🕐 Mutable timeline context passed while sampling animations.
@@ -21,6 +22,12 @@ pub trait Animation: Send {
     fn begin(&mut self);
     fn finish(&mut self);
     fn interpolate_mobject(&mut self, alpha: f64);
+    fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        let rate = self.rate_func();
+        let alpha = rate(parent_alpha.clamp(0.0, 1.0));
+        let _ = mobjects;
+        self.interpolate_mobject(alpha);
+    }
     fn get_all_mobjects(&self) -> Vec<u64>;
     fn is_introducer(&self) -> bool {
         false
@@ -34,9 +41,29 @@ fn eased_alpha(animation: &dyn Animation, alpha: f64) -> f64 {
     (animation.rate_func())(alpha.clamp(0.0, 1.0))
 }
 
-/// ▶️ Drive an animation to a parent alpha in [0,1].
-pub fn interpolate_at(animation: &mut dyn Animation, parent_alpha: f64) {
-    animation.interpolate_mobject(eased_alpha(animation, parent_alpha));
+pub(crate) fn eased_alpha_for(animation: &dyn Animation, alpha: f64) -> f64 {
+    eased_alpha(animation, alpha)
+}
+
+/// 🎯 Resolve a VSobject by id and run a closure on it.
+pub fn with_vsobject<F>(mobjects: &mut HashMap<u64, Box<dyn Sobject>>, id: u64, f: F)
+where
+    F: FnOnce(&mut VSobject),
+{
+    if let Some(obj) = mobjects.get_mut(&id) {
+        if let Some(v) = obj.as_any_mut().downcast_mut::<VSobject>() {
+            f(v);
+        }
+    }
+}
+
+/// ▶️ Drive an animation to a parent alpha in [0,1], mutating scene mobjects.
+pub fn interpolate_at(
+    mobjects: &mut HashMap<u64, Box<dyn Sobject>>,
+    animation: &mut dyn Animation,
+    parent_alpha: f64,
+) {
+    animation.apply(mobjects, parent_alpha);
 }
 
 /// ✏️ Draw/create path progressively.
@@ -74,10 +101,17 @@ impl Animation for Create {
     }
     fn begin(&mut self) {
         self.started = true;
+        self.snapshot_ratio = 1.0;
     }
     fn finish(&mut self) {}
     fn interpolate_mobject(&mut self, alpha: f64) {
         let _ = (self.target_id, alpha, self.started, self.snapshot_ratio);
+    }
+    fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        let alpha = eased_alpha(self, parent_alpha);
+        with_vsobject(mobjects, self.target_id, |v| {
+            v.set_point_ratio(alpha * self.snapshot_ratio);
+        });
     }
     fn get_all_mobjects(&self) -> Vec<u64> {
         vec![self.target_id]
@@ -93,6 +127,8 @@ pub struct FadeIn {
     pub run_time: f64,
     pub rate: RateFunc,
     pub target_opacity: f64,
+    start_opacity: f64,
+    primed: bool,
 }
 
 impl FadeIn {
@@ -102,6 +138,8 @@ impl FadeIn {
             run_time,
             rate: crate::rate::smooth,
             target_opacity: 1.0,
+            start_opacity: 0.0,
+            primed: false,
         }
     }
 }
@@ -113,10 +151,23 @@ impl Animation for FadeIn {
     fn rate_func(&self) -> RateFunc {
         self.rate
     }
-    fn begin(&mut self) {}
+    fn begin(&mut self) {
+        self.primed = false;
+    }
     fn finish(&mut self) {}
     fn interpolate_mobject(&mut self, alpha: f64) {
         let _ = (self.target_id, alpha * self.target_opacity);
+    }
+    fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        let alpha = eased_alpha(self, parent_alpha);
+        with_vsobject(mobjects, self.target_id, |v| {
+            if !self.primed {
+                self.start_opacity = v.opacity();
+                self.primed = true;
+            }
+            let opacity = self.start_opacity + (self.target_opacity - self.start_opacity) * alpha;
+            v.set_opacity(opacity);
+        });
     }
     fn get_all_mobjects(&self) -> Vec<u64> {
         vec![self.target_id]
@@ -131,6 +182,8 @@ pub struct FadeOut {
     pub target_id: u64,
     pub run_time: f64,
     pub rate: RateFunc,
+    start_opacity: f64,
+    primed: bool,
 }
 
 impl FadeOut {
@@ -139,6 +192,8 @@ impl FadeOut {
             target_id,
             run_time,
             rate: crate::rate::smooth,
+            start_opacity: 1.0,
+            primed: false,
         }
     }
 }
@@ -150,10 +205,22 @@ impl Animation for FadeOut {
     fn rate_func(&self) -> RateFunc {
         self.rate
     }
-    fn begin(&mut self) {}
+    fn begin(&mut self) {
+        self.primed = false;
+    }
     fn finish(&mut self) {}
     fn interpolate_mobject(&mut self, alpha: f64) {
         let _ = (self.target_id, 1.0 - alpha);
+    }
+    fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        let alpha = eased_alpha(self, parent_alpha);
+        with_vsobject(mobjects, self.target_id, |v| {
+            if !self.primed {
+                self.start_opacity = v.opacity();
+                self.primed = true;
+            }
+            v.set_opacity(self.start_opacity * (1.0 - alpha));
+        });
     }
     fn get_all_mobjects(&self) -> Vec<u64> {
         vec![self.target_id]
@@ -168,6 +235,7 @@ pub struct Transform {
     pub target_id: u64,
     pub run_time: f64,
     pub rate: RateFunc,
+    primed: bool,
 }
 
 impl Transform {
@@ -176,6 +244,7 @@ impl Transform {
             target_id,
             run_time,
             rate: crate::rate::smooth,
+            primed: false,
         }
     }
 }
@@ -187,10 +256,25 @@ impl Animation for Transform {
     fn rate_func(&self) -> RateFunc {
         self.rate
     }
-    fn begin(&mut self) {}
+    fn begin(&mut self) {
+        self.primed = false;
+    }
     fn finish(&mut self) {}
     fn interpolate_mobject(&mut self, alpha: f64) {
         let _ = (self.target_id, alpha);
+    }
+    fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        let alpha = eased_alpha(self, parent_alpha);
+        with_vsobject(mobjects, self.target_id, |v| {
+            if !self.primed {
+                v.save_state();
+                if !v.has_target() {
+                    v.generate_target();
+                }
+                self.primed = true;
+            }
+            v.interpolate_saved_to_target(alpha);
+        });
     }
     fn get_all_mobjects(&self) -> Vec<u64> {
         vec![self.target_id]
@@ -203,6 +287,7 @@ pub struct Rotate {
     pub angle: f64,
     pub run_time: f64,
     pub rate: RateFunc,
+    start_transform: Option<Affine>,
 }
 
 impl Rotate {
@@ -212,6 +297,7 @@ impl Rotate {
             angle,
             run_time,
             rate: crate::rate::smooth,
+            start_transform: None,
         }
     }
 }
@@ -223,10 +309,24 @@ impl Animation for Rotate {
     fn rate_func(&self) -> RateFunc {
         self.rate
     }
-    fn begin(&mut self) {}
+    fn begin(&mut self) {
+        self.start_transform = None;
+    }
     fn finish(&mut self) {}
     fn interpolate_mobject(&mut self, alpha: f64) {
         let _ = (self.target_id, self.angle * alpha);
+    }
+    fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        let alpha = eased_alpha(self, parent_alpha);
+        with_vsobject(mobjects, self.target_id, |v| {
+            if self.start_transform.is_none() {
+                self.start_transform = Some(v.transform());
+            }
+            if let Some(start) = self.start_transform {
+                *v.transform_mut() = start;
+                v.rotate(self.angle * alpha);
+            }
+        });
     }
     fn get_all_mobjects(&self) -> Vec<u64> {
         vec![self.target_id]
@@ -267,6 +367,13 @@ impl Animation for MoveAlongPath {
     fn finish(&mut self) {}
     fn interpolate_mobject(&mut self, alpha: f64) {
         let _ = self.position_at(alpha);
+    }
+    fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        let alpha = eased_alpha(self, parent_alpha);
+        let point = self.position_at(alpha);
+        with_vsobject(mobjects, self.target_id, |v| {
+            v.move_to(point);
+        });
     }
     fn get_all_mobjects(&self) -> Vec<u64> {
         vec![self.target_id]
@@ -320,7 +427,13 @@ impl Animation for AnimationGroup {
     fn interpolate_mobject(&mut self, parent_alpha: f64) {
         let alpha = eased_alpha(self, parent_alpha);
         for a in &mut self.animations {
-            interpolate_at(a.as_mut(), alpha);
+            interpolate_at(&mut HashMap::new(), a.as_mut(), alpha);
+        }
+    }
+    fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
+        let alpha = eased_alpha(self, parent_alpha);
+        for a in &mut self.animations {
+            interpolate_at(mobjects, a.as_mut(), alpha);
         }
     }
     fn get_all_mobjects(&self) -> Vec<u64> {
@@ -379,21 +492,22 @@ impl Animation for Succession {
         }
     }
     fn interpolate_mobject(&mut self, parent_alpha: f64) {
+        self.apply(&mut HashMap::new(), parent_alpha);
+    }
+    fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
         let alpha = eased_alpha(self, parent_alpha);
         if self.animations.is_empty() {
             return;
         }
+        let bounds: Vec<(f64, f64)> = (0..self.animations.len()).map(|i| self.slot_bounds(i)).collect();
         let mut chosen = self.animations.len() - 1;
-        for (i, _) in self.animations.iter().enumerate() {
-            let (start, end) = self.slot_bounds(i);
-            if alpha >= start && alpha <= end + 1e-9 {
+        for (i, (start, _)) in bounds.iter().enumerate() {
+            if alpha >= *start {
                 chosen = i;
+            }
+            if alpha < *start {
                 break;
             }
-            if alpha < start {
-                break;
-            }
-            chosen = i;
         }
         if self.active_index != Some(chosen) {
             self.active_index = Some(chosen);
@@ -407,11 +521,11 @@ impl Animation for Succession {
                 self.begun[i] = true;
             }
             if i < chosen {
-                interpolate_at(a.as_mut(), 1.0);
+                interpolate_at(mobjects, a.as_mut(), 1.0);
             } else {
-                let (start, end) = self.slot_bounds(i);
+                let (start, end) = bounds[i];
                 let child_alpha = map_child_alpha(alpha, start, end);
-                interpolate_at(a.as_mut(), child_alpha);
+                interpolate_at(mobjects, a.as_mut(), child_alpha);
             }
         }
     }
@@ -466,17 +580,21 @@ impl Animation for LaggedStart {
         self.group.finish();
     }
     fn interpolate_mobject(&mut self, parent_alpha: f64) {
+        self.apply(&mut HashMap::new(), parent_alpha);
+    }
+    fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
         let alpha = eased_alpha(self, parent_alpha);
         let n = self.group.animations.len();
+        let starts: Vec<f64> = (0..n).map(|i| self.child_start(i, n)).collect();
         for (i, a) in self.group.animations.iter_mut().enumerate() {
-            let start = self.child_start(i, n);
+            let start = starts[i];
             let child_alpha = map_child_alpha(alpha, start, 1.0);
             if child_alpha > 0.0 {
                 if !self.group.begun[i] {
                     a.begin();
                     self.group.begun[i] = true;
                 }
-                interpolate_at(a.as_mut(), child_alpha);
+                interpolate_at(mobjects, a.as_mut(), child_alpha);
             }
         }
     }
@@ -508,16 +626,9 @@ where
             lag_ratio,
             factory,
             run_time,
-            cache: vec![None; count],
+            cache: (0..count).map(|_| None).collect(),
             begun: vec![false; count],
         }
-    }
-
-    fn ensure(&mut self, index: usize) -> &mut Box<dyn Animation> {
-        if self.cache[index].is_none() {
-            self.cache[index] = Some((self.factory)(index));
-        }
-        self.cache[index].as_mut().unwrap()
     }
 }
 
@@ -540,6 +651,9 @@ where
         }
     }
     fn interpolate_mobject(&mut self, parent_alpha: f64) {
+        self.apply(&mut HashMap::new(), parent_alpha);
+    }
+    fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
         let alpha = eased_alpha(self, parent_alpha);
         for i in 0..self.count {
             let start = if self.count <= 1 {
@@ -548,13 +662,20 @@ where
                 i as f64 / (self.count - 1) as f64 * self.lag_ratio
             };
             let child_alpha = map_child_alpha(alpha, start, 1.0);
-            if child_alpha > 0.0 {
-                let a = self.ensure(i);
-                if !self.begun[i] {
-                    a.begin();
-                    self.begun[i] = true;
+            if child_alpha <= 0.0 {
+                continue;
+            }
+            if !self.begun[i] {
+                if self.cache[i].is_none() {
+                    self.cache[i] = Some((self.factory)(i));
                 }
-                interpolate_at(a.as_mut(), child_alpha);
+                if let Some(a) = self.cache[i].as_mut() {
+                    a.begin();
+                }
+                self.begun[i] = true;
+            }
+            if let Some(a) = self.cache[i].as_mut() {
+                interpolate_at(mobjects, a.as_mut(), child_alpha);
             }
         }
     }
@@ -620,6 +741,8 @@ impl<'a> AnimateBuilder<'a> {
             run_time: self.run_time,
             rate: self.rate,
             target_opacity: 1.0,
+            start_opacity: 0.0,
+            primed: false,
         }
     }
 
@@ -628,6 +751,8 @@ impl<'a> AnimateBuilder<'a> {
             target_id: self.target.id(),
             run_time: self.run_time,
             rate: self.rate,
+            start_opacity: 1.0,
+            primed: false,
         }
     }
 
@@ -635,11 +760,12 @@ impl<'a> AnimateBuilder<'a> {
         Create::new(self.target.id(), self.run_time).with_rate(self.rate)
     }
 
-    pub fn transform(self) -> Transform {
+    pub     fn transform(self) -> Transform {
         Transform {
             target_id: self.target.id(),
             run_time: self.run_time,
             rate: self.rate,
+            primed: false,
         }
     }
 
@@ -653,21 +779,19 @@ impl<'a> AnimateBuilder<'a> {
 }
 
 /// 🪄 Extension trait for `.animate()` on Sobjects.
-pub trait AnimateExt: Sobject {
+pub trait AnimateExt: Sobject + Sized {
     fn animate(&mut self, run_time: f64) -> AnimateBuilder<'_> {
         AnimateBuilder::new(self, run_time)
     }
 }
 
-impl<T: Sobject + ?Sized> AnimateExt for T {}
+impl<T: Sobject + Sized> AnimateExt for T {}
 
 /// 🧮 Apply parent opacity recursively to an Sobject tree (Manim parity).
 pub fn apply_parent_opacity_tree(root: &mut dyn Sobject, parent_opacity: f64) {
     root.set_parent_opacity(parent_opacity);
     let eff = root.effective_opacity();
-    for child in root.children_mut() {
-        apply_parent_opacity_tree(child, eff);
-    }
+    root.visit_children_mut(&mut |child| apply_parent_opacity_tree(child, eff));
 }
 
 /// 🎞️ Compile animations into a flat timeline with durations.
@@ -681,6 +805,7 @@ pub fn compile_animations(animations: &[Box<dyn Animation>]) -> Vec<Duration> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::animation::AnimateExt;
     use crate::sobject::VSobject;
 
     #[test]

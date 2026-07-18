@@ -2,7 +2,8 @@
 
 use crate::color::Color;
 use crate::updater::Updater;
-use mathematical_geometry::{append_shape_to_path, bounding_box, polygon_centroid, Affine, BezPath, Point, Rect, Vec2};
+use mathematical_geometry::{append_shape_to_path, bounding_box, polygon_centroid, Affine, BezPath, PathEl, Point, Rect, Vec2};
+use kurbo::PathSeg;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 static SOBJECT_ID: AtomicU64 = AtomicU64::new(1);
@@ -65,7 +66,7 @@ impl Bounds {
 pub trait Sobject: Send {
     fn id(&self) -> u64;
     fn name(&self) -> &str;
-    fn set_name(&mut self, name: impl Into<String>);
+    fn set_name(&mut self, name: String);
     fn style(&self) -> &Style;
     fn style_mut(&mut self) -> &mut Style;
     fn opacity(&self) -> f64;
@@ -108,7 +109,7 @@ pub trait Sobject: Send {
     }
     fn paths(&self) -> Vec<BezPath>;
     fn children(&self) -> Vec<&dyn Sobject>;
-    fn children_mut(&mut self) -> Vec<&mut dyn Sobject>;
+    fn visit_children_mut(&mut self, f: &mut dyn FnMut(&mut dyn Sobject));
     fn add_child(&mut self, child: Box<dyn Sobject>);
     fn updaters(&self) -> &[Updater];
     fn updaters_mut(&mut self) -> &mut Vec<Updater>;
@@ -120,10 +121,17 @@ pub trait Sobject: Send {
     fn clone_box(&self) -> Box<dyn Sobject>;
     fn as_any(&self) -> &dyn std::any::Any;
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
+    fn z_order(&self) -> i64 {
+        0
+    }
+    fn set_z_order(&mut self, _z: i64) {}
+    fn point_ratio(&self) -> f64 {
+        1.0
+    }
 }
 
 /// ✏️ Vector Sobject backed by kurbo paths and partial point reveal.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct VSobject {
     pub id: u64,
     pub name: String,
@@ -133,6 +141,7 @@ pub struct VSobject {
     pub parent_opacity: f64,
     pub transform: Affine,
     pub point_ratio: f64,
+    pub z_order: i64,
     pub saved: Option<VSobjectSnapshot>,
     pub target: Option<VSobjectSnapshot>,
     pub updaters: Vec<Updater>,
@@ -158,6 +167,7 @@ impl VSobject {
             parent_opacity: 1.0,
             transform: Affine::IDENTITY,
             point_ratio: 1.0,
+            z_order: 0,
             saved: None,
             target: None,
             updaters: Vec::new(),
@@ -170,7 +180,7 @@ impl VSobject {
         s
     }
 
-    pub fn from_shape(shape: impl Into<mathematical_geometry::ShapeRef<'_>>) -> Self {
+    pub fn from_shape<'a>(shape: impl Into<mathematical_geometry::ShapeRef<'a>>) -> Self {
         let mut path = BezPath::new();
         append_shape_to_path(&mut path, shape, 0.01);
         Self::from_path(path)
@@ -201,6 +211,160 @@ impl VSobject {
         self.transform = snap.transform;
         self.point_ratio = snap.point_ratio;
     }
+
+    /// 🔀 Linearly blend two snapshots into the live VSobject state.
+    pub fn interpolate_snapshots(&mut self, from: &VSobjectSnapshot, to: &VSobjectSnapshot, t: f64) {
+        let t = t.clamp(0.0, 1.0);
+        self.opacity = lerp_f64(from.opacity, to.opacity, t);
+        self.transform = lerp_affine(from.transform, to.transform, t);
+        self.point_ratio = lerp_f64(from.point_ratio, to.point_ratio, t);
+        self.style = if t < 0.5 { from.style.clone() } else { to.style.clone() };
+        self.paths = interpolate_path_sets(&from.paths, &to.paths, t);
+    }
+
+    /// 🎯 Blend from saved state toward the generated target.
+    pub fn interpolate_saved_to_target(&mut self, t: f64) {
+        if self.saved.is_none() {
+            self.save_state();
+        }
+        if !self.has_target() {
+            self.generate_target();
+        }
+        let from = self.saved.clone();
+        let to = self.target.clone();
+        if let (Some(from), Some(to)) = (from, to) {
+            self.interpolate_snapshots(&from, &to, t);
+        }
+    }
+}
+
+fn lerp_f64(a: f64, b: f64, t: f64) -> f64 {
+    a + (b - a) * t.clamp(0.0, 1.0)
+}
+
+/// ✂️ Trim a path to a partial reveal ratio in [0,1].
+pub fn trim_path_at_ratio(path: &BezPath, ratio: f64) -> BezPath {
+    let ratio = ratio.clamp(0.0, 1.0);
+    if ratio >= 1.0 {
+        return path.clone();
+    }
+    if ratio <= 0.0 {
+        return BezPath::new();
+    }
+    let kurbo = path.to_kurbo();
+    let segments: Vec<PathSeg> = kurbo.path_segments(0.25).collect();
+    let total: f64 = segments.iter().map(|s| s.arclen(0.25)).sum();
+    if total <= 1e-12 {
+        return path.clone();
+    }
+    let mut remaining = total * ratio;
+    let mut out_k = kurbo::BezPath::new();
+    for seg in segments {
+        let len = seg.arclen(0.25);
+        if remaining >= len - 1e-9 {
+            seg.write_to(&mut out_k);
+            remaining -= len;
+        } else {
+            let frac = (remaining / len).clamp(0.0, 1.0);
+            seg.subsegment(0.0, frac).write_to(&mut out_k);
+            break;
+        }
+    }
+    bezpath_from_kurbo(out_k)
+}
+
+fn bezpath_from_kurbo(k: kurbo::BezPath) -> BezPath {
+    let mut out = BezPath::new();
+    for el in k.elements() {
+        out.push(PathEl::from(*el));
+    }
+    out
+}
+
+fn interpolate_path_sets(from: &[BezPath], to: &[BezPath], t: f64) -> Vec<BezPath> {
+    if from.is_empty() {
+        return to.to_vec();
+    }
+    if to.is_empty() {
+        return from.to_vec();
+    }
+    let count = from.len().max(to.len());
+    (0..count)
+        .map(|i| {
+            let a = &from[i.min(from.len() - 1)];
+            let b = &to[i.min(to.len() - 1)];
+            interpolate_bezpaths(a, b, t)
+        })
+        .collect()
+}
+
+fn interpolate_bezpaths(from: &BezPath, to: &BezPath, t: f64) -> BezPath {
+    let fa = resample_points(&sample_path_points(from, 32), 32);
+    let tb = resample_points(&sample_path_points(to, 32), 32);
+    let mut out = BezPath::new();
+    for (i, (a, b)) in fa.iter().zip(tb.iter()).enumerate() {
+        let p = Point::new(lerp_f64(a.x(), b.x(), t), lerp_f64(a.y(), b.y(), t));
+        if i == 0 {
+            out.move_to(p);
+        } else {
+            out.line_to(p);
+        }
+    }
+    out
+}
+
+fn sample_path_points(path: &BezPath, samples: usize) -> Vec<Point> {
+    let kurbo = path.to_kurbo();
+    let segments: Vec<PathSeg> = kurbo.path_segments(0.25).collect();
+    let total: f64 = segments.iter().map(|s| s.arclen(0.25)).sum();
+    if total <= 1e-12 {
+        return Vec::new();
+    }
+    let mut pts = Vec::with_capacity(samples);
+    for i in 0..samples {
+        let target = total * i as f64 / (samples - 1).max(1) as f64;
+        let mut acc = 0.0;
+        for (idx, seg) in segments.iter().enumerate() {
+            let len = seg.arclen(0.25);
+            if acc + len >= target || idx + 1 == segments.len() {
+                let local = ((target - acc) / len.max(1e-12)).clamp(0.0, 1.0);
+                let p = seg.eval(local);
+                pts.push(Point::new(p.x, p.y));
+                break;
+            }
+            acc += len;
+        }
+    }
+    pts
+}
+
+fn resample_points(pts: &[Point], count: usize) -> Vec<Point> {
+    if pts.is_empty() {
+        return vec![Point::ZERO; count];
+    }
+    if count <= 1 {
+        return vec![pts[0]];
+    }
+    (0..count)
+        .map(|i| {
+            let idx = i * (pts.len() - 1) / (count - 1);
+            pts[idx]
+        })
+        .collect()
+}
+
+fn lerp_affine(a: Affine, b: Affine, t: f64) -> Affine {
+    let ta = a.to_kurbo().as_coeffs();
+    let tb = b.to_kurbo().as_coeffs();
+    let t = t.clamp(0.0, 1.0);
+    Affine::new([
+        lerp_f64(ta[0], tb[0], t),
+        lerp_f64(ta[1], tb[1], t),
+        lerp_f64(ta[2], tb[2], t),
+        lerp_f64(ta[3], tb[3], t),
+        lerp_f64(ta[4], tb[4], t),
+        lerp_f64(ta[5], tb[5], t),
+    ])
 }
 
 impl Default for VSobject {
@@ -216,8 +380,8 @@ impl Sobject for VSobject {
     fn name(&self) -> &str {
         &self.name
     }
-    fn set_name(&mut self, name: impl Into<String>) {
-        self.name = name.into();
+    fn set_name(&mut self, name: String) {
+        self.name = name;
     }
     fn style(&self) -> &Style {
         &self.style
@@ -266,18 +430,15 @@ impl Sobject for VSobject {
         self.paths
             .iter()
             .map(|p| {
-                let mut k = p.to_kurbo();
-                k.apply_affine(t);
-                BezPath(k)
+                let trimmed = trim_path_at_ratio(p, self.point_ratio);
+                transform_bezpath(&trimmed, t)
             })
             .collect()
     }
     fn children(&self) -> Vec<&dyn Sobject> {
         Vec::new()
     }
-    fn children_mut(&mut self) -> Vec<&mut dyn Sobject> {
-        Vec::new()
-    }
+    fn visit_children_mut(&mut self, _f: &mut dyn FnMut(&mut dyn Sobject)) {}
     fn add_child(&mut self, _child: Box<dyn Sobject>) {}
     fn updaters(&self) -> &[Updater] {
         &self.updaters
@@ -313,10 +474,18 @@ impl Sobject for VSobject {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
     }
+    fn z_order(&self) -> i64 {
+        self.z_order
+    }
+    fn set_z_order(&mut self, z: i64) {
+        self.z_order = z;
+    }
+    fn point_ratio(&self) -> f64 {
+        self.point_ratio
+    }
 }
 
 /// 📦 Group of heterogeneous Sobjects.
-#[derive(Debug)]
 pub struct Group {
     pub id: u64,
     pub name: String,
@@ -325,6 +494,7 @@ pub struct Group {
     pub opacity: f64,
     pub parent_opacity: f64,
     pub transform: Affine,
+    pub z_order: i64,
     pub saved: Option<GroupSnapshot>,
     pub target: Option<GroupSnapshot>,
     pub updaters: Vec<Updater>,
@@ -346,6 +516,7 @@ impl Group {
             opacity: 1.0,
             parent_opacity: 1.0,
             transform: Affine::IDENTITY,
+            z_order: 0,
             saved: None,
             target: None,
             updaters: Vec::new(),
@@ -374,8 +545,8 @@ impl Sobject for Group {
     fn name(&self) -> &str {
         &self.name
     }
-    fn set_name(&mut self, name: impl Into<String>) {
-        self.name = name.into();
+    fn set_name(&mut self, name: String) {
+        self.name = name;
     }
     fn style(&self) -> &Style {
         &self.style
@@ -425,8 +596,10 @@ impl Sobject for Group {
     fn children(&self) -> Vec<&dyn Sobject> {
         self.children.iter().map(|c| c.as_ref()).collect()
     }
-    fn children_mut(&mut self) -> Vec<&mut dyn Sobject> {
-        self.children.iter_mut().map(|c| c.as_mut()).collect()
+    fn visit_children_mut(&mut self, f: &mut dyn FnMut(&mut dyn Sobject)) {
+        for child in &mut self.children {
+            f(child.as_mut());
+        }
     }
     fn add_child(&mut self, child: Box<dyn Sobject>) {
         self.children.push(child);
@@ -496,6 +669,12 @@ impl Sobject for Group {
     }
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
+    }
+    fn z_order(&self) -> i64 {
+        self.z_order
+    }
+    fn set_z_order(&mut self, z: i64) {
+        self.z_order = z;
     }
 }
 
@@ -589,6 +768,16 @@ pub fn center_of_points(points: &[Point]) -> Point {
     }
 }
 
+fn transform_bezpath(path: &BezPath, affine: kurbo::Affine) -> BezPath {
+    let mut k = path.to_kurbo();
+    k.apply_affine(affine);
+    let mut out = BezPath::new();
+    for el in k.elements() {
+        out.push((*el).into());
+    }
+    out
+}
+
 trait PathElPoint {
     fn as_ref_point(&self) -> Option<Point>;
 }
@@ -620,7 +809,7 @@ mod tests {
 
     #[test]
     fn vobject_has_finite_bounds() {
-        let dot = VSobject::from_shape(Circle::new(Point::new(0.0, 0.0), 1.0));
+        let dot = VSobject::from_shape(&Circle::new(Point::new(0.0, 0.0), 1.0));
         let b = dot.bounds();
         assert!(b.max.x() > b.min.x());
     }

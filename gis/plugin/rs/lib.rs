@@ -1,17 +1,424 @@
 //! 🌐 GIS plugin — 2D map app in a hot-swappable WASM component.
 
+//#region 🔖Domain
+/// 🗺️ GIS's own domain/document model (positions/routes/regions documents, undoable ops) kept
+/// app-owned while `MapHost`/`TerrainSessionCore` (generic map/terrain-hosting mechanism) live in
+/// `framework_surface_tiled_map`/`framework_surface_terrain`.
+pub(crate) mod domain {
+    // #region 🔖DocumentVcs
+    use vcs::{
+        collection_diff_from_op, create_document_vcs_envelope, invert_collection_op, CollectionDiff, CollectionOp,
+        DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable,
+    };
+    use serde::{Deserialize, Serialize};
+    
+    pub const GIS_MAP_SCHEMA: &str = "gis.map";
+    
+    //#region 🔖Feature
+    /// 🗺️ One id-keyed spatial feature (a position pin, route polyline, or region ring) carried as its full
+    /// opaque descriptor payload — id-keyed so two authors editing different features converge granularly.
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct MapFeature {
+        pub id: String,
+        pub data: serde_json::Value,
+    }
+    
+    impl Identified<String> for MapFeature {
+        fn id(&self) -> &String {
+            &self.id
+        }
+    }
+    
+    /// 🩹 Whole-payload replacement patch (features are opaque JSON); inverts to the prior payload.
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct MapFeaturePatch {
+        pub data: Option<serde_json::Value>,
+    }
+    
+    impl Patchable<MapFeaturePatch> for MapFeature {
+        fn apply_patch(&mut self, patch: &MapFeaturePatch) -> MapFeaturePatch {
+            let inverse = MapFeaturePatch { data: patch.data.as_ref().map(|_| self.data.clone()) };
+            if let Some(data) = &patch.data {
+                self.data = data.clone();
+            }
+            inverse
+        }
+    }
+    
+    fn apply_map_collection_diff(items: &mut Vec<MapFeature>, diff: &CollectionDiff<String, MapFeaturePatch, MapFeature>) {
+        for id in &diff.removed {
+            items.retain(|item| &item.id != id);
+        }
+        for patch in &diff.modified {
+            if let Some(item) = items.iter_mut().find(|item| item.id == patch.id) {
+                item.apply_patch(&patch.patch);
+            }
+        }
+        for added in &diff.added {
+            items.push(added.clone());
+        }
+    }
+    
+    fn absorb_map_collection_diff(
+        target: &mut Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>,
+        incoming: Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>,
+    ) {
+        if let Some(next) = incoming {
+            match target {
+                Some(existing) => {
+                    existing.removed.extend(next.removed);
+                    existing.modified.extend(next.modified);
+                    existing.added.extend(next.added);
+                }
+                None => *target = Some(next),
+            }
+        }
+    }
+    //#endregion 🔖Feature
+    
+    /// 🗺️ The editable map document: three id-keyed feature collections. All view/config state (camera,
+    /// render mode, vector style, LOD, selection, layer visibility, stroke weights) is plugin runtime, not
+    /// document state, so panning and styling never enter undo history.
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct GisMapDocument {
+        #[serde(default)]
+        pub positions: Vec<MapFeature>,
+        #[serde(default)]
+        pub routes: Vec<MapFeature>,
+        #[serde(default)]
+        pub regions: Vec<MapFeature>,
+    }
+    
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct GisMapDiff {
+        pub document: Option<GisMapDocument>,
+        pub positions: Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>,
+        pub routes: Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>,
+        pub regions: Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>,
+    }
+    
+    impl OperationDiff<GisMapDocument> for GisMapDiff {
+        fn apply(&self, projection: &GisMapDocument) -> GisMapDocument {
+            if let Some(document) = &self.document {
+                return document.clone();
+            }
+            let mut next = projection.clone();
+            if let Some(diff) = &self.positions {
+                apply_map_collection_diff(&mut next.positions, diff);
+            }
+            if let Some(diff) = &self.routes {
+                apply_map_collection_diff(&mut next.routes, diff);
+            }
+            if let Some(diff) = &self.regions {
+                apply_map_collection_diff(&mut next.regions, diff);
+            }
+            next
+        }
+    
+        fn absorb(&mut self, other: Self) {
+            if other.document.is_some() {
+                *self = GisMapDiff { document: other.document, ..Default::default() };
+                return;
+            }
+            absorb_map_collection_diff(&mut self.positions, other.positions);
+            absorb_map_collection_diff(&mut self.routes, other.routes);
+            absorb_map_collection_diff(&mut self.regions, other.regions);
+        }
+    }
+    
+    /// 🗺️ Typed, invertible map operation. `Positions`/`Routes`/`Regions` are id-keyed collection ops for
+    /// granular convergence; `SetDocument` replaces the whole map (example import / reset).
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[serde(tag = "op", rename_all = "camelCase")]
+    pub enum GisMapOp {
+        Positions(CollectionOp<String, MapFeature, MapFeaturePatch>),
+        Routes(CollectionOp<String, MapFeature, MapFeaturePatch>),
+        Regions(CollectionOp<String, MapFeature, MapFeaturePatch>),
+        SetDocument { document: GisMapDocument },
+    }
+    
+    impl Operation<GisMapDocument> for GisMapOp {
+        type Diff = GisMapDiff;
+    
+        fn diff(&self, projection: &GisMapDocument) -> GisMapDiff {
+            match self {
+                GisMapOp::Positions(op) => GisMapDiff { positions: Some(collection_diff_from_op(&projection.positions, op)), ..Default::default() },
+                GisMapOp::Routes(op) => GisMapDiff { routes: Some(collection_diff_from_op(&projection.routes, op)), ..Default::default() },
+                GisMapOp::Regions(op) => GisMapDiff { regions: Some(collection_diff_from_op(&projection.regions, op)), ..Default::default() },
+                GisMapOp::SetDocument { document } => GisMapDiff { document: Some(document.clone()), ..Default::default() },
+            }
+        }
+    
+        fn backwards(&self, projection: &GisMapDocument) -> Vec<Self> {
+            match self {
+                GisMapOp::Positions(op) => vec![GisMapOp::Positions(invert_collection_op(&projection.positions, op))],
+                GisMapOp::Routes(op) => vec![GisMapOp::Routes(invert_collection_op(&projection.routes, op))],
+                GisMapOp::Regions(op) => vec![GisMapOp::Regions(invert_collection_op(&projection.regions, op))],
+                GisMapOp::SetDocument { .. } => vec![GisMapOp::SetDocument { document: projection.clone() }],
+            }
+        }
+    }
+    
+    pub type GisMapEnvelope = DocumentVcsEnvelope<GisMapDocument, GisMapOp>;
+    pub type GisMapStore = DocumentVcsStore<GisMapDocument, GisMapOp>;
+    
+    pub fn empty_gis_map_projection() -> GisMapDocument {
+        GisMapDocument::default()
+    }
+    
+    /// 📥 Parses a `{ positions, routes, regions }` map-descriptor JSON into a `GisMapDocument` — each
+    /// array entry becomes a `MapFeature` keyed by its `id`, keeping the full object as the payload.
+    pub fn gis_map_document_from_descriptor_json(json: &str) -> GisMapDocument {
+        let value: serde_json::Value = serde_json::from_str(json).unwrap_or_else(|_| serde_json::json!({}));
+        let features = |key: &str| -> Vec<MapFeature> {
+            value
+                .get(key)
+                .and_then(|entry| entry.as_array())
+                .map(|entries| {
+                    entries
+                        .iter()
+                        .filter_map(|item| {
+                            let id = item.get("id").and_then(|value| value.as_str())?.to_string();
+                            Some(MapFeature { id, data: item.clone() })
+                        })
+                        .collect()
+                })
+                .unwrap_or_default()
+        };
+        GisMapDocument { positions: features("positions"), routes: features("routes"), regions: features("regions") }
+    }
+    
+    /// 📤 Rebuilds the `{ positions, routes, regions }` map-descriptor JSON the `MapHost`/renderer consume,
+    /// emitting each feature's opaque payload.
+    pub fn gis_map_descriptor_json(document: &GisMapDocument) -> String {
+        let payloads = |features: &[MapFeature]| -> Vec<serde_json::Value> { features.iter().map(|feature| feature.data.clone()).collect() };
+        serde_json::json!({
+            "positions": payloads(&document.positions),
+            "routes": payloads(&document.routes),
+            "regions": payloads(&document.regions),
+        })
+        .to_string()
+    }
+    
+    //#region 🔖WasmBridge
+    #[cfg(target_arch = "wasm32")]
+    mod wasm_bridge {
+        use super::*;
+        use std::cell::RefCell;
+        use wasm_bindgen::prelude::*;
+    
+        #[wasm_bindgen]
+        pub struct GisMapDocumentVcs {
+            store: RefCell<GisMapStore>,
+        }
+    
+        #[wasm_bindgen]
+        impl GisMapDocumentVcs {
+            #[wasm_bindgen(constructor)]
+            pub fn new(envelope_json: Option<String>) -> Result<GisMapDocumentVcs, JsValue> {
+                let store = match envelope_json {
+                    Some(json) => {
+                        let envelope: GisMapEnvelope =
+                            serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                        GisMapStore::new(envelope)
+                    }
+                    None => GisMapStore::new(create_document_vcs_envelope(
+                        GIS_MAP_SCHEMA,
+                        "gis",
+                        empty_gis_map_projection(),
+                        None,
+                    )),
+                };
+                Ok(Self { store: RefCell::new(store) })
+            }
+    
+            #[wasm_bindgen(js_name = dispatchJson)]
+            pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
+                self.store
+                    .borrow_mut()
+                    .dispatch_json(command_json)
+                    .map_err(|e| JsValue::from_str(&e.to_string()))
+            }
+    
+            #[wasm_bindgen(js_name = projectionJson)]
+            pub fn projection_json(&self) -> Result<String, JsValue> {
+                self.store
+                    .borrow()
+                    .projection_json()
+                    .map_err(|e| JsValue::from_str(&e.to_string()))
+            }
+    
+            #[wasm_bindgen(js_name = envelopeJson)]
+            pub fn envelope_json(&self) -> Result<String, JsValue> {
+                self.store
+                    .borrow()
+                    .envelope_json()
+                    .map_err(|e| JsValue::from_str(&e.to_string()))
+            }
+    
+            #[wasm_bindgen(js_name = generation)]
+            pub fn generation(&self) -> u32 {
+                self.store.borrow().generation() as u32
+            }
+        }
+    }
+    //#endregion 🔖WasmBridge
+    
+    #[cfg(test)]
+    mod gis_map_vcs_tests {
+        use super::*;
+    
+        fn round_trip(document: &GisMapDocument, op: &GisMapOp) -> GisMapDocument {
+            let forward = vcs::apply_operation(document, op);
+            let backwards = op.backwards(document);
+            let mut restored = forward.clone();
+            for back in &backwards {
+                restored = vcs::apply_operation(&restored, back);
+            }
+            assert_eq!(&restored, document, "backwards() must exactly restore the pre-op document");
+            forward
+        }
+    
+        fn feature(id: &str) -> MapFeature {
+            MapFeature { id: id.into(), data: serde_json::json!({ "id": id, "lon": 1.0, "lat": 2.0 }) }
+        }
+    
+        #[test]
+        fn positions_add_patch_remove_round_trip() {
+            let document = GisMapDocument::default();
+            let added = round_trip(&document, &GisMapOp::Positions(CollectionOp::Add { index: 0, item: feature("p1") }));
+            assert_eq!(added.positions.len(), 1);
+            let patched = round_trip(
+                &added,
+                &GisMapOp::Positions(CollectionOp::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(serde_json::json!({ "id": "p1", "label": "Home" })) } }),
+            );
+            assert_eq!(patched.positions[0].data.get("label").and_then(|value| value.as_str()), Some("Home"));
+            let removed = round_trip(&patched, &GisMapOp::Positions(CollectionOp::Remove { id: "p1".into() }));
+            assert!(removed.positions.is_empty());
+        }
+    
+        #[test]
+        fn descriptor_round_trips_through_document() {
+            let json = r#"{"positions":[{"id":"a","lon":1.0,"lat":2.0}],"routes":[{"id":"r","points":[]}],"regions":[]}"#;
+            let document = gis_map_document_from_descriptor_json(json);
+            assert_eq!(document.positions.len(), 1);
+            assert_eq!(document.routes.len(), 1);
+            let rebuilt = gis_map_document_from_descriptor_json(&gis_map_descriptor_json(&document));
+            assert_eq!(rebuilt, document);
+        }
+    
+        #[test]
+        fn gis_map_document_vcs_replays_ops() {
+            let mut store = GisMapStore::new(create_document_vcs_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_projection(), None));
+            store
+                .dispatch(DocumentVcsCommand::Apply {
+                    operations: vec![GisMapOp::Positions(CollectionOp::Add { index: 0, item: feature("p1") })],
+                    description: None,
+                })
+                .expect("apply");
+            assert_eq!(store.projection().expect("projection").positions.len(), 1);
+        }
+    }
+    // #endregion 🔖DocumentVcs
+    
+    // #region 🔖OpenUrl
+    /** @emoji 🌐 Opens a URL in the system browser when available. */
+    pub fn open_url(url: &str) -> bool {
+        if url.trim().is_empty() {
+            return false;
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            use wasm_bindgen::JsValue;
+            return web_sys::window()
+                .and_then(|window| window.open_with_url(url).ok())
+                .flatten()
+                .is_some();
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let _ = url;
+            eprintln!("[DEBUG] open_url native fallback: {url}");
+            false
+        }
+    }
+    // #endregion 🔖OpenUrl
+
+    //#region DocumentVcs
+    /// 🗄️ VCS-backed, undoable document for GIS 3D — deliberately minimal for the first pass: the
+    /// only editable/undoable property is vertical exaggeration (a genuinely useful terrain control),
+    /// mirroring `domain::GisMapDocument`/`domain::GisMapOp` (whose one editable property is `layers`).
+    pub const GIS_3D_TERRAIN_SCHEMA: &str = "gis.terrain";
+    
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct Gis3dTerrainDocument {
+        pub exaggeration: f64,
+    }
+    
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct Gis3dTerrainDiff {
+        pub exaggeration: Option<f64>,
+    }
+    
+    impl OperationDiff<Gis3dTerrainDocument> for Gis3dTerrainDiff {
+        fn apply(&self, projection: &Gis3dTerrainDocument) -> Gis3dTerrainDocument {
+            Gis3dTerrainDocument { exaggeration: self.exaggeration.unwrap_or(projection.exaggeration) }
+        }
+    
+        fn absorb(&mut self, other: Self) {
+            if other.exaggeration.is_some() {
+                self.exaggeration = other.exaggeration;
+            }
+        }
+    }
+    
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[serde(tag = "op", rename_all = "camelCase")]
+    pub enum Gis3dTerrainOp {
+        SetExaggeration { exaggeration: f64 },
+    }
+    
+    impl Operation<Gis3dTerrainDocument> for Gis3dTerrainOp {
+        type Diff = Gis3dTerrainDiff;
+    
+        fn diff(&self, _projection: &Gis3dTerrainDocument) -> Gis3dTerrainDiff {
+            match self {
+                Gis3dTerrainOp::SetExaggeration { exaggeration } => Gis3dTerrainDiff { exaggeration: Some(*exaggeration) },
+            }
+        }
+    
+        fn backwards(&self, projection: &Gis3dTerrainDocument) -> Vec<Self> {
+            match self {
+                Gis3dTerrainOp::SetExaggeration { .. } => vec![Gis3dTerrainOp::SetExaggeration { exaggeration: projection.exaggeration }],
+            }
+        }
+    }
+    
+    pub type Gis3dTerrainEnvelope = DocumentVcsEnvelope<Gis3dTerrainDocument, Gis3dTerrainOp>;
+    pub type Gis3dTerrainStore = DocumentVcsStore<Gis3dTerrainDocument, Gis3dTerrainOp>;
+    
+    pub fn empty_gis3d_terrain_projection() -> Gis3dTerrainDocument {
+        Gis3dTerrainDocument { exaggeration: 1.0 }
+    }
+    //#endregion DocumentVcs
+}
+//#endregion 🔖Domain
+
+
 pub mod app_2d {
     //! 🗺️ GIS 2D plugin — GIS map play app bundled as a hot-swappable WASM component.
 
-    use gis_2d::{
-        clamp_map_layer_weight, empty_gis_map_projection, gis_map_descriptor_json, gis_map_document_from_descriptor_json,
-        gis_map_layer_weight_slider_ids_json, gis_map_lod_scale_json,
-        open_url, GisMapDocument, GisMapOp, MapFeature, MapFeaturePatch, MapHost, GIS_MAP_LOD_MODE_AUTOMATIC,
-        GIS_MAP_SCHEMA,
-    };
+    use crate::domain::{empty_gis_map_projection, gis_map_descriptor_json, gis_map_document_from_descriptor_json, open_url, GisMapDocument, GisMapOp, MapFeature, MapFeaturePatch, GIS_MAP_SCHEMA};
+    use framework_surface_tiled_map::{clamp_map_layer_weight, gis_map_layer_weight_slider_ids_json, gis_map_lod_scale_json, MapHost, GIS_MAP_LOD_MODE_AUTOMATIC};
     use semio_framework_plugin::{SurfaceKind, PanelGroup,
         build_tiled_map_scene, create_default_layout, MeasureSelectItem, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle,
-        ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, ActionDescriptor, DocumentApp, DocumentView, DwgDrawing, DwgGeometry, TiledMapScene,
+        ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, ActionDescriptor, DocumentApp, DocumentView, DwgDrawing, DwgGeometry, OsMediaCapability, ResourceKindSpec, TiledMapScene,
         UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiSliderNode,
         UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowMeasure,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -807,7 +1214,7 @@ pub mod app_2d {
 
     //#region 🔖Render
     fn apply_gis_map_tile_base_url(scene: &mut TiledMapScene) {
-        let Ok(base) = std::env::var("SEMIO_GIS_MAP_TILE_BASE_URL") else {
+        let Ok(base) = std::env::var("SEMIO_ASSET_BASE_URL") else {
             return;
         };
         let base = base.trim_end_matches('/');
@@ -1141,6 +1548,14 @@ pub mod app_2d {
     pub fn create_gis2d_app() -> App {
         App::from_builder(
             App::builder(GIS2D_PLAY_APP_ID, "GIS 2D").document(["semio", "gis", "2d"])
+                .resource_kind(ResourceKindSpec {
+                    id: "2d.map".into(),
+                    name: "2D Map".into(),
+                    source_format: "gis.map".into(),
+                    component_kind: "gismap".into(),
+                    dimension: "2d".into(),
+                    media_capability: OsMediaCapability::MeshOnly,
+                })
                 .icon_id("gis2d")
                 .mode("edit", "Edit")
                 .default_mode_id("edit")
@@ -1323,12 +1738,12 @@ pub mod app_2d {
 
         #[test]
         fn render_canvas_uses_absolute_tile_urls_when_env_set() {
-            unsafe { std::env::set_var("SEMIO_GIS_MAP_TILE_BASE_URL", "http://127.0.0.1:6141") };
+            unsafe { std::env::set_var("SEMIO_ASSET_BASE_URL", "http://127.0.0.1:6141") };
             let mut app = new_app();
             let json = render(&mut app, GIS2D_PLAY_BODY_COMPOSITE, &ViewState::default());
             assert!(json.contains("http://127.0.0.1:6141/osm/{z}/{x}/{y}.png"));
             assert!(json.contains("http://127.0.0.1:6141/vt/{z}/{x}/{y}.pbf"));
-            unsafe { std::env::remove_var("SEMIO_GIS_MAP_TILE_BASE_URL") };
+            unsafe { std::env::remove_var("SEMIO_ASSET_BASE_URL") };
         }
 
         #[test]
@@ -1478,10 +1893,8 @@ pub mod app_3d {
     //! deliberately read-mostly for this first pass — the only editable/undoable property is
     //! vertical exaggeration.
 
-    use gis_3d::{
-        build_terrain_scene_json, projection, Gis3dTerrainDocument, Gis3dTerrainOp,
-        TerrainDescriptorJson, TerrainProjectOrigin, GIS_3D_TERRAIN_SCHEMA,
-    };
+    use crate::domain::{Gis3dTerrainDocument, Gis3dTerrainOp, GIS_3D_TERRAIN_SCHEMA};
+    use framework_surface_terrain::{build_terrain_scene_json, projection, TerrainDescriptorJson, TerrainProjectOrigin};
     use semio_framework_plugin::{
         build_world_3d_scene, create_default_layout, ui_text, world3d_default_camera, world3d_scene_extended, world3d_selection_json,
         ActionEmit, App, DocumentApp, DocumentView, SurfaceKind, UiNode, ViewState, WindowMeasure,

@@ -1,12 +1,13 @@
 //! 🛒 Sourcing plugin — curate app: handpick and curate 3D object kinds out of a modular catalogue.
 
 use semio_framework_plugin::{
-    build_table_scene, build_world_3d_scene, table_row_json, ui_stack_vertical, ui_text,
-    world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption,
-    ActionDescriptor, ActionEmit, App, Contribution, DocumentApp, DocumentView, SurfaceKind, TableCell,
-    TableScene, UiInputNode, UiNode, UiNumberStepperNode, UiSelectItem, UiSelectNode, UiToggleNode,
-    UiTreeItemAction, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
-    WindowLayoutStackNode, WindowLayoutWindowNode, WorldSunConfig, ActionDefinition, ActionKind,
+    app_labels, build_table_scene, build_world_3d_scene, is_de_locale, localized_label_map, resolve_labels,
+    table_row_json, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionDefinition, ActionEmit, ActionKind, App,
+    AppLabelsOverlay, AppLabelsOverlayExt, Contribution, DocumentApp, DocumentView, OsMediaCapability,
+    ResourceKindSpec, SurfaceKind, TableCell, TableScene, UiInputNode, UiNode, UiNumberStepperNode,
+    UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemAction, ViewState, WindowLayout, WindowLayoutAxisNode,
+    WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WorldSunConfig,
 };
 use semio_framework_core::mesh_from_indexed;
 use serde::{Deserialize, Serialize};
@@ -39,28 +40,6 @@ const EMPTY_EXAMPLE_ID: &str = "empty-curation";
 const DEMO_STOCK_JSON: &str = include_str!("../../curate/example/demo-stock.curate.json");
 const EMPTY_CURATION_JSON: &str = include_str!("../../curate/example/empty-curation.curate.json");
 //#endregion 🔖Constants
-
-//#region 🔖Document
-fn default_document() -> CurateDocument {
-    serde_json::from_str(DEMO_STOCK_JSON).unwrap_or_default()
-}
-
-fn empty_document() -> CurateDocument {
-    serde_json::from_str(EMPTY_CURATION_JSON).unwrap_or_default()
-}
-
-fn sourcing_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: SOURCING_CONTROLLER_ID.into(), action: action.into(), args }
-}
-
-fn selected_ids(document: &CurateDocument) -> Vec<String> {
-    document.runtime.selected_object_id.clone().into_iter().collect()
-}
-
-fn selection_json_for(document: &CurateDocument) -> String {
-    json!({ "selectedIds": selected_ids(document) }).to_string()
-}
-//#endregion 🔖Document
 
 //#region 🔖Contributions
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -120,108 +99,50 @@ fn available_modules(view_state: &ViewState) -> Vec<ModuleCatalogue> {
 }
 //#endregion 🔖Contributions
 
-//#region 🔖Terminology
-/// 🗣️ Complete UI label set for the curate app; one field per label makes every locale combination compile-checked.
-struct SourcingLabels {
-    window_pool: &'static str,
-    window_curated: &'static str,
-    window_preview: &'static str,
-    window_grid: &'static str,
-    mode_curate: &'static str,
-    search_placeholder: &'static str,
-    all_typologies: &'static str,
-    col_name: &'static str,
-    col_module: &'static str,
-    col_typology: &'static str,
-    col_availability: &'static str,
-    col_curated: &'static str,
-    col_count: &'static str,
-    remove: &'static str,
-    no_selection: &'static str,
+//#region 🔖Document
+fn default_document() -> CurateDocument {
+    serde_json::from_str(DEMO_STOCK_JSON).unwrap_or_default()
 }
 
-const SOURCING_LABELS_NATIVE_EN: SourcingLabels = SourcingLabels {
-    window_pool: "Pool",
-    window_curated: "Curated",
-    window_preview: "Preview",
-    window_grid: "Grid",
-    mode_curate: "Curate",
-    search_placeholder: "Search…",
-    all_typologies: "All Typologies",
-    col_name: "Name",
-    col_module: "Module",
-    col_typology: "Typology",
-    col_availability: "Availability",
-    col_curated: "Curated",
-    col_count: "Count",
-    remove: "Remove",
-    no_selection: "No selection",
-};
-const SOURCING_LABELS_NATIVE_DE: SourcingLabels = SourcingLabels {
-    window_pool: "Pool",
-    window_curated: "Kuratiert",
-    window_preview: "Vorschau",
-    window_grid: "Raster",
-    mode_curate: "Kuratieren",
-    search_placeholder: "Suchen…",
-    all_typologies: "Alle Typologien",
-    col_name: "Name",
-    col_module: "Modul",
-    col_typology: "Typologie",
-    col_availability: "Verfuegbarkeit",
-    col_curated: "Kuratiert",
-    col_count: "Anzahl",
-    remove: "Entfernen",
-    no_selection: "Keine Auswahl",
-};
+fn empty_document() -> CurateDocument {
+    serde_json::from_str(EMPTY_CURATION_JSON).unwrap_or_default()
+}
 
-/// 🗣️ Resolves the active label set from the shell-provided locale; this app has no reuse-terminology mapping.
-fn sourcing_labels(view_state: &ViewState) -> &'static SourcingLabels {
-    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-    if is_de {
-        &SOURCING_LABELS_NATIVE_DE
-    } else {
-        &SOURCING_LABELS_NATIVE_EN
+fn sourcing_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: SOURCING_CONTROLLER_ID.into(), action: action.into(), args }
+}
+
+fn selected_ids(document: &CurateDocument) -> Vec<String> {
+    document.runtime.selected_object_id.clone().into_iter().collect()
+}
+
+fn selection_json_for(document: &CurateDocument) -> String {
+    json!({ "selectedIds": selected_ids(document) }).to_string()
+}
+//#endregion 🔖Document
+
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the curate app; one field per label makes every locale combination compile-checked.
+app_labels! {
+    struct SourcingLabels {
+        window_pool: &'static str = en: "Pool", de: "Pool";
+        window_curated: &'static str = en: "Curated", de: "Kuratiert";
+        window_preview: &'static str = en: "Preview", de: "Vorschau";
+        window_grid: &'static str = en: "Grid", de: "Raster";
+        mode_curate: &'static str = en: "Curate", de: "Kuratieren";
+        search_placeholder: &'static str = en: "Search…", de: "Suchen…";
+        all_typologies: &'static str = en: "All Typologies", de: "Alle Typologien";
+        col_name: &'static str = en: "Name", de: "Name";
+        col_module: &'static str = en: "Module", de: "Modul";
+        col_typology: &'static str = en: "Typology", de: "Typologie";
+        col_availability: &'static str = en: "Availability", de: "Verfuegbarkeit";
+        col_curated: &'static str = en: "Curated", de: "Kuratiert";
+        col_count: &'static str = en: "Count", de: "Anzahl";
+        remove: &'static str = en: "Remove", de: "Entfernen";
+        no_selection: &'static str = en: "No selection", de: "Keine Auswahl";
     }
 }
 //#endregion 🔖Terminology
-
-//#region 🔖Layout
-fn sourcing_window(window_kind_id: &str, title: &str) -> WindowLayoutWindowNode {
-    WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None }
-}
-
-fn sourcing_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {
-    WindowLayoutChild::Stack(WindowLayoutStackNode { kind: "stack".into(), size, active_window_kind_id: None, children: vec![sourcing_window(window_kind_id, title)] })
-}
-
-/// 🪟 Three-column layout: pool | curated over preview | grid — mirrors `cad_quad_layout`'s pattern.
-fn sourcing_three_column_layout() -> WindowLayout {
-    WindowLayout {
-        root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
-            kind: "row".into(),
-            size: None,
-            children: vec![
-                WindowLayoutChild::Axis(WindowLayoutAxisNode {
-                    kind: "column".into(),
-                    size: Some(0.34),
-                    children: vec![sourcing_stack(WINDOW_POOL, "Pool", None)],
-                }),
-                WindowLayoutChild::Axis(WindowLayoutAxisNode {
-                    kind: "column".into(),
-                    size: Some(0.33),
-                    children: vec![sourcing_stack(WINDOW_CURATED, "Curated", Some(0.55)), sourcing_stack(WINDOW_PREVIEW, "Preview", Some(0.45))],
-                }),
-                WindowLayoutChild::Axis(WindowLayoutAxisNode {
-                    kind: "column".into(),
-                    size: Some(0.33),
-                    children: vec![sourcing_stack(WINDOW_GRID, "Grid", None)],
-                }),
-            ],
-        }),
-    }
-}
-//#endregion 🔖Layout
 
 //#region 🔖Panels
 fn build_filter_bar(document: &CurateDocument, modules: &[ModuleCatalogue], labels: &SourcingLabels) -> UiNode {
@@ -440,87 +361,7 @@ fn render_grid(document: &CurateDocument) -> UiNode {
 }
 //#endregion 🔖World3d
 
-//#region 🔖CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/hidden-op declared in `create_sourcing_curate_app`'s
-/// static manifest — mirrors `puzzle3d_action_labels`.
-fn sourcing_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-        ("stockFromCatalogue", "Stock From Catalogue", "Bestand aus Katalog"),
-        ("setDocument", "Set Document", "Dokument festlegen"),
-        ("setFilterQuery", "Set Filter Query", "Filterabfrage festlegen"),
-        ("setFilterModule", "Set Filter Module", "Filtermodul festlegen"),
-        ("setFilterTypology", "Set Filter Typology", "Filtertypologie festlegen"),
-        ("setFilterMinAvailability", "Set Filter Min Availability", "Mindestverfuegbarkeit festlegen"),
-        ("sortTable", "Sort Table", "Tabelle sortieren"),
-        ("curateAdd", "Curate Add", "Kuratierung hinzufuegen"),
-        ("curateSetCount", "Curate Set Count", "Kuratierte Anzahl festlegen"),
-        ("curateRemove", "Curate Remove", "Kuratierung entfernen"),
-        ("dropOnPool", "Drop On Pool", "Auf Pool ablegen"),
-        ("dropOnCurated", "Drop On Curated", "Auf Kuratiert ablegen"),
-        ("selectRow", "Select Row", "Zeile auswaehlen"),
-        ("worldSelect", "World Select", "Welt auswaehlen"),
-    ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-}
-
-/// 🗣️ (utility id) -> localized toolbar-button label; `create_sourcing_curate_app` declares no `.utility(...)`
-/// entries, so this is empty — kept for shape-parity with `puzzle3d_utility_labels`.
-fn sourcing_utility_labels(_is_de: bool) -> std::collections::HashMap<String, String> {
-    std::collections::HashMap::new()
-}
-//#endregion 🔖CommandLabels
-
 //#region 🔖SourcingCurateApp
-pub fn create_sourcing_curate_app() -> App {
-    App::from_builder(
-        App::builder(SOURCING_CURATE_APP_ID, "Curate")
-            .document(["semio", "sourcing", "curate"])
-            .icon_id("shopping-cart")
-            .mode("curate", "Curate")
-            .default_mode_id("curate")
-            .window_kind(WINDOW_POOL, "Pool", BODY_POOL, SurfaceKind::Table)
-            .window_kind(WINDOW_CURATED, "Curated", BODY_CURATED, SurfaceKind::Table)
-            .window_kind(WINDOW_PREVIEW, "Preview", BODY_PREVIEW, SurfaceKind::World3d)
-            .window_kind(WINDOW_GRID, "Grid", BODY_GRID, SurfaceKind::World3d)
-            .default_layout(sourcing_three_column_layout())
-            // 🔧 Every curate edit — filters, sort, selection, curation counts — is persisted in the
-            // `CurateDocument` (filters/sort/runtime all live in the document), so each arm emits a
-            // whole-document `SetDocument` op and is declared as an Operation, never a View. The
-            // filter/sort/selection/table/DnD ids are internal (kept out of the command palette).
-            .operation("setActiveExample", "Set Active Example")
-            .operation("stockFromCatalogue", "Stock From Catalogue")
-            .action_with(hidden_op("setDocument", "Set Document"))
-            .action_with(hidden_op("setFilterQuery", "Set Filter Query"))
-            .action_with(hidden_op("setFilterModule", "Set Filter Module"))
-            .action_with(hidden_op("setFilterTypology", "Set Filter Typology"))
-            .action_with(hidden_op("setFilterMinAvailability", "Set Filter Min Availability"))
-            .action_with(hidden_op("sortTable", "Sort Table"))
-            .action_with(hidden_op("curateAdd", "Curate Add"))
-            .action_with(hidden_op("curateSetCount", "Curate Set Count"))
-            .action_with(hidden_op("curateRemove", "Curate Remove"))
-            .action_with(hidden_op("dropOnPool", "Drop On Pool"))
-            .action_with(hidden_op("dropOnCurated", "Drop On Curated"))
-            .action_with(hidden_op("selectRow", "Select Row"))
-            .action_with(hidden_op("worldSelect", "World Select"))
-            // 📝 Staged argument form for the panel-visible example switch.
-            .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", "Example", vec![
-                    ActionArgOption::new(DEMO_STOCK_EXAMPLE_ID, "Demo Stock"),
-                    ActionArgOption::new(EMPTY_EXAMPLE_ID, "Empty Curation"),
-                ]).default_value(DEMO_STOCK_EXAMPLE_ID),
-            ]),
-    )
-    .example(DEMO_STOCK_EXAMPLE_ID, "Demo Stock", DEMO_STOCK_JSON)
-    .example(EMPTY_EXAMPLE_ID, "Empty Curation", EMPTY_CURATION_JSON)
-}
-
-/// 🙈 An internal document operation kept out of the command palette — the filter/sort/selection/DnD
-/// arms that mutate the persisted `CurateDocument` but are only ever dispatched from window chrome.
-fn hidden_op(id: &str, label: &str) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, ActionKind::Operation) }
-}
-
 #[derive(Default)]
 pub struct SourcingCurateApp;
 
@@ -652,7 +493,7 @@ impl DocumentApp for SourcingCurateApp {
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, CurateDocument>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
-        let labels = sourcing_labels(view_state);
+        let labels = resolve_labels::<SourcingLabels>(view_state);
         match body_key {
             BODY_POOL => {
                 let modules = available_modules(view_state);
@@ -665,33 +506,152 @@ impl DocumentApp for SourcingCurateApp {
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
-        let labels = sourcing_labels(view_state);
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        semio_framework_plugin::AppLabelsOverlay {
-            window_kind_labels: std::collections::HashMap::from([
-                (WINDOW_POOL.to_string(), labels.window_pool.to_string()),
-                (WINDOW_CURATED.to_string(), labels.window_curated.to_string()),
-                (WINDOW_PREVIEW.to_string(), labels.window_preview.to_string()),
-                (WINDOW_GRID.to_string(), labels.window_grid.to_string()),
-            ]),
-            panel_tab_labels: std::collections::HashMap::new(),
-            mode_labels: std::collections::HashMap::from([("curate".to_string(), labels.mode_curate.to_string())]),
-            action_labels: sourcing_action_labels(is_de),
-            utility_labels: sourcing_utility_labels(is_de),
-            example_labels: std::collections::HashMap::from([
+    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
+        let labels = resolve_labels::<SourcingLabels>(view_state);
+        let is_de = is_de_locale(view_state);
+        AppLabelsOverlay::default()
+            .window_kind_label(WINDOW_POOL, labels.window_pool)
+            .window_kind_label(WINDOW_CURATED, labels.window_curated)
+            .window_kind_label(WINDOW_PREVIEW, labels.window_preview)
+            .window_kind_label(WINDOW_GRID, labels.window_grid)
+            .mode_label("curate", labels.mode_curate)
+            .action_labels(sourcing_action_labels(is_de))
+            .example_labels(std::collections::HashMap::from([
                 (DEMO_STOCK_EXAMPLE_ID.to_string(), (if is_de { "Beispielbestand" } else { "Demo Stock" }).to_string()),
                 (EMPTY_EXAMPLE_ID.to_string(), (if is_de { "Leere Kuratierung" } else { "Empty Curation" }).to_string()),
-            ]),
-            action_arg_labels: std::collections::HashMap::new(),
-            dialog_labels: std::collections::HashMap::new(),
-            introduction_labels: std::collections::HashMap::new(),
-        }
+            ]))
     }
 }
 //#endregion 🔖SourcingCurateApp
 
-//#region 🔖Bundle
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/hidden-op declared in `create_sourcing_curate_app`'s
+/// static manifest — mirrors `puzzle3d_action_labels`, built on the shared `localized_label_map`.
+fn sourcing_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    localized_label_map(
+        is_de,
+        &[
+            ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+            ("stockFromCatalogue", "Stock From Catalogue", "Bestand aus Katalog"),
+            ("setDocument", "Set Document", "Dokument festlegen"),
+            ("setFilterQuery", "Set Filter Query", "Filterabfrage festlegen"),
+            ("setFilterModule", "Set Filter Module", "Filtermodul festlegen"),
+            ("setFilterTypology", "Set Filter Typology", "Filtertypologie festlegen"),
+            ("setFilterMinAvailability", "Set Filter Min Availability", "Mindestverfuegbarkeit festlegen"),
+            ("sortTable", "Sort Table", "Tabelle sortieren"),
+            ("curateAdd", "Curate Add", "Kuratierung hinzufuegen"),
+            ("curateSetCount", "Curate Set Count", "Kuratierte Anzahl festlegen"),
+            ("curateRemove", "Curate Remove", "Kuratierung entfernen"),
+            ("dropOnPool", "Drop On Pool", "Auf Pool ablegen"),
+            ("dropOnCurated", "Drop On Curated", "Auf Kuratiert ablegen"),
+            ("selectRow", "Select Row", "Zeile auswaehlen"),
+            ("worldSelect", "World Select", "Welt auswaehlen"),
+        ],
+    )
+}
+//#endregion 🔖CommandLabels
+
+//#region 🔖Manifest
+fn sourcing_window(window_kind_id: &str, title: &str) -> WindowLayoutWindowNode {
+    WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None }
+}
+
+fn sourcing_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {
+    WindowLayoutChild::Stack(WindowLayoutStackNode { kind: "stack".into(), size, active_window_kind_id: None, children: vec![sourcing_window(window_kind_id, title)] })
+}
+
+/// 🪟 Three-column layout: pool | curated over preview | grid — mirrors `cad_quad_layout`'s pattern.
+fn sourcing_three_column_layout() -> WindowLayout {
+    WindowLayout {
+        root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
+            kind: "row".into(),
+            size: None,
+            children: vec![
+                WindowLayoutChild::Axis(WindowLayoutAxisNode {
+                    kind: "column".into(),
+                    size: Some(0.34),
+                    children: vec![sourcing_stack(WINDOW_POOL, "Pool", None)],
+                }),
+                WindowLayoutChild::Axis(WindowLayoutAxisNode {
+                    kind: "column".into(),
+                    size: Some(0.33),
+                    children: vec![sourcing_stack(WINDOW_CURATED, "Curated", Some(0.55)), sourcing_stack(WINDOW_PREVIEW, "Preview", Some(0.45))],
+                }),
+                WindowLayoutChild::Axis(WindowLayoutAxisNode {
+                    kind: "column".into(),
+                    size: Some(0.33),
+                    children: vec![sourcing_stack(WINDOW_GRID, "Grid", None)],
+                }),
+            ],
+        }),
+    }
+}
+
+/// 🙈 An internal document operation kept out of the command palette — the filter/sort/selection/DnD
+/// arms that mutate the persisted `CurateDocument` but are only ever dispatched from window chrome.
+fn hidden_op(id: &str, label: &str) -> ActionDefinition {
+    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, ActionKind::Operation) }
+}
+
+pub fn create_sourcing_curate_app() -> App {
+    App::from_builder(
+        App::builder(SOURCING_CURATE_APP_ID, "Curate")
+            .document(["semio", "sourcing", "curate"])
+            .resource_kind(ResourceKindSpec {
+                id: "catalogue.kinds".into(),
+                name: "Kind Catalogue".into(),
+                source_format: "catalogue.kinds".into(),
+                component_kind: "catalogue".into(),
+                dimension: "data".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+            })
+            .resource_kind(ResourceKindSpec {
+                id: "catalogue.sourcing".into(),
+                name: "Sourcing Curation".into(),
+                source_format: "sourcing.curate".into(),
+                component_kind: "catalogue".into(),
+                dimension: "data".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+            })
+            .icon_id("shopping-cart")
+            .mode("curate", "Curate")
+            .default_mode_id("curate")
+            .window_kind(WINDOW_POOL, "Pool", BODY_POOL, SurfaceKind::Table)
+            .window_kind(WINDOW_CURATED, "Curated", BODY_CURATED, SurfaceKind::Table)
+            .window_kind(WINDOW_PREVIEW, "Preview", BODY_PREVIEW, SurfaceKind::World3d)
+            .window_kind(WINDOW_GRID, "Grid", BODY_GRID, SurfaceKind::World3d)
+            .default_layout(sourcing_three_column_layout())
+            // 🔧 Every curate edit — filters, sort, selection, curation counts — is persisted in the
+            // `CurateDocument` (filters/sort/runtime all live in the document), so each arm emits a
+            // whole-document `SetDocument` op and is declared as an Operation, never a View. The
+            // filter/sort/selection/table/DnD ids are internal (kept out of the command palette).
+            .operation("setActiveExample", "Set Active Example")
+            .operation("stockFromCatalogue", "Stock From Catalogue")
+            .action_with(hidden_op("setDocument", "Set Document"))
+            .action_with(hidden_op("setFilterQuery", "Set Filter Query"))
+            .action_with(hidden_op("setFilterModule", "Set Filter Module"))
+            .action_with(hidden_op("setFilterTypology", "Set Filter Typology"))
+            .action_with(hidden_op("setFilterMinAvailability", "Set Filter Min Availability"))
+            .action_with(hidden_op("sortTable", "Sort Table"))
+            .action_with(hidden_op("curateAdd", "Curate Add"))
+            .action_with(hidden_op("curateSetCount", "Curate Set Count"))
+            .action_with(hidden_op("curateRemove", "Curate Remove"))
+            .action_with(hidden_op("dropOnPool", "Drop On Pool"))
+            .action_with(hidden_op("dropOnCurated", "Drop On Curated"))
+            .action_with(hidden_op("selectRow", "Select Row"))
+            .action_with(hidden_op("worldSelect", "World Select"))
+            // 📝 Staged argument form for the panel-visible example switch.
+            .action_args("setActiveExample", vec![
+                ActionArgDef::select("exampleId", "Example", vec![
+                    ActionArgOption::new(DEMO_STOCK_EXAMPLE_ID, "Demo Stock"),
+                    ActionArgOption::new(EMPTY_EXAMPLE_ID, "Empty Curation"),
+                ]).default_value(DEMO_STOCK_EXAMPLE_ID),
+            ]),
+    )
+    .example(DEMO_STOCK_EXAMPLE_ID, "Demo Stock", DEMO_STOCK_JSON)
+    .example(EMPTY_EXAMPLE_ID, "Empty Curation", EMPTY_CURATION_JSON)
+}
+
 fn sourcing_setup() {}
 
 semio_framework_plugin::semio_plugin! {
@@ -699,51 +659,37 @@ semio_framework_plugin::semio_plugin! {
     setup: sourcing_setup,
     apps: [ create_sourcing_curate_app => SourcingCurateApp ],
 }
-//#endregion 🔖Bundle
+//#endregion 🔖Manifest
 
-//#region 🔖Tests
+//#region 🧪Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, PluginApp};
 
     fn view_state() -> ViewState {
         ViewState::default()
     }
 
-    fn meta() -> ActionMeta {
-        ActionMeta { actor: "local".into(), instance_id: 1 }
-    }
-
-    fn new_app() -> VcsDocumentApp<SourcingCurateApp> {
-        VcsDocumentApp::new(SourcingCurateApp::default())
-    }
-
-    /// 🧬 A wrapper carrying the real action registry so `setActiveExample`'s default materializes and the
-    /// document-mutating curate ops pass kind discipline (they are declared Operations, never Views).
-    fn new_app_with_registry() -> VcsDocumentApp<SourcingCurateApp> {
-        use semio_framework_plugin::app::AppActionRegistry;
-        let definition = create_sourcing_curate_app().definition;
-        VcsDocumentApp::with_registry(SourcingCurateApp::default(), AppActionRegistry::from_definition(&definition))
-    }
-
     #[test]
     fn curate_and_example_actions_survive_registry_enforcement() {
-        let mut app = new_app_with_registry();
+        // 🧬 A registry-backed wrapper so `setActiveExample`'s default materializes and the
+        // document-mutating curate ops pass kind discipline (they are declared Operations, never Views).
+        let mut app = testkit::new_app_with_registry::<SourcingCurateApp>(create_sourcing_curate_app);
         // setActiveExample with no args materializes the declared default (demo stock, non-empty).
-        app.handle_action("setActiveExample", None, &view_state(), &meta()).expect("set example");
+        app.handle_action("setActiveExample", None, &view_state(), &testkit::meta("local")).expect("set example");
         assert!(!app.projection().expect("projection").stock.is_empty(), "demo-stock default materialized from the registry");
         // curateAdd mutates the persisted document, so as a declared Operation it emits exactly one op
         // and is NOT rejected by the View/Shell no-ops kind discipline.
         let object_id = app.projection().expect("projection").stock[0].id.clone();
-        let result = app.handle_action("curateAdd", Some(&json!({ "objectId": object_id })), &view_state(), &meta()).expect("curate");
+        let result = app.handle_action("curateAdd", Some(&json!({ "objectId": object_id })), &view_state(), &testkit::meta("local")).expect("curate");
         assert_eq!(result.operations.len(), 1, "curateAdd is a document operation");
-        app.handle_action("undo", None, &view_state(), &meta()).expect("undo");
+        app.handle_action("undo", None, &view_state(), &testkit::meta("local")).expect("undo");
     }
 
     #[test]
     fn initial_document_has_populated_demo_stock() {
-        let app = new_app();
+        let app = testkit::new_app::<SourcingCurateApp>();
         let document = app.projection().expect("projection");
         assert!(!document.stock.is_empty());
     }
@@ -752,7 +698,7 @@ mod tests {
     fn pool_render_respects_query_filter() {
         let mut document = default_document();
         document.filters.query = "glulam".into();
-        let node = build_pool_table(&document, &SOURCING_LABELS_NATIVE_EN);
+        let node = build_pool_table(&document, &SourcingLabels::EN);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Glulam"));
         assert!(!json.contains("Hollow Core"));
@@ -762,7 +708,7 @@ mod tests {
     fn pool_stepper_cell_max_equals_availability() {
         let document = default_document();
         let kind = &document.stock[0];
-        let node = build_pool_table(&document, &SOURCING_LABELS_NATIVE_EN);
+        let node = build_pool_table(&document, &SourcingLabels::EN);
         let json = serde_json::to_value(&node).unwrap();
         let rows_json = json.pointer("/table/rowsJson").and_then(|value| value.as_str()).unwrap();
         let rows: Vec<Value> = serde_json::from_str(rows_json).unwrap();
@@ -772,41 +718,41 @@ mod tests {
 
     #[test]
     fn curate_add_and_remove_round_trip_through_patch_ops() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<SourcingCurateApp>();
         let document = app.projection().expect("projection");
         // stock[2] isn't part of the fixture's pre-curated set, so a single add lands on count 1.
         let object_id = document.stock[2].id.clone();
-        app.handle_action("curateAdd", Some(&json!({ "objectId": object_id })), &view_state(), &meta()).expect("add");
+        app.handle_action("curateAdd", Some(&json!({ "objectId": object_id })), &view_state(), &testkit::meta("local")).expect("add");
         assert_eq!(app.projection().expect("projection").curated_count(&object_id), 1);
 
-        app.handle_action("curateRemove", Some(&json!({ "objectId": object_id })), &view_state(), &meta()).expect("remove");
+        app.handle_action("curateRemove", Some(&json!({ "objectId": object_id })), &view_state(), &testkit::meta("local")).expect("remove");
         assert_eq!(app.projection().expect("projection").curated_count(&object_id), 0);
     }
 
     #[test]
     fn drop_on_curated_and_drop_on_pool_mirror_add_and_remove() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<SourcingCurateApp>();
         let document = app.projection().expect("projection");
         // stock[2] isn't part of the fixture's pre-curated set, so a single drop lands on count 1.
         let object_id = document.stock[2].id.clone();
-        app.handle_action("dropOnCurated", Some(&json!({ "objectId": object_id })), &view_state(), &meta()).expect("drop on curated");
+        app.handle_action("dropOnCurated", Some(&json!({ "objectId": object_id })), &view_state(), &testkit::meta("local")).expect("drop on curated");
         assert_eq!(app.projection().expect("projection").curated_count(&object_id), 1);
 
-        app.handle_action("dropOnPool", Some(&json!({ "objectId": object_id })), &view_state(), &meta()).expect("drop on pool");
+        app.handle_action("dropOnPool", Some(&json!({ "objectId": object_id })), &view_state(), &testkit::meta("local")).expect("drop on pool");
         assert_eq!(app.projection().expect("projection").curated_count(&object_id), 0);
     }
 
     #[test]
     fn select_row_and_world_select_update_runtime_selection() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<SourcingCurateApp>();
         let document = app.projection().expect("projection");
         let object_id = document.stock[0].id.clone();
         let other_id = document.stock[1].id.clone();
 
-        app.handle_action("selectRow", Some(&json!({ "row": { "id": object_id } })), &view_state(), &meta()).expect("select");
+        app.handle_action("selectRow", Some(&json!({ "row": { "id": object_id } })), &view_state(), &testkit::meta("local")).expect("select");
         assert_eq!(app.projection().expect("projection").runtime.selected_object_id.as_deref(), Some(object_id.as_str()));
 
-        app.handle_action("worldSelect", Some(&json!({ "ids": [object_id, other_id] })), &view_state(), &meta()).expect("world select");
+        app.handle_action("worldSelect", Some(&json!({ "ids": [object_id, other_id] })), &view_state(), &testkit::meta("local")).expect("world select");
         assert_eq!(app.projection().expect("projection").runtime.selected_object_id.as_deref(), Some(other_id.as_str()));
     }
 
@@ -830,7 +776,7 @@ mod tests {
         let mut document = default_document();
         let object_id = document.stock[0].id.clone();
         document.runtime.selected_object_id = Some(object_id.clone());
-        let node = render_preview(&document, &SOURCING_LABELS_NATIVE_EN);
+        let node = render_preview(&document, &SourcingLabels::EN);
         let json = serde_json::to_value(&node).unwrap();
         let meshes_json = json.pointer("/world3d/meshesJson").and_then(|value| value.as_str()).unwrap();
         let meshes: Vec<Value> = serde_json::from_str(meshes_json).unwrap();
@@ -841,7 +787,7 @@ mod tests {
     #[test]
     fn preview_shows_placeholder_without_selection() {
         let document = default_document();
-        let node = render_preview(&document, &SOURCING_LABELS_NATIVE_EN);
+        let node = render_preview(&document, &SourcingLabels::EN);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("No selection"));
     }
@@ -873,24 +819,24 @@ mod tests {
 
     #[test]
     fn stock_from_catalogue_merges_contributed_kinds_without_duplicating() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<SourcingCurateApp>();
         // Reset to the empty fixture so stockFromCatalogue starts from a genuinely empty stock.
-        app.handle_action("setDocument", Some(&json!({ "document": empty_document() })), &view_state(), &meta()).expect("load empty document");
+        app.handle_action("setDocument", Some(&json!({ "document": empty_document() })), &view_state(), &testkit::meta("local")).expect("load empty document");
         assert!(app.projection().expect("projection").stock.is_empty());
 
-        app.handle_action("stockFromCatalogue", None, &view_state(), &meta()).expect("populate");
+        app.handle_action("stockFromCatalogue", None, &view_state(), &testkit::meta("local")).expect("populate");
         let expected: usize = sourcing_modules().iter().map(|module| module.demo_kinds().len()).sum();
         assert_eq!(app.projection().expect("projection").stock.len(), expected);
 
-        app.handle_action("stockFromCatalogue", None, &view_state(), &meta()).expect("repopulate");
+        app.handle_action("stockFromCatalogue", None, &view_state(), &testkit::meta("local")).expect("repopulate");
         assert_eq!(app.projection().expect("projection").stock.len(), expected);
     }
 
     #[test]
     fn set_filter_min_availability_clamps_to_zero() {
-        let mut app = new_app();
-        app.handle_action("setFilterMinAvailability", Some(&json!({ "delta": -1000.0 })), &view_state(), &meta()).expect("set min availability");
+        let mut app = testkit::new_app::<SourcingCurateApp>();
+        app.handle_action("setFilterMinAvailability", Some(&json!({ "delta": -1000.0 })), &view_state(), &testkit::meta("local")).expect("set min availability");
         assert_eq!(app.projection().expect("projection").filters.min_availability, 0);
     }
 }
-//#endregion 🔖Tests
+//#endregion 🧪Tests

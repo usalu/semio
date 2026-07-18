@@ -3,7 +3,7 @@
 import type { BundleLinter } from "../../../repo/lib/js/index.ts";
 import { dependencyBoundaryBreachesForBundleDir } from "../../../repo/lib/js/index.ts";
 import { getWorkspaceRoot } from "../../../repo/lib/js/index.ts";
-import { BundleScript, ScriptRouter, devToolingEnv, runBundleScriptMain, runBunx, spawnBunx } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, devToolingEnv, runBundleScriptMain, runBunx, runVitest, spawnBunx } from "../../../repo/lib/js/index.ts";
 import { defineLint } from "../../../repo/lib/js/index.ts";
 
 export const policy = defineLint("@semio-tech/ui-react-bundle", (l: BundleLinter) => {
@@ -40,7 +40,7 @@ class LintScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runBunx(["vitest", "run", "--config", "vitest.config.ts", "--passWithNoTests", ...segments], this.root, storybookEnv());
+    runVitest(this.root, segments, "vitest.config.ts");
   }
 }
 

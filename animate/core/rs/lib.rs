@@ -24,6 +24,8 @@ mod matrix;
 mod three_d;
 #[path = "src/animation.rs"]
 mod animation;
+#[path = "src/animations_catalog.rs"]
+mod animations_catalog;
 #[path = "src/updater.rs"]
 mod updater;
 #[path = "src/camera.rs"]
@@ -46,6 +48,7 @@ pub use graph::*;
 pub use matrix::*;
 pub use three_d::*;
 pub use animation::*;
+pub use animations_catalog::*;
 pub use updater::*;
 pub use camera::*;
 pub use scene::*;

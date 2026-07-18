@@ -17,7 +17,7 @@ use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
     world3d_camera_json, world3d_scene, world3d_selection_json, world3d_sun_measures, ActionArgDef,
     ActionArgOption, ActionDescriptor, ActionEmit, App, AppLabelsOverlay, Canvas2dScene, DocumentApp,
-    DocumentView, MeshData, PanelGroup, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode,
+    DocumentView, MeshData, OsMediaCapability, PanelGroup, ResourceKindSpec, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode,
     UiInspectorFieldGroup, UiNode, UiToggleNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -2368,6 +2368,22 @@ fn create_lowpoly_app() -> App {
     App::from_builder(
         App::builder(LOWPOLY_PLAY_APP_ID, "Lowpoly")
             .document(["semio", "lowpoly"])
+            .resource_kind(ResourceKindSpec {
+                id: "3d.lowpoly".into(),
+                name: "3D Lowpoly".into(),
+                source_format: "lowpoly.fixture".into(),
+                component_kind: "lowpoly".into(),
+                dimension: "3d".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+            })
+            .resource_kind(ResourceKindSpec {
+                id: "3d.mesh".into(),
+                name: "3D Mesh".into(),
+                source_format: "mesh.reference".into(),
+                component_kind: "mesh".into(),
+                dimension: "3d".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+            })
             .icon_id("box")
             .mode("edit", "Edit")
             .mode("paint", "Paint")

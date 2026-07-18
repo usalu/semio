@@ -13,11 +13,13 @@ use protocol::{
 };
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout,
+    is_de_locale, localized_label_map, resolve_labels,
+    tree_item_desc, tree_item_with_action, tree_item_with_action_draggable,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
-    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp,
+    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp,
     DocumentView,
-    NodeGraphScene, TextEditorScene, UiFieldNode, UiInputNode,
-    UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+    NodeGraphScene, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, TextEditorScene, UiFieldNode, UiInputNode,
+    UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeSectionNode,
     ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID,     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
@@ -282,27 +284,6 @@ fn widget_id(widget: &Widget) -> &str {
     }
 }
 
-fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
-    UiTreeItemNode {
-        loading: None,
-        id: id.into(),
-        label: label.into(),
-        description: None,
-        icon_id: None,
-        selected: None,
-        default_open: None,
-        action: None,
-        hover_action: None,
-        unhover_action: None,
-        actions: None,
-        draggable: None,
-        drag_data: None,
-        items: None,
-        control: None,
-        is_hidden: None,
-    }
-}
-
 fn flow_widget_descriptor(kind: &str, neuron_kind: Option<&str>) -> Value {
     if kind == "neuron" {
         json!({ "kind": "neuron", "neuronKind": neuron_kind.unwrap_or(kind) })
@@ -311,167 +292,51 @@ fn flow_widget_descriptor(kind: &str, neuron_kind: Option<&str>) -> Value {
     }
 }
 
-fn flow_widget_drag_data(descriptor: &Value) -> HashMap<String, String> {
-    let mut drag_data = HashMap::new();
-    drag_data.insert(FLOW_WIDGET_DRAG_MIME.into(), descriptor.to_string());
-    drag_data
-}
-
-fn tree_item_with_action_draggable(
-    id: impl Into<String>,
-    label: impl Into<String>,
-    description: Option<String>,
-    action: ActionDescriptor,
-    descriptor: &Value,
-) -> UiTreeItemNode {
-    let mut item = tree_item_with_action(id, label, description, action);
-    item.draggable = Some(true);
-    item.drag_data = Some(flow_widget_drag_data(descriptor));
-    item
-}
-
-fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
-    UiTreeItemNode {
-        loading: None,
-        id: id.into(),
-        label: label.into(),
-        description,
-        icon_id: None,
-        selected: None,
-        default_open: None,
-        action: Some(action),
-        hover_action: None,
-        unhover_action: None,
-        actions: None,
-        draggable: None,
-        drag_data: None,
-        items: None,
-        control: None,
-        is_hidden: None,
-    }
+/// 🪢 Wraps a widget descriptor into the `{mime: payload}` JSON shape `tree_item_with_action_draggable`
+/// expects for its drag-data map.
+fn flow_widget_drag_json(descriptor: &Value) -> Value {
+    json!({ FLOW_WIDGET_DRAG_MIME: descriptor.to_string() })
 }
 //#endregion 🔖DocumentHelpers
 
 //#region 🔖Terminology
-/// 🗣️ Complete UI label set for the flow app; one field per label makes every locale combination compile-checked.
-struct FlowPlayLabels {
-    widgets: &'static str,
-    synapses: &'static str,
-    extensions: &'static str,
-    extension_actions: &'static str,
-    sources: &'static str,
-    components: &'static str,
-    sinks: &'static str,
-    catalogue_slider: &'static str,
-    catalogue_stepper: &'static str,
-    catalogue_note: &'static str,
-    catalogue_add: &'static str,
-    catalogue_and: &'static str,
-    catalogue_concat: &'static str,
-    catalogue_preview: &'static str,
-    catalogue_export: &'static str,
-    extension_auto_layout: &'static str,
-    extension_auto_evaluate: &'static str,
-    extension_action_reorganize_canvas: &'static str,
-    extension_action_evaluate_fixture: &'static str,
-    canvas: &'static str,
-    widget: &'static str,
-    delete_selection: &'static str,
-    window_main: &'static str,
-    window_compiled: &'static str,
-    window_generations: &'static str,
-    window_generate_form: &'static str,
-    window_generate_preview: &'static str,
-    lod_mode: &'static str,
-    automatic: &'static str,
-    proximity_distance: &'static str,
-    value: &'static str,
-    text: &'static str,
-    kind: &'static str,
-    id: &'static str,
-}
-
-const FLOW_LABELS_NATIVE_EN: FlowPlayLabels = FlowPlayLabels {
-    widgets: "Widgets",
-    synapses: "Synapses",
-    extensions: "Extensions",
-    extension_actions: "Extension Actions",
-    sources: "Sources",
-    components: "Components",
-    sinks: "Sinks",
-    catalogue_slider: "Slider",
-    catalogue_stepper: "Stepper",
-    catalogue_note: "Note",
-    catalogue_add: "Add",
-    catalogue_and: "And",
-    catalogue_concat: "Concat",
-    catalogue_preview: "Preview",
-    catalogue_export: "Export",
-    extension_auto_layout: "Auto Layout",
-    extension_auto_evaluate: "Auto Evaluate",
-    extension_action_reorganize_canvas: "Reorganize Canvas",
-    extension_action_evaluate_fixture: "Evaluate Fixture",
-    canvas: "Canvas",
-    widget: "Widget",
-    delete_selection: "Delete selection",
-    window_main: "Flow",
-    window_compiled: "DSL",
-    window_generations: "Generations",
-    window_generate_form: "Form",
-    window_generate_preview: "Preview",
-    lod_mode: "LOD Mode",
-    automatic: "Automatic",
-    proximity_distance: "Proximity Distance",
-    value: "Value",
-    text: "Text",
-    kind: "Kind",
-    id: "Id",
-};
-
-const FLOW_LABELS_NATIVE_DE: FlowPlayLabels = FlowPlayLabels {
-    widgets: "Widgets",
-    synapses: "Synapsen",
-    extensions: "Erweiterungen",
-    extension_actions: "Erweiterungsaktionen",
-    sources: "Quellen",
-    components: "Komponenten",
-    sinks: "Senken",
-    catalogue_slider: "Schieberegler",
-    catalogue_stepper: "Schrittregler",
-    catalogue_note: "Notiz",
-    catalogue_add: "Addieren",
-    catalogue_and: "Und",
-    catalogue_concat: "Verketten",
-    catalogue_preview: "Vorschau",
-    catalogue_export: "Exportieren",
-    extension_auto_layout: "Automatisches Layout",
-    extension_auto_evaluate: "Automatisch Auswerten",
-    extension_action_reorganize_canvas: "Leinwand neu anordnen",
-    extension_action_evaluate_fixture: "Fixture auswerten",
-    canvas: "Leinwand",
-    widget: "Widget",
-    delete_selection: "Auswahl löschen",
-    window_main: "Flow",
-    window_compiled: "DSL",
-    window_generations: "Generationen",
-    window_generate_form: "Formular",
-    window_generate_preview: "Vorschau",
-    lod_mode: "LOD-Modus",
-    automatic: "Automatisch",
-    proximity_distance: "Naeheabstand",
-    value: "Wert",
-    text: "Text",
-    kind: "Art",
-    id: "Id",
-};
-
-/// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
-fn flow_labels(view_state: &ViewState) -> &'static FlowPlayLabels {
-    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-    if is_de {
-        &FLOW_LABELS_NATIVE_DE
-    } else {
-        &FLOW_LABELS_NATIVE_EN
+semio_framework_plugin::app_labels! {
+    /// 🗣️ Complete UI label set for the flow app; one field per label makes every locale combination compile-checked.
+    struct FlowPlayLabels {
+        widgets: &'static str = en: "Widgets", de: "Widgets";
+        synapses: &'static str = en: "Synapses", de: "Synapsen";
+        extensions: &'static str = en: "Extensions", de: "Erweiterungen";
+        extension_actions: &'static str = en: "Extension Actions", de: "Erweiterungsaktionen";
+        sources: &'static str = en: "Sources", de: "Quellen";
+        components: &'static str = en: "Components", de: "Komponenten";
+        sinks: &'static str = en: "Sinks", de: "Senken";
+        catalogue_slider: &'static str = en: "Slider", de: "Schieberegler";
+        catalogue_stepper: &'static str = en: "Stepper", de: "Schrittregler";
+        catalogue_note: &'static str = en: "Note", de: "Notiz";
+        catalogue_add: &'static str = en: "Add", de: "Addieren";
+        catalogue_and: &'static str = en: "And", de: "Und";
+        catalogue_concat: &'static str = en: "Concat", de: "Verketten";
+        catalogue_preview: &'static str = en: "Preview", de: "Vorschau";
+        catalogue_export: &'static str = en: "Export", de: "Exportieren";
+        extension_auto_layout: &'static str = en: "Auto Layout", de: "Automatisches Layout";
+        extension_auto_evaluate: &'static str = en: "Auto Evaluate", de: "Automatisch Auswerten";
+        extension_action_reorganize_canvas: &'static str = en: "Reorganize Canvas", de: "Leinwand neu anordnen";
+        extension_action_evaluate_fixture: &'static str = en: "Evaluate Fixture", de: "Fixture auswerten";
+        canvas: &'static str = en: "Canvas", de: "Leinwand";
+        widget: &'static str = en: "Widget", de: "Widget";
+        delete_selection: &'static str = en: "Delete selection", de: "Auswahl löschen";
+        window_main: &'static str = en: "Flow", de: "Flow";
+        window_compiled: &'static str = en: "DSL", de: "DSL";
+        window_generations: &'static str = en: "Generations", de: "Generationen";
+        window_generate_form: &'static str = en: "Form", de: "Formular";
+        window_generate_preview: &'static str = en: "Preview", de: "Vorschau";
+        lod_mode: &'static str = en: "LOD Mode", de: "LOD-Modus";
+        automatic: &'static str = en: "Automatic", de: "Automatisch";
+        proximity_distance: &'static str = en: "Proximity Distance", de: "Naeheabstand";
+        value: &'static str = en: "Value", de: "Wert";
+        text: &'static str = en: "Text", de: "Text";
+        kind: &'static str = en: "Kind", de: "Art";
+        id: &'static str = en: "Id", de: "Id";
     }
 }
 
@@ -498,7 +363,7 @@ fn flow_extension_action_title_label(action_id: &str, title: &'static str, label
 /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_flow_app`'s
 /// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
 /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn flow_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+fn flow_action_labels(is_de: bool) -> HashMap<String, String> {
     const ENTRIES: &[(&str, &str, &str)] = &[
         ("addWidget", "Add Widget", "Widget hinzufuegen"),
         ("removeWidget", "Remove Widget", "Widget entfernen"),
@@ -529,7 +394,7 @@ fn flow_action_labels(is_de: bool) -> std::collections::HashMap<String, String> 
         ("renameGeneration", "Rename Generation", "Generation umbenennen"),
         ("updateGenerationValues", "Update Generation Values", "Generationswerte aktualisieren"),
     ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    localized_label_map(is_de, ENTRIES)
 }
 //#endregion 🔖CommandLabels
 
@@ -551,57 +416,18 @@ fn build_document_tree(fixture: &FlowFixture, selected: &[String], labels: &Flow
         .synapses
         .iter()
         .map(|synapse| {
-            UiTreeItemNode {
-                loading: None,
-                id: format!("flow-play-document.synapse.{}", synapse.id),
-                label: format!("{} → {}", synapse.from, synapse.to),
-                description: Some(format!("{} → {}", synapse.from_port, synapse.to_port)),
-                icon_id: None,
-                selected: None,
-                default_open: None,
-                action: None,
-        hover_action: None,
-        unhover_action: None,
-        actions: None,
-                draggable: None,
-                drag_data: None,
-                items: None,
-                control: None,
-                is_hidden: None,
-            }
+            tree_item_desc(
+                format!("flow-play-document.synapse.{}", synapse.id),
+                format!("{} → {}", synapse.from, synapse.to),
+                Some(format!("{} → {}", synapse.from_port, synapse.to_port)),
+            )
         })
         .collect();
-    UiNode::Tree(UiTreeNode {
-        loading: None,
-        sections: vec![
-            UiTreeSectionNode {
-                loading: None,
-                id: "flow-play-document.widgets".into(),
-                label: Some(labels.widgets.into()),
-                default_open: Some(true),
-                items: if widget_items.is_empty() {
-                    vec![tree_item("flow-play-document.widgets.empty", "(none)")]
-                } else {
-                    widget_items
-                },
-            },
-            UiTreeSectionNode {
-                loading: None,
-                id: "flow-play-document.synapses".into(),
-                label: Some(labels.synapses.into()),
-                default_open: Some(false),
-                items: if synapse_items.is_empty() {
-                    vec![tree_item("flow-play-document.synapses.empty", "(none)")]
-                } else {
-                    synapse_items
-                },
-            },
-        ],
-        selected_ids: Some(selected.iter().map(|id| format!("flow-play-document.widget.{id}")).collect()),
-        highlighted_ids: None,
-        selection_change: None,
-        drop_action: None,
-    })
+    PanelTreeBuilder::new("flow-play-document")
+        .section_or_placeholder("flow-play-document.widgets", Some(labels.widgets.into()), true, widget_items, "(none)")
+        .section_or_placeholder("flow-play-document.synapses", Some(labels.synapses.into()), false, synapse_items, "(none)")
+        .selected(selected.iter().map(|id| format!("flow-play-document.widget.{id}")).collect())
+        .build()
 }
 
 fn build_catalogue_tree(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> UiNode {
@@ -647,7 +473,7 @@ fn build_catalogue_tree(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels
                                 label,
                                 Some(kind.to_string()),
                                 action,
-                                &descriptor,
+                                &flow_widget_drag_json(&descriptor),
                             ))
                         })
                         .collect()
@@ -662,16 +488,12 @@ fn build_catalogue_tree(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels
             })
         })
         .collect();
-    let mut tree_sections = if tree_sections.is_empty() { catalogue_tree_sections_fallback(labels) } else { tree_sections };
-    tree_sections.extend(flow_extensions_tree_sections(runtime, labels));
-    UiNode::Tree(UiTreeNode {
-        loading: None,
-        sections: tree_sections,
-        selected_ids: Some(vec![]),
-        highlighted_ids: None,
-        selection_change: None,
-        drop_action: None,
-    })
+    let tree_sections = if tree_sections.is_empty() { catalogue_tree_sections_fallback(labels) } else { tree_sections };
+    let mut builder = PanelTreeBuilder::new("flow-play-catalogue");
+    for section in tree_sections.into_iter().chain(flow_extensions_tree_sections(runtime, labels)) {
+        builder = builder.section(section.id, section.label, section.default_open.unwrap_or(false), section.items);
+    }
+    builder.selected(vec![]).build()
 }
 
 /// 🧩 Installed/enabled extension palette plus actions surfaced by active extensions.
@@ -738,7 +560,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
                         *label,
                         Some((*kind).into()),
                         flow_action("addWidget", Some(descriptor.clone())),
-                        &descriptor,
+                        &flow_widget_drag_json(&descriptor),
                     )
                 })
                 .collect(),
@@ -757,7 +579,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
                         *label,
                         Some((*kind).into()),
                         flow_action("addWidget", Some(descriptor.clone())),
-                        &descriptor,
+                        &flow_widget_drag_json(&descriptor),
                     )
                 })
                 .collect(),
@@ -776,7 +598,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
                         *label,
                         Some((*kind).into()),
                         flow_action("addWidget", Some(descriptor.clone())),
-                        &descriptor,
+                        &flow_widget_drag_json(&descriptor),
                     )
                 })
                 .collect(),
@@ -1419,7 +1241,7 @@ impl DocumentApp for FlowPlayApp {
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, FlowFixture>, view_state: &ViewState) -> UiNode {
         let fixture = doc.projection;
-        let labels = flow_labels(view_state);
+        let labels = resolve_labels::<FlowPlayLabels>(view_state);
         match body_key {
             FLOW_PLAY_BODY_MAIN => render_main_graph(fixture, &self.runtime, labels),
             FLOW_PLAY_BODY_COMPILED => render_compiled_dag(fixture, &self.runtime),
@@ -1433,31 +1255,19 @@ impl DocumentApp for FlowPlayApp {
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
-        let labels = flow_labels(view_state);
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        semio_framework_plugin::AppLabelsOverlay {
-            window_kind_labels: std::collections::HashMap::from([
-                (FLOW_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()),
-                (FLOW_PLAY_WINDOW_COMPILED.to_string(), labels.window_compiled.to_string()),
-                (FLOW_PLAY_WINDOW_GENERATIONS.to_string(), labels.window_generations.to_string()),
-                (FLOW_PLAY_WINDOW_GENERATE_FORM.to_string(), labels.window_generate_form.to_string()),
-                (FLOW_PLAY_WINDOW_GENERATE_PREVIEW.to_string(), labels.window_generate_preview.to_string()),
-            ]),
-            panel_tab_labels: std::collections::HashMap::new(),
-            mode_labels: std::collections::HashMap::from([
-                ("edit".to_string(), (if is_de { "Bearbeiten" } else { "Edit" }).to_string()),
-                ("generate".to_string(), (if is_de { "Generieren" } else { "Generate" }).to_string()),
-            ]),
-            action_labels: flow_action_labels(is_de),
-            utility_labels: HashMap::new(),
-            example_labels: std::collections::HashMap::from([
-                ("demo".to_string(), (if is_de { "Demo" } else { "Demo" }).to_string()),
-            ]),
-            action_arg_labels: HashMap::new(),
-            dialog_labels: HashMap::new(),
-            introduction_labels: HashMap::new(),
-        }
+    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
+        let labels = resolve_labels::<FlowPlayLabels>(view_state);
+        let is_de = is_de_locale(view_state);
+        AppLabelsOverlay::default()
+            .window_kind_label(FLOW_PLAY_WINDOW_MAIN, labels.window_main)
+            .window_kind_label(FLOW_PLAY_WINDOW_COMPILED, labels.window_compiled)
+            .window_kind_label(FLOW_PLAY_WINDOW_GENERATIONS, labels.window_generations)
+            .window_kind_label(FLOW_PLAY_WINDOW_GENERATE_FORM, labels.window_generate_form)
+            .window_kind_label(FLOW_PLAY_WINDOW_GENERATE_PREVIEW, labels.window_generate_preview)
+            .mode_label("edit", if is_de { "Bearbeiten" } else { "Edit" })
+            .mode_label("generate", if is_de { "Generieren" } else { "Generate" })
+            .action_labels(flow_action_labels(is_de))
+            .example_labels(HashMap::from([("demo".to_string(), "Demo".to_string())]))
     }
 }
 //#endregion 🔖FlowPlayApp
@@ -1466,6 +1276,14 @@ impl DocumentApp for FlowPlayApp {
 fn create_flow_app() -> App {
     App::from_builder(
         App::builder(FLOW_PLAY_APP_ID, "Flow").document(["semio", "flow"])
+            .resource_kind(ResourceKindSpec {
+                id: "computation.flow".into(),
+                name: "Flow".into(),
+                source_format: "flow.document".into(),
+                component_kind: "flow".into(),
+                dimension: "graph".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+            })
             .icon_id("flow")
             .mode("edit", "Edit")
             .mode("generate", "Generate")
@@ -1576,20 +1394,15 @@ semio_framework_plugin::semio_plugin! {
 }
 //#endregion 🔖Manifest
 
+//#region 🧪Tests
 #[cfg(test)]
 mod tests {
     use super::*;
     use flow_core::FlowFixture;
-    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
-    use vcs::MemoryBackbone;
-
-    fn meta(actor: &str) -> ActionMeta {
-        ActionMeta { actor: actor.into(), instance_id: 1 }
-    }
-
-    fn new_app() -> VcsDocumentApp<FlowPlayApp> {
-        VcsDocumentApp::new(FlowPlayApp::default())
-    }
+    use semio_framework_plugin::{
+        testkit::{assert_undo_redo_round_trip, meta, new_app, paired_apps},
+        PluginApp, VcsDocumentApp,
+    };
 
     fn render(app: &mut VcsDocumentApp<FlowPlayApp>, body_key: &str, view_state: &ViewState) -> String {
         serde_json::to_string(&app.render(body_key, None, view_state).expect("render")).unwrap()
@@ -1597,13 +1410,13 @@ mod tests {
 
     #[test]
     fn renders_node_graph_scene() {
-        let mut app = new_app();
+        let mut app = new_app::<FlowPlayApp>();
         assert!(render(&mut app, FLOW_PLAY_BODY_MAIN, &ViewState::default()).contains("node-graph"));
     }
 
     #[test]
     fn renders_compiled_wire_editor() {
-        let mut app = new_app();
+        let mut app = new_app::<FlowPlayApp>();
         assert!(render(&mut app, FLOW_PLAY_BODY_COMPILED, &ViewState::default()).contains("text-editor"));
     }
 
@@ -1614,13 +1427,13 @@ mod tests {
 
     #[test]
     fn document_lists_widgets() {
-        let mut app = new_app();
+        let mut app = new_app::<FlowPlayApp>();
         assert!(render(&mut app, FLOW_PLAY_BODY_DOCUMENT, &ViewState::default()).contains("flow-play-document.widgets"));
     }
 
     #[test]
     fn catalogue_lists_module_operators() {
-        let mut app = new_app();
+        let mut app = new_app::<FlowPlayApp>();
         let json = render(&mut app, FLOW_PLAY_BODY_CATALOGUE, &ViewState::default());
         assert!(json.contains("flow-play-catalogue.math"), "expected math module section: {json}");
         assert!(json.contains("math.add"), "expected math.add operator: {json}");
@@ -1628,7 +1441,7 @@ mod tests {
 
     #[test]
     fn catalogue_items_export_flow_widget_drag_payload() {
-        let mut app = new_app();
+        let mut app = new_app::<FlowPlayApp>();
         let json = render(&mut app, FLOW_PLAY_BODY_CATALOGUE, &ViewState::default());
         assert!(json.contains(FLOW_WIDGET_DRAG_MIME), "missing drag mime: {json}");
         assert!(json.contains(r#""draggable":true"#) || json.contains(r#""draggable": true"#));
@@ -1636,7 +1449,7 @@ mod tests {
 
     #[test]
     fn add_widget_emits_ops_and_grows_the_document() {
-        let mut app = new_app();
+        let mut app = new_app::<FlowPlayApp>();
         let before = app.projection().expect("projection").widgets.len();
         let result = app
             .handle_action("addWidget", Some(&json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 })), &ViewState::default(), &meta("local"))
@@ -1647,17 +1460,21 @@ mod tests {
 
     #[test]
     fn undo_restores_fixture_after_add_widget() {
-        let mut app = new_app();
+        let mut app = new_app::<FlowPlayApp>();
         let before = app.projection().expect("projection").widgets.len();
-        app.handle_action("addWidget", Some(&json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 })), &ViewState::default(), &meta("local")).expect("addWidget");
-        assert_eq!(app.projection().expect("projection").widgets.len(), before + 1);
-        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
-        assert_eq!(app.projection().expect("projection").widgets.len(), before);
+        assert_undo_redo_round_trip(
+            &mut app,
+            "addWidget",
+            Some(&json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 })),
+            |app| app.projection().expect("projection").widgets.len(),
+            before,
+            before + 1,
+        );
     }
 
     #[test]
     fn selection_is_view_state_and_emits_no_ops() {
-        let mut app = new_app();
+        let mut app = new_app::<FlowPlayApp>();
         let result = app
             .handle_action("setSelection", Some(&json!({ "ids": ["slider"] })), &ViewState::default(), &meta("local"))
             .expect("setSelection");
@@ -1666,14 +1483,14 @@ mod tests {
 
     #[test]
     fn evaluate_updates_preview_state_without_ops() {
-        let mut app = new_app();
+        let mut app = new_app::<FlowPlayApp>();
         let result = app.handle_action("evaluate", None, &ViewState::default(), &meta("local")).expect("evaluate");
         assert!(result.operations.is_empty(), "evaluate is a view action");
     }
 
     #[test]
     fn generate_mode_renders_three_surfaces() {
-        let mut app = new_app();
+        let mut app = new_app::<FlowPlayApp>();
         assert!(render(&mut app, FLOW_PLAY_BODY_GENERATIONS, &ViewState::default()).contains("addGeneration"));
         assert!(render(&mut app, FLOW_PLAY_BODY_GENERATE_FORM, &ViewState::default()).contains("Add a generation"));
         assert!(render(&mut app, FLOW_PLAY_BODY_GENERATE_PREVIEW, &ViewState::default()).contains("text-editor"));
@@ -1681,7 +1498,7 @@ mod tests {
 
     #[test]
     fn set_lod_mode_rejects_unknown_and_accepts_known() {
-        let mut app = new_app();
+        let mut app = new_app::<FlowPlayApp>();
         app.handle_action("setLodMode", Some(&json!({ "mode": "bogus" })), &ViewState::default(), &meta("local")).expect("bogus");
         app.handle_action("setLodMode", Some(&json!({ "mode": "micro" })), &ViewState::default(), &meta("local")).expect("micro");
         let json = render(&mut app, FLOW_PLAY_BODY_MAIN, &ViewState::default());
@@ -1690,7 +1507,7 @@ mod tests {
 
     #[test]
     fn toggle_extension_and_run_action_reorganizes_fixture() {
-        let mut app = new_app();
+        let mut app = new_app::<FlowPlayApp>();
         let before = app.projection().expect("projection").widgets.len();
         let ignored = app.handle_action("runExtensionAction", Some(&json!({ "actionId": "flow.extension.reorganize" })), &ViewState::default(), &meta("local")).expect("ignored");
         assert!(ignored.operations.is_empty(), "disabled extension action must be a no-op");
@@ -1701,7 +1518,7 @@ mod tests {
 
     #[test]
     fn flow_labels_resolve_native_english_and_german() {
-        let mut app = new_app();
+        let mut app = new_app::<FlowPlayApp>();
         let english = render(&mut app, FLOW_PLAY_BODY_DOCUMENT, &ViewState::default());
         assert!(english.contains("Widgets") && english.contains("Synapses"), "english labels: {english}");
         let german = render(&mut app, FLOW_PLAY_BODY_DOCUMENT, &ViewState { locale: Some("de".into()), ..ViewState::default() });
@@ -1713,11 +1530,7 @@ mod tests {
     /// whole-fixture `setDocument` snapshots, which would clobber one side.
     #[test]
     fn two_instances_converge_on_disjoint_edits() {
-        let mut instance_a = new_app();
-        let mut instance_b = new_app();
-        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://flow-convergence", "mem://flow-convergence");
-        instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
-        instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+        let (mut instance_a, mut instance_b) = paired_apps::<FlowPlayApp>("mem://flow-convergence");
 
         instance_a
             .handle_action("renameFlowWidget", Some(&json!({ "oldId": "slider", "value": "input" })), &ViewState::default(), &meta("actor-a"))
@@ -1737,3 +1550,4 @@ mod tests {
         assert_eq!(projection_a.widgets.len(), projection_b.widgets.len(), "both instances converge to the same widget set");
     }
 }
+//#endregion 🧪Tests

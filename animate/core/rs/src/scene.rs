@@ -52,7 +52,7 @@ pub trait Scene {
         let steps = steps.max(1);
         for frame in 0..=steps {
             let alpha = frame as f64 / steps as f64;
-            interpolate_at(animation.as_mut(), alpha);
+            interpolate_at(self.mobjects_mut(), animation.as_mut(), alpha);
             self.sample_frame(self.config().frame_duration());
         }
         animation.finish();
@@ -83,6 +83,7 @@ pub trait Scene {
             frame,
             time: frame as f64 / self.config().frame_rate,
             mobject_count: self.mobjects().len(),
+            section: self.sections().find_at_time(self.scene_time()).map(|s| s.name.clone()),
         }
     }
 }
@@ -93,6 +94,21 @@ pub struct SceneFrame {
     pub frame: u64,
     pub time: f64,
     pub mobject_count: usize,
+    pub section: Option<String>,
+}
+
+/// 🔁 Interactive preview loop sampling construct timeline without encoding.
+pub fn preview_scene_loop<S: Scene>(scene: &mut S, max_frames: u64, mut on_frame: impl FnMut(&SceneFrame)) {
+    let config = scene.config().clone();
+    scene.setup(&config);
+    let fps = config.frame_rate;
+    let dt = 1.0 / fps.max(1.0);
+    scene.construct();
+    for frame in 0..max_frames {
+        scene.sample_frame(dt);
+        on_frame(&scene.render_frame_index(frame));
+    }
+    scene.tear_down();
 }
 
 /// 🏗️ Default scene implementation backing most user scenes.
@@ -276,9 +292,12 @@ mod tests {
     }
 
     #[test]
-    fn scene_construct_adds_mobject() {
+    fn preview_loop_samples_frames() {
         let mut s = DemoScene::new();
-        s.construct();
-        assert_eq!(s.mobjects().len(), 1);
+        let mut frames = 0u64;
+        preview_scene_loop(&mut s, 3, |_| {
+            frames += 1;
+        });
+        assert_eq!(frames, 3);
     }
 }

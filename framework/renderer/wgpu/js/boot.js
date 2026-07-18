@@ -131,6 +131,14 @@ class DockUiStateStore extends Store {
       this.storage.set(key, JSON.stringify(state));
   }
 }
+function expandPluginRegistry(plugins, primaryPluginId, studioMode = false) {
+  if (studioMode || !primaryPluginId)
+    return plugins;
+  const primaryEntries = plugins.filter((entry) => entry.pluginId === primaryPluginId);
+  const consumes = new Set(primaryEntries.flatMap((entry) => entry.consumes ?? []));
+  const contributorEntries = plugins.filter((entry) => entry.pluginId !== primaryPluginId && (entry.contributes ?? []).some((tag) => consumes.has(tag)));
+  return [...primaryEntries, ...contributorEntries];
+}
 var EMPTY_INVOCATION_RESPONSE = {
   output: null,
   operations: [],
@@ -379,6 +387,8 @@ if (import.meta.vitest) {
 
 // ../../plugin/registry/generated/plugins.ts
 var PLUGIN_BUILD_TARGETS = [
+  { pluginId: "animate", cratePath: "animate/plugin/rs", wasmOut: "animate_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "architect", cratePath: "architect/plugin/rs", wasmOut: "architect_plugin.wasm", contributes: [], consumes: [] },
   { pluginId: "cad", cratePath: "cad/plugin/rs", wasmOut: "cad_plugin.wasm", contributes: [], consumes: [] },
   { pluginId: "dag", cratePath: "infinite/board/port/directed/dag/plugin/rs", wasmOut: "dag_plugin.wasm", contributes: [], consumes: [] },
   { pluginId: "draw", cratePath: "draw/plugin/rs", wasmOut: "draw_plugin.wasm", contributes: [], consumes: [] },
@@ -391,10 +401,9 @@ var PLUGIN_BUILD_TARGETS = [
   { pluginId: "lowpoly", cratePath: "lowpoly/plugin/rs", wasmOut: "lowpoly_plugin.wasm", contributes: [], consumes: [] },
   { pluginId: "mathematical", cratePath: "mathematical/plugin/rs", wasmOut: "mathematical_plugin.wasm", contributes: [], consumes: [] },
   { pluginId: "note", cratePath: "note/plugin/rs", wasmOut: "note_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "presentation", cratePath: "framework/product/presentation/plugin/rs", wasmOut: "presentation_plugin.wasm", contributes: [], consumes: [] },
   { pluginId: "procedural", cratePath: "procedural/plugin/rs", wasmOut: "procedural_plugin.wasm", contributes: [], consumes: ["forms.questionKind"] },
   { pluginId: "process", cratePath: "process/plugin/rs", wasmOut: "process_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "protocol", cratePath: "protocol/plugin/rs", wasmOut: "protocol_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "protocol", cratePath: "protocol/plugin/rs", wasmOut: "protocol_plugin.wasm", contributes: [], consumes: ["protocol.blockKind"] },
   { pluginId: "protocol-module-procedural", cratePath: "protocol/module/procedural/rs", wasmOut: "protocol_module_procedural.wasm", contributes: ["protocol.blockKind"], consumes: [] },
   { pluginId: "puzzle", cratePath: "puzzle/plugin/rs", wasmOut: "puzzle_plugin.wasm", contributes: [], consumes: [] },
   { pluginId: "raster", cratePath: "raster/plugin/rs", wasmOut: "raster_plugin.wasm", contributes: [], consumes: [] },
@@ -604,7 +613,14 @@ function pluginHandleForBridge(handle) {
 var pluginFromUrl = new URLSearchParams(location.search).get("plugin");
 var pluginFilter = pluginFromUrl ?? "s";
 var studioMode = pluginFilter === "s";
-var pluginTargets = studioMode ? PLUGIN_TARGETS : PLUGIN_TARGETS.filter((entry) => entry.pluginId === pluginFilter || entry.pluginId === `${pluginFilter}-module-procedural`);
+var pluginRegistryMeta = new Map(PLUGIN_BUILD_TARGETS.map((target) => [target.pluginId, target]));
+var pluginRegistryEntries = PLUGIN_TARGETS.map((target) => ({
+  pluginId: target.pluginId,
+  moduleUrl: target.moduleUrl,
+  contributes: pluginRegistryMeta.get(target.pluginId)?.contributes,
+  consumes: pluginRegistryMeta.get(target.pluginId)?.consumes
+}));
+var pluginTargets = expandPluginRegistry(pluginRegistryEntries, pluginFilter, studioMode);
 async function pluginModuleAvailable(moduleUrl) {
   try {
     const response = await fetch(moduleUrl, { method: "HEAD" });

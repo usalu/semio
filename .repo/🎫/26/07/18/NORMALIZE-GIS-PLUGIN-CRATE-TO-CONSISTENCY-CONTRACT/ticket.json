@@ -1,0 +1,13 @@
+{
+  "title": "Normalize Gis Plugin Crate To Consistency Contract",
+  "emoji": "🗺️",
+  "status": "open",
+  "description": "Normalize gis/plugin/rs (Gis2dPlayApp/Gis3dPlayApp, pub mod app_2d/app_3d) to the Consistency Contract: adopt SDK PanelKit (tree_item/tree_item_with_action/PanelTreeBuilder/selection_ids) from semio_framework_plugin, adopt Terminology (app_labels!/LocaleLabels/localized_label_map/AppLabelsOverlayExt) replacing hand-rolled Labels struct+resolver, verify .resource_kind() on AppBuilder chains, confirm C1 app struct naming, fix C2/C3 region markers/order (rename registration region to 🔖Manifest, tests region to 🧪Tests, canonical order Constants-\u003eTypes-\u003eDocumentHelpers-\u003eTerminology-\u003eCommandLabels-\u003ePanels-\u003eRender-\u003eApp impls-\u003eManifest-\u003eTests), keep C4 pub mod app_2d/app_3d layout, adopt Testkit (testkit::meta/new_app/new_app_with_registry/paired_apps/assert_undo_redo_round_trip/assert_two_instances_converge/assert_ingest_idempotent) replacing local scaffolding and generic test bodies while leaving GisMapDocument/GisMapDiff/GisMapOp/MapFeature domain module substance and app-unique tests untouched.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2084"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪2d676e5375ee4c549032f7e132791720"
+  ]
+}

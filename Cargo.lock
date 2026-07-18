@@ -99,6 +99,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b46cbb362ab8752921c97e041f5e366ee6297bd428a31275b9fcf1e380f7299"
 
 [[package]]
+name = "animate-plugin"
+version = "0.1.0"
+dependencies = [
+ "animate_present",
+ "semio-framework-core",
+ "semio-framework-os",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "vcs",
+]
+
+[[package]]
 name = "animate_core"
 version = "0.1.0"
 dependencies = [
@@ -116,6 +129,18 @@ dependencies = [
  "typst",
  "typst-assets",
  "typst-svg",
+ "usvg 0.45.1",
+]
+
+[[package]]
+name = "animate_present"
+version = "0.1.0"
+dependencies = [
+ "animate_core",
+ "serde",
+ "serde_json",
+ "vcs",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -124,7 +149,6 @@ version = "0.1.0"
 dependencies = [
  "animate_core",
  "image",
- "infinite_cavas",
  "mathematical_geometry",
  "pollster",
  "semio-framework-hash",
@@ -171,6 +195,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
 dependencies = [
  "derive_arbitrary",
+]
+
+[[package]]
+name = "architect-plugin"
+version = "0.1.0"
+dependencies = [
+ "architect_program",
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "vcs",
+]
+
+[[package]]
+name = "architect_program"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+ "serde",
+ "serde_json",
+ "vcs",
 ]
 
 [[package]]
@@ -2242,7 +2288,6 @@ name = "energy_engine"
 version = "0.1.0"
 dependencies = [
  "mathematical_algebra",
- "mathematical_geometry",
  "serde",
  "serde_json",
 ]
@@ -2449,7 +2494,6 @@ name = "fem_3d"
 version = "0.1.0"
 dependencies = [
  "fem_core",
- "mathematical_algebra",
  "serde",
  "serde_json",
  "vcs",
@@ -2463,6 +2507,7 @@ dependencies = [
  "mathematical_algebra",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -2898,13 +2943,60 @@ dependencies = [
 ]
 
 [[package]]
-name = "framework_graph"
+name = "framework_surface_node_graph"
 version = "0.1.0"
 dependencies = [
  "infinite_board_port_directed_dag",
  "infinite_cavas",
  "js-sys",
  "serde",
+ "serde_json",
+ "ui_styling",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "framework_surface_paint"
+version = "0.1.0"
+dependencies = [
+ "image",
+ "infinite_cavas",
+ "js-sys",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "ui_styling",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "framework_surface_terrain"
+version = "0.1.0"
+dependencies = [
+ "image",
+ "js-sys",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "framework_surface_tiled_map"
+version = "0.1.0"
+dependencies = [
+ "image",
+ "infinite_cavas",
+ "js-sys",
+ "prost",
+ "serde",
+ "serde-wasm-bindgen",
  "serde_json",
  "ui_styling",
  "wasm-bindgen",
@@ -3215,45 +3307,14 @@ dependencies = [
 name = "gis-plugin"
 version = "0.1.0"
 dependencies = [
- "gis_2d",
- "gis_3d",
+ "framework_surface_terrain",
+ "framework_surface_tiled_map",
  "semio-framework-os",
  "semio-framework-plugin",
  "serde",
  "serde_json",
  "vcs",
-]
-
-[[package]]
-name = "gis_2d"
-version = "0.1.0"
-dependencies = [
- "image",
- "infinite_cavas",
- "js-sys",
- "prost",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "ui_styling",
- "vcs",
  "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "gis_3d"
-version = "0.1.0"
-dependencies = [
- "image",
- "js-sys",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "vcs",
- "wasm-bindgen",
- "wasm-bindgen-futures",
  "web-sys",
 ]
 
@@ -5170,6 +5231,7 @@ dependencies = [
  "mathematical_graph_manifest",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "wasm-bindgen",
 ]
 
@@ -5517,6 +5579,7 @@ dependencies = [
  "mathematical_graph_manifest",
  "neural_engine",
  "serde_json",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -6769,29 +6832,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "presentation-plugin"
-version = "0.1.0"
-dependencies = [
- "presentation_deck",
- "semio-framework-core",
- "semio-framework-os",
- "semio-framework-plugin",
- "serde",
- "serde_json",
- "vcs",
-]
-
-[[package]]
-name = "presentation_deck"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "vcs",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "presser"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7015,7 +7055,6 @@ dependencies = [
  "data-url",
  "ecow",
  "fontdb",
- "gis_2d",
  "image",
  "infinite_board_port_directed_normal",
  "js-sys",
@@ -7275,32 +7314,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca45419789ae5a7899559e9512e58ca889e41f04f1f2445e9f4b290ceccd1d08"
 
 [[package]]
-name = "raster"
-version = "0.1.0"
-dependencies = [
- "image",
- "infinite_cavas",
- "js-sys",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "ui_styling",
- "vcs",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
 name = "raster-plugin"
 version = "0.1.0"
 dependencies = [
- "raster",
  "semio-framework-os",
  "semio-framework-plugin",
  "serde",
  "serde_json",
  "vcs",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -8145,8 +8167,8 @@ dependencies = [
  "base64 0.22.1",
  "flow_core",
  "framework_editor",
- "framework_graph",
- "gis_2d",
+ "framework_surface_node_graph",
+ "framework_surface_tiled_map",
  "image",
  "infinite_cavas",
  "infinite_world",

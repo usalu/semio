@@ -1,10 +1,11 @@
 //! 🗂️ VCS plugin — declarative version-control play app bundled as a hot-swappable WASM component.
 
 use semio_framework_plugin::{SurfaceKind,
-    build_graph_timeline_scene, create_default_layout, ui_inspector_readonly_field,
-    ui_stack_vertical, ui_text, ActionEmit, App, ActionDescriptor, AppLabelsOverlay, DocumentApp,
-    DocumentView, HistoryView, PanelGroup, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiStackNode,
-    UiTreeItemNode, UiTreeNode, UiTreeSectionNode, GraphTimelineScene, ViewState, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    build_graph_timeline_scene, create_default_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids,
+    tree_item_with_action, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionEmit, App, ActionDescriptor,
+    AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, HistoryView, OsMediaCapability, PanelGroup, PanelTreeBuilder,
+    ResourceKindSpec, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiStackNode,
+    UiTreeItemNode, GraphTimelineScene, ViewState, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -22,7 +23,7 @@ const VCS_PLAY_WINDOW_HISTORY: &str = "vcs-history";
 const VCS_DEMO_SCHEMA: &str = "vcs.demo";
 //#endregion 🔖Constants
 
-//#region 🔖Domain
+//#region 🔖Types
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct VcsDemoProjection {
@@ -59,37 +60,6 @@ enum VcsDemoDiff {
 }
 
 type VcsDemoStore = DocumentVcsStore<VcsDemoProjection, VcsDemoOp>;
-
-fn empty_vcs_demo_projection() -> VcsDemoProjection {
-    VcsDemoProjection {
-        schema: VCS_DEMO_SCHEMA.into(),
-        title: "VCS Demo".into(),
-        counter: 0,
-        notes: String::new(),
-        status: "new".into(),
-        tags: Vec::new(),
-    }
-}
-
-fn demo_authors() -> Vec<vcs::Author> {
-    vec![
-        vcs::Author {
-            id: "author-alice".into(),
-            name: "Alice".into(),
-            avatar: None,
-        },
-        vcs::Author {
-            id: "author-bob".into(),
-            name: "Bob".into(),
-            avatar: None,
-        },
-        vcs::Author {
-            id: "author-carol".into(),
-            name: "Carol".into(),
-            avatar: None,
-        },
-    ]
-}
 
 impl OperationDiff<VcsDemoProjection> for VcsDemoDiff {
     fn apply(&self, projection: &VcsDemoProjection) -> VcsDemoProjection {
@@ -144,6 +114,39 @@ impl Operation<VcsDemoProjection> for VcsDemoOp {
             VcsDemoOp::RemoveTag { tag } => vec![VcsDemoOp::AddTag { tag: tag.clone() }],
         }
     }
+}
+//#endregion 🔖Types
+
+//#region 🔖DocumentHelpers
+fn empty_vcs_demo_projection() -> VcsDemoProjection {
+    VcsDemoProjection {
+        schema: VCS_DEMO_SCHEMA.into(),
+        title: "VCS Demo".into(),
+        counter: 0,
+        notes: String::new(),
+        status: "new".into(),
+        tags: Vec::new(),
+    }
+}
+
+fn demo_authors() -> Vec<vcs::Author> {
+    vec![
+        vcs::Author {
+            id: "author-alice".into(),
+            name: "Alice".into(),
+            avatar: None,
+        },
+        vcs::Author {
+            id: "author-bob".into(),
+            name: "Bob".into(),
+            avatar: None,
+        },
+        vcs::Author {
+            id: "author-carol".into(),
+            name: "Carol".into(),
+            avatar: None,
+        },
+    ]
 }
 
 fn apply_vcs_demo_op(projection: &VcsDemoProjection, operation: &VcsDemoOp) -> VcsDemoProjection {
@@ -370,70 +373,58 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
         authors: vec![bob, carol],
     });
 }
-//#endregion 🔖Domain
+//#endregion 🔖DocumentHelpers
 
 //#region 🔖Terminology
-/// 🗣️ Complete UI label set for the VCS app; one field per label makes every locale combination compile-checked.
-struct VcsLabels {
-    actions: &'static str,
-    counter: &'static str,
-    commit: &'static str,
-    branch: &'static str,
-    undo: &'static str,
-    redo: &'static str,
-    title: &'static str,
-    status: &'static str,
-    notes: &'static str,
-    tags: &'static str,
-    alternatives: &'static str,
-    no_checkpoints: &'static str,
-    checkpoints: &'static str,
-    window_editor: &'static str,
-    window_history: &'static str,
-}
-
-const VCS_LABELS_NATIVE_EN: VcsLabels = VcsLabels {
-    actions: "Actions",
-    counter: "Counter",
-    commit: "Commit",
-    branch: "Branch",
-    undo: "Undo",
-    redo: "Redo",
-    title: "Title",
-    status: "Status",
-    notes: "Notes",
-    tags: "Tags",
-    alternatives: "Alternatives",
-    no_checkpoints: "(no checkpoints)",
-    checkpoints: "checkpoints",
-    window_editor: "Editor",
-    window_history: "History",
-};
-
-const VCS_LABELS_NATIVE_DE: VcsLabels = VcsLabels {
-    actions: "Aktionen",
-    counter: "Zähler",
-    commit: "Commit",
-    branch: "Branch",
-    undo: "Rückgängig",
-    redo: "Wiederholen",
-    title: "Titel",
-    status: "Status",
-    notes: "Notizen",
-    tags: "Schlagwörter",
-    alternatives: "Alternativen",
-    no_checkpoints: "(keine Checkpoints)",
-    checkpoints: "Checkpoints",
-    window_editor: "Editor",
-    window_history: "Verlauf",
-};
-
-/// 🗣️ Resolves the active label set from the shell-provided locale; no terminology variant exists for this app.
-fn vcs_labels(view_state: &ViewState) -> &'static VcsLabels {
-    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-    if is_de { &VCS_LABELS_NATIVE_DE } else { &VCS_LABELS_NATIVE_EN }
+semio_framework_plugin::app_labels! {
+    /// 🗣️ Complete UI label set for the VCS app; one field per label makes every locale combination compile-checked.
+    struct VcsLabels {
+        actions: &'static str = en: "Actions", de: "Aktionen";
+        counter: &'static str = en: "Counter", de: "Zähler";
+        commit: &'static str = en: "Commit", de: "Commit";
+        branch: &'static str = en: "Branch", de: "Branch";
+        undo: &'static str = en: "Undo", de: "Rückgängig";
+        redo: &'static str = en: "Redo", de: "Wiederholen";
+        title: &'static str = en: "Title", de: "Titel";
+        status: &'static str = en: "Status", de: "Status";
+        notes: &'static str = en: "Notes", de: "Notizen";
+        tags: &'static str = en: "Tags", de: "Schlagwörter";
+        alternatives: &'static str = en: "Alternatives", de: "Alternativen";
+        no_checkpoints: &'static str = en: "(no checkpoints)", de: "(keine Checkpoints)";
+        checkpoints: &'static str = en: "checkpoints", de: "Checkpoints";
+        window_editor: &'static str = en: "Editor", de: "Editor";
+        window_history: &'static str = en: "History", de: "Verlauf";
+    }
 }
 //#endregion 🔖Terminology
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_vcs_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
+/// command palette and Actions rail get a translated label without threading locale through the whole
+/// builder chain; mirrors `puzzle3d_action_labels`.
+fn vcs_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("incrementCounter", "Increment Counter", "Zaehler erhoehen"),
+        ("patchProjection", "Patch Projection", "Projektion aktualisieren"),
+        ("textEdit", "Edit Text", "Text bearbeiten"),
+        ("edit", "Edit", "Bearbeiten"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+        ("noop", "No-op", "Keine Aktion"),
+        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrueckt"),
+        ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegt"),
+        ("canvasPointerUp", "Canvas Pointer Up", "Leinwand-Zeiger losgelassen"),
+        ("canvasWheel", "Canvas Wheel", "Leinwand-Mausrad"),
+    ];
+    localized_label_map(is_de, ENTRIES)
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_vcs_app`;
+/// currently empty since this manifest declares no utilities, kept for parity with `puzzle3d_utility_labels`.
+fn vcs_utility_labels(_is_de: bool) -> std::collections::HashMap<String, String> {
+    std::collections::HashMap::new()
+}
+//#endregion 🔖CommandLabels
 
 //#region 🔖Panels
 /// 🌳 Builds the document tree's checkpoint + alternative sections from `HistoryView` alone — the
@@ -442,26 +433,19 @@ fn vcs_labels(view_state: &ViewState) -> &'static VcsLabels {
 /// `HistoryColumn` doesn't carry alternative display names (`vcs::Alternative.name` isn't part of the
 /// `DocumentApp`-visible `HistoryView` contract — a real gap, noted for whoever revisits this).
 fn build_document_tree(history: &HistoryView, selected: &[String], labels: &VcsLabels) -> UiNode {
+    let builder = PanelTreeBuilder::new("vcs-play-document");
     let checkpoint_items: Vec<UiTreeItemNode> = history
         .columns
         .iter()
         .rev()
         .map(|column| UiTreeItemNode {
-            id: format!("vcs-play-document.checkpoint.{}", column.checkpoint_id),
-            label: column.description.clone().unwrap_or_else(|| column.checkpoint_id.clone()),
-            description: Some(column.timestamp.clone()),
             icon_id: Some("git-commit".into()),
-            selected: None,
-            default_open: None,
-            action: Some(vcs_action("checkoutCheckpoint", Some(json!({ "checkpointId": column.checkpoint_id })))),
-            hover_action: None,
-            unhover_action: None,
-            actions: None,
-            draggable: None,
-            drag_data: None,
-            items: None,
-            control: None,
-            is_hidden: None,
+            ..tree_item_with_action(
+                builder.item_id("checkpoint", &column.checkpoint_id),
+                column.description.clone().unwrap_or_else(|| column.checkpoint_id.clone()),
+                Some(column.timestamp.clone()),
+                vcs_action("checkoutCheckpoint", Some(json!({ "checkpointId": column.checkpoint_id }))),
+            )
         })
         .collect();
     let mut alternative_ids: Vec<String> = Vec::new();
@@ -477,72 +461,29 @@ fn build_document_tree(history: &HistoryView, selected: &[String], labels: &VcsL
         .map(|alternative_id| {
             let count = history.columns.iter().filter(|column| column.alternative_ids.contains(alternative_id)).count();
             UiTreeItemNode {
-                id: format!("vcs-play-document.alternative.{alternative_id}"),
-                label: alternative_id.clone(),
-                description: Some(format!("{count} {}", labels.checkpoints)),
                 icon_id: Some("git-branch".into()),
-                selected: None,
-                default_open: None,
-                action: Some(vcs_action(
-                    "switchAlternative",
-                    Some(json!({ "alternativeId": alternative_id })),
-                )),
-                hover_action: None,
-                unhover_action: None,
-                actions: None,
-                draggable: None,
-                drag_data: None,
-                items: None,
-                control: None,
-                is_hidden: None,
+                ..tree_item_with_action(
+                    builder.item_id("alternative", alternative_id),
+                    alternative_id.clone(),
+                    Some(format!("{count} {}", labels.checkpoints)),
+                    vcs_action("switchAlternative", Some(json!({ "alternativeId": alternative_id }))),
+                )
             }
         })
         .collect();
-    UiNode::Tree(UiTreeNode {
-        sections: vec![
-            UiTreeSectionNode {
-                id: "vcs-play-document.checkpoints".into(),
-                label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
-                default_open: Some(true),
-                items: if checkpoint_items.is_empty() {
-                    vec![UiTreeItemNode {
-                        id: "vcs-play-document.empty".into(),
-                        label: labels.no_checkpoints.into(),
-                        description: None,
-                        icon_id: None,
-                        selected: None,
-                        default_open: None,
-                        action: None,
-                        hover_action: None,
-                        unhover_action: None,
-                        actions: None,
-                        draggable: None,
-                        drag_data: None,
-                        items: None,
-                        control: None,
-                        is_hidden: None,
-                    }]
-                } else {
-                    checkpoint_items
-                },
-            },
-            UiTreeSectionNode {
-                id: "vcs-play-document.alternatives".into(),
-                label: Some(labels.alternatives.into()),
-                default_open: Some(true),
-                items: alternative_items,
-            },
-        ],
-        selected_ids: Some(
-            selected
-                .iter()
-                .map(|id| format!("vcs-play-document.checkpoint.{id}"))
-                .collect(),
-        ),
-        highlighted_ids: None,
-        selection_change: Some(vcs_action("setSelection", None)),
-        drop_action: None,
-    })
+    let selected_ids: Vec<String> = selected.iter().map(|id| builder.item_id("checkpoint", id)).collect();
+    builder
+        .section_or_placeholder(
+            "vcs-play-document.checkpoints",
+            Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
+            true,
+            checkpoint_items,
+            labels.no_checkpoints,
+        )
+        .section("vcs-play-document.alternatives", Some(labels.alternatives.into()), true, alternative_items)
+        .selected(selected_ids)
+        .selection_change(vcs_action("setSelection", None))
+        .build()
 }
 
 fn build_inspection_tree(projection: &VcsDemoProjection, labels: &VcsLabels) -> UiNode {
@@ -731,11 +672,7 @@ impl DocumentApp for VcsPlayApp {
         // `handle_action`, dispatching them straight to `DocumentVcsCommand`.
         match action {
             "setSelection" => {
-                self.selected_checkpoint_ids = args
-                    .and_then(|value| value.get("ids"))
-                    .and_then(|value| value.as_array())
-                    .map(|ids| ids.iter().filter_map(|value| value.as_str().map(str::to_string)).collect())
-                    .unwrap_or_default();
+                self.selected_checkpoint_ids = selection_ids(args);
                 ActionEmit::default()
             }
             "incrementCounter" => ActionEmit::ops(vec![VcsDemoOp::SetCounter { counter: doc.projection.counter + 1 }]),
@@ -771,7 +708,7 @@ impl DocumentApp for VcsPlayApp {
     }
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, VcsDemoProjection>, view_state: &ViewState) -> UiNode {
-        let labels = vcs_labels(view_state);
+        let labels = resolve_labels::<VcsLabels>(view_state);
         match body_key {
             VCS_PLAY_BODY_EDITOR => render_editor(doc.projection, labels),
             VCS_PLAY_BODY_HISTORY => render_history(doc.history),
@@ -782,58 +719,29 @@ impl DocumentApp for VcsPlayApp {
     }
 
     fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = vcs_labels(view_state);
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        AppLabelsOverlay {
-            window_kind_labels: std::collections::HashMap::from([
-                (VCS_PLAY_WINDOW_EDITOR.to_string(), labels.window_editor.to_string()),
-                (VCS_PLAY_WINDOW_HISTORY.to_string(), labels.window_history.to_string()),
-            ]),
-            panel_tab_labels: std::collections::HashMap::new(),
-            mode_labels: std::collections::HashMap::new(),
-            action_labels: vcs_action_labels(is_de),
-            utility_labels: vcs_utility_labels(is_de),
-            example_labels: HashMap::new(),
-            action_arg_labels: HashMap::new(),
-            dialog_labels: HashMap::new(),
-            introduction_labels: HashMap::new(),
-        }
+        let labels = resolve_labels::<VcsLabels>(view_state);
+        let is_de = is_de_locale(view_state);
+        AppLabelsOverlay::default()
+            .window_kind_label(VCS_PLAY_WINDOW_EDITOR, labels.window_editor)
+            .window_kind_label(VCS_PLAY_WINDOW_HISTORY, labels.window_history)
+            .action_labels(vcs_action_labels(is_de))
+            .utility_labels(vcs_utility_labels(is_de))
     }
 }
 //#endregion 🔖VcsPlayApp
 
-//#region 🔖CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_vcs_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
-/// command palette and Actions rail get a translated label without threading locale through the whole
-/// builder chain; mirrors `puzzle3d_action_labels`.
-fn vcs_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("incrementCounter", "Increment Counter", "Zaehler erhoehen"),
-        ("patchProjection", "Patch Projection", "Projektion aktualisieren"),
-        ("textEdit", "Edit Text", "Text bearbeiten"),
-        ("edit", "Edit", "Bearbeiten"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("noop", "No-op", "Keine Aktion"),
-        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrueckt"),
-        ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegt"),
-        ("canvasPointerUp", "Canvas Pointer Up", "Leinwand-Zeiger losgelassen"),
-        ("canvasWheel", "Canvas Wheel", "Leinwand-Mausrad"),
-    ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-}
-
-/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_vcs_app`;
-/// currently empty since this manifest declares no utilities, kept for parity with `puzzle3d_utility_labels`.
-fn vcs_utility_labels(_is_de: bool) -> std::collections::HashMap<String, String> {
-    std::collections::HashMap::new()
-}
-//#endregion 🔖CommandLabels
-
-//#region 🔖AppFactory
+//#region 🔖Manifest
 fn create_vcs_app() -> App {
     App::from_builder(
         App::builder(VCS_PLAY_APP_ID, "VCS").document(["semio", "vcs"])
+            .resource_kind(ResourceKindSpec {
+                id: "vcs.document".into(),
+                name: "VCS Document".into(),
+                source_format: "vcs.demo".into(),
+                component_kind: "vcs".into(),
+                dimension: "data".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+            })
             .icon_id("git-branch")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -869,22 +777,14 @@ semio_framework_plugin::semio_plugin! {
     setup: register_vcs_exports,
     apps: [ create_vcs_app => VcsPlayApp ],
 }
-//#endregion 🔖AppFactory
+//#endregion 🔖Manifest
 
 //#region 🧪Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
     use vcs::{DocumentVcsEnvelope, HistoryColumn};
-
-    fn meta() -> semio_framework_plugin::ActionMeta {
-        semio_framework_plugin::ActionMeta { actor: "local".into(), instance_id: 1 }
-    }
-
-    fn new_app() -> VcsDocumentApp<VcsPlayApp> {
-        VcsDocumentApp::new(VcsPlayApp::default())
-    }
 
     /// 📦 Parses `document_json()` (the full envelope) for tests that need to inspect raw
     /// checkpoints/alternatives directly — safe here because none of these tests undo/redo, so every
@@ -895,7 +795,7 @@ mod tests {
 
     #[test]
     fn renders_editor_scene() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<VcsPlayApp>();
         let node = app.render(VCS_PLAY_BODY_EDITOR, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(!json.contains("text-editor"), "editor must no longer be a raw JSON editor: {json}");
@@ -907,7 +807,7 @@ mod tests {
 
     #[test]
     fn renders_history_scene() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<VcsPlayApp>();
         let node = app.render(VCS_PLAY_BODY_HISTORY, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("graph-timeline"), "missing graph-timeline surface kind: {json}");
@@ -917,7 +817,7 @@ mod tests {
 
     #[test]
     fn seeded_history_has_checkpoints() {
-        let app = new_app();
+        let app = testkit::new_app::<VcsPlayApp>();
         let envelope = seeded_envelope(&app);
         assert!(envelope.vcs.alternatives.len() >= 5, "expected >=5 alternatives, got {}", envelope.vcs.alternatives.len());
         assert!(envelope.vcs.checkpoints.len() >= 14, "expected >=14 checkpoints, got {}", envelope.vcs.checkpoints.len());
@@ -935,7 +835,7 @@ mod tests {
 
     #[test]
     fn checkout_then_commit_forks_across_actions() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<VcsPlayApp>();
         let envelope_before = seeded_envelope(&app);
         let root_checkpoint_id = envelope_before.vcs.checkpoints[0].id.clone();
         let children_of_root_before = envelope_before
@@ -945,11 +845,11 @@ mod tests {
             .filter(|checkpoint| checkpoint.parent_id.as_deref() == Some(root_checkpoint_id.as_str()))
             .count();
 
-        let checkout = app.handle_action("checkoutCheckpoint", Some(&json!({ "checkpointId": root_checkpoint_id })), &ViewState::default(), &meta()).expect("checkout");
+        let checkout = app.handle_action("checkoutCheckpoint", Some(&json!({ "checkpointId": root_checkpoint_id })), &ViewState::default(), &testkit::meta("local")).expect("checkout");
         assert!(checkout.operations.is_empty(), "history actions never emit KernelOperations");
 
-        app.handle_action("incrementCounter", None, &ViewState::default(), &meta()).expect("increment");
-        app.handle_action("commitCheckpoint", Some(&json!({ "message": "forked from root" })), &ViewState::default(), &meta()).expect("commit");
+        app.handle_action("incrementCounter", None, &ViewState::default(), &testkit::meta("local")).expect("increment");
+        app.handle_action("commitCheckpoint", Some(&json!({ "message": "forked from root" })), &ViewState::default(), &testkit::meta("local")).expect("commit");
 
         let envelope_after = seeded_envelope(&app);
         let children_of_root_after = envelope_after
@@ -967,16 +867,16 @@ mod tests {
 
     #[test]
     fn increment_counter_action_updates_projection() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<VcsPlayApp>();
         let before = app.projection().expect("materialize projection").counter;
-        let result = app.handle_action("incrementCounter", None, &ViewState::default(), &meta()).expect("increment");
+        let result = app.handle_action("incrementCounter", None, &ViewState::default(), &testkit::meta("local")).expect("increment");
         assert_eq!(result.operations.len(), 1);
         assert_eq!(app.projection().expect("materialize projection").counter, before + 1);
     }
 
     #[test]
     fn document_lists_checkpoints() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<VcsPlayApp>();
         let node = app.render(VCS_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("vcs-play-document.checkpoint"));
@@ -984,14 +884,14 @@ mod tests {
 
     #[test]
     fn text_edit_action_persists_projection_changes() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<VcsPlayApp>();
         let before = app.projection().expect("materialize projection");
         let mut edited = before.clone();
         edited.title = "Edited via JSON".into();
         edited.counter = before.counter + 41;
         edited.tags.push("edited-in-place".into());
         let text = serde_json::to_string_pretty(&edited).unwrap();
-        let result = app.handle_action("textEdit", Some(&json!({ "text": text })), &ViewState::default(), &meta()).expect("text edit");
+        let result = app.handle_action("textEdit", Some(&json!({ "text": text })), &ViewState::default(), &testkit::meta("local")).expect("text edit");
         assert!(!result.operations.is_empty());
         let after = app.projection().expect("materialize projection");
         assert_eq!(after.title, "Edited via JSON");
@@ -1001,7 +901,7 @@ mod tests {
 
     #[test]
     fn vcs_labels_resolve_native_english_by_default() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<VcsPlayApp>();
         let node = app.render(VCS_PLAY_BODY_EDITOR, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Actions"));
@@ -1026,7 +926,7 @@ mod tests {
 
     #[test]
     fn vcs_labels_resolve_german_locale() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<VcsPlayApp>();
         let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
 
         let node = app.render(VCS_PLAY_BODY_EDITOR, None, &view_state).expect("render");
@@ -1051,34 +951,34 @@ mod tests {
 
     #[test]
     fn edit_action_is_alias_for_text_edit() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<VcsPlayApp>();
         let before = app.projection().expect("materialize projection");
         let mut edited = before.clone();
         edited.status = "reviewed".into();
         let text = serde_json::to_string(&edited).unwrap();
-        let result = app.handle_action("edit", Some(&json!({ "text": text })), &ViewState::default(), &meta()).expect("edit");
+        let result = app.handle_action("edit", Some(&json!({ "text": text })), &ViewState::default(), &testkit::meta("local")).expect("edit");
         assert!(!result.operations.is_empty());
         assert_eq!(app.projection().expect("materialize projection").status, "reviewed");
     }
 
     #[test]
     fn undo_redo_round_trips_through_the_wrapper() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<VcsPlayApp>();
         let before = app.projection().expect("materialize projection").counter;
-        app.handle_action("incrementCounter", None, &ViewState::default(), &meta()).expect("increment");
+        app.handle_action("incrementCounter", None, &ViewState::default(), &testkit::meta("local")).expect("increment");
         assert_eq!(app.projection().expect("materialize projection").counter, before + 1);
-        let undo = app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        let undo = app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
         assert!(undo.operations.is_empty());
         assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(app.projection().expect("materialize projection").counter, before);
-        app.handle_action("redo", None, &ViewState::default(), &meta()).expect("redo");
+        app.handle_action("redo", None, &ViewState::default(), &testkit::meta("local")).expect("redo");
         assert_eq!(app.projection().expect("materialize projection").counter, before + 1);
     }
 
     #[test]
     fn create_and_switch_alternative_round_trip_through_the_wrapper() {
-        let mut app = new_app();
-        let create = app.handle_action("createAlternative", Some(&json!({ "name": "trying-something" })), &ViewState::default(), &meta()).expect("create alternative");
+        let mut app = testkit::new_app::<VcsPlayApp>();
+        let create = app.handle_action("createAlternative", Some(&json!({ "name": "trying-something" })), &ViewState::default(), &testkit::meta("local")).expect("create alternative");
         assert!(create.operations.is_empty());
         let envelope = seeded_envelope(&app);
         assert!(envelope.active_alternative_id.is_some(), "createAlternative must set an active alternative");

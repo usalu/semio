@@ -264,7 +264,7 @@ pub mod algorithms {
         let mut queue = std::collections::VecDeque::new();
         queue.push_back(seed);
         while let Some(u) = queue.pop_front() {
-            let du = dist[u].unwrap();
+            let du = dist[u].expect("every queued node was assigned a distance before being pushed");
             for &v in &adj.out[u] {
                 if dist[v].is_none() {
                     dist[v] = Some(du + 1);
@@ -465,7 +465,7 @@ pub mod algorithms {
             path.push(u);
             for &v in &adj.out[u] {
                 if color[v] == 1 {
-                    let start = path.iter().position(|&x| x == v).unwrap();
+                    let start = path.iter().position(|&x| x == v).expect("color[v] == 1 means v is currently on the open dfs path");
                     return Some(path[start..].to_vec());
                 }
                 if color[v] == 0 {
@@ -575,13 +575,13 @@ pub mod algorithms {
                     strongconnect(v, adj, st);
                     st.lowlink[u] = st.lowlink[u].min(st.lowlink[v]);
                 } else if st.on_stack[v] {
-                    st.lowlink[u] = st.lowlink[u].min(st.index[v].unwrap());
+                    st.lowlink[u] = st.lowlink[u].min(st.index[v].expect("on_stack[v] implies index[v] was assigned when v was first visited"));
                 }
             }
-            if st.lowlink[u] == st.index[u].unwrap() {
+            if st.lowlink[u] == st.index[u].expect("index[u] was assigned at the start of this strongconnect call") {
                 let mut component = Vec::new();
                 loop {
-                    let w = st.stack.pop().unwrap();
+                    let w = st.stack.pop().expect("u is still on the tarjan stack until its own component is popped");
                     st.on_stack[w] = false;
                     component.push(w);
                     if w == u {
@@ -962,7 +962,6 @@ pub fn property_bag_to_json(bag: &PropertyBag) -> Option<serde_json::Value> {
 }
 // #endregion 🔖PropertyJson
 
-
 // #region 🔖Kinds
 use mathematical_geometry::Point;
 
@@ -1020,6 +1019,3 @@ pub struct Handle {
 /// 🪢 Retained edge with typed endpoints.
 pub type GraphEdge<E> = CoreEdge<E>;
 // #endregion 🔖Kinds
-
-
-

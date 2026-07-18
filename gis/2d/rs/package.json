@@ -1,9 +1,0 @@
-{
-  "name": "@semio-tech/gis-2d-rs",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./pkg/gis_2d.js",
-    "./pkg/gis_2d.js": "./pkg/gis_2d.js"
-  }
-}

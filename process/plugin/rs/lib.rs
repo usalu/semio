@@ -15,7 +15,7 @@ pub mod app_3d {
         apply_world3d_sun_action, build_world_3d_scene, create_default_layout, mesh_from_indexed_with_face_groups, mesh_from_kind,
         ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, world3d_camera_json, world3d_mesh_id_from_url, world3d_scene,
         world3d_sun_measures, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App,
-        DocumentApp, DocumentView, MeshData, MeshExporter, MeshImporter, PanelGroup, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode,
+        DocumentApp, DocumentView, MeshData, MeshExporter, MeshImporter, OsMediaCapability, PanelGroup, ResourceKindSpec, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode,
         UiInputNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
         WindowEngagementControl, WindowEngagementInput, WindowEngagementStatus, WindowMeasure, WorldSunConfig,
         SET_ACTIVE_UTILITY_ACTION_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -1757,6 +1757,14 @@ pub mod app_3d {
         App::from_builder(
             App::builder(PROCESS_3D_PLAY_APP_ID, "Process 3D")
                 .document(["semio", "process", "3d"])
+                .resource_kind(ResourceKindSpec {
+                    id: "3d.process".into(),
+                    name: "3D Process".into(),
+                    source_format: "process.3d".into(),
+                    component_kind: "process3d".into(),
+                    dimension: "3d".into(),
+                    media_capability: OsMediaCapability::Brep,
+                })
                 .icon_id("hammer")
                 .mode("edit", "Edit")
                 .default_mode_id("edit")

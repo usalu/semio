@@ -11,7 +11,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 //#endregion 🔌Adapters
 
-import type { PlaygroundVariant } from "../../../framework/plugin/registry/generated/playgrounds.ts";
+import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../framework/plugin/registry/generated/playgrounds.ts";
 
 export type PlaygroundHostKind = string;
 
@@ -885,26 +885,54 @@ export function runCmd(cmd: string, args: string[], opts: { cwd?: string; env?: 
 /** ⏱️Default hard wall-clock budget (ms) for a project's default `test` target. */
 export const DEFAULT_TEST_BUDGET_MS = 30_000;
 
-/** ⏱️Runs a command under a hard wall-clock budget; SIGKILLs and fails loudly past it. */
-export function runTestBudgeted(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; budgetMs?: number } = {}): void {
-  const budgetMs = opts.budgetMs ?? Number(process.env.SEMIO_TEST_BUDGET_MS ?? DEFAULT_TEST_BUDGET_MS);
+/**
+ * ⏱️SIGKILLs `pid`'s whole process tree, not just `pid` — a timed-out `spawnSync`/`execFileSync` only signals the
+ * direct child, leaking forked worker pools (e.g. vitest's `workers/forks.js`) that keep burning CPU indefinitely.
+ * Requires the child to have been spawned with `detached: true` on POSIX so `pid` is its own process-group leader.
+ */
+function killTestBudgetTree(pid: number): void {
+  if (process.platform === "win32") {
+    spawnSync("taskkill", ["/pid", String(pid), "/T", "/F"], { stdio: "ignore" });
+    return;
+  }
   try {
-    execFileSync(cmd, args, { stdio: "inherit", cwd: opts.cwd, env: opts.env ?? process.env, timeout: budgetMs, killSignal: "SIGKILL" });
-  } catch (error) {
-    const err = error as NodeJS.ErrnoException & { signal?: string };
-    if (err.signal === "SIGKILL" || err.code === "ETIMEDOUT") {
-      console.error(`[test-budget] ${cmd} ${args.join(" ")} exceeded ${budgetMs}ms — killed. Trim tests or move them to a test-e2e target.`);
-      process.exit(1);
-    }
-    throw error;
+    process.kill(-pid, "SIGKILL");
+  } catch {
+    /* group already gone */
   }
 }
 
+/**
+ * ⏱️Runs a command under a hard wall-clock budget; SIGKILLs the whole process tree and fails loudly past it.
+ * Deliberately async: Bun's `spawnSync`/`execFileSync` `detached` option does not put the child in its own
+ * process group (verified — only the async `spawn` does), so tree-killing on timeout requires the async form.
+ * Callers may fire-and-forget this from a synchronous `void`-returning context — the process stays alive on
+ * the pending child/timer handles regardless, and the eventual `process.exit()` below still takes effect.
+ */
+export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; budgetMs?: number } = {}): Promise<void> {
+  const budgetMs = opts.budgetMs ?? Number(process.env.SEMIO_TEST_BUDGET_MS ?? DEFAULT_TEST_BUDGET_MS);
+  const child = spawn(cmd, args, { stdio: "inherit", cwd: opts.cwd, env: opts.env ?? process.env, detached: process.platform !== "win32" });
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    if (child.pid) killTestBudgetTree(child.pid);
+  }, budgetMs);
+  const { code, signal } = await new Promise<{ code: number | null; signal: NodeJS.Signals | null }>((resolveExit, rejectExit) => {
+    child.on("error", rejectExit);
+    child.on("exit", (exitCode, exitSignal) => resolveExit({ code: exitCode, signal: exitSignal }));
+  }).finally(() => clearTimeout(timer));
+  if (timedOut) {
+    console.error(`[test-budget] ${cmd} ${args.join(" ")} exceeded ${budgetMs}ms — killed. Trim tests or move them to a test-e2e target.`);
+    process.exit(1);
+  }
+  if (signal || code !== 0) process.exit(code ?? 1);
+}
+
 /** 🦀Warm-builds test binaries (un-budgeted) then runs `cargo test` under the budget — Rust compile time isn't part of the test budget. */
-export function runCargoTestBudgeted(packages: string[], cwd: string, extraArgs: string[] = [], env: NodeJS.ProcessEnv = process.env): void {
+export async function runCargoTestBudgeted(packages: string[], cwd: string, extraArgs: string[] = [], env: NodeJS.ProcessEnv = process.env): Promise<void> {
   const packageArgs = packages.flatMap((pkg) => ["-p", pkg]);
   runCmd("cargo", ["build", "--tests", ...packageArgs], { cwd, env });
-  runTestBudgeted("cargo", ["test", ...packageArgs, ...extraArgs], { cwd, env });
+  await runTestBudgeted("cargo", ["test", ...packageArgs, ...extraArgs], { cwd, env });
 }
 //#endregion ⏱️TestBudget
 
@@ -991,8 +1019,8 @@ export function runViteBuild(bundleRoot: string, segments: string[], config: str
 }
 
 /** ▶️Vitest run in bundle directory, under the [[runTestBudgeted]] wall-clock budget. */
-export function runVitest(bundleRoot: string, segments: string[], config = "vitest.config.ts"): void {
-  runTestBudgeted(process.execPath, ["x", "vitest", "run", "--config", config, "--passWithNoTests", ...segments], { cwd: bundleRoot, env: devToolingEnv() });
+export async function runVitest(bundleRoot: string, segments: string[], config = "vitest.config.ts"): Promise<void> {
+  await runTestBudgeted(process.execPath, ["x", "vitest", "run", "--config", config, "--passWithNoTests", ...segments], { cwd: bundleRoot, env: devToolingEnv() });
 }
 
 //#region 🔌PlaygroundDevPorts
@@ -1193,11 +1221,13 @@ export function loadFrameworkOsPlaygroundCatalog(): readonly PlaygroundVariant[]
   return JSON.parse(readFileSync(catalogPath, "utf8")) as readonly PlaygroundVariant[];
 }
 
-/** @emoji 🗺 Local tile proxy for wgpu gis2d dev (Trunk forwards `/osm` + `/vt` here). */
-export const GIS_MAP_WGPU_TILE_PROXY_PORT = 6141;
+/** @emoji 🔌 Local dev-time asset server port for wgpu Trunk/native playgrounds (Trunk forwards
+ * route-scoped requests — e.g. `/osm`, `/vt`, `/dem` — here; driven by each playground's declared
+ * `[[package.metadata.semio.assets]]` rows, not any one app's routes). */
+export const SEMIO_ASSET_SERVER_PORT = 6141;
 
-/** @emoji 🗺 Process env for absolute GIS map tile URL base (native-bin wgpu). */
-export const SEMIO_GIS_MAP_TILE_BASE_URL_ENV = "SEMIO_GIS_MAP_TILE_BASE_URL";
+/** @emoji 🔌 Process env for the absolute asset server URL base (native-bin wgpu route-relative fetches). */
+export const SEMIO_ASSET_BASE_URL_ENV = "SEMIO_ASSET_BASE_URL";
 
 /** @emoji 🔌 Resolves the default dev port for a given catalog variant and renderer. */
 export function frameworkOsPlaygroundDefaultPort(catalog: readonly PlaygroundVariant[], variant: string, renderer: string): number {

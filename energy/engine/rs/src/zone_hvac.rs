@@ -82,7 +82,7 @@ impl ZoneEquipment {
                     pressure_pa: request.outdoor_pressure_pa,
                 };
                 let heat = heating_coil_output_w(heating, &inlet, request.heating_load_w);
-                let cool = cooling.map(|c| cooling_coil_output_w(c, &inlet, request.cooling_load_w, 0.05))
+                let cool = cooling.as_ref().map(|c| cooling_coil_output_w(c, &inlet, request.cooling_load_w, 0.05))
                     .unwrap_or(crate::coils::CoolingCoilOutput {
                         outlet: inlet,
                         total_cooling_w: 0.0,

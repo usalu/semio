@@ -144,8 +144,8 @@ pub fn ventilation_load_w(
     }
     let rho = moist_air_density(t_out_c, w_out, p_atm);
     let m_dot = rho * flow_m3_s;
-    let h_zone = moist_air_enthalpy_j_per_kg(t_zone_c, w_zone);
-    let h_out = moist_air_enthalpy_j_per_kg(t_out_c, w_out);
+    let _h_zone = moist_air_enthalpy_j_per_kg(t_zone_c, w_zone);
+    let _h_out = moist_air_enthalpy_j_per_kg(t_out_c, w_out);
     let eps = heat_recovery_effectiveness.clamp(0.0, 1.0);
     let sensible = m_dot * CP_DRY_AIR * (t_out_c - t_zone_c) * (1.0 - eps);
     let h_fg = latent_heat_vaporization((t_zone_c + t_out_c) * 0.5);

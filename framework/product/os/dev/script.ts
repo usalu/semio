@@ -974,33 +974,35 @@ class PluginWatchScript extends BundleScript {
   }
 }
 
-async function buildEngineWasm(pluginId: string, renderer: string): Promise<void> {
+/** @emoji 🔎 Resolves an `engines` crate path (from the playground registry) to its `script.ts` wasm
+ * build entry point — most engine crates keep `script.ts` inside the `rs` dir itself, a few (e.g.
+ * `flow/core/rs`) keep it one level up next to the crate's TS sibling, so both are tried. */
+function engineWasmScriptPath(cratePath: string): string {
+  const direct = join(repoRoot, cratePath, "script.ts");
+  if (existsSync(direct)) return direct;
+  const parent = cratePath.endsWith("/rs") ? cratePath.slice(0, -"/rs".length) : cratePath;
+  const parentScript = join(repoRoot, parent, "script.ts");
+  if (existsSync(parentScript)) return parentScript;
+  throw new Error(`no wasm build script found for engine crate ${cratePath}`);
+}
+
+/** @emoji 🔌 Builds every wasm engine a react-renderer dev session needs: the framework node-graph +
+ * editor host engines unconditionally (shared studio chrome, not any one app), then whatever the
+ * active playground variant declares via `engines = […]` on its `[[…playground]]` Cargo.toml row —
+ * replaces the previous hardcoded `if (pluginId === "flow" | "gis2d" | "gis3d" | "raster" | "puzzle2d")` branches. */
+async function buildEngineWasm(variant: string, renderer: string): Promise<void> {
   if (renderer !== "react" || process.env.SKIP_ENGINE_BUILD === "1") return;
-  const graphScript = join(repoRoot, "framework/graph/rs/script.ts");
+  const graphScript = join(repoRoot, "framework/surface/node-graph/rs/script.ts");
   const graphBuild = spawnSync("bun", [graphScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
-  if (graphBuild.status !== 0) throw new Error("framework-graph wasm build failed");
+  if (graphBuild.status !== 0) throw new Error("framework-surface-node-graph wasm build failed");
   const editorScript = join(repoRoot, "framework/editor/rs/script.ts");
   const editorBuild = spawnSync("bun", [editorScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
   if (editorBuild.status !== 0) throw new Error("framework-editor wasm build failed");
-  if (pluginId === "flow") {
-    const flowScript = join(repoRoot, "flow/core/script.ts");
-    const flowBuild = spawnSync("bun", [flowScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
-    if (flowBuild.status !== 0) throw new Error("flow-core wasm build failed");
-  }
-  if (pluginId === "gis2d") {
-    const gis2dScript = join(repoRoot, "gis/2d/rs/script.ts");
-    const gis2dBuild = spawnSync("bun", [gis2dScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
-    if (gis2dBuild.status !== 0) throw new Error("gis-2d-rs wasm build failed");
-  }
-  if (pluginId === "gis3d") {
-    const gis3dScript = join(repoRoot, "gis/3d/rs/script.ts");
-    const gis3dBuild = spawnSync("bun", [gis3dScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
-    if (gis3dBuild.status !== 0) throw new Error("gis-3d-rs wasm build failed");
-  }
-  if (pluginId === "puzzle" || pluginId === "puzzle2d") {
-    const puzzle2dScript = join(repoRoot, "puzzle/2d/rs/script.ts");
-    const puzzle2dBuild = spawnSync("bun", [puzzle2dScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
-    if (puzzle2dBuild.status !== 0) throw new Error("puzzle-2d-rs wasm build failed");
+  const row = playgroundCatalog.find((entry) => entry.variant === variant);
+  for (const engineCratePath of row?.engines ?? []) {
+    const script = engineWasmScriptPath(engineCratePath);
+    const build = spawnSync("bun", [script, "wasm"], { cwd: repoRoot, stdio: "inherit" });
+    if (build.status !== 0) throw new Error(`${engineCratePath} wasm build failed`);
   }
 }
 

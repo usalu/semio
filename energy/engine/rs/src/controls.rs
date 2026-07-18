@@ -81,11 +81,11 @@ pub struct HumidistatSpec {
 }
 // #endregion 🔖HumidistatSpec
 
-// #region 🔖EquipmentPriority
+// #region 🔖ZoneEquipmentPriority
 /// 🏆 Equipment serving priority for load allocation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct EquipmentPriority(pub u8);
-// #endregion 🔖EquipmentPriority
+pub struct ZoneEquipmentPriority(pub u8);
+// #endregion 🔖ZoneEquipmentPriority
 
 // #region 🔖Thermostat
 fn proportional_fraction(error: f64, throttle: f64) -> f64 {
@@ -196,8 +196,8 @@ pub fn load_to_actions(load: &ZoneLoad, ventilation_flow_m3_s: f64) -> Vec<Contr
 /// 🏆 Allocate zone load across equipment by priority until capacity exhausted.
 pub fn allocate_load_by_priority(
     load: ZoneLoad,
-    capacities_w: &[(EquipmentPriority, f64)],
-) -> Vec<(EquipmentPriority, ZoneLoad)> {
+    capacities_w: &[(ZoneEquipmentPriority, f64)],
+) -> Vec<(ZoneEquipmentPriority, ZoneLoad)> {
     let mut sorted: Vec<_> = capacities_w.iter().copied().collect();
     sorted.sort_by_key(|(p, _)| *p);
     let mut remaining = load;
@@ -268,7 +268,7 @@ mod tests {
             heating_w: 8000.0,
             ..Default::default()
         };
-        let caps = [(EquipmentPriority(1), 3000.0), (EquipmentPriority(2), 5000.0)];
+        let caps = [(ZoneEquipmentPriority(1), 3000.0), (ZoneEquipmentPriority(2), 5000.0)];
         let alloc = allocate_load_by_priority(load, &caps);
         assert_eq!(alloc.len(), 2);
         assert!((alloc[0].1.heating_w - 3000.0).abs() < 1e-6);

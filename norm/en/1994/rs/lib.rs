@@ -54,7 +54,7 @@ pub mod part_1_2 {
 
 // #region 🔖Part2
 pub mod part_2 {
-    use super::part_1_1;
+    use super::{part_1_1, AnnexChoice, CheckResult};
 
     pub fn check_bridge_composite(m_ed: f64, m_rd: f64) -> CheckResult {
         part_1_1::check_composite_bending(m_ed, m_rd, AnnexChoice::En)

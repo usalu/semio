@@ -1,10 +1,14 @@
-use animate_core::sobject::{Sobject, SobjectShape};
-use animate_core::FrameSnapshot;
-use infinite_cavas::{Color, FillRule, Scene, ShapeRef, Stroke};
-use mathematical_geometry::{Affine, Circle};
+use animate_core::{AnimateConfig, Camera, Color, Sobject};
 use pollster::block_on;
+use vello::kurbo::Stroke as KurboStroke;
 use vello::peniko::Color as VelloColor;
-use vello::{AaConfig, AaSupport, RenderParams, Renderer, RendererOptions};
+use vello::{AaConfig, AaSupport, RenderParams, Renderer, RendererOptions, Scene};
+
+/// 🖼️ Captured mobject state at one timeline sample.
+pub struct CapturedFrame {
+    pub time: f64,
+    pub mobjects: Vec<Box<dyn Sobject>>,
+}
 
 /// 🖌️ Headless Vello/wgpu renderer with static-background caching.
 pub struct VelloRenderer {
@@ -38,12 +42,14 @@ impl VelloRenderer {
             compatible_surface: None,
             force_fallback_adapter: false,
         }))
-        .ok_or_else(|| "no wgpu adapter available".to_string())?;
+        .map_err(|err| format!("no wgpu adapter available: {err:?}"))?;
         let (device, queue) = block_on(adapter.request_device(&wgpu::DeviceDescriptor {
             label: Some("animate_video"),
             required_features: wgpu::Features::empty(),
             required_limits: wgpu::Limits::default(),
             memory_hints: wgpu::MemoryHints::Performance,
+            trace: wgpu::Trace::Off,
+            experimental_features: Default::default(),
         }))
         .map_err(|err| format!("wgpu device: {err:?}"))?;
         let renderer = Renderer::new(
@@ -76,40 +82,31 @@ impl VelloRenderer {
         })
     }
 
-    /// 🖼️ Renders a frame snapshot to RGBA8 pixels.
-    pub fn render_frame(&mut self, snapshot: &FrameSnapshot) -> Result<Vec<u8>, String> {
-        let static_hash = snapshot.static_layer_hash();
-        let cache_hit = self.static_cache.as_ref().is_some_and(|cache| cache.hash == static_hash);
-        if cache_hit && snapshot.mobjects.moving_objects().is_empty() {
+    /// 🖼️ Renders captured mobjects to RGBA8 pixels.
+    pub fn render_capture(&mut self, capture: &CapturedFrame, camera: &Camera, config: &AnimateConfig) -> Result<Vec<u8>, String> {
+        let static_hash = static_layer_hash(capture, config);
+        if self.static_cache.as_ref().is_some_and(|cache| cache.hash == static_hash) {
             return Ok(self.static_cache.as_ref().expect("cache").pixels.clone());
         }
-        if cache_hit {
-            let mut pixels = self.static_cache.as_ref().expect("cache").pixels.clone();
-            let moving_scene = build_vello_scene(snapshot, true);
-            let overlay = self.render_scene_to_pixels(&moving_scene, [0.0, 0.0, 0.0, 0.0])?;
-            alpha_composite(&mut pixels, &overlay);
-            return Ok(pixels);
-        }
-        let full_scene = build_vello_scene(snapshot, false);
-        let pixels = self.render_scene_to_pixels(&full_scene, snapshot.background_color)?;
-        let static_scene = build_static_scene(snapshot);
-        let static_pixels = self.render_scene_to_pixels(&static_scene, snapshot.background_color)?;
+        let scene = build_vello_scene(capture, camera, config);
+        let background = color_to_vello_array(config.background);
+        let pixels = self.render_scene_to_pixels(&scene, background)?;
         self.static_cache = Some(StaticBackgroundCache {
             hash: static_hash,
-            pixels: static_pixels,
+            pixels: pixels.clone(),
         });
         Ok(pixels)
     }
 
-    fn render_scene_to_pixels(&mut self, scene: &Scene, background: [f32; 4]) -> Result<Vec<u8>, String> {
+    fn render_scene_to_pixels(&mut self, scene: &Scene, background: VelloColor) -> Result<Vec<u8>, String> {
         let params = RenderParams {
-            base_color: VelloColor::new(background),
+            base_color: background,
             width: self.width,
             height: self.height,
             antialiasing_method: AaConfig::Area,
         };
         self.renderer
-            .render_to_texture(&self.device, &self.queue, scene.vello_scene(), &self.target_view, &params)
+            .render_to_texture(&self.device, &self.queue, scene, &self.target_view, &params)
             .map_err(|err| format!("vello render: {err:?}"))?;
         read_pixels(
             &self.device,
@@ -141,106 +138,91 @@ fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> (wgp
     (texture, view)
 }
 
-fn build_static_scene(snapshot: &FrameSnapshot) -> Scene {
+fn build_vello_scene(capture: &CapturedFrame, camera: &Camera, config: &AnimateConfig) -> Scene {
     let mut scene = Scene::new();
-    for sobject in snapshot.mobjects.static_objects() {
-        paint_sobject(&mut scene, sobject);
+    let view = scene_affine(camera, config.width, config.height);
+    let mut indices: Vec<usize> = (0..capture.mobjects.len()).collect();
+    indices.sort_by_key(|&i| capture.mobjects[i].id());
+    for i in indices {
+        paint_mobject(&mut scene, capture.mobjects[i].as_ref(), view);
     }
     scene
 }
 
-fn build_vello_scene(snapshot: &FrameSnapshot, moving_only: bool) -> Scene {
-    let mut scene = Scene::new();
-    let objects = if moving_only {
-        snapshot.mobjects.moving_objects()
-    } else {
-        snapshot.mobjects.sorted()
-    };
-    for sobject in objects {
-        paint_sobject(&mut scene, sobject);
-    }
-    scene
+fn scene_affine(camera: &Camera, width: u32, height: u32) -> vello::kurbo::Affine {
+    let sx = width as f64 / camera.frame_width;
+    let sy = height as f64 / camera.frame_height;
+    vello::kurbo::Affine::new([
+        sx,
+        0.0,
+        0.0,
+        -sy,
+        width as f64 * 0.5 - camera.frame_center.x() * sx,
+        height as f64 * 0.5 + camera.frame_center.y() * sy,
+    ]) * camera.transform.to_kurbo()
 }
 
-fn paint_sobject(scene: &mut Scene, sobject: &Sobject) {
-    let transform = affine_to_cavas(sobject.transform);
-    match &sobject.shape {
-        SobjectShape::Circle { center, radius } => {
-            let circle = Circle::new(*center, *radius);
-            if let Some(fill) = &sobject.fill {
-                scene.fill(FillRule::NonZero, transform, color_to_paint(fill.color), None, ShapeRef::Circle(&circle));
-            }
-            if let Some(stroke) = &sobject.stroke {
-                let stroke_style = Stroke::new(stroke.width);
-                scene.stroke(&stroke_style, transform, color_to_paint(stroke.color), None, ShapeRef::Circle(&circle));
-            }
+fn paint_mobject(scene: &mut Scene, mobj: &dyn Sobject, view: vello::kurbo::Affine) {
+    let transform = view * mobj.transform().to_kurbo();
+    let style = mobj.style();
+    let opacity = mobj.effective_opacity();
+    for path in mobj.paths() {
+        let shape = path.to_kurbo();
+        if let Some(fill) = style.fill {
+            let color = fill.with_alpha(fill.a * style.fill_opacity * opacity);
+            scene.fill(
+                vello::peniko::Fill::NonZero,
+                transform,
+                color_to_vello_array(color_from_style(color)),
+                None,
+                &shape,
+            );
         }
-        SobjectShape::Rect { rect } => {
-            if let Some(fill) = &sobject.fill {
-                scene.fill(FillRule::NonZero, transform, color_to_paint(fill.color), None, ShapeRef::Rect(rect));
-            }
-            if let Some(stroke) = &sobject.stroke {
-                let stroke_style = Stroke::new(stroke.width);
-                scene.stroke(&stroke_style, transform, color_to_paint(stroke.color), None, ShapeRef::Rect(rect));
-            }
-        }
-        SobjectShape::RoundedRect { rect } => {
-            if let Some(fill) = &sobject.fill {
-                scene.fill(FillRule::NonZero, transform, color_to_paint(fill.color), None, ShapeRef::RoundedRect(rect));
-            }
-            if let Some(stroke) = &sobject.stroke {
-                let stroke_style = Stroke::new(stroke.width);
-                scene.stroke(&stroke_style, transform, color_to_paint(stroke.color), None, ShapeRef::RoundedRect(rect));
-            }
-        }
-        SobjectShape::Line { line } => {
-            if let Some(stroke) = &sobject.stroke {
-                let stroke_style = Stroke::new(stroke.width);
-                scene.stroke(&stroke_style, transform, color_to_paint(stroke.color), None, ShapeRef::Line(line));
-            }
-        }
-        SobjectShape::Arc { arc } => {
-            if let Some(fill) = &sobject.fill {
-                scene.fill(FillRule::NonZero, transform, color_to_paint(fill.color), None, ShapeRef::Arc(arc));
-            }
-            if let Some(stroke) = &sobject.stroke {
-                let stroke_style = Stroke::new(stroke.width);
-                scene.stroke(&stroke_style, transform, color_to_paint(stroke.color), None, ShapeRef::Arc(arc));
-            }
-        }
-        SobjectShape::Path { path } => {
-            if let Some(fill) = &sobject.fill {
-                scene.fill(FillRule::NonZero, transform, color_to_paint(fill.color), None, ShapeRef::BezPath(path));
-            }
-            if let Some(stroke) = &sobject.stroke {
-                let stroke_style = Stroke::new(stroke.width);
-                scene.stroke(&stroke_style, transform, color_to_paint(stroke.color), None, ShapeRef::BezPath(path));
-            }
+        if let Some(stroke) = style.stroke {
+            let color = stroke.with_alpha(stroke.a * style.stroke_opacity * opacity);
+            let stroke_style = KurboStroke::new(style.stroke_width);
+            scene.stroke(
+                &stroke_style,
+                transform,
+                color_to_vello_array(color_from_style(color)),
+                None,
+                &shape,
+            );
         }
     }
 }
 
-fn affine_to_cavas(affine: mathematical_geometry::Affine) -> Affine {
-    Affine::new(affine.to_kurbo().as_coeffs())
+fn color_to_vello_array(rgba: [f64; 4]) -> VelloColor {
+    VelloColor::new([rgba[0] as f32, rgba[1] as f32, rgba[2] as f32, rgba[3] as f32])
 }
 
-fn color_to_paint(color: [f32; 4]) -> Color {
-    Color::new(color)
+fn color_from_style(color: Color) -> [f64; 4] {
+    color.to_array()
 }
 
-fn alpha_composite(base: &mut [u8], overlay: &[u8]) {
-    for (dst, src) in base.chunks_exact_mut(4).zip(overlay.chunks_exact(4)) {
-        let alpha = f32::from(src[3]) / 255.0;
-        if alpha <= 0.0 {
-            continue;
-        }
-        for channel in 0..3 {
-            let b = f32::from(dst[channel]);
-            let o = f32::from(src[channel]);
-            dst[channel] = (o * alpha + b * (1.0 - alpha)).round().clamp(0.0, 255.0) as u8;
-        }
-        dst[3] = 255;
+pub(crate) fn static_layer_hash(capture: &CapturedFrame, config: &AnimateConfig) -> String {
+    use framework_hash::{format_number_for_hash, hash_parts};
+    let mut parts = vec![
+        format_number_for_hash(config.background[0]),
+        format_number_for_hash(config.background[1]),
+        format_number_for_hash(config.background[2]),
+        format_number_for_hash(config.background[3]),
+        capture.mobjects.len().to_string(),
+    ];
+    for mobj in &capture.mobjects {
+        parts.push(mobj.id().to_string());
+        parts.push(mobj.name().to_string());
+        parts.push(mobj.paths().len().to_string());
     }
+    hash_parts(&parts)
+}
+
+pub(crate) fn frame_hash(capture: &CapturedFrame, config: &AnimateConfig) -> String {
+    use framework_hash::{format_number_for_hash, hash_parts};
+    hash_parts(&[
+        format_number_for_hash(capture.time),
+        static_layer_hash(capture, config),
+    ])
 }
 
 fn read_pixels(
@@ -282,45 +264,35 @@ fn read_pixels(
         let _ = sender.send(result);
     });
     let _ = device.poll(wgpu::PollType::wait_indefinitely());
-    receiver.recv().map_err(|_| "readback channel closed".to_string())??;
+    receiver
+        .recv()
+        .map_err(|_| "readback channel closed".to_string())?
+        .map_err(|err| format!("map async: {err:?}"))?;
     let data = slice.get_mapped_range();
-    Ok(data.to_vec())
+    let pixels = data.to_vec();
+    drop(data);
+    readback_buffer.unmap();
+    Ok(pixels)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use animate_core::sobject::{Mobility, MobjectStore, PaintStyle, Sobject, SobjectId, SobjectShape};
-    use animate_core::FrameSnapshot;
-    use mathematical_geometry::Point;
-
-    fn circle_snapshot() -> FrameSnapshot {
-        let mut store = MobjectStore::default();
-        store.add(Sobject {
-            id: SobjectId(0),
-            shape: SobjectShape::Circle {
-                center: Point::new(0.0, 0.0),
-                radius: 1.0,
-            },
-            transform: mathematical_geometry::Affine::IDENTITY,
-            fill: Some(PaintStyle { color: [1.0, 1.0, 1.0, 1.0] }),
-            stroke: None,
-            z_index: 0,
-            mobility: Mobility::Static,
-        });
-        FrameSnapshot {
-            frame_index: 0,
-            time: 0.0,
-            mobjects: store,
-            background_color: [0.0, 0.0, 0.0, 1.0],
-        }
-    }
+    use animate_core::VSobject;
 
     #[test]
     fn vello_renderer_produces_rgba_buffer() {
-        let mut renderer = VelloRenderer::new(64, 64).expect("renderer");
-        let pixels = renderer.render_frame(&circle_snapshot()).expect("frame");
+        let config = AnimateConfig::default().with_resolution(64, 64);
+        let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
+        let mut capture = CapturedFrame {
+            time: 0.0,
+            mobjects: vec![Box::new(VSobject::new())],
+        };
+        let mut renderer = VelloRenderer::new(config.width, config.height).expect("renderer");
+        let pixels = renderer.render_capture(&capture, &camera, &config).expect("frame");
         assert_eq!(pixels.len(), 64 * 64 * 4);
-        assert!(pixels.iter().any(|&b| b > 0));
+        capture.mobjects.clear();
+        let empty = renderer.render_capture(&capture, &camera, &config).expect("empty");
+        assert_eq!(empty.len(), 64 * 64 * 4);
     }
 }

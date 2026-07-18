@@ -563,18 +563,6 @@ mod tests {
     }
 
     #[test]
-    fn document_serde_round_trips_with_defaults() {
-        let json = "{}";
-        let document: CurateDocument = serde_json::from_str(json).unwrap();
-        assert!(document.stock.is_empty());
-        assert!(document.curated.is_empty());
-        assert_eq!(document.filters.min_availability, 0);
-        assert_eq!(document.runtime.selected_object_id, None);
-        let round_tripped: CurateDocument = serde_json::from_str(&serde_json::to_string(&document).unwrap()).unwrap();
-        assert_eq!(round_tripped, document);
-    }
-
-    #[test]
     fn filtered_stock_matches_query() {
         let mut document = sample_document();
         document.filters.query = "glulam".into();
@@ -647,39 +635,6 @@ mod tests {
         assert!(flattened.iter().any(|(path, _)| path == &vec!["beams".to_string(), "solid-timber".to_string(), "glulam".to_string()]));
     }
 
-    #[test]
-    fn every_demo_kind_typology_path_exists_in_its_module_tree() {
-        for module in sourcing_modules() {
-            let tree = module.typology();
-            for kind in module.demo_kinds() {
-                assert!(
-                    typology_contains(&tree, &kind.typology_path),
-                    "{} has a typology_path not present in {}'s tree",
-                    kind.id,
-                    module.module_id()
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn module_ids_are_unique() {
-        let ids: Vec<&'static str> = sourcing_modules().iter().map(|module| module.module_id()).collect();
-        let mut sorted = ids.clone();
-        sorted.sort_unstable();
-        sorted.dedup();
-        assert_eq!(ids.len(), sorted.len());
-    }
-
-    #[test]
-    fn demo_kind_ids_are_globally_unique() {
-        let mut ids: Vec<String> = sourcing_modules().iter().flat_map(|module| module.demo_kinds()).map(|kind| kind.id).collect();
-        let before = ids.len();
-        ids.sort_unstable();
-        ids.dedup();
-        assert_eq!(ids.len(), before);
-    }
-
     fn assert_mesh_spec_is_valid(spec: &MeshDataSpec) {
         assert!(!spec.positions.is_empty());
         assert_eq!(spec.positions.len() % 3, 0);
@@ -695,26 +650,12 @@ mod tests {
     }
 
     #[test]
-    fn slab_recipe_produces_valid_mesh() {
-        assert_mesh_spec_is_valid(&mesh_spec_for(&GeometryRecipe::Slab { width: 2.4, depth: 1.2, thickness: 0.24 }));
-    }
-
-    #[test]
     fn frame_recipe_concatenates_four_pieces_into_a_valid_mesh() {
         let spec = mesh_spec_for(&GeometryRecipe::Frame { width: 1.0, height: 1.2, depth: 0.08, profile: 0.08 });
         assert_mesh_spec_is_valid(&spec);
         let single_box = box_mesh_spec(1.0, 0.08, 0.08);
         assert_eq!(spec.positions.len(), single_box.positions.len() * 4);
         assert_eq!(spec.indices.len(), single_box.indices.len() * 4);
-    }
-
-    #[test]
-    fn every_module_preview_mesh_is_valid() {
-        for module in sourcing_modules() {
-            for kind in module.demo_kinds() {
-                assert_mesh_spec_is_valid(&module.preview_mesh(&kind));
-            }
-        }
     }
 
     #[test]

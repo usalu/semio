@@ -1,0 +1,20 @@
+{
+  "title": "Norm Technology Absolutely Feature Complete",
+  "emoji": "📏",
+  "status": "open",
+  "description": "Create the norm technology as headless Rust crates for end-to-end norm compliance computation: shared norm_core plus one family crate per listed path (norm/din/v/18599, norm/din/4108, norm/din/en/16798, norm/en/1990-1999), each implementing every part of that family with German national annex where applicable.",
+  "summary": "Created norm technology with norm_core shared kernel and 13 headless family crates (DIN 4108, DIN EN 16798, DIN V 18599, EN 1990–1999). Each crate exposes part modules with clause-traced CheckResult APIs, German NA where applicable, and e2e unit tests. EN 1992 integrates fem_core via inline beam element for FEM-driven RC checks. Registered all crates in Cargo workspace, nx project.json/script.ts per bundle, and launch.json test target. All 17 norm tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2056"
+  },
+  "goal": "🎯norm",
+  "plan": {
+    "client": "cursor",
+    "id": "73be55cf",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/norm_feature_complete_73be55cf.plan.md"
+  },
+  "sessions": [
+    "⚪91767ed5390a4d20ba8dcc6f1a70a26d",
+    "⚪3a4fcadd589b46f1a82b126c997499cb"
+  ]
+}

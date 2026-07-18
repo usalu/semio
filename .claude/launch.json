@@ -299,6 +299,26 @@
         "SEMIO_RENDERER": "wgpu"
       },
       "port": 6182
+    },
+    {
+      "name": "fem2d-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:fem:2d"],
+      "env": {
+        "FEM_2D_PLAY_PORT": "6086",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6086
+    },
+    {
+      "name": "fem3d-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:fem:3d"],
+      "env": {
+        "FEM_3D_PLAY_PORT": "6087",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6087
     }
   ]
 }

@@ -118,9 +118,7 @@ pub fn run_updaters(target: &mut dyn Sobject, dt: f64) {
     for u in updaters {
         u.invoke(target, dt);
     }
-    for child in target.children_mut() {
-        run_updaters(child, dt);
-    }
+    target.visit_children_mut(&mut |child| run_updaters(child, dt));
 }
 
 #[cfg(test)]

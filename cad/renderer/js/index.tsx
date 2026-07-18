@@ -6000,7 +6000,7 @@ export function InteractionRepl({
         ) : null}
       </div>
       {showAside ? (
-        <aside className={cn(floatingPaneAsideClass, fillHost ? "max-h-[45%] w-full shrink-0 border-l-0 border-t" : "w-layout-cad-menu-lg shrink-0")} style={asideStyle}>
+        <aside className={cn(floatingPaneAsideClass, fillHost ? "max-h-[45%] w-full shrink-0 border-l-0 border-t" : "w-layout-floating-menu-lg shrink-0")} style={asideStyle}>
           <strong className="text-sm font-semibold">Editor</strong>
           <div className="flex flex-wrap gap-half">
             {transitionRows.map((row) => (
@@ -6048,7 +6048,7 @@ export function InteractionRepl({
             {interactionMenuOpen ? (
               <div
                 onPointerDown={(e) => e.stopPropagation()}
-                className={cn("absolute top-[calc(100%+var(--spacing-double))] right-0 z-[3] max-h-layout-cad-menu-sm w-layout-cad-menu-md max-w-[calc(100vw-var(--size-xl))] overflow-y-auto p-single", floatingMenuSurfaceClass)}
+                className={cn("absolute top-[calc(100%+var(--spacing-double))] right-0 z-[3] max-h-layout-floating-menu-sm w-layout-floating-menu-md max-w-[calc(100vw-var(--size-xl))] overflow-y-auto p-single", floatingMenuSurfaceClass)}
               >
                 {interactionMatches.length ? (
                   interactionMatches.map((suggestion) => (

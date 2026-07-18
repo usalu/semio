@@ -510,6 +510,57 @@
       }
     },
     {
+      "name": "🛠️dev🏛️architect⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:architect",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "ARCHITECT_PLAY_PORT": "6090",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 142
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6090)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🏛️architect🧊wgpu🌐wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:architect",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "ARCHITECT_PLAY_PORT": "6190",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 142.1
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6190)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🏛️architect🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native architect",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 142.2
+      }
+    },
+    {
       "name": "🛠️dev🌊flow⚛️react",
       "type": "node-terminal",
       "request": "launch",
@@ -868,10 +919,10 @@
       }
     },
     {
-      "name": "🛠️dev📽️presentationplay⚛️react",
+      "name": "🛠️dev🎬animateplay⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:presentation",
+      "command": "bun run dev:animate",
       "cwd": "${workspaceFolder}",
       "env": {
         "PRESENTATION_PLAY_PORT": "6051",
@@ -888,10 +939,10 @@
       }
     },
     {
-      "name": "🛠️dev📽️presentationplay🧊wgpu🌐wasm",
+      "name": "🛠️dev🎬animateplay🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:presentation",
+      "command": "bun run dev:animate",
       "cwd": "${workspaceFolder}",
       "env": {
         "PRESENTATION_PLAY_PORT": "6151",
@@ -908,10 +959,10 @@
       }
     },
     {
-      "name": "🛠️dev📽️presentationplay🧊wgpu🖥️native",
+      "name": "🛠️dev🎬animateplay🧊wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/renderer/wgpu/script.ts native presentation",
+      "command": "bun ./framework/renderer/wgpu/script.ts native animate",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2423,6 +2474,28 @@
       }
     },
     {
+      "name": "🧪test🎬animate-video",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts test",
+      "cwd": "${workspaceFolder}/animate/video/rs",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.41
+      }
+    },
+    {
+      "name": "🎥render🎬animate-video",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts render",
+      "cwd": "${workspaceFolder}/animate/video/rs",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.42
+      }
+    },
+    {
       "name": "🧪test⚡energy-engine",
       "type": "node-terminal",
       "request": "launch",
@@ -2431,6 +2504,28 @@
       "presentation": {
         "group": "3_dev",
         "order": 391.5
+      }
+    },
+    {
+      "name": "🧪test📏norm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cargo test -p norm_core -p norm_din_4108 -p norm_din_en_16798 -p norm_din_v_18599 -p norm_en_1990 -p norm_en_1991 -p norm_en_1992 -p norm_en_1993 -p norm_en_1994 -p norm_en_1995 -p norm_en_1996 -p norm_en_1997 -p norm_en_1998 -p norm_en_1999",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.6
+      }
+    },
+    {
+      "name": "🧪test🏛️architect-program",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/architect-program:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.7
       }
     },
     {
@@ -2657,10 +2752,10 @@
       }
     },
     {
-      "name": "📦build📽️presentationplay",
+      "name": "📦build🎬animateplay",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-playground-dev:build -- --app presentation",
+      "command": "bun nx run @semio-tech/framework-playground-dev:build -- --app animate",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",

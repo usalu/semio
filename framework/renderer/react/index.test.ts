@@ -44,18 +44,18 @@ import { World3dHost, brushObjectPlacementArgs, parsePuzzle3dCatalogueDragPayloa
 import { parseWorldTerrainStyle } from "./components/world-terrain-layer.tsx";
 import {
   InkCanvasHost,
-  noteBlockBounds,
-  noteEraseInkPointsInBlock,
-  noteHtmlToParagraphs,
-  noteParagraphsToHtml,
-  noteResizeBounds,
-  noteScaleBlockWithinGroup,
-  noteClipboardPayload,
-  noteBlocksFromClipboardPayload,
+  inkItemBounds,
+  eraseInkStrokePointsInItem,
+  inkHtmlToParagraphs,
+  inkParagraphsToHtml,
+  inkResizeBounds,
+  inkScaleItemWithinGroup,
+  inkClipboardPayload,
+  inkItemsFromClipboardPayload,
   screenToWorld,
   worldToScreen,
-  type NoteDocument,
-  type NoteInkBlock,
+  type InkDocument,
+  type InkStrokeItem,
 } from "./components/ink-canvas-host.tsx";
 import {
   appDocumentLabel,
@@ -1043,15 +1043,15 @@ describe("framework renderer hosts", () => {
           board2d: {
             fixtureJson: JSON.stringify({ nodes: [], edges: [], camera: { x: 0, y: 0, zoom: 1 } }),
             cameraJson: '{"x":0,"y":0,"zoom":1}',
-            kindCatalogsJson: "{}",
+            glyphCatalogsJson: "{}",
             selectionJson: "[]",
             interactive: true,
             selectionMethod: "rectangle",
             gridSnapEnabled: false,
             gridFactor: 1,
             suggestionOffset: 0,
-            brushKindWeightsJson: "{}",
-            kindCompatibilityJson: "[]",
+            brushWeightsJson: "{}",
+            placementCompatibilityJson: "[]",
             lodMode: "automatic",
           },
         },
@@ -1783,9 +1783,9 @@ describe("dag marquee overlay", () => {
   });
 });
 
-describe("note canvas host", () => {
-  const semioNoteDocument: NoteDocument = {
-    schema: "note.document",
+describe("ink canvas host", () => {
+  const semioInkDocument: InkDocument = {
+    schema: "ink.document",
     id: "semio",
     title: "Semio Note",
     camera: { x: 0, y: 0, zoom: 1 },
@@ -1840,7 +1840,7 @@ describe("note canvas host", () => {
           controllerId: "note-play",
           componentKind: "ink-canvas",
           inkCanvas: {
-            documentJson: JSON.stringify(semioNoteDocument),
+            documentJson: JSON.stringify(semioInkDocument),
             selectionJson: "[]",
             activeUtility: "selectDirect",
             viewMode: "composite",
@@ -1865,28 +1865,28 @@ describe("note canvas host", () => {
     };
     const compositeMarkup = renderToStaticMarkup(
       createElement(InkCanvasHost, {
-        node: { ...baseNode, inkCanvas: { documentJson: JSON.stringify(semioNoteDocument), selectionJson: "[]", activeUtility: "selectDirect", viewMode: "composite", interactive: true } },
+        node: { ...baseNode, inkCanvas: { documentJson: JSON.stringify(semioInkDocument), selectionJson: "[]", activeUtility: "selectDirect", viewMode: "composite", interactive: true } },
         onAction: noopAction,
       }) as ReactElement,
     );
-    expect(compositeMarkup).toContain("note-viewport-grid");
+    expect(compositeMarkup).toContain("ink-viewport-grid");
 
     const navigatorMarkup = renderToStaticMarkup(
       createElement(InkCanvasHost, {
-        node: { ...baseNode, inkCanvas: { documentJson: JSON.stringify(semioNoteDocument), selectionJson: "[]", activeUtility: "selectDirect", viewMode: "navigator", interactive: false } },
+        node: { ...baseNode, inkCanvas: { documentJson: JSON.stringify(semioInkDocument), selectionJson: "[]", activeUtility: "selectDirect", viewMode: "navigator", interactive: false } },
         onAction: noopAction,
       }) as ReactElement,
     );
-    expect(navigatorMarkup).not.toContain("note-viewport-grid");
+    expect(navigatorMarkup).not.toContain("ink-viewport-grid");
   });
 
   it("resizes with a minimum size and scales ink points when a group is resized", () => {
     const fromBounds = { x: 0, y: 0, width: 100, height: 100 };
-    const shrunk = noteResizeBounds(fromBounds, "e", -1000, 0);
+    const shrunk = inkResizeBounds(fromBounds, "e", -1000, 0);
     expect(shrunk.width).toBe(8);
 
-    const ink: NoteInkBlock = {
-      kind: "ink",
+    const ink: InkStrokeItem = {
+      kind: "stroke",
       id: "ink-1",
       name: "Ink",
       x: 0,
@@ -1902,9 +1902,9 @@ describe("note canvas host", () => {
       strokeWidth: 2,
       color: [0, 0, 0, 1],
     };
-    const scaled = noteScaleBlockWithinGroup(ink, { x: 0, y: 0, width: 100, height: 100 }, { x: 0, y: 0, width: 200, height: 50 });
-    expect(scaled.kind).toBe("ink");
-    if (scaled.kind === "ink")
+    const scaled = inkScaleItemWithinGroup(ink, { x: 0, y: 0, width: 100, height: 100 }, { x: 0, y: 0, width: 200, height: 50 });
+    expect(scaled.kind).toBe("stroke");
+    if (scaled.kind === "stroke")
       expect(scaled.points).toEqual([
         [0, 0],
         [200, 50],
@@ -1912,8 +1912,8 @@ describe("note canvas host", () => {
   });
 
   it("splits an ink stroke into fragments when erasing its middle point", () => {
-    const ink: NoteInkBlock = {
-      kind: "ink",
+    const ink: InkStrokeItem = {
+      kind: "stroke",
       id: "ink-1",
       name: "Ink",
       x: 0,
@@ -1930,9 +1930,9 @@ describe("note canvas host", () => {
       strokeWidth: 2,
       color: [0, 0, 0, 1],
     };
-    const fragments = noteEraseInkPointsInBlock(ink, 40, 0, 5);
+    const fragments = eraseInkStrokePointsInItem(ink, 40, 0, 5);
     expect(fragments).toHaveLength(0);
-    const wideStroke: NoteInkBlock = {
+    const wideStroke: InkStrokeItem = {
       ...ink,
       points: [
         [0, 0],
@@ -1942,26 +1942,26 @@ describe("note canvas host", () => {
         [80, 0],
       ],
     };
-    const splitFragments = noteEraseInkPointsInBlock(wideStroke, 40, 0, 5);
+    const splitFragments = eraseInkStrokePointsInItem(wideStroke, 40, 0, 5);
     expect(splitFragments).toHaveLength(2);
   });
 
   it("round-trips bold and link marks between paragraphs and html", () => {
-    const html = noteParagraphsToHtml([{ runs: [{ text: "hello", bold: true, link: "https://semio.tech" }] }]);
+    const html = inkParagraphsToHtml([{ runs: [{ text: "hello", bold: true, link: "https://semio.tech" }] }]);
     expect(html).toContain("<strong>");
     expect(html).toContain('href="https://semio.tech"');
   });
 
   it("round-trips a clipboard payload of note blocks", () => {
-    const payload = noteClipboardPayload([semioNoteDocument.blocks[1]!]);
-    const parsed = noteBlocksFromClipboardPayload(payload);
+    const payload = inkClipboardPayload([semioInkDocument.blocks[1]!]);
+    const parsed = inkItemsFromClipboardPayload(payload);
     expect(parsed).toHaveLength(1);
     expect(parsed?.[0]?.kind).toBe("math");
   });
 
   it("computes ink block bounds from its local points", () => {
-    const ink: NoteInkBlock = {
-      kind: "ink",
+    const ink: InkStrokeItem = {
+      kind: "stroke",
       id: "ink-1",
       name: "Ink",
       x: 10,
@@ -1977,7 +1977,7 @@ describe("note canvas host", () => {
       strokeWidth: 2,
       color: [0, 0, 0, 1],
     };
-    expect(noteBlockBounds(ink)).toEqual({ x: 10, y: 10, width: 5, height: 5 });
+    expect(inkItemBounds(ink)).toEqual({ x: 10, y: 10, width: 5, height: 5 });
   });
 
   it("applies the canonical wheel-zoom camera formula symmetrically for screen<->world conversion", () => {

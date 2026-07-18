@@ -154,14 +154,23 @@ fn out_gross_volume() -> ChannelSpec {
     ChannelSpec::named("V", "GrV", "grossVolume", "GrossVolume")
 }
 
-fn operator_info(id: &str, name: &str, abbreviation: &str, icon: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec, group: &[&str]) -> OperatorInfo {
+/// 🏷️ Descriptive metadata for a bim operator, grouped to keep `operator_info` under clippy's arg-count limit.
+struct OperatorMeta<'a> {
+    id: &'a str,
+    name: &'a str,
+    abbreviation: &'a str,
+    icon: &'a str,
+    summary: &'a str,
+}
+
+fn operator_info(meta: OperatorMeta, inputs: Vec<ChannelSpec>, output: ChannelSpec, group: &[&str]) -> OperatorInfo {
     OperatorInfo {
-        id: id.into(),
+        id: meta.id.into(),
         module: "bim".into(),
-        name: name.into(),
-        abbreviation: abbreviation.into(),
-        icon: icon.into(),
-        summary: summary.into(),
+        name: meta.name.into(),
+        abbreviation: meta.abbreviation.into(),
+        icon: meta.icon.into(),
+        summary: meta.summary.into(),
         inputs,
         outputs: vec![output],
         group: group.iter().map(|entry| (*entry).to_string()).collect(),
@@ -431,11 +440,7 @@ pub fn register(registry: &mut Registry) {
     register_element(
         registry,
         operator_info(
-            "bim.element.material",
-            "Material",
-            "Mat",
-            "emoji:🧱",
-            "Defines a building material",
+            OperatorMeta { id: "bim.element.material", name: "Material", abbreviation: "Mat", icon: "emoji:🧱", summary: "Defines a building material" },
             vec![
                 text_channel("name", "bim.element.material", "Concrete"),
                 number_channel("density", "bim.element.material", 2400.0),
@@ -451,11 +456,7 @@ pub fn register(registry: &mut Registry) {
     register_element(
         registry,
         operator_info(
-            "bim.element.space",
-            "Space",
-            "Space",
-            "emoji:🏠",
-            "Defines an occupiable space",
+            OperatorMeta { id: "bim.element.space", name: "Space", abbreviation: "Space", icon: "emoji:🏠", summary: "Defines an occupiable space" },
             vec![text_channel("name", "bim.element.space", "Space"), number_channel("area", "bim.element.space", 20.0), number_channel("height", "bim.element.space", 2.8)],
             out_space(),
             &["Elements"],
@@ -466,11 +467,7 @@ pub fn register(registry: &mut Registry) {
     register_element(
         registry,
         operator_info(
-            "bim.element.wall",
-            "Wall",
-            "Wall",
-            "emoji:🧱",
-            "Defines a wall element",
+            OperatorMeta { id: "bim.element.wall", name: "Wall", abbreviation: "Wall", icon: "emoji:🧱", summary: "Defines a wall element" },
             vec![number_channel("length", "bim.element.wall", 4.0), number_channel("height", "bim.element.wall", 2.8), number_channel("thickness", "bim.element.wall", 0.2)],
             out_wall(),
             &["Elements"],
@@ -481,11 +478,7 @@ pub fn register(registry: &mut Registry) {
     register_element(
         registry,
         operator_info(
-            "bim.element.slab",
-            "Slab",
-            "Slab",
-            "emoji:⬜",
-            "Defines a slab element",
+            OperatorMeta { id: "bim.element.slab", name: "Slab", abbreviation: "Slab", icon: "emoji:⬜", summary: "Defines a slab element" },
             vec![number_channel("width", "bim.element.slab", 10.0), number_channel("depth", "bim.element.slab", 8.0), number_channel("thickness", "bim.element.slab", 0.25)],
             out_slab(),
             &["Elements"],
@@ -496,11 +489,7 @@ pub fn register(registry: &mut Registry) {
     register_element(
         registry,
         operator_info(
-            "bim.element.column",
-            "Column",
-            "Col",
-            "emoji:🏛️",
-            "Defines a column element",
+            OperatorMeta { id: "bim.element.column", name: "Column", abbreviation: "Col", icon: "emoji:🏛️", summary: "Defines a column element" },
             vec![number_channel("width", "bim.element.column", 0.4), number_channel("depth", "bim.element.column", 0.4), number_channel("height", "bim.element.column", 3.0)],
             out_column(),
             &["Elements"],
@@ -511,11 +500,7 @@ pub fn register(registry: &mut Registry) {
     register_element(
         registry,
         operator_info(
-            "bim.element.window",
-            "Window",
-            "Win",
-            "emoji:🪟",
-            "Defines a window element",
+            OperatorMeta { id: "bim.element.window", name: "Window", abbreviation: "Win", icon: "emoji:🪟", summary: "Defines a window element" },
             vec![number_channel("width", "bim.element.window", 1.2), number_channel("height", "bim.element.window", 1.4), number_channel("sill", "bim.element.window", 0.9)],
             out_window(),
             &["Elements"],
@@ -528,11 +513,7 @@ pub fn register(registry: &mut Registry) {
         OperatorInfo {
             variadic_input: Some(VariadicSpec { slot_key: "elements".into(), min: 0, max: None }),
             ..operator_info(
-                "bim.assemble.story",
-                "Assemble Story",
-                "Story",
-                "emoji:🏢",
-                "Assembles a story from elements and optional slab",
+                OperatorMeta { id: "bim.assemble.story", name: "Assemble Story", abbreviation: "Story", icon: "emoji:🏢", summary: "Assembles a story from elements and optional slab" },
                 vec![number_channel("elevation", "bim.assemble.story", 0.0), number_channel("height", "bim.assemble.story", 3.0), ChannelSpec::requires("slab", &["bim.element.slab"])],
                 out_story(),
                 &["Assembly"],
@@ -544,19 +525,34 @@ pub fn register(registry: &mut Registry) {
     registry.register_operator(
         OperatorInfo {
             variadic_input: Some(VariadicSpec { slot_key: "stories".into(), min: 1, max: None }),
-            ..operator_info("bim.assemble.building", "Assemble Building", "Building", "emoji:🏗️", "Assembles a building from stories", vec![text_channel("name", "bim.assemble.building", "Building")], out_building(), &["Assembly"])
+            ..operator_info(
+                OperatorMeta { id: "bim.assemble.building", name: "Assemble Building", abbreviation: "Building", icon: "emoji:🏗️", summary: "Assembles a building from stories" },
+                vec![text_channel("name", "bim.assemble.building", "Building")],
+                out_building(),
+                &["Assembly"],
+            )
         },
         vec![OperatorImpl { schemas: vec![], operation: Box::new(AssembleBuilding) }],
         &["building"],
     );
 
     registry.register_operator(
-        operator_info("bim.measure.floorArea", "Floor Area", "Area", "emoji:📐", "Total floor area across all stories", vec![ChannelSpec::requires("building", &["bim.assemble.building"])], out_floor_area(), &["Measure"]),
+        operator_info(
+            OperatorMeta { id: "bim.measure.floorArea", name: "Floor Area", abbreviation: "Area", icon: "emoji:📐", summary: "Total floor area across all stories" },
+            vec![ChannelSpec::requires("building", &["bim.assemble.building"])],
+            out_floor_area(),
+            &["Measure"],
+        ),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(FloorArea) }],
         &["number"],
     );
     registry.register_operator(
-        operator_info("bim.measure.grossVolume", "Gross Volume", "Vol", "emoji:📦", "Gross building volume across all stories", vec![ChannelSpec::requires("building", &["bim.assemble.building"])], out_gross_volume(), &["Measure"]),
+        operator_info(
+            OperatorMeta { id: "bim.measure.grossVolume", name: "Gross Volume", abbreviation: "Vol", icon: "emoji:📦", summary: "Gross building volume across all stories" },
+            vec![ChannelSpec::requires("building", &["bim.assemble.building"])],
+            out_gross_volume(),
+            &["Measure"],
+        ),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(GrossVolume) }],
         &["number"],
     );

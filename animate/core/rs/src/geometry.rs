@@ -52,7 +52,7 @@ pub fn circle(center: Point, radius: f64, fill: Color, stroke: Option<Color>, st
 pub fn arc(center: Point, radius: f64, start_angle: f64, sweep: f64, color: Color, width: f64) -> VSobject {
     let a = Arc::new(center, (radius, radius), start_angle, sweep, 0.0);
     let mut path = BezPath::new();
-    append_shape_to_path(&mut path, a, 0.01);
+    append_shape_to_path(&mut path, &a, 0.01);
     styled_path(path, Color::TRANSPARENT, Some(color), width)
 }
 
@@ -70,7 +70,7 @@ pub fn rectangle(width: f64, height: f64, center: Point, fill: Color, stroke: Op
         center.y() + height / 2.0,
     );
     let mut path = BezPath::new();
-    append_shape_to_path(&mut path, r, 0.01);
+    append_shape_to_path(&mut path, &r, 0.01);
     styled_path(path, fill, stroke, stroke_width)
 }
 
@@ -84,7 +84,7 @@ pub fn rounded_rectangle(width: f64, height: f64, radius: f64, center: Point, fi
     );
     let r = RoundedRect::new(rect, RoundedRectRadii::new(radius, radius, radius, radius));
     let mut path = BezPath::new();
-    append_shape_to_path(&mut path, r, 0.01);
+    append_shape_to_path(&mut path, &r, 0.01);
     styled_path(path, fill, stroke, stroke_width)
 }
 
@@ -129,7 +129,7 @@ pub fn annulus(center: Point, inner: f64, outer: f64, fill: Color, stroke: Optio
     let mut path = circle_path(center, outer);
     let hole = circle_path(center, inner);
     for el in hole.elements() {
-        path.push(*el);
+        path.push(el);
     }
     styled_path(path, fill, stroke, stroke_width)
 }
@@ -181,13 +181,13 @@ pub fn angle(vertex: Point, ray_a: Point, ray_b: Point, radius: f64, color: Colo
 
 fn circle_path(center: Point, radius: f64) -> BezPath {
     let mut path = BezPath::new();
-    append_shape_to_path(&mut path, Circle::new(center, radius), 0.01);
+    append_shape_to_path(&mut path, &Circle::new(center, radius), 0.01);
     path
 }
 
 fn line_path(start: Point, end: Point) -> BezPath {
     let mut path = BezPath::new();
-    append_shape_to_path(&mut path, Line::new(start, end), 0.01);
+    append_shape_to_path(&mut path, &Line::new(start, end), 0.01);
     path
 }
 

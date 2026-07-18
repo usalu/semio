@@ -6,6 +6,6 @@ pub mod renderer;
 pub mod writer;
 
 pub use cache::PartialMovieCache;
-pub use render::{render_scene, OutputPaths};
+pub use render::{render_scene, OutputFormat, OutputPaths};
 pub use renderer::VelloRenderer;
 pub use writer::SceneFileWriter;

@@ -1,7 +1,7 @@
 //! ✍️ Writer plugin — declarative writer app bundled as a hot-swappable WASM component.
 
 mod grammar {
-// #region grammar
+//#region 🔖Grammar
 //! ✍️ Lightweight grammar tokenization for writer plugin scenes.
 
 use serde::{Deserialize, Serialize};
@@ -99,7 +99,7 @@ pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
     tokens.sort_by_key(|token| (token.start, std::cmp::Reverse(token.end)));
     tokens
 }
-// #endregion grammar
+//#endregion 🔖Grammar
 }
 
 
@@ -107,9 +107,11 @@ use grammar::{tokenize_language, GrammarToken};
 use trinity_jack::{complete, example_graph, format as jack_format, lint, semantic_tokens, Diagnostic};
 use writer::{empty_writer_projection, WriterCamera, WriterOp, WriterProjection};
 use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
-    build_text_editor_scene, engagement_token_matches, strip_engagement_prefix, ui_declarative_sections_to_tree, ui_text, App,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ActionDescriptor, ActionEmit, DocumentApp, DocumentView, TextEditorScene, UiNode, UiSectionNode,
-    UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
+    build_text_editor_scene, engagement_token_matches, is_de_locale, localized_label_map, resolve_labels, strip_engagement_prefix,
+    tree_item_with_action, ui_declarative_sections_to_tree, ui_text, App,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ActionDescriptor, ActionEmit, AppLabelsOverlay, AppLabelsOverlayExt,
+    DocumentApp, DocumentView, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, TextEditorScene, UiNode, UiSectionNode,
+    UiTreeItemNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -139,7 +141,7 @@ const JACK_EXAMPLE_JSON: &str = include_str!("../../example/jack.writer.json");
 const DAG_JACK_EXAMPLE_JSON: &str = include_str!("../../example/dag.jack.writer.json");
 //#endregion 🔖Constants
 
-//#region 🔖Document
+//#region 🔖Types
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct WriterEditorSelection {
@@ -208,9 +210,9 @@ struct WriterPlayRuntime {
     #[serde(default)]
     engagement_input: String,
 }
+//#endregion 🔖Types
 
-//#endregion 🔖Document
-
+//#region 🔖DocumentHelpers
 //#region 🔖JackAst
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -1155,78 +1157,71 @@ fn format_writer_text(text: &str, language_id: &str) -> String {
     normalized
 }
 //#endregion 🔖JackEditor
+//#endregion 🔖DocumentHelpers
 
 //#region 🔖Terminology
-/// 🗣️ Complete UI label set for the writer app; one field per label makes every locale combination compile-checked.
-struct WriterLabels {
-    document: &'static str,
-    empty_query: &'static str,
-    language: &'static str,
-    jack_description: &'static str,
-    camera: &'static str,
-    diagnostics: &'static str,
-    format: &'static str,
-    lint: &'static str,
-    line_numbers: &'static str,
-    font_size: &'static str,
-    line_height: &'static str,
-    tab_size: &'static str,
-    engagement_placeholder: &'static str,
-    editor_mode_status: &'static str,
-    window_main: &'static str,
-    mode_edit: &'static str,
-    panel_tab_content: &'static str,
-    panel_tab_outline: &'static str,
-}
-
-const WRITER_LABELS_NATIVE_EN: WriterLabels = WriterLabels {
-    document: "Document",
-    empty_query: "(empty query)",
-    language: "Language",
-    jack_description: "jack — Cypher-inspired trinity query language",
-    camera: "Camera",
-    diagnostics: "Diagnostics",
-    format: "Format",
-    lint: "Lint",
-    line_numbers: "Line numbers",
-    font_size: "Font size",
-    line_height: "Line height",
-    tab_size: "Tab size",
-    engagement_placeholder: "Format, lint, line numbers",
-    editor_mode_status: "Text editor",
-    window_main: "Jack",
-    mode_edit: "Edit",
-    panel_tab_content: "Content",
-    panel_tab_outline: "Outline",
-};
-
-const WRITER_LABELS_NATIVE_DE: WriterLabels = WriterLabels {
-    document: "Dokument",
-    empty_query: "(leere Abfrage)",
-    language: "Sprache",
-    jack_description: "jack — von Cypher inspirierte Trinity-Abfragesprache",
-    camera: "Kamera",
-    diagnostics: "Diagnosen",
-    format: "Formatieren",
-    lint: "Pruefen",
-    line_numbers: "Zeilennummern",
-    font_size: "Schriftgroesse",
-    line_height: "Zeilenhoehe",
-    tab_size: "Tabulatorgroesse",
-    engagement_placeholder: "Format, pruefen, Zeilennummern",
-    editor_mode_status: "Texteditor",
-    window_main: "Jack",
-    mode_edit: "Bearbeiten",
-    panel_tab_content: "Inhalt",
-    panel_tab_outline: "Gliederung",
-};
-
-/// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
-fn writer_labels(view_state: &ViewState) -> &'static WriterLabels {
-    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-    if is_de { &WRITER_LABELS_NATIVE_DE } else { &WRITER_LABELS_NATIVE_EN }
+semio_framework_plugin::app_labels! {
+    /// 🗣️ Complete UI label set for the writer app; one field per label makes every locale combination compile-checked.
+    struct WriterPlayLabels {
+        document: &'static str = en: "Document", de: "Dokument";
+        empty_query: &'static str = en: "(empty query)", de: "(leere Abfrage)";
+        language: &'static str = en: "Language", de: "Sprache";
+        jack_description: &'static str = en: "jack — Cypher-inspired trinity query language", de: "jack — von Cypher inspirierte Trinity-Abfragesprache";
+        camera: &'static str = en: "Camera", de: "Kamera";
+        diagnostics: &'static str = en: "Diagnostics", de: "Diagnosen";
+        format: &'static str = en: "Format", de: "Formatieren";
+        lint: &'static str = en: "Lint", de: "Prüfen";
+        line_numbers: &'static str = en: "Line numbers", de: "Zeilennummern";
+        font_size: &'static str = en: "Font size", de: "Schriftgröße";
+        line_height: &'static str = en: "Line height", de: "Zeilenhöhe";
+        tab_size: &'static str = en: "Tab size", de: "Tabulatorgröße";
+        engagement_placeholder: &'static str = en: "Format, lint, line numbers", de: "Format, prüfen, Zeilennummern";
+        editor_mode_status: &'static str = en: "Text editor", de: "Texteditor";
+        window_main: &'static str = en: "Jack", de: "Jack";
+        mode_edit: &'static str = en: "Edit", de: "Bearbeiten";
+        panel_tab_content: &'static str = en: "Content", de: "Inhalt";
+        panel_tab_outline: &'static str = en: "Outline", de: "Gliederung";
+    }
 }
 //#endregion 🔖Terminology
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_writer_play_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
+/// command palette and Actions rail get a translated label without threading locale through the whole builder chain.
+fn writer_action_labels(is_de: bool) -> HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("formatDocument", "Format Document", "Dokument formatieren"),
+        ("lintDocument", "Lint Document", "Dokument prüfen"),
+        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+        ("textEdit", "Edit Text", "Text bearbeiten"),
+        ("setText", "Set Text", "Text festlegen"),
+        ("setCamera", "Set Camera", "Kamera festlegen"),
+        ("commitRename", "Commit Rename", "Umbenennung übernehmen"),
+        ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
+        ("setDocument", "Set Document", "Dokument festlegen"),
+        ("setDocumentJson", "Set Document JSON", "Dokument-JSON festlegen"),
+        ("setFixtureJson", "Set Fixture JSON", "Fixture-JSON festlegen"),
+        ("requestCompletions", "Request Completions", "Vervollständigungen anfordern"),
+        ("textSelect", "Text Select", "Text auswählen"),
+        ("setEditorSelection", "Set Editor Selection", "Editor-Auswahl festlegen"),
+        ("selectAstNode", "Select Ast Node", "AST-Knoten auswählen"),
+        ("setAstSelection", "Set Ast Selection", "AST-Auswahl festlegen"),
+        ("setAstHover", "Set Ast Hover", "AST-Hover festlegen"),
+        ("textHover", "Text Hover", "Text-Hover"),
+        ("toggleLineNumbers", "Toggle Line Numbers", "Zeilennummern umschalten"),
+        ("setEditorSetting", "Set Editor Setting", "Editor-Einstellung festlegen"),
+        ("engagementInput", "Engagement Input", "Eingabe"),
+    ];
+    localized_label_map(is_de, ENTRIES)
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_writer_play_app`.
+/// Writer declares no utilities today; kept for parity with the other apps' `app_labels()` wiring.
+fn writer_utility_labels(_is_de: bool) -> HashMap<String, String> {
+    HashMap::new()
+}
+//#endregion 🔖CommandLabels
 
 //#region 🔖Panels
 fn play_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -1814,45 +1809,7 @@ impl DocumentApp for WriterApp {
         }
     }
 }
-//#endregion 🔖WriterApp
-
-//#region 🔖CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_writer_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
-/// command palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn writer_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("formatDocument", "Format Document", "Dokument formatieren"),
-        ("lintDocument", "Lint Document", "Dokument pruefen"),
-        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-        ("textEdit", "Edit Text", "Text bearbeiten"),
-        ("setText", "Set Text", "Text festlegen"),
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("commitRename", "Commit Rename", "Umbenennung uebernehmen"),
-        ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
-        ("setDocument", "Set Document", "Dokument festlegen"),
-        ("setDocumentJson", "Set Document JSON", "Dokument-JSON festlegen"),
-        ("setFixtureJson", "Set Fixture JSON", "Fixture-JSON festlegen"),
-        ("requestCompletions", "Request Completions", "Vervollstaendigungen anfordern"),
-        ("textSelect", "Text Select", "Text auswaehlen"),
-        ("setEditorSelection", "Set Editor Selection", "Editor-Auswahl festlegen"),
-        ("selectAstNode", "Select Ast Node", "AST-Knoten auswaehlen"),
-        ("setAstSelection", "Set Ast Selection", "AST-Auswahl festlegen"),
-        ("setAstHover", "Set Ast Hover", "AST-Hover festlegen"),
-        ("textHover", "Text Hover", "Text-Hover"),
-        ("toggleLineNumbers", "Toggle Line Numbers", "Zeilennummern umschalten"),
-        ("setEditorSetting", "Set Editor Setting", "Editor-Einstellung festlegen"),
-        ("engagementInput", "Engagement Input", "Eingabe"),
-    ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-}
-
-/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_writer_app`.
-/// Writer declares no utilities today; kept for parity with the other apps' `app_labels()` wiring.
-fn writer_utility_labels(_is_de: bool) -> std::collections::HashMap<String, String> {
-    std::collections::HashMap::new()
-}
-//#endregion 🔖CommandLabels
+//#endregion 🔖WriterPlayApp
 
 //#region 🔖Manifest
 /// 🙈 An internal document operation kept out of the command palette — editor events (text edits,
@@ -1870,6 +1827,14 @@ fn writer_hidden_view(id: &str, label: &str) -> ActionDefinition {
 fn create_writer_app() -> App {
     App::from_builder(
         App::builder(WRITER_PLAY_APP_ID, "Writer").document(["semio", "writer"])
+            .resource_kind(ResourceKindSpec {
+                id: "text.document".into(),
+                name: "Text Document".into(),
+                source_format: "writer.document".into(),
+                component_kind: "writer".into(),
+                dimension: "text".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+            })
             .icon_id("writer")
             .mode("edit", "Edit")
             .default_mode_id("edit")

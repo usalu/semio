@@ -1,6 +1,6 @@
 //! 🌬️ DIN EN 16798 indoor environmental input parameters and ventilation / HVAC energy.
 
-use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormError, Quantity};
+use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
 
 // #region 🔖Part1
 pub mod part_1 {

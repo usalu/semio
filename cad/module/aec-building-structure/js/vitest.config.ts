@@ -5,16 +5,16 @@ import { defineConfig } from "vitest/config";
 // #endregion 🔌Adapters
 
 const root = dirname(fileURLToPath(import.meta.url));
-const jsRoot = resolve(root, "../..");
+const jsRoot = resolve(root, "../../..");
 
 export default defineConfig({
   root,
   resolve: {
     alias: {
-      "@semio-tech/cad-js-core": resolve(jsRoot, "core/index.ts"),
-      "@semio-tech/cad-js-runtime": resolve(jsRoot, "runtime/index.ts"),
-      "@semio-tech/cad-js-kernel-brepjs": resolve(jsRoot, "kernel/brepjs/index.ts"),
-      "@semio-tech/cad-js-module-aec-building": resolve(jsRoot, "module/aec-building/index.ts"),
+      "@semio-tech/cad-js-core": resolve(jsRoot, "core/js/index.ts"),
+      "@semio-tech/cad-js-runtime": resolve(jsRoot, "runtime/js/index.ts"),
+      "@semio-tech/cad-js-kernel-brepjs": resolve(jsRoot, "kernel/brepjs/js/index.ts"),
+      "@semio-tech/cad-js-module-aec-building": resolve(jsRoot, "module/aec-building/js/index.ts"),
       "@semio-tech/cad-js-module-aec-building-structure": resolve(root, "index.ts"),
     },
   },

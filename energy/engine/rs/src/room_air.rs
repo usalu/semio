@@ -145,7 +145,7 @@ fn displacement_3node(input: &RoomAirInput, lower_fraction: f64, upper_fraction:
 // #region 🔖Ufad
 fn ufad(input: &RoomAirInput, diffuser_height_m: f64, throw_m: f64) -> RoomAirOutput {
     let h = input.ceiling_height_m.max(0.1);
-    let z_diff = diffuser_height_m.clamp(0.05, h * 0.5);
+    let _z_diff = diffuser_height_m.clamp(0.05, h * 0.5);
     let throw = throw_m.max(0.1);
     let penetration = (throw / h).clamp(0.1, 1.0);
     let t_supply = input.supply_temp_c;

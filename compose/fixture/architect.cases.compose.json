@@ -64,7 +64,7 @@
                       "wip": {
                         "theKit": {
                           "kit": {
-                            "designs": {
+                            "hasDesigns": {
                               "edges": [
                                 {
                                   "node": {
@@ -115,7 +115,7 @@
                       "wip": {
                         "theKit": {
                           "kit": {
-                            "types": {
+                            "hasTypes": {
                               "edges": [{ "node": { "id": "ta", "hash": "ha", "name": "KindAlpha" } }, { "node": { "id": "tb", "hash": "hb", "name": "KindBeta" } }, { "node": { "id": "tg", "hash": "hg", "name": "KindGamma" } }]
                             }
                           }

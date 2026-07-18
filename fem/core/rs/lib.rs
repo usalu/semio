@@ -1,4 +1,18 @@
-//! 🏗️ FEM core: shared model, element trait, assembly pipeline and linear-static analysis for `fem_2d`/`fem_3d`.
+//! 🏗️ FEM core: the headless finite-element calculation library — model, element trait, assembly
+//! pipeline, and linear-static analysis, extended by sibling modules for sparse solvers,
+//! quadrature/element formulation, the 2D/3D element libraries, meshing, and multi-case analyses.
+//! No UI, no VCS, no framework dependency — `fem_2d`/`fem_3d`/`fem-plugin` are the UI layer built
+//! on top of this crate.
+
+pub mod analyses;
+pub mod elements2d;
+pub mod elements3d;
+pub mod formulation;
+pub mod mesh;
+pub mod sparse;
+
+pub use elements2d::{Bar2, BeamEb2};
+pub use elements3d::{Bar3, Frame3};
 
 use mathematical_algebra::{MatD, VecD};
 use serde::{Deserialize, Serialize};
@@ -83,6 +97,17 @@ pub trait Element {
         None
     }
     fn recover(&self, ctx: &ElementContext, u_local: &VecD, udl: Option<&MemberUdl>) -> ElementResult;
+    /// 🏋️ Consistent element mass matrix in GLOBAL coordinates, same DOF order as `stiffness_global`.
+    /// `None` means this element contributes no mass (the default — self-weight/modal analysis skips
+    /// it, so massless elements never spuriously restrain a modal shape).
+    fn mass(&self, _ctx: &ElementContext) -> Option<MatD> {
+        None
+    }
+    /// 🌀 Geometric ("stress") stiffness in GLOBAL coordinates for the element's current axial/stress
+    /// state at displacement `u_element` — used by linear buckling. `None` means unsupported.
+    fn geometric_stiffness(&self, _ctx: &ElementContext, _u_element: &VecD) -> Option<MatD> {
+        None
+    }
 }
 
 /// 🏗️ The assembled structural model handed to `solve_linear_static`.
@@ -93,6 +118,20 @@ pub struct Model {
     pub supports: Vec<Support>,
     pub nodal_loads: Vec<NodalLoad>,
     pub member_loads: Vec<(String, MemberUdl)>,
+}
+
+/// 🔍 Element trait objects aren't `Debug`, so print element ids/count instead — this is what lets
+/// `Result<Model, _>` be used with `unwrap_err()`/`expect_err()` in caller test code.
+impl fmt::Debug for Model {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Model")
+            .field("nodes", &self.nodes)
+            .field("elements", &self.elements.iter().map(|e| e.id()).collect::<Vec<_>>())
+            .field("supports", &self.supports)
+            .field("nodal_loads", &self.nodal_loads)
+            .field("member_loads", &self.member_loads)
+            .finish()
+    }
 }
 // #endregion 🔖Model
 
@@ -145,28 +184,20 @@ pub struct StaticResult {
 }
 // #endregion 🔖Results
 
-// #region 🔖Errors
-#[derive(Clone, Debug, PartialEq)]
+//#region ⚠️ Errors
+/// ⚠️ Everything that can go wrong building or solving a [`Model`].
+#[derive(Clone, Debug, PartialEq, thiserror::Error)]
 pub enum FemError {
+    #[error("model has no nodes")]
     EmptyModel,
+    #[error("duplicate node id: {0}")]
     DuplicateNodeId(String),
+    #[error("reference to unknown node id: {0}")]
     DanglingNodeRef(String),
+    #[error("stiffness matrix is singular — model is a mechanism or under-constrained")]
     Singular,
 }
-
-impl fmt::Display for FemError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            FemError::EmptyModel => write!(f, "model has no nodes"),
-            FemError::DuplicateNodeId(id) => write!(f, "duplicate node id: {id}"),
-            FemError::DanglingNodeRef(id) => write!(f, "reference to unknown node id: {id}"),
-            FemError::Singular => write!(f, "stiffness matrix is singular — model is a mechanism or under-constrained"),
-        }
-    }
-}
-
-impl std::error::Error for FemError {}
-// #endregion 🔖Errors
+//#endregion ⚠️ Errors
 
 // #region 🔖DofMap
 struct DofMap {
@@ -245,10 +276,7 @@ fn validate(model: &Model) -> Result<(), FemError> {
 
 // #region 🔖Assembly
 fn positions_of(model: &Model, node_ids: &[String]) -> Vec<[f64; 3]> {
-    node_ids
-        .iter()
-        .map(|id| model.nodes.iter().find(|n| &n.id == id).map(|n| n.pos).unwrap_or_default())
-        .collect()
+    node_ids.iter().map(|id| model.nodes.iter().find(|n| &n.id == id).map(|n| n.pos).unwrap_or_default()).collect()
 }
 
 fn element_global_indices(dof_map: &DofMap, node_ids: &[String], dofs: &[Dof]) -> Option<Vec<usize>> {
@@ -274,8 +302,9 @@ fn extract_submatrix(k: &MatD, rows: &[usize], cols: &[usize]) -> MatD {
 
 // #region 🔖Solve
 /// 🧮 Assembles and solves the model for linear-static equilibrium `Ku = F`, partitioned by
-/// support restraints (dense elimination — v0 scale; sparse LDLT is v1 follow-up work), then
-/// recovers reactions and per-element internal forces from the solved displacement vector.
+/// support restraints (dense elimination — small/single-case scale; `analyses::solve_multi_case`
+/// is the sparse multi-case/combination pipeline for larger models), then recovers reactions and
+/// per-element internal forces from the solved displacement vector.
 pub fn solve_linear_static(model: &Model) -> Result<StaticResult, FemError> {
     validate(model)?;
     let dof_map = build_dof_map(model);
@@ -343,8 +372,7 @@ pub fn solve_linear_static(model: &Model) -> Result<StaticResult, FemError> {
         reactions.push(NodeReaction { node_id, dof, value: r });
     }
 
-    let mut displacements: Vec<NodeDisplacement> =
-        model.nodes.iter().map(|node| NodeDisplacement { node_id: node.id.clone(), values: [0.0; 6] }).collect();
+    let mut displacements: Vec<NodeDisplacement> = model.nodes.iter().map(|node| NodeDisplacement { node_id: node.id.clone(), values: [0.0; 6] }).collect();
     for (idx, (node_id, dof)) in dof_map.order.iter().enumerate() {
         if let Some(entry) = displacements.iter_mut().find(|d| &d.node_id == node_id) {
             entry.values[dof.index()] = u.get(idx);
@@ -421,10 +449,7 @@ mod tests {
 
     fn two_spring_model() -> Model {
         Model {
-            nodes: vec![
-                Node { id: "n1".into(), pos: [0.0, 0.0, 0.0] },
-                Node { id: "n2".into(), pos: [1.0, 0.0, 0.0] },
-            ],
+            nodes: vec![Node { id: "n1".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "n2".into(), pos: [1.0, 0.0, 0.0] }],
             elements: vec![Box::new(AxialSpring { id: "e1".into(), a: "n1".into(), b: "n2".into(), k: 1000.0 })],
             supports: vec![Support { node_id: "n1".into(), fixed: vec![Dof::Tx] }],
             nodal_loads: vec![NodalLoad { node_id: "n2".into(), dof: Dof::Tx, value: 10.0 }],

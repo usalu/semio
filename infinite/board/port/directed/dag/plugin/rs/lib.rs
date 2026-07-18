@@ -9,7 +9,7 @@ use infinite_board_port_directed_dag::{
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_node_graph_scene, build_text_editor_scene, create_default_layout, ui_declarative_sections_to_tree,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field,
-    ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, ActionDescriptor, DocumentApp, DocumentView, NodeGraphScene, TextEditorScene,
+    ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, ActionDescriptor, DocumentApp, DocumentView, NodeGraphScene, OsMediaCapability, ResourceKindSpec, TextEditorScene,
     UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -1120,6 +1120,14 @@ impl DocumentApp for DagPlayApp {
 fn create_dag_app() -> App {
     App::from_builder(
         App::builder(DAG_PLAY_APP_ID, "DAG").document(["semio", "mathematical", "graph", "port", "directed", "dag"])
+            .resource_kind(ResourceKindSpec {
+                id: "graph.dag".into(),
+                name: "DAG".into(),
+                source_format: "flow.dag".into(),
+                component_kind: "dag".into(),
+                dimension: "graph".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+            })
             .icon_id("dag")
             .mode("edit", "Edit")
             .default_mode_id("edit")

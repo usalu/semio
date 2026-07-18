@@ -42,6 +42,7 @@ export default defineConfig({
       "./kernel/3d/brep/js/vitest.config.ts",
       "./mathematical/graph/dsl/core/js/vitest.config.ts",
       "./ui/js/react/vitest.config.ts",
+      "./ui/styling/vitest.config.ts",
     ],
   },
 });

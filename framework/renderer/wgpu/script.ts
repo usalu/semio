@@ -6,15 +6,16 @@ import { join } from "node:path";
 import {
   BundleScript,
   ScriptRouter,
-  GIS_MAP_WGPU_TILE_PROXY_PORT,
-  SEMIO_GIS_MAP_TILE_BASE_URL_ENV,
+  SEMIO_ASSET_SERVER_PORT,
+  SEMIO_ASSET_BASE_URL_ENV,
   getWorkspaceRoot,
   runBundleScriptMain,
   runVitest,
   frameworkOsPlaygroundDefaultPort,
   loadFrameworkOsPlaygroundCatalog,
 } from "../../../repo/lib/js/index.ts";
-import { startGisMapTileProxyServer } from "../../../ui/styling/vite-elements-assets.ts";
+import { startAssetServer } from "../../../ui/styling/vite-elements-assets.ts";
+import type { PlaygroundAssetSpec } from "../../plugin/registry/generated/playgrounds.ts";
 
 const repoRoot = getWorkspaceRoot();
 const wasmTarget = "wasm32-unknown-unknown";
@@ -51,14 +52,26 @@ function syncStableRendererArtifacts(): void {
   if (wasm) copyFileSync(join(outDir, wasm), join(outDir, "semio-framework-renderer-wgpu_bg.wasm"));
 }
 
-function gisMapTileProxyBaseUrl(): string {
-  return `http://127.0.0.1:${GIS_MAP_WGPU_TILE_PROXY_PORT}`;
+function assetServerBaseUrl(): string {
+  return `http://127.0.0.1:${SEMIO_ASSET_SERVER_PORT}`;
 }
 
-function ensureGisMapTileProxyServer(plugin: string): void {
-  if (plugin !== "gis") return;
-  startGisMapTileProxyServer(repoRoot, GIS_MAP_WGPU_TILE_PROXY_PORT);
-  console.log(`[DEBUG] gis tile proxy serving at ${gisMapTileProxyBaseUrl()}`);
+/** @emoji 🗂️ The active playground variant's `tile-proxy` asset specs (the only kind the standalone
+ * asset server serves — `static-dir`/`mesh-collection` assets are Vite-only). */
+function variantTileProxyAssets(variant: string): readonly Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }>[] {
+  const row = loadFrameworkOsPlaygroundCatalog().find((entry) => entry.variant === variant);
+  return (row?.assets ?? []).filter((asset): asset is Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }> => asset.kind === "tile-proxy");
+}
+
+/** @emoji 🌐 Generic dev-time asset server bootstrap driven by the active playground's declared
+ * `tile-proxy` asset specs — replaces the previous GIS-only `ensureGisMapTileProxyServer` (which never
+ * actually triggered: it compared the playground *variant* env value, e.g. `"gis2d"`, against the
+ * *pluginId* `"gis"`, a mismatch fixed here by resolving specs straight from the registry instead). */
+function ensureAssetServer(variant: string): void {
+  const specs = variantTileProxyAssets(variant);
+  if (specs.length === 0) return;
+  startAssetServer(repoRoot, SEMIO_ASSET_SERVER_PORT, specs);
+  console.log(`[DEBUG] asset proxy serving at ${assetServerBaseUrl()}`);
 }
 
 /** 🎯Resolves the `--app <appId>` args for `semio-wgpu-native` from the catalog row matching `filterPlugin`, or `[]` when the row has no `app`. */
@@ -97,7 +110,7 @@ class TrunkServeScript extends BundleScript {
     ensureWasmTarget();
     buildBootScript(this.root);
     const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
-    ensureGisMapTileProxyServer(plugin);
+    ensureAssetServer(plugin);
     const catalog = loadFrameworkOsPlaygroundCatalog();
     const defaultPort = String(frameworkOsPlaygroundDefaultPort(catalog, plugin, "wgpu"));
     const port = process.env.S_OS_PORT ?? defaultPort;
@@ -128,13 +141,13 @@ class NativeRunScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || "s";
     await new NativeBuildScript(this.root).run([filterPlugin]);
-    ensureGisMapTileProxyServer(filterPlugin);
+    ensureAssetServer(filterPlugin);
     const nativeEnv: NodeJS.ProcessEnv = {
       ...process.env,
       SEMIO_PLUGIN_MODULES: pluginOutRoot,
     };
-    if (filterPlugin === "gis") {
-      nativeEnv[SEMIO_GIS_MAP_TILE_BASE_URL_ENV] = gisMapTileProxyBaseUrl();
+    if (variantTileProxyAssets(filterPlugin).length > 0) {
+      nativeEnv[SEMIO_ASSET_BASE_URL_ENV] = assetServerBaseUrl();
     }
     const catalog = loadFrameworkOsPlaygroundCatalog();
     const appArgs = resolveNativeAppArgs(catalog, filterPlugin);

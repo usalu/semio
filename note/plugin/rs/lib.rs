@@ -2,7 +2,7 @@
 
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_ink_canvas_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
-    ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_stack_vertical, ui_text, App,
+    ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_stack_vertical, ui_text, App, OsMediaCapability, ResourceKindSpec,
     InkCanvasScene, ActionDescriptor, ActionEmit, AppLabelsOverlay, DocumentApp, DocumentView, DwgDrawing, DwgGeometry,
     HostEffect, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiSectionNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
@@ -126,7 +126,7 @@ enum NoteBlockNode {
         tex: String,
         display_mode: bool,
     },
-    #[serde(rename = "ink", rename_all = "camelCase")]
+    #[serde(rename = "stroke", rename_all = "camelCase")]
     Ink {
         id: String,
         name: String,
@@ -293,7 +293,7 @@ fn block_kind(block: &NoteBlockNode) -> &str {
         NoteBlockNode::Image { .. } => "image",
         NoteBlockNode::Table { .. } => "table",
         NoteBlockNode::Math { .. } => "math",
-        NoteBlockNode::Ink { .. } => "ink",
+        NoteBlockNode::Ink { .. } => "stroke",
         NoteBlockNode::Group { .. } => "group",
     }
 }
@@ -393,7 +393,7 @@ fn create_block_by_kind(kind: &str, x: f64, y: f64) -> NoteBlockNode {
             tex: "E = mc^2".into(),
             display_mode: true,
         },
-        "ink" => NoteBlockNode::Ink {
+        "stroke" => NoteBlockNode::Ink {
             id,
             name: "Ink".into(),
             x,
@@ -1047,7 +1047,7 @@ fn block_icon(kind: &str) -> &str {
         "image" => "image",
         "table" => "table",
         "math" => "sigma",
-        "ink" => "pencil",
+        "stroke" => "pencil",
         _ => "folder",
     }
 }
@@ -2016,7 +2016,7 @@ impl DocumentApp for NoteApp {
                 read_as: None,
                 import_action: "setFixtureJson".into(),
             }),
-            "applyNoteEvents" => {
+            "inkApplyEvents" => {
                 let events: Vec<NoteCanvasEvent> = args
                     .and_then(|value| value.get("eventsJson"))
                     .and_then(|value| value.as_str())
@@ -2145,7 +2145,7 @@ fn note_action_labels(is_de: bool) -> HashMap<String, String> {
         ("patchBlocks", "Patch Blocks", "Bloecke aktualisieren"),
         ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
         ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
-        ("applyNoteEvents", "Apply Note Events", "Notiz-Ereignisse anwenden"),
+        ("inkApplyEvents", "Apply Note Events", "Notiz-Ereignisse anwenden"),
         ("nudgeSelection", "Nudge Selection", "Auswahl verschieben"),
         ("nudgeSelectionUp", "Nudge Selection Up", "Auswahl nach oben verschieben"),
         ("nudgeSelectionDown", "Nudge Selection Down", "Auswahl nach unten verschieben"),
@@ -2397,6 +2397,14 @@ fn create_note_app() -> App {
     let document = empty_note_document();
     let mut app = App::from_builder(
         App::builder(NOTE_PLAY_APP_ID, "Note").document(["semio", "note"])
+            .resource_kind(ResourceKindSpec {
+                id: "2d.note".into(),
+                name: "2D Note".into(),
+                source_format: "note.document".into(),
+                component_kind: "note".into(),
+                dimension: "2d".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+            })
             .icon_id("note")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -2457,7 +2465,7 @@ fn create_note_app() -> App {
             .action_with(note_internal_action("patchBlocks", "Patch Blocks", ActionKind::Operation))
             .action_with(note_internal_action("engagementSubmit", "Engagement Submit", ActionKind::Operation))
             .action_with(note_internal_action("setFixtureJson", "Set Fixture Json", ActionKind::Operation))
-            .action_with(note_internal_action("applyNoteEvents", "Apply Note Events", ActionKind::Operation))
+            .action_with(note_internal_action("inkApplyEvents", "Apply Note Events", ActionKind::Operation))
             .action_with(note_internal_action("nudgeSelection", "Nudge Selection", ActionKind::Operation))
             .action_with(note_internal_action("nudgeSelectionUp", "Nudge Selection Up", ActionKind::Operation))
             .action_with(note_internal_action("nudgeSelectionDown", "Nudge Selection Down", ActionKind::Operation))
@@ -2479,7 +2487,7 @@ fn create_note_app() -> App {
                     ActionArgOption::new("image", "Image"),
                     ActionArgOption::new("table", "Table"),
                     ActionArgOption::new("math", "Math"),
-                    ActionArgOption::new("ink", "Ink"),
+                    ActionArgOption::new("stroke", "Ink"),
                     ActionArgOption::new("group", "Group"),
                 ]).required().default_value("text"),
                 ActionArgDef::number("x", "X").default_value(0.0),
@@ -2708,7 +2716,7 @@ mod tests {
         ])
         .to_string();
         app.handle_action(
-            "applyNoteEvents",
+            "inkApplyEvents",
             Some(&json!({ "eventsJson": begin_events, "phase": "begin", "selectIds": [new_id.clone()] })),
             &ViewState::default(),
             &meta(),
@@ -2726,7 +2734,7 @@ mod tests {
             ])
             .to_string();
             app.handle_action(
-                "applyNoteEvents",
+                "inkApplyEvents",
                 Some(&json!({ "eventsJson": live_events, "phase": "live" })),
                 &ViewState::default(),
                 &meta(),
@@ -2738,7 +2746,7 @@ mod tests {
         // Commit with no further change emits no op — the gesture is already recorded.
         let commit = app
             .handle_action(
-                "applyNoteEvents",
+                "inkApplyEvents",
                 Some(&json!({ "eventsJson": "[]", "phase": "commit" })),
                 &ViewState::default(),
                 &meta(),
@@ -2759,14 +2767,14 @@ mod tests {
     fn gesture_with_no_changes_creates_no_edit() {
         let mut app = new_app();
         app.handle_action(
-            "applyNoteEvents",
+            "inkApplyEvents",
             Some(&json!({ "eventsJson": "[]", "phase": "begin" })),
             &ViewState::default(),
             &meta(),
         )
         .expect("begin");
         app.handle_action(
-            "applyNoteEvents",
+            "inkApplyEvents",
             Some(&json!({ "eventsJson": "[]", "phase": "commit" })),
             &ViewState::default(),
             &meta(),

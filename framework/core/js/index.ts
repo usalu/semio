@@ -599,7 +599,7 @@ export type TiledMapScene = {
 export type Board2dScene = {
   readonly fixtureJson: string;
   readonly cameraJson: string;
-  readonly kindCatalogsJson: string;
+  readonly glyphCatalogsJson: string;
   readonly selectionJson: string;
   readonly interactive: boolean;
   readonly hoveredId?: string;
@@ -608,12 +608,12 @@ export type Board2dScene = {
   readonly gridSnapEnabled: boolean;
   readonly gridFactor: number;
   readonly suggestionOffset: number;
-  readonly brushKindWeightsJson: string;
-  readonly kindCompatibilityJson: string;
+  readonly brushWeightsJson: string;
+  readonly placementCompatibilityJson: string;
   readonly lodMode: string;
 };
 
-/** 🖊️ An ink-canvas surface scene payload — mirrors the wasm `componentScene` node's `inkCanvas` field. */
+/** 🖊️ An ink-canvas surface scene payload — mirrors the wasm `componentScene` node's `inkCanvas` field. `documentJson` is opaque to the framework: the owning plugin defines its shape, conventionally an array of items (e.g. stroke | shape | text | image) each carrying its own transform; `selectionJson` is a `string[]` of selected item ids. */
 export type InkCanvasScene = {
   readonly documentJson: string;
   readonly selectionJson: string;
@@ -1706,8 +1706,6 @@ export function parseInvocationResponse(raw: string): InvocationResponse {
   return EMPTY_INVOCATION_RESPONSE;
 }
 //#endregion InvocationResponse
-
-export const DEFAULT_PLUGIN_REGISTRY: readonly PluginRegistryEntry[] = [{ pluginId: "draw", moduleUrl: "/plugin-modules/draw/draw_plugin.js" }];
 
 //#region SerializedPluginWasm
 /** @emoji 🔒 Serializes wasm plugin entry points — the host keeps instances in one RefCell. */

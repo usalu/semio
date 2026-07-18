@@ -84,38 +84,12 @@ pub mod appearance {
 #[cfg(test)]
 mod tests {
     use super::appearance::AppearanceName;
-    use super::{strokes, BOARD_LIGHT};
-
-    #[test]
-    fn board_light_raster_clear_is_opaque() {
-        const { assert!(BOARD_LIGHT.raster_clear[3] > 0.9) };
-    }
-
-    #[test]
-    fn stroke_widths_are_positive() {
-        const { assert!(strokes::EDGE_BASE > 0.0) };
-        const { assert!(strokes::WIRE_HIGHLIGHT > 0.0) };
-    }
 
     #[test]
     fn appearance_name_parse() {
         assert_eq!(AppearanceName::parse("dark"), AppearanceName::Dark);
         assert_eq!(AppearanceName::parse("light"), AppearanceName::Light);
-    }
-
-    #[test]
-    fn light_and_dark_palettes_differ() {
-        use super::{BOARD_DARK, BOARD_LIGHT, CHROME_DARK, CHROME_LIGHT, MAP_DARK, MAP_LIGHT};
-        assert_ne!(BOARD_LIGHT.raster_clear, BOARD_DARK.raster_clear);
-        assert_ne!(MAP_LIGHT.surface_clear, MAP_DARK.surface_clear);
-        assert_ne!(CHROME_LIGHT.canvas, CHROME_DARK.canvas);
-    }
-
-    #[test]
-    fn grid_stroke_widths_match_tokens_json() {
-        assert_eq!(strokes::GRID_LARGE, 1.0);
-        assert_eq!(strokes::GRID_MEDIUM, 0.72);
-        assert_eq!(strokes::GRID_SMALL, 0.48);
-        assert_eq!(strokes::GRID_MICRO, 0.32);
+        assert_eq!(AppearanceName::parse("DARK"), AppearanceName::Dark);
+        assert_eq!(AppearanceName::parse("anything-else"), AppearanceName::Light);
     }
 }

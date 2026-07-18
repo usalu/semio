@@ -1,0 +1,13 @@
+{
+  "title": "Normalize Reasoning Mindmap Plugin to Consistency Contract",
+  "emoji": "🧭",
+  "status": "open",
+  "description": "Mechanical Wave-2 normalization pass on reasoning/mindmap/plugin/rs/lib.rs against the repo Consistency Contract: rename WiresPlayApp -\u003e ReasoningWiresPlayApp (C1), unwrap the single-app crate's app_wires mod to flat (C4), rename AppFactory/Bundle regions to Manifest and fix region formatting/order (C2/C3), adopt framework SDK PanelKit (tree_item_with_action/PanelTreeBuilder/selection_ids) and Terminology (app_labels!/localized_label_map/AppLabelsOverlayExt) primitives in place of local hand-rolled copies (C5), adopt testkit helpers for the generic undo-redo/convergence/idempotency test bodies (C5), verify resource_kind declaration. Do NOT touch the puzzle_2d app-to-app coupling (C6, reserved for a separate agent).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2092"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪23ad3439826d4a0db73051d13407bd30"
+  ]
+}

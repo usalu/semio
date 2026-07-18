@@ -2,7 +2,7 @@
 /** @emoji ⚙️ Reads `ui/styling/tokens.json`; emits palette CSS, TS, C#, Rust, and Python styling artifacts. */
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../repo/lib/js/index.ts";
 import { parseUiTheme, resolveThemeMetrics, resolveThemePaint, type ThemePaintRef, type UiTheme } from "./js/theme.ts";
 
 const stylingRoot = import.meta.dir;
@@ -507,6 +507,15 @@ class FontsScript extends BundleScript {
   }
 }
 
+/** 🧪 Runs the in-source `import.meta.vitest` coverage in `vite-elements-assets.ts` (the generic
+ * `tileProxyVitePlugin`/`staticDirVitePlugin`/`meshCollectionVitePlugin`/`playgroundAssetVitePlugins`
+ * factories among others) — `ui/styling/js/index.test.ts`'s `bun:test` cases run separately via `bun test`. */
+class TestScript extends BundleScript {
+  run(segments: string[]): void {
+    runVitest(this.root, segments, "vitest.config.ts");
+  }
+}
+
 const PX_SCAN_ROOTS = ["ui/react", "ui/styling/js", "framework/product", "coda/client/ui", "flow/react", "cad/renderer", "puzzle", "infinite/world", "gis/2d"] as const;
 
 const PX_SCAN_SKIP = ["/.repo/", "/node_modules/", "/.storybook/", "/fixture/", "tokens.generated.", "session.json", ".plan.md"];
@@ -704,6 +713,11 @@ class CheckNoRawColorsScript extends BundleScript {
 }
 
 if (import.meta.main) {
-  const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("fonts", FontsScript).register("check-no-px", CheckNoPxScript).register("check-no-raw-colors", CheckNoRawColorsScript);
+  const router = new ScriptRouter(import.meta.dir)
+    .register("generate", GenerateScript)
+    .register("fonts", FontsScript)
+    .register("test", TestScript)
+    .register("check-no-px", CheckNoPxScript)
+    .register("check-no-raw-colors", CheckNoRawColorsScript);
   await runBundleScriptMain(router, import.meta.url);
 }

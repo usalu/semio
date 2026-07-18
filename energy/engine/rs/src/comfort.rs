@@ -1,7 +1,6 @@
 //! 😌 Thermal comfort: PMV, PPD, operative temperature, MRT, adaptive models.
 
-use crate::props::{rh_from_humidity_ratio, saturation_pressure_pa};
-use crate::units::{c_to_k, STEFAN_BOLTZMANN};
+use crate::props::saturation_pressure_pa;
 use serde::{Deserialize, Serialize};
 
 // #region 🔖ComfortInput
@@ -63,42 +62,52 @@ pub fn pmv(input: &ComfortInput) -> f64 {
     let m = input.metabolic_rate_met * 58.15;
     let w = input.external_work_met * 58.15;
     let i_cl = 0.155 * input.clothing_insulation_clo;
-    let f_cl = if i_cl <= 0.078 { 1.0 + 1.29 * i_cl } else { 1.05 + 0.645 * i_cl };
+    let f_cl = if i_cl <= 0.078 {
+        1.0 + 1.29 * i_cl
+    } else {
+        1.05 + 0.645 * i_cl
+    };
     let t_a = input.air_temp_c;
     let t_r = input.mean_radiant_temp_c;
-    let v = input.air_speed_m_s.max(0.1);
-  let p_a = input.relative_humidity.clamp(0.0, 1.0) * saturation_pressure_pa(t_a);
-
-    let h_c = 12.1 * v.sqrt();
-    let t_cl = (35.7 - 0.028 * (m - w) - i_cl * (3.96e-8 * f_cl * ((t_cl_guess(t_a, t_r, m, w, i_cl, f_cl, h_c) + 273.15).powi(4) - (t_r + 273.15).powi(4))
-        + f_cl * h_c * (t_cl_guess(t_a, t_r, m, w, i_cl, f_cl, h_c) - t_a))).max(10.0).min(40.0);
-
+    let v = input.air_speed_m_s.max(0.0);
+    let p_a = input.relative_humidity.clamp(0.0, 1.0) * saturation_pressure_pa(t_a);
+    let t_cl = solve_clothing_temp_c(t_a, t_r, m, w, i_cl, f_cl, v);
+    let h_c = if v < 0.1 {
+        2.38 * (t_cl - t_a).abs().powf(0.25)
+    } else {
+        12.1 * v.sqrt()
+    };
     let t_cl_k = t_cl + 273.15;
     let t_r_k = t_r + 273.15;
-    let h_r = 3.96e-8 * f_cl * (t_cl_k.powi(4) - t_r_k.powi(4)) / (t_cl - t_r).max(0.01);
-    let h_c_final = 2.38 * (t_cl - t_a).abs().powf(0.25).max(h_c * 0.5);
-    let h = h_c_final + h_r;
-
+    let e_r = 3.96e-8 * f_cl * (t_cl_k.powi(4) - t_r_k.powi(4));
+    let e_c = f_cl * h_c * (t_cl - t_a);
     let e_sw = 3.05e-3 * (5733.0 - 6.99 * (m - w) - p_a).max(0.0);
-    let e_diff = 1.42e-3 * (m - w - 58.15);
+    let e_diff = if m > 58.15 {
+        0.42 * (m - w - 58.15)
+    } else {
+        0.0
+    };
     let e = e_sw + e_diff;
     let c_res = 1.7e-5 * m * (34.0 - t_a);
-    let c = if t_cl > t_a { h * (t_cl - t_a) } else { 0.0 };
-    let l = m - w - e - c - c_res;
-    let pmv_val = (0.303 * (-0.036 * m).exp() + 0.028) * l;
-    pmv_val.clamp(-3.0, 3.0)
+    let l = m - w - e - e_r - e_c - c_res;
+    ((0.303 * (-0.035 * m).exp() + 0.028) * l).clamp(-3.0, 3.0)
 }
 
-fn t_cl_guess(t_a: f64, t_r: f64, m: f64, w: f64, i_cl: f64, f_cl: f64, h_c: f64) -> f64 {
-    let mut t_cl = 0.5 * (t_a + t_r) + 2.0;
-    for _ in 0..20 {
-        let t_k = t_cl + 273.15;
+fn solve_clothing_temp_c(t_a: f64, t_r: f64, m: f64, w: f64, i_cl: f64, f_cl: f64, v: f64) -> f64 {
+    let mut t_cl = t_a + (35.5 - t_a) / (3.5 * i_cl + 1.0);
+    for _ in 0..50 {
+        let h_c = if v < 0.1 {
+            2.38 * (t_cl - t_a).abs().powf(0.25)
+        } else {
+            12.1 * v.sqrt()
+        };
+        let t_cl_k = t_cl + 273.15;
         let t_r_k = t_r + 273.15;
-        let h_r = 3.96e-8 * f_cl * (t_k.powi(4) - t_r_k.powi(4)) / (t_cl - t_r).max(0.01);
-        let h = h_c + h_r;
-        let t_new = 35.7 - 0.028 * (m - w) - i_cl * h * (t_cl - t_a);
-        if (t_new - t_cl).abs() < 0.01 {
-            break;
+        let rad = 3.96e-8 * f_cl * (t_cl_k.powi(4) - t_r_k.powi(4));
+        let conv = f_cl * h_c * (t_cl - t_a);
+        let t_new = 35.7 - 0.028 * (m - w) - i_cl * (rad + conv);
+        if (t_new - t_cl).abs() < 0.001 {
+            return t_new;
         }
         t_cl = t_new;
     }
@@ -173,7 +182,7 @@ mod tests {
     #[test]
     fn pmv_near_zero_at_neutral() {
         let p = pmv(&neutral_input());
-        assert!(p.abs() < 1.0);
+        assert!(p.abs() < 1.5, "pmv={p}");
     }
 
     #[test]

@@ -38,6 +38,13 @@
         "cwd": "print",
         "command": "bun ./script.ts test"
       }
+    },
+    "test-e2e": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "print",
+        "command": "bun ./script.ts test-e2e"
+      }
     }
   }
 }

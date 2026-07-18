@@ -2126,7 +2126,7 @@ use semio_framework_plugin::{PanelGroup,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_mixed_vec3, ui_inspector_all_equal, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, AppLabelsOverlay, DocumentApp, DocumentView, MeshData, UtilityCategory, UtilityDefinition, UiFieldNode,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, AppLabelsOverlay, DocumentApp, DocumentView, MeshData, OsMediaCapability, ResourceKindSpec, UtilityCategory, UtilityDefinition, UiFieldNode,
     UiInspectorFieldGroup, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiTreeItemAction, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementPossible, WindowEngagementStatus, SET_ACTIVE_UTILITY_ACTION_ID,
@@ -5254,6 +5254,14 @@ fn cad_transform_utility_refs() -> Vec<semio_framework_plugin::UtilityRef> {
 fn create_cad_app() -> App {
     App::from_builder(
         App::builder(CAD_PLAY_APP_ID, "CAD").document(["semio", "cad"])
+            .resource_kind(ResourceKindSpec {
+                id: "3d.cad".into(),
+                name: "3D CAD".into(),
+                source_format: "cad.scene".into(),
+                component_kind: "cad".into(),
+                dimension: "3d".into(),
+                media_capability: OsMediaCapability::Brep,
+            })
             .icon_id("box")
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "cad"])

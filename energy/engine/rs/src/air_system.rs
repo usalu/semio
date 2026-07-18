@@ -3,10 +3,10 @@
 use crate::coils::{cooling_coil_output_w, heating_coil_output_w, CoilAirState, CoolingCoil, HeatingCoil};
 use crate::curves::PerformanceCurve;
 use crate::fans::{fan_mass_flow_kg_s, fan_operating_point, fan_power_w, Fan, FanType};
-use crate::ideal_hvac::{EconomizerControl, IdealLoadsSystem};
+use crate::ideal_hvac::EconomizerControl;
 use crate::props::{humidity_ratio_from_rh, moist_air_enthalpy_j_per_kg};
 use crate::terminal::{AirTerminal, TerminalRequest};
-use crate::units::{CP_DRY_AIR, P_STD, RHO_AIR_REF};
+use crate::units::{P_STD, RHO_AIR_REF};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖AirSystem

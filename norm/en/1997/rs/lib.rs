@@ -48,7 +48,7 @@ pub mod part_1 {
 
 // #region 🔖Part2
 pub mod part_2 {
-    use super::part_1;
+    use super::{part_1, AnnexChoice, CheckResult};
 
     pub fn check_pile_axial(n_ed_kn: f64, r_c_d_kn: f64) -> CheckResult {
         part_1::check_bearing(n_ed_kn, r_c_d_kn, AnnexChoice::De)

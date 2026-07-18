@@ -6,7 +6,7 @@ rust-version = "1.88"
 description = "Headless architectural programming domain — program registers, adjacency, analysis, and exchange"
 
 [lib]
-path = "lib.rs"
+path = "src/lib.rs"
 
 [dependencies]
 vcs = { path = "../../../vcs/rs" }

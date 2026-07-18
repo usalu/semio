@@ -1,0 +1,9 @@
+{
+  "name": "@semio-tech/framework-surface-paint-rs",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./pkg/framework_surface_paint.js",
+    "./pkg/framework_surface_paint.js": "./pkg/framework_surface_paint.js"
+  }
+}

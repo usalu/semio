@@ -1,6 +1,6 @@
 //! 💧 Evaporative cooling: direct and indirect with effectiveness and water use.
 
-use crate::props::{humidity_ratio_from_rh, latent_heat_vaporization, saturation_pressure_pa};
+use crate::props::{humidity_ratio_from_rh, latent_heat_vaporization, saturation_pressure_pa, wet_bulb_c};
 use crate::units::{CP_DRY_AIR, H_FG_0C, P_STD};
 use serde::{Deserialize, Serialize};
 
@@ -68,7 +68,7 @@ pub fn evaporative_cool(
     match cooler {
         EvaporativeCooler::Direct { effectiveness, .. } => {
             let eps = effectiveness.clamp(0.0, 1.0);
-            let t_wb = wet_bulb_approx_c(inlet.dry_bulb_c, inlet.humidity_ratio, inlet.pressure_pa);
+            let t_wb = wet_bulb_c(inlet.dry_bulb_c, inlet.humidity_ratio, inlet.pressure_pa);
             let t_out = inlet.dry_bulb_c - eps * (inlet.dry_bulb_c - t_wb);
             let w_sat_out = humidity_ratio_from_rh(t_out, 0.95, inlet.pressure_pa);
             let w_out = inlet.humidity_ratio + eps * (w_sat_out - inlet.humidity_ratio);
@@ -86,7 +86,7 @@ pub fn evaporative_cool(
         }
         EvaporativeCooler::Indirect { sensible_effectiveness, .. } => {
             let eps = sensible_effectiveness.clamp(0.0, 1.0);
-            let t_wb = wet_bulb_approx_c(inlet.dry_bulb_c, inlet.humidity_ratio, inlet.pressure_pa);
+            let t_wb = wet_bulb_c(inlet.dry_bulb_c, inlet.humidity_ratio, inlet.pressure_pa);
             let t_out = inlet.dry_bulb_c - eps * (inlet.dry_bulb_c - t_wb);
             let sensible = inlet.mass_flow_kg_s * CP_DRY_AIR * (inlet.dry_bulb_c - t_out);
             let water_evap = sensible / H_FG_0C;

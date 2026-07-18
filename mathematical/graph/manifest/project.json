@@ -17,6 +17,14 @@
         "cwd": "mathematical/graph/manifest",
         "command": "bun ./script.ts test"
       }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["generate"],
+      "options": {
+        "cwd": "mathematical/graph/manifest",
+        "command": "bun ./script.ts lint"
+      }
     }
   }
 }

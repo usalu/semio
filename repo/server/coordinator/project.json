@@ -28,9 +28,10 @@
     },
     "test": {
       "executor": "nx:run-commands",
+      "dependsOn": [],
       "options": {
         "cwd": "repo/server/coordinator",
-        "command": "bunx vitest run",
+        "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }
     }

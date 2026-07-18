@@ -13,6 +13,11 @@ package = "semio:cad"
 variant = "cad"
 ports = { react = 6020, wgpu = 6120 }
 
+[[package.metadata.semio.assets]]
+kind = "static-dir"
+route = "/cad-fixture"
+root = "cad/fixture"
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

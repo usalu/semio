@@ -136,10 +136,14 @@ pub fn dcv_flow_per_person_m3_s(control: &DcvControl, occupancy: f64, indoor_co2
     if occupancy < 1e-6 {
         return control.min_flow_per_person_m3_s;
     }
-    let gen_per_person = 0.31;
-    let delta_co2 = (indoor_co2_ppm - control.outdoor_co2_ppm).max(1.0);
-    let flow = gen_per_person / (delta_co2 / 1e6 * 44.01 / 24.45);
-    flow.clamp(control.min_flow_per_person_m3_s, control.max_flow_per_person_m3_s)
+    let delta_target = (control.target_ppm - control.outdoor_co2_ppm).max(50.0);
+    let ratio = if indoor_co2_ppm > control.target_ppm {
+        1.0 + (indoor_co2_ppm - control.target_ppm) / delta_target
+    } else {
+        1.0
+    };
+    (control.min_flow_per_person_m3_s * ratio)
+        .clamp(control.min_flow_per_person_m3_s, control.max_flow_per_person_m3_s)
 }
 
 /// 🎛️ Required total DCV ventilation flow [m³/s].

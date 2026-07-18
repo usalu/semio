@@ -18,7 +18,7 @@ impl EntityId {
 
 // #region 🔖Site
 /// 🌍 Site location and orientation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Site {
     pub latitude_deg: f64,
     pub longitude_deg: f64,
@@ -196,6 +196,327 @@ pub struct IdealLoadsSystem {
     pub outdoor_air_per_person_m3_s: f64,
     pub outdoor_air_per_area_m3_s_m2: f64,
 }
+
+/// 💧 Humidistat control for a zone.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Humidistat {
+    pub id: EntityId,
+    pub zone_id: EntityId,
+    pub humidifying_setpoint_schedule_id: ScheduleId,
+    pub dehumidifying_setpoint_schedule_id: ScheduleId,
+    pub humidifying_throttle_range: f64,
+    pub dehumidifying_throttle_range: f64,
+}
+
+/// 🎛️ Setpoint manager type.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub enum SetpointManagerKind {
+    Scheduled,
+    OutdoorAirReset { low_outdoor_c: f64, high_outdoor_c: f64, low_setpoint_c: f64, high_setpoint_c: f64 },
+    WarmestZone,
+    ColdestZone,
+}
+
+/// 🎛️ Setpoint manager for air/plant loops.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SetpointManager {
+    pub id: EntityId,
+    pub name: String,
+    pub kind: SetpointManagerKind,
+    pub schedule_id: Option<ScheduleId>,
+}
+
+/// 🏠 Zone equipment assignment.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ZoneEquipmentAssignment {
+    pub id: EntityId,
+    pub zone_id: EntityId,
+    pub equipment_type: ZoneEquipmentType,
+    pub priority: u8,
+    pub heating_capacity_w: f64,
+    pub cooling_capacity_w: f64,
+}
+
+/// 🏠 Zone equipment catalog reference.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub enum ZoneEquipmentType {
+    Baseboard,
+    Radiant,
+    FanCoil,
+    Ptac,
+    VrfTerminal,
+    Erv,
+    UnitHeater,
+    WaterToAirHp,
+}
+
+/// 🌀 Air loop configuration.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct AirLoop {
+    pub id: EntityId,
+    pub name: String,
+    pub supply_node_id: u32,
+    pub return_node_id: u32,
+    pub design_supply_air_flow_m3_s: f64,
+    pub terminal_zone_ids: Vec<EntityId>,
+}
+
+/// 🏭 Plant loop configuration.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PlantLoopConfig {
+    pub id: EntityId,
+    pub name: String,
+    pub loop_type: PlantLoopType,
+    pub supply_temperature_c: f64,
+    pub return_temperature_c: f64,
+    pub design_flow_kg_s: f64,
+    pub equipment_ids: Vec<EntityId>,
+}
+
+/// 🏭 Plant loop fluid type.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum PlantLoopType {
+    Heating,
+    Cooling,
+    Condenser,
+}
+
+/// 🌬️ Outdoor air system.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct OutdoorAirSystem {
+    pub id: EntityId,
+    pub air_loop_id: EntityId,
+    pub min_oa_flow_m3_s: f64,
+    pub economizer_enabled: bool,
+}
+
+/// 🌳 Shading surface for solar obstruction.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ShadingSurface {
+    pub id: EntityId,
+    pub name: String,
+    pub vertices_m: Vec<[f64; 3]>,
+    pub transmittance_schedule_id: Option<ScheduleId>,
+}
+
+/// 📋 Space list grouping.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SpaceList {
+    pub id: EntityId,
+    pub name: String,
+    pub space_ids: Vec<EntityId>,
+}
+
+/// 🏠 Thermal enclosure grouping zones.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ThermalEnclosure {
+    pub id: EntityId,
+    pub name: String,
+    pub zone_ids: Vec<EntityId>,
+}
+
+/// 🔗 Surface adjacency pair.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct AdjacencyPair {
+    pub surface_a_id: EntityId,
+    pub surface_b_id: EntityId,
+}
+
+/// 💨 Mechanical ventilation specification.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct MechanicalVentilation {
+    pub id: EntityId,
+    pub zone_id: EntityId,
+    pub schedule_id: ScheduleId,
+    pub design_flow_m3_s: f64,
+    pub fan_total_efficiency: f64,
+    pub fan_delta_pressure_pa: f64,
+}
+
+/// 🌐 Airflow network definition in model.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct AirflowNetworkDefinition {
+    pub zone_node_ids: Vec<(EntityId, u32)>,
+    pub outdoor_node_id: u32,
+    pub link_ids: Vec<u32>,
+}
+
+/// ⚡ Electrical load center.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ElectricalLoadCenter {
+    pub id: EntityId,
+    pub name: String,
+    pub generator_ids: Vec<EntityId>,
+    pub pv_ids: Vec<EntityId>,
+    pub battery_ids: Vec<EntityId>,
+}
+
+/// ☀️ PV system assignment.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PvSystemAssignment {
+    pub id: EntityId,
+    pub dc_capacity_w: f64,
+    pub area_m2: f64,
+    pub tilt_deg: f64,
+    pub azimuth_deg: f64,
+    pub module_efficiency: f64,
+    pub inverter_efficiency: f64,
+}
+
+/// 🔋 Battery storage assignment.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct BatteryAssignment {
+    pub id: EntityId,
+    pub capacity_kwh: f64,
+    pub max_charge_w: f64,
+    pub max_discharge_w: f64,
+    pub round_trip_efficiency: f64,
+}
+
+/// 🚿 Service hot water system.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ShwSystemConfig {
+    pub id: EntityId,
+    pub heater_capacity_w: f64,
+    pub storage_volume_m3: f64,
+    pub setpoint_c: f64,
+    pub schedule_id: ScheduleId,
+}
+
+/// ☀️ Solar thermal collector system.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SolarThermalConfig {
+    pub id: EntityId,
+    pub collector_area_m2: f64,
+    pub efficiency: f64,
+    pub storage_volume_m3: f64,
+    pub tilt_deg: f64,
+    pub azimuth_deg: f64,
+}
+
+/// ❄️ Refrigeration system.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct RefrigerationConfig {
+    pub id: EntityId,
+    pub case_count: u32,
+    pub design_load_w: f64,
+    pub defrost_schedule_id: ScheduleId,
+}
+
+/// 💧 Water use system.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct WaterSystemConfig {
+    pub id: EntityId,
+    pub fixture_count: u32,
+    pub peak_flow_l_s: f64,
+    pub schedule_id: ScheduleId,
+}
+
+/// ⚠️ Fault definition.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct FaultDefinition {
+    pub id: EntityId,
+    pub target_equipment_id: EntityId,
+    pub fault_type: FaultType,
+    pub severity: f64,
+    pub start_schedule_id: ScheduleId,
+}
+
+/// ⚠️ Fault type catalog.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum FaultType {
+    SensorBias,
+    CoilFouling,
+    DamperStuck,
+    ChillerFouling,
+    BoilerEfficiencyDegradation,
+}
+
+/// 📊 Output variable registration.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct OutputVariableSpec {
+    pub name: String,
+    pub key: String,
+    pub reporting_frequency: ReportingFrequency,
+}
+
+/// 📊 Reporting frequency.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ReportingFrequency {
+    Timestep,
+    Hourly,
+    Daily,
+    Monthly,
+    RunPeriod,
+}
+
+/// 📐 Sizing object for design-day autosize.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SizingObject {
+    pub id: EntityId,
+    pub zone_id: EntityId,
+    pub sizing_type: SizingType,
+    pub design_day_type: DesignDayType,
+}
+
+/// 📐 Sizing type.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum SizingType {
+    Heating,
+    Cooling,
+    OutdoorAir,
+}
+
+/// 📐 Design day type.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum DesignDayType {
+    Heating,
+    Cooling,
+}
+
+/// 💡 Daylight zone configuration.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct DaylightZoneConfig {
+    pub id: EntityId,
+    pub zone_id: EntityId,
+    pub illuminance_target_lux: f64,
+    pub glare_limit: f64,
+    pub window_transmittance: f64,
+}
+
+/// 🌡️ Room air model selection per zone.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct RoomAirModelAssignment {
+    pub zone_id: EntityId,
+    pub model: RoomAirModelType,
+}
+
+/// 🌡️ Room air model type.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum RoomAirModelType {
+    WellMixed,
+    OneNodeDisplacement,
+    TwoNodeBuoyancy,
+    UnderFloorAirDistribution,
+}
+
+/// 🌡️ Ground temperature configuration.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct GroundTemperatureConfig {
+    pub building_surface_c: [f64; 12],
+    pub shallow_c: [f64; 12],
+    pub deep_c: f64,
+}
+
+impl Default for GroundTemperatureConfig {
+    fn default() -> Self {
+        Self {
+            building_surface_c: [18.0; 12],
+            shallow_c: [18.0; 12],
+            deep_c: 18.0,
+        }
+    }
+}
 // #endregion 🔖Hvac
 
 // #region 🔖Infiltration
@@ -230,8 +551,33 @@ pub struct Model {
     pub lighting: Vec<LightingGain>,
     pub equipment: Vec<EquipmentGain>,
     pub thermostats: Vec<Thermostat>,
+    pub humidistats: Vec<Humidistat>,
+    pub setpoint_managers: Vec<SetpointManager>,
     pub ideal_loads: Vec<IdealLoadsSystem>,
+    pub zone_equipment: Vec<ZoneEquipmentAssignment>,
+    pub air_loops: Vec<AirLoop>,
+    pub plant_loops: Vec<PlantLoopConfig>,
+    pub outdoor_air_systems: Vec<OutdoorAirSystem>,
     pub infiltrations: Vec<Infiltration>,
+    pub mechanical_ventilations: Vec<MechanicalVentilation>,
+    pub shading_surfaces: Vec<ShadingSurface>,
+    pub space_lists: Vec<SpaceList>,
+    pub thermal_enclosures: Vec<ThermalEnclosure>,
+    pub adjacency_pairs: Vec<AdjacencyPair>,
+    pub airflow_network: Option<AirflowNetworkDefinition>,
+    pub electrical_load_centers: Vec<ElectricalLoadCenter>,
+    pub pv_systems: Vec<PvSystemAssignment>,
+    pub battery_storage: Vec<BatteryAssignment>,
+    pub shw_systems: Vec<ShwSystemConfig>,
+    pub solar_thermal_systems: Vec<SolarThermalConfig>,
+    pub refrigeration_systems: Vec<RefrigerationConfig>,
+    pub water_systems: Vec<WaterSystemConfig>,
+    pub faults: Vec<FaultDefinition>,
+    pub output_variables: Vec<OutputVariableSpec>,
+    pub sizing_objects: Vec<SizingObject>,
+    pub daylight_zones: Vec<DaylightZoneConfig>,
+    pub room_air_models: Vec<RoomAirModelAssignment>,
+    pub ground_temperature: GroundTemperatureConfig,
 }
 
 impl Model {
@@ -312,6 +658,44 @@ impl Model {
         for ils in &self.ideal_loads {
             if !zone_ids.contains(&ils.zone_id) {
                 diag.push(Error::severe("ideal loads system references unknown zone"));
+            }
+        }
+
+        for hv in &self.humidistats {
+            if !zone_ids.contains(&hv.zone_id) {
+                diag.push(Error::severe("humidistat references unknown zone"));
+            }
+        }
+
+        for ze in &self.zone_equipment {
+            if !zone_ids.contains(&ze.zone_id) {
+                diag.push(Error::severe("zone equipment references unknown zone"));
+            }
+        }
+
+        for mv in &self.mechanical_ventilations {
+            if !zone_ids.contains(&mv.zone_id) {
+                diag.push(Error::severe("mechanical ventilation references unknown zone"));
+            }
+        }
+
+        for al in &self.air_loops {
+            for zid in &al.terminal_zone_ids {
+                if !zone_ids.contains(zid) {
+                    diag.push(Error::severe(format!("air loop {} references unknown zone", al.name)));
+                }
+            }
+        }
+
+        for dz in &self.daylight_zones {
+            if !zone_ids.contains(&dz.zone_id) {
+                diag.push(Error::severe("daylight zone references unknown zone"));
+            }
+        }
+
+        for pair in &self.adjacency_pairs {
+            if !surface_ids.contains(&pair.surface_a_id) || !surface_ids.contains(&pair.surface_b_id) {
+                diag.push(Error::severe("adjacency pair references unknown surface"));
             }
         }
 

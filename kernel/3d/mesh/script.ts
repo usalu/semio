@@ -1,16 +1,10 @@
 #!/usr/bin/env bun
 /** 🦀 `kernel/3d/mesh` router: `bun ./script.ts test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/index.ts";
-import { join } from "node:path";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted } from "../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
-  run(): void {
-    Bun.spawnSync(["cargo", "test", "-p", "kernel_3d_mesh"], {
-      cwd: this.repoRoot,
-      stdin: "inherit",
-      stdout: "inherit",
-      stderr: "inherit",
-    });
+  run(segments: string[]): void {
+    runCargoTestBudgeted(["kernel_3d_mesh"], this.repoRoot, segments);
   }
 }
 

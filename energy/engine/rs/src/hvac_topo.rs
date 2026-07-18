@@ -1,6 +1,6 @@
 //! 🌀 HVAC fluid topology: nodes, branches, splitters, mixers, and loop validation.
 
-use crate::error::{Diagnostics, Error, Severity};
+use crate::error::{Diagnostics, Error};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖FluidNode
@@ -170,7 +170,7 @@ pub struct PlantLoop {
 }
 
 /// 💧 Plant loop working fluid.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum PlantFluid {
     Water,
     Steam,

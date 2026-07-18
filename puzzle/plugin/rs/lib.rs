@@ -7,7 +7,7 @@ pub mod d2 {
     use semio_framework_plugin::{
         build_canvas_2d_scene, build_board2d_scene, create_default_layout,
         MeasureSelectItem, WindowEngagementStatus,
-        ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp, DocumentView, PanelGroup, PluginBundle, Board2dScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
+        ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp, DocumentView, OsMediaCapability, PanelGroup, PluginBundle, ResourceKindSpec, Board2dScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
         WindowEngagementInput, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
     };
     use semio_framework_plugin::kernel::HostEffect;
@@ -986,14 +986,14 @@ pub mod d2 {
         let fixture = &envelope.fixture;
         let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(fixture, pane);
         let camera_json = json!({ "x": camera_x, "y": camera_y, "zoom": zoom }).to_string();
-        let kind_catalogs_json = fixture.get("meta").and_then(|value| value.get("kindCatalogs")).map(|value| value.to_string()).unwrap_or_else(|| "{}".into());
+        let glyph_catalogs_json = fixture.get("meta").and_then(|value| value.get("kindCatalogs")).map(|value| value.to_string()).unwrap_or_else(|| "{}".into());
         let selection_json = serde_json::to_string(&envelope.runtime.selected_ids).unwrap_or_else(|_| "[]".into());
-        let brush_kind_weights_json = serde_json::to_string(&json!({
+        let brush_weights_json = serde_json::to_string(&json!({
             "nodeWeights": envelope.runtime.node_kind_weights,
             "handleWeights": envelope.runtime.handle_kind_weights,
         }))
         .unwrap_or_else(|_| "{}".into());
-        let kind_compatibility_json = fixture
+        let placement_compatibility_json = fixture
             .get("meta")
             .and_then(|value| value.get("kindCompatibility"))
             .or_else(|| fixture.get("kindCompatibility"))
@@ -1003,7 +1003,7 @@ pub mod d2 {
         Board2dScene {
             fixture_json: cached_fixture_json(document_json, fixture),
             camera_json,
-            kind_catalogs_json,
+            glyph_catalogs_json,
             selection_json,
             interactive: pane == PUZZLE2D_PANE_OVERVIEW,
             hovered_id: None,
@@ -1012,8 +1012,8 @@ pub mod d2 {
             grid_snap_enabled: envelope.runtime.grid_snap_enabled,
             grid_factor: envelope.runtime.grid_factor,
             suggestion_offset: envelope.runtime.suggestion_offset,
-            brush_kind_weights_json,
-            kind_compatibility_json,
+            brush_weights_json,
+            placement_compatibility_json,
             lod_mode,
         }
     }
@@ -2127,6 +2127,14 @@ pub mod d2 {
         let mut app = App::from_builder(
             App::builder(PUZZLE2D_PLAY_APP_ID, "Puzzle 2D")
                 .document(["semio", "puzzle", "2d"])
+                .resource_kind(ResourceKindSpec {
+                    id: "2d.puzzle".into(),
+                    name: "2D Puzzle".into(),
+                    source_format: "puzzle.2d".into(),
+                    component_kind: "puzzle2d".into(),
+                    dimension: "2d".into(),
+                    media_capability: OsMediaCapability::MeshOnly,
+                })
                 .icon_id("puzzle2d")
                 .terminology("reuse")
                 .terminology_document("reuse", ["Entwerfen mit Bestand", "puzzle", "2d"])
@@ -2625,7 +2633,7 @@ pub mod d3 {
     use puzzle_3d::{puzzle3d_document_delta_ops, BrushPlacePayload, Puzzle3dOp, Puzzle3dPrecomputeSession};
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_world_3d_scene, create_default_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
-        ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, PanelGroup,
+        ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, OsMediaCapability, PanelGroup, ResourceKindSpec,
         SurfaceKind, UtilityDefinition, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
         IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionEmphasis, IntroductionStepDefinition,
@@ -6013,6 +6021,14 @@ pub mod d3 {
         App::from_builder(
             App::builder(PUZZLE3D_PLAY_APP_ID, "Puzzle 3D")
                 .document(["semio", "puzzle", "3d"])
+                .resource_kind(ResourceKindSpec {
+                    id: "3d.puzzle".into(),
+                    name: "3D Puzzle".into(),
+                    source_format: "puzzle.3d".into(),
+                    component_kind: "puzzle3d".into(),
+                    dimension: "3d".into(),
+                    media_capability: OsMediaCapability::MeshOnly,
+                })
                 .icon_id("puzzle")
                 .terminology("reuse")
                 .terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])
@@ -6741,7 +6757,7 @@ pub mod d5 {
         apply_world3d_sun_action, build_board2d_scene, build_world_3d_scene, create_default_layout,
         ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, WindowEngagementStatus,
         merge_world_selection_ids, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
-        ActionDescriptor, PanelGroup, Board2dScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
+        ActionDescriptor, OsMediaCapability, PanelGroup, ResourceKindSpec, Board2dScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
         WindowEngagementInput, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
         FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
     };
@@ -7566,7 +7582,7 @@ pub mod d5 {
         })
     }
 
-    fn board_brush_kind_weights_json(runtime: &Puzzle5dRuntime) -> String {
+    fn board_brush_weights_json(runtime: &Puzzle5dRuntime) -> String {
         json!({ "nodeWeights": runtime.object_kind_weights, "handleWeights": runtime.vortex_kind_weights }).to_string()
     }
 
@@ -7574,7 +7590,7 @@ pub mod d5 {
         Board2dScene {
             fixture_json: board_fixture_value(&envelope.document).to_string(),
             camera_json: board_camera_value(&envelope.document.camera2d).to_string(),
-            kind_catalogs_json: board_kind_catalogs_value(&envelope.document).to_string(),
+            glyph_catalogs_json: board_kind_catalogs_value(&envelope.document).to_string(),
             selection_json: serde_json::to_string(&selection_flat_ids(&envelope.runtime.selection)).unwrap_or_else(|_| "[]".into()),
             interactive: true,
             hovered_id: envelope.runtime.hovered_part_id.clone(),
@@ -7583,8 +7599,8 @@ pub mod d5 {
             grid_snap_enabled: envelope.runtime.grid_snap_enabled,
             grid_factor: envelope.runtime.grid_factor,
             suggestion_offset: envelope.runtime.suggestion_offset,
-            brush_kind_weights_json: board_brush_kind_weights_json(&envelope.runtime),
-            kind_compatibility_json: envelope.document.kind_compatibility.clone().unwrap_or(json!([])).to_string(),
+            brush_weights_json: board_brush_weights_json(&envelope.runtime),
+            placement_compatibility_json: envelope.document.kind_compatibility.clone().unwrap_or(json!([])).to_string(),
             lod_mode: envelope.runtime.lod_mode.clone(),
         }
     }
@@ -9341,6 +9357,14 @@ pub mod d5 {
         let mut app = App::from_builder(
             App::builder(PUZZLE5D_PLAY_APP_ID, "Puzzle 5D")
                 .document(["semio", "puzzle", "5d"])
+                .resource_kind(ResourceKindSpec {
+                    id: "5d.puzzle".into(),
+                    name: "5D Puzzle".into(),
+                    source_format: "puzzle.5d".into(),
+                    component_kind: "puzzle5d".into(),
+                    dimension: "5d".into(),
+                    media_capability: OsMediaCapability::MeshOnly,
+                })
                 .icon_id("puzzle")
                 .terminology("reuse")
                 .terminology_document("reuse", ["Entwerfen mit Bestand", "puzzle", "5d"])

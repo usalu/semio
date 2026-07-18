@@ -1,7 +1,8 @@
 //! 🧮 Combined mathematical framework playground — graph algorithms and computational geometry as one hot-swappable WASM plugin.
 
 use semio_framework_plugin::{
-    create_default_layout, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, Canvas2dScene, DocumentApp, DocumentView, NodeGraphScene, SurfaceKind, UiComponentSceneNode, UiNode, ViewState,
+    app_labels, create_default_layout, is_de_locale, localized_label_map, resolve_labels, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt, Canvas2dScene, DocumentApp,
+    DocumentView, NodeGraphScene, SurfaceKind, UiComponentSceneNode, UiNode, ViewState,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -279,6 +280,38 @@ fn geometry_layers_json(geometry: &MathGeometry) -> String {
 }
 //#endregion 🔖Geometry
 
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the mathematical app; one field per label makes every locale combination compile-checked.
+/// 🧮 Graph/node/geometry vocabulary here is pure math terminology, not building-assembly terminology, so no reuse variant applies.
+app_labels! {
+    struct MathematicalLabels {
+        window_graph: &'static str = en: "Graph", de: "Graph";
+        window_geometry: &'static str = en: "Geometry", de: "Geometrie";
+        mode_edit: &'static str = en: "Edit", de: "Bearbeiten";
+        example_demo: &'static str = en: "Demo", de: "Demo";
+    }
+}
+//#endregion 🔖Terminology
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation declared in `create_mathematical_app`'s static manifest —
+/// the manifest itself has no `view_state`/locale parameter, so this overlay is how the command palette and Actions
+/// rail get a translated label without threading locale through the whole builder chain.
+fn mathematical_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+    localized_label_map(
+        is_de,
+        &[
+            ("setDocument", "Set Document", "Dokument festlegen"),
+            ("setAlgorithm", "Set Algorithm", "Algorithmus festlegen"),
+            ("setDirected", "Set Directed", "Gerichtet festlegen"),
+            ("nodeGraphEdit", "Node Graph Edit", "Knotengraph bearbeiten"),
+            ("nodeGraphViewport", "Node Graph Viewport", "Knotengraph-Ansicht"),
+            ("setPoints", "Set Points", "Punkte festlegen"),
+        ],
+    )
+}
+//#endregion 🔖CommandLabels
+
 //#region 🔖Render
 fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiComponentSceneNode {
     UiComponentSceneNode {
@@ -318,11 +351,11 @@ fn render_geometry_window(geometry: &MathGeometry) -> UiNode {
 }
 //#endregion 🔖Render
 
-//#region 🔖MathPlayApp
+//#region 🔖MathematicalPlayApp
 #[derive(Default)]
-struct MathPlayApp;
+struct MathematicalPlayApp;
 
-impl DocumentApp for MathPlayApp {
+impl DocumentApp for MathematicalPlayApp {
     type Projection = MathProjection;
     type Op = MathOp;
 
@@ -428,78 +461,18 @@ impl DocumentApp for MathPlayApp {
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
-        let labels = math_labels(view_state);
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        semio_framework_plugin::AppLabelsOverlay {
-            window_kind_labels: std::collections::HashMap::from([
-                (MATH_WINDOW_GRAPH.to_string(), labels.window_graph.to_string()),
-                (MATH_WINDOW_GEOMETRY.to_string(), labels.window_geometry.to_string()),
-            ]),
-            panel_tab_labels: std::collections::HashMap::new(),
-            mode_labels: std::collections::HashMap::from([("edit".to_string(), labels.mode_edit.to_string())]),
-            action_labels: math_action_labels(is_de),
-            utility_labels: std::collections::HashMap::new(),
-            example_labels: std::collections::HashMap::from([("demo".to_string(), labels.example_demo.to_string())]),
-            action_arg_labels: std::collections::HashMap::new(),
-            dialog_labels: std::collections::HashMap::new(),
-            introduction_labels: std::collections::HashMap::new(),
-        }
+    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
+        let labels = resolve_labels::<MathematicalLabels>(view_state);
+        let is_de = is_de_locale(view_state);
+        AppLabelsOverlay::default()
+            .window_kind_label(MATH_WINDOW_GRAPH, labels.window_graph)
+            .window_kind_label(MATH_WINDOW_GEOMETRY, labels.window_geometry)
+            .mode_label("edit", labels.mode_edit)
+            .action_labels(mathematical_action_labels(is_de))
+            .example_labels(std::collections::HashMap::from([("demo".to_string(), labels.example_demo.to_string())]))
     }
 }
-//#endregion 🔖MathPlayApp
-
-//#region 🔖Terminology
-/// 🗣️ Complete UI label set for the mathematical app; one field per label makes every locale combination compile-checked.
-/// 🧮 Graph/node/geometry vocabulary here is pure math terminology, not building-assembly terminology, so no reuse variant applies.
-struct MathLabels {
-    window_graph: &'static str,
-    window_geometry: &'static str,
-    mode_edit: &'static str,
-    example_demo: &'static str,
-}
-
-const MATH_LABELS_NATIVE_EN: MathLabels = MathLabels {
-    window_graph: "Graph",
-    window_geometry: "Geometry",
-    mode_edit: "Edit",
-    example_demo: "Demo",
-};
-
-const MATH_LABELS_NATIVE_DE: MathLabels = MathLabels {
-    window_graph: "Graph",
-    window_geometry: "Geometrie",
-    mode_edit: "Bearbeiten",
-    example_demo: "Demo",
-};
-
-/// 🗣️ Resolves the active label set from the shell-provided locale; this app has no terminology variant.
-fn math_labels(view_state: &ViewState) -> &'static MathLabels {
-    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-    if is_de {
-        &MATH_LABELS_NATIVE_DE
-    } else {
-        &MATH_LABELS_NATIVE_EN
-    }
-}
-//#endregion 🔖Terminology
-
-//#region 🔖CommandLabels
-/// 🗣️ (action id) -> localized label for every operation declared in `create_mathematical_app`'s static manifest —
-/// the manifest itself has no `view_state`/locale parameter, so this overlay is how the command palette and Actions
-/// rail get a translated label without threading locale through the whole builder chain.
-fn math_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("setDocument", "Set Document", "Dokument festlegen"),
-        ("setAlgorithm", "Set Algorithm", "Algorithmus festlegen"),
-        ("setDirected", "Set Directed", "Gerichtet festlegen"),
-        ("nodeGraphEdit", "Node Graph Edit", "Knotengraph bearbeiten"),
-        ("nodeGraphViewport", "Node Graph Viewport", "Knotengraph-Ansicht"),
-        ("setPoints", "Set Points", "Punkte festlegen"),
-    ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-}
-//#endregion 🔖CommandLabels
+//#endregion 🔖MathematicalPlayApp
 
 //#region 🔖Manifest
 fn create_mathematical_app() -> App {
@@ -541,11 +514,11 @@ fn register_mathematical_exports() {}
 semio_framework_plugin::semio_plugin! {
     id: "mathematical", label: "Mathematical", version: "0.1.0",
     setup: register_mathematical_exports,
-    apps: [ create_mathematical_app => MathPlayApp ],
+    apps: [ create_mathematical_app => MathematicalPlayApp ],
 }
 //#endregion 🔖Manifest
 
-// #region 🔖Tests
+//#region 🧪Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -597,7 +570,7 @@ mod tests {
 
     #[test]
     fn renders_node_graph_scene() {
-        let app = MathPlayApp;
+        let app = MathematicalPlayApp;
         let projection = MathProjection::default();
         let history = semio_framework_plugin::HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, current_checkpoint_id: None };
         let doc = DocumentView { projection: &projection, history: &history };
@@ -608,7 +581,7 @@ mod tests {
 
     #[test]
     fn renders_canvas_2d_scene() {
-        let app = MathPlayApp;
+        let app = MathematicalPlayApp;
         let projection = MathProjection::default();
         let history = semio_framework_plugin::HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, current_checkpoint_id: None };
         let doc = DocumentView { projection: &projection, history: &history };
@@ -617,4 +590,4 @@ mod tests {
         assert!(json.contains("canvas-2d"));
     }
 }
-// #endregion 🔖Tests
+//#endregion 🧪Tests

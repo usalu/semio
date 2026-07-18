@@ -573,16 +573,16 @@ mod schema {
         EdgeDef { from: Label::Piece, pred: Predicate::Has, to: Label::Blueprint, field: "blueprint", cardinality: Cardinality::One, _fragment: None, edge_props: &[] },
         EdgeDef { from: Label::Blueprint, pred: Predicate::Is, to: Label::Type, field: "__typename", cardinality: Cardinality::One, _fragment: Some("... on Type"), edge_props: &[] },
         EdgeDef { from: Label::Blueprint, pred: Predicate::Is, to: Label::Design, field: "__typename", cardinality: Cardinality::One, _fragment: Some("... on Design"), edge_props: &[] },
-        EdgeDef { from: Label::Type, pred: Predicate::Has, to: Label::Connector, field: "connectors", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
-        EdgeDef { from: Label::Type, pred: Predicate::Has, to: Label::Port, field: "ports", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
+        EdgeDef { from: Label::Type, pred: Predicate::Has, to: Label::Connector, field: "hasConnectors", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
+        EdgeDef { from: Label::Type, pred: Predicate::Has, to: Label::Port, field: "hasPorts", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
         EdgeDef { from: Label::Connector, pred: Predicate::Is, to: Label::Port, field: "port", cardinality: Cardinality::One, _fragment: None, edge_props: &[] },
         EdgeDef { from: Label::Side, pred: Predicate::References, to: Label::Connector, field: "connector", cardinality: Cardinality::One, _fragment: None, edge_props: &[] },
         EdgeDef { from: Label::Connection, pred: Predicate::Has, to: Label::Side, field: "parent", cardinality: Cardinality::One, _fragment: None, edge_props: &[("parent", EdgeProp::Parent(true))] },
         EdgeDef { from: Label::Connection, pred: Predicate::Has, to: Label::Side, field: "child", cardinality: Cardinality::One, _fragment: None, edge_props: &[("parent", EdgeProp::Parent(false))] },
-        EdgeDef { from: Label::Design, pred: Predicate::Has, to: Label::Connection, field: "connections", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
-        EdgeDef { from: Label::Design, pred: Predicate::Has, to: Label::Piece, field: "pieces", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
-        EdgeDef { from: Label::Kit, pred: Predicate::Has, to: Label::Design, field: "designs", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
-        EdgeDef { from: Label::Kit, pred: Predicate::Has, to: Label::Type, field: "types", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
+        EdgeDef { from: Label::Design, pred: Predicate::Has, to: Label::Connection, field: "hasConnections", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
+        EdgeDef { from: Label::Design, pred: Predicate::Has, to: Label::Piece, field: "hasPieces", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
+        EdgeDef { from: Label::Kit, pred: Predicate::Has, to: Label::Design, field: "hasDesigns", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
+        EdgeDef { from: Label::Kit, pred: Predicate::Has, to: Label::Type, field: "hasTypes", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
     ];
 
     pub fn resolve_edge(from: Label, pred: Predicate, to: Label, rel: &RelPattern, forward: bool) -> Result<EdgeDef, String> {
@@ -1049,12 +1049,12 @@ mod planner {
 
         match anchor_label {
             Label::Design => {
-                anchor_path.push(PathSeg::Field { name: "designs".into() });
+                anchor_path.push(PathSeg::Field { name: "hasDesigns".into() });
                 anchor_path.push(PathSeg::ConnectionEdges);
                 anchor_path.push(PathSeg::ConnectionNode);
             }
             Label::Type => {
-                anchor_path.push(PathSeg::Field { name: "types".into() });
+                anchor_path.push(PathSeg::Field { name: "hasTypes".into() });
                 anchor_path.push(PathSeg::ConnectionEdges);
                 anchor_path.push(PathSeg::ConnectionNode);
             }
@@ -1077,12 +1077,12 @@ mod planner {
         let mut body = String::from("query ArchitectMatch {\n  session {\n    stores {\n      edges {\n        node {\n          wip {\n            theKit {\n              kit {\n");
         match anchor_label {
             Label::Design => {
-                body.push_str("                designs {\n                  edges {\n                    node {\n");
+                body.push_str("                hasDesigns {\n                  edges {\n                    node {\n");
                 body.push_str(&build_nested_selection(pat, anchor_label, 1));
                 body.push_str("                    }\n                  }\n                }\n");
             }
             Label::Type => {
-                body.push_str("                types {\n                  edges {\n                    node {\n");
+                body.push_str("                hasTypes {\n                  edges {\n                    node {\n");
                 body.push_str(&build_nested_selection(pat, anchor_label, 1));
                 body.push_str("                    }\n                  }\n                }\n");
             }
@@ -1707,7 +1707,7 @@ mod tests {
 
     //#region 🧪architect_cases
     fn fixtures_dir() -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixture")
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../fixture")
     }
 
     fn architect_cases_doc() -> serde_json::Value {
@@ -1837,8 +1837,11 @@ mod tests {
         }
         let kit = architect_harness_kit();
         assert_eq!(kit["name"].as_str(), Some("Architect Harness"));
-        assert_eq!(kit["designs"]["items"].as_array().unwrap().len(), 2);
-        assert_eq!(kit["types"]["items"].as_array().unwrap().len(), 3);
+        let topos = kit["typologies"]["items"].as_array().expect("typologies items");
+        let total_designs: usize = topos.iter().map(|t| t["designs"]["items"].as_array().map(Vec::len).unwrap_or(0)).sum();
+        let total_types: usize = topos.iter().map(|t| t["types"]["items"].as_array().map(Vec::len).unwrap_or(0)).sum();
+        assert_eq!(total_designs, 2, "total designs across typologies");
+        assert_eq!(total_types, 3, "total types across typologies");
     }
 
     #[test]

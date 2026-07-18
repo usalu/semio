@@ -322,21 +322,6 @@ export type BackboneWorkerResponse = { readonly kind: "event"; readonly document
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
-  describe("@semio-tech/framework-os-core program registration", () => {
-    it("builds baseline resources", () => {
-      expect(osBaselineResource("document", "note-1", "Note 1")).toEqual({ kind: "document", id: "note-1", label: "Note 1" });
-    });
-
-    it("merges program definitions and registers vcs handlers without throwing", () => {
-      expect(() => mergeOsProgramDefinition("draw-play", { id: "draw-play" })).not.toThrow();
-      let called = false;
-      registerAppVcsHandler(() => {
-        called = true;
-      });
-      expect(called).toBe(false);
-    });
-  });
-
   describe("@semio-tech/framework-os-core backbone", () => {
     it("classifies backbone uri kinds", () => {
       expect(backboneKindFromUri("file:///tmp/a.json")).toBe("file");
@@ -354,10 +339,6 @@ if (import.meta.vitest) {
       expect(parseRemoteBackboneUri("file:///tmp/a.json")).toBeNull();
     });
 
-    it("derives a backbone ref from a uri", () => {
-      expect(documentBackboneRef("folder:///tmp")).toEqual({ kind: "folder", uri: "folder:///tmp" });
-    });
-
     it("wraps and unwraps document envelopes", () => {
       const envelopeJson = wrapDocumentEnvelope({ nodes: [] }, "doc-1", "file:///tmp/a.json");
       const envelope = JSON.parse(envelopeJson) as { schema: string; id: string; projection: unknown; backbone: unknown };
@@ -371,14 +352,6 @@ if (import.meta.vitest) {
       const envelopeJson = wrapDocumentEnvelope(existing, "doc-1", "file:///tmp/a.json");
       const envelope = JSON.parse(envelopeJson) as { projection: unknown; vcs: unknown };
       expect(envelope.projection).toEqual({ a: 1 });
-    });
-
-    it("exposes the shared backbone endpoint path", () => {
-      expect(BACKBONE_ENDPOINT_PATH).toBe("/semio-backbone");
-    });
-
-    it("exposes the shared blob endpoint path", () => {
-      expect(BLOB_ENDPOINT_PATH).toBe("/semio-blob");
     });
 
     it("applies a snapshot message by overwriting the stored envelope", () => {

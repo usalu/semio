@@ -115,6 +115,47 @@ impl NumberLine {
     }
 }
 
+/// 🔢 Integer-only number line with unit ticks.
+pub struct IntegerLine {
+    pub group: Group,
+    pub start: Point,
+    pub unit_size: f64,
+    pub min: i32,
+    pub max: i32,
+}
+
+impl IntegerLine {
+    pub fn new(start: Point, min: i32, max: i32, unit_size: f64, color: Color) -> Self {
+        let span = (max - min).max(1) as f64;
+        let length = span * unit_size;
+        let axis = line(start, Point::new(start.x() + length, start.y()), color, 3.0);
+        let mut children: Vec<Box<dyn Sobject>> = vec![Box::new(axis)];
+        for value in min..=max {
+            let x = start.x() + (value - min) as f64 * unit_size;
+            children.push(Box::new(line(
+                Point::new(x, start.y() - 0.12),
+                Point::new(x, start.y() + 0.12),
+                color,
+                1.5,
+            )));
+            if value % 5 == 0 {
+                children.push(Box::new(dot(Point::new(x, start.y()), 0.04, color)));
+            }
+        }
+        Self {
+            group: Group::new(children),
+            start,
+            unit_size,
+            min,
+            max,
+        }
+    }
+
+    pub fn integer_to_point(&self, n: i32) -> Point {
+        Point::new(self.start.x() + (n - self.min) as f64 * self.unit_size, self.start.y())
+    }
+}
+
 /// ℂ Complex plane (axes with imaginary vertical axis).
 pub struct ComplexPlane {
     pub plane: NumberPlane,
@@ -151,5 +192,11 @@ mod tests {
     fn number_line_maps_values() {
         let nl = NumberLine::new(Point::ZERO, 10.0, Color::WHITE);
         assert!((nl.number_to_point(5.0).x() - 5.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn integer_line_maps_values() {
+        let il = IntegerLine::new(Point::ZERO, 0, 10, 1.0, Color::WHITE);
+        assert!((il.integer_to_point(5).x() - 5.0).abs() < 1e-9);
     }
 }

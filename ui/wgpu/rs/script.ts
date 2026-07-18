@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 /** @emoji ⚙️ Runs `cargo test` for the `ui_wgpu` crate. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted } from "../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
-  run(): void {
-    runCmd("cargo", ["test", "-p", "ui_wgpu"], { cwd: import.meta.dir });
+  run(segments: string[]): void {
+    runCargoTestBudgeted(["ui_wgpu"], this.repoRoot, segments);
   }
 }
 

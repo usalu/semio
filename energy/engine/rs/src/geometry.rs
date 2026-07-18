@@ -1,6 +1,6 @@
 //! 📐 Surface geometry: area, orientation, zone volume, and coordinate transforms.
 
-use crate::units::{deg_to_rad, rad_to_deg};
+use crate::units::rad_to_deg;
 use mathematical_algebra::Vec3;
 
 // #region 🔖Types
@@ -88,28 +88,50 @@ pub fn surface_tilt_azimuth(normal: [f64; 3], north_axis_deg: f64) -> TiltAzimut
 // #endregion 🔖Orientation
 
 // #region 🔖Volume
-/// 📦 Zone volume [m³] from closed watertight surface set (divergence theorem).
+/// 📦 Zone volume [m³] from closed watertight surface set (pyramid sum to interior reference point).
 pub fn zone_volume_from_surfaces(surfaces: &[&[[f64; 3]]]) -> f64 {
-    let mut volume = 0.0;
+    let mut ref_pt = [0.0_f64; 3];
+    let mut count = 0usize;
     for vertices in surfaces {
-        if vertices.len() < 3 {
-            continue;
-        }
-        let n = polygon_normal(vertices);
-        let area = surface_area_m2(vertices);
-        let mut centroid = [0.0_f64; 3];
         for v in *vertices {
-            centroid[0] += v[0];
-            centroid[1] += v[1];
-            centroid[2] += v[2];
+            ref_pt[0] += v[0];
+            ref_pt[1] += v[1];
+            ref_pt[2] += v[2];
+            count += 1;
         }
-        let inv = 1.0 / vertices.len() as f64;
-        centroid[0] *= inv;
-        centroid[1] *= inv;
-        centroid[2] *= inv;
-        volume += area * (centroid[0] * n[0] + centroid[1] * n[1] + centroid[2] * n[2]) / 3.0;
     }
-    volume.abs()
+    if count == 0 {
+        return 0.0;
+    }
+    ref_pt[0] /= count as f64;
+    ref_pt[1] /= count as f64;
+    ref_pt[2] /= count as f64;
+    surfaces.iter().map(|face| face_pyramid_volume_m3(face, ref_pt)).sum::<f64>().abs()
+}
+
+fn face_pyramid_volume_m3(vertices: &[[f64; 3]], ref_pt: [f64; 3]) -> f64 {
+    if vertices.len() < 3 {
+        return 0.0;
+    }
+    let mut ax = 0.0_f64;
+    let mut ay = 0.0_f64;
+    let mut az = 0.0_f64;
+    let len = vertices.len();
+    for i in 0..len {
+        let v0 = vertices[i];
+        let v1 = vertices[(i + 1) % len];
+        ax += (v0[1] - v1[1]) * (v0[2] + v1[2]);
+        ay += (v0[2] - v1[2]) * (v0[0] + v1[0]);
+        az += (v0[0] - v1[0]) * (v0[1] + v1[1]);
+    }
+    let inv = 1.0 / len as f64;
+    let cx = vertices.iter().map(|v| v[0]).sum::<f64>() * inv;
+    let cy = vertices.iter().map(|v| v[1]).sum::<f64>() * inv;
+    let cz = vertices.iter().map(|v| v[2]).sum::<f64>() * inv;
+    let dx = cx - ref_pt[0];
+    let dy = cy - ref_pt[1];
+    let dz = cz - ref_pt[2];
+    (ax * dx + ay * dy + az * dz) / 6.0
 }
 // #endregion 🔖Volume
 
@@ -177,8 +199,8 @@ mod tests {
 
     #[test]
     fn box_volume() {
-        let floor = [[0.0, 0.0, 0.0], [4.0, 0.0, 0.0], [4.0, 3.0, 0.0], [0.0, 3.0, 0.0]];
-        let ceiling = [[0.0, 0.0, 3.0], [0.0, 3.0, 3.0], [4.0, 3.0, 3.0], [4.0, 0.0, 3.0]];
+        let floor = [[0.0, 0.0, 0.0], [0.0, 3.0, 0.0], [4.0, 3.0, 0.0], [4.0, 0.0, 0.0]];
+        let ceiling = [[0.0, 0.0, 3.0], [4.0, 0.0, 3.0], [4.0, 3.0, 3.0], [0.0, 3.0, 3.0]];
         let walls = [
             [[0.0, 0.0, 0.0], [0.0, 0.0, 3.0], [0.0, 3.0, 3.0], [0.0, 3.0, 0.0]],
             [[4.0, 0.0, 0.0], [4.0, 3.0, 0.0], [4.0, 3.0, 3.0], [4.0, 0.0, 3.0]],

@@ -277,30 +277,11 @@ pub struct KeybindingSpec {
 }
 
 //#region 🔖ResourceKind
-/// 🗂️ Which geometry backend a resource kind's media exporters/importers target. Structurally
-/// mirrors `semio_framework_os::OsMediaCapability` (the "os" product crate, which itself depends on
-/// this SDK crate — `semio-framework-os` cannot be a dependency here without a cycle). Intentionally
-/// duplicated rather than shared for now; a later wave should hoist one canonical definition into
-/// `semio-framework-core` (which both this crate and `semio-framework-os` already depend on) the same
-/// way `OsMediaFormat` already lives there, and have `semio_framework_os::OsMediaCapability` become a
-/// re-export of it instead of a second definition.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum OsMediaCapability {
-    MeshOnly,
-    Brep,
-}
-
-/// 🗂️ Declares one resource kind an app produces/consumes (e.g. a 3D mesh format, a raster format) —
-/// registers with the OS media graph so import/export/preview wiring is data-driven instead of the OS
-/// hardcoding a per-app match on kind-id strings.
-pub struct ResourceKindSpec {
-    pub id: String,
-    pub name: String,
-    pub source_format: String,
-    pub component_kind: String,
-    pub dimension: String,
-    pub media_capability: OsMediaCapability,
-}
+/// 🗂️ `OsMediaCapability`/`ResourceKindSpec` now live in `semio-framework-core` (both this crate and
+/// `semio-framework-os` already depend on it) the same way `OsMediaFormat` already does — re-exported
+/// here verbatim instead of duplicated, so `AppBuilder::resource_kind(...)` and
+/// `semio_framework_os`'s resource catalog registry share one definition.
+pub use semio_framework_core::{OsMediaCapability, ResourceKindSpec};
 //#endregion 🔖ResourceKind
 
 pub struct AppBuilder {
@@ -1009,6 +990,10 @@ impl AppBuilder {
             terminology_documents: self.terminology_documents,
             introduction: self.introduction,
             dialogs: self.dialogs,
+            media_kinds: Vec::new(),
+            media_inputs: Vec::new(),
+            media_outputs: Vec::new(),
+            resource_kinds: self.resource_kinds,
         }
     }
 }
@@ -2168,13 +2153,6 @@ pub struct App {
     pub definition: AppDefinition,
     pub examples: Vec<ExampleDefinition>,
     pub program: Option<ProgramDefinition>,
-    /// 🗂️ Resource kinds declared via `.resource_kind(...)`. Rust-level only for now — `AppDefinition`
-    /// (in `semio-framework-core`, outside this crate's ownership) has no `resource_kinds` field yet, so
-    /// this does not yet round-trip through the JSON plugin-manifest wire format the way `window_kinds`/
-    /// `panel_tabs` do. A later wave should add that field to `AppDefinition` and thread it through
-    /// `AppBuilder::build_definition` so OS-side media graph registration can consume it from the manifest
-    /// instead of from this in-process `App` value.
-    pub resource_kinds: Vec<ResourceKindSpec>,
 }
 
 impl App {
@@ -2182,13 +2160,14 @@ impl App {
         AppBuilder::new(id, label)
     }
 
-    pub fn from_builder(mut builder: AppBuilder) -> Self {
-        let resource_kinds = std::mem::take(&mut builder.resource_kinds);
+    /// 🗂️ Resource kinds declared via `.resource_kind(...)` — see `AppDefinition.resource_kinds`
+    /// (round-trips through the plugin manifest; `semio_framework_os`'s resource catalog registry
+    /// consumes it from there at plugin registration time).
+    pub fn from_builder(builder: AppBuilder) -> Self {
         Self {
             definition: builder.build_definition(),
             examples: Vec::new(),
             program: None,
-            resource_kinds,
         }
     }
 

@@ -2,7 +2,6 @@
 #![allow(clippy::missing_errors_doc, reason = "Puzzle board bundle is internal to puzzle 2d.")]
 
 pub use cavas::{CubicBez, Point, Vec2};
-pub use gis_2d as map;
 pub use graph::cavas;
 pub use graph::{
     apply_edge_handle_snap_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value, apply_normal_undirected_redraw_layout_to_fixture_v1_json,

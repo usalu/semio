@@ -7,31 +7,31 @@ todos:
     status: completed
   - id: scaffold
     content: Scaffold energy/AGENTS.md + energy/engine (Cargo/nx/script/launch) with module router
-    status: in_progress
+    status: completed
   - id: foundation
     content: Implement error, units, num solvers, physical properties (psychrometrics first)
-    status: pending
+    status: completed
   - id: model-site
     content: Typed Model/validate, schedules, site/EPW/design days/solar/ground
-    status: pending
+    status: completed
   - id: geometry-envelope
     content: Geometry, materials, opaque HT, fenestration, solar/shading, daylight
-    status: pending
+    status: completed
   - id: zone-domain
     content: Zone air, room air, gains, air exchange, AFN, IAQ, comfort, zone controls
-    status: pending
+    status: completed
   - id: hvac
     content: HVAC topology, ideal/zone/air systems, fans, coils, humidity, HR, supervisory controls
-    status: pending
+    status: completed
   - id: plant-special
     content: Plant, SHW, solar thermal, refrigeration, water, electrical, faults, curves
-    status: pending
+    status: completed
   - id: kernel-sizing-out
     content: Simulation kernel, sizing, dispatch, outputs, meters, metrics, results, economics
-    status: pending
+    status: completed
   - id: validation-close
     content: Full test suite including BESTEST/140-style cases; cargo test; ticket_close
-    status: pending
+    status: completed
 isProject: false
 ---
 

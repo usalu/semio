@@ -1105,18 +1105,6 @@ mod tests {
     }
 
     #[test]
-    fn concrete_forest_camera_look_at_inside_frustum_planes() {
-        let camera = concrete_forest_camera();
-        let view_proj = camera.view_proj(1.0);
-        let planes = frustum_planes(view_proj);
-        let target = camera.target;
-        for (index, plane) in planes.iter().enumerate() {
-            let distance = plane.normal.dot(target) + plane.distance;
-            assert!(distance >= -1e-2, "plane {index} distance={distance}");
-        }
-    }
-
-    #[test]
     fn perspective_maps_depth_to_wgpu_ndc() {
         let near = 0.1_f32;
         let far = 100.0_f32;

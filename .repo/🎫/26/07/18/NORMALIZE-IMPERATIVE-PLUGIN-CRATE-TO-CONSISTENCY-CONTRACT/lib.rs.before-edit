@@ -1,0 +1,855 @@
+//! ⚡ Imperative plugin — declarative imperative play app bundled as a hot-swappable WASM component.
+
+use imperative_core::{default_document, Dictionary, ImperativeDocument, ImperativeHost, ImperativeOp, PathRef};
+use imperative_engine::Step;
+use semio_framework_plugin::{SurfaceKind, PanelGroup,
+    build_table_scene, build_text_editor_scene, create_stack_layout, ui_declarative_sections_to_tree,
+    ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDescriptor,
+    ActionEmit, App, AppLabelsOverlay, DocumentApp, DocumentView, OsMediaCapability, ResourceKindSpec, TableScene, TextEditorScene, UiNode,
+    UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+};
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
+use std::collections::{BTreeMap, HashMap};
+use vcs::CollectionOp;
+
+//#region 🔖Constants
+const IMPERATIVE_PLAY_APP_ID: &str = "imperative-play";
+const IMPERATIVE_PLAY_SURFACE_MAIN: &str = "imperative.play.main";
+const IMPERATIVE_PLAY_SURFACE_SCRIPT: &str = "imperative.play.script";
+const IMPERATIVE_PLAY_BODY_MAIN: &str = "imperative.play.main";
+const IMPERATIVE_PLAY_BODY_SCRIPT: &str = "imperative.play.script";
+const IMPERATIVE_PLAY_BODY_DOCUMENT: &str = "imperative.play.document";
+const IMPERATIVE_PLAY_BODY_CATALOGUE: &str = "imperative.play.catalogue";
+const IMPERATIVE_PLAY_BODY_INSPECTOR: &str = "imperative.play.inspection";
+const IMPERATIVE_PLAY_WINDOW_MAIN: &str = "imperative-main";
+const IMPERATIVE_PLAY_WINDOW_SCRIPT: &str = "imperative-script";
+const IMPERATIVE_DOCUMENT_SCHEMA: &str = "imperative.document/v1";
+//#endregion 🔖Constants
+
+//#region 🔖Types
+/// 🎛️ Ephemeral view state (step selection + last run output) — lives in the app struct, not the
+/// document, so it never pollutes undo history.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+struct ImperativePlayRuntime {
+    selected_step_ids: Vec<String>,
+    run_output_json: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct TableRow {
+    index: usize,
+    id: String,
+    kind: String,
+}
+//#endregion 🔖Types
+
+//#region 🔖DocumentHelpers
+/// 🆔 Allocates a fresh `step-N` id one past the highest suffix used anywhere in the document
+/// (including nested `control.*` bodies), deterministically from pre-state — no mutable counter.
+fn next_step_id(document: &ImperativeDocument) -> String {
+    fn max_suffix(steps: &[Step]) -> u64 {
+        steps.iter().fold(0, |acc, step| {
+            let own = step.id.strip_prefix("step-").and_then(|rest| rest.parse::<u64>().ok()).unwrap_or(0);
+            let nested = step.bodies.values().map(|path| max_suffix(&path.steps)).max().unwrap_or(0);
+            acc.max(own).max(nested)
+        })
+    }
+    format!("step-{}", max_suffix(&document.path.steps) + 1)
+}
+
+/// 📍 Reads `owner`/`slot` off action args into a [`imperative_core::PathRef`] so nested
+/// control-step bodies (e.g. `control.if` then/else) resolve correctly; falls back to the root
+/// path unless both are present and `owner` names a real top-level step, avoiding an unresolvable
+/// or unknown reference that would otherwise address nothing.
+fn path_ref_from_args(args: Option<&Value>, document: &ImperativeDocument) -> PathRef {
+    let owner = args.and_then(|value| value.get("owner")).and_then(|value| value.as_str()).map(str::to_string);
+    let slot = args.and_then(|value| value.get("slot")).and_then(|value| value.as_str()).map(str::to_string);
+    match (owner, slot) {
+        (Some(owner), Some(slot)) if document.path.steps.iter().any(|step| step.id == owner) => {
+            PathRef { owner: Some(owner), slot: Some(slot) }
+        }
+        _ => PathRef::default(),
+    }
+}
+
+fn table_rows(steps: &[Step]) -> String {
+    let rows: Vec<TableRow> = steps
+        .iter()
+        .enumerate()
+        .map(|(index, step)| TableRow {
+            index: index + 1,
+            id: step.id.clone(),
+            kind: step.kind.clone(),
+        })
+        .collect();
+    serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
+}
+
+fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
+    UiTreeItemNode {
+        id: id.into(),
+        label: label.into(),
+        description: None,
+        icon_id: None,
+        selected: None,
+        default_open: None,
+        action: None,
+        hover_action: None,
+        unhover_action: None,
+        actions: None,
+        draggable: None,
+        drag_data: None,
+        items: None,
+        control: None,
+        is_hidden: None,
+    }
+}
+
+fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
+    UiTreeItemNode {
+        id: id.into(),
+        label: label.into(),
+        description,
+        icon_id: None,
+        selected: None,
+        default_open: None,
+        action: Some(action),
+        hover_action: None,
+        unhover_action: None,
+        actions: None,
+        draggable: None,
+        drag_data: None,
+        items: None,
+        control: None,
+        is_hidden: None,
+    }
+}
+
+fn imperative_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor {
+        controller_id: IMPERATIVE_PLAY_APP_ID.into(),
+        action: action.into(),
+        args,
+    }
+}
+//#endregion 🔖DocumentHelpers
+
+//#region 🔖Terminology
+/// 🗣️ Complete UI label set for the imperative app; one field per label makes every locale combination compile-checked.
+struct ImperativeLabels {
+    window_main: &'static str,
+    window_script: &'static str,
+    col_index: &'static str,
+    col_id: &'static str,
+    col_kind: &'static str,
+    action_state_set: &'static str,
+    action_log_print: &'static str,
+    action_control_if: &'static str,
+    action_control_while: &'static str,
+    action_math_add: &'static str,
+    document_empty: &'static str,
+    inspector_empty_hint: &'static str,
+    inspector_step_not_found: &'static str,
+    inspector_id: &'static str,
+    inspector_kind: &'static str,
+    inspector_params: &'static str,
+}
+
+const IMPERATIVE_LABELS_NATIVE_EN: ImperativeLabels = ImperativeLabels {
+    window_main: "Imperative",
+    window_script: "Script",
+    col_index: "#",
+    col_id: "Id",
+    col_kind: "Kind",
+    action_state_set: "Set state",
+    action_log_print: "Print log",
+    action_control_if: "If",
+    action_control_while: "While",
+    action_math_add: "Add",
+    document_empty: "(none)",
+    inspector_empty_hint: "Select a step in the document.",
+    inspector_step_not_found: "Step not found",
+    inspector_id: "Id",
+    inspector_kind: "Kind",
+    inspector_params: "Params",
+};
+
+const IMPERATIVE_LABELS_NATIVE_DE: ImperativeLabels = ImperativeLabels {
+    window_main: "Imperativ",
+    window_script: "Skript",
+    col_index: "#",
+    col_id: "ID",
+    col_kind: "Art",
+    action_state_set: "Zustand setzen",
+    action_log_print: "Log ausgeben",
+    action_control_if: "Wenn",
+    action_control_while: "Solange",
+    action_math_add: "Addieren",
+    document_empty: "(keine)",
+    inspector_empty_hint: "Wählen Sie einen Schritt im Dokument aus.",
+    inspector_step_not_found: "Schritt nicht gefunden",
+    inspector_id: "ID",
+    inspector_kind: "Art",
+    inspector_params: "Parameter",
+};
+
+/// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
+fn imperative_labels(view_state: &ViewState) -> &'static ImperativeLabels {
+    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    if is_de {
+        &IMPERATIVE_LABELS_NATIVE_DE
+    } else {
+        &IMPERATIVE_LABELS_NATIVE_EN
+    }
+}
+//#endregion 🔖Terminology
+
+//#region 🔖Panels
+fn build_document_tree(document: &ImperativeDocument, selected: &[String], labels: &ImperativeLabels) -> UiNode {
+    let step_items: Vec<UiTreeItemNode> = document
+        .path
+        .steps
+        .iter()
+        .enumerate()
+        .map(|(index, step)| {
+            tree_item_with_action(
+                format!("imperative-play-document.step.{}", step.id),
+                format!("{}. {}", index + 1, step.kind),
+                Some(step.id.clone()),
+                imperative_action("setSelection", Some(json!({ "ids": [step.id.clone()] }))),
+            )
+        })
+        .collect();
+    UiNode::Tree(UiTreeNode {
+        sections: vec![UiTreeSectionNode {
+            id: "imperative-play-document.steps".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
+            default_open: Some(true),
+            items: if step_items.is_empty() {
+                vec![tree_item("imperative-play-document.steps.empty", labels.document_empty)]
+            } else {
+                step_items
+            },
+        }],
+        selected_ids: Some(selected.iter().map(|id| format!("imperative-play-document.step.{id}")).collect()),
+        highlighted_ids: None,
+        selection_change: None,
+        drop_action: None,
+    })
+}
+
+fn build_catalogue_tree(labels: &ImperativeLabels) -> UiNode {
+    let actions = [
+        ("state.set", labels.action_state_set),
+        ("log.print", labels.action_log_print),
+        ("control.if", labels.action_control_if),
+        ("control.while", labels.action_control_while),
+        ("math.add", labels.action_math_add),
+    ];
+    UiNode::Tree(UiTreeNode {
+        sections: vec![UiTreeSectionNode {
+            id: "imperative-play-catalogue.actions".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()),
+            default_open: Some(true),
+            items: actions
+                .iter()
+                .map(|(kind, label)| {
+                    tree_item_with_action(
+                        format!("imperative-play-catalogue.action.{kind}"),
+                        *label,
+                        Some((*kind).into()),
+                        imperative_action("addStep", Some(json!({ "kind": kind }))),
+                    )
+                })
+                .collect(),
+        }],
+        selected_ids: Some(vec![]),
+        highlighted_ids: None,
+        selection_change: None,
+        drop_action: None,
+    })
+}
+
+fn build_inspector_tree(document: &ImperativeDocument, selected: &[String], labels: &ImperativeLabels) -> UiNode {
+    if selected.is_empty() {
+        return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
+            id: "imperative-play-inspector.empty".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            default_open: Some(true),
+            children: vec![ui_text(labels.inspector_empty_hint)],
+        }]);
+    }
+    let steps: Vec<&Step> = selected
+        .iter()
+        .filter_map(|id| document.path.steps.iter().find(|step| &step.id == id))
+        .collect();
+    if steps.is_empty() {
+        return ui_stack_vertical(vec![ui_text(labels.inspector_step_not_found)]);
+    }
+    ui_stack_vertical(vec![
+        ui_inspector_readonly_field("imperative-play-inspector.id", labels.inspector_id, steps[0].id.clone()),
+        ui_inspector_readonly_field("imperative-play-inspector.kind", labels.inspector_kind, steps[0].kind.clone()),
+        ui_inspector_readonly_field(
+            "imperative-play-inspector.params",
+            labels.inspector_params,
+            serde_json::to_string(&steps[0].params).unwrap_or_else(|_| "{}".into()),
+        ),
+    ])
+}
+//#endregion 🔖Panels
+
+//#region 🔖Render
+/// 📤 One table row per scope key so the full run output is legible instead of an 80-char
+/// truncated blob; falls back to the raw JSON when it isn't a plain object.
+fn run_output_rows(run_output_json: &str, offset: usize) -> Vec<TableRow> {
+    match serde_json::from_str::<Value>(run_output_json).ok().and_then(|value| value.as_object().cloned()) {
+        Some(scope) if !scope.is_empty() => scope
+            .into_iter()
+            .enumerate()
+            .map(|(index, (key, value))| TableRow {
+                index: offset + index + 1,
+                id: format!("run-output.{key}"),
+                kind: format!("{key} = {}", serde_json::to_string(&value).unwrap_or_else(|_| "null".into())),
+            })
+            .collect(),
+        _ => vec![TableRow {
+            index: offset + 1,
+            id: "run-output".into(),
+            kind: run_output_json.to_string(),
+        }],
+    }
+}
+
+fn render_main_table(document: &ImperativeDocument, run_output_json: &str, labels: &ImperativeLabels) -> UiNode {
+    let mut rows_json = table_rows(&document.path.steps);
+    if !run_output_json.is_empty() {
+        if let Ok(mut rows) = serde_json::from_str::<Vec<TableRow>>(&rows_json) {
+            rows.extend(run_output_rows(run_output_json, rows.len()));
+            rows_json = serde_json::to_string(&rows).unwrap_or(rows_json);
+        }
+    }
+    build_table_scene(
+        IMPERATIVE_PLAY_SURFACE_MAIN,
+        IMPERATIVE_PLAY_APP_ID,
+        TableScene::base(
+            json!([
+                {"id":"index","label":labels.col_index},
+                {"id":"id","label":labels.col_id},
+                {"id":"kind","label":labels.col_kind},
+            ])
+            .to_string(),
+            rows_json,
+        ),
+    )
+}
+
+fn render_script(document: &ImperativeDocument) -> UiNode {
+    let host = ImperativeHost::from_document(document.clone());
+    build_text_editor_scene(
+        IMPERATIVE_PLAY_SURFACE_SCRIPT,
+        IMPERATIVE_PLAY_APP_ID,
+        TextEditorScene::base(host.compile_text(), Some("imperative".into()), None),
+    )
+}
+//#endregion 🔖Render
+
+//#region 🔖ImperativePlayApp
+#[derive(Default)]
+struct ImperativePlayApp {
+    runtime: ImperativePlayRuntime,
+}
+
+impl DocumentApp for ImperativePlayApp {
+    type Projection = ImperativeDocument;
+    type Op = ImperativeOp;
+
+    fn app_id(&self) -> &str {
+        IMPERATIVE_PLAY_APP_ID
+    }
+
+    fn document_schema(&self) -> &str {
+        IMPERATIVE_DOCUMENT_SCHEMA
+    }
+
+    fn initial_projection(&self) -> ImperativeDocument {
+        default_document()
+    }
+
+    fn handle_action(
+        &mut self,
+        action: &str,
+        args: Option<&Value>,
+        doc: &DocumentView<'_, ImperativeDocument>,
+        _view_state: &ViewState,
+    ) -> ActionEmit<ImperativeOp> {
+        let document = doc.projection;
+        match action {
+            "setSelection" => {
+                self.runtime.selected_step_ids = args
+                    .and_then(|value| value.get("ids"))
+                    .and_then(|value| serde_json::from_value(value.clone()).ok())
+                    .unwrap_or_default();
+                ActionEmit::default()
+            }
+            "addStep" | "addStepAt" => {
+                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print");
+                let index = args
+                    .and_then(|value| value.get("index"))
+                    .and_then(|value| value.as_u64())
+                    .map(|value| value as usize)
+                    .unwrap_or(usize::MAX);
+                let path_ref = path_ref_from_args(args, document);
+                let id = next_step_id(document);
+                let step = Step {
+                    id: id.clone(),
+                    kind: kind.into(),
+                    params: Dictionary::new(),
+                    bodies: BTreeMap::new(),
+                };
+                self.runtime.selected_step_ids = vec![id];
+                ActionEmit::ops(vec![ImperativeOp { path_ref, collection: CollectionOp::Add { index, item: step } }])
+            }
+            "removeStep" | "removeStepAt" => {
+                if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
+                    if resolve_contains(document, args, id) {
+                        let path_ref = path_ref_from_args(args, document);
+                        self.runtime.selected_step_ids.retain(|step_id| step_id != id);
+                        return ActionEmit::ops(vec![ImperativeOp { path_ref, collection: CollectionOp::Remove { id: id.into() } }]);
+                    }
+                }
+                ActionEmit::default()
+            }
+            "moveStep" | "moveStepAt" => {
+                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
+                let new_index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).map(|value| value as usize);
+                if let (Some(id), Some(new_index)) = (id, new_index) {
+                    if resolve_contains(document, args, id) {
+                        let path_ref = path_ref_from_args(args, document);
+                        return ActionEmit::ops(vec![ImperativeOp { path_ref, collection: CollectionOp::Move { id: id.into(), to_index: new_index } }]);
+                    }
+                }
+                ActionEmit::default()
+            }
+            "setStepParams" | "setStepParamsAt" => {
+                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
+                let params = args.and_then(|value| value.get("params"));
+                if let (Some(id), Some(params)) = (id, params) {
+                    if let Ok(patch) = serde_json::from_value::<Dictionary>(params.clone()) {
+                        if resolve_contains(document, args, id) {
+                            let path_ref = path_ref_from_args(args, document);
+                            return ActionEmit::ops(vec![ImperativeOp { path_ref, collection: CollectionOp::Patch { id: id.into(), patch } }]);
+                        }
+                    }
+                }
+                ActionEmit::default()
+            }
+            "run" => {
+                let host = ImperativeHost::from_document(document.clone());
+                let result = host.run();
+                self.runtime.run_output_json =
+                    serde_json::to_string(&result.scope).unwrap_or_else(|_| format!("{:?}", result.scope));
+                ActionEmit::default()
+            }
+            _ => ActionEmit::default(),
+        }
+    }
+
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, ImperativeDocument>, view_state: &ViewState) -> UiNode {
+        let document = doc.projection;
+        let labels = imperative_labels(view_state);
+        match body_key {
+            IMPERATIVE_PLAY_BODY_MAIN => render_main_table(document, &self.runtime.run_output_json, labels),
+            IMPERATIVE_PLAY_BODY_SCRIPT => render_script(document),
+            IMPERATIVE_PLAY_BODY_DOCUMENT => build_document_tree(document, &self.runtime.selected_step_ids, labels),
+            IMPERATIVE_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
+            IMPERATIVE_PLAY_BODY_INSPECTOR => build_inspector_tree(document, &self.runtime.selected_step_ids, labels),
+            _ => ui_text(format!("Unknown body: {body_key}")),
+        }
+    }
+
+    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
+        let labels = imperative_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+        AppLabelsOverlay {
+            window_kind_labels: std::collections::HashMap::from([
+                (IMPERATIVE_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()),
+                (IMPERATIVE_PLAY_WINDOW_SCRIPT.to_string(), labels.window_script.to_string()),
+            ]),
+            panel_tab_labels: std::collections::HashMap::new(),
+            mode_labels: std::collections::HashMap::new(),
+            action_labels: imperative_action_labels(is_de),
+            utility_labels: HashMap::new(),
+            example_labels: HashMap::new(),
+            action_arg_labels: HashMap::new(),
+            dialog_labels: HashMap::new(),
+            introduction_labels: HashMap::new(),
+        }
+    }
+}
+
+/// 🔎 Resolves the step list a `PathRef` addresses — the root path, or a nested `control.*` step's
+/// slot (an unmaterialized slot reads as empty).
+fn steps_at<'a>(document: &'a ImperativeDocument, path_ref: &PathRef) -> &'a [Step] {
+    match (&path_ref.owner, &path_ref.slot) {
+        (Some(owner), Some(slot)) => document
+            .path
+            .steps
+            .iter()
+            .find(|step| &step.id == owner)
+            .and_then(|step| step.bodies.get(slot))
+            .map(|path| path.steps.as_slice())
+            .unwrap_or(&[]),
+        _ => document.path.steps.as_slice(),
+    }
+}
+
+/// 🔎 True when the step `id` exists in the list the `owner`/`slot` args address — the pre-state
+/// guard the op arms share so a stale id never emits a no-op edit into history.
+fn resolve_contains(document: &ImperativeDocument, args: Option<&Value>, id: &str) -> bool {
+    let path_ref = path_ref_from_args(args, document);
+    steps_at(document, &path_ref).iter().any(|step| step.id == id)
+}
+//#endregion 🔖ImperativePlayApp
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_imperative_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
+/// command palette and Actions rail get a translated label without threading locale through the builder.
+fn imperative_action_labels(is_de: bool) -> HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("addStep", "Add Step", "Schritt hinzufuegen"),
+        ("addStepAt", "Add Step At", "Schritt bei Position hinzufuegen"),
+        ("removeStep", "Remove Step", "Schritt entfernen"),
+        ("removeStepAt", "Remove Step At", "Schritt bei Position entfernen"),
+        ("moveStep", "Move Step", "Schritt verschieben"),
+        ("moveStepAt", "Move Step At", "Schritt bei Position verschieben"),
+        ("setStepParams", "Set Step Params", "Schrittparameter festlegen"),
+        ("setStepParamsAt", "Set Step Params At", "Schrittparameter bei Position festlegen"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+        ("run", "Run", "Ausfuehren"),
+    ];
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+}
+//#endregion 🔖CommandLabels
+
+//#region 🔖Manifest
+fn create_imperative_app() -> App {
+    App::from_builder(
+        App::builder(IMPERATIVE_PLAY_APP_ID, "Imperative").document(["semio", "imperative"])
+            .resource_kind(ResourceKindSpec {
+                id: "computation.imperative".into(),
+                name: "Imperative".into(),
+                source_format: "imperative.document".into(),
+                component_kind: "imperative".into(),
+                dimension: "graph".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+            })
+            .icon_id("imperative")
+            .mode("edit", "Edit")
+            .default_mode_id("edit")
+            .window_kind(IMPERATIVE_PLAY_WINDOW_MAIN, "Imperative", IMPERATIVE_PLAY_BODY_MAIN, SurfaceKind::NodeGraph)
+            .window_kind(IMPERATIVE_PLAY_WINDOW_SCRIPT, "Script", IMPERATIVE_PLAY_BODY_SCRIPT, SurfaceKind::TextEditor)
+            .default_layout(create_stack_layout(
+                &[IMPERATIVE_PLAY_WINDOW_MAIN.into(), IMPERATIVE_PLAY_WINDOW_SCRIPT.into()],
+                Some(&["Imperative".into(), "Script".into()]),
+            ))
+            .panel_tab(
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+                PanelGroup::Workbench,
+                IMPERATIVE_PLAY_BODY_DOCUMENT,
+            )
+            .panel_tab(
+                FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+                PanelGroup::Workbench,
+                IMPERATIVE_PLAY_BODY_CATALOGUE,
+            )
+            .panel_tab(
+                FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+                PanelGroup::Details,
+                IMPERATIVE_PLAY_BODY_INSPECTOR,
+            )
+            // 🔧 Document-mutating step edits — dispatched as VCS operations with a true inverse.
+            // The `*At` variants address a nested body via owner/slot args (drag-and-drop into blocks).
+            .operation("addStep", "Add Step")
+            .operation("addStepAt", "Add Step At")
+            .operation("removeStep", "Remove Step")
+            .operation("removeStepAt", "Remove Step At")
+            .operation("moveStep", "Move Step")
+            .operation("moveStepAt", "Move Step At")
+            .operation("setStepParams", "Set Step Params")
+            .operation("setStepParamsAt", "Set Step Params At")
+            // 👁️ Ephemeral view state / runtime effect — selection is scratch, `run` evaluates into runtime.
+            .view_action("setSelection", "Set Selection")
+            .view_action("run", "Run")
+            // 📝 Staged argument form for the panel-visible create action (the step kind is a choice).
+            .action_args("addStep", vec![
+                ActionArgDef::select("kind", "Kind", vec![
+                    ActionArgOption::new("state.set", "Set State"),
+                    ActionArgOption::new("log.print", "Print Log"),
+                    ActionArgOption::new("control.if", "If"),
+                    ActionArgOption::new("control.while", "While"),
+                    ActionArgOption::new("math.add", "Add"),
+                ]).default_value("log.print"),
+            ])
+            .keybinding("mod+z", "undo")
+            .keybinding("mod+shift+z", "redo"),
+    )
+    .example("demo", "Demo", serde_json::to_string(&default_document()).unwrap())
+    .program("imperative", "Imperative", "graph")
+}
+
+fn register_imperative_exports() {}
+
+semio_framework_plugin::semio_plugin! {
+    id: "imperative",
+    label: "Imperative",
+    version: "0.1.0",
+    setup: register_imperative_exports,
+    apps: [ create_imperative_app => ImperativePlayApp ],
+}
+//#endregion 🔖Manifest
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+    use vcs::{Backbone, BackboneMessage, MemoryBackbone};
+
+    fn meta(actor: &str) -> ActionMeta {
+        ActionMeta { actor: actor.into(), instance_id: 1 }
+    }
+
+    fn new_app() -> VcsDocumentApp<ImperativePlayApp> {
+        VcsDocumentApp::new(ImperativePlayApp::default())
+    }
+
+    /// 🧬 A wrapper carrying the real action registry so `addStep`'s `kind` default materializes and the
+    /// View-kind `run` action is held to the no-ops contract.
+    fn new_app_with_registry() -> VcsDocumentApp<ImperativePlayApp> {
+        use semio_framework_plugin::app::AppActionRegistry;
+        let definition = create_imperative_app().definition;
+        VcsDocumentApp::with_registry(ImperativePlayApp::default(), AppActionRegistry::from_definition(&definition))
+    }
+
+    #[test]
+    fn app_definition_builds_without_panicking() {
+        let app = create_imperative_app();
+        assert_eq!(app.definition.id, IMPERATIVE_PLAY_APP_ID);
+        assert!(app.definition.keybindings.iter().any(|binding| binding.action.action == "undo"));
+    }
+
+    #[test]
+    fn add_step_materializes_kind_default_and_run_emits_no_ops() {
+        let mut app = new_app_with_registry();
+        // addStep fired with no args: the declared `kind` default ("log.print") must be materialized.
+        app.handle_action("addStep", None, &ViewState::default(), &meta("local")).expect("add step");
+        let document = app.projection().expect("materialize projection");
+        assert_eq!(document.path.steps.last().unwrap().kind, "log.print", "kind default materialized from the registry");
+        // `run` is a View-kind action: under registry enforcement it must not emit document operations.
+        let result = app.handle_action("run", None, &ViewState::default(), &meta("local")).expect("run");
+        assert!(result.operations.is_empty(), "run evaluates into runtime, never the document");
+    }
+
+    #[test]
+    fn renders_table_scene() {
+        let mut app = new_app();
+        let node = app.render(IMPERATIVE_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("table"));
+    }
+
+    #[test]
+    fn imperative_labels_resolve_native_by_default() {
+        let mut app = new_app();
+        let node = app.render(IMPERATIVE_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Set state"));
+        assert!(json.contains("Print log"));
+        assert!(json.contains("While"));
+    }
+
+    #[test]
+    fn imperative_labels_resolve_native_in_german() {
+        let mut app = new_app();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let node = app.render(IMPERATIVE_PLAY_BODY_CATALOGUE, None, &view_state).expect("render");
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Zustand setzen"));
+        assert!(json.contains("Log ausgeben"));
+        assert!(json.contains("Solange"));
+    }
+
+    #[test]
+    fn renders_script_editor() {
+        let mut app = new_app();
+        let node = app.render(IMPERATIVE_PLAY_BODY_SCRIPT, None, &ViewState::default()).expect("render");
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("text-editor"));
+    }
+
+    #[test]
+    fn default_document_has_steps() {
+        let mut app = new_app();
+        assert_eq!(app.projection().expect("projection").path.steps.len(), 2);
+    }
+
+    #[test]
+    fn add_step_action_appends_step() {
+        let mut app = new_app();
+        app.handle_action("addStep", Some(&json!({ "kind": "log.print" })), &ViewState::default(), &meta("local")).expect("add step");
+        assert!(app.projection().expect("projection").path.steps.len() > 2);
+    }
+
+    #[test]
+    fn add_step_at_owner_slot_nests_into_control_body() {
+        let mut app = new_app();
+        app.handle_action("addStepAt", Some(&json!({ "kind": "control.if" })), &ViewState::default(), &meta("local")).expect("add owner");
+        let owner_id = app.projection().expect("projection").path.steps.last().expect("owner").id.clone();
+        let root_len = app.projection().expect("projection").path.steps.len();
+        app.handle_action(
+            "addStepAt",
+            Some(&json!({ "kind": "log.print", "owner": owner_id, "slot": "then" })),
+            &ViewState::default(),
+            &meta("local"),
+        )
+        .expect("add nested");
+        let document = app.projection().expect("projection");
+        let owner_step = document.path.steps.iter().find(|step| step.id == owner_id).expect("owner step");
+        assert_eq!(owner_step.bodies.get("then").map(|body| body.steps.len()), Some(1));
+        assert_eq!(document.path.steps.len(), root_len, "nested step lives in the slot, not the root path");
+    }
+
+    #[test]
+    fn add_step_at_falls_back_to_root_for_unknown_owner() {
+        let mut app = new_app();
+        app.handle_action(
+            "addStepAt",
+            Some(&json!({ "kind": "log.print", "owner": "missing-step", "slot": "then" })),
+            &ViewState::default(),
+            &meta("local"),
+        )
+        .expect("add step");
+        let document = app.projection().expect("projection");
+        let added_id = document.path.steps.last().expect("added").id.clone();
+        assert!(document.path.steps.iter().any(|step| step.id == added_id));
+    }
+
+    #[test]
+    fn run_action_expands_scope_into_readable_rows_without_truncation() {
+        let mut app = new_app();
+        app.handle_action("run", None, &ViewState::default(), &meta("local")).expect("run");
+        let node = app.render(IMPERATIVE_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("counter"), "run output row shows the full scope key, not an 80-char blob");
+    }
+
+    #[test]
+    fn undo_after_add_step_restores_original_document_exactly() {
+        let mut app = new_app();
+        let original = app.projection().expect("projection");
+        app.handle_action("addStep", Some(&json!({ "kind": "log.print" })), &ViewState::default(), &meta("local")).expect("add step");
+        let after_add = app.projection().expect("projection");
+        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        assert_eq!(app.projection().expect("projection"), original, "undo is a true inverse of addStep");
+        app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+        assert_eq!(app.projection().expect("projection"), after_add, "redo restores the post-apply state");
+    }
+
+    #[test]
+    fn remove_step_action_is_exact_inverse_of_add() {
+        let mut app = new_app();
+        let original = app.projection().expect("projection");
+        app.handle_action("addStep", Some(&json!({ "kind": "math.add" })), &ViewState::default(), &meta("local")).expect("add step");
+        let added_id = app.projection().expect("projection").path.steps.last().expect("added").id.clone();
+        app.handle_action("removeStep", Some(&json!({ "id": added_id })), &ViewState::default(), &meta("local")).expect("remove step");
+        assert_eq!(app.projection().expect("projection"), original);
+    }
+
+    /// 🧪 The definitional regression proof: two independent instances start from the same document,
+    /// apply DISJOINT edits (A appends a root step, B patches an existing step's params), and
+    /// exchanging ops over a `MemoryBackbone` converges both sides to contain BOTH edits — impossible
+    /// under whole-document `setDocument` snapshots, which would clobber one side's write.
+    #[test]
+    fn two_instances_converge_disjoint_edits_via_backbone() {
+        let mut instance_a = new_app();
+        let mut instance_b = new_app();
+        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://imperative-convergence", "mem://imperative-convergence");
+        instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
+        instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+
+        // A appends a new root step.
+        instance_a
+            .handle_action("addStep", Some(&json!({ "kind": "math.add" })), &ViewState::default(), &meta("actor-a"))
+            .expect("a adds step");
+        let added_id = instance_a.projection().expect("projection").path.steps.last().expect("added").id.clone();
+
+        // B renames the first step's `key` param — a disjoint edit that must survive alongside A's.
+        instance_b
+            .handle_action(
+                "setStepParams",
+                Some(&json!({ "id": "step-1", "params": { "key": "renamed" } })),
+                &ViewState::default(),
+                &meta("actor-b"),
+            )
+            .expect("b patches params");
+
+        // Exchange: `commitCheckpoint` is a neutral history action that always pumps inbound ops via
+        // store.dispatch without touching applied_edit_ids the way undo would.
+        instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
+        instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+
+        let projection_a = instance_a.projection().expect("projection");
+        let projection_b = instance_b.projection().expect("projection");
+
+        assert!(projection_a.path.steps.iter().any(|step| step.id == added_id), "instance A must keep its own edit");
+        assert!(projection_b.path.steps.iter().any(|step| step.id == added_id), "instance B must converge on A's remote edit");
+        assert!(step_params_contains(&projection_a, "step-1", "renamed"), "instance A must converge on B's remote param edit");
+        assert!(step_params_contains(&projection_b, "step-1", "renamed"), "instance B must keep its own edit");
+    }
+
+    #[test]
+    fn ingest_operations_is_idempotent_for_imperative() {
+        let mut sender = new_app();
+        let (near, mut far) = MemoryBackbone::pair("mem://imperative-doc", "mem://imperative-doc");
+        sender.attach_backbone(Box::new(near)).expect("attach");
+        sender
+            .handle_action("addStep", Some(&json!({ "kind": "math.add" })), &ViewState::default(), &meta("local"))
+            .expect("add step");
+
+        let mut envelopes = Vec::new();
+        for message in far.receive().expect("receive") {
+            if let BackboneMessage::Ops { envelopes: ops } = message {
+                envelopes.extend(ops);
+            }
+        }
+        assert!(!envelopes.is_empty(), "expected the applied op to flow onto the channel");
+        let operations_json = serde_json::to_string(&envelopes).expect("serialize envelopes");
+
+        let mut receiver = new_app();
+        let baseline = receiver.projection().expect("projection").path.steps.len();
+        receiver.ingest_operations(&operations_json).expect("ingest once");
+        receiver.ingest_operations(&operations_json).expect("ingest twice");
+        assert_eq!(
+            receiver.projection().expect("projection").path.steps.len(),
+            baseline + 1,
+            "feeding the same op twice must not double-apply"
+        );
+    }
+
+    fn step_params_contains(document: &ImperativeDocument, step_id: &str, needle: &str) -> bool {
+        document
+            .path
+            .steps
+            .iter()
+            .find(|step| step.id == step_id)
+            .map(|step| serde_json::to_string(&step.params).unwrap_or_default().contains(needle))
+            .unwrap_or(false)
+    }
+}

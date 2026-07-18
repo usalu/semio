@@ -11,7 +11,7 @@ use draw::{
 use semio_framework_plugin::{SurfaceKind, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView,
     build_canvas_2d_scene, create_default_layout, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_select, ui_inspector_mixed_slider, ui_inspector_mixed_text, ui_inspector_mixed_toggle,
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene,
+    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene, OsMediaCapability, ResourceKindSpec,
     ActionDescriptor, PanelGroup, UtilityCategory, UtilityDefinition, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSelectItem,
     UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
     WindowEngagementInput, WindowEngagementStatus,
@@ -1956,6 +1956,14 @@ fn create_draw_app() -> App {
     };
     App::from_builder(
         App::builder(DRAW_PLAY_APP_ID, "Draw").document(["semio", "draw"])
+            .resource_kind(ResourceKindSpec {
+                id: "2d.drawing".into(),
+                name: "2D Drawing".into(),
+                source_format: "draw.document".into(),
+                component_kind: "draw".into(),
+                dimension: "2d".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+            })
             .icon_id("draw")
             .mode("edit", "Edit")
             .default_mode_id("edit")

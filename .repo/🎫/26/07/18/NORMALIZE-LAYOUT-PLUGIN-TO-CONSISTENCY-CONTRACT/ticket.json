@@ -1,0 +1,13 @@
+{
+  "title": "Normalize Layout Plugin To Consistency Contract",
+  "emoji": "📐",
+  "status": "open",
+  "description": "Normalize the layout plugin crate (layout/plugin/rs/lib.rs) to the Wave-3 Consistency Contract: adopt SDK PanelKit (tree_item/tree_item_with_action/tree_item_with_action_draggable/PanelTreeBuilder/selection_ids) from semio_framework_plugin instead of local hand-rolled copies; adopt SDK Testkit (meta/new_app/new_app_with_registry/assert_undo_redo_round_trip) instead of local test scaffolding; rename the \"🔖AppFactory\" region to \"🔖Manifest\" and reorder regions into canonical order (Constants, Types, DocumentHelpers, Terminology, CommandLabels, Panels, Render, App impl, Manifest, Tests); verify C1 naming (app id \"layout-play\" -\u003e struct \"LayoutPlayApp\", already compliant) and C4 layout (single-app crate stays flat, already compliant). Do NOT touch the hand-rolled PointerCamera/CanvasScene regions (reserved for a separate Wave-3 agent covering build_canvas_2d_scene consolidation). Mechanical pass only.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2091"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪da1129ca55fb424bb0ab40183b4ae6d6"
+  ]
+}

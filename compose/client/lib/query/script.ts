@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🏛️ `@semio-tech/compose-query` — `bun script.ts <build|test|wasm>`. */
 import { execFileSync } from "node:child_process";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
 class WasmScript extends BundleScript {
@@ -38,7 +38,7 @@ class BuildScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    execFileSync("cargo", ["test", ...segments], { stdio: "inherit", cwd: join(this.root, "rs") });
+    runCargoTestBudgeted(["compose_query"], this.repoRoot, segments);
   }
 }
 

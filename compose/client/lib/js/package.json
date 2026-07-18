@@ -4,6 +4,10 @@
   "name": "@semio-tech/compose-js",
   "version": "0.1.0",
   "type": "module",
+  "scripts": {
+    "test": "bun nx run @semio-tech/compose-js:test",
+    "test-e2e": "bun nx run @semio-tech/compose-js:test-e2e"
+  },
   "dependencies": {
     "rxjs": "^7.8.2",
     "zod": "^4.3.5"

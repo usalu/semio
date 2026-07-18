@@ -71,19 +71,31 @@ pub mod part_3 {
 
 // #region 🔖Part4
 pub mod part_4 {
-    use super::*;
+    use super::{part_1_1, AnnexChoice, CheckResult};
+
+    pub fn check_plated_structures(n_ed: f64, n_rd: f64) -> CheckResult {
+        part_1_1::check_cross_section(n_ed, n_rd, AnnexChoice::En)
+    }
 }
 // #endregion 🔖Part4
 
 // #region 🔖Part5
 pub mod part_5 {
-    use super::*;
+    use super::{part_1_1, AnnexChoice, CheckResult};
+
+    pub fn check_pile_foundation_steel(n_ed: f64, n_rd: f64) -> CheckResult {
+        part_1_1::check_cross_section(n_ed, n_rd, AnnexChoice::En)
+    }
 }
 // #endregion 🔖Part5
 
 // #region 🔖Part6
 pub mod part_6 {
-    use super::*;
+    use super::{part_1_1, AnnexChoice, CheckResult};
+
+    pub fn check_stainless_steel(n_ed: f64, n_rd: f64) -> CheckResult {
+        part_1_1::check_cross_section(n_ed, n_rd, AnnexChoice::De)
+    }
 }
 // #endregion 🔖Part6
 

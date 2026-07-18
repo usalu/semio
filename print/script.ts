@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
-/** 🖨️ `@semio-tech/print` router: `bun ./script.ts generate|fonts|build|watch|test`. */
+/** 🖨️ `@semio-tech/print` router: `bun ./script.ts generate|fonts|build|watch|test|test-e2e`. */
+import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { arch, platform } from "node:os";
@@ -598,7 +599,73 @@ class WatchScript extends BundleScript {
   }
 }
 
+//#region ⏱️Test
+/** ⏱️Warm-cache unit tests only, pure functions with no Tectonic/network/fs I/O — full 12-PDF Tectonic build is `#[e2e]`, see `test-e2e`. */
 class TestScript extends BundleScript {
+  run(): void {
+    //#region parseHex6 / blendHex
+    assert.deepEqual(parseHex6("#ff0080"), [255, 0, 128]);
+    assert.deepEqual(parseHex6("abc"), [170, 187, 204]);
+    assert.equal(blendHex("#ffffff", "#000000", 0.5), "#808080");
+    assert.equal(blendHex("#ff0000", "#0000ff", 1), "#ff0000");
+    assert.equal(blendHex("#ff0000", "#0000ff", 0), "#0000ff");
+    //#endregion
+
+    //#region remFactor / remToEm
+    assert.equal(remFactor("1.5rem"), 1.5);
+    assert.equal(remFactor("0.2rem"), 0.2);
+    assert.equal(remToEm("2rem"), "2em");
+    assert.equal(remToEm("garbage"), "garbage");
+    //#endregion
+
+    //#region colorKeyToLatex / chromePaintKeyToLatex
+    assert.equal(colorKeyToLatex("accent_strong"), "semio-accent-strong");
+    assert.equal(chromePaintKeyToLatex("activeForeground"), "active-foreground");
+    assert.equal(chromePaintKeyToLatex("base"), "base");
+    //#endregion
+
+    //#region parsePt / parsePanelManifest
+    assert.equal(parsePt("12.5pt"), 12.5);
+    const manifestPath = join(distDir, ".semio-print-test.panels");
+    mkdirSync(distDir, { recursive: true });
+    writeFileSync(manifestPath, "panel-1;2;10pt;20pt;100pt;200pt\n");
+    assert.deepEqual(parsePanelManifest(manifestPath), [{ id: "panel-1", page: 2, xPt: 10, yPt: 20, wPt: 100, hPt: 200 }]);
+    writeFileSync(manifestPath, "");
+    assert.deepEqual(parsePanelManifest(manifestPath), []);
+    rmSync(manifestPath);
+    //#endregion
+
+    //#region resolvePaint
+    const colors = { accent: "#112233", base: "#000000" };
+    assert.equal(resolvePaint(colors, { hex: "#abcdef" }), "#abcdef");
+    assert.equal(resolvePaint(colors, { token: "accent" }), "#112233");
+    assert.equal(resolvePaint(colors, { mix: ["accent", "base", 0] }), "#000000");
+    assert.throws(() => resolvePaint(colors, {}));
+    assert.throws(() => resolvePaint(colors, { token: "missing" }));
+    //#endregion
+
+    //#region deriveDarkTexSource
+    const lightSource = "\\documentclass[a4paper]{article}\n\\includegraphics{asset/logo/mark.png}\n";
+    const darkSource = deriveDarkTexSource(lightSource);
+    assert.match(darkSource, /theme=dark/);
+    assert.match(darkSource, /asset\/logo\/mark-dark\.png/);
+    assert.throws(() => deriveDarkTexSource("\\documentclass[theme=dark]{article}"));
+    assert.throws(() => deriveDarkTexSource("\\documentclass{article}"));
+    //#endregion
+
+    //#region templatePdfNames / resolveTemplates
+    assert.deepEqual(templatePdfNames("template/report/report.tex"), { light: "report.pdf", dark: "report-dark.pdf" });
+    assert.equal(resolveTemplates([]).length, TEMPLATES.length);
+    assert.equal(resolveTemplates(["report", "report-dark"]).length, 1);
+    assert.throws(() => resolveTemplates(["not-a-template"]));
+    //#endregion
+
+    console.log("print: unit tests passed");
+  }
+}
+
+/** 🖨️Full Tectonic build of every template in light+dark — needs the Tectonic toolchain and font downloads, excluded from the default ≤30s `test` budget. */
+class TestE2eScript extends BundleScript {
   async run(): Promise<void> {
     emitSemioTokensSty();
     await fetchPrintFonts();
@@ -613,8 +680,9 @@ class TestScript extends BundleScript {
     console.log(`print: all ${TEMPLATES.length * 2} template PDFs built`);
   }
 }
+//#endregion ⏱️Test
 
-const router = new ScriptRouter(printRoot).register("generate", GenerateScript).register("fonts", FontsScript).register("build", BuildScript).register("watch", WatchScript).register("test", TestScript);
+const router = new ScriptRouter(printRoot).register("generate", GenerateScript).register("fonts", FontsScript).register("build", BuildScript).register("watch", WatchScript).register("test", TestScript).register("test-e2e", TestE2eScript);
 
 if (import.meta.main) {
   await runBundleScriptMain(router, import.meta.url, { defaultCommand: "build" });

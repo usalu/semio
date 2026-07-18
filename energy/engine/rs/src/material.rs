@@ -60,7 +60,7 @@ pub struct EquivalentLayer {
 /// 🧱 Collapse layers into one equivalent slab preserving R and thermal mass.
 pub fn equivalent_layer(layers: &[Material], r_interior: f64, r_exterior: f64) -> EquivalentLayer {
     let r_solid: f64 = layers.iter().map(layer_resistance_m2k_w).sum();
-    let r_total = r_interior + r_exterior + r_solid;
+    let _r_total = r_interior + r_exterior + r_solid;
     let thickness_m: f64 = layers.iter().map(|l| l.thickness_m).sum();
     let thermal_mass = construction_thermal_mass(layers);
     let conductivity_w_m_k = if r_solid > 0.0 { thickness_m / r_solid } else { 1.0 };

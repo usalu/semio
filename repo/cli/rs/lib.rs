@@ -122,6 +122,28 @@ pub mod catalog {
         pub aliases: Vec<String>,
         pub ports: Ports,
         pub examples: Vec<String>,
+        /// 🔌 Crate paths (e.g. `framework/surface/tiled-map/rs`) whose `wasm` build target must run
+        /// for this playground variant, read from `engines = […]` on its `[[…playground]]` row.
+        pub engines: Vec<String>,
+        /// 🗂️ Dev-time asset serving needs for this variant, read from the crate's
+        /// `[[package.metadata.semio.assets]]` rows (see [`AssetSpec`]).
+        pub assets: Vec<AssetSpec>,
+    }
+
+    /// 🗂️ One `[[package.metadata.semio.assets]]` row: a dev-time asset-serving need declared by a
+    /// plugin crate (tile proxy, static directory, or mesh collection). `app` optionally scopes the
+    /// row to one playground variant of a multi-app crate (unset ⇒ every variant of the crate).
+    #[derive(Debug, Clone, PartialEq, Eq, Default)]
+    pub struct AssetSpec {
+        pub kind: String,
+        pub route: String,
+        pub app: Option<String>,
+        pub upstream: Option<String>,
+        pub cache: Option<String>,
+        pub root: Option<String>,
+        pub roots: Vec<String>,
+        pub placeholder: Option<String>,
+        pub filter_from_examples: bool,
     }
     //#endregion 🔖Entries
 
@@ -154,6 +176,15 @@ pub mod catalog {
             }
         }
         out
+    }
+
+    fn bool_field(block: &str, key: &str) -> bool {
+        for line in block.lines() {
+            if let Some(rest) = line.trim().strip_prefix(&format!("{key} = ")) {
+                return rest.trim() == "true";
+            }
+        }
+        false
     }
 
     fn ports_field(block: &str) -> Option<Ports> {
@@ -262,7 +293,30 @@ pub mod catalog {
                 let app = string_field(block, "app");
                 let aliases = string_array_field(block, "aliases");
                 let ports = ports_field(block)?;
-                Some(PlaygroundEntry { variant, plugin_id: plugin_id.to_string(), crate_path: crate_path.to_string(), app, aliases, ports, examples: Vec::new() })
+                let engines = string_array_field(block, "engines");
+                Some(PlaygroundEntry { variant, plugin_id: plugin_id.to_string(), crate_path: crate_path.to_string(), app, aliases, ports, examples: Vec::new(), engines, assets: Vec::new() })
+            })
+            .collect()
+    }
+
+    /// 🗂️ Parses every `[[package.metadata.semio.assets]]` row for one crate.
+    pub fn parse_assets_text(text: &str) -> Vec<AssetSpec> {
+        blocks_after_header(text, |l| l == "[[package.metadata.semio.assets]]")
+            .iter()
+            .filter_map(|block| {
+                let kind = string_field(block, "kind")?;
+                let route = string_field(block, "route")?;
+                Some(AssetSpec {
+                    kind,
+                    route,
+                    app: string_field(block, "app"),
+                    upstream: string_field(block, "upstream"),
+                    cache: string_field(block, "cache"),
+                    root: string_field(block, "root"),
+                    roots: string_array_field(block, "roots"),
+                    placeholder: string_field(block, "placeholder"),
+                    filter_from_examples: bool_field(block, "filter_from_examples"),
+                })
             })
             .collect()
     }
@@ -336,8 +390,14 @@ pub mod catalog {
         for entry in &entries {
             let manifest = root.join(&entry.crate_path).join("Cargo.toml");
             let Ok(text) = fs::read_to_string(&manifest) else { continue };
+            let crate_assets = parse_assets_text(&text);
             for mut playground in parse_playgrounds_text(&text, &entry.plugin_id, &entry.crate_path) {
                 playground.examples = discover_examples_for_playground(root, &entry.crate_path, &entry.plugin_id, &playground.variant);
+                playground.assets = crate_assets
+                    .iter()
+                    .filter(|asset| asset.app.as_deref().map(|app| Some(app) == playground.app.as_deref()).unwrap_or(true))
+                    .cloned()
+                    .collect();
                 playgrounds.push(playground);
             }
         }
@@ -435,6 +495,52 @@ pub mod catalog {
         )
     }
 
+    fn asset_spec_json(asset: &AssetSpec) -> serde_json::Value {
+        let mut obj = serde_json::json!({ "kind": asset.kind, "route": asset.route });
+        if let Some(v) = &asset.upstream {
+            obj["upstream"] = serde_json::json!(v);
+        }
+        if let Some(v) = &asset.cache {
+            obj["cache"] = serde_json::json!(v);
+        }
+        if let Some(v) = &asset.root {
+            obj["root"] = serde_json::json!(v);
+        }
+        if !asset.roots.is_empty() {
+            obj["roots"] = serde_json::json!(asset.roots);
+        }
+        if let Some(v) = &asset.placeholder {
+            obj["placeholder"] = serde_json::json!(v);
+        }
+        if asset.filter_from_examples {
+            obj["filterFromExamples"] = serde_json::json!(true);
+        }
+        obj
+    }
+
+    fn asset_spec_ts(asset: &AssetSpec) -> String {
+        let mut fields = vec![format!("kind: {}", json_string(&asset.kind)), format!("route: {}", json_string(&asset.route))];
+        if let Some(v) = &asset.upstream {
+            fields.push(format!("upstream: {}", json_string(v)));
+        }
+        if let Some(v) = &asset.cache {
+            fields.push(format!("cache: {}", json_string(v)));
+        }
+        if let Some(v) = &asset.root {
+            fields.push(format!("root: {}", json_string(v)));
+        }
+        if !asset.roots.is_empty() {
+            fields.push(format!("roots: {}", serde_json::to_string(&asset.roots).unwrap_or_default()));
+        }
+        if let Some(v) = &asset.placeholder {
+            fields.push(format!("placeholder: {}", json_string(v)));
+        }
+        if asset.filter_from_examples {
+            fields.push("filterFromExamples: true".to_string());
+        }
+        format!("{{ {} }}", fields.join(", "))
+    }
+
     pub fn emit_playgrounds_json(playgrounds: &[PlaygroundEntry]) -> String {
         let value: Vec<serde_json::Value> = playgrounds
             .iter()
@@ -446,6 +552,8 @@ pub mod catalog {
                     "aliases": p.aliases,
                     "ports": { "react": p.ports.react, "wgpu": p.ports.wgpu },
                     "examples": p.examples,
+                    "engines": p.engines,
+                    "assets": p.assets.iter().map(asset_spec_json).collect::<Vec<_>>(),
                 });
                 if let Some(app) = &p.app {
                     obj["app"] = serde_json::json!(app);
@@ -461,8 +569,9 @@ pub mod catalog {
             .iter()
             .map(|p| {
                 let app = p.app.as_ref().map(|a| format!(", app: {}", json_string(a))).unwrap_or_default();
+                let assets: Vec<String> = p.assets.iter().map(asset_spec_ts).collect();
                 format!(
-                    "\t{{ variant: {}, pluginId: {}, cratePath: {}{}, aliases: {}, ports: {{ react: {}, wgpu: {} }}, examples: {} }},",
+                    "\t{{ variant: {}, pluginId: {}, cratePath: {}{}, aliases: {}, ports: {{ react: {}, wgpu: {} }}, examples: {}, engines: {}, assets: [{}] }},",
                     json_string(&p.variant),
                     json_string(&p.plugin_id),
                     json_string(&p.crate_path),
@@ -471,11 +580,13 @@ pub mod catalog {
                     p.ports.react,
                     p.ports.wgpu,
                     serde_json::to_string(&p.examples).unwrap_or_default(),
+                    serde_json::to_string(&p.engines).unwrap_or_default(),
+                    assets.join(", "),
                 )
             })
             .collect();
         format!(
-            "/** @generated by repo/cli/rs (semio plugin registry generate) — do not edit. */\nexport type PlaygroundBuildTarget = {{\n\treadonly variant: string;\n\treadonly pluginId: string;\n\treadonly cratePath: string;\n\treadonly app?: string;\n\treadonly aliases: readonly string[];\n\treadonly ports: {{ readonly react: number; readonly wgpu: number }};\n\treadonly examples: readonly string[];\n}};\n\nexport const PLAYGROUND_BUILD_TARGETS: readonly PlaygroundBuildTarget[] = [\n{}\n];\n",
+            "/** @generated by repo/cli/rs (semio plugin registry generate) — do not edit. */\nexport type PlaygroundAssetSpec =\n\t| {{ readonly kind: \"tile-proxy\"; readonly route: string; readonly upstream: string; readonly cache: string }}\n\t| {{ readonly kind: \"static-dir\"; readonly route: string; readonly root: string }}\n\t| {{ readonly kind: \"mesh-collection\"; readonly route: string; readonly roots: readonly string[]; readonly placeholder: string; readonly filterFromExamples?: boolean }};\n\nexport type PlaygroundBuildTarget = {{\n\treadonly variant: string;\n\treadonly pluginId: string;\n\treadonly cratePath: string;\n\treadonly app?: string;\n\treadonly aliases: readonly string[];\n\treadonly ports: {{ readonly react: number; readonly wgpu: number }};\n\treadonly examples: readonly string[];\n\treadonly engines: readonly string[];\n\treadonly assets: readonly PlaygroundAssetSpec[];\n}};\n\nexport const PLAYGROUND_BUILD_TARGETS: readonly PlaygroundBuildTarget[] = [\n{}\n];\n",
             rows.join("\n")
         )
     }
@@ -537,9 +648,25 @@ pub mod catalog {
                         wgpu: v.get("ports")?.get("wgpu")?.as_u64()? as u32,
                     },
                     examples: v.get("examples").and_then(|e| e.as_array()).map(|a| a.iter().filter_map(|e| e.as_str().map(str::to_string)).collect()).unwrap_or_default(),
+                    engines: v.get("engines").and_then(|e| e.as_array()).map(|a| a.iter().filter_map(|e| e.as_str().map(str::to_string)).collect()).unwrap_or_default(),
+                    assets: v.get("assets").and_then(|e| e.as_array()).map(|a| a.iter().filter_map(asset_spec_from_json).collect()).unwrap_or_default(),
                 })
             })
             .collect()
+    }
+
+    fn asset_spec_from_json(v: &serde_json::Value) -> Option<AssetSpec> {
+        Some(AssetSpec {
+            kind: v.get("kind")?.as_str()?.to_string(),
+            route: v.get("route")?.as_str()?.to_string(),
+            app: None,
+            upstream: v.get("upstream").and_then(|x| x.as_str()).map(str::to_string),
+            cache: v.get("cache").and_then(|x| x.as_str()).map(str::to_string),
+            root: v.get("root").and_then(|x| x.as_str()).map(str::to_string),
+            roots: v.get("roots").and_then(|x| x.as_array()).map(|a| a.iter().filter_map(|e| e.as_str().map(str::to_string)).collect()).unwrap_or_default(),
+            placeholder: v.get("placeholder").and_then(|x| x.as_str()).map(str::to_string),
+            filter_from_examples: v.get("filterFromExamples").and_then(|x| x.as_bool()).unwrap_or(false),
+        })
     }
     //#endregion 🔖GenerateCheck
 }
@@ -747,18 +874,124 @@ pub mod plugin_registry_command {
 
 // #region 🔖Tui
 pub mod tui_dashboard {
-    use crate::catalog::load_playground_catalog;
+    use crate::catalog::{load_playground_catalog, PlaygroundEntry};
+    use crate::env_contract::{build_dev_env, DevOptions};
+    use std::io::{BufRead, BufReader};
     use std::path::Path;
+    use std::process::{Child, Command, Stdio};
+    use std::sync::mpsc::{channel, Receiver};
+    use std::time::Duration;
     use ui_tui::backend::{NativeTerminal, TerminalBackend};
-    use ui_tui::chrome::{shell, FooterState, KeyHint, NavItem, NavbarState};
+    use ui_tui::chrome::{shell, ChromeState, FooterState, KeyHint, NavItem, NavbarState, WindowState};
+    use ui_tui::engine::Tui;
     use ui_tui::event::{Event, Key};
     use ui_tui::geometry::Size;
-    use ui_tui::layout::even_window_layout;
-    use ui_tui::scene::{Node, NodeContent};
+    use ui_tui::layout::{even_window_layout, Constraint, Dimension, Direction};
+    use ui_tui::scene::{Node, NodeContent, NodeId};
     use ui_tui::theme::Theme;
-    use ui_tui::widget::{ListState, WidgetSignal, WidgetState};
+    use ui_tui::widget::{LogState, TableAlign, TableColumn, TableRow, TableState, WidgetSignal, WidgetState};
+    use ui_styling::appearance::AppearanceName;
 
-    /// 🎛️ The bare-`semio` interactive launcher: a plugin list over the live catalog.
+    //#region 🔖CatalogTable
+    /// 🌳 Groups the catalog by `pluginId` into a two-level table: one parent row per plugin, one
+    /// child row per playground variant. Returns the rows alongside a flat-row-index → catalog-index
+    /// map (`None` for parent rows) so an `Activated` signal can resolve back to a `PlaygroundEntry`.
+    pub fn group_catalog_into_table(catalog: &[PlaygroundEntry]) -> (Vec<TableRow>, Vec<Option<usize>>) {
+        let mut plugin_ids: Vec<&str> = catalog.iter().map(|e| e.plugin_id.as_str()).collect();
+        plugin_ids.sort();
+        plugin_ids.dedup();
+        let mut rows = Vec::new();
+        let mut mapping = Vec::new();
+        for plugin_id in plugin_ids {
+            rows.push(TableRow::parent(plugin_id.to_string(), vec![plugin_id.to_string(), String::new(), String::new(), String::new()]));
+            mapping.push(None);
+            for (i, entry) in catalog.iter().enumerate() {
+                if entry.plugin_id != plugin_id {
+                    continue;
+                }
+                rows.push(TableRow::child(
+                    entry.variant.clone(),
+                    vec![entry.variant.clone(), entry.ports.react.to_string(), entry.ports.wgpu.to_string(), entry.examples.len().to_string()],
+                    1,
+                ));
+                mapping.push(Some(i));
+            }
+        }
+        (rows, mapping)
+    }
+
+    fn plugin_table_columns() -> Vec<TableColumn> {
+        vec![
+            TableColumn::new("Plugin / App", 0, TableAlign::Left),
+            TableColumn::new("React", 6, TableAlign::Right),
+            TableColumn::new("Wgpu", 6, TableAlign::Right),
+            TableColumn::new("Examples", 9, TableAlign::Right),
+        ]
+    }
+    //#endregion 🔖CatalogTable
+
+    //#region 🔖Sessions
+    /// ▶️ One supervised child process (a dev or build pipeline run), streaming its combined
+    /// stdout/stderr into `rx` line by line from two reader threads.
+    struct Session {
+        child: Child,
+        rx: Receiver<String>,
+        variant: String,
+    }
+
+    fn spawn_session(root: &Path, verb: &str, variant: &str, row: &PlaygroundEntry) -> std::io::Result<Session> {
+        let env = build_dev_env(variant, Some(row), &DevOptions { renderer: "react".into(), ..Default::default() });
+        let mut child = Command::new("bun")
+            .args(["nx", "run", &format!("@semio-tech/framework-os-dev:{verb}")])
+            .current_dir(root)
+            .envs(env)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()?;
+        let (tx, rx) = channel();
+        if let Some(stdout) = child.stdout.take() {
+            let tx = tx.clone();
+            std::thread::spawn(move || {
+                for line in BufReader::new(stdout).lines().map_while(Result::ok) {
+                    if tx.send(line).is_err() {
+                        break;
+                    }
+                }
+            });
+        }
+        if let Some(stderr) = child.stderr.take() {
+            std::thread::spawn(move || {
+                for line in BufReader::new(stderr).lines().map_while(Result::ok) {
+                    if tx.send(line).is_err() {
+                        break;
+                    }
+                }
+            });
+        }
+        Ok(Session { child, rx, variant: variant.to_string() })
+    }
+
+    impl Session {
+        fn stop(mut self) {
+            let _ = self.child.kill();
+            let _ = self.child.wait();
+        }
+    }
+
+    /// 📡 Drains whatever log lines have arrived since the last tick into the window's `Log` widget.
+    fn pump_session(tui: &mut Tui, session: &Option<Session>, log_id: NodeId) {
+        let Some(session) = session else { return };
+        while let Ok(line) = session.rx.try_recv() {
+            if let Some(WidgetState::Log(log)) = tui.scene.node_mut(log_id).widget() {
+                log.push(&line);
+            }
+        }
+    }
+    //#endregion 🔖Sessions
+
+    /// 🎛️ The bare-`semio` interactive dashboard: `dev` and `build` windows, each a table of
+    /// plugins (parent rows) with their apps (child rows), and a log pane streaming the session
+    /// launched from whichever row is activated.
     pub fn run(root: &Path) -> i32 {
         let catalog = load_playground_catalog(root);
         if catalog.is_empty() {
@@ -772,32 +1005,48 @@ pub mod tui_dashboard {
         if term.enter().is_err() {
             return 1;
         }
-        let size = term.size().unwrap_or(Size { width: 80, height: 24 });
-        let mut tui = ui_tui::engine::Tui::new(size, Theme::new(ui_styling::appearance::AppearanceName::Dark));
-        let navbar = NavbarState {
-            left: vec![NavItem { id: "logo".into(), label: "semio".into(), active: true }],
-            center: vec![],
-            right: vec![],
-        };
+        let size = term.size().unwrap_or(Size { width: 100, height: 32 });
+        let mut tui = Tui::new(size, Theme::new(AppearanceName::Dark));
+
+        let navbar = NavbarState { left: vec![NavItem { id: "logo".into(), label: "semio".into(), active: true }], center: vec![], right: vec![] };
         let footer = FooterState {
             hints: vec![
-                KeyHint { key: "↑↓".into(), label: "select".into() },
-                KeyHint { key: "Enter".into(), label: "launch".into() },
+                KeyHint { key: "\u{2191}\u{2193}".into(), label: "select".into() },
+                KeyHint { key: "\u{21b5}".into(), label: "launch/toggle".into() },
+                KeyHint { key: "Tab".into(), label: "window".into() },
+                KeyHint { key: "x".into(), label: "stop".into() },
                 KeyHint { key: "q".into(), label: "quit".into() },
             ],
             status: format!("{} playgrounds", catalog.len()),
         };
-        let variants: Vec<String> = catalog.iter().map(|p| p.variant.clone()).collect();
-        let layout = even_window_layout(&["plugins".to_string()]);
-        let built = shell(&mut tui.scene, navbar, footer, &layout);
-        let (_, window_id) = built.windows[0].clone();
-        let list_id = tui.scene.add(window_id, Node::new(NodeContent::Widget(WidgetState::List(ListState::new(variants)))));
-        tui.set_focus(Some(list_id));
+        let built = shell(&mut tui.scene, navbar, footer, &even_window_layout(&[]));
+        tui.scene.node_mut(built.canvas).set_constraint(Constraint { direction: Direction::Row, height: Dimension::Weight(1), ..Default::default() });
+
+        let dev_window = tui.scene.add(built.canvas, Node::new(NodeContent::Chrome(ChromeState::Window(WindowState::new("dev")))));
+        tui.scene.node_mut(dev_window).set_constraint(Constraint { width: Dimension::Weight(1), direction: Direction::Column, padding: [2, 1, 1, 1], gap: 1, ..Default::default() });
+        let build_window = tui.scene.add(built.canvas, Node::new(NodeContent::Chrome(ChromeState::Window(WindowState::new("build")))));
+        tui.scene.node_mut(build_window).set_constraint(Constraint { width: Dimension::Weight(1), direction: Direction::Column, padding: [2, 1, 1, 1], gap: 1, ..Default::default() });
+
+        let (dev_rows, dev_map) = group_catalog_into_table(&catalog);
+        let dev_table = tui.scene.add(dev_window, Node::new(NodeContent::Widget(WidgetState::Table(TableState::new(plugin_table_columns(), dev_rows)))));
+        tui.scene.node_mut(dev_table).set_constraint(Constraint { height: Dimension::Weight(3), ..Default::default() });
+        let dev_log = tui.scene.add(dev_window, Node::new(NodeContent::Widget(WidgetState::Log(LogState::new(500)))));
+        tui.scene.node_mut(dev_log).set_constraint(Constraint { height: Dimension::Weight(1), ..Default::default() });
+
+        let (build_rows, build_map) = group_catalog_into_table(&catalog);
+        let build_table = tui.scene.add(build_window, Node::new(NodeContent::Widget(WidgetState::Table(TableState::new(plugin_table_columns(), build_rows)))));
+        tui.scene.node_mut(build_table).set_constraint(Constraint { height: Dimension::Weight(3), ..Default::default() });
+        let build_log = tui.scene.add(build_window, Node::new(NodeContent::Widget(WidgetState::Log(LogState::new(500)))));
+        tui.scene.node_mut(build_log).set_constraint(Constraint { height: Dimension::Weight(1), ..Default::default() });
+
+        tui.set_focus(Some(dev_table));
         term.present(&tui.render_full()).ok();
 
-        let mut launch: Option<usize> = None;
+        let mut dev_session: Option<Session> = None;
+        let mut build_session: Option<Session> = None;
+
         loop {
-            let events = term.poll(std::time::Duration::from_millis(80)).unwrap_or_default();
+            let events = term.poll(Duration::from_millis(80)).unwrap_or_default();
             let mut quit = false;
             for event in &events {
                 if let Event::Key(k) = event {
@@ -805,16 +1054,70 @@ pub mod tui_dashboard {
                         quit = true;
                         break;
                     }
+                    if k.key == Key::Char('x') {
+                        let focus = tui.focus();
+                        if focus == Some(dev_table) || focus == Some(dev_log) {
+                            if let Some(session) = dev_session.take() {
+                                session.stop();
+                            }
+                        } else if focus == Some(build_table) || focus == Some(build_log) {
+                            if let Some(session) = build_session.take() {
+                                session.stop();
+                            }
+                        }
+                        continue;
+                    }
                 }
-                for (_, signal) in tui.dispatch(event) {
-                    if let WidgetSignal::Activated(idx) = signal {
-                        launch = Some(idx);
+                for (node_id, signal) in tui.dispatch(event) {
+                    let WidgetSignal::Activated(row_idx) = signal else { continue };
+                    let (verb, map, window_id) = if node_id == dev_table {
+                        ("dev", &dev_map, dev_window)
+                    } else if node_id == build_table {
+                        ("build", &build_map, build_window)
+                    } else {
+                        continue;
+                    };
+                    let Some(Some(catalog_idx)) = map.get(row_idx) else { continue };
+                    let Some(row) = catalog.get(*catalog_idx) else { continue };
+                    if let Ok(session) = spawn_session(root, verb, &row.variant, row) {
+                        let log_id = if window_id == dev_window { dev_log } else { build_log };
+                        if let Some(WidgetState::Log(log)) = tui.scene.node_mut(log_id).widget() {
+                            log.clear();
+                            log.push(&format!("[{verb}] launching {}\u{2026}", row.variant));
+                        }
+                        let old = if window_id == dev_window { dev_session.replace(session) } else { build_session.replace(session) };
+                        if let Some(old) = old {
+                            old.stop();
+                        }
                     }
                 }
             }
-            if quit || launch.is_some() {
+            if quit {
                 break;
             }
+
+            pump_session(&mut tui, &dev_session, dev_log);
+            pump_session(&mut tui, &build_session, build_log);
+
+            let focus = tui.focus();
+            let dev_focused = focus == Some(dev_table) || focus == Some(dev_log);
+            let build_focused = focus == Some(build_table) || focus == Some(build_log);
+            if let Some(ChromeState::Window(w)) = tui.scene.node_mut(dev_window).chrome() {
+                w.focused = dev_focused;
+            }
+            if let Some(ChromeState::Window(w)) = tui.scene.node_mut(build_window).chrome() {
+                w.focused = build_focused;
+            }
+            let status = match (&dev_session, &build_session) {
+                (None, None) => format!("{} playgrounds", catalog.len()),
+                (Some(d), None) => format!("dev: {}", d.variant),
+                (None, Some(b)) => format!("build: {}", b.variant),
+                (Some(d), Some(b)) => format!("dev: {} \u{2502} build: {}", d.variant, b.variant),
+            };
+            if let Some(ChromeState::Footer(f)) = tui.scene.node_mut(built.footer).chrome() {
+                f.status = status;
+            }
+
             let patch = tui.render();
             if !patch.0.is_empty() {
                 term.present(&patch).ok();
@@ -822,14 +1125,13 @@ pub mod tui_dashboard {
         }
         term.leave().ok();
 
-        match launch.and_then(|i| catalog.get(i)) {
-            Some(row) => {
-                println!("launching {}…", row.variant);
-                let env = crate::env_contract::build_dev_env(&row.variant, Some(row), &crate::env_contract::DevOptions { renderer: "react".into(), ..Default::default() });
-                crate::proc::spawn_inherit("bun", &["nx", "run", "@semio-tech/framework-os-dev:dev"], root, &env)
-            }
-            None => 0,
+        if let Some(session) = dev_session {
+            session.stop();
         }
+        if let Some(session) = build_session {
+            session.stop();
+        }
+        0
     }
 }
 // #endregion 🔖Tui
@@ -880,10 +1182,11 @@ fn print_usage() {
 #[cfg(test)]
 mod tests {
     use crate::args::parse;
-    use crate::catalog::{parse_playgrounds_text, parse_plugin_cargo_text, validate_playground_registry, PlaygroundEntry, Ports};
+    use crate::catalog::{parse_assets_text, parse_playgrounds_text, parse_plugin_cargo_text, validate_playground_registry, PlaygroundEntry, Ports};
     use crate::dev::{consume_legacy_example_prefix, resolve_playground};
     use crate::env_contract::{build_dev_env, resolve_port, DevOptions};
     use crate::options::{parse_lock, Lock};
+    use crate::tui_dashboard::group_catalog_into_table;
 
     #[test]
     fn args_split_verb_segments_and_flags() {
@@ -944,6 +1247,56 @@ ports = { react = 6013, wgpu = 6113 }
         assert_eq!(entries[0].aliases, vec!["2d"]);
         assert_eq!(entries[0].ports, Ports { react: 6012, wgpu: 6112 });
         assert_eq!(entries[0].examples, Vec::<String>::new());
+    }
+
+    #[test]
+    fn playground_blocks_parse_engines() {
+        let text = r#"
+[[package.metadata.semio.playground]]
+variant = "gis2d"
+app = "gis2d"
+aliases = ["gis 2d"]
+ports = { react = 6040, wgpu = 6140 }
+engines = ["framework/surface/tiled-map/rs"]
+"#;
+        let entries = parse_playgrounds_text(text, "gis", "gis/plugin/rs");
+        assert_eq!(entries[0].engines, vec!["framework/surface/tiled-map/rs"]);
+    }
+
+    #[test]
+    fn assets_blocks_parse_all_kinds() {
+        let text = r#"
+[[package.metadata.semio.assets]]
+kind = "tile-proxy"
+route = "/osm"
+upstream = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+cache = "osm-tiles"
+
+[[package.metadata.semio.assets]]
+kind = "static-dir"
+route = "/cad-fixture"
+root = "cad/fixture"
+
+[[package.metadata.semio.assets]]
+kind = "mesh-collection"
+route = "/mesh"
+roots = ["asset/metabolism/representation", "asset/abbau-aufbau"]
+placeholder = "asset/mesh/placeholder.glb"
+filter_from_examples = true
+app = "puzzle3d"
+"#;
+        let assets = parse_assets_text(text);
+        assert_eq!(assets.len(), 3);
+        assert_eq!(assets[0].kind, "tile-proxy");
+        assert_eq!(assets[0].upstream.as_deref(), Some("https://tile.openstreetmap.org/{z}/{x}/{y}.png"));
+        assert_eq!(assets[0].cache.as_deref(), Some("osm-tiles"));
+        assert_eq!(assets[1].kind, "static-dir");
+        assert_eq!(assets[1].root.as_deref(), Some("cad/fixture"));
+        assert_eq!(assets[2].kind, "mesh-collection");
+        assert_eq!(assets[2].roots, vec!["asset/metabolism/representation", "asset/abbau-aufbau"]);
+        assert_eq!(assets[2].placeholder.as_deref(), Some("asset/mesh/placeholder.glb"));
+        assert!(assets[2].filter_from_examples);
+        assert_eq!(assets[2].app.as_deref(), Some("puzzle3d"));
     }
 
     #[test]
@@ -1010,5 +1363,31 @@ ports = { react = 6013, wgpu = 6113 }
         assert_eq!(parse_lock("All"), Lock::All);
         assert_eq!(parse_lock("dark"), Lock::Individual("dark".to_string()));
     }
+
+    #[test]
+    fn group_catalog_into_table_nests_apps_under_their_plugin_with_a_catalog_index_map() {
+        let catalog = vec![
+            PlaygroundEntry { variant: "puzzle3d".into(), plugin_id: "puzzle".into(), ports: Ports { react: 6013, wgpu: 6113 }, examples: vec!["a".into()], ..Default::default() },
+            PlaygroundEntry { variant: "puzzle2d".into(), plugin_id: "puzzle".into(), ports: Ports { react: 6012, wgpu: 6112 }, ..Default::default() },
+            PlaygroundEntry { variant: "draw".into(), plugin_id: "draw".into(), ports: Ports { react: 6064, wgpu: 6164 }, ..Default::default() },
+        ];
+        let (rows, map) = group_catalog_into_table(&catalog);
+
+        // plugins sorted alphabetically, each followed immediately by its child rows in catalog order
+        assert_eq!(rows.iter().map(|r| r.id.as_str()).collect::<Vec<_>>(), vec!["draw", "draw", "puzzle", "puzzle3d", "puzzle2d"]);
+        assert_eq!(rows.iter().map(|r| r.level).collect::<Vec<_>>(), vec![0, 1, 0, 1, 1]);
+        assert!(rows[0].has_children && rows[2].has_children);
+        assert!(!rows[1].has_children && !rows[3].has_children && !rows[4].has_children);
+
+        // the map resolves each child row back to its catalog entry; parent rows map to None
+        assert_eq!(map, vec![None, Some(2), None, Some(0), Some(1)]);
+        assert_eq!(catalog[map[1].unwrap()].variant, "draw");
+        assert_eq!(catalog[map[3].unwrap()].variant, "puzzle3d");
+
+        // cell contents: ports and example count on children, blank on the parent row
+        assert_eq!(rows[3].cells.iter().map(String::as_str).collect::<Vec<_>>(), vec!["puzzle3d", "6013", "6113", "1"]);
+        assert_eq!(rows[2].cells.iter().map(String::as_str).collect::<Vec<_>>(), vec!["puzzle", "", "", ""]);
+    }
 }
 // #endregion 🔖Tests
+

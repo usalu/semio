@@ -645,13 +645,13 @@ export function Board2dHost({ node, onAction }: ComponentSceneHostProps) {
 
   useEffect(() => {
     if (!scene) return;
-    applyToSession(sessionRef.current, (session) => session.setKindCatalogsJson(scene.kindCatalogsJson));
-  }, [sessionEpoch, scene?.kindCatalogsJson]);
+    applyToSession(sessionRef.current, (session) => session.setKindCatalogsJson(scene.glyphCatalogsJson));
+  }, [sessionEpoch, scene?.glyphCatalogsJson]);
 
   useEffect(() => {
     if (!scene) return;
-    applyToSession(sessionRef.current, (session) => session.setHandleLinkCompatJson?.(scene.kindCompatibilityJson));
-  }, [sessionEpoch, scene?.kindCompatibilityJson]);
+    applyToSession(sessionRef.current, (session) => session.setHandleLinkCompatJson?.(scene.placementCompatibilityJson));
+  }, [sessionEpoch, scene?.placementCompatibilityJson]);
 
   useEffect(() => {
     if (!scene) return;
@@ -720,8 +720,8 @@ export function Board2dHost({ node, onAction }: ComponentSceneHostProps) {
 
   useEffect(() => {
     if (!scene) return;
-    applyToSession(sessionRef.current, (session) => session.setBrushKindWeights?.(scene.brushKindWeightsJson));
-  }, [sessionEpoch, scene?.brushKindWeightsJson]);
+    applyToSession(sessionRef.current, (session) => session.setBrushKindWeights?.(scene.brushWeightsJson));
+  }, [sessionEpoch, scene?.brushWeightsJson]);
 
   useEffect(() => {
     if (!scene) return;

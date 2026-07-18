@@ -1,7 +1,7 @@
 //! 🌬️ Zone sensible and latent air balance: transient BDF3, analytical steady state, unmet load.
 
 use crate::props::{latent_heat_vaporization, moist_air_density, moist_air_enthalpy_j_per_kg};
-use crate::units::{c_to_k, CP_DRY_AIR, H_FG_0C, P_STD, RHO_AIR_REF};
+use crate::units::{CP_DRY_AIR, P_STD};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖HumiditySolutionMethod
@@ -113,7 +113,7 @@ fn zone_sensible_capacitance_j_per_k(volume_m3: f64, temp_c: f64, w: f64, p_atm:
     rho * volume_m3 * CP_DRY_AIR
 }
 
-fn zone_moisture_capacitance_kg_per_kg(volume_m3: f64, temp_c: f64, w: f64, p_atm: f64) -> f64 {
+fn zone_moisture_capacitance_kg_per_k(volume_m3: f64, temp_c: f64, w: f64, p_atm: f64) -> f64 {
     moist_air_density(temp_c, w, p_atm) * volume_m3
 }
 // #endregion 🔖Capacitance
@@ -161,8 +161,8 @@ fn compute_unmet_loads(
 ) -> (f64, f64, f64, f64) {
     let mut unmet_heating = 0.0;
     let mut unmet_cooling = 0.0;
-    let mut unmet_humid = 0.0;
-    let mut unmet_dehumid = 0.0;
+    let unmet_humid = 0.0;
+    let unmet_dehumid = 0.0;
 
     if balance.conditioned {
         if let Some(t_heat) = balance.heating_setpoint_c {

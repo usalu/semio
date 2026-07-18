@@ -65,6 +65,7 @@ pub struct AnimateConfig {
     pub output_dir: PathBuf,
     pub cache: CacheConfig,
     pub background: [f64; 4],
+    pub audio_track: Option<PathBuf>,
 }
 
 impl Default for AnimateConfig {
@@ -85,6 +86,7 @@ impl AnimateConfig {
             output_dir: PathBuf::from("output"),
             cache: CacheConfig::default(),
             background: [0.0, 0.0, 0.0, 1.0],
+            audio_track: None,
         }
     }
 
@@ -109,7 +111,12 @@ impl AnimateConfig {
         self
     }
 
-    pub fn frame_duration(self) -> f64 {
+    pub fn with_audio_track(mut self, path: impl AsRef<Path>) -> Self {
+        self.audio_track = Some(path.as_ref().to_path_buf());
+        self
+    }
+
+    pub fn frame_duration(&self) -> f64 {
         1.0 / self.frame_rate
     }
 

@@ -716,10 +716,10 @@
   --layout-story-width-sm: 37.5rem;
   --layout-story-width-md: 50rem;
   --layout-story-width-lg: 60rem;
-  --layout-cad-menu-sm: calc(68.75 * var(--ui-spacing));
-  --layout-cad-menu-md: calc(87.5 * var(--ui-spacing));
-  --layout-cad-menu-lg: calc(112.5 * var(--ui-spacing));
-  --layout-cad-overlay: calc(131.25 * var(--ui-spacing));
+  --layout-floating-menu-sm: calc(68.75 * var(--ui-spacing));
+  --layout-floating-menu-md: calc(87.5 * var(--ui-spacing));
+  --layout-floating-menu-lg: calc(112.5 * var(--ui-spacing));
+  --layout-floating-overlay: calc(131.25 * var(--ui-spacing));
   --layout-preview-min: 4.5rem;
   --layout-preview-md: 5.5rem;
   --layout-offscreen: -100vw;
@@ -1378,17 +1378,17 @@
 @utility w-layout-story-lg {
   width: var(--layout-story-width-lg);
 }
-@utility w-layout-cad-menu-sm {
-  width: var(--layout-cad-menu-sm);
+@utility w-layout-floating-menu-sm {
+  width: var(--layout-floating-menu-sm);
 }
-@utility w-layout-cad-menu-md {
-  width: var(--layout-cad-menu-md);
+@utility w-layout-floating-menu-md {
+  width: var(--layout-floating-menu-md);
 }
-@utility w-layout-cad-menu-lg {
-  width: var(--layout-cad-menu-lg);
+@utility w-layout-floating-menu-lg {
+  width: var(--layout-floating-menu-lg);
 }
-@utility w-layout-cad-overlay {
-  width: var(--layout-cad-overlay);
+@utility w-layout-floating-overlay {
+  width: var(--layout-floating-overlay);
 }
 @utility min-h-layout-preview {
   min-height: var(--layout-preview-min);

@@ -11,3 +11,4 @@ path = "lib.rs"
 mathematical_algebra = { path = "../../../mathematical/algebra/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+thiserror = "2.0.12"

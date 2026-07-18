@@ -19,7 +19,6 @@ import { fileURLToPath } from "node:url";
 import type { Connect, Plugin } from "vite";
 import { defineConfig, type UserConfig } from "vite";
 import {
-  PLAYGROUND_LOCKED_EXAMPLE_ENV,
   PLAYGROUND_PORTS,
   PLAYGROUND_SITE_DEV_PORTS,
   PLAYGROUND_SITE_HOSTS,
@@ -27,7 +26,6 @@ import {
   playgroundDevPort,
   playgroundDevPortString,
   playgroundEmbedUrl,
-  playgroundLockedExampleIdFromEnv,
   playgroundPlayViteDefine,
   playgroundPortEnv,
   playgroundTestPort,
@@ -35,7 +33,10 @@ import {
   type PlaygroundHostKind,
   type PlaygroundSiteKind,
 } from "../../repo/lib/js/index.ts";
+import type { PlaygroundAssetSpec } from "../../framework/plugin/registry/generated/playgrounds.ts";
 // #endregion 🔌Adapters
+
+export type { PlaygroundAssetSpec };
 
 export {
   PLAYGROUND_PORTS,
@@ -164,8 +165,8 @@ export function playgroundFlowWasmDevStubPlugin(repoRoot: string): Plugin {
         ? resolve(dirname(importer), cleanId)
         : cleanId.startsWith("@semio-tech/flow-core/pkg/")
           ? resolve(repoRoot, "flow/core/rs/pkg", cleanId.slice("@semio-tech/flow-core/pkg/".length))
-          : cleanId.startsWith("@semio-tech/framework-graph-rs/pkg/")
-            ? resolve(repoRoot, "framework/graph/rs/pkg", cleanId.slice("@semio-tech/framework-graph-rs/pkg/".length))
+          : cleanId.startsWith("@semio-tech/framework-surface-node-graph-rs/pkg/")
+            ? resolve(repoRoot, "framework/surface/node-graph/rs/pkg", cleanId.slice("@semio-tech/framework-surface-node-graph-rs/pkg/".length))
             : cleanId.startsWith("@semio-tech/framework-editor-rs/pkg/")
               ? resolve(repoRoot, "framework/editor/rs/pkg", cleanId.slice("@semio-tech/framework-editor-rs/pkg/".length))
               : resolve(repoRoot, cleanId.replace(/^@semio-tech\/[^/]+\//, ""));
@@ -368,27 +369,22 @@ function createUiAssetsMiddleware(assetsRoot: string): Connect.NextHandleFunctio
   };
 }
 
-/** @emoji 📂 Kit fixture GLB roots for puzzle 3d `/mesh/*` URLs. */
-export function puzzle3dKitMeshRoots(repoRoot: string): { readonly meshRoots: readonly string[]; readonly placeholderMesh: string } {
-  const metabolismMeshCandidates = [resolve(repoRoot, "asset/metabolism/representation"), resolve(repoRoot, "asset/metabolism/representations")];
-  const metabolismMeshRoot = metabolismMeshCandidates.find((candidate) => existsSync(candidate)) ?? metabolismMeshCandidates[0]!;
-  return {
-    meshRoots: [metabolismMeshRoot, resolve(repoRoot, "asset/abbau-aufbau")],
-    placeholderMesh: resolve(repoRoot, "asset/mesh/placeholder.glb"),
-  };
-}
-
-/** @emoji 🌐 Connect middleware: serve kit GLBs at `/mesh/<name>.glb` (first matching root wins). */
-export function createPuzzle3dMeshesMiddleware(meshRoots: readonly string[], placeholderMesh: string): Connect.NextHandleFunction {
-  const rootsResolved = meshRoots.map((root) => resolve(root));
-  const placeholderResolved = resolve(placeholderMesh);
+//#region 🔖MeshCollectionAssetPlugin
+/** @emoji 🌐 Connect middleware: serve a `mesh-collection` spec's GLBs at `{route}/<name>.glb` (first
+ * matching root wins; `{route}/<placeholder-basename>` always serves `spec.placeholder`). Generalizes
+ * the previous puzzle-3d-only `/mesh/*` middleware — driven entirely by the spec, no app names. */
+function createMeshCollectionMiddleware(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }>): Connect.NextHandleFunction {
+  const route = spec.route.endsWith("/") ? spec.route : `${spec.route}/`;
+  const rootsResolved = spec.roots.map((root) => resolve(repoRoot, root));
+  const placeholderResolved = resolve(repoRoot, spec.placeholder);
+  const placeholderBasename = placeholderResolved.split(/[\\/]/).pop()!;
   return (req, res, next) => {
-    if (!req.url?.startsWith("/mesh/")) {
+    if (!req.url?.startsWith(route)) {
       next();
       return;
     }
-    const rawName = decodeURIComponent(req.url.slice("/mesh/".length).split(/[?#]/, 1)[0] ?? "");
-    if (rawName === "placeholder.glb") {
+    const rawName = decodeURIComponent(req.url.slice(route.length).split(/[?#]/, 1)[0] ?? "");
+    if (rawName === placeholderBasename) {
       if (!existsSync(placeholderResolved) || !statSync(placeholderResolved).isFile()) {
         next();
         return;
@@ -414,76 +410,19 @@ export function createPuzzle3dMeshesMiddleware(meshRoots: readonly string[], pla
   };
 }
 
-const PUZZLE_3D_LOCKED_FIXTURE_JSON_REL: Readonly<Record<string, readonly string[]>> = {};
-
-/** @emoji 🔒 Resolves locked-example fixture paths for puzzle 3d play bundles. */
-export function resolvePuzzle3dLockedFixtureJsonRel(_repoRoot: string): Readonly<Record<string, readonly string[]>> {
-  return PUZZLE_3D_LOCKED_FIXTURE_JSON_REL;
-}
-
-/** @emoji 🔎 Collects `/mesh/*.glb` basenames referenced anywhere in fixture JSON. */
-export function puzzle3dMeshBasenamesInJson(value: unknown, out = new Set<string>()): Set<string> {
-  if (typeof value === "string") {
-    const match = /^\/mesh\/([^?#]+\.glb)$/i.exec(value.trim());
-    if (match) {
-      out.add(decodeURIComponent(match[1]!));
-    }
-    return out;
-  }
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      puzzle3dMeshBasenamesInJson(item, out);
-    }
-    return out;
-  }
-  if (value && typeof value === "object") {
-    for (const entry of Object.values(value as Record<string, unknown>)) {
-      puzzle3dMeshBasenamesInJson(entry, out);
-    }
-  }
-  return out;
-}
-
-/** @emoji 🔒 GLB basenames required by {@link PLAYGROUND_LOCKED_EXAMPLE_ENV}, if set. */
-export function puzzle3dLockedExampleMeshBasenames(repoRoot: string): Set<string> | undefined {
-  const exampleId = playgroundLockedExampleIdFromEnv();
-  if (!exampleId) {
-    return undefined;
-  }
-  const relPaths = resolvePuzzle3dLockedFixtureJsonRel(repoRoot)[exampleId];
-  if (!relPaths?.length) {
-    return undefined;
-  }
-  const basenames = new Set<string>();
-  for (const rel of relPaths) {
-    const filePath = resolve(repoRoot, rel);
-    if (!existsSync(filePath)) {
-      continue;
-    }
-    try {
-      puzzle3dMeshBasenamesInJson(JSON.parse(readFileSync(filePath, "utf8")), basenames);
-    } catch {
-      continue;
-    }
-  }
-  basenames.add("placeholder.glb");
-  return basenames;
-}
-
-/** @emoji 📦 Copies kit GLBs into a static `dist/mesh` tree (optional basename filter). */
-export function copyPuzzle3dKitGlbs(meshRoots: readonly string[], dest: string, onlyBasenames?: ReadonlySet<string>): void {
+/** @emoji 📦 Copies every `.glb` under `roots` into a static `dest` tree (first match per basename wins). */
+function copyMeshCollectionGlbs(roots: readonly string[], dest: string): void {
   mkdirSync(dest, { recursive: true });
   const copied = new Set<string>();
-  const want = (basename: string) => !onlyBasenames || onlyBasenames.has(basename);
-  for (const meshRoot of meshRoots) {
-    if (!existsSync(meshRoot)) {
+  for (const root of roots) {
+    if (!existsSync(root)) {
       continue;
     }
-    for (const entry of readdirSync(meshRoot)) {
-      if (!entry.endsWith(".glb") || !want(entry) || copied.has(entry)) {
+    for (const entry of readdirSync(root)) {
+      if (!entry.endsWith(".glb") || copied.has(entry)) {
         continue;
       }
-      const src = resolve(meshRoot, entry);
+      const src = resolve(root, entry);
       if (!statSync(src).isFile()) {
         continue;
       }
@@ -493,14 +432,21 @@ export function copyPuzzle3dKitGlbs(meshRoots: readonly string[], dest: string, 
   }
 }
 
-/** @emoji 🧊 Vite: serve and copy kit meshes at `/mesh/*` for puzzle 3d play and sketchpad. */
-export function puzzle3dMeshesVitePlugin(repoRoot: string): Plugin[] {
-  const { meshRoots, placeholderMesh } = puzzle3dKitMeshRoots(repoRoot);
-  const serveMeshes = createPuzzle3dMeshesMiddleware(meshRoots, placeholderMesh);
+/** @emoji 🧊 Generic dev/build Vite plugin pair for one `mesh-collection` asset spec: serves and
+ * copies every GLB under `spec.roots` at `spec.route`, plus `spec.placeholder` as a fallback.
+ * `spec.filterFromExamples` is reserved for a future per-locked-example basename filter (no source
+ * data populates it yet, so every declared spec currently copies its full collection — matches the
+ * puzzle-3d-only plugin this replaces, whose equivalent filter was already permanently inert). */
+export function meshCollectionVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }>): Plugin[] {
+  const serveMeshes = createMeshCollectionMiddleware(repoRoot, spec);
+  const meshRoots = spec.roots.map((root) => resolve(repoRoot, root));
+  const placeholderMesh = resolve(repoRoot, spec.placeholder);
+  const placeholderBasename = placeholderMesh.split(/[\\/]/).pop()!;
+  const destName = spec.route.replace(/^\//, "");
   let viteRoot = process.cwd();
   return [
     {
-      name: "puzzle-3d-meshes-serve",
+      name: `mesh-collection-serve${spec.route}`,
       enforce: "pre",
       configureServer(server) {
         server.middlewares.use(serveMeshes);
@@ -510,23 +456,24 @@ export function puzzle3dMeshesVitePlugin(repoRoot: string): Plugin[] {
       },
     },
     {
-      name: "puzzle-3d-meshes-build",
+      name: `mesh-collection-build${spec.route}`,
       apply: "build",
       enforce: "pre",
       configResolved(config) {
         viteRoot = config.root;
       },
       closeBundle() {
-        const dest = resolve(viteRoot, "dist", "mesh");
+        const dest = resolve(viteRoot, "dist", destName);
         mkdirSync(resolve(viteRoot, "dist"), { recursive: true });
-        copyPuzzle3dKitGlbs(meshRoots, dest, puzzle3dLockedExampleMeshBasenames(repoRoot));
+        copyMeshCollectionGlbs(meshRoots, dest);
         if (existsSync(placeholderMesh)) {
-          cpSync(placeholderMesh, resolve(dest, "placeholder.glb"));
+          cpSync(placeholderMesh, resolve(dest, placeholderBasename));
         }
       },
     },
   ];
 }
+//#endregion 🔖MeshCollectionAssetPlugin
 
 /** @emoji 🎬 Inline shell paint before Tailwind finishes compiling the play stylesheet. */
 export const PLAYGROUND_PLAY_BOOT_INLINE_STYLE =
@@ -720,22 +667,25 @@ export function duplicateNamedImportsForModule(source: string, moduleId: string)
 
 const PRESENTATION_RENDERER_VITEST_START = "//#region 🧪Tests";
 
-/** @emoji ✂️ Drops vitest regions (and hoisted slide globs) from presentation renderer in browser dev. */
-export function presentationRendererVitestStripPlugin(presentationIndexPath: string): Plugin {
+/** @emoji ✂️ Drops vitest regions from animate present renderer in browser dev. */
+export function animatePresentRendererVitestStripPlugin(animatePresentIndexPath: string): Plugin {
   return {
-    name: "presentation-renderer-vitest-strip",
+    name: "animate-present-renderer-vitest-strip",
     enforce: "pre",
     load(id) {
       if (process.env.VITEST) return;
       const filePath = id.split("?")[0];
-      if (filePath !== presentationIndexPath) return;
-      const source = readFileSync(presentationIndexPath, "utf8");
+      if (filePath !== animatePresentIndexPath) return;
+      const source = readFileSync(animatePresentIndexPath, "utf8");
       const testsStart = source.indexOf(PRESENTATION_RENDERER_VITEST_START);
       if (testsStart < 0) return source;
       return source.slice(0, testsStart);
     },
   };
 }
+
+/** @deprecated Use {@link animatePresentRendererVitestStripPlugin}. */
+export const presentationRendererVitestStripPlugin = animatePresentRendererVitestStripPlugin;
 
 export type PlaygroundPlayViteOptions = {
   readonly playDir: string;
@@ -802,11 +752,6 @@ export function mapTileCacheRoots(repoRoot: string): { readonly osm: string; rea
     osm: resolve(repoRoot, ".repo-cache", "osm-tiles"),
     vt: resolve(repoRoot, ".repo-cache", "openfreemap-vt"),
   };
-}
-
-/** @emoji ⛰️ Cache root for GIS 3D elevation (Terrarium DEM) tiles — the 3D analog of {@link mapTileCacheRoots}. */
-export function terrainTileCacheRoot(repoRoot: string): string {
-  return resolve(repoRoot, ".repo-cache", "terrarium-dem");
 }
 
 /** @emoji 🧭 Web Mercator tile index for a lon/lat at zoom `z`. */
@@ -878,26 +823,6 @@ async function fetchOsmTileToCache(cacheRoot: string, z: number, x: number, y: n
   }
   await mkdir(resolve(filePath, ".."), { recursive: true });
   const upstream = await fetch(`https://tile.openstreetmap.org/${z}/${x}/${y}.png`, {
-    headers: { "User-Agent": GIS_MAP_TILE_USER_AGENT },
-  });
-  if (!upstream.ok) {
-    return false;
-  }
-  await writeFile(filePath, Buffer.from(await upstream.arrayBuffer()));
-  return true;
-}
-
-const GIS_3D_TERRARIUM_TILE_BASE_URL = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium";
-
-async function fetchElevationTileToCache(cacheRoot: string, z: number, x: number, y: number): Promise<boolean> {
-  const rel = `${z}/${x}/${y}.png`;
-  const filePath = resolve(cacheRoot, rel);
-  const relToRoot = relative(cacheRoot, filePath);
-  if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
-    return false;
-  }
-  await mkdir(resolve(filePath, ".."), { recursive: true });
-  const upstream = await fetch(`${GIS_3D_TERRARIUM_TILE_BASE_URL}/${z}/${x}/${y}.png`, {
     headers: { "User-Agent": GIS_MAP_TILE_USER_AGENT },
   });
   if (!upstream.ok) {
@@ -1024,23 +949,95 @@ export async function prefetchMapTiles(options: PrefetchMapTilesOptions): Promis
 }
 //#endregion 🔖MapTileCache
 
-function createOsmTileMiddleware(cacheRoot: string, mode: GisMapTileServeMode): Connect.NextHandleFunction {
+//#region 🔖TileProxyAssetPlugin
+/** @emoji 🧩 Extension implied by a resolved tile URL template's tail (`.png`, `.pbf`, …), `"bin"` if absent. */
+function tileProxyExtFromTemplate(template: string): string {
+  const clean = template.split(/[?#]/, 1)[0] ?? template;
+  const ext = clean.split(".").pop();
+  return ext && ext.length <= 4 ? ext : "bin";
+}
+
+function contentTypeForTileExt(ext: string): string {
+  if (ext === "png") return "image/png";
+  if (ext === "pbf" || ext === "mvt") return "application/x-protobuf";
+  return "application/octet-stream";
+}
+
+const tileProxyTemplateCache = new Map<string, { readonly template: string; readonly at: number }>();
+const TILE_PROXY_TEMPLATE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** @emoji 🧭 Resolves a `tile-proxy` spec's `upstream` to a concrete `{z}/{x}/{y}` URL template: used
+ * directly when it already contains `{z}`, otherwise treated as a TileJSON endpoint and resolved
+ * (cached, 7-day TTL) — generalizes the previous OpenFreeMap-only MVT template resolution so any
+ * TileJSON-backed upstream (not just OpenFreeMap) works the same way. */
+async function resolveTileProxyUrlTemplate(upstream: string): Promise<string> {
+  if (upstream.includes("{z}")) {
+    return upstream;
+  }
+  const now = Date.now();
+  const cached = tileProxyTemplateCache.get(upstream);
+  if (cached && now - cached.at < TILE_PROXY_TEMPLATE_TTL_MS) {
+    return cached.template;
+  }
+  const res = await fetch(upstream, { headers: { "User-Agent": GIS_MAP_TILE_USER_AGENT } });
+  if (!res.ok) {
+    throw new Error(`tile proxy upstream TileJSON failed: ${res.status}`);
+  }
+  const json = (await res.json()) as { tiles?: string[] };
+  const template = json.tiles?.[0];
+  if (typeof template !== "string" || !template.includes("{z}")) {
+    throw new Error("tile proxy TileJSON missing tiles URL template");
+  }
+  tileProxyTemplateCache.set(upstream, { template, at: now });
+  return template;
+}
+
+async function fetchTileProxyTileToCache(cacheRoot: string, upstream: string, z: number, x: number, y: number): Promise<{ readonly ok: boolean; readonly ext: string }> {
+  const template = await resolveTileProxyUrlTemplate(upstream);
+  const ext = tileProxyExtFromTemplate(template);
+  const filePath = resolve(cacheRoot, `${z}/${x}/${y}.${ext}`);
+  const relToRoot = relative(cacheRoot, filePath);
+  if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
+    return { ok: false, ext };
+  }
+  await mkdir(resolve(filePath, ".."), { recursive: true });
+  const url = template.replace("{z}", String(z)).replace("{x}", String(x)).replace("{y}", String(y));
+  const upstreamRes = await fetch(url, { headers: { "User-Agent": GIS_MAP_TILE_USER_AGENT } });
+  if (!upstreamRes.ok) {
+    return { ok: false, ext };
+  }
+  const buf = Buffer.from(await upstreamRes.arrayBuffer());
+  if (buf.length === 0) {
+    return { ok: false, ext };
+  }
+  await writeFile(filePath, buf);
+  return { ok: true, ext };
+}
+
+/** @emoji 🌐 Connect middleware serving `{route}/{z}/{x}/{y}.{ext}` tiles from `cacheRoot`, fetching
+ * (and caching) from `upstream` on a miss — generalizes the previous OSM/OpenFreeMap/Terrarium
+ * middlewares into one route-driven implementation. */
+function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: string, mode: GisMapTileServeMode): Connect.NextHandleFunction {
+  const prefix = route.endsWith("/") ? route : `${route}/`;
+  const pattern = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\d+)/(\\d+)/(\\d+)\\.(\\w+)(?:\\?.*)?$`);
   return async (req, res, next) => {
-    const match = req.url?.match(/^\/osm\/(\d+)\/(\d+)\/(\d+)\.png(?:\?.*)?$/);
+    const match = req.url?.match(pattern);
     if (!match) {
       next();
       return;
     }
-    const [, z, x, y] = match;
-    const rel = `${z}/${x}/${y}.png`;
-    const filePath = resolve(cacheRoot, rel);
+    const [, zs, xs, ys, ext] = match as unknown as [string, string, string, string, string];
+    const z = Number(zs);
+    const x = Number(xs);
+    const y = Number(ys);
+    const filePath = resolve(cacheRoot, `${z}/${x}/${y}.${ext}`);
     const relToRoot = relative(cacheRoot, filePath);
     if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
       next();
       return;
     }
     if (existsSync(filePath)) {
-      res.setHeader("Content-Type", "image/png");
+      res.setHeader("Content-Type", contentTypeForTileExt(ext));
       createReadStream(filePath).pipe(res);
       return;
     }
@@ -1050,13 +1047,13 @@ function createOsmTileMiddleware(cacheRoot: string, mode: GisMapTileServeMode): 
       return;
     }
     try {
-      const ok = await fetchOsmTileToCache(cacheRoot, Number(z), Number(x), Number(y));
-      if (!ok) {
+      const result = await fetchTileProxyTileToCache(cacheRoot, upstream, z, x, y);
+      if (!result.ok) {
         res.statusCode = 404;
         res.end();
         return;
       }
-      res.setHeader("Content-Type", "image/png");
+      res.setHeader("Content-Type", contentTypeForTileExt(result.ext));
       createReadStream(filePath).pipe(res);
     } catch {
       res.statusCode = 502;
@@ -1065,109 +1062,28 @@ function createOsmTileMiddleware(cacheRoot: string, mode: GisMapTileServeMode): 
   };
 }
 
-function createVtTileMiddleware(cacheRoot: string, mode: GisMapTileServeMode): Connect.NextHandleFunction {
-  return async (req, res, next) => {
-    const match = req.url?.match(/^\/vt\/(\d+)\/(\d+)\/(\d+)\.pbf(?:\?.*)?$/);
-    if (!match) {
-      next();
-      return;
-    }
-    const [, z, x, y] = match;
-    const rel = `${z}/${x}/${y}.pbf`;
-    const filePath = resolve(cacheRoot, rel);
-    const relToRoot = relative(cacheRoot, filePath);
-    if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
-      next();
-      return;
-    }
-    if (existsSync(filePath)) {
-      res.setHeader("Content-Type", "application/x-protobuf");
-      createReadStream(filePath).pipe(res);
-      return;
-    }
-    if (mode === "bundle") {
-      res.statusCode = 404;
-      res.end();
-      return;
-    }
-    try {
-      const ok = await fetchVtTileToCache(cacheRoot, Number(z), Number(x), Number(y));
-      if (!ok) {
-        res.statusCode = 404;
-        res.end();
-        return;
-      }
-      res.setHeader("Content-Type", "application/x-protobuf");
-      createReadStream(filePath).pipe(res);
-    } catch {
-      res.statusCode = 502;
-      res.end();
-    }
-  };
-}
-
-/** @emoji ⛰️ Serves `/dem/{z}/{x}/{y}.png` Terrarium elevation tiles — the 3D analog of {@link createOsmTileMiddleware}. */
-function createElevationTileMiddleware(cacheRoot: string, mode: GisMapTileServeMode): Connect.NextHandleFunction {
-  return async (req, res, next) => {
-    const match = req.url?.match(/^\/dem\/(\d+)\/(\d+)\/(\d+)\.png(?:\?.*)?$/);
-    if (!match) {
-      next();
-      return;
-    }
-    const [, z, x, y] = match;
-    const rel = `${z}/${x}/${y}.png`;
-    const filePath = resolve(cacheRoot, rel);
-    const relToRoot = relative(cacheRoot, filePath);
-    if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
-      next();
-      return;
-    }
-    if (existsSync(filePath)) {
-      res.setHeader("Content-Type", "image/png");
-      createReadStream(filePath).pipe(res);
-      return;
-    }
-    if (mode === "bundle") {
-      res.statusCode = 404;
-      res.end();
-      return;
-    }
-    try {
-      const ok = await fetchElevationTileToCache(cacheRoot, Number(z), Number(x), Number(y));
-      if (!ok) {
-        res.statusCode = 404;
-        res.end();
-        return;
-      }
-      res.setHeader("Content-Type", "image/png");
-      createReadStream(filePath).pipe(res);
-    } catch {
-      res.statusCode = 502;
-      res.end();
-    }
-  };
-}
-
-/** @emoji ⛰️ Vite plugins serving GIS 3D elevation tiles (`fetch` or offline `bundle`) — the 3D analog of {@link gisMapTilesVitePlugins}. */
-export function terrainTilesVitePlugins(repoRoot: string, mode: GisMapTileServeMode = "fetch"): Plugin[] {
-  const dem = terrainTileCacheRoot(repoRoot);
-  const serveDem = createElevationTileMiddleware(dem, mode);
+/** @emoji 🌐 Generic dev/preview/build Vite plugin pair for one `tile-proxy` asset spec — replaces the
+ * previous `gisMapTilesVitePlugins`/`terrainTilesVitePlugins`/`osmTileProxyVitePlugin`/
+ * `mapLibreVectorTileProxyVitePlugin` quartet with a single spec-driven implementation. */
+export function tileProxyVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }>, mode: GisMapTileServeMode = "fetch"): Plugin[] {
+  const cacheRoot = resolve(repoRoot, ".repo-cache", spec.cache);
+  const serveTiles = createTileProxyMiddleware(spec.route, cacheRoot, spec.upstream, mode);
   let viteRoot = process.cwd();
   const plugins: Plugin[] = [
     {
-      name: "gis-3d-dem-tiles",
+      name: `tile-proxy-serve${spec.route}`,
       enforce: "pre",
       configureServer(server) {
-        server.middlewares.use(serveDem);
+        server.middlewares.use(serveTiles);
       },
       configurePreviewServer(server) {
-        server.middlewares.use(serveDem);
+        server.middlewares.use(serveTiles);
       },
     },
   ];
   if (mode === "bundle") {
     plugins.push({
-      name: "gis-3d-tiles-build",
+      name: `tile-proxy-build${spec.route}`,
       apply: "build",
       enforce: "pre",
       configResolved(config) {
@@ -1176,8 +1092,8 @@ export function terrainTilesVitePlugins(repoRoot: string, mode: GisMapTileServeM
       closeBundle() {
         const dist = resolve(viteRoot, "dist");
         mkdirSync(dist, { recursive: true });
-        if (existsSync(dem)) {
-          cpSync(dem, resolve(dist, "dem"), { recursive: true });
+        if (existsSync(cacheRoot)) {
+          cpSync(cacheRoot, resolve(dist, spec.route.replace(/^\//, "")), { recursive: true });
         }
       },
     });
@@ -1185,105 +1101,52 @@ export function terrainTilesVitePlugins(repoRoot: string, mode: GisMapTileServeM
   return plugins;
 }
 
-/** @emoji 🗺 Standalone HTTP server for GIS map raster/vector tiles (wgpu Trunk / native-bin dev). */
-export function startGisMapTileProxyServer(repoRoot: string, port: number, mode: GisMapTileServeMode = "fetch", host = "127.0.0.1"): Server {
-  const { osm, vt } = mapTileCacheRoots(repoRoot);
-  const serveOsm = createOsmTileMiddleware(osm, mode);
-  const serveVt = createVtTileMiddleware(vt, mode);
+/** @emoji 🌐 Standalone HTTP server combining every `tile-proxy` spec's middleware (wgpu Trunk /
+ * native-bin dev) — generalizes `startGisMapTileProxyServer` to any set of declared asset specs. */
+export function startAssetServer(repoRoot: string, port: number, specs: readonly PlaygroundAssetSpec[], mode: GisMapTileServeMode = "fetch", host = "127.0.0.1"): Server {
+  const middlewares = specs
+    .filter((spec): spec is Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }> => spec.kind === "tile-proxy")
+    .map((spec) => createTileProxyMiddleware(spec.route, resolve(repoRoot, ".repo-cache", spec.cache), spec.upstream, mode));
   const server = createServer((req, res) => {
-    serveOsm(req, res, () => {
-      serveVt(req, res, () => {
+    const run = (i: number): void => {
+      if (i >= middlewares.length) {
         res.statusCode = 404;
         res.end();
-      });
-    });
+        return;
+      }
+      middlewares[i]!(req, res, () => run(i + 1));
+    };
+    run(0);
   });
   server.listen(port, host);
   return server;
 }
+//#endregion 🔖TileProxyAssetPlugin
 
-/** @emoji 🗺 Vite plugins for GIS map raster/vector tiles (`fetch` or offline `bundle`). */
-export function gisMapTilesVitePlugins(repoRoot: string, mode: GisMapTileServeMode = "fetch"): Plugin[] {
-  const { osm, vt } = mapTileCacheRoots(repoRoot);
-  const serveOsm = createOsmTileMiddleware(osm, mode);
-  const serveVt = createVtTileMiddleware(vt, mode);
-  let viteRoot = process.cwd();
-  const plugins: Plugin[] = [
-    {
-      name: "gis-2d-osm-tiles",
-      enforce: "pre",
-      configureServer(server) {
-        server.middlewares.use(serveOsm);
-      },
-      configurePreviewServer(server) {
-        server.middlewares.use(serveOsm);
-      },
-    },
-    {
-      name: "gis-2d-vt-tiles",
-      enforce: "pre",
-      configureServer(server) {
-        server.middlewares.use(serveVt);
-      },
-      configurePreviewServer(server) {
-        server.middlewares.use(serveVt);
-      },
-    },
-  ];
-  if (mode === "bundle") {
-    plugins.push({
-      name: "gis-2d-tiles-build",
-      apply: "build",
-      enforce: "pre",
-      configResolved(config) {
-        viteRoot = config.root;
-      },
-      closeBundle() {
-        const dist = resolve(viteRoot, "dist");
-        mkdirSync(dist, { recursive: true });
-        if (existsSync(osm)) {
-          cpSync(osm, resolve(dist, "osm"), { recursive: true });
-        }
-        if (existsSync(vt)) {
-          cpSync(vt, resolve(dist, "vt"), { recursive: true });
-        }
-      },
-    });
+//#region 🔖PlaygroundAssetVitePlugins
+/** @emoji 🚦 Dispatches every declared `[[package.metadata.semio.assets]]` spec to its generic Vite
+ * plugin factory — the single driver a dev `vite.config` calls with a playground's resolved `assets`
+ * metadata instead of hand-picking per-app plugin factories. */
+export function playgroundAssetVitePlugins(repoRoot: string, specs: readonly PlaygroundAssetSpec[], mode: GisMapTileServeMode = "fetch"): Plugin[] {
+  const seen = new Set<string>();
+  const plugins: Plugin[] = [];
+  for (const spec of specs) {
+    const key = `${spec.kind}:${spec.route}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    if (spec.kind === "tile-proxy") {
+      plugins.push(...tileProxyVitePlugin(repoRoot, spec, mode));
+    } else if (spec.kind === "static-dir") {
+      plugins.push(...staticDirVitePlugin(repoRoot, spec));
+    } else {
+      plugins.push(...meshCollectionVitePlugin(repoRoot, spec));
+    }
   }
   return plugins;
 }
-
-/** @emoji 🗺 Dev/preview proxy for OpenStreetMap raster tiles at `/osm/:z/:x/:y.png`. */
-export function osmTileProxyVitePlugin(cacheDir: string, mode: GisMapTileServeMode = "fetch"): Plugin {
-  const { osm } = mapTileCacheRoots(cacheDir);
-  const serveOsm = createOsmTileMiddleware(osm, mode);
-  return {
-    name: "osm-tile-proxy",
-    enforce: "pre",
-    configureServer(server) {
-      server.middlewares.use(serveOsm);
-    },
-    configurePreviewServer(server) {
-      server.middlewares.use(serveOsm);
-    },
-  };
-}
-
-/** @emoji 🗺 Dev/preview proxy for OpenFreeMap OSM MVT at `/vt/:z/:x/:y.pbf`. */
-export function mapLibreVectorTileProxyVitePlugin(cacheDir: string, mode: GisMapTileServeMode = "fetch"): Plugin {
-  const { vt } = mapTileCacheRoots(cacheDir);
-  const serveVt = createVtTileMiddleware(vt, mode);
-  return {
-    name: "maplibre-vt-proxy",
-    enforce: "pre",
-    configureServer(server) {
-      server.middlewares.use(serveVt);
-    },
-    configurePreviewServer(server) {
-      server.middlewares.use(serveVt);
-    },
-  };
-}
+//#endregion 🔖PlaygroundAssetVitePlugins
 
 /** @emoji 🦀 Vite `optimizeDeps.exclude` entries for wasm-bindgen flow modules (must not be prebundled). */
 export const FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE = [
@@ -1313,36 +1176,52 @@ export function createWorkspaceViteResolveConfig(repoRoot: string, extraAliases:
   };
 }
 
-/** @emoji 🖼️ Vite: serve and copy `cad/fixture` at `/cad-fixture/*` for CAD world reference planes. */
-export function cadFixtureVitePlugin(repoRoot: string): Plugin[] {
-  const fixtureRoot = resolve(repoRoot, "cad/fixture");
+//#region 🔖StaticDirAssetPlugin
+function contentTypeForStaticDirAsset(filePath: string): string | undefined {
+  if (filePath.endsWith(".png")) {
+    return "image/png";
+  }
+  if (filePath.endsWith(".jpg") || filePath.endsWith(".jpeg")) {
+    return "image/jpeg";
+  }
+  if (filePath.endsWith(".pdf")) {
+    return "application/pdf";
+  }
+  if (filePath.endsWith(".svg")) {
+    return "image/svg+xml";
+  }
+  return undefined;
+}
+
+/** @emoji 🖼️ Generic dev/build Vite plugin pair for one `static-dir` asset spec: serves and copies
+ * `spec.root` at `spec.route` — replaces the previous `cadFixtureVitePlugin`/`infiniteFixtureVitePlugin`
+ * pair (byte-identical serving logic, now route/root-driven instead of hardcoded per fixture tree). */
+export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "static-dir" }>): Plugin[] {
+  const fixtureRoot = resolve(repoRoot, spec.root);
+  const route = spec.route.endsWith("/") ? spec.route : `${spec.route}/`;
   const serveFixture: Connect.NextHandleFunction = (req, res, next) => {
-    if (!req.url?.startsWith("/cad-fixture/")) {
+    if (!req.url?.startsWith(route)) {
       next();
       return;
     }
-    const rel = decodeURIComponent(req.url.slice("/cad-fixture/".length).split(/[?#]/, 1)[0] ?? "");
+    const rel = decodeURIComponent(req.url.slice(route.length).split(/[?#]/, 1)[0] ?? "");
     const filePath = resolve(fixtureRoot, rel);
     const relToRoot = relative(fixtureRoot, filePath);
     if (relToRoot.startsWith("..") || isAbsolute(relToRoot) || !existsSync(filePath) || !statSync(filePath).isFile()) {
       next();
       return;
     }
-    if (filePath.endsWith(".png")) {
-      res.setHeader("Content-Type", "image/png");
-    } else if (filePath.endsWith(".jpg") || filePath.endsWith(".jpeg")) {
-      res.setHeader("Content-Type", "image/jpeg");
-    } else if (filePath.endsWith(".pdf")) {
-      res.setHeader("Content-Type", "application/pdf");
-    } else if (filePath.endsWith(".svg")) {
-      res.setHeader("Content-Type", "image/svg+xml");
+    const contentType = contentTypeForStaticDirAsset(filePath);
+    if (contentType) {
+      res.setHeader("Content-Type", contentType);
     }
     createReadStream(filePath).pipe(res);
   };
+  const destName = spec.route.replace(/^\//, "");
   let viteRoot = process.cwd();
   return [
     {
-      name: "cad-fixture-serve",
+      name: `static-dir-serve${spec.route}`,
       enforce: "pre",
       configureServer(server) {
         server.middlewares.use(serveFixture);
@@ -1352,7 +1231,7 @@ export function cadFixtureVitePlugin(repoRoot: string): Plugin[] {
       },
     },
     {
-      name: "cad-fixture-build",
+      name: `static-dir-build${spec.route}`,
       apply: "build",
       enforce: "pre",
       configResolved(config) {
@@ -1362,7 +1241,7 @@ export function cadFixtureVitePlugin(repoRoot: string): Plugin[] {
         if (!existsSync(fixtureRoot)) {
           return;
         }
-        const dest = resolve(viteRoot, "dist", "cad-fixture");
+        const dest = resolve(viteRoot, "dist", destName);
         mkdirSync(resolve(viteRoot, "dist"), { recursive: true });
         cpSync(fixtureRoot, dest, { recursive: true });
       },
@@ -1370,62 +1249,14 @@ export function cadFixtureVitePlugin(repoRoot: string): Plugin[] {
   ];
 }
 
-/** @emoji 🌐 Vite: serve and copy `infinite/fixture` at `/infinite-fixture/*` for world reference planes. */
-export function infiniteFixtureVitePlugin(repoRoot: string): Plugin[] {
-  const fixtureRoot = resolve(repoRoot, "infinite/fixture");
-  const serveFixture: Connect.NextHandleFunction = (req, res, next) => {
-    if (!req.url?.startsWith("/infinite-fixture/")) {
-      next();
-      return;
-    }
-    const rel = decodeURIComponent(req.url.slice("/infinite-fixture/".length).split(/[?#]/, 1)[0] ?? "");
-    const filePath = resolve(fixtureRoot, rel);
-    const relToRoot = relative(fixtureRoot, filePath);
-    if (relToRoot.startsWith("..") || isAbsolute(relToRoot) || !existsSync(filePath) || !statSync(filePath).isFile()) {
-      next();
-      return;
-    }
-    if (filePath.endsWith(".png")) {
-      res.setHeader("Content-Type", "image/png");
-    } else if (filePath.endsWith(".jpg") || filePath.endsWith(".jpeg")) {
-      res.setHeader("Content-Type", "image/jpeg");
-    } else if (filePath.endsWith(".pdf")) {
-      res.setHeader("Content-Type", "application/pdf");
-    } else if (filePath.endsWith(".svg")) {
-      res.setHeader("Content-Type", "image/svg+xml");
-    }
-    createReadStream(filePath).pipe(res);
-  };
-  let viteRoot = process.cwd();
-  return [
-    {
-      name: "infinite-fixture-serve",
-      enforce: "pre",
-      configureServer(server) {
-        server.middlewares.use(serveFixture);
-      },
-      configurePreviewServer(server) {
-        server.middlewares.use(serveFixture);
-      },
-    },
-    {
-      name: "infinite-fixture-build",
-      apply: "build",
-      enforce: "pre",
-      configResolved(config) {
-        viteRoot = config.root;
-      },
-      closeBundle() {
-        if (!existsSync(fixtureRoot)) {
-          return;
-        }
-        const dest = resolve(viteRoot, "dist", "infinite-fixture");
-        mkdirSync(resolve(viteRoot, "dist"), { recursive: true });
-        cpSync(fixtureRoot, dest, { recursive: true });
-      },
-    },
-  ];
-}
+/** @emoji 🌐 Reference-plane fixture trees every `*-play` static bundle serves unconditionally
+ * (not app-specific — `cad/fixture` and `infinite/fixture` back shared world reference planes used
+ * across playgrounds), kept as a literal baseline rather than per-plugin metadata. */
+export const PLAYGROUND_PLAY_STATIC_ASSETS: readonly Extract<PlaygroundAssetSpec, { kind: "static-dir" }>[] = [
+  { kind: "static-dir", route: "/cad-fixture", root: "cad/fixture" },
+  { kind: "static-dir", route: "/infinite-fixture", root: "infinite/fixture" },
+];
+//#endregion 🔖StaticDirAssetPlugin
 
 export function findWorkspacePackages(repoRoot: string): string[] {
   const packages: string[] = [];
@@ -1502,8 +1333,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
       playgroundComposeSketchpadStubPlugin(repoRoot),
       ...uiAssetsVitePlugin(uiAssetsRoot),
       ...semioFaviconVitePlugin(repoRoot),
-      ...cadFixtureVitePlugin(repoRoot),
-      infiniteFixtureVitePlugin(repoRoot),
+      ...playgroundAssetVitePlugins(repoRoot, PLAYGROUND_PLAY_STATIC_ASSETS),
       tailwindcss(),
       react(),
       playgroundPlaywrightDevStubPlugin(),
@@ -1561,12 +1391,30 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("gisMapTilesVitePlugins", () => {
+  describe("tileProxyVitePlugin", () => {
+    const osmSpec: Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }> = {
+      kind: "tile-proxy",
+      route: "/osm",
+      upstream: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      cache: "osm-tiles",
+    };
+
     it("adds a build copy plugin only for bundle mode", () => {
-      const fetchPlugins = gisMapTilesVitePlugins(repoRoot, "fetch");
-      const bundlePlugins = gisMapTilesVitePlugins(repoRoot, "bundle");
-      expect(fetchPlugins.some((plugin) => plugin.name === "gis-2d-tiles-build")).toBe(false);
-      expect(bundlePlugins.some((plugin) => plugin.name === "gis-2d-tiles-build")).toBe(true);
+      const fetchPlugins = tileProxyVitePlugin(repoRoot, osmSpec, "fetch");
+      const bundlePlugins = tileProxyVitePlugin(repoRoot, osmSpec, "bundle");
+      expect(fetchPlugins.some((plugin) => plugin.name === "tile-proxy-build/osm")).toBe(false);
+      expect(bundlePlugins.some((plugin) => plugin.name === "tile-proxy-build/osm")).toBe(true);
+    });
+  });
+
+  describe("playgroundAssetVitePlugins", () => {
+    it("dispatches each asset kind to its generic factory and dedupes by kind+route", () => {
+      const specs: PlaygroundAssetSpec[] = [
+        { kind: "static-dir", route: "/cad-fixture", root: "cad/fixture" },
+        { kind: "static-dir", route: "/cad-fixture", root: "cad/fixture" },
+      ];
+      const plugins = playgroundAssetVitePlugins(repoRoot, specs);
+      expect(plugins.filter((plugin) => plugin.name === "static-dir-serve/cad-fixture")).toHaveLength(1);
     });
   });
 
@@ -1577,9 +1425,11 @@ if (import.meta.vitest) {
     });
 
     it("returns more tiles at higher zoom", () => {
+      // 🇨🇭 Switzerland still fits inside a single OSM tile up to z6 (~5.6°/tile > its ~4.6° span), so
+      // the comparison needs a zoom gap wide enough to actually straddle a tile boundary.
       const z2 = listMapTilesForBounds(GIS_MAP_DEFAULT_PREFETCH_BOUNDS, 2, 2).length;
-      const z4 = listMapTilesForBounds(GIS_MAP_DEFAULT_PREFETCH_BOUNDS, 4, 4).length;
-      expect(z4).toBeGreaterThan(z2);
+      const z8 = listMapTilesForBounds(GIS_MAP_DEFAULT_PREFETCH_BOUNDS, 8, 8).length;
+      expect(z8).toBeGreaterThan(z2);
     });
   });
 
@@ -1661,24 +1511,41 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("puzzle3dKitMeshRoots", () => {
+  describe("meshCollectionVitePlugin", () => {
+    const puzzle3dMeshSpec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }> = {
+      kind: "mesh-collection",
+      route: "/mesh",
+      roots: ["asset/metabolism/representation", "asset/abbau-aufbau"],
+      placeholder: "asset/mesh/placeholder.glb",
+      filterFromExamples: true,
+    };
+
     it("points at metabolism and abbau-aufbau kit glbs plus shared placeholder", () => {
-      const { meshRoots, placeholderMesh } = puzzle3dKitMeshRoots(repoRoot);
-      expect(existsSync(resolve(meshRoots[0]!, "capsule_J.glb"))).toBe(true);
-      expect(existsSync(resolve(meshRoots[0]!, "capsule-with-balcony_slash.glb"))).toBe(true);
-      expect(existsSync(resolve(meshRoots[1]!, "hexagonal-cut-concrete-forest-left.glb"))).toBe(true);
-      expect(existsSync(placeholderMesh)).toBe(true);
+      expect(existsSync(resolve(repoRoot, puzzle3dMeshSpec.roots[0]!, "capsule_J.glb"))).toBe(true);
+      expect(existsSync(resolve(repoRoot, puzzle3dMeshSpec.roots[0]!, "capsule-with-balcony_slash.glb"))).toBe(true);
+      expect(existsSync(resolve(repoRoot, puzzle3dMeshSpec.roots[1]!, "hexagonal-cut-concrete-forest-left.glb"))).toBe(true);
+      expect(existsSync(resolve(repoRoot, puzzle3dMeshSpec.placeholder))).toBe(true);
+    });
+
+    it("registers serve and build plugins named after the route", () => {
+      const plugins = meshCollectionVitePlugin(repoRoot, puzzle3dMeshSpec);
+      expect(plugins.map((plugin) => plugin.name)).toEqual(["mesh-collection-serve/mesh", "mesh-collection-build/mesh"]);
     });
   });
 
   describe("createWorkspaceViteResolveConfig", () => {
-    it("pins scene hosts and excludes workspace packages from optimizeDeps", () => {
-      const config = createWorkspaceViteResolveConfig(repoRoot);
-      expect(config.resolve?.dedupe).toContain("react");
-      expect(config.resolve?.dedupe).toContain("three");
-      expect(config.server?.fs?.allow).toContain(repoRoot);
-      expect(config.optimizeDeps?.exclude).toContain("@semio-tech/flow-module-core");
-    });
+    // ⏱️ `findWorkspacePackages` walks the whole repo tree — past the 5s default on this monorepo's size.
+    it(
+      "pins scene hosts and excludes workspace packages from optimizeDeps",
+      () => {
+        const config = createWorkspaceViteResolveConfig(repoRoot);
+        expect(config.resolve?.dedupe).toContain("react");
+        expect(config.resolve?.dedupe).toContain("three");
+        expect(config.server?.fs?.allow).toContain(repoRoot);
+        expect(config.optimizeDeps?.exclude).toContain("@semio-tech/flow-module-core");
+      },
+      20000,
+    );
   });
 }
 //#endregion 🔖ViteElementsAssets

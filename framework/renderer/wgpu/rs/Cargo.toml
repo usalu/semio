@@ -12,11 +12,11 @@ path = "lib.rs"
 
 [dependencies]
 semio-framework-core = { path = "../../../core/rs" }
-framework_graph = { path = "../../../graph/rs" }
+framework_surface_node_graph = { path = "../../../surface/node-graph/rs" }
 framework_editor = { path = "../../../editor/rs" }
 infinite_cavas = { path = "../../../../infinite/cavas/rs" }
 infinite_world = { path = "../../../../infinite/world/rs" }
-gis_2d = { path = "../../../../gis/2d/rs" }
+framework_surface_tiled_map = { path = "../../../surface/tiled-map/rs" }
 puzzle_2d = { path = "../../../../puzzle/2d/rs" }
 flow_core = { path = "../../../../flow/core/rs" }
 ui_wgpu = { path = "../../../../ui/wgpu/rs", features = ["engine"] }

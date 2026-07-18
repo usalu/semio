@@ -1,54 +1,24 @@
-# Norm Technology — Part Checklist
+# Norm Feature Complete — Part Checklist
+
+Status: IN PROGRESS
 
 ## norm_core
-- [ ] Quantity, ClauseId, CheckResult, NationalAnnex, LimitState, LoadDuration
+- [ ] Table lookup helpers, design situations, extended annex params
 
 ## norm_din_4108
-- [ ] part_2 Mindestwärmeschutz
-- [ ] part_3 Feuchteschutz
-- [ ] part_4 Bemessungswerte
-- [ ] part_6 Nachweis U-Wert
-- [ ] part_7 Luftdichtheit
+- [ ] All in-force parts with climate-dependent limits and Glaser moisture
 
 ## norm_din_en_16798
-- [ ] part_1 indoor environmental input parameters
-- [ ] part_3 ventilation for non-residential
-- [ ] part_5 heating/cooling systems
-- [ ] part_7 ventilation for residential
-- [ ] part_9 humidification/dehumidification
-- [ ] part_13 performance of residential ventilation
-- [ ] part_15 ventilation for kitchens
-- [ ] part_17 ventilation for commercial kitchens
+- [ ] All published parts with real outdoor-air tables
 
 ## norm_din_v_18599
-- [ ] part_1 through part_12 (balancing method family)
+- [ ] Parts 1–12 real monthly balancing, wired to 4108 + 16798
 
 ## norm_en_1990
-- [ ] basis of design, combinations, γ/ψ, na_de
+- [ ] Full combination set 6.10/6.10a/6.10b/6.11, DE ψ/γ/ξ tables
 
 ## norm_en_1991
-- [ ] part_1_1 through part_1_7, part_2, part_3, part_4, na_de
+- [ ] Correct part mapping, wind/snow/imposed tables, DE NA
 
-## norm_en_1992
-- [ ] part_1_1, part_1_2, part_2, part_3, part_4, na_de
-
-## norm_en_1993
-- [ ] part_1_1 through part_1_12, part_2 through part_6, na_de
-
-## norm_en_1994
-- [ ] part_1_1, part_1_2, part_2, na_de
-
-## norm_en_1995
-- [ ] part_1_1, part_1_2, part_2, na_de
-
-## norm_en_1996
-- [ ] part_1_1, part_1_2, part_2, part_3, na_de
-
-## norm_en_1997
-- [ ] part_1, part_2, na_de
-
-## norm_en_1998
-- [ ] part_1 through part_6, na_de
-
-## norm_en_1999
-- [ ] part_1_1 through part_1_5, na_de
+## norm_en_1992 through norm_en_1999
+- [ ] Part-specific physics replacing macro stubs
